@@ -111,7 +111,9 @@ class WorkshopStatusResponse(BaseModel if HAS_FASTAPI else object):  # type: ign
     )
     builders: list[BuilderSummaryResponse] = Field(..., description="Builder states")
     artifacts_count: int = Field(default=0, description="Number of artifacts")
-    metrics: dict[str, Any] = Field(default_factory=dict, description="Execution metrics")
+    metrics: dict[str, Any] = Field(
+        default_factory=dict, description="Execution metrics"
+    )
 
 
 class WorkshopPlanResponse(BaseModel if HAS_FASTAPI else object):  # type: ignore[misc]
@@ -194,7 +196,9 @@ def create_workshop_router() -> "APIRouter | None":
                 archetype=b.archetype,
                 name=b.name,
                 phase=b.builder_phase.name,
-                is_active=workshop.state.active_builder == b if workshop.state.active_builder else False,
+                is_active=workshop.state.active_builder == b
+                if workshop.state.active_builder
+                else False,
                 is_in_specialty=b.is_in_specialty,
             )
             for b in workshop.builders
@@ -204,7 +208,9 @@ def create_workshop_router() -> "APIRouter | None":
             id=state["id"],
             phase=workshop.state.phase.name,
             is_running=flux.is_running,
-            active_task=workshop.state.active_task.to_dict() if workshop.state.active_task else None,
+            active_task=workshop.state.active_task.to_dict()
+            if workshop.state.active_task
+            else None,
             builders=builders,
             artifacts_count=len(workshop.state.artifacts),
             metrics=flux.get_metrics().to_dict(),
@@ -253,10 +259,14 @@ def create_workshop_router() -> "APIRouter | None":
                 return
 
             # Send start event
-            start_data = json.dumps({
-                "task": flux.workshop.state.active_task.description if flux.workshop.state.active_task else None,
-                "phase": flux.current_phase.name,
-            })
+            start_data = json.dumps(
+                {
+                    "task": flux.workshop.state.active_task.description
+                    if flux.workshop.state.active_task
+                    else None,
+                    "phase": flux.current_phase.name,
+                }
+            )
             yield f"event: workshop.start\ndata: {start_data}\n\n"
 
             current_phase = flux.current_phase.name
@@ -280,10 +290,12 @@ def create_workshop_router() -> "APIRouter | None":
                 pass
             finally:
                 # Send end event
-                end_data = json.dumps({
-                    "status": "completed",
-                    "metrics": flux.get_metrics().to_dict(),
-                })
+                end_data = json.dumps(
+                    {
+                        "status": "completed",
+                        "metrics": flux.get_metrics().to_dict(),
+                    }
+                )
                 yield f"event: workshop.end\ndata: {end_data}\n\n"
 
         return StreamingResponse(
@@ -309,13 +321,17 @@ def create_workshop_router() -> "APIRouter | None":
 
         builders = []
         for b in workshop.builders:
-            builders.append({
-                "archetype": b.archetype,
-                "name": b.name,
-                "phase": b.builder_phase.name,
-                "is_active": workshop.state.active_builder == b if workshop.state.active_builder else False,
-                "is_in_specialty": b.is_in_specialty,
-            })
+            builders.append(
+                {
+                    "archetype": b.archetype,
+                    "name": b.name,
+                    "phase": b.builder_phase.name,
+                    "is_active": workshop.state.active_builder == b
+                    if workshop.state.active_builder
+                    else False,
+                    "is_in_specialty": b.is_in_specialty,
+                }
+            )
 
         return {"builders": builders, "count": len(builders)}
 
@@ -327,7 +343,9 @@ def create_workshop_router() -> "APIRouter | None":
 
         builder = workshop.get_builder(archetype)
         if builder is None:
-            raise HTTPException(status_code=404, detail=f"Builder {archetype} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Builder {archetype} not found"
+            )
 
         # LOD 0: Basic info
         result: dict[str, Any] = {
@@ -365,15 +383,19 @@ def create_workshop_router() -> "APIRouter | None":
         return result
 
     @router.post("/builder/{archetype}/whisper")
-    async def whisper_builder(archetype: str, request: WhisperRequest) -> dict[str, Any]:
+    async def whisper_builder(
+        archetype: str, request: WhisperRequest
+    ) -> dict[str, Any]:
         """Send a whisper to a specific builder."""
         state = _get_or_create_workshop()
         workshop = state["workshop"]
-        flux = state["flux"]
+        # flux available for future integration: state["flux"]
 
         builder = workshop.get_builder(archetype)
         if builder is None:
-            raise HTTPException(status_code=404, detail=f"Builder {archetype} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Builder {archetype} not found"
+            )
 
         # For now, whisper is recorded but doesn't change behavior
         # Future: integrate with DialogueEngine
@@ -425,6 +447,136 @@ def create_workshop_router() -> "APIRouter | None":
             "artifacts": [a.to_dict() for a in workshop.state.artifacts],
             "count": len(workshop.state.artifacts),
         }
+
+    # =========================================================================
+    # History Endpoints (Chunk 9)
+    # =========================================================================
+
+    @router.get("/history")
+    async def get_task_history(
+        page: int = 1,
+        page_size: int = 10,
+        status: Optional[str] = None,
+    ) -> dict[str, Any]:
+        """
+        Get paginated task history.
+
+        Args:
+            page: Page number (1-indexed).
+            page_size: Number of tasks per page (max 50).
+            status: Filter by status (completed, interrupted, all).
+        """
+        from agents.town.history import get_history_store
+
+        store = get_history_store()
+        page_size = min(page_size, 50)  # Cap at 50
+
+        tasks, total = store.list_tasks(page=page, page_size=page_size, status=status)
+        total_pages = (total + page_size - 1) // page_size if page_size > 0 else 0
+
+        return {
+            "tasks": [t.to_dict() for t in tasks],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        }
+
+    @router.get("/history/{task_id}")
+    async def get_task_detail(task_id: str) -> dict[str, Any]:
+        """Get detailed task record including all events and artifacts."""
+        from agents.town.history import get_history_store
+
+        store = get_history_store()
+        record = store.get_task(task_id)
+
+        if record is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        return {
+            "task": record.to_dict(),
+            "artifacts": [a.to_dict() for a in record.artifacts],
+            "events": [e.to_dict() for e in record.events],
+            "builder_contributions": record._compute_contributions(),
+        }
+
+    @router.get("/history/{task_id}/events")
+    async def get_task_events(task_id: str) -> dict[str, Any]:
+        """Get all events for a task (for replay)."""
+        from agents.town.history import get_history_store
+
+        store = get_history_store()
+        record = store.get_task(task_id)
+
+        if record is None:
+            raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+        return {
+            "task_id": task_id,
+            "events": [e.to_dict() for e in record.events],
+            "count": len(record.events),
+            "duration_seconds": record.duration_seconds,
+        }
+
+    # =========================================================================
+    # Metrics Endpoints (Chunk 9)
+    # =========================================================================
+
+    @router.get("/metrics/aggregate")
+    async def get_aggregate_metrics(period: str = "24h") -> dict[str, Any]:
+        """
+        Get aggregate workshop metrics for a time period.
+
+        Args:
+            period: Time period (24h, 7d, 30d, all).
+        """
+        from agents.town.history import get_history_store
+
+        if period not in ("24h", "7d", "30d", "all"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid period: {period}. Use 24h, 7d, 30d, or all.",
+            )
+
+        store = get_history_store()
+        return store.get_aggregate_metrics(period)
+
+    @router.get("/metrics/builder/{archetype}")
+    async def get_builder_metrics(
+        archetype: str, period: str = "24h"
+    ) -> dict[str, Any]:
+        """
+        Get metrics for a specific builder archetype.
+
+        Args:
+            archetype: Builder archetype (Scout, Sage, Spark, Steady, Sync).
+            period: Time period (24h, 7d, 30d, all).
+        """
+        from agents.town.history import get_history_store
+
+        valid_archetypes = {"Scout", "Sage", "Spark", "Steady", "Sync"}
+        if archetype not in valid_archetypes:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid archetype: {archetype}. Use one of {valid_archetypes}.",
+            )
+
+        if period not in ("24h", "7d", "30d", "all"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid period: {period}. Use 24h, 7d, 30d, or all.",
+            )
+
+        store = get_history_store()
+        return store.get_builder_metrics(archetype, period)
+
+    @router.get("/metrics/flow")
+    async def get_flow_metrics() -> dict[str, Any]:
+        """Get handoff flow metrics between builders."""
+        from agents.town.history import get_history_store
+
+        store = get_history_store()
+        return store.get_flow_metrics()
 
     return router
 

@@ -382,11 +382,16 @@ class TestColonyDashboardJSON:
         assert len(output["citizens"]) == 3
 
         alice = output["citizens"][0]
-        assert alice["id"] == "alice"
+        assert alice["citizen_id"] == "alice"
         assert alice["name"] == "Alice"
         assert alice["archetype"] == "builder"
         assert alice["phase"] == "WORKING"
         assert alice["nphase"] == "ACT"
+        # Verify eigenvectors are included
+        assert "eigenvectors" in alice
+        assert "warmth" in alice["eigenvectors"]
+        assert "curiosity" in alice["eigenvectors"]
+        assert "trust" in alice["eigenvectors"]
 
     def test_project_json_grid_config(self, sample_colony: ColonyState) -> None:
         """Test JSON projection includes grid configuration."""

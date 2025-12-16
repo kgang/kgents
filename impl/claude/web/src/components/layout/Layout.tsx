@@ -1,9 +1,14 @@
 import { Outlet, Link } from 'react-router-dom';
 import { useUserStore } from '@/stores/userStore';
 import { UpgradeModal } from '@/components/paywall/UpgradeModal';
+import { ToastContainer } from '@/components/feedback/ToastContainer';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 export function Layout() {
   const { isAuthenticated, tier, credits, logout } = useUserStore();
+
+  // Track online status (shows toasts on connectivity changes)
+  useOnlineStatus();
 
   return (
     <div className="min-h-screen bg-town-bg flex flex-col">
@@ -65,6 +70,9 @@ export function Layout() {
 
       {/* Global Modals */}
       <UpgradeModal />
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 }

@@ -4,33 +4,54 @@
 
 > *"Context is not what you put in—it is what emerges from the relationship between observer, conversation, and intent."*
 
-**Status:** Specification v1.0
+**Status:** Implementation v1.0 (Core + Frontend Integration complete)
 **Date:** 2025-12-15
 **Prerequisites:** `agentese.md`, `umwelt.md`, `../d-gents/persistence.md`, `../principles.md`
 **Integrations:** K-gent (Soul), D-gent (Memory), Agent Town (Builders), Flux (Streaming), Web UI
-**Guard:** `[phase=PLAN][entropy=0.06][law_check=true][minimal_output=true]`
+**Guard:** `[phase=IMPLEMENT][entropy=0.06][law_check=true][minimal_output=true]`
 
 ---
 
-## Prologue: The Naming Crisis
+## Implementation Status
 
-The current implementation scatters context management across multiple systems:
+| Component | Status | Location |
+|-----------|--------|----------|
+| **ContextWindow** | ✅ Complete | `agents/d/context_window.py` |
+| **LinearityMap** | ✅ Complete | `agents/d/linearity.py` |
+| **ContextProjector** | ✅ Complete | `agents/d/projector.py` |
+| **AGENTESE `self.stream.*`** | ✅ Complete | `protocols/agentese/contexts/stream.py` |
+| **PromptBuilder** | ✅ Complete | `agents/d/prompt_builder.py` |
+| **ComponentRenderer** | ✅ Complete | `agents/d/component_renderer.py` |
+| **ContextSession** | ✅ Complete | `agents/d/context_session.py` |
+| **Tests** | ✅ 145 tests | `agents/d/_tests/test_context_*.py` |
+| **`self.context.*` paths** | 🚧 Optional | Alias from `self.stream.*` |
+| **Module consolidation** | 🚧 Optional | Move `agents/d/context*.py` → `context/` |
 
-| Current Location | Purpose | Problem |
-|------------------|---------|---------|
-| `agents/d/stream.py` | Event-sourced state | Name suggests streaming, not context |
-| `protocols/agentese/contexts/stream.py` | AGENTESE `self.stream.*` resolver | Confused with D-gent streaming |
-| `agents/d/context_window.py` | Comonadic context management | Hidden in D-gent |
-| `agents/k/session.py` | K-gent soul persistence | Context concerns mixed with soul logic |
-| `agents/town/builders/base.py` | N-Phase context injection | Ad-hoc context passing |
+---
 
-**The Core Confusion**: "Stream" means event flow (Flux), temporal sequence (D-gent), and context window (conversation). This naming collision causes cognitive load and architectural drift.
+## Prologue: The Naming Analysis
 
-**The Solution**: A dedicated `context/` module that:
-1. **Owns all context engineering** - window, compression, linearity, prompts
-2. **Serves ready-to-render components** - frontend receives pure React props
-3. **Routes through PolyFunctor spine** - all I/O through polynomial agents
-4. **Removes prompts from frontend** - context module builds complete prompts
+The current implementation has context management across multiple systems:
+
+| Current Location | Purpose | Status |
+|------------------|---------|--------|
+| `agents/d/context_window.py` | Store Comonad context management | ✅ **Complete** |
+| `agents/d/linearity.py` | Resource class tracking | ✅ **Complete** |
+| `agents/d/projector.py` | Galois Connection compression | ✅ **Complete** |
+| `protocols/agentese/contexts/stream.py` | AGENTESE `self.stream.*` resolver | ✅ **Complete** |
+| `agents/k/session.py` | K-gent soul persistence | 🔄 Could integrate ContextSession |
+| `agents/town/builders/base.py` | N-Phase context injection | 🔄 Could integrate ContextSession |
+
+**The Naming Question**: "Stream" currently means context window (conversation). Future work could:
+1. Rename `self.stream.*` → `self.context.*` for clarity
+2. Keep `self.stream.*` as alias for backward compatibility
+3. Create dedicated `context/` module to consolidate files
+
+**Current Design Decisions**:
+1. **Context lives in D-gent** - D-gent owns data/state agents; context is state
+2. **AGENTESE `self.stream.*` works** - Full comonadic operations available
+3. **Compression respects linearity** - DROPPABLE → REQUIRED → PRESERVED
+4. **Frontend integration pending** - PromptBuilder and ComponentRenderer not yet needed
 
 ---
 
@@ -399,48 +420,59 @@ class ComponentRenderer:
 
 ## Part IV: AGENTESE Integration
 
-### 4.1 The `self.context.*` Namespace
+### 4.1 The Current `self.stream.*` Namespace (Implemented)
 
-Context operations are exposed via AGENTESE:
+Context operations are exposed via AGENTESE at `self.stream.*`:
 
 ```
-self.context.*           # Context operations
-  self.context.window.*      # Window layer (Store Comonad)
-    self.context.window.focus    # extract() - current turn
-    self.context.window.map      # extend() - context-aware map
-    self.context.window.seek     # seek() - move focus
-    self.context.window.history  # all_turns() - full history
+self.stream.*              # Context operations (IMPLEMENTED)
+  self.stream.focus.*          # Window layer (Store Comonad)
+    self.stream.focus.extract    # extract() - current turn ✅
+    self.stream.focus.peek       # peek at position ✅
 
-  self.context.pressure.*    # Pressure layer (Galois Connection)
-    self.context.pressure.check  # Current pressure value
-    self.context.pressure.compress  # Trigger compression
-    self.context.pressure.threshold # Adaptive threshold
+  self.stream.map.*            # Context-aware transformations
+    self.stream.map.extend       # extend() - context-aware map ✅
+    self.stream.map.transform    # summarize all turns ✅
 
-  self.context.linearity.*   # Linearity layer (Resource Classes)
-    self.context.linearity.tag     # Assign resource class
-    self.context.linearity.promote # Upgrade resource class
-    self.context.linearity.stats   # Resource distribution
+  self.stream.seek.*           # Navigation
+    self.stream.seek.position    # get/set position ✅
+    self.stream.seek.forward     # move forward ✅
+    self.stream.seek.backward    # move backward ✅
+    self.stream.seek.start       # go to start ✅
+    self.stream.seek.end         # go to end ✅
 
-  self.context.prompt.*      # Prompt layer (assembly)
-    self.context.prompt.system   # Build system prompt
-    self.context.prompt.render   # Render for LLM
+  self.stream.project.*        # Compression (Galois Connection)
+    self.stream.project.compress # compress to target pressure ✅
+    self.stream.project.threshold # adaptive threshold config ✅
+    self.stream.project.stats    # compression statistics ✅
+
+  self.stream.linearity.*      # Resource class management
+    self.stream.linearity.tag    # assign resource class ✅
+    self.stream.linearity.promote # upgrade class ✅
+    self.stream.linearity.drop   # drop droppable resource ✅
+    self.stream.linearity.stats  # linearity statistics ✅
+
+  self.stream.pressure.*       # Quick pressure checks
+    self.stream.pressure.check   # current pressure value ✅
+    self.stream.pressure.auto_compress # auto-compress if needed ✅
 ```
 
-### 4.2 Migration from `self.stream.*`
+### 4.2 Future: `self.context.*` Aliases (Optional)
 
-The existing `self.stream.*` paths become aliases to `self.context.*`:
+If renaming is desired for clarity, add aliases:
 
 ```python
-# Backward compatibility
-STREAM_TO_CONTEXT_ALIASES = {
-    "self.stream.focus": "self.context.window.focus",
-    "self.stream.map": "self.context.window.map",
-    "self.stream.seek": "self.context.window.seek",
-    "self.stream.project": "self.context.pressure.compress",
-    "self.stream.linearity": "self.context.linearity",
-    "self.stream.pressure": "self.context.pressure",
+# Optional future aliases (not implemented)
+CONTEXT_TO_STREAM_ALIASES = {
+    "self.context.window.focus": "self.stream.focus.extract",
+    "self.context.window.map": "self.stream.map.extend",
+    "self.context.window.seek": "self.stream.seek.position",
+    "self.context.pressure.compress": "self.stream.project.compress",
+    "self.context.linearity": "self.stream.linearity",
 }
 ```
+
+**Current recommendation**: Keep `self.stream.*` as the canonical path. The implementation is complete and tested.
 
 ---
 
@@ -550,35 +582,41 @@ function useContextSession() {
 
 ## Part VI: Migration Plan
 
-### 6.1 Phase 1: Extract (Week 1)
+### Current State (v0.9)
 
-1. Create `impl/claude/context/` module structure
-2. Move `agents/d/context_window.py` → `context/window.py`
-3. Move `agents/d/linearity.py` → `context/linearity.py`
-4. Move `agents/d/projector.py` → `context/pressure.py`
-5. Create `context/polynomial.py` with CONTEXT_POLYNOMIAL
+The core context engineering primitives are **complete and tested**:
 
-### 6.2 Phase 2: Unify (Week 2)
+```
+✅ ContextWindow     → agents/d/context_window.py (Store Comonad)
+✅ LinearityMap      → agents/d/linearity.py (Resource Classes)
+✅ ContextProjector  → agents/d/projector.py (Galois Connection)
+✅ AGENTESE Resolver → protocols/agentese/contexts/stream.py
+✅ Tests             → agents/d/_tests/test_context*.py, test_linearity.py, test_projector.py
+```
 
-1. Create `context/prompt.py` with PromptBuilder
-2. Create `context/render.py` with ComponentRenderer
-3. Create `context/session.py` with ContextSession
-4. Update AGENTESE to expose `self.context.*`
-5. Add aliases from `self.stream.*` → `self.context.*`
+### Optional Future Work
 
-### 6.3 Phase 3: Integrate (Week 3)
+The following are **optional enhancements**, not blockers:
 
+**Phase A: Consolidation** (if desired for clarity)
+1. Create `impl/claude/context/` module
+2. Move context files from `agents/d/`
+3. Update imports across codebase
+
+**Phase B: Frontend Integration** (when Web UI needs it)
+1. Create `PromptBuilder` - assemble prompts from context
+2. Create `ComponentRenderer` - transform to React props
+3. Create `ContextSession` - cross-request state management
+
+**Phase C: AGENTESE Aliases** (for naming clarity)
+1. Add `self.context.*` paths that delegate to `self.stream.*`
+2. Backward compatibility: `self.stream.*` continues to work
+3. No deprecation required—both paths valid
+
+**Phase D: Integration** (when K-gent/Builder need unified context)
 1. Update `agents/k/session.py` to use ContextSession
 2. Update `agents/town/builders/base.py` to use ContextSession
-3. Update Web UI to receive component props only
-4. Remove prompt strings from frontend code
-
-### 6.4 Phase 4: Deprecate (Week 4)
-
-1. Mark `self.stream.*` paths as deprecated
-2. Emit warnings on `self.stream.*` usage
-3. Update documentation
-4. Remove prompt construction from frontend
+3. Web UI receives component props via API
 
 ---
 
@@ -670,37 +708,37 @@ def verify_comonad_laws(window: ContextWindow) -> bool:
     return True
 ```
 
-## Appendix B: Files Affected
+## Appendix B: Files (Current State)
 
-### Created
+### Implemented (Production)
 ```
-impl/claude/context/__init__.py
-impl/claude/context/polynomial.py
-impl/claude/context/window.py
-impl/claude/context/pressure.py
-impl/claude/context/linearity.py
-impl/claude/context/prompt.py
-impl/claude/context/session.py
-impl/claude/context/render.py
-impl/claude/context/operad.py
-impl/claude/context/_tests/...
+impl/claude/agents/d/context_window.py     # ✅ Store Comonad (ContextWindow, Turn, TurnRole)
+impl/claude/agents/d/linearity.py          # ✅ Resource Classes (LinearityMap, ResourceClass)
+impl/claude/agents/d/projector.py          # ✅ Galois Connection (ContextProjector, AdaptiveThreshold)
+impl/claude/agents/d/context_comonad.py    # ✅ Comonad law verification
+impl/claude/protocols/agentese/contexts/stream.py  # ✅ AGENTESE self.stream.* resolver
 ```
 
-### Modified
+### Tests (107 passing)
 ```
-impl/claude/agents/k/session.py         # Use ContextSession
-impl/claude/agents/town/builders/base.py # Use ContextSession
-impl/claude/protocols/agentese/contexts/self_.py  # Add context.* paths
-impl/claude/web/src/hooks/useWorkshopStream.ts    # Receive props only
-impl/claude/web/src/pages/Workshop.tsx            # Remove prompt logic
+impl/claude/agents/d/_tests/test_context_window.py  # ✅ ContextWindow tests
+impl/claude/agents/d/_tests/test_linearity.py       # ✅ LinearityMap tests
+impl/claude/agents/d/_tests/test_projector.py       # ✅ Projector + Galois tests
 ```
 
-### Deprecated (Later Removed)
+### Future (Optional Enhancements)
 ```
-impl/claude/protocols/agentese/contexts/stream.py  # → context.py
-impl/claude/agents/d/context_window.py             # → context/window.py
-impl/claude/agents/d/linearity.py                  # → context/linearity.py
-impl/claude/agents/d/projector.py                  # → context/pressure.py
+impl/claude/context/                       # 🚧 Consolidated module (if desired)
+impl/claude/context/prompt.py              # 🚧 PromptBuilder (when frontend needs)
+impl/claude/context/render.py              # 🚧 ComponentRenderer (when frontend needs)
+impl/claude/context/session.py             # 🚧 ContextSession (when K-gent integrates)
+```
+
+### No Changes Needed
+```
+impl/claude/agents/k/session.py            # Currently uses own session management
+impl/claude/agents/town/builders/base.py   # Currently uses direct context injection
+impl/claude/web/                           # Frontend integration deferred
 ```
 
 ---

@@ -160,7 +160,8 @@ describe('useInhabitSession', () => {
         }
       });
 
-      expect(result.current.error).toBe('Failed to start INHABIT session');
+      // Error message comes from the Error object
+      expect(result.current.error).toBe('Network error');
     });
 
     it('should set loading during start', async () => {

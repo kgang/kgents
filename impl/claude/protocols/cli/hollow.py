@@ -111,9 +111,14 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "town": "protocols.cli.handlers.town:cmd_town",
     # ==========================================================================
+    # Tiny Atelier (Demo Workshop)
+    # ==========================================================================
+    "atelier": "protocols.cli.handlers.atelier:cmd_atelier",
+    # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
     "dashboard": "protocols.cli.handlers.dashboard:cmd_dashboard",
+    "play": "protocols.cli.handlers.play:cmd_play",
     # ==========================================================================
     # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
     # ==========================================================================

@@ -30,6 +30,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { ColonyDashboardJSON } from '@/reactive/types';
 import type { TownEvent } from '@/api/types';
+import { useBatchedEvents } from './useBatchedEvents';
 
 // =============================================================================
 // Types
@@ -42,6 +43,8 @@ interface UseTownStreamWidgetOptions {
   speed?: number;
   /** Number of phases to run (default 4 = one day) */
   phases?: number;
+  /** Whether to enable N-Phase tracking */
+  nphaseEnabled?: boolean;
   /** Connect automatically on mount */
   autoConnect?: boolean;
   /** Callback when an event is received */
@@ -54,6 +57,8 @@ interface UseTownStreamWidgetOptions {
   onDisconnect?: () => void;
   /** Callback on error */
   onError?: (error: Event) => void;
+  /** Event batching delay in ms (default: 50) */
+  batchDelay?: number;
 }
 
 interface UseTownStreamWidgetResult {
@@ -79,12 +84,14 @@ export function useTownStreamWidget({
   townId,
   speed = 1.0,
   phases = 4,
+  nphaseEnabled = false,
   autoConnect = false,
   onEvent,
   onDashboard,
   onConnect,
   onDisconnect,
   onError,
+  batchDelay = 50,
 }: UseTownStreamWidgetOptions): UseTownStreamWidgetResult {
   // State
   const [dashboard, setDashboard] = useState<ColonyDashboardJSON | null>(null);
@@ -96,6 +103,22 @@ export function useTownStreamWidget({
   const eventSourceRef = useRef<EventSource | null>(null);
   const callbacksRef = useRef({ onEvent, onDashboard, onConnect, onDisconnect, onError });
   callbacksRef.current = { onEvent, onDashboard, onConnect, onDisconnect, onError };
+
+  // Batched event handler - reduces render frequency by ~50%
+  const addBatchedEvent = useBatchedEvents<TownEvent>(
+    useCallback((batch) => {
+      // Process batch: prepend to events (most recent first), keep max 100
+      setEvents((prev) => {
+        const combined = [...batch.reverse(), ...prev];
+        return combined.slice(0, 100);
+      });
+      // Call individual callbacks for each event
+      batch.forEach((event) => {
+        callbacksRef.current.onEvent?.(event);
+      });
+    }, []),
+    batchDelay
+  );
 
   // Connect to SSE stream
   const connect = useCallback(() => {
@@ -111,7 +134,7 @@ export function useTownStreamWidget({
     }
 
     // Build URL with query params
-    const url = `/v1/town/${townId}/live?speed=${speed}&phases=${phases}`;
+    const url = `/v1/town/${townId}/live?speed=${speed}&phases=${phases}&nphase_enabled=${nphaseEnabled}`;
     console.log('[SSE Widget] Connecting to:', url);
 
     const es = new EventSource(url);
@@ -140,13 +163,11 @@ export function useTownStreamWidget({
     });
 
     // Handle live.event event (individual simulation events)
+    // Uses batched handler to reduce render frequency
     es.addEventListener('live.event', (e) => {
       const event: TownEvent = JSON.parse(e.data);
       console.log('[SSE Widget] Event:', event.operation, event.participants);
-
-      // Prepend to events (most recent first), keep max 100
-      setEvents((prev) => [event, ...prev.slice(0, 99)]);
-      callbacksRef.current.onEvent?.(event);
+      addBatchedEvent(event);
     });
 
     // Handle live.phase event (phase transitions)
@@ -175,7 +196,7 @@ export function useTownStreamWidget({
         callbacksRef.current.onDisconnect?.();
       }
     };
-  }, [townId, speed, phases]);
+  }, [townId, speed, phases, nphaseEnabled, addBatchedEvent]);
 
   // Disconnect from SSE stream
   const disconnect = useCallback(() => {

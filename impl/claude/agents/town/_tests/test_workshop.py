@@ -23,7 +23,6 @@ import asyncio
 from datetime import datetime
 
 import pytest
-
 from agents.town.builders import (
     Builder,
     BuilderPhase,
@@ -51,7 +50,6 @@ from agents.town.workshop import (
     route_task,
     suggest_phases,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -228,33 +226,47 @@ class TestWorkshopState:
         state = WorkshopState(phase=WorkshopPhase.REFINING, builders=default_builders)
         assert state.is_complete is False
 
-    def test_active_builder_exploring(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_exploring(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is Scout during EXPLORING."""
         state = WorkshopState(phase=WorkshopPhase.EXPLORING, builders=default_builders)
         assert state.active_builder is not None
         assert state.active_builder.archetype == "Scout"
 
-    def test_active_builder_designing(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_designing(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is Sage during DESIGNING."""
         state = WorkshopState(phase=WorkshopPhase.DESIGNING, builders=default_builders)
         assert state.active_builder is not None
         assert state.active_builder.archetype == "Sage"
 
-    def test_active_builder_prototyping(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_prototyping(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is Spark during PROTOTYPING."""
-        state = WorkshopState(phase=WorkshopPhase.PROTOTYPING, builders=default_builders)
+        state = WorkshopState(
+            phase=WorkshopPhase.PROTOTYPING, builders=default_builders
+        )
         assert state.active_builder is not None
         assert state.active_builder.archetype == "Spark"
 
-    def test_active_builder_refining(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_refining(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is Steady during REFINING."""
         state = WorkshopState(phase=WorkshopPhase.REFINING, builders=default_builders)
         assert state.active_builder is not None
         assert state.active_builder.archetype == "Steady"
 
-    def test_active_builder_integrating(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_integrating(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is Sync during INTEGRATING."""
-        state = WorkshopState(phase=WorkshopPhase.INTEGRATING, builders=default_builders)
+        state = WorkshopState(
+            phase=WorkshopPhase.INTEGRATING, builders=default_builders
+        )
         assert state.active_builder is not None
         assert state.active_builder.archetype == "Sync"
 
@@ -263,7 +275,9 @@ class TestWorkshopState:
         state = WorkshopState(phase=WorkshopPhase.IDLE, builders=default_builders)
         assert state.active_builder is None
 
-    def test_active_builder_complete(self, default_builders: tuple[Builder, ...]) -> None:
+    def test_active_builder_complete(
+        self, default_builders: tuple[Builder, ...]
+    ) -> None:
         """Active builder is None during COMPLETE."""
         state = WorkshopState(phase=WorkshopPhase.COMPLETE, builders=default_builders)
         assert state.active_builder is None
@@ -365,7 +379,9 @@ class TestTaskAssignment:
         assert len(plan.estimated_phases) > 0
 
     @pytest.mark.asyncio
-    async def test_assign_starts_first_phase(self, workshop: WorkshopEnvironment) -> None:
+    async def test_assign_starts_first_phase(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Assigning task starts first phase."""
         await workshop.assign_task("Research something")
         assert not workshop.state.is_idle
@@ -378,7 +394,9 @@ class TestTaskAssignment:
         }
 
     @pytest.mark.asyncio
-    async def test_assign_transitions_lead_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_assign_transitions_lead_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Assigning task transitions the lead builder."""
         await workshop.assign_task("Research authentication")
         lead = workshop.get_builder("Scout")
@@ -387,7 +405,9 @@ class TestTaskAssignment:
         assert lead.builder_phase == BuilderPhase.EXPLORING
 
     @pytest.mark.asyncio
-    async def test_cannot_assign_while_active(self, workshop: WorkshopEnvironment) -> None:
+    async def test_cannot_assign_while_active(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot assign a new task while one is active."""
         await workshop.assign_task("First task")
         with pytest.raises(ValueError, match="already in progress"):
@@ -410,7 +430,9 @@ class TestAdvance:
     """Tests for workshop advancement."""
 
     @pytest.mark.asyncio
-    async def test_advance_requires_active_task(self, workshop: WorkshopEnvironment) -> None:
+    async def test_advance_requires_active_task(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot advance without active task."""
         with pytest.raises(ValueError, match="No active task"):
             await workshop.advance()
@@ -423,7 +445,9 @@ class TestAdvance:
         assert isinstance(event, WorkshopEvent)
 
     @pytest.mark.asyncio
-    async def test_advance_produces_artifact_event(self, workshop: WorkshopEnvironment) -> None:
+    async def test_advance_produces_artifact_event(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Advance produces artifact event while working."""
         await workshop.assign_task("Task")
         event = await workshop.advance()
@@ -442,7 +466,9 @@ class TestAdvance:
         assert event.builder in {"Scout", "Sage", "Spark", "Steady", "Sync", None}
 
     @pytest.mark.asyncio
-    async def test_cannot_advance_when_complete(self, workshop: WorkshopEnvironment) -> None:
+    async def test_cannot_advance_when_complete(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot advance when task is complete."""
         await workshop.assign_task("Task")
         await workshop.complete()
@@ -459,7 +485,9 @@ class TestHandoff:
     """Tests for explicit handoffs."""
 
     @pytest.mark.asyncio
-    async def test_handoff_requires_active_task(self, workshop: WorkshopEnvironment) -> None:
+    async def test_handoff_requires_active_task(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot handoff without active task."""
         with pytest.raises(ValueError, match="No active task"):
             await workshop.handoff("Scout", "Sage")
@@ -479,7 +507,9 @@ class TestHandoff:
         assert workshop.state.phase == WorkshopPhase.DESIGNING
 
     @pytest.mark.asyncio
-    async def test_handoff_changes_active_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_handoff_changes_active_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Handoff changes the active builder."""
         await workshop.assign_task("Task")
         await workshop.handoff("Scout", "Spark")
@@ -487,14 +517,18 @@ class TestHandoff:
         assert workshop.state.active_builder.archetype == "Spark"
 
     @pytest.mark.asyncio
-    async def test_handoff_validates_from_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_handoff_validates_from_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Handoff validates from_builder exists."""
         await workshop.assign_task("Task")
         with pytest.raises(ValueError, match="not found.*Unknown"):
             await workshop.handoff("Unknown", "Sage")
 
     @pytest.mark.asyncio
-    async def test_handoff_validates_to_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_handoff_validates_to_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Handoff validates to_builder exists."""
         await workshop.assign_task("Task")
         with pytest.raises(ValueError, match="not found.*Missing"):
@@ -515,7 +549,9 @@ class TestHandoff:
         assert "Ready for design" in event.message
 
     @pytest.mark.asyncio
-    async def test_handoff_creates_artifact(self, workshop: WorkshopEnvironment) -> None:
+    async def test_handoff_creates_artifact(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Handoff with artifact adds to artifacts list."""
         await workshop.assign_task("Task")
         await workshop.handoff("Scout", "Sage", artifact="notes")
@@ -532,7 +568,9 @@ class TestCompletion:
     """Tests for task completion."""
 
     @pytest.mark.asyncio
-    async def test_complete_requires_active_task(self, workshop: WorkshopEnvironment) -> None:
+    async def test_complete_requires_active_task(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot complete without active task."""
         with pytest.raises(ValueError, match="No active task"):
             await workshop.complete()
@@ -545,7 +583,9 @@ class TestCompletion:
         assert event.type == WorkshopEventType.TASK_COMPLETED
 
     @pytest.mark.asyncio
-    async def test_complete_sets_phase_complete(self, workshop: WorkshopEnvironment) -> None:
+    async def test_complete_sets_phase_complete(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Complete sets phase to COMPLETE."""
         await workshop.assign_task("Task")
         await workshop.complete()
@@ -594,7 +634,9 @@ class TestEvents:
     """Tests for event generation and streaming."""
 
     @pytest.mark.asyncio
-    async def test_assign_emits_task_assigned(self, workshop: WorkshopEnvironment) -> None:
+    async def test_assign_emits_task_assigned(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Task assignment emits TASK_ASSIGNED event."""
         await workshop.assign_task("Task")
         events = workshop.state.events
@@ -602,7 +644,9 @@ class TestEvents:
         assert WorkshopEventType.TASK_ASSIGNED in event_types
 
     @pytest.mark.asyncio
-    async def test_assign_emits_plan_created(self, workshop: WorkshopEnvironment) -> None:
+    async def test_assign_emits_plan_created(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Task assignment emits PLAN_CREATED event."""
         await workshop.assign_task("Task")
         events = workshop.state.events
@@ -610,7 +654,9 @@ class TestEvents:
         assert WorkshopEventType.PLAN_CREATED in event_types
 
     @pytest.mark.asyncio
-    async def test_assign_emits_phase_started(self, workshop: WorkshopEnvironment) -> None:
+    async def test_assign_emits_phase_started(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Task assignment emits PHASE_STARTED event."""
         await workshop.assign_task("Task")
         events = workshop.state.events
@@ -786,7 +832,7 @@ class TestIntegration:
 
         # Sage → Spark
         await workshop.handoff("Sage", "Spark", artifact="design")
-        assert workshop.state.phase == WorkshopPhase.PROTOTYPING
+        assert workshop.state.phase == WorkshopPhase.PROTOTYPING  # type: ignore[comparison-overlap]
 
         # Spark → Steady
         await workshop.handoff("Spark", "Steady", artifact="prototype")
@@ -802,7 +848,9 @@ class TestIntegration:
         assert len(workshop.state.artifacts) == 4
 
     @pytest.mark.asyncio
-    async def test_manifest_at_different_lods(self, workshop: WorkshopEnvironment) -> None:
+    async def test_manifest_at_different_lods(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Manifest provides different detail levels."""
         await workshop.assign_task("Task")
 
@@ -965,6 +1013,7 @@ class TestWorkshopMetrics:
     def test_duration_seconds_running(self) -> None:
         """Duration computes from start_time to now when running."""
         import time
+
         metrics = WorkshopMetrics(start_time=datetime.now())
         time.sleep(0.05)
         assert metrics.duration_seconds > 0.04
@@ -972,6 +1021,7 @@ class TestWorkshopMetrics:
     def test_duration_seconds_completed(self) -> None:
         """Duration computes from start to end when completed."""
         import time
+
         start = datetime.now()
         time.sleep(0.05)
         end = datetime.now()
@@ -981,6 +1031,7 @@ class TestWorkshopMetrics:
     def test_events_per_second(self) -> None:
         """Events per second calculation."""
         import time
+
         metrics = WorkshopMetrics(start_time=datetime.now(), total_events=10)
         time.sleep(0.05)
         eps = metrics.events_per_second
@@ -1147,7 +1198,9 @@ class TestWorkshopFluxCreation:
         flux = WorkshopFlux(workshop, seed=42)
         assert flux is not None
 
-    def test_create_with_auto_advance_false(self, workshop: WorkshopEnvironment) -> None:
+    def test_create_with_auto_advance_false(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Flux can be created with auto_advance=False."""
         flux = WorkshopFlux(workshop, auto_advance=False)
         assert flux._auto_advance is False
@@ -1190,7 +1243,9 @@ class TestWorkshopFluxStart:
         assert flux.is_running is True
 
     @pytest.mark.asyncio
-    async def test_start_task_object(self, workshop: WorkshopEnvironment, sample_task: WorkshopTask) -> None:
+    async def test_start_task_object(
+        self, workshop: WorkshopEnvironment, sample_task: WorkshopTask
+    ) -> None:
         """Can start with WorkshopTask object."""
         flux = WorkshopFlux(workshop)
         plan = await flux.start(sample_task)
@@ -1204,7 +1259,9 @@ class TestWorkshopFluxStart:
         assert flux.is_running is True
 
     @pytest.mark.asyncio
-    async def test_start_initializes_metrics(self, workshop: WorkshopEnvironment) -> None:
+    async def test_start_initializes_metrics(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Start initializes metrics with start_time."""
         flux = WorkshopFlux(workshop)
         await flux.start("Task")
@@ -1218,14 +1275,18 @@ class TestWorkshopFluxStart:
         assert flux.current_phase != WorkshopPhase.IDLE
 
     @pytest.mark.asyncio
-    async def test_start_sets_active_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_start_sets_active_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Start sets active builder."""
         flux = WorkshopFlux(workshop)
         await flux.start("Research task")
         assert flux.active_builder is not None
 
     @pytest.mark.asyncio
-    async def test_cannot_start_while_running(self, workshop: WorkshopEnvironment) -> None:
+    async def test_cannot_start_while_running(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Cannot start when already running."""
         flux = WorkshopFlux(workshop)
         await flux.start("First task")
@@ -1260,7 +1321,9 @@ class TestWorkshopFluxStep:
             assert isinstance(event, WorkshopEvent)
 
     @pytest.mark.asyncio
-    async def test_step_increments_step_count(self, workshop: WorkshopEnvironment) -> None:
+    async def test_step_increments_step_count(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Step increments step count."""
         flux = WorkshopFlux(workshop, auto_advance=False)
         await flux.start("Task")
@@ -1280,14 +1343,18 @@ class TestWorkshopFluxStep:
         assert metrics.total_events >= 1
 
     @pytest.mark.asyncio
-    async def test_step_nothing_when_not_running(self, workshop: WorkshopEnvironment) -> None:
+    async def test_step_nothing_when_not_running(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Step yields nothing when not running."""
         flux = WorkshopFlux(workshop)
         events = [e async for e in flux.step()]
         assert events == []
 
     @pytest.mark.asyncio
-    async def test_step_adds_dialogue_metadata(self, workshop: WorkshopEnvironment) -> None:
+    async def test_step_adds_dialogue_metadata(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Step adds dialogue to event metadata."""
         flux = WorkshopFlux(workshop, auto_advance=False, seed=42)
         await flux.start("Research task")
@@ -1306,7 +1373,9 @@ class TestWorkshopFluxRun:
     """Tests for WorkshopFlux.run()."""
 
     @pytest.mark.asyncio
-    async def test_run_yields_events_until_complete(self, workshop: WorkshopEnvironment) -> None:
+    async def test_run_yields_events_until_complete(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Run yields events until task complete."""
         flux = WorkshopFlux(workshop, max_steps_per_phase=2)
         await flux.start("Research task")
@@ -1318,7 +1387,9 @@ class TestWorkshopFluxRun:
         assert len(events) > 0
 
     @pytest.mark.asyncio
-    async def test_run_ends_when_task_complete(self, workshop: WorkshopEnvironment) -> None:
+    async def test_run_ends_when_task_complete(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Run stops when task completes."""
         flux = WorkshopFlux(workshop, max_steps_per_phase=1)
         await flux.start("Research task")
@@ -1328,7 +1399,9 @@ class TestWorkshopFluxRun:
         assert WorkshopEventType.TASK_COMPLETED in event_types
 
     @pytest.mark.asyncio
-    async def test_run_nothing_when_not_running(self, workshop: WorkshopEnvironment) -> None:
+    async def test_run_nothing_when_not_running(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Run yields nothing when not started."""
         flux = WorkshopFlux(workshop)
         events = [e async for e in flux.run()]
@@ -1371,7 +1444,9 @@ class TestWorkshopFluxPerturb:
         assert event.metadata.get("perturbation") is True
 
     @pytest.mark.asyncio
-    async def test_perturb_handoff_requires_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_perturb_handoff_requires_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Perturb handoff requires builder arg."""
         flux = WorkshopFlux(workshop)
         await flux.start("Task")
@@ -1406,7 +1481,9 @@ class TestWorkshopFluxPerturb:
             await flux.perturb("invalid_action")
 
     @pytest.mark.asyncio
-    async def test_perturb_increments_perturbation_count(self, workshop: WorkshopEnvironment) -> None:
+    async def test_perturb_increments_perturbation_count(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Perturbations are counted in metrics."""
         flux = WorkshopFlux(workshop, auto_advance=False)
         await flux.start("Task")
@@ -1550,15 +1627,19 @@ class TestWorkshopFluxDialogue:
         flux = WorkshopFlux(workshop, seed=42)
         await flux.start("Research task")
         # Generate dialogue directly
+        assert flux.active_builder is not None
         dialogue = await flux._generate_dialogue(flux.active_builder, "start_work")
         assert dialogue is not None
         assert len(dialogue) > 0
 
     @pytest.mark.asyncio
-    async def test_dialogue_with_next_builder(self, workshop: WorkshopEnvironment) -> None:
+    async def test_dialogue_with_next_builder(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Handoff dialogue includes next builder name."""
         flux = WorkshopFlux(workshop, seed=42)
         await flux.start("Research task")
+        assert flux.active_builder is not None
         dialogue = await flux._generate_dialogue(
             flux.active_builder, "handoff", next_builder="Sage"
         )
@@ -1566,11 +1647,14 @@ class TestWorkshopFluxDialogue:
         assert "Sage" in dialogue
 
     @pytest.mark.asyncio
-    async def test_dialogue_graceful_missing_template(self, workshop: WorkshopEnvironment) -> None:
+    async def test_dialogue_graceful_missing_template(
+        self, workshop: WorkshopEnvironment
+    ) -> None:
         """Graceful handling of missing template."""
         flux = WorkshopFlux(workshop, seed=42)
         await flux.start("Research task")
         # Unknown action should return None
+        assert flux.active_builder is not None
         dialogue = await flux._generate_dialogue(flux.active_builder, "unknown_action")
         assert dialogue is None
 
@@ -1642,7 +1726,9 @@ class TestWorkshopFluxIntegration:
 
         metrics = flux.get_metrics()
         # Metrics should be roughly consistent
-        assert metrics.total_events >= event_count - 10  # Allow some slack for initial events
+        assert (
+            metrics.total_events >= event_count - 10
+        )  # Allow some slack for initial events
         assert metrics.end_time is not None
 
     @pytest.mark.asyncio

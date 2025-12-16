@@ -29,6 +29,7 @@ docs/skills/
 ├── agent-observability.md       # Adding observability to agents
 ├── agent-town-visualization.md  # Scatter plots, SSE, NATS for Agent Town
 ├── building-agent.md            # Create Agent[A, B] with functors
+├── defensive-component-lifecycle.md  # Error boundaries, toasts, async state
 ├── cli-command.md               # How to add a CLI command
 ├── flux-agent.md                # How to create a Flux agent
 ├── handler-patterns.md          # Common handler patterns
@@ -156,9 +157,11 @@ How to confirm the skill was applied correctly.
 | [agentese-repl](agentese-repl.md) | Interactive REPL for AGENTESE navigation and composition | Easy-Medium |
 | [agent-observability](agent-observability.md) | Adding observability to agents | Medium |
 | [agent-town-visualization](agent-town-visualization.md) | Eigenvector scatter, SSE streaming, NATS bridge | Medium |
+| [defensive-component-lifecycle](defensive-component-lifecycle.md) | Error boundaries, async state, toasts, offline detection | Easy-Medium |
 | [building-agent](building-agent.md) | Create a well-formed `Agent[A, B]` with functors | Medium |
 | [cli-command](cli-command.md) | Add a new CLI command to kgents | Easy |
 | [flux-agent](flux-agent.md) | Lift an agent to continuous stream processing | Medium |
+| [frontend-contracts](frontend-contracts.md) | Validate backend JSON matches frontend TypeScript types | Easy-Medium |
 | [handler-patterns](handler-patterns.md) | Common patterns for CLI handlers | Easy-Medium |
 | [hotdata-pattern](hotdata-pattern.md) | Pre-computed LLM data for demos/tests (AD-004) | Easy |
 | [plan-file](plan-file.md) | Write plan files following the Forest Protocol | Easy |

@@ -144,17 +144,42 @@ export const mockInhabitStatus = {
  * Setup API mocks for tourist flow (no auth, limited access).
  */
 export async function setupTouristMocks(page: Page) {
-  await page.route('**/api/v1/town', async (route) => {
+  // Match both /api/v1 and /v1 patterns
+  await page.route('**/v1/town', async (route) => {
     if (route.request().method() === 'POST') {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(mockTown),
       });
+    } else if (route.request().method() === 'GET') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(mockTown),
+      });
+    } else {
+      await route.continue();
     }
   });
 
-  await page.route('**/api/v1/town/*/citizens', async (route) => {
+  // GET /v1/town/{id}
+  await page.route('**/v1/town/*', async (route) => {
+    const url = route.request().url();
+    // Skip if this is a more specific route (citizens, live, etc)
+    if (url.includes('/citizens') || url.includes('/live') || url.includes('/citizen/')) {
+      await route.continue();
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(mockTown),
+    });
+  });
+
+  await page.route('**/v1/town/*/citizens', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -167,7 +192,7 @@ export async function setupTouristMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/town/*/citizen/**', async (route) => {
+  await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
     const lod = lodParam ? parseInt(lodParam) : 0;
@@ -199,7 +224,7 @@ export async function setupTouristMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/user/budget', async (route) => {
+  await page.route('**/v1/user/budget', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -216,7 +241,7 @@ export async function setupResidentMocks(page: Page) {
   await setupTouristMocks(page);
 
   // Override user budget to be RESIDENT
-  await page.route('**/api/v1/user/budget', async (route) => {
+  await page.route('**/v1/user/budget', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -225,7 +250,7 @@ export async function setupResidentMocks(page: Page) {
   });
 
   // LOD 3 now accessible
-  await page.route('**/api/v1/town/*/citizen/**', async (route) => {
+  await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
     const lod = lodParam ? parseInt(lodParam) : 0;
@@ -262,7 +287,7 @@ export async function setupResidentMocks(page: Page) {
  * Setup checkout flow mocks.
  */
 export async function setupCheckoutMocks(page: Page) {
-  await page.route('**/api/v1/payments/subscription/checkout', async (route) => {
+  await page.route('**/v1/payments/subscription/checkout', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -270,7 +295,7 @@ export async function setupCheckoutMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/payments/credits/checkout', async (route) => {
+  await page.route('**/v1/payments/credits/checkout', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -283,7 +308,7 @@ export async function setupCheckoutMocks(page: Page) {
  * Setup INHABIT flow mocks.
  */
 export async function setupInhabitMocks(page: Page) {
-  await page.route('**/api/v1/town/*/inhabit/*/start', async (route) => {
+  await page.route('**/v1/town/*/inhabit/*/start', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -291,7 +316,7 @@ export async function setupInhabitMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/town/*/inhabit/*/status', async (route) => {
+  await page.route('**/v1/town/*/inhabit/*/status', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -299,7 +324,7 @@ export async function setupInhabitMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/town/*/inhabit/*/suggest', async (route) => {
+  await page.route('**/v1/town/*/inhabit/*/suggest', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -319,7 +344,7 @@ export async function setupInhabitMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/town/*/inhabit/*/force', async (route) => {
+  await page.route('**/v1/town/*/inhabit/*/force', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -340,11 +365,135 @@ export async function setupInhabitMocks(page: Page) {
     });
   });
 
-  await page.route('**/api/v1/town/*/inhabit/*/end', async (route) => {
+  await page.route('**/v1/town/*/inhabit/*/end', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ success: true }),
+    });
+  });
+}
+
+// =============================================================================
+// N-Phase Mock Data (Wave 5)
+// =============================================================================
+
+export const mockNPhaseContext = {
+  session_id: 'nphase-session-123',
+  current_phase: 'UNDERSTAND' as const,
+  cycle_count: 1,
+  checkpoint_count: 0,
+  handle_count: 0,
+};
+
+export const mockNPhaseTransitions = [
+  {
+    tick: 15,
+    from_phase: 'UNDERSTAND',
+    to_phase: 'ACT',
+    session_id: 'nphase-session-123',
+    cycle_count: 1,
+    trigger: 'town_phase:EVENING',
+  },
+  {
+    tick: 28,
+    from_phase: 'ACT',
+    to_phase: 'REFLECT',
+    session_id: 'nphase-session-123',
+    cycle_count: 1,
+    trigger: 'town_phase:NIGHT',
+  },
+];
+
+export const mockLiveStartWithNPhase = {
+  town_id: 'demo-town-123',
+  phases: 4,
+  speed: 1.0,
+  nphase_enabled: true,
+  nphase: mockNPhaseContext,
+};
+
+export const mockLiveEndWithNPhase = {
+  town_id: 'demo-town-123',
+  total_ticks: 40,
+  status: 'completed',
+  nphase_summary: {
+    session_id: 'nphase-session-123',
+    final_phase: 'REFLECT',
+    current_phase: 'REFLECT',
+    cycle_count: 1,
+    checkpoint_count: 2,
+    handle_count: 5,
+    ledger_entries: 12,
+  },
+};
+
+/**
+ * Setup N-Phase SSE mock for live stream.
+ *
+ * Simulates the town live endpoint with N-Phase events.
+ */
+export async function setupNPhaseMocks(page: Page) {
+  // Start with tourist mocks for basic API
+  await setupTouristMocks(page);
+
+  // Mock the live SSE endpoint
+  await page.route('**/v1/town/*/live*', async (route) => {
+    const url = new URL(route.request().url());
+    const nphaseEnabled = url.searchParams.get('nphase_enabled') === 'true';
+
+    // Generate SSE events
+    let events = `event: live.start\ndata: ${JSON.stringify({
+      ...mockLiveStartWithNPhase,
+      nphase_enabled: nphaseEnabled,
+      nphase: nphaseEnabled ? mockNPhaseContext : undefined,
+    })}\n\n`;
+
+    // Simulate some events with phase transitions
+    if (nphaseEnabled) {
+      // First transition at tick 15
+      events += `event: live.event\ndata: ${JSON.stringify({
+        tick: 15,
+        phase: 'EVENING',
+        operation: 'trade',
+        participants: ['Alice', 'Bob'],
+        success: true,
+        message: 'Alice trades with Bob',
+        tokens_used: 0,
+        timestamp: new Date().toISOString(),
+      })}\n\n`;
+
+      events += `event: live.nphase\ndata: ${JSON.stringify(mockNPhaseTransitions[0])}\n\n`;
+
+      // Second transition at tick 28
+      events += `event: live.event\ndata: ${JSON.stringify({
+        tick: 28,
+        phase: 'NIGHT',
+        operation: 'reflect',
+        participants: ['Carol'],
+        success: true,
+        message: 'Carol reflects on the day',
+        tokens_used: 0,
+        timestamp: new Date().toISOString(),
+      })}\n\n`;
+
+      events += `event: live.nphase\ndata: ${JSON.stringify(mockNPhaseTransitions[1])}\n\n`;
+    }
+
+    // End event
+    events += `event: live.end\ndata: ${JSON.stringify({
+      ...mockLiveEndWithNPhase,
+      nphase_summary: nphaseEnabled ? mockLiveEndWithNPhase.nphase_summary : undefined,
+    })}\n\n`;
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'text/event-stream',
+      headers: {
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+      body: events,
     });
   });
 }

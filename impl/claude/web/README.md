@@ -92,7 +92,7 @@ npm run test -- tests/unit/hooks/useInhabitSession.test.ts
 npm run test:coverage
 ```
 
-Current test count: 160+ tests
+Current test count: 230+ tests
 
 ## Architecture
 
@@ -136,12 +136,17 @@ Backend (Python)                    Frontend (React)
 src/
 ├── api/           # API client and types
 ├── components/    # Reusable UI components
+│   ├── elastic/   # ElasticPlaceholder (loading/empty/error)
+│   ├── error/     # ErrorBoundary
+│   ├── feedback/  # Toast, ToastContainer
 │   ├── landing/   # Landing page components (DemoPreview)
-│   ├── layout/    # Layout wrapper
+│   ├── layout/    # Layout wrapper + ToastContainer
 │   ├── paywall/   # LODGate, UpgradeModal
 │   └── town/      # Town visualization (Mesa, CitizenPanel)
 ├── hooks/         # Custom React hooks
+│   ├── useAsyncState.ts       # Standardized async state
 │   ├── useInhabitSession.ts   # INHABIT session management
+│   ├── useOnlineStatus.ts     # Connectivity tracking
 │   └── useTownStreamWidget.ts # Widget SSE streaming
 ├── lib/           # Utilities (Stripe, grid math)
 ├── pages/         # Route pages
@@ -149,7 +154,8 @@ src/
 │   ├── Town.tsx            # Widget-based Town page
 │   ├── Inhabit.tsx
 │   ├── Dashboard.tsx
-│   └── CheckoutSuccess.tsx
+│   ├── CheckoutSuccess.tsx
+│   └── NotFound.tsx        # 404 page
 ├── reactive/      # Widget infrastructure
 │   ├── types.ts           # Widget JSON types
 │   ├── WidgetRenderer.tsx # Type-safe dispatcher
@@ -163,6 +169,45 @@ src/
     ├── userStore.ts   # Auth, tier, credits
     └── uiStore.ts     # Modals, notifications
 ```
+
+### Defensive Component Lifecycle
+
+The app uses a layered defensive architecture:
+
+```
+Layer 1: ErrorBoundary (catches render errors)
+    ↓
+Layer 2: useAsyncState (standardizes loading/error/data)
+    ↓
+Layer 3: ToastContainer (non-blocking notifications)
+```
+
+**Key Components:**
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `ErrorBoundary` | Catches render errors, resets on route change | `components/error/` |
+| `useAsyncState` | Eliminates loading/error boilerplate | `hooks/useAsyncState.ts` |
+| `Toast` / `ToastContainer` | Non-blocking notifications | `components/feedback/` |
+| `useOnlineStatus` | Connectivity tracking with toasts | `hooks/useOnlineStatus.ts` |
+| `NotFound` | 404 page | `pages/NotFound.tsx` |
+| `ElasticPlaceholder` | Loading/empty/error states | `components/elastic/` |
+
+**Usage:**
+
+```typescript
+// useAsyncState - eliminates try/catch boilerplate
+const { state, execute } = useAsyncState<Town>();
+await execute(townApi.get(id));
+// state.data, state.isLoading, state.error available
+
+// Toast notifications
+import { showSuccess, showError } from '@/stores/uiStore';
+showSuccess('Town created!');
+showError('Connection lost');
+```
+
+See `docs/skills/defensive-component-lifecycle.md` for detailed patterns.
 
 ## Features
 

@@ -5,7 +5,13 @@
 #
 # Runs both:
 #   1. Python checks (heavy tests) via scripts/hooks/pre-push
-#   2. JS/TS checks (typecheck, tests, build) on web directory
+#   2. JS/TS checks (typecheck, unit tests, build) on web directory
+#   3. E2E tests (optional, controlled by KGENTS_E2E_TESTS env var)
+#
+# Environment variables:
+#   KGENTS_E2E_TESTS=1     - Run E2E Playwright tests (slower, requires browser)
+#   KGENTS_SKIP_E2E=1      - Explicitly skip E2E tests even if KGENTS_E2E_TESTS is set
+#   KGENTS_E2E_HEADLESS=1  - Run E2E tests in headless mode (default)
 #
 # =============================================================================
 
@@ -70,6 +76,46 @@ if [ $FAILED -eq 0 ]; then
     fi
 fi
 
+# -----------------------------------------------------------------------------
+# 3. E2E Tests (Optional - controlled by KGENTS_E2E_TESTS env var)
+# -----------------------------------------------------------------------------
+if [ "$KGENTS_E2E_TESTS" = "1" ] && [ "$KGENTS_SKIP_E2E" != "1" ] && [ $FAILED -eq 0 ]; then
+    echo ""
+    echo "=== E2E Tests (Playwright) ==="
+
+    # Check if Playwright browsers are installed
+    if ! npx playwright --version > /dev/null 2>&1; then
+        echo "Playwright not found. Skipping E2E tests."
+        echo "Run 'npx playwright install' to enable E2E tests."
+    else
+        # Quick check for browser installation (chromium)
+        CHROMIUM_PATH=$(npx playwright show 2>/dev/null | grep chromium | head -1 || true)
+        if [ -z "$CHROMIUM_PATH" ]; then
+            echo "Playwright browsers not installed. Skipping E2E tests."
+            echo "Run 'npx playwright install chromium' to enable E2E tests."
+        else
+            echo "Running E2E tests..."
+            # Run Playwright tests (headless by default)
+            npx playwright test --reporter=list
+            if [ $? -ne 0 ]; then
+                echo "E2E tests failed."
+                FAILED=1
+            else
+                echo "E2E tests passed."
+            fi
+        fi
+    fi
+elif [ "$KGENTS_E2E_TESTS" = "1" ] && [ "$KGENTS_SKIP_E2E" = "1" ]; then
+    echo ""
+    echo "E2E tests skipped (KGENTS_SKIP_E2E=1)"
+elif [ "$KGENTS_E2E_TESTS" != "1" ]; then
+    echo ""
+    echo "E2E tests skipped (set KGENTS_E2E_TESTS=1 to enable)"
+fi
+
+# -----------------------------------------------------------------------------
+# Summary
+# -----------------------------------------------------------------------------
 if [ $FAILED -ne 0 ]; then
     echo ""
     echo "JS/TS pre-push checks failed."

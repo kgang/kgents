@@ -93,7 +93,7 @@ Unlike games with scripted NPCs, Agent Town citizens have:
 
 ## Part II: The Experience Design
 
-### 2.1 The Four Gardens (from visionary-ux-flows.md)
+### 2.1 The Four Gardens (from brainstorming/_archive/plans/visionary-ux-flows.md)
 
 Agent Town manifests across four interconnected interfaces:
 

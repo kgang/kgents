@@ -44,6 +44,7 @@ These are idea indexes, kept for reference but not tracked as work items:
 
 | Plan | Completed | Notes |
 |------|-----------|-------|
+| **agents/atelier** | 2025-12-15 | 128 tests, Tiny Atelier complete: API/CLI/Web UI/Reactive Widgets, streaming-first architecture |
 | agents/k-gent | 2025-12-15 | 784 tests, Mirror Test passes, all 6 phases complete |
 | plans/crown-jewel-next | 2025-12-15 | 198 tests, MPP complete, Agent Town foundation |
 | plans/devex/cli-unification | 2025-12-15 | 1309 tests, AGENTESE CLI complete, 13.7ms startup |
@@ -62,6 +63,8 @@ These are idea indexes, kept for reference but not tracked as work items:
 | saas-phase11 | 2025-12-14 | DR foundation shipped; S3 awaits funding |
 | agent-town-phase7 | 2025-12-14 | 696 tests; DialogueEngine + live integration |
 | agent-town-phase8 | 2025-12-15 | 91 tests; INHABIT mode complete (all 11 phases) |
+| web-reactive-refactor | 2025-12-15 | Widget-based Town; V2→primary; townStore removed |
+| plans/web-refactor | 2025-12-15 | 631 tests; All 5 phases: Elastic→Interaction→Flows→Performance→Polish |
 
 ---
 
@@ -82,11 +85,11 @@ Accursed Share (5%):    agents/t-gent (rotation)
 
 | Metric | Value |
 |--------|-------|
-| Test count | 17,585 |
+| Test count | 18,331 |
 | Active trees | 5 |
 | Dormant trees | 0 |
 | Blocked | 0 |
-| Complete | 18 |
+| Complete | 21 |
 | Archived this session | 25 |
 | Accursed share next | (none needed - all work visible) |
 
@@ -153,6 +156,7 @@ plans/agentese-universal-protocol (100% ✓) ──enables──▶ marimo-integ
 plans/meta/nphase-prompt-compiler (100% ✓) ──enables──▶ all-future-multi-phase-work
 plans/meta/v0-ui-learnings-synthesis (100% ✓) ──enables──▶ reactive-substrate-unification
 self/memory (100% ✓) ──enables──▶ agents/k-gent, interaction-flows
+plans/web-refactor (100% ✓) ──enables──▶ monetization, reactive-substrate-unification
 
 # ACTIVE
 plans/reactive-substrate-unification (15%) ──enables──▶ marimo-integration, dashboard-refactor
@@ -188,7 +192,7 @@ ls -la plans/_epilogues/
 
 ## Last Session Epilogue
 
-*Latest: `2025-12-15-chief-reconciliation.md`*
+*Latest: `2025-12-15-atelier-remetabolize.md`*
 
 ---
 

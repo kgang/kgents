@@ -188,6 +188,22 @@ entropy:
 2025-12-15  V2 parallel migration: run TownV2 alongside Town, then git-mv when stable—zero downtime refactor
 2025-12-15  Partial store removal: keep zustand when any store needs persistence/immer; remove only isolated stores
 2025-12-15  API > store for cross-page data: Inhabit fetches citizen name via API vs. relying on populated store
+2025-12-15  History store singleton pattern: class-level _instance with get_/reset_ functions enables test isolation
+2025-12-15  Graceful recording: try/except around non-critical history recording—task completion > observability
+2025-12-15  SVG sparklines > canvas: simple path d= string, native styling, zero dependencies
+2025-12-15  Immer set() vs mutation: set({...}) for simple updates, set((state) => { mutate }) for nested
+2025-12-15  Context Protocol v1.0: PromptBuilder (backend-only prompts), ComponentRenderer (frontend props), ContextSession (polynomial state machine)
+2025-12-15  Frontend contract: messages+pressure+status+canSend—prompts never leak; eigenvectors inject personality without exposure
+2025-12-15  Polynomial state machine: EMPTY→ACCUMULATING→PRESSURED→COMPRESSED—state gates valid inputs (PRESSURED blocks non-compress)
+2025-12-15  Eigenvector templates: 6D (K-gent: aesthetic/categorical/gratitude/heterarchy/generativity/joy) vs 7D (Citizen: warmth/curiosity/trust/creativity/patience/resilience/ambition)
+2025-12-15  Elastic primitives: CSS custom props + forwardRef components → layout-aware widgets without inheritance coupling
+2025-12-15  Contract tests bridge type gaps: Python schema validators mirror TypeScript interfaces; CI catches drift before runtime crashes
+2025-12-15  Defensive lifecycle: ErrorBoundary+resetKeys(route) catches render errors; useAsyncState eliminates try/catch boilerplate; ToastContainer renders from uiStore
+2025-12-15  Contextual loading > spinner: rotating messages with emoji create perceived performance ("Waking up citizens...")
+2025-12-15  Error empathy: "Lost in the Ether" > "Network Error"—friendly titles + helpful suggestions reduce user frustration
+2025-12-15  Onboarding hints: localStorage + once-per-user + delay + dismissible—show after user settles, not immediately
+2025-12-15  Easter eggs: useKonamiCode + useSecretWord + useClickCounter patterns—discovery is the delight, not announcement
+2025-12-15  Animation CSS separation: animations.css import after globals.css—keyframes isolated, maintainable, hot-reloadable
 ```
 
 ## Anti-Patterns
@@ -213,4 +229,4 @@ entropy:
 
 ---
 
-*Lines: 184/200 | Last pruned: 2025-12-15*
+*Lines: 199/200 | Last pruned: 2025-12-15*

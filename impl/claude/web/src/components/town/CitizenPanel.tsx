@@ -121,24 +121,26 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
         <LODSection level={3} title="Memory" icon="🧠">
           <div className="space-y-3">
             {/* Display eigenvectors from CitizenCardJSON */}
-            <div>
-              <h4 className="font-medium text-sm mb-2">Eigenvectors</h4>
-              <EigenvectorBar
-                label="Warmth"
-                value={citizen.eigenvectors.warmth}
-                color="bg-red-500"
-              />
-              <EigenvectorBar
-                label="Curiosity"
-                value={citizen.eigenvectors.curiosity}
-                color="bg-yellow-500"
-              />
-              <EigenvectorBar
-                label="Trust"
-                value={citizen.eigenvectors.trust}
-                color="bg-green-500"
-              />
-            </div>
+            {citizen.eigenvectors && (
+              <div>
+                <h4 className="font-medium text-sm mb-2">Eigenvectors</h4>
+                <EigenvectorBar
+                  label="Warmth"
+                  value={citizen.eigenvectors.warmth ?? 0.5}
+                  color="bg-red-500"
+                />
+                <EigenvectorBar
+                  label="Curiosity"
+                  value={citizen.eigenvectors.curiosity ?? 0.5}
+                  color="bg-yellow-500"
+                />
+                <EigenvectorBar
+                  label="Trust"
+                  value={citizen.eigenvectors.trust ?? 0.5}
+                  color="bg-green-500"
+                />
+              </div>
+            )}
             {/* Full eigenvectors from manifest if available */}
             {manifest?.eigenvectors && (
               <div className="mt-2">

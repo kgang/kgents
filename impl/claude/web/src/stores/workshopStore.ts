@@ -8,6 +8,12 @@ import type {
   WorkshopPhase,
   WorkshopMetrics,
   WorkshopPlan,
+  TaskHistoryItem,
+  TaskDetailResponse,
+  AggregateMetrics,
+  BuilderPerformanceMetrics,
+  FlowMetrics,
+  ReplayState,
 } from '@/api/types';
 
 // =============================================================================
@@ -38,6 +44,23 @@ interface WorkshopState {
   // Metrics
   metrics: WorkshopMetrics;
 
+  // History (Chunk 9)
+  taskHistory: TaskHistoryItem[];
+  historyPage: number;
+  historyTotal: number;
+  historyTotalPages: number;
+  selectedTaskId: string | null;
+  taskDetail: TaskDetailResponse | null;
+
+  // Aggregate Metrics (Chunk 9)
+  aggregateMetrics: AggregateMetrics | null;
+  builderMetrics: Record<string, BuilderPerformanceMetrics>;
+  flowMetrics: FlowMetrics | null;
+  metricsPeriod: '24h' | '7d' | '30d' | 'all';
+
+  // Replay (Chunk 9)
+  replay: ReplayState | null;
+
   // Actions
   setWorkshopId: (id: string | null) => void;
   setActiveTask: (task: WorkshopTask | null) => void;
@@ -53,6 +76,25 @@ interface WorkshopState {
   setMetrics: (metrics: WorkshopMetrics) => void;
   clearEvents: () => void;
   reset: () => void;
+
+  // History Actions (Chunk 9)
+  setTaskHistory: (tasks: TaskHistoryItem[], total: number, page: number, totalPages: number) => void;
+  setTaskDetail: (detail: TaskDetailResponse | null) => void;
+  selectTask: (taskId: string | null) => void;
+
+  // Metrics Actions (Chunk 9)
+  setAggregateMetrics: (metrics: AggregateMetrics) => void;
+  setBuilderMetrics: (archetype: string, metrics: BuilderPerformanceMetrics) => void;
+  setFlowMetrics: (metrics: FlowMetrics) => void;
+  setMetricsPeriod: (period: '24h' | '7d' | '30d' | 'all') => void;
+
+  // Replay Actions (Chunk 9)
+  startReplay: (taskId: string, events: WorkshopEvent[], duration: number) => void;
+  stepReplay: (direction: 1 | -1) => void;
+  seekReplay: (index: number) => void;
+  setReplaySpeed: (speed: number) => void;
+  toggleReplayPlaying: () => void;
+  stopReplay: () => void;
 }
 
 // =============================================================================
@@ -83,6 +125,20 @@ const initialState = {
   isRunning: false,
   speed: 1.0,
   metrics: initialMetrics,
+  // History (Chunk 9)
+  taskHistory: [],
+  historyPage: 1,
+  historyTotal: 0,
+  historyTotalPages: 0,
+  selectedTaskId: null,
+  taskDetail: null,
+  // Aggregate Metrics (Chunk 9)
+  aggregateMetrics: null,
+  builderMetrics: {},
+  flowMetrics: null,
+  metricsPeriod: '24h' as const,
+  // Replay (Chunk 9)
+  replay: null,
 };
 
 // =============================================================================
@@ -141,6 +197,91 @@ export const useWorkshopStore = create<WorkshopState>()(
     clearEvents: () => set({ events: [], artifacts: [] }),
 
     reset: () => set(initialState),
+
+    // History Actions (Chunk 9)
+    setTaskHistory: (tasks, total, page, totalPages) =>
+      set({
+        taskHistory: tasks,
+        historyTotal: total,
+        historyPage: page,
+        historyTotalPages: totalPages,
+      }),
+
+    setTaskDetail: (detail) => set({ taskDetail: detail }),
+
+    selectTask: (taskId) => set({ selectedTaskId: taskId, taskDetail: null }),
+
+    // Metrics Actions (Chunk 9)
+    setAggregateMetrics: (metrics) => set({ aggregateMetrics: metrics }),
+
+    setBuilderMetrics: (archetype, metrics) =>
+      set((state) => {
+        state.builderMetrics[archetype] = metrics;
+      }),
+
+    setFlowMetrics: (metrics) => set({ flowMetrics: metrics }),
+
+    setMetricsPeriod: (period) => set({ metricsPeriod: period }),
+
+    // Replay Actions (Chunk 9)
+    startReplay: (taskId, events, duration) =>
+      set({
+        replay: {
+          taskId,
+          events,
+          currentIndex: 0,
+          isPlaying: false,
+          playbackSpeed: 1.0,
+          duration,
+          elapsed: 0,
+        },
+      }),
+
+    stepReplay: (direction) =>
+      set((state) => {
+        if (!state.replay) return;
+        const newIndex = state.replay.currentIndex + direction;
+        if (newIndex >= 0 && newIndex < state.replay.events.length) {
+          state.replay.currentIndex = newIndex;
+          // Calculate elapsed time based on event timestamps
+          const event = state.replay.events[newIndex];
+          if (event && state.replay.events[0]) {
+            const startTime = new Date(state.replay.events[0].timestamp).getTime();
+            const currentTime = new Date(event.timestamp).getTime();
+            state.replay.elapsed = (currentTime - startTime) / 1000;
+          }
+        }
+      }),
+
+    seekReplay: (index) =>
+      set((state) => {
+        if (!state.replay) return;
+        if (index >= 0 && index < state.replay.events.length) {
+          state.replay.currentIndex = index;
+          const event = state.replay.events[index];
+          if (event && state.replay.events[0]) {
+            const startTime = new Date(state.replay.events[0].timestamp).getTime();
+            const currentTime = new Date(event.timestamp).getTime();
+            state.replay.elapsed = (currentTime - startTime) / 1000;
+          }
+        }
+      }),
+
+    setReplaySpeed: (speed) =>
+      set((state) => {
+        if (state.replay) {
+          state.replay.playbackSpeed = Math.max(0.5, Math.min(4.0, speed));
+        }
+      }),
+
+    toggleReplayPlaying: () =>
+      set((state) => {
+        if (state.replay) {
+          state.replay.isPlaying = !state.replay.isPlaying;
+        }
+      }),
+
+    stopReplay: () => set({ replay: null }),
   }))
 );
 

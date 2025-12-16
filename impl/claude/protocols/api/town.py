@@ -22,9 +22,8 @@ from typing import TYPE_CHECKING, Any, Optional
 from uuid import UUID, uuid4
 
 if TYPE_CHECKING:
-    from fastapi import APIRouter
-
     from agents.town.flux import TownEvent
+    from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
@@ -224,7 +223,11 @@ def build_colony_dashboard(
     Returns:
         ColonyDashboard widget ready for .to_json()
     """
-    from agents.i.reactive.colony_dashboard import ColonyState, ColonyDashboard, TownPhase
+    from agents.i.reactive.colony_dashboard import (
+        ColonyDashboard,
+        ColonyState,
+        TownPhase,
+    )
     from agents.i.reactive.primitives.citizen_card import CitizenState
     from agents.town.polynomial import CitizenPhase
 
@@ -700,6 +703,7 @@ def create_town_router() -> "APIRouter | None":
         town_id: str,
         phases: int = 4,
         speed: float = 1.0,
+        nphase_enabled: bool = False,
     ) -> StreamingResponse:
         """
         Live orchestration with governed playback via SSE.
@@ -710,11 +714,14 @@ def create_town_router() -> "APIRouter | None":
             town_id: Town ID
             phases: Number of phases to run (default 4 = one day)
             speed: Playback speed multiplier (0.5 to 4.0)
+            nphase_enabled: Whether to enable N-Phase tracking
 
         Events:
             - live.start: Orchestration started
             - live.event: TownEvent (phase, operation, participants, etc.)
             - live.phase: Phase transition
+            - live.nphase: N-Phase transition (when enabled)
+            - live.state: Full state projection (includes N-Phase when enabled)
             - live.end: Orchestration ended
 
         Example SSE output:
@@ -755,15 +762,49 @@ def create_town_router() -> "APIRouter | None":
             )
             governor = PhaseGovernor(flux=flux, config=config, event_bus=event_bus)
 
+            # Create N-Phase session if enabled
+            nphase_session = None
+            last_nphase: str | None = None
+            if nphase_enabled:
+                from protocols.nphase.events import NPhaseEvent
+                from protocols.nphase.session import create_session, reset_session_store
+
+                reset_session_store()
+                nphase_session = create_session(f"Town {town_id} Live")
+                # Wire event bus for N-Phase events
+                nphase_event_bus: EventBus[NPhaseEvent] = EventBus()
+                nphase_session.set_event_bus(nphase_event_bus)
+                last_nphase = nphase_session.current_phase.name
+
             # Send start event
-            start_data = json.dumps(
-                {
-                    "town_id": town_id,
-                    "phases": phases,
-                    "speed": speed,
+            start_data_dict: dict[str, Any] = {
+                "town_id": town_id,
+                "phases": phases,
+                "speed": speed,
+                "nphase_enabled": nphase_enabled,
+            }
+            if nphase_session:
+                start_data_dict["nphase"] = {
+                    "session_id": nphase_session.id,
+                    "current_phase": nphase_session.current_phase.name,
+                    "cycle_count": nphase_session.cycle_count,
                 }
-            )
+            start_data = json.dumps(start_data_dict)
             yield f"event: live.start\ndata: {start_data}\n\n"
+
+            # Helper: Map Town phase to N-Phase
+            def get_nphase_for_town_phase(town_phase: str) -> str:
+                """Map Town phase to N-Phase equivalent."""
+                # MORNING/AFTERNOON = gathering info = UNDERSTAND
+                # EVENING = acting/trading = ACT
+                # NIGHT = reflection/rest = REFLECT
+                mapping = {
+                    "MORNING": "UNDERSTAND",
+                    "AFTERNOON": "UNDERSTAND",
+                    "EVENING": "ACT",
+                    "NIGHT": "REFLECT",
+                }
+                return mapping.get(town_phase, "UNDERSTAND")
 
             # Run with governed playback
             tick = 0
@@ -783,6 +824,34 @@ def create_town_router() -> "APIRouter | None":
                             }
                         )
                         yield f"event: live.phase\ndata: {phase_data}\n\n"
+
+                        # N-Phase tracking: Advance when town phase maps to new N-Phase
+                        if nphase_session and current_phase:
+                            target_nphase = get_nphase_for_town_phase(current_phase)
+                            if target_nphase != last_nphase:
+                                from protocols.nphase.operad import NPhase
+
+                                nphase_enum = NPhase[target_nphase]
+                                nphase_session.advance_phase(
+                                    nphase_enum,
+                                    payload={
+                                        "source": "town_live",
+                                        "town_phase": current_phase,
+                                    },
+                                )
+                                # Emit N-Phase transition event
+                                nphase_data = json.dumps(
+                                    {
+                                        "tick": tick,
+                                        "from_phase": last_nphase,
+                                        "to_phase": target_nphase,
+                                        "session_id": nphase_session.id,
+                                        "cycle_count": nphase_session.cycle_count,
+                                        "trigger": f"town_phase:{current_phase}",
+                                    }
+                                )
+                                yield f"event: live.nphase\ndata: {nphase_data}\n\n"
+                                last_nphase = target_nphase
 
                     # Send event with dialogue fields if present
                     event_data_dict: dict[str, Any] = {
@@ -814,6 +883,15 @@ def create_town_router() -> "APIRouter | None":
                         try:
                             dashboard = build_colony_dashboard(env, flux, tick)
                             state_json = dashboard._to_json()
+                            # Include N-Phase in state projection
+                            if nphase_session:
+                                state_json["nphase"] = {
+                                    "session_id": nphase_session.id,
+                                    "current_phase": nphase_session.current_phase.name,
+                                    "cycle_count": nphase_session.cycle_count,
+                                    "checkpoint_count": len(nphase_session.checkpoints),
+                                    "handle_count": len(nphase_session.handles),
+                                }
                             yield f"event: live.state\ndata: {json.dumps(state_json)}\n\n"
                         except Exception as e:
                             logger.warning(f"Failed to emit live.state: {e}")
@@ -822,13 +900,21 @@ def create_town_router() -> "APIRouter | None":
                 pass
             finally:
                 # Send end event
-                end_data = json.dumps(
-                    {
-                        "town_id": town_id,
-                        "total_ticks": tick,
-                        "status": "completed",
+                end_data_dict: dict[str, Any] = {
+                    "town_id": town_id,
+                    "total_ticks": tick,
+                    "status": "completed",
+                }
+                if nphase_session:
+                    end_data_dict["nphase_summary"] = {
+                        "session_id": nphase_session.id,
+                        "final_phase": nphase_session.current_phase.name,
+                        "cycle_count": nphase_session.cycle_count,
+                        "checkpoint_count": len(nphase_session.checkpoints),
+                        "handle_count": len(nphase_session.handles),
+                        "ledger_entries": len(nphase_session.ledger),
                     }
-                )
+                end_data = json.dumps(end_data_dict)
                 yield f"event: live.end\ndata: {end_data}\n\n"
 
                 event_bus.close()

@@ -34,6 +34,7 @@ Tasteful • Curated • Ethical • Joy-Inducing • Composable • Heterarchic
 | **Billing** | `protocols/billing/` | Stripe: subscriptions, customers, OpenMeter usage |
 | **Licensing** | `protocols/licensing/` | Tiers: FREE/PRO/ENTERPRISE, feature flags, decorators |
 | **Tenancy** | `protocols/tenancy/` | Multi-tenant: API keys, RLS context, usage events |
+| **Atelier** | `agents/atelier/` | Creative workshop: streaming artisans, gallery, collaboration, exhibitions |
 
 ---
 
@@ -77,7 +78,7 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ## Status
 
-**Tests**: 17,585+ | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux
+**Tests**: 18,331+ | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux Atelier
 
 ---
 

@@ -49,7 +49,7 @@ def nphase_session() -> NPhaseSession:
 
 
 async def collect_events(
-    bus: EventBus[NPhaseEvent], timeout: float = 0.1
+    bus: EventBus[NPhaseEvent], timeout: float = 0.05
 ) -> list[NPhaseEvent]:
     """Collect events from bus for a short period."""
     events: list[NPhaseEvent] = []
@@ -60,8 +60,10 @@ async def collect_events(
                 break
             events.append(event)
 
-    # Run collector with timeout
+    # Start collector first
     task = asyncio.create_task(collector())
+    # Yield control to allow pending publish tasks to run
+    await asyncio.sleep(0)
     await asyncio.sleep(timeout)
     bus.close()
     try:
@@ -112,13 +114,28 @@ class TestPhaseTransitionEvents:
         self, nphase_session: NPhaseSession, event_bus: EventBus[NPhaseEvent]
     ) -> None:
         """advance_phase() emits PhaseTransitionEvent."""
-        nphase_session.set_event_bus(event_bus)
+        events: list[NPhaseEvent] = []
 
-        # Advance in the background
+        async def collector() -> None:
+            async for event in event_bus.subscribe():
+                if event is None:
+                    break
+                events.append(event)
+
+        # Start collector BEFORE operations
+        nphase_session.set_event_bus(event_bus)
+        task = asyncio.create_task(collector())
+
+        # Yield control to let collector subscribe
+        await asyncio.sleep(0)
+
+        # Perform operation
         nphase_session.advance_phase(NPhase.ACT, auto_checkpoint=False)
 
-        # Allow event to be published
-        events = await collect_events(event_bus)
+        # Allow events to be published
+        await asyncio.sleep(0.01)
+        event_bus.close()
+        await asyncio.wait_for(task, timeout=0.1)
 
         # Should have one transition event
         transition_events = [
@@ -137,7 +154,17 @@ class TestPhaseTransitionEvents:
         self, nphase_session: NPhaseSession, event_bus: EventBus[NPhaseEvent]
     ) -> None:
         """Payload is included in transition event."""
+        events: list[NPhaseEvent] = []
+
+        async def collector() -> None:
+            async for event in event_bus.subscribe():
+                if event is None:
+                    break
+                events.append(event)
+
         nphase_session.set_event_bus(event_bus)
+        task = asyncio.create_task(collector())
+        await asyncio.sleep(0)
 
         nphase_session.advance_phase(
             NPhase.ACT,
@@ -145,7 +172,10 @@ class TestPhaseTransitionEvents:
             auto_checkpoint=False,
         )
 
-        events = await collect_events(event_bus)
+        await asyncio.sleep(0.01)
+        event_bus.close()
+        await asyncio.wait_for(task, timeout=0.1)
+
         transition_events = [
             e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION
         ]
@@ -169,11 +199,29 @@ class TestCheckpointEvents:
         self, nphase_session: NPhaseSession, event_bus: EventBus[NPhaseEvent]
     ) -> None:
         """checkpoint() emits PhaseCheckpointEvent."""
-        nphase_session.set_event_bus(event_bus)
+        events: list[NPhaseEvent] = []
 
+        async def collector() -> None:
+            async for event in event_bus.subscribe():
+                if event is None:
+                    break
+                events.append(event)
+
+        # Start collector BEFORE operations
+        nphase_session.set_event_bus(event_bus)
+        task = asyncio.create_task(collector())
+
+        # Yield control to let collector subscribe
+        await asyncio.sleep(0)
+
+        # Perform operation
         cp = nphase_session.checkpoint({"reason": "manual"})
 
-        events = await collect_events(event_bus)
+        # Allow events to be published
+        await asyncio.sleep(0.01)
+        event_bus.close()
+        await asyncio.wait_for(task, timeout=0.1)
+
         checkpoint_events = [
             e for e in events if e.event_type == NPhaseEventType.PHASE_CHECKPOINT
         ]
@@ -190,12 +238,28 @@ class TestCheckpointEvents:
         self, nphase_session: NPhaseSession, event_bus: EventBus[NPhaseEvent]
     ) -> None:
         """Auto-checkpoint during advance emits event."""
+        events: list[NPhaseEvent] = []
+
+        async def collector() -> None:
+            async for event in event_bus.subscribe():
+                if event is None:
+                    break
+                events.append(event)
+
+        # Start collector BEFORE operations
         nphase_session.set_event_bus(event_bus)
+        task = asyncio.create_task(collector())
+
+        # Yield control to let collector subscribe
+        await asyncio.sleep(0)
 
         # Advance with auto_checkpoint=True (default)
         nphase_session.advance_phase(NPhase.ACT)
 
-        events = await collect_events(event_bus)
+        # Allow events to be published
+        await asyncio.sleep(0.01)
+        event_bus.close()
+        await asyncio.wait_for(task, timeout=0.1)
 
         # Should have checkpoint event (auto) + transition event
         checkpoint_events = [
@@ -222,14 +286,32 @@ class TestEventBusIntegration:
         self, nphase_session: NPhaseSession, event_bus: EventBus[NPhaseEvent]
     ) -> None:
         """Full workflow emits appropriate events."""
+        events: list[NPhaseEvent] = []
+
+        async def collector() -> None:
+            async for event in event_bus.subscribe():
+                if event is None:
+                    break
+                events.append(event)
+
+        # Start collector BEFORE operations
         nphase_session.set_event_bus(event_bus)
+        task = asyncio.create_task(collector())
+
+        # Yield control to let collector subscribe
+        await asyncio.sleep(0)
 
         # Run a sequence of operations
         nphase_session.advance_phase(NPhase.ACT)  # checkpoint + transition
+        await asyncio.sleep(0)  # Yield between operations
         nphase_session.checkpoint()  # manual checkpoint
+        await asyncio.sleep(0)  # Yield between operations
         nphase_session.advance_phase(NPhase.REFLECT)  # checkpoint + transition
 
-        events = await collect_events(event_bus)
+        # Allow events to be published
+        await asyncio.sleep(0.02)
+        event_bus.close()
+        await asyncio.wait_for(task, timeout=0.1)
 
         # Count event types
         by_type: dict[NPhaseEventType, int] = {}

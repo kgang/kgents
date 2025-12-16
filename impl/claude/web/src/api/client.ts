@@ -9,6 +9,12 @@ import type {
   WorkshopStatus,
   WorkshopPlan,
   BuilderSummary,
+  TaskHistoryResponse,
+  TaskDetailResponse,
+  AggregateMetrics,
+  BuilderPerformanceMetrics,
+  FlowMetrics,
+  WorkshopEvent,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -181,4 +187,32 @@ export const workshopApi = {
 
   getArtifacts: () =>
     apiClient.get('/v1/workshop/artifacts'),
+
+  // History endpoints (Chunk 9)
+  getHistory: (page: number = 1, pageSize: number = 10, status?: string) =>
+    apiClient.get<TaskHistoryResponse>('/v1/workshop/history', {
+      params: { page, page_size: pageSize, status },
+    }),
+
+  getTaskDetail: (taskId: string) =>
+    apiClient.get<TaskDetailResponse>(`/v1/workshop/history/${taskId}`),
+
+  getTaskEvents: (taskId: string) =>
+    apiClient.get<{ task_id: string; events: WorkshopEvent[]; count: number; duration_seconds: number }>(
+      `/v1/workshop/history/${taskId}/events`
+    ),
+
+  // Metrics endpoints (Chunk 9)
+  getAggregateMetrics: (period: string = '24h') =>
+    apiClient.get<AggregateMetrics>('/v1/workshop/metrics/aggregate', {
+      params: { period },
+    }),
+
+  getBuilderMetrics: (archetype: string, period: string = '24h') =>
+    apiClient.get<BuilderPerformanceMetrics>(`/v1/workshop/metrics/builder/${archetype}`, {
+      params: { period },
+    }),
+
+  getFlowMetrics: () =>
+    apiClient.get<FlowMetrics>('/v1/workshop/metrics/flow'),
 };

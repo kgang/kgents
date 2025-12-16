@@ -68,7 +68,7 @@ Fuse Agent Town, AGENTESE REPL, and the Reactive UI into a **Micro-Experience Fa
 5. AUP endpoint `/api/v1/world/town/flux` streams SSE
 6. Functor law verified: `scatter.map(f) ≡ scatter.with_state(f(state))`
 7. All tests pass, mypy clean
-8. Demo beats in `docs/micro-experience-factory.md` executable
+8. Demo beats in `brainstorming/_archive/docs/micro-experience-factory.md` executable
 
 ## Attention Budget
 
@@ -210,7 +210,7 @@ Step 6: Wire SSE → IsometricWidget updates
 
 Step 7: Demo beat integration
         - kg town demo → isometric lattice
-        - Verify all beats from docs/micro-experience-factory.md
+        - Verify all beats from brainstorming/_archive/docs/micro-experience-factory.md
 ```
 
 ### Fallback Paths

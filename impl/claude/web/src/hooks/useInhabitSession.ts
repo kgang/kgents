@@ -2,6 +2,38 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { inhabitApi } from '@/api/client';
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+interface AxiosLikeError {
+  response?: {
+    data?: { detail?: string };
+    status?: number;
+  };
+  message?: string;
+}
+
+/**
+ * Extract error message from unknown error type.
+ * Handles axios-style errors and standard Error objects.
+ */
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) {
+    return err.message;
+  }
+  if (typeof err === 'object' && err !== null) {
+    const axiosErr = err as AxiosLikeError;
+    if (axiosErr.response?.data?.detail) {
+      return axiosErr.response.data.detail;
+    }
+    if (axiosErr.message) {
+      return axiosErr.message;
+    }
+  }
+  return fallback;
+}
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -98,8 +130,8 @@ export function useInhabitSession({
     try {
       const response = await inhabitApi.start(townId, citizenName, forceEnabled);
       setStatus(response.data as InhabitStatus);
-    } catch (err: any) {
-      const message = err.response?.data?.detail || 'Failed to start INHABIT session';
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, 'Failed to start INHABIT session');
       setError(message);
       throw new Error(message);
     } finally {
@@ -136,8 +168,8 @@ export function useInhabitSession({
       }
 
       return data;
-    } catch (err: any) {
-      const message = err.response?.data?.detail || 'Failed to submit action';
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, 'Failed to submit action');
       setError(message);
       return null;
     } finally {
@@ -172,8 +204,8 @@ export function useInhabitSession({
       }
 
       return data;
-    } catch (err: any) {
-      const message = err.response?.data?.detail || 'Cannot force action';
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, 'Cannot force action');
       setError(message);
       return null;
     } finally {
@@ -200,8 +232,8 @@ export function useInhabitSession({
       setStatus(data.status);
 
       return data;
-    } catch (err: any) {
-      const message = err.response?.data?.detail || 'Failed to apologize';
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, 'Failed to apologize');
       setError(message);
       return null;
     } finally {
@@ -219,7 +251,7 @@ export function useInhabitSession({
       await inhabitApi.end(townId, citizenName);
       setStatus(null);
       onSessionEnd?.();
-    } catch (err: any) {
+    } catch {
       // Session might already be ended
       setStatus(null);
       onSessionEnd?.();

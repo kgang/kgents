@@ -1,0 +1,398 @@
+/**
+ * Micro-Interaction Animations
+ *
+ * Subtle animations that bring the UI to life without being distracting.
+ * All animations respect prefers-reduced-motion (inherited from globals.css).
+ *
+ * @see plans/web-refactor/phase5-continuation.md
+ */
+
+/* =============================================================================
+ * Citizen Card Interactions
+ * ============================================================================= */
+
+.citizen-card-hover {
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+.citizen-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* New citizen spawn animation */
+@keyframes citizen-spawn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.citizen-spawning {
+  animation: citizen-spawn 0.4s ease-out;
+}
+
+/* =============================================================================
+ * Phase Transitions
+ * ============================================================================= */
+
+@keyframes phase-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.phase-transitioning {
+  animation: phase-pulse 1s ease-in-out infinite;
+}
+
+/* Phase badge glow */
+@keyframes phase-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px currentColor;
+  }
+  50% {
+    box-shadow: 0 0 15px currentColor, 0 0 25px currentColor;
+  }
+}
+
+.phase-active-glow {
+  animation: phase-glow 2s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Event Feed
+ * ============================================================================= */
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.event-item-new {
+  animation: slide-in-right 0.2s ease-out;
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.artifact-item-new {
+  animation: slide-in-left 0.25s ease-out;
+}
+
+/* =============================================================================
+ * Builder/Workshop Animations
+ * ============================================================================= */
+
+/* Builder archetype glow */
+@keyframes archetype-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--glow-color, rgba(233, 69, 96, 0.6));
+  }
+  50% {
+    box-shadow: 0 0 15px var(--glow-color, rgba(233, 69, 96, 0.6));
+  }
+}
+
+.builder-active {
+  animation: archetype-glow 2s ease-in-out infinite;
+}
+
+/* Builder working indicator */
+@keyframes builder-working {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.builder-working {
+  animation: builder-working 1s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Completion Celebrations
+ * ============================================================================= */
+
+@keyframes confetti-burst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.confetti-particle {
+  animation: confetti-burst 0.8s ease-out forwards;
+}
+
+@keyframes success-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.success-bounce {
+  animation: success-bounce 0.4s ease-out;
+}
+
+/* Checkmark draw animation */
+@keyframes draw-check {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.check-animate {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: draw-check 0.3s ease-out 0.2s forwards;
+}
+
+/* =============================================================================
+ * Loading States
+ * ============================================================================= */
+
+@keyframes loader-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.loader-bounce {
+  animation: loader-bounce 0.6s ease-in-out infinite;
+}
+
+.loader-bounce-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.loader-bounce-delay-2 {
+  animation-delay: 0.2s;
+}
+
+/* Shimmer effect for skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(100, 100, 120, 0.1) 25%,
+    rgba(100, 100, 120, 0.2) 50%,
+    rgba(100, 100, 120, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Hint/Tooltip Animations
+ * ============================================================================= */
+
+@keyframes hint-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hint-bubble {
+  animation: hint-appear 0.2s ease-out;
+}
+
+@keyframes hint-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.hint-attention {
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Easter Egg Animations
+ * ============================================================================= */
+
+@keyframes shooting-star {
+  0% {
+    transform: translateX(-100px) translateY(100px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(300px) translateY(-300px);
+    opacity: 0;
+  }
+}
+
+.shooting-star {
+  animation: shooting-star 1s ease-out forwards;
+}
+
+@keyframes celebration {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.2) rotate(-10deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(10deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.celebration {
+  animation: celebration 0.5s ease-out;
+}
+
+/* =============================================================================
+ * Modal/Cheatsheet Animations
+ * ============================================================================= */
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-appear {
+  animation: modal-appear 0.2s ease-out;
+}
+
+@keyframes backdrop-appear {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.backdrop-appear {
+  animation: backdrop-appear 0.15s ease-out;
+}
+
+/* =============================================================================
+ * Progress/Status Animations
+ * ============================================================================= */
+
+@keyframes progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.progress-indeterminate {
+  animation: progress-indeterminate 1.5s ease-in-out infinite;
+}
+
+/* Breathing animation for "waiting" states */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* =============================================================================
+ * Navigation Transitions
+ * ============================================================================= */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.3s ease-out;
+}

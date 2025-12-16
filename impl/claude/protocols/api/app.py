@@ -164,6 +164,13 @@ def create_app(
     if workshop_router is not None:
         app.include_router(workshop_router)
 
+    # Atelier endpoints (Tiny Atelier demo)
+    from .atelier import create_atelier_router
+
+    atelier_router = create_atelier_router()
+    if atelier_router is not None:
+        app.include_router(atelier_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -322,6 +329,19 @@ def create_app(
                     "perturb": "POST /v1/workshop/perturb",
                     "reset": "POST /v1/workshop/reset",
                     "artifacts": "GET /v1/workshop/artifacts",
+                },
+                "atelier": {
+                    "artisans": "GET /api/atelier/artisans",
+                    "commission": "POST /api/atelier/commission (SSE stream)",
+                    "collaborate": "POST /api/atelier/collaborate (SSE stream)",
+                    "gallery": "GET /api/atelier/gallery",
+                    "piece": "GET /api/atelier/gallery/{id}",
+                    "lineage": "GET /api/atelier/gallery/{id}/lineage",
+                    "search": "GET /api/atelier/gallery/search",
+                    "queue": "POST /api/atelier/queue",
+                    "pending": "GET /api/atelier/queue/pending",
+                    "process": "POST /api/atelier/queue/process (SSE stream)",
+                    "status": "GET /api/atelier/status",
                 },
             },
         }

@@ -510,7 +510,8 @@ class ColonyDashboard(ComposableMixin, KgentsWidget[ColonyState]):
             },
             "citizens": [
                 {
-                    "id": c.citizen_id,
+                    "type": "citizen_card",
+                    "citizen_id": c.citizen_id,
                     "name": c.name,
                     "archetype": c.archetype,
                     "phase": c.phase.name,
@@ -520,6 +521,11 @@ class ColonyDashboard(ComposableMixin, KgentsWidget[ColonyState]):
                     "capability": c.capability,
                     "entropy": c.entropy,
                     "activity": list(c.activity),
+                    "eigenvectors": {
+                        "warmth": c.warmth,
+                        "curiosity": c.curiosity,
+                        "trust": c.trust,
+                    },
                 }
                 for c in state.citizens
             ],

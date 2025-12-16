@@ -1431,6 +1431,8 @@ class WorkshopFlux:
             self._metrics.end_time = datetime.now()
             # Generate completion dialogue
             await self._generate_dialogue(active, "complete")
+            # Record task to history (Chunk 9)
+            self._record_to_history("completed")
 
         # Add N-Phase info to event metadata if tracking (Wave 4)
         if self._nphase_session is not None:
@@ -1591,6 +1593,8 @@ class WorkshopFlux:
         self._metrics.end_time = datetime.now()
 
         if self._workshop.state.active_task is not None:
+            # Record task as interrupted (Chunk 9)
+            self._record_to_history("interrupted")
             return await self._workshop.complete(summary="Stopped by flux.stop()")
         return None
 
@@ -1676,6 +1680,42 @@ class WorkshopFlux:
                 pass  # Graceful degradation
 
         return dialogue
+
+    def _record_to_history(self, status: str) -> None:
+        """
+        Record the completed/interrupted task to history store (Chunk 9).
+
+        Args:
+            status: Task completion status (completed, interrupted).
+        """
+        task = self._workshop.state.active_task
+        if task is None:
+            return
+
+        plan = self._workshop.state.plan
+
+        # Build builder sequence from events
+        builder_sequence: list[str] = []
+        for event in self._workshop.state.events:
+            if event.builder and event.builder not in builder_sequence:
+                builder_sequence.append(event.builder)
+
+        try:
+            from agents.town.history import get_history_store
+
+            store = get_history_store()
+            store.record_task(
+                task=task,
+                status=status,
+                lead_builder=plan.lead_builder if plan else "Unknown",
+                builder_sequence=builder_sequence,
+                events=list(self._workshop.state.events),
+                artifacts=list(self._workshop.state.artifacts),
+                metrics=self._metrics,
+            )
+        except Exception:
+            # Graceful degradation - history recording is non-critical
+            pass
 
     def reset(self) -> None:
         """Reset flux to initial state (N-Phase session is preserved, not reset)."""

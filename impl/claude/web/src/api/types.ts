@@ -379,3 +379,203 @@ export const BUILDER_ICONS: Record<BuilderArchetype, string> = {
   Steady: '🔧',
   Sync: '🔗',
 };
+
+// =============================================================================
+// Workshop History & Metrics (Chunk 9)
+// =============================================================================
+
+export interface TaskHistoryItem {
+  id: string;
+  description: string;
+  status: 'completed' | 'interrupted';
+  lead_builder: string;
+  builder_sequence: string[];
+  artifacts_count: number;
+  tokens_used: number;
+  handoffs: number;
+  duration_seconds: number;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface TaskHistoryResponse {
+  tasks: TaskHistoryItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface BuilderContribution {
+  archetype: string;
+  phases_worked: string[];
+  artifacts_produced: number;
+  tokens_used: number;
+  duration_seconds: number;
+}
+
+export interface TaskDetailResponse {
+  task: TaskHistoryItem;
+  artifacts: WorkshopArtifact[];
+  events: WorkshopEvent[];
+  builder_contributions: Record<string, BuilderContribution>;
+}
+
+export interface DayMetric {
+  date: string;
+  value: number;
+}
+
+export interface AggregateMetrics {
+  period: string;
+  total_tasks: number;
+  completed_tasks: number;
+  interrupted_tasks: number;
+  total_artifacts: number;
+  total_tokens: number;
+  total_handoffs: number;
+  avg_duration_seconds: number;
+  tasks_by_day: DayMetric[];
+  artifacts_by_day: DayMetric[];
+  tokens_by_day: DayMetric[];
+}
+
+export interface BuilderPerformanceMetrics {
+  archetype: string;
+  period: string;
+  tasks_participated: number;
+  tasks_led: number;
+  artifacts_produced: number;
+  tokens_used: number;
+  avg_duration_seconds: number;
+  specialty_efficiency: number;
+  handoffs_initiated: number;
+  handoffs_received: number;
+}
+
+export interface HandoffFlow {
+  from_builder: string;
+  to_builder: string;
+  count: number;
+}
+
+export interface FlowMetrics {
+  flows: HandoffFlow[];
+  total_handoffs: number;
+}
+
+// Replay state
+export interface ReplayState {
+  taskId: string;
+  events: WorkshopEvent[];
+  currentIndex: number;
+  isPlaying: boolean;
+  playbackSpeed: number;
+  duration: number;
+  elapsed: number;
+}
+
+// =============================================================================
+// N-Phase (Wave 5)
+// =============================================================================
+
+/**
+ * N-Phase development cycle: UNDERSTAND → ACT → REFLECT
+ */
+export type NPhaseType = 'UNDERSTAND' | 'ACT' | 'REFLECT';
+
+/**
+ * N-Phase context embedded in SSE events.
+ * Maps to backend NPhaseSession state.
+ */
+export interface NPhaseContext {
+  session_id: string;
+  current_phase: NPhaseType;
+  cycle_count: number;
+  checkpoint_count: number;
+  handle_count: number;
+}
+
+/**
+ * N-Phase transition event from live.nphase SSE.
+ */
+export interface NPhaseTransitionEvent {
+  tick: number;
+  from_phase: NPhaseType;
+  to_phase: NPhaseType;
+  session_id: string;
+  cycle_count: number;
+  trigger: string;
+  timestamp?: Date;
+}
+
+/**
+ * N-Phase summary in live.end event.
+ */
+export interface NPhaseSummary extends NPhaseContext {
+  final_phase: NPhaseType;
+  ledger_entries: number;
+}
+
+/**
+ * Extended live.start event with N-Phase.
+ */
+export interface LiveStartEvent {
+  town_id: string;
+  phases: number;
+  speed: number;
+  nphase_enabled: boolean;
+  nphase?: NPhaseContext;
+}
+
+/**
+ * Extended live.end event with N-Phase.
+ */
+export interface LiveEndEvent {
+  town_id: string;
+  total_ticks: number;
+  status: string;
+  nphase_summary?: NPhaseSummary;
+}
+
+/**
+ * N-Phase state for React components.
+ */
+export interface NPhaseState {
+  enabled: boolean;
+  sessionId: string | null;
+  currentPhase: NPhaseType;
+  cycleCount: number;
+  checkpointCount: number;
+  handleCount: number;
+  transitions: NPhaseTransitionEvent[];
+  isActive: boolean;
+}
+
+/**
+ * N-Phase visual configuration.
+ */
+export const NPHASE_CONFIG = {
+  colors: {
+    UNDERSTAND: '#3b82f6', // blue - gathering info
+    ACT: '#f59e0b',        // amber - executing
+    REFLECT: '#8b5cf6',    // purple - reviewing
+  },
+  icons: {
+    UNDERSTAND: '🔍',
+    ACT: '⚡',
+    REFLECT: '💭',
+  },
+  descriptions: {
+    UNDERSTAND: 'Gathering context and analyzing the situation',
+    ACT: 'Executing actions and making changes',
+    REFLECT: 'Reviewing outcomes and learning',
+  },
+  // Town phase → N-Phase mapping
+  townPhaseMapping: {
+    MORNING: 'UNDERSTAND',
+    AFTERNOON: 'UNDERSTAND',
+    EVENING: 'ACT',
+    NIGHT: 'REFLECT',
+  } as Record<TownPhase, NPhaseType>,
+} as const;

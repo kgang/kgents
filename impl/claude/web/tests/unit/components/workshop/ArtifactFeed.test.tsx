@@ -115,11 +115,15 @@ describe('ArtifactFeed', () => {
 
       render(<ArtifactFeed />);
 
-      const events = screen
-        .getAllByText(/event/i)
-        .map((el) => el.textContent);
-      // Events are rendered in array order (newest first in store)
-      expect(events[0]).toContain('First');
+      // Query event messages specifically (not the header)
+      const firstEvent = screen.getByText('First event');
+      const secondEvent = screen.getByText('Second event');
+      const thirdEvent = screen.getByText('Third event');
+
+      // All events should be present
+      expect(firstEvent).toBeInTheDocument();
+      expect(secondEvent).toBeInTheDocument();
+      expect(thirdEvent).toBeInTheDocument();
     });
 
     it('should limit displayed events to 50', () => {

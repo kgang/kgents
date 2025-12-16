@@ -1,0 +1,1 @@
+"""Atelier UI widget tests."""

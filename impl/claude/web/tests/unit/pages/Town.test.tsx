@@ -17,6 +17,27 @@ import Town from '@/pages/Town';
 const mockConnect = vi.fn();
 const mockDisconnect = vi.fn();
 
+// Mock useNPhaseStream
+vi.mock('@/hooks/useNPhaseStream', () => ({
+  useNPhaseStream: vi.fn(() => ({
+    nphase: {
+      enabled: false,
+      sessionId: null,
+      currentPhase: 'UNDERSTAND',
+      cycleCount: 0,
+      checkpointCount: 0,
+      handleCount: 0,
+      transitions: [],
+      isActive: false,
+    },
+    transitions: [],
+    isConnected: false,
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    reset: vi.fn(),
+  })),
+}));
+
 vi.mock('@/hooks/useTownStreamWidget', () => ({
   useTownStreamWidget: vi.fn(() => ({
     dashboard: {
@@ -173,11 +194,11 @@ describe('Town', () => {
         expect(speedSelect).toBeInTheDocument();
       });
 
-      // Check options
-      expect(screen.getByText('0.5x Speed')).toBeInTheDocument();
-      expect(screen.getByText('1x Speed')).toBeInTheDocument();
-      expect(screen.getByText('2x Speed')).toBeInTheDocument();
-      expect(screen.getByText('4x Speed')).toBeInTheDocument();
+      // Check options (updated to match new compact labels)
+      expect(screen.getByText('0.5x')).toBeInTheDocument();
+      expect(screen.getByText('1x')).toBeInTheDocument();
+      expect(screen.getByText('2x')).toBeInTheDocument();
+      expect(screen.getByText('4x')).toBeInTheDocument();
     });
 
     it('should call disconnect when clicking pause', async () => {

@@ -6,7 +6,65 @@
  *
  * The widget type discriminator pattern enables type-safe rendering:
  *   switch (widget.type) { case 'citizen_card': ... }
+ *
+ * Extended with layout hints for elastic UI system.
+ * @see plans/web-refactor/elastic-primitives.md
  */
+
+// =============================================================================
+// Layout Hints (Elastic System)
+// =============================================================================
+
+/**
+ * Layout hints that widgets can provide for elastic rendering.
+ * These hints guide the ElasticContainer on how to arrange widgets.
+ */
+export interface WidgetLayoutHints {
+  /** Flex grow factor (how eagerly to take space) */
+  flex?: number;
+
+  /** Minimum width before collapsing (px) */
+  minWidth?: number;
+
+  /** Maximum comfortable width (px) */
+  maxWidth?: number;
+
+  /** Render priority (higher = survives truncation) */
+  priority?: number;
+
+  /** Preferred aspect ratio (width/height) */
+  aspectRatio?: number;
+
+  /** Can this widget be hidden to save space? */
+  collapsible?: boolean;
+
+  /** Viewport width threshold for collapse (px) */
+  collapseAt?: number;
+}
+
+/**
+ * Layout context passed to widgets by container.
+ * Widgets can adapt their rendering based on available space.
+ */
+export interface LayoutContext {
+  /** Available width in pixels */
+  availableWidth: number;
+
+  /** Available height in pixels */
+  availableHeight: number;
+
+  /** Nesting depth (affects default sizing) */
+  depth: number;
+
+  /** Parent's layout strategy */
+  parentLayout: 'flow' | 'grid' | 'masonry' | 'stack';
+
+  /** Is the viewport constrained? */
+  isConstrained: boolean;
+
+  /** Preferred density */
+  density: 'compact' | 'comfortable' | 'spacious';
+}
 
 // =============================================================================
 // Glyph
@@ -79,7 +137,8 @@ export interface SparklineJSON {
 // =============================================================================
 
 export type CitizenPhase = 'IDLE' | 'SOCIALIZING' | 'WORKING' | 'REFLECTING' | 'RESTING';
-export type NPhase = 'SENSE' | 'ACT' | 'REFLECT';
+// UNDERSTAND is the primary name in backend (SENSE is alias for backwards compat)
+export type NPhase = 'UNDERSTAND' | 'SENSE' | 'ACT' | 'REFLECT';
 
 export interface CitizenEigenvectors {
   warmth: number;
@@ -100,6 +159,8 @@ export interface CitizenCardJSON {
   region: string;
   mood: string;
   eigenvectors: CitizenEigenvectors;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================
@@ -111,6 +172,8 @@ export interface HStackJSON {
   gap: number;
   separator: string | null;
   children: WidgetJSON[];
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 export interface VStackJSON {
@@ -118,6 +181,8 @@ export interface VStackJSON {
   gap: number;
   separator: string | null;
   children: WidgetJSON[];
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================
@@ -141,6 +206,8 @@ export interface ColonyDashboardJSON {
   citizens: CitizenCardJSON[];
   grid_cols: number;
   selected_citizen_id: string | null;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================

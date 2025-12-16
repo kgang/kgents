@@ -8,6 +8,47 @@
     --foreground: 255 255 255;
     --muted: 100 100 120;
     --accent: 233 69 96;
+
+    /* =================================================================
+     * Elastic System Custom Properties
+     * From: plans/web-refactor/elastic-primitives.md
+     * ================================================================= */
+
+    /* Spacing scale */
+    --elastic-gap-xs: 4px;
+    --elastic-gap-sm: 8px;
+    --elastic-gap-md: 16px;
+    --elastic-gap-lg: 24px;
+    --elastic-gap-xl: 32px;
+
+    /* Transitions - timing functions */
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Transitions - durations */
+    --duration-instant: 100ms;
+    --duration-fast: 150ms;
+    --duration-normal: 250ms;
+    --duration-slow: 400ms;
+
+    /* Composite transitions */
+    --elastic-transition-fast: var(--duration-fast) var(--ease-out-expo);
+    --elastic-transition-smooth: var(--duration-normal) var(--ease-in-out-cubic);
+    --elastic-transition-spring: var(--duration-slow) var(--ease-spring);
+
+    /* Breakpoints (for reference in JS) */
+    --elastic-bp-sm: 640px;
+    --elastic-bp-md: 768px;
+    --elastic-bp-lg: 1024px;
+    --elastic-bp-xl: 1280px;
+
+    /* Z-indices */
+    --elastic-z-base: 0;
+    --elastic-z-sticky: 100;
+    --elastic-z-dropdown: 200;
+    --elastic-z-modal: 300;
+    --elastic-z-toast: 400;
   }
 
   body {
@@ -18,6 +59,175 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+}
+
+/* =============================================================================
+ * Elastic Grid System
+ * From: plans/web-refactor/elastic-primitives.md
+ * ============================================================================= */
+
+@layer components {
+  /* Town Layout - 3 column with responsive collapse */
+  .town-grid {
+    display: grid;
+    grid-template-areas:
+      "header header header"
+      "sidebar mesa details"
+      "footer footer footer";
+    grid-template-columns: minmax(0, 280px) 1fr minmax(0, 320px);
+    grid-template-rows: auto 1fr auto;
+    gap: var(--elastic-gap-md);
+    height: 100%;
+  }
+
+  /* Collapse sidebar on medium screens */
+  @media (max-width: 1024px) {
+    .town-grid {
+      grid-template-areas:
+        "header header"
+        "mesa details"
+        "footer footer";
+      grid-template-columns: 1fr minmax(0, 280px);
+    }
+  }
+
+  /* Stack on small screens */
+  @media (max-width: 768px) {
+    .town-grid {
+      grid-template-areas:
+        "header"
+        "mesa"
+        "details"
+        "footer";
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto auto;
+    }
+  }
+
+  /* Workshop Layout - similar pattern */
+  .workshop-grid {
+    display: grid;
+    grid-template-areas:
+      "header header"
+      "canvas sidebar"
+      "footer footer";
+    grid-template-columns: 1fr minmax(0, 320px);
+    grid-template-rows: auto 1fr auto;
+    gap: var(--elastic-gap-md);
+    height: 100%;
+  }
+
+  @media (max-width: 768px) {
+    .workshop-grid {
+      grid-template-areas:
+        "header"
+        "canvas"
+        "sidebar"
+        "footer";
+      grid-template-columns: 1fr;
+      grid-template-rows: auto 1fr auto auto;
+    }
+  }
+
+  /* Elastic container layouts */
+  .elastic-flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--elastic-gap-md);
+  }
+
+  .elastic-stack-v {
+    display: flex;
+    flex-direction: column;
+    gap: var(--elastic-gap-md);
+  }
+
+  .elastic-stack-h {
+    display: flex;
+    flex-direction: row;
+    gap: var(--elastic-gap-md);
+  }
+
+  .elastic-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--elastic-gap-md);
+  }
+
+  /* Masonry-like layout using CSS columns */
+  .elastic-masonry {
+    columns: 3;
+    column-gap: var(--elastic-gap-md);
+  }
+
+  @media (max-width: 1024px) {
+    .elastic-masonry { columns: 2; }
+  }
+
+  @media (max-width: 640px) {
+    .elastic-masonry { columns: 1; }
+  }
+
+  .elastic-masonry > * {
+    break-inside: avoid;
+    margin-bottom: var(--elastic-gap-md);
+  }
+
+  /* Elastic card transitions */
+  .elastic-card {
+    transition:
+      transform var(--elastic-transition-fast),
+      box-shadow var(--elastic-transition-fast),
+      opacity var(--elastic-transition-fast);
+  }
+
+  .elastic-card:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .elastic-card:active {
+    transform: scale(0.99);
+  }
+
+  /* Button micro-interactions */
+  .elastic-button {
+    transition:
+      transform var(--duration-instant) var(--ease-spring),
+      box-shadow var(--elastic-transition-fast);
+  }
+
+  .elastic-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .elastic-button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Skeleton animation for loading states */
+  .elastic-skeleton {
+    @apply animate-pulse bg-town-accent/30 rounded;
+  }
+
+  /* Focus indicators */
+  .elastic-focus:focus-visible {
+    outline: 2px solid theme('colors.town-highlight');
+    outline-offset: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
@@ -61,4 +271,353 @@
 
 .citizen-hover:hover {
   transform: scale(1.1);
+}
+
+/* =============================================================================
+ * Historical Mode Visual Differentiation
+ * From: plans/web-refactor/interaction-patterns.md
+ * ============================================================================= */
+
+.historical-mode {
+  /* Subtle sepia overlay for "viewing the past" feeling */
+  filter: sepia(8%) brightness(0.95);
+
+  /* Smooth transition when entering/exiting */
+  transition: filter var(--elastic-transition-smooth);
+}
+
+/* "Viewing History" badge - positioned at top center */
+.historical-mode::before {
+  content: 'Viewing History';
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(251, 191, 36, 0.9); /* amber-400 */
+  color: #1a1a2e;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  z-index: var(--elastic-z-toast);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: historical-badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes historical-badge-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
+}
+
+/* Disable interactive elements in historical mode */
+.historical-mode .interactive-element,
+.historical-mode [data-interactive="true"] {
+  pointer-events: none;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Exception: timeline scrubber stays interactive */
+.historical-mode .timeline-scrubber,
+.historical-mode [data-always-interactive="true"] {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  filter: brightness(1.05);
+}
+
+/* Timeline sticky at bottom in historical mode */
+.historical-mode .timeline-scrubber {
+  position: sticky;
+  bottom: 0;
+  z-index: var(--elastic-z-sticky);
+}
+
+/* Visual indicator on cards that they're read-only */
+.historical-mode .elastic-card {
+  border-left: 3px solid rgba(251, 191, 36, 0.5);
+}
+
+/* =============================================================================
+ * Context Menu Styles
+ * ============================================================================= */
+
+.context-menu {
+  position: fixed;
+  min-width: 160px;
+  background: rgba(26, 26, 46, 0.98);
+  border: 1px solid rgba(100, 100, 120, 0.3);
+  border-radius: 8px;
+  padding: 4px 0;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(255, 255, 255, 0.1);
+  z-index: var(--elastic-z-dropdown);
+  animation: context-menu-appear var(--duration-fast) var(--ease-out-expo);
+}
+
+@keyframes context-menu-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: background var(--duration-instant) ease;
+}
+
+.context-menu-item:hover {
+  background: rgba(100, 100, 120, 0.2);
+}
+
+.context-menu-item:active {
+  background: rgba(100, 100, 120, 0.3);
+}
+
+.context-menu-item.destructive {
+  color: #f87171; /* red-400 */
+}
+
+.context-menu-item.destructive:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.context-menu-item:disabled,
+.context-menu-item[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.context-menu-separator {
+  height: 1px;
+  background: rgba(100, 100, 120, 0.3);
+  margin: 4px 0;
+}
+
+.context-menu-label {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(100, 100, 120, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* =============================================================================
+ * Touch Gesture Visual Feedback
+ * ============================================================================= */
+
+/* Long-press indicator (radial fill) */
+.touch-long-press {
+  position: relative;
+}
+
+.touch-long-press::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid transparent;
+  background:
+    conic-gradient(
+      from 0deg,
+      rgba(233, 69, 96, 0.6) var(--long-press-progress, 0%),
+      transparent var(--long-press-progress, 0%)
+    );
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.touch-long-press.pressing::after {
+  opacity: 1;
+}
+
+/* Pinch-zoom feedback */
+.pinch-zooming {
+  transition: none !important;
+}
+
+/* Swipe action reveal */
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  transform: translateX(100%);
+  transition: transform var(--elastic-transition-fast);
+}
+
+.swipe-container.swiped .swipe-actions {
+  transform: translateX(0);
+}
+
+.swipe-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.swipe-action.edit {
+  background: #3b82f6; /* blue-500 */
+}
+
+.swipe-action.delete {
+  background: #ef4444; /* red-500 */
+}
+
+/* =============================================================================
+ * Accessibility Enhancements
+ * ============================================================================= */
+
+/* Skip to main content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  padding: 8px 16px;
+  background: var(--color-town-highlight, #e94560);
+  color: white;
+  z-index: 9999;
+  transition: top 0.2s ease;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Enhanced focus indicators for keyboard navigation */
+:focus-visible {
+  outline: 2px solid theme('colors.town-highlight');
+  outline-offset: 2px;
+}
+
+/* Focus within for containers */
+.focus-container:focus-within {
+  ring: 2px;
+  ring-offset: 2px;
+  ring-color: theme('colors.town-highlight');
+}
+
+/* High contrast focus for buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid theme('colors.town-highlight');
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+}
+
+/* Focus for interactive cards */
+.interactive-card:focus-visible {
+  outline: 2px solid theme('colors.town-highlight');
+  outline-offset: 2px;
+  transform: translateY(-2px);
+}
+
+/* =============================================================================
+ * Screen Reader Only
+ * ============================================================================= */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =============================================================================
+ * High Contrast Mode Support
+ * ============================================================================= */
+
+@media (prefers-contrast: high) {
+  :root {
+    --accent: 255 100 100;
+  }
+
+  .elastic-card {
+    border: 2px solid currentColor;
+  }
+
+  button,
+  [role="button"] {
+    border: 2px solid currentColor;
+  }
+}
+
+/* =============================================================================
+ * Color Scheme Preferences
+ * ============================================================================= */
+
+@media (prefers-color-scheme: light) {
+  /* Future: light mode support */
+}
+
+/* =============================================================================
+ * Empty States with Personality
+ * ============================================================================= */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: rgba(100, 100, 120, 0.8);
+}
+
+.empty-state-emoji {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: breathe 3s ease-in-out infinite;
+}
+
+.empty-state-title {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-message {
+  font-size: 0.875rem;
+  color: rgba(100, 100, 120, 0.8);
+  max-width: 20rem;
 }

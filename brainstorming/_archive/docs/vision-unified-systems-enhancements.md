@@ -209,6 +209,16 @@ class ConsentLedger:
 
 LOD5 returns a vignette/tension delta, not a blank paywall. Users who pay for depth receive something irreducible—even if that something is mystery.
 
+### 2.5 Unified Context Spine (Context Protocol v1.0)
+
+Context is now a first-class polynomial functor with three layers (window/comonad, pressure/Galois compression, linearity/resource classes) per `spec/protocols/context.md`. The mandates:
+
+- **Single owner**: All context engineering lives in `context/` (window, compression, linearity, prompts, rendering). `self.stream.*` aliases to `self.context.*` then deprecates.
+- **Frontend purity**: Frontend only receives React-ready props (`messages`, `pressure`, `status`, actions); no system prompts, eigenvectors, or compression logic leak client-side.
+- **Mathematical contracts**: Comonad laws verified in tests; compression is modeled as a Galois connection (lossy by design); linearity map enforces DROPPABLE/REQUIRED/PRESERVED classes.
+- **Operad spine**: Context operations exposed via AGENTESE `self.context.*`, routed through polynomial transitions, observable via spans (pressure, compression steps, law_checks).
+- **Safety + efficiency**: Compression strategy follows resource classes; pressure gating prevents prompt bloat; cost spans pair with quality spans to ensure “cost-down, quality-flat.” Incorporate proven prompt compression approaches (e.g., LLMLingua/LongLLMLingua token pruning) as optional compressors while honoring linearity tags and emitting deltas to spans.
+
 ---
 
 ## Part III: AGENTESE REPL (Living Shell)
