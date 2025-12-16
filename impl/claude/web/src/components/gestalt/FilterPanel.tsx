@@ -119,7 +119,7 @@ export function FilterPanel({
   );
 
   const handleDisplayToggle = useCallback(
-    (key: 'showEdges' | 'showViolations' | 'showLabels' | 'showAnimation', value: boolean) => {
+    (key: 'showEdges' | 'showViolations' | 'showLabels' | 'showAnimation' | 'organicTheme', value: boolean) => {
       onFiltersChange({ [key]: value, activePreset: null });
     },
     [onFiltersChange]
@@ -255,6 +255,42 @@ export function FilterPanel({
             </label>
           ))}
         </div>
+      </div>
+
+      {/* Theme Toggle - Sprint 3 */}
+      <div>
+        <h4
+          className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${
+            isCompact ? 'text-[10px]' : 'text-xs'
+          }`}
+        >
+          Theme
+        </h4>
+        <label className="flex items-center gap-2 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={filters.organicTheme}
+            onChange={(e) => handleDisplayToggle('organicTheme', e.target.checked)}
+            className={`
+              rounded bg-gray-700 border-gray-600
+              focus:ring-offset-gray-800
+              ${isCompact ? 'w-3 h-3' : 'w-4 h-4'}
+            `}
+            style={{ accentColor: '#22c55e' }}
+          />
+          <span
+            className={`text-gray-300 group-hover:text-white transition-colors ${
+              isCompact ? 'text-xs' : 'text-sm'
+            }`}
+          >
+            🌿 Forest Mode
+          </span>
+        </label>
+        {!isCompact && (
+          <p className="text-[10px] text-gray-500 mt-1 leading-tight">
+            Organic plants & vines instead of spheres & lines
+          </p>
+        )}
       </div>
 
       {/* Max Nodes Slider */}

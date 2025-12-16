@@ -13,6 +13,46 @@ import type {
   PolynomialEdge,
   GardenerSessionState,
 } from '../../api/types';
+import {
+  SEMANTIC_COLORS,
+  STATE_COLORS,
+  GRAYS,
+} from '../../constants';
+
+// =============================================================================
+// Polynomial Phase Colors
+// =============================================================================
+
+/**
+ * Phase colors for polynomial visualizations.
+ * Maps semantic meaning to colors from the design system.
+ */
+const POLYNOMIAL_COLORS = {
+  // Gardener phases
+  sense: '#3B82F6',      // Blue - perception, information
+  act: SEMANTIC_COLORS.creation, // Amber - execution, action
+  reflect: SEMANTIC_COLORS.collaboration, // Violet - synthesis
+
+  // N-Phase colors (mapped to semantic meanings)
+  plan: GRAYS[400],      // Gray - neutral planning
+  research: '#3B82F6',   // Blue - discovery
+  develop: STATE_COLORS.success, // Green - building
+  strategize: SEMANTIC_COLORS.collaboration, // Violet - planning
+  crossSynergize: SEMANTIC_COLORS.drama, // Pink - connection
+  implement: SEMANTIC_COLORS.creation, // Amber - execution
+  qa: SEMANTIC_COLORS.knowledge, // Cyan - verification
+  test: '#10B981',       // Emerald - validation
+  educate: '#A855F7',    // Purple - teaching
+  measure: '#F97316',    // Orange - metrics
+  reflectPhase: '#6366F1', // Indigo - contemplation
+
+  // Citizen phases
+  idle: GRAYS[400],      // Gray - neutral
+  socializing: SEMANTIC_COLORS.drama, // Pink - social
+  working: SEMANTIC_COLORS.creation, // Amber - productive
+  reflecting: SEMANTIC_COLORS.collaboration, // Violet - contemplation
+  resting: STATE_COLORS.success, // Green - healthy rest
+} as const;
 
 // =============================================================================
 // Gardener Session Visualization
@@ -22,9 +62,9 @@ import type {
  * Phase configuration for Gardener.
  */
 const GARDENER_PHASES = [
-  { id: 'SENSE', label: 'Sense', emoji: '👁️', color: '#3b82f6', description: 'Gather context' },
-  { id: 'ACT', label: 'Act', emoji: '⚡', color: '#f59e0b', description: 'Execute intent' },
-  { id: 'REFLECT', label: 'Reflect', emoji: '💭', color: '#8b5cf6', description: 'Consolidate learnings' },
+  { id: 'SENSE', label: 'Sense', emoji: '👁️', color: POLYNOMIAL_COLORS.sense, description: 'Gather context' },
+  { id: 'ACT', label: 'Act', emoji: '⚡', color: POLYNOMIAL_COLORS.act, description: 'Execute intent' },
+  { id: 'REFLECT', label: 'Reflect', emoji: '💭', color: POLYNOMIAL_COLORS.reflect, description: 'Consolidate learnings' },
 ] as const;
 
 /**
@@ -105,17 +145,17 @@ export function createGardenerVisualization(
  * N-Phase development cycle phases.
  */
 const NPHASE_PHASES = [
-  { id: 'PLAN', label: 'Plan', emoji: '📋', color: '#94a3b8' },
-  { id: 'RESEARCH', label: 'Research', emoji: '🔍', color: '#3b82f6' },
-  { id: 'DEVELOP', label: 'Develop', emoji: '🛠️', color: '#22c55e' },
-  { id: 'STRATEGIZE', label: 'Strategize', emoji: '🎯', color: '#8b5cf6' },
-  { id: 'CROSS-SYNERGIZE', label: 'Cross-Synergize', emoji: '🔗', color: '#ec4899' },
-  { id: 'IMPLEMENT', label: 'Implement', emoji: '⚙️', color: '#f59e0b' },
-  { id: 'QA', label: 'QA', emoji: '🔬', color: '#06b6d4' },
-  { id: 'TEST', label: 'Test', emoji: '🧪', color: '#10b981' },
-  { id: 'EDUCATE', label: 'Educate', emoji: '📚', color: '#a855f7' },
-  { id: 'MEASURE', label: 'Measure', emoji: '📊', color: '#f97316' },
-  { id: 'REFLECT', label: 'Reflect', emoji: '🪞', color: '#6366f1' },
+  { id: 'PLAN', label: 'Plan', emoji: '📋', color: POLYNOMIAL_COLORS.plan },
+  { id: 'RESEARCH', label: 'Research', emoji: '🔍', color: POLYNOMIAL_COLORS.research },
+  { id: 'DEVELOP', label: 'Develop', emoji: '🛠️', color: POLYNOMIAL_COLORS.develop },
+  { id: 'STRATEGIZE', label: 'Strategize', emoji: '🎯', color: POLYNOMIAL_COLORS.strategize },
+  { id: 'CROSS-SYNERGIZE', label: 'Cross-Synergize', emoji: '🔗', color: POLYNOMIAL_COLORS.crossSynergize },
+  { id: 'IMPLEMENT', label: 'Implement', emoji: '⚙️', color: POLYNOMIAL_COLORS.implement },
+  { id: 'QA', label: 'QA', emoji: '🔬', color: POLYNOMIAL_COLORS.qa },
+  { id: 'TEST', label: 'Test', emoji: '🧪', color: POLYNOMIAL_COLORS.test },
+  { id: 'EDUCATE', label: 'Educate', emoji: '📚', color: POLYNOMIAL_COLORS.educate },
+  { id: 'MEASURE', label: 'Measure', emoji: '📊', color: POLYNOMIAL_COLORS.measure },
+  { id: 'REFLECT', label: 'Reflect', emoji: '🪞', color: POLYNOMIAL_COLORS.reflectPhase },
 ] as const;
 
 /**
@@ -199,11 +239,11 @@ export function createNPhaseVisualization(
  * Citizen polynomial phases.
  */
 const CITIZEN_PHASES = [
-  { id: 'IDLE', label: 'Idle', emoji: '⚪', color: '#94a3b8', description: 'Ready for interaction' },
-  { id: 'SOCIALIZING', label: 'Socializing', emoji: '💬', color: '#ec4899', description: 'Engaged in social activity' },
-  { id: 'WORKING', label: 'Working', emoji: '🔧', color: '#f59e0b', description: 'Performing solo work' },
-  { id: 'REFLECTING', label: 'Reflecting', emoji: '💭', color: '#8b5cf6', description: 'Internal contemplation' },
-  { id: 'RESTING', label: 'Resting', emoji: '💤', color: '#22c55e', description: 'Right to Rest active' },
+  { id: 'IDLE', label: 'Idle', emoji: '⚪', color: POLYNOMIAL_COLORS.idle, description: 'Ready for interaction' },
+  { id: 'SOCIALIZING', label: 'Socializing', emoji: '💬', color: POLYNOMIAL_COLORS.socializing, description: 'Engaged in social activity' },
+  { id: 'WORKING', label: 'Working', emoji: '🔧', color: POLYNOMIAL_COLORS.working, description: 'Performing solo work' },
+  { id: 'REFLECTING', label: 'Reflecting', emoji: '💭', color: POLYNOMIAL_COLORS.reflecting, description: 'Internal contemplation' },
+  { id: 'RESTING', label: 'Resting', emoji: '💤', color: POLYNOMIAL_COLORS.resting, description: 'Right to Rest active' },
 ] as const;
 
 /**

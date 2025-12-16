@@ -833,6 +833,12 @@ export interface CodebaseTopologyResponse {
     avg_health: number;
     overall_grade: string;
   };
+  /** Sprint 2: Applied umwelt configuration */
+  umwelt?: {
+    role: string;
+    config: Record<string, number | boolean | string[]>;
+    emphasized_layers: string[];
+  };
 }
 
 /**
@@ -927,6 +933,33 @@ export interface CodebaseScanResponse {
   edge_count: number;
   overall_grade: string;
 }
+
+/**
+ * SSE topology update (Sprint 1: Live Architecture).
+ *
+ * Update kinds:
+ * - full: Complete topology replacement
+ * - ping: Keepalive (no change detected)
+ * - error: Error message
+ */
+export interface CodebaseTopologyUpdate {
+  kind: 'full' | 'ping' | 'error' | 'add' | 'remove' | 'update';
+  topology?: CodebaseTopologyResponse;
+  node?: CodebaseModule;
+  link?: DependencyLink;
+  error?: string;
+  timestamp: string;
+}
+
+/**
+ * Connection status for SSE stream.
+ */
+export type GestaltStreamStatus =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'error';
 
 /**
  * Health grade visual config.
@@ -1292,4 +1325,257 @@ export const INFRA_SEVERITY_CONFIG: Record<InfraEvent['severity'], { icon: strin
   warning: { icon: '⚠️', color: '#f59e0b' },
   error: { icon: '❌', color: '#ef4444' },
   critical: { icon: '🔥', color: '#dc2626' },
+};
+
+// =============================================================================
+// Park (Punchdrunk Park - Wave 3)
+// =============================================================================
+
+/**
+ * Crisis phases for polynomial state machine.
+ */
+export type ParkCrisisPhase = 'NORMAL' | 'INCIDENT' | 'RESPONSE' | 'RECOVERY';
+
+/**
+ * Timer status values.
+ */
+export type ParkTimerStatus = 'PENDING' | 'ACTIVE' | 'WARNING' | 'CRITICAL' | 'EXPIRED' | 'COMPLETED' | 'PAUSED';
+
+/**
+ * Mask archetype categories.
+ */
+export type ParkMaskArchetype =
+  | 'TRICKSTER'
+  | 'DREAMER'
+  | 'SKEPTIC'
+  | 'ARCHITECT'
+  | 'CHILD'
+  | 'SAGE'
+  | 'WARRIOR'
+  | 'HEALER';
+
+/**
+ * Integrated scenario types.
+ */
+export type ParkScenarioType =
+  | 'MYSTERY'
+  | 'COLLABORATION'
+  | 'CONFLICT'
+  | 'EMERGENCE'
+  | 'CRISIS_PRACTICE'
+  | 'COMPLIANCE_DRILL'
+  | 'TABLETOP'
+  | 'INCIDENT_RESPONSE';
+
+/**
+ * Timer state information.
+ */
+export interface ParkTimerInfo {
+  name: string;
+  countdown: string;
+  status: ParkTimerStatus;
+  progress: number;
+  remaining_seconds: number;
+}
+
+/**
+ * Eigenvector transform deltas.
+ */
+export interface ParkEigenvectorTransform {
+  creativity: number;
+  trust: number;
+  empathy: number;
+  authority: number;
+  playfulness: number;
+  wisdom: number;
+  directness: number;
+  warmth: number;
+}
+
+/**
+ * Dialogue mask information.
+ */
+export interface ParkMaskInfo {
+  name: string;
+  archetype: ParkMaskArchetype;
+  description: string;
+  flavor_text: string | null;
+  intensity: number;
+  transform: ParkEigenvectorTransform;
+  special_abilities: string[];
+  restrictions: string[];
+}
+
+/**
+ * Eigenvector state with optional mask transform.
+ */
+export interface ParkEigenvectorState {
+  base: Record<string, number>;
+  transformed: Record<string, number>;
+  mask_applied: string | null;
+}
+
+/**
+ * Full scenario state.
+ */
+export interface ParkScenarioState {
+  scenario_id: string;
+  name: string;
+  scenario_type: ParkScenarioType;
+  is_active: boolean;
+
+  // Timers
+  timers: ParkTimerInfo[];
+  any_timer_critical: boolean;
+  any_timer_expired: boolean;
+
+  // Crisis phase
+  crisis_phase: ParkCrisisPhase;
+  available_transitions: ParkCrisisPhase[];
+  phase_transitions: Array<{
+    timestamp: string;
+    from: ParkCrisisPhase;
+    to: ParkCrisisPhase;
+    consent_debt: number;
+    forces_used: number;
+  }>;
+
+  // Consent mechanics
+  consent_debt: number;
+  forces_used: number;
+  forces_remaining: number;
+
+  // Mask state
+  mask: ParkMaskInfo | null;
+  eigenvectors: ParkEigenvectorState | null;
+
+  // Timing
+  started_at: string | null;
+  accelerated: boolean;
+}
+
+/**
+ * Request to start a new scenario.
+ */
+export interface ParkStartScenarioRequest {
+  template?: 'data-breach' | 'service-outage';
+  timer_type?: 'gdpr' | 'sec' | 'hipaa' | 'sla' | 'custom';
+  accelerated?: boolean;
+  mask_name?: string;
+}
+
+/**
+ * Request to tick timers.
+ */
+export interface ParkTickRequest {
+  count?: number;
+}
+
+/**
+ * Request to transition crisis phase.
+ */
+export interface ParkTransitionPhaseRequest {
+  phase: 'normal' | 'incident' | 'response' | 'recovery';
+}
+
+/**
+ * Request for mask action.
+ */
+export interface ParkMaskActionRequest {
+  action: 'don' | 'doff';
+  mask_name?: string;
+}
+
+/**
+ * Request to complete scenario.
+ */
+export interface ParkCompleteRequest {
+  outcome?: 'success' | 'failure' | 'abandon';
+}
+
+/**
+ * Scenario completion summary.
+ */
+export interface ParkScenarioSummary {
+  scenario_id: string;
+  name: string;
+  scenario_type: ParkScenarioType;
+  outcome: string;
+  duration_seconds: number;
+  consent_debt_final: number;
+  forces_used: number;
+  timer_outcomes: Record<string, {
+    status: ParkTimerStatus;
+    elapsed_seconds: number;
+    expired: boolean;
+  }>;
+  phase_transitions: Array<{
+    timestamp: string;
+    from: ParkCrisisPhase;
+    to: ParkCrisisPhase;
+    consent_debt: number;
+    forces_used: number;
+  }>;
+  injections_count: number;
+}
+
+/**
+ * Park system status.
+ */
+export interface ParkStatusResponse {
+  running: boolean;
+  scenario_id: string | null;
+  scenario_name: string | null;
+  masks_available: number;
+}
+
+/**
+ * Crisis phase visual config.
+ */
+export const PARK_PHASE_CONFIG: Record<ParkCrisisPhase, { color: string; emoji: string; label: string }> = {
+  NORMAL: { color: '#22c55e', emoji: '✓', label: 'Normal' },
+  INCIDENT: { color: '#f59e0b', emoji: '!', label: 'Incident' },
+  RESPONSE: { color: '#ef4444', emoji: '⚡', label: 'Response' },
+  RECOVERY: { color: '#3b82f6', emoji: '↺', label: 'Recovery' },
+};
+
+/**
+ * Timer status visual config.
+ */
+export const PARK_TIMER_CONFIG: Record<ParkTimerStatus, { color: string; emoji: string }> = {
+  PENDING: { color: '#6b7280', emoji: '[ ]' },
+  ACTIVE: { color: '#22c55e', emoji: '[>]' },
+  WARNING: { color: '#f59e0b', emoji: '[!]' },
+  CRITICAL: { color: '#ef4444', emoji: '[X]' },
+  EXPIRED: { color: '#dc2626', emoji: '[x]' },
+  COMPLETED: { color: '#22c55e', emoji: '[o]' },
+  PAUSED: { color: '#6b7280', emoji: '[-]' },
+};
+
+/**
+ * Mask archetype visual config.
+ */
+export const PARK_MASK_CONFIG: Record<ParkMaskArchetype, { color: string; emoji: string }> = {
+  TRICKSTER: { color: '#f59e0b', emoji: '🎭' },
+  DREAMER: { color: '#a855f7', emoji: '💭' },
+  SKEPTIC: { color: '#6366f1', emoji: '🔍' },
+  ARCHITECT: { color: '#3b82f6', emoji: '🏗️' },
+  CHILD: { color: '#ec4899', emoji: '🌟' },
+  SAGE: { color: '#8b5cf6', emoji: '🦉' },
+  WARRIOR: { color: '#ef4444', emoji: '⚔️' },
+  HEALER: { color: '#22c55e', emoji: '💚' },
+};
+
+/**
+ * Eigenvector dimension config for radar chart.
+ */
+export const PARK_EIGENVECTOR_CONFIG: Record<string, { label: string; color: string }> = {
+  creativity: { label: 'Creativity', color: '#f59e0b' },
+  trust: { label: 'Trust', color: '#22c55e' },
+  empathy: { label: 'Empathy', color: '#ec4899' },
+  authority: { label: 'Authority', color: '#ef4444' },
+  playfulness: { label: 'Playfulness', color: '#a855f7' },
+  wisdom: { label: 'Wisdom', color: '#8b5cf6' },
+  directness: { label: 'Directness', color: '#3b82f6' },
+  warmth: { label: 'Warmth', color: '#f97316' },
 };

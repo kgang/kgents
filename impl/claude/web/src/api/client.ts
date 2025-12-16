@@ -288,15 +288,34 @@ export const gestaltApi = {
   getModule: (moduleName: string) =>
     apiClient.get<CodebaseModuleResponse>(`/v1/world/codebase/module/${encodeURIComponent(moduleName)}`),
 
-  /** Get topology for visualization */
-  getTopology: (maxNodes = 200, minHealth = 0.0) =>
+  /** Get topology for visualization (Sprint 2: observer-dependent views) */
+  getTopology: (maxNodes = 200, minHealth = 0.0, role?: string) =>
     apiClient.get<CodebaseTopologyResponse>('/v1/world/codebase/topology', {
-      params: { max_nodes: maxNodes, min_health: minHealth },
+      params: {
+        max_nodes: maxNodes,
+        min_health: minHealth,
+        ...(role && { role }), // Sprint 2: Observer role
+      },
     }),
 
   /** Force rescan of codebase */
   scan: (language = 'python', path?: string) =>
     apiClient.post<CodebaseScanResponse>('/v1/world/codebase/scan', { language, path }),
+
+  /** Create EventSource for topology stream (Sprint 1: Live Architecture) */
+  createTopologyStream: (options?: {
+    maxNodes?: number;
+    minHealth?: number;
+    pollInterval?: number;
+  }) => {
+    const baseUrl = apiClient.defaults.baseURL || '';
+    const params = new URLSearchParams();
+    if (options?.maxNodes) params.set('max_nodes', options.maxNodes.toString());
+    if (options?.minHealth) params.set('min_health', options.minHealth.toString());
+    if (options?.pollInterval) params.set('poll_interval', options.pollInterval.toString());
+    const queryString = params.toString();
+    return new EventSource(`${baseUrl}/v1/world/codebase/stream${queryString ? `?${queryString}` : ''}`);
+  },
 };
 
 // =============================================================================
@@ -398,4 +417,213 @@ export const gardenerApi = {
     apiClient.get<GardenerSessionListResponse>('/v1/gardener/sessions', {
       params: { limit },
     }),
+
+  // =========================================================================
+  // Garden State API (Phase 7: Web Visualization)
+  // =========================================================================
+
+  /** Get garden state */
+  getGarden: () =>
+    apiClient.get<GardenStateResponse>('/v1/gardener/garden'),
+
+  /** Apply a tending gesture */
+  tend: (verb: TendingVerb, target: string, options?: { tone?: number; reasoning?: string }) =>
+    apiClient.post<TendResponse>('/v1/gardener/garden/tend', {
+      verb,
+      target,
+      tone: options?.tone ?? 0.5,
+      reasoning: options?.reasoning ?? '',
+    }),
+
+  /** Transition garden season */
+  transitionSeason: (newSeason: GardenSeason, reason?: string) =>
+    apiClient.post<GardenStateResponse>('/v1/gardener/garden/season', {
+      new_season: newSeason,
+      reason: reason ?? '',
+    }),
+
+  /** Focus on a specific plot */
+  focusPlot: (plotName: string) =>
+    apiClient.post<GardenStateResponse>(`/v1/gardener/garden/plot/${plotName}/focus`),
+
+  // =========================================================================
+  // Auto-Inducer API (Phase 8: Season Transition Suggestions)
+  // =========================================================================
+
+  /** Accept a suggested season transition */
+  acceptTransition: (fromSeason: GardenSeason, toSeason: GardenSeason) =>
+    apiClient.post<TransitionActionResponse>('/v1/gardener/garden/transition/accept', {
+      from_season: fromSeason,
+      to_season: toSeason,
+    }),
+
+  /** Dismiss a suggested season transition */
+  dismissTransition: (fromSeason: GardenSeason, toSeason: GardenSeason) =>
+    apiClient.post<TransitionActionResponse>('/v1/gardener/garden/transition/dismiss', {
+      from_season: fromSeason,
+      to_season: toSeason,
+    }),
+};
+
+// Garden API types
+import type {
+  GardenSeason,
+  TendingVerb,
+} from '@/reactive/types';
+
+export interface GardenStateResponse {
+  garden_id: string;
+  name: string;
+  created_at: string;
+  season: GardenSeason;
+  season_since: string;
+  plots: Record<string, PlotResponse>;
+  active_plot: string | null;
+  session_id: string | null;
+  memory_crystals: string[];
+  prompt_count: number;
+  prompt_types: Record<string, number>;
+  recent_gestures: GestureResponse[];
+  last_tended: string;
+  metrics: {
+    health_score: number;
+    total_prompts: number;
+    active_plots: number;
+    entropy_spent: number;
+    entropy_budget: number;
+  };
+  computed: {
+    health_score: number;
+    entropy_remaining: number;
+    entropy_percentage: number;
+    active_plot_count: number;
+    total_plot_count: number;
+    season_plasticity: number;
+    season_entropy_multiplier: number;
+  };
+}
+
+export interface PlotResponse {
+  name: string;
+  path: string;
+  description: string;
+  plan_path: string | null;
+  crown_jewel: string | null;
+  prompts: string[];
+  season_override: GardenSeason | null;
+  rigidity: number;
+  progress: number;
+  created_at: string;
+  last_tended: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+}
+
+export interface GestureResponse {
+  verb: TendingVerb;
+  target: string;
+  tone: number;
+  reasoning: string;
+  entropy_cost: number;
+  timestamp: string;
+  observer: string;
+  session_id: string | null;
+  result_summary: string;
+}
+
+// Phase 8: Transition suggestion types
+export interface TransitionSignals {
+  gesture_frequency: number;
+  gesture_diversity: number;
+  plot_progress_delta: number;
+  artifacts_created: number;
+  time_in_season_hours: number;
+  entropy_spent_ratio: number;
+  reflect_count: number;
+  session_active: boolean;
+}
+
+export interface TransitionSuggestion {
+  from_season: GardenSeason;
+  to_season: GardenSeason;
+  confidence: number;
+  reason: string;
+  signals: TransitionSignals;
+  triggered_at: string;
+}
+
+export interface TendResponse {
+  accepted: boolean;
+  state_changed: boolean;
+  changes: string[];
+  synergies_triggered: string[];
+  reasoning_trace: string[];
+  error: string | null;
+  gesture: GestureResponse;
+  // Phase 8: Auto-Inducer
+  suggested_transition: TransitionSuggestion | null;
+}
+
+export interface TransitionActionResponse {
+  status: string;
+  garden_state: GardenStateResponse | null;
+  message: string;
+}
+
+// =============================================================================
+// Park API (Wave 3: Punchdrunk Park)
+// =============================================================================
+
+import type {
+  ParkScenarioState,
+  ParkStartScenarioRequest,
+  ParkTickRequest,
+  ParkTransitionPhaseRequest,
+  ParkMaskActionRequest,
+  ParkCompleteRequest,
+  ParkScenarioSummary,
+  ParkMaskInfo,
+  ParkStatusResponse,
+} from './types';
+
+export const parkApi = {
+  /** Get current scenario state */
+  getScenario: () =>
+    apiClient.get<ParkScenarioState>('/api/park/scenario'),
+
+  /** Start a new crisis practice scenario */
+  startScenario: (data: ParkStartScenarioRequest = {}) =>
+    apiClient.post<ParkScenarioState>('/api/park/scenario/start', data),
+
+  /** Tick scenario timers */
+  tick: (data: ParkTickRequest = { count: 1 }) =>
+    apiClient.post<ParkScenarioState>('/api/park/scenario/tick', data),
+
+  /** Transition crisis phase */
+  transitionPhase: (data: ParkTransitionPhaseRequest) =>
+    apiClient.post<ParkScenarioState>('/api/park/scenario/phase', data),
+
+  /** Don or doff a dialogue mask */
+  maskAction: (data: ParkMaskActionRequest) =>
+    apiClient.post<ParkScenarioState>('/api/park/scenario/mask', data),
+
+  /** Use force mechanic */
+  useForce: () =>
+    apiClient.post<ParkScenarioState>('/api/park/scenario/force'),
+
+  /** Complete scenario */
+  completeScenario: (data: ParkCompleteRequest = { outcome: 'success' }) =>
+    apiClient.post<ParkScenarioSummary>('/api/park/scenario/complete', data),
+
+  /** List all available masks */
+  getMasks: () =>
+    apiClient.get<ParkMaskInfo[]>('/api/park/masks'),
+
+  /** Get mask details */
+  getMask: (name: string) =>
+    apiClient.get<ParkMaskInfo>(`/api/park/masks/${name}`),
+
+  /** Get Park system status */
+  getStatus: () =>
+    apiClient.get<ParkStatusResponse>('/api/park/status'),
 };

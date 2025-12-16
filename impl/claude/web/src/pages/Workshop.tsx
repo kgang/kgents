@@ -18,6 +18,8 @@ import {
   ElasticPlaceholder,
   useWindowLayout,
 } from '@/components/elastic';
+import { PersonalityLoading } from '@/components/joy';
+import { getBuilderColor, getEmptyState } from '@/constants';
 import type {
   WorkshopStatus,
   WorkshopPhase,
@@ -45,15 +47,7 @@ const MIN_GRID_ITEM_WIDTH = {
   spacious: 200,
 } as const;
 
-// Builder colors from types
-const BUILDER_COLORS_MAP: Record<string, string> = {
-  Scout: '#22c55e',
-  Sage: '#8b5cf6',
-  Spark: '#f59e0b',
-  Steady: '#3b82f6',
-  Sync: '#ec4899',
-};
-
+/** Builder personality icons */
 const BUILDER_ICONS_MAP: Record<string, string> = {
   Scout: '🔍',
   Sage: '📐',
@@ -101,11 +95,9 @@ export default function Workshop() {
               className="h-full bg-town-bg"
             >
               {isLoading && (
-                <ElasticPlaceholder
-                  for="agent"
-                  state="loading"
-                  expectedSize={{ width: '100%', height: isMobile ? '200px' : '300px' }}
-                />
+                <div className="h-full flex items-center justify-center" style={{ minHeight: isMobile ? '200px' : '300px' }}>
+                  <PersonalityLoading jewel="atelier" action="create" />
+                </div>
               )}
 
               {error && (
@@ -201,20 +193,22 @@ function WorkshopHeader({ phase, taskDescription, isRunning }: WorkshopHeaderPro
 
 function EmptyWorkshop({ density }: { density: Density }) {
   const isCompact = density === 'compact';
+  // Use semantic empty state - Workshop maps to Atelier's artisan vocabulary
+  const emptyState = getEmptyState('noArtisans');
 
   return (
     <div className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}>
       <span className={`${isCompact ? 'text-4xl mb-2' : 'text-6xl mb-4'}`}>🏗️</span>
-      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>Workshop Ready</h2>
+      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>{emptyState.title}</h2>
       <p className={`text-gray-400 max-w-md ${isCompact ? 'text-xs mb-4' : 'mb-6'}`}>
         {isCompact
-          ? 'Assign a task to your builder agents.'
-          : 'Assign a task to your builder agents. They\'ll collaborate through phases: Exploring, Designing, Prototyping, Refining, and Integrating.'}
+          ? emptyState.description
+          : `${emptyState.description} They'll collaborate through phases: Exploring, Designing, Prototyping, Refining, and Integrating.`}
       </p>
       <button className={`bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors ${
         isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
       }`}>
-        Create Task
+        {emptyState.action || 'Create Task'}
       </button>
     </div>
   );
@@ -247,13 +241,13 @@ function BuilderCanvas({ builders, density }: BuilderCanvasProps) {
             <div className={isCompact ? 'text-xs' : 'text-sm'}>
               <div
                 className="w-full h-1 rounded-full mt-2"
-                style={{ backgroundColor: BUILDER_COLORS_MAP[builder.archetype] + '40' }}
+                style={{ backgroundColor: getBuilderColor(builder.archetype) + '40' }}
               >
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
                     width: builder.is_active ? '60%' : '0%',
-                    backgroundColor: BUILDER_COLORS_MAP[builder.archetype],
+                    backgroundColor: getBuilderColor(builder.archetype),
                   }}
                 />
               </div>
@@ -274,10 +268,11 @@ function BuilderRosterPanel({ builders, density }: BuilderRosterPanelProps) {
   const isCompact = density === 'compact';
 
   if (builders.length === 0) {
+    const emptyState = getEmptyState('noArtisans');
     return (
       <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
         <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>Builders</h3>
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>No builders assigned yet</p>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{emptyState.description}</p>
       </div>
     );
   }
@@ -290,7 +285,7 @@ function BuilderRosterPanel({ builders, density }: BuilderRosterPanelProps) {
           <div
             key={b.archetype}
             className={`flex items-center gap-2 ${isCompact ? 'text-xs' : 'text-sm'}`}
-            style={{ color: b.is_active ? BUILDER_COLORS_MAP[b.archetype] : undefined }}
+            style={{ color: b.is_active ? getBuilderColor(b.archetype) : undefined }}
           >
             <span className={isCompact ? 'text-sm' : ''}>{BUILDER_ICONS_MAP[b.archetype]}</span>
             <span className={b.is_active ? 'font-medium' : 'text-gray-400'}>{b.name}</span>
@@ -317,7 +312,7 @@ function ArtifactsPanel({ artifacts, density }: ArtifactsPanelProps) {
         Artifacts ({artifacts.length})
       </h3>
       {artifacts.length === 0 ? (
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>No artifacts produced yet</p>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{getEmptyState('noCreations').description}</p>
       ) : (
         <div className={`space-y-1 overflow-y-auto ${isCompact ? 'max-h-32' : 'max-h-48'}`}>
           {artifacts.slice(0, maxArtifacts).map((artifact) => (

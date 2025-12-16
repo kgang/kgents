@@ -46,6 +46,9 @@ export interface FilterState {
 
   // Node limit (existing)
   maxNodes: number;
+
+  // Sprint 3: Organic/Forest theme toggle
+  organicTheme: boolean;
 }
 
 /**
@@ -62,6 +65,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   showLabels: true,
   showAnimation: true, // Chunk 3: Flow animation enabled by default
   maxNodes: 150,
+  organicTheme: true, // Sprint 3: Forest theme enabled by default
 };
 
 // =============================================================================

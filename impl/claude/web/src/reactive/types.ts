@@ -220,6 +220,143 @@ export interface ColonyDashboardJSON {
 // Union Type
 // =============================================================================
 
+// =============================================================================
+// Garden (Gardener-Logos Crown Jewel)
+// =============================================================================
+
+export type GardenSeason = 'DORMANT' | 'SPROUTING' | 'BLOOMING' | 'HARVEST' | 'COMPOSTING';
+export type TendingVerb = 'OBSERVE' | 'PRUNE' | 'GRAFT' | 'WATER' | 'ROTATE' | 'WAIT';
+
+/** Season metadata for display */
+export interface SeasonInfo {
+  name: GardenSeason;
+  emoji: string;
+  plasticity: number;
+  entropy_multiplier: number;
+}
+
+/** Tending gesture record */
+export interface GestureJSON {
+  verb: TendingVerb;
+  target: string;
+  tone: number;
+  reasoning: string;
+  entropy_cost: number;
+  timestamp: string;
+  observer: string;
+  session_id: string | null;
+  result_summary: string;
+}
+
+/** Plot state for garden regions */
+export interface PlotJSON {
+  name: string;
+  path: string;
+  description: string;
+  plan_path: string | null;
+  crown_jewel: string | null;
+  prompts: string[];
+  season_override: GardenSeason | null;
+  rigidity: number;
+  progress: number;
+  created_at: string;
+  last_tended: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  /** Whether the plot has been tended in the last 24 hours */
+  is_active?: boolean;
+}
+
+/** Garden metrics */
+export interface GardenMetricsJSON {
+  health_score: number;
+  total_prompts: number;
+  active_plots: number;
+  entropy_spent: number;
+  entropy_budget: number;
+}
+
+/** Computed garden fields (from JSON projection) */
+export interface GardenComputedJSON {
+  health_score: number;
+  entropy_remaining: number;
+  entropy_percentage: number;
+  active_plot_count: number;
+  total_plot_count: number;
+  season_plasticity: number;
+  season_entropy_multiplier: number;
+}
+
+/** Full garden state JSON (from project_garden_to_json) */
+export interface GardenJSON {
+  type: 'garden';
+  garden_id: string;
+  name: string;
+  created_at: string;
+  season: GardenSeason;
+  season_since: string;
+  plots: Record<string, PlotJSON>;
+  active_plot: string | null;
+  session_id: string | null;
+  memory_crystals: string[];
+  prompt_count: number;
+  prompt_types: Record<string, number>;
+  recent_gestures: GestureJSON[];
+  last_tended: string;
+  metrics: GardenMetricsJSON;
+  computed: GardenComputedJSON;
+}
+
+/** Garden dashboard widget (composite) */
+export interface GardenDashboardJSON {
+  type: 'garden_dashboard';
+  garden: GardenJSON;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
+}
+
+// =============================================================================
+// Auto-Inducer (Phase 8: Season Transition Suggestions)
+// =============================================================================
+
+/** Signals gathered from garden state to evaluate transitions */
+export interface TransitionSignalsJSON {
+  gesture_frequency: number;
+  gesture_diversity: number;
+  plot_progress_delta: number;
+  artifacts_created: number;
+  time_in_season_hours: number;
+  entropy_spent_ratio: number;
+  reflect_count: number;
+  session_active: boolean;
+}
+
+/** A suggested season transition from the Auto-Inducer */
+export interface TransitionSuggestionJSON {
+  from_season: GardenSeason;
+  to_season: GardenSeason;
+  confidence: number;
+  reason: string;
+  signals: TransitionSignalsJSON;
+  triggered_at: string;
+}
+
+/** Response from tending with optional transition suggestion */
+export interface TendResponseJSON {
+  accepted: boolean;
+  state_changed: boolean;
+  changes: string[];
+  synergies_triggered: string[];
+  reasoning_trace: string[];
+  error: string | null;
+  gesture: GestureJSON;
+  suggested_transition: TransitionSuggestionJSON | null;
+}
+
+// =============================================================================
+// Union Type
+// =============================================================================
+
 /**
  * Discriminated union of all widget JSON types.
  *
@@ -235,7 +372,9 @@ export type WidgetJSON =
   | CitizenCardJSON
   | HStackJSON
   | VStackJSON
-  | ColonyDashboardJSON;
+  | ColonyDashboardJSON
+  | GardenJSON
+  | GardenDashboardJSON;
 
 /**
  * Extract the type literal from a WidgetJSON.
@@ -250,8 +389,16 @@ export function isWidgetJSON(value: unknown): value is WidgetJSON {
   const obj = value as Record<string, unknown>;
   return (
     typeof obj.type === 'string' &&
-    ['glyph', 'bar', 'sparkline', 'citizen_card', 'hstack', 'vstack', 'colony_dashboard'].includes(
-      obj.type
-    )
+    [
+      'glyph',
+      'bar',
+      'sparkline',
+      'citizen_card',
+      'hstack',
+      'vstack',
+      'colony_dashboard',
+      'garden',
+      'garden_dashboard',
+    ].includes(obj.type)
   );
 }

@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { townApi } from '@/api/client';
 import { cn, getArchetypeColor, getPhaseColor } from '@/lib/utils';
+import { InlineError, PersonalityLoading } from '@/components/joy';
 import type { CitizenCardJSON } from '@/reactive/types';
 import type { CitizenManifest } from '@/api/types';
 
@@ -44,19 +45,19 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
 
   if (loading) {
     return (
-      <div className="p-6 text-center text-gray-400">
-        <div className="animate-pulse">Loading...</div>
+      <div className="p-6 flex justify-center">
+        <PersonalityLoading jewel="coalition" size="sm" action="manifest" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-400">
-        <p>{error}</p>
+      <div className="p-6 text-center">
+        <InlineError message={error} />
         <button
           onClick={() => setCurrentLOD(0)}
-          className="mt-2 text-sm text-gray-400 hover:text-white"
+          className="mt-4 text-sm text-gray-400 hover:text-white"
         >
           Reset to LOD 0
         </button>

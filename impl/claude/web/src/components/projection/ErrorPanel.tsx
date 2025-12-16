@@ -7,6 +7,7 @@
 
 import type { ErrorInfo } from '../../reactive/schema';
 import { getErrorEmoji, isErrorRetryable } from '../../reactive/schema';
+import { STATE_COLORS, SEMANTIC_COLORS } from '../../constants';
 
 interface ErrorPanelProps {
   error: ErrorInfo;
@@ -16,14 +17,15 @@ interface ErrorPanelProps {
 
 /**
  * Color mapping for error categories.
+ * Uses semantic colors from design system where appropriate.
  */
 const CATEGORY_COLORS: Record<string, { border: string; bg: string; text: string }> = {
-  network: { border: '#f59e0b', bg: '#fffbeb', text: '#92400e' },
+  network: { border: STATE_COLORS.warning, bg: '#fffbeb', text: '#92400e' },
   notFound: { border: '#3b82f6', bg: '#eff6ff', text: '#1e40af' },
-  permission: { border: '#ef4444', bg: '#fef2f2', text: '#991b1b' },
-  timeout: { border: '#f59e0b', bg: '#fffbeb', text: '#92400e' },
-  validation: { border: '#a855f7', bg: '#faf5ff', text: '#6b21a8' },
-  unknown: { border: '#ef4444', bg: '#fef2f2', text: '#991b1b' },
+  permission: { border: STATE_COLORS.error, bg: '#fef2f2', text: '#991b1b' },
+  timeout: { border: STATE_COLORS.warning, bg: '#fffbeb', text: '#92400e' },
+  validation: { border: SEMANTIC_COLORS.collaboration, bg: '#faf5ff', text: '#6b21a8' },
+  unknown: { border: STATE_COLORS.error, bg: '#fef2f2', text: '#991b1b' },
 };
 
 export function ErrorPanel({ error, onRetry, showRetry = true }: ErrorPanelProps) {

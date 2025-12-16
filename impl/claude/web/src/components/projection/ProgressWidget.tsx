@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { STATE_COLORS, GRAYS } from '../../constants';
 
 export type ProgressVariant = 'bar' | 'steps';
 
@@ -58,7 +59,7 @@ function ProgressBar({
       <div
         style={{
           height: '8px',
-          backgroundColor: '#e5e7eb',
+          backgroundColor: GRAYS[200],
           borderRadius: '4px',
           overflow: 'hidden',
         }}
@@ -71,7 +72,7 @@ function ProgressBar({
         <div
           style={{
             height: '100%',
-            backgroundColor: '#3b82f6',
+            backgroundColor: STATE_COLORS.info,
             borderRadius: '4px',
             transition: 'width 0.3s ease',
             width: indeterminate ? '30%' : `${clampedValue}%`,
@@ -116,12 +117,12 @@ function ProgressSteps({ steps }: { steps: ProgressStep[] }) {
                 fontSize: '14px',
                 fontWeight: 600,
                 backgroundColor: step.completed
-                  ? '#10b981'
+                  ? STATE_COLORS.success
                   : step.current
-                    ? '#3b82f6'
-                    : '#e5e7eb',
-                color: step.completed || step.current ? 'white' : '#6b7280',
-                border: step.current ? '2px solid #60a5fa' : 'none',
+                    ? STATE_COLORS.info
+                    : GRAYS[200],
+                color: step.completed || step.current ? 'white' : GRAYS[500],
+                border: step.current ? `2px solid ${STATE_COLORS.info}` : 'none',
               }}
               aria-current={step.current ? 'step' : undefined}
             >
@@ -130,7 +131,7 @@ function ProgressSteps({ steps }: { steps: ProgressStep[] }) {
             <span
               style={{
                 fontSize: '12px',
-                color: step.current ? '#1f2937' : '#6b7280',
+                color: step.current ? GRAYS[800] : GRAYS[500],
                 fontWeight: step.current ? 600 : 400,
                 textAlign: 'center',
                 maxWidth: '80px',
@@ -146,7 +147,7 @@ function ProgressSteps({ steps }: { steps: ProgressStep[] }) {
               style={{
                 flex: 1,
                 height: '2px',
-                backgroundColor: step.completed ? '#10b981' : '#e5e7eb',
+                backgroundColor: step.completed ? STATE_COLORS.success : GRAYS[200],
                 margin: '0 8px',
                 marginBottom: '20px',
               }}

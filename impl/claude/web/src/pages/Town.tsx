@@ -13,7 +13,7 @@
  * @see plans/web-refactor/elastic-audit-report.md
  */
 
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useTownStreamWidget } from '@/hooks/useTownStreamWidget';
 import { townApi } from '@/api/client';
@@ -21,6 +21,8 @@ import { Mesa } from '@/components/town/Mesa';
 import { CitizenPanel } from '@/components/town/CitizenPanel';
 import { ColonyDashboard } from '@/widgets/dashboards';
 import { ElasticSplit, ElasticContainer, useWindowLayout } from '@/components/elastic';
+import { getEmptyState } from '@/constants';
+import { EmpathyError } from '@/components/joy';
 import type { TownEvent } from '@/api/types';
 
 type LoadingState = 'loading' | 'loaded' | 'error' | 'creating';
@@ -259,19 +261,14 @@ export default function Town() {
   if (loadingState === 'error') {
     return (
       <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
-        <div className="text-center max-w-md">
-          <div className="text-6xl mb-4">🏚️</div>
-          <h2 className="text-xl font-semibold mb-2 text-red-400">Town Not Found</h2>
-          <p className="text-gray-400 mb-6">{error}</p>
-          <div className="flex gap-4 justify-center">
-            <Link
-              to="/town/demo"
-              className="px-6 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
-            >
-              Create New Town
-            </Link>
-          </div>
-        </div>
+        <EmpathyError
+          type="notfound"
+          title="Town Not Found"
+          subtitle={error || 'The town you requested could not be located.'}
+          action="Create New Town"
+          onAction={() => window.location.href = '/town/demo'}
+          size="lg"
+        />
       </div>
     );
   }
@@ -539,7 +536,7 @@ function ControlsPanel({
               </div>
             ))
           ) : (
-            <p className="text-xs text-gray-600">No events yet</p>
+            <p className="text-xs text-gray-600">{getEmptyState('noData').description}</p>
           )}
         </div>
       </div>
@@ -658,7 +655,7 @@ function EventFeed({ events, isOpen, onToggle, density }: EventFeedProps) {
               ))}
             </ul>
           ) : (
-            <p className={`text-gray-600 ${isCompact ? 'text-xs' : 'text-sm'}`}>No events yet. Press Play to start.</p>
+            <p className={`text-gray-600 ${isCompact ? 'text-xs' : 'text-sm'}`}>{getEmptyState('noData').description} Press Play to start.</p>
           )}
         </div>
       )}

@@ -36,6 +36,15 @@ import type {
 } from '../api/types';
 import { INFRA_ENTITY_CONFIG, INFRA_SEVERITY_CONFIG, HEALTH_GRADE_CONFIG } from '../api/types';
 import { ErrorBoundary } from '../components/error/ErrorBoundary';
+import {
+  getHealthColor as getHealthColorString,
+  CONNECTION_STATUS_COLORS,
+  DARK_SURFACES,
+  SEMANTIC_COLORS,
+  GRAYS,
+  getEmptyState,
+  getLoadingMessage,
+} from '../constants';
 
 // Elastic Layout Imports
 import {
@@ -115,12 +124,9 @@ interface PanelState {
 // Utility Functions
 // =============================================================================
 
-/** Get color based on health score */
+/** Get color based on health score (returns THREE.Color for 3D) */
 function getHealthColor(health: number): THREE.Color {
-  if (health >= 0.8) return new THREE.Color('#22c55e'); // Green
-  if (health >= 0.6) return new THREE.Color('#facc15'); // Yellow
-  if (health >= 0.4) return new THREE.Color('#f97316'); // Orange
-  return new THREE.Color('#ef4444'); // Red
+  return new THREE.Color(getHealthColorString(health));
 }
 
 /** Format bytes to human readable */
@@ -334,19 +340,19 @@ function InfraEdge({ connection, source, target }: InfraEdgeProps) {
     return new THREE.BufferGeometry().setFromPoints(points);
   }, [points]);
 
-  // Color based on connection kind
+  // Color based on connection kind - using semantic colors
   const color = useMemo(() => {
     switch (connection.kind) {
       case 'selects':
-        return '#3b82f6'; // Blue
+        return SEMANTIC_COLORS.knowledge; // Cyan (was blue)
       case 'owns':
-        return '#a855f7'; // Purple
+        return SEMANTIC_COLORS.collaboration; // Violet
       case 'http':
-        return '#22c55e'; // Green
+        return SEMANTIC_COLORS.growth; // Green
       case 'nats':
-        return '#ec4899'; // Pink
+        return SEMANTIC_COLORS.drama; // Pink
       default:
-        return '#6b7280'; // Gray
+        return GRAYS[500]; // Gray
     }
   }, [connection.kind]);
 
@@ -543,7 +549,7 @@ function EventFeed({ events, density, isDrawer }: EventFeedProps) {
       {displayEvents.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <div className={isCompact ? 'text-xl mb-1' : 'text-2xl mb-2'}>📭</div>
-          <p className={isCompact ? 'text-xs' : 'text-sm'}>No events yet</p>
+          <p className={isCompact ? 'text-xs' : 'text-sm'}>{getEmptyState('noData').description}</p>
         </div>
       ) : (
         displayEvents.map((event, i) => {
@@ -910,16 +916,16 @@ function ConnectionStatus({ status }: ConnectionStatusProps) {
   const config = useMemo(() => {
     switch (status) {
       case 'connected':
-        return { color: '#22c55e', icon: '●', text: 'Live' };
+        return { color: CONNECTION_STATUS_COLORS.live, icon: '●', text: 'Live' };
       case 'connecting':
-        return { color: '#f59e0b', icon: '○', text: 'Connecting...' };
+        return { color: CONNECTION_STATUS_COLORS.connecting, icon: '○', text: 'Connecting...' };
       case 'reconnecting':
-        return { color: '#f59e0b', icon: '◐', text: 'Reconnecting...' };
+        return { color: CONNECTION_STATUS_COLORS.reconnecting, icon: '◐', text: 'Reconnecting...' };
       case 'error':
-        return { color: '#ef4444', icon: '●', text: 'Error' };
+        return { color: CONNECTION_STATUS_COLORS.error, icon: '●', text: 'Error' };
       case 'disconnected':
       default:
-        return { color: '#6b7280', icon: '○', text: 'Offline' };
+        return { color: CONNECTION_STATUS_COLORS.offline, icon: '○', text: 'Offline' };
     }
   }, [status]);
 
@@ -1164,7 +1170,7 @@ export default function GestaltLive() {
           camera={{ position: [0, 0, isMobile ? 30 : 25], fov: 55 }}
           gl={{ antialias: true, alpha: false }}
           shadows={shadowsEnabled}
-          style={{ background: '#111827' }}
+          style={{ background: DARK_SURFACES.canvas }}
           onClick={() => setSelectedEntity(null)}
         >
           <InfraScene
@@ -1239,8 +1245,8 @@ export default function GestaltLive() {
               <span
                 className="text-xs font-bold px-1.5 py-0.5 rounded"
                 style={{
-                  backgroundColor: topology.overall_health >= 0.8 ? '#22c55e33' : '#ef444433',
-                  color: topology.overall_health >= 0.8 ? '#22c55e' : '#ef4444',
+                  backgroundColor: getHealthColorString(topology.overall_health) + '33',
+                  color: getHealthColorString(topology.overall_health),
                 }}
               >
                 {Math.round(topology.overall_health * 100)}%
@@ -1397,8 +1403,8 @@ export default function GestaltLive() {
                 <span
                   className="text-sm font-normal px-2 py-0.5 rounded ml-2"
                   style={{
-                    backgroundColor: topology.overall_health >= 0.8 ? '#22c55e33' : '#ef444433',
-                    color: topology.overall_health >= 0.8 ? '#22c55e' : '#ef4444',
+                    backgroundColor: getHealthColorString(topology.overall_health) + '33',
+                    color: getHealthColorString(topology.overall_health),
                   }}
                 >
                   {Math.round(topology.overall_health * 100)}%
@@ -1408,7 +1414,7 @@ export default function GestaltLive() {
             <p className={`text-gray-400 mt-0.5 ${isTablet ? 'text-xs' : 'text-sm'}`}>
               {topology
                 ? `${topology.total_entities} entities • ${topology.connections.length} connections`
-                : 'Loading...'}
+                : getLoadingMessage('gestalt')}
             </p>
           </div>
 

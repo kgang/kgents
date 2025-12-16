@@ -46,6 +46,8 @@ import {
   Legend,
   NodeTooltip,
   SmartEdge,
+  SmartVineEdge,
+  OrganicNode,
   type FilterState,
   HEALTH_GRADES,
   DEFAULT_FILTER_STATE,
@@ -53,10 +55,13 @@ import {
 } from '../components/gestalt';
 import {
   PersonalityLoading,
+  EmpathyError,
   Breathe,
   celebrateEpic,
 } from '../components/joy';
 import { useObserverState } from '../components/path';
+import { useSynergyToast } from '../components/synergy';
+import { DARK_SURFACES, FOREST_SCENE } from '../constants';
 
 // =============================================================================
 // Constants - Responsive scaling
@@ -307,6 +312,8 @@ interface SceneProps {
   density: Density;
   /** Illumination quality for canonical lighting */
   illuminationQuality: IlluminationQuality;
+  /** Use organic/forest theme (Sprint 3) */
+  organicTheme: boolean;
 }
 
 function Scene({
@@ -321,6 +328,7 @@ function Scene({
   enabledGrades,
   density,
   illuminationQuality,
+  organicTheme,
 }: SceneProps) {
   // Apply all filters: layer + health grades
   const filteredNodes = useMemo(() => {
@@ -407,6 +415,7 @@ function Scene({
 
       <LayerRings layers={topology.layers} nodeMap={nodeMap} />
 
+      {/* Edge rendering - organic vines or standard edges */}
       {showEdges &&
         filteredLinks.map((link) => {
           const sourceNode = nodeMap.get(link.source);
@@ -415,6 +424,22 @@ function Scene({
 
           const edgeId = `${link.source}->${link.target}`;
           const isActive = activeEdgeIds.has(edgeId);
+
+          // Sprint 3: Use VineEdge for organic theme
+          if (organicTheme) {
+            return (
+              <SmartVineEdge
+                key={edgeId}
+                source={[sourceNode.x, sourceNode.y, sourceNode.z]}
+                target={[targetNode.x, targetNode.y, targetNode.z]}
+                isViolation={link.is_violation}
+                animationEnabled={showAnimation}
+                isActive={isActive}
+                isHighlighted={isActive}
+                isDimmed={selectedNodeId !== null && !isActive}
+              />
+            );
+          }
 
           return (
             <SmartEdge
@@ -430,15 +455,27 @@ function Scene({
           );
         })}
 
+      {/* Node rendering - organic plants or standard spheres */}
       {filteredNodes.map((node) => (
-        <ModuleNode
-          key={node.id}
-          node={node}
-          isSelected={node.id === selectedNodeId}
-          onClick={() => onNodeClick(node)}
-          showLabel={labelledNodeIds.has(node.id)}
-          density={density}
-        />
+        organicTheme ? (
+          <OrganicNode
+            key={node.id}
+            node={node}
+            isSelected={node.id === selectedNodeId}
+            onClick={() => onNodeClick(node)}
+            showLabel={labelledNodeIds.has(node.id)}
+            density={density}
+          />
+        ) : (
+          <ModuleNode
+            key={node.id}
+            node={node}
+            isSelected={node.id === selectedNodeId}
+            onClick={() => onNodeClick(node)}
+            showLabel={labelledNodeIds.has(node.id)}
+            density={density}
+          />
+        )
       ))}
 
       <OrbitControls
@@ -623,14 +660,14 @@ function TopologyLoading() {
 function TopologyErrorFallback({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8">
-      <div className="text-5xl mb-4">⚠️</div>
-      <h3 className="text-lg font-semibold text-gray-300 mb-2">3D Rendering Failed</h3>
-      <p className="text-gray-500 text-sm text-center mb-4 max-w-md">
-        The graph couldn't be rendered. This may happen without WebGL support.
-      </p>
-      <button onClick={onRetry} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors">
-        Try Again
-      </button>
+      <EmpathyError
+        type="unknown"
+        title="3D Rendering Failed"
+        subtitle="The graph couldn't be rendered. This may happen without WebGL support."
+        action="Try Again"
+        onAction={onRetry}
+        size="md"
+      />
     </div>
   );
 }
@@ -676,17 +713,21 @@ export default function Gestalt() {
   // Observer state (Wave 0 Foundation 2)
   const [observer, setObserver] = useObserverState('gestalt', 'architect');
 
-  // Load topology
+  // Synergy toast hook (Wave 4: Cross-jewel visibility)
+  const { gestaltToBrain, driftDetected } = useSynergyToast();
+
+  // Load topology - Sprint 2: Include observer role
   useEffect(() => {
     loadTopology();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.maxNodes]);
+  }, [filters.maxNodes, observer]);
 
   const loadTopology = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await gestaltApi.getTopology(filters.maxNodes, 0.0);
+      // Sprint 2: Pass observer role to API for observer-dependent views
+      const response = await gestaltApi.getTopology(filters.maxNodes, 0.0, observer);
       setTopology(response.data);
 
       // Foundation 5: Celebrate A+ health grade!
@@ -738,6 +779,17 @@ export default function Gestalt() {
     try {
       await gestaltApi.scan('python');
       await loadTopology();
+
+      // Wave 4: Show synergy toast when scan completes
+      // This notifies the user that the analysis was captured to Brain
+      if (topology) {
+        gestaltToBrain('impl/claude/', topology.stats.overall_grade);
+
+        // Also notify about drift violations if any
+        if (topology.stats.violation_count > 0) {
+          driftDetected('impl/claude/', topology.stats.violation_count);
+        }
+      }
     } catch (err) {
       console.error('Failed to scan:', err);
       setError('Failed to scan codebase');
@@ -757,7 +809,7 @@ export default function Gestalt() {
           camera={{ position: [0, 0, isMobile ? 30 : 25], fov: 55 }}
           gl={{ antialias: true, alpha: false }}
           shadows={shadowsEnabled ? 'soft' : false}
-          style={{ background: '#111827' }}
+          style={{ background: filters.organicTheme ? FOREST_SCENE.background : DARK_SURFACES.canvas }}
         >
           <Scene
             topology={topology}
@@ -771,6 +823,7 @@ export default function Gestalt() {
             enabledGrades={filters.enabledGrades}
             density={density}
             illuminationQuality={illuminationQuality}
+            organicTheme={filters.organicTheme}
           />
         </Canvas>
       </Suspense>
@@ -857,13 +910,14 @@ export default function Gestalt() {
         <div className="flex-1 relative">
           {error ? (
             <div className="h-full flex items-center justify-center p-4">
-              <div className="text-center">
-                <div className="text-4xl mb-3">⚠️</div>
-                <p className="text-gray-400 text-sm mb-4">{error}</p>
-                <button onClick={handleRetry} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm">
-                  Retry
-                </button>
-              </div>
+              <EmpathyError
+                type="network"
+                title="Architecture Unavailable"
+                subtitle={error}
+                action="Retry"
+                onAction={handleRetry}
+                size="sm"
+              />
             </div>
           ) : loading && !topology ? (
             <TopologyLoading />
@@ -1043,13 +1097,14 @@ export default function Gestalt() {
       {/* Main content with ElasticSplit */}
       {error ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-5xl mb-4">⚠️</div>
-            <p className="text-gray-400 mb-4">{error}</p>
-            <button onClick={handleRetry} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg">
-              Retry
-            </button>
-          </div>
+          <EmpathyError
+            type="network"
+            title="Architecture Unavailable"
+            subtitle={error}
+            action="Retry"
+            onAction={handleRetry}
+            size="lg"
+          />
         </div>
       ) : loading && !topology ? (
         <div className="flex-1">

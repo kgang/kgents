@@ -26,6 +26,13 @@ export {
 // Atelier streaming
 export { useAtelierStream, type UseAtelierStreamResult } from './useAtelierStream';
 
+// Gestalt streaming (Sprint 1: Live Architecture)
+export {
+  useGestaltStream,
+  type UseGestaltStreamOptions,
+  type UseGestaltStreamReturn,
+} from './useGestaltStream';
+
 // Performance optimization
 export { useBatchedEvents } from './useBatchedEvents';
 
@@ -66,3 +73,16 @@ export {
   type UseTouchGesturesOptions,
   type TouchGesturesState,
 } from './useTouchGestures';
+
+// Emergence visualization hooks
+export {
+  useCymatics,
+  type UseCymaticsOptions,
+  type UseCymaticsReturn,
+} from './useCymatics';
+
+export {
+  useGrowthAnimation,
+  type GrowthAnimationOptions,
+  type UseGrowthAnimationReturn,
+} from './useGrowthAnimation';

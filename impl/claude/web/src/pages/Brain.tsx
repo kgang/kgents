@@ -46,6 +46,8 @@ import {
   celebrate,
 } from '../components/joy';
 import { CrystalDetail } from '../components/brain';
+import { useSynergyToast } from '../components/synergy';
+import { getEmptyState, getLoadingMessage } from '../constants';
 
 // =============================================================================
 // Constants - Density-aware scaling
@@ -119,6 +121,52 @@ function TopologyErrorFallback({ onRetry }: { onRetry: () => void }) {
         >
           Use 2D View
         </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Connection error display.
+ * Shows when the backend API isn't reachable.
+ */
+function ConnectionError({ error, onRetry }: { error: string; onRetry: () => void }) {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8">
+      <div className="text-5xl mb-4">🔌</div>
+      <h3 className="text-lg font-semibold text-gray-300 mb-2">Backend Not Connected</h3>
+      <pre className="text-gray-500 text-sm text-center mb-4 max-w-lg whitespace-pre-wrap font-mono bg-gray-800 p-4 rounded-lg">
+        {error}
+      </pre>
+      <div className="flex gap-3">
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 rounded text-sm font-medium transition-colors"
+        >
+          🔄 Retry Connection
+        </button>
+      </div>
+      <p className="text-gray-600 text-xs mt-4 max-w-md text-center">
+        The Brain stores data in <code className="text-cyan-400">~/.kgents/brain/patterns.json</code> and will restore your data when the server starts.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Empty state when brain has no data.
+ */
+function EmptyBrainState() {
+  return (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 p-8">
+      <div className="text-5xl mb-4">🧠</div>
+      <h3 className="text-lg font-semibold text-gray-300 mb-2">Your Brain is Empty</h3>
+      <p className="text-gray-500 text-sm text-center mb-4 max-w-md">
+        Start capturing thoughts, notes, or information using the "Quick Capture" panel.
+        Your brain data will persist across server restarts.
+      </p>
+      <div className="text-xs text-gray-600 mt-4">
+        Data stored in: <code className="text-cyan-400">~/.kgents/brain/patterns.json</code>
       </div>
     </div>
   );
@@ -320,6 +368,8 @@ export default function Brain() {
   const [ghostContext, setGhostContext] = useState('');
   const [ghostResults, setGhostResults] = useState<GhostMemory[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [viewMode, setViewMode] = useState<'topology' | 'panels'>('topology');
   const [showEdges, setShowEdges] = useState(true);
@@ -339,37 +389,66 @@ export default function Brain() {
   // Observer state (Wave 0 Foundation 2)
   const [observer, setObserver] = useObserverState('brain', 'technical');
 
-  // Load status, map, and topology on mount
-  useEffect(() => {
-    loadStatus();
-    loadMap();
-    loadTopology();
+  // Synergy toasts (Wave 4: Cross-jewel notifications)
+  const { crystalFormed } = useSynergyToast();
+
+  // Load all brain data
+  const loadAllData = useCallback(async () => {
+    setInitialLoading(true);
+    setConnectionError(null);
+
+    try {
+      // Load all in parallel
+      const [statusRes, mapRes, topologyRes] = await Promise.all([
+        brainApi.getStatus(),
+        brainApi.getMap(),
+        brainApi.getTopology(0.3),
+      ]);
+
+      setStatus(statusRes.data);
+      setMap(mapRes.data);
+      setTopology(topologyRes.data);
+      setConnectionError(null);
+    } catch (error: unknown) {
+      console.error('Failed to load brain data:', error);
+
+      // Provide helpful error message
+      if (error && typeof error === 'object' && 'code' in error) {
+        const axiosError = error as { code?: string; message?: string };
+        if (axiosError.code === 'ERR_NETWORK' || axiosError.code === 'ECONNREFUSED') {
+          setConnectionError(
+            'Cannot connect to backend. Make sure the API server is running:\n\n' +
+            'cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000'
+          );
+        } else {
+          setConnectionError(`Connection error: ${axiosError.message || 'Unknown error'}`);
+        }
+      } else {
+        setConnectionError('Failed to connect to Brain API');
+      }
+    } finally {
+      setInitialLoading(false);
+    }
   }, []);
 
-  const loadStatus = async () => {
-    try {
-      const response = await brainApi.getStatus();
-      setStatus(response.data);
-    } catch (error) {
-      console.error('Failed to load brain status:', error);
-    }
-  };
+  // Load on mount
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
-  const loadMap = async () => {
+  // Refresh all data after capture
+  const refreshAfterCapture = async () => {
     try {
-      const response = await brainApi.getMap();
-      setMap(response.data);
+      const [statusRes, mapRes, topologyRes] = await Promise.all([
+        brainApi.getStatus(),
+        brainApi.getMap(),
+        brainApi.getTopology(0.3),
+      ]);
+      setStatus(statusRes.data);
+      setMap(mapRes.data);
+      setTopology(topologyRes.data);
     } catch (error) {
-      console.error('Failed to load brain map:', error);
-    }
-  };
-
-  const loadTopology = async () => {
-    try {
-      const response = await brainApi.getTopology(0.3);
-      setTopology(response.data);
-    } catch (error) {
-      console.error('Failed to load brain topology:', error);
+      console.error('Failed to refresh after capture:', error);
     }
   };
 
@@ -384,8 +463,8 @@ export default function Brain() {
   // Retry handler for 3D rendering failures
   const handleTopologyRetry = useCallback(() => {
     setTopologyKey((k) => k + 1); // Force remount
-    loadTopology(); // Refresh data
-  }, []);
+    loadAllData(); // Refresh all data
+  }, [loadAllData]);
 
   // Log 3D errors for telemetry
   const handleTopologyError = useCallback((error: Error) => {
@@ -401,17 +480,21 @@ export default function Brain() {
 
     try {
       const response = await brainApi.capture({ content: captureContent });
+      setCaptureContent('');
+
+      // Refresh all data to show new content
+      await refreshAfterCapture();
+
       setMessage({
         type: 'success',
         text: `Captured: ${response.data.concept_id}`,
       });
-      setCaptureContent('');
-      // Refresh map and topology to show new content
-      loadMap();
-      loadTopology();
 
       // Foundation 5: Celebrate successful capture!
       celebrate({ intensity: 'subtle' });
+
+      // Wave 4: Show synergy toast notification
+      crystalFormed(response.data.concept_id);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -437,7 +520,7 @@ export default function Brain() {
       if (response.data.count === 0) {
         setMessage({
           type: 'success',
-          text: 'No memories surfaced for this context',
+          text: getEmptyState('noResults').description,
         });
       }
     } catch (error) {
@@ -465,24 +548,45 @@ export default function Brain() {
   // Render: 3D Canvas
   // ==========================================================================
 
-  const canvas3D = (
-    <ErrorBoundary
-      key={topologyKey}
-      fallback={<TopologyErrorFallback onRetry={handleTopologyRetry} />}
-      onError={handleTopologyError}
-      resetKeys={[topologyKey]}
-    >
-      <Suspense fallback={<TopologyLoading />}>
-        <BrainTopology
-          topology={topology}
-          onNodeClick={handleNodeClick}
-          showEdges={showEdges}
-          showGaps={showGaps}
-          showLabels={showLabels}
-        />
-      </Suspense>
-    </ErrorBoundary>
-  );
+  // Determine what to show in the canvas area
+  const renderCanvas = () => {
+    // Initial loading state
+    if (initialLoading) {
+      return <TopologyLoading />;
+    }
+
+    // Connection error state
+    if (connectionError) {
+      return <ConnectionError error={connectionError} onRetry={loadAllData} />;
+    }
+
+    // Empty brain state (connected but no data)
+    if (topology && topology.nodes.length === 0) {
+      return <EmptyBrainState />;
+    }
+
+    // Normal 3D topology
+    return (
+      <ErrorBoundary
+        key={topologyKey}
+        fallback={<TopologyErrorFallback onRetry={handleTopologyRetry} />}
+        onError={handleTopologyError}
+        resetKeys={[topologyKey]}
+      >
+        <Suspense fallback={<TopologyLoading />}>
+          <BrainTopology
+            topology={topology}
+            onNodeClick={handleNodeClick}
+            showEdges={showEdges}
+            showGaps={showGaps}
+            showLabels={showLabels}
+          />
+        </Suspense>
+      </ErrorBoundary>
+    );
+  };
+
+  const canvas3D = renderCanvas();
 
   // ==========================================================================
   // Render: Stats Overlay
@@ -515,12 +619,23 @@ export default function Brain() {
           <div className="flex items-center gap-2">
             <span className="text-lg">🧠</span>
             <span className="font-semibold">Brain</span>
-            {status && (
+            {connectionError ? (
+              <span className="text-xs text-red-400">⚠️</span>
+            ) : status ? (
               <span className={`text-xs ${getStatusColor(status.status)}`}>
                 {status.concept_count}
               </span>
-            )}
+            ) : null}
           </div>
+          {/* Refresh button */}
+          <button
+            onClick={loadAllData}
+            disabled={initialLoading}
+            className="text-gray-500 hover:text-cyan-400 transition-colors disabled:opacity-50 p-1"
+            title="Refresh"
+          >
+            <span className={`text-sm ${initialLoading ? 'animate-spin' : ''}`}>🔄</span>
+          </button>
         </header>
 
         {/* Main content */}
@@ -686,18 +801,31 @@ export default function Brain() {
             <h1 className={`font-bold flex items-center gap-2 ${isTablet ? 'text-lg' : 'text-xl'}`}>
               <span>🧠</span>
               <span>Holographic Brain</span>
+              {/* Refresh button */}
+              <button
+                onClick={loadAllData}
+                disabled={initialLoading}
+                className="text-gray-500 hover:text-cyan-400 transition-colors disabled:opacity-50"
+                title="Refresh brain data"
+              >
+                <span className={`text-sm ${initialLoading ? 'animate-spin' : ''}`}>🔄</span>
+              </button>
             </h1>
             <p className={`text-gray-400 mt-0.5 ${isTablet ? 'text-xs' : 'text-sm'}`}>
-              {status ? (
+              {connectionError ? (
+                <span className="text-red-400">⚠️ Not connected</span>
+              ) : status ? (
                 <>
                   <span className={getStatusColor(status.status)}>{status.status}</span>
                   {' • '}
-                  {status.concept_count} concepts
+                  <span className="text-cyan-400">{status.concept_count}</span> concepts
                   {' • '}
                   {status.embedder_type}
                 </>
+              ) : initialLoading ? (
+                getLoadingMessage('brain')
               ) : (
-                'Loading...'
+                getLoadingMessage('brain')
               )}
             </p>
           </div>
@@ -959,7 +1087,7 @@ function PanelsView({
                   </span>
                 </div>
                 <p className={`${isCompact ? 'line-clamp-1' : 'text-sm'}`}>
-                  {memory.content || <span className="text-gray-500 italic">No content</span>}
+                  {memory.content || <span className="text-gray-500 italic">{getEmptyState('noData').title}</span>}
                 </p>
               </div>
             ))}

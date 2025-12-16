@@ -14,6 +14,7 @@ import type {
   PilotResponse,
 } from '@/api/types';
 import { PilotCard, CategoryFilter, OverrideControls } from '@/components/gallery';
+import { EmpathyError, PersonalityLoading } from '@/components/joy';
 
 type FilterCategory = GalleryCategory | 'ALL';
 
@@ -70,33 +71,27 @@ export default function GalleryPage() {
     setOverrides(newOverrides);
   }, []);
 
-  // Loading state
+  // Loading state - Foundation 5: PersonalityLoading (generic)
   if (loading && !galleryData) {
     return (
       <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
-        <div className="text-center">
-          <div className="animate-pulse text-4xl mb-4">◈</div>
-          <p className="text-gray-400">Loading gallery...</p>
-        </div>
+        <PersonalityLoading jewel="gestalt" size="lg" action="connect" />
       </div>
     );
   }
 
-  // Error state
+  // Error state - Foundation 5: EmpathyError
   if (error && !galleryData) {
     return (
       <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
-        <div className="text-center max-w-md">
-          <div className="text-4xl mb-4 text-red-400">⚠</div>
-          <h2 className="text-xl font-semibold mb-2 text-red-400">Gallery Error</h2>
-          <p className="text-gray-400 mb-4">{error}</p>
-          <button
-            onClick={fetchGallery}
-            className="px-4 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
-          >
-            Retry
-          </button>
-        </div>
+        <EmpathyError
+          type="network"
+          title="Gallery Unavailable"
+          subtitle={error}
+          action="Retry"
+          onAction={fetchGallery}
+          size="lg"
+        />
       </div>
     );
   }

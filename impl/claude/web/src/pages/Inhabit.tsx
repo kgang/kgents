@@ -23,18 +23,11 @@ import {
   ElasticPlaceholder,
   useWindowLayout,
 } from '@/components/elastic';
+import { PersonalityLoading } from '@/components/joy';
+import { getArchetypeColor, getEmptyState, TOOLTIPS } from '@/constants';
 import type { CitizenManifest, InhabitStatus, InhabitActionResult, Eigenvectors } from '@/api/types';
 
 type Density = 'compact' | 'comfortable' | 'spacious';
-
-// Mock archetype colors (would come from shared config)
-const ARCHETYPE_COLORS: Record<string, string> = {
-  Builder: '#3b82f6',
-  Trader: '#22c55e',
-  Healer: '#ec4899',
-  Scholar: '#8b5cf6',
-  Watcher: '#f59e0b',
-};
 
 export default function Inhabit() {
   const { citizenId } = useParams<{ citizenId: string }>();
@@ -102,11 +95,9 @@ export default function Inhabit() {
               className="h-full bg-town-bg"
             >
               {isLoading && (
-                <ElasticPlaceholder
-                  for="agent"
-                  state="loading"
-                  expectedSize={{ width: '100%', height: isMobile ? '300px' : '400px' }}
-                />
+                <div className="h-full flex items-center justify-center" style={{ minHeight: isMobile ? '300px' : '400px' }}>
+                  <PersonalityLoading jewel="coalition" action="inhabit" />
+                </div>
               )}
 
               {error && (
@@ -223,15 +214,19 @@ interface EmptyInhabitProps {
 
 function EmptyInhabit({ citizenId, density }: EmptyInhabitProps) {
   const isCompact = density === 'compact';
+  // Use semantic empty state messages
+  const emptyState = getEmptyState('noCitizens');
 
   return (
     <div className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}>
       <span className={`${isCompact ? 'text-4xl mb-2' : 'text-6xl mb-4'}`}>👤</span>
-      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>Ready to Inhabit</h2>
+      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>
+        {citizenId ? 'Ready to Inhabit' : emptyState.title}
+      </h2>
       <p className={`text-gray-400 max-w-md ${isCompact ? 'text-xs mb-4' : 'mb-6'}`}>
         {citizenId
           ? `Connect with citizen ${citizenId} to see the town through their eyes.`
-          : 'Select a citizen from the town to begin inhabitation.'}
+          : emptyState.description}
       </p>
       <Link
         to="/town/default"
@@ -239,7 +234,7 @@ function EmptyInhabit({ citizenId, density }: EmptyInhabitProps) {
           isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
         }`}
       >
-        {citizenId ? 'Begin Inhabitation' : 'Browse Town'}
+        {citizenId ? 'Begin Inhabitation' : emptyState.action || 'Browse Town'}
       </Link>
     </div>
   );
@@ -263,7 +258,7 @@ function CitizenFocusView({
   // Note: _status and _onAction will be used for action handling
   void _status;
   void _onAction;
-  const archetypeColor = citizen.archetype ? ARCHETYPE_COLORS[citizen.archetype] : '#666';
+  const archetypeColor = getArchetypeColor(citizen.archetype || '');
   const isCompact = density === 'compact';
   void isCompact; // Will be used for density-aware styling
 
@@ -422,10 +417,11 @@ function StatusPanel({ status, density }: StatusPanelProps) {
   const isCompact = density === 'compact';
 
   if (!status) {
+    const emptyState = getEmptyState('noSessions');
     return (
       <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
         <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>Session Status</h3>
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>No active inhabitation session</p>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{emptyState.description}</p>
       </div>
     );
   }
@@ -503,7 +499,10 @@ function ConsentPanel({ consent, density }: ConsentPanelProps) {
       <div className={`${isCompact ? 'space-y-1 text-xs' : 'space-y-2 text-sm'}`}>
         <div className="flex justify-between">
           <span className="text-gray-400">Debt</span>
-          <span className={consent.debt > 50 ? 'text-yellow-400' : 'text-gray-300'}>
+          <span
+            className={consent.debt > 50 ? 'text-yellow-400' : 'text-gray-300'}
+            title={TOOLTIPS.consentDebt(consent.debt / 100)}
+          >
             {consent.debt}
           </span>
         </div>

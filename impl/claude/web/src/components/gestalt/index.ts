@@ -3,7 +3,11 @@
  *
  * Visual showcase components for the Living Architecture Visualizer.
  *
+ * Sprint 3: Forest Theme - Organic, plant-like visualization
+ * "The codebase is a forest, not a machine."
+ *
  * @see plans/gestalt-visual-showcase.md
+ * @see plans/_continuations/gestalt-sprint3.md
  */
 
 // Types
@@ -21,7 +25,7 @@ export type { LegendProps, NodeKindConfig, EdgeKindConfig } from './Legend';
 export { NodeTooltip, StandaloneTooltip } from './NodeTooltip';
 export type { NodeTooltipProps, StandaloneTooltipProps } from './NodeTooltip';
 
-// Chunk 3: Edge Styling & Animation Components
+// Chunk 3: Edge Styling & Animation Components (Original)
 export { AnimatedEdge, StaticEdge, SmartEdge } from './AnimatedEdge';
 export type { AnimatedEdgeProps, StaticEdgeProps, SmartEdgeProps } from './AnimatedEdge';
 export {
@@ -36,3 +40,9 @@ export {
   calculatePulseGlow,
 } from './EdgeStyles';
 export type { EdgeStyle, EdgeType, FlowAnimationConfig } from './EdgeStyles';
+
+// Sprint 3: Organic/Forest Theme Components
+export { OrganicNode } from './OrganicNode';
+export type { OrganicNodeProps } from './OrganicNode';
+export { VineEdge, SmartVineEdge } from './VineEdge';
+export type { VineEdgeProps, SmartVineEdgeProps } from './VineEdge';

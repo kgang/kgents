@@ -161,6 +161,16 @@ const InnerRenderer = memo(function InnerRenderer({
         />
       );
 
+    case 'garden':
+    case 'garden_dashboard':
+      // Garden widgets rendered separately via GardenVisualization
+      // This case handles them if they appear in generic widget streams
+      return (
+        <div className={`text-amber-400 text-sm ${className}`}>
+          Garden widget: render via GardenVisualization
+        </div>
+      );
+
     default: {
       // Type-safe exhaustiveness check
       const exhaustiveCheck: never = widget;

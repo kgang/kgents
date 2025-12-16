@@ -25,6 +25,7 @@ import { useWindowLayout } from '../hooks/useLayoutContext';
 import { PolynomialDiagram } from '../components/polynomial';
 import { useObserverState, ObserverSwitcher, DEFAULT_OBSERVERS, PathTrace } from '../components/path';
 import { Breathe, celebrate } from '../components/joy';
+import { JEWEL_COLORS } from '../constants';
 
 // =============================================================================
 // Mock Data (until API is ready)
@@ -72,7 +73,7 @@ function createSessionVisualization(session: GardenerSessionState): PolynomialVi
       emoji: positionLabels[id].emoji,
       is_current: session.phase === id,
       is_terminal: false, // Gardener phases are cyclic, never terminal
-      color: session.phase === id ? '#84CC16' : undefined, // Lime for current
+      color: session.phase === id ? JEWEL_COLORS.gardener.primary : undefined,
     })),
     edges: [
       { source: 'SENSE', target: 'ACT', label: 'advance', is_valid: session.phase === 'SENSE' },

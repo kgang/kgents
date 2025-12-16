@@ -70,3 +70,15 @@ export {
   getMotionPreferences,
   type MotionPreferences,
 } from './useMotionPreferences';
+
+// =============================================================================
+// Page Transitions
+// =============================================================================
+
+export {
+  PageTransition,
+  PageFade,
+  PageSlide,
+  PageScale,
+  type PageTransitionProps,
+} from './PageTransition';
