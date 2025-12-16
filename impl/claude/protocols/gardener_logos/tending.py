@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal
 if TYPE_CHECKING:
     from .garden import GardenState
     from .persistence import GardenStore
+    from .seasons import SeasonTransition
 
 
 class TendingVerb(Enum):
@@ -158,6 +159,7 @@ class TendingResult:
     - What changed (if anything)
     - The new garden state
     - Any side effects (synergies triggered, etc.)
+    - Suggested season transition (Phase 8: Auto-Inducer)
     """
 
     gesture: TendingGesture
@@ -167,6 +169,9 @@ class TendingResult:
     synergies_triggered: list[str]  # Cross-jewel effects
     reasoning_trace: tuple[str, ...]
     error: str | None = None
+
+    # Phase 8: Auto-Inducer - suggested season transition
+    suggested_transition: "SeasonTransition | None" = None
 
     @property
     def success(self) -> bool:
@@ -181,6 +186,7 @@ async def apply_gesture(
     store: "GardenStore | None" = None,
     auto_save: bool = True,
     emit_event: bool = True,
+    evaluate_transition: bool = True,
 ) -> TendingResult:
     """
     Apply a tending gesture to the garden.
@@ -194,9 +200,10 @@ async def apply_gesture(
         store: Optional GardenStore for persistence
         auto_save: Whether to auto-save after successful gesture (requires store)
         emit_event: Whether to emit synergy events for significant gestures
+        evaluate_transition: Whether to evaluate for season transition (Phase 8)
 
     Returns:
-        TendingResult with outcome
+        TendingResult with outcome (including suggested_transition if any)
     """
     handlers = {
         TendingVerb.OBSERVE: _handle_observe,
@@ -245,6 +252,10 @@ async def apply_gesture(
         if emit_event and result.accepted and gesture.verb.affects_state:
             await _emit_gesture_applied_event(garden, gesture, result)
 
+        # Phase 8: Auto-Inducer - evaluate for season transition
+        if evaluate_transition and result.accepted:
+            result = _evaluate_and_add_transition_suggestion(garden, result)
+
         return result
 
     except Exception as e:
@@ -257,6 +268,54 @@ async def apply_gesture(
             reasoning_trace=(f"Error: {e}",),
             error=str(e),
         )
+
+
+def _evaluate_and_add_transition_suggestion(
+    garden: "GardenState",
+    result: TendingResult,
+) -> TendingResult:
+    """
+    Evaluate garden state for season transition suggestion.
+
+    Phase 8: Auto-Inducer
+    Called after successful gesture application to check if the garden
+    should transition to a new season based on activity patterns.
+
+    Args:
+        garden: The garden that was just tended
+        result: The tending result to augment
+
+    Returns:
+        TendingResult with suggested_transition if applicable
+    """
+    try:
+        from .seasons import suggest_season_transition
+
+        suggestion = suggest_season_transition(garden)
+
+        if suggestion is not None:
+            # Create a new result with the suggestion
+            return TendingResult(
+                gesture=result.gesture,
+                accepted=result.accepted,
+                state_changed=result.state_changed,
+                changes=result.changes,
+                synergies_triggered=result.synergies_triggered,
+                reasoning_trace=result.reasoning_trace,
+                error=result.error,
+                suggested_transition=suggestion,
+            )
+
+    except ImportError:
+        # seasons module not available - skip silently
+        pass
+    except Exception as e:
+        # Log but don't fail the gesture
+        import logging
+        logger = logging.getLogger("kgents.gardener.auto_inducer")
+        logger.warning(f"Failed to evaluate season transition: {e}")
+
+    return result
 
 
 # =============================================================================

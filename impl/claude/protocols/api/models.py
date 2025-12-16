@@ -673,3 +673,214 @@ class GardenerSessionListResponse(BaseModel):
 
     sessions: list[GardenerSessionResponse] = Field(default_factory=list)
     active_session_id: Optional[str] = Field(default=None, description="Currently active session ID")
+
+
+# =============================================================================
+# Garden State Models (Phase 7: Web Visualization)
+# =============================================================================
+
+
+class GardenSeason(str, Enum):
+    """Garden seasons - relationship to change."""
+
+    DORMANT = "DORMANT"
+    SPROUTING = "SPROUTING"
+    BLOOMING = "BLOOMING"
+    HARVEST = "HARVEST"
+    COMPOSTING = "COMPOSTING"
+
+
+class TendingVerb(str, Enum):
+    """The six primitive tending gestures."""
+
+    OBSERVE = "OBSERVE"
+    PRUNE = "PRUNE"
+    GRAFT = "GRAFT"
+    WATER = "WATER"
+    ROTATE = "ROTATE"
+    WAIT = "WAIT"
+
+
+class GestureResponse(BaseModel):
+    """A tending gesture record."""
+
+    verb: TendingVerb
+    target: str = Field(..., description="AGENTESE path target")
+    tone: float = Field(..., ge=0.0, le=1.0, description="How definitive (0=tentative, 1=definitive)")
+    reasoning: str = Field(default="", description="Why this gesture")
+    entropy_cost: float = Field(default=0.0, description="Entropy cost")
+    timestamp: str = Field(..., description="ISO timestamp")
+    observer: str = Field(default="default", description="Observer archetype")
+    session_id: Optional[str] = None
+    result_summary: str = Field(default="", description="Result of gesture")
+
+
+class PlotResponse(BaseModel):
+    """A garden plot (focused region)."""
+
+    name: str
+    path: str = Field(..., description="AGENTESE path")
+    description: str = ""
+    plan_path: Optional[str] = None
+    crown_jewel: Optional[str] = None
+    prompts: list[str] = Field(default_factory=list)
+    season_override: Optional[GardenSeason] = None
+    rigidity: float = Field(default=0.5, ge=0.0, le=1.0)
+    progress: float = Field(default=0.0, ge=0.0, le=1.0)
+    created_at: str = Field(..., description="ISO timestamp")
+    last_tended: str = Field(..., description="ISO timestamp")
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GardenMetricsResponse(BaseModel):
+    """Garden health metrics."""
+
+    health_score: float = Field(..., ge=0.0, le=1.0)
+    total_prompts: int = 0
+    active_plots: int = 0
+    entropy_spent: float = 0.0
+    entropy_budget: float = 1.0
+
+
+class GardenComputedResponse(BaseModel):
+    """Computed garden fields."""
+
+    health_score: float
+    entropy_remaining: float
+    entropy_percentage: float
+    active_plot_count: int
+    total_plot_count: int
+    season_plasticity: float
+    season_entropy_multiplier: float
+
+
+class GardenStateResponse(BaseModel):
+    """Full garden state response."""
+
+    garden_id: str
+    name: str
+    created_at: str
+    season: GardenSeason
+    season_since: str
+    plots: dict[str, PlotResponse] = Field(default_factory=dict)
+    active_plot: Optional[str] = None
+    session_id: Optional[str] = None
+    memory_crystals: list[str] = Field(default_factory=list)
+    prompt_count: int = 0
+    prompt_types: dict[str, int] = Field(default_factory=dict)
+    recent_gestures: list[GestureResponse] = Field(default_factory=list)
+    last_tended: str
+    metrics: GardenMetricsResponse
+    computed: GardenComputedResponse
+
+
+class TendRequest(BaseModel):
+    """Request to apply a tending gesture."""
+
+    verb: TendingVerb = Field(..., description="Tending verb")
+    target: str = Field(..., description="AGENTESE path target")
+    tone: float = Field(default=0.5, ge=0.0, le=1.0, description="How definitive")
+    reasoning: str = Field(default="", description="Why this gesture")
+
+
+class TendResponse(BaseModel):
+    """Response from applying a tending gesture."""
+
+    accepted: bool
+    state_changed: bool
+    changes: list[str] = Field(default_factory=list)
+    synergies_triggered: list[str] = Field(default_factory=list)
+    reasoning_trace: list[str] = Field(default_factory=list)
+    error: Optional[str] = None
+    gesture: GestureResponse
+
+
+class SeasonTransitionRequest(BaseModel):
+    """Request to transition garden season."""
+
+    new_season: GardenSeason
+    reason: str = Field(default="", description="Why transitioning")
+
+
+# =============================================================================
+# Auto-Inducer Models (Phase 8: Season Transition Suggestions)
+# =============================================================================
+
+
+class TransitionSignalsResponse(BaseModel):
+    """
+    Signals gathered from garden state to evaluate transitions.
+
+    These metrics drive automatic season transition suggestions.
+    """
+
+    gesture_frequency: float = Field(..., description="Gestures per hour")
+    gesture_diversity: int = Field(..., description="Unique verbs used recently")
+    plot_progress_delta: float = Field(..., ge=0.0, le=1.0, description="Progress change since season start")
+    artifacts_created: int = Field(..., ge=0, description="Session artifacts count")
+    time_in_season_hours: float = Field(..., ge=0.0, description="Hours in current season")
+    entropy_spent_ratio: float = Field(..., ge=0.0, le=1.0, description="Entropy spent / budget ratio")
+    reflect_count: int = Field(default=0, ge=0, description="Number of REFLECT cycles")
+    session_active: bool = Field(default=False, description="Whether there's an active session")
+
+
+class TransitionSuggestionResponse(BaseModel):
+    """
+    A suggested season transition from the Auto-Inducer.
+
+    The garden suggests (but doesn't auto-apply) transitions based on
+    activity patterns. Users confirm or dismiss suggestions.
+    """
+
+    from_season: GardenSeason = Field(..., description="Current season")
+    to_season: GardenSeason = Field(..., description="Suggested new season")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.7+ triggers suggestion)")
+    reason: str = Field(..., description="Human-readable reason for suggestion")
+    signals: TransitionSignalsResponse = Field(..., description="Signals that triggered suggestion")
+    triggered_at: str = Field(..., description="ISO timestamp when suggestion was generated")
+
+
+class TendResponseWithSuggestion(BaseModel):
+    """
+    Enhanced TendResponse that includes optional transition suggestion.
+
+    Phase 8: Auto-Inducer integration into tending flow.
+    """
+
+    accepted: bool
+    state_changed: bool
+    changes: list[str] = Field(default_factory=list)
+    synergies_triggered: list[str] = Field(default_factory=list)
+    reasoning_trace: list[str] = Field(default_factory=list)
+    error: Optional[str] = None
+    gesture: GestureResponse
+    suggested_transition: Optional[TransitionSuggestionResponse] = Field(
+        default=None,
+        description="Season transition suggestion (if confidence >= 0.7)",
+    )
+
+
+class TransitionAcceptRequest(BaseModel):
+    """Request to accept a suggested season transition."""
+
+    from_season: GardenSeason = Field(..., description="The season being transitioned from (validation)")
+    to_season: GardenSeason = Field(..., description="The season to transition to")
+
+
+class TransitionDismissRequest(BaseModel):
+    """Request to dismiss a suggested season transition."""
+
+    from_season: GardenSeason = Field(..., description="The season being transitioned from")
+    to_season: GardenSeason = Field(..., description="The dismissed target season")
+
+
+class TransitionActionResponse(BaseModel):
+    """Response from accepting or dismissing a transition."""
+
+    status: str = Field(..., description="Action result: accepted, dismissed, error")
+    garden_state: Optional[GardenStateResponse] = Field(
+        default=None,
+        description="Updated garden state (if transition was accepted)",
+    )
+    message: str = Field(default="", description="Additional context")

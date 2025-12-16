@@ -24,11 +24,28 @@ from .models import (
     GardenerPhase,
     GardenerSessionListResponse,
     GardenerSessionResponse,
+    GardenComputedResponse,
+    GardenMetricsResponse,
+    GardenSeason,
+    GardenStateResponse,
+    GestureResponse,
+    PlotResponse,
     PolynomialEdge,
     PolynomialHistoryEntry,
     PolynomialPosition,
     PolynomialVisualization,
     PolynomialVisualizationResponse,
+    SeasonTransitionRequest,
+    TendingVerb,
+    TendRequest,
+    TendResponse,
+    # Phase 8: Auto-Inducer models
+    TendResponseWithSuggestion,
+    TransitionAcceptRequest,
+    TransitionActionResponse,
+    TransitionDismissRequest,
+    TransitionSignalsResponse,
+    TransitionSuggestionResponse,
 )
 
 if TYPE_CHECKING:
@@ -395,4 +412,350 @@ def create_gardener_router() -> "APIRouter | None":
             logger.exception("Failed to list sessions")
             raise HTTPException(status_code=500, detail=str(e))
 
+    # =========================================================================
+    # Garden State Endpoints (Phase 7: Web Visualization)
+    # =========================================================================
+
+    @router.get("/garden", response_model=GardenStateResponse)
+    async def get_garden(
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> GardenStateResponse:
+        """
+        Get current garden state.
+
+        Returns the full garden state including:
+        - Season and plasticity
+        - All plots with progress
+        - Recent gestures
+        - Health metrics
+        """
+        try:
+            garden = await _get_or_create_garden()
+            return _garden_to_response(garden)
+        except Exception as e:
+            logger.exception("Failed to get garden state")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/garden/tend", response_model=TendResponseWithSuggestion)
+    async def apply_tend(
+        request: TendRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> TendResponseWithSuggestion:
+        """
+        Apply a tending gesture to the garden.
+
+        The six primitive gestures:
+        - OBSERVE: Perceive without changing
+        - PRUNE: Remove what no longer serves
+        - GRAFT: Add something new
+        - WATER: Nurture via TextGRAD
+        - ROTATE: Change perspective
+        - WAIT: Allow time to pass
+
+        Phase 8: May include a suggested season transition if activity
+        patterns indicate the garden should change seasons.
+        """
+        try:
+            from protocols.gardener_logos.tending import (
+                TendingGesture,
+                TendingVerb as GardenTendingVerb,
+                apply_gesture,
+            )
+
+            garden = await _get_or_create_garden()
+
+            # Convert API verb to garden verb
+            verb = GardenTendingVerb[request.verb.value]
+
+            gesture = TendingGesture(
+                verb=verb,
+                target=request.target,
+                tone=request.tone,
+                reasoning=request.reasoning,
+                entropy_cost=verb.base_entropy_cost,
+            )
+
+            result = await apply_gesture(garden, gesture, emit_event=True)
+
+            # Convert transition suggestion if present (Phase 8: Auto-Inducer)
+            suggestion_response: TransitionSuggestionResponse | None = None
+            if result.suggested_transition is not None:
+                st = result.suggested_transition
+                suggestion_response = TransitionSuggestionResponse(
+                    from_season=GardenSeason(st.from_season.name),
+                    to_season=GardenSeason(st.to_season.name),
+                    confidence=st.confidence,
+                    reason=st.reason,
+                    signals=TransitionSignalsResponse(
+                        gesture_frequency=st.signals.gesture_frequency,
+                        gesture_diversity=st.signals.gesture_diversity,
+                        plot_progress_delta=st.signals.plot_progress_delta,
+                        artifacts_created=st.signals.artifacts_created,
+                        time_in_season_hours=st.signals.time_in_season_hours,
+                        entropy_spent_ratio=st.signals.entropy_spent_ratio,
+                        reflect_count=st.signals.reflect_count,
+                        session_active=st.signals.session_active,
+                    ),
+                    triggered_at=st.triggered_at.isoformat(),
+                )
+
+            # Convert result to response
+            return TendResponseWithSuggestion(
+                accepted=result.accepted,
+                state_changed=result.state_changed,
+                changes=result.changes,
+                synergies_triggered=result.synergies_triggered,
+                reasoning_trace=list(result.reasoning_trace),
+                error=result.error,
+                gesture=GestureResponse(
+                    verb=TendingVerb(gesture.verb.name),
+                    target=gesture.target,
+                    tone=gesture.tone,
+                    reasoning=gesture.reasoning,
+                    entropy_cost=gesture.entropy_cost,
+                    timestamp=gesture.timestamp.isoformat(),
+                    observer=gesture.observer,
+                    session_id=gesture.session_id,
+                    result_summary=gesture.result_summary,
+                ),
+                suggested_transition=suggestion_response,
+            )
+        except Exception as e:
+            logger.exception("Failed to apply tending gesture")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/garden/season", response_model=GardenStateResponse)
+    async def transition_season(
+        request: SeasonTransitionRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> GardenStateResponse:
+        """
+        Transition the garden to a new season.
+
+        Seasons affect plasticity and entropy costs:
+        - DORMANT: Low plasticity (0.1), cheap operations
+        - SPROUTING: High plasticity (0.9), expensive growth
+        - BLOOMING: Medium plasticity (0.3), crystallizing
+        - HARVEST: Low plasticity (0.2), efficient gathering
+        - COMPOSTING: High plasticity (0.8), breaking down patterns
+        """
+        try:
+            from protocols.gardener_logos.garden import GardenSeason as GardenSeasonEnum
+
+            garden = await _get_or_create_garden()
+            new_season = GardenSeasonEnum[request.new_season.value]
+            garden.transition_season(new_season, request.reason)
+
+            return _garden_to_response(garden)
+        except Exception as e:
+            logger.exception("Failed to transition season")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/garden/plot/{plot_name}/focus", response_model=GardenStateResponse)
+    async def focus_plot(
+        plot_name: str,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> GardenStateResponse:
+        """Set the active plot focus."""
+        try:
+            garden = await _get_or_create_garden()
+
+            if plot_name not in garden.plots:
+                raise HTTPException(status_code=404, detail=f"Plot '{plot_name}' not found")
+
+            garden.active_plot = plot_name
+            return _garden_to_response(garden)
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to focus plot")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Auto-Inducer Endpoints (Phase 8: Season Transition Suggestions)
+    # =========================================================================
+
+    @router.post("/garden/transition/accept", response_model=TransitionActionResponse)
+    async def accept_transition(
+        request: TransitionAcceptRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> TransitionActionResponse:
+        """
+        Accept a suggested season transition.
+
+        Applies the transition and returns the updated garden state.
+        Also clears any dismissals for this garden.
+        """
+        try:
+            from protocols.gardener_logos.garden import GardenSeason as GardenSeasonEnum
+            from protocols.gardener_logos.seasons import clear_dismissals
+
+            garden = await _get_or_create_garden()
+
+            # Validate current season matches
+            if garden.season.name != request.from_season.value:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Garden is in {garden.season.name}, not {request.from_season.value}",
+                )
+
+            # Apply the transition
+            new_season = GardenSeasonEnum[request.to_season.value]
+            garden.transition_season(new_season, f"User accepted {new_season.name} transition")
+
+            # Clear dismissals since we're accepting
+            clear_dismissals(garden.garden_id)
+
+            return TransitionActionResponse(
+                status="accepted",
+                garden_state=_garden_to_response(garden),
+                message=f"Transitioned from {request.from_season.value} to {request.to_season.value}",
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to accept transition")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/garden/transition/dismiss", response_model=TransitionActionResponse)
+    async def dismiss_transition(
+        request: TransitionDismissRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> TransitionActionResponse:
+        """
+        Dismiss a suggested season transition.
+
+        Records the dismissal so the same transition won't be
+        suggested again for a cooldown period (default: 4 hours).
+        """
+        try:
+            from protocols.gardener_logos.garden import GardenSeason as GardenSeasonEnum
+            from protocols.gardener_logos.seasons import dismiss_transition
+
+            garden = await _get_or_create_garden()
+
+            # Record the dismissal
+            from_season = GardenSeasonEnum[request.from_season.value]
+            to_season = GardenSeasonEnum[request.to_season.value]
+            dismiss_transition(garden.garden_id, from_season, to_season)
+
+            return TransitionActionResponse(
+                status="dismissed",
+                garden_state=None,  # Garden state unchanged
+                message=f"Dismissed {from_season.name} → {to_season.name} suggestion (won't suggest for 4h)",
+            )
+        except Exception as e:
+            logger.exception("Failed to dismiss transition")
+            raise HTTPException(status_code=500, detail=str(e))
+
     return router
+
+
+# =============================================================================
+# Garden State Helpers
+# =============================================================================
+
+_garden_state: Any = None
+_garden_lock = threading.Lock()
+
+
+async def _get_or_create_garden() -> Any:
+    """Get or create the default garden state."""
+    global _garden_state
+
+    if _garden_state is None:
+        with _garden_lock:
+            if _garden_state is None:
+                from protocols.gardener_logos.garden import create_garden
+                from protocols.gardener_logos.plots import create_crown_jewel_plots
+
+                _garden_state = create_garden(name="Default Garden")
+                _garden_state.plots = create_crown_jewel_plots()
+                _garden_state.metrics.active_plots = len(_garden_state.plots)
+
+    return _garden_state
+
+
+def _garden_to_response(garden: Any) -> GardenStateResponse:
+    """Convert GardenState to API response."""
+    from protocols.gardener_logos.projections.json import project_garden_to_json
+
+    data = project_garden_to_json(garden)
+
+    # Convert plots
+    plots = {}
+    for name, plot_data in data.get("plots", {}).items():
+        plots[name] = PlotResponse(
+            name=plot_data["name"],
+            path=plot_data["path"],
+            description=plot_data.get("description", ""),
+            plan_path=plot_data.get("plan_path"),
+            crown_jewel=plot_data.get("crown_jewel"),
+            prompts=plot_data.get("prompts", []),
+            season_override=GardenSeason(plot_data["season_override"])
+            if plot_data.get("season_override")
+            else None,
+            rigidity=plot_data.get("rigidity", 0.5),
+            progress=plot_data.get("progress", 0.0),
+            created_at=plot_data.get("created_at", ""),
+            last_tended=plot_data.get("last_tended", ""),
+            tags=plot_data.get("tags", []),
+            metadata=plot_data.get("metadata", {}),
+        )
+
+    # Convert gestures
+    gestures = []
+    for g in data.get("recent_gestures", []):
+        gestures.append(
+            GestureResponse(
+                verb=TendingVerb(g["verb"]),
+                target=g["target"],
+                tone=g.get("tone", 0.5),
+                reasoning=g.get("reasoning", ""),
+                entropy_cost=g.get("entropy_cost", 0.0),
+                timestamp=g.get("timestamp", ""),
+                observer=g.get("observer", "default"),
+                session_id=g.get("session_id"),
+                result_summary=g.get("result_summary", ""),
+            )
+        )
+
+    # Build computed
+    computed_data = data.get("computed", {})
+    computed = GardenComputedResponse(
+        health_score=computed_data.get("health_score", 0.0),
+        entropy_remaining=computed_data.get("entropy_remaining", 0.0),
+        entropy_percentage=computed_data.get("entropy_percentage", 0.0),
+        active_plot_count=computed_data.get("active_plot_count", 0),
+        total_plot_count=computed_data.get("total_plot_count", 0),
+        season_plasticity=computed_data.get("season_plasticity", 0.5),
+        season_entropy_multiplier=computed_data.get("season_entropy_multiplier", 1.0),
+    )
+
+    # Build metrics
+    metrics_data = data.get("metrics", {})
+    metrics = GardenMetricsResponse(
+        health_score=metrics_data.get("health_score", 0.0),
+        total_prompts=metrics_data.get("total_prompts", 0),
+        active_plots=metrics_data.get("active_plots", 0),
+        entropy_spent=metrics_data.get("entropy_spent", 0.0),
+        entropy_budget=metrics_data.get("entropy_budget", 1.0),
+    )
+
+    return GardenStateResponse(
+        garden_id=data.get("garden_id", ""),
+        name=data.get("name", "Default Garden"),
+        created_at=data.get("created_at", ""),
+        season=GardenSeason(data.get("season", "DORMANT")),
+        season_since=data.get("season_since", ""),
+        plots=plots,
+        active_plot=data.get("active_plot"),
+        session_id=data.get("session_id"),
+        memory_crystals=data.get("memory_crystals", []),
+        prompt_count=data.get("prompt_count", 0),
+        prompt_types=data.get("prompt_types", {}),
+        recent_gestures=gestures,
+        last_tended=data.get("last_tended", ""),
+        metrics=metrics,
+        computed=computed,
+    )

@@ -1,26 +1,23 @@
 """
-World Context Router: Agents, infrastructure, resources.
+World Context Router: Agents, resources.
 
 AGENTESE Context: world.*
 
 This context handles all external/world operations:
 - world.agents.*    -> Agent operations (was: kgents a)
 - world.daemon.*    -> Cortex daemon lifecycle (was: kgents daemon)
-- world.infra.*     -> K8s infrastructure (was: kgents infra)
 - world.fixture.*   -> HotData fixtures (was: kgents fixture)
 - world.codebase.*  -> Architecture analysis (Gestalt)
+- world.town.*      -> Agent Town simulation
 
 Usage:
     kgents world                   # Show world overview
     kgents world agents            # Agent operations
     kgents world agents list       # List registered agents
     kgents world agents run X      # Run agent X
-    kgents world agents inspect X  # Inspect agent X
     kgents world daemon start      # Start cortex daemon
-    kgents world infra status      # K8s cluster status
     kgents world codebase          # Architecture overview
-    kgents world codebase health   # Health metrics
-    kgents world codebase drift    # Drift violations
+    kgents world town start        # Start Agent Town
 """
 
 from __future__ import annotations
@@ -34,10 +31,10 @@ if TYPE_CHECKING:
 
 
 class WorldRouter(ContextRouter):
-    """Router for world.* context (agents, infrastructure, resources)."""
+    """Router for world.* context (agents, resources)."""
 
     context = "world"
-    description = "Agents, infrastructure, resources"
+    description = "Agents and resources"
 
     def _register_holons(self) -> None:
         """Register world.* holons."""
@@ -54,22 +51,10 @@ class WorldRouter(ContextRouter):
             aspects=["start", "stop", "status", "install", "logs"],
         )
         self.register(
-            "infra",
-            "K8s infrastructure operations",
-            _handle_infra,
-            aspects=["status", "deploy", "logs", "scale"],
-        )
-        self.register(
             "fixture",
             "HotData fixtures",
             _handle_fixture,
             aspects=["list", "refresh", "validate"],
-        )
-        self.register(
-            "exec",
-            "Q-gent execution",
-            _handle_exec,
-            aspects=["run"],
         )
         self.register(
             "dev",
@@ -116,25 +101,11 @@ def _handle_daemon(args: list[str], ctx: "InvocationContext | None" = None) -> i
     return cmd_daemon(args)
 
 
-def _handle_infra(args: list[str], ctx: "InvocationContext | None" = None) -> int:
-    """Handle world infra -> delegating to existing infra handler."""
-    from protocols.cli.handlers.infra import cmd_infra
-
-    return cmd_infra(args)
-
-
 def _handle_fixture(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world fixture -> delegating to existing fixture handler."""
     from protocols.cli.handlers.fixture import cmd_fixture
 
     return cmd_fixture(args, ctx)
-
-
-def _handle_exec(args: list[str], ctx: "InvocationContext | None" = None) -> int:
-    """Handle world exec -> delegating to existing exec handler."""
-    from protocols.cli.handlers.exec import cmd_exec
-
-    return cmd_exec(args)
 
 
 def _handle_dev(args: list[str], ctx: "InvocationContext | None" = None) -> int:

@@ -499,75 +499,7 @@ async def handle_principles() -> MCPToolResult:
     )
 
 
-async def handle_psi(problem: str, domain: str = "general") -> MCPToolResult:
-    """
-    Solve a problem using metaphor-based reasoning (Psi-gent).
-
-    Maps to: kgents psi "<problem>" --domain=<domain>
-    """
-    try:
-        from agents.psi import (
-            MetaphorEngine,
-            Problem,
-            create_standard_corpus,
-        )
-
-        # Create the problem specification
-        problem_obj = Problem(
-            id=f"mcp_{hash(problem) % 10000:04d}",
-            description=problem,
-            domain=domain,
-        )
-
-        # Create metaphor engine with standard corpus
-        corpus = create_standard_corpus()
-        engine = MetaphorEngine(corpus=corpus)
-
-        # Solve the problem (synchronous call)
-        result = engine.solve_problem(problem_obj)
-
-        # Format output
-        output = f"Problem: {problem}\n"
-        output += f"Domain: {domain}\n\n"
-
-        if result.success:
-            output += "✅ Solution Found!\n\n"
-            if result.metaphor_solution:
-                output += f"Metaphor Used: {result.metaphor_solution.projection.metaphor.name}\n"
-                output += f"Metaphor Domain: {result.metaphor_solution.projection.metaphor.domain}\n"
-                output += f"\nReasoning:\n{result.metaphor_solution.reasoning}\n"
-
-            if result.translated_answer:
-                output += f"\nSolution:\n{result.translated_answer}\n"
-
-            if result.distortion:
-                output += f"\nDistortion: {result.distortion.total:.2f}\n"
-        else:
-            output += "❌ No solution found\n"
-            output += "Reason: Distortion too high or no suitable metaphor found\n"
-
-        return MCPToolResult(
-            success=result.success,
-            content=output,
-            metadata={
-                "problem": problem,
-                "domain": domain,
-                "metaphor_used": result.metaphor_solution.projection.metaphor.name
-                if result.metaphor_solution
-                else None,
-                "distortion": result.distortion.total if result.distortion else None,
-            },
-        )
-    except ImportError as e:
-        return MCPToolResult(
-            success=True,
-            content=f"Solving problem via metaphor: {problem}\n[Psi-gent not available: {e}]",
-        )
-    except Exception as e:
-        return MCPToolResult(
-            success=False,
-            content=f"Psi-gent failed: {e}",
-        )
+# NOTE: handle_psi removed (Psi-gent archived 2025-12-16)
 
 
 # =============================================================================
@@ -704,25 +636,7 @@ KGENTS_TOOLS: list[MCPTool] = [
         parameters=(),
         handler=handle_principles,
     ),
-    MCPTool(
-        name="kgents_psi",
-        description="Solve a problem using metaphor-based reasoning (Psi-gent). Projects problems through metaphors to find solutions.",
-        parameters=(
-            MCPToolParameter(
-                "problem",
-                "string",
-                "Problem description to solve via metaphor",
-            ),
-            MCPToolParameter(
-                "domain",
-                "string",
-                "Problem domain (e.g., 'organization', 'software', 'design')",
-                required=False,
-                default="general",
-            ),
-        ),
-        handler=handle_psi,
-    ),
+    # NOTE: kgents_psi removed (Psi-gent archived 2025-12-16)
 ]
 
 TOOL_REGISTRY: dict[str, MCPTool] = {tool.name: tool for tool in KGENTS_TOOLS}

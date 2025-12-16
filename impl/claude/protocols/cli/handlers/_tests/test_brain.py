@@ -3,11 +3,11 @@ Tests for brain CLI handler.
 
 Session 5: Crown Jewel Brain CLI
 
-Tests use a simple embedder (no network calls) via fixture injection.
+Tests use temporary directory for brain storage to avoid polluting user data.
 
 Note on test isolation:
-    The brain handler uses module-level globals (_brain_logos, _brain_logos_factory).
-    The autouse fixture resets these between tests, ensuring isolation in sequential
+    The brain handler uses a module-level global (_brain_crystal).
+    The autouse fixture resets this between tests, ensuring isolation in sequential
     runs. However, pytest-xdist parallel runs (-n auto) could cause race conditions
     if multiple workers execute brain tests simultaneously. For CI, either:
     - Run brain tests sequentially (no -n flag), OR
@@ -17,33 +17,43 @@ Note on test isolation:
 from __future__ import annotations
 
 import io
+import os
 import sys
 from typing import Generator
 
 import pytest
 from protocols.cli.handlers.brain import (
-    _reset_brain_logos,
-    _set_brain_logos_factory,
+    _reset_brain,
     cmd_brain,
 )
 
 
 @pytest.fixture(autouse=True)
-def use_simple_embedder() -> Generator[None, None, None]:
-    """Use simple embedder for all brain tests (no network calls).
+def isolate_brain(tmp_path: str) -> Generator[None, None, None]:
+    """Isolate brain tests with temp directory and reset between tests.
 
-    This fixture ensures tests don't download models or mutate global state.
+    This ensures tests don't pollute user data and each test starts fresh.
     """
-    from protocols.agentese import create_brain_logos
+    from pathlib import Path
 
-    def simple_brain_factory() -> object:
-        """Create brain logos with simple (non-network) embedder."""
-        return create_brain_logos(embedder_type="simple", dimension=64)
+    # Use temp directory for brain storage
+    brain_dir = Path(tmp_path) / "kgents" / "brain"
+    brain_dir.mkdir(parents=True, exist_ok=True)
 
-    _set_brain_logos_factory(simple_brain_factory)
+    # Set environment variable for brain storage location
+    old_data_dir = os.environ.get("KGENTS_DATA_DIR")
+    os.environ["KGENTS_DATA_DIR"] = str(Path(tmp_path))
+
     yield
-    _set_brain_logos_factory(None)
-    _reset_brain_logos()
+
+    # Reset brain state after each test
+    _reset_brain()
+
+    # Restore original env
+    if old_data_dir is not None:
+        os.environ["KGENTS_DATA_DIR"] = old_data_dir
+    elif "KGENTS_DATA_DIR" in os.environ:
+        del os.environ["KGENTS_DATA_DIR"]
 
 
 class TestBrainHelp:

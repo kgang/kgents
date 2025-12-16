@@ -10,6 +10,7 @@ Endpoints:
 - GET /v1/world/codebase/module/{name} -> Module details
 - POST /v1/world/codebase/scan -> Force rescan
 - GET /v1/world/codebase/topology -> Graph topology for visualization
+- GET /v1/world/codebase/stream -> SSE stream for live updates (Sprint 1)
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from typing import Any
 
 try:
     from fastapi import APIRouter, HTTPException, Query
+    from fastapi.responses import StreamingResponse
     from pydantic import BaseModel, Field
 
     HAS_FASTAPI = True
@@ -26,6 +28,7 @@ except ImportError:
     APIRouter = None  # type: ignore[assignment]
     HTTPException = None  # type: ignore[assignment]
     Query = None  # type: ignore[assignment]
+    StreamingResponse = None  # type: ignore[assignment]
     BaseModel = object  # type: ignore[assignment]
     Field = lambda *a, **k: None  # type: ignore[assignment]
 
@@ -42,6 +45,14 @@ from protocols.gestalt.handler import (
     handle_drift_witness,
     handle_health_manifest,
     handle_module_manifest,
+)
+from protocols.gestalt.umwelt import (
+    GestaltUmwelt,
+    OBSERVER_TO_UMWELT,
+    UmweltConfig,
+    get_umwelt_config,
+    compute_node_score,
+    filter_node_for_umwelt,
 )
 
 # =============================================================================
@@ -148,6 +159,7 @@ class TopologyResponse(BaseModel):
     links: list[DependencyLink] = Field(default_factory=list)
     layers: list[str] = Field(default_factory=list, description="Detected layers")
     stats: dict[str, Any] = Field(default_factory=dict)
+    umwelt: dict[str, Any] | None = Field(None, description="Applied umwelt config (Sprint 2)")
 
 
 class ManifestResponse(BaseModel):
@@ -209,6 +221,16 @@ class ScanResponse(BaseModel):
     module_count: int
     edge_count: int
     overall_grade: str
+
+
+class TopologyUpdate(BaseModel):
+    """SSE update for topology changes."""
+
+    kind: str = Field(..., description="Update kind: full, add, remove, update, ping")
+    topology: TopologyResponse | None = Field(None, description="Full topology (for kind=full)")
+    node: ModuleNode | None = Field(None, description="Node for add/update/remove")
+    link: DependencyLink | None = Field(None, description="Link for add/update/remove")
+    timestamp: str = Field(..., description="ISO timestamp")
 
 
 # =============================================================================
@@ -300,12 +322,16 @@ def create_gestalt_router() -> "APIRouter | None":
     async def get_topology(
         max_nodes: int = Query(200, ge=10, le=1000, description="Max nodes to return"),
         min_health: float = Query(0.0, ge=0.0, le=1.0, description="Min health filter"),
+        role: str | None = Query(None, description="Observer role (Sprint 2): tech_lead, developer, reviewer, product, security, performance"),
     ) -> TopologyResponse:
         """
         Get graph topology for visualization.
 
         Returns nodes and links formatted for force-directed graph rendering.
         Positions are computed using a simple layout algorithm.
+
+        Sprint 2: Supports observer-dependent views via `role` parameter.
+        Different roles emphasize different metrics and filter different modules.
         """
         import hashlib
         import math
@@ -317,16 +343,45 @@ def create_gestalt_router() -> "APIRouter | None":
         violations = get_api_cached_violations()
         violation_edges = {(v.source_module, v.target_module): v for v in violations}
 
-        # Filter and limit modules
-        modules_with_health = [
-            m
-            for m in graph.modules.values()
-            if m.health and m.health.overall_health >= min_health
-        ]
-        modules_with_health.sort(
-            key=lambda m: m.health.overall_health if m.health else 0,
-            reverse=True,
-        )
+        # Sprint 2: Get umwelt configuration for role-based filtering
+        umwelt_config = get_umwelt_config(role)
+
+        # Use umwelt's min_health if higher than query param
+        effective_min_health = max(min_health, umwelt_config.min_health_score)
+
+        # Filter and limit modules with umwelt awareness
+        modules_with_health = []
+        for m in graph.modules.values():
+            if not m.health:
+                continue
+            if m.health.overall_health < effective_min_health:
+                continue
+
+            # Sprint 2: Apply umwelt visibility filter
+            node_dict = {
+                "name": m.name,
+                "id": m.name,
+                "health_score": m.health.overall_health if m.health else 0.5,
+                "is_external": m.layer == "external" if m.layer else False,
+                "has_violations": any(v.source_module == m.name for v in violations),
+            }
+            if not filter_node_for_umwelt(node_dict, umwelt_config):
+                continue
+
+            modules_with_health.append(m)
+
+        # Sprint 2: Sort by umwelt-weighted importance score
+        def get_importance(m) -> float:
+            node_dict = {
+                "health_score": m.health.overall_health if m.health else 0.5,
+                "coupling": m.health.coupling if m.health else 0.5,
+                "has_violations": any(v.source_module == m.name for v in violations),
+                "cyclomatic_complexity": getattr(m.health, "complexity", 0) if m.health else 0,
+                "lines_of_code": m.lines_of_code,
+            }
+            return compute_node_score(node_dict, umwelt_config)
+
+        modules_with_health.sort(key=get_importance, reverse=True)
         selected_modules = modules_with_health[:max_nodes]
         selected_names = {m.name for m in selected_modules}
 
@@ -408,6 +463,111 @@ def create_gestalt_router() -> "APIRouter | None":
                 if health_scores
                 else 0,
                 "overall_grade": graph.overall_grade,
+            },
+            # Sprint 2: Include applied umwelt config
+            umwelt={
+                "role": role or "developer",
+                "config": umwelt_config.to_dict(),
+                "emphasized_layers": umwelt_config.emphasized_layers,
+            } if role else None,
+        )
+
+    @router.get("/stream")
+    async def stream_topology(
+        max_nodes: int = Query(200, ge=10, le=1000, description="Max nodes to return"),
+        min_health: float = Query(0.0, ge=0.0, le=1.0, description="Min health filter"),
+        poll_interval: float = Query(5.0, ge=1.0, le=60.0, description="Poll interval in seconds"),
+    ):
+        """
+        Stream topology updates via Server-Sent Events.
+
+        Returns:
+        - Initial 'full' event with complete topology
+        - Periodic 'update' events when changes detected
+        - 'ping' events to keep connection alive
+
+        Sprint 1: Basic file-watching with periodic rescans.
+        Uses watchdog-based reactive store when available.
+        """
+        import asyncio
+        import json
+        from datetime import datetime
+
+        async def event_generator():
+            """Generate SSE events for topology updates."""
+            last_topology: TopologyResponse | None = None
+            last_hash: int = 0
+
+            try:
+                while True:
+                    # Get current topology
+                    try:
+                        current = await get_topology(max_nodes, min_health)
+                    except Exception as e:
+                        # Send error and continue
+                        error_event = {
+                            "kind": "error",
+                            "error": str(e),
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                        yield f"data: {json.dumps(error_event)}\n\n"
+                        await asyncio.sleep(poll_interval)
+                        continue
+
+                    # Compute hash for change detection
+                    current_hash = hash(
+                        (
+                            tuple((n.id, n.health_score, n.x, n.y, n.z) for n in current.nodes),
+                            tuple((l.source, l.target, l.is_violation) for l in current.links),
+                        )
+                    )
+
+                    # Determine update type
+                    if last_topology is None:
+                        # First event: full topology
+                        update = TopologyUpdate(
+                            kind="full",
+                            topology=current,
+                            timestamp=datetime.now().isoformat(),
+                        )
+                        yield f"data: {update.model_dump_json()}\n\n"
+                        last_topology = current
+                        last_hash = current_hash
+
+                    elif current_hash != last_hash:
+                        # Topology changed: send full update
+                        # Future: compute and send incremental diff
+                        update = TopologyUpdate(
+                            kind="full",
+                            topology=current,
+                            timestamp=datetime.now().isoformat(),
+                        )
+                        yield f"data: {update.model_dump_json()}\n\n"
+                        last_topology = current
+                        last_hash = current_hash
+
+                    else:
+                        # No change: send ping to keep connection alive
+                        ping = TopologyUpdate(
+                            kind="ping",
+                            timestamp=datetime.now().isoformat(),
+                        )
+                        yield f"data: {ping.model_dump_json()}\n\n"
+
+                    # Wait for next poll
+                    await asyncio.sleep(poll_interval)
+
+            except asyncio.CancelledError:
+                # Client disconnected
+                pass
+
+        return StreamingResponse(
+            event_generator(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
             },
         )
 

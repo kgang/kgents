@@ -629,4 +629,259 @@ In Gardener-Logos:
 
 *"The garden tends itself, but it still needs a gardener. The gardener tends the garden, but is also tended BY the garden. This is not circular logic—it is the spiral of sympoiesis."*
 
+---
+
+## Appendix B: Implementation Status (2025-12-16)
+
+### Completed Phases
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| **1. AGENTESE Wiring** | ✅ | GardenerLogosNode with all aspects |
+| **2. CLI Integration** | ✅ | `kg garden`, `kg tend`, `kg plot` commands |
+| **3. Persistence** | ✅ | GardenStore with SQLite |
+| **4. Session Unification** | ✅ | GardenState owns GardenerSession |
+| **5. Prompt Delegation** | ✅ | concept.prompt.* routes through garden |
+| **6. Synergy Bus** | ✅ | Events + cross-jewel handlers |
+| **7. Web Visualization** | ✅ | React components + API endpoints |
+| **8. Auto-Inducer** | ✅ | seasons.py + CLI suggest/accept/dismiss |
+
+### Test Counts
+
+- `protocols/gardener_logos/`: **203 tests**
+- `protocols/cli/handlers/`: **69 tests** (garden + tend + plot)
+- `protocols/gardener_logos/_tests/test_seasons.py`: **25 tests** (auto-inducer)
+- `agents/gardener/`: **52 tests** (session polynomial)
+- **Total**: ~349 tests
+
+### Key Implementation Files
+
+```
+impl/claude/protocols/gardener_logos/
+├── garden.py              # GardenState, GardenSeason
+├── tending.py             # TendingVerb, TendingGesture, apply_gesture
+├── plots.py               # PlotState, create_crown_jewel_plots
+├── personality.py         # TendingPersonality, joy layer
+├── persistence.py         # GardenStore (SQLite)
+├── seasons.py             # TransitionSignals, SeasonTransition, Auto-Inducer
+├── coalition_bridge.py    # Cross-jewel: Coalition integration
+├── agentese/context.py    # GardenerLogosNode (unified resolver)
+├── meta/meta_tending.py   # META_TENDING_PROMPT
+└── projections/           # ASCII and JSON projections
+```
+
+### Learnings Extracted
+
+See: `plans/meta.md` → "Gardener-Logos Patterns" section
+Skill: `docs/skills/gardener-logos.md`
+
+---
+
+## Appendix C: Architectural Insights (Post-Implementation Reflection)
+
+> *"The garden taught us how to tend. Here is what we learned."*
+
+### C.1 The Ownership Pattern
+
+**Insight**: `GardenState` owns `GardenerSession`, not the other way around.
+
+```
+Wrong:  Session creates Garden → Garden orphaned when session ends
+Right:  Garden owns Session → Garden persists; sessions come and go
+```
+
+This creates clean lifecycle management:
+- Creating a session in DORMANT auto-transitions to SPROUTING
+- Session completion transitions to HARVEST
+- Session cleared but `garden.session_id` preserved for history
+
+**Reusable for**: Any jewel where a transient workflow operates within persistent state (Atelier exhibitions, Coalition tasks).
+
+### C.2 The Enum Property Pattern
+
+**Insight**: Enums should carry their own metadata as `@property` methods.
+
+```python
+class GardenSeason(Enum):
+    @property
+    def plasticity(self) -> float: ...
+
+    @property
+    def entropy_multiplier(self) -> float: ...
+
+    @property
+    def emoji(self) -> str: ...
+```
+
+This eliminates scattered lookup dictionaries and keeps behavior co-located with the enum definition.
+
+**Reusable for**: `TendingVerb.base_entropy_cost`, `TendingVerb.affects_state`, any categorized type.
+
+### C.3 The Multiplied Effect Pattern
+
+**Insight**: Contextual modifiers multiply, they don't replace.
+
+```python
+# Season modulates gesture effect
+effective_learning_rate = gesture.tone × season.plasticity
+
+# Examples:
+# SPROUTING (0.9) + definitive tone (1.0) → 0.9 (aggressive)
+# DORMANT (0.1) + tentative tone (0.3) → 0.03 (minimal)
+```
+
+This allows fine-grained control without explosion of special cases.
+
+**Reusable for**: Any system where context should modulate but not override intent.
+
+### C.4 The Signal Aggregation Pattern
+
+**Insight**: Transition rules aggregate multiple signals into confidence scores.
+
+```python
+def _eval_dormant_to_sprouting(signals: TransitionSignals) -> tuple[float, str]:
+    confidence = 0.0
+    reasons = []
+
+    if signals.gesture_frequency > 2.0:
+        confidence += 0.5
+        reasons.append("High activity")
+
+    if signals.entropy_spent_ratio < 0.5:
+        confidence += 0.3
+        reasons.append("Entropy available")
+
+    return min(1.0, confidence), "; ".join(reasons)
+```
+
+This pattern:
+- Makes rules transparent (each signal contributes with clear weight)
+- Produces human-readable reasons
+- Allows additive composition without boolean explosion
+
+**Reusable for**: Coalition recommendation, Atelier bidding, any confidence-based decision.
+
+### C.5 The Async-Safe Emission Pattern
+
+**Insight**: Sync methods that need to emit async events use `create_task()` with fallback.
+
+```python
+def transition_season(self, new_season, reason, emit_event=True):
+    # ... sync state change ...
+
+    if emit_event:
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(get_synergy_bus().emit(event))
+        except RuntimeError:
+            # No event loop - log and skip
+            pass
+```
+
+This allows core methods to remain sync while still participating in the async event system.
+
+**Reusable for**: Any sync code that should emit events (state machines, CLI handlers).
+
+### C.6 The Dismissal Memory Pattern
+
+**Insight**: Suggestions should track dismissal with time-bounded cooldown.
+
+```python
+_dismissed_transitions: dict[tuple[str, str, str], datetime] = {}
+_DISMISSAL_COOLDOWN_HOURS = 4
+
+def is_transition_dismissed(garden_id, from_season, to_season) -> bool:
+    key = (garden_id, from_season.name, to_season.name)
+    dismissed_at = _dismissed_transitions.get(key)
+    if dismissed_at is None:
+        return False
+    return datetime.now() - dismissed_at < timedelta(hours=_DISMISSAL_COOLDOWN_HOURS)
+```
+
+This prevents "nagging" while still allowing suggestions to resurface after user's context may have changed.
+
+**Reusable for**: Any suggestion system (Gestalt drift alerts, Atelier style suggestions).
+
+### C.7 The Plot Rigidity Spectrum
+
+**Insight**: Different domains have different appropriate change rates.
+
+| Plot | Rigidity | Rationale |
+|------|----------|-----------|
+| Punchdrunk Park | 0.3 | Playful, experimental |
+| Atelier | 0.4 | Creative, fluid |
+| Coalition Forge | 0.5 | Balanced |
+| Holographic Brain | 0.6 | Memory should be stable |
+| Domain Sim | 0.7 | Drills need consistency |
+| Gardener | 0.8 | Core infrastructure |
+
+**Reusable for**: Any multi-domain system where change tolerance varies.
+
+### C.8 The Dual-Channel Output Pattern
+
+**Insight**: CLI commands should emit both human and semantic output.
+
+```python
+def _emit_output(human: str, semantic: dict, ctx: InvocationContext | None):
+    if ctx is not None:
+        ctx.output(human=human, semantic=semantic)
+    else:
+        print(human)
+```
+
+This allows the same command to serve:
+- Human users (readable terminal output)
+- Agent consumers (structured JSON via FD3)
+
+**Reusable for**: All CLI handlers in kgents.
+
+### C.9 The Immutable Gesture Trace
+
+**Insight**: Gestures are frozen dataclasses appended to a bounded list.
+
+```python
+@dataclass(frozen=True)
+class TendingGesture:
+    verb: TendingVerb
+    target: str
+    tone: float
+    timestamp: datetime = field(default_factory=datetime.now)
+
+def add_gesture(self, gesture):
+    self.recent_gestures.append(gesture)
+    if len(self.recent_gestures) > 50:
+        self.recent_gestures = self.recent_gestures[-50:]
+```
+
+Benefits:
+- Gestures are facts, not mutable state
+- Bounded memory prevents unbounded growth
+- Enables trajectory analysis (diversity, frequency)
+
+**Reusable for**: Audit logs, interaction traces, learning from history.
+
+### C.10 The Season Cycle
+
+**Insight**: Seasons form a directed cycle, not a fully-connected graph.
+
+```
+     ┌─────────────────────────────────────┐
+     │                                     │
+     ▼                                     │
+  DORMANT ──────► SPROUTING ──────► BLOOMING
+     ▲                                     │
+     │                                     ▼
+  COMPOSTING ◄────── HARVEST ◄─────────────┘
+```
+
+Each season has exactly one forward transition. This:
+- Simplifies the auto-inducer (one rule per season)
+- Creates natural rhythm (rest → growth → crystallize → gather → decompose → rest)
+- Prevents chaotic state jumping
+
+**Reusable for**: Any lifecycle with natural phases (project states, document maturity).
+
+---
+
 *Specification v1.0 — 2025-12-16*
+*Implementation: 100% COMPLETE — All 8 phases shipped 🌱*

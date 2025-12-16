@@ -8,12 +8,21 @@ Exposes Holographic Brain (Crown Jewel) capabilities via REST API:
 - GET /v1/brain/status - Brain health status
 
 Session 6: Production Brain API for Web UI integration.
+Session 9: D-gent persistence - Brain data survives server restarts.
+
+D-gent Integration:
+    Brain data is persisted to ~/.kgents/brain/patterns.json using D-gent
+    serialization patterns. On startup, any existing brain data is loaded
+    automatically. On capture, data is saved immediately (write-through).
 """
 
 from __future__ import annotations
 
+import json
 import logging
 import threading
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .models import (
@@ -66,6 +75,144 @@ _brain_logos_lock = threading.Lock()
 # Test hook: override to inject a mock logos instance
 _brain_logos_factory: Any = None
 
+# D-gent persistence configuration
+_BRAIN_STORAGE_DIR = Path.home() / ".kgents" / "brain"
+_BRAIN_PATTERNS_FILE = _BRAIN_STORAGE_DIR / "patterns.json"
+
+
+def _ensure_storage_dir() -> None:
+    """Ensure the brain storage directory exists."""
+    _BRAIN_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _save_brain_patterns(crystal: Any) -> None:
+    """Save MemoryCrystal patterns to disk (D-gent persistence).
+
+    Uses atomic write (temp file + rename) for crash safety.
+    Format: JSON with pattern data including embeddings.
+    """
+    try:
+        _ensure_storage_dir()
+        patterns = getattr(crystal, "_patterns", {})
+        hot_patterns = getattr(crystal, "_hot_patterns", set())
+        dimension = getattr(crystal, "_dimension", 384)
+
+        # Serialize patterns to JSON-safe format
+        serialized: dict[str, Any] = {
+            "version": 1,
+            "dimension": dimension,
+            "saved_at": datetime.now(timezone.utc).isoformat(),
+            "hot_pattern_ids": list(hot_patterns),
+            "patterns": {},
+        }
+
+        for concept_id, pattern in patterns.items():
+            serialized["patterns"][concept_id] = {
+                "content": getattr(pattern, "content", ""),
+                "embedding": list(getattr(pattern, "embedding", [])),
+                "resolution": getattr(pattern, "resolution", 1.0),
+                "access_count": getattr(pattern, "access_count", 0),
+                "stored_at": (
+                    getattr(pattern, "stored_at", datetime.now(timezone.utc)).isoformat()
+                    if hasattr(pattern, "stored_at")
+                    else datetime.now(timezone.utc).isoformat()
+                ),
+                "metadata": dict(getattr(pattern, "metadata", {})),
+            }
+
+        # Atomic write: write to temp file, then rename
+        temp_file = _BRAIN_PATTERNS_FILE.with_suffix(".tmp")
+        with open(temp_file, "w") as f:
+            json.dump(serialized, f, indent=2)
+        temp_file.rename(_BRAIN_PATTERNS_FILE)
+
+        logger.info(
+            f"Saved {len(patterns)} brain patterns to {_BRAIN_PATTERNS_FILE}"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to save brain patterns: {e}")
+
+
+def _load_brain_patterns(crystal: Any) -> int:
+    """Load persisted patterns into MemoryCrystal (D-gent restoration).
+
+    Returns:
+        Number of patterns loaded, or 0 if no data found.
+    """
+    if not _BRAIN_PATTERNS_FILE.exists():
+        logger.info("No persisted brain data found - starting fresh")
+        return 0
+
+    try:
+        with open(_BRAIN_PATTERNS_FILE) as f:
+            data = json.load(f)
+
+        version = data.get("version", 1)
+        if version != 1:
+            logger.warning(f"Unknown brain data version {version} - skipping load")
+            return 0
+
+        # Check dimension compatibility
+        saved_dimension = data.get("dimension", 0)
+        crystal_dimension = getattr(crystal, "_dimension", 0)
+        if saved_dimension != crystal_dimension and saved_dimension > 0:
+            logger.warning(
+                f"Dimension mismatch: saved={saved_dimension}, current={crystal_dimension}. "
+                f"Starting fresh (old data preserved in {_BRAIN_PATTERNS_FILE}.bak)"
+            )
+            # Backup old file
+            backup_path = _BRAIN_PATTERNS_FILE.with_suffix(".json.bak")
+            import shutil
+            shutil.copy(_BRAIN_PATTERNS_FILE, backup_path)
+            return 0
+
+        patterns_data = data.get("patterns", {})
+        hot_pattern_ids = set(data.get("hot_pattern_ids", []))
+
+        # Import pattern class for reconstruction
+        from agents.m.crystal import CrystalPattern
+
+        loaded = 0
+        for concept_id, pdata in patterns_data.items():
+            try:
+                # Parse stored_at timestamp
+                stored_at_str = pdata.get("stored_at")
+                if stored_at_str:
+                    stored_at = datetime.fromisoformat(stored_at_str)
+                    if stored_at.tzinfo is None:
+                        stored_at = stored_at.replace(tzinfo=timezone.utc)
+                else:
+                    stored_at = datetime.now(timezone.utc)
+
+                # Create pattern and store in crystal
+                # Note: CrystalPattern fields are:
+                # concept_id, content, embedding, resolution, stored_at, last_accessed, access_count
+                pattern = CrystalPattern(
+                    concept_id=concept_id,
+                    content=pdata.get("content", ""),
+                    embedding=pdata.get("embedding", []),
+                    resolution=pdata.get("resolution", 1.0),
+                    stored_at=stored_at,
+                    last_accessed=stored_at,  # Use stored_at for last_accessed
+                    access_count=pdata.get("access_count", 0),
+                )
+
+                # Direct injection into crystal's internal state
+                crystal._patterns[concept_id] = pattern
+                if concept_id in hot_pattern_ids:
+                    crystal._hot_patterns.add(concept_id)
+                loaded += 1
+            except Exception as e:
+                logger.warning(f"Failed to load pattern {concept_id}: {e}")
+
+        logger.info(
+            f"Loaded {loaded} brain patterns from {_BRAIN_PATTERNS_FILE}"
+        )
+        return loaded
+    except Exception as e:
+        logger.warning(f"Failed to load brain patterns: {e}")
+        return 0
+
 
 def _get_brain_logos() -> tuple[Any, Any]:
     """Get or create the shared Brain Logos instance (thread-safe).
@@ -73,6 +220,11 @@ def _get_brain_logos() -> tuple[Any, Any]:
     Uses double-checked locking pattern for efficient thread-safe
     lazy initialization. This is important for API servers that may
     handle concurrent requests.
+
+    D-gent Persistence:
+        On first initialization, loads any persisted brain data from
+        ~/.kgents/brain/patterns.json. This ensures data survives
+        server restarts.
 
     Tests can inject a factory via _set_brain_logos_factory() to avoid
     network calls and global state mutation.
@@ -96,6 +248,24 @@ def _get_brain_logos() -> tuple[Any, Any]:
                     from protocols.agentese import create_brain_logos
 
                     _brain_logos = create_brain_logos(embedder_type="auto")
+
+                    # D-gent persistence: load persisted patterns
+                    try:
+                        resolvers = _brain_logos._context_resolvers
+                        self_resolver = resolvers.get("self")
+                        memory_node = getattr(self_resolver, "_memory", None)
+                        crystal = (
+                            getattr(memory_node, "_memory_crystal", None)
+                            if memory_node
+                            else None
+                        )
+                        if crystal:
+                            loaded = _load_brain_patterns(crystal)
+                            if loaded > 0:
+                                logger.info(f"Brain restored with {loaded} patterns")
+                    except Exception as e:
+                        logger.warning(f"Failed to restore brain patterns: {e}")
+
                 _brain_observer = Observer.guest()
 
     return _brain_logos, _brain_observer
@@ -170,6 +340,21 @@ def create_brain_router() -> "APIRouter | None":
 
             if "error" in result:
                 raise HTTPException(status_code=400, detail=result["error"])
+
+            # D-gent persistence: save after capture (write-through)
+            try:
+                resolvers = logos._context_resolvers
+                self_resolver = resolvers.get("self")
+                memory_node = getattr(self_resolver, "_memory", None)
+                crystal = (
+                    getattr(memory_node, "_memory_crystal", None)
+                    if memory_node
+                    else None
+                )
+                if crystal:
+                    _save_brain_patterns(crystal)
+            except Exception as e:
+                logger.warning(f"Failed to persist brain pattern: {e}")
 
             return BrainCaptureResponse(
                 status=result.get("status", "captured"),
@@ -407,11 +592,19 @@ def create_brain_router() -> "APIRouter | None":
 
                 # Compute position from embedding (use first 3 dims, normalized)
                 # For better visualization, we spread across a unit sphere
+                use_hash_position = True  # Default to hash-based
+
                 if len(embedding) >= 3:
-                    # Use first 3 dimensions, scale to reasonable range
-                    x, y, z = embedding[0] * 10, embedding[1] * 10, embedding[2] * 10
-                else:
-                    # Fallback: random-ish position based on concept_id hash
+                    # Check if first 3 dims have meaningful values (not all zeros)
+                    first_3_magnitude = abs(embedding[0]) + abs(embedding[1]) + abs(embedding[2])
+                    if first_3_magnitude > 0.001:
+                        # Use first 3 dimensions, scale to reasonable range
+                        x, y, z = embedding[0] * 10, embedding[1] * 10, embedding[2] * 10
+                        use_hash_position = False
+
+                if use_hash_position:
+                    # Fallback: deterministic position based on concept_id hash
+                    # This ensures different crystals appear at different locations
                     h = hash(concept_id)
                     x = ((h >> 0) & 0xFF) / 255.0 * 20 - 10
                     y = ((h >> 8) & 0xFF) / 255.0 * 20 - 10

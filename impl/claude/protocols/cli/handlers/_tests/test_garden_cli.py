@@ -164,6 +164,114 @@ class TestGardenCommand:
         result = cmd_garden(["unknown"])
         assert result == 1
 
+    # =========================================================================
+    # Auto-Inducer Tests (Phase 8)
+    # =========================================================================
+
+    def test_garden_suggest(self) -> None:
+        """Test kg garden suggest returns 0."""
+        from protocols.cli.handlers.garden import cmd_garden
+
+        result = cmd_garden(["suggest"])
+        assert result == 0
+
+    def test_garden_suggest_json(self) -> None:
+        """Test kg garden suggest --json."""
+        from protocols.cli.handlers.garden import cmd_garden
+        import io
+        import sys
+        import json
+
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            result = cmd_garden(["suggest", "--json"])
+        finally:
+            sys.stdout = sys.__stdout__
+
+        assert result == 0
+        data = json.loads(captured.getvalue())
+        assert "status" in data
+        assert "signals" in data
+        # Either "no_suggestion" or "suggestion"
+        assert data["status"] in ("no_suggestion", "suggestion")
+
+    def test_garden_suggest_shows_signals(self) -> None:
+        """Test kg garden suggest shows transition signals."""
+        from protocols.cli.handlers.garden import cmd_garden
+        import io
+        import sys
+        import json
+
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            result = cmd_garden(["suggest", "--json"])
+        finally:
+            sys.stdout = sys.__stdout__
+
+        assert result == 0
+        data = json.loads(captured.getvalue())
+
+        # Signals should always be present
+        signals = data.get("signals", {})
+        assert "gesture_frequency" in signals
+        assert "gesture_diversity" in signals
+        assert "time_in_season_hours" in signals
+        assert "entropy_spent_ratio" in signals
+
+    def test_garden_accept_no_suggestion(self) -> None:
+        """Test kg garden accept returns 1 when no suggestion."""
+        from protocols.cli.handlers.garden import cmd_garden
+
+        # Fresh garden has no pending suggestion
+        result = cmd_garden(["accept"])
+        assert result == 1
+
+    def test_garden_accept_json_no_suggestion(self) -> None:
+        """Test kg garden accept --json returns error when no suggestion."""
+        from protocols.cli.handlers.garden import cmd_garden
+        import io
+        import sys
+        import json
+
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            result = cmd_garden(["accept", "--json"])
+        finally:
+            sys.stdout = sys.__stdout__
+
+        assert result == 1
+        data = json.loads(captured.getvalue())
+        assert data["status"] == "no_suggestion"
+
+    def test_garden_dismiss_no_suggestion(self) -> None:
+        """Test kg garden dismiss returns 1 when no suggestion."""
+        from protocols.cli.handlers.garden import cmd_garden
+
+        # Fresh garden has no pending suggestion
+        result = cmd_garden(["dismiss"])
+        assert result == 1
+
+    def test_garden_dismiss_json_no_suggestion(self) -> None:
+        """Test kg garden dismiss --json returns error when no suggestion."""
+        from protocols.cli.handlers.garden import cmd_garden
+        import io
+        import sys
+        import json
+
+        captured = io.StringIO()
+        sys.stdout = captured
+        try:
+            result = cmd_garden(["dismiss", "--json"])
+        finally:
+            sys.stdout = sys.__stdout__
+
+        assert result == 1
+        data = json.loads(captured.getvalue())
+        assert data["status"] == "no_suggestion"
+
 
 # =============================================================================
 # Tend Command Tests

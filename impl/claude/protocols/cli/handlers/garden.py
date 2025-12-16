@@ -39,6 +39,11 @@ def _print_help() -> None:
     print("  init              Initialize garden with default plots")
     print("  transition <to>   Transition to new season (DORMANT|SPROUTING|BLOOMING|HARVEST|COMPOSTING)")
     print()
+    print("AUTO-INDUCER (Phase 8):")
+    print("  suggest           Check for suggested season transition")
+    print("  accept            Accept the current suggestion")
+    print("  dismiss           Dismiss the current suggestion (4h cooldown)")
+    print()
     print("OPTIONS:")
     print("  --json            Output as JSON")
     print("  --width <n>       ASCII width (default: 72)")
@@ -132,6 +137,12 @@ async def _async_garden(
                 return await _handle_init(json_mode, ctx)
             case "transition":
                 return await _handle_transition(subcommand_args, json_mode, ctx)
+            case "suggest":
+                return await _handle_suggest(json_mode, ctx)
+            case "accept":
+                return await _handle_accept(json_mode, ctx)
+            case "dismiss":
+                return await _handle_dismiss(json_mode, ctx)
             case _:
                 _emit_output(
                     f"[GARDEN] Unknown subcommand: {subcommand}",
@@ -386,6 +397,233 @@ async def _handle_transition(
             f"",
             f"  Reason: {reason}",
             f"  Plasticity: {old_season.plasticity:.0%} -> {new_season.plasticity:.0%}",
+            f"",
+        ]
+        _emit_output("\n".join(lines), result, ctx)
+
+    return 0
+
+
+# =============================================================================
+# Auto-Inducer Handlers (Phase 8)
+# =============================================================================
+
+
+async def _handle_suggest(
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """Handle suggest subcommand - check for season transition suggestion."""
+    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos.seasons import (
+        suggest_season_transition,
+        TransitionSignals,
+    )
+
+    # Get or create garden with plots for realistic signals
+    garden = create_garden(name="kgents")
+    garden.plots = create_crown_jewel_plots()
+    garden.metrics.active_plots = len([p for p in garden.plots.values() if p.is_active])
+
+    # Gather signals and evaluate
+    signals = TransitionSignals.gather(garden)
+    suggestion = suggest_season_transition(garden)
+
+    if suggestion is None:
+        result = {
+            "status": "no_suggestion",
+            "current_season": garden.season.name,
+            "signals": signals.to_dict(),
+            "message": "Garden is content in its current season.",
+        }
+
+        if json_mode:
+            import json
+            _emit_output(json.dumps(result, indent=2), result, ctx)
+        else:
+            lines = [
+                f"",
+                f"  {garden.season.emoji} AUTO-INDUCER: No Suggestion",
+                f"",
+                f"  Current Season: {garden.season.name}",
+                f"  The garden is content. No transition suggested.",
+                f"",
+                f"  CURRENT SIGNALS:",
+                f"    Gesture frequency: {signals.gesture_frequency:.2f}/hour",
+                f"    Gesture diversity: {signals.gesture_diversity} verbs",
+                f"    Time in season:    {signals.time_in_season_hours:.1f} hours",
+                f"    Entropy usage:     {signals.entropy_spent_ratio:.0%}",
+                f"    Session active:    {'Yes' if signals.session_active else 'No'}",
+                f"",
+            ]
+            _emit_output("\n".join(lines), result, ctx)
+        return 0
+
+    # We have a suggestion
+    result = {
+        "status": "suggestion",
+        "from_season": suggestion.from_season.name,
+        "to_season": suggestion.to_season.name,
+        "confidence": suggestion.confidence,
+        "reason": suggestion.reason,
+        "signals": suggestion.signals.to_dict(),
+        "should_suggest": suggestion.should_suggest,
+    }
+
+    if json_mode:
+        import json
+        _emit_output(json.dumps(result, indent=2), result, ctx)
+    else:
+        confidence_bar = _progress_bar(suggestion.confidence, 10)
+        lines = [
+            f"",
+            f"  {suggestion.from_season.emoji} AUTO-INDUCER: Transition Suggested!",
+            f"",
+            f"  {suggestion.from_season.emoji} {suggestion.from_season.name} -> {suggestion.to_season.emoji} {suggestion.to_season.name}",
+            f"",
+            f"  Confidence: {confidence_bar} {suggestion.confidence:.0%}",
+            f"  Reason:     {suggestion.reason}",
+            f"",
+            f"  SIGNALS:",
+            f"    Gesture frequency: {signals.gesture_frequency:.2f}/hour",
+            f"    Gesture diversity: {signals.gesture_diversity} verbs",
+            f"    Time in season:    {signals.time_in_season_hours:.1f} hours",
+            f"    Entropy usage:     {signals.entropy_spent_ratio:.0%}",
+            f"",
+            f"  ACTIONS:",
+            f"    kg garden accept   - Accept this transition",
+            f"    kg garden dismiss  - Dismiss (won't suggest for 4h)",
+            f"",
+        ]
+        _emit_output("\n".join(lines), result, ctx)
+
+    return 0
+
+
+async def _handle_accept(
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """Handle accept subcommand - accept current transition suggestion."""
+    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos.seasons import (
+        suggest_season_transition,
+        clear_dismissals,
+    )
+
+    garden = create_garden(name="kgents")
+    garden.plots = create_crown_jewel_plots()
+
+    # Check if there's a suggestion to accept
+    suggestion = suggest_season_transition(garden)
+
+    if suggestion is None or not suggestion.should_suggest:
+        result = {
+            "status": "no_suggestion",
+            "message": "No pending transition suggestion to accept.",
+        }
+        if json_mode:
+            import json
+            _emit_output(json.dumps(result, indent=2), result, ctx)
+        else:
+            _emit_output(
+                "\n  No pending transition suggestion to accept.\n  Run 'kg garden suggest' to check status.\n",
+                result,
+                ctx,
+            )
+        return 1
+
+    # Accept the transition
+    old_season = suggestion.from_season
+    new_season = suggestion.to_season
+    garden.transition_season(new_season, f"Accepted auto-inducer suggestion: {suggestion.reason}")
+
+    # Clear dismissals since we're accepting
+    clear_dismissals(garden.garden_id)
+
+    result = {
+        "status": "accepted",
+        "from_season": old_season.name,
+        "to_season": new_season.name,
+        "reason": suggestion.reason,
+    }
+
+    if json_mode:
+        import json
+        _emit_output(json.dumps(result, indent=2), result, ctx)
+    else:
+        lines = [
+            f"",
+            f"  {new_season.emoji} TRANSITION ACCEPTED",
+            f"",
+            f"  {old_season.emoji} {old_season.name} -> {new_season.emoji} {new_season.name}",
+            f"",
+            f"  Plasticity: {old_season.plasticity:.0%} -> {new_season.plasticity:.0%}",
+            f"  Reason: {suggestion.reason}",
+            f"",
+            f"  The garden has transitioned to {new_season.name}.",
+            f"",
+        ]
+        _emit_output("\n".join(lines), result, ctx)
+
+    return 0
+
+
+async def _handle_dismiss(
+    json_mode: bool,
+    ctx: "InvocationContext | None",
+) -> int:
+    """Handle dismiss subcommand - dismiss current transition suggestion."""
+    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos.seasons import (
+        suggest_season_transition,
+        dismiss_transition,
+    )
+
+    garden = create_garden(name="kgents")
+    garden.plots = create_crown_jewel_plots()
+
+    # Check if there's a suggestion to dismiss
+    suggestion = suggest_season_transition(garden)
+
+    if suggestion is None or not suggestion.should_suggest:
+        result = {
+            "status": "no_suggestion",
+            "message": "No pending transition suggestion to dismiss.",
+        }
+        if json_mode:
+            import json
+            _emit_output(json.dumps(result, indent=2), result, ctx)
+        else:
+            _emit_output(
+                "\n  No pending transition suggestion to dismiss.\n  Run 'kg garden suggest' to check status.\n",
+                result,
+                ctx,
+            )
+        return 1
+
+    # Dismiss the transition
+    dismiss_transition(garden.garden_id, suggestion.from_season, suggestion.to_season)
+
+    result = {
+        "status": "dismissed",
+        "from_season": suggestion.from_season.name,
+        "to_season": suggestion.to_season.name,
+        "cooldown_hours": 4,
+    }
+
+    if json_mode:
+        import json
+        _emit_output(json.dumps(result, indent=2), result, ctx)
+    else:
+        lines = [
+            f"",
+            f"  TRANSITION DISMISSED",
+            f"",
+            f"  {suggestion.from_season.emoji} {suggestion.from_season.name} -> {suggestion.to_season.emoji} {suggestion.to_season.name}",
+            f"",
+            f"  This suggestion won't be shown again for 4 hours.",
+            f"  The garden remains in {suggestion.from_season.name}.",
             f"",
         ]
         _emit_output("\n".join(lines), result, ctx)

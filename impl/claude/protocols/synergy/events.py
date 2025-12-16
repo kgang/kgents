@@ -69,6 +69,12 @@ class SynergyEventType(Enum):
     CONSENT_DEBT_HIGH = "consent_debt_high"
     FORCE_USED = "force_used"
 
+    # D-gent events (Data layer)
+    DATA_STORED = "data_stored"       # Datum stored to backend
+    DATA_DELETED = "data_deleted"     # Datum removed from backend
+    DATA_UPGRADED = "data_upgraded"   # Datum promoted to higher tier
+    DATA_DEGRADED = "data_degraded"   # Datum demoted (graceful degradation)
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -80,6 +86,9 @@ class Jewel(Enum):
     COALITION = "coalition"
     PARK = "park"
     DOMAIN = "domain"
+
+    # Infrastructure jewels
+    DGENT = "dgent"  # Data layer (D-gent)
 
     # Special: broadcast target
     ALL = "*"
@@ -179,6 +188,50 @@ def create_analysis_complete_event(
             "average_health": average_health,
             "drift_count": drift_count,
             "root_path": root_path,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_drift_detected_event(
+    source_id: str,
+    source_module: str,
+    target_module: str,
+    rule: str,
+    severity: str,
+    root_path: str,
+    message: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Gestalt drift detected event.
+
+    Sprint 2: Auto-capture drift violations to Brain for tracking.
+
+    Args:
+        source_id: Unique violation identifier
+        source_module: Module that violates the rule
+        target_module: Module being incorrectly depended on
+        rule: Name of the governance rule violated
+        severity: error, warning, info
+        root_path: Root path being analyzed
+        message: Optional descriptive message
+
+    Returns:
+        SynergyEvent for DRIFT_DETECTED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GESTALT,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.DRIFT_DETECTED,
+        source_id=source_id,
+        payload={
+            "source_module": source_module,
+            "target_module": target_module,
+            "rule": rule,
+            "severity": severity,
+            "root_path": root_path,
+            "message": message or f"{source_module} → {target_module} violates {rule}",
         },
         correlation_id=correlation_id or str(uuid.uuid4()),
     )
@@ -759,6 +812,155 @@ def create_plot_progress_event(
     )
 
 
+# =============================================================================
+# D-gent Events (Data Layer)
+# =============================================================================
+
+
+def create_data_stored_event(
+    datum_id: str,
+    content_preview: str,
+    content_size: int,
+    backend_tier: str,
+    has_parent: bool = False,
+    metadata: dict[str, Any] | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a D-gent data stored event.
+
+    When data is persisted to a backend, this event notifies
+    other jewels that new data is available.
+
+    Args:
+        datum_id: Unique datum identifier
+        content_preview: First 100 chars/bytes of content
+        content_size: Size of content in bytes
+        backend_tier: Storage tier (MEMORY, JSONL, SQLITE, POSTGRES)
+        has_parent: Whether datum has causal parent
+        metadata: Optional datum metadata
+
+    Returns:
+        SynergyEvent for DATA_STORED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.DGENT,
+        target_jewel=Jewel.ALL,  # Broadcast to all
+        event_type=SynergyEventType.DATA_STORED,
+        source_id=datum_id,
+        payload={
+            "content_preview": content_preview[:100] if content_preview else "",
+            "content_size": content_size,
+            "backend_tier": backend_tier,
+            "has_parent": has_parent,
+            "metadata": metadata or {},
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_data_deleted_event(
+    datum_id: str,
+    backend_tier: str,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a D-gent data deleted event.
+
+    When data is removed from a backend, this event notifies
+    other jewels that the data is no longer available.
+
+    Args:
+        datum_id: ID of deleted datum
+        backend_tier: Storage tier the datum was in
+
+    Returns:
+        SynergyEvent for DATA_DELETED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.DGENT,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.DATA_DELETED,
+        source_id=datum_id,
+        payload={
+            "backend_tier": backend_tier,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_data_upgraded_event(
+    datum_id: str,
+    old_tier: str,
+    new_tier: str,
+    reason: str = "access_pattern",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a D-gent data upgraded event.
+
+    When data is promoted to a higher durability tier,
+    this event tracks the progression.
+
+    Args:
+        datum_id: ID of upgraded datum
+        old_tier: Previous storage tier
+        new_tier: New storage tier (more durable)
+        reason: Why the upgrade occurred
+
+    Returns:
+        SynergyEvent for DATA_UPGRADED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.DGENT,
+        target_jewel=Jewel.BRAIN,  # Brain tracks tier changes
+        event_type=SynergyEventType.DATA_UPGRADED,
+        source_id=datum_id,
+        payload={
+            "old_tier": old_tier,
+            "new_tier": new_tier,
+            "reason": reason,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_data_degraded_event(
+    datum_id: str,
+    old_tier: str,
+    new_tier: str,
+    reason: str = "graceful_degradation",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a D-gent data degraded event.
+
+    When data falls back to a lower tier (e.g., Postgres unavailable),
+    this event tracks the graceful degradation.
+
+    Args:
+        datum_id: ID of degraded datum
+        old_tier: Previous storage tier
+        new_tier: New storage tier (less durable)
+        reason: Why the degradation occurred
+
+    Returns:
+        SynergyEvent for DATA_DEGRADED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.DGENT,
+        target_jewel=Jewel.ALL,  # All jewels should know about degradation
+        event_type=SynergyEventType.DATA_DEGRADED,
+        source_id=datum_id,
+        payload={
+            "old_tier": old_tier,
+            "new_tier": new_tier,
+            "reason": reason,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -768,6 +970,7 @@ __all__ = [
     "SynergyResult",
     # Factory functions - Wave 0/1
     "create_analysis_complete_event",
+    "create_drift_detected_event",  # Sprint 2
     "create_crystal_formed_event",
     "create_session_complete_event",
     "create_artifact_created_event",
@@ -789,4 +992,9 @@ __all__ = [
     "create_season_changed_event",
     "create_gesture_applied_event",
     "create_plot_progress_event",
+    # Factory functions - D-gent (Data layer)
+    "create_data_stored_event",
+    "create_data_deleted_event",
+    "create_data_upgraded_event",
+    "create_data_degraded_event",
 ]

@@ -206,6 +206,13 @@ def create_app(
     if gardener_router is not None:
         app.include_router(gardener_router)
 
+    # Park endpoints (Wave 3: Punchdrunk Park)
+    from .park import create_park_router
+
+    park_router = create_park_router()
+    if park_router is not None:
+        app.include_router(park_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -400,6 +407,18 @@ def create_app(
                     "events_stream": "GET /api/infra/events/stream (SSE)",
                     "health": "GET /api/infra/health",
                     "entity": "GET /api/infra/entity/{entity_id}",
+                },
+                "park": {
+                    "scenario": "GET /api/park/scenario",
+                    "start": "POST /api/park/scenario/start",
+                    "tick": "POST /api/park/scenario/tick",
+                    "phase": "POST /api/park/scenario/phase",
+                    "mask": "POST /api/park/scenario/mask",
+                    "force": "POST /api/park/scenario/force",
+                    "complete": "POST /api/park/scenario/complete",
+                    "masks": "GET /api/park/masks",
+                    "mask_detail": "GET /api/park/masks/{name}",
+                    "status": "GET /api/park/status",
                 },
             },
         }

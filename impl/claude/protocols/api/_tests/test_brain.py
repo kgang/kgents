@@ -588,3 +588,98 @@ class TestTopologyPerformance:
 
         assert response.status_code == 200
         assert elapsed < 0.5, f"Response time {elapsed:.3f}s exceeds 500ms baseline"
+
+
+class TestBrainPersistence:
+    """Tests for D-gent persistence of brain data.
+
+    Session 9: Brain data survives server restarts via D-gent persistence.
+    Data is stored in ~/.kgents/brain/patterns.json.
+    """
+
+    def test_persistence_save_and_load(self) -> None:
+        """Test that captured patterns are saved and can be reloaded."""
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from protocols.api.brain import (
+            _get_brain_logos,
+            _load_brain_patterns,
+            _reset_brain_logos,
+            _save_brain_patterns,
+        )
+
+        # Use temp directory for this test
+        with tempfile.TemporaryDirectory() as tmpdir:
+            test_file = Path(tmpdir) / "patterns.json"
+
+            with patch(
+                "protocols.api.brain._BRAIN_PATTERNS_FILE", test_file
+            ), patch(
+                "protocols.api.brain._BRAIN_STORAGE_DIR", Path(tmpdir)
+            ):
+                # Get fresh logos
+                _reset_brain_logos()
+                logos, observer = _get_brain_logos()
+
+                # Capture content via AGENTESE
+                import asyncio
+
+                async def capture():
+                    await logos.invoke(
+                        "self.memory.capture",
+                        observer,
+                        content="Persistence test content",
+                    )
+
+                asyncio.get_event_loop().run_until_complete(capture())
+
+                # Get crystal and save
+                resolvers = logos._context_resolvers
+                self_resolver = resolvers.get("self")
+                memory_node = getattr(self_resolver, "_memory", None)
+                crystal = (
+                    getattr(memory_node, "_memory_crystal", None)
+                    if memory_node
+                    else None
+                )
+
+                assert crystal is not None
+                assert len(crystal._patterns) == 1
+
+                _save_brain_patterns(crystal)
+                assert test_file.exists()
+
+                # Reset and create new crystal
+                from agents.m.crystal import create_crystal
+
+                new_crystal = create_crystal(dimension=64, use_numpy=True)
+                assert len(new_crystal._patterns) == 0
+
+                # Load into new crystal
+                loaded = _load_brain_patterns(new_crystal)
+                assert loaded == 1
+                assert len(new_crystal._patterns) == 1
+
+                # Verify content
+                pattern = list(new_crystal._patterns.values())[0]
+                assert "Persistence test content" in pattern.content
+
+    def test_persistence_empty_file(self) -> None:
+        """Test that missing persistence file returns 0 loaded."""
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+
+        from agents.m.crystal import create_crystal
+        from protocols.api.brain import _load_brain_patterns
+
+        # Use non-existent file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_file = Path(tmpdir) / "nonexistent.json"
+
+            with patch("protocols.api.brain._BRAIN_PATTERNS_FILE", missing_file):
+                crystal = create_crystal(dimension=64, use_numpy=True)
+                loaded = _load_brain_patterns(crystal)
+                assert loaded == 0
