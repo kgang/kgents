@@ -34,6 +34,8 @@ AGENTESE: self.grow.*
 from __future__ import annotations
 
 import asyncio
+import re
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -59,7 +61,7 @@ except ImportError:
 
 
 # =============================================================================
-# State Management
+# State Management (Thread-Safe)
 # =============================================================================
 
 
@@ -75,45 +77,140 @@ class GrowSession:
 
 
 _session: GrowSession | None = None
+_session_lock = threading.Lock()
 
 
 def _get_session() -> GrowSession:
-    """Get or create grow session."""
+    """Get or create grow session (thread-safe).
+
+    Uses double-checked locking for efficient thread-safe lazy initialization.
+    """
     global _session
     if _session is None:
-        _session = GrowSession()
+        with _session_lock:
+            # Double-check after acquiring lock
+            if _session is None:
+                _session = GrowSession()
     return _session
 
 
 def _get_resolver() -> Any:
-    """Get or create the SelfGrowResolver."""
+    """Get or create the SelfGrowResolver (thread-safe).
+
+    The resolver is created once per session and cached.
+    """
     session = _get_session()
     if session.resolver is None:
-        from protocols.agentese.contexts.self_grow import create_self_grow_resolver
+        with _session_lock:
+            # Double-check after acquiring lock
+            if session.resolver is None:
+                from protocols.agentese.contexts.self_grow import (
+                    create_self_grow_resolver,
+                )
 
-        session.resolver = create_self_grow_resolver()
+                session.resolver = create_self_grow_resolver()
     return session.resolver
 
 
+# Cortex lock (separate from session lock to avoid deadlocks in async context)
+_cortex_lock = threading.Lock()
+
+
 async def _get_cortex() -> Any:
-    """Get or create the GrowthCortex for persistence."""
+    """Get or create the GrowthCortex for persistence (thread-safe).
+
+    Uses locking for thread-safe lazy initialization.
+    Falls back to in-memory storage if database is unavailable.
+    """
     session = _get_session()
     if session.cortex is None:
-        from protocols.agentese.contexts.self_grow import create_growth_cortex
-        from protocols.cli.instance_db.storage import StorageProvider
+        with _cortex_lock:
+            # Double-check after acquiring lock
+            if session.cortex is None:
+                from protocols.agentese.contexts.self_grow import create_growth_cortex
+                from protocols.cli.instance_db.storage import StorageProvider
 
-        try:
-            # Try to get storage provider
-            storage = await StorageProvider.from_config()
-            session.cortex = create_growth_cortex(relational=storage.relational)
+                try:
+                    # Try to get storage provider
+                    storage = await StorageProvider.from_config()
+                    session.cortex = create_growth_cortex(relational=storage.relational)
 
-            # Initialize schema (runs migrations if needed)
-            await session.cortex.init_schema()
-        except Exception:
-            # Fall back to in-memory (no persistence)
-            session.cortex = create_growth_cortex()
+                    # Initialize schema (runs migrations if needed)
+                    await session.cortex.init_schema()
+                except Exception:
+                    # Fall back to in-memory (no persistence)
+                    session.cortex = create_growth_cortex()
 
     return session.cortex
+
+
+# =============================================================================
+# Input Validation
+# =============================================================================
+
+# Valid AGENTESE contexts
+VALID_CONTEXTS = frozenset({"world", "self", "concept", "void", "time"})
+
+# Entity name pattern: lowercase letters, numbers, underscores (no leading numbers)
+ENTITY_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+
+# Minimum and maximum lengths
+MIN_ENTITY_LENGTH = 2
+MAX_ENTITY_LENGTH = 64
+MIN_WHY_LENGTH = 10
+MAX_WHY_LENGTH = 1000
+
+
+def _validate_context(context: str) -> tuple[bool, str]:
+    """Validate AGENTESE context.
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not context:
+        return False, "Context cannot be empty"
+    if context not in VALID_CONTEXTS:
+        return (
+            False,
+            f"Invalid context: {context}. Valid: {', '.join(sorted(VALID_CONTEXTS))}",
+        )
+    return True, ""
+
+
+def _validate_entity(entity: str) -> tuple[bool, str]:
+    """Validate entity name.
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not entity:
+        return False, "Entity name cannot be empty"
+    if len(entity) < MIN_ENTITY_LENGTH:
+        return False, f"Entity name too short (min {MIN_ENTITY_LENGTH} chars)"
+    if len(entity) > MAX_ENTITY_LENGTH:
+        return False, f"Entity name too long (max {MAX_ENTITY_LENGTH} chars)"
+    if not ENTITY_PATTERN.match(entity):
+        return (
+            False,
+            "Entity name must be lowercase letters, numbers, underscores (start with letter)",
+        )
+    return True, ""
+
+
+def _validate_why_exists(why: str | None) -> tuple[bool, str]:
+    """Validate why_exists justification.
+
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if why is None:
+        return True, ""  # Optional field
+    why = why.strip()
+    if len(why) < MIN_WHY_LENGTH:
+        return False, f"Justification too short (min {MIN_WHY_LENGTH} chars)"
+    if len(why) > MAX_WHY_LENGTH:
+        return False, f"Justification too long (max {MAX_WHY_LENGTH} chars)"
+    return True, ""
 
 
 def _run_async(coro: Any) -> Any:
@@ -521,8 +618,8 @@ def _propose(args: list[str], ctx: "InvocationContext | None") -> int:
         )
         return 1
 
-    context = args[0]
-    entity = args[1]
+    context = args[0].lower().strip()
+    entity = args[1].lower().strip()
 
     # Parse optional justification
     why_exists = None
@@ -530,6 +627,22 @@ def _propose(args: list[str], ctx: "InvocationContext | None") -> int:
         why_idx = args.index("--why")
         if why_idx + 1 < len(args):
             why_exists = " ".join(args[why_idx + 1 :])
+
+    # Validate inputs
+    valid, error = _validate_context(context)
+    if not valid:
+        _emit(f"Error: {error}", {"error": "invalid_context"}, ctx)
+        return 1
+
+    valid, error = _validate_entity(entity)
+    if not valid:
+        _emit(f"Error: {error}", {"error": "invalid_entity"}, ctx)
+        return 1
+
+    valid, error = _validate_why_exists(why_exists)
+    if not valid:
+        _emit(f"Error: {error}", {"error": "invalid_why"}, ctx)
+        return 1
 
     # Check for existing gap
     session = _get_session()
@@ -1058,18 +1171,31 @@ def _wizard(ctx: "InvocationContext | None") -> int:
 
     # Step 2: Entity name
     console.print("\n[bold]Step 2: Name Your Holon[/]")
-    console.print("[dim]Use lowercase with underscores (e.g., flower_garden)[/]")
+    console.print(
+        f"[dim]Use lowercase with underscores (e.g., flower_garden, {MIN_ENTITY_LENGTH}-{MAX_ENTITY_LENGTH} chars)[/]"
+    )
 
     entity = Prompt.ask("Entity name")
-    if not entity or not entity.replace("_", "").isalnum():
-        console.print("[red]Invalid entity name[/]")
+    entity = entity.lower().strip() if entity else ""
+
+    valid, error = _validate_entity(entity)
+    if not valid:
+        console.print(f"[red]{error}[/]")
         return 1
 
     # Step 3: Justification
     console.print("\n[bold]Step 3: Justify Its Existence[/]")
-    console.print("[dim]Why does this holon need to exist? (Tasteful principle)[/]")
+    console.print(
+        f"[dim]Why does this holon need to exist? (min {MIN_WHY_LENGTH} chars)[/]"
+    )
 
     why_exists = Prompt.ask("Justification")
+    why_exists = why_exists.strip() if why_exists else ""
+
+    valid, error = _validate_why_exists(why_exists if why_exists else None)
+    if not valid:
+        console.print(f"[red]{error}[/]")
+        return 1
 
     # Step 4: Affordances
     console.print("\n[bold]Step 4: Define Affordances[/]")

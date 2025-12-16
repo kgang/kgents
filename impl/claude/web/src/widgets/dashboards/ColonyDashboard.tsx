@@ -4,12 +4,16 @@
  * Displays:
  * - Header with phase and day
  * - Status bar with colony metrics
- * - Citizen grid
+ * - Citizen grid (using ElasticContainer)
  * - Footer with entropy and token counts
+ *
+ * Now with elastic layout - citizens auto-arrange based on viewport.
+ * @see plans/web-refactor/elastic-primitives.md
  */
 
-import { memo, useMemo } from 'react';
-import type { ColonyDashboardJSON, CitizenCardJSON } from '@/reactive/types';
+import { memo } from 'react';
+import type { ColonyDashboardJSON } from '@/reactive/types';
+import { ElasticContainer, ElasticPlaceholder } from '@/components/elastic';
 import { CitizenCard } from '../cards';
 
 export interface ColonyDashboardProps extends Omit<ColonyDashboardJSON, 'type'> {
@@ -23,20 +27,10 @@ export const ColonyDashboard = memo(function ColonyDashboard({
   day,
   metrics,
   citizens,
-  grid_cols,
   selected_citizen_id,
   onSelectCitizen,
   className,
 }: ColonyDashboardProps) {
-  // Build grid rows
-  const rows = useMemo(() => {
-    const result: CitizenCardJSON[][] = [];
-    for (let i = 0; i < citizens.length; i += grid_cols) {
-      result.push(citizens.slice(i, i + grid_cols));
-    }
-    return result;
-  }, [citizens, grid_cols]);
-
   return (
     <div
       className={`kgents-colony-dashboard border rounded-lg overflow-hidden ${className || ''}`}
@@ -51,7 +45,7 @@ export const ColonyDashboard = memo(function ColonyDashboard({
       </div>
 
       {/* Status bar */}
-      <div className="flex gap-4 px-4 py-2 bg-gray-100 text-sm border-b">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 bg-gray-100 text-sm border-b">
         <span>
           <strong>Colony:</strong> {colony_id.slice(0, 12)}
         </span>
@@ -63,26 +57,34 @@ export const ColonyDashboard = memo(function ColonyDashboard({
         </span>
       </div>
 
-      {/* Citizen grid */}
-      <div className="p-4">
-        <div className="flex flex-col gap-4">
-          {rows.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex gap-4">
-              {row.map((citizen) => (
-                <CitizenCard
-                  key={citizen.citizen_id}
-                  {...citizen}
-                  onSelect={onSelectCitizen}
-                  isSelected={citizen.citizen_id === selected_citizen_id}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* Citizen grid using ElasticContainer */}
+      <ElasticContainer
+        layout="grid"
+        gap={{ sm: 'var(--elastic-gap-sm)', md: 'var(--elastic-gap-md)', lg: 'var(--elastic-gap-lg)' }}
+        padding={{ sm: 'var(--elastic-gap-sm)', md: 'var(--elastic-gap-md)' }}
+        transition="smooth"
+        minItemWidth={200}
+        emptyState={
+          <ElasticPlaceholder
+            for="agent"
+            state="empty"
+            emptyMessage="No citizens in this colony yet"
+          />
+        }
+        className="min-h-[200px]"
+      >
+        {citizens.map((citizen) => (
+          <CitizenCard
+            key={citizen.citizen_id}
+            {...citizen}
+            onSelect={onSelectCitizen}
+            isSelected={citizen.citizen_id === selected_citizen_id}
+          />
+        ))}
+      </ElasticContainer>
 
       {/* Footer */}
-      <div className="flex justify-between px-4 py-2 bg-gray-100 text-sm border-t">
+      <div className="flex justify-between flex-wrap gap-x-4 px-4 py-2 bg-gray-100 text-sm border-t">
         <span>Entropy: {metrics.entropy_budget.toFixed(2)}</span>
         <span>Tokens: {metrics.total_tokens}</span>
       </div>

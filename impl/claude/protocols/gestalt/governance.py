@@ -381,6 +381,19 @@ def create_kgents_config() -> GovernanceConfig:
     Create governance config for the kgents codebase.
 
     Layers: spec > agents > protocols > impl
+
+    Note: Patterns use fnmatch against dotted module names (not file paths).
+    - Use "*" for single component: "*.types" matches "agents.types"
+    - Use "agents.*" for subtree: matches "agents.m.cartographer"
+
+    Ring Pattern Priority:
+    Dict iteration order (Python 3.7+) determines priority when a module
+    matches multiple patterns. Current order is intentional:
+        core > domain > application > infrastructure
+
+    This means "protocols.agentese.types" matches both "*.types" (core) and
+    "protocols.agentese.*" (domain), but is assigned to CORE—which is correct
+    because type modules should be innermost in clean architecture.
     """
     config = GovernanceConfig(
         layer_patterns={
@@ -392,8 +405,9 @@ def create_kgents_config() -> GovernanceConfig:
             ring_order=["core", "domain", "application", "infrastructure"],
             description="Clean architecture: inner rings must not depend on outer",
         ),
+        # Ring patterns: match against dotted module names (e.g., "protocols.agentese.types")
         ring_patterns={
-            "core": ["**/types.py", "**/base.py", "**/protocols.py"],
+            "core": ["*.types", "*.base", "*.protocols", "*.__init__"],
             "domain": ["agents.*", "protocols.agentese.*"],
             "application": ["protocols.cli.*", "protocols.api.*"],
             "infrastructure": ["protocols.terrarium.*", "protocols.tenancy.*"],

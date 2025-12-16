@@ -28,6 +28,36 @@ from agents.atelier.artisan import (
     Piece,
     Provenance,
 )
+from agents.atelier.bidding import (
+    BID_COSTS,
+    BID_PRIORITIES,
+    AtelierBidManager,
+    Bid,
+    BidOutcome,
+    BidQueue,
+    BidResult,
+    BidType,
+    SpectatorStats,
+    get_bid_manager,
+)
+from agents.atelier.economy import (
+    AccrualResult,
+    AccrualTier,
+    AsyncTokenPool,
+    InsufficientBalanceError,
+    InvalidAmountError,
+    InvalidUserError,
+    LicenseTierProvider,
+    RefundResult,
+    SessionError,
+    SpendResult,
+    TokenPool,
+    TokenPoolError,
+    UserBalance,
+    create_async_token_pool,
+    create_token_pool,
+    create_token_pool_with_licensing,
+)
 from agents.atelier.workshop import Workshop, WorkshopFlux
 
 __all__ = [
@@ -41,4 +71,33 @@ __all__ = [
     # Workshop
     "Workshop",
     "WorkshopFlux",
+    # Bidding (Spike 1B: Spectator Economy)
+    "Bid",
+    "BidType",
+    "BidOutcome",
+    "BidResult",
+    "BidQueue",
+    "SpectatorStats",
+    "AtelierBidManager",
+    "BID_COSTS",
+    "BID_PRIORITIES",
+    "get_bid_manager",
+    # Economy (Spike 1A: TokenPool)
+    "TokenPool",
+    "AsyncTokenPool",
+    "UserBalance",
+    "AccrualTier",
+    "AccrualResult",
+    "SpendResult",
+    "RefundResult",
+    "LicenseTierProvider",
+    "create_token_pool",
+    "create_async_token_pool",
+    "create_token_pool_with_licensing",
+    # Economy Exceptions
+    "TokenPoolError",
+    "InvalidUserError",
+    "InvalidAmountError",
+    "InsufficientBalanceError",
+    "SessionError",
 ]

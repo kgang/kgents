@@ -606,6 +606,31 @@ def fresh_store() -> Store:
     return Store()  # New instance per test
 ```
 
+### 5b. Global singletons + pytest-xdist race conditions
+
+**Symptom**: Tests pass sequentially but fail with `pytest -n auto` (parallel)
+
+**Context**: Module-level singletons with factory injection (e.g., `_brain_logos`, `_brain_logos_factory`) work well for sequential tests but can race when parallel workers mutate the same globals.
+
+**Options**:
+1. **Document** — Add warning in test docstring that parallel execution is unsafe
+2. **Isolate** — Use `pytest.mark.no_parallel` or test grouping to run in single worker
+3. **Monkeypatch** — Use `monkeypatch.setattr()` for per-test isolation (more verbose)
+
+```python
+# Option 1: Document in module docstring
+"""
+Note on test isolation:
+    Uses module-level globals. Safe for sequential runs, but pytest-xdist
+    parallel runs (-n auto) may cause race conditions.
+"""
+
+# Option 2: Marker (if you add custom marker)
+@pytest.mark.no_parallel
+def test_with_global_singleton() -> None:
+    ...
+```
+
 ### 6. Flaky async tests
 
 **Symptom**: Test intermittently fails
@@ -964,6 +989,246 @@ uv run pytest --hypothesis-show-statistics agents/i/reactive/_tests/test_wave1_s
 
 ---
 
+## React Component Testing: Chaos & Performance
+
+For React components (especially layout systems), we use specialized testing patterns to ensure stability under rapid state changes.
+
+### Chaos Testing (Random State Changes)
+
+Test component stability under rapid, random mutations:
+
+```tsx
+import { render, screen, act } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { useState, useEffect } from 'react';
+
+describe('Chaos Tests: Random Widget Show/Hide', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // Mock ResizeObserver for layout components
+    const MockResizeObserver = vi.fn().mockImplementation((callback) => ({
+      observe: vi.fn(() => callback([{ contentRect: { width: 800, height: 600 } }])),
+      unobserve: vi.fn(),
+      disconnect: vi.fn(),
+    }));
+    window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('should handle mixed add/remove at 10+ changes per second', async () => {
+    function RapidChaosWrapper() {
+      const [items, setItems] = useState<string[]>(['a', 'b', 'c']);
+
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setItems((prev) => {
+            const action = Math.random();
+            if (action < 0.4 && prev.length > 2) {
+              // Remove random
+              const idx = Math.floor(Math.random() * prev.length);
+              return prev.filter((_, i) => i !== idx);
+            } else if (action < 0.8) {
+              // Add new
+              return [...prev, `new-${Date.now()}`];
+            }
+            return [...prev].sort(() => Math.random() - 0.5); // Shuffle
+          });
+        }, 50); // 20 changes per second
+        return () => clearInterval(interval);
+      }, []);
+
+      return <MyComponent items={items} />;
+    }
+
+    render(<RapidChaosWrapper />);
+
+    // Run for 3 seconds of simulated time (60 changes)
+    await act(async () => {
+      for (let i = 0; i < 60; i++) {
+        vi.advanceTimersByTime(50);
+      }
+    });
+
+    // Component should still be functional
+    expect(screen.getByTestId('my-component')).toBeInTheDocument();
+  });
+});
+```
+
+**Key Techniques**:
+- Use `vi.useFakeTimers({ shouldAdvanceTime: true })` for controlled time
+- Mock `ResizeObserver` for layout-aware components
+- Test add/remove/shuffle combinations
+- Verify component doesn't crash after many mutations
+
+### Performance Baseline Testing
+
+Set performance budgets that fail if violated:
+
+```tsx
+function measureRenderTime(
+  renderFn: () => void
+): { duration: number } {
+  const start = performance.now();
+  renderFn();
+  return { duration: performance.now() - start };
+}
+
+describe('Performance: Initial Render', () => {
+  it('should render 100 items in <500ms', () => {
+    const items = Array.from({ length: 100 }, (_, i) => ({ id: `item-${i}` }));
+
+    const { duration } = measureRenderTime(() =>
+      render(
+        <GridContainer>
+          {items.map((item) => <Card key={item.id} {...item} />)}
+        </GridContainer>
+      )
+    );
+
+    console.log(`100 items initial render: ${duration.toFixed(2)}ms`);
+    expect(duration).toBeLessThan(5000); // jsdom is slower; real target is 500ms
+  });
+
+  it('should scale linearly with item count', () => {
+    const counts = [10, 25, 50, 100];
+    const durations: number[] = [];
+
+    counts.forEach((count) => {
+      const items = Array.from({ length: count }, (_, i) => ({ id: `item-${i}` }));
+      const { duration } = measureRenderTime(() =>
+        render(<GridContainer>{items.map((item) => <Card key={item.id} {...item} />)}</GridContainer>)
+      );
+      durations.push(duration);
+    });
+
+    // Verify roughly linear scaling (100 items should be ~10x 10 items)
+    const ratio = durations[3] / durations[0];
+    expect(ratio).toBeLessThan(20); // Allow some overhead
+  });
+});
+```
+
+### Memory Leak Testing
+
+Verify cleanup on unmount:
+
+```tsx
+it('should not leak event listeners during resize stress', async () => {
+  let resizeObserverCalls = 0;
+
+  function ResizeStressWrapper() {
+    const [width, setWidth] = useState(1280);
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setWidth(400 + Math.floor(Math.random() * 800));
+        resizeObserverCalls++;
+      }, 50);
+      return () => clearInterval(interval);
+    }, []);
+
+    return <ResponsiveComponent style={{ width }} />;
+  }
+
+  const { unmount } = render(<ResizeStressWrapper />);
+
+  await act(async () => {
+    for (let i = 0; i < 100; i++) {
+      vi.advanceTimersByTime(50);
+    }
+  });
+
+  unmount();
+  expect(resizeObserverCalls).toBeGreaterThan(90);
+});
+```
+
+### Visual Regression Testing (Playwright)
+
+Test responsive breakpoints with screenshots:
+
+```typescript
+import { test, expect } from '@playwright/test';
+
+const BREAKPOINTS = {
+  mobile_small: { width: 320, height: 568 },
+  mobile: { width: 640, height: 1136 },
+  tablet: { width: 768, height: 1024 },
+  desktop: { width: 1024, height: 768 },
+  desktop_large: { width: 1280, height: 800 },
+};
+
+test.describe('Responsive Layout', () => {
+  test('should collapse at 768px threshold', async ({ page }) => {
+    await page.setViewportSize(BREAKPOINTS.desktop);
+    await page.goto('/my-page');
+
+    // Should be side-by-side
+    const splitContainer = page.locator('[data-direction="horizontal"]');
+    await expect(splitContainer).toBeVisible();
+
+    // Resize below threshold
+    await page.setViewportSize({ width: 767, height: 1024 });
+    await page.waitForTimeout(100); // Allow resize observer
+
+    // Should be collapsed
+    const collapsed = page.locator('[data-collapsed="true"]');
+    await expect(collapsed).toBeVisible();
+
+    await expect(page).toHaveScreenshot('collapsed-layout.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+  });
+
+  test('should transition smoothly between breakpoints', async ({ page }) => {
+    await page.setViewportSize(BREAKPOINTS.desktop_large);
+    await page.goto('/my-page');
+
+    for (const size of [1024, 768, 640, 320]) {
+      await page.setViewportSize({ width: size, height: 800 });
+      await page.waitForTimeout(150);
+
+      // Verify no overflow
+      const overflows = await page.evaluate(() => {
+        const elements = document.querySelectorAll('[data-testid="card"]');
+        let hasOverflow = false;
+        elements.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          if (rect.right > window.innerWidth) hasOverflow = true;
+        });
+        return hasOverflow;
+      });
+
+      expect(overflows).toBe(false);
+    }
+  });
+});
+```
+
+### Running React Tests
+
+```bash
+cd impl/claude/web
+
+# Unit tests (vitest)
+npm run test                          # All tests
+npm run test -- --watch               # Watch mode
+npm run test -- tests/unit/elastic/   # Specific directory
+
+# E2E tests (playwright)
+npm run test:e2e                      # All E2E
+npm run test:e2e -- --ui              # Interactive UI
+npm run test:e2e -- e2e/elastic/      # Specific directory
+npm run test:e2e -- --update-snapshots # Update screenshots
+```
+
+---
+
 ## Related Skills
 
 - [building-agent](building-agent.md) - Creating well-formed agents
@@ -977,6 +1242,8 @@ uv run pytest --hypothesis-show-statistics agents/i/reactive/_tests/test_wave1_s
 
 ## Changelog
 
+- 2025-12-16: Added React chaos/performance testing patterns (vitest + playwright)
+- 2025-12-16: Added global singletons + pytest-xdist race condition pitfall
 - 2025-12-14: Added stress testing patterns (property-based, performance baselines, boundary tests)
 - 2025-12-12: Added T-gent Types I-V taxonomy, T-gent test agents, Oracle, Cortex patterns
 - 2025-12-12: Initial version based on conftest.py and testing patterns

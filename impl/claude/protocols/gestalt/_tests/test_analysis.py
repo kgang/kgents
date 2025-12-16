@@ -290,6 +290,35 @@ class TestGraphBuilding:
         assert graph.module_count == 0
         assert graph.edge_count == 0
 
+    def test_duplicate_imports_deduplicated(self, tmp_path: Path) -> None:
+        """Duplicate imports from same module should be counted once.
+
+        Regression test: Without deduplication, multiple imports of the
+        same target (e.g., at different lines or via different styles)
+        inflate coupling metrics incorrectly.
+        """
+        # Module that imports 'os' twice (once direct, once from)
+        (tmp_path / "multi_import.py").write_text(
+            """
+import os
+import os  # duplicate
+from os import path
+from os import environ
+"""
+        )
+
+        graph = build_architecture_graph(tmp_path, "python")
+
+        # Should have exactly 1 edge (multi_import -> os), not 4
+        edges_to_os = [e for e in graph.edges if e.target == "os"]
+        assert len(edges_to_os) == 1, (
+            f"Expected 1 deduplicated edge to 'os', got {len(edges_to_os)}: "
+            f"{[(e.source, e.target, e.line_number) for e in edges_to_os]}"
+        )
+
+        # Total edge count should reflect deduplication
+        assert graph.edge_count == 1
+
     def test_build_simple_graph(self, tmp_path: Path) -> None:
         """Build graph from simple module structure."""
         # Create module a.py
@@ -358,6 +387,41 @@ class TestGraphBuilding:
 # ============================================================================
 # Architecture Graph Tests
 # ============================================================================
+
+
+class TestProjectRootDetection:
+    """Tests for _get_project_root function."""
+
+    def test_prefers_repo_root_over_pyproject(self, tmp_path: Path) -> None:
+        """Ensure root detection prefers .git over nested pyproject.toml.
+
+        Regression test: scans from impl/claude/protocols/gestalt should use
+        the repo root (where .git lives), not impl/claude (where pyproject.toml is).
+        """
+        from protocols.gestalt.handler import _get_project_root
+
+        # The real test: verify we find the repo root
+        root = _get_project_root(prefer_repo_root=True)
+
+        # Should find the kgents repo root (has .git or .kgents)
+        assert (root / ".git").exists() or (root / ".kgents").exists(), (
+            f"Expected to find .git or .kgents at {root}"
+        )
+        # Repo root should contain both spec/ and impl/
+        # (if we stopped at impl/claude/pyproject.toml, spec wouldn't exist)
+        assert (root / "spec").exists() or (root / "impl").exists(), (
+            f"Expected repo root to contain spec/ or impl/, got {root}"
+        )
+
+    def test_allows_impl_only_root(self) -> None:
+        """Can opt to use impl/claude as root for narrower scans."""
+        from protocols.gestalt.handler import _get_project_root
+
+        root = _get_project_root(prefer_repo_root=False)
+        # Should find some pyproject.toml
+        assert (root / "pyproject.toml").exists(), (
+            f"Expected pyproject.toml at {root} when prefer_repo_root=False"
+        )
 
 
 class TestArchitectureGraph:

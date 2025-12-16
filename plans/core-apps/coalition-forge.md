@@ -1,31 +1,38 @@
 ---
 path: plans/core-apps/coalition-forge
 status: active
-progress: 0
-last_touched: 2025-12-15
-touched_by: claude-opus-4-5
+progress: 40
+last_touched: 2025-12-16
+touched_by: claude-sonnet-4
 blocking: []
 enables:
   - monetization/task-credits
   - plans/enterprise-workflows
 session_notes: |
-  Stub plan created from core-apps-synthesis.
-  Low lift, high demo value - proves visible dynamics.
+  2025-12-16: Spike 2A + hardening complete.
+  - ForgeTask Protocol with input/output typing
+  - 5 task templates (research, code_review, content, decision, intel)
+  - TaskPolynomial state machine (7 phases)
+  - TASK_OPERAD composition grammar (seq, par, cond, retry)
+  - Coalition eigenvector compatibility checking
+  - Projection Protocol (to_cli, to_web, to_json)
+  - Property-based tests with Hypothesis
+  - 203 tests passing, mypy clean
 phase_ledger:
   PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
+  RESEARCH: touched
+  DEVELOP: in_progress
   STRATEGIZE: pending
-  CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  CROSS-SYNERGIZE: touched
+  IMPLEMENT: in_progress
   QA: pending
-  TEST: pending
+  TEST: in_progress
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.08
-  spent: 0.0
+  spent: 0.04
   returned: 0.0
 ---
 
@@ -128,11 +135,17 @@ from agents.forge import (
 
 **Goal**: Basic task submission → coalition → output
 
-- [ ] Define `ForgeTask` interface with input/output typing
+- [x] Define `ForgeTask` interface with input/output typing (Spike 2A)
 - [ ] Implement coalition formation algorithm
-- [ ] Create 5 task templates (research, review, content, decision, intel)
+- [x] Create 5 task templates (research, review, content, decision, intel) (Spike 2A)
 - [ ] Build basic execution orchestration
 - [ ] Wire output delivery
+
+**Spike 2A Complete (2025-12-16)**:
+- `agents/forge/task.py`: ForgeTask Protocol, TaskInput, TaskOutput, CoalitionShape
+- `agents/forge/templates/`: 5 task templates with validation, credit calculation
+- `agents/forge/agentese.py`: AGENTESE paths for concept.task.*
+- 71 tests passing in `agents/forge/_tests/test_task.py`
 
 **Success Criteria**: User can submit task and get output
 

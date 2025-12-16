@@ -195,7 +195,12 @@ describe('useWindowLayout', () => {
   });
 
   describe('breakpoint detection', () => {
-    it('detects mobile breakpoint (< 640px)', () => {
+    // Breakpoints aligned with Layout Projection Functor spec:
+    // - compact/mobile: < 768px
+    // - comfortable/tablet: 768-1024px
+    // - spacious/desktop: > 1024px
+
+    it('detects mobile breakpoint (< 768px)', () => {
       setWindowSize(375, 667);
 
       const { result } = renderHook(() => useWindowLayout());
@@ -205,7 +210,7 @@ describe('useWindowLayout', () => {
       expect(result.current.isDesktop).toBe(false);
     });
 
-    it('detects tablet breakpoint (640-1024px)', () => {
+    it('detects tablet breakpoint (768-1024px)', () => {
       setWindowSize(768, 1024);
 
       const { result } = renderHook(() => useWindowLayout());

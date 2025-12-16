@@ -338,3 +338,90 @@ class TestPresetConfigs:
         assert len(config.layer_rules) > 0
         assert config.ring_rule is not None
         assert "core" in config.ring_rule.ring_order
+
+
+# ============================================================================
+# Ring Pattern Regression Tests
+# ============================================================================
+
+
+class TestRingPatternMatching:
+    """Regression tests for ring pattern matching against dotted module names."""
+
+    def test_ring_pattern_matches_dotted_module_name(self) -> None:
+        """Ring patterns should match dotted module names (not file paths).
+
+        This is a regression test for the bug where ring_patterns used file
+        globs like "**/types.py" but fnmatch runs against dotted names like
+        "protocols.agentese.types".
+        """
+        config = create_kgents_config()
+        graph = ArchitectureGraph()
+
+        # Add modules with dotted names (as they appear in real scans)
+        # Note: protocols.agentese.types matches BOTH "*.types" (core) AND
+        # "protocols.agentese.*" (domain). The first matching pattern wins
+        # in iteration order. Use modules that unambiguously match one ring.
+        graph.modules["protocols.billing.types"] = Module(
+            name="protocols.billing.types"
+        )
+        graph.modules["protocols.cli.handlers.brain"] = Module(
+            name="protocols.cli.handlers.brain"
+        )
+        graph.modules["agents.m.cartographer"] = Module(name="agents.m.cartographer")
+
+        config.assign_rings(graph)
+
+        # protocols.billing.types should match "*.types" -> core
+        # (doesn't match agentese.*, cli.*, api.*, terrarium.*, or tenancy.*)
+        types_module = graph.modules["protocols.billing.types"]
+        assert config.get_module_ring(types_module) == "core", (
+            "*.types pattern should match protocols.billing.types"
+        )
+
+        # protocols.cli.handlers.brain should match "protocols.cli.*" -> application
+        cli_module = graph.modules["protocols.cli.handlers.brain"]
+        assert config.get_module_ring(cli_module) == "application", (
+            "protocols.cli.* should match protocols.cli.handlers.brain"
+        )
+
+        # agents.m.cartographer should match "agents.*" -> domain
+        agent_module = graph.modules["agents.m.cartographer"]
+        assert config.get_module_ring(agent_module) == "domain", (
+            "agents.* should match agents.m.cartographer"
+        )
+
+    def test_ring_rule_triggers_violation(self) -> None:
+        """Ring rule should detect violations when inner depends on outer.
+
+        Regression test proving ring assignment + rule checking works end-to-end.
+        """
+        config = create_kgents_config()
+
+        graph = ArchitectureGraph()
+        # Core module (inner ring)
+        graph.modules["protocols.agentese.types"] = Module(
+            name="protocols.agentese.types"
+        )
+        # Infrastructure module (outer ring)
+        graph.modules["protocols.terrarium.client"] = Module(
+            name="protocols.terrarium.client"
+        )
+        # VIOLATION: core (inner) imports infrastructure (outer)
+        graph.edges = [
+            DependencyEdge(
+                source="protocols.agentese.types",
+                target="protocols.terrarium.client",
+                line_number=10,
+            ),
+        ]
+
+        violations = check_drift(graph, config)
+
+        # Should detect ring violation
+        ring_violations = [v for v in violations if v.rule_type == RuleType.RING]
+        assert len(ring_violations) == 1, (
+            f"Expected 1 ring violation, got {len(ring_violations)}: {ring_violations}"
+        )
+        assert ring_violations[0].source_module == "protocols.agentese.types"
+        assert ring_violations[0].target_module == "protocols.terrarium.client"

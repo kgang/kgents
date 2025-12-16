@@ -76,6 +76,7 @@ Two-tier collection: try context, fallback direct
 SSE over NATS: circuit breaker + fallback queue ensures degradation when NATS unavailable
 Template fallbacks make CLI commands work without LLM
 Heuristic alignment fallback: keyword→eigenvector mapping enables graceful LLM degradation
+Optional dep stubs: no-op stubs for type-checking; document intent, not silent failure
 ```
 
 ### Frontend Patterns
@@ -95,7 +96,19 @@ DI > mocking: set_soul() injection pattern beats patch() for testability
 Property-based tests catch edge cases: Hypothesis found boundary issues humans missed
 Performance baselines as assertions: `assert elapsed < 1.0` catches regressions
 Registry singleton + reset(): class-level state works with pytest fixtures via reset()
+Global singletons + xdist = race: sequential OK, parallel risky—document or use markers
 Contract tests bridge type gaps: Python validators mirror TypeScript interfaces
+Stress test phase machines: Hypothesis with action sequences reveals invalid transitions
+```
+
+### Punchdrunk & Director Patterns
+```
+DirectorAgent polynomial: OBSERVING → BUILDING_TENSION → INJECTING → COOLDOWN cycle
+Consent debt sensitivity: debt > 0.7 blocks injection; debt multiplies cooldown
+Entropy budget: LCG sample() for deterministic testing; void.entropy for production
+Injection decision algorithm: tension-based probability + debt reduction + cooldown check
+ASCII projection pattern: ┌─┼└ borders + progress bars = rich CLI without deps
+Cross-jewel synergies: Atelier rate limiting → injection cooldown; Forge events → injections
 ```
 
 ### Infrastructure
@@ -136,6 +149,13 @@ TZ-aware caching: if cached_at has tzinfo, use aware now(); else use naive now()
 Core-apps × AGENTESE: each jewel needs path registry + observer views + subscriptions + shortcuts + pipelines
 ```
 
+### Gestalt Elastic Synthesis (2025-12-16)
+```
+Density-Content Isomorphism: Screen Density ≅ Observer Umwelt ≅ Content Detail Level
+UI building algorithm: name dimension → define values → provide context → parameterize constants → adapt internally
+Categorical stack for UI: Functor (layout), Natural Transformation (responsive), Sheaf (component coherence)
+```
+
 ### UX Patterns (from Core-Apps Research)
 ```
 Dual-currency economy: earned (watching) + purchased (premium)—never 1:1 ratio
@@ -153,6 +173,21 @@ Role-based information asymmetry: different users see different data—realistic
 Session persistence: named sessions + `kg /continue` = work spans terminals
 Context-aware completion: suggest from history + current phase, not just syntax
 Decay visualization: fresh→fading opacity gradient shows temporal relevance
+```
+
+### Crown Jewel Strategy (2025-12-16)
+```
+Ship-ready detection: 95% code + tests > feature completeness; docs complete the last 5%
+Two-leader strategy: ship best two first, validate market, fund rest
+Web UI is common multiplier: single React pattern unlocks three jewels simultaneously
+Gardener = force multiplier: investment in development interface accelerates all jewels
+Revenue stacking: $560K = $300K enterprise + $175K SaaS + $85K economy—diverse streams
+Spike completion ≠ jewel completion: spikes prove feasibility; integration proves value
+Middle tier pattern: 40-60% jewels share common blocker (Web UI + API endpoints)
+Enterprise sales distinct: Domain Simulation needs pilot motion, not SaaS landing page
+AGENTESE path count: 58 paths = unified interface surface across all seven jewels
+Test density indicates readiness: Brain 1104 > Gestalt 146 > others; correlation strong
+Moat articulation: "we build substrate that generates apps" > "we build 7 apps"
 ```
 
 ## Anti-Patterns
@@ -174,4 +209,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~130/200 | Last pruned: 2025-12-15 | AGENTESE v3 integration learnings added*
+*Lines: ~155/200 | Last pruned: 2025-12-16 | Crown Jewel Strategy added*

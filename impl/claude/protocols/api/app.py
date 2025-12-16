@@ -185,6 +185,20 @@ def create_app(
     if brain_router is not None:
         app.include_router(brain_router)
 
+    # Gestalt endpoints (Living Architecture Visualizer / Crown Jewel)
+    from .gestalt import create_gestalt_router
+
+    gestalt_router = create_gestalt_router()
+    if gestalt_router is not None:
+        app.include_router(gestalt_router)
+
+    # Infrastructure endpoints (Gestalt Live - real-time monitoring)
+    from .infrastructure import create_infrastructure_router
+
+    infrastructure_router = create_infrastructure_router()
+    if infrastructure_router is not None:
+        app.include_router(infrastructure_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -361,6 +375,24 @@ def create_app(
                     "all": "GET /api/gallery",
                     "categories": "GET /api/gallery/categories",
                     "pilot": "GET /api/gallery/{pilot_name}",
+                },
+                "gestalt": {
+                    "manifest": "GET /v1/world/codebase/manifest",
+                    "health": "GET /v1/world/codebase/health",
+                    "drift": "GET /v1/world/codebase/drift",
+                    "module": "GET /v1/world/codebase/module/{name}",
+                    "topology": "GET /v1/world/codebase/topology",
+                    "scan": "POST /v1/world/codebase/scan",
+                },
+                "infrastructure": {
+                    "status": "GET /api/infra/status",
+                    "connect": "POST /api/infra/connect",
+                    "disconnect": "POST /api/infra/disconnect",
+                    "topology": "GET /api/infra/topology",
+                    "topology_stream": "GET /api/infra/topology/stream (SSE)",
+                    "events_stream": "GET /api/infra/events/stream (SSE)",
+                    "health": "GET /api/infra/health",
+                    "entity": "GET /api/infra/entity/{entity_id}",
                 },
             },
         }

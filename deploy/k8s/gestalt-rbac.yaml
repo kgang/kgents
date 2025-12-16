@@ -1,0 +1,113 @@
+# Gestalt Live RBAC Resources
+#
+# Creates a ServiceAccount and ClusterRole for read-only Kubernetes monitoring.
+# This follows least-privilege principles:
+# - Read-only access to workload resources (pods, services, deployments)
+# - No access to secrets, configmaps, or other sensitive data
+# - No write permissions
+#
+# @see plans/_continuations/gestalt-live-real-k8s.md
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gestalt-live
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: gestalt-live
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: kgents
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gestalt-live-reader
+  labels:
+    app.kubernetes.io/name: gestalt-live
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: kgents
+    # Use aggregation label for easy extension
+    rbac.kgents.io/aggregate-to-gestalt-reader: "true"
+rules:
+  # Core resources - read-only
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/status
+      - services
+      - endpoints
+      - events
+      - namespaces
+      - nodes
+    verbs: ["get", "list", "watch"]
+
+  # Apps resources - read-only
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - deployments/status
+      - replicasets
+      - replicasets/status
+      - statefulsets
+      - statefulsets/status
+      - daemonsets
+      - daemonsets/status
+    verbs: ["get", "list", "watch"]
+
+  # Networking resources - read-only
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
+      - ingresses/status
+      - networkpolicies
+    verbs: ["get", "list", "watch"]
+
+  # Metrics (requires metrics-server)
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - pods
+      - nodes
+    verbs: ["get", "list"]
+
+  # Batch resources - read-only
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - jobs/status
+      - cronjobs
+      - cronjobs/status
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gestalt-live-reader-binding
+  labels:
+    app.kubernetes.io/name: gestalt-live
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: kgents
+subjects:
+  - kind: ServiceAccount
+    name: gestalt-live
+    namespace: kgents
+roleRef:
+  kind: ClusterRole
+  name: gestalt-live-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+# Namespace-scoped RoleBinding alternative for more restricted access
+# Uncomment and modify if you want per-namespace access control
+#
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: gestalt-live-reader
+#   namespace: kgents  # Repeat for each namespace
+# subjects:
+#   - kind: ServiceAccount
+#     name: gestalt-live
+#     namespace: kgents
+# roleRef:
+#   kind: ClusterRole
+#   name: gestalt-live-reader
+#   apiGroup: rbac.authorization.k8s.io

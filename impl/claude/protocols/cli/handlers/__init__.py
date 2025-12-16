@@ -17,6 +17,7 @@ Structure:
 - daemon.py: Cortex daemon lifecycle (start/stop/status, Mac launchd)
 - soul.py: K-gent Digital Soul (Middleware of Consciousness)
 - semaphore.py: Agent Semaphores (Rodizio Pattern)
+- prompt.py: Evergreen Prompt System (Wave 6 Living CLI)
 
 All handlers follow the signature:
     def cmd_<name>(args: list[str]) -> int

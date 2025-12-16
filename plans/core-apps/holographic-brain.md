@@ -278,11 +278,27 @@ with TenantContext(team_id="acme-corp"):
 
 **Goal**: Basic capture and recall
 
-- [ ] Create capture interface (web + CLI)
+- [x] Create capture interface (web + CLI) — Session 5-6
 - [ ] Wire crystal visualization to M-gent
-- [ ] Implement basic recall (semantic search)
+- [x] Implement basic recall (semantic search) — Session 4 (L-gent embeddings)
 - [ ] Single-user storage backend
-- [ ] Import from markdown/plaintext
+- [x] Import from markdown/plaintext — Spike 3A (Obsidian/Notion import)
+
+**Spike 3A Complete + Hardened (2025-12-16)**:
+- `agents/m/importers/markdown.py`: 960+ lines
+- ObsidianVaultParser: Folder traversal, skip hidden folders
+- Extract: Frontmatter (YAML), [[wikilinks]], #tags, headings, code blocks
+- MarkdownEngram: Structured representation for Crystal storage
+- MarkdownImporter: Batch import with progress tracking
+- CLI: `kg brain import --source obsidian --path /vault [--dry-run] [--json]`
+
+**Hardening (Robustification)**:
+- Property-based tests (Hypothesis): 8 fuzz tests for all extraction functions
+- Performance baselines: 3 tests ensure <1s for large documents
+- L-gent integration: Auto-detects sentence-transformers for semantic embeddings
+- Fallback: Hash-based 64-dim embeddings when no ML libraries available
+- Error handling: Graceful continue-on-error with detailed error reports
+- Tests: 82 importer tests + 28 CLI tests = **110 total tests**
 
 **Success Criteria**: User can capture and recall knowledge
 

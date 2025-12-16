@@ -96,6 +96,26 @@ COALITION_PATHS: dict[str, dict[str, Any]] = {
         "description": "Execute coalition task",
         "effects": ["CREDIT_CHARGE", "TASK_RUN"],
     },
+    "world.coalition.subscribe": {
+        "aspect": "witness",
+        "description": "Subscribe to real-time coalition formation events (SSE)",
+        "effects": [],
+    },
+    "world.coalition.dialogue.witness": {
+        "aspect": "witness",
+        "description": "Stream coalition dialogue history",
+        "effects": [],
+    },
+    "world.coalition.formation.manifest": {
+        "aspect": "manifest",
+        "description": "View coalition formation state (who joined, why, eigenvector compatibility)",
+        "effects": [],
+    },
+    "world.coalition.handoff.witness": {
+        "aspect": "witness",
+        "description": "Observe handoff events between builders",
+        "effects": [],
+    },
     "concept.task.manifest": {
         "aspect": "manifest",
         "description": "View task template details",
@@ -159,21 +179,56 @@ BRAIN_PATHS: dict[str, dict[str, Any]] = {
 
 # Crown Jewel 4: Punchdrunk Park
 PARK_PATHS: dict[str, dict[str, Any]] = {
+    # Scenario discovery and filtering
     "world.town.scenario.manifest": {
         "aspect": "manifest",
-        "description": "List available scenarios",
+        "description": "List available scenarios (all or filtered by type/tag/difficulty)",
         "effects": [],
     },
-    "world.town.scenario.inhabit": {
+    "world.town.scenario.search": {
+        "aspect": "manifest",
+        "description": "Search scenarios with filters (type, tags, difficulty)",
+        "effects": [],
+    },
+    # Individual scenario operations
+    "world.town.scenario[id].manifest": {
+        "aspect": "manifest",
+        "description": "View scenario details at specified LOD (0-3)",
+        "effects": [],
+    },
+    "world.town.scenario[id].inhabit": {
         "aspect": "define",
         "description": "Enter a scenario as a character",
-        "effects": ["MASK_DONNED", "SESSION_STARTED"],
+        "effects": ["MASK_DONNED", "SESSION_STARTED", "CITIZENS_SPAWNED"],
     },
-    "world.town.scenario.observe": {
+    "world.town.scenario[id].observe": {
         "aspect": "manifest",
         "description": "Watch scenario unfold as spectator",
         "effects": [],
     },
+    "world.town.scenario[id].spawn": {
+        "aspect": "define",
+        "description": "Spawn citizens from scenario template",
+        "effects": ["CITIZENS_CREATED"],
+    },
+    # Scenario type enumeration
+    "world.town.scenario.types.manifest": {
+        "aspect": "manifest",
+        "description": "List the five scenario types (Mystery, Collaboration, Conflict, Emergence, Practice)",
+        "effects": [],
+    },
+    # Legacy compatibility
+    "world.town.scenario.inhabit": {
+        "aspect": "define",
+        "description": "Enter a scenario as a character (legacy path)",
+        "effects": ["MASK_DONNED", "SESSION_STARTED"],
+    },
+    "world.town.scenario.observe": {
+        "aspect": "manifest",
+        "description": "Watch scenario unfold as spectator (legacy path)",
+        "effects": [],
+    },
+    # Consent system
     "self.consent.manifest": {
         "aspect": "manifest",
         "description": "View consent ledger (force/apology history)",
@@ -184,6 +239,7 @@ PARK_PATHS: dict[str, dict[str, Any]] = {
         "description": "Override agent consent with apology",
         "effects": ["CONSENT_OVERRIDDEN", "APOLOGY_LOGGED"],
     },
+    # Mask system
     "concept.mask.manifest": {
         "aspect": "manifest",
         "description": "View available character masks",
@@ -194,9 +250,26 @@ PARK_PATHS: dict[str, dict[str, Any]] = {
         "description": "Create a new character mask",
         "effects": ["MASK_CREATED"],
     },
+    # Scenario template management
+    "concept.scenario.manifest": {
+        "aspect": "manifest",
+        "description": "View scenario template schema and available fields",
+        "effects": [],
+    },
+    "concept.scenario.define": {
+        "aspect": "define",
+        "description": "Create a custom scenario template",
+        "effects": ["SCENARIO_REGISTERED"],
+    },
+    # Temporal
     "time.inhabit.witness": {
         "aspect": "witness",
         "description": "Replay inhabitation session",
+        "effects": [],
+    },
+    "time.scenario.witness": {
+        "aspect": "witness",
+        "description": "View scenario session history and outcomes",
         "effects": [],
     },
 }
@@ -225,13 +298,59 @@ SIMULATION_PATHS: dict[str, dict[str, Any]] = {
     },
     "concept.drill.manifest": {
         "aspect": "manifest",
-        "description": "View drill template details",
+        "description": "List available drill templates (service_outage, data_breach)",
+        "effects": [],
+    },
+    "concept.drill[type].manifest": {
+        "aspect": "manifest",
+        "description": "View specific drill template by type (e.g., concept.drill[service_outage].manifest)",
         "effects": [],
     },
     "concept.drill.define": {
         "aspect": "define",
         "description": "Create custom drill template",
         "effects": ["DRILL_REGISTERED"],
+    },
+    # Spike 5B: Canonical Drill Templates
+    "world.simulation[id].citizens.manifest": {
+        "aspect": "manifest",
+        "description": "List citizens participating in drill (roles, eigenvectors, status)",
+        "effects": [],
+    },
+    "world.simulation[id].timers.manifest": {
+        "aspect": "manifest",
+        "description": "View compliance timers (GDPR 72h, SEC 4-day, etc.)",
+        "effects": [],
+    },
+    "world.simulation[id].injects.manifest": {
+        "aspect": "manifest",
+        "description": "List active and pending injects",
+        "effects": [],
+    },
+    "world.simulation[id].inject.trigger": {
+        "aspect": "define",
+        "description": "Manually trigger an inject (media_story, executive_call)",
+        "effects": ["INJECT_TRIGGERED", "NOTIFY_PARTICIPANTS", "AUDIT_LOG"],
+    },
+    "world.simulation[id].inject.resolve": {
+        "aspect": "define",
+        "description": "Resolve an active inject",
+        "effects": ["INJECT_RESOLVED", "AUDIT_LOG"],
+    },
+    "world.simulation[id].criteria.manifest": {
+        "aspect": "manifest",
+        "description": "View success criteria evaluation status",
+        "effects": [],
+    },
+    "world.simulation[id].criteria.evaluate": {
+        "aspect": "define",
+        "description": "Evaluate a success criterion",
+        "effects": ["CRITERION_EVALUATED", "AUDIT_LOG"],
+    },
+    "world.simulation[id].report.manifest": {
+        "aspect": "manifest",
+        "description": "Generate drill performance report",
+        "effects": [],
     },
     "time.simulation.witness": {
         "aspect": "witness",
@@ -242,6 +361,57 @@ SIMULATION_PATHS: dict[str, dict[str, Any]] = {
         "aspect": "manifest",
         "description": "Export compliance report",
         "effects": [],
+    },
+    # Crisis Polynomial paths (Spike 5A)
+    "world.simulation[id].polynomial.manifest": {
+        "aspect": "manifest",
+        "description": "View crisis polynomial state for drill",
+        "effects": [],
+    },
+    "world.simulation[id].polynomial.detect": {
+        "aspect": "define",
+        "description": "Detect incident (NORMAL→INCIDENT)",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.escalate": {
+        "aspect": "define",
+        "description": "Escalate to higher authority",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG", "NOTIFICATION"],
+    },
+    "world.simulation[id].polynomial.contain": {
+        "aspect": "define",
+        "description": "Apply containment action",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.communicate": {
+        "aspect": "define",
+        "description": "Send status update to stakeholders",
+        "effects": ["NOTIFICATION", "AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.investigate": {
+        "aspect": "define",
+        "description": "Investigate incident details",
+        "effects": ["AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.resolve": {
+        "aspect": "define",
+        "description": "Apply fix or mitigation",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.recover": {
+        "aspect": "define",
+        "description": "Transition to recovery phase",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG"],
+    },
+    "world.simulation[id].polynomial.close": {
+        "aspect": "define",
+        "description": "Complete incident lifecycle (→NORMAL)",
+        "effects": ["STATE_TRANSITION", "AUDIT_LOG", "NOTIFICATION"],
+    },
+    "world.simulation[id].polynomial.audit": {
+        "aspect": "witness",
+        "description": "Generate compliance audit report",
+        "effects": ["AUDIT_REPORT"],
     },
 }
 
@@ -391,13 +561,20 @@ class CrownJewelRegistry:
         """
         jewel_prefixes = {
             "atelier": ("world.atelier.", "self.tokens."),
-            "coalition": ("world.coalition.", "concept.task.", "self.credits."),
+            "coalition": (
+                "world.coalition.",
+                "concept.task.",
+                "self.credits.",
+                "world.forge.",
+            ),
             "brain": ("self.memory.",),
             "park": (
-                "world.town.scenario.",
+                "world.town.scenario",  # Matches both world.town.scenario. and world.town.scenario[
                 "self.consent.",
                 "concept.mask.",
+                "concept.scenario.",
                 "time.inhabit.",
+                "time.scenario.",
             ),
             "simulation": ("world.simulation.", "concept.drill.", "time.simulation."),
             "gestalt": ("world.codebase.", "concept.governance."),

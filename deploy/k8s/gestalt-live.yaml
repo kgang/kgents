@@ -1,0 +1,180 @@
+# Gestalt Live Deployment
+#
+# Deploys the kgents API server with Gestalt Live infrastructure monitoring.
+#
+# Prerequisites:
+# - namespace.yaml (creates kgents namespace)
+# - gestalt-rbac.yaml (creates ServiceAccount and ClusterRole)
+#
+# Usage:
+#   kubectl apply -f deploy/k8s/namespace.yaml
+#   kubectl apply -f deploy/k8s/gestalt-rbac.yaml
+#   kubectl apply -f deploy/k8s/gestalt-live.yaml
+#
+# @see plans/_continuations/gestalt-live-real-k8s.md
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kgents-api
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kgents-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kgents-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: kgents
+      annotations:
+        # Prometheus metrics scraping
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: gestalt-live
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: ghcr.io/kgents/api:latest  # TODO: Pin to specific version
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: KGENTS_ENV
+              value: "production"
+            - name: GESTALT_USE_MOCK
+              value: "false"
+            - name: LOG_LEVEL
+              value: "INFO"
+            # Add OpenTelemetry config
+            - name: OTEL_SERVICE_NAME
+              value: "kgents-api"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://otel-collector.kgents:4317"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: kgents-api
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kgents-api
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: kgents-api
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: kgents-api
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kgents-api
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: kgents-api
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: kgents-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: kgents
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: kgents-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80

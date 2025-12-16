@@ -189,6 +189,26 @@ from .holographic import (
     MemoryPattern,
     ResonanceResult,
 )
+
+# Phase 9: Importers (Spike 3A)
+from .importers import (
+    FrontmatterData,
+    ImportProgress,
+    MarkdownEngram,
+    MarkdownImporter,
+    ObsidianVaultParser,
+    WikiLink,
+    create_importer_with_best_embedder,
+    create_lgent_embedder,
+    extract_code_blocks,
+    extract_frontmatter,
+    extract_headings,
+    extract_tags,
+    extract_wikilinks,
+    generate_concept_id,
+    parse_markdown,
+    strip_markdown_formatting,
+)
 from .inference import (
     ActiveInferenceAgent,
     Belief,
@@ -565,4 +585,21 @@ __all__ = [
     "create_ghost_sync_manager",
     "create_ghost_aware_reaper",
     "wrap_with_ghost_sync",
+    # Phase 9: Importers (Spike 3A)
+    "MarkdownEngram",
+    "FrontmatterData",
+    "WikiLink",
+    "ImportProgress",
+    "ObsidianVaultParser",
+    "MarkdownImporter",
+    "create_importer_with_best_embedder",
+    "create_lgent_embedder",
+    "extract_frontmatter",
+    "extract_wikilinks",
+    "extract_tags",
+    "extract_headings",
+    "extract_code_blocks",
+    "strip_markdown_formatting",
+    "generate_concept_id",
+    "parse_markdown",
 ]

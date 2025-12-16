@@ -11,11 +11,11 @@
 
 ---
 ## KENT's WISHES
-* COMPOSITIONAL GENERATIVE EXPERIENCES
 * INDIVIDUALLY TAILORED, GENERATIONS OF BEST PRACTICES AND DESIGN THOUGHT
-* "holographic metaphor reification"
-* "SIX CROWN JEWEL"
 * Fully leverage our category theory guarantees for max chaos
+* Substrates for building app-builders
+* (OG) Pixar like storytelling in our visual elements, design, and interactive narratives (implicit and explicit)
+* Daring, bold, creative, opinionated but not gaudy
 
 ## KENT's NEVERS
 * Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity

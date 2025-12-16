@@ -94,6 +94,35 @@ from .forest import (
     create_forest_resolver,
     parse_forest_md,
 )
+
+# Gardener context (The 7th Crown Jewel)
+from .gardener import (
+    COMMAND_TO_PATH,
+    GARDENER_ROLE_AFFORDANCES,
+    NL_PATTERN_HINTS,
+    GardenerContextResolver,
+    GardenerNode,
+    GardenerSession,
+    RouteMethod,
+    RouteResult,
+    create_gardener_node,
+    create_gardener_resolver,
+    get_all_command_mappings,
+    resolve_command_to_path,
+)
+
+# Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
+from .prompt import (
+    PROMPT_ROLE_AFFORDANCES,
+    CheckpointSummaryDTO,
+    DiffResult,
+    EvolutionResult,
+    PromptContextResolver,
+    PromptNode,
+    ValidationResult,
+    create_prompt_node,
+    create_prompt_resolver,
+)
 from .self_ import (
     SELF_AFFORDANCES,
     CapabilitiesNode,
@@ -301,6 +330,19 @@ __all__ = [
     "create_forest_node",
     "create_forest_resolver",
     "parse_forest_md",
+    # Gardener context (concept.gardener.* - The 7th Crown Jewel)
+    "COMMAND_TO_PATH",
+    "GARDENER_ROLE_AFFORDANCES",
+    "NL_PATTERN_HINTS",
+    "GardenerContextResolver",
+    "GardenerNode",
+    "GardenerSession",
+    "RouteMethod",
+    "RouteResult",
+    "create_gardener_node",
+    "create_gardener_resolver",
+    "get_all_command_mappings",
+    "resolve_command_to_path",
     # Crown Jewels (Seven Crown Jewel applications)
     "ALL_CROWN_JEWEL_PATHS",
     "ATELIER_PATHS",
@@ -334,6 +376,16 @@ __all__ = [
     "needs_lattice",
     "needs_manifold",
     "needs_witness",
+    # Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
+    "PROMPT_ROLE_AFFORDANCES",
+    "CheckpointSummaryDTO",
+    "DiffResult",
+    "EvolutionResult",
+    "PromptContextResolver",
+    "PromptNode",
+    "ValidationResult",
+    "create_prompt_node",
+    "create_prompt_resolver",
     # Unified factory
     "create_context_resolvers",
 ]

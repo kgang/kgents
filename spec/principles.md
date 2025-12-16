@@ -24,6 +24,8 @@ These seven principles guide all kgents design decisions.
 
 > Intentional selection over exhaustive cataloging.
 
+**Heritage Citation (TextGRAD):** The TextGRAD approach treats natural language feedback as "textual gradients" for improvement. Gradual refinement preserves quality—prompts improve incrementally, not through wholesale replacement. kgents' `rigidity` field (0.0-1.0) controls how much a section can change per improvement step, embodying curation through controlled evolution. See `spec/heritage.md` §9.
+
 - **Quality over quantity**: Better to have 10 excellent agents than 100 mediocre ones
 - **Every agent earns its place**: There is no "parking lot" of half-baked ideas
 - **Evolve, don't accumulate**: Remove agents that no longer serve
@@ -73,6 +75,8 @@ These seven principles guide all kgents design decisions.
 > Agents are morphisms in a category; composition is primary.
 
 This principle comes from [C-gents](c-gents/) but applies to all agents.
+
+**Heritage Citation (SPEAR):** The SPEAR paper (arXiv:2508.05012) formalizes prompt algebra with composition, union, tensor, and differentiation operators. kgents implements `compose_sections()` with verified associativity—the same algebraic structure applies to both agents and prompts. See `spec/heritage.md` §7.
 
 - **Agents can be combined**: A + B → AB (composition)
 - **Identity agents exist**: Agents that pass through unchanged (useful in pipelines)
@@ -180,6 +184,8 @@ The operad ensures validity. Entropy introduces variation. Both paths lead to th
 
 > Agents exist in flux, not fixed hierarchy; autonomy and composability coexist.
 
+**Heritage Citation (Meta-Prompting):** The Meta-Prompting paper (arXiv:2311.11482) formalizes self-improvement as a **monad**—a categorical structure with unit, bind, and associativity. This is exactly the self-similar structure kgents uses for PolyAgents, Operads, and Sheaves. The prompt system improves itself via the same structure it implements. See `spec/heritage.md` §8.
+
 Agents have a dual nature:
 - **Loop mode** (autonomous): perception → action → feedback → repeat
 - **Function mode** (composable): input → transform → output
@@ -259,6 +265,8 @@ See:
 > Spec is compression; design should generate implementation.
 
 A well-formed specification captures the essential decisions, reducing implementation entropy. The zen-agents experiment achieved 60% code reduction compared to organic development—proof that spec-first design compresses accumulated wisdom into regenerable form.
+
+**Heritage Citation (DSPy):** The DSPy framework (dspy.ai) demonstrates that prompts are **programs, not strings**. Programs have typed inputs/outputs and can be compiled from specifications. kgents' `PromptCompiler` embodies this principle—prompts are generated from source files, not hand-written. See `spec/heritage.md` §6.
 
 - **Spec captures judgment**: Design decisions made once, applied everywhere
 - **Implementation follows mechanically**: Given spec + Ground, impl is derivable
@@ -1121,4 +1129,77 @@ $ kgents self soul reflect
 **Implementation**: `impl/claude/protocols/cli/repl.py`
 
 *Zen Principle: The interface that teaches its own structure through use is no interface at all.*
+
+### AD-008: Simplifying Isomorphisms (2025-12-16)
+
+> **When the same conditional pattern appears 3+ times, extract the SIMPLIFYING ISOMORPHISM—a categorical equivalence that should be applied uniformly.**
+
+**Context**: UI code often contains repetitive conditional logic based on screen size, user role, feature flags, or other dimensions. These scattered conditionals obscure the underlying structure and make the code fragile.
+
+**Discovery**: The Gestalt Elastic refactor revealed that `isMobile`, `isTablet`, and `isDesktop` checks throughout the codebase were all manifestations of a single dimension: **density**. This is not unique to screen size—the same pattern appears wherever conditionals cluster.
+
+```
+Screen Density ≅ Observer Umwelt ≅ Projection Target ≅ Content Detail Level
+```
+
+**Decision**: When conditional logic repeats 3+ times on the same dimension, extract it:
+
+1. **IDENTIFY**: Notice repeated `if/switch` on the same condition
+2. **NAME**: Give the dimension an explicit name (`density`, `role`, `tier`)
+3. **DEFINE**: List exhaustive, mutually exclusive values
+4. **CONTEXT**: Create a hook/context to provide the dimension
+5. **PARAMETERIZE**: Replace scattered values with lookup tables
+6. **ADAPT**: Components receive dimension, decide behavior internally
+7. **REMOVE**: Eliminate all remaining ad-hoc conditionals
+
+**The Extraction Pattern**:
+
+```typescript
+// Before: Scattered conditionals
+const nodeSize = isMobile ? 0.2 : isTablet ? 0.25 : 0.3;
+const fontSize = isMobile ? 14 : 18;
+const maxItems = isMobile ? 15 : 50;
+
+// After: Parameterized by named dimension
+const NODE_SIZE = { compact: 0.2, comfortable: 0.25, spacious: 0.3 } as const;
+const FONT_SIZE = { compact: 14, comfortable: 16, spacious: 18 } as const;
+const MAX_ITEMS = { compact: 15, comfortable: 30, spacious: 50 } as const;
+
+const { density } = useWindowLayout();
+const nodeSize = NODE_SIZE[density];
+const fontSize = FONT_SIZE[density];
+const maxItems = MAX_ITEMS[density];
+```
+
+**Known Isomorphisms in kgents**:
+
+| Scattered As... | Named Dimension | Values |
+|-----------------|-----------------|--------|
+| `isMobile`, `isTablet`, `isDesktop` | `density` | `compact`, `comfortable`, `spacious` |
+| `isViewer`, `isEditor`, `isAdmin` | `role` | `viewer`, `editor`, `admin` |
+| `isFree`, `isPro`, `isEnterprise` | `tier` | `free`, `pro`, `enterprise` |
+| Observer-specific rendering | `umwelt` | (AGENTESE) |
+
+**Connection to AGENTESE**:
+
+This is the Projection Protocol extended to UI. AGENTESE says "observation is interaction"—the observer's umwelt determines what they perceive. The Simplifying Isomorphism principle says the same: the UI's density determines what content it renders. Both are instances of observer-dependent projection.
+
+**Consequences**:
+
+1. **Code becomes declarative**: "render at this density" vs. "if mobile, do X"
+2. **Components are reusable**: Same component works at all densities
+3. **Testing is systematic**: Test each density value, not each condition
+4. **New dimensions are easy**: Add a new dimension without touching components
+5. **Isomorphisms compose**: `(density, role)` pairs form a product space
+
+**Anti-pattern**: Scattering `isMobile` checks throughout components instead of passing density context and letting components adapt internally.
+
+**Validation Test**: "Can I describe the behavior without mentioning the original condition?"
+
+- **Fails**: "On mobile, we show fewer labels."
+- **Passes**: "In compact density, we show fewer labels."
+
+**Implementation**: See `docs/skills/ui-isomorphism-detection.md` and `docs/skills/elastic-ui-patterns.md`
+
+*Zen Principle: The same structure appears everywhere because it IS everywhere. Find it once, use it forever.*
 

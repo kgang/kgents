@@ -136,6 +136,295 @@ class WebGLTarget(RenderTarget):
 
 ---
 
+## Density Projection
+
+The Projection Protocol extends beyond target (CLI/Web/marimo) to include **DENSITY** as an orthogonal dimension.
+
+### The Density-Target Matrix
+
+| Target | Density | Projection |
+|--------|---------|------------|
+| CLI | compact | Single-line summaries, sparklines |
+| CLI | spacious | Full tables, verbose output |
+| Web | compact | Drawer panels, floating actions, touch targets |
+| Web | comfortable | Collapsible panels, hybrid layout |
+| Web | spacious | Full sidebars, draggable dividers, legends |
+| marimo | compact | Collapsed cells, summary widgets |
+| marimo | spacious | Expanded cells, full visualizations |
+
+### Density as Observer Capacity
+
+Density is not merely screen size—it is the **capacity to receive**. This is the Projection Protocol's realization of AGENTESE observer-dependent perception:
+
+```python
+# Same widget, same target, different densities
+widget.project(RenderTarget.WEB, density='compact')    # → Minimal chrome, drawers
+widget.project(RenderTarget.WEB, density='spacious')   # → Full panels, legends
+```
+
+The widget's `layout` field provides hints, but the projection target makes the final density decision based on available space:
+
+```typescript
+interface WidgetLayoutHints {
+  flex?: number;           // Flex grow factor
+  minWidth?: number;       // Collapse threshold
+  maxWidth?: number;       // Comfortable maximum
+  priority?: number;       // Truncation order
+  collapsible?: boolean;   // Can be hidden to save space
+  collapseAt?: number;     // Viewport width threshold
+}
+```
+
+### The Isomorphism
+
+The key insight from the Gestalt Elastic refactor:
+
+```
+Screen Density ≅ Observer Umwelt ≅ Projection Target ≅ Content Detail Level
+```
+
+This is not metaphor—it is a categorical equivalence:
+
+| AGENTESE Concept | Projection Concept |
+|------------------|-------------------|
+| Observer umwelt | Projection target + density |
+| Affordance based on who grasps | Content based on available space |
+| `manifest` yields observer-view | `project` yields density-view |
+
+### Practical Application
+
+The density dimension allows widgets to define **content degradation** gracefully:
+
+```typescript
+type ContentLevel = 'icon' | 'title' | 'summary' | 'full';
+
+function getContentLevel(width: number): ContentLevel {
+  if (width < 60) return 'icon';
+  if (width < 150) return 'title';
+  if (width < 280) return 'summary';
+  return 'full';
+}
+```
+
+Each level is a **lossy projection**—information removed predictably, matching the Galois connection principle.
+
+---
+
+## Layout Projection
+
+> *"The sidebar and the drawer are the same panel. Only the observer's capacity to receive differs."*
+
+Content projection is **lossy compression**—fewer labels, smaller numbers, truncated text. Layout projection is **structural isomorphism**—the same information, arranged differently for different interaction modalities.
+
+### The Two Functors
+
+The Projection Protocol operates through two distinct functors:
+
+```
+Content[D] : State → ContentDetail[D]      (lossy compression)
+Layout[D]  : WidgetTree → Structure[D]     (structural isomorphism)
+
+Where D ∈ {compact, comfortable, spacious}
+```
+
+| Functor | Domain | Operation | Example |
+|---------|--------|-----------|---------|
+| Content[D] | State → Detail | Removes information | 12 labels → 5 labels |
+| Layout[D] | WidgetTree → Structure | Rearranges information | Sidebar → Drawer |
+
+**Key Insight**: Content projection affects **fidelity** (how much to show). Layout projection affects **affordance** (how to interact).
+
+### The Structural Isomorphism
+
+Layout projection preserves information while transforming structure:
+
+```
+Layout[compact](Panel) ≅ Layout[spacious](Panel)
+
+Desktop:  ┌─────────────┬────────────┐
+          │   Canvas    │   Panel    │
+          │             │ (sidebar)  │
+          └─────────────┴────────────┘
+
+Mobile:   ┌─────────────────────────┐
+          │        Canvas           │
+          │                    [⚙️]  │  ← Floating action
+          └─────────────────────────┘
+          ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┐
+          │    Panel (drawer)        │  ← Slides up on tap
+          └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─┘
+```
+
+The **same logical content** projects to **different interaction modalities**. The isomorphism is semantic: what the user can accomplish remains constant; how they accomplish it varies.
+
+### Layout Primitives
+
+The protocol defines three canonical layout primitives that compose to form all density-adaptive layouts:
+
+| Primitive | Compact | Comfortable | Spacious |
+|-----------|---------|-------------|----------|
+| **Split** | Collapse secondary | Fixed-width panes | Resizable divider |
+| **Panel** | Bottom drawer | Collapsible panel | Fixed sidebar |
+| **Actions** | Floating FAB cluster | Inline button row | Full toolbar |
+
+These primitives form the **basis** of the layout functor. All responsive layouts decompose into compositions of these primitives.
+
+### The Three-Stage Layout Pattern
+
+Layouts project through three canonical stages:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  SPACIOUS (Desktop >1024px)                                         │
+│                                                                     │
+│  ┌─────────────────────────────┬─────────────────┬────────────────┐ │
+│  │      Primary Canvas         │  Control Panel  │ Detail Panel   │ │
+│  │                           ↔ │                 │   (optional)   │ │
+│  │     (resizable divider) →   │                 │                │ │
+│  └─────────────────────────────┴─────────────────┴────────────────┘ │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  COMFORTABLE (Tablet 768-1024px)                                    │
+│                                                                     │
+│  ┌─────────────────────────────┬─────────────────────────────────┐  │
+│  │      Primary Canvas         │  Control/Detail Toggle          │  │
+│  │                             │    (fixed width, no resize)     │  │
+│  └─────────────────────────────┴─────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  COMPACT (Mobile <768px)                                            │
+│                                                                     │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │                      Full Canvas                          [⚙️] │  │
+│  │                                                           [📋] │  │
+│  │                                           Floating Actions → │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│  ┌ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┐  │
+│  │         Bottom Drawer (slides up on action tap)              │  │
+│  └ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ┘  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Physical Constraints
+
+Layout projection respects constraints from the physical world that do not scale:
+
+| Constraint | Minimum | Applies To |
+|------------|---------|------------|
+| Touch target | 48px × 48px | Mobile interactive elements |
+| Readable font | 14px | Compact text |
+| Tap spacing | 8px | Adjacent touch targets |
+| Drawer handle | 40px × 4px | Mobile drawer affordance |
+
+These are **invariants**—they do not change with density. The layout functor ensures these constraints are satisfied regardless of projection target.
+
+```
+TouchTarget[D] ≥ 48px    ∀ D ∈ {compact, comfortable, spacious}
+```
+
+### Density-Parameterized Constants
+
+Content-level density uses lookup tables rather than scattered conditionals:
+
+```
+Value[D] : Density → Number
+
+NODE_SIZE     = { compact: 0.2,  comfortable: 0.25, spacious: 0.3  }
+FONT_SIZE     = { compact: 14,   comfortable: 16,   spacious: 18   }
+MAX_LABELS    = { compact: 15,   comfortable: 30,   spacious: 50   }
+PANEL_WIDTH   = { compact: null, comfortable: 240,  spacious: 320  }
+```
+
+This is the **canonical pattern** for density-dependent values. The scattered conditional anti-pattern (`isMobile ? X : Y`) is replaced by explicit lookup.
+
+### Composition Laws
+
+Layout projection preserves widget composition under certain conditions:
+
+**Vertical Composition (`//`)**:
+```
+Layout[D](A // B) = Layout[D](A) // Layout[D](B)
+
+The vertical stack of two widgets projects to a vertical stack of their projections.
+```
+
+**Horizontal Composition (`>>`)**:
+```
+Layout[compact](A >> B) ≠ Layout[compact](A) >> Layout[compact](B)
+
+In compact mode, horizontal composition may transform to vertical stacking
+or tab/drawer navigation. This is NOT a failure—it's the structural isomorphism.
+```
+
+**The Transformation Rule**:
+```
+Layout[compact](SidePanel >> MainContent)
+    → Layout[compact](MainContent) + FloatingAction(SidePanel)
+
+The >> composition transforms to overlay composition in compact mode.
+```
+
+### Connection to AGENTESE
+
+Layout projection is `manifest` specialized to physical capacity:
+
+| AGENTESE | Layout Projection |
+|----------|-------------------|
+| Observer umwelt | Viewport density |
+| Affordance for who grasps | Interaction modality for screen size |
+| `manifest` yields observer-view | `Layout[D]` yields density-structure |
+
+```python
+# AGENTESE observer-dependent projection
+await logos.invoke("world.panel.manifest", mobile_umwelt)
+# → Drawer with floating action trigger
+
+await logos.invoke("world.panel.manifest", desktop_umwelt)
+# → Fixed sidebar with resizable divider
+```
+
+The observer's **capacity to receive** includes not just cognitive bandwidth (content projection) but also **physical modality** (layout projection). A mobile user cannot drag a resize handle—they tap floating actions instead.
+
+### Component Density Propagation
+
+Components receive density as a parameter and decide internally how to adapt:
+
+```
+Anti-pattern: {isMobile ? <CompactPanel /> : <FullPanel />}
+Pattern:      <Panel density={density} />
+
+// Inside Panel:
+function Panel({ density }) {
+  const isDrawer = density === 'compact';
+  // Component owns its density interpretation
+}
+```
+
+This encapsulation ensures:
+1. Parent components remain density-agnostic
+2. Components can be reused at any density
+3. Testing targets density values, not scattered conditions
+
+### Layout Hints
+
+Widgets provide layout hints that inform projection decisions:
+
+```typescript
+interface LayoutHints {
+  collapseAt?: number;        // Viewport width to collapse
+  collapseTo?: 'drawer' | 'tab' | 'hidden';
+  priority?: number;          // Truncation order (lower = keep longer)
+  requiresFullWidth?: boolean; // Cannot share horizontal space
+  minTouchTarget?: number;     // Physical minimum (default 48)
+}
+```
+
+These hints guide the layout functor but do not determine it—the projection target makes the final decision based on available space.
+
+---
+
 ## The Three Truths
 
 ### 1. State Is Design
@@ -366,6 +655,78 @@ This means:
 | WebGL | Planned | Three.js scenes |
 | WebXR | Future | VR/AR experiences |
 | Audio | Future | Sonification of state |
+
+---
+
+## 3D Target Projection (WebGL/WebXR)
+
+> *"Depth is not decoration—it is information."*
+
+The Projection Protocol extends to 3D targets with an additional orthogonal dimension: **illumination quality**.
+
+### The Illumination Quality Dimension
+
+Just as density governs 2D layout projection, **illumination quality** governs 3D rendering fidelity:
+
+```
+Projection[3D] = (Density × IlluminationQuality) → 3D Scene
+
+Where IlluminationQuality ∈ {minimal, standard, high, cinematic}
+```
+
+This is a **simplifying isomorphism** (AD-008): device capability checks are unified into a single named dimension.
+
+| Quality | Shadows | Shadow Map | Use Case |
+|---------|---------|------------|----------|
+| `minimal` | None | N/A | Low-end mobile, battery saving |
+| `standard` | Soft | 1024px | Most devices |
+| `high` | PCF soft | 2048px | Desktop, high-end mobile |
+| `cinematic` | VSM/CSM | 4096px | Presentation, screenshots |
+
+### Canonical Principles for 3D Targets
+
+1. **Consistent Lighting**: All 3D scenes use the same canonical lighting rig
+2. **Shadows as Depth Cues**: Shadows are not decorative—they provide spatial information
+3. **Quality Detection**: Illumination quality is detected from device capability, not configured
+4. **Selective Shadow Casting**: Only objects that benefit from shadows cast them
+
+### The Sun Pattern
+
+The primary light is a **DirectionalLight** positioned upper-right-front to match the human "light from above" prior:
+
+```
+Sun position: [15, 20, 15] (relative to scene center)
+```
+
+This creates shadows that fall to the lower-left, matching cognitive expectations.
+
+### Semiotic Depth Cues
+
+3D projections leverage depth cues in order of perceptual strength:
+
+| Cue | Provided By | Priority |
+|-----|-------------|----------|
+| Occlusion | WebGL z-buffer | Automatic |
+| Shadows | DirectionalLight | Explicit (quality-dependent) |
+| Size gradient | Perspective camera | Automatic |
+| Motion parallax | OrbitControls | Interactive |
+| Shading | PBR materials | Automatic |
+
+**Key insight**: Shadows are the second-most-powerful depth cue after occlusion, yet often omitted due to performance concerns. Quality-dependent shadows solve this tradeoff.
+
+### Connection to AGENTESE
+
+3D projection is observer-dependent in two dimensions:
+
+| AGENTESE Concept | 2D Manifestation | 3D Manifestation |
+|------------------|------------------|------------------|
+| Observer capacity | Viewport density | Device capability |
+| `manifest` result | Content + Layout | Content + Layout + Illumination |
+| Lossy compression | Fewer labels | Lower shadow fidelity |
+
+### Implementation Guidance
+
+See `docs/skills/3d-lighting-patterns.md` for implementation patterns and `plans/3d-visual-clarity.md` for the implementation plan.
 
 ---
 

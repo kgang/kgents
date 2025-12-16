@@ -1,0 +1,16 @@
+# kgents Namespace
+#
+# Primary namespace for kgents application workloads.
+#
+# @see plans/_continuations/gestalt-live-real-k8s.md
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kgents
+  labels:
+    app.kubernetes.io/part-of: kgents
+    # Enable pod security standards
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

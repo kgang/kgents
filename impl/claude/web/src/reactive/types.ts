@@ -90,6 +90,8 @@ export interface GlyphJSON {
   fg?: string;
   bg?: string;
   distortion?: VisualDistortion;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================
@@ -111,6 +113,8 @@ export interface BarJSON {
   fg?: string;
   bg?: string;
   distortion?: VisualDistortion;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================
@@ -130,6 +134,8 @@ export interface SparklineJSON {
   fg?: string;
   bg?: string;
   distortion?: VisualDistortion;
+  /** Layout hints for elastic rendering */
+  layout?: WidgetLayoutHints;
 }
 
 // =============================================================================

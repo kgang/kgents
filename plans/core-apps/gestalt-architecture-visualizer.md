@@ -1,7 +1,7 @@
 ---
 path: plans/core-apps/gestalt-architecture-visualizer
 status: active
-progress: 0.25
+progress: 0.60
 last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,6 +9,76 @@ enables:
   - plans/reactive-substrate-unification
   - monetization/grand-initiative-monetization
 session_notes: |
+  Session 5 (2025-12-16): Spike 6A Elastic Edition - Responsive UI Refactor.
+  - Completely refactored Gestalt.tsx to use elastic primitives:
+    - ElasticSplit for canvas/panel responsive layout
+    - ElasticContainer for control panel with density-aware styling
+    - useWindowLayout for responsive breakpoint detection
+  - Three layout modes based on screen size:
+    - Desktop (>1024px): Canvas | Controls | Details with draggable divider
+    - Tablet (768-1024px): Canvas | Controls/Details with dynamic split ratio
+    - Mobile (<768px): Full canvas + FloatingActions + BottomDrawer panels
+  - Density-aware rendering (compact/comfortable/spacious):
+    - NODE_BASE_SIZE scales 0.2/0.25/0.3
+    - LABEL_FONT_SIZE scales 0.14/0.18/0.22
+    - MAX_VISIBLE_LABELS scales 15/30/50
+    - Control panel adapts: inline checkboxes on compact, legend only on spacious
+    - Detail panel: 4-col stats grid on compact, 2-col on comfortable+
+  - New mobile-specific components:
+    - FloatingActions: Scan/Controls/Details toggle buttons
+    - BottomDrawer: Slide-up panels with drag handle
+    - Auto-open details drawer on node click
+  - Smart defaults: labels off on mobile, fewer max nodes
+  - Dynamic split ratio: expands canvas when no module selected
+
+  Session 4 (2025-12-16): Spike 6A Hardened - Robustified CLI Handler.
+  - Added OTEL span instrumentation (gestalt.* spans with duration metrics)
+  - Added dual-channel output support (InvocationContext, _emit_output, _emit_error)
+  - Added --help/-h flag with comprehensive usage documentation
+  - Added proper error handling with exit codes (0=success, 1=error)
+  - Added property-based tests with Hypothesis (arbitrary args, module names)
+  - Added performance baseline tests (manifest/health/drift <100ms, scan <2s)
+  - Added OTEL span verification tests
+  - Verified CrownJewelRegistry integration (10 Gestalt paths registered)
+  - Total: 146 tests passing (analysis 34 + governance 24 + reactive 45 + handler 43)
+  - Cross-synergy: Brain handler patterns (thread-safe singleton, factory injection, OTEL)
+
+  Session 3 (2025-12-16): Spike 6B Complete - Web Topology Component.
+  - Created protocols/api/gestalt.py with REST endpoints:
+    - GET /v1/world/codebase/manifest -> Full architecture graph
+    - GET /v1/world/codebase/health -> Health metrics summary
+    - GET /v1/world/codebase/drift -> Drift violations
+    - GET /v1/world/codebase/module/{name} -> Module details
+    - POST /v1/world/codebase/scan -> Force rescan
+    - GET /v1/world/codebase/topology -> Graph data for visualization
+  - Added gestaltApi to web/src/api/client.ts
+  - Created Gestalt.tsx page with:
+    - 3D force-directed graph using react-three-fiber
+    - Module nodes with health-based coloring (A+:green to F:red)
+    - Node sizing by LOC and health score
+    - Dependency edges (gray) with violation highlighting (red)
+    - Layer ring overlays
+    - Zoom/pan/rotate controls (OrbitControls)
+    - Module detail sidebar on click (health stats, dependencies, violations)
+    - Health distribution chart
+    - Layer filter dropdown
+    - Max nodes slider (50-500)
+  - Added TypeScript types for all codebase responses
+  - Route added: /gestalt
+  - All 135 gestalt tests passing
+
+  Session 2 (2025-12-16): Spike 6A Complete - GestaltStore CLI Wiring.
+  - Updated handler.py to use GestaltStore reactive substrate
+  - All CLI commands now read from GestaltStore Signals/Computed:
+    - manifest: store.module_count, store.edge_count, store.overall_grade
+    - health: store.grade_distribution, store.module_healths
+    - drift: store.violations Signal, store.drift_count, store.active_drift_count
+    - module: store.graph, store.violations
+  - Added --watch flag for live file watching mode
+  - Created test injection hooks (_set_store_factory, _reset_store)
+  - 32 new handler tests verifying CLI output matches store state
+  - Total: 135 tests passing (analysis + governance + reactive + handler)
+
   Session 1 (2025-12-16): Phase 1 Complete - Core Analysis Engine.
   - Created protocols/gestalt/ with analysis.py and governance.py
   - Implemented ModuleHealth dataclass with weighted health scoring
@@ -16,7 +86,6 @@ session_notes: |
   - ArchitectureGraph with instability metric (Martin's I = Ce/(Ca+Ce))
   - LayerRule and RingRule for drift detection
   - GovernanceConfig with pattern-based layer/ring assignment
-  - 49 tests passing (analysis + governance)
   - Wired to AGENTESE: world.codebase.* paths
   - CLI commands: kg world codebase [manifest|health|drift|module|scan]
   - Scanned kgents: 1814 modules, 14226 edges, B+ (86%) overall health
@@ -25,18 +94,18 @@ session_notes: |
 phase_ledger:
   PLAN: complete
   RESEARCH: complete
-  DEVELOP: touched
-  STRATEGIZE: pending
-  CROSS-SYNERGIZE: pending
+  DEVELOP: complete
+  STRATEGIZE: touched  # OTEL span design
+  CROSS-SYNERGIZE: touched  # Brain handler patterns, Crown Jewel registry
   IMPLEMENT: touched
-  QA: pending
-  TEST: touched
+  QA: touched  # Property-based tests, performance baselines
+  TEST: complete
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.10
-  spent: 0.03
+  spent: 0.05
   returned: 0.0
 ---
 

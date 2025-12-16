@@ -12,19 +12,31 @@ from __future__ import annotations
 from typing import Any, Optional
 
 try:
-    from pydantic import BaseModel, Field
+    from pydantic import BaseModel, Field, field_validator
 
     HAS_PYDANTIC = True
 except ImportError:
+    # Stubs for when pydantic is not installed.
+    #
+    # Purpose: Allow this module to be imported for type checking or test mocking
+    # without requiring pydantic as a dependency. The actual API (FastAPI) requires
+    # pydantic anyway—these stubs only affect non-API use cases.
+    #
+    # Behavior: Models become plain objects, validators silently no-op.
+    # This is intentional graceful degradation, not a bug.
     HAS_PYDANTIC = False
-    # Stub for when pydantic is not installed
     BaseModel = object  # type: ignore[misc, assignment]
 
     def _stub_field(*args: Any, **kwargs: Any) -> Any:
         """Stub Field function."""
         return None
 
+    def _stub_field_validator(*args: Any, **kwargs: Any) -> Any:
+        """Stub field_validator decorator."""
+        return lambda fn: fn
+
     Field = _stub_field
+    field_validator = _stub_field_validator
 
 
 # --- Governance Models ---
@@ -214,6 +226,18 @@ class BrainCaptureRequest(BaseModel):
         examples=[{"source": "meeting", "importance": "high"}],
     )
 
+    @field_validator("content")
+    @classmethod
+    def content_not_whitespace_only(cls, v: str) -> str:
+        """Validate that content is not whitespace-only.
+
+        Mirrors CLI behavior which strips and rejects empty content.
+        """
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("content cannot be whitespace only")
+        return stripped
+
 
 class BrainCaptureResponse(BaseModel):
     """Response from brain capture operation."""
@@ -251,6 +275,18 @@ class BrainGhostRequest(BaseModel):
         description="Maximum number of memories to surface",
         examples=[5, 10],
     )
+
+    @field_validator("context")
+    @classmethod
+    def context_not_whitespace_only(cls, v: str) -> str:
+        """Validate that context is not whitespace-only.
+
+        Mirrors CLI behavior which strips and rejects empty context.
+        """
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("context cannot be whitespace only")
+        return stripped
 
 
 class GhostMemory(BaseModel):
@@ -352,4 +388,237 @@ class BrainStatusResponse(BaseModel):
     has_cartographer: bool = Field(
         ...,
         description="Whether CartographerAgent is configured",
+    )
+
+
+# --- Brain Topology Models (3D Visualization) ---
+
+
+class TopologyNode(BaseModel):
+    """A crystal node in the 3D topology visualization."""
+
+    id: str = Field(
+        ...,
+        description="Concept ID",
+    )
+    label: str = Field(
+        ...,
+        description="Display label (truncated content)",
+    )
+    x: float = Field(
+        ...,
+        description="3D X position (from embedding PCA)",
+    )
+    y: float = Field(
+        ...,
+        description="3D Y position (from embedding PCA)",
+    )
+    z: float = Field(
+        ...,
+        description="3D Z position (from embedding PCA)",
+    )
+    resolution: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Resolution level (1.0=fresh, 0.01=fading) - maps to opacity",
+    )
+    is_hot: bool = Field(
+        ...,
+        description="Whether this is a hot/hub crystal",
+    )
+    access_count: int = Field(
+        ...,
+        ge=0,
+        description="Number of times accessed",
+    )
+    age_seconds: float = Field(
+        ...,
+        ge=0,
+        description="Seconds since stored",
+    )
+    content_preview: Optional[str] = Field(
+        default=None,
+        description="First 100 chars of content",
+    )
+
+
+class TopologyEdge(BaseModel):
+    """An edge between similar crystals."""
+
+    source: str = Field(..., description="Source concept ID")
+    target: str = Field(..., description="Target concept ID")
+    similarity: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Cosine similarity between embeddings",
+    )
+
+
+class TopologyGap(BaseModel):
+    """A detected gap (sparse region) in the knowledge topology."""
+
+    x: float = Field(..., description="Gap center X")
+    y: float = Field(..., description="Gap center Y")
+    z: float = Field(..., description="Gap center Z")
+    radius: float = Field(..., description="Gap radius")
+    nearest_concepts: list[str] = Field(
+        default_factory=list,
+        description="Concept IDs at the gap boundary",
+    )
+
+
+class BrainTopologyResponse(BaseModel):
+    """Full topology data for 3D visualization."""
+
+    nodes: list[TopologyNode] = Field(
+        default_factory=list,
+        description="Crystal nodes with positions",
+    )
+    edges: list[TopologyEdge] = Field(
+        default_factory=list,
+        description="Similarity edges between crystals",
+    )
+    gaps: list[TopologyGap] = Field(
+        default_factory=list,
+        description="Detected knowledge gaps",
+    )
+    hub_ids: list[str] = Field(
+        default_factory=list,
+        description="IDs of hub crystals (high connectivity)",
+    )
+    stats: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Topology statistics",
+    )
+
+
+# --- Polynomial Visualization Models (Foundation 3: Visible Polynomial State) ---
+
+
+class PolynomialPosition(BaseModel):
+    """A position (state) in a polynomial agent's state machine."""
+
+    id: str = Field(
+        ...,
+        description="Unique identifier for this position",
+    )
+    label: str = Field(
+        ...,
+        description="Human-readable label for the position",
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description="Optional description of what this state represents",
+    )
+    emoji: Optional[str] = Field(
+        default=None,
+        description="Optional emoji for visual representation",
+    )
+    is_current: bool = Field(
+        default=False,
+        description="Whether this is the current position",
+    )
+    is_terminal: bool = Field(
+        default=False,
+        description="Whether this is a terminal state",
+    )
+    color: Optional[str] = Field(
+        default=None,
+        description="Optional color for visual representation (hex or name)",
+    )
+
+
+class PolynomialEdge(BaseModel):
+    """A valid transition edge between positions."""
+
+    source: str = Field(..., description="Source position ID")
+    target: str = Field(..., description="Target position ID")
+    label: Optional[str] = Field(
+        default=None,
+        description="Label for the transition (e.g., command name)",
+    )
+    is_valid: bool = Field(
+        default=True,
+        description="Whether this transition is currently valid",
+    )
+
+
+class PolynomialHistoryEntry(BaseModel):
+    """A historical transition in the polynomial's execution."""
+
+    from_position: str = Field(..., description="Position before transition")
+    to_position: str = Field(..., description="Position after transition")
+    input_summary: Optional[str] = Field(
+        default=None,
+        description="Summary of the input that triggered the transition",
+    )
+    output_summary: Optional[str] = Field(
+        default=None,
+        description="Summary of the output produced",
+    )
+    timestamp: Optional[str] = Field(
+        default=None,
+        description="ISO timestamp of the transition",
+    )
+
+
+class PolynomialVisualization(BaseModel):
+    """
+    Complete visualization data for a polynomial agent's state machine.
+
+    This model enables Foundation 3 (Visible Polynomial State) by providing
+    all data needed to render a state machine diagram in CLI or Web UI.
+
+    Use cases:
+    - GardenerSession: SENSE → ACT → REFLECT cycle
+    - CitizenPolynomial: IDLE → WORKING → RESTING states
+    - N-Phase development: 11-phase development workflow
+    """
+
+    id: str = Field(
+        ...,
+        description="Unique identifier for this polynomial visualization",
+    )
+    name: str = Field(
+        ...,
+        description="Name of the polynomial agent",
+    )
+    positions: list[PolynomialPosition] = Field(
+        default_factory=list,
+        description="All positions (states) in the state machine",
+    )
+    edges: list[PolynomialEdge] = Field(
+        default_factory=list,
+        description="Valid transitions between positions",
+    )
+    current: Optional[str] = Field(
+        default=None,
+        description="ID of the current position (if applicable)",
+    )
+    valid_directions: list[str] = Field(
+        default_factory=list,
+        description="IDs of positions that can be reached from current",
+    )
+    history: list[PolynomialHistoryEntry] = Field(
+        default_factory=list,
+        description="Recent transition history",
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional metadata (e.g., cycle count, progress)",
+    )
+
+
+class PolynomialVisualizationResponse(BaseModel):
+    """API response wrapper for polynomial visualization."""
+
+    visualization: PolynomialVisualization = Field(
+        ...,
+        description="The polynomial visualization data",
+    )
+    agentese_path: Optional[str] = Field(
+        default=None,
+        description="AGENTESE path for this polynomial (e.g., concept.gardener.session)",
     )

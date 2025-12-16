@@ -18,6 +18,7 @@ AGENTESE Paths:
 - world.codebase.health.manifest  -> Health metrics
 
 Phase 1 implements: Core analysis engine (Python + TypeScript)
+Phase 2 implements: Reactive substrate (Signal, Computed, file watching)
 """
 
 from .analysis import (
@@ -37,6 +38,12 @@ from .governance import (
     RingRule,
     check_drift,
 )
+from .reactive import (
+    FileDiff,
+    GestaltStore,
+    IncrementalUpdate,
+    create_gestalt_store,
+)
 
 __all__ = [
     # Analysis
@@ -54,4 +61,9 @@ __all__ = [
     "LayerRule",
     "RingRule",
     "check_drift",
+    # Reactive (Phase 2)
+    "GestaltStore",
+    "FileDiff",
+    "IncrementalUpdate",
+    "create_gestalt_store",
 ]

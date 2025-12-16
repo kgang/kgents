@@ -25,6 +25,13 @@ import type {
   BrainGhostResponse,
   BrainMapResponse,
   BrainStatusResponse,
+  BrainTopologyResponse,
+  CodebaseManifestResponse,
+  CodebaseHealthResponse,
+  CodebaseDriftResponse,
+  CodebaseModuleResponse,
+  CodebaseTopologyResponse,
+  CodebaseScanResponse,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -255,4 +262,88 @@ export const brainApi = {
 
   /** Get brain status */
   getStatus: () => apiClient.get<BrainStatusResponse>('/v1/brain/status'),
+
+  /** Get 3D topology data for visualization */
+  getTopology: (similarityThreshold = 0.3) =>
+    apiClient.get<BrainTopologyResponse>('/v1/brain/topology', {
+      params: { similarity_threshold: similarityThreshold },
+    }),
+};
+
+// =============================================================================
+// Gestalt API (Living Architecture Visualizer)
+// =============================================================================
+
+export const gestaltApi = {
+  /** Get full architecture manifest */
+  getManifest: () => apiClient.get<CodebaseManifestResponse>('/v1/world/codebase/manifest'),
+
+  /** Get health metrics summary */
+  getHealth: () => apiClient.get<CodebaseHealthResponse>('/v1/world/codebase/health'),
+
+  /** Get drift violations */
+  getDrift: () => apiClient.get<CodebaseDriftResponse>('/v1/world/codebase/drift'),
+
+  /** Get module details */
+  getModule: (moduleName: string) =>
+    apiClient.get<CodebaseModuleResponse>(`/v1/world/codebase/module/${encodeURIComponent(moduleName)}`),
+
+  /** Get topology for visualization */
+  getTopology: (maxNodes = 200, minHealth = 0.0) =>
+    apiClient.get<CodebaseTopologyResponse>('/v1/world/codebase/topology', {
+      params: { max_nodes: maxNodes, min_health: minHealth },
+    }),
+
+  /** Force rescan of codebase */
+  scan: (language = 'python', path?: string) =>
+    apiClient.post<CodebaseScanResponse>('/v1/world/codebase/scan', { language, path }),
+};
+
+// =============================================================================
+// Infrastructure API (Gestalt Live)
+// =============================================================================
+
+import type {
+  InfraTopologyResponse,
+  InfraHealthResponse,
+  InfraEntity,
+  InfraStatusResponse,
+} from './types';
+
+export const infraApi = {
+  /** Get collector status */
+  getStatus: () => apiClient.get<InfraStatusResponse>('/api/infra/status'),
+
+  /** Connect to infrastructure data source */
+  connect: () => apiClient.post<{ status: string }>('/api/infra/connect'),
+
+  /** Disconnect from infrastructure data source */
+  disconnect: () => apiClient.post<{ status: string }>('/api/infra/disconnect'),
+
+  /** Get current infrastructure topology */
+  getTopology: (params?: {
+    namespaces?: string;
+    kinds?: string;
+    min_health?: number;
+  }) =>
+    apiClient.get<InfraTopologyResponse>('/api/infra/topology', { params }),
+
+  /** Get aggregate infrastructure health */
+  getHealth: () => apiClient.get<InfraHealthResponse>('/api/infra/health'),
+
+  /** Get single entity details */
+  getEntity: (entityId: string) =>
+    apiClient.get<InfraEntity>(`/api/infra/entity/${encodeURIComponent(entityId)}`),
+
+  /** Create EventSource for topology stream */
+  createTopologyStream: () => {
+    const baseUrl = apiClient.defaults.baseURL || '';
+    return new EventSource(`${baseUrl}/api/infra/topology/stream`);
+  },
+
+  /** Create EventSource for events stream */
+  createEventsStream: () => {
+    const baseUrl = apiClient.defaults.baseURL || '';
+    return new EventSource(`${baseUrl}/api/infra/events/stream`);
+  },
 };

@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-15 evening (Chief reconciliation: 18,547 tests)
+> Last updated: 2025-12-16 (Chief reconciliation: 19,659 tests)
 
 ## Legend
 
@@ -259,6 +259,25 @@ DashboardApp subscribes via EventBus and pushes FeverOverlay modal.
 
 ---
 
+## Elastic Primitives (NEW) — 100% COMPLETE ✅
+
+| Phase | Component | Status | Tests |
+|-------|-----------|--------|-------|
+| 1 | Foundation (CSS vars, hooks, ElasticContainer/Card/Split/Placeholder) | ✅ | — |
+| 2 | Widget Integration (WidgetLayoutHints, CitizenCard responsive) | ✅ | — |
+| 3 | Page Layouts (Town, Workshop, Inhabit with ElasticSplit) | ✅ | — |
+| 4 | Testing (chaos, performance, visual regression) | ✅ | 32+ |
+
+**Total**: 32+ tests (17 chaos, 10 performance, 15+ E2E). Responsive layout system.
+
+**Key Metrics**:
+- 100 widgets: ~46ms render (target 500ms)
+- Selection: <1ms latency
+- Breakpoints: 640px (sm), 768px (collapse), 1024px (lg), 1280px (xl)
+- Content levels: icon (<60px), title (<150px), summary (<280px), full (≥400px)
+
+---
+
 ## Flux Synapse (NEW) — In Progress 🚧
 
 | Component | Status | Tests |
@@ -351,4 +370,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-15 Evening Reconciliation (18,547 tests, 78 mypy notes - mostly import stubs)*
+*Last verified: 2025-12-16 Morning Reconciliation (19,659 tests, 182 mypy notes - mostly import stubs for new migration/prompt code)*

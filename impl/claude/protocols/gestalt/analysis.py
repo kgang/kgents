@@ -495,9 +495,21 @@ def build_architecture_graph(
         language: "python" or "typescript"
 
     Returns:
-        ArchitectureGraph with modules and edges
+        ArchitectureGraph with modules and edges (deduplicated by source->target)
     """
     graph = ArchitectureGraph(root_path=root, language=language)
+
+    # Track unique edges by (source, target) to avoid inflating coupling metrics
+    # Multiple imports of the same target from the same source are counted once
+    seen_edges: set[tuple[str, str]] = set()
+
+    def add_unique_edges(module: Module) -> None:
+        """Add module's imports as unique edges (deduplicated)."""
+        for edge in module.imports:
+            edge_key = (edge.source, edge.target)
+            if edge_key not in seen_edges:
+                seen_edges.add(edge_key)
+                graph.edges.append(edge)
 
     # Discover and analyze modules
     if language == "python":
@@ -509,8 +521,12 @@ def build_architecture_graph(
                 module.name = str(rel_path.with_suffix("")).replace("/", ".")
             except ValueError:
                 pass
+            # Update source in imports to use normalized name
+            for edge in module.imports:
+                # Create new edge with correct source name (module.imports has old name)
+                object.__setattr__(edge, "source", module.name)
             graph.modules[module.name] = module
-            graph.edges.extend(module.imports)
+            add_unique_edges(module)
 
     elif language == "typescript":
         for path in discover_typescript_modules(root):
@@ -520,8 +536,11 @@ def build_architecture_graph(
                 module.name = str(rel_path.with_suffix("")).replace("/", ".")
             except ValueError:
                 pass
+            # Update source in imports to use normalized name
+            for edge in module.imports:
+                object.__setattr__(edge, "source", module.name)
             graph.modules[module.name] = module
-            graph.edges.extend(module.imports)
+            add_unique_edges(module)
 
     # Compute health metrics for each module
     for name, module in graph.modules.items():

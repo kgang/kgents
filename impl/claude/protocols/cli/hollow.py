@@ -148,6 +148,10 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Grow: Autopoietic Holon Generator (self.grow.*)
     # ==========================================================================
     "grow": "protocols.cli.handlers.grow:cmd_grow",
+    # ==========================================================================
+    # Prompt: Evergreen Prompt System (concept.prompt.*)
+    # ==========================================================================
+    "prompt": "protocols.cli.handlers.prompt:cmd_prompt",
 }
 
 

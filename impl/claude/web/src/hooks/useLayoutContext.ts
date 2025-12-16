@@ -12,12 +12,16 @@
 import { useState, useEffect, useRef, createContext, useContext, type RefObject } from 'react';
 import type { LayoutContext } from '@/reactive/types';
 
-// Breakpoints matching Tailwind defaults
+// Breakpoints aligned with Layout Projection Functor spec
+// See: spec/protocols/projection.md (Layout Projection section)
+// - compact: < 768px (mobile)
+// - comfortable: 768-1024px (tablet)
+// - spacious: > 1024px (desktop)
 const BREAKPOINTS = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
+  sm: 768,   // spec: compact threshold (was 640, now matches spec)
+  md: 768,   // kept for compatibility
+  lg: 1024,  // spec: comfortable → spacious transition
+  xl: 1280,  // not used by spec, kept for Tailwind compatibility
 };
 
 /**

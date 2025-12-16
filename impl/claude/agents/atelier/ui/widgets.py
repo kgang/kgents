@@ -11,10 +11,13 @@ Theme: Orisinal.com aesthetic - gentle ASCII art, soft tones.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import KgentsWidget, RenderTarget
+
+if TYPE_CHECKING:
+    from agents.atelier.bidding import BidQueue
 
 # =============================================================================
 # State Types
@@ -53,6 +56,29 @@ class AtelierState:
     pending_queue: int = 0
     artisans: tuple[str, ...] = ()
     status: str = "idle"
+
+
+@dataclass(frozen=True)
+class SpectatorEntry:
+    """Single entry in the spectator leaderboard."""
+
+    spectator_id: str
+    tokens_spent: int
+    bids_submitted: int
+    bids_accepted: int
+    influence_score: float
+    rank: int
+
+
+@dataclass(frozen=True)
+class LeaderboardState:
+    """State for spectator leaderboard widget."""
+
+    session_id: str
+    entries: tuple[SpectatorEntry, ...] = ()
+    total_spectators: int = 0
+    total_tokens_in_play: int = 0
+    last_updated: str = ""
 
 
 # =============================================================================
@@ -337,11 +363,183 @@ class AtelierWidget(KgentsWidget[AtelierState]):
         return f"Atelier: {s.status}"
 
 
+class SpectatorLeaderboardWidget(KgentsWidget[LeaderboardState]):
+    """
+    Widget for spectator leaderboard in Atelier sessions.
+
+    Shows:
+    - Top spectators ranked by influence score
+    - Tokens spent and bids submitted
+    - Real-time updates via Signal
+
+    Integrates with BidQueue for live updates.
+
+    Theme: Celebratory yet gentle — highlighting contribution without competition.
+    """
+
+    def __init__(self, state: LeaderboardState | None = None) -> None:
+        default_state = LeaderboardState(session_id="")
+        self.state = Signal.of(state or default_state)
+
+    def update_from_queue(self, queue: "BidQueue") -> None:
+        """
+        Update leaderboard from a BidQueue.
+
+        Pulls current stats and rebuilds the leaderboard state.
+        """
+        from datetime import datetime
+
+        from agents.atelier.bidding import BidQueue as BidQueueClass
+
+        if not isinstance(queue, BidQueueClass):
+            return
+
+        # Get leaderboard data
+        top_spectators = queue.get_leaderboard(limit=10)
+
+        # Build entries
+        entries = tuple(
+            SpectatorEntry(
+                spectator_id=stats.spectator_id,
+                tokens_spent=stats.tokens_spent,
+                bids_submitted=stats.bids_submitted,
+                bids_accepted=stats.bids_accepted,
+                influence_score=stats.influence_score,
+                rank=i + 1,
+            )
+            for i, stats in enumerate(top_spectators)
+        )
+
+        # Update state
+        self.state.set(
+            LeaderboardState(
+                session_id=queue.session_id,
+                entries=entries,
+                total_spectators=len(queue._spectator_stats),
+                total_tokens_in_play=queue.total_tokens_collected,
+                last_updated=datetime.now().isoformat(),
+            )
+        )
+
+    def project(self, target: RenderTarget) -> Any:
+        s = self.state.value
+
+        if target == RenderTarget.CLI:
+            if not s.entries:
+                return "◇ No spectators yet. Be the first to bid!"
+
+            lines = [
+                "╭──────────────────────────────────────────╮",
+                "│          Spectator Leaderboard           │",
+                "├──────────────────────────────────────────┤",
+            ]
+
+            # Medal icons for top 3
+            medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+
+            for entry in s.entries[:10]:
+                medal = medals.get(entry.rank, "  ")
+                # Format: rank medal name tokens bids
+                name = entry.spectator_id[:12]
+                lines.append(
+                    f"│ {medal} {entry.rank:2}. {name:12} "
+                    f"💎{entry.tokens_spent:4} "
+                    f"📝{entry.bids_submitted:3} │"
+                )
+
+            lines.extend(
+                [
+                    "├──────────────────────────────────────────┤",
+                    f"│  Total: {s.total_spectators} spectators, "
+                    f"{s.total_tokens_in_play} tokens   │",
+                    "╰──────────────────────────────────────────╯",
+                ]
+            )
+
+            return "\n".join(lines)
+
+        elif target == RenderTarget.JSON:
+            return {
+                "type": "spectator_leaderboard",
+                "session_id": s.session_id,
+                "entries": [
+                    {
+                        "rank": e.rank,
+                        "spectator_id": e.spectator_id,
+                        "tokens_spent": e.tokens_spent,
+                        "bids_submitted": e.bids_submitted,
+                        "bids_accepted": e.bids_accepted,
+                        "influence_score": e.influence_score,
+                    }
+                    for e in s.entries
+                ],
+                "total_spectators": s.total_spectators,
+                "total_tokens_in_play": s.total_tokens_in_play,
+                "last_updated": s.last_updated,
+            }
+
+        elif target == RenderTarget.MARIMO:
+            if not s.entries:
+                return """
+                <div style="text-align: center; color: #a8a29e; padding: 2rem;">
+                    ◇ No spectators yet. Be the first to bid!
+                </div>
+                """
+
+            medals = {1: "🥇", 2: "🥈", 3: "🥉"}
+            rows = []
+            for entry in s.entries[:10]:
+                medal = medals.get(entry.rank, "")
+                rows.append(f"""
+                    <tr style="border-bottom: 1px solid #e7e5e4;">
+                        <td style="padding: 0.5rem; text-align: center;">{medal} {entry.rank}</td>
+                        <td style="padding: 0.5rem;">{entry.spectator_id}</td>
+                        <td style="padding: 0.5rem; text-align: right;">💎 {entry.tokens_spent}</td>
+                        <td style="padding: 0.5rem; text-align: right;">📝 {entry.bids_submitted}</td>
+                        <td style="padding: 0.5rem; text-align: right; color: #78716c;">
+                            {entry.influence_score:.1f}
+                        </td>
+                    </tr>
+                """)
+
+            return f"""
+            <div style="font-family: sans-serif; padding: 1rem; background: linear-gradient(135deg, #fef3c7 0%, #fafaf9 100%); border-radius: 0.75rem;">
+                <h3 style="margin: 0 0 1rem 0; color: #44403c; text-align: center;">
+                    Spectator Leaderboard
+                </h3>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="color: #78716c; font-size: 0.75rem; text-transform: uppercase;">
+                            <th style="padding: 0.5rem;">Rank</th>
+                            <th style="padding: 0.5rem; text-align: left;">Spectator</th>
+                            <th style="padding: 0.5rem; text-align: right;">Tokens</th>
+                            <th style="padding: 0.5rem; text-align: right;">Bids</th>
+                            <th style="padding: 0.5rem; text-align: right;">Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {"".join(rows)}
+                    </tbody>
+                </table>
+                <div style="margin-top: 1rem; text-align: center; color: #a8a29e; font-size: 0.75rem;">
+                    {s.total_spectators} spectators · {s.total_tokens_in_play} tokens in play
+                </div>
+            </div>
+            """
+
+        return f"Leaderboard: {len(s.entries)} spectators"
+
+
 __all__ = [
+    # Widgets
     "AtelierWidget",
     "GalleryWidget",
     "PieceWidget",
+    "SpectatorLeaderboardWidget",
+    # State Types
     "AtelierState",
     "GalleryState",
+    "LeaderboardState",
     "PieceState",
+    "SpectatorEntry",
 ]

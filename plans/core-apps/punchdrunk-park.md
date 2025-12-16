@@ -1,8 +1,8 @@
 ---
 path: plans/core-apps/punchdrunk-park
 status: active
-progress: 0
-last_touched: 2025-12-15
+progress: 40
+last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
 enables:
@@ -13,21 +13,23 @@ session_notes: |
   Stub plan created from core-apps-synthesis.
   The "Westworld" vision - Kent's grandest strategy.
   INHABIT mode (91 tests) provides foundation.
+  2025-12-16: Spike 4B complete - DirectorAgent for pacing and serendipity injection (41 tests).
+  2025-12-16: Hardening complete - OTEL spans, property-based tests (10), performance baselines (6), CLI projections (7 tests). Now 64 tests total.
 phase_ledger:
   PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
+  RESEARCH: touched
+  DEVELOP: in_progress
   STRATEGIZE: pending
-  CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
-  QA: pending
-  TEST: pending
+  CROSS-SYNERGIZE: touched
+  IMPLEMENT: in_progress
+  QA: touched
+  TEST: in_progress
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.12
-  spent: 0.0
+  spent: 0.05
   returned: 0.0
 ---
 

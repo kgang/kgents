@@ -727,3 +727,569 @@ export interface BrainStatusResponse {
   concept_count: number;
   has_cartographer: boolean;
 }
+
+// =============================================================================
+// Brain Topology (3D Visualization)
+// =============================================================================
+
+/**
+ * A crystal node in the 3D topology.
+ */
+export interface TopologyNode {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  z: number;
+  resolution: number; // 0.01-1.0, maps to opacity
+  is_hot: boolean;
+  access_count: number;
+  age_seconds: number;
+  content_preview: string | null;
+}
+
+/**
+ * An edge between similar crystals.
+ */
+export interface TopologyEdge {
+  source: string;
+  target: string;
+  similarity: number;
+}
+
+/**
+ * A detected gap (sparse region) in knowledge.
+ */
+export interface TopologyGap {
+  x: number;
+  y: number;
+  z: number;
+  radius: number;
+  nearest_concepts: string[];
+}
+
+/**
+ * Full topology response for 3D visualization.
+ */
+export interface BrainTopologyResponse {
+  nodes: TopologyNode[];
+  edges: TopologyEdge[];
+  gaps: TopologyGap[];
+  hub_ids: string[];
+  stats: {
+    concept_count: number;
+    edge_count: number;
+    hub_count: number;
+    gap_count: number;
+    avg_resolution: number;
+  };
+}
+
+// =============================================================================
+// Gestalt (Living Architecture Visualizer)
+// =============================================================================
+
+/**
+ * A module node in the architecture graph.
+ */
+export interface CodebaseModule {
+  id: string;
+  label: string;
+  layer: string | null;
+  health_grade: string;
+  health_score: number;
+  lines_of_code: number;
+  coupling: number;
+  cohesion: number;
+  instability: number | null;
+  x: number;
+  y: number;
+  z: number;
+}
+
+/**
+ * A dependency link between modules.
+ */
+export interface DependencyLink {
+  source: string;
+  target: string;
+  import_type: string;
+  is_violation: boolean;
+  violation_severity: string | null;
+}
+
+/**
+ * Graph topology response for visualization.
+ */
+export interface CodebaseTopologyResponse {
+  nodes: CodebaseModule[];
+  links: DependencyLink[];
+  layers: string[];
+  stats: {
+    node_count: number;
+    link_count: number;
+    layer_count: number;
+    violation_count: number;
+    avg_health: number;
+    overall_grade: string;
+  };
+}
+
+/**
+ * Architecture manifest response.
+ */
+export interface CodebaseManifestResponse {
+  module_count: number;
+  edge_count: number;
+  language: string;
+  average_health: number;
+  overall_grade: string;
+  drift_count: number;
+  modules: Array<{
+    name: string;
+    lines_of_code: number;
+    layer: string | null;
+    health_grade: string;
+    health_score: number;
+  }>;
+}
+
+/**
+ * Health metrics response.
+ */
+export interface CodebaseHealthResponse {
+  average_health: number;
+  overall_grade: string;
+  grade_distribution: Record<string, number>;
+  worst_modules: Array<{
+    name: string;
+    grade: string;
+    coupling: number;
+    cohesion: number;
+    drift: number;
+    complexity: number;
+  }>;
+  best_modules: Array<{
+    name: string;
+    grade: string;
+  }>;
+}
+
+/**
+ * Drift violations response.
+ */
+export interface CodebaseDriftResponse {
+  total_violations: number;
+  unsuppressed: number;
+  suppressed: number;
+  violations: Array<{
+    rule: string;
+    source: string;
+    target: string;
+    severity: string;
+    suppressed: boolean;
+    line: number;
+  }>;
+}
+
+/**
+ * Module details response.
+ */
+export interface CodebaseModuleResponse {
+  name: string;
+  path: string | null;
+  lines_of_code: number;
+  layer: string | null;
+  exports: string[];
+  health: {
+    grade: string;
+    score: number;
+    coupling: number;
+    cohesion: number;
+    drift: number;
+    complexity: number;
+    instability: number | null;
+  } | null;
+  dependencies: string[];
+  dependents: string[];
+  violations: Array<{
+    rule: string;
+    target: string;
+  }>;
+}
+
+/**
+ * Scan response.
+ */
+export interface CodebaseScanResponse {
+  status: string;
+  module_count: number;
+  edge_count: number;
+  overall_grade: string;
+}
+
+/**
+ * Health grade visual config.
+ */
+export const HEALTH_GRADE_CONFIG: Record<string, { color: string; bgColor: string }> = {
+  'A+': { color: '#22c55e', bgColor: 'bg-green-500/20' },
+  'A': { color: '#4ade80', bgColor: 'bg-green-400/20' },
+  'B+': { color: '#a3e635', bgColor: 'bg-lime-400/20' },
+  'B': { color: '#facc15', bgColor: 'bg-yellow-400/20' },
+  'C+': { color: '#fb923c', bgColor: 'bg-orange-400/20' },
+  'C': { color: '#f97316', bgColor: 'bg-orange-500/20' },
+  'D': { color: '#ef4444', bgColor: 'bg-red-500/20' },
+  'F': { color: '#dc2626', bgColor: 'bg-red-600/20' },
+  '?': { color: '#6b7280', bgColor: 'bg-gray-500/20' },
+};
+
+// =============================================================================
+// Polynomial Visualization (Foundation 3: Visible Polynomial State)
+// =============================================================================
+
+/**
+ * A position (state) in a polynomial agent's state machine.
+ */
+export interface PolynomialPosition {
+  id: string;
+  label: string;
+  description?: string;
+  emoji?: string;
+  is_current: boolean;
+  is_terminal: boolean;
+  color?: string;
+}
+
+/**
+ * A valid transition edge between positions.
+ */
+export interface PolynomialEdge {
+  source: string;
+  target: string;
+  label?: string;
+  is_valid: boolean;
+}
+
+/**
+ * A historical transition in the polynomial's execution.
+ */
+export interface PolynomialHistoryEntry {
+  from_position: string;
+  to_position: string;
+  input_summary?: string;
+  output_summary?: string;
+  timestamp?: string;
+}
+
+/**
+ * Complete visualization data for a polynomial agent's state machine.
+ *
+ * This enables Foundation 3 (Visible Polynomial State) by providing
+ * all data needed to render a state machine diagram.
+ */
+export interface PolynomialVisualization {
+  id: string;
+  name: string;
+  positions: PolynomialPosition[];
+  edges: PolynomialEdge[];
+  current?: string;
+  valid_directions: string[];
+  history: PolynomialHistoryEntry[];
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * API response wrapper for polynomial visualization.
+ */
+export interface PolynomialVisualizationResponse {
+  visualization: PolynomialVisualization;
+  agentese_path?: string;
+}
+
+/**
+ * Configuration for polynomial visualization styling.
+ */
+export const POLYNOMIAL_CONFIG = {
+  // Default colors for positions
+  colors: {
+    default: '#3b82f6', // blue
+    current: '#22c55e', // green
+    terminal: '#ef4444', // red
+    available: '#f59e0b', // amber
+  },
+  // Gardener session phases
+  gardener: {
+    SENSE: { color: '#3b82f6', emoji: '👁️', label: 'Sense' },
+    ACT: { color: '#f59e0b', emoji: '⚡', label: 'Act' },
+    REFLECT: { color: '#8b5cf6', emoji: '💭', label: 'Reflect' },
+  },
+  // N-Phase development phases
+  nphase: {
+    PLAN: { color: '#94a3b8', emoji: '📋', label: 'Plan' },
+    RESEARCH: { color: '#3b82f6', emoji: '🔍', label: 'Research' },
+    DEVELOP: { color: '#22c55e', emoji: '🛠️', label: 'Develop' },
+    STRATEGIZE: { color: '#8b5cf6', emoji: '🎯', label: 'Strategize' },
+    'CROSS-SYNERGIZE': { color: '#ec4899', emoji: '🔗', label: 'Cross-Synergize' },
+    IMPLEMENT: { color: '#f59e0b', emoji: '⚙️', label: 'Implement' },
+    QA: { color: '#06b6d4', emoji: '🔬', label: 'QA' },
+    TEST: { color: '#10b981', emoji: '🧪', label: 'Test' },
+    EDUCATE: { color: '#a855f7', emoji: '📚', label: 'Educate' },
+    MEASURE: { color: '#f97316', emoji: '📊', label: 'Measure' },
+    REFLECT: { color: '#6366f1', emoji: '🪞', label: 'Reflect' },
+  },
+  // Citizen polynomial phases
+  citizen: {
+    IDLE: { color: '#94a3b8', emoji: '⚪', label: 'Idle' },
+    SOCIALIZING: { color: '#ec4899', emoji: '💬', label: 'Socializing' },
+    WORKING: { color: '#f59e0b', emoji: '🔧', label: 'Working' },
+    REFLECTING: { color: '#8b5cf6', emoji: '💭', label: 'Reflecting' },
+    RESTING: { color: '#22c55e', emoji: '💤', label: 'Resting' },
+  },
+} as const;
+
+/**
+ * Session phase type for Gardener.
+ */
+export type GardenerPhase = 'SENSE' | 'ACT' | 'REFLECT';
+
+/**
+ * GardenerSession state for visualization.
+ */
+export interface GardenerSessionState {
+  session_id: string;
+  name: string;
+  phase: GardenerPhase;
+  plan_path?: string;
+  intent?: {
+    description: string;
+    priority: string;
+  };
+  artifacts_count: number;
+  learnings_count: number;
+  sense_count: number;
+  act_count: number;
+  reflect_count: number;
+}
+
+// =============================================================================
+// Infrastructure (Gestalt Live)
+// =============================================================================
+
+/**
+ * Infrastructure entity kinds.
+ */
+export type InfraEntityKind =
+  | 'namespace'
+  | 'node'
+  | 'pod'
+  | 'service'
+  | 'deployment'
+  | 'container'
+  | 'nats_subject'
+  | 'nats_stream'
+  | 'database'
+  | 'volume'
+  | 'custom';
+
+/**
+ * Infrastructure entity status.
+ */
+export type InfraEntityStatus =
+  | 'running'
+  | 'pending'
+  | 'succeeded'
+  | 'failed'
+  | 'terminating'
+  | 'unknown';
+
+/**
+ * Infrastructure connection kinds.
+ */
+export type InfraConnectionKind =
+  | 'network'
+  | 'http'
+  | 'grpc'
+  | 'nats'
+  | 'volume'
+  | 'owns'
+  | 'selects'
+  | 'depends';
+
+/**
+ * Infrastructure entity for visualization.
+ */
+export interface InfraEntity {
+  id: string;
+  kind: InfraEntityKind;
+  name: string;
+  namespace: string | null;
+  status: InfraEntityStatus;
+  status_message: string | null;
+  health: number;
+  health_grade: string;
+  cpu_percent: number;
+  memory_bytes: number;
+  memory_limit: number | null;
+  memory_percent: number | null;
+  custom_metrics: Record<string, number>;
+  x: number;
+  y: number;
+  z: number;
+  labels: Record<string, string>;
+  source: string;
+  created_at: string | null;
+}
+
+/**
+ * Infrastructure connection between entities.
+ */
+export interface InfraConnection {
+  id: string;
+  source_id: string;
+  target_id: string;
+  kind: InfraConnectionKind;
+  requests_per_sec: number;
+  bytes_per_sec: number;
+  error_rate: number;
+  is_healthy: boolean;
+}
+
+/**
+ * Infrastructure topology snapshot.
+ */
+export interface InfraTopologyResponse {
+  entities: InfraEntity[];
+  connections: InfraConnection[];
+  timestamp: string;
+  total_entities: number;
+  healthy_count: number;
+  warning_count: number;
+  critical_count: number;
+  overall_health: number;
+  entities_by_kind: Record<string, number>;
+  entities_by_namespace: Record<string, number>;
+}
+
+/**
+ * Infrastructure health summary.
+ */
+export interface InfraHealthResponse {
+  overall: number;
+  overall_grade: string;
+  healthy: number;
+  warning: number;
+  critical: number;
+  total: number;
+  by_kind: Record<string, { count: number; average_health: number }>;
+  by_namespace: Record<string, { count: number; average_health: number }>;
+  worst_entities: Array<{
+    id: string;
+    name: string;
+    kind: string;
+    health: number;
+    status: string;
+  }>;
+}
+
+/**
+ * Infrastructure event.
+ */
+export interface InfraEvent {
+  id: string;
+  type: string;
+  reason: string;
+  message: string;
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  entity_id: string;
+  entity_kind: InfraEntityKind;
+  entity_name: string;
+  entity_namespace: string | null;
+  timestamp: string;
+  count: number;
+}
+
+/**
+ * Infrastructure collector status.
+ */
+export interface InfraStatusResponse {
+  connected: boolean;
+  collector_type: string;
+  health_check: boolean;
+}
+
+// =============================================================================
+// Topology Streaming (Phase 2)
+// =============================================================================
+
+/**
+ * Types of topology updates from SSE stream.
+ */
+export type TopologyUpdateKind =
+  | 'full'
+  | 'entity_added'
+  | 'entity_updated'
+  | 'entity_removed'
+  | 'connection_added'
+  | 'connection_updated'
+  | 'connection_removed'
+  | 'metrics';
+
+/**
+ * Incremental topology update from SSE stream.
+ */
+export interface TopologyUpdate {
+  kind: TopologyUpdateKind;
+  timestamp: string;
+  entity?: InfraEntity;
+  connection?: InfraConnection;
+  topology?: InfraTopologyResponse;
+  metrics?: Record<string, Record<string, number>>;
+}
+
+/**
+ * Connection status for SSE streams.
+ */
+export type StreamConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
+
+/**
+ * Entity animation state for smooth transitions.
+ */
+export interface EntityAnimationState {
+  opacity: number;       // 0-1, for fade in/out
+  scale: number;         // base scale multiplier
+  pulseIntensity: number; // 0-1, for update flash
+  isNew: boolean;        // just added (fade in)
+  isRemoving: boolean;   // marked for removal (fade out)
+  lastUpdated: number;   // timestamp for pulse decay
+}
+
+/**
+ * Entity kind visual config.
+ */
+export const INFRA_ENTITY_CONFIG: Record<InfraEntityKind, {
+  icon: string;
+  color: string;
+  shape: 'sphere' | 'octahedron' | 'dodecahedron' | 'box' | 'cone' | 'cylinder' | 'torus';
+}> = {
+  namespace: { icon: '📦', color: '#6366f1', shape: 'torus' },
+  node: { icon: '🖥️', color: '#8b5cf6', shape: 'box' },
+  pod: { icon: '🫛', color: '#22c55e', shape: 'sphere' },
+  service: { icon: '🔗', color: '#3b82f6', shape: 'octahedron' },
+  deployment: { icon: '🚀', color: '#f59e0b', shape: 'dodecahedron' },
+  container: { icon: '📦', color: '#06b6d4', shape: 'box' },
+  nats_subject: { icon: '📨', color: '#a855f7', shape: 'cone' },
+  nats_stream: { icon: '💨', color: '#ec4899', shape: 'cylinder' },
+  database: { icon: '🗄️', color: '#ef4444', shape: 'cylinder' },
+  volume: { icon: '💾', color: '#f97316', shape: 'box' },
+  custom: { icon: '⚙️', color: '#6b7280', shape: 'sphere' },
+};
+
+/**
+ * Event severity visual config.
+ */
+export const INFRA_SEVERITY_CONFIG: Record<InfraEvent['severity'], { icon: string; color: string }> = {
+  info: { icon: 'ℹ️', color: '#3b82f6' },
+  warning: { icon: '⚠️', color: '#f59e0b' },
+  error: { icon: '❌', color: '#ef4444' },
+  critical: { icon: '🔥', color: '#dc2626' },
+};

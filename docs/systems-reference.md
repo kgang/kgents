@@ -195,6 +195,57 @@ card.to_json()     # API
 
 ---
 
+## Elastic Primitives (Responsive Layout)
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `ElasticContainer` | `web/src/components/elastic/` | Self-arranging grid/stack/flow layouts |
+| `ElasticCard` | `web/src/components/elastic/` | Priority-aware cards with content degradation |
+| `ElasticSplit` | `web/src/components/elastic/` | Two-pane layout, collapses at 768px |
+| `ElasticPlaceholder` | `web/src/components/elastic/` | Loading/empty/error states |
+| `useWindowLayout` | `web/src/hooks/useLayoutContext.ts` | Window-level density/breakpoint info |
+| `useLayoutMeasure` | `web/src/hooks/useLayoutContext.ts` | Container-level size measurement |
+| `WidgetLayoutHints` | `web/src/reactive/types.ts` | Layout metadata for widgets |
+
+```tsx
+import { ElasticContainer, ElasticSplit, ElasticCard } from '@/components/elastic';
+import { useWindowLayout } from '@/hooks/useLayoutContext';
+
+// Get density context
+const { density, isMobile, isTablet, isDesktop } = useWindowLayout();
+// density: 'compact' | 'comfortable' | 'spacious'
+
+// Self-arranging grid
+<ElasticContainer layout="grid" minItemWidth={200}>
+  {widgets.map(w => <ElasticCard key={w.id} priority={w.priority} {...w} />)}
+</ElasticContainer>
+
+// Two-pane with collapse
+<ElasticSplit
+  direction="horizontal"
+  defaultRatio={0.7}
+  collapseAt={768}
+  resizable={isDesktop}
+  primary={<MainPanel density={density} />}
+  secondary={<Sidebar density={density} />}
+/>
+```
+
+**Key Insight**: Density-Content Isomorphism — pass `density` down, let components decide what it means.
+
+**Breakpoints**:
+- 640px (sm/compact) — Mobile, drawers, touch targets
+- 768px (md) — ElasticSplit collapse threshold
+- 1024px (lg/spacious) — Full desktop layout
+
+**Content Levels**: icon (<60px), title (<150px), summary (<280px), full (≥400px)
+
+**Tests**: 32+ (17 chaos, 10 performance, 15+ E2E visual regression)
+
+**Skills**: `docs/skills/elastic-ui-patterns.md`, `docs/skills/ui-isomorphism-detection.md`
+
+---
+
 ## Projection Gallery
 
 | Component | Location | Purpose |
@@ -247,6 +298,70 @@ prompt = compiler.compile_from_yaml_file("project.yaml")
 updater = state_updater(project)
 state = updater.advance_phase("DEVELOP", outputs)
 ```
+
+---
+
+## Evergreen Prompt System (Self-Cultivating CLAUDE.md)
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `PromptCompiler` | `protocols/prompt/compiler.py` | Section-based CLAUDE.md compilation |
+| `PromptM` | `protocols/prompt/monad.py` | Prompt Monad with unit/bind/map |
+| `SoftSection` | `protocols/prompt/soft_section.py` | Rigidity spectrum (0.0-1.0) |
+| `RollbackRegistry` | `protocols/prompt/rollback/` | Full history with instant rollback |
+| CLI | `protocols/prompt/cli.py` | compile, history, rollback, diff |
+
+```python
+from protocols.prompt import (
+    PromptCompiler, CompilationContext,
+    PromptM, Source, sequence,
+    RollbackRegistry, get_default_registry
+)
+from protocols.prompt.sections import get_default_compilers
+
+# Compile CLAUDE.md
+compiler = PromptCompiler(section_compilers=get_default_compilers(), version=1)
+context = CompilationContext(project_root=Path("/path/to/project"))
+result = compiler.compile(context)
+
+# Use PromptM monad for composable transformations
+section = Section(name="test", content="hello", token_cost=5, required=True)
+transformed = (
+    PromptM.unit(section)
+    .with_provenance(Source.TEMPLATE)
+    .map(lambda s: s.with_content(s.content.upper()))
+    .with_trace("Uppercased content")
+)
+
+# Checkpoint and rollback
+registry = get_default_registry()
+checkpoint_id = registry.checkpoint(
+    before_content="old",
+    after_content="new",
+    before_sections=(),
+    after_sections=(),
+    reason="Test change"
+)
+result = registry.rollback(checkpoint_id)
+```
+
+**CLI Commands**:
+```bash
+# Compile with checkpoint
+uv run python -m protocols.prompt.cli compile --reason "Update"
+
+# View history
+uv run python -m protocols.prompt.cli history
+
+# Rollback
+uv run python -m protocols.prompt.cli rollback 26b96d66
+```
+
+**Category Laws** (verified with 216 tests):
+- Left Identity: `unit(x).bind(f) == f(x)`
+- Right Identity: `m.bind(unit) == m`
+- Associativity: `m.bind(f).bind(g) == m.bind(λx. f(x).bind(g))`
+- Rollback Invertibility: `rollback(checkpoint(p)).content == p`
 
 ---
 
@@ -354,4 +469,4 @@ from protocols.tenancy import set_tenant_context
 
 ---
 
-*Last updated: 2025-12-15*
+*Last updated: 2025-12-16*

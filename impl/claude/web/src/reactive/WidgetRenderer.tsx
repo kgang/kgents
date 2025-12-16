@@ -5,6 +5,9 @@
  * the appropriate React components. All rendering logic lives in the
  * dedicated widget components in `/widgets/`.
  *
+ * Extended with LayoutContext support for elastic rendering.
+ * @see plans/web-refactor/elastic-primitives.md
+ *
  * @example
  * ```tsx
  * <WidgetRenderer
@@ -14,9 +17,10 @@
  * ```
  */
 
-import { memo, useCallback } from 'react';
+import React, { memo, useCallback } from 'react';
 import type {
   WidgetJSON,
+  LayoutContext,
   GlyphJSON,
   BarJSON,
   SparklineJSON,
@@ -25,6 +29,8 @@ import type {
   VStackJSON,
   ColonyDashboardJSON,
 } from './types';
+import { useLayoutMeasure } from '@/hooks/useLayoutContext';
+import { LayoutContextProvider } from '@/components/elastic';
 
 // Import widget components from /widgets/
 import {
@@ -50,6 +56,8 @@ export interface WidgetRendererProps {
   onSelect?: (id: string) => void;
   selectedId?: string | null;
   className?: string;
+  /** Layout context from parent (auto-measured if not provided) */
+  layoutContext?: LayoutContext;
 }
 
 export interface GlyphProps extends Omit<GlyphJSON, 'type'> {
@@ -173,13 +181,24 @@ const InnerRenderer = memo(function InnerRenderer({
  * - citizen_card (agent card)
  * - hstack, vstack (composition)
  * - colony_dashboard (composite)
+ *
+ * Now with LayoutContext support for elastic rendering.
  */
 export const WidgetRenderer = memo(function WidgetRenderer({
   widget,
   onSelect,
   selectedId,
   className,
+  layoutContext,
 }: WidgetRendererProps) {
+  // Measure container if no context provided
+  const [containerRef, measuredContext] = useLayoutMeasure({
+    parentLayout: 'stack',
+  });
+
+  // Use provided context or measured context
+  const effectiveContext = layoutContext ?? measuredContext;
+
   // Create render function for nested widgets
   const renderWidget = useCallback(
     (props: {
@@ -192,14 +211,18 @@ export const WidgetRenderer = memo(function WidgetRenderer({
   );
 
   return (
-    <WidgetProvider renderWidget={renderWidget}>
-      <InnerRenderer
-        widget={widget}
-        onSelect={onSelect}
-        selectedId={selectedId}
-        className={className}
-      />
-    </WidgetProvider>
+    <div ref={containerRef as React.RefObject<HTMLDivElement>} className="widget-renderer-root">
+      <LayoutContextProvider value={effectiveContext}>
+        <WidgetProvider renderWidget={renderWidget}>
+          <InnerRenderer
+            widget={widget}
+            onSelect={onSelect}
+            selectedId={selectedId}
+            className={className}
+          />
+        </WidgetProvider>
+      </LayoutContextProvider>
+    </div>
   );
 });
 

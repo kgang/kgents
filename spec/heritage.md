@@ -190,7 +190,175 @@ These papers form the conceptual DNA of kgents. Every design decision, every arc
 
 ---
 
-## The Extension: Polyfunctor Category Theory
+## Part II: Prompt Algebraic Foundations (Added 2025-12-16)
+
+> *"Prompts are morphisms; we differentiate them with textual gradients until they converge."*
+
+The following papers form the foundation for kgents' **self-cultivating prompt system**—the Evergreen Prompt System. These are later-stage additions to the Heritage Canon, integrated via the `heritage-prompt-algebra-upgrade.md` plan.
+
+### 6. DSPy: Prompts as Programs
+
+**Citation:**
+```
+@article{dspy2024,
+  title={Programming—not prompting—language models},
+  author={Khattab, Omar and others},
+  journal={Stanford NLP},
+  year={2024}
+}
+```
+
+**URL:** https://dspy.ai/
+
+**Core Contribution:**
+- Prompts are **programs**, not strings
+- Programs have typed inputs/outputs
+- Programs can be optimized via training data
+- Compilation replaces manual prompt engineering
+
+**kgents Integration:**
+| DSPy Concept | kgents Mapping |
+|--------------|----------------|
+| Signature | `Section` dataclass with typed fields |
+| Module | `SectionCompiler` protocol |
+| Optimizer | `PromptM.improve()` with TextGRAD |
+| Compilation | `PromptCompiler.compile()` |
+
+**Verification:**
+- `impl/claude/protocols/prompt/_tests/test_compiler.py` — compilation laws
+- `impl/claude/protocols/prompt/_tests/test_polynomial.py` — state machine
+
+---
+
+### 7. SPEAR: Prompt Algebra
+
+**Citation:**
+```
+@article{spear2025,
+  title={SPEAR: Systematic Prompt Ensemble Approach},
+  author={Various},
+  journal={arXiv:2508.05012},
+  year={2025}
+}
+```
+
+**URL:** https://arxiv.org/html/2508.05012
+
+**Core Contribution:**
+- Prompts have **algebraic operators**: composition, union, tensor, differentiation
+- Prompt spaces form a vector space with meaningful addition
+- Curry/uncurry operations exist for prompt transformations
+
+**kgents Integration:**
+| SPEAR Operator | kgents Mapping |
+|----------------|----------------|
+| Composition (∘) | `compose_sections()` with associativity law |
+| Union (∪) | `MergeStrategy.CONCAT` |
+| Tensor (⊗) | Phase-specific section variants |
+| Differentiation (∂) | TextGRAD improvement direction |
+
+**Verification:**
+- `impl/claude/protocols/prompt/_tests/test_compiler.py::test_compose_associativity`
+- `impl/claude/protocols/prompt/section_base.py::compose_sections()`
+
+---
+
+### 8. Meta-Prompting: Functor and Monad Structure
+
+**Citation:**
+```
+@article{metaprompt2023,
+  title={Meta Prompting for AI Systems},
+  author={Zhang, Yifan and Yuan, Zhongwei and Yao, Nan},
+  journal={arXiv:2311.11482},
+  year={2023}
+}
+```
+
+**URL:** https://arxiv.org/abs/2311.11482
+
+**Core Contribution:**
+- Meta-prompting is a **functor**: `MP : Category(Tasks) → Category(Prompts)`
+- Recursive meta-prompting is a **monad**: unit + bind + associativity
+- Self-improvement loops have categorical structure
+- The monad captures the "prompt that improves prompts"
+
+**kgents Integration:**
+| Paper Concept | kgents Mapping |
+|---------------|----------------|
+| MP Functor | `PromptCompiler.compile()` as morphism |
+| RMP Monad | `PromptM` dataclass (Wave 3+) |
+| Unit | `PromptM.unit(value)` |
+| Bind | `PromptM.bind(f)` |
+
+**Monadic Laws (Must Hold):**
+```python
+# Left Identity: unit(x) >>= f ≡ f(x)
+# Right Identity: m >>= unit ≡ m
+# Associativity: (m >>= f) >>= g ≡ m >>= (λx. f(x) >>= g)
+```
+
+**Verification:**
+- `impl/claude/protocols/prompt/_tests/test_monad.py` (Wave 3+)
+- `impl/claude/protocols/prompt/polynomial.py::PROMPT_POLYNOMIAL`
+
+---
+
+### 9. TextGRAD: Textual Gradients
+
+**Citation:**
+```
+@article{textgrad2024,
+  title={TextGRAD: Automatic Differentiation via Text},
+  author={IntuitionLabs},
+  journal={IntuitionLabs Technical Report},
+  year={2024}
+}
+```
+
+**URL:** https://intuitionlabs.ai/articles/meta-prompting-llm-self-optimization
+
+**Core Contribution:**
+- Natural language feedback can be treated as **gradient signals**
+- "Textual differentiation" identifies which parts of a prompt to improve
+- Gradient descent analogy: feedback → direction → improvement step
+- Chain rule applies: improvements compose through sections
+
+**kgents Integration:**
+| TextGRAD Concept | kgents Mapping |
+|------------------|----------------|
+| Textual Gradient | `feedback: str` in `TextGRADImprover` |
+| Gradient Step | `improve(prompt, feedback)` |
+| Chain Rule | Section-local improvement composition |
+| Learning Rate | `rigidity` field (0.0-1.0) |
+
+**Verification:**
+- `impl/claude/protocols/prompt/_tests/test_textgrad.py` (Wave 4)
+- Rigidity spectrum in `SoftSection.rigidity`
+
+---
+
+### Prompt Heritage Integration Summary
+
+| Pillar | Core Claim | kgents Verification |
+|--------|------------|---------------------|
+| **DSPy** | Prompts are programs | `PromptCompiler.compile()` |
+| **SPEAR** | Prompts have algebraic structure | `compose_sections()` laws |
+| **Meta-Prompting** | Self-improvement is monadic | `PromptM` monad laws |
+| **TextGRAD** | Feedback is textual gradient | `TextGRADImprover` |
+
+**Connection to Principles:**
+
+| Heritage | Principle | Connection |
+|----------|-----------|------------|
+| DSPy (compilation) | **Generative** | Spec generates implementation |
+| SPEAR (algebra) | **Composable** | Algebraic composition laws |
+| Meta-Prompting (monad) | **Heterarchical** | Self-similar categorical structure |
+| TextGRAD (gradients) | **Curated** | Gradual improvement preserves quality |
+
+---
+
+## Part III: The Extension — Polyfunctor Category Theory
 
 kgents **extends** the heritage papers with rigorous mathematical foundations:
 
