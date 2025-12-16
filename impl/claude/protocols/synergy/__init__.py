@@ -43,17 +43,42 @@ from .bus import (
     get_synergy_bus,
     reset_synergy_bus,
 )
+from .cli_output import (
+    ARROW,
+    CRYSTAL_ICON,
+    LINK_ICON,
+    SynergyNotificationContext,
+    create_notification_context,
+    display_synergy_notification,
+    display_synergy_results,
+    format_crystal_reference,
+    format_synergy_arrow,
+    format_synergy_header,
+)
 from .events import (
     Jewel,
     SynergyEvent,
     SynergyEventType,
     SynergyResult,
+    # Wave 0-1 factory functions
     create_analysis_complete_event,
     create_artifact_created_event,
+    # Wave 2: Atelier factory functions
+    create_bid_accepted_event,
+    # Wave 2: Coalition factory functions
+    create_coalition_formed_event,
     create_crystal_formed_event,
+    create_piece_created_event,
     create_session_complete_event,
+    create_task_complete_event,
 )
-from .handlers import BaseSynergyHandler, GestaltToBrainHandler
+from .handlers import (
+    AtelierToBrainHandler,
+    BaseSynergyHandler,
+    BrainToCoalitionHandler,
+    CoalitionToBrainHandler,
+    GestaltToBrainHandler,
+)
 
 __all__ = [
     # Event types
@@ -62,18 +87,39 @@ __all__ = [
     # Data classes
     "SynergyEvent",
     "SynergyResult",
-    # Factory functions
+    # Factory functions - Wave 0-1
     "create_analysis_complete_event",
     "create_crystal_formed_event",
     "create_session_complete_event",
     "create_artifact_created_event",
+    # Factory functions - Wave 2: Atelier
+    "create_piece_created_event",
+    "create_bid_accepted_event",
+    # Factory functions - Wave 2: Coalition
+    "create_coalition_formed_event",
+    "create_task_complete_event",
     # Bus
     "SynergyEventBus",
     "SynergyHandler",
     "ResultSubscriber",
     "get_synergy_bus",
     "reset_synergy_bus",
-    # Handlers
+    # Handlers - Wave 0-1
     "BaseSynergyHandler",
     "GestaltToBrainHandler",
+    # Handlers - Wave 2
+    "AtelierToBrainHandler",
+    "CoalitionToBrainHandler",
+    "BrainToCoalitionHandler",
+    # CLI Output (Wave 2: UI Integration)
+    "display_synergy_notification",
+    "display_synergy_results",
+    "SynergyNotificationContext",
+    "create_notification_context",
+    "format_synergy_header",
+    "format_crystal_reference",
+    "format_synergy_arrow",
+    "ARROW",
+    "LINK_ICON",
+    "CRYSTAL_ICON",
 ]

@@ -13,10 +13,21 @@ import { apiClient } from './client';
 // Types
 // =============================================================================
 
+export interface EigenvectorDimensions {
+  warmth: number;
+  curiosity: number;
+  trust: number;
+  creativity: number;
+  patience: number;
+  resilience: number;
+  ambition: number;
+}
+
 export interface Artisan {
   name: string;
   specialty: string;
   personality: string;
+  eigenvector?: EigenvectorDimensions;
 }
 
 export interface ArtisansResponse {

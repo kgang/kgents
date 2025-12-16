@@ -752,6 +752,115 @@ class CoalitionFormationView(KgentsWidget[ForgeFormationState]):
 
         return True
 
+    async def enrich_with_brain_context(
+        self,
+        query: str | None = None,
+        limit: int = 5,
+    ) -> list[dict[str, Any]]:
+        """
+        Enrich the formation view with relevant Brain context.
+
+        Wave 2: Coalition → Brain synergy.
+
+        This queries Brain for crystals relevant to the current task
+        and adds them as context for the formation.
+
+        Args:
+            query: Optional search query (defaults to task description)
+            limit: Maximum crystals to retrieve
+
+        Returns:
+            List of relevant crystal summaries
+
+        Example:
+            view.start_formation("Research competitor pricing", "research")
+            crystals = await view.enrich_with_brain_context()
+            # crystals contains past related research
+        """
+        state = self._signal.value
+        if state.phase == "idle":
+            logger.warning("Cannot enrich: no formation in progress")
+            return []
+
+        search_query = query or state.task_description
+        if not search_query:
+            return []
+
+        with _trace_span(
+            "forge.formation.brain_enrichment",
+            task_id=state.task_id,
+            query=search_query[:50],
+        ) as span:
+            try:
+                crystals = await self._query_brain_context(search_query, limit)
+
+                # Add context event to formation
+                if crystals:
+                    context_event = FormationEvent(
+                        type=FormationEventType.FORMATION_STARTED,  # Reuse for context
+                        message=f"Found {len(crystals)} relevant past experiences",
+                        metadata={
+                            "type": "brain_context",
+                            "crystal_count": len(crystals),
+                            "crystal_ids": [c.get("id", "unknown") for c in crystals],
+                        },
+                    )
+
+                    def update_state(s: ForgeFormationState) -> ForgeFormationState:
+                        return ForgeFormationState(
+                            task_id=s.task_id,
+                            task_description=s.task_description,
+                            task_type=s.task_type,
+                            phase=s.phase,
+                            progress_percent=s.progress_percent,
+                            builders=s.builders,
+                            lead_builder=s.lead_builder,
+                            events=s.events + (context_event,),
+                            compatibility_matrix=s.compatibility_matrix,
+                            started_at=s.started_at,
+                            estimated_completion=s.estimated_completion,
+                        )
+
+                    self._signal.update(update_state)
+                    self._emit_event(context_event)
+
+                _record_span_event(
+                    span, "enrichment_complete", crystal_count=len(crystals)
+                )
+                return crystals
+
+            except Exception as e:
+                logger.error(f"Brain enrichment failed: {e}")
+                _set_span_error(span, e)
+                return []
+
+    async def _query_brain_context(
+        self,
+        query: str,
+        limit: int,
+    ) -> list[dict[str, Any]]:
+        """Query Brain for relevant crystals."""
+        try:
+            from protocols.agentese import create_brain_logos
+            from protocols.agentese.node import Observer
+
+            logos = create_brain_logos(embedder_type="auto")
+            observer = Observer.guest()
+
+            # Query for similar tasks
+            result = await logos.invoke(
+                "self.memory.query",
+                observer,
+                query=query,
+                limit=limit,
+            )
+
+            crystals: list[dict[str, Any]] = result.get("crystals", [])
+            return crystals
+        except Exception as e:
+            logger.warning(f"Brain query failed (non-critical): {e}")
+            return []
+
 
 # =============================================================================
 # DialogueStream Widget

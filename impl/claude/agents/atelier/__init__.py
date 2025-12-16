@@ -58,6 +58,20 @@ from agents.atelier.economy import (
     create_token_pool,
     create_token_pool_with_licensing,
 )
+from agents.atelier.gestalt_integration import (
+    CodeIssue,
+    GestaltArtifactAnalysis,
+    analyze_artifact_code,
+    analyze_piece,
+    create_health_badge_props,
+    emit_artifact_analysis_complete,
+)
+from agents.atelier.synergy import (
+    SynergyAwareWorkshop,
+    emit_bid_accepted,
+    emit_piece_created,
+    wrap_stream_with_synergy,
+)
 from agents.atelier.workshop import Workshop, WorkshopFlux
 
 __all__ = [
@@ -100,4 +114,16 @@ __all__ = [
     "InvalidAmountError",
     "InsufficientBalanceError",
     "SessionError",
+    # Synergy (Wave 2: Brain integration)
+    "emit_piece_created",
+    "emit_bid_accepted",
+    "wrap_stream_with_synergy",
+    "SynergyAwareWorkshop",
+    # Gestalt Integration (Wave 2: Code analysis)
+    "CodeIssue",
+    "GestaltArtifactAnalysis",
+    "analyze_artifact_code",
+    "analyze_piece",
+    "create_health_badge_props",
+    "emit_artifact_analysis_complete",
 ]

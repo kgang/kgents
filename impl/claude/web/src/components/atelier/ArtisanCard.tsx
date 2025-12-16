@@ -3,16 +3,21 @@
  *
  * Theme: Orisinal.com aesthetic - whimsical, minimal, melancholic but hopeful.
  * Gentle borders, soft colors, understated animation.
+ *
+ * Wave 2: Enhanced with eigenvector personality visualization.
  */
 
-// React import not needed for JSX in modern React
+import { useState } from 'react';
 import type { Artisan } from '@/api/atelier';
+import { EigenvectorRadar, EigenvectorBars } from '@/components/eigenvector';
 
 interface ArtisanCardProps {
   artisan: Artisan;
   selected?: boolean;
   onClick?: () => void;
   disabled?: boolean;
+  showEigenvector?: boolean;
+  compactEigenvector?: boolean;
 }
 
 export function ArtisanCard({
@@ -20,7 +25,11 @@ export function ArtisanCard({
   selected = false,
   onClick,
   disabled = false,
+  showEigenvector = false,
+  compactEigenvector = true,
 }: ArtisanCardProps) {
+  const [showRadar, setShowRadar] = useState(false);
+
   return (
     <button
       onClick={onClick}
@@ -46,8 +55,52 @@ export function ArtisanCard({
       {/* Specialty */}
       <p className="text-sm text-stone-500 italic">{artisan.specialty}</p>
 
-      {/* Personality preview (on hover) */}
-      {artisan.personality && (
+      {/* Eigenvector visualization (Wave 2) */}
+      {showEigenvector && artisan.eigenvector && (
+        <div className="mt-3">
+          {compactEigenvector ? (
+            <EigenvectorBars
+              dimensions={artisan.eigenvector}
+              compact
+              showLabels
+              className="group-hover:opacity-100 opacity-70 transition-opacity"
+            />
+          ) : (
+            <div className="relative">
+              {/* Toggle button */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowRadar(!showRadar);
+                }}
+                className="absolute top-0 right-0 text-xs text-stone-400 hover:text-stone-600"
+              >
+                {showRadar ? '◐' : '◑'}
+              </button>
+
+              {showRadar ? (
+                <EigenvectorRadar
+                  dimensions={artisan.eigenvector}
+                  size={120}
+                  showLabels={false}
+                  animated
+                  className="mx-auto"
+                />
+              ) : (
+                <EigenvectorBars
+                  dimensions={artisan.eigenvector}
+                  showLabels
+                  className="group-hover:opacity-100 opacity-70 transition-opacity"
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Personality preview (on hover, when eigenvector not shown) */}
+      {!showEigenvector && artisan.personality && (
         <p className="mt-2 text-xs text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity line-clamp-2">
           {artisan.personality}
         </p>
