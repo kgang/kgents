@@ -78,9 +78,17 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ## Seven Jewel Crown (Project KPIs)
 
-Atelier (Flux) • Coalition (Operad) • Brain (Sheaf) • Punchdrunk (Polynomial) • Domain (Tenancy) • Gestalt (Reactive) • **Gardener (N-Phase)**
+| Jewel | Progress | Status |
+|-------|----------|--------|
+| **Brain** | 100% | ✅ COMPLETE - Production-ready |
+| **Gestalt** | 70% | Elastic UI, OTEL, 146 tests |
+| **Atelier** | 65% | Wave 2 synergies, 296 tests |
+| **Coalition** | 55% | Brain+Gardener integration, 221 tests |
+| **Gardener** | 40% | Gardener-Logos spec, 39 tests |
+| **Park** | 40% | DirectorAgent, masks, 64 tests |
+| **Domain** | 0% | Stub plan only |
 
-**Crown Completion**: 73% | **Target**: 80% by Q2 2025 | **New Mandate**: AGENTESE-first + strict autopoiesis
+**Crown Avg**: 53% | **Hero Path**: 70% (Brain+Gestalt+Gardener) | **Target**: 80% by Q2 2025
 
 ---
 
