@@ -106,6 +106,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "init": "protocols.cli.handlers.init:cmd_init",
     "wipe": "protocols.cli.handlers.wipe:cmd_wipe",
+    "migrate": "protocols.cli.handlers.migrate:cmd_migrate",
     # ==========================================================================
     # Agent Town (Crown Jewel)
     # ==========================================================================

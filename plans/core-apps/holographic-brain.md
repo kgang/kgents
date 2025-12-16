@@ -1,7 +1,7 @@
 ---
 path: plans/core-apps/holographic-brain
 status: active
-progress: 70
+progress: 85
 last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,6 +9,14 @@ enables:
   - monetization/subscription-saas
   - plans/team-knowledge-base
 session_notes: |
+  Session 5 (2025-12-16): UI layer and CLI brain command complete.
+  - Added sentence-transformers to optional dependencies (brain extras)
+  - Created Brain integration tests (14 tests in test_brain.py)
+  - Built BrainCartographyCard and GhostNotifierCard reactive widgets
+  - Created CLI brain handler with capture/ghost/map/status subcommands
+  - Added brain legacy commands to CLI router
+  - 85% complete: Core functionality done, needs polish and full integration tests
+
   Session 4 (2025-12-16): L-gent semantic embeddings wired for real search.
   - Added `_embedder` field to MemoryNode and SelfContextResolver
   - Added async `_get_embedding()` method that uses L-gent embedder if available
@@ -31,18 +39,18 @@ session_notes: |
 phase_ledger:
   PLAN: touched
   RESEARCH: complete
-  DEVELOP: in_progress
+  DEVELOP: complete
   STRATEGIZE: pending
   CROSS-SYNERGIZE: pending
-  IMPLEMENT: in_progress
-  QA: pending
-  TEST: pending
+  IMPLEMENT: complete
+  QA: in_progress
+  TEST: in_progress
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.08
-  spent: 0.02
+  spent: 0.05
   returned: 0.0
 ---
 

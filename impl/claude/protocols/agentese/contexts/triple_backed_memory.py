@@ -18,6 +18,7 @@ Spec: spec/protocols/crown-symbiont.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Generic, List, TypeVar
@@ -27,17 +28,12 @@ if TYPE_CHECKING:
     from agents.d.manifold import SemanticManifold
     from agents.d.witness import TemporalWitness
 
+# Use canonical WitnessReport from agents.d.stream
+from agents.d.stream import WitnessReport
+
 S = TypeVar("S")  # State type
 
-
-@dataclass
-class WitnessReport:
-    """Observation metadata for event recording."""
-
-    observer_id: str
-    timestamp: datetime
-    confidence: float = 1.0
-    context: dict[str, Any] | None = None
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -84,7 +80,7 @@ class TripleBackedMemory(Generic[S]):
         Load current state from D-gent triple.
 
         Priority:
-        1. TemporalWitness.current_state() if witness exists
+        1. TemporalWitness.load() if witness exists
         2. Cached _current_state if set
         3. initial_state if provided
         4. Empty dict as fallback
@@ -95,9 +91,9 @@ class TripleBackedMemory(Generic[S]):
         # Try witness first
         if self.witness is not None:
             try:
-                return await self.witness.current_state()
-            except Exception:
-                pass
+                return await self.witness.load()
+            except Exception as e:
+                logger.debug("Failed to load from witness: %s", e)
 
         # Fall back to cached state
         if self._current_state is not None:
@@ -133,22 +129,21 @@ class TripleBackedMemory(Generic[S]):
                     event=state,
                     witness=self._create_witness_report(context),
                 )
-            except Exception:
-                # Log but don't fail the save
-                pass
+            except Exception as e:
+                logger.warning("Failed to record to witness: %s", e)
 
         # 2. Semantic embedding (Manifold)
         if self.manifold is not None:
             try:
                 point = await self.manifold.embed(state)
-                await self.manifold.store(
-                    id=node_id,
-                    point=point,
+                # Use add() with the point's coordinates
+                await self.manifold.add(
+                    entry_id=node_id,
                     state=state,
+                    embedding=point.coordinates,
                 )
-            except Exception:
-                # Log but don't fail the save
-                pass
+            except Exception as e:
+                logger.warning("Failed to store in manifold: %s", e)
 
         # 3. Relational update (Lattice)
         if self.lattice is not None:
@@ -162,11 +157,10 @@ class TripleBackedMemory(Generic[S]):
                     await self.lattice.relate(
                         source=node_id,
                         target=self._previous_node_id,
-                        edge=EdgeKind.DERIVED_FROM,
+                        kind=EdgeKind.DERIVES_FROM,
                     )
-            except Exception:
-                # Log but don't fail the save
-                pass
+            except Exception as e:
+                logger.warning("Failed to update lattice: %s", e)
 
         # Update tracking state
         self._current_state = state
@@ -191,7 +185,8 @@ class TripleBackedMemory(Generic[S]):
             timeline = await self.witness.timeline(timedelta(days=7))
             states = [entry.state for entry in timeline if hasattr(entry, "state")]
             return states[:limit] if limit else states
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to get history from witness: %s", e)
             return []
 
     # === Private Helpers ===
@@ -209,9 +204,9 @@ class TripleBackedMemory(Generic[S]):
         """Create witness report for event recording."""
         return WitnessReport(
             observer_id="triple_backed_memory",
-            timestamp=datetime.now(),
             confidence=1.0,
-            context=context,
+            context=context or {},
+            anomaly_score=0.0,
         )
 
     def _is_dict_state(self) -> bool:
@@ -231,8 +226,14 @@ class TripleBackedMemory(Generic[S]):
 
         try:
             point = await self.manifold.embed(state)
-            return await self.manifold.neighbors(point, radius)
-        except Exception:
+            # neighbors() returns List[Tuple[S, SemanticPoint, float]]
+            # We extract just the states
+            results = await self.manifold.neighbors(
+                point.coordinates, k=10, radius=radius
+            )
+            return [s for s, _, _ in results]
+        except Exception as e:
+            logger.debug("Failed to find semantic neighbors: %s", e)
             return []
 
     async def lineage_chain(self, node_id: str) -> List[str]:
@@ -242,7 +243,8 @@ class TripleBackedMemory(Generic[S]):
 
         try:
             return await self.lattice.lineage(node_id)
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to get lineage chain: %s", e)
             return []
 
     async def event_timeline(self, hours: int = 24) -> List[dict[str, Any]]:
@@ -263,7 +265,8 @@ class TripleBackedMemory(Generic[S]):
                 }
                 for e in timeline
             ]
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to get event timeline: %s", e)
             return []
 
 

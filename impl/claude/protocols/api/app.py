@@ -178,6 +178,13 @@ def create_app(
     if gallery_router is not None:
         app.include_router(gallery_router)
 
+    # Brain endpoints (Holographic Brain / Crown Jewel)
+    from .brain import create_brain_router
+
+    brain_router = create_brain_router()
+    if brain_router is not None:
+        app.include_router(brain_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(

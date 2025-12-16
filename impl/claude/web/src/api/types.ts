@@ -365,11 +365,11 @@ export interface WorkshopEvent {
 
 // Builder visual config
 export const BUILDER_COLORS: Record<BuilderArchetype, string> = {
-  Scout: '#22c55e',  // green
-  Sage: '#8b5cf6',   // purple
-  Spark: '#f59e0b',  // amber
+  Scout: '#22c55e', // green
+  Sage: '#8b5cf6', // purple
+  Spark: '#f59e0b', // amber
   Steady: '#3b82f6', // blue
-  Sync: '#ec4899',   // pink
+  Sync: '#ec4899', // pink
 };
 
 export const BUILDER_ICONS: Record<BuilderArchetype, string> = {
@@ -558,8 +558,8 @@ export interface NPhaseState {
 export const NPHASE_CONFIG = {
   colors: {
     UNDERSTAND: '#3b82f6', // blue - gathering info
-    ACT: '#f59e0b',        // amber - executing
-    REFLECT: '#8b5cf6',    // purple - reviewing
+    ACT: '#f59e0b', // amber - executing
+    REFLECT: '#8b5cf6', // purple - reviewing
   },
   icons: {
     UNDERSTAND: '🔍',
@@ -656,3 +656,74 @@ export const GALLERY_CATEGORY_CONFIG: Record<GalleryCategory, { icon: string; co
   ADAPTERS: { icon: '⇄', color: '#06b6d4' },
   SPECIALIZED: { icon: '◈', color: '#ef4444' },
 };
+
+// =============================================================================
+// Brain (Holographic Brain)
+// =============================================================================
+
+/**
+ * Request to capture content to holographic memory.
+ */
+export interface BrainCaptureRequest {
+  content: string;
+  concept_id?: string;
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Response from brain capture operation.
+ */
+export interface BrainCaptureResponse {
+  status: string;
+  concept_id: string;
+  storage: string;
+}
+
+/**
+ * Request to surface ghost memories.
+ */
+export interface BrainGhostRequest {
+  context: string;
+  limit?: number;
+}
+
+/**
+ * A surfaced ghost memory.
+ */
+export interface GhostMemory {
+  concept_id: string;
+  content: string | null;
+  relevance: number;
+}
+
+/**
+ * Response from ghost surfacing.
+ */
+export interface BrainGhostResponse {
+  status: string;
+  context: string;
+  surfaced: GhostMemory[];
+  count: number;
+}
+
+/**
+ * Brain map/topology response.
+ */
+export interface BrainMapResponse {
+  summary: string;
+  concept_count: number;
+  landmarks: number;
+  hot_patterns: number;
+  dimension: number;
+}
+
+/**
+ * Brain status response.
+ */
+export interface BrainStatusResponse {
+  status: 'healthy' | 'degraded' | 'unavailable';
+  embedder_type: string;
+  embedder_dimension: number;
+  concept_count: number;
+  has_cartographer: boolean;
+}

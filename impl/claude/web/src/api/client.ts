@@ -19,6 +19,12 @@ import type {
   PilotResponse,
   GalleryCategoryInfo,
   GalleryOverrides,
+  BrainCaptureRequest,
+  BrainCaptureResponse,
+  BrainGhostRequest,
+  BrainGhostResponse,
+  BrainMapResponse,
+  BrainStatusResponse,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -69,17 +75,13 @@ apiClient.interceptors.response.use(
 // =============================================================================
 
 export const townApi = {
-  create: (data: CreateTownRequest = {}) =>
-    apiClient.post<Town>('/v1/town', data),
+  create: (data: CreateTownRequest = {}) => apiClient.post<Town>('/v1/town', data),
 
-  get: (townId: string) =>
-    apiClient.get<Town>(`/v1/town/${townId}`),
+  get: (townId: string) => apiClient.get<Town>(`/v1/town/${townId}`),
 
-  delete: (townId: string) =>
-    apiClient.delete(`/v1/town/${townId}`),
+  delete: (townId: string) => apiClient.delete(`/v1/town/${townId}`),
 
-  getCitizens: (townId: string) =>
-    apiClient.get<CitizensResponse>(`/v1/town/${townId}/citizens`),
+  getCitizens: (townId: string) => apiClient.get<CitizensResponse>(`/v1/town/${townId}/citizens`),
 
   getCitizen: (townId: string, name: string, lod: number = 0, userId: string = 'anonymous') =>
     apiClient.get<CitizenDetailResponse>(
@@ -141,8 +143,7 @@ export const paymentsApi = {
       cancel_url: cancelUrl || `${window.location.origin}/`,
     }),
 
-  getBalance: () =>
-    apiClient.get('/api/user/credits'),
+  getBalance: () => apiClient.get('/api/user/credits'),
 
   spendCredits: (amount: number, action: string) =>
     apiClient.post('/api/user/credits/spend', { amount, action }),
@@ -153,8 +154,7 @@ export const paymentsApi = {
 // =============================================================================
 
 export const userApi = {
-  getProfile: () =>
-    apiClient.get('/api/user/profile'),
+  getProfile: () => apiClient.get('/api/user/profile'),
 
   updateProfile: (data: { name?: string; email?: string }) =>
     apiClient.put('/api/user/profile', data),
@@ -165,14 +165,12 @@ export const userApi = {
 // =============================================================================
 
 export const workshopApi = {
-  get: () =>
-    apiClient.get<WorkshopStatus>('/v1/workshop'),
+  get: () => apiClient.get<WorkshopStatus>('/v1/workshop'),
 
   assignTask: (description: string, priority: number = 1) =>
     apiClient.post<WorkshopPlan>('/v1/workshop/task', { description, priority }),
 
-  getStatus: () =>
-    apiClient.get<WorkshopStatus>('/v1/workshop/status'),
+  getStatus: () => apiClient.get<WorkshopStatus>('/v1/workshop/status'),
 
   getBuilders: () =>
     apiClient.get<{ builders: BuilderSummary[]; count: number }>('/v1/workshop/builders'),
@@ -186,11 +184,9 @@ export const workshopApi = {
   perturb: (action: string, builder?: string, artifact?: unknown) =>
     apiClient.post('/v1/workshop/perturb', { action, builder, artifact }),
 
-  reset: () =>
-    apiClient.post('/v1/workshop/reset'),
+  reset: () => apiClient.post('/v1/workshop/reset'),
 
-  getArtifacts: () =>
-    apiClient.get('/v1/workshop/artifacts'),
+  getArtifacts: () => apiClient.get('/v1/workshop/artifacts'),
 
   // History endpoints (Chunk 9)
   getHistory: (page: number = 1, pageSize: number = 10, status?: string) =>
@@ -202,9 +198,12 @@ export const workshopApi = {
     apiClient.get<TaskDetailResponse>(`/v1/workshop/history/${taskId}`),
 
   getTaskEvents: (taskId: string) =>
-    apiClient.get<{ task_id: string; events: WorkshopEvent[]; count: number; duration_seconds: number }>(
-      `/v1/workshop/history/${taskId}/events`
-    ),
+    apiClient.get<{
+      task_id: string;
+      events: WorkshopEvent[];
+      count: number;
+      duration_seconds: number;
+    }>(`/v1/workshop/history/${taskId}/events`),
 
   // Metrics endpoints (Chunk 9)
   getAggregateMetrics: (period: string = '24h') =>
@@ -217,8 +216,7 @@ export const workshopApi = {
       params: { period },
     }),
 
-  getFlowMetrics: () =>
-    apiClient.get<FlowMetrics>('/v1/workshop/metrics/flow'),
+  getFlowMetrics: () => apiClient.get<FlowMetrics>('/v1/workshop/metrics/flow'),
 };
 
 // =============================================================================
@@ -238,4 +236,23 @@ export const galleryApi = {
     apiClient.get<PilotResponse>(`/api/gallery/${name}`, {
       params: overrides,
     }),
+};
+
+// =============================================================================
+// Brain API (Holographic Brain)
+// =============================================================================
+
+export const brainApi = {
+  /** Capture content to holographic memory */
+  capture: (data: BrainCaptureRequest) =>
+    apiClient.post<BrainCaptureResponse>('/v1/brain/capture', data),
+
+  /** Surface ghost memories based on context */
+  ghost: (data: BrainGhostRequest) => apiClient.post<BrainGhostResponse>('/v1/brain/ghost', data),
+
+  /** Get brain topology/cartography */
+  getMap: () => apiClient.get<BrainMapResponse>('/v1/brain/map'),
+
+  /** Get brain status */
+  getStatus: () => apiClient.get<BrainStatusResponse>('/v1/brain/status'),
 };

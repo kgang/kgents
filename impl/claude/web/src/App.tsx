@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/error/ErrorBoundary';
 const Town = lazy(() => import('./pages/Town'));
 const Atelier = lazy(() => import('./pages/Atelier'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
+const Brain = lazy(() => import('./pages/Brain'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function LoadingFallback() {
@@ -33,6 +34,7 @@ function App() {
             <Route path="/town/:townId" element={<Town />} />
             <Route path="/atelier" element={<Atelier />} />
             <Route path="/gallery" element={<GalleryPage />} />
+            <Route path="/brain" element={<Brain />} />
           </Route>
           {/* 404 catch-all */}
           <Route path="*" element={<NotFound />} />

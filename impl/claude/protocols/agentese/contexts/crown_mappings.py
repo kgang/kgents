@@ -257,9 +257,9 @@ def create_symbiont_for_path(
         return None
 
     # Lazy imports to avoid circular dependencies
-    witness = None
-    manifold = None
-    lattice = None
+    witness: Any = None
+    manifold: Any = None
+    lattice: Any = None
 
     if config.uses_witness:
         try:

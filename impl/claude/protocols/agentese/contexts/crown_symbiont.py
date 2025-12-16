@@ -18,6 +18,7 @@ Spec: spec/protocols/crown-symbiont.md
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import (
@@ -37,6 +38,8 @@ if TYPE_CHECKING:
     from agents.d.witness import TemporalWitness
 
 from .triple_backed_memory import TripleBackedMemory
+
+logger = logging.getLogger(__name__)
 
 I = TypeVar("I")  # Input type
 O = TypeVar("O")  # Output type
@@ -203,7 +206,7 @@ class CrownSymbiont(Generic[I, O, S]):
             trajectory: Name of trajectory to check (e.g., "mood", "decisions")
 
         Returns:
-            Drift report with severity, magnitude, explanation
+            Drift report with magnitude, start time, explanation
         """
         if self.witness is None:
             return {"drift_detected": False, "reason": "No witness configured"}
@@ -212,34 +215,63 @@ class CrownSymbiont(Generic[I, O, S]):
             report = await self.witness.check_drift(trajectory)
             return {
                 "drift_detected": report.drift_detected,
-                "severity": report.severity.value
-                if hasattr(report.severity, "value")
-                else str(report.severity),
-                "magnitude": report.magnitude,
+                "magnitude": report.drift_magnitude,
+                "drift_start": report.drift_start.isoformat()
+                if report.drift_start
+                else None,
+                "expected_value": report.expected_value,
+                "actual_value": report.actual_value,
                 "explanation": report.explanation,
             }
         except Exception as e:
+            logger.debug("Failed to detect drift for trajectory %s: %s", trajectory, e)
             return {"drift_detected": False, "error": str(e)}
 
-    async def momentum(self) -> dict[str, Any]:
+    async def momentum(self, trajectory: str | None = None) -> dict[str, Any]:
         """
         Get semantic velocity of state.
 
+        Args:
+            trajectory: Optional trajectory name. If None, returns overall momentum
+                        for all registered trajectories.
+
         Returns:
-            Momentum vector with direction and magnitude
+            Momentum vector with direction, magnitude, confidence
         """
         if self.witness is None:
-            return {"magnitude": 0.0, "direction": None}
+            return {"magnitude": 0.0, "direction": None, "confidence": 0.0}
 
         try:
-            vec = await self.witness.momentum()
-            return {
-                "magnitude": vec.magnitude if hasattr(vec, "magnitude") else 0.0,
-                "direction": vec.direction if hasattr(vec, "direction") else None,
-                "values": list(vec.values) if hasattr(vec, "values") else [],
-            }
+            if trajectory is not None:
+                # Get momentum for specific trajectory
+                vec = await self.witness.momentum_for(trajectory)
+                return {
+                    "trajectory": trajectory,
+                    "magnitude": vec.magnitude,
+                    "direction": vec.direction,
+                    "confidence": vec.confidence,
+                }
+            else:
+                # Get overall momentum for all trajectories
+                all_momentum = await self.witness.overall_momentum()
+                return {
+                    "trajectories": {
+                        name: {
+                            "magnitude": vec.magnitude,
+                            "direction": vec.direction,
+                            "confidence": vec.confidence,
+                        }
+                        for name, vec in all_momentum.items()
+                    }
+                }
         except Exception as e:
-            return {"magnitude": 0.0, "error": str(e)}
+            logger.debug("Failed to get momentum: %s", e)
+            return {
+                "magnitude": 0.0,
+                "direction": None,
+                "confidence": 0.0,
+                "error": str(e),
+            }
 
     async def entropy(self, window: timedelta | None = None) -> float:
         """
@@ -253,7 +285,8 @@ class CrownSymbiont(Generic[I, O, S]):
 
         try:
             return await self.witness.entropy(window or timedelta(hours=1))
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to get entropy: %s", e)
             return 0.0
 
     # === Semantic Affordances (from Manifold) ===
@@ -274,8 +307,14 @@ class CrownSymbiont(Generic[I, O, S]):
 
         try:
             point = await self.manifold.embed(state)
-            return await self.manifold.neighbors(point, radius)
-        except Exception:
+            # neighbors() returns List[Tuple[S, SemanticPoint, float]]
+            # We extract just the states
+            results = await self.manifold.neighbors(
+                point.coordinates, k=10, radius=radius
+            )
+            return [s for s, _, _ in results]
+        except Exception as e:
+            logger.debug("Failed to find neighbors: %s", e)
             return []
 
     async def curvature_at(self, state: S) -> float:
@@ -293,8 +332,9 @@ class CrownSymbiont(Generic[I, O, S]):
 
         try:
             point = await self.manifold.embed(state)
-            return await self.manifold.curvature_at(point)
-        except Exception:
+            return await self.manifold.curvature_at(point.coordinates)
+        except Exception as e:
+            logger.debug("Failed to get curvature: %s", e)
             return 0.0
 
     async def voids_nearby(self, state: S) -> list[dict[str, Any]]:
@@ -309,7 +349,7 @@ class CrownSymbiont(Generic[I, O, S]):
 
         try:
             point = await self.manifold.embed(state)
-            void = await self.manifold.void_nearby(point)
+            void = await self.manifold.void_nearby(point.coordinates)
             if void is None:
                 return []
             return [
@@ -320,7 +360,8 @@ class CrownSymbiont(Generic[I, O, S]):
                     "suggested_exploration": void.suggested_exploration,
                 }
             ]
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to find voids: %s", e)
             return []
 
     # === Relational Affordances (from Lattice) ===
@@ -340,7 +381,8 @@ class CrownSymbiont(Generic[I, O, S]):
 
         try:
             return await self.lattice.lineage(node_id)
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to get lineage for %s: %s", node_id, e)
             return []
 
     async def meet(self, a: str, b: str) -> str | None:
@@ -356,7 +398,8 @@ class CrownSymbiont(Generic[I, O, S]):
         try:
             result = await self.lattice.meet(a, b)
             return result.node_id if result.found else None
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to compute meet(%s, %s): %s", a, b, e)
             return None
 
     async def join(self, a: str, b: str) -> str | None:
@@ -372,7 +415,8 @@ class CrownSymbiont(Generic[I, O, S]):
         try:
             result = await self.lattice.join(a, b)
             return result.node_id if result.found else None
-        except Exception:
+        except Exception as e:
+            logger.debug("Failed to compute join(%s, %s): %s", a, b, e)
             return None
 
     async def entails(self, a: str, b: str) -> bool:
@@ -386,8 +430,11 @@ class CrownSymbiont(Generic[I, O, S]):
             return False
 
         try:
-            return await self.lattice.entails(a, b)
-        except Exception:
+            # entails() returns EntailmentProof, extract .holds
+            proof = await self.lattice.entails(a, b)
+            return proof.holds
+        except Exception as e:
+            logger.debug("Failed to check entailment(%s, %s): %s", a, b, e)
             return False
 
     # === Projection Methods ===
@@ -427,6 +474,7 @@ class CrownSymbiont(Generic[I, O, S]):
                 "coverage": stats.coverage,
             }
         except Exception as e:
+            logger.debug("Failed to project topology: %s", e)
             return {"type": "topology", "error": str(e)}
 
     async def project_graph(self, root: str | None = None) -> dict[str, Any]:
@@ -451,6 +499,7 @@ class CrownSymbiont(Generic[I, O, S]):
                 "is_bounded": stats.is_bounded,
             }
         except Exception as e:
+            logger.debug("Failed to project graph: %s", e)
             return {"type": "graph", "error": str(e)}
 
     async def project_holographic(self, focus: str | None = None) -> dict[str, Any]:

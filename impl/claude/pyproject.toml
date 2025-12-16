@@ -33,6 +33,7 @@ dependencies = [
 [project.optional-dependencies]
 migrations = [
     "alembic>=1.13.0",
+    "greenlet>=3.0.0",  # Required for async SQLAlchemy
 ]
 brain = [
     "sentence-transformers>=2.2.0",  # High-quality semantic embeddings for Holographic Brain

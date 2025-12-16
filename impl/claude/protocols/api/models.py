@@ -189,3 +189,165 @@ class HealthResponse(BaseModel):
         description="Status of individual components",
         examples=[{"soul": "ok", "llm": "ok", "auth": "ok"}],
     )
+
+
+# --- Brain Models (Holographic Brain) ---
+
+
+class BrainCaptureRequest(BaseModel):
+    """Request to capture content to holographic memory."""
+
+    content: str = Field(
+        ...,
+        description="The content to capture into memory",
+        examples=["Python is great for machine learning", "Meeting notes from standup"],
+    )
+    concept_id: Optional[str] = Field(
+        default=None,
+        description="Optional concept identifier (auto-generated if not provided)",
+        examples=["note_20231215_standup", "insight_ml_patterns"],
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Optional metadata to attach to the capture",
+        examples=[{"source": "meeting", "importance": "high"}],
+    )
+
+
+class BrainCaptureResponse(BaseModel):
+    """Response from brain capture operation."""
+
+    status: str = Field(
+        ...,
+        description="Capture status: captured, error",
+        examples=["captured"],
+    )
+    concept_id: str = Field(
+        ...,
+        description="The concept ID of the captured content",
+        examples=["capture_20231215_123456_abc123"],
+    )
+    storage: str = Field(
+        ...,
+        description="Where content was stored: memory_crystal, local_memory",
+        examples=["memory_crystal"],
+    )
+
+
+class BrainGhostRequest(BaseModel):
+    """Request to surface ghost memories based on context."""
+
+    context: str = Field(
+        ...,
+        description="Context string to find relevant memories",
+        examples=["AI and machine learning", "Python programming"],
+    )
+    limit: int = Field(
+        default=5,
+        ge=1,
+        le=50,
+        description="Maximum number of memories to surface",
+        examples=[5, 10],
+    )
+
+
+class GhostMemory(BaseModel):
+    """A surfaced ghost memory."""
+
+    concept_id: str = Field(
+        ...,
+        description="Concept identifier",
+    )
+    content: Optional[str] = Field(
+        default=None,
+        description="The memory content",
+    )
+    relevance: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Relevance score (0.0 to 1.0)",
+    )
+
+
+class BrainGhostResponse(BaseModel):
+    """Response from ghost surfacing operation."""
+
+    status: str = Field(
+        ...,
+        description="Surface status: surfaced, no_ghosts, error",
+        examples=["surfaced"],
+    )
+    context: str = Field(
+        ...,
+        description="The context used for surfacing",
+    )
+    surfaced: list[GhostMemory] = Field(
+        default_factory=list,
+        description="List of surfaced memories",
+    )
+    count: int = Field(
+        ...,
+        ge=0,
+        description="Number of memories surfaced",
+    )
+
+
+class BrainMapResponse(BaseModel):
+    """Response from brain cartography/map request."""
+
+    summary: str = Field(
+        ...,
+        description="Summary of the memory topology",
+        examples=["Memory nodes: 42"],
+    )
+    concept_count: int = Field(
+        ...,
+        ge=0,
+        description="Total number of concepts in memory",
+    )
+    landmarks: int = Field(
+        default=0,
+        ge=0,
+        description="Number of landmarks in topology",
+    )
+    hot_patterns: int = Field(
+        default=0,
+        ge=0,
+        description="Number of hot (recently accessed) patterns",
+    )
+    dimension: int = Field(
+        ...,
+        ge=1,
+        description="Embedding dimension",
+    )
+
+
+class BrainStatusResponse(BaseModel):
+    """Response from brain status check."""
+
+    status: str = Field(
+        ...,
+        description="Brain status: healthy, degraded, unavailable",
+        examples=["healthy"],
+    )
+    embedder_type: str = Field(
+        ...,
+        description="Type of embedder in use",
+        examples=["SentenceTransformerEmbedder", "SimpleEmbedder"],
+    )
+    embedder_dimension: int = Field(
+        ...,
+        ge=1,
+        description="Embedding dimension",
+        examples=[384, 64],
+    )
+    concept_count: int = Field(
+        ...,
+        ge=0,
+        description="Number of concepts in memory",
+    )
+    has_cartographer: bool = Field(
+        ...,
+        description="Whether CartographerAgent is configured",
+    )

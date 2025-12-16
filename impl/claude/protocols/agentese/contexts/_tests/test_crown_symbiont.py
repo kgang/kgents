@@ -136,7 +136,7 @@ class TestCrownSymbiont:
     """Tests for CrownSymbiont."""
 
     @pytest.mark.asyncio
-    async def test_sync_logic_execution(self, initial_state: CounterState):
+    async def test_sync_logic_execution(self, initial_state: CounterState) -> None:
         """Test executing sync logic through symbiont."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -150,7 +150,7 @@ class TestCrownSymbiont:
         assert result == 8
 
     @pytest.mark.asyncio
-    async def test_async_logic_execution(self, initial_state: CounterState):
+    async def test_async_logic_execution(self, initial_state: CounterState) -> None:
         """Test executing async logic through symbiont."""
         symbiont = CrownSymbiont(
             logic=async_counter_logic,
@@ -161,7 +161,7 @@ class TestCrownSymbiont:
         assert result == 10
 
     @pytest.mark.asyncio
-    async def test_dict_state(self, dict_initial_state: dict[str, Any]):
+    async def test_dict_state(self, dict_initial_state: dict[str, Any]) -> None:
         """Test with dict state."""
 
         def dict_counter(inc: int, state: dict[str, Any]) -> tuple[int, dict[str, Any]]:
@@ -179,7 +179,7 @@ class TestCrownSymbiont:
         result = await symbiont.invoke(5)
         assert result == 5
 
-    def test_name_property(self, initial_state: CounterState):
+    def test_name_property(self, initial_state: CounterState) -> None:
         """Test symbiont name."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -189,7 +189,9 @@ class TestCrownSymbiont:
         assert "counter_logic" in symbiont.name
 
     @pytest.mark.asyncio
-    async def test_projections_without_triple(self, initial_state: CounterState):
+    async def test_projections_without_triple(
+        self, initial_state: CounterState
+    ) -> None:
         """Test projection methods when no triple components configured."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -205,6 +207,11 @@ class TestCrownSymbiont:
 
         momentum = await symbiont.momentum()
         assert momentum["magnitude"] == 0.0
+        assert momentum["confidence"] == 0.0
+
+        # Test with trajectory parameter
+        momentum_traj = await symbiont.momentum(trajectory="test")
+        assert momentum_traj["magnitude"] == 0.0
 
         entropy = await symbiont.entropy()
         assert entropy == 0.0
@@ -235,7 +242,7 @@ class TestCrownSymbiontProjections:
     """Tests for CrownSymbiont projection methods."""
 
     @pytest.mark.asyncio
-    async def test_project_timeline(self, initial_state: CounterState):
+    async def test_project_timeline(self, initial_state: CounterState) -> None:
         """Test timeline projection."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -248,7 +255,7 @@ class TestCrownSymbiontProjections:
         assert "count" in projection
 
     @pytest.mark.asyncio
-    async def test_project_topology(self, initial_state: CounterState):
+    async def test_project_topology(self, initial_state: CounterState) -> None:
         """Test topology projection."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -259,7 +266,7 @@ class TestCrownSymbiontProjections:
         assert projection["type"] == "topology"
 
     @pytest.mark.asyncio
-    async def test_project_graph(self, initial_state: CounterState):
+    async def test_project_graph(self, initial_state: CounterState) -> None:
         """Test graph projection."""
         symbiont = CrownSymbiont(
             logic=counter_logic,
@@ -270,7 +277,7 @@ class TestCrownSymbiontProjections:
         assert projection["type"] == "graph"
 
     @pytest.mark.asyncio
-    async def test_project_holographic(self, initial_state: CounterState):
+    async def test_project_holographic(self, initial_state: CounterState) -> None:
         """Test holographic (combined) projection."""
         symbiont = CrownSymbiont(
             logic=counter_logic,

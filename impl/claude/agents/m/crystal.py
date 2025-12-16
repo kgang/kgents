@@ -589,6 +589,45 @@ class NumPyCrystal(Generic[T]):
         if pattern.resolution >= 0.7:
             self._hot_patterns.add(concept_id)
 
+    def retrieve_content(self, concept_id: str) -> T | None:
+        """Retrieve the stored content for a concept.
+
+        Args:
+            concept_id: The concept to retrieve
+
+        Returns:
+            The stored content, or None if not found
+        """
+        pattern = self._patterns.get(concept_id)
+        if pattern:
+            pattern.access()
+            return pattern.content
+        return None
+
+    def get_pattern(self, concept_id: str) -> CrystalPattern[T] | None:
+        """Get a specific pattern by concept ID.
+
+        Args:
+            concept_id: The concept to look up
+
+        Returns:
+            The pattern if found, None otherwise
+        """
+        return self._patterns.get(concept_id)
+
+    def stats(self) -> dict[str, Any]:
+        """Return crystal statistics."""
+        return {
+            "dimension": self._dimension,
+            "concept_count": len(self._patterns),
+            "hot_count": len(self._hot_patterns),
+            "avg_resolution": (
+                sum(p.resolution for p in self._patterns.values()) / len(self._patterns)
+                if self._patterns
+                else 0
+            ),
+        }
+
 
 def create_crystal(dimension: int = 1024, use_numpy: bool = True) -> Any:
     """Factory function to create appropriate crystal type.
