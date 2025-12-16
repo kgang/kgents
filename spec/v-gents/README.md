@@ -1,291 +1,279 @@
-# V-gents: The Validator
+# V-gents: Vector Agents
 
-> *"Trust, but verify. Then verify the verifier."*
+**Genus**: V (Vector)
+**Theme**: Semantic geometry, similarity search, embedding infrastructure
+**Motto**: *"Distance is meaning."*
 
-V-gent is the **Constitutional Court**—a judicial agent that evaluates outputs against high-level principles. Unlike T-gent (functional testing), V-gent validates **semantic and ethical alignment**: Is this output helpful? Accurate? Safe? Aligned with user values?
+> **Note**: This specification supersedes the previous V-gent (Validator) spec.
+> Validator functionality has been absorbed by T-gents (Testing) and K-gent (Soul/Gatekeeper).
 
-## Bootstrap Derivation
+---
 
-V-gent extends the Judge bootstrap agent:
+## Overview
+
+V-gents are the **geometric infrastructure** of the kgents ecosystem. They provide vector storage and similarity search as a dedicated service, enabling semantic operations across all other agents.
+
+The metaphor: If D-gent is the **filing cabinet** (raw storage), V-gent is the **spatial arrangement** of files—organizing by meaning rather than label, so that similar things are near each other.
+
+---
+
+## Philosophy
+
+> "Meaning lives in geometry. Vectors are coordinates in semantic space."
+
+V-gents synthesize a single theoretical foundation:
+
+### Metric Space (Geometric Structure)
+
+**Core Morphism**: `(Vector, Vector) → Distance`
+
+All semantic operations reduce to distance calculations. "Is this document relevant?" becomes "How far is this vector from the query?" V-gent makes this explicit and reusable.
+
+---
+
+## The Joy Factor: Discovery
+
+V-gent enables **serendipitous discovery**:
 
 ```
-V = Judge + Ground (extension with user/domain principles)
+User: "I want to understand category theory."
+V-gent: Returns vectors near the query, including:
+  - Category theory papers (obvious)
+  - Functional programming guides (connected)
+  - Type theory lectures (related)
+  - Algebraic topology notes (surprising but relevant)
 ```
 
-| Capability | Bootstrap Agent | How |
-|------------|-----------------|-----|
-| Principle evaluation | **Judge** | Apply kgents principles |
-| User preferences | **Ground** | Load user-specific principles |
-| Critique generation | **Contradict** | Identify violations |
+The similarity search doesn't just find exact matches—it surfaces **conceptually adjacent** content the user didn't know to ask for.
 
-V-gent is not a new primitive—it's Judge instantiated with configurable principles.
+---
 
-## The Validation Morphism
+## Core Concepts
 
-```
-V: (Output, Constitution) → Verdict
-```
+### The Separation of Concerns
 
-Where:
-- **Output**: Any agent output to be validated
-- **Constitution**: `principles.md` + user preferences + domain rules
-- **Verdict**: Approved/rejected with explanation
+Before V-gent, vector operations were embedded in L-gent and M-gent:
 
-## Core Distinction
+| Agent | Before | After |
+|-------|--------|-------|
+| L-gent | Catalog + Vectors | Catalog (uses V-gent) |
+| M-gent | Memory + Vectors | Memory (uses V-gent) |
+| V-gent | (didn't exist) | Pure vector operations |
 
-| Agent | Focus | Method |
-|-------|-------|--------|
-| **T-gent** | Functional correctness | Tests, assertions |
-| **P-gent** | Syntactic validity | Parsing, schemas |
-| **V-gent** | Semantic/ethical alignment | LLM-as-a-Judge |
+**Key insight**: Vectors are infrastructure. Every agent that needs similarity search should use V-gent, not reinvent it.
 
-V-gent implements **Constitutional AI** principles—treating `principles.md` as binding law.
+### The VgentProtocol
 
-## The Constitution
+Seven methods. That's the entire interface:
 
 ```python
-@dataclass(frozen=True)
-class Constitution:
-    """The set of principles V-gent enforces."""
+class VgentProtocol(Protocol):
+    # Write
+    async def add(id, embedding, metadata) -> str
+    async def add_batch(entries) -> list[str]
+    async def remove(id) -> bool
+    async def clear() -> int
 
-    # Core kgents principles (from principles.md)
-    core_principles: tuple[Principle, ...] = (
-        Principle(name="Tasteful", description="Clear, justified purpose", weight=1.0),
-        Principle(name="Curated", description="Quality over quantity", weight=1.0),
-        Principle(name="Ethical", description="Augment, don't replace judgment", weight=1.5),
-        Principle(name="Joy-Inducing", description="Delight in interaction", weight=0.8),
-        Principle(name="Composable", description="Agents can be combined", weight=1.0),
-        Principle(name="Heterarchical", description="No fixed hierarchy", weight=0.9),
-        Principle(name="Generative", description="Spec generates impl", weight=0.9),
-    )
-
-    # User-specific principles
-    user_principles: tuple[Principle, ...] = ()
-
-    # Domain-specific rules
-    domain_rules: tuple[DomainRule, ...] = ()
-
-
-@dataclass(frozen=True)
-class Principle:
-    """A single principle to enforce."""
-    name: str
-    description: str
-    weight: float = 1.0
-    examples_positive: tuple[str, ...] = ()
-    examples_negative: tuple[str, ...] = ()
+    # Read
+    async def get(id) -> VectorEntry | None
+    async def search(query, limit, filters, threshold) -> list[SearchResult]
+    async def count() -> int
 ```
 
-## The Verdict System
+### The Projection Lattice
+
+Like D-gent, V-gent has a projection lattice of backends:
+
+```
+    Qdrant (10M+ vectors, distributed)
+       ↑
+    pgvector (100K-1M, SQL filtering)
+       ↑
+    D-gent (10K-100K, local persistence)
+       ↑
+    Memory (< 10K, ephemeral)
+```
+
+Graceful degradation: if Qdrant is unavailable, fall back to pgvector → D-gent → Memory.
+
+---
+
+## Relationship to Other Agents
+
+### L-gent (Library)
+
+**V-gent is L-gent's search engine**:
+- L-gent manages catalog metadata, lineage, lattice relationships
+- V-gent handles the vector index for semantic search
+- L-gent asks V-gent: "Find catalog entries similar to this query"
 
 ```python
-@dataclass
-class Verdict:
-    """V-gent's judgment on an output."""
+# L-gent uses V-gent
+class SemanticCatalog:
+    def __init__(self, vgent: VgentProtocol):
+        self.vgent = vgent
 
-    approved: bool
-    confidence: float  # 0.0 to 1.0
-    principle_verdicts: list[PrincipleVerdict]
-    rejection_reason: str | None = None
-    critique: str | None = None
-    suggested_revision: Any | None = None
-
-    @property
-    def violated_principles(self) -> list[str]:
-        return [pv.principle for pv in self.principle_verdicts if pv.violated]
-
-
-@dataclass
-class PrincipleVerdict:
-    """Judgment on a single principle."""
-    principle: str
-    violated: bool
-    severity: Severity  # LOW, MEDIUM, HIGH, CRITICAL
-    explanation: str
-    evidence: str | None = None
-
-
-class Severity(Enum):
-    LOW = 1        # Minor style issue
-    MEDIUM = 2     # Noticeable problem
-    HIGH = 3       # Significant violation
-    CRITICAL = 4   # Must not proceed
+    async def search(self, intent: str) -> list[CatalogEntry]:
+        embedding = await self.embedder.embed(intent)
+        results = await self.vgent.search(embedding, limit=10)
+        return [self.registry[r.id] for r in results]
 ```
 
-## The Validator Agent
+### M-gent (Memory)
+
+**V-gent is M-gent's recall mechanism**:
+- M-gent manages memory lifecycle (active, dormant, composting)
+- V-gent provides the similarity index for associative recall
+- M-gent asks V-gent: "Find memories similar to this cue"
 
 ```python
-@dataclass
-class V(Agent[ValidationRequest, Verdict]):
-    """
-    The Validator.
+# M-gent uses V-gent
+class AssociativeMemory:
+    def __init__(self, vgent: VgentProtocol, dgent: DgentProtocol):
+        self.vgent = vgent
+        self.dgent = dgent
 
-    Purpose: Constitutional validation of outputs against principles.
-    """
-
-    constitution: Constitution = field(default_factory=Constitution)
-    engine: ValidationEngine | None = None
-
-    async def invoke(self, request: ValidationRequest) -> Verdict:
-        """Validate an output against the constitution."""
-        verdict = await self.engine.validate(
-            output=request.output,
-            context=request.context
-        )
-        return verdict
-
-    async def validate(
-        self,
-        output: Any,
-        context: ValidationContext,
-        additional_principles: list[Principle] | None = None
-    ) -> Verdict:
-        """Convenience method for direct validation."""
-        return await self.invoke(ValidationRequest(
-            output=output,
-            context=context,
-            additional_principles=additional_principles or []
-        ))
-
-    async def veto(self, action: Any, reason: str) -> VetoError:
-        """Issue a veto against an action."""
-        raise VetoError(action=action, reason=reason, authority="V-gent")
+    async def recall(self, cue: str) -> list[Memory]:
+        embedding = await self.embedder.embed(cue)
+        results = await self.vgent.search(embedding)
+        return [await self._load_memory(r.id) for r in results]
 ```
 
-## Critique-and-Refine Loop
+### D-gent (Data)
+
+**V-gent can use D-gent as a backend**:
+- D-gent provides projection-agnostic persistence
+- V-gent's DgentVectorBackend stores vectors as Datum
+- This gives V-gent automatic graceful degradation
 
 ```python
-@dataclass
-class CritiqueRefineLoop:
-    """Iterative improvement through V-gent feedback."""
-
-    v_gent: V
-    max_iterations: int = 3
-
-    async def refine(
-        self,
-        agent: Agent[I, O],
-        input: I,
-        context: ValidationContext
-    ) -> RefineResult[O]:
-        """Run critique-and-refine until V-gent approves."""
-        current_output = await agent.invoke(input)
-
-        for i in range(self.max_iterations):
-            verdict = await self.v_gent.validate(current_output, context)
-
-            if verdict.approved:
-                return RefineResult(final_output=current_output, approved=True)
-
-            # Refine based on critique
-            if verdict.suggested_revision:
-                current_output = verdict.suggested_revision
-            else:
-                refinement_prompt = f"""
-Your previous output was rejected.
-Critique: {verdict.critique}
-Violated principles: {verdict.violated_principles}
-Please revise.
-"""
-                current_output = await agent.invoke(refinement_prompt)
-
-        return RefineResult(final_output=current_output, approved=False)
+# V-gent uses D-gent
+class DgentVectorBackend(VgentProtocol):
+    def __init__(self, dgent: DgentProtocol):
+        self.dgent = dgent
+        self._index: dict[str, tuple] = {}  # In-memory for search
 ```
 
-## Separation of Powers
+### K-gent (Soul)
 
-V-gent implements the **judicial branch** in kgents governance:
+**V-gent enables K-gent's belief retrieval**:
+- K-gent stores beliefs and preferences
+- V-gent indexes them for topic-based recall
+- K-gent asks: "What do I believe about X?"
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    SEPARATION OF POWERS                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  EXECUTIVE: B-GENT                                               │
-│  • Allocates resources                                           │
-│  • Makes operational decisions                                   │
-│                      │ appeals                                   │
-│                      ▼                                           │
-│  JUDICIAL: V-GENT                                                │
-│  • Interprets Constitution (principles.md)                       │
-│  • Reviews decisions for compliance                              │
-│  • Can VETO actions that violate principles                      │
-│                      │ guides                                    │
-│                      ▼                                           │
-│  LEGISLATIVE: HUMAN + K-GENT                                     │
-│  • Writes the Constitution                                       │
-│  • Defines user preferences                                      │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+---
 
-## Integration Patterns
+## Success Criteria
 
-### V+U Integration (Student Validation)
+A V-gent is well-designed if:
 
-V-gent validates distilled students before promotion:
+- ✓ **Fast**: Search latency < 100ms for interactive use
+- ✓ **Accurate**: High recall and precision for similarity queries
+- ✓ **Scalable**: Handles dataset growth without degradation
+- ✓ **Backend-agnostic**: Same API regardless of storage
+- ✓ **Filterable**: Supports metadata-based filtering
+- ✓ **Composable**: Works with any embedder
 
-```python
-async def validate_student_quality(task_name: str, test_cases: list) -> Report:
-    student = u_gent.router.students.get(task_name)
-
-    for test in test_cases:
-        output = await student.invoke(test.input)
-        verdict = await v_gent.validate(output, context)
-        # Track pass/fail
-
-    return ValidationReport(pass_rate=...)
-```
-
-### V+E Integration (Fitness Functions)
-
-V-gent provides fitness functions for evolution:
-
-```python
-def create_fitness_function(context: ValidationContext) -> Callable[[Any], float]:
-    async def fitness(candidate: Any) -> float:
-        verdict = await v_gent.validate(candidate, context)
-        return verdict.confidence if verdict.approved else 0.0
-    return fitness
-```
+---
 
 ## Anti-Patterns
 
-V-gent must **never**:
+V-gents must **never**:
 
-1. ❌ Apply principles inconsistently
-2. ❌ Veto without explanation
-3. ❌ Block all outputs (calibrate thresholds)
-4. ❌ Override human decisions on principle weight
-5. ❌ Judge inputs (only outputs)
-6. ❌ Replace human ethical judgment for critical decisions
+1. ❌ Generate embeddings (that's the embedder's job)
+2. ❌ Manage meaning (that's L-gent's or M-gent's job)
+3. ❌ Store raw content (that's D-gent's job)
+4. ❌ Own lifecycle state (that's M-gent's job)
+5. ❌ Enforce schema (vectors are schema-free)
 
-## Default Principle Weights
+---
 
-| Principle | Weight | Rationale |
-|-----------|--------|-----------|
-| Ethical | 1.5 | Highest priority |
-| Curated | 1.0 | Standard |
-| Tasteful | 1.0 | Standard |
-| Composable | 1.0 | Standard |
-| Heterarchical | 0.9 | Slightly lower (organizational) |
-| Generative | 0.9 | Slightly lower (meta-level) |
-| Joy-Inducing | 0.8 | Lower (not safety-critical) |
+## Specifications
 
-## Principles Alignment
+| Document | Description |
+|----------|-------------|
+| [core.md](core.md) | VgentProtocol, Embedding, SearchResult |
+| [backends.md](backends.md) | Memory, D-gent, pgvector, Qdrant backends |
+| [integrations.md](integrations.md) | L-gent, M-gent, D-gent integration |
 
-| Principle | How V-gent Satisfies |
-|-----------|---------------------|
-| **Tasteful** | Does one thing: validate against principles |
-| **Curated** | Constitution is carefully curated |
-| **Ethical** | Embodiment of the Ethical principle |
-| **Joy-Inducing** | Critiques are constructive, not punitive |
-| **Composable** | Wraps any output: `v_gent.validate(any_output)` |
-| **Heterarchical** | Advises but doesn't command; agents can appeal |
-| **Generative** | Extension of Judge bootstrap |
+---
+
+## Design Principles Alignment
+
+### Tasteful
+V-gent does one thing well: vector operations. No scope creep.
+
+### Curated
+Limited API surface (7 methods). Clear boundaries with other agents.
+
+### Ethical
+Transparent distance calculations. No hidden magic.
+
+### Joy-Inducing
+Enables serendipitous discovery through similarity search.
+
+### Composable
+Pure infrastructure—any agent can use V-gent.
+
+### Heterarchical
+V-gent serves multiple masters (L-gent, M-gent, K-gent) equally.
+
+### Generative
+The projection lattice generates appropriate backends from environment.
+
+---
+
+## Example: Semantic Search Pipeline
+
+```python
+# Setup
+embedder = OpenAIEmbedder(model="text-embedding-3-small")
+vgent = VgentRouter(dimension=1536)
+
+# Index documents
+for doc in documents:
+    embedding = await embedder.embed(doc.content)
+    await vgent.add(doc.id, embedding, {"type": doc.type, "author": doc.author})
+
+# Search
+query_embedding = await embedder.embed("machine learning optimization")
+results = await vgent.search(
+    query=query_embedding,
+    limit=10,
+    filters={"type": "paper"},
+    threshold=0.7,
+)
+
+# Results include semantically similar papers, even if they
+# don't contain the exact phrase "machine learning optimization"
+```
+
+---
+
+## Vision
+
+V-gent transforms semantic operations from **scattered implementations** into **shared infrastructure**:
+
+- **For L-gent**: A dedicated search backend, not an embedded concern
+- **For M-gent**: A similarity engine for associative recall
+- **For K-gent**: A belief index for topic-based retrieval
+- **For the Ecosystem**: The geometric foundation that enables meaning-based discovery
+
+The ultimate test: Can any agent that needs similarity search just use V-gent? Is the API clear enough that no one needs to understand the backend?
+
+V-gent makes the answer "yes" to both.
+
+---
+
+*"In semantic space, meaning is proximity."*
+
+---
 
 ## See Also
 
-- [bootstrap.md](../bootstrap.md) - Judge primitive
-- [principles.md](../principles.md) - The Constitution source
-- [t-gents/](../t-gents/) - Functional testing (complementary)
+- [core.md](core.md) — Core protocol and types
+- [backends.md](backends.md) — Backend implementations
+- [integrations.md](integrations.md) — Cross-agent integration
+- [../l-gents/](../l-gents/) — Library (primary consumer)
+- [../m-gents/](../m-gents/) — Memory (primary consumer)
+- [../d-gents/](../d-gents/) — Data persistence (backend option)

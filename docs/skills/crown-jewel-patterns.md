@@ -1,0 +1,483 @@
+---
+path: docs/skills/crown-jewel-patterns
+status: active
+progress: 100
+last_touched: 2025-12-16
+touched_by: claude-opus-4
+blocking: []
+enables: [atelier, coalition, park, domain, gestalt]
+session_notes: |
+  Extracted from Gardener-Logos post-implementation reflection.
+  These patterns are reusable across all Crown Jewels.
+phase_ledger:
+  PLAN: complete
+  REFLECT: complete
+---
+
+# Skill: Crown Jewel Implementation Patterns
+
+> *"The first jewel teaches how to craft all the others."*
+
+**Difficulty**: Intermediate
+**Prerequisites**: `polynomial-agent.md`, `agentese-path.md`
+**Source**: Gardener-Logos post-implementation reflection
+**Spec**: `spec/protocols/gardener-logos.md` Appendix C
+
+---
+
+## Overview
+
+These patterns emerged from implementing Gardener-Logos (the first jewel to reach 100%). They apply broadly to all Crown Jewels and represent tested, production-ready approaches.
+
+---
+
+## Pattern 1: Container Owns Workflow
+
+**Problem**: Workflows (sessions, tasks, exhibitions) need lifecycle management within persistent state.
+
+**Wrong**: Workflow creates Container
+```python
+# Workflow creates its own home → orphaned when workflow ends
+session = GardenerSession(name="work")
+garden = session.create_garden()  # Garden dies with session
+```
+
+**Right**: Container owns Workflow
+```python
+class Container:
+    _workflow: Workflow | None = None
+    workflow_id: str | None = None  # For history
+
+    def get_or_create_workflow(self, name: str) -> Workflow:
+        if self._workflow is None:
+            self._workflow = create_workflow(name)
+            self.workflow_id = self._workflow.id
+            self._on_workflow_started()  # State transition
+        return self._workflow
+
+    async def on_workflow_complete(self):
+        await self._on_workflow_ended()
+        self._workflow = None
+        # workflow_id preserved for history
+```
+
+**Benefits**:
+- Container persists across workflows
+- Clean lifecycle management
+- History preserved via ID
+
+**Apply to**:
+| Jewel | Container | Workflow |
+|-------|-----------|----------|
+| Gardener | Garden | Session |
+| Atelier | Gallery | Exhibition |
+| Coalition | Forge | Task |
+| Park | Scenario | Simulation |
+
+---
+
+## Pattern 2: Enum Property Pattern
+
+**Problem**: Enum values need associated metadata (colors, costs, valid transitions).
+
+**Wrong**: External lookup dictionaries
+```python
+class Status(Enum):
+    PENDING = auto()
+    ACTIVE = auto()
+
+# Scattered across codebase
+STATUS_COLORS = {Status.PENDING: "yellow", Status.ACTIVE: "blue"}
+STATUS_COSTS = {Status.PENDING: 0.1, Status.ACTIVE: 0.5}
+```
+
+**Right**: Properties on enum
+```python
+class Status(Enum):
+    PENDING = auto()
+    ACTIVE = auto()
+    COMPLETE = auto()
+
+    @property
+    def color(self) -> str:
+        return {
+            Status.PENDING: "yellow",
+            Status.ACTIVE: "blue",
+            Status.COMPLETE: "green",
+        }[self]
+
+    @property
+    def cost(self) -> float:
+        return {
+            Status.PENDING: 0.1,
+            Status.ACTIVE: 0.5,
+            Status.COMPLETE: 0.0,
+        }[self]
+
+    @property
+    def can_transition_to(self) -> set["Status"]:
+        return {
+            Status.PENDING: {Status.ACTIVE},
+            Status.ACTIVE: {Status.COMPLETE, Status.PENDING},
+            Status.COMPLETE: set(),
+        }[self]
+```
+
+**Benefits**:
+- Metadata co-located with enum
+- IDE autocomplete works
+- Type-safe access
+
+**Apply to**:
+| Jewel | Enum | Properties |
+|-------|------|------------|
+| Gardener | GardenSeason | plasticity, entropy_multiplier, emoji |
+| Gardener | TendingVerb | base_entropy_cost, affects_state, emoji |
+| Atelier | BidState | can_outbid, min_increment |
+| Coalition | AgentRole | capabilities, cost_multiplier |
+| Park | MaskType | interactivity, visibility |
+
+---
+
+## Pattern 3: Multiplied Context Effect
+
+**Problem**: Context should modulate user intent, not override it.
+
+**Wrong**: Binary context
+```python
+# Context overrides intent entirely
+if season == DORMANT:
+    learning_rate = 0.0  # No learning possible
+else:
+    learning_rate = user_tone  # Full learning
+```
+
+**Right**: Multiplied effect
+```python
+# Context modulates intent smoothly
+effective_rate = user_intent * context_factor
+
+# Gardener example:
+learning_rate = gesture.tone * season.plasticity
+# SPROUTING (0.9) × definitive (1.0) → 0.9 (aggressive)
+# DORMANT (0.1) × tentative (0.3) → 0.03 (minimal)
+```
+
+**Benefits**:
+- Smooth gradients, no cliff edges
+- User intent always factors in
+- No explosion of special cases
+
+**Apply to**:
+| Jewel | Intent | Context | Effect |
+|-------|--------|---------|--------|
+| Gardener | tone | plasticity | learning_rate |
+| Atelier | bid_amount | market_heat | effective_bid |
+| Coalition | urgency | agent_load | priority_score |
+| Park | immersion | scenario_intensity | experience |
+
+---
+
+## Pattern 4: Signal Aggregation for Decisions
+
+**Problem**: Complex decisions require weighing multiple factors.
+
+**Wrong**: Boolean explosion
+```python
+if gesture_freq > 2 and entropy < 0.5 and session_active:
+    transition = True
+elif gesture_freq > 1 and entropy < 0.7:
+    transition = True  # Different threshold, duplicated logic
+```
+
+**Right**: Confidence aggregation
+```python
+def evaluate_transition(signals: Signals) -> tuple[float, str]:
+    confidence = 0.0
+    reasons = []
+
+    # Each signal contributes independently
+    if signals.gesture_frequency > 2.0:
+        confidence += 0.5
+        reasons.append(f"High activity ({signals.gesture_frequency:.1f}/h)")
+    elif signals.gesture_frequency > 1.0:
+        confidence += 0.3
+        reasons.append(f"Moderate activity ({signals.gesture_frequency:.1f}/h)")
+
+    if signals.entropy_available > 0.5:
+        confidence += 0.3
+        reasons.append("Entropy available")
+
+    if signals.session_active:
+        confidence += 0.2
+        reasons.append("Session active")
+
+    return min(1.0, confidence), "; ".join(reasons)
+
+# Usage
+confidence, reason = evaluate_transition(signals)
+if confidence >= THRESHOLD:
+    suggest_transition(reason)
+```
+
+**Benefits**:
+- Transparent (see why decision was made)
+- Composable (add/remove signals easily)
+- Tunable (adjust weights)
+- Explains itself (reasons string)
+
+**Apply to**:
+| Jewel | Decision | Signals |
+|-------|----------|---------|
+| Gardener | Season transition | gesture_freq, entropy, session |
+| Coalition | Agent recommendation | skill_match, availability, past_success |
+| Atelier | Bid suggestion | market_value, creator_reputation, demand |
+| Gestalt | Drift alert | dependency_freshness, breaking_changes, usage |
+
+---
+
+## Pattern 5: Dismissal Memory
+
+**Problem**: Suggestions that are dismissed should not immediately reappear.
+
+**Implementation**:
+```python
+from datetime import datetime, timedelta
+
+_dismissed: dict[str, datetime] = {}
+COOLDOWN_HOURS = 4
+
+def dismiss(key: str) -> None:
+    """Record that a suggestion was dismissed."""
+    _dismissed[key] = datetime.now()
+
+def should_suggest(key: str) -> bool:
+    """Check if suggestion can be made (not recently dismissed)."""
+    dismissed_at = _dismissed.get(key)
+    if dismissed_at is None:
+        return True
+    return datetime.now() - dismissed_at >= timedelta(hours=COOLDOWN_HOURS)
+
+def clear_dismissals(prefix: str) -> None:
+    """Clear all dismissals matching prefix."""
+    keys_to_remove = [k for k in _dismissed if k.startswith(prefix)]
+    for key in keys_to_remove:
+        del _dismissed[key]
+```
+
+**Benefits**:
+- Respects user's "not now"
+- Time-bounded (resurfaces when context may have changed)
+- Memory-efficient (only stores timestamps)
+
+**Apply to**:
+| Jewel | Suggestion Type | Key Format |
+|-------|-----------------|------------|
+| Gardener | Season transition | `{garden_id}:{from}→{to}` |
+| Gestalt | Drift alert | `{module}:{dependency}` |
+| Atelier | Style recommendation | `{creator}:{style}` |
+| Coalition | Team suggestion | `{task}:{agent_combo}` |
+
+---
+
+## Pattern 6: Async-Safe Event Emission
+
+**Problem**: Sync methods need to emit events to async systems.
+
+**Implementation**:
+```python
+import asyncio
+
+def sync_method_with_event(self, data, emit_event=True):
+    # ... sync state changes ...
+
+    if emit_event:
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self._emit_event(data))
+        except RuntimeError:
+            # No running event loop - skip emission
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.debug(f"No event loop for emission: {data}")
+
+async def _emit_event(self, data):
+    from protocols.synergy import get_synergy_bus
+    event = create_event(data)
+    await get_synergy_bus().emit(event)
+```
+
+**Benefits**:
+- Core methods stay sync (simpler, easier to test)
+- Events still emitted when async context exists
+- Graceful degradation when no event loop
+
+**Apply to**: All jewels that emit synergy events from state transitions.
+
+---
+
+## Pattern 7: Dual-Channel Output
+
+**Problem**: CLI commands should serve both humans and agents.
+
+**Implementation**:
+```python
+def _emit_output(
+    human: str,
+    semantic: dict,
+    ctx: "InvocationContext | None",
+) -> None:
+    """Emit both human-readable and machine-readable output."""
+    if ctx is not None:
+        ctx.output(human=human, semantic=semantic)
+    else:
+        # Fallback for direct invocation
+        print(human)
+
+# Usage
+_emit_output(
+    human=f"\n  {garden.season.emoji} Garden: {garden.name}\n",
+    semantic={
+        "garden_id": garden.garden_id,
+        "season": garden.season.name,
+        "health": garden.metrics.health_score,
+    },
+    ctx=ctx,
+)
+```
+
+**Benefits**:
+- Same command serves humans (terminal) and agents (JSON)
+- No duplicate command implementations
+- Consistent semantics across interfaces
+
+**Apply to**: All CLI handlers via `protocols/cli/handlers/`.
+
+---
+
+## Pattern 8: Bounded History Trace
+
+**Problem**: History should enable analysis without unbounded growth.
+
+**Implementation**:
+```python
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
+
+@dataclass(frozen=True)  # Immutable!
+class HistoryEntry:
+    action: str
+    target: str
+    timestamp: datetime = field(default_factory=datetime.now)
+
+    def is_recent(self, hours: int = 24) -> bool:
+        return datetime.now() - self.timestamp < timedelta(hours=hours)
+
+class Container:
+    history: list[HistoryEntry] = field(default_factory=list)
+    MAX_HISTORY = 50
+
+    def add_history(self, entry: HistoryEntry) -> None:
+        self.history.append(entry)
+        if len(self.history) > self.MAX_HISTORY:
+            self.history = self.history[-self.MAX_HISTORY:]
+
+    @property
+    def recent_diversity(self) -> int:
+        """Count unique actions in recent history."""
+        recent = [e for e in self.history if e.is_recent()]
+        return len({e.action for e in recent})
+```
+
+**Benefits**:
+- Bounded memory (never grows past MAX)
+- Enables trajectory analysis (diversity, frequency)
+- Immutable entries (facts, not mutable state)
+
+**Apply to**:
+| Jewel | History Type | Analysis |
+|-------|--------------|----------|
+| Gardener | Gestures | trajectory, frequency, diversity |
+| Atelier | Bids | market trends, creator patterns |
+| Coalition | Task assignments | agent utilization, success rates |
+| Park | Player actions | engagement, decision patterns |
+
+---
+
+## Pattern 9: Directed State Cycle
+
+**Problem**: State machines can have too many valid transitions, creating chaos.
+
+**Wrong**: Fully-connected
+```
+Any state → Any other state (exponential complexity)
+```
+
+**Right**: Directed cycle
+```
+     ┌─────────────────────────────────────┐
+     │                                     │
+     ▼                                     │
+  STATE_1 ──────► STATE_2 ──────► STATE_3
+     ▲                                     │
+     │                                     ▼
+  STATE_5 ◄────── STATE_4 ◄─────────────┘
+```
+
+**Implementation**:
+```python
+TRANSITION_RULES: dict[State, list[State]] = {
+    State.DORMANT: [State.SPROUTING],      # One forward
+    State.SPROUTING: [State.BLOOMING],     # One forward
+    State.BLOOMING: [State.HARVEST],       # One forward
+    State.HARVEST: [State.COMPOSTING],     # One forward
+    State.COMPOSTING: [State.DORMANT],     # Back to start
+}
+
+def can_transition(from_state: State, to_state: State) -> bool:
+    return to_state in TRANSITION_RULES.get(from_state, [])
+```
+
+**Benefits**:
+- One rule per state (simple)
+- Natural rhythm (clear progression)
+- Prevents chaotic jumping
+
+**Apply to**:
+| Jewel | Cycle |
+|-------|-------|
+| Gardener | DORMANT→SPROUTING→BLOOMING→HARVEST→COMPOSTING→DORMANT |
+| Atelier | DRAFT→BIDDING→EVALUATION→AWARD→COMPLETE |
+| Coalition | FORMING→ASSIGNED→EXECUTING→REVIEWING→DISBANDED |
+| Park | SETUP→RUNNING→PAUSED→COMPLETE |
+
+---
+
+## Quick Reference
+
+| Pattern | Use When | Key Insight |
+|---------|----------|-------------|
+| Container Owns Workflow | Persistent state + transient workflows | Container persists; workflows come and go |
+| Enum Property | Enum values need metadata | Co-locate metadata with enum |
+| Multiplied Context | Context modulates intent | `effective = intent × context` |
+| Signal Aggregation | Multi-factor decisions | Confidence + reasons string |
+| Dismissal Memory | Suggestion systems | Time-bounded "not now" |
+| Async-Safe Emission | Sync→async bridge | `create_task` with fallback |
+| Dual-Channel Output | CLI for humans + agents | `emit(human, semantic)` |
+| Bounded History | Trajectory analysis | Immutable + trim to MAX |
+| Directed Cycle | State machine design | One forward per state |
+
+---
+
+## Related
+
+- `gardener-logos.md` — Source implementation
+- `polynomial-agent.md` — State machine fundamentals
+- `handler-patterns.md` — CLI handler patterns
+- `test-patterns.md` — Testing these patterns
+
+---
+
+## Changelog
+
+- 2025-12-16: Initial version from Gardener-Logos reflection
