@@ -1,8 +1,32 @@
 # Forest Health: 2025-12-15
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
+>
+> *"The Crown is our compass. Each jewel tests a meta-framework."*
+>
+> *"The garden tends itself, but only because we planted it together."*
 
 This file provides a canopy view of all active plans. Read this at session start.
+
+---
+
+## The Seven Jewel Crown (Project KPIs)
+
+> Progress on these apps—and the elegance of their execution—defines our project-level KPIs above everything else.
+>
+> **2025-12-15 EVOLUTION**: Expanded from 6 to 7 jewels with The Gardener. New mandates: AGENTESE-first, strict autopoiesis.
+
+| Jewel | Progress | Status | Meta-Framework Stress |
+|-------|----------|--------|----------------------|
+| **Atelier** | 90% | active | Flux (streaming) |
+| **Coalition Forge** | 85% | active | Operad (composition) |
+| **Holographic Brain** | 95% | active | Sheaf (coherence) |
+| **Punchdrunk Park** | 80% | active | Polynomial (consent) |
+| **Domain Simulation** | 75% | active | Tenancy (enterprise) |
+| **Gestalt** | 5% | active | Reactive (projection) |
+| **The Gardener** | 60% | active | N-Phase (autopoiesis) |
+
+**Crown Completion**: 70% average | **Target**: 80% by Q2 2025
 
 ---
 
@@ -10,6 +34,16 @@ This file provides a canopy view of all active plans. Read this at session start
 
 | Plan | Progress | Last Touched | Status | Notes |
 |------|----------|--------------|--------|-------|
+| **plans/ui-factoring-clean-slate** | 0% | 2025-12-15 | active | **CLEANUP**: Remove 82% of web UI, keep essentials (AGENTESE, Town, Atelier, primitives) |
+| **plans/core-apps-synthesis** | 10% | 2025-12-15 | active | **SEVEN JEWEL CROWN**: 30 ideas → 7 reference apps + AGENTESE-first mandate |
+| plans/core-apps/atelier-experience | 0% | 2025-12-15 | active | Jewel #1: Creative workshop + spectator economy |
+| plans/core-apps/coalition-forge | 0% | 2025-12-15 | active | Jewel #2: No-code multi-agent task assembly |
+| plans/core-apps/holographic-brain | 0% | 2025-12-15 | active | Jewel #3: PKM as living topology (M-gent UI) |
+| plans/core-apps/punchdrunk-park | 0% | 2025-12-15 | active | Jewel #4: Narrative experiences with agent consent |
+| plans/core-apps/domain-simulation | 0% | 2025-12-15 | active | Jewel #5: Enterprise simulation engine |
+| plans/core-apps/gestalt-architecture-visualizer | 5% | 2025-12-15 | active | Jewel #6: Living architecture ops + governance |
+| plans/core-apps/the-gardener | 0% | 2025-12-15 | active | **Jewel #7**: Autopoietic dev interface (AGENTESE-first CLI + N-Phase sessions) |
+| **plans/agentese-v3** | 15% | 2025-12-15 | active | **AGENTESE v3 (FINAL SYNTHESIS)**: Consolidated from v1 learnings + v2 draft + critiques. Spec: `spec/protocols/agentese-v3.md`. (**BLOCKS** Gardener) |
 | plans/reactive-substrate-unification | 15% | 2025-12-14 | active | CROWN JEWEL EXTENSION: Unified Reactive Substrate for CLI/TUI/marimo/JSON |
 | monetization/grand-initiative-monetization | 0% | 2025-12-14 | active | GRAND INITIATIVE: Revenue strategy, $5.4B market opportunity |
 | plans/_epilogues/2025-12-14-n-phase-hardening-plan | 0% | 2025-12-14 | active | Crown jewel hardening: Make N-Phase Cycle machine-executable |
@@ -86,11 +120,14 @@ Accursed Share (5%):    agents/t-gent (rotation)
 | Metric | Value |
 |--------|-------|
 | Test count | 18,331 |
-| Active trees | 5 |
+| Active trees | 19 |
 | Dormant trees | 0 |
 | Blocked | 0 |
 | Complete | 21 |
 | Archived this session | 25 |
+| **Seven Jewel Crown** | 7 jewels (from 30 ideas) |
+| **AGENTESE v3** | 1 consolidated plan (supersedes 5 archived) |
+| Crown Completion | 70% average |
 | Accursed share next | (none needed - all work visible) |
 
 ---
@@ -158,7 +195,25 @@ plans/meta/v0-ui-learnings-synthesis (100% ✓) ──enables──▶ reactive-
 self/memory (100% ✓) ──enables──▶ agents/k-gent, interaction-flows
 plans/web-refactor (100% ✓) ──enables──▶ monetization, reactive-substrate-unification
 
-# ACTIVE
+# ACTIVE - SEVEN JEWEL CROWN (Project KPIs)
+plans/core-apps-synthesis (10%) ──enables──▶ all 7 jewels
+    ├── plans/core-apps/atelier-experience (0%) ──stresses──▶ Flux (streaming)
+    ├── plans/core-apps/coalition-forge (0%) ──stresses──▶ Operad (composition)
+    ├── plans/core-apps/holographic-brain (0%) ──stresses──▶ Sheaf (coherence)
+    ├── plans/core-apps/punchdrunk-park (0%) ──stresses──▶ Polynomial (consent)
+    ├── plans/core-apps/domain-simulation (0%) ──stresses──▶ Tenancy (enterprise)
+    ├── plans/core-apps/gestalt-architecture-visualizer (5%) ──stresses──▶ Reactive (projection)
+    └── plans/core-apps/the-gardener (0%) ──stresses──▶ N-Phase (autopoiesis)
+        └── plans/agentese-v3 (15%) ──blocks──▶ the-gardener
+
+# ACTIVE - AGENTESE v3 (Consolidated)
+plans/agentese-v3 (15%) ──blocks──▶ the-gardener, all-jewels
+    # Supersedes: agentese-evolution tree (5 plans → 1)
+    # Spec: spec/protocols/agentese-v3.md
+    # Archived: plans/_archive/agentese-evolution-2025-12-15/
+
+# ACTIVE - Infrastructure
+plans/ui-factoring-clean-slate (0%) ──enables──▶ core-apps-synthesis, clean-slate-for-new-UIs
 plans/reactive-substrate-unification (15%) ──enables──▶ marimo-integration, dashboard-refactor
 monetization/grand-initiative-monetization (0%) ──enables──▶ deployment, dashboard-overhaul
 plans/_epilogues/2025-12-14-n-phase-hardening-plan (0%) ──enables──▶ auto-continuation-runtime

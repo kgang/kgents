@@ -15,34 +15,7 @@
 * INDIVIDUALLY TAILORED, GENERATIONS OF BEST PRACTICES AND DESIGN THOUGHT
 * "holographic metaphor reification"
 * "SIX CROWN JEWEL"
-
-
-```original_prompt
-Let's REALLY go hard with Agent Town (bigger, emergent), in fact i'll update focus now.
-I want to expand the scope of this 4x. This should be one of the soul converging points for this project.
-This is really where I didn't know where I wanted to go.
-
-CRITICAL REFERENCES: ENSHRINE IN SPECS!!!!
-THERE ARE VERY IMPORTANT CONCEPTUAL REFERENCE "HERITAGE" FOR KENT: DIRECT INSPIRATIONS FOR ALL HIS WORK ON
-KGENTS AND MANY YEARS LEADING UP TO IT
-* https://arxiv.org/abs/2307.07924 `CHATDEV`
-* https://arxiv.org/abs/2304.03442 `SIMULACRA`
-* https://arxiv.org/abs/2411.00114 `ALTERA`
-* https://arxiv.org/abs/2305.16291 `VOYAGER`
-* https://arxiv.org/abs/2405.02957 `AGENT HOSPITAL`
-Note: extend all of the above with polyfunctor category theory to include system orchestration,
-proprioception, modifying self-deployment, iterative-emergent complex adaptive system behavior dynamices
-etc.
-
-CREATE THE GRANDEST strategy of many, many agents, bootstrapped through this system to ultimately become a
-west world like simulation park with infinite dimension detail on people (if they pay infinite amounts of
-money). The core concept is this holographic metaphor reification (see spec/psi-gents, AGENTESE, and
-umwelt).
-
-Combine ALL plans, specs, and work so far, along with the papers above, and especially close readings of
-plans/principles and spec/principles to lay out YOUR GRAND META-NARRATIVE so everything is re-written,
-re-formulate, re-imagined, and transformed to serve these ideas.
-```
+* Fully leverage our category theory guarantees for max chaos
 
 ## KENT's NEVERS
 * Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity
@@ -57,6 +30,7 @@ re-formulate, re-imagined, and transformed to serve these ideas.
 * VISUAL UIs/Refined interactions *
 * MONEY GENERATING (planning) *
 * FUN YET TECHNICAL*
+* KGENTS SELF-INTERFACING, AUTOPOESIS-DRIVEN DEVELOPMENT, AND REGENERATION OF AGENTESE
 
 
 **Constraints**:

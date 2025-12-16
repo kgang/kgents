@@ -117,6 +117,17 @@ Easter eggs hidden > announced: discovery is the delight
 Teaching examples > reference docs: show the pattern in action
 Counter-metrics force harm-thinking: "what makes this feature bad?" reveals blind spots
 Force mechanic ethics: expensive (3x) + limited (3/session) + logged = agency by design
+Six→Seven Jewel Crown: each jewel stresses one meta-framework; The Gardener stresses N-Phase (autopoiesis)
+Autopoiesis = self-production; sympoiesis = making-with; Gardener enables both via N-Phase sessions
+AGENTESE-first: all CLI commands route through Logos; imperative → verb-first ontology
+AGENTESE v3 synthesizes: v1 learnings + v2 draft + critiques + philosophy
+v3 goal: 150+ exports → <50; single Logos class; categories enforced at runtime
+Context.holon.aspect > flat verbs: ontological structure matters
+Observer gradations: Observer (minimal) → Umwelt (full); guest is valid observer
+Bounded queries: ?pattern with limit/offset prevents footguns
+Subscriptions: at-most-once default; fully specified semantics
+Pre-charge economics with refund on failure: safer than post-charge
+String-based >> composition: "path.a" >> "path.b" natural idiom
 ```
 
 ## Anti-Patterns
@@ -138,4 +149,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~95/200 | Last pruned: 2025-12-15 | Culled: 199→95 (52% reduction)*
+*Lines: ~108/200 | Last pruned: 2025-12-15 | AGENTESE v3 insights added*
