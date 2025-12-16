@@ -129,6 +129,24 @@ COMMAND_REGISTRY: dict[str, str] = {
     "project": "protocols.cli.handlers.project:cmd_project",
     "why": "protocols.cli.handlers.why:cmd_why",
     "tension": "protocols.cli.handlers.tension:cmd_tension",
+    # ==========================================================================
+    # v3: Shortcut and Legacy Management
+    # ==========================================================================
+    "shortcut": "protocols.cli.shortcuts:cmd_shortcut",
+    "legacy": "protocols.cli.legacy:cmd_legacy",
+    # ==========================================================================
+    # v3: Query and Subscribe Commands
+    # ==========================================================================
+    "query": "protocols.cli.handlers.query:cmd_query",
+    "subscribe": "protocols.cli.handlers.subscribe:cmd_subscribe",
+    # ==========================================================================
+    # Forest: AGENTESE-native forest health (self.forest.*)
+    # ==========================================================================
+    "forest": "protocols.cli.handlers.forest:cmd_forest",
+    # ==========================================================================
+    # Grow: Autopoietic Holon Generator (self.grow.*)
+    # ==========================================================================
+    "grow": "protocols.cli.handlers.grow:cmd_grow",
 }
 
 
@@ -535,6 +553,90 @@ def _sync_shutdown(verbose: bool = False) -> None:
         pass  # Best effort
 
 
+def _handle_agentese(args: list[str], flags: dict[str, Any]) -> int:
+    """
+    Handle AGENTESE direct paths, shortcuts, queries, and compositions.
+
+    v3 CLI Integration: Routes through Logos instead of command registry.
+
+    Args:
+        args: Command-line arguments (e.g., ["self.forest.manifest", "--json"])
+        flags: Global flags from parse_global_flags
+
+    Returns:
+        Exit code
+    """
+    import asyncio
+
+    try:
+        from protocols.cli.agentese_router import AgentesRouter, RouterConfig
+
+        # Build config from flags
+        config = RouterConfig(
+            json_output="--json" in args,
+            trace_output="--trace" in args,
+            dry_run="--dry-run" in args,
+        )
+
+        # Remove flags from args
+        clean_args = [a for a in args if a not in ("--json", "--trace", "--dry-run")]
+
+        # Bootstrap cortex if needed
+        if not flags.get("no_bootstrap"):
+            project_root = find_kgents_root()
+            verbose = "--verbose" in args or "-v" in args
+            _sync_bootstrap(project_root, verbose=verbose)
+
+        # Create router and execute
+        router = AgentesRouter(config=config)
+
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+
+        result = loop.run_until_complete(router.route(clean_args, None))
+
+        if not result.success:
+            print(f"Error: {result.error}")
+            return 1
+
+        # Output result
+        if config.json_output:
+            import json
+
+            print(json.dumps(result.result, indent=2, default=str))
+        elif result.result is not None:
+            try:
+                from rich.console import Console
+
+                if hasattr(result.result, "__rich__"):
+                    console = Console()
+                    console.print(result.result)
+                else:
+                    print(result.result)
+            except ImportError:
+                print(result.result)
+
+        if config.trace_output and result.trace_id:
+            print(f"\nTrace ID: {result.trace_id}")
+
+        return 0
+
+    except ImportError as e:
+        # Fallback if router not available
+        print(f"Error: AGENTESE router not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+    finally:
+        # Graceful shutdown
+        verbose = "--verbose" in args or "-v" in args
+        _sync_shutdown(verbose=verbose)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """
     The Hollow Shell entry point.
@@ -582,6 +684,33 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Extract command
     command = remaining[0]
     command_args = remaining[1:]
+
+    # v3: Check for AGENTESE direct paths, shortcuts, queries, and legacy commands
+    # These bypass the command registry and route through Logos
+    is_agentese_path = "." in command and command.split(".")[0] in {
+        "world",
+        "self",
+        "concept",
+        "void",
+        "time",
+    }
+    is_shortcut = command.startswith("/")
+    is_query = command.startswith("?")
+    is_composition = ">>" in " ".join(remaining)
+
+    # Check for legacy commands (before command registry check)
+    is_legacy = False
+    if not (is_agentese_path or is_shortcut or is_query or is_composition):
+        try:
+            from protocols.cli.legacy import is_legacy_command
+
+            is_legacy = is_legacy_command(remaining)
+        except ImportError:
+            pass
+
+    if is_agentese_path or is_shortcut or is_query or is_composition or is_legacy:
+        # Route through AGENTESE router
+        return _handle_agentese(remaining, flags)
 
     # Check for command-level help (no bootstrap needed)
     if flags["help"] or "--help" in command_args or "-h" in command_args:

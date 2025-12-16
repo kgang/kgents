@@ -28,7 +28,7 @@ from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import KgentsWidget, RenderTarget
 
 if TYPE_CHECKING:
-    pass
+    from protocols.projection.schema import UIHint
 
 
 @dataclass(frozen=True)
@@ -386,3 +386,19 @@ class DensityFieldWidget(KgentsWidget[DensityFieldState]):
             }
 
         return result
+
+    # =========================================================================
+    # Projection Integration
+    # =========================================================================
+
+    def ui_hint(self) -> "UIHint":
+        """
+        Return the UI hint for this widget.
+
+        DensityFields render as "graph" type (2D spatial data).
+        """
+        return "graph"
+
+    def widget_type(self) -> str:
+        """Override to return 'density_field' explicitly."""
+        return "density_field"

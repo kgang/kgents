@@ -90,18 +90,20 @@ async def stream_with_envelope(
                 last_heartbeat = now
 
         # Stream complete
-        complete_envelope = {
-            "meta": {
-                "status": "done",
-                "stream": {
-                    "received": received_count,
-                    "totalExpected": received_count,
-                },
-            },
+        complete_stream: dict[str, Any] = {
+            "received": received_count,
+            "totalExpected": received_count,
         }
         if include_timestamps:
-            complete_envelope["meta"]["stream"]["startedAt"] = started_at
-            complete_envelope["meta"]["stream"]["completedAt"] = time.time()
+            complete_stream["startedAt"] = started_at
+            complete_stream["completedAt"] = time.time()
+
+        complete_envelope: dict[str, Any] = {
+            "meta": {
+                "status": "done",
+                "stream": complete_stream,
+            },
+        }
 
         yield f"event: complete\ndata: {json.dumps(complete_envelope)}\n\n"
 

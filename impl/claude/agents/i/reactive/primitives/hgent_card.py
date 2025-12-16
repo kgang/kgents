@@ -23,7 +23,7 @@ from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import CompositeWidget, KgentsWidget, RenderTarget
 
 if TYPE_CHECKING:
-    pass
+    from protocols.projection.schema import UIHint
 
 Difficulty = Literal["low", "medium", "high"]
 CardStyle = Literal["compact", "full", "minimal"]
@@ -314,6 +314,22 @@ class ShadowCardWidget(CompositeWidget[ShadowCardState]):
             },
         }
 
+    # =========================================================================
+    # Projection Integration
+    # =========================================================================
+
+    def ui_hint(self) -> "UIHint":
+        """
+        Return the UI hint for this widget.
+
+        ShadowCards render as "card" type (introspection output).
+        """
+        return "card"
+
+    def widget_type(self) -> str:
+        """Override to return 'shadow_card' explicitly."""
+        return "shadow_card"
+
 
 # === Dialectic Card ===
 
@@ -548,3 +564,19 @@ class DialecticCardWidget(CompositeWidget[DialecticCardState]):
                 "header_glyph": self.slots["header_glyph"].project(RenderTarget.JSON),
             },
         }
+
+    # =========================================================================
+    # Projection Integration
+    # =========================================================================
+
+    def ui_hint(self) -> "UIHint":
+        """
+        Return the UI hint for this widget.
+
+        DialecticCards render as "card" type (dialectic synthesis output).
+        """
+        return "card"
+
+    def widget_type(self) -> str:
+        """Override to return 'dialectic_card' explicitly."""
+        return "dialectic_card"

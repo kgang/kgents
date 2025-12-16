@@ -477,6 +477,11 @@ class Logos:
     # v3: Path aliases registry
     _aliases: "AliasRegistry | None" = None
 
+    # Crown Jewel Brain integration (Session 3-4)
+    _memory_crystal: Any = None  # MemoryCrystal from agents.m
+    _cartographer: Any = None  # CartographerAgent from agents.m
+    _embedder: Any = None  # L-gent Embedder for semantic embeddings
+
     def __post_init__(self) -> None:
         """Initialize context resolvers if not already set."""
         if not self._context_resolvers:
@@ -487,6 +492,10 @@ class Logos:
                 b_gent=self._b_gent,
                 grammarian=self._grammarian,
                 capital_ledger=self._capital_ledger,
+                # Crown Jewel Brain (Session 3-4)
+                memory_crystal=self._memory_crystal,
+                cartographer=self._cartographer,
+                embedder=self._embedder,
             )
 
     # === v3 API: Make Logos callable ===
@@ -1414,6 +1423,10 @@ def create_logos(
     curator: "WundtCurator | None" = None,
     middleware: list["WundtCurator"] | None = None,
     telemetry: bool = False,
+    # Crown Jewel Brain integration (Session 3-4)
+    memory_crystal: Any = None,
+    cartographer: Any = None,
+    embedder: Any = None,
 ) -> Logos:
     """
     Create a Logos resolver with standard configuration.
@@ -1431,6 +1444,9 @@ def create_logos(
                    If provided, this takes precedence over the curator parameter.
                    The first WundtCurator in the list becomes the primary curator.
         telemetry: Enable OpenTelemetry tracing (Phase 6)
+        memory_crystal: MemoryCrystal for Four Pillars holographic memory (Session 3)
+        cartographer: CartographerAgent for holographic memory navigation (Session 3)
+        embedder: L-gent Embedder for semantic embeddings (Session 4)
 
     Returns:
         Configured Logos instance with Phase 2 context resolvers
@@ -1451,6 +1467,9 @@ def create_logos(
 
         # With telemetry enabled
         logos = create_logos(telemetry=True)
+
+        # With Crown Jewel Brain wiring (use create_brain_logos() for full wiring)
+        logos = create_logos(memory_crystal=crystal, embedder=embedder)
 
         # All outputs are filtered through the Wundt curve
         result = await logos.invoke("concept.story.manifest", observer)
@@ -1474,6 +1493,10 @@ def create_logos(
         _capital_ledger=capital_ledger,
         _curator=effective_curator,
         _telemetry_enabled=telemetry,
+        # Crown Jewel Brain (Session 3-4)
+        _memory_crystal=memory_crystal,
+        _cartographer=cartographer,
+        _embedder=embedder,
     )
     logos.__post_init__()  # Initialize context resolvers
     return logos

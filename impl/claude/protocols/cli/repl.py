@@ -503,60 +503,89 @@ class ReplState:
 
         color = context_colors.get(context, cyan)
 
+        # Special indicator for soul dialogue mode
+        magenta = rl("\033[35m")
+        if context == "self" and rest == "soul":
+            return f"{gray}({obs}){reset} {color}[{context}{reset}.{rest}{color}]{reset} {magenta}💬{reset} "
+
         if rest:
             return f"{gray}({obs}){reset} {color}[{context}{reset}.{rest}{color}]{reset} {yellow}»{reset} "
         else:
             return f"{gray}({obs}){reset} {color}[{context}]{reset} {yellow}»{reset} "
 
     def get_logos(self) -> Any:
-        """Get or create the Logos resolver (lazy initialization)."""
+        """Get or create the Logos resolver (lazy initialization).
+
+        Uses WiredLogos (AGENTESE v3) for path validation and proper integration.
+        Falls back to plain Logos if WiredLogos unavailable.
+        """
         if self._logos is None:
             try:
-                from protocols.agentese.logos import create_logos
+                # v3: Use WiredLogos for full integration
+                from protocols.agentese import create_minimal_wired_logos
 
-                self._logos = create_logos()
+                self._logos = create_minimal_wired_logos()
             except ImportError:
-                pass  # Logos not available, will use CLI fallback
+                try:
+                    # Fallback: plain Logos
+                    from protocols.agentese.logos import create_logos
+
+                    self._logos = create_logos()
+                except ImportError:
+                    pass  # Logos not available, will use CLI fallback
         return self._logos
 
     def get_umwelt(self) -> Any:
-        """Get or create Umwelt for current observer (lazy initialization)."""
+        """Get or create Umwelt for current observer (lazy initialization).
+
+        v3: Uses Observer class from AGENTESE for proper gradation support.
+        Falls back to legacy LightweightUmwelt if v3 Observer unavailable.
+        """
         if (
             self._umwelt is None
             or getattr(self._umwelt, "_observer_type", None) != self.observer
         ):
             try:
-                from agents.d.volatile import VolatileAgent
-                from bootstrap.umwelt import LightweightUmwelt
+                # v3: Use Observer class with from_archetype factory
+                from protocols.agentese import Observer as V3Observer
 
-                # Create a simple DNA-like object for the observer
-                @dataclass
-                class ObserverDNA:
-                    name: str = "repl_user"
-                    archetype: str = "explorer"
-                    capabilities: tuple[str, ...] = ()
+                v3_observer = V3Observer.from_archetype(self.observer)
+                # Wrap to track observer type for cache invalidation
+                self._umwelt = _UmweltWrapper(v3_observer, self.observer)
+            except (ImportError, AttributeError):
+                # Fallback: Legacy LightweightUmwelt construction
+                try:
+                    from agents.d.volatile import VolatileAgent
+                    from bootstrap.umwelt import LightweightUmwelt
 
-                dna = ObserverDNA(
-                    name="repl_user",
-                    archetype=self.observer,
-                    capabilities=("manifest", "witness", "affordances")
-                    if self.observer == "explorer"
-                    else ("manifest", "witness", "affordances", "define")
-                    if self.observer in ("developer", "architect", "admin")
-                    else (),
-                )
+                    # Create a simple DNA-like object for the observer
+                    @dataclass
+                    class ObserverDNA:
+                        name: str = "repl_user"
+                        archetype: str = "explorer"
+                        capabilities: tuple[str, ...] = ()
 
-                # Create lightweight umwelt with volatile storage
-                storage: Any = VolatileAgent(_state={})
-                umwelt = LightweightUmwelt(
-                    storage=storage,
-                    dna=dna,
-                    gravity=(),
-                )
-                # Wrap in a non-frozen container for cache tracking
-                self._umwelt = _UmweltWrapper(umwelt, self.observer)
-            except ImportError:
-                pass  # Umwelt not available
+                    dna = ObserverDNA(
+                        name="repl_user",
+                        archetype=self.observer,
+                        capabilities=("manifest", "witness", "affordances")
+                        if self.observer == "explorer"
+                        else ("manifest", "witness", "affordances", "define")
+                        if self.observer in ("developer", "architect", "admin")
+                        else (),
+                    )
+
+                    # Create lightweight umwelt with volatile storage
+                    storage: Any = VolatileAgent(_state={})
+                    umwelt = LightweightUmwelt(
+                        storage=storage,
+                        dna=dna,
+                        gravity=(),
+                    )
+                    # Wrap in a non-frozen container for cache tracking
+                    self._umwelt = _UmweltWrapper(umwelt, self.observer)
+                except ImportError:
+                    pass  # Umwelt not available
         return self._umwelt
 
     def get_fuzzy(self) -> Any:
@@ -589,11 +618,42 @@ class ReplState:
 # =============================================================================
 
 
+def _expand_aliases(line: str) -> str:
+    """
+    Expand aliases in the input line.
+
+    v3: Aliases are prefix expansions (first segment only).
+    "me.challenge" → "self.soul.challenge" (if "me" → "self.soul")
+
+    Args:
+        line: Raw input line from user
+
+    Returns:
+        Line with aliases expanded
+    """
+    # Don't expand special navigation or slash commands
+    if not line or line.startswith("/") or line in (".", "..", "..."):
+        return line
+
+    try:
+        from protocols.agentese import expand_aliases
+
+        # Get the global alias registry
+        registry = get_alias_registry()
+        if isinstance(registry, dict) and registry.get("_stub"):
+            return line  # No registry available
+
+        return expand_aliases(line, registry)
+    except ImportError:
+        return line
+
+
 def _parse_path_input(line: str) -> list[str]:
     """
     Parse input line into path parts, supporting both formats.
 
     Wave 5.1: Supports dotted paths for fast-forward navigation.
+    v3: Also expands aliases before parsing.
 
     Formats supported:
         "world dev"           → ["world", "dev"]       (space-separated)
@@ -603,6 +663,7 @@ def _parse_path_input(line: str) -> list[str]:
         "self.soul reflect"   → ["self", "soul", "reflect"]  (mixed)
         ".."                  → [".."]                 (special, preserved)
         "."                   → ["."]                  (special, preserved)
+        "me.challenge"        → ["self", "soul", "challenge"]  (alias expanded)
 
     Args:
         line: Raw input line from user
@@ -613,6 +674,9 @@ def _parse_path_input(line: str) -> list[str]:
     # Handle special navigation commands that use dots
     if line in (".", "..", "..."):
         return [line]
+
+    # v3: Expand aliases first
+    line = _expand_aliases(line)
 
     # Split by spaces first
     space_parts = line.split()
@@ -639,53 +703,86 @@ def handle_navigation(state: ReplState, parts: list[str]) -> str | None:
 
     Returns a message to display, or None for no output.
 
-    IMPORTANT: Only handles single-word navigation. Multi-word inputs
-    (e.g., "self status") should be treated as invocations, not navigation.
+    Supports:
+    - Single-word navigation: `self`, `soul`, `..`, `/`, `.`
+    - Fast-forward navigation: `self.soul`, `world.agents` (dotted paths to holons)
+
+    Multi-word inputs with aspects (e.g., "self soul reflect") are invocations, not navigation.
     """
     if not parts:
         return None
 
-    # Multi-word input = not navigation (it's an invocation)
-    if len(parts) > 1:
-        return None
-
     cmd = parts[0].lower()
 
-    # Root navigation
-    if cmd == "/":
-        state.path = []
-        return "\033[90m→ root\033[0m"
+    # Single-word commands first
+    if len(parts) == 1:
+        # Root navigation
+        if cmd == "/":
+            state.path = []
+            return "\033[90m→ root\033[0m"
 
-    # Go up
-    if cmd == "..":
-        if state.path:
-            removed = state.path.pop()
-            return f"\033[90m← {removed}\033[0m"
-        return "\033[90m(already at root)\033[0m"
+        # Go up
+        if cmd == "..":
+            if state.path:
+                removed = state.path.pop()
+                return f"\033[90m← {removed}\033[0m"
+            return "\033[90m(already at root)\033[0m"
 
-    # Show current path
-    if cmd == ".":
-        if state.path:
-            return f"\033[36m{state.current_path}\033[0m"
-        return "\033[36m(root)\033[0m"
+        # Show current path
+        if cmd == ".":
+            if state.path:
+                return f"\033[36m{state.current_path}\033[0m"
+            return "\033[36m(root)\033[0m"
 
-    # Context navigation (single word - can switch from anywhere)
-    if cmd in CONTEXTS:
-        if not state.path or state.path[0] != cmd:
-            state.path = [cmd]
-            return f"\033[90m→ {cmd}\033[0m"
-        # Already in this context - no-op
-        return f"\033[90m(already in {cmd})\033[0m"
+        # Context navigation (single word - can switch from anywhere)
+        if cmd in CONTEXTS:
+            if not state.path or state.path[0] != cmd:
+                state.path = [cmd]
+                return f"\033[90m→ {cmd}\033[0m"
+            # Already in this context - no-op
+            return f"\033[90m(already in {cmd})\033[0m"
 
-    # Holon navigation (when in a context, single word only)
-    if len(state.path) == 1:
-        context = state.path[0]
-        holons = CONTEXT_HOLONS.get(context, [])
-        if cmd in holons:
-            state.path.append(cmd)
-            return f"\033[90m→ {cmd}\033[0m"
+        # Holon navigation (when in a context, single word only)
+        if len(state.path) == 1:
+            context = state.path[0]
+            holons = CONTEXT_HOLONS.get(context, [])
+            if cmd in holons:
+                state.path.append(cmd)
+                # Special message for soul dialogue mode
+                if context == "self" and cmd == "soul":
+                    return (
+                        "\033[90m→ soul\033[0m\n"
+                        "\033[33mDialogue mode:\033[0m Text you type will be sent to K-gent soul.\n"
+                        "\033[90mUse\033[0m ?\033[90m for affordances,\033[0m ..\033[90m to exit,\033[0m "
+                        "reflect\033[90m/\033[0madvise\033[90m/\033[0mchallenge\033[90m/\033[0mexplore\033[90m for modes.\033[0m"
+                    )
+                return f"\033[90m→ {cmd}\033[0m"
 
-    return None  # Not a navigation command
+        return None  # Not a navigation command
+
+    # Fast-forward navigation: context.holon (exactly 2 parts)
+    # e.g., "self.soul", "world.agents", "void.entropy"
+    if len(parts) == 2:
+        context = parts[0].lower()
+        holon = parts[1].lower()
+
+        if context in CONTEXTS:
+            holons = CONTEXT_HOLONS.get(context, [])
+            if holon in holons:
+                # Valid fast-forward path - navigate there
+                state.path = [context, holon]
+                # Special message for soul dialogue mode
+                if context == "self" and holon == "soul":
+                    return (
+                        f"\033[90m→ {context}.{holon}\033[0m\n"
+                        "\033[33mDialogue mode:\033[0m Text you type will be sent to K-gent soul.\n"
+                        "\033[90mUse\033[0m ?\033[90m for affordances,\033[0m ..\033[90m to exit,\033[0m "
+                        "reflect\033[90m/\033[0madvise\033[90m/\033[0mchallenge\033[90m/\033[0mexplore\033[90m for modes.\033[0m"
+                    )
+                return f"\033[90m→ {context}.{holon}\033[0m"
+
+    # 3+ parts = likely an invocation (e.g., self.soul.reflect)
+    return None
 
 
 def handle_introspection(state: ReplState, cmd: str) -> str | None:
@@ -698,7 +795,81 @@ def handle_introspection(state: ReplState, cmd: str) -> str | None:
 
 
 def _show_affordances(state: ReplState) -> str:
-    """Show affordances for current location."""
+    """Show affordances for current location.
+
+    v3: Uses query API to get live affordances from Logos.
+    Falls back to static CONTEXT_HOLONS if query unavailable.
+    """
+    # v3: Try to use query API for live affordances
+    logos = state.get_logos()
+    if logos is not None:
+        result = _query_affordances(state, logos)
+        if result is not None:
+            return result
+
+    # Fallback: static affordances
+    return _show_static_affordances(state)
+
+
+def _query_affordances(state: ReplState, logos: Any) -> str | None:
+    """Use v3 query API to get live affordances."""
+    try:
+        from protocols.agentese import query
+
+        current = state.current_path or ""
+        observer = state.get_umwelt()
+
+        if not current:
+            # At root - query for contexts
+            pattern = "?*"
+        else:
+            # Query children of current path
+            pattern = f"?{current}.*"
+
+        result = query(logos, pattern, limit=50, observer=observer)
+
+        if not result:
+            return None
+
+        lines = ["\033[1mAffordances:\033[0m", ""]
+
+        if not current:
+            # Show contexts with descriptions
+            context_descs = {
+                "self": "Internal state, memory, soul",
+                "world": "Agents, infrastructure, resources",
+                "concept": "Laws, principles, dialectics",
+                "void": "Entropy, shadow, Accursed Share",
+                "time": "Traces, forecasts, schedules",
+            }
+            for match in result.matches:
+                ctx = match.path.split(".")[0] if "." in match.path else match.path
+                desc = context_descs.get(ctx, "")
+                lines.append(f"  \033[36m{ctx:<10}\033[0m  {desc}")
+        else:
+            # Show child paths
+            for match in result.matches:
+                # Strip current path prefix for cleaner display
+                child = match.path[len(current) + 1 :] if current else match.path
+                if match.affordances:
+                    affs = ", ".join(match.affordances[:3])
+                    lines.append(f"  \033[33m{child}\033[0m  ({affs})")
+                else:
+                    lines.append(f"  \033[33m{child}\033[0m")
+
+        if result.has_more:
+            lines.append(
+                f"  \033[90m... and {result.total_count - len(result)} more\033[0m"
+            )
+
+        return "\n".join(lines)
+
+    except (ImportError, Exception):
+        return None  # Fall back to static
+
+
+def _show_static_affordances(state: ReplState) -> str:
+    """Show static affordances (fallback when query unavailable)."""
     lines = ["\033[1mAffordances:\033[0m"]
 
     if not state.path:
@@ -729,7 +900,7 @@ def _show_affordances(state: ReplState) -> str:
     else:
         # In a holon - show aspects
         lines.append("")
-        aspects = ["manifest", "witness", "affordances", "refine"]
+        aspects = ["manifest", "witness", "affordances", "help", "refine"]
         for aspect in aspects:
             lines.append(f"  \033[33m{aspect}\033[0m")
         lines.append("")
@@ -739,10 +910,50 @@ def _show_affordances(state: ReplState) -> str:
 
 
 def _show_detailed_help(state: ReplState) -> str:
-    """Show detailed help for current location."""
+    """Show detailed help for current location.
+
+    v3: When at a specific path, invokes the `help` aspect via Logos.
+    Falls back to static help when Logos unavailable.
+    """
     if not state.path:
         return HELP_TEXT
 
+    # v3: Try to invoke help aspect via Logos
+    logos = state.get_logos()
+    observer = state.get_umwelt()
+    if logos is not None and observer is not None and len(state.path) >= 2:
+        # At a holon or deeper - try help aspect
+        help_result = _invoke_help_aspect(state, logos, observer)
+        if help_result is not None:
+            return help_result
+
+    # Fallback: static context help
+    return _show_static_detailed_help(state)
+
+
+def _invoke_help_aspect(state: ReplState, logos: Any, observer: Any) -> str | None:
+    """Invoke the help aspect via Logos."""
+    try:
+        import asyncio
+
+        path = state.current_path
+        if not path:
+            return None
+
+        # Invoke help aspect
+        full_path = f"{path}.help"
+        result = asyncio.run(logos.invoke(full_path, observer))
+
+        if result:
+            return str(result)
+        return None
+
+    except (ImportError, Exception):
+        return None  # Fall back to static
+
+
+def _show_static_detailed_help(state: ReplState) -> str:
+    """Show static detailed help (fallback when Logos unavailable)."""
     context = state.path[0]
 
     context_help = {
@@ -1301,6 +1512,141 @@ def handle_observer_command(state: ReplState, line: str) -> str:
     return _error_with_sympathy(
         f"Unknown command: {cmd}",
         suggestion="Try: /observer, /observer developer, /observers",
+    )
+
+
+# =============================================================================
+# v3: Alias Management
+# =============================================================================
+
+
+# Global alias registry (lazy-initialized)
+_alias_registry: Any | None = None
+
+
+def get_alias_registry() -> Any:
+    """Get or create the global alias registry."""
+    global _alias_registry
+    if _alias_registry is None:
+        try:
+            from protocols.agentese import (
+                create_alias_registry,
+                get_default_aliases_path,
+            )
+
+            _alias_registry = create_alias_registry(
+                persistence_path=get_default_aliases_path(),
+                include_standard=True,
+                load_from_disk=True,
+            )
+        except ImportError:
+            # Stub registry if agentese not available
+            _alias_registry = {"_stub": True}
+    return _alias_registry
+
+
+def handle_alias_command(state: ReplState, line: str) -> str:
+    """
+    Handle alias management commands.
+
+    Commands:
+        /alias                 - List all aliases
+        /aliases               - List all aliases (synonym)
+        /alias <name> <path>   - Create alias
+        /unalias <name>        - Remove alias
+    """
+    parts = line.strip().split()
+    cmd = parts[0].lower()
+
+    registry = get_alias_registry()
+
+    # Check if registry is just a stub
+    if isinstance(registry, dict) and registry.get("_stub"):
+        return "\033[31mAlias system not available\033[0m (agentese module not found)"
+
+    try:
+        from protocols.agentese import (
+            AliasError,
+            AliasNotFoundError,
+            AliasShadowError,
+        )
+    except ImportError:
+        return "\033[31mAlias system not available\033[0m"
+
+    if cmd in ("/alias", "/aliases"):
+        if len(parts) == 1:
+            # List all aliases
+            aliases = registry.list_aliases()
+            if not aliases:
+                return "\033[90mNo aliases defined.\033[0m\nUse: /alias <name> <path>"
+
+            lines = ["\033[1mAliases:\033[0m", ""]
+
+            # Show standard aliases
+            from protocols.agentese import create_standard_aliases
+
+            standard = create_standard_aliases()
+            custom = {k: v for k, v in aliases.items() if k not in standard}
+            builtin = {k: v for k, v in aliases.items() if k in standard}
+
+            if builtin:
+                lines.append("  \033[90mStandard:\033[0m")
+                for name, target in sorted(builtin.items()):
+                    lines.append(f"    \033[33m{name:<15}\033[0m → {target}")
+
+            if custom:
+                if builtin:
+                    lines.append("")
+                lines.append("  \033[90mUser-defined:\033[0m")
+                for name, target in sorted(custom.items()):
+                    lines.append(f"    \033[33m{name:<15}\033[0m → {target}")
+
+            lines.append("")
+            lines.append(
+                "\033[90mUsage: /alias <name> <path> or /unalias <name>\033[0m"
+            )
+            return "\n".join(lines)
+
+        if len(parts) == 2:
+            # Show specific alias
+            name = parts[1]
+            target = registry.get(name)
+            if target:
+                return f"\033[33m{name}\033[0m → {target}"
+            return f"\033[90mAlias '{name}' not found\033[0m"
+
+        if len(parts) >= 3:
+            # Create alias: /alias name path
+            name = parts[1]
+            target = parts[2]
+
+            try:
+                registry.register(name, target)
+                registry.save()
+                return f"\033[32mAlias created:\033[0m {name} → {target}"
+            except AliasShadowError as e:
+                return f"\033[31mError:\033[0m {e}"
+            except AliasError as e:
+                return f"\033[31mError:\033[0m {e}"
+
+    if cmd == "/unalias":
+        if len(parts) < 2:
+            return "\033[90mUsage:\033[0m /unalias <name>"
+
+        name = parts[1]
+
+        try:
+            registry.unregister(name)
+            registry.save()
+            return f"\033[32mAlias removed:\033[0m {name}"
+        except AliasNotFoundError:
+            return f"\033[31mAlias not found:\033[0m {name}"
+        except AliasError as e:
+            return f"\033[31mError:\033[0m {e}"
+
+    return _error_with_sympathy(
+        f"Unknown alias command: {cmd}",
+        suggestion="Try: /alias, /aliases, /alias me self.soul, /unalias me",
     )
 
 
@@ -2504,6 +2850,16 @@ def run_repl(
                 else:
                     hint = get_contextual_hint(state)
                     print(hint if hint else "Type '?' for available commands.")
+                continue
+
+            # v3: Alias management commands
+            if (
+                line.startswith("/alias")
+                or line == "/aliases"
+                or line.startswith("/unalias")
+            ):
+                alias_result = handle_alias_command(state, line)
+                print(alias_result)
                 continue
 
             # Wave 4: Check for slash shortcuts (joy-inducing commands)

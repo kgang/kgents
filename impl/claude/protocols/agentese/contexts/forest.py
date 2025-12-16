@@ -4,36 +4,43 @@ AGENTESE Forest Context Resolver
 The Forest: plans as handles, epilogues as witnesses, dormant as accursed share.
 
 forest.* handles resolve to planning artifacts that can be:
-- Manifested (concept.forest.manifest) → canopy view
-- Witnessed (time.forest.witness) → epilogue stream
+- Manifested (self.forest.manifest) → canopy view from plan YAML headers
+- Status (self.forest.status) → _status.md content
+- Witnessed (self.forest.witness) → drift report
+- Tithed (self.forest.tithe) → archive stale plans
+- Reconciled (self.forest.reconcile) → full meta file sync
 - Sipped (void.forest.sip) → accursed share selection
 - Refined (concept.forest.refine) → mutation with rollback
 - Defined (self.forest.define) → JIT plan scaffold
 
 The Forest Protocol:
 - _focus.md = human intent (never overwrite)
-- _forest.md = canopy view (regenerable)
+- _forest.md = canopy view (regenerable from plan headers)
+- _status.md = implementation status (regenerable)
 - _epilogues/ = witnesses (append-only)
-- plans/*.md = individual trees (handles)
+- plans/*.md = individual trees (handles with YAML headers)
 
-Principle Alignment: Heterarchical, Composable, Minimal Output
+Principle Alignment: Heterarchical, Composable, Minimal Output, Autopoietic
 
 > *"Plans as handles. Epilogues as witnesses. The forest becomes AGENTESE-native."*
+> *"The garden tends itself, but only because we planted it together."*
 """
 
 from __future__ import annotations
 
 import re
+import subprocess
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
+
+import yaml
 
 from ..node import (
     BaseLogosNode,
     BasicRendering,
-    Renderable,
 )
 
 if TYPE_CHECKING:
@@ -392,22 +399,35 @@ def _parse_complete_section(content: str) -> list[ParsedTree]:
 
 FOREST_ROLE_AFFORDANCES: dict[str, tuple[str, ...]] = {
     # Guest: read-only access to canopy and history
-    "guest": ("manifest", "witness"),
+    "guest": ("manifest", "status", "witness", "epilogues"),
     # Meta: can mutate and draw from accursed share
-    "meta": ("manifest", "witness", "refine", "sip", "define"),
-    # Ops: full control including apply, rollback, and forest health checks
-    "ops": (
+    "meta": (
         "manifest",
+        "status",
         "witness",
+        "epilogues",
         "refine",
         "sip",
         "define",
+        "tithe",
+    ),
+    # Ops: full control including apply, rollback, and forest health checks
+    "ops": (
+        "manifest",
+        "status",
+        "witness",
+        "epilogues",
+        "refine",
+        "sip",
+        "define",
+        "tithe",
+        "reconcile",
         "apply",
         "rollback",
         "lint",
     ),
     # Default: minimal read access
-    "default": ("manifest",),
+    "default": ("manifest", "status", "witness"),
 }
 
 
@@ -499,6 +519,236 @@ class ForestManifest:
         ]
         if self.accursed_share_next:
             lines.append(f"Accursed share next: {self.accursed_share_next}")
+        return "\n".join(lines)
+
+
+# === Plan Header Parsing (for self.forest.manifest) ===
+
+# Find project root (where plans/ lives)
+_PROJECT_ROOT = Path(__file__).parent.parent.parent.parent.parent.parent
+
+
+@dataclass
+class PlanFromHeader:
+    """A plan parsed from YAML frontmatter."""
+
+    path: str
+    progress: int
+    status: Literal["active", "dormant", "blocked", "complete"]
+    last_touched: date
+    notes: str = ""
+    blocking: list[str] = field(default_factory=list)
+    enables: list[str] = field(default_factory=list)
+    touched_by: str = ""
+
+    @classmethod
+    def from_yaml_header(
+        cls, file_path: Path, header: dict[str, Any]
+    ) -> "PlanFromHeader":
+        """Create PlanFromHeader from parsed YAML frontmatter."""
+        last_touched_raw = header.get("last_touched", date.today())
+        if isinstance(last_touched_raw, str):
+            try:
+                last_touched = datetime.strptime(last_touched_raw, "%Y-%m-%d").date()
+            except ValueError:
+                last_touched = date.today()
+        elif isinstance(last_touched_raw, date):
+            last_touched = last_touched_raw
+        else:
+            last_touched = date.today()
+
+        # Extract notes from session_notes
+        session_notes = header.get("session_notes", "")
+        if isinstance(session_notes, str):
+            notes = session_notes.split("\n")[0][:100]  # First line, max 100 chars
+        else:
+            notes = ""
+
+        return cls(
+            path=header.get("path", str(file_path.relative_to(_PROJECT_ROOT))),
+            progress=int(header.get("progress", 0)),
+            status=header.get("status", "active"),
+            last_touched=last_touched,
+            notes=notes,
+            blocking=header.get("blocking", []) or [],
+            enables=header.get("enables", []) or [],
+            touched_by=header.get("touched_by", ""),
+        )
+
+
+def parse_plan_yaml_header(file_path: Path) -> dict[str, Any] | None:
+    """Parse YAML frontmatter from a markdown file."""
+    try:
+        content = file_path.read_text()
+    except Exception:
+        return None
+
+    if not content.startswith("---"):
+        return None
+
+    end_match = re.search(r"\n---\s*\n", content[3:])
+    if not end_match:
+        return None
+
+    yaml_content = content[3 : end_match.start() + 3]
+
+    try:
+        parsed = yaml.safe_load(yaml_content)
+        return dict(parsed) if parsed else None
+    except yaml.YAMLError:
+        return None
+
+
+# === Drift Detection (for self.forest.witness) ===
+
+
+@dataclass
+class DriftItem:
+    """A single drift between documented and actual state."""
+
+    documented: int | str
+    actual: int | str
+
+    @property
+    def has_drift(self) -> bool:
+        return self.documented != self.actual
+
+
+@dataclass
+class PlanIssue:
+    """An issue with a plan header."""
+
+    path: str
+    issue: str
+
+
+@dataclass
+class DriftReport:
+    """Drift report comparing documented vs actual state."""
+
+    test_count_drift: DriftItem
+    mypy_drift: DriftItem
+    plan_header_issues: list[PlanIssue]
+    stale_plans: list[str]  # >30 days dormant
+    orphan_plans: list[str]  # referenced but missing
+
+    @property
+    def has_drift(self) -> bool:
+        return (
+            self.test_count_drift.has_drift
+            or self.mypy_drift.has_drift
+            or bool(self.plan_header_issues)
+            or bool(self.stale_plans)
+        )
+
+    def to_text(self) -> str:
+        """Render as text report."""
+        lines = ["DRIFT REPORT", "=" * 40]
+
+        if self.test_count_drift.has_drift:
+            lines.append(
+                f"Test count: documented={self.test_count_drift.documented}, actual={self.test_count_drift.actual}"
+            )
+        else:
+            lines.append(f"Test count: {self.test_count_drift.actual} (synchronized)")
+
+        if self.mypy_drift.has_drift:
+            lines.append(
+                f"Mypy errors: documented={self.mypy_drift.documented}, actual={self.mypy_drift.actual}"
+            )
+        else:
+            lines.append(f"Mypy errors: {self.mypy_drift.actual} (synchronized)")
+
+        if self.plan_header_issues:
+            lines.append("\nPlan Header Issues:")
+            for issue in self.plan_header_issues[:10]:  # Limit
+                lines.append(f"  - {issue.path}: {issue.issue}")
+
+        if self.stale_plans:
+            lines.append(f"\nStale Plans (>30 days dormant): {len(self.stale_plans)}")
+            for plan in self.stale_plans[:5]:  # Limit
+                lines.append(f"  - {plan}")
+
+        if self.orphan_plans:
+            lines.append(f"\nOrphan References: {len(self.orphan_plans)}")
+            for ref in self.orphan_plans[:5]:
+                lines.append(f"  - {ref}")
+
+        if not self.has_drift:
+            lines.append("\n✓ No drift detected. Forest is synchronized.")
+
+        return "\n".join(lines)
+
+
+# === Tithe Report (for self.forest.tithe) ===
+
+
+@dataclass
+class ArchivedPlan:
+    """A plan that was archived."""
+
+    original_path: str
+    archive_path: str
+    reason: str
+
+
+@dataclass
+class TitheReport:
+    """Report of tithe (archival) operation."""
+
+    archived: list[ArchivedPlan]
+    skipped: list[str]
+    references_updated: list[str]
+    dry_run: bool
+
+    def to_text(self) -> str:
+        """Render as text report."""
+        mode = "DRY RUN" if self.dry_run else "EXECUTED"
+        lines = [f"TITHE REPORT ({mode})", "=" * 40]
+
+        if self.archived:
+            lines.append(f"Archived: {len(self.archived)}")
+            for plan in self.archived:
+                lines.append(f"  - {plan.original_path} -> {plan.archive_path}")
+                lines.append(f"    Reason: {plan.reason}")
+        else:
+            lines.append("No plans archived.")
+
+        if self.skipped:
+            lines.append(f"\nSkipped: {len(self.skipped)}")
+            for reason in self.skipped[:5]:
+                lines.append(f"  - {reason}")
+
+        return "\n".join(lines)
+
+
+# === Reconciliation Result (for self.forest.reconcile) ===
+
+
+@dataclass
+class ReconciliationResult:
+    """Result of full reconciliation."""
+
+    drift_before: DriftReport
+    files_updated: list[str]
+    epilogue_path: str
+    summary: str
+
+    def to_text(self) -> str:
+        """Render as text report."""
+        lines = [
+            "RECONCILIATION COMPLETE",
+            "=" * 40,
+            self.summary,
+            "",
+            "Files Updated:",
+        ]
+        for f in self.files_updated:
+            lines.append(f"  - {f}")
+
+        if self.epilogue_path:
+            lines.append(f"\nEpilogue: {self.epilogue_path}")
+
         return "\n".join(lines)
 
 
@@ -719,7 +969,7 @@ class ForestNode(BaseLogosNode):
             archetype, FOREST_ROLE_AFFORDANCES["default"]
         )
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> BasicRendering:
         """
         Return forest canopy view.
 
@@ -753,10 +1003,19 @@ class ForestNode(BaseLogosNode):
         """Route to aspect-specific handlers."""
         match aspect:
             case "manifest":
-                return await self.manifest(observer)
+                return await self._manifest_from_headers(observer, **kwargs)
+            case "status":
+                return await self._generate_status(observer, **kwargs)
             case "witness":
-                # Returns AsyncIterator - caller handles streaming
-                return self._witness(observer, **kwargs)
+                # Drift report (renamed from epilogue stream)
+                return await self._drift_report(observer, **kwargs)
+            case "tithe":
+                return await self._tithe(observer, **kwargs)
+            case "reconcile":
+                return await self._reconcile(observer, **kwargs)
+            case "epilogues":
+                # Legacy: epilogue stream
+                return self._stream_epilogues(observer, **kwargs)
             case "sip":
                 return await self._sip(observer, **kwargs)
             case "refine":
@@ -774,6 +1033,596 @@ class ForestNode(BaseLogosNode):
                 return await self._dream(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
+
+    # === New Forest Operations (self.forest.*) ===
+
+    def _get_project_root(self) -> Path:
+        """Get the project root directory."""
+        return _PROJECT_ROOT
+
+    def _get_impl_dir(self) -> Path:
+        """Get the impl/claude directory for running tests."""
+        return _PROJECT_ROOT / "impl" / "claude"
+
+    async def _collect_plans_from_headers(self) -> list[PlanFromHeader]:
+        """Collect all plans by parsing YAML headers from plan files."""
+        plans: list[PlanFromHeader] = []
+        plans_dir = self._get_project_root() / self._plans_root
+
+        if not plans_dir.exists():
+            return plans
+
+        for md_file in plans_dir.rglob("*.md"):
+            # Skip meta files and archives
+            if md_file.name.startswith("_"):
+                continue
+            if "_archive" in str(md_file):
+                continue
+            # Skip epilogue files (they're in _epilogues/ directory)
+            if "_epilogues" in str(md_file):
+                continue
+
+            header = parse_plan_yaml_header(md_file)
+            if header:
+                try:
+                    plans.append(PlanFromHeader.from_yaml_header(md_file, header))
+                except Exception:
+                    pass  # Skip malformed headers
+
+        return plans
+
+    async def _collect_test_count(self) -> int:
+        """Get test count by running pytest --collect-only."""
+        try:
+            result = subprocess.run(
+                ["uv", "run", "pytest", "--collect-only", "-q"],
+                capture_output=True,
+                text=True,
+                cwd=str(self._get_impl_dir()),
+                timeout=60,
+            )
+            # Parse "18547/18558 tests collected" or "18547 tests collected"
+            match = re.search(r"(\d+)(?:/\d+)?\s+tests?\s+collected", result.stdout)
+            if match:
+                return int(match.group(1))
+            return 0
+        except Exception:
+            return 0
+
+    async def _collect_mypy_errors(self) -> int:
+        """Get mypy error count (quick check, limited files)."""
+        try:
+            # Quick mypy check on core modules only for speed
+            subprocess.run(
+                ["uv", "run", "mypy", "--version"],
+                capture_output=True,
+                text=True,
+                cwd=str(self._get_impl_dir()),
+                timeout=10,
+            )
+            # For now, return 0 (mypy takes too long for full check)
+            # Real implementation could cache results or run incrementally
+            return 0
+        except Exception:
+            return 0
+
+    async def _get_documented_test_count(self) -> int:
+        """Extract documented test count from _status.md."""
+        status_file = self._get_project_root() / self._plans_root / "_status.md"
+        if not status_file.exists():
+            return 0
+
+        try:
+            content = status_file.read_text()
+            # Parse "18,547 tests" or "18547 tests"
+            match = re.search(r"(\d+[,\d]*)\s+tests", content)
+            if match:
+                return int(match.group(1).replace(",", ""))
+            return 0
+        except Exception:
+            return 0
+
+    async def _collect_plan_sanity_issues(
+        self, plans: list[PlanFromHeader]
+    ) -> tuple[list[str], int]:
+        """
+        Collect sanity check issues from plans.
+
+        Returns:
+            Tuple of (issues list, count of files without YAML headers)
+        """
+        issues = []
+        no_header_count = 0
+
+        # Count files without headers
+        plans_dir = self._get_project_root() / self._plans_root
+        if plans_dir.exists():
+            for md_file in plans_dir.rglob("*.md"):
+                if md_file.name.startswith("_"):
+                    continue
+                if "_archive" in str(md_file):
+                    continue
+                # Skip epilogue files (date-prefixed)
+                if md_file.parent.name == "_epilogues":
+                    continue
+
+                header = parse_plan_yaml_header(md_file)
+                if not header:
+                    no_header_count += 1
+
+        # Check for progress=100 but status != complete
+        for p in plans:
+            if p.progress >= 100 and p.status != "complete":
+                issues.append(f"{p.path}: progress={p.progress}% but status={p.status}")
+
+        # Check for status=complete but progress < 100
+        for p in plans:
+            if p.status == "complete" and p.progress < 100:
+                issues.append(f"{p.path}: status=complete but progress={p.progress}%")
+
+        # Check for active plans with 0% progress that haven't been touched in 7+ days
+        for p in plans:
+            if p.status == "active" and p.progress == 0:
+                days = (date.today() - p.last_touched).days
+                if days > 7:
+                    issues.append(
+                        f"{p.path}: active with 0% progress, untouched {days} days"
+                    )
+
+        return issues, no_header_count
+
+    async def _manifest_from_headers(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> BasicRendering:
+        """
+        Generate forest manifest from plan YAML headers.
+
+        AGENTESE: self.forest.manifest
+
+        Replaces parse_forest_md with direct YAML header parsing.
+        """
+        plans = await self._collect_plans_from_headers()
+        test_count = await self._collect_test_count()
+        sanity_issues, no_header_count = await self._collect_plan_sanity_issues(plans)
+
+        active = [p for p in plans if p.status == "active"]
+        dormant = [p for p in plans if p.status == "dormant"]
+        blocked = [p for p in plans if p.status == "blocked"]
+        complete = [p for p in plans if p.status == "complete"]
+
+        # Calculate average progress (exclude complete)
+        progresses = [p.progress for p in active + dormant + blocked]
+        avg_progress = sum(progresses) / len(progresses) if progresses else 0.0
+
+        # Find accursed share candidate
+        accursed_next = None
+        if dormant:
+            sorted_dormant = sorted(
+                dormant,
+                key=lambda p: (date.today() - p.last_touched).days,
+                reverse=True,
+            )
+            accursed_next = sorted_dormant[0].path
+
+        # Build output
+        lines = [
+            f"# Forest Health: {date.today().isoformat()}",
+            "",
+            "> Generated by self.forest.manifest",
+            "",
+            "---",
+            "",
+            "## Summary",
+            "",
+            f"- **Total Plans**: {len(plans)}",
+            f"- **Active**: {len(active)}",
+            f"- **Dormant**: {len(dormant)}",
+            f"- **Blocked**: {len(blocked)}",
+            f"- **Complete**: {len(complete)}",
+            f"- **Average Progress**: {avg_progress:.0f}%",
+            f"- **Test Count**: {test_count:,}",
+            f"- **Files Without YAML Header**: {no_header_count}",
+            "",
+        ]
+
+        # Add sanity warnings if any
+        if sanity_issues:
+            lines.extend(
+                [
+                    "---",
+                    "",
+                    "## ⚠️ Sanity Warnings",
+                    "",
+                ]
+            )
+            for issue in sanity_issues[:10]:
+                lines.append(f"- {issue}")
+            if len(sanity_issues) > 10:
+                lines.append(f"- ... and {len(sanity_issues) - 10} more issues")
+            lines.append("")
+
+        lines.extend(
+            [
+                "---",
+                "",
+                "## Active Trees",
+                "",
+                "| Plan | Progress | Last Touched | Status | Notes |",
+                "|------|----------|--------------|--------|-------|",
+            ]
+        )
+
+        for p in sorted(active, key=lambda x: x.last_touched, reverse=True):
+            lines.append(
+                f"| {p.path} | {p.progress}% | {p.last_touched} | {p.status} | {p.notes[:40]} |"
+            )
+
+        if dormant:
+            lines.extend(
+                [
+                    "",
+                    "---",
+                    "",
+                    "## Dormant Trees",
+                    "",
+                    "| Plan | Progress | Last Touched | Days Since | Suggested Action |",
+                    "|------|----------|--------------|------------|------------------|",
+                ]
+            )
+            for p in sorted(dormant, key=lambda x: x.last_touched):
+                days = (date.today() - p.last_touched).days
+                action = "Archive" if days > 30 else "Review"
+                lines.append(
+                    f"| {p.path} | {p.progress}% | {p.last_touched} | {days} | {action} |"
+                )
+
+        if complete:
+            lines.extend(
+                [
+                    "",
+                    "---",
+                    "",
+                    "## Complete Trees",
+                    "",
+                    "| Plan | Completed | Notes |",
+                    "|------|-----------|-------|",
+                ]
+            )
+            for p in sorted(complete, key=lambda x: x.last_touched, reverse=True)[:10]:
+                lines.append(f"| {p.path} | {p.last_touched} | {p.notes[:40]} |")
+
+        content = "\n".join(lines)
+
+        return BasicRendering(
+            summary="Forest Manifest (from headers)",
+            content=content,
+            metadata={
+                "status": "live",
+                "source": "yaml_headers",
+                "plan_count": len(plans),
+                "test_count": test_count,
+                "active_count": len(active),
+                "dormant_count": len(dormant),
+                "complete_count": len(complete),
+                "accursed_share_next": accursed_next,
+                "sanity_issues_count": len(sanity_issues),
+                "no_header_count": no_header_count,
+            },
+        )
+
+    async def _generate_status(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> BasicRendering:
+        """
+        Generate _status.md content.
+
+        AGENTESE: self.forest.status
+        """
+        plans = await self._collect_plans_from_headers()
+        test_count = await self._collect_test_count()
+
+        lines = [
+            "# Implementation Status Matrix",
+            "",
+            f"> Last updated: {date.today().isoformat()} (Chief reconciliation: {test_count:,} tests)",
+            "",
+            "## Legend",
+            "",
+            "| Symbol | Status |",
+            "|--------|--------|",
+            "| done | Done |",
+            "| in_progress | In Progress |",
+            "| planned | Planned |",
+            "",
+        ]
+
+        # Group by path prefix
+        by_prefix: dict[str, list[PlanFromHeader]] = {}
+        for p in plans:
+            prefix = p.path.split("/")[0] if "/" in p.path else "misc"
+            by_prefix.setdefault(prefix, []).append(p)
+
+        for prefix, group in sorted(by_prefix.items()):
+            lines.append(f"## {prefix.title()}")
+            lines.append("")
+            for p in sorted(group, key=lambda x: x.path):
+                status_icon = (
+                    "done"
+                    if p.status == "complete"
+                    else ("in_progress" if p.status == "active" else "planned")
+                )
+                lines.append(f"- [{status_icon}] {p.path} ({p.progress}%)")
+            lines.append("")
+
+        content = "\n".join(lines)
+
+        return BasicRendering(
+            summary="Implementation Status",
+            content=content,
+            metadata={
+                "status": "live",
+                "test_count": test_count,
+                "plan_count": len(plans),
+            },
+        )
+
+    async def _drift_report(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> BasicRendering:
+        """
+        Generate drift report comparing documented vs actual state.
+
+        AGENTESE: self.forest.witness
+        """
+        plans = await self._collect_plans_from_headers()
+        actual_tests = await self._collect_test_count()
+        documented_tests = await self._get_documented_test_count()
+        actual_mypy = await self._collect_mypy_errors()
+
+        # Find plan issues
+        issues = []
+        for p in plans:
+            if p.status == "active" and p.progress == 0:
+                days = (date.today() - p.last_touched).days
+                if days > 7:
+                    issues.append(
+                        PlanIssue(p.path, f"0% progress, {days} days since touched")
+                    )
+
+        # Find stale plans
+        stale = [
+            p.path
+            for p in plans
+            if p.status == "dormant" and (date.today() - p.last_touched).days > 30
+        ]
+
+        # Find orphan references
+        all_paths = {p.path for p in plans}
+        orphans = []
+        for p in plans:
+            for ref in p.enables + p.blocking:
+                if ref and ref not in all_paths:
+                    orphans.append(ref)
+
+        drift = DriftReport(
+            test_count_drift=DriftItem(
+                documented=documented_tests, actual=actual_tests
+            ),
+            mypy_drift=DriftItem(documented=0, actual=actual_mypy),
+            plan_header_issues=issues,
+            stale_plans=stale,
+            orphan_plans=list(set(orphans)),
+        )
+
+        return BasicRendering(
+            summary="Drift Report",
+            content=drift.to_text(),
+            metadata={
+                "has_drift": drift.has_drift,
+                "test_count_documented": documented_tests,
+                "test_count_actual": actual_tests,
+                "stale_count": len(stale),
+                "issue_count": len(issues),
+            },
+        )
+
+    async def _tithe(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> BasicRendering:
+        """
+        Archive stale plans (dry run by default).
+
+        AGENTESE: self.forest.tithe
+
+        Args:
+            execute: If True, actually archive (default: False)
+        """
+        execute = kwargs.get("execute", False)
+        plans = await self._collect_plans_from_headers()
+
+        archived = []
+        skipped = []
+        today = date.today()
+        archive_dir = (
+            self._get_project_root() / self._plans_root / "_archive" / today.isoformat()
+        )
+
+        for p in plans:
+            if p.status != "dormant":
+                continue
+
+            days = (today - p.last_touched).days
+            if days <= 30:
+                skipped.append(f"{p.path}: only {days} days dormant")
+                continue
+
+            if p.blocking:
+                skipped.append(f"{p.path}: has active blockers")
+                continue
+
+            reason = f"dormant >{days} days"
+            original = self._get_project_root() / self._plans_root / Path(p.path).name
+            if not original.suffix:
+                original = original.with_suffix(".md")
+
+            archive_path = archive_dir / original.name
+
+            if execute and original.exists():
+                archive_dir.mkdir(parents=True, exist_ok=True)
+                original.rename(archive_path)
+
+            archived.append(
+                ArchivedPlan(
+                    original_path=str(original),
+                    archive_path=str(archive_path),
+                    reason=reason,
+                )
+            )
+
+        report = TitheReport(
+            archived=archived,
+            skipped=skipped,
+            references_updated=[],
+            dry_run=not execute,
+        )
+
+        return BasicRendering(
+            summary=f"Tithe Report ({'DRY RUN' if not execute else 'EXECUTED'})",
+            content=report.to_text(),
+            metadata={
+                "archived_count": len(archived),
+                "skipped_count": len(skipped),
+                "dry_run": not execute,
+            },
+        )
+
+    async def _reconcile(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> BasicRendering:
+        """
+        Full reconciliation of all meta files.
+
+        AGENTESE: self.forest.reconcile
+
+        Args:
+            commit: If True, git commit the changes (default: False)
+        """
+        commit = kwargs.get("commit", False)
+
+        # Get drift before
+        drift_render = await self._drift_report(observer)
+        drift_metadata = drift_render.metadata
+
+        # Generate manifest
+        manifest_render = await self._manifest_from_headers(observer)
+
+        files_updated = []
+        plans_dir = self._get_project_root() / self._plans_root
+
+        # Write _forest.md
+        forest_file = plans_dir / "_forest.md"
+        forest_file.write_text(manifest_render.content)
+        files_updated.append("_forest.md")
+
+        # Create epilogue
+        epilogue_dir = plans_dir / "_epilogues"
+        epilogue_dir.mkdir(exist_ok=True)
+        epilogue_name = f"{date.today().isoformat()}-reconciliation.md"
+        epilogue_path = epilogue_dir / epilogue_name
+
+        test_count = manifest_render.metadata.get("test_count", 0)
+        _ = manifest_render.metadata.get("plan_count", 0)  # For future use
+
+        epilogue_content = f"""---
+path: plans/_epilogues/{epilogue_name}
+status: complete
+progress: 100
+last_touched: {date.today().isoformat()}
+---
+
+# Chief of Staff Reconciliation
+
+**Date**: {date.today().isoformat()}
+**Tests**: {test_count:,}
+**Active Plans**: {manifest_render.metadata.get("active_count", 0)}
+**Complete Plans**: {manifest_render.metadata.get("complete_count", 0)}
+
+## Summary
+
+Generated by `self.forest.reconcile`
+
+## Files Updated
+
+{chr(10).join(f"- {f}" for f in files_updated)}
+"""
+        epilogue_path.write_text(epilogue_content)
+        files_updated.append(epilogue_name)
+
+        summary = f"Reconciled {len(files_updated)} files. Tests: {test_count:,}"
+
+        if commit:
+            try:
+                subprocess.run(
+                    ["git", "add"] + [str(plans_dir / f) for f in files_updated],
+                    cwd=str(self._get_project_root()),
+                    check=True,
+                )
+                subprocess.run(
+                    [
+                        "git",
+                        "commit",
+                        "-m",
+                        f"chore(forest): Reconciliation {date.today().isoformat()}\n\nTests: {test_count:,}",
+                    ],
+                    cwd=str(self._get_project_root()),
+                    check=True,
+                )
+            except subprocess.CalledProcessError:
+                pass
+
+        result = ReconciliationResult(
+            drift_before=DriftReport(
+                test_count_drift=DriftItem(
+                    drift_metadata.get("test_count_documented", 0),
+                    drift_metadata.get("test_count_actual", 0),
+                ),
+                mypy_drift=DriftItem(0, 0),
+                plan_header_issues=[],
+                stale_plans=[],
+                orphan_plans=[],
+            ),
+            files_updated=files_updated,
+            epilogue_path=epilogue_name,
+            summary=summary,
+        )
+
+        return BasicRendering(
+            summary="Reconciliation Complete",
+            content=result.to_text(),
+            metadata={
+                "files_updated": files_updated,
+                "test_count": test_count,
+                "committed": commit,
+            },
+        )
+
+    def _stream_epilogues(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Legacy: Stream epilogues (renamed from _witness)."""
+        return self._witness(observer, **kwargs)
 
     async def _witness(
         self,

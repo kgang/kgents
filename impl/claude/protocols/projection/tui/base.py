@@ -6,17 +6,18 @@ Provides the foundation for all projection TUI components.
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from abc import abstractmethod
+from typing import Any, Generic, TypeVar
 
 from protocols.projection.schema import WidgetMeta, WidgetStatus
+from rich.console import RenderableType
 from textual.reactive import reactive
 from textual.widget import Widget
 
 T = TypeVar("T")
 
 
-class TUIWidget(Widget, Generic[T], ABC):
+class TUIWidget(Widget, Generic[T]):
     """
     Base class for TUI projection widgets.
 
@@ -34,7 +35,7 @@ class TUIWidget(Widget, Generic[T], ABC):
         self,
         state: T | None = None,
         meta: WidgetMeta | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize TUI widget.
@@ -78,16 +79,16 @@ class TUIWidget(Widget, Generic[T], ABC):
         return self.meta.cache is not None and self.meta.cache.is_cached
 
     @abstractmethod
-    def render_content(self) -> str:
+    def render_content(self) -> RenderableType:
         """
         Render the widget content.
 
         Returns:
-            Rich console markup string.
+            Rich renderable (str, Text, Panel, etc.).
         """
         ...
 
-    def compose(self):
+    def compose(self) -> Any:
         """Textual compose method - subclasses should override if needed."""
         yield from []
 
@@ -101,8 +102,8 @@ class TUIProjector:
 
     @staticmethod
     def create_widget(
-        widget_type: str, state, meta: WidgetMeta | None = None
-    ) -> TUIWidget:
+        widget_type: str, state: Any, meta: WidgetMeta | None = None
+    ) -> "TUIWidget[Any]":
         """
         Create a TUI widget from type and state.
 
@@ -133,4 +134,4 @@ class TUIProjector:
         if widget_class is None:
             raise ValueError(f"Unknown widget type: {widget_type}")
 
-        return widget_class(state=state, meta=meta)
+        return widget_class(state=state, meta=meta)  # type: ignore[return-value]

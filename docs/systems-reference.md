@@ -195,6 +195,37 @@ card.to_json()     # API
 
 ---
 
+## Projection Gallery
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `Pilot` | `protocols/projection/gallery/pilots.py` | Pre-configured widget demo |
+| `Gallery` | `protocols/projection/gallery/runner.py` | Render orchestrator |
+| `GalleryOverrides` | `protocols/projection/gallery/overrides.py` | Override injection |
+| `GalleryAPI` | `protocols/api/gallery.py` | REST endpoints |
+| `GalleryPage` | `web/src/pages/GalleryPage.tsx` | React frontend |
+
+```python
+from protocols.projection.gallery import Gallery, GalleryOverrides, PILOT_REGISTRY
+
+# CLI gallery
+gallery = Gallery()
+gallery.show_all(target=RenderTarget.CLI)  # All 25 pilots
+gallery.show("agent_card_active", overrides={"entropy": 0.5})
+
+# With global overrides
+gallery = Gallery(GalleryOverrides(entropy=0.3, seed=42))
+```
+
+**Web Gallery**: `http://localhost:3000/gallery`
+
+**API Endpoints**:
+- `GET /api/gallery` - All pilots with projections
+- `GET /api/gallery/{name}` - Single pilot
+- `GET /api/gallery/categories` - Category metadata
+
+---
+
 ## N-Phase Compiler
 
 | Component | Purpose |

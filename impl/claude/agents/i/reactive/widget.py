@@ -19,6 +19,17 @@ The state machine IS the widget. The rendering IS a functor application.
 Instrumentation:
     Metrics can be enabled via KGENTS_REACTIVE_METRICS=1 env var.
     When enabled, render durations are tracked via OpenTelemetry.
+
+Projection Integration (v2):
+    Widgets now integrate with the Projection Component Library for unified
+    rendering with metadata (status, cache, errors, refusals).
+
+    # Get wrapped result with metadata
+    envelope = widget.to_envelope(RenderTarget.JSON)
+    if envelope.meta.has_error:
+        show_error(envelope.meta.error)
+    else:
+        render(envelope.data)
 """
 
 from __future__ import annotations
@@ -29,7 +40,9 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
-    pass
+    from collections.abc import AsyncIterator
+
+    from protocols.projection.schema import WidgetEnvelope, WidgetMeta
 
 # Check if metrics are enabled (opt-in for zero overhead by default)
 _METRICS_ENABLED = os.environ.get("KGENTS_REACTIVE_METRICS", "").lower() in (
@@ -154,6 +167,173 @@ class KgentsWidget(ABC, Generic[S]):
         if isinstance(result, dict):
             return result
         return {"value": result}
+
+    # =========================================================================
+    # Projection Integration (v2)
+    # =========================================================================
+
+    def to_envelope(
+        self,
+        target: RenderTarget = RenderTarget.JSON,
+        *,
+        meta: "WidgetMeta | None" = None,
+        source_path: str | None = None,
+    ) -> "WidgetEnvelope[Any]":
+        """
+        Project to target wrapped in a WidgetEnvelope with metadata.
+
+        This integrates with the Projection Component Library, providing
+        unified metadata (status, cache, errors, refusals) alongside the
+        projected data.
+
+        **Error Boundary**: This method never raises exceptions. If projection
+        fails, the envelope contains an ErrorInfo with details, and data is None.
+
+        Args:
+            target: Which rendering target to project to
+            meta: Optional metadata to include (defaults to WidgetMeta.done())
+            source_path: Optional AGENTESE path that produced this widget
+
+        Returns:
+            WidgetEnvelope containing the projection and metadata.
+            On error: data=None, meta.status=ERROR, meta.error contains details.
+
+        Example:
+            envelope = widget.to_envelope(RenderTarget.JSON)
+            if envelope.meta.has_error:
+                show_error(envelope.meta.error)
+            elif envelope.meta.status == WidgetStatus.DONE:
+                api_response = envelope.to_dict()
+        """
+        from protocols.projection.schema import ErrorInfo, WidgetEnvelope, WidgetMeta
+
+        try:
+            # Get the projection
+            data = self.project(target)
+
+            # Use provided meta or default to done
+            if meta is None:
+                meta = WidgetMeta.done()
+
+            return WidgetEnvelope(
+                data=data,
+                meta=meta,
+                source_path=source_path,
+            )
+        except Exception as e:
+            # Error boundary: wrap exceptions in envelope
+            error_info = ErrorInfo(
+                category="unknown",
+                code=type(e).__name__,
+                message=str(e) or f"Projection to {target.name} failed",
+                fallback_action=f"Try {target.name} projection again or use a different target",
+            )
+            return WidgetEnvelope(
+                data=None,
+                meta=WidgetMeta.with_error(error_info),
+                source_path=source_path,
+            )
+
+    def to_json_envelope(
+        self,
+        *,
+        meta: "WidgetMeta | None" = None,
+        source_path: str | None = None,
+    ) -> "WidgetEnvelope[dict[str, Any]]":
+        """
+        Convenience: project to JSON wrapped in envelope.
+
+        Equivalent to to_envelope(RenderTarget.JSON) but with better typing.
+        """
+        return self.to_envelope(RenderTarget.JSON, meta=meta, source_path=source_path)
+
+    def widget_type(self) -> str:
+        """
+        Return the widget type name for projection hints.
+
+        Override in subclasses to customize. Default is class name
+        converted to snake_case.
+
+        Example:
+            class AgentCardWidget -> "agent_card"
+        """
+        import re
+
+        name = self.__class__.__name__
+        if name.endswith("Widget"):
+            name = name[:-6]
+        # Convert CamelCase to snake_case
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+    def ui_hint(self) -> str | None:
+        """
+        Return the UI hint for projection.
+
+        Override in subclasses to provide specific hints.
+        Valid values: "form", "stream", "table", "graph", "card", "text"
+
+        Default returns None (let projection adapter infer from path).
+        """
+        return None
+
+    async def to_streaming_envelope(
+        self,
+        target: RenderTarget = RenderTarget.JSON,
+        *,
+        source_path: str | None = None,
+        total_expected: int | None = None,
+    ) -> "AsyncIterator[WidgetEnvelope[Any]]":
+        """
+        Yield streaming envelopes as projection progresses.
+
+        For widgets that support incremental rendering, this yields
+        envelopes with STREAMING status until complete, then DONE.
+
+        Default implementation yields a single DONE envelope (non-streaming).
+        Override in subclasses to provide true streaming behavior.
+
+        Args:
+            target: Which rendering target to project to
+            source_path: Optional AGENTESE path that produced this widget
+            total_expected: Optional total chunks expected (for progress)
+
+        Yields:
+            WidgetEnvelope with STREAMING status, then final DONE envelope
+
+        Example:
+            async for envelope in widget.to_streaming_envelope():
+                if envelope.meta.status == WidgetStatus.STREAMING:
+                    update_progress(envelope.meta.stream.progress)
+                else:
+                    render_final(envelope.data)
+        """
+        from datetime import datetime, timezone
+
+        from protocols.projection.schema import StreamMeta, WidgetEnvelope, WidgetMeta
+
+        # Default: non-streaming widget yields single envelope
+        # Subclasses can override for true streaming behavior
+
+        # Start streaming
+        started_at = datetime.now(timezone.utc)
+        stream_meta = StreamMeta(
+            total_expected=total_expected or 1,
+            received=0,
+            started_at=started_at,
+        )
+
+        # Yield initial streaming state
+        yield WidgetEnvelope(
+            data=None,
+            meta=WidgetMeta.streaming(stream_meta),
+            source_path=source_path,
+        )
+
+        # Get actual projection (with error boundary)
+        final_envelope = self.to_envelope(target, source_path=source_path)
+
+        # Yield final result
+        yield final_envelope
 
 
 class CompositeWidget(KgentsWidget[S]):

@@ -15,6 +15,10 @@ import type {
   BuilderPerformanceMetrics,
   FlowMetrics,
   WorkshopEvent,
+  GalleryResponse,
+  PilotResponse,
+  GalleryCategoryInfo,
+  GalleryOverrides,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -215,4 +219,23 @@ export const workshopApi = {
 
   getFlowMetrics: () =>
     apiClient.get<FlowMetrics>('/v1/workshop/metrics/flow'),
+};
+
+// =============================================================================
+// Gallery API
+// =============================================================================
+
+export const galleryApi = {
+  getAll: (overrides?: GalleryOverrides, category?: string) =>
+    apiClient.get<GalleryResponse>('/api/gallery', {
+      params: { ...overrides, category },
+    }),
+
+  getCategories: () =>
+    apiClient.get<{ categories: GalleryCategoryInfo[] }>('/api/gallery/categories'),
+
+  getPilot: (name: string, overrides?: GalleryOverrides) =>
+    apiClient.get<PilotResponse>(`/api/gallery/${name}`, {
+      params: overrides,
+    }),
 };

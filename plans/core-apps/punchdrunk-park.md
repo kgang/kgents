@@ -277,6 +277,154 @@ Users can wear masks during scenarios, forcing novel behaviors.
 
 ---
 
+## AGENTESE v3 Integration
+
+> *"Collaboration > control. The verb-first ontology makes consent explicit."*
+
+### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `world.town.manifest` | manifest | Observer-dependent view | — |
+| `world.town.scenario[id].manifest` | manifest | Scenario details | — |
+| `world.town.scenario[id].inhabit` | define | Start INHABIT session | `SPAWN_SESSION`, `DEBIT_TICKET` |
+| `world.town.inhabit[id].manifest` | manifest | Current session state | — |
+| `world.town.inhabit[id].act` | define | Player action | `UPDATE_CONSENT_LEDGER` |
+| `world.town.inhabit[id].dialogue` | witness | Dialogue history | — |
+| `self.consent.manifest` | manifest | My consent debt | — |
+| `self.consent.force` | define | Use force mechanic | `3X_COST`, `LOG_FORCE`, `UPDATE_DEBT` |
+| `concept.mask.manifest` | manifest | Available masks | — |
+| `concept.mask[name].don` | define | Wear mask | `TRANSFORM_EIGENVECTOR` |
+| `void.entropy.inject` | sip | Serendipity injection | `MODIFY_SCENARIO` |
+| `time.inhabit[id].witness` | witness | Session replay | — |
+| `?world.town.scenario.*` | query | Search scenarios | — |
+
+### Observer-Dependent Perception (Core Feature)
+
+```python
+# The same Town manifests differently for different observers
+# This is THE Punchdrunk principle in action
+
+# Architect sees power structures
+await logos("world.town.manifest", architect_umwelt)
+# → TownView(power_nodes, influence_edges, authority_hierarchy)
+
+# Poet sees relationship webs
+await logos("world.town.manifest", poet_umwelt)
+# → TownView(emotional_bonds, trust_networks, metaphor_layers)
+
+# Economist sees resource flows
+await logos("world.town.manifest", economist_umwelt)
+# → TownView(capital_distribution, transaction_history, wealth_gaps)
+
+# Child sees wonder and play
+await logos("world.town.manifest", child_umwelt)
+# → TownView(play_spaces, friendly_faces, adventure_hooks)
+```
+
+### Consent Mechanics via AGENTESE
+
+```python
+# Force uses the 3x cost, logged mechanic
+# This is NOT just an API call—it's an AGENTESE path with explicit effects
+await logos(
+    "self.consent.force",
+    player_umwelt,
+    target_citizen="sarah",
+    request="approve the budget",
+    effects=["3X_CONSENT_COST", "LOG_TO_AUDIT", "UPDATE_DEBT"]
+)
+# Returns: ForceResult(success=True, debt_remaining=0.4, forces_left=2)
+
+# Consent debt is queryable
+debt = await logos("self.consent.manifest", player_umwelt)
+# → ConsentLedger(overall=0.6, per_citizen={"sarah": 0.2, "tom": 0.9, ...})
+```
+
+### Subscription Patterns
+
+```python
+# Live consent updates during INHABIT
+consent_sub = await logos.subscribe(
+    "world.town.inhabit[*].consent",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+
+# Citizen dialogue stream
+dialogue_sub = await logos.subscribe(
+    "world.town.inhabit[id].dialogue",
+    delivery=DeliveryMode.AT_LEAST_ONCE,
+    buffer_size=1000
+)
+
+# Serendipity events (Director-injected surprises)
+entropy_sub = await logos.subscribe(
+    "void.entropy.inject",
+    delivery=DeliveryMode.AT_MOST_ONCE
+)
+```
+
+### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions
+park: world.town.manifest
+scenarios: "?world.town.scenario.*"
+inhabit: world.town.scenario.inhabit
+consent: self.consent.manifest
+force: self.consent.force
+masks: concept.mask.manifest
+replay: time.inhabit.witness
+```
+
+### Pipeline Composition
+
+```python
+# Scenario selection → INHABIT → K-gent feedback
+experience_pipeline = (
+    path("world.town.scenario[id].manifest")
+    >> path("world.town.scenario[id].inhabit")
+    >> path("time.inhabit[id].witness")  # Replay available
+    >> path("self.soul.feedback")        # K-gent analysis
+)
+
+# Mask application affects subsequent interactions
+masked_session = (
+    path("concept.mask[trickster].don")
+    >> path("world.town.scenario[id].inhabit")
+    # All dialogue now filtered through trickster eigenvectors
+)
+```
+
+### Multiplayer via Shared Subscriptions
+
+```python
+# Two players in same scenario, different perspectives
+# Both subscribe to same session, different views
+
+# Player A (Detective)
+detective_view = await logos(
+    "world.town.inhabit[id].manifest",
+    detective_umwelt
+)
+# → DetectiveView(evidence, suspects, access_level="security")
+
+# Player B (Journalist)
+journalist_view = await logos(
+    "world.town.inhabit[id].manifest",
+    journalist_umwelt
+)
+# → JournalistView(sources, leads, access_level="public")
+
+# Convergence: when paths cross
+convergence_sub = await logos.subscribe(
+    "world.town.inhabit[id].convergence",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+```
+
+---
+
 ## Dependencies
 
 | System | Usage |
@@ -284,7 +432,7 @@ Users can wear masks during scenarios, forcing novel behaviors.
 | `agents/town/` | Simulation core |
 | `agents/town/inhabit_session.py` | INHABIT mode (91 tests) |
 | `agents/k/` | Dialogue + feedback |
-| `protocols/agentese/` | Umwelt-based perception |
+| `protocols/agentese/` | Path-based interaction (v3) |
 | `protocols/billing/` | Ticket system |
 
 ---

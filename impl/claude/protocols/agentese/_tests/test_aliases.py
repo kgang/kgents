@@ -1,5 +1,5 @@
 """
-AGENTESE Alias System Tests (v3)
+AGENTESE Alias System Tests
 
 Tests for path aliases:
 - Alias registration and expansion

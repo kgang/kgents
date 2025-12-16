@@ -297,7 +297,8 @@ class BaseLogosNode(ABC):
         pass
 
     # Standard affordances available to all archetypes
-    _base_affordances: tuple[str, ...] = ("manifest", "witness", "affordances")
+    # v3.1: Added "help" for self-documentation
+    _base_affordances: tuple[str, ...] = ("manifest", "witness", "affordances", "help")
 
     def affordances(self, observer: AgentMeta) -> list[str]:
         """
@@ -349,7 +350,55 @@ class BaseLogosNode(ABC):
             # Get AgentMeta from Umwelt's DNA
             meta = self._umwelt_to_meta(observer)
             return self.affordances(meta)
+        if aspect == "help":
+            # v3.1: Self-documentation aspect
+            meta = self._umwelt_to_meta(observer)
+            return self._generate_help(meta)
         return await self._invoke_aspect(aspect, observer, **kwargs)
+
+    def _generate_help(self, observer: AgentMeta) -> str:
+        """
+        Generate self-documenting help for this node.
+
+        v3.1: Every node can describe itself via the help aspect.
+        Uses AspectMetadata for rich documentation when available.
+
+        Args:
+            observer: The observer requesting help
+
+        Returns:
+            Formatted help string showing path, affordances, and descriptions
+        """
+        from .affordances import STANDARD_ASPECTS
+
+        # Get affordances for this observer
+        affordances = self.affordances(observer)
+
+        lines = [
+            f"Path: {self.handle}",
+            f"Observer: {observer.archetype}",
+            "",
+            "Affordances:",
+        ]
+
+        for aff in affordances:
+            aspect_info = STANDARD_ASPECTS.get(aff)
+            if aspect_info:
+                desc = aspect_info.description
+                cat = aspect_info.category.name
+                lines.append(f"  {aff:20} [{cat:12}] {desc}")
+                # Show examples if available
+                if hasattr(aspect_info, "examples") and aspect_info.examples:
+                    for ex in aspect_info.examples[:2]:
+                        lines.append(f"    Example: {ex}")
+                # Show related aspects if available
+                if hasattr(aspect_info, "see_also") and aspect_info.see_also:
+                    related = ", ".join(aspect_info.see_also[:3])
+                    lines.append(f"    See also: {related}")
+            else:
+                lines.append(f"  {aff:20} (custom aspect)")
+
+        return "\n".join(lines)
 
     @abstractmethod
     async def _invoke_aspect(

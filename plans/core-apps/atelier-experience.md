@@ -184,6 +184,81 @@ SPECTATOR_COSTS = {
 
 ---
 
+## AGENTESE v3 Integration
+
+> *"All interaction flows through Logos. No view from nowhere."*
+
+### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `world.atelier.session.manifest` | manifest | Show current creation stream | — |
+| `world.atelier.session.bid` | define | Inject spectator constraint | `TRANSFER_TOKENS`, `NOTIFY_BUILDER` |
+| `world.atelier.session.subscribe` | witness | Stream session updates | — |
+| `world.atelier.gallery.manifest` | manifest | Browse artifacts | — |
+| `world.atelier.gallery.acquire` | define | Purchase artifact | `TRANSFER_TOKENS`, `GRANT_LICENSE` |
+| `world.atelier.builder.manifest` | manifest | Builder's view (observer-specific) | — |
+| `self.tokens.manifest` | manifest | My token balance | — |
+| `self.tokens.tithe` | tithe | Spend tokens with gratitude | `DEBIT_TOKENS` |
+| `?world.atelier.session.*` | query | Search active sessions | — |
+
+### Observer-Dependent Perception
+
+```python
+# Spectator sees stream + bid interface
+await logos("world.atelier.session.manifest", spectator_umwelt)
+# → StreamView(canvas, chat, bid_queue)
+
+# Builder sees canvas + incoming bids
+await logos("world.atelier.session.manifest", builder_umwelt)
+# → BuilderView(canvas, tools, pending_bids, token_earnings)
+
+# Festival admin sees all sessions + metrics
+await logos("world.atelier.session.manifest", admin_umwelt)
+# → AdminView(all_sessions, engagement_metrics, revenue)
+```
+
+### Subscription Patterns
+
+```python
+# Spectator subscribes to session updates
+sub = await logos.subscribe(
+    "world.atelier.session[*].bid",
+    delivery=DeliveryMode.AT_LEAST_ONCE,
+    buffer_size=100
+)
+
+# Festival mode: collective momentum subscription
+momentum_sub = await logos.subscribe(
+    "world.atelier.festival.momentum",
+    delivery=DeliveryMode.AT_MOST_ONCE
+)
+```
+
+### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions
+atelier: world.atelier.manifest
+watch: world.atelier.session.manifest
+bid: world.atelier.session.bid
+gallery: world.atelier.gallery.manifest
+tokens: self.tokens.manifest
+```
+
+### Pipeline Composition
+
+```python
+# Watch session → filter by builder → get gallery
+pipeline = (
+    path("world.atelier.session.manifest")
+    >> path("world.atelier.session.filter", builder="kent")
+    >> path("world.atelier.gallery.manifest")
+)
+```
+
+---
+
 ## Dependencies
 
 | System | Usage |
@@ -193,6 +268,7 @@ SPECTATOR_COSTS = {
 | `agents/i/reactive/` | Widget composition |
 | `protocols/billing/` | Token transactions |
 | `agents/m/` | Memory Theatre integration |
+| `protocols/agentese/` | Path-based interaction (v3) |
 
 ---
 

@@ -18,6 +18,9 @@ export function Layout() {
             <Link to="/atelier" className="text-gray-300 hover:text-white transition-colors">
               Atelier
             </Link>
+            <Link to="/gallery" className="text-gray-300 hover:text-white transition-colors">
+              Gallery
+            </Link>
           </nav>
         </div>
       </header>

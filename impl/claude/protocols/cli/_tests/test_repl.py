@@ -193,12 +193,68 @@ class TestNavigation:
         assert repl_state.path == ["world"]
 
     def test_multi_word_not_navigation(self, repl_state: Any) -> None:
-        """Verify multi-word input is not treated as navigation."""
+        """Verify multi-word input with 3+ parts is not treated as navigation."""
         from protocols.cli.repl import handle_navigation
 
         repl_state.path = ["self"]
         result = handle_navigation(repl_state, ["status", "manifest"])
         assert result is None  # Not navigation, should be invocation
+
+    def test_fast_forward_navigation_self_soul(self, repl_state: Any) -> None:
+        """Verify self.soul fast-forward navigation works from root."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = []
+        result = handle_navigation(repl_state, ["self", "soul"])
+        assert result is not None
+        assert repl_state.path == ["self", "soul"]
+        assert "soul" in result.lower()
+
+    def test_fast_forward_navigation_world_agents(self, repl_state: Any) -> None:
+        """Verify world.agents fast-forward navigation works."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = []
+        result = handle_navigation(repl_state, ["world", "agents"])
+        assert result is not None
+        assert repl_state.path == ["world", "agents"]
+
+    def test_fast_forward_navigation_void_entropy(self, repl_state: Any) -> None:
+        """Verify void.entropy fast-forward navigation works."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = []
+        result = handle_navigation(repl_state, ["void", "entropy"])
+        assert result is not None
+        assert repl_state.path == ["void", "entropy"]
+
+    def test_fast_forward_navigation_from_other_context(self, repl_state: Any) -> None:
+        """Verify fast-forward navigation works from any starting point."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = ["world", "agents"]
+        result = handle_navigation(repl_state, ["self", "soul"])
+        assert result is not None
+        assert repl_state.path == ["self", "soul"]
+
+    def test_fast_forward_invalid_holon_not_navigation(self, repl_state: Any) -> None:
+        """Verify invalid holon in fast-forward path is not navigation."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = []
+        result = handle_navigation(repl_state, ["self", "invalid_holon"])
+        assert result is None  # Not a valid navigation path
+
+    def test_fast_forward_soul_shows_dialogue_mode_message(
+        self, repl_state: Any
+    ) -> None:
+        """Verify fast-forward to self.soul shows dialogue mode message."""
+        from protocols.cli.repl import handle_navigation
+
+        repl_state.path = []
+        result = handle_navigation(repl_state, ["self", "soul"])
+        assert result is not None
+        assert "Dialogue mode" in result
 
 
 # =============================================================================

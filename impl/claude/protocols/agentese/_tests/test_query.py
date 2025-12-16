@@ -1,5 +1,5 @@
 """
-AGENTESE Query System Tests (v3)
+AGENTESE Query System Tests
 
 Tests for the query system:
 - Query syntax validation

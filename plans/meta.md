@@ -128,6 +128,31 @@ Bounded queries: ?pattern with limit/offset prevents footguns
 Subscriptions: at-most-once default; fully specified semantics
 Pre-charge economics with refund on failure: safer than post-charge
 String-based >> composition: "path.a" >> "path.b" natural idiom
+Wiring > stub: add_X_to_Y() must actually modify class, not be no-op placeholder
+Subscription indexing: ** catch-all needs separate bucket from * prefix wildcards
+AT_LEAST_ONCE delivery: track pending, redeliver on timeout, cap retry attempts
+Pipeline fail_fast semantics: don't pass stale input to later stages after failure
+TZ-aware caching: if cached_at has tzinfo, use aware now(); else use naive now()
+Core-apps × AGENTESE: each jewel needs path registry + observer views + subscriptions + shortcuts + pipelines
+```
+
+### UX Patterns (from Core-Apps Research)
+```
+Dual-currency economy: earned (watching) + purchased (premium)—never 1:1 ratio
+Collective momentum: visible meter + unlock thresholds + decay creates urgency
+Spectator influence gradations: cheap=plentiful, expensive=impactful
+Semantic zoom: zoom level = semantic depth, not just visual scale; C4 model
+Consent as continuum [0,1]: nuanced > binary; refusal is feature, not bug
+Masks for threshold: anonymity enables transition from observer → participant
+Memory persistence: cross-session continuity creates consequence and depth
+Gap detection: show what's missing, not just what exists
+Natural language → structure: "describe what you want" eliminates blank page
+Dry run mode: test without execution enables safe experimentation
+Timeline reconstruction: post-action replay enables objective learning
+Role-based information asymmetry: different users see different data—realistic constraint
+Session persistence: named sessions + `kg /continue` = work spans terminals
+Context-aware completion: suggest from history + current phase, not just syntax
+Decay visualization: fresh→fading opacity gradient shows temporal relevance
 ```
 
 ## Anti-Patterns
@@ -149,4 +174,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~108/200 | Last pruned: 2025-12-15 | AGENTESE v3 insights added*
+*Lines: ~130/200 | Last pruned: 2025-12-15 | AGENTESE v3 integration learnings added*

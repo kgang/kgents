@@ -31,11 +31,22 @@ Usage:
 
 from protocols.projection.streaming.backpressure import (
     BackpressurePolicy,
+    BufferManager,
     DropEvent,
     DropPolicy,
 )
-from protocols.projection.streaming.retry import RetryPolicy
-from protocols.projection.streaming.sse import stream_with_envelope
+from protocols.projection.streaming.retry import (
+    AGGRESSIVE_RETRY,
+    CONSERVATIVE_RETRY,
+    NO_RETRY,
+    RetryPolicy,
+)
+from protocols.projection.streaming.sse import (
+    format_drop_event,
+    format_refusal_event,
+    stream_with_envelope,
+    with_heartbeat,
+)
 from protocols.projection.streaming.state import StreamContext, StreamState
 
 __all__ = [
@@ -44,10 +55,17 @@ __all__ = [
     "StreamContext",
     # Backpressure
     "BackpressurePolicy",
+    "BufferManager",
     "DropPolicy",
     "DropEvent",
     # Retry
     "RetryPolicy",
+    "AGGRESSIVE_RETRY",
+    "CONSERVATIVE_RETRY",
+    "NO_RETRY",
     # SSE
     "stream_with_envelope",
+    "format_drop_event",
+    "format_refusal_event",
+    "with_heartbeat",
 ]

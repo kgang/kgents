@@ -1,5 +1,5 @@
 """
-AGENTESE Aspect Pipelines (v3)
+AGENTESE Aspect Pipelines
 
 Multiple aspects on the same node executed in sequence.
 
@@ -31,9 +31,10 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from bootstrap.umwelt import Umwelt
+
     from .logos import Logos
     from .node import LogosNode, Observer
-    from bootstrap.umwelt import Umwelt
 
 
 # === Pipeline Result ===
@@ -50,12 +51,16 @@ class PipelineStageResult:
     duration_ms: float = 0.0
 
     @classmethod
-    def ok(cls, aspect: str, result: Any, duration_ms: float = 0.0) -> "PipelineStageResult":
+    def ok(
+        cls, aspect: str, result: Any, duration_ms: float = 0.0
+    ) -> "PipelineStageResult":
         """Create a successful result."""
         return cls(aspect=aspect, success=True, result=result, duration_ms=duration_ms)
 
     @classmethod
-    def fail(cls, aspect: str, error: Exception, duration_ms: float = 0.0) -> "PipelineStageResult":
+    def fail(
+        cls, aspect: str, error: Exception, duration_ms: float = 0.0
+    ) -> "PipelineStageResult":
         """Create a failed result."""
         return cls(
             aspect=aspect,
@@ -197,13 +202,25 @@ class AspectPipeline:
             except Exception as e:
                 duration_ms = (time.perf_counter() - stage_start) * 1000
                 stages.append(PipelineStageResult.fail(aspect, e, duration_ms))
-                failed_at = i
 
-                if self._fail_fast and not self._collect_all:
+                # Track first failure
+                if failed_at == -1:
+                    failed_at = i
+
+                if self._fail_fast:
+                    # Stop immediately on failure
                     break
-                # If collect_all, continue but don't pass result forward
-                if self._collect_all:
-                    continue
+
+                # collect_all=True: Continue collecting results but mark as failed
+                # collect_all=False: Stop here - don't pass stale state forward
+                if not self._collect_all:
+                    # Important: Don't continue with stale `current` value
+                    # This prevents later stages from running on partial/invalid data
+                    break
+
+                # If collect_all, continue but reset current to None to indicate failure
+                # Later stages will receive None as input, making the failure explicit
+                current = None
 
         total_duration_ms = (time.perf_counter() - total_start) * 1000
         success = failed_at == -1
@@ -222,7 +239,9 @@ class AspectPipeline:
         initial_input: Any = None,
     ) -> PipelineResult:
         """Execute the pipeline with configured aspects."""
-        return await self.pipe(*self.aspects, observer=observer, initial_input=initial_input)
+        return await self.pipe(
+            *self.aspects, observer=observer, initial_input=initial_input
+        )
 
 
 # === LogosNode Mixin ===
@@ -266,30 +285,41 @@ class PipelineMixin:
             )
         """
         pipeline = AspectPipeline(self)
-        result = await pipeline.pipe(*aspects, observer=observer, initial_input=initial_input)
+        result = await pipeline.pipe(
+            *aspects, observer=observer, initial_input=initial_input
+        )
 
         if not result.success:
-            raise result.error or Exception(f"Pipeline failed at stage {result.failed_at}")
+            raise result.error or Exception(
+                f"Pipeline failed at stage {result.failed_at}"
+            )
 
         return result.final_result
 
 
-def add_pipe_to_logos_node(node_cls: type) -> None:  # noqa: ARG001
+def add_pipe_to_logos_node(node_cls: type) -> type:
     """
     Add pipe() method to LogosNode class.
 
-    This enables aspect pipelines on resolved nodes.
+    This enables aspect pipelines on resolved nodes:
+        node = logos.resolve("world.document")
+        result = await node.pipe("load", "parse", "summarize", observer=observer)
 
-    Note: This function is defined for documentation/reference purposes.
-    The actual integration happens via PipelineMixin or direct assignment.
+    Args:
+        node_cls: The LogosNode class to extend
+
+    Returns:
+        The modified class (for chaining)
     """
-    pass  # Integration happens at runtime via mixin or monkey-patching
+    if not hasattr(node_cls, "pipe"):
+        node_cls.pipe = PipelineMixin.pipe  # type: ignore[attr-defined]
+    return node_cls
 
 
 # === Logos Integration ===
 
 
-def add_pipeline_to_logos(logos_cls: type) -> None:  # noqa: ARG001
+def add_pipeline_to_logos(logos_cls: type) -> type:
     """
     Add pipeline factory to Logos class.
 
@@ -297,10 +327,34 @@ def add_pipeline_to_logos(logos_cls: type) -> None:  # noqa: ARG001
         pipeline = logos.pipeline("world.document")
         result = await pipeline.pipe("load", "parse", "summarize", observer=observer)
 
-    Note: This function is defined for documentation/reference purposes.
-    The actual integration happens via direct assignment at runtime.
+    Args:
+        logos_cls: The Logos class to extend
+
+    Returns:
+        The modified class (for chaining)
     """
-    pass  # Integration happens at runtime via monkey-patching
+
+    def pipeline(self: Any, path: str, *aspects: str) -> AspectPipeline:
+        """
+        Create an aspect pipeline for a path.
+
+        Args:
+            path: AGENTESE path to the node (without aspect)
+            *aspects: Initial aspects to add to the pipeline
+
+        Returns:
+            AspectPipeline ready for configuration and execution
+
+        Example:
+            pipeline = logos.pipeline("world.document")
+            result = await pipeline.pipe("load", "parse", "summarize", observer=observer)
+        """
+        node = self.resolve(path)
+        return create_pipeline(node, *aspects)
+
+    if not hasattr(logos_cls, "pipeline"):
+        logos_cls.pipeline = pipeline  # type: ignore[attr-defined]
+    return logos_cls
 
 
 # === Factory Functions ===

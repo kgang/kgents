@@ -155,6 +155,8 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | `plan-file.md` | Forest Protocol plan files |
 | `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |
 | `test-patterns.md` | Testing conventions and fixtures |
+| `ux-reference-patterns.md` | Cross-cutting UX patterns from research |
+| `user-flow-documentation.md` | Documenting precise user flows with ASCII wireframes |
 
 ## Core Principles (Summary)
 

@@ -19,7 +19,10 @@ uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
 cd impl/claude/web
 npm install && npm run dev
 
-# Visit http://localhost:3000
+# Visit:
+#   http://localhost:3000           - Agent Town
+#   http://localhost:3000/gallery   - Projection Gallery
+#   http://localhost:3000/atelier   - Atelier
 ```
 
 ## Detailed Setup
@@ -172,6 +175,18 @@ Once the backend is running, these endpoints are available:
 | POST | `/v1/soul/governance` | Semantic gatekeeper |
 | POST | `/v1/soul/dialogue` | Interactive dialogue |
 
+### Projection Gallery
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/gallery` | All pilots with projections |
+| GET | `/api/gallery?entropy=0.5` | With override |
+| GET | `/api/gallery?category=CARDS` | Filter by category |
+| GET | `/api/gallery/{name}` | Single pilot |
+| GET | `/api/gallery/categories` | Category metadata |
+
+**Web Gallery**: `http://localhost:3000/gallery`
+
 ### System
 
 | Method | Endpoint | Description |
@@ -267,4 +282,6 @@ kgents/
 
 - Read [AGENTESE specification](../spec/protocols/agentese.md)
 - Explore [Agent Town](../spec/agents/town.md)
+- Visit the [Projection Gallery](http://localhost:3000/gallery) to see all widgets
 - Check [systems reference](systems-reference.md) for built infrastructure
+- Learn the [projection-gallery skill](skills/projection-gallery.md) pattern

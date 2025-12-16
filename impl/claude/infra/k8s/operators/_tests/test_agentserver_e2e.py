@@ -9,8 +9,8 @@ Usage:
     # Create cluster first (if not exists)
     kind create cluster --config impl/claude/infra/k8s/kind/terrarium-cluster.yaml
 
-    # Run E2E tests
-    uv run pytest -m e2e impl/claude/infra/k8s/operators/_tests/test_agentserver_e2e.py -v
+    # Run E2E tests (tier3)
+    uv run pytest -m tier3 impl/claude/infra/k8s/operators/_tests/test_agentserver_e2e.py -v
 
 Prerequisites:
     - kind installed
@@ -18,7 +18,8 @@ Prerequisites:
     - Docker running
 
 Markers:
-    @pytest.mark.e2e - Requires kind cluster, skipped if not available
+    @pytest.mark.tier3 - E2E tests requiring real K8s cluster
+    @pytest.mark.e2e - DEPRECATED, use tier3
 """
 
 from __future__ import annotations
@@ -31,6 +32,9 @@ from pathlib import Path
 from typing import Any, Generator
 
 import pytest
+
+# Mark entire module as tier3 (E2E tests requiring real K8s cluster)
+pytestmark = [pytest.mark.tier3, pytest.mark.e2e]
 
 # Cluster name from kind config
 CLUSTER_NAME = "kgents-terrarium"
@@ -181,7 +185,6 @@ def cleanup_agentserver(
     kubectl_delete("agentserver", test_agentserver_name)
 
 
-@pytest.mark.e2e
 class TestAgentServerCRD:
     """AgentServer CRD availability tests."""
 
@@ -197,7 +200,6 @@ class TestAgentServerCRD:
         assert result.returncode == 0
 
 
-@pytest.mark.e2e
 class TestAgentServerCreate:
     """AgentServer creation tests."""
 
@@ -234,7 +236,6 @@ class TestAgentServerCreate:
         assert spec.get("semaphores", {}).get("enabled") is True
 
 
-@pytest.mark.e2e
 class TestAgentServerOperator:
     """
     Tests that require the operator running.
@@ -280,7 +281,6 @@ class TestAgentServerOperator:
         assert cr.get("metadata", {}).get("name") == test_agentserver_name
 
 
-@pytest.mark.e2e
 class TestAgentServerDelete:
     """AgentServer deletion tests."""
 
@@ -306,7 +306,6 @@ class TestAgentServerDelete:
         assert not data or "NotFound" in str(data)
 
 
-@pytest.mark.e2e
 class TestClusterHealth:
     """Cluster health verification tests."""
 
@@ -348,7 +347,6 @@ spec:
             kubectl_delete("pod", "e2e-test-pod")
 
 
-@pytest.mark.e2e
 class TestLLMRoutingPrepare:
     """
     Prepare infrastructure for routing LLM calls through K8s.

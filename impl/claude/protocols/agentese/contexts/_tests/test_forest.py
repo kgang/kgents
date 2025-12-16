@@ -707,3 +707,242 @@ def test_scan_epilogues_ignores_subdirectories(tmp_path: Path) -> None:
     entries = scan_epilogues(epilogues)
     assert len(entries) == 1
     assert "main" in entries[0].path.lower()
+
+
+# === New Forest Operations Tests (self.forest.*) ===
+
+
+@pytest.fixture
+def plans_with_headers(tmp_path: Path) -> Path:
+    """Create a plans directory with YAML-fronted plan files."""
+    plans_dir = tmp_path / "plans"
+    plans_dir.mkdir()
+
+    # Create plan with valid YAML header
+    (plans_dir / "test-plan.md").write_text("""---
+path: plans/test-plan
+status: active
+progress: 50
+last_touched: 2025-12-15
+blocking: []
+enables: []
+session_notes: |
+  Test plan for unit testing.
+---
+
+# Test Plan
+
+Content here.
+""")
+
+    # Create another plan
+    (plans_dir / "complete-plan.md").write_text("""---
+path: plans/complete-plan
+status: complete
+progress: 100
+last_touched: 2025-12-14
+---
+
+# Complete Plan
+
+Done.
+""")
+
+    return plans_dir
+
+
+@pytest.fixture
+def forest_node_with_plans(plans_with_headers: Path, tmp_path: Path) -> ForestNode:
+    """Create ForestNode with plans directory that has YAML headers."""
+    epilogues = tmp_path / "_epilogues"
+    epilogues.mkdir()
+
+    # Create _forest.md and _status.md for parsing
+    (plans_with_headers / "_forest.md").write_text("# Forest Health: 2025-12-15\n")
+    (plans_with_headers / "_status.md").write_text(
+        "> Last updated: 2025-12-15 (Chief reconciliation: 18,000 tests)\n"
+    )
+
+    node = create_forest_node(
+        forest_path=str(plans_with_headers / "_forest.md"),
+        epilogues_path=str(epilogues),
+        plans_root=str(plans_with_headers),
+    )
+    # Override project root for testing
+    node._get_project_root = lambda: tmp_path  # type: ignore
+    return node
+
+
+class TestPlanFromHeader:
+    """Tests for PlanFromHeader YAML parsing."""
+
+    def test_parse_yaml_header_valid(self, plans_with_headers: Path) -> None:
+        """parse_plan_yaml_header should parse valid YAML frontmatter."""
+        from ..forest import parse_plan_yaml_header
+
+        header = parse_plan_yaml_header(plans_with_headers / "test-plan.md")
+        assert header is not None
+        assert header["status"] == "active"
+        assert header["progress"] == 50
+
+    def test_parse_yaml_header_missing(self, tmp_path: Path) -> None:
+        """parse_plan_yaml_header should return None for files without frontmatter."""
+        from ..forest import parse_plan_yaml_header
+
+        no_header = tmp_path / "no-header.md"
+        no_header.write_text("# Just a title\n\nContent without YAML header.")
+
+        header = parse_plan_yaml_header(no_header)
+        assert header is None
+
+
+class TestManifestFromHeaders:
+    """Tests for self.forest.manifest (from YAML headers)."""
+
+    @pytest.mark.asyncio
+    async def test_manifest_from_headers_returns_renderable(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_manifest_from_headers should return a Renderable."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._manifest_from_headers(observer)
+
+        assert hasattr(result, "content")
+        assert hasattr(result, "metadata")
+        assert "# Forest Health" in result.content
+
+    @pytest.mark.asyncio
+    async def test_manifest_includes_metadata(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_manifest_from_headers should include plan counts in metadata."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._manifest_from_headers(observer)
+
+        assert "plan_count" in result.metadata
+        assert "active_count" in result.metadata
+        assert "complete_count" in result.metadata
+
+
+class TestDriftReport:
+    """Tests for self.forest.witness (drift report)."""
+
+    @pytest.mark.asyncio
+    async def test_drift_report_returns_renderable(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_drift_report should return a Renderable with drift info."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._drift_report(observer)
+
+        assert hasattr(result, "content")
+        assert "DRIFT REPORT" in result.content
+
+    @pytest.mark.asyncio
+    async def test_drift_report_includes_test_counts(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_drift_report should compare documented vs actual test counts."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._drift_report(observer)
+
+        assert "test_count_documented" in result.metadata
+        assert "test_count_actual" in result.metadata
+
+
+class TestTithe:
+    """Tests for self.forest.tithe (archive stale plans)."""
+
+    @pytest.mark.asyncio
+    async def test_tithe_dry_run_default(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_tithe should be dry run by default."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._tithe(observer)
+
+        assert result.metadata["dry_run"] is True
+
+    @pytest.mark.asyncio
+    async def test_tithe_returns_report(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_tithe should return a report."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._tithe(observer)
+
+        assert hasattr(result, "content")
+        assert "TITHE REPORT" in result.content
+
+
+class TestReconcile:
+    """Tests for self.forest.reconcile (full reconciliation)."""
+
+    @pytest.mark.asyncio
+    async def test_reconcile_updates_forest_md(
+        self, forest_node_with_plans: ForestNode, plans_with_headers: Path
+    ) -> None:
+        """_reconcile should update _forest.md."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._reconcile(observer)
+
+        assert "_forest.md" in result.metadata["files_updated"]
+
+    @pytest.mark.asyncio
+    async def test_reconcile_returns_summary(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_reconcile should return a summary."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._reconcile(observer)
+
+        assert hasattr(result, "content")
+        assert "RECONCILIATION COMPLETE" in result.content
+
+
+class TestForestAspectRouting:
+    """Tests for _invoke_aspect routing to new operations."""
+
+    @pytest.mark.asyncio
+    async def test_invoke_aspect_manifest(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_invoke_aspect('manifest') should route to _manifest_from_headers."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._invoke_aspect("manifest", observer)
+
+        assert hasattr(result, "content")
+        assert "Forest" in result.content
+
+    @pytest.mark.asyncio
+    async def test_invoke_aspect_witness(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_invoke_aspect('witness') should route to _drift_report."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._invoke_aspect("witness", observer)
+
+        assert hasattr(result, "content")
+        assert "DRIFT" in result.content
+
+    @pytest.mark.asyncio
+    async def test_invoke_aspect_tithe(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_invoke_aspect('tithe') should route to _tithe."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._invoke_aspect("tithe", observer)
+
+        assert hasattr(result, "content")
+        assert "TITHE" in result.content
+
+    @pytest.mark.asyncio
+    async def test_invoke_aspect_reconcile(
+        self, forest_node_with_plans: ForestNode
+    ) -> None:
+        """_invoke_aspect('reconcile') should route to _reconcile."""
+        observer = MockUmwelt(archetype="ops")
+        result = await forest_node_with_plans._invoke_aspect("reconcile", observer)
+
+        assert hasattr(result, "content")
+        assert "RECONCILIATION" in result.content

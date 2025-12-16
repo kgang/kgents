@@ -134,7 +134,7 @@ class GraphWidget(KgentsWidget[GraphWidgetState]):
             return self._pie_to_cli()
 
         # Get all data points for scaling
-        all_data = []
+        all_data: list[float] = []
         for ds in s.datasets:
             all_data.extend(ds.data)
 

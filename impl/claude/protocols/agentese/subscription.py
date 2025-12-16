@@ -1,5 +1,5 @@
 """
-AGENTESE Subscription Manager (v3)
+AGENTESE Subscription Manager
 
 Reactive subscriptions for continuous observation of paths.
 
@@ -239,19 +239,37 @@ class Subscription:
         async with subscription:
             async for event in subscription:
                 handle(event)
+
+    For AT_LEAST_ONCE delivery:
+        - Events are tracked until acknowledged
+        - Unacknowledged events are redelivered after timeout
+        - Use subscription.acknowledge(event_id) to confirm receipt
     """
 
     id: str
     config: SubscriptionConfig
-    _queue: asyncio.Queue[AgentesEvent] = field(default_factory=lambda: asyncio.Queue(maxsize=1000))
+    _queue: asyncio.Queue[AgentesEvent] = field(
+        default_factory=lambda: asyncio.Queue(maxsize=1000)
+    )
     _active: bool = field(default=True)
     _acknowledged: set[str] = field(default_factory=set)
     _heartbeat_task: asyncio.Task[None] | None = field(default=None)
     _manager: "SubscriptionManager | None" = field(default=None)
+    # AT_LEAST_ONCE: Track pending events for redelivery
+    _pending_events: dict[str, tuple[AgentesEvent, datetime]] = field(
+        default_factory=dict
+    )
+    _redelivery_task: asyncio.Task[None] | None = field(default=None)
+    # Redelivery settings
+    _redelivery_timeout: float = field(default=30.0)  # seconds
+    _max_redelivery_attempts: int = field(default=3)
+    _redelivery_attempts: dict[str, int] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Initialize buffer with configured size."""
         self._queue = asyncio.Queue(maxsize=self.config.buffer_size)
+        self._pending_events = {}
+        self._redelivery_attempts = {}
 
     @property
     def pattern(self) -> str:
@@ -265,23 +283,104 @@ class Subscription:
 
     async def __aiter__(self) -> AsyncIterator[AgentesEvent]:
         """Async iteration over events."""
+        # Start heartbeat task if configured
+        if self._heartbeat_task is None and self.config.heartbeat_interval > 0:
+            self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+
+        # Start redelivery task for AT_LEAST_ONCE
+        if (
+            self.config.delivery == DeliveryMode.AT_LEAST_ONCE
+            and self._redelivery_task is None
+        ):
+            self._redelivery_task = asyncio.create_task(self._redelivery_loop())
+
         while self._active:
             try:
-                event = await asyncio.wait_for(self._queue.get(), timeout=self.config.heartbeat_interval)
+                event = await asyncio.wait_for(
+                    self._queue.get(), timeout=self.config.heartbeat_interval
+                )
                 if event.event_type == EventType.HEARTBEAT:
-                    continue  # Skip heartbeats in iteration
-                yield event
+                    # Yield heartbeat so consumers can detect liveness
+                    yield event
+                    continue
+
+                # For AT_LEAST_ONCE, track the event until acknowledged
                 if self.config.delivery == DeliveryMode.AT_LEAST_ONCE:
-                    self._acknowledged.add(event.event_id)
+                    self._pending_events[event.event_id] = (
+                        event,
+                        datetime.now(timezone.utc),
+                    )
+
+                yield event
             except asyncio.TimeoutError:
-                # Emit heartbeat on timeout
-                continue
+                # Timeout without event - emit heartbeat
+                heartbeat = AgentesEvent.heartbeat()
+                yield heartbeat
+
+    async def _heartbeat_loop(self) -> None:
+        """Background task to emit periodic heartbeats."""
+        while self._active:
+            try:
+                await asyncio.sleep(self.config.heartbeat_interval)
+                if self._active:
+                    self._emit(AgentesEvent.heartbeat())
+            except asyncio.CancelledError:
+                break
+
+    async def _redelivery_loop(self) -> None:
+        """Background task to redeliver unacknowledged events (AT_LEAST_ONCE)."""
+        while self._active:
+            try:
+                await asyncio.sleep(
+                    self._redelivery_timeout / 2
+                )  # Check twice per timeout
+                if not self._active:
+                    break
+
+                now = datetime.now(timezone.utc)
+                events_to_redeliver: list[AgentesEvent] = []
+
+                for event_id, (event, sent_at) in list(self._pending_events.items()):
+                    # Check if already acknowledged
+                    if event_id in self._acknowledged:
+                        del self._pending_events[event_id]
+                        continue
+
+                    # Check if timeout exceeded
+                    age = (now - sent_at).total_seconds()
+                    if age > self._redelivery_timeout:
+                        attempts = self._redelivery_attempts.get(event_id, 0)
+                        if attempts < self._max_redelivery_attempts:
+                            events_to_redeliver.append(event)
+                            self._redelivery_attempts[event_id] = attempts + 1
+                            # Reset sent time for next timeout check
+                            self._pending_events[event_id] = (event, now)
+                        else:
+                            # Max attempts reached, drop the event
+                            logger.warning(
+                                f"Subscription {self.id}: Dropping event {event_id} "
+                                f"after {attempts} redelivery attempts"
+                            )
+                            del self._pending_events[event_id]
+                            del self._redelivery_attempts[event_id]
+
+                # Redeliver events
+                for event in events_to_redeliver:
+                    logger.debug(
+                        f"Subscription {self.id}: Redelivering event {event.event_id}"
+                    )
+                    self._emit(event)
+
+            except asyncio.CancelledError:
+                break
 
     async def __aenter__(self) -> "Subscription":
         """Enter context manager."""
         return self
 
-    async def __aexit__(self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any) -> None:
+    async def __aexit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any
+    ) -> None:
         """Exit context manager, close subscription."""
         await self.close()
 
@@ -292,6 +391,12 @@ class Subscription:
             self._heartbeat_task.cancel()
             try:
                 await self._heartbeat_task
+            except asyncio.CancelledError:
+                pass
+        if self._redelivery_task is not None:
+            self._redelivery_task.cancel()
+            try:
+                await self._redelivery_task
             except asyncio.CancelledError:
                 pass
         if self._manager is not None:
@@ -329,9 +434,29 @@ class Subscription:
 
         return True
 
-    def acknowledge(self, event_id: str) -> None:
-        """Acknowledge receipt of an event (for AT_LEAST_ONCE)."""
+    def acknowledge(self, event_id: str) -> bool:
+        """
+        Acknowledge receipt of an event (for AT_LEAST_ONCE).
+
+        Args:
+            event_id: The event ID to acknowledge
+
+        Returns:
+            True if the event was pending, False if already acknowledged or not found
+        """
+        if event_id in self._acknowledged:
+            return False
+
         self._acknowledged.add(event_id)
+
+        # Remove from pending events
+        if event_id in self._pending_events:
+            del self._pending_events[event_id]
+            if event_id in self._redelivery_attempts:
+                del self._redelivery_attempts[event_id]
+            return True
+
+        return False
 
     def pending_count(self) -> int:
         """Get number of pending events in buffer."""
@@ -468,7 +593,22 @@ class SubscriptionManager:
         self._subscriptions[sub_id] = subscription
 
         # Index by pattern prefix for efficient routing
-        prefix = pattern.split(".")[0] if "." in pattern else pattern
+        # Handle special patterns:
+        # - "**" matches everything (index under "**")
+        # - "*" matches any single segment (index under "*")
+        # - "*.foo" matches any context with foo holon (index under "*")
+        # - "world.*" matches all in world context (index under "world")
+        if pattern == "**":
+            prefix = "**"
+        elif pattern.startswith("**"):
+            # e.g., "**.manifest" - catch-all pattern
+            prefix = "**"
+        elif pattern.startswith("*"):
+            # e.g., "*" or "*.foo" - wildcard patterns
+            prefix = "*"
+        else:
+            # Normal prefix (e.g., "world" from "world.foo")
+            prefix = pattern.split(".")[0] if "." in pattern else pattern
         if prefix not in self._pattern_index:
             self._pattern_index[prefix] = set()
         self._pattern_index[prefix].add(sub_id)
@@ -497,8 +637,16 @@ class SubscriptionManager:
         subscription = self._subscriptions[subscription_id]
         subscription._active = False
 
-        # Remove from index
-        prefix = subscription.config.pattern.split(".")[0]
+        # Remove from index (use same prefix calculation as subscribe)
+        pattern = subscription.config.pattern
+        if pattern == "**":
+            prefix = "**"
+        elif pattern.startswith("**"):
+            prefix = "**"
+        elif pattern.startswith("*"):
+            prefix = "*"
+        else:
+            prefix = pattern.split(".")[0] if "." in pattern else pattern
         if prefix in self._pattern_index:
             self._pattern_index[prefix].discard(subscription_id)
             if not self._pattern_index[prefix]:
@@ -585,9 +733,13 @@ class SubscriptionManager:
         if prefix in self._pattern_index:
             potential_sub_ids.update(self._pattern_index[prefix])
 
-        # Check wildcard subscriptions (** patterns)
+        # Check wildcard subscriptions (* patterns)
         if "*" in self._pattern_index:
             potential_sub_ids.update(self._pattern_index["*"])
+
+        # Check catch-all subscriptions (** patterns)
+        if "**" in self._pattern_index:
+            potential_sub_ids.update(self._pattern_index["**"])
 
         delivered = 0
         for sub_id in potential_sub_ids:
@@ -739,7 +891,7 @@ class LogosSubscriptionMixin:
             yield sub
 
 
-def add_subscription_methods_to_logos(logos_cls: type) -> None:  # noqa: ARG001
+def add_subscription_methods_to_logos(logos_cls: type) -> type:
     """
     Add subscription methods to Logos class.
 
@@ -747,11 +899,104 @@ def add_subscription_methods_to_logos(logos_cls: type) -> None:  # noqa: ARG001
     - logos.subscribe(pattern): Create subscription
     - logos.subscription(pattern): Context manager
     - logos._emit_subscription_event(): Internal event emission
+    - logos._subscription_manager: Lazy subscription manager
 
-    Note: This function is defined for documentation/reference purposes.
-    The actual integration happens via LogosSubscriptionMixin or direct assignment at runtime.
+    Args:
+        logos_cls: The Logos class to extend
+
+    Returns:
+        The modified class (for chaining)
     """
-    pass  # Integration happens at runtime via mixin or monkey-patching
+    # Add _subscription_manager property
+    if not hasattr(logos_cls, "_subscription_manager"):
+        logos_cls._subscription_manager = None  # type: ignore[attr-defined]
+
+    def _get_subscription_manager(self: Any) -> SubscriptionManager:
+        """Get or create the subscription manager."""
+        if self._subscription_manager is None:
+            self._subscription_manager = SubscriptionManager()
+        manager: SubscriptionManager = self._subscription_manager
+        return manager
+
+    async def subscribe(
+        self: Any,
+        pattern: str,
+        **kwargs: Any,
+    ) -> Subscription:
+        """
+        Subscribe to AGENTESE path events.
+
+        Args:
+            pattern: Path pattern (e.g., "self.memory.*")
+            **kwargs: Subscription options (delivery, ordering, buffer_size, etc.)
+
+        Returns:
+            Active Subscription
+
+        Example:
+            async for event in logos.subscribe("self.memory.*"):
+                print(f"Memory changed: {event.path}")
+        """
+        manager = _get_subscription_manager(self)
+        return await manager.subscribe(pattern, **kwargs)
+
+    @asynccontextmanager
+    async def subscription(
+        self: Any,
+        pattern: str,
+        **kwargs: Any,
+    ) -> AsyncIterator[Subscription]:
+        """
+        Context manager for subscriptions.
+
+        Example:
+            async with logos.subscription("self.forest.*") as sub:
+                async for event in sub:
+                    if event.data.progress == 100:
+                        break
+        """
+        manager = _get_subscription_manager(self)
+        async with manager.subscription(pattern, **kwargs) as sub:
+            yield sub
+
+    def _emit_subscription_event(
+        self: Any,
+        path: str,
+        aspect: str,
+        data: Any,
+        observer_archetype: str = "guest",
+        event_type: EventType = EventType.INVOKED,
+        trace_id: str | None = None,
+    ) -> int:
+        """
+        Emit an event to all matching subscriptions.
+
+        Returns:
+            Number of subscriptions that received the event
+        """
+        if self._subscription_manager is None:
+            return 0
+        manager: SubscriptionManager = self._subscription_manager
+        return manager.emit(
+            path=path,
+            aspect=aspect,
+            data=data,
+            observer_archetype=observer_archetype,
+            event_type=event_type,
+            trace_id=trace_id,
+        )
+
+    # Wire methods if not already present
+    if not hasattr(logos_cls, "_get_subscription_manager"):
+        logos_cls._get_subscription_manager = _get_subscription_manager  # type: ignore[attr-defined]
+    if not hasattr(logos_cls, "subscribe"):
+        logos_cls.subscribe = subscribe  # type: ignore[attr-defined]
+    if not hasattr(logos_cls, "subscription"):
+        logos_cls.subscription = subscription  # type: ignore[attr-defined]
+    if not hasattr(logos_cls, "_emit_subscription_event"):
+        logos_cls._emit_subscription_event = _emit_subscription_event  # type: ignore[attr-defined]
+
+    return logos_cls
 
 
 # === Metrics (from spec §9.5) ===

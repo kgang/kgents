@@ -31,6 +31,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+migrations = [
+    "alembic>=1.13.0",
+]
+brain = [
+    "sentence-transformers>=2.2.0",  # High-quality semantic embeddings for Holographic Brain
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
@@ -55,7 +61,7 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
-    "-m", "not e2e",  # Skip E2E tests by default (use -m e2e to run)
+    "-m", "not tier3",  # Skip tier3 (E2E) tests by default
 ]
 # Test Optimization: Run pytest with --profile-tests to enable profiling
 # Example: pytest --profile-tests --show-recommendations
@@ -66,7 +72,14 @@ filterwarnings = [
     "ignore::pytest.PytestCollectionWarning",
 ]
 # Custom markers for test categorization (Phase 2: Laws as First-Class Citizens, Phase 7: Performance)
+# Test Tiers:
+#   tier1: Unit tests (pure functions, no I/O, no mocks) - target <30s total
+#   tier2: Integration tests (mocked external deps) - target <5m total
+#   tier3: E2E tests (real external services like K8s) - variable time
 markers = [
+    "tier1: Unit tests (pure functions, no I/O, no mocks)",
+    "tier2: Integration tests (mocked external deps)",
+    "tier3: E2E tests (real external services like K8s cluster)",
     "law(name): mark test as category law verification",
     "law_identity: tests identity law (Id >> f == f == f >> Id)",
     "law_associativity: tests associativity ((f >> g) >> h == f >> (g >> h))",
@@ -78,7 +91,7 @@ markers = [
     "external: mark test as requiring external services",
     "accursed_share: mark test as exploratory/chaos (Phase 5)",
     "property: mark test as property-based (Phase 3)",
-    "e2e: end-to-end Kubernetes tests (require kind cluster)",
+    "e2e: end-to-end Kubernetes tests (require kind cluster) - DEPRECATED, use tier3",
 ]
 
 [dependency-groups]

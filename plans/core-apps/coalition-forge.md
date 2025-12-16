@@ -218,6 +218,110 @@ SUBSCRIPTION_TIERS = {
 
 ---
 
+## AGENTESE v3 Integration
+
+> *"Coalition formation is composition. Composition is AGENTESE."*
+
+### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `concept.task.manifest` | manifest | Show task template schema | — |
+| `concept.task[type].manifest` | manifest | Show specific template | — |
+| `?concept.task.*` | query | Search available templates | — |
+| `world.coalition.form` | define | Create coalition for task | `SPAWN_AGENTS`, `DEBIT_CREDITS` |
+| `world.coalition[id].manifest` | manifest | Watch coalition work | — |
+| `world.coalition[id].dialogue.witness` | witness | Stream dialogue history | — |
+| `world.coalition[id].subscribe` | witness | Real-time updates | — |
+| `world.coalition[id].inject` | refine | Add constraint mid-task | `NOTIFY_CITIZENS` |
+| `time.task[id].witness` | witness | Replay task execution | — |
+| `self.credits.manifest` | manifest | My credit balance | — |
+
+### Observer-Dependent Perception
+
+```python
+# User sees simplified progress + output
+await logos("world.coalition[id].manifest", user_umwelt)
+# → TaskProgress(status, estimated_time, preview)
+
+# Power user sees full coalition dynamics
+await logos("world.coalition[id].manifest", power_user_umwelt)
+# → CoalitionView(agents, handoffs, dialogue, eigenvector_compatibility)
+
+# Enterprise admin sees all team tasks + analytics
+await logos("?world.coalition.*", admin_umwelt, limit=100)
+# → [TaskSummary(id, status, owner, credits_used)]
+```
+
+### Subscription Patterns
+
+```python
+# Subscribe to coalition dialogue (for live viewing)
+sub = await logos.subscribe(
+    "world.coalition[*].dialogue",
+    delivery=DeliveryMode.AT_LEAST_ONCE,
+    buffer_size=500
+)
+
+# Subscribe to task completions (for notifications)
+complete_sub = await logos.subscribe(
+    "world.coalition[*].complete",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+```
+
+### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions
+forge: world.coalition.manifest
+task: concept.task.manifest
+tasks: "?concept.task.*"
+coalitions: "?world.coalition.*"
+credits: self.credits.manifest
+```
+
+### Pipeline Composition (Operad-Native)
+
+```python
+# Task composition using >> operator
+# Each stage maps to Operad operations
+research_pipeline = (
+    path("concept.task.research_report")
+    >> path("world.coalition.form")
+    >> path("world.coalition[*].manifest")
+)
+
+# Complex task: research → analyze → document
+complex_task = AspectPipeline(
+    path("concept.task.research"),
+    path("concept.task.analyze"),
+    path("concept.task.document"),
+    fail_fast=True
+)
+```
+
+### Eigenvector Compatibility via AGENTESE
+
+```python
+# Query citizens by eigenvector compatibility
+compatible = await logos(
+    "?world.citizen.*",
+    user_umwelt,
+    filter={"eigenvector.creativity": ">0.7", "eigenvector.analytical": ">0.5"}
+)
+
+# Form coalition with specific citizens
+coalition = await logos(
+    "world.coalition.form",
+    user_umwelt,
+    citizens=compatible[:5],
+    task="concept.task.research_report"
+)
+```
+
+---
+
 ## Dependencies
 
 | System | Usage |
@@ -227,6 +331,7 @@ SUBSCRIPTION_TIERS = {
 | `agents/operad/` | Composition grammar |
 | `agents/sheaf/` | Output coherence |
 | `protocols/billing/` | Credit system |
+| `protocols/agentese/` | Path-based interaction (v3) |
 
 ---
 

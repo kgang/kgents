@@ -7,7 +7,7 @@ Supports plain, code, heading, quote, and markdown variants.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from protocols.projection.schema import WidgetMeta
 from protocols.projection.tui.base import TUIWidget
@@ -102,7 +102,7 @@ class TUITextStatic(Static):
         self,
         content: str,
         variant: Literal["plain", "code", "heading", "quote", "markdown"] = "plain",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self._content = content

@@ -7,12 +7,12 @@ Shows streaming content with blinking cursor and auto-scroll.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
+from protocols.projection.tui.base import TUIWidget
 from rich.console import RenderableType
 from rich.text import Text
 from textual.widgets import Static
-
-from protocols.projection.tui.base import TUIWidget
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ class TUIStreamingText(Static):
     Use this when you don't need full TUIWidget features.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._chunks: list[str] = []
         self._complete = False
@@ -90,13 +90,12 @@ class TUIStreamingText(Static):
         self._complete = False
         self.refresh()
 
-    @property
-    def content(self) -> str:
+    def get_content(self) -> str:
         """Get accumulated content."""
         return "".join(self._chunks)
 
     def render(self) -> RenderableType:
-        text = Text(self.content)
+        text = Text(self.get_content())
 
         if not self._complete:
             text.append("▋", style="bold blink blue")

@@ -23,7 +23,7 @@ from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import CompositeWidget, RenderTarget
 
 if TYPE_CHECKING:
-    pass
+    from protocols.projection.schema import UIHint
 
 YieldType = Literal["thought", "action", "artifact", "error", "yield"]
 
@@ -394,3 +394,19 @@ class YieldCardWidget(CompositeWidget[YieldCardState]):
             )
 
         return result
+
+    # =========================================================================
+    # Projection Integration
+    # =========================================================================
+
+    def ui_hint(self) -> "UIHint":
+        """
+        Return the UI hint for this widget.
+
+        YieldCards render as "card" type (agent output).
+        """
+        return "card"
+
+    def widget_type(self) -> str:
+        """Override to return 'yield_card' explicitly."""
+        return "yield_card"

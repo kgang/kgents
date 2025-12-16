@@ -134,19 +134,19 @@ class SelectWidget(KgentsWidget[SelectWidgetState]):
 
             if s.multiple:
                 # Multi-select uses SelectionList
-                options = [
+                multi_options: list[tuple[str, str, bool]] = [
                     (opt.label, opt.value, opt.value in s.selected)
                     for opt in s.options
                     if not opt.disabled
                 ]
-                return SelectionList(*options)
+                return SelectionList(*multi_options)
             else:
                 # Single select
-                options = [
+                single_options: list[tuple[str, str]] = [
                     (opt.label, opt.value) for opt in s.options if not opt.disabled
                 ]
                 return Select(
-                    options,
+                    single_options,
                     prompt=s.placeholder,
                     value=s.selected[0] if s.selected else None,
                 )

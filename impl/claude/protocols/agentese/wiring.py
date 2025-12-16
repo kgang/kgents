@@ -49,7 +49,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from .exceptions import (
     ObserverRequiredError,
@@ -61,7 +61,7 @@ from .integration import (
     create_agentese_integrations,
 )
 from .logos import ComposedPath, IdentityPath, Logos, create_logos
-from .node import LogosNode
+from .node import LogosNode, Observer
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -166,7 +166,7 @@ class WiredLogos:
     async def invoke(
         self,
         path: str,
-        observer: "Umwelt[Any, Any]",
+        observer: "Umwelt[Any, Any] | Observer | None" = None,
         **kwargs: Any,
     ) -> Any:
         """
@@ -174,28 +174,30 @@ class WiredLogos:
 
         Enhanced behavior:
         1. Validate path via G-gent
-        2. Extract AgentMeta via UmweltIntegration
+        2. Extract AgentMeta via UmweltIntegration (if Umwelt provided)
         3. Check affordances with enhanced metadata
         4. Invoke via Logos
         5. Track usage in L-gent
 
         Args:
             path: Full AGENTESE path including aspect
-            observer: The observer's Umwelt (REQUIRED)
+            observer: Observer, Umwelt, or None (v3 API: defaults to guest)
             **kwargs: Aspect-specific arguments
 
         Returns:
             Aspect-specific result
         """
-        if observer is None:
-            raise ObserverRequiredError()
-
         # Step 1: G-gent validation
         if self.validate_paths:
             self._validate_path(path)
 
-        # Step 2: UmweltIntegration for enhanced meta extraction
-        _meta = self.integrations.umwelt.extract_meta(observer)
+        # Step 2: UmweltIntegration for enhanced meta extraction (only if Umwelt)
+        # Skip if observer is an Observer or None
+        if observer is not None and hasattr(observer, "dna"):
+            # hasattr check ensures this is Umwelt, not Observer
+            _meta = self.integrations.umwelt.extract_meta(
+                cast("Umwelt[Any, Any]", observer)
+            )
 
         # Step 3 & 4: Invoke via Logos (uses our resolve() which is enhanced)
         success = True

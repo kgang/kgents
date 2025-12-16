@@ -22,7 +22,7 @@ See: spec/protocols/projection.md
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, auto
 from typing import Any, Generic, Literal, TypeVar
 
@@ -86,7 +86,18 @@ class CacheMeta:
         """Check if cache is stale based on TTL."""
         if not self.is_cached or self.cached_at is None or self.ttl_seconds is None:
             return False
-        elapsed = (datetime.now() - self.cached_at).total_seconds()
+        # For accurate comparison, use timezone-aware datetimes when available.
+        # If cached_at is naive, use naive now() to compare in same "space".
+        # If cached_at is aware, use aware now(utc) for correct comparison.
+        if self.cached_at.tzinfo is not None:
+            now = datetime.now(timezone.utc)
+            # Convert to UTC for comparison
+            cached_at_utc = self.cached_at.astimezone(timezone.utc)
+            elapsed = (now - cached_at_utc).total_seconds()
+        else:
+            # Both naive - compare directly
+            now = datetime.now()
+            elapsed = (now - self.cached_at).total_seconds()
         return elapsed > self.ttl_seconds
 
     @property
@@ -94,7 +105,18 @@ class CacheMeta:
         """Get cache age in seconds, or None if not cached."""
         if not self.is_cached or self.cached_at is None:
             return None
-        return (datetime.now() - self.cached_at).total_seconds()
+        # For accurate comparison, use timezone-aware datetimes when available.
+        # If cached_at is naive, use naive now() to compare in same "space".
+        # If cached_at is aware, use aware now(utc) for correct comparison.
+        if self.cached_at.tzinfo is not None:
+            now = datetime.now(timezone.utc)
+            # Convert to UTC for comparison
+            cached_at_utc = self.cached_at.astimezone(timezone.utc)
+            return (now - cached_at_utc).total_seconds()
+        else:
+            # Both naive - compare directly
+            now = datetime.now()
+            return (now - self.cached_at).total_seconds()
 
 
 # =============================================================================
@@ -210,7 +232,7 @@ class StreamMeta:
             total_expected=self.total_expected,
             received=received,
             started_at=self.started_at,
-            last_chunk_at=datetime.now(),
+            last_chunk_at=datetime.now(timezone.utc),
         )
 
 

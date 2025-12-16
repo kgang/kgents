@@ -43,6 +43,45 @@ from .concept_blend import (
     create_blend_node,
     forge_blend,
 )
+
+# Crown Jewels path registry (Seven Crown Jewel apps)
+from .crown_jewels import (
+    ALL_CROWN_JEWEL_PATHS,
+    ATELIER_PATHS,
+    BRAIN_PATHS,
+    COALITION_PATHS,
+    GARDENER_PATHS,
+    GESTALT_PATHS,
+    PARK_PATHS,
+    SIMULATION_PATHS,
+    CrownJewelRegistry,
+    # Crown Symbiont integration
+    create_crown_symbiont_for_path,
+    get_crown_jewel_registry,
+    get_dgent_config_for_path,
+    list_self_time_paths,
+    register_crown_jewel_paths,
+)
+from .crown_mappings import (
+    CROWN_DGENT_MAPPINGS,
+    MappingStats,
+    get_mapping_stats,
+    get_triple_config,
+    is_crown_path,
+    list_paths_by_aspect,
+    list_paths_by_context,
+    needs_lattice,
+    needs_manifold,
+    needs_witness,
+)
+
+# Crown Symbiont: Pure logic + D-gent triple infrastructure
+from .crown_symbiont import (
+    CrownSymbiont,
+    CrownTripleConfig,
+    compose_crown_symbionts,
+    create_crown_symbiont,
+)
 from .forest import (
     FOREST_ROLE_AFFORDANCES,
     EpilogueEntry,
@@ -81,6 +120,11 @@ from .time import (
     TimeContextResolver,
     TraceNode,
     create_time_resolver,
+)
+from .triple_backed_memory import (
+    TripleBackedMemory,
+    WitnessReport,
+    create_triple_backed_memory,
 )
 from .void import (
     CapitalNode,
@@ -123,6 +167,9 @@ def create_context_resolvers(
     memory_crystal: Any = None,
     pheromone_field: Any = None,
     inference_agent: Any = None,
+    # Crown Jewel Brain (Session 3-4)
+    cartographer: Any = None,
+    embedder: Any = None,
 ) -> dict[str, Any]:
     """
     Create all five context resolvers with unified configuration.
@@ -142,6 +189,8 @@ def create_context_resolvers(
         memory_crystal: MemoryCrystal for Four Pillars holographic memory
         pheromone_field: PheromoneField for stigmergic coordination
         inference_agent: ActiveInferenceAgent for free energy-based retention
+        cartographer: CartographerAgent for holographic memory navigation
+        embedder: L-gent Embedder for semantic embeddings (Session 4)
 
     Returns:
         Dictionary mapping context names to resolvers
@@ -162,6 +211,9 @@ def create_context_resolvers(
             memory_crystal=memory_crystal,
             pheromone_field=pheromone_field,
             inference_agent=inference_agent,
+            # Crown Jewel Brain (Session 3-4)
+            cartographer=cartographer,
+            embedder=embedder,
         ),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
         "void": create_void_resolver(
@@ -249,6 +301,39 @@ __all__ = [
     "create_forest_node",
     "create_forest_resolver",
     "parse_forest_md",
+    # Crown Jewels (Seven Crown Jewel applications)
+    "ALL_CROWN_JEWEL_PATHS",
+    "ATELIER_PATHS",
+    "BRAIN_PATHS",
+    "COALITION_PATHS",
+    "CrownJewelRegistry",
+    "GARDENER_PATHS",
+    "GESTALT_PATHS",
+    "PARK_PATHS",
+    "SIMULATION_PATHS",
+    "get_crown_jewel_registry",
+    "register_crown_jewel_paths",
+    # Crown Symbiont: Pure logic + D-gent triple
+    "CrownSymbiont",
+    "CrownTripleConfig",
+    "CROWN_DGENT_MAPPINGS",
+    "MappingStats",
+    "TripleBackedMemory",
+    "WitnessReport",
+    "compose_crown_symbionts",
+    "create_crown_symbiont",
+    "create_crown_symbiont_for_path",
+    "create_triple_backed_memory",
+    "get_dgent_config_for_path",
+    "get_mapping_stats",
+    "get_triple_config",
+    "is_crown_path",
+    "list_paths_by_aspect",
+    "list_paths_by_context",
+    "list_self_time_paths",
+    "needs_lattice",
+    "needs_manifold",
+    "needs_witness",
     # Unified factory
     "create_context_resolvers",
 ]

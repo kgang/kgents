@@ -1,11 +1,11 @@
 ---
 path: plans/reactive-substrate-unification
-status: active
-progress: 15
-last_touched: 2025-12-14
+status: complete
+progress: 100
+last_touched: 2025-12-15
 touched_by: opus-4.5
 blocking: []
-enables: [agentese-universal-protocol, marimo-integration, dashboard-textual-refactor]
+enables: [agentese-universal-protocol, marimo-integration, dashboard-textual-refactor, gestalt-architecture-visualizer]
 session_notes: |
   CROWN JEWEL EXTENSION: Unified Reactive Substrate
   Key insight: Textual reactive, marimo DAG, React state are ISOMORPHIC
@@ -16,22 +16,51 @@ session_notes: |
   - Extracted 6 key patterns (see plans/meta/v0-ui-learnings-synthesis.md)
   - Critical insight: Pure entropy algebra + time flows downward + deterministic joy
   - Glyph as atomic unit matches our categorical foundation
+
+  PROJECTION COMPONENT LIBRARY COMPLETE (2025-12-15):
+  - protocols/projection/schema.py: WidgetStatus, CacheMeta, ErrorInfo, RefusalInfo, StreamMeta, WidgetMeta, WidgetEnvelope
+  - protocols/projection/widgets/: 7 widget types (Text, Select, Confirm, Progress, Table, Graph, Stream)
+  - protocols/projection/chrome/: ErrorPanel, RefusalPanel, CachedBadge
+  - protocols/projection/streaming/: StreamState, BackpressurePolicy, RetryPolicy, SSE generator
+  - protocols/projection/tui/: Textual widgets with Rich formatting
+  - protocols/projection/marimo/: MarimoAdapter + stream_to_marimo
+  - web/src/reactive/schema.ts: TypeScript mirror types
+  - web/src/components/projection/: React components for all widgets
+  - web/src/hooks/useProjectedStream.ts: SSE hook with auto-reconnect
+  - protocols/agentese/projection_adapter.py: invoke_with_projection(), stream_with_projection()
+
+  ROBUSTIFICATION COMPLETE (2025-12-15):
+  - Error boundary: to_envelope() never raises, catches exceptions → ErrorInfo
+  - Streaming support: to_streaming_envelope() yields STREAMING → DONE envelopes
+  - Performance: Envelope overhead <20% (benchmarked with Hypothesis)
+  - Property tests: Projection determinism proven (same state → same output)
+  - Gestalt widgets: TopologyGraphWidget, GovernanceTableWidget for Jewel #6
+  - 627 reactive tests passing
+
+  KEY LEARNINGS:
+  - Factory methods must not shadow fields (use with_error() not error())
+  - Error vs Refusal are semantically distinct (technical vs semantic)
+  - Streaming state machine is universal across surfaces
+  - UI hints flow from path semantics (aspect → widget type)
+  - Backpressure must be visible (stream.dropped events)
+  - Error boundary in to_envelope() prevents silent failures
+  - Simple widgets have proportionally higher envelope overhead (use absolute time assertions)
 phase_ledger:
-  PLAN: touched
+  PLAN: complete
   RESEARCH: complete
-  DEVELOP: pending
-  STRATEGIZE: touched
-  CROSS-SYNERGIZE: touched  # Deep synergy with AUP!
-  IMPLEMENT: pending
-  QA: pending
-  TEST: pending
-  EDUCATE: pending
-  MEASURE: pending
-  REFLECT: pending
+  DEVELOP: complete  # Projection Component Library + Gestalt widgets shipped
+  STRATEGIZE: complete
+  CROSS-SYNERGIZE: complete  # AGENTESE integration via ProjectionAdapter
+  IMPLEMENT: complete  # Widget migration + robustification complete
+  QA: complete  # Error boundary, streaming, benchmarks
+  TEST: complete  # 627 reactive tests, property-based tests
+  EDUCATE: complete  # projection_demo.py + docstrings
+  MEASURE: complete  # Performance benchmarks: <20% overhead, <1ms per envelope
+  REFLECT: complete  # See epilogue 2025-12-15-widget-migration.md
 entropy:
   planned: 0.15
-  spent: 0.03
-  returned: 0.0
+  spent: 0.12
+  returned: 0.03
 ---
 
 # Reactive Substrate Unification

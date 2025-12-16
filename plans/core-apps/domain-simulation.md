@@ -297,6 +297,175 @@ scenario:
 
 ---
 
+## AGENTESE v3 Integration
+
+> *"Enterprise simulations demand full audit trails. AGENTESE makes every action observable."*
+
+### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `world.simulation.manifest` | manifest | List active simulations | — |
+| `world.simulation[id].manifest` | manifest | Simulation state | — |
+| `world.simulation[id].polynomial.manifest` | manifest | Current polynomial position | — |
+| `world.simulation[id].inject` | define | Runtime scenario inject | `NOTIFY_PARTICIPANTS`, `LOG_AUDIT` |
+| `world.simulation[id].advance` | define | Advance polynomial state | `STATE_TRANSITION`, `LOG_AUDIT` |
+| `world.simulation[id].subscribe` | witness | Real-time updates | — |
+| `concept.polynomial[type].manifest` | manifest | Polynomial schema | — |
+| `concept.drill[type].manifest` | manifest | Drill template | — |
+| `?concept.drill.*` | query | Search drill templates | — |
+| `time.simulation[id].witness` | witness | Full audit replay | — |
+| `time.simulation[id].export` | manifest | Compliance export | — |
+
+### Observer-Dependent Perception (Role-Based)
+
+```python
+# Each role in the drill sees different information
+# This creates realistic information asymmetry
+
+# Security Analyst sees: logs, alerts, containment options
+await logos("world.simulation[id].manifest", security_analyst_umwelt)
+# → SecurityView(logs, alerts, containment_options, forensic_tools)
+
+# Incident Commander sees: timeline, resources, escalation
+await logos("world.simulation[id].manifest", incident_commander_umwelt)
+# → CommanderView(timeline, team_status, escalation_path, decisions)
+
+# Executive sees: business impact, public messaging
+await logos("world.simulation[id].manifest", executive_umwelt)
+# → ExecutiveView(impact_summary, customer_exposure, media_talking_points)
+
+# Facilitator sees: everything + inject controls
+await logos("world.simulation[id].manifest", facilitator_umwelt)
+# → FacilitatorView(all_views, inject_controls, participant_metrics)
+```
+
+### Multi-Tenant via Observer
+
+```python
+# Tenant context integrated with AGENTESE observer
+from protocols.tenancy import TenantContext
+
+with TenantContext(tenant_id="acme-healthcare"):
+    # All queries scoped to tenant
+    drills = await logos("?concept.drill.*", admin_umwelt)
+    # → Only ACME's custom drills visible
+
+    # Simulation creation respects tenant
+    sim = await logos(
+        "world.simulation.create",
+        admin_umwelt,
+        drill="data_breach_v2",
+        effects=["CREATE_SIMULATION", "NOTIFY_PARTICIPANTS"]
+    )
+    # → Simulation isolated to ACME tenant
+```
+
+### Subscription Patterns
+
+```python
+# Participant: real-time updates during drill
+participant_sub = await logos.subscribe(
+    "world.simulation[id].events",
+    delivery=DeliveryMode.AT_LEAST_ONCE,
+    buffer_size=500
+)
+
+# Facilitator: all participant actions (for monitoring)
+facilitator_sub = await logos.subscribe(
+    "world.simulation[id].actions",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+
+# Compliance: audit trail (guaranteed delivery)
+audit_sub = await logos.subscribe(
+    "time.simulation[id].audit",
+    delivery=DeliveryMode.AT_LEAST_ONCE,
+    persist=True  # Never lose audit events
+)
+```
+
+### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions (enterprise focus)
+sim: world.simulation.manifest
+drill: concept.drill.manifest
+drills: "?concept.drill.*"
+inject: world.simulation.inject
+advance: world.simulation.advance
+audit: time.simulation.witness
+export: time.simulation.export
+```
+
+### Pipeline Composition (Polynomial Transitions)
+
+```python
+# Crisis drill lifecycle as pipeline
+crisis_pipeline = (
+    path("concept.drill[data_breach].manifest")
+    >> path("world.simulation.create")
+    >> path("world.simulation[id].start")
+    # Participants interact...
+    >> path("world.simulation[id].advance", state="RESPONSE")
+    >> path("world.simulation[id].advance", state="RECOVERY")
+    >> path("time.simulation[id].witness")  # Debrief
+)
+
+# Inject sequence
+inject_sequence = AspectPipeline(
+    path("world.simulation[id].inject", event="media_story"),
+    path("world.simulation[id].inject", event="executive_call"),
+    fail_fast=False  # All injects fire
+)
+```
+
+### Audit Trail via AGENTESE
+
+```python
+# Every action logged with full context
+# This is THE compliance differentiator
+
+# Replay with full state reconstruction
+replay = await logos(
+    "time.simulation[id].witness",
+    auditor_umwelt,
+    format="timeline"  # or "json", "pdf", "scorm"
+)
+# → AuditTimeline(actions, decisions, state_transitions, participants)
+
+# Export for regulatory compliance
+export = await logos(
+    "time.simulation[id].export",
+    compliance_umwelt,
+    format="pdf",
+    include_decisions=True,
+    include_metrics=True
+)
+# → ComplianceReport(audit_trail, metrics, recommendations)
+```
+
+### Polynomial State via AGENTESE
+
+```python
+# Query current polynomial position
+state = await logos(
+    "world.simulation[id].polynomial.manifest",
+    facilitator_umwelt
+)
+# → PolynomialState(position="INCIDENT", transitions_available=["RESPONSE", "ESCALATE"])
+
+# Advance state (logged, audited)
+await logos(
+    "world.simulation[id].advance",
+    facilitator_umwelt,
+    to_state="RESPONSE",
+    effects=["STATE_TRANSITION", "NOTIFY_PARTICIPANTS", "LOG_AUDIT"]
+)
+```
+
+---
+
 ## Dependencies
 
 | System | Usage |
@@ -307,6 +476,7 @@ scenario:
 | `protocols/tenancy/` | Multi-tenant isolation |
 | `protocols/terrarium/` | Gateway + metrics |
 | `protocols/api/` | REST endpoints |
+| `protocols/agentese/` | Path-based interaction (v3) |
 | `infra/k8s/` | Deployment manifests |
 
 ---

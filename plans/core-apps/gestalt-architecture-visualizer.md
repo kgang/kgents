@@ -144,10 +144,100 @@ class ModuleHealth:
 - SSE stream; initial load <2s on 50-module repo; smooth zoom/pan.
 - Exit: 50+ tests (API + frontend); accessibility + perf budgets met.
 
-### Phase 5 — AGENTESE Integration (Chunk 5)
-**Goal**: Logos paths for architecture.
-- Paths: `world.codebase.manifest`, `.module[name=x].manifest`, `.drift.witness`, `.layer[name=x].manifest`, `self.memory.cartography`.
-- Observer-dependent affordances (security, performance, product lenses).
+### Phase 5 — AGENTESE v3 Integration (Chunk 5)
+**Goal**: Full Logos paths for architecture + v3 features.
+
+#### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `world.codebase.manifest` | manifest | Full architecture graph | — |
+| `world.codebase.module[name].manifest` | manifest | Module details | — |
+| `world.codebase.layer[name].manifest` | manifest | Layer with members | — |
+| `world.codebase.drift.witness` | witness | Drift violations | — |
+| `world.codebase.drift.refine` | refine | Challenge drift rule | — |
+| `world.codebase.health.manifest` | manifest | Health metrics | — |
+| `world.codebase.subscribe` | witness | Live architecture updates | — |
+| `?world.codebase.module.*` | query | Search modules by pattern | — |
+| `?world.codebase.drift.*` | query | Search drift violations | — |
+| `self.memory.cartography` | manifest | Holographic architecture view | — |
+| `concept.governance.manifest` | manifest | Architecture rules | — |
+| `concept.governance.refine` | refine | Propose rule change | `QUEUE_REVIEW` |
+
+#### Observer-Dependent Perception
+
+```python
+# Security engineer sees: vulnerabilities, access patterns
+await logos("world.codebase.manifest", security_umwelt)
+# → SecurityView(vulnerable_deps, access_paths, attack_surface)
+
+# Performance engineer sees: hot paths, bottlenecks
+await logos("world.codebase.manifest", performance_umwelt)
+# → PerformanceView(hot_modules, coupling_bottlenecks, complexity_spikes)
+
+# Product manager sees: feature modules, dependencies
+await logos("world.codebase.manifest", product_umwelt)
+# → ProductView(feature_modules, integration_points, change_impact)
+
+# Tech lead sees: health metrics, governance
+await logos("world.codebase.manifest", tech_lead_umwelt)
+# → GovernanceView(health_grades, drift_alerts, layer_violations)
+```
+
+#### Subscription Patterns
+
+```python
+# Live architecture updates (file watcher → Signal → subscription)
+arch_sub = await logos.subscribe(
+    "world.codebase.update",
+    delivery=DeliveryMode.AT_MOST_ONCE,  # Debounce OK
+    buffer_size=50
+)
+
+# Drift alerts (important, don't miss)
+drift_sub = await logos.subscribe(
+    "world.codebase.drift.alert",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+
+# Health degradation warnings
+health_sub = await logos.subscribe(
+    "world.codebase.health.warning",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+```
+
+#### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions
+arch: world.codebase.manifest
+modules: "?world.codebase.module.*"
+drift: world.codebase.drift.witness
+health: world.codebase.health.manifest
+layers: "?world.codebase.layer.*"
+governance: concept.governance.manifest
+tour: world.codebase.tour
+```
+
+#### Pipeline Composition
+
+```python
+# Scan → analyze → report
+analysis_pipeline = (
+    path("world.codebase.manifest")
+    >> path("world.codebase.health.manifest")
+    >> path("world.codebase.drift.witness")
+)
+
+# Governance challenge workflow
+challenge_pipeline = (
+    path("world.codebase.drift[id].manifest")
+    >> path("world.codebase.drift[id].refine")  # Propose exception
+    >> path("concept.governance.refine")         # Queue for review
+)
+```
+
 - Exit: 30+ tests; governance rules respected in resolver outputs.
 
 ### Phase 6 — VR Projection (Future)

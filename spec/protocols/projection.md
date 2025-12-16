@@ -369,4 +369,149 @@ This means:
 
 ---
 
+## The Projection Gallery
+
+The Projection Gallery is the canonical demonstration of the protocol. It renders **every widget** to **every target** in a single view, proving the protocol's guarantees hold in practice.
+
+### Architecture
+
+```
+Pilot[State] ────► Gallery.render() ────► { CLI, HTML, JSON }
+     │                    │                        │
+     │                    │                        │
+     └── Widget factory ──┴── Override injection ──┘
+```
+
+### Gallery Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `Pilot` | `protocols/projection/gallery/pilots.py` | Pre-configured widget demo |
+| `Gallery` | `protocols/projection/gallery/runner.py` | Render orchestrator |
+| `GalleryOverrides` | `protocols/projection/gallery/overrides.py` | Developer control injection |
+| `GalleryAPI` | `protocols/api/gallery.py` | REST endpoint |
+| `GalleryPage` | `web/src/pages/GalleryPage.tsx` | React frontend |
+
+### The Pilot Pattern
+
+A **Pilot** is a pre-configured widget demonstration:
+
+```python
+@dataclass
+class Pilot:
+    name: str                     # "glyph_idle", "agent_card_error"
+    category: PilotCategory       # PRIMITIVES, CARDS, CHROME, etc.
+    description: str              # One-line explanation
+    widget_factory: Callable      # Creates widget with overrides
+    tags: list[str]               # Searchable metadata
+```
+
+Pilots separate **what to show** from **how to show it**:
+
+```python
+# Define the demo
+register_pilot(Pilot(
+    name="glyph_entropy_sweep",
+    category=PilotCategory.PRIMITIVES,
+    description="Glyph with customizable entropy",
+    widget_factory=lambda overrides: GlyphWidget(
+        GlyphState(
+            entropy=overrides.get("entropy", 0.5),
+            phase="active",
+        )
+    ),
+    variations=[{"entropy": e} for e in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]],
+    tags=["glyph", "entropy", "sweep"],
+))
+
+# Gallery handles all projections
+gallery = Gallery()
+gallery.show("glyph_entropy_sweep", target=RenderTarget.CLI)
+gallery.show("glyph_entropy_sweep", target=RenderTarget.MARIMO)
+gallery.show("glyph_entropy_sweep", target=RenderTarget.JSON)
+```
+
+### Override Injection
+
+The Gallery supports surgical state manipulation for rapid iteration:
+
+```python
+# Environment variables
+export KGENTS_GALLERY_ENTROPY=0.5
+export KGENTS_GALLERY_SEED=42
+
+# CLI flags
+python -m protocols.projection.gallery --entropy=0.8 --seed=123
+
+# Programmatic
+gallery = Gallery(GalleryOverrides(entropy=0.3, seed=999))
+
+# Per-widget override
+gallery.show("agent_card", overrides={"phase": "error", "breathing": False})
+```
+
+### Web Gallery API
+
+The REST API serves projections for the web frontend:
+
+```
+GET /api/gallery                    # All pilots, all projections
+GET /api/gallery?category=CARDS     # Filter by category
+GET /api/gallery?entropy=0.5        # With overrides
+GET /api/gallery/{pilot_name}       # Single pilot
+GET /api/gallery/categories         # Category metadata
+```
+
+Response shape:
+```json
+{
+  "pilots": [
+    {
+      "name": "glyph_idle",
+      "category": "PRIMITIVES",
+      "description": "Glyph in idle phase",
+      "tags": ["glyph", "idle"],
+      "projections": {
+        "cli": "○",
+        "html": "<span class=\"kgents-glyph\">○</span>",
+        "json": {"type": "glyph", "char": "○", "phase": "idle"}
+      }
+    }
+  ],
+  "categories": ["PRIMITIVES", "CARDS", "CHROME", ...],
+  "total": 25
+}
+```
+
+### The Gallery as Protocol Proof
+
+The Gallery proves the Projection Protocol's claims:
+
+| Claim | Gallery Evidence |
+|-------|------------------|
+| **Design once** | 25 pilots, each renders to 3+ targets |
+| **Batteries included** | No per-target code in pilots |
+| **Lossy by design** | CLI shows less than marimo |
+| **Deterministic** | Same seed → same output |
+| **Composable** | HStack/VStack pilots compose primitives |
+
+### Running the Gallery
+
+```bash
+# CLI gallery
+cd impl/claude
+python -m protocols.projection.gallery --all
+python -m protocols.projection.gallery --widget=agent_card --entropy=0.5
+
+# Web gallery
+cd impl/claude
+uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
+
+cd impl/claude/web
+npm run dev
+# Visit http://localhost:3000/gallery
+```
+
+---
+
 *"The projection is not the territory. But a good projection makes the territory navigable."*

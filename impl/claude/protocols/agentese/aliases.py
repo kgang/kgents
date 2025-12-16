@@ -1,5 +1,5 @@
 """
-AGENTESE Path Aliases (v3)
+AGENTESE Path Aliases
 
 Power user shortcuts for common paths.
 

@@ -6,13 +6,13 @@ Provides consistent status chrome across TUI widgets.
 
 from __future__ import annotations
 
+from typing import Any
+
+from protocols.projection.schema import CacheMeta, ErrorInfo, RefusalInfo
 from rich.console import RenderableType
 from rich.panel import Panel
 from rich.text import Text
 from textual.widgets import Static
-
-from protocols.projection.schema import CacheMeta, ErrorInfo, RefusalInfo
-
 
 # Error emoji mapping by category
 ERROR_EMOJI = {
@@ -40,7 +40,9 @@ class TUIErrorPanel(Static):
     }
     """
 
-    def __init__(self, error: ErrorInfo, show_retry: bool = True, **kwargs) -> None:
+    def __init__(
+        self, error: ErrorInfo, show_retry: bool = True, **kwargs: Any
+    ) -> None:
         super().__init__(**kwargs)
         self._error = error
         self._show_retry = show_retry
@@ -95,7 +97,7 @@ class TUIRefusalPanel(Static):
         refusal: RefusalInfo,
         show_appeal: bool = True,
         show_override: bool = True,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self._refusal = refusal
@@ -150,7 +152,7 @@ class TUICachedBadge(Static):
     }
     """
 
-    def __init__(self, cache: CacheMeta, **kwargs) -> None:
+    def __init__(self, cache: CacheMeta, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._cache = cache
 

@@ -7,16 +7,15 @@ Supports bar and step variants with animations.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
+from protocols.projection.schema import WidgetMeta
+from protocols.projection.tui.base import TUIWidget
 from rich.console import RenderableType
 from rich.progress_bar import ProgressBar
 from rich.table import Table
 from rich.text import Text
 from textual.widgets import Static
-
-from protocols.projection.schema import WidgetMeta
-from protocols.projection.tui.base import TUIWidget
 
 
 @dataclass(frozen=True)
@@ -127,7 +126,7 @@ class TUIProgressBar(Static):
     Use this when you don't need full TUIWidget features.
     """
 
-    def __init__(self, value: int = 0, label: str | None = None, **kwargs) -> None:
+    def __init__(self, value: int = 0, label: str | None = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._value = max(0, min(100, value))
         self._label = label

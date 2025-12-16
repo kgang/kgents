@@ -338,6 +338,17 @@ from .pulse import (
     create_pulse,
     create_pulse_from_window,
 )
+
+# D-gent Triple: Unified Noosphere pattern (Witness + Manifold + Lattice)
+from .triple import (
+    MANIFOLD_AVAILABLE,
+    DgentTriple,
+    TripleStats,
+    create_dgent_triple,
+    create_temporal_relational,
+    create_temporal_semantic,
+    create_witness_only,
+)
 from .witness import (
     DriftSeverity,
     EntropyLevel,
@@ -725,4 +736,12 @@ __all__ = [
     "memory_transition",
     "MemoryPolynomialAgent",
     "reset_memory",
+    # D-gent Triple: Unified Noosphere pattern
+    "DgentTriple",
+    "TripleStats",
+    "MANIFOLD_AVAILABLE",
+    "create_dgent_triple",
+    "create_witness_only",
+    "create_temporal_semantic",
+    "create_temporal_relational",
 ]

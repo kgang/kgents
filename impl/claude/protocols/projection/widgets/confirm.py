@@ -98,17 +98,19 @@ class ConfirmWidget(KgentsWidget[ConfirmWidgetState]):
             class ConfirmDialog:
                 """Pseudo-widget for TUI confirmation."""
 
-                def __init__(self, state: ConfirmWidgetState) -> None:
-                    self.state = state
+                def __init__(self, widget_state: ConfirmWidgetState) -> None:
+                    self._state = widget_state
 
-                def compose(self):
-                    yield Static(state.message)
-                    if state.requires_type_confirm:
-                        yield Input(placeholder=f"Type '{state.requires_type_confirm}'")
+                def compose(self) -> Any:
+                    yield Static(self._state.message)
+                    if self._state.requires_type_confirm:
+                        yield Input(
+                            placeholder=f"Type '{self._state.requires_type_confirm}'"
+                        )
                     with Horizontal():
-                        variant = "error" if state.destructive else "primary"
-                        yield Button(state.confirm_label, variant=variant)
-                        yield Button(state.cancel_label, variant="default")
+                        variant: str = "error" if self._state.destructive else "primary"
+                        yield Button(self._state.confirm_label, variant=variant)  # type: ignore[arg-type]
+                        yield Button(self._state.cancel_label, variant="default")
 
             return ConfirmDialog(s)
         except ImportError:

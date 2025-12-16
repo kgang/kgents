@@ -30,6 +30,12 @@ Usage:
 See: spec/protocols/projection.md
 """
 
+# Chrome components
+from protocols.projection.chrome import (
+    CachedBadge,
+    ErrorPanel,
+    RefusalPanel,
+)
 from protocols.projection.schema import (
     CacheMeta,
     ErrorCategory,
@@ -40,6 +46,34 @@ from protocols.projection.schema import (
     WidgetEnvelope,
     WidgetMeta,
     WidgetStatus,
+)
+
+# Streaming infrastructure
+from protocols.projection.streaming import (
+    AGGRESSIVE_RETRY,
+    CONSERVATIVE_RETRY,
+    NO_RETRY,
+    BackpressurePolicy,
+    BufferManager,
+    DropPolicy,
+    RetryPolicy,
+    StreamContext,
+    StreamState,
+    format_drop_event,
+    format_refusal_event,
+    stream_with_envelope,
+    with_heartbeat,
+)
+
+# Widget states
+from protocols.projection.widgets import (
+    ConfirmWidgetState,
+    GraphWidgetState,
+    ProgressWidgetState,
+    SelectWidgetState,
+    StreamWidgetState,
+    TableWidgetState,
+    TextWidgetState,
 )
 
 __all__ = [
@@ -55,4 +89,30 @@ __all__ = [
     "WidgetMeta",
     # Envelope
     "WidgetEnvelope",
+    # Widget states
+    "TextWidgetState",
+    "SelectWidgetState",
+    "ConfirmWidgetState",
+    "ProgressWidgetState",
+    "TableWidgetState",
+    "GraphWidgetState",
+    "StreamWidgetState",
+    # Chrome
+    "ErrorPanel",
+    "RefusalPanel",
+    "CachedBadge",
+    # Streaming
+    "StreamState",
+    "StreamContext",
+    "BackpressurePolicy",
+    "DropPolicy",
+    "BufferManager",
+    "RetryPolicy",
+    "AGGRESSIVE_RETRY",
+    "CONSERVATIVE_RETRY",
+    "NO_RETRY",
+    "stream_with_envelope",
+    "format_drop_event",
+    "format_refusal_event",
+    "with_heartbeat",
 ]

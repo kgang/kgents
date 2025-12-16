@@ -1,7 +1,7 @@
 """
-AGENTESE v3 API Tests
+AGENTESE API Tests
 
-Tests for the v3 API additions:
+Tests for the API:
 - Observer base class
 - Logos.__call__() syntax
 - @aspect decorator with category enforcement

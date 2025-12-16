@@ -552,10 +552,19 @@ class TestInvoke:
     """Tests for invoke() with integrations."""
 
     @pytest.mark.asyncio
-    async def test_invoke_requires_observer(self, wired_logos: WiredLogos) -> None:
-        """Test that invoke requires observer."""
-        with pytest.raises(ObserverRequiredError):
-            await wired_logos.invoke("world.house.manifest", None)  # type: ignore[arg-type]
+    async def test_invoke_accepts_none_observer(self, wired_logos: WiredLogos) -> None:
+        """Test that invoke accepts None observer (v3 API: defaults to guest)."""
+        # v3 API: None defaults to guest observer, so this should not raise
+        # ObserverRequiredError. The actual invocation may fail for other
+        # reasons (e.g., path not registered), but not due to missing observer.
+        try:
+            await wired_logos.invoke("world.house.manifest", None)
+        except ObserverRequiredError:
+            pytest.fail(
+                "ObserverRequiredError should not be raised for None observer in v3 API"
+            )
+        except Exception:
+            pass  # Other exceptions are fine (path may not be registered)
 
     @pytest.mark.asyncio
     async def test_invoke_validates_path(

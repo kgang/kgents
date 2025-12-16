@@ -84,7 +84,7 @@ class TableWidgetState:
         return tuple(
             sorted(
                 self.rows,
-                key=lambda r: r.get(self.sort_by, ""),
+                key=lambda r: r.get(self.sort_by or "", ""),
                 reverse=reverse,
             )
         )
@@ -205,10 +205,15 @@ class TableWidget(KgentsWidget[TableWidgetState]):
             table = Table(show_header=True)
 
             # Add columns
+            from typing import Literal as TLiteral
+
             for col in s.columns:
-                justify = {"left": "left", "center": "center", "right": "right"}.get(
-                    col.align, "left"
-                )
+                justify_map: dict[str, TLiteral["left", "center", "right"]] = {
+                    "left": "left",
+                    "center": "center",
+                    "right": "right",
+                }
+                justify = justify_map.get(col.align, "left")
                 sort_indicator = ""
                 if col.key == s.sort_by:
                     sort_indicator = " ▲" if s.sort_direction == "asc" else " ▼"

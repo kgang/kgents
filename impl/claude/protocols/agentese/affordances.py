@@ -144,13 +144,23 @@ CATEGORY_RULES: dict[AspectCategory, dict[str, bool]] = {
 
 @dataclass
 class AspectMetadata:
-    """Runtime metadata attached to aspect methods by @aspect decorator."""
+    """Runtime metadata attached to aspect methods by @aspect decorator.
+
+    Extended for self-documentation (v3.1):
+    - examples: Usage examples for help output
+    - see_also: Related aspects for discovery
+    - since_version: Version tracking for deprecation
+    """
 
     category: AspectCategory
     effects: list[DeclaredEffect | Effect]
     requires_archetype: tuple[str, ...]
     idempotent: bool
     description: str
+    # v3.1: Extended for self-documentation
+    examples: list[str] = field(default_factory=list)
+    see_also: list[str] = field(default_factory=list)
+    since_version: str = "1.0"
 
 
 def aspect(
@@ -159,6 +169,10 @@ def aspect(
     requires_archetype: tuple[str, ...] = (),
     idempotent: bool = False,
     description: str = "",
+    # v3.1: Extended for self-documentation
+    examples: list[str] | None = None,
+    see_also: list[str] | None = None,
+    since_version: str = "1.0",
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
     Decorator to mark a method as an AGENTESE aspect (v3 API).
@@ -171,11 +185,16 @@ def aspect(
         requires_archetype: Archetypes required to invoke this aspect
         idempotent: Whether repeated calls have the same effect
         description: Human-readable description
+        examples: Usage examples for self-documentation (v3.1)
+        see_also: Related aspects for discovery (v3.1)
+        since_version: Version when aspect was introduced (v3.1)
 
     Example:
         @aspect(
             category=AspectCategory.PERCEPTION,
             effects=[Effect.READS("memory_crystals")],
+            examples=["self.memory.recall --query 'project goals'"],
+            see_also=["engram", "forget"],
         )
         async def recall(self, observer: Observer, query: str) -> Crystal | None:
             ...
@@ -201,6 +220,9 @@ def aspect(
             requires_archetype=requires_archetype,
             idempotent=idempotent,
             description=description or func.__doc__ or "",
+            examples=examples or [],
+            see_also=see_also or [],
+            since_version=since_version,
         )
         func.__aspect_meta__ = meta  # type: ignore[attr-defined]
 
@@ -270,6 +292,11 @@ STANDARD_ASPECTS: dict[str, Aspect] = {
     # Introspection
     "affordances": Aspect(
         "affordances", AspectCategory.INTROSPECTION, "What can I do?"
+    ),
+    "help": Aspect(
+        "help",
+        AspectCategory.INTROSPECTION,
+        "Self-documenting help for this node",
     ),
     "constraints": Aspect(
         "constraints", AspectCategory.INTROSPECTION, "What limits me?"

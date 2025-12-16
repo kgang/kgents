@@ -171,6 +171,13 @@ def create_app(
     if atelier_router is not None:
         app.include_router(atelier_router)
 
+    # Gallery endpoints (Projection Component Gallery)
+    from .gallery import create_gallery_router
+
+    gallery_router = create_gallery_router()
+    if gallery_router is not None:
+        app.include_router(gallery_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(
@@ -342,6 +349,11 @@ def create_app(
                     "pending": "GET /api/atelier/queue/pending",
                     "process": "POST /api/atelier/queue/process (SSE stream)",
                     "status": "GET /api/atelier/status",
+                },
+                "gallery": {
+                    "all": "GET /api/gallery",
+                    "categories": "GET /api/gallery/categories",
+                    "pilot": "GET /api/gallery/{pilot_name}",
                 },
             },
         }

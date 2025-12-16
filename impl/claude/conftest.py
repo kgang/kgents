@@ -263,6 +263,20 @@ def pytest_configure(config: Any) -> None:
     # Tests that need actual LLM should use MockLLMClient or explicitly set auto_llm=True
     os.environ.setdefault("KGENTS_NO_AUTO_LLM", "1")
 
+    # Test Tier markers (stratified testing)
+    # tier1: Unit tests - pure functions, no I/O, no mocks (<30s target)
+    # tier2: Integration tests - mocked external deps (<5m target)
+    # tier3: E2E tests - real external services (K8s, APIs)
+    config.addinivalue_line(
+        "markers", "tier1: Unit tests (pure functions, no I/O, no mocks)"
+    )
+    config.addinivalue_line(
+        "markers", "tier2: Integration tests (mocked external deps)"
+    )
+    config.addinivalue_line(
+        "markers", "tier3: E2E tests (real external services like K8s cluster)"
+    )
+
     # Law markers
     config.addinivalue_line(
         "markers", "law(name): mark test as category law verification"

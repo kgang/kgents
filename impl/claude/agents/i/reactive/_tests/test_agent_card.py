@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from agents.i.reactive.primitives.agent_card import AgentCardState, AgentCardWidget
 from agents.i.reactive.widget import RenderTarget
@@ -361,3 +363,236 @@ class TestAgentCardDeterminism:
         assert widget1.project(RenderTarget.MARIMO) == widget2.project(
             RenderTarget.MARIMO
         )
+
+
+class TestAgentCardProjectionIntegration:
+    """Tests for Projection Component Library integration."""
+
+    def test_to_envelope_returns_widget_envelope(self) -> None:
+        """to_envelope returns WidgetEnvelope."""
+        from protocols.projection.schema import WidgetEnvelope
+
+        widget = AgentCardWidget()
+        envelope = widget.to_envelope()
+        assert isinstance(envelope, WidgetEnvelope)
+
+    def test_to_envelope_contains_json_data(self) -> None:
+        """to_envelope contains projected JSON data."""
+        widget = AgentCardWidget(AgentCardState(name="Test"))
+        envelope = widget.to_envelope(RenderTarget.JSON)
+
+        assert isinstance(envelope.data, dict)
+        assert envelope.data["name"] == "Test"
+        assert envelope.data["type"] == "agent_card"
+
+    def test_to_envelope_default_meta_is_done(self) -> None:
+        """to_envelope default meta status is DONE."""
+        from protocols.projection.schema import WidgetStatus
+
+        widget = AgentCardWidget()
+        envelope = widget.to_envelope()
+
+        assert envelope.meta.status == WidgetStatus.DONE
+
+    def test_to_envelope_custom_meta(self) -> None:
+        """to_envelope accepts custom meta."""
+        from protocols.projection.schema import WidgetMeta, WidgetStatus
+
+        widget = AgentCardWidget()
+        custom_meta = WidgetMeta(status=WidgetStatus.STREAMING)
+        envelope = widget.to_envelope(meta=custom_meta)
+
+        assert envelope.meta.status == WidgetStatus.STREAMING
+
+    def test_to_envelope_source_path(self) -> None:
+        """to_envelope includes source path."""
+        widget = AgentCardWidget()
+        envelope = widget.to_envelope(source_path="world.agents.manifest")
+
+        assert envelope.source_path == "world.agents.manifest"
+
+    def test_to_json_envelope_returns_dict_envelope(self) -> None:
+        """to_json_envelope returns envelope with dict data."""
+        widget = AgentCardWidget()
+        envelope = widget.to_json_envelope()
+
+        assert isinstance(envelope.data, dict)
+        assert envelope.data["type"] == "agent_card"
+
+    def test_widget_type_returns_snake_case(self) -> None:
+        """widget_type returns snake_case class name without Widget suffix."""
+        widget = AgentCardWidget()
+        assert widget.widget_type() == "agent_card"
+
+    def test_envelope_to_dict_is_json_serializable(self) -> None:
+        """WidgetEnvelope.to_dict() produces JSON-serializable output."""
+        import json
+
+        widget = AgentCardWidget(AgentCardState(name="Test", capability=0.8))
+        envelope = widget.to_envelope(source_path="test.path")
+
+        # Should not raise
+        result = json.dumps(envelope.to_dict())
+        parsed = json.loads(result)
+
+        assert parsed["data"]["name"] == "Test"
+        assert parsed["meta"]["status"] == "done"
+        assert parsed["sourcePath"] == "test.path"
+
+    def test_envelope_cli_projection(self) -> None:
+        """to_envelope works with CLI target."""
+        widget = AgentCardWidget(AgentCardState(name="CLI Test"))
+        envelope = widget.to_envelope(RenderTarget.CLI)
+
+        assert isinstance(envelope.data, str)
+        assert "CLI Test" in envelope.data
+
+    def test_ui_hint_returns_card(self) -> None:
+        """AgentCardWidget ui_hint returns 'card'."""
+        widget = AgentCardWidget()
+        assert widget.ui_hint() == "card"
+
+    def test_base_widget_ui_hint_returns_none(self) -> None:
+        """Base widget ui_hint returns None by default."""
+        from agents.i.reactive.primitives.glyph import GlyphWidget
+
+        widget = GlyphWidget()
+        assert widget.ui_hint() is None
+
+
+class TestErrorBoundary:
+    """Tests for to_envelope() error boundary behavior."""
+
+    def test_error_boundary_catches_exceptions(self) -> None:
+        """to_envelope() catches projection exceptions and returns error envelope."""
+        from protocols.projection.schema import WidgetStatus
+
+        class FailingWidget(AgentCardWidget):
+            def project(self, target: RenderTarget) -> Any:
+                raise ValueError("Intentional test failure")
+
+        widget = FailingWidget()
+        envelope = widget.to_envelope()
+
+        # Should not raise, returns error envelope
+        assert envelope.meta.status == WidgetStatus.ERROR
+        assert envelope.meta.has_error
+        assert envelope.data is None
+
+    def test_error_boundary_captures_exception_type(self) -> None:
+        """Error boundary captures exception type as error code."""
+
+        class FailingWidget(AgentCardWidget):
+            def project(self, target: RenderTarget) -> Any:
+                raise TypeError("Type mismatch")
+
+        widget = FailingWidget()
+        envelope = widget.to_envelope()
+
+        assert envelope.meta.error is not None
+        assert envelope.meta.error.code == "TypeError"
+        assert "Type mismatch" in envelope.meta.error.message
+
+    def test_error_boundary_captures_custom_exceptions(self) -> None:
+        """Error boundary handles custom exception classes."""
+
+        class CustomProjectionError(Exception):
+            pass
+
+        class FailingWidget(AgentCardWidget):
+            def project(self, target: RenderTarget) -> Any:
+                raise CustomProjectionError("Custom failure")
+
+        widget = FailingWidget()
+        envelope = widget.to_envelope()
+
+        assert envelope.meta.error is not None
+        assert envelope.meta.error.code == "CustomProjectionError"
+        assert envelope.meta.error.category == "unknown"
+
+    def test_error_boundary_preserves_source_path(self) -> None:
+        """Error envelope preserves source_path on failure."""
+
+        class FailingWidget(AgentCardWidget):
+            def project(self, target: RenderTarget) -> Any:
+                raise RuntimeError("Boom")
+
+        widget = FailingWidget()
+        envelope = widget.to_envelope(source_path="test.widget.manifest")
+
+        assert envelope.source_path == "test.widget.manifest"
+        assert envelope.meta.has_error
+
+    def test_success_path_still_works(self) -> None:
+        """Normal widgets still work after error boundary added."""
+        from protocols.projection.schema import WidgetStatus
+
+        widget = AgentCardWidget(AgentCardState(name="Normal"))
+        envelope = widget.to_envelope()
+
+        assert envelope.meta.status == WidgetStatus.DONE
+        assert not envelope.meta.has_error
+        assert envelope.data is not None
+        assert envelope.data["name"] == "Normal"
+
+
+class TestStreamingEnvelope:
+    """Tests for to_streaming_envelope() support."""
+
+    @pytest.mark.asyncio
+    async def test_streaming_envelope_yields_multiple(self) -> None:
+        """to_streaming_envelope yields at least streaming + final envelope."""
+        from protocols.projection.schema import WidgetStatus
+
+        widget = AgentCardWidget(AgentCardState(name="Streaming Test"))
+        envelopes = []
+
+        async for envelope in widget.to_streaming_envelope():
+            envelopes.append(envelope)
+
+        assert len(envelopes) == 2
+        # First is STREAMING
+        assert envelopes[0].meta.status == WidgetStatus.STREAMING
+        # Last is DONE (or ERROR)
+        assert envelopes[-1].meta.status in (WidgetStatus.DONE, WidgetStatus.ERROR)
+
+    @pytest.mark.asyncio
+    async def test_streaming_envelope_has_stream_meta(self) -> None:
+        """Streaming envelope includes StreamMeta with progress info."""
+        widget = AgentCardWidget()
+
+        async for envelope in widget.to_streaming_envelope():
+            if envelope.meta.stream is not None:
+                assert envelope.meta.stream.started_at is not None
+                break
+
+    @pytest.mark.asyncio
+    async def test_streaming_envelope_final_has_data(self) -> None:
+        """Final streaming envelope contains projected data."""
+        widget = AgentCardWidget(AgentCardState(name="Final Data"))
+
+        final_envelope = None
+        async for envelope in widget.to_streaming_envelope():
+            final_envelope = envelope
+
+        assert final_envelope is not None
+        assert final_envelope.data is not None
+        assert final_envelope.data["name"] == "Final Data"
+
+    @pytest.mark.asyncio
+    async def test_streaming_envelope_respects_source_path(self) -> None:
+        """to_streaming_envelope preserves source_path."""
+        widget = AgentCardWidget()
+
+        async for envelope in widget.to_streaming_envelope(source_path="test.stream"):
+            assert envelope.source_path == "test.stream"
+
+    @pytest.mark.asyncio
+    async def test_streaming_envelope_with_total_expected(self) -> None:
+        """to_streaming_envelope uses provided total_expected."""
+        widget = AgentCardWidget()
+
+        async for envelope in widget.to_streaming_envelope(total_expected=10):
+            if envelope.meta.stream is not None:
+                assert envelope.meta.stream.total_expected == 10
+                break

@@ -579,3 +579,80 @@ export const NPHASE_CONFIG = {
     NIGHT: 'REFLECT',
   } as Record<TownPhase, NPhaseType>,
 } as const;
+
+// =============================================================================
+// Projection Gallery
+// =============================================================================
+
+/**
+ * Gallery pilot categories.
+ */
+export type GalleryCategory =
+  | 'PRIMITIVES'
+  | 'CARDS'
+  | 'CHROME'
+  | 'STREAMING'
+  | 'COMPOSITION'
+  | 'ADAPTERS'
+  | 'SPECIALIZED';
+
+/**
+ * Projections for a single pilot across targets.
+ */
+export interface PilotProjections {
+  cli: string;
+  html: string;
+  json: Record<string, unknown>;
+}
+
+/**
+ * Single pilot response from the gallery API.
+ */
+export interface PilotResponse {
+  name: string;
+  category: GalleryCategory;
+  description: string;
+  tags: string[];
+  projections: PilotProjections;
+}
+
+/**
+ * Full gallery response with all pilots.
+ */
+export interface GalleryResponse {
+  pilots: PilotResponse[];
+  categories: GalleryCategory[];
+  total: number;
+}
+
+/**
+ * Category metadata.
+ */
+export interface GalleryCategoryInfo {
+  name: GalleryCategory;
+  pilot_count: number;
+  pilots: string[];
+}
+
+/**
+ * Gallery override parameters.
+ */
+export interface GalleryOverrides {
+  entropy?: number;
+  seed?: number;
+  phase?: string;
+  time_ms?: number;
+}
+
+/**
+ * Gallery category visual config.
+ */
+export const GALLERY_CATEGORY_CONFIG: Record<GalleryCategory, { icon: string; color: string }> = {
+  PRIMITIVES: { icon: '○', color: '#22c55e' },
+  CARDS: { icon: '▦', color: '#3b82f6' },
+  CHROME: { icon: '◻', color: '#f59e0b' },
+  STREAMING: { icon: '▸', color: '#8b5cf6' },
+  COMPOSITION: { icon: '⊞', color: '#ec4899' },
+  ADAPTERS: { icon: '⇄', color: '#06b6d4' },
+  SPECIALIZED: { icon: '◈', color: '#ef4444' },
+};

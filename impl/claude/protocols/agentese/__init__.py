@@ -6,80 +6,64 @@ Where observation collapses potential into actuality.
 
 > "The noun is a lie. There is only the rate of change."
 
-Core exports:
-- Logos: The resolver functor (H(Context) -> Interaction)
+Public API (~78 exports):
+- Logos: The resolver functor
+- Observer: Lightweight observer with gradations
 - LogosNode: Protocol for resolvable entities
-- AffordanceSet: Observer-specific verb list
-- Exceptions: Sympathetic error types
-- Context resolvers: world, self, concept, void, time
+- path(): String-based composition with >>
+- @aspect: Decorator with category enforcement
+- query()/subscribe(): Bounded queries and subscriptions
+- WiredLogos: High-level integration wrapper
 """
 
-# Phase 8: Natural Language Adapter
-from .adapter import (
-    LLM_TRANSLATION_EXAMPLES,
-    # Constants
-    TRANSLATION_PATTERNS,
-    # Adapter
-    AgentesAdapter,
-    AsyncTranslator,
-    LLMProtocol,
-    LLMTranslator,
-    # Translators
-    PatternTranslator,
-    TranslationError,
-    # Result types
-    TranslationResult,
-    # Protocols
-    Translator,
-    build_translation_prompt,
-    # Factory functions
-    create_adapter,
-    create_pattern_translator,
+from __future__ import annotations
+
+from typing import Any, cast
+
+# =============================================================================
+# PUBLIC API - Core
+# =============================================================================
+# Logos and creation
+from .logos import (
+    # v3 Path Composition
+    AgentesePath,
+    ComposedPath,
+    IdentityPath,
+    Logos,
+    UnboundComposedPath,
+    create_logos,
+    path,
 )
 
-# Phase 3: Affordances
+# v3 API: Path is an alias for AgentesePath
+Path = AgentesePath
+
+# Node protocol and observer
+# =============================================================================
+# PUBLIC API - Adapter
+# =============================================================================
+from .adapter import (
+    AgentesAdapter,
+    create_adapter,
+)
+
+# =============================================================================
+# PUBLIC API - Effects & Aspects
+# =============================================================================
 from .affordances import (
-    ARCHETYPE_AFFORDANCES,
-    # v3 Category Rules
     CATEGORY_RULES,
-    CONCEPT_AFFORDANCE_SET,
-    # Constants
-    CORE_ASPECTS,
-    SELF_AFFORDANCE_SET,
-    STANDARD_ASPECTS,
-    TIME_AFFORDANCE_SET,
-    VOID_AFFORDANCE_SET,
-    WORLD_AFFORDANCE_SET,
-    # Matcher
-    AffordanceMatcher,
-    # Registry
-    AffordanceRegistry,
-    # DNA
-    ArchetypeDNA,
-    Aspect,
-    # Types
     AspectCategory,
-    # v3 Aspect Decorator
     AspectMetadata,
-    CapabilityAffordanceMatcher,
-    # Context sets
-    ContextAffordanceSet,
-    # v3 Effects
     DeclaredEffect,
     Effect,
-    StandardAffordanceMatcher,
-    # Adapter
-    UmweltAdapter,
-    # v3 decorator
     aspect,
-    create_affordance_registry,
-    create_umwelt_adapter,
     get_aspect_metadata,
-    get_context_affordance_set,
     is_aspect,
 )
 
-# v3 Alias System
+# =============================================================================
+# PUBLIC API - Alias System
+# =============================================================================
 from .aliases import (
     AliasError,
     AliasNotFoundError,
@@ -92,76 +76,22 @@ from .aliases import (
     get_default_aliases_path,
 )
 
-# v3 Subscription System
-from .subscription import (
-    AgentesEvent,
-    DeliveryMode,
-    EventType,
-    OrderingMode,
-    Subscription,
-    SubscriptionConfig,
-    SubscriptionManager,
-    SubscriptionMetrics,
-    create_subscription_manager,
-)
-
-# v3 Aspect Pipelines
-from .pipeline import (
-    AspectPipeline,
-    PipelineResult,
-    PipelineStageResult,
-    create_pipeline,
-)
-
-# Phase 2: Context Resolvers
+# =============================================================================
+# PUBLIC API - Context Factory (single entry point)
+# =============================================================================
 from .contexts import (
     VALID_CONTEXTS,
-    CapabilitiesNode,
-    # Concept context
-    ConceptContextResolver,
-    ConceptNode,
-    EntropyNode,
-    EntropyPool,
-    FutureNode,
-    GratitudeNode,
-    IdentityNode,
-    MemoryNode,
-    PastNode,
-    RandomnessGrant,
-    ScheduledAction,
-    ScheduleNode,
-    # Self context
-    SelfContextResolver,
-    SerendipityNode,
-    StateNode,
-    # Time context
-    TimeContextResolver,
-    TraceNode,
-    # Void context
-    VoidContextResolver,
-    # World context
-    WorldContextResolver,
-    WorldNode,
-    create_concept_node,
-    create_concept_resolver,
-    # Unified factory
     create_context_resolvers,
-    create_entropy_pool,
-    create_self_resolver,
-    create_time_resolver,
-    create_void_resolver,
-    create_world_node,
-    create_world_resolver,
 )
+
+# =============================================================================
+# PUBLIC API - Exceptions
+# =============================================================================
 from .exceptions import (
     AffordanceError,
     AgentesError,
-    # Track A (Syntax Architect): Clause/Annotation errors
-    AnnotationSyntaxError,
     BudgetExhaustedError,
-    ClauseSyntaxError,
     CompositionViolationError,
-    # Track B (Law Enforcer): Law check exception
     LawCheckFailed,
     ObserverRequiredError,
     PathNotFoundError,
@@ -169,87 +99,42 @@ from .exceptions import (
     TastefulnessError,
 )
 
-# Phase 6: Integration Layer
-from .integration import (
-    # G-gent Integration
-    AGENTESE_BNF,
-    AGENTESE_CONSTRAINTS,
-    AGENTESE_EXAMPLES,
-    # Membrane Integration
-    MEMBRANE_AGENTESE_MAP,
-    # Unified Factory
-    AgentesIntegrations,
-    GgentIntegration,
-    LgentIntegration,
-    # L-gent Integration
-    LgentRegistryProtocol,
-    MembraneAgenteseBridge,
-    # Umwelt Integration
-    UmweltIntegration,
-    create_agentese_integrations,
-    create_ggent_integration,
-    create_lgent_integration,
-    create_membrane_bridge,
-    create_umwelt_integration,
-)
-
-# Phase 4: JIT Compilation
-from .jit import (
-    JITCompiler,
-    JITPromoter,
-    # Parser
-    ParsedSpec,
-    # Promotion
-    PromotionResult,
-    # Compiler
-    SpecCompiler,
-    SpecParser,
-    compile_spec,
-    # Factory functions
-    create_jit_compiler,
-)
-
-# Phase 5: Composition & Category Laws
+# =============================================================================
+# PUBLIC API - Composition Primitives
+# =============================================================================
 from .laws import (
     IDENTITY,
-    CategoryLawVerifier,
     Composable,
-    Composed,
     Id,
-    # Core types
     Identity,
-    LawEnforcingComposition,
-    # Law verification
-    LawVerificationResult,
-    SimpleMorphism,
-    # Helpers
-    compose,
-    create_enforcing_composition,
-    create_verifier,
-    # Track B (Law Enforcer): Emit law check events
-    emit_law_check_event,
-    enforce_minimal_output,
-    # Minimal output
-    is_single_logical_unit,
-    morphism,
-    pipe,
-    # Track B (Law Enforcer): Verification with events
-    raise_if_failed,
-    verify_and_emit_associativity,
-    verify_and_emit_identity,
 )
-from .logos import (
-    # v3 Path Composition
-    AgentesePath,
-    ComposedPath,
-    IdentityPath,
-    Logos,
-    UnboundComposedPath,
-    create_logos,
-    path,
+from .node import (
+    AffordanceSet,
+    AgentMeta,
+    BaseLogosNode,
+    BasicRendering,
+    JITLogosNode,
+    LogosNode,
+    Observer,
+    Renderable,
 )
 
-# v3 Query System
+# =============================================================================
+# PUBLIC API - Aspect Pipelines
+# =============================================================================
+from .pipeline import (
+    AspectPipeline,
+    PipelineMixin,
+    PipelineResult,
+    PipelineStageResult,
+    add_pipe_to_logos_node,
+    add_pipeline_to_logos,
+    create_pipeline,
+)
+
+# =============================================================================
+# PUBLIC API - Query System
+# =============================================================================
 from .query import (
     QueryBoundError,
     QueryBuilder,
@@ -260,59 +145,26 @@ from .query import (
     query,
 )
 
-# v3 API: Path is an alias for AgentesePath
-Path = AgentesePath
-from .node import (
-    AffordanceSet,
-    AgentMeta,
-    BaseLogosNode,
-    BasicRendering,
-    BlueprintRendering,
-    EconomicRendering,
-    JITLogosNode,
-    LogosNode,
-    # v3 Observer
-    Observer,
-    PoeticRendering,
-    Renderable,
+# =============================================================================
+# PUBLIC API - Subscription System
+# =============================================================================
+from .subscription import (
+    AgentesEvent,
+    DeliveryMode,
+    EventType,
+    LogosSubscriptionMixin,
+    OrderingMode,
+    Subscription,
+    SubscriptionConfig,
+    SubscriptionManager,
+    SubscriptionMetrics,
+    add_subscription_methods_to_logos,
+    create_subscription_manager,
 )
 
-# Track A (Syntax Architect): Path Parser
-from .parser import (
-    PHASE_NAMES,
-    VALID_ANNOTATION_MODIFIERS,
-    VALID_CLAUSE_MODIFIERS,
-    Annotation,
-    Clause,
-    ParsedPath,
-    ParseError,
-    ParseResult,
-    PathParser,
-    Phase,
-    create_parser,
-    parse_path,
-    try_parse_path,
-)
-
-# Phase 3: Renderings
-from .renderings import (
-    AdminRendering,
-    DeveloperRendering,
-    EntropyRendering,
-    EntropyRenderingFactory,
-    MemoryRendering,
-    MemoryRenderingFactory,
-    PhilosopherRendering,
-    RenderingFactory,
-    ScientificRendering,
-    StandardRenderingFactory,
-    TemporalRendering,
-    TemporalRenderingFactory,
-    create_rendering_factory,
-    render_for_archetype,
-)
-
-# Phase 7: Wire to Logos
+# =============================================================================
+# PUBLIC API - Wiring & Integration
+# =============================================================================
 from .wiring import (
     WiredLogos,
     create_minimal_wired_logos,
@@ -320,201 +172,49 @@ from .wiring import (
     wire_existing_logos,
 )
 
+# =============================================================================
+# PUBLIC API EXPORTS (~78 exports)
+# =============================================================================
+
 __all__ = [
-    # Core
+    # === Core (15) ===
     "Logos",
     "create_logos",
+    "Observer",
     "LogosNode",
     "AffordanceSet",
     "AgentMeta",
     "Renderable",
     "BasicRendering",
-    "BlueprintRendering",
-    "PoeticRendering",
-    "EconomicRendering",
-    "JITLogosNode",
     "BaseLogosNode",
-    # v3 API: Observer
-    "Observer",
-    # v3 API: Path Composition
+    "JITLogosNode",
+    # Path composition
     "AgentesePath",
     "Path",
     "UnboundComposedPath",
+    "ComposedPath",
+    "IdentityPath",
     "path",
-    # v3 API: Effects
+    # === Effects & Aspects (8) ===
     "Effect",
     "DeclaredEffect",
-    "CATEGORY_RULES",
-    # v3 API: @aspect Decorator
-    "aspect",
+    "AspectCategory",
     "AspectMetadata",
+    "CATEGORY_RULES",
+    "aspect",
     "get_aspect_metadata",
     "is_aspect",
-    # Exceptions
+    # === Exceptions (9) ===
     "AgentesError",
     "PathNotFoundError",
     "PathSyntaxError",
-    "ClauseSyntaxError",
-    "AnnotationSyntaxError",
     "AffordanceError",
     "ObserverRequiredError",
     "TastefulnessError",
     "BudgetExhaustedError",
     "CompositionViolationError",
-    # Track B (Law Enforcer)
     "LawCheckFailed",
-    # Track A (Syntax Architect): Parser
-    "PathParser",
-    "ParsedPath",
-    "ParseResult",
-    "ParseError",
-    "Clause",
-    "Annotation",
-    "Phase",
-    "PHASE_NAMES",
-    "VALID_CLAUSE_MODIFIERS",
-    "VALID_ANNOTATION_MODIFIERS",
-    "create_parser",
-    "parse_path",
-    "try_parse_path",
-    # Phase 3: Affordances
-    "AspectCategory",
-    "Aspect",
-    "CORE_ASPECTS",
-    "STANDARD_ASPECTS",
-    "ARCHETYPE_AFFORDANCES",
-    "AffordanceRegistry",
-    "create_affordance_registry",
-    "AffordanceMatcher",
-    "StandardAffordanceMatcher",
-    "CapabilityAffordanceMatcher",
-    "ArchetypeDNA",
-    "UmweltAdapter",
-    "create_umwelt_adapter",
-    "ContextAffordanceSet",
-    "WORLD_AFFORDANCE_SET",
-    "SELF_AFFORDANCE_SET",
-    "CONCEPT_AFFORDANCE_SET",
-    "VOID_AFFORDANCE_SET",
-    "TIME_AFFORDANCE_SET",
-    "get_context_affordance_set",
-    # Phase 3: Renderings
-    "ScientificRendering",
-    "DeveloperRendering",
-    "AdminRendering",
-    "PhilosopherRendering",
-    "MemoryRendering",
-    "EntropyRendering",
-    "TemporalRendering",
-    "RenderingFactory",
-    "StandardRenderingFactory",
-    "MemoryRenderingFactory",
-    "EntropyRenderingFactory",
-    "TemporalRenderingFactory",
-    "create_rendering_factory",
-    "render_for_archetype",
-    # Constants
-    "VALID_CONTEXTS",
-    # Context Resolvers
-    "WorldContextResolver",
-    "WorldNode",
-    "create_world_resolver",
-    "create_world_node",
-    "SelfContextResolver",
-    "MemoryNode",
-    "CapabilitiesNode",
-    "StateNode",
-    "IdentityNode",
-    "create_self_resolver",
-    "ConceptContextResolver",
-    "ConceptNode",
-    "create_concept_resolver",
-    "create_concept_node",
-    "VoidContextResolver",
-    "EntropyPool",
-    "EntropyNode",
-    "SerendipityNode",
-    "GratitudeNode",
-    "RandomnessGrant",
-    "create_void_resolver",
-    "create_entropy_pool",
-    "TimeContextResolver",
-    "TraceNode",
-    "PastNode",
-    "FutureNode",
-    "ScheduleNode",
-    "ScheduledAction",
-    "create_time_resolver",
-    "create_context_resolvers",
-    # Phase 4: JIT Compilation
-    "ParsedSpec",
-    "SpecParser",
-    "SpecCompiler",
-    "JITCompiler",
-    "PromotionResult",
-    "JITPromoter",
-    "create_jit_compiler",
-    "compile_spec",
-    # Phase 5: Composition & Category Laws
-    "ComposedPath",
-    "IdentityPath",
-    "Identity",
-    "Id",
-    "IDENTITY",
-    "Composable",
-    "Composed",
-    "LawVerificationResult",
-    "CategoryLawVerifier",
-    "is_single_logical_unit",
-    "enforce_minimal_output",
-    "compose",
-    "pipe",
-    "LawEnforcingComposition",
-    "SimpleMorphism",
-    "morphism",
-    "create_verifier",
-    "create_enforcing_composition",
-    # Track B (Law Enforcer): Law check event emission
-    "emit_law_check_event",
-    "verify_and_emit_identity",
-    "verify_and_emit_associativity",
-    "raise_if_failed",
-    # Phase 6: Integration Layer
-    "UmweltIntegration",
-    "create_umwelt_integration",
-    "MEMBRANE_AGENTESE_MAP",
-    "MembraneAgenteseBridge",
-    "create_membrane_bridge",
-    "LgentRegistryProtocol",
-    "LgentIntegration",
-    "create_lgent_integration",
-    "AGENTESE_BNF",
-    "AGENTESE_CONSTRAINTS",
-    "AGENTESE_EXAMPLES",
-    "GgentIntegration",
-    "create_ggent_integration",
-    "AgentesIntegrations",
-    "create_agentese_integrations",
-    # Phase 7: Wire to Logos
-    "WiredLogos",
-    "create_wired_logos",
-    "wire_existing_logos",
-    "create_minimal_wired_logos",
-    # Phase 8: Natural Language Adapter
-    "TranslationResult",
-    "TranslationError",
-    "TRANSLATION_PATTERNS",
-    "LLM_TRANSLATION_EXAMPLES",
-    "Translator",
-    "AsyncTranslator",
-    "LLMProtocol",
-    "PatternTranslator",
-    "LLMTranslator",
-    "AgentesAdapter",
-    "create_adapter",
-    "create_pattern_translator",
-    "build_translation_prompt",
-    # v3 Query System
+    # === Query System (7) ===
     "QueryResult",
     "QueryMatch",
     "QueryBuilder",
@@ -522,7 +222,7 @@ __all__ = [
     "QueryBoundError",
     "query",
     "create_query_builder",
-    # v3 Alias System
+    # === Alias System (9) ===
     "AliasRegistry",
     "AliasError",
     "AliasShadowError",
@@ -532,7 +232,7 @@ __all__ = [
     "create_standard_aliases",
     "expand_aliases",
     "get_default_aliases_path",
-    # v3 Subscription System
+    # === Subscription System (11) ===
     "AgentesEvent",
     "EventType",
     "DeliveryMode",
@@ -542,9 +242,182 @@ __all__ = [
     "SubscriptionManager",
     "SubscriptionMetrics",
     "create_subscription_manager",
-    # v3 Aspect Pipelines
+    "LogosSubscriptionMixin",
+    "add_subscription_methods_to_logos",
+    # === Aspect Pipelines (7) ===
     "AspectPipeline",
     "PipelineResult",
     "PipelineStageResult",
+    "PipelineMixin",
+    "add_pipe_to_logos_node",
+    "add_pipeline_to_logos",
     "create_pipeline",
+    # === Wiring (4) ===
+    "WiredLogos",
+    "create_wired_logos",
+    "create_minimal_wired_logos",
+    "wire_existing_logos",
+    # === Context (2) ===
+    "VALID_CONTEXTS",
+    "create_context_resolvers",
+    # === Composition (4) ===
+    "Identity",
+    "Id",
+    "IDENTITY",
+    "Composable",
+    # === Adapter (2) ===
+    "AgentesAdapter",
+    "create_adapter",
+    # === Crown Jewel Brain Factory (1) ===
+    "create_brain_logos",
 ]
+
+
+# =============================================================================
+# Crown Jewel Brain Factory (Session 4)
+# =============================================================================
+
+
+def create_brain_logos(
+    dimension: int = 384,
+    embedder_type: str = "auto",
+) -> "Logos":
+    """
+    Create a Logos instance with full Holographic Brain wiring.
+
+    This is the single factory function for Crown Jewel Brain that wires:
+    - MemoryCrystal: Holographic memory storage
+    - L-gent Embedder: Semantic embeddings (sentence-transformers or fallback)
+    - CartographerAgent: Memory navigation with VectorSearchable
+    - N-gent TraceStore: Desire line computation with TraceQueryable
+
+    Session 4 Goal: Wire semantic embeddings for real ghost surfacing.
+
+    Args:
+        dimension: Embedding dimension (384 for MiniLM, 64 for fallback)
+        embedder_type: "auto", "sentence-transformers", or "simple"
+
+    Returns:
+        Fully-wired Logos instance ready for Holographic Brain operations
+
+    Example:
+        logos = create_brain_logos()
+        observer = Observer.guest()
+
+        # Capture with semantic embedding
+        await logos.invoke('self.memory.capture', observer, content='Python tutorial')
+        await logos.invoke('self.memory.capture', observer, content='Python examples')
+
+        # Ghost surfaces semantically similar memories
+        result = await logos.invoke('self.memory.ghost.surface', observer, context='Python code')
+        # result['count'] > 0 (semantic similarity works!)
+    """
+    # Import dependencies lazily to avoid circular imports
+    from agents.m.cartographer import create_cartographer
+    from agents.m.crystal import create_crystal
+    from agents.n.store import MemoryCrystalStore
+
+    # 1. Create embedder
+    embedder = None
+    actual_dimension = dimension
+    if embedder_type == "auto":
+        try:
+            from agents.l import create_best_available_embedder
+
+            embedder = create_best_available_embedder()
+            actual_dimension = embedder.dimension
+        except Exception:
+            # Fall back to no embedder (uses hash-based pseudo-embedding)
+            actual_dimension = 64
+    elif embedder_type == "sentence-transformers":
+        try:
+            from agents.l.embedders import SentenceTransformerEmbedder
+
+            embedder = SentenceTransformerEmbedder()
+            actual_dimension = embedder.dimension
+        except ImportError:
+            # Fall back to no embedder
+            actual_dimension = 64
+    else:
+        # "simple" - use no embedder, fallback to hash-based
+        actual_dimension = 64
+
+    # 2. Create MemoryCrystal with matching dimension
+    memory_crystal = create_crystal(dimension=actual_dimension, use_numpy=True)
+
+    # 3. Create N-gent trace store (for desire lines)
+    trace_store = MemoryCrystalStore()
+
+    # 4. Create CrystalVectorSearchable adapter (wraps MemoryCrystal)
+    class CrystalVectorSearchable:
+        """Adapter to make MemoryCrystal implement VectorSearchable protocol."""
+
+        def __init__(self, crystal: Any) -> None:
+            self._crystal = crystal
+
+        async def find_similar(
+            self,
+            embedding: list[float],
+            threshold: float = 0.5,
+            limit: int = 100,
+        ) -> list[tuple[str, list[float], float]]:
+            """Find similar items by embedding."""
+            results = self._crystal.retrieve(
+                cue=embedding,
+                threshold=threshold,
+                limit=limit,
+            )
+            # Convert ResonanceMatch to (id, embedding, similarity) tuples
+            output = []
+            for match in results:
+                pattern = self._crystal.get_pattern(match.concept_id)
+                if pattern:
+                    output.append(
+                        (
+                            match.concept_id,
+                            pattern.embedding,
+                            match.similarity,
+                        )
+                    )
+            return output
+
+    vector_search = CrystalVectorSearchable(memory_crystal)
+
+    # 5. Create CartographerAgent with full wiring
+    cartographer = create_cartographer(
+        vector_search=vector_search,
+        trace_store=cast(Any, trace_store),  # type: ignore[arg-type]
+    )
+
+    # 6. Create Logos with all wiring
+    logos = create_logos(
+        memory_crystal=memory_crystal,
+        cartographer=cartographer,
+        embedder=embedder,
+    )
+
+    return logos
+
+
+# =============================================================================
+# API Wiring
+# =============================================================================
+
+
+def _wire_api() -> None:
+    """Wire API methods into Logos and LogosNode classes."""
+    # Wire pipeline methods to Logos
+    add_pipeline_to_logos(Logos)
+
+    # Wire subscription methods to Logos
+    add_subscription_methods_to_logos(Logos)
+
+    # Wire pipe() to BaseLogosNode for resolved nodes
+    add_pipe_to_logos_node(BaseLogosNode)
+
+    # Wire pipe() to JITLogosNode
+    add_pipe_to_logos_node(JITLogosNode)
+
+
+# Perform wiring on import
+_wire_api()

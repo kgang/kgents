@@ -80,13 +80,16 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 Atelier (Flux) • Coalition (Operad) • Brain (Sheaf) • Punchdrunk (Polynomial) • Domain (Tenancy) • Gestalt (Reactive) • **Gardener (N-Phase)**
 
-**Crown Completion**: 70% | **Target**: 80% by Q2 2025 | **New Mandate**: AGENTESE-first + strict autopoiesis
+**Crown Completion**: 73% | **Target**: 80% by Q2 2025 | **New Mandate**: AGENTESE-first + strict autopoiesis
 
 ---
 
 ## Status
 
-**Tests**: 18,141 | **Mypy**: 0 | **Web**: 9K LOC (post-cleanup) | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux Atelier
+**Tests**: 18,600+ | **Reactive**: 627 tests | **Mypy**: 78 notes | **Web**: 9K LOC | Agents: A-Z + Flux/Atelier
+**AGENTESE v3.1**: Self-doc (`help` aspect), WiredLogos in REPL, aliases (`/alias`), query API for `?`, docs/guides/
+**Projection**: WidgetEnvelope (error boundary, streaming), 7 widgets + Gestalt (Topology/Governance), chrome, SSE, 4 surfaces
+**Reactive Substrate**: COMPLETE — Error boundary in to_envelope(), streaming envelopes, property-based tests, <20% overhead
 
 ---
 

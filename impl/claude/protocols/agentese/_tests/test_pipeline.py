@@ -1,5 +1,5 @@
 """
-Tests for AGENTESE Aspect Pipelines (v3).
+Tests for AGENTESE Aspect Pipelines.
 
 Tests cover:
 - Pipeline execution
@@ -11,12 +11,12 @@ Tests cover:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from ..node import AgentMeta, Observer
+from ..node import AgentMeta, Observer, Renderable
 from ..pipeline import (
     AspectPipeline,
     PipelineResult,
@@ -24,29 +24,60 @@ from ..pipeline import (
     create_pipeline,
 )
 
+if TYPE_CHECKING:
+    from bootstrap.types import Agent
+    from bootstrap.umwelt import Umwelt
+
+
+# === Mock Renderable for Testing ===
+
+
+@dataclass(frozen=True)
+class MockRenderable:
+    """Mock renderable for testing."""
+
+    content: str = "mock content"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"content": self.content}
+
+    def to_text(self) -> str:
+        return self.content
+
 
 # === Mock Node for Testing ===
 
 
 @dataclass
 class MockNode:
-    """Mock node for testing pipelines."""
+    """
+    Mock node for testing pipelines.
+
+    Implements the LogosNode protocol for type-safe testing.
+    """
 
     handle: str = "test.node"
-    _state: dict[str, Any] = None
-
-    def __post_init__(self) -> None:
-        if self._state is None:
-            self._state = {}
+    _state: dict[str, Any] = field(default_factory=dict)
 
     def affordances(self, observer: AgentMeta) -> list[str]:
         """Return available aspects."""
         return ["load", "parse", "transform", "summarize", "fail", "slow"]
 
+    def lens(self, aspect: str) -> "Agent[Any, Any]":
+        """Return composable agent for aspect (mock implementation)."""
+        # Import here to avoid circular imports
+        from ..node import AspectAgent
+
+        return AspectAgent(self, aspect)  # type: ignore[return-value]
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """Return mock renderable."""
+        return MockRenderable(content=f"manifest for {self.handle}")
+
     async def invoke(
         self,
         aspect: str,
-        observer: Observer,
+        observer: "Observer | Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
         """Invoke an aspect."""
@@ -72,6 +103,7 @@ class MockNode:
 
         if aspect == "slow":
             import asyncio
+
             await asyncio.sleep(0.1)
             return {"slow": True}
 
@@ -251,11 +283,7 @@ class TestAspectPipeline:
     async def test_fluent_api(self, node: MockNode, observer: Observer) -> None:
         """Test fluent builder API."""
         result = await (
-            AspectPipeline(node)
-            .add("load")
-            .add("parse")
-            .add("transform")
-            .run(observer)
+            AspectPipeline(node).add("load").add("parse").add("transform").run(observer)
         )
 
         assert result.success is True

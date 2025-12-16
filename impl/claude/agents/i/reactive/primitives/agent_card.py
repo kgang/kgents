@@ -8,6 +8,16 @@ A card is a "paragraph" in our visual language. It composes:
 
 The AgentCard makes agents feel alive. It's the primary unit
 for representing an agent's identity and current state.
+
+Projection Integration:
+    AgentCardWidget fully integrates with the Projection Component Library.
+    Use to_envelope() to get wrapped results with metadata:
+
+        envelope = card.to_envelope()
+        if envelope.meta.status == WidgetStatus.DONE:
+            render(envelope.data)
+
+    The widget type is "card" for UI hint inference.
 """
 
 from __future__ import annotations
@@ -23,7 +33,7 @@ from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import CompositeWidget, RenderTarget
 
 if TYPE_CHECKING:
-    pass
+    from protocols.projection.schema import UIHint
 
 CardStyle = Literal["compact", "full", "minimal"]
 
@@ -403,3 +413,19 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
             )
 
         return result
+
+    # =========================================================================
+    # Projection Integration
+    # =========================================================================
+
+    def ui_hint(self) -> "UIHint":
+        """
+        Return the UI hint for this widget.
+
+        AgentCards render as "card" type in the projection system.
+        """
+        return "card"
+
+    def widget_type(self) -> str:
+        """Override to return 'agent_card' explicitly."""
+        return "agent_card"

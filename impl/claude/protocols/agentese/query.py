@@ -1,5 +1,5 @@
 """
-AGENTESE Query System (v3)
+AGENTESE Query System
 
 Bounded queries for exploring the registry without invocation.
 

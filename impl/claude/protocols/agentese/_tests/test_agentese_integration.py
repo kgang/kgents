@@ -19,9 +19,7 @@ from .. import (
     # Core
     Logos,
     PathNotFoundError,
-    compose,
     create_logos,
-    pipe,
 )
 from ..contexts import (
     AGENT_REGISTRY,
@@ -296,29 +294,33 @@ class TestComposition:
         assert left_result == right_result
 
     @pytest.mark.asyncio
-    async def test_compose_helper(self) -> None:
-        """compose() creates left-to-right pipeline."""
+    async def test_compose_operator(self) -> None:
+        """>> operator creates left-to-right pipeline."""
         from ..laws import SimpleMorphism
 
         inc = SimpleMorphism(name="inc", fn=lambda x: x + 1)
         double = SimpleMorphism(name="double", fn=lambda x: x * 2)
 
-        pipeline = compose(inc, double)
+        # Use >> operator instead of compose()
+        pipeline = inc >> double
 
         # 5 -> 6 -> 12
         result = await pipeline.invoke(5)
         assert result == 12
 
     @pytest.mark.asyncio
-    async def test_pipe_helper(self) -> None:
-        """pipe() executes value through morphisms."""
+    async def test_pipeline_execution(self) -> None:
+        """Pipeline executes value through morphisms."""
         from ..laws import SimpleMorphism
 
         inc = SimpleMorphism(name="inc", fn=lambda x: x + 1)
         double = SimpleMorphism(name="double", fn=lambda x: x * 2)
 
+        # Use >> operator for composition
+        pipeline = inc >> double
+
         # 5 -> 6 -> 12
-        result = await pipe(5, inc, double)
+        result = await pipeline.invoke(5)
         assert result == 12
 
 

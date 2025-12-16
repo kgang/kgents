@@ -1,23 +1,40 @@
 ---
 path: plans/core-apps/holographic-brain
 status: active
-progress: 0
-last_touched: 2025-12-15
+progress: 70
+last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - monetization/subscription-saas
   - plans/team-knowledge-base
 session_notes: |
-  Stub plan created from core-apps-synthesis.
-  M-gent is 95% ready (1104 tests) - needs UI layer.
+  Session 4 (2025-12-16): L-gent semantic embeddings wired for real search.
+  - Added `_embedder` field to MemoryNode and SelfContextResolver
+  - Added async `_get_embedding()` method that uses L-gent embedder if available
+  - `self.memory.capture` now uses L-gent embedding (via _get_embedding)
+  - `self.memory.ghost.surface` now uses semantic embeddings for search
+  - Created `create_brain_logos()` factory function that wires:
+    - MemoryCrystal (holographic storage)
+    - CartographerAgent with VectorSearchable (via CrystalVectorSearchable adapter)
+    - N-gent TraceStore for desire lines
+    - L-gent Embedder for semantic embeddings
+  - Verified: Ghost surfacing returns semantically similar memories
+  - 70% complete: semantic search works, needs UI layer
+
+  Session 3 (2025-12-15): AGENTESE handlers wired to M-gent infrastructure.
+  - MemoryCrystal wired to self.memory.capture (stores patterns)
+  - Ghost surfacing via self.memory.ghost.surface (uses MemoryCrystal.retrieve)
+  - CartographerAgent wired to self.memory.cartography.manifest
+  - CLI shortcuts already defined: /capture, /ghost, /map
+  - Fixed sync/async mismatch (MemoryCrystal is sync)
 phase_ledger:
   PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
+  RESEARCH: complete
+  DEVELOP: in_progress
   STRATEGIZE: pending
   CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  IMPLEMENT: in_progress
   QA: pending
   TEST: pending
   EDUCATE: pending
@@ -25,7 +42,7 @@ phase_ledger:
   REFLECT: pending
 entropy:
   planned: 0.08
-  spent: 0.0
+  spent: 0.02
   returned: 0.0
 ---
 
@@ -114,18 +131,110 @@ from agents.brain import (
 
 ---
 
-## AGENTESE Integration
+## AGENTESE v3 Integration
+
+> *"Memory is not retrieval. Memory is re-perception through the observer's current umwelt."*
+
+### Path Registry
+
+| AGENTESE Path | Aspect | Handler | Effects |
+|---------------|--------|---------|---------|
+| `self.memory.capture` | define | Capture raw input | `STORE_ENGRAM`, `QUEUE_CRYSTALLIZATION` |
+| `self.memory.crystal.manifest` | manifest | Show crystal topology | — |
+| `self.memory.crystal[id].manifest` | manifest | Expand specific crystal | — |
+| `self.memory.crystal[id].refine` | refine | Dialectically challenge crystal | — |
+| `self.memory.cartography.manifest` | manifest | Show knowledge topology | — |
+| `self.memory.ghost.surface` | sip | Proactive surfacing (entropy) | — |
+| `self.memory.ghost.subscribe` | witness | Stream ghost notifications | — |
+| `self.memory.decay` | tithe | Prune low-engagement items | `DELETE_ENGRAMS` |
+| `self.memory.recall` | manifest | Semantic search | — |
+| `?self.memory.crystal.*` | query | Search crystals by pattern | — |
+| `?self.memory.crystal[*].connections` | query | Find connected crystals | — |
+
+### Observer-Dependent Perception
 
 ```python
-# Second Brain as AGENTESE context
-BRAIN_PATHS = {
-    "self.memory.capture": brain.capture,
-    "self.memory.crystal.manifest": brain.crystalize,
-    "self.memory.cartography.manifest": brain.map,
-    "self.memory.ghost.surface": brain.surface,
-    "self.memory.decay": brain.prune,
-    "self.memory.recall": brain.recall,
-}
+# Personal view: my crystals, my topology
+await logos("self.memory.cartography.manifest", personal_umwelt)
+# → PersonalTopology(crystals, connections, decay_candidates)
+
+# Team view: shared substrate + personal overlay
+await logos("self.memory.cartography.manifest", team_umwelt)
+# → TeamTopology(shared_crystals, personal_crystals, expertise_map)
+
+# Research view: cross-domain connections emphasized
+await logos("self.memory.cartography.manifest", researcher_umwelt)
+# → ResearchTopology(gaps, frontiers, citation_network)
+```
+
+### Subscription Patterns
+
+```python
+# Ghost surfacing: proactive notifications
+ghost_sub = await logos.subscribe(
+    "self.memory.ghost.surface",
+    delivery=DeliveryMode.AT_MOST_ONCE,  # Don't overwhelm
+    buffer_size=10
+)
+
+# Crystal formation: watch for new compressions
+crystal_sub = await logos.subscribe(
+    "self.memory.crystal.formed",
+    delivery=DeliveryMode.AT_LEAST_ONCE
+)
+
+# Decay warnings: crystals about to fade
+decay_sub = await logos.subscribe(
+    "self.memory.crystal[*].decay_warning",
+    delivery=DeliveryMode.AT_MOST_ONCE
+)
+```
+
+### CLI Shortcuts
+
+```yaml
+# .kgents/shortcuts.yaml additions
+brain: self.memory.manifest
+capture: self.memory.capture
+recall: self.memory.recall
+crystals: "?self.memory.crystal.*"
+ghost: self.memory.ghost.surface
+map: self.memory.cartography.manifest
+```
+
+### Pipeline Composition
+
+```python
+# Capture → crystallize → connect
+capture_pipeline = (
+    path("self.memory.capture")
+    >> path("self.memory.crystal.form")
+    >> path("self.memory.cartography.update")
+)
+
+# Ghost surfacing → user review → decay or refresh
+ghost_pipeline = AspectPipeline(
+    path("self.memory.ghost.surface"),
+    path("self.memory.crystal.manifest"),
+    # User decides: refresh or tithe
+    fail_fast=False  # Collect all surfaces
+)
+```
+
+### Team Substrate via Tenancy
+
+```python
+# Team memory uses tenant context
+with TenantContext(team_id="acme-corp"):
+    # Query team-shared crystals
+    shared = await logos("?self.memory.crystal.*", team_umwelt, scope="shared")
+
+    # Contribute personal crystal to team
+    await logos(
+        "self.memory.crystal[id].share",
+        team_umwelt,
+        effects=["COPY_TO_TEAM_SUBSTRATE"]
+    )
 ```
 
 ---
