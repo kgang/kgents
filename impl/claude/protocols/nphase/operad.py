@@ -356,3 +356,6 @@ def next_phase(current: NPhase) -> NPhase:
             return NPhase.REFLECT
         case NPhase.REFLECT:
             return NPhase.UNDERSTAND  # Cycle back
+        case _:
+            # Exhaustive but mypy needs explicit fallback
+            return NPhase.UNDERSTAND

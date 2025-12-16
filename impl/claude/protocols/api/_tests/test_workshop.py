@@ -1,5 +1,7 @@
 """Tests for Workshop API endpoints (Chunk 8)."""
 
+from collections.abc import Generator
+
 import pytest
 
 # Skip all tests if FastAPI not available
@@ -9,8 +11,8 @@ from fastapi.testclient import TestClient
 from protocols.api.workshop import (
     AssignTaskRequest,
     BuilderSummaryResponse,
-    WorkshopStatusResponse,
     WorkshopPlanResponse,
+    WorkshopStatusResponse,
     create_workshop_router,
 )
 
@@ -32,7 +34,7 @@ def client() -> TestClient:
 
 
 @pytest.fixture(autouse=True)
-def reset_workshop_state() -> None:
+def reset_workshop_state() -> Generator[None, None, None]:
     """Reset workshop state between tests."""
     from protocols.api.workshop import _reset_workshop
 
@@ -346,7 +348,13 @@ class TestWorkshopIntegration:
         # 3. Check running
         status = client.get("/v1/workshop/status").json()
         assert status["is_running"] is True
-        assert status["phase"] in ["EXPLORING", "DESIGNING", "PROTOTYPING", "REFINING", "INTEGRATING"]
+        assert status["phase"] in [
+            "EXPLORING",
+            "DESIGNING",
+            "PROTOTYPING",
+            "REFINING",
+            "INTEGRATING",
+        ]
 
         # 4. Reset
         reset = client.post("/v1/workshop/reset").json()

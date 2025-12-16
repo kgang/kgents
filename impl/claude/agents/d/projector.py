@@ -111,8 +111,8 @@ class CompressionResult:
 
 
 @dataclass
-class CompressionConfig:
-    """Configuration for compression behavior."""
+class ContextCompressionConfig:
+    """Configuration for context compression behavior."""
 
     # Target pressure after compression (0.0 to 1.0)
     target_pressure: float = 0.5
@@ -128,6 +128,10 @@ class CompressionConfig:
 
     # Maximum turns to drop in one pass
     max_drops_per_pass: int = 10
+
+
+# Backwards compatibility alias
+CompressionConfig = ContextCompressionConfig
 
 
 @dataclass
@@ -150,7 +154,7 @@ class ContextProjector:
             # result.compression_ratio shows how much was saved
     """
 
-    config: CompressionConfig = field(default_factory=CompressionConfig)
+    config: ContextCompressionConfig = field(default_factory=ContextCompressionConfig)
     summarizer: Summarizer = field(default_factory=DefaultSummarizer)
 
     async def compress(
@@ -435,7 +439,7 @@ def create_projector(
     summarizer: Summarizer | None = None,
 ) -> ContextProjector:
     """Create a ContextProjector with configuration."""
-    config = CompressionConfig(target_pressure=target_pressure)
+    config = ContextCompressionConfig(target_pressure=target_pressure)
     return ContextProjector(
         config=config,
         summarizer=summarizer or DefaultSummarizer(),

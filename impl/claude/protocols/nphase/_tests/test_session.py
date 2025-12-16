@@ -17,7 +17,6 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
-
 from protocols.nphase.operad import NPhase
 from protocols.nphase.session import (
     Handle,
@@ -30,7 +29,6 @@ from protocols.nphase.session import (
     list_sessions,
     reset_session_store,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -170,7 +168,7 @@ class TestPhaseAdvancement:
 
         entry = session.advance_phase(NPhase.ACT, payload="Research complete")
 
-        assert session.current_phase == NPhase.ACT
+        assert session.current_phase == NPhase.ACT  # type: ignore[comparison-overlap]
         assert entry.from_phase == NPhase.UNDERSTAND
         assert entry.to_phase == NPhase.ACT
         assert entry.payload == "Research complete"
@@ -303,7 +301,7 @@ class TestCheckpointRestore:
         # Restore
         session.restore(cp.id)
 
-        assert session.current_phase == NPhase.UNDERSTAND
+        assert session.current_phase == NPhase.UNDERSTAND  # type: ignore[comparison-overlap]
         assert len(session.handles) == 1
         assert session.handles[0].path == "world.file1"
 
@@ -438,7 +436,9 @@ class TestLedger:
         """Ledger entries include cycle count."""
         session.advance_phase(NPhase.ACT, auto_checkpoint=False)
         session.advance_phase(NPhase.REFLECT, auto_checkpoint=False)
-        session.advance_phase(NPhase.UNDERSTAND, auto_checkpoint=False)  # Cycle 1 starts
+        session.advance_phase(
+            NPhase.UNDERSTAND, auto_checkpoint=False
+        )  # Cycle 1 starts
         session.advance_phase(NPhase.ACT, auto_checkpoint=False)
 
         assert session.ledger[0].cycle_count == 0

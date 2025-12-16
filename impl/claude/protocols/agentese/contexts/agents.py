@@ -183,6 +183,12 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "active",
         "description": "Seance-based agent interaction via Morton/Porras-Kim metaphysics",
     },
+    "atelier": {
+        "name": "Atelier",
+        "theme": "Artisan Workshop (streaming-first creation)",
+        "status": "active",
+        "description": "Whimsical workshop for making beautiful things—streaming artisans, commissions, and pieces",
+    },
 }
 
 

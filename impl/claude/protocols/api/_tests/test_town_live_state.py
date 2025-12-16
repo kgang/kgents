@@ -18,9 +18,7 @@ from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
-
 from protocols.api.town import build_colony_dashboard, should_emit_state
-
 
 # =============================================================================
 # TestShouldEmitState
@@ -187,7 +185,7 @@ class TestBuildColonyDashboard:
         assert len(json_output["citizens"]) == 1
 
         citizen = json_output["citizens"][0]
-        assert citizen["id"] == "alice-123"
+        assert citizen["citizen_id"] == "alice-123"
         assert citizen["name"] == "Alice"
         assert citizen["archetype"] == "builder"
         assert citizen["phase"] == "WORKING"

@@ -44,6 +44,37 @@ Example:
 """
 
 from .cached import CachedAgent
+
+# Context Engineering (Phase 6: Context Protocol)
+from .component_renderer import (
+    ComponentRenderer,
+    ContextProps,
+    ContextStatus,
+    MessageProps,
+    create_component_renderer,
+    render_for_frontend,
+    render_minimal,
+)
+from .context_session import (
+    ContextInput,
+    ContextOutput,
+    ContextPressureError,
+    ContextSession,
+    ContextState,
+    create_context_session,
+    from_messages,
+)
+from .context_window import (
+    ContextMeta,
+    ContextSnapshot,
+    ContextWindow,
+    Turn,
+    TurnRole,
+    create_context_window,
+)
+from .context_window import (
+    from_messages as context_from_messages,
+)
 from .entropy import EntropyConstrainedAgent, entropy_constrained
 from .errors import (
     DriftDetectionError,
@@ -127,6 +158,30 @@ from .polynomial import (
     memory_directions,
     memory_transition,
     reset_memory,
+)
+
+# Context Projector (Galois Connection)
+from .projector import (
+    AdaptiveThreshold,
+    CompressionResult,
+    ContextCompressionConfig,
+    ContextProjector,
+    DefaultSummarizer,
+    Summarizer,
+    auto_compress,
+    create_projector,
+)
+
+# Prompt Building (Context Protocol)
+from .prompt_builder import (
+    PromptBuilder,
+    build_builder_prompt,
+    build_citizen_prompt,
+    build_kgent_prompt,
+    create_prompt_builder,
+    render_constraints,
+    render_eigenvectors_6d,
+    render_eigenvectors_7d,
 )
 from .protocol import DataAgent
 from .symbiont import Symbiont
@@ -401,6 +456,44 @@ except ImportError:
 __all__ = [
     # Protocol
     "DataAgent",
+    # Context Engineering (Phase 6: Context Protocol)
+    "ContextWindow",
+    "ContextMeta",
+    "ContextSnapshot",
+    "Turn",
+    "TurnRole",
+    "create_context_window",
+    "context_from_messages",
+    "ContextSession",
+    "ContextState",
+    "ContextInput",
+    "ContextOutput",
+    "ContextPressureError",
+    "create_context_session",
+    "from_messages",
+    "ComponentRenderer",
+    "ContextProps",
+    "ContextStatus",
+    "MessageProps",
+    "create_component_renderer",
+    "render_for_frontend",
+    "render_minimal",
+    "PromptBuilder",
+    "create_prompt_builder",
+    "build_kgent_prompt",
+    "build_builder_prompt",
+    "build_citizen_prompt",
+    "render_eigenvectors_6d",
+    "render_eigenvectors_7d",
+    "render_constraints",
+    "ContextProjector",
+    "CompressionResult",
+    "ContextCompressionConfig",
+    "AdaptiveThreshold",
+    "DefaultSummarizer",
+    "Summarizer",
+    "auto_compress",
+    "create_projector",
     # Errors
     "StateError",
     "StateNotFoundError",
