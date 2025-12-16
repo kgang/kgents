@@ -661,6 +661,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#projection-gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projection Gallery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#n-phase-compiler" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1125,6 +1136,59 @@
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">card</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>     <span class="c1"># API</span>
 </span></code></pre></div>
 <hr />
+<h2 id="projection-gallery">Projection Gallery</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Pilot</code></td>
+<td><code>protocols/projection/gallery/pilots.py</code></td>
+<td>Pre-configured widget demo</td>
+</tr>
+<tr>
+<td><code>Gallery</code></td>
+<td><code>protocols/projection/gallery/runner.py</code></td>
+<td>Render orchestrator</td>
+</tr>
+<tr>
+<td><code>GalleryOverrides</code></td>
+<td><code>protocols/projection/gallery/overrides.py</code></td>
+<td>Override injection</td>
+</tr>
+<tr>
+<td><code>GalleryAPI</code></td>
+<td><code>protocols/api/gallery.py</code></td>
+<td>REST endpoints</td>
+</tr>
+<tr>
+<td><code>GalleryPage</code></td>
+<td><code>web/src/pages/GalleryPage.tsx</code></td>
+<td>React frontend</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.projection.gallery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gallery</span><span class="p">,</span> <span class="n">GalleryOverrides</span><span class="p">,</span> <span class="n">PILOT_REGISTRY</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># CLI gallery</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">()</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show_all</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">RenderTarget</span><span class="o">.</span><span class="n">CLI</span><span class="p">)</span>  <span class="c1"># All 25 pilots</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s2">&quot;agent_card_active&quot;</span><span class="p">,</span> <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;entropy&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># With global overrides</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">(</span><span class="n">GalleryOverrides</span><span class="p">(</span><span class="n">entropy</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span>
+</span></code></pre></div>
+<p><strong>Web Gallery</strong>: <code>http://localhost:3000/gallery</code></p>
+<p><strong>API Endpoints</strong>:
+- <code>GET /api/gallery</code> - All pilots with projections
+- <code>GET /api/gallery/{name}</code> - Single pilot
+- <code>GET /api/gallery/categories</code> - Category metadata</p>
+<hr />
 <h2 id="n-phase-compiler">N-Phase Compiler</h2>
 <table>
 <thead>
@@ -1148,60 +1212,60 @@
 </tr>
 </tbody>
 </table>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.nphase</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="n">compiler</span><span class="p">,</span> <span class="n">ProjectDefinition</span><span class="p">,</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>    <span class="n">NPhaseStateUpdater</span><span class="p">,</span> <span class="n">state_updater</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">)</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># Compile from YAML</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="n">prompt</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile_from_yaml_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># Track state</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="n">updater</span> <span class="o">=</span> <span class="n">state_updater</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="n">state</span> <span class="o">=</span> <span class="n">updater</span><span class="o">.</span><span class="n">advance_phase</span><span class="p">(</span><span class="s2">&quot;DEVELOP&quot;</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.nphase</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">compiler</span><span class="p">,</span> <span class="n">ProjectDefinition</span><span class="p">,</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">NPhaseStateUpdater</span><span class="p">,</span> <span class="n">state_updater</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">)</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># Compile from YAML</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">prompt</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile_from_yaml_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># Track state</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">updater</span> <span class="o">=</span> <span class="n">state_updater</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">state</span> <span class="o">=</span> <span class="n">updater</span><span class="o">.</span><span class="n">advance_phase</span><span class="p">(</span><span class="s2">&quot;DEVELOP&quot;</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="saas-infrastructure">SaaS Infrastructure</h2>
 <h3 id="api-protocolsapi">API (<code>protocols/api/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span><span class="p">,</span> <span class="n">GovernanceRequest</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>  <span class="c1"># FastAPI app with auth, routes, middleware</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span><span class="p">,</span> <span class="n">GovernanceRequest</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>  <span class="c1"># FastAPI app with auth, routes, middleware</span>
 </span></code></pre></div>
 <h3 id="billing-protocolsbilling">Billing (<code>protocols/billing/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">StripeClient</span><span class="p">,</span> <span class="n">CustomerManager</span><span class="p">,</span> <span class="n">SubscriptionManager</span><span class="p">,</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">OpenMeterClient</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">StripeClient</span><span class="p">,</span> <span class="n">CustomerManager</span><span class="p">,</span> <span class="n">SubscriptionManager</span><span class="p">,</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">OpenMeterClient</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="licensing-protocolslicensing">Licensing (<code>protocols/licensing/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">LicenseTier</span><span class="p">,</span> <span class="n">requires_tier</span><span class="p">,</span> <span class="n">is_feature_enabled</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="p">)</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="nd">@requires_tier</span><span class="p">(</span><span class="n">LicenseTier</span><span class="o">.</span><span class="n">PRO</span><span class="p">)</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">pro_feature</span><span class="p">():</span> <span class="o">...</span>
-</span></code></pre></div>
-<h3 id="tenancy-protocolstenancy">Tenancy (<code>protocols/tenancy/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">TenantContext</span><span class="p">,</span> <span class="n">set_tenant_context</span><span class="p">,</span> <span class="n">ApiKeyService</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">LicenseTier</span><span class="p">,</span> <span class="n">requires_tier</span><span class="p">,</span> <span class="n">is_feature_enabled</span>
 </span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">)</span>
 </span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">with</span> <span class="n">set_tenant_context</span><span class="p">(</span><span class="n">tenant_id</span><span class="p">):</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>    <span class="c1"># All queries scoped to tenant</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a>    <span class="o">...</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nd">@requires_tier</span><span class="p">(</span><span class="n">LicenseTier</span><span class="o">.</span><span class="n">PRO</span><span class="p">)</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">pro_feature</span><span class="p">():</span> <span class="o">...</span>
+</span></code></pre></div>
+<h3 id="tenancy-protocolstenancy">Tenancy (<code>protocols/tenancy/</code>)</h3>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">TenantContext</span><span class="p">,</span> <span class="n">set_tenant_context</span><span class="p">,</span> <span class="n">ApiKeyService</span>
+</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">)</span>
+</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
+</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">with</span> <span class="n">set_tenant_context</span><span class="p">(</span><span class="n">tenant_id</span><span class="p">):</span>
+</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="c1"># All queries scoped to tenant</span>
+</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="o">...</span>
 </span></code></pre></div>
 <hr />
 <h2 id="terrarium-agent-gateway">Terrarium (Agent Gateway)</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.terrarium</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">Terrarium</span><span class="p">,</span> <span class="n">HolographicBuffer</span><span class="p">,</span> <span class="n">PrismRestBridge</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">)</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># Create gateway</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="n">terrarium</span> <span class="o">=</span> <span class="n">Terrarium</span><span class="p">()</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">terrarium</span><span class="o">.</span><span class="n">register_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="n">flux_agent</span><span class="p">)</span>
-</span><span id="__span-12-8"><a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
-</span><span id="__span-12-9"><a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="c1"># Mount CLI agent as REST</span>
-</span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="n">bridge</span> <span class="o">=</span> <span class="n">PrismRestBridge</span><span class="p">()</span>
-</span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="n">bridge</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">terrarium</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">cli_agent</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.terrarium</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">Terrarium</span><span class="p">,</span> <span class="n">HolographicBuffer</span><span class="p">,</span> <span class="n">PrismRestBridge</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">)</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Create gateway</span>
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="n">terrarium</span> <span class="o">=</span> <span class="n">Terrarium</span><span class="p">()</span>
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">terrarium</span><span class="o">.</span><span class="n">register_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="n">flux_agent</span><span class="p">)</span>
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="c1"># Mount CLI agent as REST</span>
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="n">bridge</span> <span class="o">=</span> <span class="n">PrismRestBridge</span><span class="p">()</span>
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="n">bridge</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">terrarium</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">cli_agent</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="infra-kubernetes">Infra (Kubernetes)</h2>
@@ -1237,34 +1301,34 @@
 </table>
 <hr />
 <h2 id="key-import-patterns">Key Import Patterns</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># Categorical foundation</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="c1"># Stream processing</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="c1"># AGENTESE</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>
-</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a><span class="c1"># Reactive</span>
-</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
-</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>
-</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a><span class="c1"># Town</span>
-</span><span id="__span-13-16"><a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
-</span><span id="__span-13-17"><a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a>
-</span><span id="__span-13-18"><a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a><span class="c1"># Soul</span>
-</span><span id="__span-13-19"><a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
-</span><span id="__span-13-20"><a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>
-</span><span id="__span-13-21"><a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="c1"># Memory</span>
-</span><span id="__span-13-22"><a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
-</span><span id="__span-13-23"><a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a>
-</span><span id="__span-13-24"><a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="c1"># SaaS</span>
-</span><span id="__span-13-25"><a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
-</span><span id="__span-13-26"><a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
-</span><span id="__span-13-27"><a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
-</span><span id="__span-13-28"><a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Categorical foundation</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># Stream processing</span>
+</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
+</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
+</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1"># AGENTESE</span>
+</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
+</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
+</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="c1"># Reactive</span>
+</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
+</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>
+</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="c1"># Town</span>
+</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
+</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>
+</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="c1"># Soul</span>
+</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
+</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
+</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="c1"># Memory</span>
+</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
+</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>
+</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="c1"># SaaS</span>
+</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
+</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
+</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
+</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
 </span></code></pre></div>
 <hr />
 <p><em>Last updated: 2025-12-15</em></p>

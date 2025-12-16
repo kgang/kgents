@@ -751,6 +751,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#projection-gallery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projection Gallery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#system" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -936,7 +947,10 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nb">cd</span><span class="w"> </span>impl/claude/web
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>npm<span class="w"> </span>install<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>npm<span class="w"> </span>run<span class="w"> </span>dev
 </span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Visit http://localhost:3000</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1"># Visit:</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1">#   http://localhost:3000           - Agent Town</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1">#   http://localhost:3000/gallery   - Projection Gallery</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1">#   http://localhost:3000/atelier   - Atelier</span>
 </span></code></pre></div>
 <h2 id="detailed-setup">Detailed Setup</h2>
 <h3 id="1-clone-and-install-dependencies">1. Clone and Install Dependencies</h3>
@@ -1100,6 +1114,44 @@
 </tr>
 </tbody>
 </table>
+<h3 id="projection-gallery">Projection Gallery</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/api/gallery</code></td>
+<td>All pilots with projections</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/gallery?entropy=0.5</code></td>
+<td>With override</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/gallery?category=CARDS</code></td>
+<td>Filter by category</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/gallery/{name}</code></td>
+<td>Single pilot</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/gallery/categories</code></td>
+<td>Category metadata</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Web Gallery</strong>: <code>http://localhost:3000/gallery</code></p>
 <h3 id="system">System</h3>
 <table>
 <thead>
@@ -1220,7 +1272,9 @@
 <ul>
 <li>Read <a href="../spec/protocols/agentese.md">AGENTESE specification</a></li>
 <li>Explore <a href="../spec/agents/town.md">Agent Town</a></li>
+<li>Visit the <a href="http://localhost:3000/gallery">Projection Gallery</a> to see all widgets</li>
 <li>Check <a href="../systems-reference/">systems reference</a> for built infrastructure</li>
+<li>Learn the <a href="../skills/projection-gallery/">projection-gallery skill</a> pattern</li>
 </ul>
 
 
