@@ -513,6 +513,7 @@ def handle_drift_witness(
                 "severity": v.severity,
                 "suppressed": v.suppressed,
                 "line": v.edge.line_number,
+                "suggested_fix": v.suggested_fix,
             }
             for v in violations[:50]  # Limit to 50
         ],
@@ -529,15 +530,20 @@ def handle_drift_witness(
         f"Drift Violations: {drift_count} total ({active_count} active)",
         "",
     ]
-    for v in violations[:20]:
+    for v in violations[:10]:  # Show fewer with more detail
         status = "[suppressed] " if v.suppressed else ""
         lines.append(
             f"  {status}{v.severity.upper()}: {v.source_module} -> {v.target_module}"
         )
         lines.append(f"    Rule: {v.rule_name} (line {v.edge.line_number})")
+        if v.suggested_fix and not v.suppressed:
+            # Show first line of suggested fix
+            first_line = v.suggested_fix.split("\n")[0]
+            lines.append(f"    Fix: {first_line}")
 
-    if len(violations) > 20:
-        lines.append(f"\n  ... and {len(violations) - 20} more")
+    if len(violations) > 10:
+        lines.append(f"\n  ... and {len(violations) - 10} more")
+        lines.append("  (Use --json for full details including all suggested fixes)")
 
     return "\n".join(lines)
 

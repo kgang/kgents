@@ -153,6 +153,67 @@ class DriftViolation:
         )
 
 
+def generate_suggested_fix(
+    edge: DependencyEdge,
+    rule_type: RuleType,
+    source_layer: str | None,
+    target_layer: str | None,
+    source_module: str,
+    target_module: str,
+) -> str:
+    """
+    Generate an actionable fix suggestion for a drift violation.
+
+    Returns a human-readable suggestion for how to resolve the violation.
+    """
+    if rule_type == RuleType.LAYER:
+        if source_layer and target_layer:
+            return (
+                f"Option 1: Move '{source_module}' to the '{target_layer}' layer\n"
+                f"Option 2: Extract the needed functionality into a shared module "
+                f"in a layer both can access\n"
+                f"Option 3: Add a suppression with justification: "
+                f"`# gestalt: suppress {source_module}->{target_module}`"
+            )
+        return (
+            f"Assign layers to both modules and ensure the dependency "
+            f"follows your layer architecture rules."
+        )
+
+    elif rule_type == RuleType.RING:
+        if source_layer and target_layer:
+            return (
+                f"Option 1: Move '{target_module}' to an inner ring (toward '{source_layer}' or inward)\n"
+                f"Option 2: Introduce an interface/protocol in the inner ring "
+                f"and implement it in the outer ring\n"
+                f"Option 3: Use dependency injection to invert the dependency"
+            )
+        return (
+            f"In clean/onion architecture, outer rings should depend on inner rings. "
+            f"Consider inverting this dependency or restructuring modules."
+        )
+
+    elif rule_type == RuleType.DENY:
+        return (
+            f"This dependency is explicitly forbidden. Options:\n"
+            f"Option 1: Remove the import at line {edge.line_number}\n"
+            f"Option 2: Use a facade or adapter pattern to avoid direct dependency\n"
+            f"Option 3: Request a rule exception with documented justification"
+        )
+
+    elif rule_type == RuleType.TAG:
+        return (
+            f"The tags on '{source_module}' and '{target_module}' conflict. "
+            f"Review module tags and adjust either the dependency or tag assignments."
+        )
+
+    # Generic fallback
+    return (
+        f"Review the dependency from '{source_module}' to '{target_module}' "
+        f"and consider restructuring to comply with architectural rules."
+    )
+
+
 # ============================================================================
 # Governance Configuration
 # ============================================================================
@@ -269,6 +330,7 @@ def check_drift(
                 target_module.layer if target_module else None,
             ):
                 suppressed, reason = config.is_suppressed(edge)
+                target_layer = target_module.layer if target_module else None
                 violations.append(
                     DriftViolation(
                         edge=edge,
@@ -277,10 +339,18 @@ def check_drift(
                         source_module=edge.source,
                         target_module=edge.target,
                         source_layer=source_module.layer,
-                        target_layer=target_module.layer if target_module else None,
+                        target_layer=target_layer,
                         severity="error",
                         description=rule.description
-                        or f"Layer '{source_module.layer}' may not depend on '{target_module.layer if target_module else 'unknown'}'",
+                        or f"Layer '{source_module.layer}' may not depend on '{target_layer or 'unknown'}'",
+                        suggested_fix=generate_suggested_fix(
+                            edge=edge,
+                            rule_type=RuleType.LAYER,
+                            source_layer=source_module.layer,
+                            target_layer=target_layer,
+                            source_module=edge.source,
+                            target_module=edge.target,
+                        ),
                         suppressed=suppressed,
                         suppression_reason=reason,
                     )
@@ -305,6 +375,14 @@ def check_drift(
                         severity="error",
                         description=config.ring_rule.description
                         or f"Ring '{source_ring}' may not depend on outer ring '{target_ring}'",
+                        suggested_fix=generate_suggested_fix(
+                            edge=edge,
+                            rule_type=RuleType.RING,
+                            source_layer=source_ring,
+                            target_layer=target_ring,
+                            source_module=edge.source,
+                            target_module=edge.target,
+                        ),
                         suppressed=suppressed,
                         suppression_reason=reason,
                     )
@@ -325,6 +403,14 @@ def check_drift(
                         target_module=edge.target,
                         severity=drift_rule.severity,
                         description=drift_rule.description,
+                        suggested_fix=generate_suggested_fix(
+                            edge=edge,
+                            rule_type=RuleType.DENY,
+                            source_layer=source_module.layer,
+                            target_layer=target_module.layer,
+                            source_module=edge.source,
+                            target_module=edge.target,
+                        ),
                         suppressed=suppressed,
                         suppression_reason=reason,
                     )

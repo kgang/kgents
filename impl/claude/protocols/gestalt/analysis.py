@@ -9,15 +9,40 @@ Key Types:
 - DependencyEdge: An import relationship
 - ModuleHealth: Health metrics for a module
 - ArchitectureGraph: The full dependency graph with health
+- Analyzer: Protocol for language-specific analyzers (extensible)
+- AnalyzerRegistry: Registry for managing analyzers
+
+Extension Point:
+To add a new language analyzer, implement the Analyzer protocol and
+register it with the AnalyzerRegistry:
+
+    class GoAnalyzer:
+        def can_analyze(self, path: Path) -> bool:
+            return path.suffix == ".go"
+
+        def analyze_source(self, source: str, module_name: str) -> list[DependencyEdge]:
+            # Parse Go imports...
+            return edges
+
+        def analyze_file(self, path: Path) -> Module:
+            # Full analysis...
+            return module
+
+    registry = AnalyzerRegistry()
+    registry.register("go", GoAnalyzer())
 """
 
 from __future__ import annotations
 
 import ast
 import re
+from abc import abstractmethod
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    pass
 
 # ============================================================================
 # Core Types
@@ -186,6 +211,212 @@ class ArchitectureGraph:
         ca = len(self.get_dependents(module_name))
         total = ca + ce
         return ce / total if total > 0 else None
+
+
+# ============================================================================
+# Analyzer Protocol (Extensibility Point)
+# ============================================================================
+
+
+@runtime_checkable
+class Analyzer(Protocol):
+    """
+    Protocol for language-specific code analyzers.
+
+    Implement this protocol to add support for new languages.
+    Each analyzer handles:
+    1. Source code parsing (analyze_source)
+    2. Full file analysis (analyze_file)
+    3. File discovery (discover)
+
+    Example:
+        class RustAnalyzer:
+            def can_analyze(self, path: Path) -> bool:
+                return path.suffix == ".rs"
+
+            def analyze_source(self, source: str, module_name: str) -> list[DependencyEdge]:
+                # Parse Rust `use` statements...
+                return edges
+
+            def analyze_file(self, path: Path) -> Module:
+                source = path.read_text()
+                imports = self.analyze_source(source, path.stem)
+                return Module(name=path.stem, path=path, imports=imports)
+
+            def discover(self, root: Path) -> Iterator[Path]:
+                return root.rglob("*.rs")
+    """
+
+    @abstractmethod
+    def can_analyze(self, path: Path) -> bool:
+        """Check if this analyzer can handle the given file."""
+        ...
+
+    @abstractmethod
+    def analyze_source(
+        self, source: str, module_name: str = "unknown"
+    ) -> list[DependencyEdge]:
+        """
+        Extract imports from source code string.
+
+        This is the core parsing method - useful for:
+        - In-memory analysis (IDE integrations)
+        - Testing without file system
+        - Streaming analysis
+
+        Args:
+            source: Source code as string
+            module_name: Name to use for the source module
+
+        Returns:
+            List of DependencyEdge objects
+        """
+        ...
+
+    @abstractmethod
+    def analyze_file(self, path: Path) -> Module:
+        """
+        Analyze a single file and return a Module.
+
+        This handles file I/O and full analysis including:
+        - Line counting
+        - Export extraction
+        - Import parsing
+
+        Args:
+            path: Path to the file
+
+        Returns:
+            Module with imports and metadata
+        """
+        ...
+
+    @abstractmethod
+    def discover(self, root: Path) -> Iterator[Path]:
+        """
+        Discover analyzable files in a directory tree.
+
+        Should filter out:
+        - Build directories (dist, build, node_modules)
+        - Cache directories (__pycache__, .git)
+        - Test files (if appropriate for the language)
+
+        Args:
+            root: Root directory to scan
+
+        Returns:
+            Iterator of file paths
+        """
+        ...
+
+
+class AnalyzerRegistry:
+    """
+    Registry for language analyzers.
+
+    Manages multiple analyzers and routes analysis requests
+    to the appropriate one.
+
+    Usage:
+        registry = AnalyzerRegistry()
+        registry.register("python", PythonAnalyzer())
+        registry.register("typescript", TypeScriptAnalyzer())
+        registry.register("go", GoAnalyzer())
+
+        # Analyze a file
+        module = registry.analyze_file(Path("main.go"))
+
+        # Analyze source directly
+        edges = registry.analyze_source("go", source, "main")
+
+        # Discover all files
+        for path in registry.discover(Path("./project"), language="python"):
+            print(path)
+    """
+
+    def __init__(self) -> None:
+        self._analyzers: dict[str, Analyzer] = {}
+
+    def register(self, language: str, analyzer: Analyzer) -> None:
+        """
+        Register an analyzer for a language.
+
+        Args:
+            language: Language identifier (e.g., "python", "go")
+            analyzer: Analyzer instance
+        """
+        self._analyzers[language] = analyzer
+
+    def get(self, language: str) -> Analyzer | None:
+        """Get analyzer by language name."""
+        return self._analyzers.get(language)
+
+    def get_for_path(self, path: Path) -> Analyzer | None:
+        """Find analyzer that can handle the given path."""
+        for analyzer in self._analyzers.values():
+            if analyzer.can_analyze(path):
+                return analyzer
+        return None
+
+    def analyze_file(self, path: Path) -> Module | None:
+        """
+        Analyze a file using the appropriate analyzer.
+
+        Returns None if no analyzer can handle the file.
+        """
+        analyzer = self.get_for_path(path)
+        if analyzer is None:
+            return None
+        return analyzer.analyze_file(path)
+
+    def analyze_source(
+        self, language: str, source: str, module_name: str = "unknown"
+    ) -> list[DependencyEdge]:
+        """
+        Analyze source code using the specified language analyzer.
+
+        Args:
+            language: Language identifier
+            source: Source code string
+            module_name: Name for the module
+
+        Returns:
+            List of DependencyEdge, empty if language not registered
+        """
+        analyzer = self._analyzers.get(language)
+        if analyzer is None:
+            return []
+        return analyzer.analyze_source(source, module_name)
+
+    def discover(self, root: Path, language: str | None = None) -> Iterator[Path]:
+        """
+        Discover files using registered analyzers.
+
+        Args:
+            root: Root directory to scan
+            language: If specified, only use that analyzer.
+                      If None, discover files for all languages.
+
+        Yields:
+            File paths
+        """
+        if language is not None:
+            analyzer = self._analyzers.get(language)
+            if analyzer is not None:
+                yield from analyzer.discover(root)
+        else:
+            # Discover for all registered analyzers
+            seen: set[Path] = set()
+            for analyzer in self._analyzers.values():
+                for path in analyzer.discover(root):
+                    if path not in seen:
+                        seen.add(path)
+                        yield path
+
+    @property
+    def languages(self) -> list[str]:
+        """List of registered language names."""
+        return list(self._analyzers.keys())
 
 
 # ============================================================================
@@ -439,6 +670,97 @@ def analyze_typescript_file(path: Path) -> Module:
         imports=imports,
         exported_symbols=exports,
     )
+
+
+# ============================================================================
+# Concrete Analyzer Implementations
+# ============================================================================
+
+
+class PythonAnalyzer:
+    """
+    Analyzer implementation for Python source files.
+
+    Implements the Analyzer protocol for Python:
+    - AST-based import parsing
+    - __init__.py package detection
+    - Function/class export extraction
+    """
+
+    def can_analyze(self, path: Path) -> bool:
+        """Check if this analyzer can handle the file."""
+        return path.suffix == ".py"
+
+    def analyze_source(
+        self, source: str, module_name: str = "unknown"
+    ) -> list[DependencyEdge]:
+        """Extract imports from Python source code."""
+        return analyze_python_imports(source, module_name)
+
+    def analyze_file(self, path: Path) -> Module:
+        """Analyze a single Python file."""
+        return analyze_python_file(path)
+
+    def discover(self, root: Path) -> Iterator[Path]:
+        """Discover Python files in directory tree."""
+        return discover_python_modules(root)
+
+
+class TypeScriptAnalyzer:
+    """
+    Analyzer implementation for TypeScript source files.
+
+    Implements the Analyzer protocol for TypeScript:
+    - Regex-based import parsing (ES6 imports, require())
+    - Type-only import detection
+    - Export declaration extraction
+    """
+
+    def can_analyze(self, path: Path) -> bool:
+        """Check if this analyzer can handle the file."""
+        return path.suffix in (".ts", ".tsx") and not path.name.endswith(".d.ts")
+
+    def analyze_source(
+        self, source: str, module_name: str = "unknown"
+    ) -> list[DependencyEdge]:
+        """Extract imports from TypeScript source code."""
+        return analyze_typescript_imports(source, module_name)
+
+    def analyze_file(self, path: Path) -> Module:
+        """Analyze a single TypeScript file."""
+        return analyze_typescript_file(path)
+
+    def discover(self, root: Path) -> Iterator[Path]:
+        """Discover TypeScript files in directory tree."""
+        return discover_typescript_modules(root)
+
+
+def create_default_registry() -> AnalyzerRegistry:
+    """
+    Create an AnalyzerRegistry with default language analyzers.
+
+    Returns a registry with Python and TypeScript analyzers pre-registered.
+
+    Usage:
+        registry = create_default_registry()
+        registry.register("go", GoAnalyzer())  # Add custom
+    """
+    registry = AnalyzerRegistry()
+    registry.register("python", PythonAnalyzer())
+    registry.register("typescript", TypeScriptAnalyzer())
+    return registry
+
+
+# Default registry instance (for convenience)
+_default_registry: AnalyzerRegistry | None = None
+
+
+def get_default_registry() -> AnalyzerRegistry:
+    """Get or create the default analyzer registry."""
+    global _default_registry
+    if _default_registry is None:
+        _default_registry = create_default_registry()
+    return _default_registry
 
 
 # ============================================================================

@@ -784,6 +784,167 @@ async def create_gestalt_store(
 
 
 # ============================================================================
+# GestaltStoreFactory (Builder Pattern)
+# ============================================================================
+
+
+class GestaltStoreFactory:
+    """
+    Factory for creating GestaltStore instances with customization.
+
+    Provides a builder pattern for configuring stores with:
+    - Custom analyzers
+    - Custom governance configs
+    - Pre-populated graphs (for testing)
+    - Custom languages
+
+    Usage:
+        # Basic usage
+        store = GestaltStoreFactory().create(Path("./project"))
+
+        # With custom config
+        store = (
+            GestaltStoreFactory()
+            .with_config(my_governance_config)
+            .with_language("typescript")
+            .create(Path("./project"))
+        )
+
+        # For testing with mock graph
+        store = (
+            GestaltStoreFactory()
+            .with_graph(mock_graph)
+            .with_violations(mock_violations)
+            .create(Path("."))
+        )
+
+        # With custom analyzer registry
+        registry = AnalyzerRegistry()
+        registry.register("go", GoAnalyzer())
+        store = (
+            GestaltStoreFactory()
+            .with_analyzer_registry(registry)
+            .create(Path("./project"))
+        )
+    """
+
+    def __init__(self) -> None:
+        """Initialize factory with default settings."""
+        self._config: GovernanceConfig | None = None
+        self._language: str = "python"
+        self._graph: ArchitectureGraph | None = None
+        self._violations: list[DriftViolation] | None = None
+        self._debounce_seconds: float = 0.3
+
+    def with_config(self, config: GovernanceConfig) -> "GestaltStoreFactory":
+        """
+        Set custom governance configuration.
+
+        Args:
+            config: GovernanceConfig with layer/ring rules
+
+        Returns:
+            Self for chaining
+        """
+        self._config = config
+        return self
+
+    def with_language(self, language: str) -> "GestaltStoreFactory":
+        """
+        Set the language to analyze.
+
+        Args:
+            language: "python", "typescript", etc.
+
+        Returns:
+            Self for chaining
+        """
+        self._language = language
+        return self
+
+    def with_graph(self, graph: ArchitectureGraph) -> "GestaltStoreFactory":
+        """
+        Pre-populate with an existing graph (for testing).
+
+        When a graph is provided, the store will use it directly
+        instead of scanning the filesystem.
+
+        Args:
+            graph: Pre-built ArchitectureGraph
+
+        Returns:
+            Self for chaining
+        """
+        self._graph = graph
+        return self
+
+    def with_violations(
+        self, violations: list[DriftViolation]
+    ) -> "GestaltStoreFactory":
+        """
+        Pre-populate with violations (for testing).
+
+        Args:
+            violations: List of DriftViolation
+
+        Returns:
+            Self for chaining
+        """
+        self._violations = violations
+        return self
+
+    def with_debounce(self, seconds: float) -> "GestaltStoreFactory":
+        """
+        Set debounce delay for file watching.
+
+        Args:
+            seconds: Debounce delay in seconds
+
+        Returns:
+            Self for chaining
+        """
+        self._debounce_seconds = seconds
+        return self
+
+    def create(self, root: Path | None = None) -> GestaltStore:
+        """
+        Create the configured GestaltStore.
+
+        Args:
+            root: Root directory to analyze (defaults to cwd)
+
+        Returns:
+            Configured GestaltStore instance
+        """
+        store = GestaltStore(
+            root=root,
+            language=self._language,
+            config=self._config,
+        )
+
+        # Set debounce
+        store._debounce_seconds = self._debounce_seconds
+
+        # Pre-populate if graph provided
+        if self._graph is not None:
+            store._graph.set(self._graph)
+
+        # Pre-populate violations if provided
+        if self._violations is not None:
+            store._violations.set(self._violations)
+
+        return store
+
+    def __repr__(self) -> str:
+        return (
+            f"GestaltStoreFactory("
+            f"language={self._language!r}, "
+            f"has_config={self._config is not None}, "
+            f"has_graph={self._graph is not None})"
+        )
+
+
+# ============================================================================
 # Exports
 # ============================================================================
 
@@ -791,6 +952,8 @@ __all__ = [
     # Core
     "GestaltStore",
     "create_gestalt_store",
+    # Factory
+    "GestaltStoreFactory",
     # Types
     "FileDiff",
     "IncrementalUpdate",
