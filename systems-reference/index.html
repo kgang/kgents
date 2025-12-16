@@ -661,6 +661,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#elastic-primitives-responsive-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elastic Primitives (Responsive Layout)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#projection-gallery" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -676,6 +687,17 @@
     <span class="md-ellipsis">
       
         N-Phase Compiler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evergreen-prompt-system-self-cultivating-claudemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evergreen Prompt System (Self-Cultivating CLAUDE.md)
       
     </span>
   </a>
@@ -1136,6 +1158,84 @@
 </span><span id="__span-6-15"><a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">card</span><span class="o">.</span><span class="n">to_json</span><span class="p">()</span>     <span class="c1"># API</span>
 </span></code></pre></div>
 <hr />
+<h2 id="elastic-primitives-responsive-layout">Elastic Primitives (Responsive Layout)</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ElasticContainer</code></td>
+<td><code>web/src/components/elastic/</code></td>
+<td>Self-arranging grid/stack/flow layouts</td>
+</tr>
+<tr>
+<td><code>ElasticCard</code></td>
+<td><code>web/src/components/elastic/</code></td>
+<td>Priority-aware cards with content degradation</td>
+</tr>
+<tr>
+<td><code>ElasticSplit</code></td>
+<td><code>web/src/components/elastic/</code></td>
+<td>Two-pane layout, collapses at 768px</td>
+</tr>
+<tr>
+<td><code>ElasticPlaceholder</code></td>
+<td><code>web/src/components/elastic/</code></td>
+<td>Loading/empty/error states</td>
+</tr>
+<tr>
+<td><code>useWindowLayout</code></td>
+<td><code>web/src/hooks/useLayoutContext.ts</code></td>
+<td>Window-level density/breakpoint info</td>
+</tr>
+<tr>
+<td><code>useLayoutMeasure</code></td>
+<td><code>web/src/hooks/useLayoutContext.ts</code></td>
+<td>Container-level size measurement</td>
+</tr>
+<tr>
+<td><code>WidgetLayoutHints</code></td>
+<td><code>web/src/reactive/types.ts</code></td>
+<td>Layout metadata for widgets</td>
+</tr>
+</tbody>
+</table>
+<div class="language-tsx highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">ElasticContainer</span><span class="p">,</span><span class="w"> </span><span class="nx">ElasticSplit</span><span class="p">,</span><span class="w"> </span><span class="nx">ElasticCard</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@/components/elastic&#39;</span><span class="p">;</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">useWindowLayout</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@/hooks/useLayoutContext&#39;</span><span class="p">;</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// Get density context</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">density</span><span class="p">,</span><span class="w"> </span><span class="nx">isMobile</span><span class="p">,</span><span class="w"> </span><span class="nx">isTablet</span><span class="p">,</span><span class="w"> </span><span class="nx">isDesktop</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useWindowLayout</span><span class="p">();</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1">// density: &#39;compact&#39; | &#39;comfortable&#39; | &#39;spacious&#39;</span>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1">// Self-arranging grid</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="p">&lt;</span><span class="nt">ElasticContainer</span><span class="w"> </span><span class="na">layout</span><span class="o">=</span><span class="s">&quot;grid&quot;</span><span class="w"> </span><span class="na">minItemWidth</span><span class="o">=</span><span class="p">{</span><span class="mf">200</span><span class="p">}&gt;</span>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="p">{</span><span class="nx">widgets</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">w</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">&lt;</span><span class="nt">ElasticCard</span><span class="w"> </span><span class="na">key</span><span class="o">=</span><span class="p">{</span><span class="nx">w</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="w"> </span><span class="na">priority</span><span class="o">=</span><span class="p">{</span><span class="nx">w</span><span class="p">.</span><span class="nx">priority</span><span class="p">}</span><span class="w"> </span><span class="p">{</span><span class="na">...w</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;)}</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">&lt;/</span><span class="nt">ElasticContainer</span><span class="p">&gt;</span>
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1">// Two-pane with collapse</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="p">&lt;</span><span class="nt">ElasticSplit</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="w">  </span><span class="na">direction</span><span class="o">=</span><span class="s">&quot;horizontal&quot;</span>
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="na">defaultRatio</span><span class="o">=</span><span class="p">{</span><span class="mf">0.7</span><span class="p">}</span>
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="w">  </span><span class="na">collapseAt</span><span class="o">=</span><span class="p">{</span><span class="mf">768</span><span class="p">}</span>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="w">  </span><span class="na">resizable</span><span class="o">=</span><span class="p">{</span><span class="nx">isDesktop</span><span class="p">}</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="w">  </span><span class="na">primary</span><span class="o">=</span><span class="p">{&lt;</span><span class="nt">MainPanel</span><span class="w"> </span><span class="na">density</span><span class="o">=</span><span class="p">{</span><span class="nx">density</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;}</span>
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="w">  </span><span class="na">secondary</span><span class="o">=</span><span class="p">{&lt;</span><span class="nt">Sidebar</span><span class="w"> </span><span class="na">density</span><span class="o">=</span><span class="p">{</span><span class="nx">density</span><span class="p">}</span><span class="w"> </span><span class="p">/&gt;}</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="p">/&gt;</span>
+</span></code></pre></div>
+<p><strong>Key Insight</strong>: Density-Content Isomorphism — pass <code>density</code> down, let components decide what it means.</p>
+<p><strong>Breakpoints</strong>:
+- 640px (sm/compact) — Mobile, drawers, touch targets
+- 768px (md) — ElasticSplit collapse threshold
+- 1024px (lg/spacious) — Full desktop layout</p>
+<p><strong>Content Levels</strong>: icon (&lt;60px), title (&lt;150px), summary (&lt;280px), full (≥400px)</p>
+<p><strong>Tests</strong>: 32+ (17 chaos, 10 performance, 15+ E2E visual regression)</p>
+<p><strong>Skills</strong>: <code>docs/skills/elastic-ui-patterns.md</code>, <code>docs/skills/ui-isomorphism-detection.md</code></p>
+<hr />
 <h2 id="projection-gallery">Projection Gallery</h2>
 <table>
 <thead>
@@ -1173,15 +1273,15 @@
 </tr>
 </tbody>
 </table>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.projection.gallery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gallery</span><span class="p">,</span> <span class="n">GalleryOverrides</span><span class="p">,</span> <span class="n">PILOT_REGISTRY</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># CLI gallery</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">()</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show_all</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">RenderTarget</span><span class="o">.</span><span class="n">CLI</span><span class="p">)</span>  <span class="c1"># All 25 pilots</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s2">&quot;agent_card_active&quot;</span><span class="p">,</span> <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;entropy&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># With global overrides</span>
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">(</span><span class="n">GalleryOverrides</span><span class="p">(</span><span class="n">entropy</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.projection.gallery</span><span class="w"> </span><span class="kn">import</span> <span class="n">Gallery</span><span class="p">,</span> <span class="n">GalleryOverrides</span><span class="p">,</span> <span class="n">PILOT_REGISTRY</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="c1"># CLI gallery</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">()</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show_all</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">RenderTarget</span><span class="o">.</span><span class="n">CLI</span><span class="p">)</span>  <span class="c1"># All 25 pilots</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="n">gallery</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="s2">&quot;agent_card_active&quot;</span><span class="p">,</span> <span class="n">overrides</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;entropy&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># With global overrides</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">gallery</span> <span class="o">=</span> <span class="n">Gallery</span><span class="p">(</span><span class="n">GalleryOverrides</span><span class="p">(</span><span class="n">entropy</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">))</span>
 </span></code></pre></div>
 <p><strong>Web Gallery</strong>: <code>http://localhost:3000/gallery</code></p>
 <p><strong>API Endpoints</strong>:
@@ -1212,60 +1312,145 @@
 </tr>
 </tbody>
 </table>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.nphase</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="n">compiler</span><span class="p">,</span> <span class="n">ProjectDefinition</span><span class="p">,</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="n">NPhaseStateUpdater</span><span class="p">,</span> <span class="n">state_updater</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="p">)</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="c1"># Compile from YAML</span>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="n">prompt</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile_from_yaml_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="c1"># Track state</span>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">updater</span> <span class="o">=</span> <span class="n">state_updater</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a><span class="n">state</span> <span class="o">=</span> <span class="n">updater</span><span class="o">.</span><span class="n">advance_phase</span><span class="p">(</span><span class="s2">&quot;DEVELOP&quot;</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.nphase</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">compiler</span><span class="p">,</span> <span class="n">ProjectDefinition</span><span class="p">,</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="n">NPhaseStateUpdater</span><span class="p">,</span> <span class="n">state_updater</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="p">)</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># Compile from YAML</span>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">prompt</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile_from_yaml_file</span><span class="p">(</span><span class="s2">&quot;project.yaml&quot;</span><span class="p">)</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="c1"># Track state</span>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="n">updater</span> <span class="o">=</span> <span class="n">state_updater</span><span class="p">(</span><span class="n">project</span><span class="p">)</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">state</span> <span class="o">=</span> <span class="n">updater</span><span class="o">.</span><span class="n">advance_phase</span><span class="p">(</span><span class="s2">&quot;DEVELOP&quot;</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </span></code></pre></div>
+<hr />
+<h2 id="evergreen-prompt-system-self-cultivating-claudemd">Evergreen Prompt System (Self-Cultivating CLAUDE.md)</h2>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Location</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PromptCompiler</code></td>
+<td><code>protocols/prompt/compiler.py</code></td>
+<td>Section-based CLAUDE.md compilation</td>
+</tr>
+<tr>
+<td><code>PromptM</code></td>
+<td><code>protocols/prompt/monad.py</code></td>
+<td>Prompt Monad with unit/bind/map</td>
+</tr>
+<tr>
+<td><code>SoftSection</code></td>
+<td><code>protocols/prompt/soft_section.py</code></td>
+<td>Rigidity spectrum (0.0-1.0)</td>
+</tr>
+<tr>
+<td><code>RollbackRegistry</code></td>
+<td><code>protocols/prompt/rollback/</code></td>
+<td>Full history with instant rollback</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td><code>protocols/prompt/cli.py</code></td>
+<td>compile, history, rollback, diff</td>
+</tr>
+</tbody>
+</table>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.prompt</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">PromptCompiler</span><span class="p">,</span> <span class="n">CompilationContext</span><span class="p">,</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">PromptM</span><span class="p">,</span> <span class="n">Source</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">RollbackRegistry</span><span class="p">,</span> <span class="n">get_default_registry</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="p">)</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.prompt.sections</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_default_compilers</span>
+</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
+</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># Compile CLAUDE.md</span>
+</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="n">compiler</span> <span class="o">=</span> <span class="n">PromptCompiler</span><span class="p">(</span><span class="n">section_compilers</span><span class="o">=</span><span class="n">get_default_compilers</span><span class="p">(),</span> <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="n">context</span> <span class="o">=</span> <span class="n">CompilationContext</span><span class="p">(</span><span class="n">project_root</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;/path/to/project&quot;</span><span class="p">))</span>
+</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">result</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
+</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="c1"># Use PromptM monad for composable transformations</span>
+</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="n">section</span> <span class="o">=</span> <span class="n">Section</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="s2">&quot;hello&quot;</span><span class="p">,</span> <span class="n">token_cost</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-10-15"><a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a><span class="n">transformed</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="__span-10-16"><a id="__codelineno-10-16" name="__codelineno-10-16" href="#__codelineno-10-16"></a>    <span class="n">PromptM</span><span class="o">.</span><span class="n">unit</span><span class="p">(</span><span class="n">section</span><span class="p">)</span>
+</span><span id="__span-10-17"><a id="__codelineno-10-17" name="__codelineno-10-17" href="#__codelineno-10-17"></a>    <span class="o">.</span><span class="n">with_provenance</span><span class="p">(</span><span class="n">Source</span><span class="o">.</span><span class="n">TEMPLATE</span><span class="p">)</span>
+</span><span id="__span-10-18"><a id="__codelineno-10-18" name="__codelineno-10-18" href="#__codelineno-10-18"></a>    <span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">with_content</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">upper</span><span class="p">()))</span>
+</span><span id="__span-10-19"><a id="__codelineno-10-19" name="__codelineno-10-19" href="#__codelineno-10-19"></a>    <span class="o">.</span><span class="n">with_trace</span><span class="p">(</span><span class="s2">&quot;Uppercased content&quot;</span><span class="p">)</span>
+</span><span id="__span-10-20"><a id="__codelineno-10-20" name="__codelineno-10-20" href="#__codelineno-10-20"></a><span class="p">)</span>
+</span><span id="__span-10-21"><a id="__codelineno-10-21" name="__codelineno-10-21" href="#__codelineno-10-21"></a>
+</span><span id="__span-10-22"><a id="__codelineno-10-22" name="__codelineno-10-22" href="#__codelineno-10-22"></a><span class="c1"># Checkpoint and rollback</span>
+</span><span id="__span-10-23"><a id="__codelineno-10-23" name="__codelineno-10-23" href="#__codelineno-10-23"></a><span class="n">registry</span> <span class="o">=</span> <span class="n">get_default_registry</span><span class="p">()</span>
+</span><span id="__span-10-24"><a id="__codelineno-10-24" name="__codelineno-10-24" href="#__codelineno-10-24"></a><span class="n">checkpoint_id</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">checkpoint</span><span class="p">(</span>
+</span><span id="__span-10-25"><a id="__codelineno-10-25" name="__codelineno-10-25" href="#__codelineno-10-25"></a>    <span class="n">before_content</span><span class="o">=</span><span class="s2">&quot;old&quot;</span><span class="p">,</span>
+</span><span id="__span-10-26"><a id="__codelineno-10-26" name="__codelineno-10-26" href="#__codelineno-10-26"></a>    <span class="n">after_content</span><span class="o">=</span><span class="s2">&quot;new&quot;</span><span class="p">,</span>
+</span><span id="__span-10-27"><a id="__codelineno-10-27" name="__codelineno-10-27" href="#__codelineno-10-27"></a>    <span class="n">before_sections</span><span class="o">=</span><span class="p">(),</span>
+</span><span id="__span-10-28"><a id="__codelineno-10-28" name="__codelineno-10-28" href="#__codelineno-10-28"></a>    <span class="n">after_sections</span><span class="o">=</span><span class="p">(),</span>
+</span><span id="__span-10-29"><a id="__codelineno-10-29" name="__codelineno-10-29" href="#__codelineno-10-29"></a>    <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;Test change&quot;</span>
+</span><span id="__span-10-30"><a id="__codelineno-10-30" name="__codelineno-10-30" href="#__codelineno-10-30"></a><span class="p">)</span>
+</span><span id="__span-10-31"><a id="__codelineno-10-31" name="__codelineno-10-31" href="#__codelineno-10-31"></a><span class="n">result</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">rollback</span><span class="p">(</span><span class="n">checkpoint_id</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>CLI Commands</strong>:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Compile with checkpoint</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>protocols.prompt.cli<span class="w"> </span>compile<span class="w"> </span>--reason<span class="w"> </span><span class="s2">&quot;Update&quot;</span>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># View history</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>protocols.prompt.cli<span class="w"> </span><span class="nb">history</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="c1"># Rollback</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>protocols.prompt.cli<span class="w"> </span>rollback<span class="w"> </span>26b96d66
+</span></code></pre></div></p>
+<p><strong>Category Laws</strong> (verified with 216 tests):
+- Left Identity: <code>unit(x).bind(f) == f(x)</code>
+- Right Identity: <code>m.bind(unit) == m</code>
+- Associativity: <code>m.bind(f).bind(g) == m.bind(λx. f(x).bind(g))</code>
+- Rollback Invertibility: <code>rollback(checkpoint(p)).content == p</code></p>
 <hr />
 <h2 id="saas-infrastructure">SaaS Infrastructure</h2>
 <h3 id="api-protocolsapi">API (<code>protocols/api/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span><span class="p">,</span> <span class="n">GovernanceRequest</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>  <span class="c1"># FastAPI app with auth, routes, middleware</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span><span class="p">,</span> <span class="n">GovernanceRequest</span>
+</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="n">app</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">()</span>  <span class="c1"># FastAPI app with auth, routes, middleware</span>
 </span></code></pre></div>
 <h3 id="billing-protocolsbilling">Billing (<code>protocols/billing/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>    <span class="n">StripeClient</span><span class="p">,</span> <span class="n">CustomerManager</span><span class="p">,</span> <span class="n">SubscriptionManager</span><span class="p">,</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>    <span class="n">OpenMeterClient</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">StripeClient</span><span class="p">,</span> <span class="n">CustomerManager</span><span class="p">,</span> <span class="n">SubscriptionManager</span><span class="p">,</span>
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">OpenMeterClient</span>
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="p">)</span>
 </span></code></pre></div>
 <h3 id="licensing-protocolslicensing">Licensing (<code>protocols/licensing/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>    <span class="n">LicenseTier</span><span class="p">,</span> <span class="n">requires_tier</span><span class="p">,</span> <span class="n">is_feature_enabled</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="p">)</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="nd">@requires_tier</span><span class="p">(</span><span class="n">LicenseTier</span><span class="o">.</span><span class="n">PRO</span><span class="p">)</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">pro_feature</span><span class="p">():</span> <span class="o">...</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="n">LicenseTier</span><span class="p">,</span> <span class="n">requires_tier</span><span class="p">,</span> <span class="n">is_feature_enabled</span>
+</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="p">)</span>
+</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="nd">@requires_tier</span><span class="p">(</span><span class="n">LicenseTier</span><span class="o">.</span><span class="n">PRO</span><span class="p">)</span>
+</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="k">def</span><span class="w"> </span><span class="nf">pro_feature</span><span class="p">():</span> <span class="o">...</span>
 </span></code></pre></div>
 <h3 id="tenancy-protocolstenancy">Tenancy (<code>protocols/tenancy/</code>)</h3>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>    <span class="n">TenantContext</span><span class="p">,</span> <span class="n">set_tenant_context</span><span class="p">,</span> <span class="n">ApiKeyService</span>
-</span><span id="__span-12-3"><a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">)</span>
-</span><span id="__span-12-4"><a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
-</span><span id="__span-12-5"><a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="k">with</span> <span class="n">set_tenant_context</span><span class="p">(</span><span class="n">tenant_id</span><span class="p">):</span>
-</span><span id="__span-12-6"><a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>    <span class="c1"># All queries scoped to tenant</span>
-</span><span id="__span-12-7"><a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>    <span class="o">...</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="n">TenantContext</span><span class="p">,</span> <span class="n">set_tenant_context</span><span class="p">,</span> <span class="n">ApiKeyService</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a><span class="p">)</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="k">with</span> <span class="n">set_tenant_context</span><span class="p">(</span><span class="n">tenant_id</span><span class="p">):</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>    <span class="c1"># All queries scoped to tenant</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="o">...</span>
 </span></code></pre></div>
 <hr />
 <h2 id="terrarium-agent-gateway">Terrarium (Agent Gateway)</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.terrarium</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">Terrarium</span><span class="p">,</span> <span class="n">HolographicBuffer</span><span class="p">,</span> <span class="n">PrismRestBridge</span>
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="p">)</span>
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Create gateway</span>
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="n">terrarium</span> <span class="o">=</span> <span class="n">Terrarium</span><span class="p">()</span>
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="n">terrarium</span><span class="o">.</span><span class="n">register_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="n">flux_agent</span><span class="p">)</span>
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a><span class="c1"># Mount CLI agent as REST</span>
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="n">bridge</span> <span class="o">=</span> <span class="n">PrismRestBridge</span><span class="p">()</span>
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="n">bridge</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">terrarium</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">cli_agent</span><span class="p">)</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.terrarium</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="n">Terrarium</span><span class="p">,</span> <span class="n">HolographicBuffer</span><span class="p">,</span> <span class="n">PrismRestBridge</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="p">)</span>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="c1"># Create gateway</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">terrarium</span> <span class="o">=</span> <span class="n">Terrarium</span><span class="p">()</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">terrarium</span><span class="o">.</span><span class="n">register_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="n">flux_agent</span><span class="p">)</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="c1"># Mount CLI agent as REST</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="n">bridge</span> <span class="o">=</span> <span class="n">PrismRestBridge</span><span class="p">()</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="n">bridge</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">terrarium</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">cli_agent</span><span class="p">)</span>
 </span></code></pre></div>
 <hr />
 <h2 id="infra-kubernetes">Infra (Kubernetes)</h2>
@@ -1301,37 +1486,37 @@
 </table>
 <hr />
 <h2 id="key-import-patterns">Key Import Patterns</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-14-1"><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Categorical foundation</span>
-</span><span id="__span-14-2"><a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
-</span><span id="__span-14-3"><a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
-</span><span id="__span-14-4"><a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
-</span><span id="__span-14-5"><a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>
-</span><span id="__span-14-6"><a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="c1"># Stream processing</span>
-</span><span id="__span-14-7"><a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
-</span><span id="__span-14-8"><a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
-</span><span id="__span-14-9"><a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="c1"># AGENTESE</span>
-</span><span id="__span-14-10"><a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
-</span><span id="__span-14-11"><a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a>
-</span><span id="__span-14-12"><a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="c1"># Reactive</span>
-</span><span id="__span-14-13"><a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
-</span><span id="__span-14-14"><a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>
-</span><span id="__span-14-15"><a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="c1"># Town</span>
-</span><span id="__span-14-16"><a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
-</span><span id="__span-14-17"><a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a>
-</span><span id="__span-14-18"><a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a><span class="c1"># Soul</span>
-</span><span id="__span-14-19"><a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
-</span><span id="__span-14-20"><a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a>
-</span><span id="__span-14-21"><a id="__codelineno-14-21" name="__codelineno-14-21" href="#__codelineno-14-21"></a><span class="c1"># Memory</span>
-</span><span id="__span-14-22"><a id="__codelineno-14-22" name="__codelineno-14-22" href="#__codelineno-14-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
-</span><span id="__span-14-23"><a id="__codelineno-14-23" name="__codelineno-14-23" href="#__codelineno-14-23"></a>
-</span><span id="__span-14-24"><a id="__codelineno-14-24" name="__codelineno-14-24" href="#__codelineno-14-24"></a><span class="c1"># SaaS</span>
-</span><span id="__span-14-25"><a id="__codelineno-14-25" name="__codelineno-14-25" href="#__codelineno-14-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
-</span><span id="__span-14-26"><a id="__codelineno-14-26" name="__codelineno-14-26" href="#__codelineno-14-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
-</span><span id="__span-14-27"><a id="__codelineno-14-27" name="__codelineno-14-27" href="#__codelineno-14-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
-</span><span id="__span-14-28"><a id="__codelineno-14-28" name="__codelineno-14-28" href="#__codelineno-14-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Categorical foundation</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="c1"># Stream processing</span>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a><span class="c1"># AGENTESE</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="c1"># Reactive</span>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="c1"># Town</span>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="c1"># Soul</span>
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a>
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a><span class="c1"># Memory</span>
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>
+</span><span id="__span-17-24"><a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a><span class="c1"># SaaS</span>
+</span><span id="__span-17-25"><a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
+</span><span id="__span-17-26"><a id="__codelineno-17-26" name="__codelineno-17-26" href="#__codelineno-17-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
+</span><span id="__span-17-27"><a id="__codelineno-17-27" name="__codelineno-17-27" href="#__codelineno-17-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
+</span><span id="__span-17-28"><a id="__codelineno-17-28" name="__codelineno-17-28" href="#__codelineno-17-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
 </span></code></pre></div>
 <hr />
-<p><em>Last updated: 2025-12-15</em></p>
+<p><em>Last updated: 2025-12-16</em></p>
 
 
 
