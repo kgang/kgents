@@ -1,9 +1,0 @@
----
-# Observability namespace for kgents monitoring stack
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: kgents-observability
-  labels:
-    app.kubernetes.io/name: kgents-observability
-    app.kubernetes.io/part-of: kgents
