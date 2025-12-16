@@ -263,3 +263,125 @@ class TestSparklineDeterminism:
 
         assert widget1.project(RenderTarget.CLI) == widget2.project(RenderTarget.CLI)
         assert widget1.project(RenderTarget.JSON) == widget2.project(RenderTarget.JSON)
+
+
+# =============================================================================
+# Projection Functor Law Tests
+# =============================================================================
+
+
+class TestSparklineProjectionLaws:
+    """Tests that SparklineWidget satisfies projection functor laws.
+
+    These tests verify:
+    1. Identity Law: project(id(state)) ≡ project(state)
+    2. Composition Law: Composed state changes project correctly
+    3. Determinism: Same state → same output (no hidden randomness)
+
+    See: spec/protocols/projection.md
+    See: agents/i/reactive/projection/laws.py
+    """
+
+    def test_identity_law_cli(self) -> None:
+        """SparklineWidget satisfies identity law for CLI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = SparklineWidget(SparklineState(values=(0.1, 0.5, 0.9), max_length=20))
+        assert verify_identity_law(widget, ExtendedTarget.CLI)
+
+    def test_identity_law_json(self) -> None:
+        """SparklineWidget satisfies identity law for JSON target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = SparklineWidget(SparklineState(values=(0.2, 0.4, 0.6, 0.8), entropy=0.3))
+        assert verify_identity_law(widget, ExtendedTarget.JSON)
+
+    def test_identity_law_marimo(self) -> None:
+        """SparklineWidget satisfies identity law for MARIMO target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = SparklineWidget(SparklineState(values=(0.3, 0.7), label="CPU"))
+        assert verify_identity_law(widget, ExtendedTarget.MARIMO)
+
+    def test_identity_law_tui(self) -> None:
+        """SparklineWidget satisfies identity law for TUI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = SparklineWidget(SparklineState(values=(0.1, 0.2, 0.3), fg="cyan"))
+        assert verify_identity_law(widget, ExtendedTarget.TUI)
+
+    def test_composition_law_append_value(self) -> None:
+        """SparklineWidget satisfies composition law with append transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def append_value(s: SparklineState) -> SparklineState:
+            new_values = s.values + (0.75,)
+            if len(new_values) > s.max_length:
+                new_values = new_values[-s.max_length:]
+            return SparklineState(
+                values=new_values, max_length=s.max_length, fg=s.fg, bg=s.bg,
+                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+            )
+
+        def identity(s: SparklineState) -> SparklineState:
+            return s
+
+        widget = SparklineWidget(SparklineState(values=(0.1, 0.5, 0.9)))
+        assert verify_composition_law(widget, append_value, identity, ExtendedTarget.CLI)
+
+    def test_composition_law_scale_values(self) -> None:
+        """SparklineWidget satisfies composition law with scale transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def scale_values(s: SparklineState) -> SparklineState:
+            scaled = tuple(min(1.0, v * 1.2) for v in s.values)
+            return SparklineState(
+                values=scaled, max_length=s.max_length, fg=s.fg, bg=s.bg,
+                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+            )
+
+        def add_label(s: SparklineState) -> SparklineState:
+            return SparklineState(
+                values=s.values, max_length=s.max_length, fg=s.fg, bg=s.bg,
+                entropy=s.entropy, seed=s.seed, t=s.t, label="Memory", show_bounds=s.show_bounds,
+            )
+
+        widget = SparklineWidget(SparklineState(values=(0.3, 0.5, 0.7)))
+        assert verify_composition_law(widget, scale_values, add_label, ExtendedTarget.JSON)
+
+    def test_determinism_cli(self) -> None:
+        """SparklineWidget projection is deterministic for CLI."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = SparklineWidget(SparklineState(values=(0.1, 0.5, 0.9), entropy=0.3, seed=42))
+        assert verify_determinism(widget, ExtendedTarget.CLI, iterations=10)
+
+    def test_determinism_json(self) -> None:
+        """SparklineWidget projection is deterministic for JSON."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = SparklineWidget(SparklineState(values=(0.2, 0.4, 0.6, 0.8, 1.0), seed=99))
+        assert verify_determinism(widget, ExtendedTarget.JSON, iterations=10)
+
+    def test_all_laws_comprehensive(self) -> None:
+        """SparklineWidget passes all projection laws."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_all_laws
+
+        def shift_values(s: SparklineState) -> SparklineState:
+            shifted = s.values[1:] + (0.5,) if s.values else (0.5,)
+            return SparklineState(
+                values=shifted, max_length=s.max_length, fg=s.fg, bg=s.bg,
+                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+            )
+
+        def identity(s: SparklineState) -> SparklineState:
+            return s
+
+        widget = SparklineWidget(SparklineState(values=(0.1, 0.3, 0.5, 0.7)))
+        result = verify_all_laws(
+            widget,
+            ExtendedTarget.CLI,
+            state_transforms=[shift_values, identity],
+        )
+
+        assert result.all_passed, f"Law violations: {result.errors}"

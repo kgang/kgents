@@ -199,6 +199,13 @@ def create_app(
     if infrastructure_router is not None:
         app.include_router(infrastructure_router)
 
+    # Gardener endpoints (Wave 1: Hero Path)
+    from .gardener import create_gardener_router
+
+    gardener_router = create_gardener_router()
+    if gardener_router is not None:
+        app.include_router(gardener_router)
+
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
     async def health_check(

@@ -6,6 +6,44 @@ This document inventories all production-ready infrastructure in kgents. When pl
 
 ---
 
+## Gardener-Logos (NEW 2025-12-16)
+
+**The Meta-Tending Substrate** — Unifies The Gardener Crown Jewel with Prompt Logos into a single system for tending the garden of prompts.
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **Spec** | `spec/protocols/gardener-logos.md` | Full specification |
+| **Garden State** | `protocols/gardener_logos/garden.py` | Seasons, metrics, unified state |
+| **Tending Calculus** | `protocols/gardener_logos/tending.py` | 6 verbs: observe, prune, graft, water, rotate, wait |
+| **Plots** | `protocols/gardener_logos/plots.py` | Named focus regions (crown jewels, plans) |
+| **Personality** | `protocols/gardener_logos/personality.py` | Joy layer, contextual greetings |
+| **Meta-Tending** | `protocols/gardener_logos/meta/` | Self-observation prompts |
+| **ASCII Projection** | `protocols/gardener_logos/projections/ascii.py` | CLI rendering |
+
+```python
+from protocols.gardener_logos import (
+    create_garden, GardenSeason,
+    create_plot, create_crown_jewel_plots,
+    observe, prune, graft, water, rotate, wait,
+    TendingPersonality, default_personality,
+)
+from protocols.gardener_logos.projections import project_garden_to_ascii
+
+garden = create_garden(name="my-project", season=GardenSeason.SPROUTING)
+garden.plots = create_crown_jewel_plots()
+garden.add_gesture(observe("concept.prompt.*"))
+print(project_garden_to_ascii(garden))
+```
+
+**AGENTESE Paths:**
+- `concept.gardener.manifest` — Garden overview
+- `concept.gardener.tend` — Apply tending gestures
+- `concept.gardener.season.*` — Season operations
+- `concept.gardener.plot.*` — Plot management
+- `concept.prompt.*` — Prompt Logos (delegated)
+
+---
+
 ## Categorical Foundation (USE FOR ANY DOMAIN)
 
 | Component | Location | Purpose | Tests |

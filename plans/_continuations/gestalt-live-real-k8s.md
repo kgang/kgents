@@ -54,7 +54,43 @@
 - `impl/claude/agents/infra/collectors/__init__.py` — Exports config module
 - `impl/claude/agents/infra/collectors/kubernetes.py` — Fixed health_check and owner_refs
 
-**Tests**: 97 passed (infra suite)
+**Tests**: 114 passed (infra suite)
+
+### Semantic Layout Implementation (2025-12-16)
+
+**Problem**: Original layout was random with force-directed refinement—not informative.
+
+**Solution**: Principled semantic layout following the Projection Protocol:
+
+| Axis | Semantic Meaning | Implementation |
+|------|------------------|----------------|
+| **Y** | Abstraction layer | Services (top) → Deployments (mid) → Pods (bottom) |
+| **X** | Namespace clustering | Entities grouped by namespace, spread horizontally |
+| **Z** | Health/Attention | Unhealthy entities come forward (depth = information) |
+
+**Live Test Results**:
+```
+Y-AXIS HIERARCHY:
+  service         avg_y =  4.39 (21 entities)
+  deployment      avg_y =  0.00 (7 entities)
+  pod             avg_y = -4.39 (22 entities)
+
+X-AXIS CLUSTERING:
+  default                   avg_x = -25.00
+  kgents-agents             avg_x = -16.23
+  kgents-gateway            avg_x =  -7.45
+  kgents-observability      avg_x =   1.32
+  kgents-triad              avg_x =  10.09
+```
+
+**Files Added**:
+- `impl/claude/agents/infra/layout.py` — Semantic layout algorithm
+- `impl/claude/agents/infra/_tests/test_layout.py` — 17 tests for layout
+
+**Key Principles Applied**:
+- "Depth is not decoration—it is information" (spec/protocols/projection.md)
+- Layout projection is structural isomorphism
+- Semantic hierarchy is visually encoded
 
 ---
 

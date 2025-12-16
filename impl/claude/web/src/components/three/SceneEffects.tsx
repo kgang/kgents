@@ -33,7 +33,7 @@
  */
 
 import { useMemo } from 'react';
-import { EffectComposer, SSAO } from '@react-three/postprocessing';
+import { EffectComposer, SSAO, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import {
@@ -43,6 +43,10 @@ import {
   SSAO_RADIUS,
   SSAO_INTENSITY,
   SSAO_COLOR,
+  BLOOM_ENABLED,
+  BLOOM_INTENSITY,
+  BLOOM_THRESHOLD,
+  BLOOM_SMOOTHING,
 } from '../../constants/lighting';
 
 // =============================================================================
@@ -73,6 +77,18 @@ export interface SceneEffectsProps {
    * Uses quality-based default if not specified.
    */
   ssaoRadiusOverride?: number;
+
+  /**
+   * Override bloom intensity (for fine-tuning per scene).
+   * Uses quality-based default if not specified.
+   */
+  bloomIntensityOverride?: number;
+
+  /**
+   * Override bloom threshold (for fine-tuning per scene).
+   * Uses quality-based default if not specified.
+   */
+  bloomThresholdOverride?: number;
 }
 
 // =============================================================================
@@ -84,9 +100,9 @@ export interface SceneEffectsProps {
  *
  * Currently includes:
  * - SSAO (Screen-Space Ambient Occlusion) for depth enhancement
+ * - Bloom for emissive glow effects
  *
  * Future possibilities:
- * - Bloom for emissive elements
  * - Chromatic aberration for style
  * - Vignette for focus
  */
@@ -95,8 +111,10 @@ export function SceneEffects({
   disabled = false,
   ssaoIntensityOverride,
   ssaoRadiusOverride,
+  bloomIntensityOverride,
+  bloomThresholdOverride,
 }: SceneEffectsProps) {
-  // Get quality-based configuration
+  // Get quality-based SSAO configuration
   const ssaoConfig = useMemo(() => {
     const enabled = SSAO_ENABLED[quality];
     const samples = SSAO_SAMPLES[quality];
@@ -108,28 +126,81 @@ export function SceneEffects({
     return { enabled, samples, radius, intensity, color };
   }, [quality, ssaoIntensityOverride, ssaoRadiusOverride]);
 
+  // Get quality-based Bloom configuration
+  const bloomConfig = useMemo(() => {
+    const enabled = BLOOM_ENABLED[quality];
+    const intensity = bloomIntensityOverride ?? BLOOM_INTENSITY[quality];
+    const threshold = bloomThresholdOverride ?? BLOOM_THRESHOLD[quality];
+    const smoothing = BLOOM_SMOOTHING[quality];
+
+    return { enabled, intensity, threshold, smoothing };
+  }, [quality, bloomIntensityOverride, bloomThresholdOverride]);
+
   // Don't render anything if disabled or no effects needed
-  if (disabled || !ssaoConfig.enabled) {
+  const hasAnyEffect = ssaoConfig.enabled || bloomConfig.enabled;
+  if (disabled || !hasAnyEffect) {
     return null;
   }
 
+  // EffectComposer has strict typing - render based on which effects are enabled
+  // Both SSAO and Bloom enabled
+  if (ssaoConfig.enabled && bloomConfig.enabled) {
+    return (
+      <EffectComposer>
+        <SSAO
+          blendFunction={BlendFunction.MULTIPLY}
+          samples={ssaoConfig.samples}
+          radius={ssaoConfig.radius}
+          intensity={ssaoConfig.intensity}
+          luminanceInfluence={0.5}
+          color={ssaoConfig.color}
+          distanceScaling={true}
+          depthAwareUpsampling={true}
+          worldDistanceThreshold={1.0}
+          worldDistanceFalloff={0.1}
+          worldProximityThreshold={0.3}
+          worldProximityFalloff={0.3}
+        />
+        <Bloom
+          intensity={bloomConfig.intensity}
+          luminanceThreshold={bloomConfig.threshold}
+          luminanceSmoothing={bloomConfig.smoothing}
+          mipmapBlur={true}
+        />
+      </EffectComposer>
+    );
+  }
+
+  // Only SSAO enabled
+  if (ssaoConfig.enabled) {
+    return (
+      <EffectComposer>
+        <SSAO
+          blendFunction={BlendFunction.MULTIPLY}
+          samples={ssaoConfig.samples}
+          radius={ssaoConfig.radius}
+          intensity={ssaoConfig.intensity}
+          luminanceInfluence={0.5}
+          color={ssaoConfig.color}
+          distanceScaling={true}
+          depthAwareUpsampling={true}
+          worldDistanceThreshold={1.0}
+          worldDistanceFalloff={0.1}
+          worldProximityThreshold={0.3}
+          worldProximityFalloff={0.3}
+        />
+      </EffectComposer>
+    );
+  }
+
+  // Only Bloom enabled
   return (
     <EffectComposer>
-      <SSAO
-        blendFunction={BlendFunction.MULTIPLY}
-        samples={ssaoConfig.samples}
-        radius={ssaoConfig.radius}
-        intensity={ssaoConfig.intensity}
-        luminanceInfluence={0.5}
-        color={ssaoConfig.color}
-        // Additional tuning parameters
-        distanceScaling={true}
-        depthAwareUpsampling={true}
-        // World-space distance parameters (reasonable defaults)
-        worldDistanceThreshold={1.0}
-        worldDistanceFalloff={0.1}
-        worldProximityThreshold={0.3}
-        worldProximityFalloff={0.3}
+      <Bloom
+        intensity={bloomConfig.intensity}
+        luminanceThreshold={bloomConfig.threshold}
+        luminanceSmoothing={bloomConfig.smoothing}
+        mipmapBlur={true}
       />
     </EffectComposer>
   );

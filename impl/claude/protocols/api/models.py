@@ -9,6 +9,7 @@ Request/response models for:
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Any, Optional
 
 try:
@@ -622,3 +623,53 @@ class PolynomialVisualizationResponse(BaseModel):
         default=None,
         description="AGENTESE path for this polynomial (e.g., concept.gardener.session)",
     )
+
+
+# =============================================================================
+# Gardener Models (Wave 1: Hero Path)
+# =============================================================================
+
+
+class GardenerPhase(str, Enum):
+    """Gardener session phases following the SENSE → ACT → REFLECT cycle."""
+
+    SENSE = "SENSE"
+    ACT = "ACT"
+    REFLECT = "REFLECT"
+
+
+class GardenerIntentRequest(BaseModel):
+    """Intent for a gardener session."""
+
+    description: str = Field(..., description="What the session aims to accomplish")
+    priority: str = Field(default="normal", description="Priority level: low, normal, high")
+
+
+class GardenerSessionResponse(BaseModel):
+    """Response representing a gardener session state."""
+
+    session_id: str = Field(..., description="Unique session identifier")
+    name: str = Field(..., description="Human-readable session name")
+    phase: GardenerPhase = Field(..., description="Current session phase")
+    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
+    intent: Optional[GardenerIntentRequest] = Field(default=None, description="Session intent")
+    artifacts_count: int = Field(default=0, description="Number of artifacts created")
+    learnings_count: int = Field(default=0, description="Number of learnings recorded")
+    sense_count: int = Field(default=0, description="Times entered SENSE phase")
+    act_count: int = Field(default=0, description="Times entered ACT phase")
+    reflect_count: int = Field(default=0, description="Completed reflection cycles")
+
+
+class GardenerCreateRequest(BaseModel):
+    """Request to create a new gardener session."""
+
+    name: Optional[str] = Field(default=None, description="Session name (auto-generated if not provided)")
+    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
+    intent: Optional[GardenerIntentRequest] = Field(default=None, description="Initial session intent")
+
+
+class GardenerSessionListResponse(BaseModel):
+    """List of gardener sessions."""
+
+    sessions: list[GardenerSessionResponse] = Field(default_factory=list)
+    active_session_id: Optional[str] = Field(default=None, description="Currently active session ID")

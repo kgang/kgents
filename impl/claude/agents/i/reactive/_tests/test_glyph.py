@@ -271,3 +271,120 @@ class TestGlyphDeterminism:
 
         assert low.get("distortion") is None
         assert high.get("distortion") is not None
+
+
+# =============================================================================
+# Projection Functor Law Tests
+# =============================================================================
+
+
+class TestGlyphProjectionLaws:
+    """Tests that GlyphWidget satisfies projection functor laws.
+
+    These tests verify:
+    1. Identity Law: project(id(state)) ≡ project(state)
+    2. Composition Law: Composed state changes project correctly
+    3. Determinism: Same state → same output (no hidden randomness)
+
+    See: spec/protocols/projection.md
+    See: agents/i/reactive/projection/laws.py
+    """
+
+    def test_identity_law_cli(self) -> None:
+        """GlyphWidget satisfies identity law for CLI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = GlyphWidget(GlyphState(char="◉", phase="active"))
+        assert verify_identity_law(widget, ExtendedTarget.CLI)
+
+    def test_identity_law_json(self) -> None:
+        """GlyphWidget satisfies identity law for JSON target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = GlyphWidget(GlyphState(char="X", entropy=0.3, seed=42))
+        assert verify_identity_law(widget, ExtendedTarget.JSON)
+
+    def test_identity_law_marimo(self) -> None:
+        """GlyphWidget satisfies identity law for MARIMO target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = GlyphWidget(GlyphState(char="◉", fg="#ff0000"))
+        assert verify_identity_law(widget, ExtendedTarget.MARIMO)
+
+    def test_identity_law_tui(self) -> None:
+        """GlyphWidget satisfies identity law for TUI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = GlyphWidget(GlyphState(char="Y", fg="red", bg="black"))
+        assert verify_identity_law(widget, ExtendedTarget.TUI)
+
+    def test_composition_law_phase_change(self) -> None:
+        """GlyphWidget satisfies composition law with phase transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def change_phase(s: GlyphState) -> GlyphState:
+            return GlyphState(
+                char=s.char, fg=s.fg, bg=s.bg, phase="error",
+                entropy=s.entropy, seed=s.seed, t=s.t, animate=s.animate,
+            )
+
+        def identity(s: GlyphState) -> GlyphState:
+            return s
+
+        widget = GlyphWidget(GlyphState(char="◉", phase="idle"))
+        assert verify_composition_law(widget, change_phase, identity, ExtendedTarget.CLI)
+
+    def test_composition_law_entropy_change(self) -> None:
+        """GlyphWidget satisfies composition law with entropy transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def double_entropy(s: GlyphState) -> GlyphState:
+            return GlyphState(
+                char=s.char, fg=s.fg, bg=s.bg, phase=s.phase,
+                entropy=min(1.0, s.entropy * 2), seed=s.seed, t=s.t, animate=s.animate,
+            )
+
+        def add_time(s: GlyphState) -> GlyphState:
+            return GlyphState(
+                char=s.char, fg=s.fg, bg=s.bg, phase=s.phase,
+                entropy=s.entropy, seed=s.seed, t=s.t + 100.0, animate=s.animate,
+            )
+
+        widget = GlyphWidget(GlyphState(char="X", entropy=0.2, seed=42))
+        assert verify_composition_law(widget, double_entropy, add_time, ExtendedTarget.JSON)
+
+    def test_determinism_cli(self) -> None:
+        """GlyphWidget projection is deterministic for CLI."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = GlyphWidget(GlyphState(char="◉", entropy=0.5, seed=42, t=1000.0))
+        assert verify_determinism(widget, ExtendedTarget.CLI, iterations=10)
+
+    def test_determinism_json(self) -> None:
+        """GlyphWidget projection is deterministic for JSON."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = GlyphWidget(GlyphState(char="◉", entropy=0.5, seed=42, t=1000.0))
+        assert verify_determinism(widget, ExtendedTarget.JSON, iterations=10)
+
+    def test_all_laws_comprehensive(self) -> None:
+        """GlyphWidget passes all projection laws."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_all_laws
+
+        def change_char(s: GlyphState) -> GlyphState:
+            return GlyphState(
+                char="Z", fg=s.fg, bg=s.bg, phase=s.phase,
+                entropy=s.entropy, seed=s.seed, t=s.t, animate=s.animate,
+            )
+
+        def identity(s: GlyphState) -> GlyphState:
+            return s
+
+        widget = GlyphWidget(GlyphState(char="A", phase="active"))
+        result = verify_all_laws(
+            widget,
+            ExtendedTarget.CLI,
+            state_transforms=[change_char, identity],
+        )
+
+        assert result.all_passed, f"Law violations: {result.errors}"

@@ -347,3 +347,55 @@ export const infraApi = {
     return new EventSource(`${baseUrl}/api/infra/events/stream`);
   },
 };
+
+// =============================================================================
+// Gardener API (Wave 1: Hero Path)
+// =============================================================================
+
+import type {
+  GardenerSessionState,
+  PolynomialVisualization,
+} from './types';
+
+interface GardenerCreateRequest {
+  name?: string;
+  plan_path?: string;
+  intent?: {
+    description: string;
+    priority?: string;
+  };
+}
+
+interface GardenerSessionListResponse {
+  sessions: GardenerSessionState[];
+  active_session_id?: string;
+}
+
+interface GardenerPolynomialResponse {
+  visualization: PolynomialVisualization;
+  agentese_path?: string;
+}
+
+export const gardenerApi = {
+  /** Get active session */
+  getSession: () =>
+    apiClient.get<GardenerSessionState>('/v1/gardener/session'),
+
+  /** Create new session */
+  createSession: (data: GardenerCreateRequest = {}) =>
+    apiClient.post<GardenerSessionState>('/v1/gardener/session', data),
+
+  /** Advance to next phase */
+  advanceSession: () =>
+    apiClient.post<GardenerSessionState>('/v1/gardener/session/advance'),
+
+  /** Get polynomial visualization for active session */
+  getPolynomial: () =>
+    apiClient.get<GardenerPolynomialResponse>('/v1/gardener/session/polynomial'),
+
+  /** List recent sessions */
+  listSessions: (limit = 10) =>
+    apiClient.get<GardenerSessionListResponse>('/v1/gardener/sessions', {
+      params: { limit },
+    }),
+};

@@ -152,6 +152,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Prompt: Evergreen Prompt System (concept.prompt.*)
     # ==========================================================================
     "prompt": "protocols.cli.handlers.prompt:cmd_prompt",
+    # ==========================================================================
+    # Gardener: Development Session Management (concept.gardener.*)
+    # Wave 1: Hero Path Polish
+    # ==========================================================================
+    "gardener": "protocols.cli.handlers.gardener:cmd_gardener",
 }
 
 

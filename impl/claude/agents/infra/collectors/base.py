@@ -280,107 +280,29 @@ class BaseCollector(ABC):
         connections: list[InfraConnection],
     ) -> None:
         """
-        Calculate 3D positions for entities using force-directed layout.
+        Calculate 3D positions for entities using semantic layout.
+
+        Follows the Projection Protocol principles:
+        - Y-axis = abstraction layer (services → deployments → pods)
+        - X-axis = namespace clustering
+        - Z-axis = health/attention (unhealthy forward)
 
         Modifies entities in-place to set x, y, z coordinates.
+
+        @see impl/claude/agents/infra/layout.py
+        @see spec/protocols/projection.md (Layout Projection, 3D Target Projection)
         """
         if not self.config.calculate_positions:
             return
 
-        # Simple force-directed layout
-        # In production, use a proper library like networkx or igraph
-        import math
-        import random
+        from ..layout import LayoutConfig, LayoutStrategy, apply_layout
 
-        # Initialize random positions
-        for entity in entities:
-            entity.x = random.uniform(-10, 10)
-            entity.y = random.uniform(-10, 10)
-            entity.z = random.uniform(-5, 5)
+        # Configure layout based on collector config
+        layout_config = LayoutConfig(
+            strategy=LayoutStrategy.SEMANTIC,
+            refinement_iterations=self.config.layout_iterations,
+            spring_strength=self.config.layout_spring_strength,
+            repulsion_strength=self.config.layout_repulsion_strength,
+        )
 
-        # Build connection lookup
-        connections_by_entity: dict[str, list[str]] = {}
-        for conn in connections:
-            if conn.source_id not in connections_by_entity:
-                connections_by_entity[conn.source_id] = []
-            connections_by_entity[conn.source_id].append(conn.target_id)
-
-        entity_map = {e.id: e for e in entities}
-
-        # Iterate force-directed layout
-        for _ in range(self.config.layout_iterations):
-            # Calculate forces
-            forces: dict[str, tuple[float, float, float]] = {
-                e.id: (0.0, 0.0, 0.0) for e in entities
-            }
-
-            # Repulsion between all entities
-            for i, e1 in enumerate(entities):
-                for e2 in entities[i + 1 :]:
-                    dx = e1.x - e2.x
-                    dy = e1.y - e2.y
-                    dz = e1.z - e2.z
-                    dist = math.sqrt(dx * dx + dy * dy + dz * dz) + 0.1
-
-                    force = self.config.layout_repulsion_strength / (dist * dist)
-
-                    fx, fy, fz = forces[e1.id]
-                    forces[e1.id] = (
-                        fx + dx / dist * force,
-                        fy + dy / dist * force,
-                        fz + dz / dist * force,
-                    )
-
-                    fx, fy, fz = forces[e2.id]
-                    forces[e2.id] = (
-                        fx - dx / dist * force,
-                        fy - dy / dist * force,
-                        fz - dz / dist * force,
-                    )
-
-            # Attraction along connections
-            for source_id, target_ids in connections_by_entity.items():
-                if source_id not in entity_map:
-                    continue
-                source = entity_map[source_id]
-
-                for target_id in target_ids:
-                    if target_id not in entity_map:
-                        continue
-                    target = entity_map[target_id]
-
-                    dx = target.x - source.x
-                    dy = target.y - source.y
-                    dz = target.z - source.z
-                    dist = math.sqrt(dx * dx + dy * dy + dz * dz) + 0.1
-
-                    force = dist * self.config.layout_spring_strength
-
-                    fx, fy, fz = forces[source_id]
-                    forces[source_id] = (
-                        fx + dx / dist * force,
-                        fy + dy / dist * force,
-                        fz + dz / dist * force,
-                    )
-
-                    fx, fy, fz = forces[target_id]
-                    forces[target_id] = (
-                        fx - dx / dist * force,
-                        fy - dy / dist * force,
-                        fz - dz / dist * force,
-                    )
-
-            # Apply forces
-            for entity in entities:
-                fx, fy, fz = forces[entity.id]
-                entity.x += fx * 0.1
-                entity.y += fy * 0.1
-                entity.z += fz * 0.1
-
-        # Group by namespace (layer entities vertically)
-        namespaces = sorted(set(e.namespace or "(none)" for e in entities))
-        namespace_y = {ns: i * 5 for i, ns in enumerate(namespaces)}
-
-        for entity in entities:
-            ns = entity.namespace or "(none)"
-            entity.y = namespace_y[ns] + entity.y * 0.3  # Compress Y within namespace
+        apply_layout(entities, connections, LayoutStrategy.SEMANTIC, layout_config)

@@ -707,3 +707,157 @@ class TestToMarimo:
         assert "kgents-vstack" in result
         # Nested HStacks should also be rendered
         assert "kgents-hstack" in result
+
+
+# =============================================================================
+# Projection Functor Law Tests for Composed Widgets
+# =============================================================================
+
+
+class TestComposedProjectionLaws:
+    """Tests that composed widgets (HStack/VStack) satisfy projection functor laws.
+
+    Composed widgets must preserve laws even when their children change.
+    The key insight is that composition should be "law-preserving":
+    if each child satisfies laws, the composition should too.
+
+    See: spec/protocols/projection.md
+    See: agents/i/reactive/projection/laws.py
+    """
+
+    def test_hstack_identity_law_cli(self) -> None:
+        """HStack satisfies identity law for CLI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        a = GlyphWidget(GlyphState(char="A"))
+        b = GlyphWidget(GlyphState(char="B"))
+        hstack = a >> b
+
+        assert verify_identity_law(hstack, ExtendedTarget.CLI)
+
+    def test_hstack_identity_law_json(self) -> None:
+        """HStack satisfies identity law for JSON target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        a = GlyphWidget(GlyphState(char="X"))
+        b = SparklineWidget(SparklineState(values=(0.1, 0.5, 0.9)))
+        hstack = a >> b
+
+        assert verify_identity_law(hstack, ExtendedTarget.JSON)
+
+    def test_vstack_identity_law_cli(self) -> None:
+        """VStack satisfies identity law for CLI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        a = GlyphWidget(GlyphState(char="A"))
+        b = GlyphWidget(GlyphState(char="B"))
+        vstack = a // b
+
+        assert verify_identity_law(vstack, ExtendedTarget.CLI)
+
+    def test_vstack_identity_law_json(self) -> None:
+        """VStack satisfies identity law for JSON target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        s1 = SparklineWidget(SparklineState(values=(0.3, 0.5, 0.7)))
+        s2 = SparklineWidget(SparklineState(values=(0.6, 0.4, 0.2)))
+        vstack = s1 // s2
+
+        assert verify_identity_law(vstack, ExtendedTarget.JSON)
+
+    def test_nested_composition_identity_law(self) -> None:
+        """Nested composition satisfies identity law."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        a = GlyphWidget(GlyphState(char="A"))
+        b = GlyphWidget(GlyphState(char="B"))
+        c = GlyphWidget(GlyphState(char="C"))
+        d = GlyphWidget(GlyphState(char="D"))
+
+        # (A >> B) // (C >> D)
+        layout = (a >> b) // (c >> d)
+
+        assert verify_identity_law(layout, ExtendedTarget.CLI)
+        assert verify_identity_law(layout, ExtendedTarget.JSON)
+        assert verify_identity_law(layout, ExtendedTarget.MARIMO)
+
+    def test_hstack_determinism(self) -> None:
+        """HStack projection is deterministic."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        a = GlyphWidget(GlyphState(char="◉", entropy=0.3, seed=42))
+        b = GlyphWidget(GlyphState(char="○", entropy=0.5, seed=99))
+        hstack = a >> b
+
+        assert verify_determinism(hstack, ExtendedTarget.CLI, iterations=10)
+        assert verify_determinism(hstack, ExtendedTarget.JSON, iterations=10)
+
+    def test_vstack_determinism(self) -> None:
+        """VStack projection is deterministic."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        s1 = SparklineWidget(SparklineState(values=(0.1, 0.3, 0.5), entropy=0.2))
+        s2 = SparklineWidget(SparklineState(values=(0.9, 0.7, 0.5), entropy=0.4))
+        vstack = s1 // s2
+
+        assert verify_determinism(vstack, ExtendedTarget.CLI, iterations=10)
+        assert verify_determinism(vstack, ExtendedTarget.JSON, iterations=10)
+
+    def test_deeply_nested_determinism(self) -> None:
+        """Deeply nested composition is deterministic."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        a = GlyphWidget(GlyphState(char="A"))
+        b = GlyphWidget(GlyphState(char="B"))
+        c = GlyphWidget(GlyphState(char="C"))
+        d = GlyphWidget(GlyphState(char="D"))
+        e = GlyphWidget(GlyphState(char="E"))
+        f = GlyphWidget(GlyphState(char="F"))
+
+        # ((A >> B) // (C >> D)) >> (E // F)
+        layout = ((a >> b) // (c >> d)) >> (e // f)
+
+        assert verify_determinism(layout, ExtendedTarget.CLI, iterations=10)
+        assert verify_determinism(layout, ExtendedTarget.JSON, iterations=10)
+
+    def test_composition_preserves_laws_across_targets(self) -> None:
+        """Composed widgets preserve laws across all supported targets."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        a = GlyphWidget(GlyphState(char="◉", phase="active"))
+        b = SparklineWidget(SparklineState(values=(0.2, 0.5, 0.8), label="CPU"))
+        layout = a >> b
+
+        for target in [ExtendedTarget.CLI, ExtendedTarget.JSON, ExtendedTarget.MARIMO]:
+            assert verify_identity_law(layout, target), f"Failed for {target}"
+
+    def test_long_chain_identity_law(self) -> None:
+        """Long HStack chain satisfies identity law."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widgets = [GlyphWidget(GlyphState(char=c)) for c in "ABCDEFGH"]
+        chain = widgets[0]
+        for w in widgets[1:]:
+            chain = chain >> w
+
+        assert verify_identity_law(chain, ExtendedTarget.CLI)
+        assert verify_identity_law(chain, ExtendedTarget.JSON)
+
+    def test_mixed_widget_composition_laws(self) -> None:
+        """Mixed widget types in composition satisfy laws."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_all_laws
+
+        # Create a dashboard-style layout
+        status = GlyphWidget(GlyphState(char="◉", phase="active"))
+        cpu_spark = SparklineWidget(SparklineState(values=(0.3, 0.5, 0.7), label="CPU"))
+        mem_spark = SparklineWidget(SparklineState(values=(0.6, 0.4, 0.2), label="MEM"))
+
+        header = status >> GlyphWidget(GlyphState(char="Dashboard"))
+        metrics = cpu_spark // mem_spark
+        dashboard = header // metrics
+
+        # Test without composition law (since composed widgets don't have a single state)
+        result = verify_all_laws(dashboard, ExtendedTarget.CLI)
+
+        assert result.identity, f"Identity failed: {result.errors}"
+        assert result.determinism, f"Determinism failed: {result.errors}"

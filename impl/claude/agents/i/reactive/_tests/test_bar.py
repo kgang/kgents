@@ -253,3 +253,124 @@ class TestBarDeterminism:
 
         assert widget1.project(RenderTarget.CLI) == widget2.project(RenderTarget.CLI)
         assert widget1.project(RenderTarget.JSON) == widget2.project(RenderTarget.JSON)
+
+
+# =============================================================================
+# Projection Functor Law Tests
+# =============================================================================
+
+
+class TestBarProjectionLaws:
+    """Tests that BarWidget satisfies projection functor laws.
+
+    These tests verify:
+    1. Identity Law: project(id(state)) ≡ project(state)
+    2. Composition Law: Composed state changes project correctly
+    3. Determinism: Same state → same output (no hidden randomness)
+
+    See: spec/protocols/projection.md
+    See: agents/i/reactive/projection/laws.py
+    """
+
+    def test_identity_law_cli(self) -> None:
+        """BarWidget satisfies identity law for CLI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = BarWidget(BarState(value=0.7, width=15, style="solid"))
+        assert verify_identity_law(widget, ExtendedTarget.CLI)
+
+    def test_identity_law_json(self) -> None:
+        """BarWidget satisfies identity law for JSON target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = BarWidget(BarState(value=0.5, width=10, entropy=0.2, seed=42))
+        assert verify_identity_law(widget, ExtendedTarget.JSON)
+
+    def test_identity_law_marimo(self) -> None:
+        """BarWidget satisfies identity law for MARIMO target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = BarWidget(BarState(value=0.8, orientation="vertical"))
+        assert verify_identity_law(widget, ExtendedTarget.MARIMO)
+
+    def test_identity_law_tui(self) -> None:
+        """BarWidget satisfies identity law for TUI target."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_identity_law
+
+        widget = BarWidget(BarState(value=0.3, fg="green", bg="black"))
+        assert verify_identity_law(widget, ExtendedTarget.TUI)
+
+    def test_composition_law_value_scale(self) -> None:
+        """BarWidget satisfies composition law with value transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def scale_value(s: BarState) -> BarState:
+            return BarState(
+                value=min(1.0, s.value * 1.5), width=s.width, orientation=s.orientation,
+                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
+                t=s.t, label=s.label,
+            )
+
+        def identity(s: BarState) -> BarState:
+            return s
+
+        widget = BarWidget(BarState(value=0.4, width=10))
+        assert verify_composition_law(widget, scale_value, identity, ExtendedTarget.CLI)
+
+    def test_composition_law_style_change(self) -> None:
+        """BarWidget satisfies composition law with style transformation."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_composition_law
+
+        def change_style(s: BarState) -> BarState:
+            return BarState(
+                value=s.value, width=s.width, orientation=s.orientation,
+                style="gradient", fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
+                t=s.t, label=s.label,
+            )
+
+        def add_label(s: BarState) -> BarState:
+            return BarState(
+                value=s.value, width=s.width, orientation=s.orientation,
+                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
+                t=s.t, label="Progress",
+            )
+
+        widget = BarWidget(BarState(value=0.6, width=20, style="solid"))
+        assert verify_composition_law(widget, change_style, add_label, ExtendedTarget.JSON)
+
+    def test_determinism_cli(self) -> None:
+        """BarWidget projection is deterministic for CLI."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = BarWidget(BarState(value=0.5, width=10, entropy=0.3, seed=42, t=1000.0))
+        assert verify_determinism(widget, ExtendedTarget.CLI, iterations=10)
+
+    def test_determinism_json(self) -> None:
+        """BarWidget projection is deterministic for JSON."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_determinism
+
+        widget = BarWidget(BarState(value=0.75, width=15, entropy=0.4, seed=99))
+        assert verify_determinism(widget, ExtendedTarget.JSON, iterations=10)
+
+    def test_all_laws_comprehensive(self) -> None:
+        """BarWidget passes all projection laws."""
+        from agents.i.reactive.projection import ExtendedTarget, verify_all_laws
+
+        def increment_value(s: BarState) -> BarState:
+            return BarState(
+                value=min(1.0, s.value + 0.1), width=s.width, orientation=s.orientation,
+                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
+                t=s.t, label=s.label,
+            )
+
+        def identity(s: BarState) -> BarState:
+            return s
+
+        widget = BarWidget(BarState(value=0.5, width=10))
+        result = verify_all_laws(
+            widget,
+            ExtendedTarget.CLI,
+            state_transforms=[increment_value, identity],
+        )
+
+        assert result.all_passed, f"Law violations: {result.errors}"
