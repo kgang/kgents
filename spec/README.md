@@ -49,6 +49,7 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [r-gents/](r-gents/) - Refinery (prompt optimization, DSPy/TextGrad/OPRO integration)
    - [t-gents/](t-gents/) - Testing (algebraic reliability, Types I-V)
    - [u-gents/](u-gents/) - Utility (tool use, MCP integration)
+   - [v-gents/](v-gents/) - Vector (semantic geometry, similarity search, embedding infrastructure)
    - [w-gents/](w-gents/) - Wire (ephemeral process observation, stigmergic coordination)
 
 ---
@@ -71,6 +72,10 @@ Agents don't exist in isolation. Key integration points:
 | P+T | T-gent Tool parsing uses P-gent strategies |
 | W+I | W-gent observation feeds I-gent visualization |
 | M+D | M-gent holographic memory composes with D-gent persistence |
+| V+L | L-gent catalog delegates vector operations to V-gent |
+| V+M | M-gent uses V-gent for associative recall similarity |
+| V+D | V-gent can use D-gent as a persistence backend |
+| V+K | K-gent uses V-gent for belief/topic similarity search |
 | O+* | O-gents observe all agents including bootstrap |
 | N+O | N-gent stories feed O-gent metrics |
 | B+B | B-Banker controls B-Bio's resource allocation |
