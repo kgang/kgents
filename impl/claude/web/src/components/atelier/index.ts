@@ -14,3 +14,5 @@ export { PieceDetail } from './PieceDetail';
 export { GalleryGrid } from './GalleryGrid';
 export { LineageTree } from './LineageTree';
 export { CollaborationBuilder } from './CollaborationBuilder';
+export { ErrorPanel } from './ErrorPanel';
+export { LoadingPanel } from './LoadingPanel';

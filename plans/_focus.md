@@ -11,15 +11,10 @@
 
 ---
 ## KENT's WISHES
-* COMPOSITIONAL GENERATIVE UI
-* LLMAgents using haiku tokens liberally in agent town, running on our cluster
-* Create a shockingly delightful consumer, prosumer, and professional experience
-* Builder Workshop
+* COMPOSITIONAL GENERATIVE EXPERIENCES
+* INDIVIDUALLY TAILORED, GENERATIONS OF BEST PRACTICES AND DESIGN THOUGHT
 * "holographic metaphor reification"
-* Agent Town's builders:
-  - Chefs in a kitchen (expertise, collaboration, mise en place)
-  - Gardeners in a garden (cultivation, patience, seasonality)
-  - Kids on a playground (play, exploration, joy)
+* "SIX CROWN JEWEL"
 
 
 ```original_prompt

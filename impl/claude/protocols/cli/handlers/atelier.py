@@ -10,6 +10,7 @@ Commands:
     kg atelier queue              - Queue for background processing
     kg atelier pending            - View pending commissions
     kg atelier process            - Process queued commissions
+    kg atelier seed               - Seed gallery with sample commissions
 
 Theme: Orisinal.com aesthetic—whimsical, minimal, melancholic but hopeful.
 """
@@ -29,6 +30,70 @@ from rich.table import Table
 from rich.text import Text
 
 console = Console()
+
+
+# =============================================================================
+# Friendly Error Messages
+# =============================================================================
+
+EMPTY_GALLERY_MESSAGE = """
+[dim]Your gallery is empty—but that's the beginning of every beautiful collection.[/dim]
+
+[dim]Try commissioning your first piece:[/dim]
+  [bold]kg atelier commission calligrapher "a haiku about beginnings"[/bold]
+
+[dim]Or see all available artisans:[/dim]
+  [bold]kg atelier artisans[/bold]
+"""
+
+ARTISAN_NOT_FOUND_MESSAGE = """
+[red]Unknown artisan: {name}[/red]
+
+[dim]Available artisans:[/dim]
+{artisans}
+
+[dim]Example:[/dim]
+  [bold]kg atelier commission calligrapher "a haiku about persistence"[/bold]
+"""
+
+PIECE_NOT_FOUND_MESSAGE = """
+[red]Piece '{piece_id}' not found[/red]
+
+[dim]The gallery holds what remains. Perhaps it was:[/dim]
+  • Never created
+  • Deleted from the gallery
+  • A misremembered ID
+
+[dim]View your gallery:[/dim]
+  [bold]kg atelier gallery[/bold]
+"""
+
+NO_PENDING_MESSAGE = """
+[dim]No pending commissions—the queue rests quietly.[/dim]
+
+[dim]Queue something for later:[/dim]
+  [bold]kg atelier queue calligrapher "something for tomorrow"[/bold]
+"""
+
+STREAMING_ERROR_MESSAGE = """
+[red]✗ {error}[/red]
+
+[dim]The artisan encountered an issue. Suggestions:[/dim]
+  • Check your network connection
+  • Try again in a moment
+  • Queue the commission for later: [bold]kg atelier queue ...[/bold]
+"""
+
+CONNECTION_ERROR_MESSAGE = """
+[red]✗ Connection error[/red]
+
+[dim]Could not reach the artisans. Check:[/dim]
+  • Is the API server running?
+  • Network connectivity
+
+[dim]For local dev, start the backend:[/dim]
+  [bold]uv run uvicorn protocols.api.app:create_app --factory --reload[/bold]
+"""
 
 
 # =============================================================================
@@ -214,12 +279,7 @@ def gallery(artisan: str | None, form: str | None, limit: int) -> None:
         pieces = await store.list_pieces(artisan=artisan, form=form, limit=limit)
 
         if not pieces:
-            console.print(
-                "\n[dim]Your gallery is empty. Commission an artisan to get started![/dim]"
-            )
-            console.print(
-                '[dim]  kg atelier commission calligrapher "a haiku about beginnings"[/dim]\n'
-            )
+            console.print(EMPTY_GALLERY_MESSAGE)
             return
 
         table = Table(title="✧ your gallery ✧", border_style="dim")
@@ -261,7 +321,7 @@ def view(piece_id: str) -> None:
     async def show_piece() -> None:
         piece = await store.get(piece_id)
         if not piece:
-            console.print(f"[red]Piece '{piece_id}' not found[/red]")
+            console.print(PIECE_NOT_FOUND_MESSAGE.format(piece_id=piece_id))
             return
         display_piece_full(piece)
 
@@ -280,7 +340,7 @@ def lineage(piece_id: str) -> None:
     async def show_lineage() -> None:
         piece = await store.get(piece_id)
         if not piece:
-            console.print(f"[red]Piece '{piece_id}' not found[/red]")
+            console.print(PIECE_NOT_FOUND_MESSAGE.format(piece_id=piece_id))
             return
 
         # Build lineage graph from all pieces
@@ -381,12 +441,15 @@ def queue_commission(artisan_name: str, request: str, patron: str) -> None:
     Example:
         kg atelier queue calligrapher "something for tomorrow"
     """
-    from agents.atelier.artisans import get_artisan
+    from agents.atelier.artisans import ARTISAN_REGISTRY, get_artisan
     from agents.atelier.workshop import get_workshop
 
     # Validate artisan
     if not get_artisan(artisan_name):
-        console.print(f"[red]Unknown artisan: {artisan_name}[/red]")
+        artisan_list = "\n".join(f"  • {name}" for name in ARTISAN_REGISTRY.keys())
+        console.print(
+            ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list)
+        )
         return
 
     workshop = get_workshop()
@@ -414,7 +477,7 @@ def pending() -> None:
         items = await queue.pending()
 
         if not items:
-            console.print("[dim]No pending commissions[/dim]")
+            console.print(NO_PENDING_MESSAGE)
             return
 
         table = Table(title="Pending Commissions", border_style="dim")
@@ -481,7 +544,7 @@ def process_queue(process_all: bool) -> None:
             # Check if there was nothing to process
             pending = await queue.pending()
             if not pending and count == 0:
-                console.print("[dim]No pending commissions[/dim]")
+                console.print(NO_PENDING_MESSAGE)
 
     run_async(do_process())
 
@@ -503,7 +566,11 @@ def search(query: str, limit: int) -> None:
         results = await store.search_content(query, limit=limit)
 
         if not results:
-            console.print(f"[dim]No pieces found matching '{query}'[/dim]")
+            console.print(
+                f"\n[dim]No pieces found matching '{query}'[/dim]\n"
+                "\n[dim]Perhaps try a different search, or view the full gallery:[/dim]"
+                "\n  [bold]kg atelier gallery[/bold]\n"
+            )
             return
 
         console.print(f"\n[bold]Found {len(results)} pieces[/bold]\n")
@@ -514,6 +581,91 @@ def search(query: str, limit: int) -> None:
         console.print()
 
     run_async(do_search())
+
+
+@atelier.command()
+@click.option("--force", "-f", is_flag=True, help="Overwrite existing seed pieces")
+@click.option("--clear", "-c", is_flag=True, help="Remove seed pieces instead")
+def seed(force: bool, clear: bool) -> None:
+    """Seed the gallery with sample pieces
+
+    This adds 3 example pieces to demonstrate artisan capabilities:
+    - A haiku from the Calligrapher
+    - A map from the Cartographer
+    - A letter from the Correspondent
+
+    Examples:
+        kg atelier seed          # Add sample pieces
+        kg atelier seed --force  # Overwrite existing seeds
+        kg atelier seed --clear  # Remove seed pieces
+    """
+    from agents.atelier.gallery.seeds import clear_seeds, seed_gallery
+    from agents.atelier.gallery.store import get_gallery
+
+    gallery = get_gallery()
+
+    async def do_seed() -> None:
+        if clear:
+            removed = await clear_seeds(gallery)
+            if removed:
+                console.print(
+                    f"[green]✓[/green] Removed {len(removed)} seed pieces: {', '.join(removed)}"
+                )
+            else:
+                console.print("[dim]No seed pieces to remove[/dim]")
+            return
+
+        added = await seed_gallery(gallery, force=force)
+        if added:
+            console.print(
+                f"[green]✓[/green] Added {len(added)} sample pieces to your gallery"
+            )
+            console.print("\n[dim]View them with:[/dim]")
+            console.print("  [bold]kg atelier gallery[/bold]")
+            for piece_id in added:
+                console.print(f"  [bold]kg atelier view {piece_id}[/bold]")
+        else:
+            console.print(
+                "[dim]Gallery already contains seed pieces. Use --force to overwrite.[/dim]"
+            )
+
+    run_async(do_seed())
+
+
+@atelier.command()
+def status() -> None:
+    """Show workshop status and statistics"""
+    from agents.atelier.artisans import ARTISAN_REGISTRY
+    from agents.atelier.gallery.store import get_gallery
+    from agents.atelier.workshop.commission import get_queue
+
+    gallery = get_gallery()
+    queue = get_queue()
+
+    async def show_status() -> None:
+        total_pieces = await gallery.count()
+        pending_items = await queue.pending()
+
+        console.print("\n[bold]✧ workshop status ✧[/bold]\n")
+
+        table = Table(show_header=False, border_style="dim", box=None)
+        table.add_column("Label", style="dim")
+        table.add_column("Value")
+
+        table.add_row("Gallery pieces", str(total_pieces))
+        table.add_row("Pending queue", str(len(pending_items)))
+        table.add_row("Available artisans", str(len(ARTISAN_REGISTRY)))
+
+        console.print(table)
+
+        if len(ARTISAN_REGISTRY) > 0:
+            console.print("\n[dim]Artisans:[/dim]")
+            for name in ARTISAN_REGISTRY.keys():
+                console.print(f"  • {name}")
+
+        console.print()
+
+    run_async(show_status())
 
 
 # =============================================================================

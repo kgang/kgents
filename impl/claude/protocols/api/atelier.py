@@ -11,21 +11,56 @@ REST API for Tiny Atelier with SSE streaming:
 - GET  /api/atelier/queue/pending    - Get pending queue
 - POST /api/atelier/queue/process    - Process queue
 - GET  /api/atelier/artisans         - List available artisans
+- GET  /api/atelier/commission/{id}/status - Fallback polling for commission status
 
 Theme: Orisinal.com aesthetic—whimsical, minimal, melancholic but hopeful.
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:
     from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
+
+# =============================================================================
+# SSE Configuration
+# =============================================================================
+
+HEARTBEAT_INTERVAL_SECONDS = 15  # Send heartbeat every 15s
+SSE_TIMEOUT_SECONDS = 30  # Client should fallback if no event in 30s
+
+# In-memory commission status tracking for fallback polling
+# In production, use Redis or similar for multi-instance support
+_commission_status: dict[str, dict[str, Any]] = {}
+
+
+def _update_commission_status(
+    commission_id: str,
+    status: str,
+    piece: dict[str, Any] | None = None,
+    error: str | None = None,
+) -> None:
+    """Update commission status for fallback polling."""
+    _commission_status[commission_id] = {
+        "status": status,
+        "piece": piece,
+        "error": error,
+        "updated_at": datetime.now().isoformat(),
+    }
+
+
+def _get_commission_status(commission_id: str) -> dict[str, Any] | None:
+    """Get commission status for fallback polling."""
+    return _commission_status.get(commission_id)
+
 
 # Graceful FastAPI import
 try:
@@ -175,6 +210,29 @@ class CommissionQueuedResponse(BaseModel if HAS_FASTAPI else object):  # type: i
     status: str = Field(default="queued", description="Status")
 
 
+class CommissionStatusResponse(BaseModel if HAS_FASTAPI else object):  # type: ignore[misc]
+    """
+    Fallback polling response for commission status.
+
+    Use when SSE streaming is unavailable or timed out.
+    """
+
+    commission_id: str = Field(..., description="Commission ID")
+    status: str = Field(
+        ...,
+        description="Status: pending, contemplating, working, complete, error",
+    )
+    piece: Optional[PieceResponse] = Field(
+        None, description="Completed piece if status is 'complete'"
+    )
+    error: Optional[str] = Field(None, description="Error message if status is 'error'")
+    updated_at: str = Field(..., description="Last update timestamp")
+    sse_timeout_hint: int = Field(
+        default=SSE_TIMEOUT_SECONDS,
+        description="Suggested timeout for SSE connection before polling",
+    )
+
+
 # --- Router Factory ---
 
 
@@ -220,22 +278,126 @@ def create_atelier_router() -> "APIRouter | None":
         - working: Creation in progress
         - fragment: Partial content
         - piece_complete: Final piece (data.piece contains full piece)
+        - heartbeat: Keep-alive signal (every 15s)
         - error: Error occurred
+
+        Resilience:
+        - Heartbeats sent every 15s to detect connection drops
+        - If no event for 30s, client should fallback to polling
+        - Use GET /api/atelier/commission/{id}/status for fallback
         """
-        from agents.atelier.artisan import AtelierEventType
+        from agents.atelier.artisan import AtelierEvent, AtelierEventType
         from agents.atelier.workshop import get_workshop
 
         workshop = get_workshop()
+        commission_id: str | None = None
 
         async def generate() -> AsyncIterator[str]:
-            async for event in workshop.flux.commission(
+            nonlocal commission_id
+
+            # Create heartbeat task
+            async def heartbeat_generator() -> AsyncIterator[AtelierEvent]:
+                """Generate heartbeat events every HEARTBEAT_INTERVAL_SECONDS."""
+                while True:
+                    await asyncio.sleep(HEARTBEAT_INTERVAL_SECONDS)
+                    yield AtelierEvent(
+                        event_type=AtelierEventType.HEARTBEAT,
+                        artisan=request.artisan,
+                        commission_id=commission_id,
+                        message="keep-alive",
+                    )
+
+            # Merge workshop events with heartbeats
+            workshop_gen = workshop.flux.commission(
                 artisan_name=request.artisan,
                 request=request.request,
                 patron=request.patron,
-            ):
-                event_data = event.to_dict()
-                yield f"event: {event.event_type.value}\n"
-                yield f"data: {json.dumps(event_data)}\n\n"
+            )
+
+            # Use asyncio to race between workshop events and heartbeats
+            heartbeat_task: asyncio.Task[AtelierEvent] | None = None
+            workshop_task: asyncio.Task[AtelierEvent | None] | None = None
+
+            try:
+                workshop_iter = workshop_gen.__aiter__()
+                heartbeat_iter = heartbeat_generator().__aiter__()
+
+                while True:
+                    # Create tasks if needed
+                    if workshop_task is None:
+                        workshop_task = asyncio.create_task(
+                            workshop_iter.__anext__()  # type: ignore
+                        )
+                    if heartbeat_task is None:
+                        heartbeat_task = asyncio.create_task(
+                            heartbeat_iter.__anext__()  # type: ignore
+                        )
+
+                    # Wait for either
+                    done, _ = await asyncio.wait(
+                        {workshop_task, heartbeat_task},
+                        return_when=asyncio.FIRST_COMPLETED,
+                    )
+
+                    for task in done:
+                        try:
+                            event = task.result()
+                        except StopAsyncIteration:
+                            # Workshop finished
+                            if heartbeat_task and not heartbeat_task.done():
+                                heartbeat_task.cancel()
+                            return
+
+                        # Skip None events (shouldn't happen but type-safe)
+                        if event is None:
+                            continue
+
+                        # Track commission ID for status updates
+                        if (
+                            event.event_type == AtelierEventType.COMMISSION_RECEIVED
+                            and event.commission_id
+                        ):
+                            commission_id = event.commission_id
+                            _update_commission_status(commission_id, "pending")
+
+                        # Update status tracking
+                        if commission_id:
+                            if event.event_type == AtelierEventType.CONTEMPLATING:
+                                _update_commission_status(
+                                    commission_id, "contemplating"
+                                )
+                            elif event.event_type == AtelierEventType.WORKING:
+                                _update_commission_status(commission_id, "working")
+                            elif event.event_type == AtelierEventType.PIECE_COMPLETE:
+                                _update_commission_status(
+                                    commission_id,
+                                    "complete",
+                                    piece=event.data.get("piece"),
+                                )
+                            elif event.event_type == AtelierEventType.ERROR:
+                                _update_commission_status(
+                                    commission_id, "error", error=event.message
+                                )
+
+                        # Emit event
+                        event_data = event.to_dict()
+                        yield f"event: {event.event_type.value}\n"
+                        yield f"data: {json.dumps(event_data)}\n\n"
+
+                        # Reset the completed task
+                        if task is workshop_task:
+                            workshop_task = None
+                        else:
+                            heartbeat_task = None
+
+            except asyncio.CancelledError:
+                pass
+            finally:
+                # Cleanup
+                if heartbeat_task and not heartbeat_task.done():
+                    heartbeat_task.cancel()
+                if workshop_task and not workshop_task.done():
+                    workshop_task.cancel()
 
         return StreamingResponse(
             generate(),
@@ -244,6 +406,7 @@ def create_atelier_router() -> "APIRouter | None":
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
                 "X-Accel-Buffering": "no",
+                "X-SSE-Timeout-Hint": str(SSE_TIMEOUT_SECONDS),
             },
         )
 
@@ -281,6 +444,91 @@ def create_atelier_router() -> "APIRouter | None":
                 "Connection": "keep-alive",
                 "X-Accel-Buffering": "no",
             },
+        )
+
+    @router.get(
+        "/commission/{commission_id}/status", response_model=CommissionStatusResponse
+    )
+    async def get_commission_status(commission_id: str) -> CommissionStatusResponse:
+        """
+        Fallback polling endpoint for commission status.
+
+        Use this when:
+        - SSE connection is unavailable
+        - SSE stream timed out (no event in 30s)
+        - Client doesn't support SSE
+
+        Poll interval recommendation: 2-5 seconds
+        """
+        status_data = _get_commission_status(commission_id)
+
+        if not status_data:
+            # Check if there's a piece with this commission ID in the gallery
+            from agents.atelier.gallery.store import get_gallery
+
+            gallery = get_gallery()
+            piece = await gallery.get_by_commission(commission_id)
+
+            if piece:
+                return CommissionStatusResponse(
+                    commission_id=commission_id,
+                    status="complete",
+                    piece=PieceResponse(
+                        id=piece.id,
+                        content=piece.content,
+                        artisan=piece.artisan,
+                        commission_id=piece.commission_id,
+                        form=piece.form,
+                        provenance=ProvenanceResponse(
+                            interpretation=piece.provenance.interpretation,
+                            considerations=piece.provenance.considerations,
+                            choices=[c.to_dict() for c in piece.provenance.choices],
+                            inspirations=piece.provenance.inspirations,
+                        ),
+                        created_at=piece.created_at.isoformat(),
+                    ),
+                    error=None,
+                    updated_at=piece.created_at.isoformat(),
+                    sse_timeout_hint=SSE_TIMEOUT_SECONDS,
+                )
+
+            raise HTTPException(
+                status_code=404,
+                detail=f"Commission {commission_id} not found. It may not have started yet.",
+            )
+
+        # Build response from tracked status
+        piece_response = None
+        if status_data.get("piece"):
+            piece_data = status_data["piece"]
+            piece_response = PieceResponse(
+                id=piece_data["id"],
+                content=piece_data["content"],
+                artisan=piece_data["artisan"],
+                commission_id=piece_data["commission_id"],
+                form=piece_data.get("form", "reflection"),
+                provenance=ProvenanceResponse(
+                    interpretation=piece_data.get("provenance", {}).get(
+                        "interpretation", ""
+                    ),
+                    considerations=piece_data.get("provenance", {}).get(
+                        "considerations", []
+                    ),
+                    choices=piece_data.get("provenance", {}).get("choices", []),
+                    inspirations=piece_data.get("provenance", {}).get(
+                        "inspirations", []
+                    ),
+                ),
+                created_at=piece_data.get("created_at", ""),
+            )
+
+        return CommissionStatusResponse(
+            commission_id=commission_id,
+            status=status_data["status"],
+            piece=piece_response,
+            error=status_data.get("error"),
+            updated_at=status_data["updated_at"],
+            sse_timeout_hint=SSE_TIMEOUT_SECONDS,
         )
 
     @router.get("/gallery", response_model=GalleryResponse)
@@ -566,4 +814,7 @@ __all__ = [
     "GalleryResponse",
     "PieceResponse",
     "LineageResponse",
+    "CommissionStatusResponse",
+    "HEARTBEAT_INTERVAL_SECONDS",
+    "SSE_TIMEOUT_SECONDS",
 ]

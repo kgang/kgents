@@ -200,6 +200,7 @@ class AtelierEventType(Enum):
     FRAGMENT = "fragment"  # Partial content during streaming
     PIECE_COMPLETE = "piece_complete"
     ERROR = "error"
+    HEARTBEAT = "heartbeat"  # Keep-alive signal (emit every 15s)
 
 
 @dataclass

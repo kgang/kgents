@@ -23,6 +23,8 @@ import {
   PieceDetail,
   LineageTree,
   CollaborationBuilder,
+  ErrorPanel,
+  LoadingPanel,
 } from '@/components/atelier';
 
 type View = 'commission' | 'collaborate' | 'gallery' | 'piece' | 'lineage';
@@ -116,11 +118,7 @@ export default function Atelier() {
   };
 
   // Collaboration handler
-  const handleCollaborate = async (
-    artisanNames: string[],
-    request: string,
-    mode: string
-  ) => {
+  const handleCollaborate = async (artisanNames: string[], request: string, mode: string) => {
     const piece = await stream.collaborate(artisanNames, request, mode);
     if (piece) {
       const galleryRes = await atelierApi.getGallery({ limit: 50 });
@@ -151,9 +149,7 @@ export default function Atelier() {
       <header className="bg-white border-b border-stone-100">
         <div className="max-w-6xl mx-auto px-6 py-8">
           <h1 className="text-2xl font-serif text-stone-800">Tiny Atelier</h1>
-          <p className="mt-1 text-sm text-stone-400">
-            A workshop of creative artisans
-          </p>
+          <p className="mt-1 text-sm text-stone-400">A workshop of creative artisans</p>
         </div>
       </header>
 
@@ -191,14 +187,33 @@ export default function Atelier() {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* Global Error State */}
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-red-600">
-            {error}
-          </div>
+          <ErrorPanel
+            title="Unable to load workshop"
+            message={error}
+            onRetry={() => {
+              setError(null);
+              setIsLoading(true);
+              Promise.all([atelierApi.getArtisans(), atelierApi.getGallery({ limit: 50 })])
+                .then(([artisansRes, galleryRes]) => {
+                  setArtisans(artisansRes.data.artisans);
+                  setPieces(galleryRes.data.pieces);
+                })
+                .catch((err) => {
+                  setError('Failed to load atelier data');
+                  console.error('[Atelier] Retry error:', err);
+                })
+                .finally(() => setIsLoading(false));
+            }}
+          />
         )}
 
+        {/* Global Loading State */}
+        {isLoading && !error && <LoadingPanel message="Preparing the workshop..." />}
+
         {/* Gallery View */}
-        {view === 'gallery' && (
+        {!isLoading && !error && view === 'gallery' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-stone-700">Gallery</h2>
@@ -206,26 +221,18 @@ export default function Atelier() {
                 {pieces.length} {pieces.length === 1 ? 'piece' : 'pieces'}
               </span>
             </div>
-            <GalleryGrid
-              pieces={pieces}
-              isLoading={isLoading}
-              onPieceClick={loadPiece}
-            />
+            <GalleryGrid pieces={pieces} isLoading={isLoading} onPieceClick={loadPiece} />
           </div>
         )}
 
         {/* Commission View */}
-        {view === 'commission' && (
+        {!isLoading && !error && view === 'commission' && (
           <div className="space-y-8">
             {/* Artisan Selection */}
             {!selectedArtisan && (
               <div className="space-y-4">
-                <h2 className="text-lg font-medium text-stone-700">
-                  Choose an Artisan
-                </h2>
-                <ArtisanGrid
-                  onSelect={selectArtisan}
-                />
+                <h2 className="text-lg font-medium text-stone-700">Choose an Artisan</h2>
+                <ArtisanGrid onSelect={selectArtisan} />
               </div>
             )}
 
@@ -251,9 +258,7 @@ export default function Atelier() {
 
                 {/* Form or Progress */}
                 {!stream.isStreaming && stream.status === 'idle' && (
-                  <CommissionForm
-                    onSubmit={(data) => handleCommission(data.request)}
-                  />
+                  <CommissionForm onSubmit={(data) => handleCommission(data.request)} />
                 )}
 
                 {/* Streaming Progress */}
@@ -300,7 +305,7 @@ export default function Atelier() {
         )}
 
         {/* Collaborate View */}
-        {view === 'collaborate' && (
+        {!isLoading && !error && view === 'collaborate' && (
           <div className="max-w-xl mx-auto space-y-6">
             <h2 className="text-lg font-medium text-stone-700">Collaboration</h2>
 
@@ -353,7 +358,7 @@ export default function Atelier() {
         )}
 
         {/* Piece Detail View */}
-        {view === 'piece' && currentPiece && (
+        {!isLoading && !error && view === 'piece' && currentPiece && (
           <div className="max-w-2xl mx-auto">
             <button
               onClick={() => setView('gallery')}
@@ -362,11 +367,7 @@ export default function Atelier() {
               <span>&larr;</span> Back to gallery
             </button>
             <div className="bg-white rounded-lg border border-stone-200 p-6">
-              <PieceDetail
-                piece={currentPiece}
-                onDelete={deletePiece}
-                onInspiration={loadPiece}
-              />
+              <PieceDetail piece={currentPiece} onDelete={deletePiece} onInspiration={loadPiece} />
               <div className="mt-4 pt-4 border-t border-stone-100">
                 <button
                   onClick={() => loadLineage(currentPiece.id)}
@@ -380,7 +381,7 @@ export default function Atelier() {
         )}
 
         {/* Lineage View */}
-        {view === 'lineage' && lineage && (
+        {!isLoading && !error && view === 'lineage' && lineage && (
           <div className="max-w-2xl mx-auto">
             <button
               onClick={() => {
@@ -395,9 +396,7 @@ export default function Atelier() {
               <span>&larr;</span> Back
             </button>
             <div className="bg-white rounded-lg border border-stone-200 p-6">
-              <h2 className="text-lg font-medium text-stone-700 mb-4">
-                Inspiration Lineage
-              </h2>
+              <h2 className="text-lg font-medium text-stone-700 mb-4">Inspiration Lineage</h2>
               <LineageTree lineage={lineage} onNodeClick={loadPiece} />
             </div>
           </div>
@@ -407,9 +406,7 @@ export default function Atelier() {
       {/* Footer */}
       <footer className="border-t border-stone-100 bg-white mt-16">
         <div className="max-w-6xl mx-auto px-6 py-8 text-center">
-          <p className="text-xs text-stone-300">
-            Tiny Atelier &middot; A kgents demo
-          </p>
+          <p className="text-xs text-stone-300">Tiny Atelier &middot; A kgents demo</p>
         </div>
       </footer>
     </div>

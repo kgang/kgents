@@ -297,75 +297,19 @@ Bug Report: "Users intermittently see wrong profile picture"
 
 ---
 
-## Idea 5: Living Architecture Visualizer ("Gestalt")
+## ~~Idea 5: Living Architecture Visualizer ("Gestalt")~~ PROMOTED
 
-### Concept
+> **Status**: Promoted to plan on 2025-12-15
+> **Plan Location**: `plans/gestalt-architecture-visualizer.md`
 
-A real-time visualization of codebase architecture that evolves with the code. Not diagrams that rot, but living holographic maps that show data flow, dependency health, and architectural drift. Uses the kgents reactive substrate for multi-target rendering (CLI sparklines, web dashboards, VR exploration).
+This idea has been expanded into a full implementation plan with:
+- 6 implementation phases (Core Analysis → Reactive Integration → CLI → Web → AGENTESE → VR)
+- Detailed user journeys (First Setup, Daily Workflow, Architecture Review, Onboarding, VR)
+- Health metrics (coupling, cohesion, drift, complexity, churn, coverage)
+- Revenue model ($29/mo Pro, $199/seat Enterprise)
+- Cross-synergies with other tools and kgents systems
 
-### Why Kgents Uniquely Enables This
-
-| Kgents System | Application |
-|---------------|-------------|
-| **Reactive Substrate** | Signal/Computed/Effect → live architecture signals |
-| **Projection Protocol** | Same data → CLI/TUI/marimo/JSON/VR rendering |
-| **M-gent HoloMaps** | Architecture AS holographic memory |
-| **Terrarium metrics** | Real-time health scores |
-
-### User Journey
-
-```
-                     GESTALT VIEWS
-                          │
-        ┌─────────────────┼─────────────────┐
-        │                 │                 │
-        ▼                 ▼                 ▼
-    CLI Mode          Web Mode          VR Mode
-                                        (future)
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ auth ████░░  │  │  [Interactive │  │  [Walk       │
-│ api  ██████  │  │   node graph] │  │   through    │
-│ db   ███░░░  │  │              │  │   your code] │
-│              │  │  Click to    │  │              │
-│ drift: 12%   │  │  drill down  │  │              │
-└──────────────┘  └──────────────┘  └──────────────┘
-        │                 │                 │
-        └─────────────────┼─────────────────┘
-                          │
-                    Same Signal[T]
-                    Different projections
-```
-
-**Day 1**: Developer runs `gestalt init`. Gestalt scans codebase, builds HoloMap. Initial architecture extracted as reactive Signals.
-
-**Week 1**: Developer works normally. Gestalt watches file changes, updates Signals. Architecture visualization stays current without manual updates.
-
-**Week 4**: Gestalt detects: "Module 'payments' has 15 inbound dependencies but only 3 declared interfaces. Architectural drift: HIGH." Visualization highlights with color.
-
-**Month 3**: Team reviews architecture in web dashboard. Click on any module to see: dependency health, recent changes, suggested refactors. Export to ADR (Architecture Decision Record).
-
-### VR Future State
-
-Using the kgents Projection Protocol, the same architecture data renders in VR:
-
-- Walk through your codebase as a 3D city
-- Buildings are modules, height = complexity
-- Bridges are dependencies, thickness = coupling
-- "Explore your code like a world" (directly from `_focus.md` vision)
-
-### Market Differentiation
-
-| Competitor | Gap Gestalt Fills |
-|------------|-------------------|
-| Graphviz/PlantUML | Static, manual, rot quickly |
-| CodeScene | Analysis-focused, not visualization |
-| Sourcegraph | Search-focused, not architecture |
-
-### Revenue Model
-
-- **Free**: CLI sparklines, single repo
-- **Pro ($29/mo)**: Web dashboard, multiple repos, drift alerts
-- **Enterprise**: VR mode, custom projections, org-wide views
+See the full plan for implementation details.
 
 ---
 
@@ -448,7 +392,7 @@ DEVTOOLS_OPERAD = Operad(
 | Tool | Effort | Market Size | Kgents Leverage | Recommendation |
 |------|--------|-------------|-----------------|----------------|
 | **Prism** | Medium | $2.1B code review | High (Sheaf, Town) | **Start here** |
-| **Gestalt** | Medium | $1.8B observability | Very High (Reactive) | Second |
+| **Gestalt** | Medium | $1.8B observability | Very High (Reactive) | **PROMOTED** → `plans/gestalt-architecture-visualizer.md` |
 | **Morphism** | High | $890M test gen | Very High (Laws) | Third (unique) |
 | **Hive** | High | $3.2B debugging | Very High (Swarm) | Fourth |
 | **Pheromone** | Medium | $2.4B docs | High (M-gent) | Fifth |
@@ -457,7 +401,7 @@ DEVTOOLS_OPERAD = Operad(
 
 **Rationale**:
 1. **Prism** has immediate market fit (code review pain is universal)
-2. **Gestalt** showcases Projection Protocol (differentiation)
+2. **Gestalt** showcases Projection Protocol (differentiation) — **now has full plan**
 3. **Morphism** is most unique (no categorical test gen exists)
 
 ---
