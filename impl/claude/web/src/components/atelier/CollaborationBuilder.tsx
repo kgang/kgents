@@ -83,7 +83,7 @@ const PRESETS: CollaborationPreset[] = [
   {
     name: 'Three Perspectives',
     description: 'Ensemble of three artisans on one theme',
-    artisans: ['calligrapher', 'cartographer', 'correspondent'],
+    artisans: ['calligrapher', 'cartographer', 'archivist'],
     mode: 'ensemble',
     sampleRequest: 'the feeling of coming home',
   },

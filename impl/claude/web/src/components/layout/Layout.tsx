@@ -1,15 +1,6 @@
 import { Outlet, Link } from 'react-router-dom';
-import { useUserStore } from '@/stores/userStore';
-import { UpgradeModal } from '@/components/paywall/UpgradeModal';
-import { ToastContainer } from '@/components/feedback/ToastContainer';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 export function Layout() {
-  const { isAuthenticated, tier, credits, logout } = useUserStore();
-
-  // Track online status (shows toasts on connectivity changes)
-  useOnlineStatus();
-
   return (
     <div className="min-h-screen bg-town-bg flex flex-col">
       {/* Header */}
@@ -21,37 +12,12 @@ export function Layout() {
           </Link>
 
           <nav className="flex items-center gap-6">
-            {isAuthenticated ? (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="text-gray-300 hover:text-white transition-colors"
-                >
-                  Dashboard
-                </Link>
-                <div className="flex items-center gap-4">
-                  <span className="px-3 py-1 bg-town-accent/30 rounded-full text-sm">
-                    {tier}
-                  </span>
-                  <span className="text-sm text-gray-400">
-                    {credits} credits
-                  </span>
-                  <button
-                    onClick={logout}
-                    className="text-gray-400 hover:text-white text-sm transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <Link
-                to="/"
-                className="px-4 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
-              >
-                Get Started
-              </Link>
-            )}
+            <Link to="/town/default" className="text-gray-300 hover:text-white transition-colors">
+              Town
+            </Link>
+            <Link to="/atelier" className="text-gray-300 hover:text-white transition-colors">
+              Atelier
+            </Link>
           </nav>
         </div>
       </header>
@@ -67,12 +33,6 @@ export function Layout() {
           <p>Agent Town - Civilizations that dream</p>
         </div>
       </footer>
-
-      {/* Global Modals */}
-      <UpgradeModal />
-
-      {/* Toast Notifications */}
-      <ToastContainer />
     </div>
   );
 }

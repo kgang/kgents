@@ -1,14 +1,10 @@
 /**
  * ErrorBoundary: Catches render errors in React component tree.
  *
- * Uses ElasticPlaceholder for consistent error display with personality.
  * Supports reset on route changes via resetKeys prop.
- *
- * @see plans/web-refactor/defensive-lifecycle.md
  */
 
 import { Component, type ReactNode, type ErrorInfo } from 'react';
-import { ElasticPlaceholder } from '@/components/elastic/ElasticPlaceholder';
 
 // =============================================================================
 // Types
@@ -17,7 +13,7 @@ import { ElasticPlaceholder } from '@/components/elastic/ElasticPlaceholder';
 export interface ErrorBoundaryProps {
   /** Child components to render */
   children: ReactNode;
-  /** Custom fallback UI (optional, defaults to ElasticPlaceholder) */
+  /** Custom fallback UI (optional) */
   fallback?: ReactNode;
   /** Callback when error is caught (for logging/telemetry) */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
@@ -36,19 +32,6 @@ interface ErrorBoundaryState {
 
 /**
  * Error boundary that catches render errors and displays a friendly fallback.
- *
- * @example
- * ```tsx
- * // Wrap at app level with route-based reset
- * <ErrorBoundary resetKeys={[location.pathname]}>
- *   <App />
- * </ErrorBoundary>
- *
- * // Wrap specific section with custom fallback
- * <ErrorBoundary fallback={<CustomError />}>
- *   <RiskyComponent />
- * </ErrorBoundary>
- * ```
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -61,16 +44,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    // Log to console for debugging
     console.error('[ErrorBoundary] Caught error:', error);
     console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
-
-    // Call optional error handler (for telemetry)
     this.props.onError?.(error, errorInfo);
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps): void {
-    // Reset error state when resetKeys change (e.g., on route change)
     if (this.state.hasError && this.props.resetKeys) {
       const hasKeyChanged = this.props.resetKeys.some(
         (key, index) => key !== prevProps.resetKeys?.[index]
@@ -81,29 +60,29 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
   }
 
-  /**
-   * Reset the error boundary to try rendering children again.
-   */
   reset = (): void => {
     this.setState({ hasError: false, error: null });
   };
 
   render(): ReactNode {
     if (this.state.hasError) {
-      // Use custom fallback if provided
       if (this.props.fallback !== undefined) {
         return this.props.fallback;
       }
 
-      // Default: full-page error with ElasticPlaceholder
+      // Simple error UI
       return (
         <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
-          <div className="max-w-md w-full">
-            <ElasticPlaceholder
-              state="error"
-              error={this.state.error?.message || 'Something went wrong'}
-              onRetry={this.reset}
-            />
+          <div className="max-w-md w-full text-center p-8">
+            <div className="text-6xl mb-4">😵</div>
+            <h2 className="text-xl font-semibold mb-2 text-red-400">Something went wrong</h2>
+            <p className="text-gray-400 mb-6">{this.state.error?.message || 'Unknown error'}</p>
+            <button
+              onClick={this.reset}
+              className="px-6 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
+            >
+              Try Again
+            </button>
           </div>
         </div>
       );
@@ -113,12 +92,4 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 }
 
-// =============================================================================
-// Hook for programmatic reset (optional)
-// =============================================================================
-
-/**
- * Context for accessing error boundary reset function.
- * Use with ErrorBoundaryProvider for nested reset capability.
- */
 export { ErrorBoundary as default };

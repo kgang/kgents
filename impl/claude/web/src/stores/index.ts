@@ -3,7 +3,7 @@
  *
  * Import stores from this module for cleaner imports:
  * ```ts
- * import { useUIStore, useUserStore, useWorkshopStore, showSuccess } from '@/stores';
+ * import { useUIStore, useUserStore, showSuccess } from '@/stores';
  * ```
  */
 
@@ -18,11 +18,3 @@ export {
   selectCanInhabit,
   selectCanForce,
 } from './userStore';
-
-// Workshop Store - builders, events, artifacts, replay
-export {
-  useWorkshopStore,
-  selectActiveBuilder,
-  selectSelectedBuilderData,
-  selectPhaseProgress,
-} from './workshopStore';

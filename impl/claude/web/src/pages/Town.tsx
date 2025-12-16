@@ -2,60 +2,43 @@
  * Town: Widget-based Agent Town visualization.
  *
  * Consumes ColonyDashboardJSON from useTownStreamWidget for rendering.
- * Wave 5: Integrated N-Phase tracking with visual indicators.
+ * Simplified: N-Phase tracking removed pending reactive primitive rebuild.
  */
 
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useTownStreamWidget } from '@/hooks/useTownStreamWidget';
-import { useNPhaseStream } from '@/hooks/useNPhaseStream';
 import { townApi } from '@/api/client';
 import { Mesa } from '@/components/town/Mesa';
 import { CitizenPanel } from '@/components/town/CitizenPanel';
-import { PhaseIndicator, PhaseIndicatorCompact } from '@/components/town/PhaseIndicator';
-import { PhaseTimeline } from '@/components/town/PhaseTimeline';
 import { ColonyDashboard } from '@/widgets/dashboards';
-import type { TownEvent, NPhaseState } from '@/api/types';
+import type { TownEvent } from '@/api/types';
 
 type LoadingState = 'loading' | 'loaded' | 'error' | 'creating';
 
 export default function Town() {
   const { townId: paramTownId } = useParams<{ townId: string }>();
 
-  // Local state (replaces Zustand)
+  // Local state
   const [townId, setTownId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
   const [error, setError] = useState<string | null>(null);
   const [speed, setSpeed] = useState(1.0);
   const [selectedCitizenId, setSelectedCitizenId] = useState<string | null>(null);
   const [isEventFeedOpen, setIsEventFeedOpen] = useState(false);
-  const [nphaseEnabled, setNphaseEnabled] = useState(true); // N-Phase enabled by default
-  const [showTimeline, setShowTimeline] = useState(false);
 
   // Mesa sizing
   const mesaContainerRef = useRef<HTMLDivElement>(null);
   const [mesaSize, setMesaSize] = useState({ width: 800, height: 600 });
 
-  // Widget-based streaming (Phase 3 hook)
+  // Widget-based streaming
   const { dashboard, events, isConnected, isPlaying, connect, disconnect } = useTownStreamWidget({
     townId: townId || '',
     speed,
     phases: 4,
-    nphaseEnabled,
-    autoConnect: false, // We control connection after town loads
+    nphaseEnabled: false,
+    autoConnect: false,
   });
-
-  // N-Phase tracking (Wave 5)
-  const { nphase } = useNPhaseStream({
-    townId: townId || '',
-    enabled: nphaseEnabled,
-    speed,
-    phases: 4,
-    autoConnect: false, // Controlled by town stream
-  });
-
-  // Current tick from events
-  const currentTick = events.length > 0 ? events[0].tick : 0;
 
   // Load or create town on mount
   useEffect(() => {
@@ -65,7 +48,6 @@ export default function Town() {
       setLoadingState('loading');
       setError(null);
       try {
-        // Verify town exists
         await townApi.get(id);
         setTownId(id);
         setLoadingState('loaded');
@@ -166,12 +148,6 @@ export default function Town() {
             >
               Create New Town
             </Link>
-            <Link
-              to="/"
-              className="px-6 py-2 bg-town-accent hover:bg-town-accent/80 rounded-lg font-medium transition-colors"
-            >
-              Back to Home
-            </Link>
           </div>
         </div>
       </div>
@@ -180,7 +156,7 @@ export default function Town() {
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col">
-      {/* Town Header - derived from dashboard */}
+      {/* Town Header */}
       <TownHeader
         townId={townId}
         phase={dashboard?.phase || 'MORNING'}
@@ -189,25 +165,9 @@ export default function Town() {
         isPlaying={isPlaying}
         isConnected={isConnected}
         speed={speed}
-        nphaseEnabled={nphaseEnabled}
-        nphase={nphase}
-        showTimeline={showTimeline}
         onTogglePlay={() => (isPlaying ? disconnect() : connect())}
         onSpeedChange={setSpeed}
-        onToggleNPhase={() => setNphaseEnabled(!nphaseEnabled)}
-        onToggleTimeline={() => setShowTimeline(!showTimeline)}
       />
-
-      {/* N-Phase Timeline (collapsible) */}
-      {showTimeline && nphaseEnabled && (
-        <div className="bg-town-surface/30 border-b border-town-accent/30 px-4 py-3">
-          <PhaseTimeline
-            nphase={nphase}
-            currentTick={currentTick}
-            height={100}
-          />
-        </div>
-      )}
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
@@ -226,13 +186,6 @@ export default function Town() {
 
         {/* Right Sidebar */}
         <div className="w-80 border-l border-town-accent/30 flex flex-col bg-town-surface/30">
-          {/* N-Phase indicator in sidebar */}
-          {nphaseEnabled && nphase.enabled && (
-            <div className="p-3 border-b border-town-accent/30">
-              <PhaseIndicator nphase={nphase} mode="full" />
-            </div>
-          )}
-
           {/* Citizen Panel or Dashboard Mini */}
           <div className="flex-1 overflow-y-auto">
             {selectedCitizen ? (
@@ -279,13 +232,8 @@ interface TownHeaderProps {
   isPlaying: boolean;
   isConnected: boolean;
   speed: number;
-  nphaseEnabled: boolean;
-  nphase: NPhaseState;
-  showTimeline: boolean;
   onTogglePlay: () => void;
   onSpeedChange: (speed: number) => void;
-  onToggleNPhase: () => void;
-  onToggleTimeline: () => void;
 }
 
 function TownHeader({
@@ -296,13 +244,8 @@ function TownHeader({
   isPlaying,
   isConnected,
   speed,
-  nphaseEnabled,
-  nphase,
-  showTimeline,
   onTogglePlay,
   onSpeedChange,
-  onToggleNPhase,
-  onToggleTimeline,
 }: TownHeaderProps) {
   return (
     <div className="bg-town-surface/50 border-b border-town-accent/30 px-4 py-2">
@@ -325,45 +268,8 @@ function TownHeader({
           </div>
         </div>
 
-        {/* Center: N-Phase indicator */}
-        {nphaseEnabled && (
-          <div className="hidden md:block">
-            <PhaseIndicatorCompact nphase={nphase} />
-          </div>
-        )}
-
         {/* Right: Controls */}
         <div className="flex items-center gap-2">
-          {/* N-Phase toggle */}
-          <button
-            onClick={onToggleNPhase}
-            className={`px-2 py-1 rounded text-xs transition-colors ${
-              nphaseEnabled
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                : 'bg-gray-700/50 text-gray-500 border border-gray-600/30'
-            }`}
-            title={nphaseEnabled ? 'Disable N-Phase tracking' : 'Enable N-Phase tracking'}
-          >
-            N-Phase {nphaseEnabled ? 'ON' : 'OFF'}
-          </button>
-
-          {/* Timeline toggle */}
-          {nphaseEnabled && (
-            <button
-              onClick={onToggleTimeline}
-              className={`px-2 py-1 rounded text-xs transition-colors ${
-                showTimeline
-                  ? 'bg-purple-500/20 text-purple-400'
-                  : 'bg-gray-700/50 text-gray-500'
-              }`}
-              title={showTimeline ? 'Hide timeline' : 'Show timeline'}
-            >
-              {showTimeline ? '📊' : '📉'}
-            </button>
-          )}
-
-          <div className="w-px h-6 bg-gray-700 mx-1" />
-
           <button
             onClick={onTogglePlay}
             className="px-3 py-1 bg-town-accent/30 rounded text-sm hover:bg-town-accent/50 transition-colors"
@@ -382,13 +288,6 @@ function TownHeader({
           </select>
         </div>
       </div>
-
-      {/* N-Phase full indicator (mobile: below header) */}
-      {nphaseEnabled && (
-        <div className="md:hidden mt-2">
-          <PhaseIndicator nphase={nphase} mode="compact" />
-        </div>
-      )}
     </div>
   );
 }

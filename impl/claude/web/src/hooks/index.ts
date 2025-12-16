@@ -8,24 +8,35 @@
  */
 
 // Async state management
-export { useAsyncState, type AsyncState, type AsyncStatus, type UseAsyncStateOptions, type UseAsyncStateReturn } from './useAsyncState';
+export {
+  useAsyncState,
+  type AsyncState,
+  type AsyncStatus,
+  type UseAsyncStateOptions,
+  type UseAsyncStateReturn,
+} from './useAsyncState';
 
 // SSE streaming hooks
-export { useTownStreamWidget, type UseTownStreamWidgetOptions, type UseTownStreamWidgetResult } from './useTownStreamWidget';
-export { useWorkshopStream, useReconnectingWorkshopStream } from './useWorkshopStream';
-export { useNPhaseStream, useNPhaseFromDashboard, INITIAL_NPHASE_STATE, type UseNPhaseStreamOptions, type UseNPhaseStreamResult } from './useNPhaseStream';
+export {
+  useTownStreamWidget,
+  type UseTownStreamWidgetOptions,
+  type UseTownStreamWidgetResult,
+} from './useTownStreamWidget';
+
+// Atelier streaming
+export { useAtelierStream, type UseAtelierStreamResult } from './useAtelierStream';
 
 // Performance optimization
 export { useBatchedEvents } from './useBatchedEvents';
 
-// Session hooks
-export { useInhabitSession, type InhabitStatus, type InhabitResponse } from './useInhabitSession';
-
-// Historical replay
-export { useHistoricalMode, type HistoryMode, type HistoricalState, type HistoricalActions, type UseHistoricalModeOptions } from './useHistoricalMode';
-
 // Layout and responsiveness
-export { useLayoutContext, useLayoutMeasure, useWindowLayout, LayoutContextProvider, DEFAULT_LAYOUT_CONTEXT } from './useLayoutContext';
+export {
+  useLayoutContext,
+  useLayoutMeasure,
+  useWindowLayout,
+  LayoutContextProvider,
+  DEFAULT_LAYOUT_CONTEXT,
+} from './useLayoutContext';
 
 // Connectivity
 export { useOnlineStatus } from './useOnlineStatus';
