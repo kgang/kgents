@@ -7,13 +7,14 @@
 ## Summary
 
 - **Total Plans**: 60
-- **Active**: 31
+- **Active**: 29
 - **Dormant**: 1
 - **Blocked**: 0
-- **Complete**: 21 (+1 Brain)
-- **Average Progress**: 32%
+- **Complete**: 23 (Brain + Gardener + Creative Direction)
+- **Average Progress**: 36%
 - **Test Count**: 20,168+
 - **AGENTESE Paths**: 58 (Crown Jewels registered)
+- **Hero Path**: 90% (Brain 100% + Gestalt 70% + Gardener 100%)
 
 ---
 
@@ -39,12 +40,13 @@
 | plans/agent-town/grand-strategy | 0% | 2025-12-15 | active | GRAND STRATEGY synthesized from: |
 | plans/agent-town/master-prompts-v2 | 0% | 2025-12-15 | active | MASTER PROMPTS for Agent Town N-Phase Cy |
 | plans/agent-town/monetization-mvp | 0% | 2025-12-15 | active | MONETIZATION MVP for Agent Town. |
-| plans/core-apps/coalition-forge | 55% | 2025-12-16 | active | Wave 2 synergies complete. Brain+Gardener integration. 221 tests. |
+| plans/core-apps/holographic-brain | **100%** | 2025-12-16 | **complete** | **PRODUCTION-READY**. API, Web, CLI, imports. 212+ M-gent tests. |
+| plans/core-apps/the-gardener | **100%** | 2025-12-16 | **complete** | **PRODUCTION-READY**. Tending Calculus, Seasons, Auto-Inducer. 163+ tests. |
+| plans/core-apps/gestalt-architecture-visualizer | 70% | 2025-12-16 | active | Elastic UI, OTEL, property tests. 92+ tests. |
+| plans/core-apps/atelier-experience | 65% | 2025-12-16 | active | Wave 2 synergies complete. Brain integration. |
+| plans/core-apps/coalition-forge | 55% | 2025-12-16 | active | Wave 2 synergies complete. Brain+Gardener integration. |
+| plans/core-apps/punchdrunk-park | 40% | 2025-12-16 | active | DirectorAgent, masks, property tests, OTEL spans. 64 tests. |
 | plans/core-apps/domain-simulation | 0% | 2025-12-15 | active | Stub plan only. Crisis polynomial + templates defined but unimplemented. |
-| plans/core-apps/holographic-brain | **100%** | 2025-12-16 | **complete** | **PRODUCTION-READY**. API, Web, CLI, imports, 1104 tests. |
-| plans/core-apps/punchdrunk-park | 40% | 2025-12-16 | active | DirectorAgent, masks, property tests, OTEL spans. 64 hardened tests. |
-| plans/core-apps/atelier-experience | 65% | 2025-12-16 | active | Wave 2 synergies complete. Brain integration. 296 tests. |
-| plans/core-apps/the-gardener | 40% | 2025-12-16 | active | Gardener-Logos spec unified. Tending calculus, persistence. 39 tests. |
 | plans/micro-experience-factory | 0% | 2025-12-14 | active | PLAN phase complete. Micro-Experience Fa |
 | plans/meta/unified-engine-master-prompt | 30% | 2025-12-14 | active |  |
 | meta/forest-agentese | 95% | 2025-12-14 | active | Week 3 IMPLEMENT (95%): Live wiring comp |
@@ -92,7 +94,8 @@
 
 | Plan | Completed | Notes |
 |------|-----------|-------|
-| plans/core-apps/holographic-brain | 2025-12-16 | **PRODUCTION-READY**. API, Web, CLI, imports, 1104 tests. |
+| plans/core-apps/holographic-brain | 2025-12-16 | **PRODUCTION-READY**. API, Web, CLI, imports. 212+ M-gent tests. |
+| plans/core-apps/the-gardener | 2025-12-16 | **PRODUCTION-READY**. Tending Calculus, Seasons, Auto-Inducer. 163+ tests. |
 | plans/agent-town/phase5-cross-synergize | 2025-12-14 | CROSS-SYNERGIZE complete. Discovered 4 visualization vectors. |
 | plans/agent-town/phase5-strategize | 2025-12-14 | STRATEGIZE phase complete. Ordered backlog. |
 | plans/web-refactor/elastic-primitives | 2025-12-16 | Responsive layout: ElasticContainer/Card/Split/Placeholder. 32+ tests. |

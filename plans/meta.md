@@ -190,6 +190,43 @@ Test density indicates readiness: Brain 1104 > Gestalt 146 > others; correlation
 Moat articulation: "we build substrate that generates apps" > "we build 7 apps"
 ```
 
+### Gardener-Logos Patterns (2025-12-16)
+```
+Tending ≠ CRUD: gestures have tone (0-1), meaning, and relationship context
+Season plasticity modulates change: high plasticity (SPROUTING=0.9) = aggressive TextGRAD
+Entropy budget creates scarcity: forces intentionality; exhaustion triggers COMPOSTING
+Session → Season synergy: SENSE→ACT → SPROUTING; ACT→REFLECT → BLOOMING; complete → HARVEST
+Auto-Inducer suggests, never auto-applies: user confirms; dismissal memory (4h cooldown)
+GardenState owns GardenerSession: unified state model; creating session in DORMANT → SPROUTING
+Gesture immutability: append-only momentum trace; last 50 kept for trajectory analysis
+Cross-jewel via synergy bus: season changes + significant gestures emit events → Brain, Gestalt
+Plot ↔ Plan linking: plots reference Forest Protocol plans; crown_jewel enum for categorization
+Transition signals: gesture_frequency, diversity, plot_progress_delta, entropy_ratio → confidence
+```
+
+### Gardener-Logos Architecture (2025-12-16 Reflection)
+```
+Ownership Pattern: Container owns Workflow; Container persists, Workflows come and go
+Enum Property Pattern: metadata on enum values via @property eliminates lookup dictionaries
+Multiplied Effect: context × intent = effective rate (no special cases, smooth gradients)
+Signal Aggregation: multiple signals → confidence + reasons (transparent, composable)
+Async-Safe Emission: create_task with RuntimeError fallback for sync→async bridge
+Dismissal Memory: key → timestamp → cooldown_check (anti-nag, time-bounded)
+Season Cycle: directed graph not fully-connected; one forward transition per state
+Rigidity Spectrum: playful=0.3, creative=0.4, balanced=0.5, stable=0.6, infrastructure=0.8
+Dual-Channel Output: emit(human, semantic) for humans + agents from same command
+Bounded Trace: append + trim(50) = trajectory analysis without unbounded growth
+```
+
+### Creative Direction Closure (2025-12-16)
+```
+Sparse tooltips > exhaustive: over-tooltipping is anti-pattern; define but use sparingly
+Button verb consistency: team internalized naturally; systematic audit often finds nothing
+Storybook deferral: setup cost only justified at scale; TypeScript + docs suffice initially
+Design token ceiling: 150+ exports is enough; resist urge to tokenize everything
+Accursed Share in design: intentional gaps enable emergence; over-specification kills joy
+```
+
 ## Anti-Patterns
 
 ```
@@ -209,4 +246,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~155/200 | Last pruned: 2025-12-16 | Crown Jewel Strategy added*
+*Lines: ~165/200 | Last pruned: 2025-12-16 | Creative Direction closure added*

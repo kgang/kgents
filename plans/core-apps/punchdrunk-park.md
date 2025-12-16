@@ -13,8 +13,9 @@ session_notes: |
   Stub plan created from core-apps-synthesis.
   The "Westworld" vision - Kent's grandest strategy.
   INHABIT mode (91 tests) provides foundation.
-  2025-12-16: Spike 4B complete - DirectorAgent for pacing and serendipity injection (41 tests).
-  2025-12-16: Hardening complete - OTEL spans, property-based tests (10), performance baselines (6), CLI projections (7 tests). Now 64 tests total.
+  2025-12-16: DirectorAgent (pacing, serendipity), DialogueMasks (8 archetypes).
+  2025-12-16: OTEL spans, property tests (10), performance baselines, CLI. 64 tests.
+  Dependencies: ParkDomainBridge integrates Domain timers into scenarios.
 phase_ledger:
   PLAN: touched
   RESEARCH: touched

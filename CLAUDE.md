@@ -166,19 +166,21 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | domain-simulation | 35% | active |
 | punchdrunk-park | 50% | active |
 | atelier-experience | 60% | active |
-| the-gardener | 25% | active |
+| gardener-logos | 100% | **complete** |
 
 
 ## Skills Directory
 
-`docs/skills/` contains 37 documented patterns for common tasks:
+`docs/skills/` contains 39 documented patterns for common tasks:
 
 | Skill | Description |
 |-------|-------------|
 | `agentese-path.md` | Adding AGENTESE paths (e.g., `self.soul.*`) |
 | `building-agent.md` | Creating `Agent[A, B]` with functors |
 | `cli-command.md` | Adding CLI commands to kgents |
+| `crown-jewel-patterns.md` | **NEW** Reusable patterns for all Crown Jewels |
 | `flux-agent.md` | Lifting agents to stream processing |
+| `gardener-logos.md` | **NEW** Tending Calculus, Seasons, Auto-Inducer |
 | `handler-patterns.md` | CLI handler patterns |
 | `plan-file.md` | Forest Protocol plan files |
 | `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |

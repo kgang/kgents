@@ -1,13 +1,35 @@
 ---
 path: plans/crown-jewels-enlightened
 status: active
-progress: 50
+progress: 70
 last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - ALL crown jewel work
 session_notes: |
+  2025-12-16 (late night): Wave 4 WEB SYNERGY COMPLETE!
+  - Web Synergy Toast System (`components/synergy/`)
+  - Radix Toast + Framer Motion + Zustand store
+  - Jewel-specific colors/icons with action links
+  - `useSynergyToast` hook for all pages
+  - Crown Navigation redesign in Layout.tsx
+  - Crown icon, jewel-aware nav, AGENTESE path display
+  - Gestalt page wired to show synergy toasts
+  - Fixed pre-existing TS errors (build passing)
+  - Hero Path now at 92% (Brain 100% + Gestalt 75% + Gardener 100%)
+
+  2025-12-16 (night): Wave 3 CLI COMPLETE!
+  - `kg park` CLI handler with all commands (500 lines)
+  - 39 new tests for Park CLI (all passing)
+  - Commands: start, status, tick, phase, mask, force, complete
+  - AGENTESE path display on every command
+  - Synergy integration: auto-capture to Brain on complete
+  - 8 dialogue masks with eigenvector transforms
+  - 5 timer types (GDPR, SEC, HIPAA, SLA, Custom)
+  - Registered in hollow.py
+  - Total Wave 3 tests: 81 passing
+
   2025-12-16 (evening): Wave 3 FOUNDATION complete!
   - DomainToBrainHandler: auto-capture drill results (synergy handler)
   - ParkToBrainHandler: auto-capture scenario results (synergy handler)
@@ -413,16 +435,19 @@ celebrate(); // confetti on milestone completion
 | Task | Status | Notes |
 |------|--------|-------|
 | N-Phase session tracking | ✓ | Done |
-| CLI interface | Partial | Needs polish |
-| Polynomial state visualization | TODO | Show the state machine |
-| Brain/Gestalt context integration | TODO | Show relevant crystals |
-| Session orchestration | TODO | Plan 07 |
+| CLI interface | ✓ | All 8 phases complete |
+| Polynomial state visualization | ✓ | Garden state machine |
+| Brain/Gestalt context integration | ✓ | Auto-Inducer + seasons |
+| Session orchestration | ✓ | Tending calculus complete |
+
+**Status**: ✅ GARDENER 100% COMPLETE (349 tests)
 
 **Success Criteria**:
 - [ ] New user can complete hero path in < 5 minutes
 - [ ] Observer switching produces visibly different results
-- [ ] Polynomial state is visible in Gardener
-- [ ] Gestalt → Brain synergy works automatically
+- [x] Polynomial state is visible in Gardener ✓ 2025-12-16
+- [x] Gestalt → Brain synergy works automatically ✓ 2025-12-16
+- [x] Synergy visible in Web UI (toast notifications) ✓ 2025-12-16
 - [ ] At least one "wow moment" per jewel
 
 ### Wave 2: Tier 2 Enablement (2-3 weeks)
@@ -467,12 +492,13 @@ Implementation:
 
 **Goal**: Park and Domain work, completing the Crown.
 
-**Status**: FOUNDATION COMPLETE (2025-12-16)
+**Status**: CLI COMPLETE (2025-12-16)
 
 #### Park
 - [x] Uses Domain simulation timers ✓ 2025-12-16 (ParkDomainBridge)
 - [x] Scenario inhabitation with polynomial state visible ✓ 2025-12-16 (IntegratedScenarioState)
 - [x] Character masks with eigenvector personalities ✓ 2025-12-16 (DialogueMask with 8 archetypes)
+- [x] CLI commands for integrated scenarios ✓ 2025-12-16 (`kg park`)
 
 Implementation:
 - `ParkDomainBridge`: Creates integrated scenarios with Domain timers
@@ -481,7 +507,9 @@ Implementation:
 - `EigenvectorTransform`: Transforms player eigenvectors when wearing masks
 - `MaskedSessionState`: Tracks mask application and ability usage
 - Template factories: `create_data_breach_practice`, `create_service_outage_practice`
-- 42 tests passing
+- **CLI Handler**: `protocols/cli/handlers/park.py` (500 lines, 39 tests)
+- Commands: `start`, `status`, `tick`, `phase`, `mask`, `force`, `complete`
+- 81 tests passing (42 foundation + 39 CLI)
 
 #### Domain
 - [x] Crisis simulation with full timer infrastructure ✓ (existing)
@@ -498,7 +526,42 @@ Implementation:
 **Success Criteria**:
 - [x] Park scenario can include Domain simulation elements ✓ 2025-12-16
 - [x] Domain drill results appear in Brain automatically ✓ 2025-12-16
-- [ ] All 7 jewels feel like one unified system (Web UI integration pending)
+- [x] CLI commands for Park scenarios with timers ✓ 2025-12-16 (`kg park crisis`)
+- [ ] Web UI integration for Park scenarios (timer display, mask selection)
+- [ ] All 7 jewels feel like one unified system (Web UI polish pending)
+
+### Wave 4: Web Crown Unification (1-2 weeks)
+
+**Goal**: Make synergies visible in Web UI so 7 jewels feel like 1 crown.
+
+**Status**: IN PROGRESS ✓ 2025-12-16
+
+#### Completed
+- [x] Web Synergy Toast System (`web/src/components/synergy/`)
+  - `types.ts`: Jewel and SynergyEventType definitions
+  - `store.ts`: Zustand toast store with auto-dismiss
+  - `SynergyToaster.tsx`: Radix Toast + Framer Motion
+  - `useSynergyToast.ts`: Hook with pre-built helpers
+- [x] Crown Navigation (`web/src/components/layout/`)
+  - `Layout.tsx`: Redesigned with jewel-aware nav
+  - `CrownContext.tsx`: Session state display
+  - Crown icon, AGENTESE path display, tier groupings
+- [x] Gestalt → Toast integration
+  - `gestaltToBrain()` on scan complete
+  - `driftDetected()` for violations
+  - Action links to navigate to Brain
+
+#### Remaining
+- [ ] Hero Path Landing Page (`/crown`)
+- [ ] Wire toasts to Brain, Park, Atelier pages
+- [ ] Crown Context API (real backend state)
+- [ ] Observer switching prominent in Web
+
+**Success Criteria**:
+- [x] Synergy toasts appear when jewels complete operations ✓ 2025-12-16
+- [x] Crown nav shows current jewel + AGENTESE path ✓ 2025-12-16
+- [ ] Hero path guides new users through Brain → Gestalt → Gardener
+- [ ] "Wow moment" achievable in < 5 minutes
 
 ---
 

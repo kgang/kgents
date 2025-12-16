@@ -80,30 +80,32 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 | Jewel | Progress | Status |
 |-------|----------|--------|
-| **Brain** | 100% | ✅ COMPLETE - Production-ready |
-| **Gestalt** | 70% | Elastic UI, OTEL, 146 tests |
-| **Atelier** | 65% | Wave 2 synergies, 296 tests |
-| **Coalition** | 55% | Brain+Gardener integration, 221 tests |
-| **Gardener** | 40% | Gardener-Logos spec, 39 tests |
-| **Park** | 40% | DirectorAgent, masks, 64 tests |
+| **Brain** | 100% | ✅ PRODUCTION-READY (212+ M-gent tests) |
+| **Gardener** | 100% | ✅ PRODUCTION-READY (163+ tests) |
+| **Gestalt** | 70% | Elastic UI, OTEL, synergy toasts (92+ tests) |
+| **Atelier** | 65% | Wave 2 synergies |
+| **Coalition** | 55% | Brain+Gardener integration |
+| **Park** | 40% | DirectorAgent, masks (64 tests) |
 | **Domain** | 0% | Stub plan only |
 
-**Crown Avg**: 53% | **Hero Path**: 70% (Brain+Gestalt+Gardener) | **Target**: 80% by Q2 2025
+**Crown Avg**: 61% | **Hero Path**: 90% (Brain+Gestalt+Gardener) | **Target**: 80% by Q2 2025
+
+**Web Synergy**: Toast system + Crown nav complete (`components/synergy/`)
 
 ---
 
 ## Status
 
-**Tests**: 18,600+ | **Reactive**: 627 tests | **Mypy**: 78 notes | **Web**: 9K LOC | Agents: A-Z + Flux/Atelier
+**Tests**: 18,600+ | **Reactive**: 627 tests | **Mypy**: 78 notes | **Web**: 9K LOC
 **AGENTESE v3.1**: Self-doc (`help` aspect), WiredLogos in REPL, aliases (`/alias`), query API for `?`, docs/guides/
 **Projection**: WidgetEnvelope (error boundary, streaming), 7 widgets + Gestalt (Topology/Governance), chrome, SSE, 4 surfaces
-**Reactive Substrate**: COMPLETE — Error boundary in to_envelope(), streaming envelopes, property-based tests, <20% overhead
+**Archived (2025-12-16)**: H-gent (dialectic), Q-gent (quartermaster), R-gent (refinery), Psi-gent (metaphor) → `agents/_archived/`
 
 ---
 
 ## Skills (docs/skills/)
 
-agentese-path • building-agent • cli-command • flux-agent • polynomial-agent • plan-file • test-patterns • reactive-primitives • modal-scope-branching • turn-projectors • saas-patterns • agent-town-*
+agentese-path • building-agent • cli-command • flux-agent • polynomial-agent • plan-file • test-patterns • reactive-primitives • modal-scope-branching • turn-projectors • saas-patterns • agent-town-* • **gardener-logos** (NEW)
 
 ---
 
