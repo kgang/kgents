@@ -6,15 +6,13 @@ An observer that:
 - Records all inputs to history (Writer Monad)
 - Enables pipeline inspection and debugging
 
-Now uses VolatileAgent (D-gent) for history storage,
-demonstrating T-gent + D-gent integration.
+Simplified implementation using plain Python list for history.
 """
 
 from __future__ import annotations
 
 from typing import Generic, List, TypeVar
 
-from agents.d import VolatileAgent
 from bootstrap.types import Agent
 
 A = TypeVar("A")
@@ -31,12 +29,9 @@ class SpyAgent(Agent[A, A], Generic[A]):
 
     Properties:
     - Transparent: Data flows through unchanged
-    - Observable: All inputs recorded to history via VolatileAgent
+    - Observable: All inputs recorded to in-memory history
     - Composable: Can be inserted anywhere in pipeline
     - Testable: History can be inspected for assertions
-
-    Now uses VolatileAgent internally for history storage,
-    demonstrating D-gent integration with T-gents.
 
     Example:
         # Spy on intermediate pipeline data
@@ -51,15 +46,17 @@ class SpyAgent(Agent[A, A], Generic[A]):
         spy.assert_count(1)
     """
 
-    def __init__(self, label: str = "Spy"):
+    def __init__(self, label: str = "Spy", max_history: int = 100):
         """
-        Initialize spy agent with D-gent-backed history.
+        Initialize spy agent with in-memory history.
 
         Args:
             label: Human-readable label for this spy
+            max_history: Maximum history entries to keep
         """
         self.label = label
-        self._memory = VolatileAgent[List[A]](_state=[], _max_history=100)
+        self._history: List[A] = []
+        self._max_history = max_history
         self.__is_test__ = True  # T-gent marker
 
     @property
@@ -70,13 +67,12 @@ class SpyAgent(Agent[A, A], Generic[A]):
     @property
     def history(self) -> List[A]:
         """
-        Synchronous access to history (backward compatible).
+        Synchronous access to history.
 
-        Note: This returns the current state synchronously.
-        For full D-gent functionality, use get_history() async method.
+        Returns:
+            List of all captured values
         """
-        # Access internal state directly for backward compatibility
-        return self._memory._state
+        return self._history
 
     async def invoke(self, input: A) -> A:
         """
@@ -91,10 +87,12 @@ class SpyAgent(Agent[A, A], Generic[A]):
         # Log the capture
         print(f"[{self.name}] Capturing: {input}")
 
-        # Record to D-gent history
-        current = await self._memory.load()
-        current.append(input)
-        await self._memory.save(current)
+        # Record to history
+        self._history.append(input)
+
+        # Trim if exceeds max
+        if len(self._history) > self._max_history:
+            self._history = self._history[-self._max_history :]
 
         # Return unchanged (identity)
         return input
@@ -102,32 +100,20 @@ class SpyAgent(Agent[A, A], Generic[A]):
     @property
     def call_count(self) -> int:
         """Number of times invoke was called."""
-        return len(self.history)
+        return len(self._history)
 
     async def get_history(self) -> List[A]:
         """
-        Get full history via D-gent interface.
+        Get full history (async interface for compatibility).
 
         Returns:
             List of captured values
         """
-        return await self._memory.load()
-
-    async def get_history_snapshots(self, limit: int = 10) -> List[List[A]]:
-        """
-        Get historical snapshots of spy state.
-
-        Args:
-            limit: Maximum number of snapshots
-
-        Returns:
-            List of historical states (newest first)
-        """
-        return await self._memory.history(limit=limit)
+        return self._history
 
     def reset(self) -> None:
         """Clear history for test isolation."""
-        self._memory._state.clear()
+        self._history.clear()
 
     def assert_captured(self, expected: A) -> None:
         """
@@ -139,8 +125,8 @@ class SpyAgent(Agent[A, A], Generic[A]):
         Raises:
             AssertionError: If expected not in history
         """
-        assert expected in self.history, (
-            f"Expected {expected} not captured in {self.name}. History: {self.history}"
+        assert expected in self._history, (
+            f"Expected {expected} not captured in {self.name}. History: {self._history}"
         )
 
     def assert_count(self, count: int) -> None:
@@ -153,7 +139,7 @@ class SpyAgent(Agent[A, A], Generic[A]):
         Raises:
             AssertionError: If count doesn't match
         """
-        actual = len(self.history)
+        actual = len(self._history)
         assert actual == count, (
             f"Expected {count} invocations in {self.name}, got {actual}"
         )
@@ -165,7 +151,7 @@ class SpyAgent(Agent[A, A], Generic[A]):
         Raises:
             AssertionError: If history is empty
         """
-        assert len(self.history) > 0, f"{self.name} captured nothing"
+        assert len(self._history) > 0, f"{self.name} captured nothing"
 
     def last(self) -> A:
         """
@@ -177,9 +163,9 @@ class SpyAgent(Agent[A, A], Generic[A]):
         Raises:
             IndexError: If history is empty
         """
-        if not self.history:
+        if not self._history:
             raise IndexError(f"{self.name} has no captured values")
-        return self.history[-1]
+        return self._history[-1]
 
 
 # Helper function for quick spy creation

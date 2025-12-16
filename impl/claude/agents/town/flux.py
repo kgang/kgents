@@ -391,14 +391,14 @@ class TownFlux:
         Returns list of subject names the citizen has gossiped about.
         """
         try:
-            response = await citizen.memory.query(limit=20)
+            # Access internal storage directly (CitizenMemory has no query method)
+            storage = citizen.memory._storage
             subjects = []
-            if response.state and isinstance(response.state, dict):
-                for key, value in response.state.items():
-                    if isinstance(value, dict) and value.get("type") == "gossip":
-                        subj = value.get("subject")
-                        if subj:
-                            subjects.append(subj)
+            for key, value in storage.items():
+                if isinstance(value, dict) and value.get("type") == "gossip":
+                    subj = value.get("subject")
+                    if subj:
+                        subjects.append(subj)
             return subjects
         except Exception:
             return []
@@ -407,12 +407,12 @@ class TownFlux:
         """
         Synchronous access to remembered gossip subjects.
 
-        Uses the memory store directly for synchronous access.
+        Uses the memory storage directly for synchronous access.
         """
         try:
-            store = citizen.memory._store
+            storage = citizen.memory._storage
             subjects = []
-            for key, value in store.state.items():
+            for key, value in storage.items():
                 if isinstance(value, dict) and value.get("type") == "gossip":
                     subj = value.get("subject")
                     if subj:

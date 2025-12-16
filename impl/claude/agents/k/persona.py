@@ -150,6 +150,25 @@ class PersonaSeed:
         }
     )
 
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "name": self.name,
+            "roles": self.roles,
+            "preferences": self.preferences,
+            "patterns": self.patterns,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "PersonaSeed":
+        """Create from dictionary."""
+        return cls(
+            name=data.get("name", "Kent"),
+            roles=data.get("roles", ["researcher", "creator", "thinker"]),
+            preferences=data.get("preferences", {}),
+            patterns=data.get("patterns", {}),
+        )
+
 
 @dataclass
 class PersonaState:
@@ -183,6 +202,32 @@ class PersonaState:
 
     # Source tracking: "explicit" | "inferred" | "inherited"
     sources: dict[str, str] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "seed": self.seed.to_dict(),
+            "current_focus": self.current_focus,
+            "recent_interests": self.recent_interests,
+            "active_projects": self.active_projects,
+            "confidence": self.confidence,
+            "sources": self.sources,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "PersonaState":
+        """Create from dictionary."""
+        seed_data = data.get("seed", {})
+        return cls(
+            seed=PersonaSeed.from_dict(seed_data),
+            current_focus=data.get("current_focus", "kgents specification"),
+            recent_interests=data.get(
+                "recent_interests", ["category theory", "scientific agents", "personal AI"]
+            ),
+            active_projects=data.get("active_projects", []),
+            confidence=data.get("confidence", {}),
+            sources=data.get("sources", {}),
+        )
 
 
 @dataclass

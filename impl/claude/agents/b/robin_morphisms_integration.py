@@ -11,12 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from agents.h import DialecticOutput
 from agents.k import PersonaResponse
 from bootstrap.types import Agent
 from runtime.base import Runtime
 
 from .hypothesis import HypothesisOutput
+from .robin_integration import DialecticOutput  # Inline type (H-gent archived)
 
 
 @dataclass

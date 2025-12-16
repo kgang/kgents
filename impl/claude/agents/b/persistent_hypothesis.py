@@ -8,16 +8,23 @@ Provides durable storage for hypothesis history, enabling:
 - Research lineage preservation
 - L-gent catalog integration
 - D-gent lineage support
+
+Uses the NEW D-gent architecture:
+- DgentRouter: Auto-selects best backend (SQLite by default)
+- Datum: Schema-free bytes with causal linking for history
+- causal_chain: Track hypothesis memory evolution
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import json
+from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from agents.d import PersistentAgent
+from agents.d import Datum, DgentRouter
+from agents.d.router import Backend
 
 from .hypothesis_parser import Hypothesis, ParsedHypothesisResponse
 
@@ -256,17 +263,46 @@ class HypothesisMemory:
         """Get L-gent catalog ID for a hypothesis."""
         return self.catalog_ids.get(hyp_idx)
 
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary for JSON storage."""
+        return {
+            "hypotheses": [asdict(h) for h in self.hypotheses],
+            "domains": self.domains,
+            "total_generated": self.total_generated,
+            "lineage_edges": [asdict(e) for e in self.lineage_edges],
+            "catalog_ids": {str(k): v for k, v in self.catalog_ids.items()},
+            "sessions": self.sessions,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "HypothesisMemory":
+        """Deserialize from dictionary."""
+        return cls(
+            hypotheses=[Hypothesis(**h) for h in data.get("hypotheses", [])],
+            domains=data.get("domains", {}),
+            total_generated=data.get("total_generated", 0),
+            lineage_edges=[
+                HypothesisLineageEdge(**e) for e in data.get("lineage_edges", [])
+            ],
+            catalog_ids={
+                int(k): v for k, v in data.get("catalog_ids", {}).items()
+            },
+            sessions=data.get("sessions", []),
+        )
+
 
 class PersistentHypothesisStorage:
     """
     Persistent storage for hypothesis memory.
 
-    Wraps HypothesisMemory with PersistentAgent to enable
-    durable hypothesis tracking across sessions.
+    Uses the NEW D-gent architecture:
+    - DgentRouter for backend selection (SQLite by default)
+    - Datum for storage (memory serialized as JSON bytes)
+    - causal_chain for evolution history tracking
 
     Example:
         >>> storage = PersistentHypothesisStorage(
-        ...     path=Path("~/.kgents/hypotheses.json")
+        ...     namespace="hypotheses"
         ... )
         >>> await storage.load()
         >>>
@@ -281,45 +317,69 @@ class PersistentHypothesisStorage:
 
     def __init__(
         self,
-        path: Path | str,
+        namespace: str = "bgent_hypotheses",
         auto_save: bool = True,
+        data_dir: Path | None = None,
+        preferred_backend: Backend = Backend.SQLITE,
     ):
         """
         Initialize persistent hypothesis storage.
 
         Args:
-            path: Path to JSON file for hypothesis memory
+            namespace: Namespace for D-gent storage
             auto_save: Whether to save after each operation
+            data_dir: Directory for data files
+            preferred_backend: Preferred storage backend
         """
-        self._dgent = PersistentAgent[HypothesisMemory](
-            path=Path(path),
-            schema=HypothesisMemory,
-            max_history=100,  # Track hypothesis evolution
+        self._dgent = DgentRouter(
+            namespace=namespace,
+            preferred=preferred_backend,
+            data_dir=data_dir,
         )
         self.auto_save = auto_save
         self._memory: Optional[HypothesisMemory] = None
+        self._current_datum_id: str | None = None
 
     async def load(self) -> HypothesisMemory:
         """
-        Load hypothesis memory from disk.
+        Load hypothesis memory from storage.
 
         Returns:
             Loaded or initialized memory
         """
         try:
-            self._memory = await self._dgent.load()
+            # Get the most recent datum
+            recent = await self._dgent.list(limit=1)
+            if recent:
+                self._current_datum_id = recent[0].id
+                data = json.loads(recent[0].content.decode("utf-8"))
+                self._memory = HypothesisMemory.from_dict(data)
+            else:
+                # No state exists yet, initialize
+                self._memory = HypothesisMemory()
+                if self.auto_save:
+                    await self.save()
         except Exception:
-            # No state exists yet, initialize
+            # Failed to load, initialize empty
             self._memory = HypothesisMemory()
             if self.auto_save:
-                await self._dgent.save(self._memory)
+                await self.save()
 
         return self._memory
 
     async def save(self) -> None:
-        """Persist current hypothesis memory to disk."""
+        """Persist current hypothesis memory to storage."""
         if self._memory is not None:
-            await self._dgent.save(self._memory)
+            content = json.dumps(self._memory.to_dict(), default=str).encode("utf-8")
+
+            datum = Datum.create(
+                content=content,
+                causal_parent=self._current_datum_id,
+                metadata={"type": "hypothesis_memory"},
+            )
+
+            await self._dgent.put(datum)
+            self._current_datum_id = datum.id
 
     async def add_response(
         self,
@@ -375,15 +435,31 @@ class PersistentHypothesisStorage:
         limit: int = 10,
     ) -> list[HypothesisMemory]:
         """
-        Get history of hypothesis memory states.
+        Get history of hypothesis memory states via causal chain.
 
         Args:
             limit: Maximum number of historical states
 
         Returns:
-            List of past memory states (newest first)
+            List of past memory states (oldest to newest)
         """
-        return await self._dgent.history(limit=limit)
+        if self._current_datum_id is None:
+            return []
+
+        chain = await self._dgent.causal_chain(self._current_datum_id)
+        memories = []
+
+        for datum in chain:
+            try:
+                data = json.loads(datum.content.decode("utf-8"))
+                memories.append(HypothesisMemory.from_dict(data))
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+        if limit is not None:
+            memories = memories[-limit:]
+
+        return memories
 
     @property
     def total_generated(self) -> int:
@@ -512,15 +588,17 @@ class PersistentHypothesisStorage:
 
 
 def persistent_hypothesis_storage(
-    path: Path | str = "~/.kgents/hypotheses.json",
+    namespace: str = "bgent_hypotheses",
+    data_dir: Path | None = None,
 ) -> PersistentHypothesisStorage:
     """
     Create persistent hypothesis storage.
 
     Args:
-        path: Path to hypothesis memory file
+        namespace: Namespace for D-gent storage
+        data_dir: Directory for data files
 
     Returns:
         Configured PersistentHypothesisStorage
     """
-    return PersistentHypothesisStorage(path=path)
+    return PersistentHypothesisStorage(namespace=namespace, data_dir=data_dir)

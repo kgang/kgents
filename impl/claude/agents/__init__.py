@@ -5,10 +5,15 @@ Each letter represents a distinct agent genus:
 - A-gents: Abstract architectures + Art/Creativity (the skeleton)
 - B-gents: Bio/Scientific discovery
 - C-gents: Category theory (composability)
-- H-gents: Hegel/Jung/Lacan (dialectics, psyche)
 - K-gent: Kent simulacra
 - T-gents: Testing agents (verification, perturbation, observation)
 - U-gents: Utility agents (tools, MCP, execution)
+
+Archived (see agents/_archived/):
+- H-gents: Hegel/Jung/Lacan (dialectics) - archived 2025-12-16
+- Q-gent: Quartermaster (K8s jobs) - archived 2025-12-16
+- R-gents: Refinery (DSPy optimization) - archived 2025-12-16
+- Psi-gent: Metaphor engine - archived 2025-12-16
 
 Quick Start:
     >>> from agents import Agent, Kappa, Capability
@@ -28,7 +33,7 @@ See agents.examples for runnable demonstrations.
 # ─────────────────────────────────────────────────────────────────────────────
 from bootstrap.types import Agent, ComposedAgent
 
-from . import a, b, c, h, k, t, u
+from . import a, b, c, k, t, u
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Alethic Architecture: Halo Capability Protocol
@@ -111,7 +116,6 @@ __all__ = [
     "a",
     "b",
     "c",
-    "h",
     "k",
     "t",
     "u",

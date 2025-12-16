@@ -1,18 +1,18 @@
 """
 L-gent Persistence Layer - D-gent Integration
 
-Provides durable storage for L-gent catalogs using D-gent primitives.
+Provides durable storage for L-gent catalogs using the NEW D-gent architecture.
 
-The integration follows the spec:
-  "L-gent uses D-gents for persistence:
-   - PersistentAgent: Store the catalog itself"
+Uses:
+- DgentRouter: Auto-selects best backend (SQLite by default)
+- Datum: Schema-free bytes with causal linking for history
+- causal_chain: Replaces old history() method
 
 Key Features:
-- PersistentRegistry: Wraps Registry with file-backed storage
+- PersistentRegistry: Wraps Registry with D-gent storage
 - Auto-save on modifications (configurable)
-- History tracking for catalog evolution
-- Crash recovery via atomic writes
-- Symbiont-style composition (logic + memory separation)
+- History tracking via causal chain
+- Backend flexibility (Memory → JSONL → SQLite → Postgres)
 
 Usage:
     >>> from agents.l import PersistentRegistry
@@ -20,7 +20,7 @@ Usage:
     >>>
     >>> # Create persistent registry
     >>> registry = await PersistentRegistry.create(
-    ...     path=Path("catalog.json"),
+    ...     namespace="catalog",
     ...     auto_save=True,
     ... )
     >>>
@@ -35,9 +35,8 @@ Usage:
 
 from __future__ import annotations
 
-# Import D-gent primitives
 import builtins
-import sys
+import json
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -52,8 +51,17 @@ from .types import (
     Status,
 )
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from agents.d import PersistentAgent, StateNotFoundError
+# New D-gent imports
+from agents.d import (
+    Datum,
+    DgentRouter,
+    StateNotFoundError,
+)
+from agents.d.router import Backend
+
+
+# Well-known ID for the catalog datum
+CATALOG_DATUM_ID = "lgent_catalog_current"
 
 
 class SaveStrategy(Enum):
@@ -80,21 +88,18 @@ class PersistentRegistry:
     """
     L-gent Registry with D-gent persistence.
 
-    Wraps the in-memory Registry with PersistentAgent[Catalog] for durable storage.
-    All Registry methods are available, with automatic or manual persistence.
+    Uses the NEW D-gent architecture:
+    - DgentRouter for backend selection (SQLite by default)
+    - Datum for storage (catalog serialized as JSON bytes)
+    - causal_chain for history tracking
 
     The architecture follows the Symbiont pattern:
     - Logic: Registry (in-memory operations)
-    - Memory: PersistentAgent[Catalog] (file-backed state)
-
-    This separation allows:
-    - Testing logic without disk I/O
-    - Swapping storage backends (file → database → cloud)
-    - Composing with other D-gents (caching, entropy limits)
+    - Memory: DgentRouter (projection-agnostic storage)
 
     Example:
         >>> registry = await PersistentRegistry.create(
-        ...     path=Path("./data/catalog.json"),
+        ...     namespace="my_catalog",
         ...     config=PersistenceConfig(save_strategy=SaveStrategy.ON_WRITE),
         ... )
         >>>
@@ -104,16 +109,17 @@ class PersistentRegistry:
         >>>
         >>> # Explicit persistence control
         >>> await registry.save()  # Force save
-        >>> await registry.reload()  # Reload from disk
+        >>> await registry.reload()  # Reload from storage
         >>> history = await registry.catalog_history(limit=5)  # View past states
     """
 
     def __init__(
         self,
         registry: Registry,
-        storage: PersistentAgent[dict[str, Any]],
+        storage: DgentRouter,
         config: PersistenceConfig,
-        path: Path,
+        namespace: str,
+        current_datum_id: str | None = None,
     ) -> None:
         """
         Initialize persistent registry.
@@ -123,99 +129,144 @@ class PersistentRegistry:
         self._registry = registry
         self._storage = storage
         self._config = config
-        self._path = path
+        self._namespace = namespace
+        self._current_datum_id = current_datum_id
         self._dirty = False  # Track unsaved changes
 
     @classmethod
     async def create(
         cls,
-        path: Path | str,
+        namespace: str = "lgent_catalog",
         config: PersistenceConfig | None = None,
+        data_dir: Path | None = None,
+        preferred_backend: Backend = Backend.SQLITE,
     ) -> "PersistentRegistry":
         """
         Factory method to create a persistent registry.
 
-        Loads existing catalog from disk, or creates new one if missing.
+        Loads existing catalog from storage, or creates new one if missing.
 
         Args:
-            path: Path to catalog JSON file
+            namespace: Namespace for the D-gent storage
             config: Persistence configuration (defaults to ON_WRITE auto-save)
+            data_dir: Directory for data files (defaults to ~/.kgents/data)
+            preferred_backend: Preferred storage backend (defaults to SQLite)
 
         Returns:
             Initialized PersistentRegistry
 
         Example:
             >>> registry = await PersistentRegistry.create(
-            ...     path=Path("catalog.json"),
+            ...     namespace="catalog",
             ... )
         """
         config = config or PersistenceConfig()
-        path = Path(path)
 
-        # Create D-gent storage (using Catalog as schema)
-        storage = PersistentAgent(
-            path=path,
-            schema=dict,  # We serialize Catalog to dict
-            max_history=config.max_history,
+        # Create D-gent router with SQLite as preferred backend
+        storage = DgentRouter(
+            namespace=namespace,
+            preferred=preferred_backend,
+            data_dir=data_dir,
         )
 
         # Try to load existing catalog
+        current_datum_id = None
         try:
-            data = await storage.load()
-            catalog = Catalog.from_dict(data)
-            registry = Registry(catalog=catalog)
-        except StateNotFoundError:
+            # Get the most recent datum
+            recent = await storage.list(limit=1)
+            if recent:
+                current_datum_id = recent[0].id
+                data = json.loads(recent[0].content.decode("utf-8"))
+                catalog = Catalog.from_dict(data)
+                registry = Registry(catalog=catalog)
+            else:
+                if config.create_if_missing:
+                    registry = Registry()
+                else:
+                    raise StateNotFoundError(f"No catalog found in namespace {namespace}")
+        except Exception as e:
             if config.create_if_missing:
-                # Create fresh registry
                 registry = Registry()
             else:
-                raise FileNotFoundError(f"Catalog not found at {path}")
+                raise StateNotFoundError(f"Failed to load catalog: {e}")
 
         return cls(
             registry=registry,
             storage=storage,
             config=config,
-            path=path,
+            namespace=namespace,
+            current_datum_id=current_datum_id,
         )
 
     # ========== Persistence Operations ==========
 
     async def save(self) -> None:
         """
-        Persist current catalog state to disk.
+        Persist current catalog state to storage.
 
-        Uses atomic writes (temp file + rename) for crash safety.
-        Appends to history for evolution tracking.
+        Creates a new Datum with the current state, linked to the previous
+        state via causal_parent for history tracking.
         """
         data = self._registry.catalog.to_dict()
-        await self._storage.save(data)
+        content = json.dumps(data, default=str).encode("utf-8")
+
+        # Create datum with causal link to previous state
+        datum = Datum.create(
+            content=content,
+            causal_parent=self._current_datum_id,
+            metadata={"type": "lgent_catalog", "namespace": self._namespace},
+        )
+
+        await self._storage.put(datum)
+        self._current_datum_id = datum.id
         self._dirty = False
 
     async def reload(self) -> None:
         """
-        Reload catalog from disk, discarding in-memory changes.
+        Reload catalog from storage, discarding in-memory changes.
 
         Useful after external catalog modifications or to reset state.
         """
-        data = await self._storage.load()
-        catalog = Catalog.from_dict(data)
-        self._registry = Registry(catalog=catalog)
+        recent = await self._storage.list(limit=1)
+        if recent:
+            self._current_datum_id = recent[0].id
+            data = json.loads(recent[0].content.decode("utf-8"))
+            catalog = Catalog.from_dict(data)
+            self._registry = Registry(catalog=catalog)
+        else:
+            self._registry = Registry()
+            self._current_datum_id = None
         self._dirty = False
 
-    async def catalog_history(self, limit: int | None = None) -> list[Catalog]:
+    async def catalog_history(self, limit: int | None = None) -> builtins.list[Catalog]:
         """
-        Retrieve historical catalog states.
+        Retrieve historical catalog states via causal chain.
 
-        D-gent's PersistentAgent maintains JSONL history of all saves.
+        Uses D-gent's causal_chain to trace the evolution of the catalog.
 
         Args:
             limit: Maximum number of historical states to return
 
         Returns:
-            List of Catalog snapshots, newest first
+            List of Catalog snapshots, oldest to newest
         """
-        history_data = await self._storage.history(limit=limit)
-        return [Catalog.from_dict(data) for data in history_data]
+        if self._current_datum_id is None:
+            return []
+
+        chain = await self._storage.causal_chain(self._current_datum_id)
+        catalogs = []
+
+        for datum in chain:
+            try:
+                data = json.loads(datum.content.decode("utf-8"))
+                catalogs.append(Catalog.from_dict(data))
+            except (json.JSONDecodeError, KeyError):
+                continue  # Skip malformed entries
+
+        if limit is not None:
+            catalogs = catalogs[-limit:]
+
+        return catalogs
 
     async def close(self) -> None:
         """
@@ -260,7 +311,7 @@ class PersistentRegistry:
         status: Status | None = None,
         author: str | None = None,
         limit: int | None = None,
-    ) -> list[CatalogEntry]:
+    ) -> builtins.list[CatalogEntry]:
         """List entries with optional filters. See Registry.list_entries()."""
         return await self._registry.list_entries(
             entity_type=entity_type,
@@ -343,9 +394,9 @@ class PersistentRegistry:
         return self._registry.catalog
 
     @property
-    def path(self) -> Path:
-        """Path to the catalog file."""
-        return self._path
+    def namespace(self) -> str:
+        """Namespace for this registry's storage."""
+        return self._namespace
 
     @property
     def is_dirty(self) -> bool:
@@ -357,6 +408,11 @@ class PersistentRegistry:
         """Current persistence configuration."""
         return self._config
 
+    @property
+    def current_datum_id(self) -> str | None:
+        """ID of the current catalog datum (for causal linking)."""
+        return self._current_datum_id
+
     def to_dict(self) -> dict[str, Any]:
         """Export catalog as dictionary."""
         return self._registry.to_dict()
@@ -366,9 +422,10 @@ class PersistentRegistry:
 
 
 async def create_persistent_registry(
-    path: Path | str,
+    namespace: str = "lgent_catalog",
     auto_save: bool = True,
     max_history: int = 50,
+    data_dir: Path | None = None,
 ) -> PersistentRegistry:
     """
     Create a persistent registry with sensible defaults.
@@ -376,27 +433,33 @@ async def create_persistent_registry(
     Convenience wrapper around PersistentRegistry.create().
 
     Args:
-        path: Path to catalog JSON file
+        namespace: Namespace for D-gent storage
         auto_save: If True, save after each modification (default)
         max_history: Number of historical catalog states to keep
+        data_dir: Directory for data files
 
     Returns:
         Initialized PersistentRegistry
 
     Example:
-        >>> registry = await create_persistent_registry("catalog.json")
+        >>> registry = await create_persistent_registry("my_catalog")
         >>> await registry.register(entry)  # Auto-saved
     """
     config = PersistenceConfig(
         save_strategy=SaveStrategy.ON_WRITE if auto_save else SaveStrategy.MANUAL,
         max_history=max_history,
     )
-    return await PersistentRegistry.create(path=path, config=config)
+    return await PersistentRegistry.create(
+        namespace=namespace,
+        config=config,
+        data_dir=data_dir,
+    )
 
 
 async def load_or_create_registry(
-    path: Path | str,
+    namespace: str = "lgent_catalog",
     auto_save: bool = True,
+    data_dir: Path | None = None,
 ) -> PersistentRegistry:
     """
     Load existing registry or create new one.
@@ -405,10 +468,15 @@ async def load_or_create_registry(
     in most applications.
 
     Args:
-        path: Path to catalog JSON file
+        namespace: Namespace for D-gent storage
         auto_save: If True, save after each modification
+        data_dir: Directory for data files
 
     Returns:
         PersistentRegistry (existing or newly created)
     """
-    return await create_persistent_registry(path=path, auto_save=auto_save)
+    return await create_persistent_registry(
+        namespace=namespace,
+        auto_save=auto_save,
+        data_dir=data_dir,
+    )

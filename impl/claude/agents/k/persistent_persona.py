@@ -1,7 +1,12 @@
 """
 Persistent K-gent: Persona with durable state storage.
 
-Wraps PersonaState with PersistentAgent to enable:
+Uses the NEW D-gent architecture:
+- DgentRouter: Auto-selects best backend (SQLite by default)
+- Datum: Schema-free bytes with causal linking for history
+- causal_chain: Track persona evolution over time
+
+Enables:
 - Personality continuity across sessions
 - Preference evolution tracking
 - Confidence updates over time
@@ -10,10 +15,13 @@ Wraps PersonaState with PersistentAgent to enable:
 
 from __future__ import annotations
 
+import json
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Optional
 
-from agents.d import PersistentAgent
+from agents.d import Datum, DgentRouter
+from agents.d.router import Backend
 
 from .persona import (
     DialogueInput,
@@ -29,64 +37,73 @@ class PersistentPersonaAgent(KgentAgent):
     """
     K-gent with persistent persona state.
 
-    Automatically saves persona state after each dialogue,
-    enabling continuity across sessions and preference evolution.
+    Uses the NEW D-gent architecture:
+    - DgentRouter for backend selection (SQLite by default)
+    - Datum for storage (state serialized as JSON bytes)
+    - causal_chain for evolution history tracking
 
     Example:
         >>> persona = PersistentPersonaAgent(
-        ...     path=Path("~/.kgents/persona.json")
+        ...     namespace="kgent_persona"
         ... )
         >>> # First session
         >>> response = await persona.invoke(
         ...     DialogueInput(message="I prefer minimal design", mode=DialogueMode.REFLECT)
         ... )
         >>> # Later session - remembers preferences
-        >>> persona2 = PersistentPersonaAgent(path=Path("~/.kgents/persona.json"))
+        >>> persona2 = PersistentPersonaAgent(namespace="kgent_persona")
         >>> await persona2.load_state()
         >>> # State is restored, preferences remembered
     """
 
     def __init__(
         self,
-        path: Path | str,
+        namespace: str = "kgent_persona",
         initial_state: Optional[PersonaState] = None,
         auto_save: bool = True,
+        data_dir: Path | None = None,
+        preferred_backend: Backend = Backend.SQLITE,
     ):
         """
         Initialize persistent persona agent.
 
         Args:
-            path: Path to JSON file for persona state
+            namespace: Namespace for D-gent storage
             initial_state: Initial state (used if no file exists)
             auto_save: Whether to save state after each invoke
+            data_dir: Directory for data files
+            preferred_backend: Preferred storage backend
         """
         # Initialize with default or provided state
         state = initial_state or PersonaState(seed=PersonaSeed())
         super().__init__(state=state)
 
-        # Create persistent backend
-        self._dgent = PersistentAgent[PersonaState](
-            path=Path(path),
-            schema=PersonaState,
-            max_history=50,  # Track persona evolution
+        # Create D-gent router
+        self._dgent = DgentRouter(
+            namespace=namespace,
+            preferred=preferred_backend,
+            data_dir=data_dir,
         )
         self.auto_save = auto_save
+        self._current_datum_id: str | None = None
 
     async def load_state(self) -> None:
         """
-        Load persona state from disk.
+        Load persona state from storage.
 
         Call this after initialization to restore persisted state.
-        If the file doesn't exist or is corrupted, keeps the initial state.
+        If no state exists or is corrupted, keeps the initial state.
         """
         try:
-            self._state = await self._dgent.load()
-            self._query_agent = PersonaQueryAgent(self._state)
-        except FileNotFoundError:
-            # No state exists yet, use initial state (expected on first run)
-            pass
-        except (ValueError, KeyError, TypeError) as e:
-            # Corrupted state file - log but keep initial state
+            # Get the most recent datum
+            recent = await self._dgent.list(limit=1)
+            if recent:
+                self._current_datum_id = recent[0].id
+                data = json.loads(recent[0].content.decode("utf-8"))
+                self._state = PersonaState.from_dict(data)
+                self._query_agent = PersonaQueryAgent(self._state)
+        except Exception as e:
+            # Corrupted state - log but keep initial state
             import logging
 
             logging.getLogger(__name__).warning(
@@ -94,8 +111,17 @@ class PersistentPersonaAgent(KgentAgent):
             )
 
     async def save_state(self) -> None:
-        """Persist current persona state to disk."""
-        await self._dgent.save(self._state)
+        """Persist current persona state to storage."""
+        content = json.dumps(self._state.to_dict(), default=str).encode("utf-8")
+
+        datum = Datum.create(
+            content=content,
+            causal_parent=self._current_datum_id,
+            metadata={"type": "persona_state"},
+        )
+
+        await self._dgent.put(datum)
+        self._current_datum_id = datum.id
 
     async def invoke(self, input: DialogueInput) -> DialogueOutput:
         """
@@ -118,15 +144,31 @@ class PersistentPersonaAgent(KgentAgent):
 
     async def get_evolution_history(self, limit: int = 10) -> list[PersonaState]:
         """
-        Get history of persona state changes.
+        Get history of persona state changes via causal chain.
 
         Args:
             limit: Maximum number of historical states
 
         Returns:
-            List of past persona states (newest first)
+            List of past persona states (oldest to newest)
         """
-        return await self._dgent.history(limit=limit)
+        if self._current_datum_id is None:
+            return []
+
+        chain = await self._dgent.causal_chain(self._current_datum_id)
+        states = []
+
+        for datum in chain:
+            try:
+                data = json.loads(datum.content.decode("utf-8"))
+                states.append(PersonaState.from_dict(data))
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+        if limit is not None:
+            states = states[-limit:]
+
+        return states
 
     def update_preference(
         self,
@@ -162,42 +204,47 @@ class PersistentPersonaQueryAgent(PersonaQueryAgent):
     """
     Persona query agent backed by persistent storage.
 
-    Wraps PersonaQueryAgent to provide query interface
-    with automatic state persistence.
+    Uses the NEW D-gent architecture for state persistence.
     """
 
     def __init__(
         self,
-        path: Path | str,
+        namespace: str = "kgent_persona_query",
         initial_state: Optional[PersonaState] = None,
+        data_dir: Path | None = None,
+        preferred_backend: Backend = Backend.SQLITE,
     ):
         """
         Initialize persistent query agent.
 
         Args:
-            path: Path to JSON file for persona state
+            namespace: Namespace for D-gent storage
             initial_state: Initial state if no file exists
+            data_dir: Directory for data files
+            preferred_backend: Preferred storage backend
         """
         state = initial_state or PersonaState(seed=PersonaSeed())
         super().__init__(state=state)
 
-        self._dgent = PersistentAgent[PersonaState](
-            path=Path(path),
-            schema=PersonaState,
-            max_history=50,
+        self._dgent = DgentRouter(
+            namespace=namespace,
+            preferred=preferred_backend,
+            data_dir=data_dir,
         )
+        self._current_datum_id: str | None = None
 
     async def load_state(self) -> None:
-        """Load persona state from disk.
+        """Load persona state from storage.
 
-        If the file doesn't exist or is corrupted, keeps the initial state.
+        If no state exists or is corrupted, keeps the initial state.
         """
         try:
-            self._state = await self._dgent.load()
-        except FileNotFoundError:
-            # No state exists yet, use initial state (expected on first run)
-            pass
-        except (ValueError, KeyError, TypeError) as e:
+            recent = await self._dgent.list(limit=1)
+            if recent:
+                self._current_datum_id = recent[0].id
+                data = json.loads(recent[0].content.decode("utf-8"))
+                self._state = PersonaState.from_dict(data)
+        except Exception as e:
             # Corrupted state file - log but keep initial state
             import logging
 
@@ -207,41 +254,62 @@ class PersistentPersonaQueryAgent(PersonaQueryAgent):
 
     async def save_state(self) -> None:
         """Persist current persona state."""
-        await self._dgent.save(self._state)
+        content = json.dumps(self._state.to_dict(), default=str).encode("utf-8")
+
+        datum = Datum.create(
+            content=content,
+            causal_parent=self._current_datum_id,
+            metadata={"type": "persona_query_state"},
+        )
+
+        await self._dgent.put(datum)
+        self._current_datum_id = datum.id
 
 
 # Convenience functions
 
 
 def persistent_kgent(
-    path: Path | str = "~/.kgents/persona.json",
+    namespace: str = "kgent_persona",
     initial_state: Optional[PersonaState] = None,
+    data_dir: Path | None = None,
 ) -> PersistentPersonaAgent:
     """
     Create a persistent K-gent dialogue agent.
 
     Args:
-        path: Path to persona state file
+        namespace: Namespace for D-gent storage
         initial_state: Initial state if file doesn't exist
+        data_dir: Directory for data files
 
     Returns:
         Configured PersistentPersonaAgent
     """
-    return PersistentPersonaAgent(path=path, initial_state=initial_state)
+    return PersistentPersonaAgent(
+        namespace=namespace,
+        initial_state=initial_state,
+        data_dir=data_dir,
+    )
 
 
 def persistent_query_persona(
-    path: Path | str = "~/.kgents/persona.json",
+    namespace: str = "kgent_persona_query",
     initial_state: Optional[PersonaState] = None,
+    data_dir: Path | None = None,
 ) -> PersistentPersonaQueryAgent:
     """
     Create a persistent persona query agent.
 
     Args:
-        path: Path to persona state file
+        namespace: Namespace for D-gent storage
         initial_state: Initial state if file doesn't exist
+        data_dir: Directory for data files
 
     Returns:
         Configured PersistentPersonaQueryAgent
     """
-    return PersistentPersonaQueryAgent(path=path, initial_state=initial_state)
+    return PersistentPersonaQueryAgent(
+        namespace=namespace,
+        initial_state=initial_state,
+        data_dir=data_dir,
+    )

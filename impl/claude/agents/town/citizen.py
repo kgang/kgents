@@ -27,7 +27,6 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from agents.d.polynomial import MemoryPolynomialAgent
 from agents.town.polynomial import (
     CITIZEN_POLYNOMIAL,
     CitizenInput,
@@ -42,6 +41,58 @@ from protocols.nphase.operad import (
 from protocols.nphase.operad import (
     next_phase as nphase_next,
 )
+
+
+# =============================================================================
+# CitizenMemory (Simple In-Memory Store)
+# =============================================================================
+
+
+@dataclass
+class MemoryLoadResponse:
+    """Response from CitizenMemory.load()."""
+
+    state: Any
+    key: str | None = None
+    found: bool = True
+
+
+class CitizenMemory:
+    """
+    Simple in-memory key-value store for Citizen entities.
+
+    Provides async interface for compatibility with agent patterns.
+    """
+
+    def __init__(self) -> None:
+        """Initialize in-memory storage."""
+        self._storage: dict[str, Any] = {}
+        self._default_key = "__default__"
+
+    async def store(self, content: Any, key: str | None = None) -> None:
+        """Store content under a key."""
+        storage_key = key or self._default_key
+        self._storage[storage_key] = content
+
+    async def load(self, key: str | None = None) -> MemoryLoadResponse:
+        """Load content from a key."""
+        storage_key = key or self._default_key
+        if storage_key in self._storage:
+            return MemoryLoadResponse(
+                state=self._storage[storage_key],
+                key=storage_key,
+                found=True,
+            )
+        return MemoryLoadResponse(
+            state=None,
+            key=storage_key,
+            found=False,
+        )
+
+    def clear(self) -> None:
+        """Clear all storage."""
+        self._storage.clear()
+
 
 # =============================================================================
 # Eigenvectors (Soul Fingerprint)
@@ -316,7 +367,7 @@ class Citizen:
     - polynomial: The state machine (CitizenPolynomial)
     - eigenvectors: Soul fingerprint
     - cosmotechnics: Meaning-making frame
-    - memory: Holographic memory (MemoryPolynomialAgent)
+    - memory: Holographic memory (CitizenMemory)
     - opacity: Irreducible unknowable core
 
     From Morton: The citizen is a hyperobject—distributed in time/relation.
@@ -331,7 +382,7 @@ class Citizen:
 
     # Internal state (managed by polynomial)
     _phase: CitizenPhase = field(default=CitizenPhase.IDLE, repr=False)
-    _memory: MemoryPolynomialAgent | None = field(default=None, repr=False)
+    _memory: CitizenMemory | None = field(default=None, repr=False)
 
     # Identity
     id: str = field(default_factory=lambda: str(uuid4())[:8])
@@ -350,7 +401,7 @@ class Citizen:
     def __post_init__(self) -> None:
         """Initialize memory if not provided."""
         if self._memory is None:
-            self._memory = MemoryPolynomialAgent()
+            self._memory = CitizenMemory()
 
     @property
     def phase(self) -> CitizenPhase:
@@ -358,10 +409,10 @@ class Citizen:
         return self._phase
 
     @property
-    def memory(self) -> MemoryPolynomialAgent:
+    def memory(self) -> CitizenMemory:
         """The citizen's memory agent."""
         if self._memory is None:
-            self._memory = MemoryPolynomialAgent()
+            self._memory = CitizenMemory()
         return self._memory
 
     @property

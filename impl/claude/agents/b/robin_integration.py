@@ -4,27 +4,26 @@ Robin: Scientific Companion Agent
 A personalized scientific dialogue agent that composes:
 - K-gent (personalization layer)
 - HypothesisEngine (scientific reasoning)
-- HegelAgent (dialectic refinement)
+- Simple dialectic synthesis (thesis/antithesis → synthesis)
 
 Robin is NOT a simple composition (types don't align for >>).
 Instead, it's an orchestrating agent that:
 1. Personalizes scientific queries through K-gent
 2. Generates falsifiable hypotheses
-3. Applies dialectic synthesis to surface tensions
+3. Applies simple dialectic synthesis to surface tensions
+
+NOTE: H-gent (Hegel/Jung/Lacan) was archived 2025-12-16.
+Robin now uses a simplified inline dialectic implementation.
 
 The "composition" is at the conceptual level:
     Robin = Personalization → Hypothesis Generation → Dialectic Refinement
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Optional
 
 from agents.a.skeleton import AgentBehavior, AgentIdentity, AgentInterface, AgentMeta
-from agents.h import (
-    DialecticInput,
-    DialecticOutput,
-    HegelAgent,
-)
+from bootstrap.types import Agent
 from agents.k import (
     DialogueInput,
     DialogueMode,
@@ -36,8 +35,66 @@ from agents.k import (
     PersonaSeed,
     PersonaState,
 )  # kgent, query_persona intentionally not imported (available via agents.k)
-from bootstrap.types import Agent
 from runtime.base import AgentResult, Runtime
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Inline Dialectic Types (simplified from archived H-gent)
+# ─────────────────────────────────────────────────────────────────────────────
+@dataclass
+class DialecticInput:
+    """Input for dialectic synthesis."""
+    thesis: str
+    antithesis: str = ""
+    context: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class DialecticOutput:
+    """Output from dialectic synthesis."""
+    thesis: str
+    antithesis: str
+    synthesis: str
+    productive_tension: bool = False
+    sublation_notes: str = ""
+
+
+class SimpleDialecticAgent(Agent[DialecticInput, DialecticOutput]):
+    """
+    Simplified dialectic agent (replacement for archived HegelAgent).
+
+    Performs basic thesis/antithesis → synthesis without the full
+    Hegelian/Jungian/Lacanian machinery.
+    """
+
+    @property
+    def name(self) -> str:
+        return "SimpleDialectic"
+
+    async def invoke(
+        self, input: DialecticInput, runtime: Optional[Runtime] = None
+    ) -> DialecticOutput:
+        """Simple dialectic synthesis."""
+        # If no antithesis provided, generate one
+        antithesis = input.antithesis or f"Alternative view: not {input.thesis}"
+
+        # Simple synthesis: acknowledge both views
+        synthesis = f"Both '{input.thesis}' and '{antithesis}' contain partial truths."
+
+        # Detect productive tension (simple heuristic)
+        productive = bool(input.antithesis and input.antithesis != input.thesis)
+
+        return DialecticOutput(
+            thesis=input.thesis,
+            antithesis=antithesis,
+            synthesis=synthesis,
+            productive_tension=productive,
+            sublation_notes="Simplified dialectic (H-gent archived)",
+        )
+
+
+# Alias for backward compatibility
+HegelAgent = SimpleDialecticAgent
 
 from .hypothesis import (
     HypothesisEngine,

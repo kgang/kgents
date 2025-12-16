@@ -321,6 +321,7 @@ class TestEffectStress:
         assert cleanup_count[0] == 1000  # Dispose calls final cleanup
 
 
+@pytest.mark.skip(reason="ModalScope removed in data-architecture-rewrite")
 class TestModalScopeStress:
     """Stress tests for ModalScope deep nesting."""
 
@@ -564,20 +565,10 @@ class TestPerformanceBaselines:
         assert elapsed < 1.0, f"Subscriber notification too slow: {elapsed:.3f}s"
         assert count[0] == 100000  # 10 subscribers * 10000 updates
 
+    @pytest.mark.skip(reason="ModalScope removed in data-architecture-rewrite")
     def test_modal_scope_branch_performance(self) -> None:
         """ModalScope branching should be fast."""
-        from agents.d.modal_scope import ModalScope
-
-        root = ModalScope.create_root()
-
-        start = time.perf_counter()
-        for i in range(500):
-            branch = root.branch(f"b{i}", budget=0.01)
-            root.discard(branch)
-        elapsed = time.perf_counter() - start
-
-        # Should complete 500 branch/discard cycles in under 2 seconds
-        assert elapsed < 2.0, f"ModalScope branch/discard too slow: {elapsed:.3f}s"
+        pass
 
 
 # =============================================================================

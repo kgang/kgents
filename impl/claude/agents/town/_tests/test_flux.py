@@ -412,11 +412,11 @@ class TestMemoryIntegration:
             async for _ in flux.step():
                 pass
 
-        # Check if any memories were stored (via the memory store)
-        store = alice.memory._store
+        # Check if any memories were stored (via the memory storage)
+        storage = alice.memory._storage
         # Should have at least some state (even if not gossip specifically)
         # This tests the integration is wired correctly
-        assert store is not None
+        assert storage is not None
 
     def test_get_remembered_subjects_empty(self) -> None:
         """Get remembered subjects returns empty for new citizen."""
@@ -437,8 +437,8 @@ class TestMemoryIntegration:
         alice = env.get_citizen_by_name("Alice")
         assert alice is not None
 
-        # Manually add a gossip memory to Alice's store
-        alice.memory._store.state["gossip_1"] = {
+        # Manually add a gossip memory to Alice's storage
+        alice.memory._storage["gossip_1"] = {
             "type": "gossip",
             "subject": "Bob",
             "speaker": "Alice",

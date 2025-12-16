@@ -190,7 +190,11 @@ class TestPersonaQuery:
 
 
 class TestKgentMemoryIntegration:
-    """Test K-gent × M-gent integration."""
+    """Test K-gent × M-gent integration.
+
+    Note: HolographicMemory is a legacy stub with sync key-value semantics.
+    For semantic retrieval, use AssociativeMemory from the new M-gent architecture.
+    """
 
     @pytest.mark.asyncio
     async def test_dialogue_history_storage(self) -> None:
@@ -210,13 +214,14 @@ class TestKgentMemoryIntegration:
             )
         )
 
-        # Store in memory
-        await memory.store("design_discussion", dialogue1)
-        await memory.store("feature_discussion", dialogue2)
+        # Store in memory (sync API on legacy stub)
+        memory.store("design_discussion", dialogue1)
+        memory.store("feature_discussion", dialogue2)
 
-        # Retrieve by concept
-        retrieved = await memory.retrieve("patterns")
-        assert len(retrieved) > 0
+        # Retrieve by exact key (legacy stub uses key lookup, not semantic search)
+        retrieved = memory.retrieve("design_discussion")
+        assert retrieved is not None
+        assert retrieved.response is not None
 
     @pytest.mark.asyncio
     async def test_preference_memory(self) -> None:
@@ -229,12 +234,12 @@ class TestKgentMemoryIntegration:
             PersonaQuery(aspect="preference", topic="communication")
         )
 
-        # Store preference response
-        await memory.store("communication_prefs", response)
+        # Store preference response (sync API on legacy stub)
+        memory.store("communication_prefs", response)
 
-        # Should be retrievable
-        retrieved = await memory.retrieve("style")
-        assert len(retrieved) > 0
+        # Retrieve by exact key
+        retrieved = memory.retrieve("communication_prefs")
+        assert retrieved is not None
 
 
 def _make_trace(
@@ -347,22 +352,24 @@ class TestKgentNarrativeIntegration:
 
 
 class TestPersistentPersona:
-    """Test K-gent × D-gent integration (persistent persona)."""
+    """Test K-gent × D-gent integration (persistent persona).
+
+    Uses the NEW D-gent architecture with namespace/data_dir instead of path.
+    """
 
     @pytest.mark.asyncio
     async def test_persona_persistence(self, tmp_path: Path) -> None:
         """Test persistent persona state."""
-        path = tmp_path / "persona.json"
-
-        # Create persona with custom state
+        # Create persona with custom state using new API
         initial_state = PersonaState(
             seed=PersonaSeed(name="TestKent"),
             current_focus="testing",
         )
 
         agent = PersistentPersonaAgent(
-            path=path,
+            namespace="test_persona",
             initial_state=initial_state,
+            data_dir=tmp_path,
         )
 
         # Have dialogue
@@ -371,8 +378,11 @@ class TestPersistentPersona:
         )
         assert result.response
 
-        # Create new agent from same path
-        agent2 = PersistentPersonaAgent(path=path)
+        # Create new agent from same namespace
+        agent2 = PersistentPersonaAgent(
+            namespace="test_persona",
+            data_dir=tmp_path,
+        )
         await agent2.load_state()
 
         # State should be preserved
@@ -381,9 +391,10 @@ class TestPersistentPersona:
     @pytest.mark.asyncio
     async def test_preference_evolution(self, tmp_path: Path) -> None:
         """Test tracking preference changes over time."""
-        path = tmp_path / "persona_evolution.json"
-
-        agent = PersistentPersonaAgent(path=path)
+        agent = PersistentPersonaAgent(
+            namespace="test_persona_evolution",
+            data_dir=tmp_path,
+        )
 
         # Update preferences
         agent.update_preference(
