@@ -16,60 +16,8 @@ Tests all 9 commands from CLI Quick Wins Wave 4:
 import pytest
 
 
-class TestSparkline:
-    """Tests for kgents sparkline command."""
-
-    def test_help_flag(self) -> None:
-        """--help returns 0 and prints help."""
-        from protocols.cli.handlers.sparkline import cmd_sparkline
-
-        assert cmd_sparkline(["--help"]) == 0
-
-    def test_basic_invocation(self) -> None:
-        """Basic usage with numbers returns 0."""
-        from protocols.cli.handlers.sparkline import cmd_sparkline
-
-        assert cmd_sparkline(["1", "2", "3", "4", "5"]) == 0
-
-    def test_missing_input(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Missing input returns 1."""
-        import io
-        import sys
-
-        from protocols.cli.handlers.sparkline import cmd_sparkline
-
-        # Mock stdin to be a tty (no piped input)
-        monkeypatch.setattr(sys.stdin, "isatty", lambda: True)
-        assert cmd_sparkline([]) == 1
-
-    def test_render_sparkline(self) -> None:
-        """render_sparkline produces correct output."""
-        from protocols.cli.handlers.sparkline import render_sparkline
-
-        result = render_sparkline([1, 2, 3, 4, 5])
-        assert len(result) == 5
-        assert result[0] == "▁"  # Min
-        assert result[-1] == "█"  # Max
-
-    def test_single_value(self) -> None:
-        """Single value produces single bar."""
-        from protocols.cli.handlers.sparkline import render_sparkline
-
-        result = render_sparkline([42])
-        assert len(result) == 1
-
-    def test_empty_values(self) -> None:
-        """Empty list produces empty string."""
-        from protocols.cli.handlers.sparkline import render_sparkline
-
-        result = render_sparkline([])
-        assert result == ""
-
-    def test_json_mode(self) -> None:
-        """--json produces JSON output."""
-        from protocols.cli.handlers.sparkline import cmd_sparkline
-
-        assert cmd_sparkline(["--json", "1", "2", "3"]) == 0
+# Sparkline tests removed - handler archived in UI factoring cleanup
+# TODO: Rebuild sparkline with reactive primitives
 
 
 class TestChallenge:
@@ -362,8 +310,8 @@ class TestHollowRegistration:
         """All Wave 4 commands are registered in hollow.py."""
         from protocols.cli.hollow import COMMAND_REGISTRY
 
+        # Note: sparkline and dashboard archived in UI factoring cleanup
         wave4_commands = [
-            "sparkline",
             "challenge",
             "oblique",
             "constrain",
@@ -381,8 +329,8 @@ class TestHollowRegistration:
         """Wave 4 commands resolve to callables."""
         from protocols.cli.hollow import resolve_command
 
+        # Note: sparkline archived in UI factoring cleanup
         wave4_commands = [
-            "sparkline",
             "oblique",
             "constrain",
             "yes-and",

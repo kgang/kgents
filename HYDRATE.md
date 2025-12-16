@@ -76,9 +76,17 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ---
 
+## Seven Jewel Crown (Project KPIs)
+
+Atelier (Flux) • Coalition (Operad) • Brain (Sheaf) • Punchdrunk (Polynomial) • Domain (Tenancy) • Gestalt (Reactive) • **Gardener (N-Phase)**
+
+**Crown Completion**: 70% | **Target**: 80% by Q2 2025 | **New Mandate**: AGENTESE-first + strict autopoiesis
+
+---
+
 ## Status
 
-**Tests**: 18,331+ | **Mypy**: 0 | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux Atelier
+**Tests**: 18,141 | **Mypy**: 0 | **Web**: 9K LOC (post-cleanup) | Agents: A B C D E F G H I J K L M N O P Ψ Q R T U W Flux Atelier
 
 ---
 
@@ -96,4 +104,4 @@ cd impl/claude && uv run pytest -q && uv run mypy .
 
 ---
 
-*Lines: 80. Ceiling: 120.*
+*Lines: 90. Ceiling: 120.*

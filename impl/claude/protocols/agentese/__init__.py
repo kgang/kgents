@@ -92,6 +92,27 @@ from .aliases import (
     get_default_aliases_path,
 )
 
+# v3 Subscription System
+from .subscription import (
+    AgentesEvent,
+    DeliveryMode,
+    EventType,
+    OrderingMode,
+    Subscription,
+    SubscriptionConfig,
+    SubscriptionManager,
+    SubscriptionMetrics,
+    create_subscription_manager,
+)
+
+# v3 Aspect Pipelines
+from .pipeline import (
+    AspectPipeline,
+    PipelineResult,
+    PipelineStageResult,
+    create_pipeline,
+)
+
 # Phase 2: Context Resolvers
 from .contexts import (
     VALID_CONTEXTS,
@@ -511,4 +532,19 @@ __all__ = [
     "create_standard_aliases",
     "expand_aliases",
     "get_default_aliases_path",
+    # v3 Subscription System
+    "AgentesEvent",
+    "EventType",
+    "DeliveryMode",
+    "OrderingMode",
+    "SubscriptionConfig",
+    "Subscription",
+    "SubscriptionManager",
+    "SubscriptionMetrics",
+    "create_subscription_manager",
+    # v3 Aspect Pipelines
+    "AspectPipeline",
+    "PipelineResult",
+    "PipelineStageResult",
+    "create_pipeline",
 ]

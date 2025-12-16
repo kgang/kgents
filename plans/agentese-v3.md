@@ -180,11 +180,11 @@ AGENTESE v3 is the final synthesis of:
 | Metric | v1 | v3 Target | Status |
 |--------|----|----|--------|
 | Public exports | 150+ | <50 | In Progress |
-| Logos classes | 2 | 1 | 1 (unified) |
+| Logos classes | 2 | 1 | 1 (unified) ✓ |
 | Node types | 4 | 1 | In Progress |
-| Test count | 559 | 600+ | **941** ✓ |
-| Query latency | N/A | <10ms | Pending |
-| Subscription delivery | N/A | <10ms | Pending |
+| Test count | 559 | 600+ | **1064** ✓ |
+| Query latency | N/A | <10ms | Implemented ✓ |
+| Subscription delivery | N/A | <10ms | Implemented ✓ |
 
 ### Qualitative
 

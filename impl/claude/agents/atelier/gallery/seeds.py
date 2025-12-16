@@ -93,43 +93,39 @@ one step, then another""",
     },
     {
         "id": "seed003",
-        "artisan": "correspondent",
+        "artisan": "archivist",
         "commission_id": "seed-commission-003",
-        "form": "letter",
-        "content": """Dear Future Self,
+        "form": "synthesis",
+        "content": """Memory Archive: Morning Rituals
 
-I write to you from a Tuesday that feels ordinary,
-but I suspect you'll remember it differently.
+Fragments collected across time:
+- The same mug, different mornings
+- Light through kitchen windows, always surprising
+- The precise moment coffee becomes ritual
 
-The coffee is cooling beside me. Outside,
-someone is learning to parallel park—badly.
-These small things accumulate into a life.
+Patterns observed:
+- Mornings shape the day they precede
+- Small consistencies compound into identity
+- The unremarkable becomes remarkable through attention
 
-I hope you're still curious. I hope you still
-stop to notice how light falls through windows
-at certain hours. I hope the bad parking
-still makes you smile.
-
-Be gentle with yourself.
-
-— Your Present Self""",
+Filed under: quotidian, persistent, human""",
         "provenance": {
-            "interpretation": "A letter bridging temporal selves with tenderness",
+            "interpretation": "A synthesis of morning observations across time",
             "considerations": [
-                "Letters to future self often feel preachy",
-                "Specific details anchor abstract sentiment",
-                "Gentleness is underrated as advice",
+                "Archives need structure without rigidity",
+                "Patterns emerge from patient observation",
+                "The mundane deserves documentation",
             ],
             "choices": [
                 {
-                    "decision": "Include mundane details (parking, coffee)",
-                    "reason": "Specificity creates resonance that abstraction cannot",
-                    "alternatives": ["focus on achievements", "give advice"],
+                    "decision": "Use fragment format",
+                    "reason": "Memories are rarely complete narratives",
+                    "alternatives": ["chronological", "thematic essay"],
                 },
                 {
-                    "decision": "End with self-compassion",
-                    "reason": "We rarely tell ourselves to be gentle",
-                    "alternatives": ["encouragement", "instructions"],
+                    "decision": "End with filing metadata",
+                    "reason": "Reinforces the archive metaphor",
+                    "alternatives": ["summary", "reflection"],
                 },
             ],
             "inspirations": [],

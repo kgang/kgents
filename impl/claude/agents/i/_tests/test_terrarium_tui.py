@@ -472,56 +472,8 @@ class TestTerrariumApp:
 # =============================================================================
 
 
-class TestObserveHandler:
-    """Tests for observe CLI handler."""
-
-    def test_parse_args_empty(self) -> None:
-        """Test parsing empty args."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args([])
-
-        assert options == {}
-
-    def test_parse_args_compact(self) -> None:
-        """Test parsing --compact."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args(["--compact"])
-
-        assert options.get("compact") is True
-
-    def test_parse_args_simple(self) -> None:
-        """Test parsing --simple."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args(["--simple"])
-
-        assert options.get("simple") is True
-
-    def test_parse_args_focus(self) -> None:
-        """Test parsing --focus."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args(["--focus", "L"])
-
-        assert options.get("focus") == "L"
-
-    def test_parse_args_focus_missing(self) -> None:
-        """Test --focus without agent name."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args(["--focus"])
-
-        assert "error" in options
-
-    def test_parse_args_unknown(self) -> None:
-        """Test unknown option."""
-        from protocols.cli.handlers.observe import _parse_args
-
-        options = _parse_args(["--unknown"])
-
-        assert "error" in options
+# TestObserveHandler removed - observe.py archived in UI factoring cleanup
+# TODO: Rebuild observe handler with reactive primitives
 
 
 class TestTetherHandler:

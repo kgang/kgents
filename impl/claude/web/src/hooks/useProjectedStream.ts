@@ -15,13 +15,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type {
-  WidgetMeta,
-  StreamMeta,
-  ErrorInfo,
-  RefusalInfo,
-  WidgetStatus,
-} from '../reactive/schema';
+import type { WidgetMeta, WidgetStatus } from '../reactive/schema';
 import { WidgetMetaFactory } from '../reactive/schema';
 
 // =============================================================================
@@ -240,15 +234,9 @@ export function useProjectedStream<T>(config: StreamConfig): UseProjectedStreamR
     });
 
     // Complete event
-    es.addEventListener('complete', (e: MessageEvent) => {
-      try {
-        const envelope = JSON.parse(e.data);
-        setMeta(WidgetMetaFactory.done());
-        es.close();
-      } catch {
-        setMeta(WidgetMetaFactory.done());
-        es.close();
-      }
+    es.addEventListener('complete', (_e: MessageEvent) => {
+      setMeta(WidgetMetaFactory.done());
+      es.close();
     });
 
     // Error event from server

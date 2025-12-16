@@ -117,12 +117,10 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
-    "dashboard": "protocols.cli.handlers.dashboard:cmd_dashboard",
     "play": "protocols.cli.handlers.play:cmd_play",
     # ==========================================================================
     # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
     # ==========================================================================
-    "sparkline": "protocols.cli.handlers.sparkline:cmd_sparkline",
     "challenge": "protocols.cli.handlers.challenge:cmd_challenge",
     "oblique": "protocols.cli.handlers.oblique:cmd_oblique",
     "constrain": "protocols.cli.handlers.constrain:cmd_constrain",
