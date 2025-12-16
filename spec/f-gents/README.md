@@ -1,390 +1,764 @@
-# F-gents: Forge Agents
+# F-gents: Flow Agents
 
-**Genus**: F (Forge)
-**Theme**: Permanent artifact synthesis from natural language intent
-**Motto**: *"Intent crystallizes into artifact; contracts enable composition"*
+> *"The noun is a lie. There is only the rate of change."*
 
-## Overview
+**Genus**: F (Flow)
+**Theme**: Continuous interaction substrate for all agent modalities
+**Motto**: *"Static: A -> B. Dynamic: dA/dt -> dB/dt."*
 
-F-gents are agents that **transmute natural language intent into permanent software artifacts**. Unlike J-gents (ephemeral, runtime JIT compilation), F-gents produce **durable, versioned, composable agents** that persist in the ecosystem.
-
-The distinction:
-- **J-gents**: Improvisational jazz—ephemeral solutions compiled at runtime, discarded after use
-- **F-gents**: Classical composition—permanent structures engineered once, reused forever
-
-## Philosophy
-
-> "An artifact is intent made permanent; a contract is the promise it keeps."
-
-F-gents embody three core commitments:
-
-### 1. Intent-Driven Creation
-
-**Natural language is the source of truth.**
-
-The creator expresses *what* they want (purpose, behavior, constraints) in human terms. The F-gent translates this into executable form while preserving the original intent as documentation.
-
-```
-Intent → Analysis → Contract → Implementation → Artifact
-```
-
-### 2. Contract-First Design
-
-**Interfaces precede implementations.**
-
-Before generating agent code, F-gents synthesize the *contract*—the protocol that defines how the agent composes with others. This ensures artifacts are **composable by construction**.
-
-Contracts specify:
-- **Type signatures**: What inputs/outputs flow through the agent
-- **Behavioral invariants**: What guarantees the agent promises
-- **Semantic intent**: Why this interface exists (for human understanding)
-
-### 3. Living Artifacts
-
-**Artifacts evolve while preserving intent.**
-
-F-gents don't just generate code; they create **living documents** that interweave:
-- **Intent** (human-editable natural language)
-- **Contracts** (machine-verified protocols)
-- **Implementation** (auto-generated, frozen)
-- **Examples** (test cases driving validation)
-
-When the environment changes (APIs evolve, requirements shift), F-gents can **re-forge** artifacts from the original intent while adapting to new constraints.
-
-## Core Concepts
-
-### The Artifact: Agent Living Object (ALO)
-
-F-gents produce `.alo.md` files—hybrid documents that are simultaneously:
-- **Specification**: Human-readable intent and constraints
-- **Contract**: Machine-readable interface definitions
-- **Implementation**: Executable code
-- **Test Suite**: Validation examples
-
-Structure:
-```markdown
----
-# Metadata (versioning, lineage, status)
 ---
 
-# 1. THE INTENT (Human/Architect Vision)
-Natural language description of purpose, tone, directives
+## Purpose
 
-# 2. THE CONTRACT (Interface & Invariants)
-- Type signatures
-- Behavioral guarantees
-- Validation rules
+F-gents provide the **unified flow infrastructure** for continuous agent interaction:
 
-# 3. THE EXAMPLES (Test-Driven Validation)
-Input/output pairs demonstrating correct behavior
+1. **Chat**: Streaming conversation with context management
+2. **Research**: Tree-structured exploration with branch/merge
+3. **Collaboration**: Multi-agent contribution with blackboard patterns
 
-# 4. THE IMPLEMENTATION (Auto-Generated)
-WARNING: DO NOT EDIT DIRECTLY
-Code synthesized by F-gent from Intent + Contract
+**Why this needs to exist** (Tasteful principle):
+
+Without F-gents, agents are corpses that only move when poked. Modern AI workflows demand continuous interaction:
+
+- Chat requires streaming responses with context windows
+- Deep research requires exploring hypothesis trees
+- Multi-agent projects require shared state and contribution tracking
+
+These are not separate systems. They are **configurations of the same underlying flow substrate**.
+
+---
+
+## The Core Insight
+
+All continuous agent interaction shares the same categorical structure:
+
+```
+Flow: Agent[A, B] -> Agent[Flow[A], Flow[B]]
+
+Where Flow[T] = AsyncIterator[T]
 ```
 
-### The Forge Loop
+The three modalities (Chat, Research, Collaboration) are **polynomial configurations** of this functor, not separate implementations.
 
-F-gents iterate through phases to crystallize artifacts:
+| Mode | Description |
+|------|-------------|
+| **Static** | `Agent: A -> B` - a point transformation (invoke once) |
+| **Dynamic** | `Flow(Agent): dA/dt -> dB/dt` - continuous flow (stream processing) |
 
-#### Phase 1: Understand (Intent Analysis)
-**Morphism**: `NaturalLanguage → (Intent, Constraints, Dependencies)`
+---
 
-- Parse user request for semantic meaning
-- Query **L-gent** (if exists) for similar artifacts to reuse/compose
-- Extract explicit and implicit requirements
-- Identify dependencies on external systems
+## Formal Definition
 
-#### Phase 2: Contract (Interface Synthesis)
-**Morphism**: `(Intent, Dependencies) → Contract`
+### The Flow Polynomial
 
-- Synthesize type signatures for inputs/outputs
-- Define behavioral invariants (idempotency, latency, error handling)
-- Specify composition protocols (how this agent connects to others)
-- **Key insight**: Ontology alignment happens *before* code generation
+```python
+@dataclass(frozen=True)
+class FlowPolynomial(PolyAgent[FlowState, FlowInput, FlowOutput]):
+    """
+    Polynomial functor for flow agents.
 
-#### Phase 3: Prototype (Code Generation)
-**Morphism**: `(Intent, Contract) → SourceCode`
+    Positions (states): {DORMANT, STREAMING, BRANCHING, CONVERGING, COLLAPSED}
+    Directions: State-dependent valid inputs
+    Transition: (State, Input) -> (State, Output)
 
-- Generate implementation satisfying contract
-- Static analysis: Parsing, type checking, linting
-- Security scan via **G-gent** (malicious patterns, vulnerabilities)
-- If validation fails → iterate (max 5 attempts)
-
-#### Phase 4: Validate (Test-Driven Forging)
-**Morphism**: `(SourceCode, Examples) → (Verdict, Evidence)`
-
-- Execute implementation against test cases from Examples
-- Compare outputs to expected results
-- If mismatch → self-heal: analyze error, regenerate code
-- Convergence detection: If stuck in loop, escalate to human
-
-#### Phase 5: Crystallize (Artifact Finalization)
-**Morphism**: `(Intent, Contract, SourceCode) → Artifact`
-
-- Lock implementation into `.alo.md` file
-- Generate artifact hash (integrity verification)
-- Register with **L-gent** (librarian) for discoverability
-- Notify **C-gent** (composer) that new tool is available
-
-### Drift Detection & Re-Forging
-
-Artifacts are permanent, but environments change.
-
-**Drift** occurs when:
-- External APIs change structure
-- Runtime errors emerge in production
-- Contract violations detected by monitoring
-
-**Re-Forging** workflow:
-1. **G-gent** flags artifact as "brittle" due to recurring failures
-2. F-gent retrieves original intent from `.alo.md`
-3. F-gent analyzes error logs + new environment
-4. F-gent enters Forge Loop starting at Phase 2 (Contract may need updating)
-5. New artifact version generated: `v1.0.2 → v1.0.3`
-6. Human approval required if contract changes (breaking change)
-
-## Relationship to Bootstrap Agents
-
-F-gents are **derivable** from bootstrap primitives:
-
-| F-gent Capability | Bootstrap Agent | How |
-|-------------------|-----------------|-----|
-| Intent parsing | **Ground** | Natural language grounded in syntax/semantics |
-| Contract synthesis | **Compose** | Interface = composition protocol |
-| Code generation | **Fix** | Iterative refinement until convergence |
-| Validation | **Contradict** | Tests contradict implementation claims |
-| Quality judgment | **Judge** | Principles (tasteful, ethical, composable) |
-| Dialectical refinement | **Sublate** | Thesis (intent) + Antithesis (constraints) → Synthesis (artifact) |
-
-F-gents add no new irreducibles—they orchestrate bootstrap agents into a generative pipeline.
-
-## Relationship to Other Genera
-
-### J-gents (Just-in-Time Intelligence)
-
-**Complementary opposites:**
-- **J-gent**: Ephemeral agent compiled at runtime, discarded after use
-- **F-gent**: Permanent agent forged once, reused indefinitely
-
-**When to use which:**
-- Use **J-gent** for one-off tasks, exploratory debugging, dynamic environments
-- Use **F-gent** for reusable tools, production systems, ecosystem building
-
-**Hybrid pattern**: F-gent can create a *template* that J-gent instantiates with runtime parameters.
-
-### E-gents (Evolution)
-
-F-gents create artifacts; **E-gents evolve them:**
-- F-gent: Intent → Artifact (initial creation)
-- E-gent: Artifact(v1) → Artifact(v2) (iterative improvement)
-
-**Integration**: E-gents use F-gent to re-generate improved implementations from updated intent.
-
-### D-gents (Data)
-
-**F-gents leverage D-gents for lineage tracking:**
-- **PersistentAgent**: Store artifact history (all versions)
-- **VectorAgent**: Semantic search over artifact library (find similar agents)
-- **GraphAgent**: Dependency graph (which artifacts compose with which)
-
-### C-gents (Category Theory)
-
-**Contracts ARE morphisms:**
-- F-gent ensures every artifact is a well-typed morphism `A → B`
-- Contracts specify composition laws (associativity, identity)
-- F-gent validates that artifact satisfies functor/monad laws (if applicable)
-
-### H-gents (Hegelian Dialectic)
-
-**Forging is dialectical:**
-- **Thesis**: User intent (what they want)
-- **Antithesis**: Environmental constraints (what's possible)
-- **Synthesis**: Artifact (reconciliation of desire and reality)
-
-When intent and constraints conflict, F-gent **holds the tension** and requests human clarification (doesn't force invalid synthesis).
-
-### L-gent (Librarian - Future)
-
-**F-gent is the library's author:**
-- F-gent creates artifacts → L-gent catalogs them
-- L-gent enables discovery → F-gent reuses existing artifacts
-- Prevents duplication: L-gent searches before F-gent forges
-
-### K-gent (Kent Simulacra)
-
-**K-gent can request F-gent to build tools:**
-- K-gent: "I need an agent that summarizes papers"
-- F-gent: *Forges SummarizerAgent from intent*
-- K-gent: *Uses new tool in workflow*
-
-## Composability
-
-F-gents ensure artifacts are **composable by construction**:
-
-### Contract-First Composition
-
-Before forging Agent B that depends on Agent A, F-gent:
-1. Reads Agent A's contract (output type, guarantees)
-2. Synthesizes Agent B's contract to align (input type matches A's output)
-3. Generates composition glue if needed (adapters, transformers)
-
-### The Handshake Pattern
-
-When F-gent creates two agents that must communicate:
-```yaml
-# Forged by F-gent
-contract_name: "DataPipeline"
-
-agents:
-  - name: "Fetcher"
-    output_type: "RawData"
-    guarantees: ["idempotent", "timeout<5s"]
-
-  - name: "Processor"
-    input_type: "RawData"  # Matches Fetcher output
-    output_type: "CleanData"
-    guarantees: ["deterministic", "error-transparent"]
-
-composition:
-  pipeline: "Fetcher >> Processor"
-  validation: "output type-checks, all guarantees preserved"
+    This captures the essential structure of all flow modalities:
+    - Chat: Primarily STREAMING with context management
+    - Research: STREAMING -> BRANCHING -> CONVERGING cycles
+    - Collaboration: STREAMING with multi-agent injection
+    """
+    positions: frozenset[FlowState]
+    directions: Callable[[FlowState], frozenset[FlowInput]]
+    transition: Callable[[FlowState, FlowInput], tuple[FlowState, FlowOutput]]
 ```
 
-## Success Criteria
+### Flow States
 
-An F-gent artifact is well-forged if:
+```python
+class FlowState(Enum):
+    """Lifecycle states of a flow agent."""
+    DORMANT = "dormant"       # Created, not started (invoke works directly)
+    STREAMING = "streaming"   # Processing continuous input
+    BRANCHING = "branching"   # Exploring alternatives (research mode)
+    CONVERGING = "converging" # Merging branches (research mode)
+    DRAINING = "draining"     # Source exhausted, flushing output
+    COLLAPSED = "collapsed"   # Entropy depleted or error
+```
 
-- ✓ **Intent Preserved**: Natural language intent matches generated behavior
-- ✓ **Contract Explicit**: Interface fully specified (types, invariants, semantics)
-- ✓ **Tests Pass**: All examples validate correctly
-- ✓ **Composable**: Artifact is a valid morphism in C-gent category
-- ✓ **Discoverable**: Registered with L-gent for ecosystem reuse
-- ✓ **Versioned**: Lineage tracked, breaking changes flagged
-- ✓ **Re-Forgeable**: Can regenerate from intent if environment changes
+### State Transition Diagram
+
+```
+                    +-> BRANCHING --+
+                    |               |
+                    |               v
+DORMANT --start--> STREAMING ------+-> CONVERGING
+    ^               |   |                  |
+    |               |   +------------------+
+    +--stop---------+
+                    |
+                    v
+                DRAINING --> COLLAPSED
+```
+
+---
+
+## The Three Flow Modalities
+
+### Modality 1: Chat Flow
+
+Streaming conversation with context window management.
+
+**Key characteristics**:
+- Sequential message/response pairs
+- Context window with summarization at threshold
+- No branching (linear history)
+
+**Configuration**:
+```python
+chat_config = FlowConfig(
+    modality="chat",
+    context_window=128_000,           # Token limit
+    summarization_threshold=0.8,      # Summarize at 80% capacity
+    context_strategy="sliding",       # sliding | summarize | forget
+    turn_timeout=60.0,               # Max seconds per turn
+)
+```
+
+**Usage**:
+```python
+chat_flow = Flow.lift(dialogue_agent, chat_config)
+
+async for response in chat_flow.start(user_messages):
+    print(f"Assistant: {response.text}")
+```
+
+**State mapping**:
+| State | Chat Meaning |
+|-------|--------------|
+| DORMANT | Waiting for first message |
+| STREAMING | Generating response tokens |
+| DRAINING | User ended conversation |
+| COLLAPSED | Error or context overflow |
+
+### Modality 2: Research Flow (Tree of Thought)
+
+Structured exploration with branching hypotheses.
+
+**Key characteristics**:
+- Hypothesis generation (branching)
+- Parallel exploration of alternatives
+- Synthesis of insights (merging)
+- Pruning of unpromising branches
+
+**Configuration**:
+```python
+research_config = FlowConfig(
+    modality="research",
+    max_branches=5,                   # Max parallel hypotheses
+    depth_limit=4,                    # Max exploration depth
+    branching_threshold=0.3,          # Branch if uncertainty > 30%
+    pruning_threshold=0.2,            # Prune branches below 20% promise
+    merge_strategy="weighted_vote",   # best_first | weighted_vote | synthesis
+)
+```
+
+**Usage**:
+```python
+research_flow = Flow.lift(hypothesis_agent, research_config)
+
+question = "What are the implications of quantum error correction?"
+
+async for result in research_flow.start([question]):
+    match result.type:
+        case "branch":
+            print(f"Exploring: {result.hypothesis}")
+        case "insight":
+            print(f"Found: {result.finding} (confidence: {result.confidence})")
+        case "merge":
+            print(f"Synthesized: {result.synthesis}")
+```
+
+**State mapping**:
+| State | Research Meaning |
+|-------|-----------------|
+| DORMANT | Waiting for question |
+| STREAMING | Processing current hypothesis |
+| BRANCHING | Generating alternative hypotheses |
+| CONVERGING | Synthesizing insights from branches |
+| COLLAPSED | Depth limit reached or question answered |
+
+### Modality 3: Collaboration Flow (Blackboard)
+
+Multi-agent contribution with shared state.
+
+**Key characteristics**:
+- Multiple agents contribute to shared "blackboard"
+- Read/write access control per agent
+- Consensus mechanisms for conflicts
+- Round-based or continuous contribution
+
+**Configuration**:
+```python
+collab_config = FlowConfig(
+    modality="collaboration",
+    agents=["analyst", "critic", "synthesizer"],
+    blackboard_capacity=100,          # Max items on board
+    contribution_order="round_robin", # round_robin | priority | free
+    consensus_threshold=0.67,         # 2/3 agreement for decisions
+    conflict_strategy="vote",         # vote | moderator | timestamp
+    round_limit=10,                   # Max contribution rounds
+)
+```
+
+**Usage**:
+```python
+collab_flow = Flow.lift_multi(agent_pool, collab_config)
+
+problem = "Design a sustainable city transportation system"
+
+async for contribution in collab_flow.start([problem]):
+    print(f"[{contribution.agent}]: {contribution.text}")
+
+    if contribution.type == "consensus":
+        print(f"DECISION: {contribution.decision}")
+```
+
+**State mapping**:
+| State | Collaboration Meaning |
+|-------|----------------------|
+| DORMANT | Waiting for problem statement |
+| STREAMING | Agents contributing |
+| CONVERGING | Building consensus |
+| COLLAPSED | Consensus reached or round limit |
+
+---
+
+## The Flow Operad
+
+The operad defines valid composition patterns for flow operations.
+
+```python
+FLOW_OPERAD = Operad(
+    operations={
+        # === Universal Operations ===
+        "start": Operation(
+            arity=1,
+            signature="Agent[A,B] -> Flow[A] -> Flow[B]",
+            compose=start_compose,
+        ),
+        "stop": Operation(
+            arity=0,
+            signature="Flow[_] -> ()",
+            compose=stop_compose,
+        ),
+        "perturb": Operation(
+            arity=1,
+            signature="(Flow[A], A) -> B",
+            compose=perturb_compose,
+        ),
+
+        # === Chat Operations ===
+        "turn": Operation(
+            arity=1,
+            signature="Message -> Response",
+            compose=turn_compose,
+        ),
+        "summarize": Operation(
+            arity=1,
+            signature="Context -> CompressedContext",
+            compose=summarize_compose,
+        ),
+        "inject_context": Operation(
+            arity=1,
+            signature="Context -> Flow[_]",
+            compose=inject_compose,
+        ),
+
+        # === Research Operations ===
+        "branch": Operation(
+            arity=1,
+            signature="Hypothesis -> [Hypothesis]",
+            compose=branch_compose,
+        ),
+        "merge": Operation(
+            arity=2,
+            signature="(Hypothesis, Hypothesis) -> Synthesis",
+            compose=merge_compose,
+        ),
+        "prune": Operation(
+            arity=1,
+            signature="[Hypothesis] -> [Hypothesis]",
+            compose=prune_compose,
+        ),
+        "evaluate": Operation(
+            arity=1,
+            signature="Hypothesis -> Score",
+            compose=evaluate_compose,
+        ),
+
+        # === Collaboration Operations ===
+        "post": Operation(
+            arity=1,
+            signature="Contribution -> Blackboard",
+            compose=post_compose,
+        ),
+        "read": Operation(
+            arity=1,
+            signature="Query -> [Contribution]",
+            compose=read_compose,
+        ),
+        "vote": Operation(
+            arity=2,
+            signature="(Proposal, Agents) -> Decision",
+            compose=vote_compose,
+        ),
+        "moderate": Operation(
+            arity=1,
+            signature="[Contribution] -> Resolution",
+            compose=moderate_compose,
+        ),
+    },
+    laws=[
+        # Identity: start(Id) = Id_Flow
+        OpLaw("start_identity", "start(Id) ≅ Id_Flow"),
+        # Composition: start(f >> g) = start(f) >> start(g)
+        OpLaw("start_composition", "start(f >> g) ≅ start(f) >> start(g)"),
+        # Perturbation: perturb during STREAMING injects, never bypasses
+        OpLaw("perturbation_integrity", "perturb(flowing, x) = inject_priority(x)"),
+        # Branch/Merge coherence: merge(branch(h)) preserves semantic essence
+        OpLaw("branch_merge", "merge(branch(h)) ⊇ essence(h)"),
+    ]
+)
+```
+
+---
+
+## Integration
+
+### AGENTESE Paths
+
+F-gent introduces new paths under `self.flow.*`:
+
+```
+self.flow.state        - Current FlowState (DORMANT, STREAMING, etc.)
+self.flow.entropy      - Remaining entropy budget
+self.flow.context      - Current context window contents
+self.flow.context_used - Tokens used in context
+self.flow.modality     - Current modality (chat, research, collaboration)
+
+# Chat-specific
+self.flow.turn         - Current turn number
+self.flow.history      - Conversation history
+
+# Research-specific
+self.flow.tree         - Current hypothesis tree
+self.flow.branch       - Current branch path
+self.flow.depth        - Current exploration depth
+
+# Collaboration-specific
+self.flow.board        - Current blackboard state
+self.flow.contributors - Active contributing agents
+self.flow.round        - Current contribution round
+```
+
+### Composition with Existing Agents
+
+F-gent composes naturally with other gents:
+
+| Pattern | Composition | Result |
+|---------|-------------|--------|
+| Personalized streaming | `K >> Flow` | K-gent persona in continuous flow |
+| Persistent flow state | `Symbiont(Flow)` | Flow with D-gent memory |
+| Traced flow history | `Flow >> Witness` | N-gent traces all flow events |
+| Town simulation | `TownFlux` | Flow specialized for Agent Town |
+
+---
+
+## FlowConfig
+
+```python
+@dataclass
+class FlowConfig:
+    """Configuration for flow behavior."""
+
+    # === Modality Selection ===
+    modality: Literal["chat", "research", "collaboration"] = "chat"
+
+    # === Universal Config ===
+    entropy_budget: float = 1.0          # Initial budget (void.entropy)
+    entropy_decay: float = 0.01          # Per-event decay
+    max_events: int | None = None        # Hard cap (None = unlimited)
+
+    # === Backpressure ===
+    buffer_size: int = 100               # Output buffer size
+    drop_policy: Literal["block", "drop_oldest", "drop_newest"] = "block"
+
+    # === Feedback (Ouroboros) ===
+    feedback_fraction: float = 0.0       # 0.0 = no feedback, 1.0 = full ouroboros
+    feedback_transform: Callable[[B], A] | None = None
+
+    # === Chat-Specific ===
+    context_window: int = 128_000        # Token limit
+    summarization_threshold: float = 0.8 # Trigger summarization at N%
+    context_strategy: Literal["sliding", "summarize", "forget"] = "summarize"
+    turn_timeout: float = 60.0           # Seconds
+
+    # === Research-Specific ===
+    max_branches: int = 5                # Max parallel hypotheses
+    depth_limit: int = 4                 # Max exploration depth
+    branching_threshold: float = 0.3     # Uncertainty threshold to branch
+    pruning_threshold: float = 0.2       # Promise threshold to prune
+    merge_strategy: Literal["best_first", "weighted_vote", "synthesis"] = "synthesis"
+
+    # === Collaboration-Specific ===
+    agents: list[str] = field(default_factory=list)
+    blackboard_capacity: int = 100
+    contribution_order: Literal["round_robin", "priority", "free"] = "round_robin"
+    consensus_threshold: float = 0.67
+    conflict_strategy: Literal["vote", "moderator", "timestamp"] = "vote"
+    round_limit: int = 10
+
+    # === Observability ===
+    agent_id: str | None = None
+    emit_pheromones: bool = True
+    trace_enabled: bool = True
+```
+
+---
+
+## The Perturbation Principle
+
+**Critical invariant**: `invoke()` on a STREAMING flow must never bypass the stream.
+
+### The Problem
+
+```python
+# BAD: Bypass causes state schizophrenia
+async def invoke(self, x):
+    if self._state == FlowState.STREAMING:
+        return await self.inner.invoke(x)  # Bypasses stream state!
+```
+
+If the agent has Symbiont memory, bypassing means:
+- State loaded twice (once by flow, once by invoke)
+- Race conditions on state updates
+- Inconsistent memory ("schizophrenia")
+
+### The Solution
+
+```python
+# GOOD: Perturbation injects into stream
+async def invoke(self, x):
+    if self._state == FlowState.STREAMING:
+        future = asyncio.Future()
+        await self._perturbation_queue.put((x, future))
+        return await future  # Goes through stream
+    else:
+        return await self.inner.invoke(x)  # Direct when DORMANT
+```
+
+**Perturbation flow**:
+1. Input wrapped with Future
+2. Input queued with high priority
+3. Stream processor handles it in order
+4. Result returned via Future
+
+This preserves **State Integrity**: Symbiont-compatible flows work correctly.
+
+---
+
+## The Ouroboros: Self-Feeding Flow
+
+True autonomy requires recurrence - output affects future input.
+
+```python
+config = FlowConfig(
+    feedback_fraction=0.3,              # 30% of outputs feed back
+    feedback_transform=lambda r: r.as_context(),
+)
+```
+
+| Fraction | Behavior | Use Case |
+|----------|----------|----------|
+| 0.0 | Pure reactive | Simple stream processing |
+| 0.1-0.3 | Light context | Conversational memory |
+| 0.5 | Equal internal/external | Dialectician archetype |
+| 1.0 | Full ouroboros | **DANGER**: Solipsism! |
+
+**Anti-pattern**: `feedback_fraction=1.0` creates closed loop that only talks to itself.
+
+---
+
+## Flow Topology: Physics of Continuous Agents
+
+Agents are **topological knots in event streams**, not static architecture.
+
+| Metric | Meaning | Calculation |
+|--------|---------|-------------|
+| **Pressure** | Queue depth (backlog) | `len(input_queue) + len(output_queue)` |
+| **Flow** | Throughput | `events_processed / elapsed_time` |
+| **Turbulence** | Error rate | `errors / events_processed` |
+| **Temperature** | Token metabolism | Integrated from void/entropy |
+
+---
+
+## Living Pipelines
+
+Flow agents compose via `|` (pipe):
+
+```python
+# Static composition (discrete)
+static_pipeline = agent_a >> agent_b >> agent_c
+result = await static_pipeline.invoke(input)
+
+# Living composition (continuous)
+living_pipeline = flow_a | flow_b | flow_c
+
+async for result in living_pipeline.start(source):
+    process(result)
+```
+
+### Pipeline Implementation
+
+```python
+@dataclass
+class FlowPipeline(Generic[A, B]):
+    """Chain of FlowAgents forming a living pipeline."""
+
+    stages: list[FlowAgent]
+
+    async def start(self, source: AsyncIterator[A]) -> AsyncIterator[B]:
+        current = source
+        for stage in self.stages:
+            current = stage.start(current)
+        async for result in current:
+            yield result
+
+    def __or__(self, other: FlowAgent) -> "FlowPipeline":
+        return FlowPipeline(self.stages + [other])
+```
+
+---
+
+## Functor Laws
+
+Flow preserves categorical structure:
+
+```python
+# Identity Preservation
+Flow(Id) ≅ Id_Flow  # Identity agent maps Flow[A] -> Flow[A]
+
+# Composition Preservation
+Flow(f >> g) ≅ Flow(f) >> Flow(g)
+```
+
+**Proof sketch**:
+- **Identity**: `Flow(Id).start(source)` yields each element unchanged
+- **Composition**: Processing through `Flow(f >> g)` equivalent to `Flow(f)` then `Flow(g)`
+
+---
+
+## Relationship to Bootstrap
+
+**Flux is derived from Fix**, not an irreducible:
+
+```python
+Flow(agent) ≅ Fix(
+    transform=lambda stream: map_async(agent.invoke, stream),
+    equality_check=lambda s1, s2: s1.exhausted and s2.exhausted
+)
+```
+
+Flow is **foundational infrastructure** but not a bootstrap agent.
+
+---
+
+## Examples
+
+### Example 1: Simple Chat
+
+```python
+from agents.f import Flow, FlowConfig
+
+config = FlowConfig(modality="chat", context_window=8000)
+chat = Flow.lift(assistant_agent, config)
+
+async for response in chat.start(user_messages):
+    print(response.text)
+```
+
+### Example 2: Deep Research
+
+```python
+config = FlowConfig(
+    modality="research",
+    max_branches=4,
+    depth_limit=3,
+    merge_strategy="synthesis",
+)
+research = Flow.lift(hypothesis_agent, config)
+
+async for insight in research.start(["How does consciousness emerge?"]):
+    if insight.confidence > 0.8:
+        print(f"High-confidence finding: {insight.text}")
+```
+
+### Example 3: Multi-Agent Brainstorm
+
+```python
+agents = {"analyst": analyst_agent, "critic": critic_agent, "synth": synth_agent}
+
+config = FlowConfig(
+    modality="collaboration",
+    agents=list(agents.keys()),
+    consensus_threshold=0.67,
+)
+collab = Flow.lift_multi(agents, config)
+
+async for contribution in collab.start(["Design an AI safety protocol"]):
+    print(f"[{contribution.agent}] {contribution.text}")
+```
+
+---
 
 ## Anti-Patterns
 
-F-gents must **never**:
+### 1. Timer-Driven Zombies
 
-1. ❌ Generate code without synthesizing contract first
-2. ❌ Forge artifacts that duplicate existing ones (check L-gent first)
-3. ❌ Hide failures in silent retry loops (expose errors, request human input)
-4. ❌ Create non-composable artifacts (all must be valid morphisms)
-5. ❌ Discard original intent (must preserve in artifact)
-6. ❌ Auto-deploy breaking changes (require human approval)
-7. ❌ Generate artifacts without test cases
+```python
+# BAD: Polling
+while True:
+    await asyncio.sleep(1.0)  # Zombie twitching
+
+# GOOD: Event-driven
+async for event in source:
+    yield await process(event)
+```
+
+### 2. Void Output (The Sink Problem)
+
+```python
+# BAD: Output vanishes
+async def start(self, source) -> None:
+    async for event in source:
+        result = await self.invoke(event)  # Where does result go?
+
+# GOOD: Output flows
+async def start(self, source) -> AsyncIterator[B]:
+    async for event in source:
+        yield await self.invoke(event)
+```
+
+### 3. Bypass Invocation
+
+```python
+# BAD: Schizophrenia risk
+if flowing:
+    return await self.inner.invoke(x)  # Bypasses stream
+
+# GOOD: Perturbation
+if flowing:
+    return await self._perturb(x)  # Goes through stream
+```
+
+### 4. Unbounded Context Growth
+
+```python
+# BAD: Context grows forever
+context.append(new_message)  # Eventually exceeds window
+
+# GOOD: Managed context
+if context_used > threshold * context_window:
+    context = await summarize(context)
+```
+
+### 5. Treating Modalities as Separate Systems
+
+```python
+# BAD: Separate implementations
+class ChatFlow: ...
+class ResearchFlow: ...
+class CollabFlow: ...
+
+# GOOD: Configuration of same substrate
+Flow.lift(agent, FlowConfig(modality="chat"))
+Flow.lift(agent, FlowConfig(modality="research"))
+Flow.lift(agent, FlowConfig(modality="collaboration"))
+```
+
+---
+
+## Implementation
+
+```
+impl/claude/agents/f/
+├── __init__.py
+├── flow.py              # FlowAgent, FlowPolynomial
+├── config.py            # FlowConfig
+├── state.py             # FlowState
+├── operad.py            # FLOW_OPERAD
+├── perturbation.py      # Perturbation handling
+├── context.py           # Context window management
+├── modalities/
+│   ├── chat.py          # Chat-specific behavior
+│   ├── research.py      # Tree-of-thought behavior
+│   └── collaboration.py # Blackboard behavior
+├── pipeline.py          # FlowPipeline, | operator
+├── sources/
+│   ├── events.py        # Event-driven sources
+│   ├── periodic.py      # Timer sources (use sparingly)
+│   └── merged.py        # Multi-source merging
+└── _tests/
+```
+
+**Migration**: Existing `agents/flux/` and `agents/town/flux.py` will import from `agents/f/`.
+
+---
 
 ## Specifications
 
 | Document | Description |
 |----------|-------------|
-| [forge.md](forge.md) | The Forge Loop: Understand → Contract → Prototype → Validate → Crystallize |
-| [contracts.md](contracts.md) | Contract synthesis, ontology alignment, composition protocols |
-| [artifacts.md](artifacts.md) | ALO format, versioning, lineage, re-forging |
-| [integration.md](integration.md) | Ecosystem integration (L-gent, E-gent, J-gent) |
+| [chat.md](chat.md) | Chat flow specification (context management, turns) |
+| [research.md](research.md) | Research flow specification (tree of thought) |
+| [collaboration.md](collaboration.md) | Collaboration flow specification (blackboard) |
+| [context.md](context.md) | Context window management strategies |
+| [perturbation.md](perturbation.md) | Perturbation protocol details |
+
+---
 
 ## Design Principles Alignment
 
 ### Tasteful
-F-gents justify artifact existence via L-gent search (avoid duplication).
+Flow provides the minimal substrate for continuous interaction. Three modalities, one implementation.
 
 ### Curated
-F-gents produce artifacts that earn their place through validation and reuse.
+Consolidates scattered Flux specs into single coherent F-gent. Removes redundant Forge specs.
 
 ### Ethical
-Contracts make guarantees explicit (transparency, no hidden behavior).
+Entropy bounds prevent runaway computation. Context management respects user privacy.
 
 ### Joy-Inducing
-Natural language intent makes creation delightful (no boilerplate drudgery).
+Living pipelines feel alive. Streaming responses feel immediate.
 
 ### Composable
-**Contract-first design ensures composability by construction.**
+Functor laws hold. `|` operator enables pipeline composition. Perturbation preserves state.
 
 ### Heterarchical
-F-gents don't own artifacts—they author them for ecosystem use. No fixed hierarchy.
+Both `invoke()` (discrete) and `start()` (continuous) coexist via perturbation principle.
 
 ### Generative
-Intent is the compressed spec; artifact is the generated implementation. **This is the exemplar of generative design.**
-
-## Example: Forging a Summarizer Agent
-
-**User Intent**:
-> "I need an agent that summarizes technical papers for executive reading. Concise, objective, no jargon. Output JSON with title, key findings, confidence score."
-
-**F-gent Forge Loop**:
-
-1. **Understand**:
-   - Intent: Summarization agent
-   - Constraints: Executive audience (concise), objective tone, structured output
-   - Dependencies: Input (paper text/PDF), Output (JSON)
-
-2. **Contract**:
-   ```python
-   # Synthesized by F-gent
-   class SummaryOutput(TypedDict):
-       title: str
-       key_findings: list[str]
-       confidence_score: float  # 0.0-1.0
-
-   class SummarizerAgent(Agent[str, SummaryOutput]):
-       """
-       Summarize technical papers for executive reading.
-
-       Guarantees:
-       - Output length < 500 words
-       - No hallucinations (citations must exist in input)
-       - Confidence score reflects certainty
-       """
-   ```
-
-3. **Prototype**:
-   - Generate implementation using LLM + prompt engineering
-   - Static checks: Parsing, type validation
-   - G-gent security scan: No malicious patterns
-
-4. **Validate**:
-   - Run against example papers (test cases)
-   - Verify output length < 500 words
-   - Check JSON schema compliance
-   - If failures → iterate (refine prompt, adjust logic)
-
-5. **Crystallize**:
-   - Lock into `summarizer_v1.alo.md`
-   - Register with L-gent under tags: [summarization, executive, papers]
-   - Notify C-gent: SummarizerAgent available for composition
-
-**Result**: Permanent, reusable artifact ready for ecosystem integration.
-
----
-
-## Vision
-
-F-gents transform agent creation from **artisanal crafting** to **intentional forging**:
-
-- **Traditional**: Write code manually, debug, test, document separately
-- **F-gents**: Express intent, get validated artifact, compose with ecosystem
-
-By making **contracts first-class**, F-gents ensure artifacts are:
-1. **Interoperable** (type-safe composition)
-2. **Transparent** (guarantees explicit)
-3. **Reusable** (discoverable via L-gent)
-4. **Evolvable** (re-forgeable from intent)
-
-They are the **foundry of the agent ecosystem**—where raw intent becomes refined capability.
+This spec generates implementation. Modalities derive from configuration, not new code.
 
 ---
 
 ## See Also
 
-- [forge.md](forge.md) - The Forge Loop specification
-- [contracts.md](contracts.md) - Contract synthesis deep dive
-- [artifacts.md](artifacts.md) - ALO format and versioning
-- [../j-gents/](../j-gents/) - Complementary ephemeral intelligence
-- [../e-gents/](../e-gents/) - Artifact evolution
-- [../c-gents/](../c-gents/) - Composition foundations
-- [../bootstrap.md](../bootstrap.md) - Derivation from irreducibles
+- `spec/principles.md` - Design principles (especially Heterarchical)
+- `spec/c-gents/functor-catalog.md` - Flux functor entry
+- `spec/archetypes.md` - Archetypes as Flow configurations
+- `spec/d-gents/symbiont.md` - Symbiont pattern for persistent flow state
+- `docs/skills/flux-agent.md` - Usage skill (being updated)
 
 ---
 
-*"Intent is ephemeral; artifacts endure. The forge is where intention becomes permanence."*
+*"Agents are corpses that only move when poked. Flow gives them life."*
