@@ -4,10 +4,11 @@ World Context Router: Agents, infrastructure, resources.
 AGENTESE Context: world.*
 
 This context handles all external/world operations:
-- world.agents.*  -> Agent operations (was: kgents a)
-- world.daemon.*  -> Cortex daemon lifecycle (was: kgents daemon)
-- world.infra.*   -> K8s infrastructure (was: kgents infra)
-- world.fixture.* -> HotData fixtures (was: kgents fixture)
+- world.agents.*    -> Agent operations (was: kgents a)
+- world.daemon.*    -> Cortex daemon lifecycle (was: kgents daemon)
+- world.infra.*     -> K8s infrastructure (was: kgents infra)
+- world.fixture.*   -> HotData fixtures (was: kgents fixture)
+- world.codebase.*  -> Architecture analysis (Gestalt)
 
 Usage:
     kgents world                   # Show world overview
@@ -17,6 +18,9 @@ Usage:
     kgents world agents inspect X  # Inspect agent X
     kgents world daemon start      # Start cortex daemon
     kgents world infra status      # K8s cluster status
+    kgents world codebase          # Architecture overview
+    kgents world codebase health   # Health metrics
+    kgents world codebase drift    # Drift violations
 """
 
 from __future__ import annotations
@@ -85,6 +89,12 @@ class WorldRouter(ContextRouter):
             _handle_viz,
             aspects=["sparkline", "graph", "table"],
         )
+        self.register(
+            "codebase",
+            "Architecture analysis and governance (Gestalt)",
+            _handle_codebase,
+            aspects=["manifest", "health", "drift", "module", "scan"],
+        )
 
 
 # =============================================================================
@@ -141,6 +151,13 @@ def _handle_town(args: list[str], ctx: "InvocationContext | None" = None) -> int
     return cmd_town(args, ctx)
 
 
+def _handle_codebase(args: list[str], ctx: "InvocationContext | None" = None) -> int:
+    """Handle world codebase -> delegating to Gestalt handler."""
+    from protocols.gestalt.handler import cmd_codebase
+
+    return cmd_codebase(args, ctx)
+
+
 def _handle_viz(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Handle world viz -> routes to visualization handlers.
@@ -166,9 +183,10 @@ def _handle_viz(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     rest = args[1:]
 
     if aspect == "sparkline":
-        from protocols.cli.handlers.sparkline import cmd_sparkline
+        import protocols.cli.handlers.sparkline as sparkline_mod  # type: ignore[import-untyped]
 
-        return cmd_sparkline(rest, ctx)
+        result: int = sparkline_mod.cmd_sparkline(rest, ctx)
+        return result
     else:
         print(f"Unknown viz aspect: {aspect}")
         print("  Available: sparkline")

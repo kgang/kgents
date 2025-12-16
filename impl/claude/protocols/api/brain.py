@@ -13,6 +13,7 @@ Session 6: Production Brain API for Web UI integration.
 from __future__ import annotations
 
 import logging
+import threading
 from typing import TYPE_CHECKING, Any
 
 from .models import (
@@ -53,21 +54,33 @@ except ImportError:
 
 from .auth import get_optional_api_key
 
-# Global Brain Logos instance (initialized lazily)
+# Global Brain Logos instance with thread-safe initialization
 _brain_logos: Any = None
 _brain_observer: Any = None
+_brain_logos_lock = threading.Lock()
 
 
-def _get_brain_logos() -> Any:
-    """Get or create the shared Brain Logos instance."""
+def _get_brain_logos() -> tuple[Any, Any]:
+    """Get or create the shared Brain Logos instance (thread-safe).
+
+    Uses double-checked locking pattern for efficient thread-safe
+    lazy initialization. This is important for API servers that may
+    handle concurrent requests.
+
+    Returns:
+        Tuple of (logos, observer) instances
+    """
     global _brain_logos, _brain_observer
 
     if _brain_logos is None:
-        from protocols.agentese import create_brain_logos
-        from protocols.agentese.node import Observer
+        with _brain_logos_lock:
+            # Double-check after acquiring lock
+            if _brain_logos is None:
+                from protocols.agentese import create_brain_logos
+                from protocols.agentese.node import Observer
 
-        _brain_logos = create_brain_logos(embedder_type="auto")
-        _brain_observer = Observer.guest()
+                _brain_logos = create_brain_logos(embedder_type="auto")
+                _brain_observer = Observer.guest()
 
     return _brain_logos, _brain_observer
 

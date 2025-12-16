@@ -199,6 +199,7 @@ class BrainCaptureRequest(BaseModel):
 
     content: str = Field(
         ...,
+        min_length=1,
         description="The content to capture into memory",
         examples=["Python is great for machine learning", "Meeting notes from standup"],
     )
@@ -239,6 +240,7 @@ class BrainGhostRequest(BaseModel):
 
     context: str = Field(
         ...,
+        min_length=1,
         description="Context string to find relevant memories",
         examples=["AI and machine learning", "Python programming"],
     )

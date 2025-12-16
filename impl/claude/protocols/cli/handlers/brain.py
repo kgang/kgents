@@ -18,6 +18,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import threading
 from typing import TYPE_CHECKING, Any
 
 from agents.i.reactive.primitives.brain_cards import (
@@ -30,25 +31,37 @@ if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
 
 
-# Module-level brain instance
+# Module-level brain instance with thread-safe initialization
 _brain_logos: Any = None
+_brain_logos_lock = threading.Lock()
 
 
 def _get_brain_logos() -> Any:
-    """Get or create the brain logos instance."""
+    """Get or create the brain logos instance (thread-safe).
+
+    Uses double-checked locking pattern for efficient thread-safe
+    lazy initialization.
+    """
     global _brain_logos
     if _brain_logos is None:
-        from protocols.agentese import create_brain_logos
+        with _brain_logos_lock:
+            # Double-check after acquiring lock
+            if _brain_logos is None:
+                from protocols.agentese import create_brain_logos
 
-        _brain_logos = create_brain_logos(embedder_type="auto")
+                _brain_logos = create_brain_logos(embedder_type="auto")
     return _brain_logos
 
 
 def _get_observer() -> Any:
-    """Get mock observer for CLI invocations."""
-    from protocols.agentese._tests.conftest import create_mock_umwelt
+    """Get observer for CLI invocations.
 
-    return create_mock_umwelt()
+    Uses a guest observer (lightweight, no permissions) for CLI context.
+    This avoids test fixtures in production code.
+    """
+    from protocols.agentese.node import Observer
+
+    return Observer.guest()
 
 
 def print_help() -> None:
@@ -128,7 +141,11 @@ async def _handle_capture(args: list[str], json_output: bool) -> int:
         print('Usage: kg brain capture "your content here"')
         return 1
 
-    content = " ".join(args)
+    content = " ".join(args).strip()
+    if not content:
+        print("Error: content cannot be empty or whitespace only")
+        print('Usage: kg brain capture "your content here"')
+        return 1
     logos = _get_brain_logos()
     observer = _get_observer()
 
@@ -155,7 +172,11 @@ async def _handle_ghost(args: list[str], json_output: bool) -> int:
         print('Usage: kg brain ghost "your context here"')
         return 1
 
-    context = " ".join(args)
+    context = " ".join(args).strip()
+    if not context:
+        print("Error: context cannot be empty or whitespace only")
+        print('Usage: kg brain ghost "your context here"')
+        return 1
     logos = _get_brain_logos()
     observer = _get_observer()
 

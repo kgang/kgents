@@ -78,6 +78,14 @@ class TestBrainCapture:
         )
         assert response.status_code == 422  # Validation error
 
+    def test_capture_rejects_empty_content(self, client: TestClient) -> None:
+        """Test that empty content is rejected."""
+        response = client.post(
+            "/v1/brain/capture",
+            json={"content": ""},
+        )
+        assert response.status_code == 422  # Validation error (min_length=1)
+
 
 class TestBrainGhost:
     """Tests for POST /v1/brain/ghost."""
@@ -129,6 +137,14 @@ class TestBrainGhost:
             json={},
         )
         assert response.status_code == 422  # Validation error
+
+    def test_ghost_rejects_empty_context(self, client: TestClient) -> None:
+        """Test that empty context is rejected."""
+        response = client.post(
+            "/v1/brain/ghost",
+            json={"context": ""},
+        )
+        assert response.status_code == 422  # Validation error (min_length=1)
 
 
 class TestBrainMap:

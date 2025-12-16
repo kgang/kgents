@@ -91,3 +91,32 @@ class TestBrainMap:
         """Map with --json returns structured output."""
         result = cmd_brain(["--json", "map"])
         assert result == 0
+
+
+class TestBrainErrorPaths:
+    """Tests for error handling in brain commands."""
+
+    def test_unknown_subcommand(self) -> None:
+        """Unknown subcommand returns error."""
+        result = cmd_brain(["unknown_cmd"])
+        assert result == 1
+
+    def test_capture_whitespace_only(self) -> None:
+        """Capture with whitespace-only content shows error."""
+        result = cmd_brain(["capture", "   ", "  "])
+        assert result == 1
+
+    def test_ghost_whitespace_only(self) -> None:
+        """Ghost with whitespace-only context shows error."""
+        result = cmd_brain(["ghost", "   "])
+        assert result == 1
+
+    def test_multiple_args_capture(self) -> None:
+        """Capture with multiple args joins them."""
+        result = cmd_brain(["capture", "hello", "world"])
+        assert result == 0
+
+    def test_multiple_args_ghost(self) -> None:
+        """Ghost with multiple args joins them."""
+        result = cmd_brain(["ghost", "machine", "learning"])
+        assert result == 0

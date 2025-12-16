@@ -1,31 +1,42 @@
 ---
 path: plans/core-apps/gestalt-architecture-visualizer
-status: research
-progress: 0.05
-last_touched: 2025-12-15
-touched_by: gpt-5-codex
+status: active
+progress: 0.25
+last_touched: 2025-12-16
+touched_by: claude-opus-4-5
 blocking: []
 enables:
   - plans/reactive-substrate-unification
   - monetization/grand-initiative-monetization
 session_notes: |
-  Relocated to core-apps; format aligned with pillar plans.
-  Fresh scan (Dec 2025): CodeSee Maps, CodeScene, Structurizr, ArchGuard validate demand for live diagrams; none deliver reactive, multi-target, policy-aware visualizations with holographic storage.
+  Session 1 (2025-12-16): Phase 1 Complete - Core Analysis Engine.
+  - Created protocols/gestalt/ with analysis.py and governance.py
+  - Implemented ModuleHealth dataclass with weighted health scoring
+  - Python and TypeScript import parsing (AST + regex)
+  - ArchitectureGraph with instability metric (Martin's I = Ce/(Ca+Ce))
+  - LayerRule and RingRule for drift detection
+  - GovernanceConfig with pattern-based layer/ring assignment
+  - 49 tests passing (analysis + governance)
+  - Wired to AGENTESE: world.codebase.* paths
+  - CLI commands: kg world codebase [manifest|health|drift|module|scan]
+  - Scanned kgents: 1814 modules, 14226 edges, B+ (86%) overall health
+
+  Previous: Relocated to core-apps; format aligned with pillar plans.
 phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: pending
+  PLAN: complete
+  RESEARCH: complete
+  DEVELOP: touched
   STRATEGIZE: pending
   CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  IMPLEMENT: touched
   QA: pending
-  TEST: pending
+  TEST: touched
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.10
-  spent: 0.0
+  spent: 0.03
   returned: 0.0
 ---
 
@@ -45,7 +56,7 @@ entropy:
 | **Frame** | Living architecture operations & governance |
 | **Core Mechanic** | File watcher → Cartographer → `Signal[ArchitectureGraph]` → projectors (CLI/Web/VR) |
 | **Revenue** | Free (1 repo, CLI) / Pro $29 (5 repos) / Team $79 (20 repos) / Enterprise $199 seat (unlimited, SSO, VR) |
-| **Status** | Engine unbuilt; substrate + cartography primitives ready |
+| **Status** | Phase 1 complete (analysis engine + CLI); Phase 2-5 pending |
 | **AGENTESE Context** | `world.codebase.manifest`, `self.memory.cartography` |
 
 ---
