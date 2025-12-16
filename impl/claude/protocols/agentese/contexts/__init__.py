@@ -55,32 +55,9 @@ from .crown_jewels import (
     PARK_PATHS,
     SIMULATION_PATHS,
     CrownJewelRegistry,
-    # Crown Symbiont integration
-    create_crown_symbiont_for_path,
     get_crown_jewel_registry,
-    get_dgent_config_for_path,
     list_self_time_paths,
     register_crown_jewel_paths,
-)
-from .crown_mappings import (
-    CROWN_DGENT_MAPPINGS,
-    MappingStats,
-    get_mapping_stats,
-    get_triple_config,
-    is_crown_path,
-    list_paths_by_aspect,
-    list_paths_by_context,
-    needs_lattice,
-    needs_manifold,
-    needs_witness,
-)
-
-# Crown Symbiont: Pure logic + D-gent triple infrastructure
-from .crown_symbiont import (
-    CrownSymbiont,
-    CrownTripleConfig,
-    compose_crown_symbionts,
-    create_crown_symbiont,
 )
 from .forest import (
     FOREST_ROLE_AFFORDANCES,
@@ -133,6 +110,13 @@ from .self_ import (
     SemaphoreNode,
     StateNode,
     create_self_resolver,
+    # Data architecture rewrite (Phase 2)
+    DATA_AFFORDANCES,
+    BUS_AFFORDANCES,
+    DataNode,
+    BusNode,
+    create_data_resolver,
+    create_bus_resolver,
 )
 from .self_judgment import (
     CriticsLoop,
@@ -149,11 +133,6 @@ from .time import (
     TimeContextResolver,
     TraceNode,
     create_time_resolver,
-)
-from .triple_backed_memory import (
-    TripleBackedMemory,
-    WitnessReport,
-    create_triple_backed_memory,
 )
 from .void import (
     CapitalNode,
@@ -276,6 +255,13 @@ __all__ = [
     "JudgmentNode",
     "SemaphoreNode",
     "create_self_resolver",
+    # Data architecture rewrite (Phase 2)
+    "DATA_AFFORDANCES",
+    "BUS_AFFORDANCES",
+    "DataNode",
+    "BusNode",
+    "create_data_resolver",
+    "create_bus_resolver",
     # Self judgment (SPECS critique)
     "Critique",
     "CritiqueWeights",
@@ -354,28 +340,8 @@ __all__ = [
     "PARK_PATHS",
     "SIMULATION_PATHS",
     "get_crown_jewel_registry",
-    "register_crown_jewel_paths",
-    # Crown Symbiont: Pure logic + D-gent triple
-    "CrownSymbiont",
-    "CrownTripleConfig",
-    "CROWN_DGENT_MAPPINGS",
-    "MappingStats",
-    "TripleBackedMemory",
-    "WitnessReport",
-    "compose_crown_symbionts",
-    "create_crown_symbiont",
-    "create_crown_symbiont_for_path",
-    "create_triple_backed_memory",
-    "get_dgent_config_for_path",
-    "get_mapping_stats",
-    "get_triple_config",
-    "is_crown_path",
-    "list_paths_by_aspect",
-    "list_paths_by_context",
     "list_self_time_paths",
-    "needs_lattice",
-    "needs_manifold",
-    "needs_witness",
+    "register_crown_jewel_paths",
     # Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
     "PROMPT_ROLE_AFFORDANCES",
     "CheckpointSummaryDTO",

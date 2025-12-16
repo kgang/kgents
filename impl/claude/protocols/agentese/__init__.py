@@ -283,120 +283,30 @@ def create_brain_logos(
     embedder_type: str = "auto",
 ) -> "Logos":
     """
-    Create a Logos instance with full Holographic Brain wiring.
+    Create a Logos instance with basic memory support.
 
-    This is the single factory function for Crown Jewel Brain that wires:
-    - MemoryCrystal: Holographic memory storage
-    - L-gent Embedder: Semantic embeddings (sentence-transformers or fallback)
-    - CartographerAgent: Memory navigation with VectorSearchable
-    - N-gent TraceStore: Desire line computation with TraceQueryable
-
-    Session 4 Goal: Wire semantic embeddings for real ghost surfacing.
+    NOTE: Full Holographic Brain wiring (cartographer, crystal, trace store)
+    was removed in data-architecture-rewrite Phase 6. This now returns
+    a basic Logos with simpler memory support via AssociativeMemory.
 
     Args:
-        dimension: Embedding dimension (384 for MiniLM, 64 for fallback)
-        embedder_type: "auto", "sentence-transformers", or "simple"
+        dimension: Embedding dimension (ignored - for API compatibility)
+        embedder_type: Embedder type (ignored - for API compatibility)
 
     Returns:
-        Fully-wired Logos instance ready for Holographic Brain operations
-
-    Example:
-        logos = create_brain_logos()
-        observer = Observer.guest()
-
-        # Capture with semantic embedding
-        await logos.invoke('self.memory.capture', observer, content='Python tutorial')
-        await logos.invoke('self.memory.capture', observer, content='Python examples')
-
-        # Ghost surfaces semantically similar memories
-        result = await logos.invoke('self.memory.ghost.surface', observer, context='Python code')
-        # result['count'] > 0 (semantic similarity works!)
+        Logos instance with basic memory operations
     """
-    # Import dependencies lazily to avoid circular imports
-    from agents.m.cartographer import create_cartographer
-    from agents.m.crystal import create_crystal
-    from agents.n.store import MemoryCrystalStore
+    import warnings
 
-    # 1. Create embedder
-    embedder = None
-    actual_dimension = dimension
-    if embedder_type == "auto":
-        try:
-            from agents.l import create_best_available_embedder
-
-            embedder = create_best_available_embedder()
-            actual_dimension = embedder.dimension
-        except Exception:
-            # Fall back to no embedder (uses hash-based pseudo-embedding)
-            actual_dimension = 64
-    elif embedder_type == "sentence-transformers":
-        try:
-            from agents.l.embedders import SentenceTransformerEmbedder
-
-            embedder = SentenceTransformerEmbedder()
-            actual_dimension = embedder.dimension
-        except ImportError:
-            # Fall back to no embedder
-            actual_dimension = 64
-    else:
-        # "simple" - use no embedder, fallback to hash-based
-        actual_dimension = 64
-
-    # 2. Create MemoryCrystal with matching dimension
-    memory_crystal = create_crystal(dimension=actual_dimension, use_numpy=True)
-
-    # 3. Create N-gent trace store (for desire lines)
-    trace_store = MemoryCrystalStore()
-
-    # 4. Create CrystalVectorSearchable adapter (wraps MemoryCrystal)
-    class CrystalVectorSearchable:
-        """Adapter to make MemoryCrystal implement VectorSearchable protocol."""
-
-        def __init__(self, crystal: Any) -> None:
-            self._crystal = crystal
-
-        async def find_similar(
-            self,
-            embedding: list[float],
-            threshold: float = 0.5,
-            limit: int = 100,
-        ) -> list[tuple[str, list[float], float]]:
-            """Find similar items by embedding."""
-            results = self._crystal.retrieve(
-                cue=embedding,
-                threshold=threshold,
-                limit=limit,
-            )
-            # Convert ResonanceMatch to (id, embedding, similarity) tuples
-            output = []
-            for match in results:
-                pattern = self._crystal.get_pattern(match.concept_id)
-                if pattern:
-                    output.append(
-                        (
-                            match.concept_id,
-                            pattern.embedding,
-                            match.similarity,
-                        )
-                    )
-            return output
-
-    vector_search = CrystalVectorSearchable(memory_crystal)
-
-    # 5. Create CartographerAgent with full wiring
-    cartographer = create_cartographer(
-        vector_search=vector_search,
-        trace_store=cast(Any, trace_store),  # type: ignore[arg-type]
+    warnings.warn(
+        "create_brain_logos() cartographer/crystal wiring was removed in "
+        "data-architecture-rewrite Phase 6. Use create_logos() directly.",
+        DeprecationWarning,
+        stacklevel=2,
     )
 
-    # 6. Create Logos with all wiring
-    logos = create_logos(
-        memory_crystal=memory_crystal,
-        cartographer=cartographer,
-        embedder=embedder,
-    )
-
-    return logos
+    # Return basic Logos without cartographer/crystal wiring
+    return create_logos()
 
 
 # =============================================================================

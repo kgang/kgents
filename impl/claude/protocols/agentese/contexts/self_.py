@@ -39,6 +39,18 @@ from .self_memory import (
     MemoryGhostNode,
     MemoryNode,
 )
+
+# Data architecture rewrite (Phase 2)
+from .self_data import (
+    DATA_AFFORDANCES,
+    DataNode,
+    create_data_resolver,
+)
+from .self_bus import (
+    BUS_AFFORDANCES,
+    BusNode,
+    create_bus_resolver,
+)
 from .self_semaphore import SemaphoreNode
 from .vitals import VitalsContextResolver, create_vitals_resolver
 
@@ -55,6 +67,13 @@ __all__ = [
     "SemaphoreNode",
     "DashboardNode",
     "GenericSelfNode",
+    # Data architecture rewrite (Phase 2)
+    "DataNode",
+    "BusNode",
+    "DATA_AFFORDANCES",
+    "BUS_AFFORDANCES",
+    "create_data_resolver",
+    "create_bus_resolver",
     # Resolver
     "SelfContextResolver",
     # Factory
@@ -94,6 +113,9 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "prune",
         "budget",
     ),
+    # Data architecture rewrite (Phase 2)
+    "data": DATA_AFFORDANCES,
+    "bus": BUS_AFFORDANCES,
 }
 
 
@@ -744,6 +766,10 @@ class SelfContextResolver:
     # L-gent embedder for semantic search (Session 4)
     _embedder: Any = None  # L-gent Embedder for semantic embeddings
 
+    # Data architecture rewrite (Phase 2)
+    _dgent_new: Any = None  # New simplified D-gent (DgentProtocol)
+    _data_bus: Any = None  # DataBus for reactive events
+
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
     _capabilities: CapabilitiesNode | None = None
@@ -751,6 +777,9 @@ class SelfContextResolver:
     _identity: IdentityNode | None = None
     _judgment: JudgmentNode | None = None
     _semaphore: SemaphoreNode | None = None
+    # Data architecture rewrite (Phase 2)
+    _data: DataNode | None = None
+    _bus: BusNode | None = None
     # Vitals context resolver for self.vitals.*
     _vitals_resolver: VitalsContextResolver | None = None
     # Self-grow resolver for self.grow.*
@@ -758,20 +787,9 @@ class SelfContextResolver:
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes."""
+        # MemoryNode simplified in data-architecture-rewrite Phase 6
         self._memory = MemoryNode(
-            _d_gent=self._d_gent,
-            _n_gent=self._n_gent,
-            _crystallization_engine=self._crystallization_engine,
             _ghost_path=self._ghost_path,
-            _memory_crystal=self._memory_crystal,
-            _pheromone_field=self._pheromone_field,
-            _inference_agent=self._inference_agent,
-            _language_games=self._language_games,
-            # Substrate integration (Phase 5)
-            _substrate=self._substrate,
-            _router=self._router,
-            _compactor=self._compactor,
-            # L-gent embedder (Session 4)
             _embedder=self._embedder,
         )
         self._capabilities = CapabilitiesNode()
@@ -779,6 +797,9 @@ class SelfContextResolver:
         self._identity = IdentityNode()
         self._judgment = JudgmentNode()
         self._semaphore = SemaphoreNode(_purgatory=self._purgatory)
+        # Data architecture rewrite (Phase 2)
+        self._data = create_data_resolver(dgent=self._dgent_new)
+        self._bus = create_bus_resolver(bus=self._data_bus)
         self._vitals_resolver = create_vitals_resolver()
         self._grow_resolver = create_self_grow_resolver()
 
@@ -808,7 +829,6 @@ class SelfContextResolver:
                     elif sub_holon == "cartography":
                         return MemoryCartographyNode(
                             _parent_memory=memory_node,
-                            _cartographer=self._cartographer,
                         )
                     # Default: return memory node for other sub-paths
                 return self._memory or MemoryNode()
@@ -843,6 +863,13 @@ class SelfContextResolver:
                     return self._grow_resolver.resolve(rest[0], rest[1:])
                 # self.grow → Return recognize as default (gap discovery)
                 return self._grow_resolver.resolve("recognize", [])
+            # Data architecture rewrite (Phase 2)
+            case "data":
+                # self.data.* → DataNode for D-gent operations
+                return self._data or DataNode()
+            case "bus":
+                # self.bus.* → BusNode for DataBus operations
+                return self._bus or BusNode()
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)
@@ -869,12 +896,15 @@ def create_self_resolver(
     # Crown Jewel Brain integration (Session 3-4)
     cartographer: Any = None,
     embedder: Any = None,
+    # Data architecture rewrite (Phase 2)
+    dgent_new: Any = None,
+    data_bus: Any = None,
 ) -> SelfContextResolver:
     """
     Create a SelfContextResolver with optional integrations.
 
     Args:
-        d_gent: D-gent for persistence
+        d_gent: D-gent for persistence (legacy)
         n_gent: N-gent for tracing
         purgatory: Purgatory for semaphore integration
         crystallization_engine: CrystallizationEngine for crystal operations
@@ -888,6 +918,8 @@ def create_self_resolver(
         compactor: Compactor for graceful memory compaction
         cartographer: CartographerAgent for holographic memory navigation
         embedder: L-gent Embedder for semantic embeddings (Session 4)
+        dgent_new: New simplified D-gent (DgentProtocol from data-architecture-rewrite)
+        data_bus: DataBus for reactive data events
 
     Returns:
         Configured SelfContextResolver
@@ -910,5 +942,8 @@ def create_self_resolver(
     # Crown Jewel Brain
     resolver._cartographer = cartographer
     resolver._embedder = embedder
+    # Data architecture rewrite (Phase 2)
+    resolver._dgent_new = dgent_new
+    resolver._data_bus = data_bus
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver

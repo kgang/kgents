@@ -656,6 +656,7 @@ class TestBrainPerformance:
             f"Capturing 100 items took {elapsed:.2f}s (expected <10s)"
         )
 
+    @pytest.mark.skip(reason="Ghost infrastructure removed in data-architecture-rewrite")
     @pytest.mark.asyncio
     async def test_ghost_surfacing_stays_fast(
         self, perf_logos: Any, observer: Any

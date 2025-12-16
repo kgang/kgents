@@ -640,82 +640,21 @@ def get_crown_jewel_registry(logos: "Logos") -> CrownJewelRegistry | None:
 # =============================================================================
 
 
-def create_crown_symbiont_for_path(
-    path: str,
-    logic: Callable[[I, S], tuple[O, S]],
-    initial_state: S,
-    **kwargs: Any,
-) -> Any:
-    """
-    Create a CrownSymbiont for a Crown Jewel path.
-
-    Wraps the pure handler logic with D-gent triple infrastructure:
-    - TemporalWitness for event sourcing (if path needs it)
-    - SemanticManifold for embeddings (if path needs it)
-    - RelationalLattice for relationships (if path needs it)
-
-    Args:
-        path: AGENTESE path (e.g., "self.memory.capture")
-        logic: Pure handler function (I, S) → (O, S)
-        initial_state: Initial state value
-        **kwargs: Additional arguments for D-gent components
-
-    Returns:
-        CrownSymbiont configured for the path, or None if path not mapped
-
-    Example:
-        >>> async def capture_logic(input, state):
-        ...     # Pure logic here
-        ...     return output, new_state
-        ...
-        >>> symbiont = create_crown_symbiont_for_path(
-        ...     path="self.memory.capture",
-        ...     logic=capture_logic,
-        ...     initial_state={"crystals": []},
-        ... )
-        >>> result = await symbiont.invoke(input_data)
-    """
-    from .crown_mappings import create_symbiont_for_path
-
-    return create_symbiont_for_path(path, logic, initial_state, **kwargs)
-
-
-def get_dgent_config_for_path(path: str) -> dict[str, Any] | None:
-    """
-    Get the D-gent triple configuration for a Crown path.
-
-    Returns:
-        Dict with witness_aspect, manifold_aspect, lattice_aspect,
-        or None if path not mapped
-    """
-    from .crown_mappings import get_triple_config
-
-    config = get_triple_config(path)
-    if config is None:
-        return None
-
-    return {
-        "witness_aspect": config.witness_aspect,
-        "manifold_aspect": config.manifold_aspect,
-        "lattice_aspect": config.lattice_aspect,
-        "uses_witness": config.uses_witness,
-        "uses_manifold": config.uses_manifold,
-        "uses_lattice": config.uses_lattice,
-    }
-
-
 def list_self_time_paths() -> dict[str, list[str]]:
     """
-    List all self.* and time.* Crown paths with their D-gent mappings.
+    List all self.* and time.* Crown paths.
 
     Returns:
         Dict with "self" and "time" keys containing lists of paths
+
+    Note: Crown Symbiont infrastructure was removed in data-architecture-rewrite.
     """
-    from .crown_mappings import list_paths_by_context
+    self_paths = [p for p in ALL_CROWN_JEWEL_PATHS if p.startswith("self.")]
+    time_paths = [p for p in ALL_CROWN_JEWEL_PATHS if p.startswith("time.")]
 
     return {
-        "self": list_paths_by_context("self"),
-        "time": list_paths_by_context("time"),
+        "self": self_paths,
+        "time": time_paths,
     }
 
 
@@ -738,8 +677,5 @@ __all__ = [
     # Logos integration
     "register_crown_jewel_paths",
     "get_crown_jewel_registry",
-    # Crown Symbiont integration
-    "create_crown_symbiont_for_path",
-    "get_dgent_config_for_path",
     "list_self_time_paths",
 ]
