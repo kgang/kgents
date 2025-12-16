@@ -1,31 +1,36 @@
 ---
 path: plans/core-apps/atelier-experience
 status: active
-progress: 0
-last_touched: 2025-12-15
+progress: 65
+last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - monetization/token-economy
   - plans/festivals-framework
 session_notes: |
-  Stub plan created from core-apps-synthesis.
+  2025-12-16: Wave 2 synergy integration complete.
+  - AtelierToBrainHandler: auto-captures pieces to Brain
+  - emit_piece_created/emit_bid_accepted synergy functions
+  - wrap_stream_with_synergy decorator for automatic capture
+  - SynergyAwareWorkshop mixin
+  - 296 tests passing
   Extends existing Tiny Atelier (128 tests) to full platform.
 phase_ledger:
   PLAN: touched
-  RESEARCH: pending
-  DEVELOP: pending
-  STRATEGIZE: pending
-  CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  RESEARCH: touched
+  DEVELOP: in_progress
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: complete
+  IMPLEMENT: in_progress
   QA: pending
-  TEST: pending
+  TEST: in_progress
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.10
-  spent: 0.0
+  spent: 0.03
   returned: 0.0
 ---
 

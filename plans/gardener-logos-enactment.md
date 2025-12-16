@@ -3,7 +3,7 @@
 > *"The garden that tends itself still needs a gardener. Now we build the hands."*
 
 **Status:** `[active]`
-**Progress:** 80%
+**Progress:** 90%
 **Spec:** `spec/protocols/gardener-logos.md`
 **Foundation:** `impl/claude/protocols/gardener_logos/` (178 tests passing)
 **Owner:** Claude + Kent
@@ -26,7 +26,7 @@ The Gardener-Logos foundation is built (garden state, tending calculus, plots, p
 
 ---
 
-## Current State (Phase 4 Complete)
+## Current State (Phase 6 Complete)
 
 ```
 impl/claude/protocols/gardener_logos/
@@ -513,10 +513,21 @@ class GardenSynergyHandler(BaseSynergyHandler):
 ```
 
 **Deliverables:**
-- [ ] Garden event types
-- [ ] Event emission in tending.py
-- [ ] Cross-jewel handlers
-- [ ] Tests for synergy
+- [x] Garden event types (SEASON_CHANGED, GESTURE_APPLIED, PLOT_PROGRESS_UPDATED)
+- [x] Factory functions for events (create_season_changed_event, create_gesture_applied_event, create_plot_progress_event)
+- [x] Event emission in garden.py (transition_season) and tending.py (apply_gesture)
+- [x] GardenToBrainHandler (auto-capture season transitions and significant gestures)
+- [x] GestaltToGardenHandler (update plots when Gestalt analyzes relevant modules)
+- [x] Handler registration in bus.py (Wave 4 handlers)
+- [x] 22 tests for synergy (test_garden_handlers.py)
+
+**Implementation Notes (Session 2025-12-16):**
+- Added 3 new event types to SynergyEventType enum
+- Garden operations emit events automatically (emit_event parameter controls this)
+- GardenToBrainHandler captures season transitions, significant gestures, and milestone progress
+- GestaltToGardenHandler observes plots when Gestalt analyzes matching paths
+- Path matching uses crown_jewel mapping, plan_path overlap, and plot name matching
+- 92 total synergy tests passing
 
 ---
 
@@ -696,8 +707,8 @@ Phase 2 (CLI)          ██████████ 100% ✅
 Phase 3 (Persistence)  ██████████ 100% ✅
 Phase 4 (Session)      ██████████ 100% ✅
 Phase 5 (Prompt)       ██████████ 100% ✅
-Phase 6 (Synergy)      ░░░░░░░░░░  0%  ← Next
-Phase 7 (Web)          ░░░░░░░░░░  0%
+Phase 6 (Synergy)      ██████████ 100% ✅
+Phase 7 (Web)          ░░░░░░░░░░  0%  ← Next
 Phase 8 (Auto-Inducer) ░░░░░░░░░░  0%
 ```
 
@@ -755,3 +766,4 @@ Phase 8 (Auto-Inducer) ░░░░░░░░░░  0%
 
 *Plan created: 2025-12-16*
 *Last updated: 2025-12-16*
+*Phase 6 completed: 2025-12-16 (Synergy Bus Integration)*

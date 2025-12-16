@@ -1,29 +1,33 @@
 ---
 path: plans/core-apps/coalition-forge
 status: active
-progress: 40
+progress: 55
 last_touched: 2025-12-16
-touched_by: claude-sonnet-4
+touched_by: claude-opus-4-5
 blocking: []
 enables:
   - monetization/task-credits
   - plans/enterprise-workflows
 session_notes: |
-  2025-12-16: Spike 2A + hardening complete.
+  2025-12-16: Wave 2 synergy integration complete.
+  - CoalitionToBrainHandler: auto-captures task completions to Brain
+  - BrainToCoalitionHandler: enriches formation with context
+  - emit_coalition_formed/emit_task_complete synergy functions
+  - query_relevant_context/query_context_for_coalition Brain queries
+  - GardenerCoalitionIntegration: spawn_and_track, record_completion
+  - Coalition bridge with tending calculus (graft_coalition gesture)
+  - 221 tests passing (203 + 18 new Wave 2)
+  Previous:
   - ForgeTask Protocol with input/output typing
   - 5 task templates (research, code_review, content, decision, intel)
   - TaskPolynomial state machine (7 phases)
   - TASK_OPERAD composition grammar (seq, par, cond, retry)
-  - Coalition eigenvector compatibility checking
-  - Projection Protocol (to_cli, to_web, to_json)
-  - Property-based tests with Hypothesis
-  - 203 tests passing, mypy clean
 phase_ledger:
   PLAN: touched
   RESEARCH: touched
   DEVELOP: in_progress
-  STRATEGIZE: pending
-  CROSS-SYNERGIZE: touched
+  STRATEGIZE: touched
+  CROSS-SYNERGIZE: complete
   IMPLEMENT: in_progress
   QA: pending
   TEST: in_progress
@@ -32,7 +36,7 @@ phase_ledger:
   REFLECT: pending
 entropy:
   planned: 0.08
-  spent: 0.04
+  spent: 0.05
   returned: 0.0
 ---
 

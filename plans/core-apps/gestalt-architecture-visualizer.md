@@ -1,7 +1,7 @@
 ---
 path: plans/core-apps/gestalt-architecture-visualizer
 status: active
-progress: 0.60
+progress: 0.70
 last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,6 +9,28 @@ enables:
   - plans/reactive-substrate-unification
   - monetization/grand-initiative-monetization
 session_notes: |
+  Session 6 (2025-12-16): DevEx Hardening Sprint.
+  - Created docs/skills/codebase-analysis.md skill document covering:
+    - Adding new language analyzers (Go, Rust, etc.)
+    - Creating custom governance rules (Layer, Ring, Custom)
+    - Extending health metrics
+    - Wiring new AGENTESE paths
+  - Added suggested_fix field and generation to DriftViolation:
+    - LAYER violations: move module, extract shared, or suppress
+    - RING violations: move to inner ring, use interfaces, or DI
+    - DENY violations: remove import, use adapter, or exception
+  - Extracted Analyzer[T] protocol for language-agnostic analysis:
+    - Analyzer protocol with can_analyze, analyze_source, analyze_file, discover
+    - AnalyzerRegistry for managing multiple analyzers
+    - PythonAnalyzer and TypeScriptAnalyzer concrete implementations
+    - create_default_registry() and get_default_registry() helpers
+  - Added GestaltStoreFactory with builder pattern:
+    - with_config(), with_language(), with_graph(), with_violations()
+    - with_debounce() for configuring file watcher
+    - Enables easy testing without filesystem scanning
+  - Fixed rich markup escaping bug in path_display.py (property-based test edge case)
+  - All 146 gestalt tests passing
+
   Session 5 (2025-12-16): Spike 6A Elastic Edition - Responsive UI Refactor.
   - Completely refactored Gestalt.tsx to use elastic primitives:
     - ElasticSplit for canvas/panel responsive layout

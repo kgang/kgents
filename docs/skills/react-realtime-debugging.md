@@ -153,7 +153,52 @@ setTownId(newId);
 setCitizens(data.citizens);
 ```
 
-### Pattern E: Effect Dependency Array Issues
+### Pattern E: Duplicate Keys from SSE/WebSocket Streams
+
+**Symptom**: React warning about duplicate keys in lists displaying streamed data
+
+**Signal**:
+```
+Warning: Encountered two children with the same key, `uuid-here`.
+Keys should be unique so that components maintain their identity across updates.
+```
+
+**Cause**: Real-time streams can deliver duplicate items (reconnections, server retries, at-least-once delivery):
+
+```typescript
+// BAD: Blindly prepending events allows duplicates
+source.onmessage = (event) => {
+  const item = JSON.parse(event.data);
+  setItems((prev) => [item, ...prev].slice(0, maxItems)); // Duplicate IDs!
+};
+```
+
+**Fix**: Deduplicate at the data layer, not render layer:
+
+```typescript
+// GOOD: Check for existing ID before adding
+source.onmessage = (event) => {
+  const item = JSON.parse(event.data);
+  setItems((prev) => {
+    const seen = new Set(prev.map((e) => e.id));
+    if (seen.has(item.id)) {
+      return prev; // Skip duplicate
+    }
+    return [item, ...prev].slice(0, maxItems);
+  });
+};
+```
+
+**Alternative**: If duplicates are semantically valid (same ID, different payload), use composite keys:
+
+```typescript
+// When same ID can have multiple valid entries
+<div key={`${item.id}-${item.timestamp}`}>
+```
+
+**Prevention**: When building SSE/WebSocket consumers, always assume duplicates are possible.
+
+### Pattern F: Effect Dependency Array Issues
 
 **Symptom**: Effect doesn't run when expected, or runs too often
 
@@ -186,6 +231,7 @@ useEffect(() => {
 [ ] Component re-renders? (log in component body)
 [ ] No stale closures? (use refs for event handlers)
 [ ] Effect dependencies complete?
+[ ] No duplicate keys? (deduplicate streamed data by ID)
 ```
 
 ## Testing Real-time Features
@@ -227,3 +273,4 @@ expect(store.getState().events).toHaveLength(1);
 - **Don't trust silent catch blocks**: Every catch should surface to UI or logging
 - **Don't use `navigate()` for same-component updates**: Use history API or state directly
 - **Don't put callbacks in effect deps without understanding identity**: Wrap in useCallback or use refs
+- **Don't assume stream data is unique**: Always deduplicate at the hook/store layer, not in render

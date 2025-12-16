@@ -16,6 +16,7 @@
 * Substrates for building app-builders
 * (OG) Pixar like storytelling in our visual elements, design, and interactive narratives (implicit and explicit)
 * Daring, bold, creative, opinionated but not gaudy
+* Make it easy for kent and kgents to do the correct, enlightened things
 
 ## KENT's NEVERS
 * Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity

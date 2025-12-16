@@ -7,12 +7,12 @@
 ## Summary
 
 - **Total Plans**: 60
-- **Active**: 32
+- **Active**: 31
 - **Dormant**: 1
 - **Blocked**: 0
-- **Complete**: 20
-- **Average Progress**: 28%
-- **Test Count**: 20,168
+- **Complete**: 21 (+1 Brain)
+- **Average Progress**: 32%
+- **Test Count**: 20,168+
 - **AGENTESE Paths**: 58 (Crown Jewels registered)
 
 ---
@@ -39,12 +39,12 @@
 | plans/agent-town/grand-strategy | 0% | 2025-12-15 | active | GRAND STRATEGY synthesized from: |
 | plans/agent-town/master-prompts-v2 | 0% | 2025-12-15 | active | MASTER PROMPTS for Agent Town N-Phase Cy |
 | plans/agent-town/monetization-mvp | 0% | 2025-12-15 | active | MONETIZATION MVP for Agent Town. |
-| plans/core-apps/coalition-forge | 40% | 2025-12-16 | active | Spike 2A+2B complete. ForgeTask, templates, polynomial, operad, visualization. |
-| plans/core-apps/domain-simulation | 35% | 2025-12-16 | active | Spike 5A+5B complete. CrisisPolynomial, CRISIS_OPERAD, 2 drill templates. |
-| plans/core-apps/holographic-brain | **95%** | 2025-12-16 | active | **SHIP-READY**. Spikes 3A+3B complete. 1104 tests, API, Web, CLI. |
-| plans/core-apps/punchdrunk-park | 50% | 2025-12-16 | active | Spike 4A+4B complete. ScenarioTemplate, 5 scenarios, DirectorAgent. |
-| plans/core-apps/atelier-experience | 60% | 2025-12-16 | active | Spike 1A+1B complete. TokenPool, BidQueue, SpectatorLeaderboard. |
-| plans/core-apps/the-gardener | 25% | 2025-12-16 | active | Spike 7A+7B complete. GardenerSession, persistence, partial routing. |
+| plans/core-apps/coalition-forge | 55% | 2025-12-16 | active | Wave 2 synergies complete. Brain+Gardener integration. 221 tests. |
+| plans/core-apps/domain-simulation | 0% | 2025-12-15 | active | Stub plan only. Crisis polynomial + templates defined but unimplemented. |
+| plans/core-apps/holographic-brain | **100%** | 2025-12-16 | **complete** | **PRODUCTION-READY**. API, Web, CLI, imports, 1104 tests. |
+| plans/core-apps/punchdrunk-park | 40% | 2025-12-16 | active | DirectorAgent, masks, property tests, OTEL spans. 64 hardened tests. |
+| plans/core-apps/atelier-experience | 65% | 2025-12-16 | active | Wave 2 synergies complete. Brain integration. 296 tests. |
+| plans/core-apps/the-gardener | 40% | 2025-12-16 | active | Gardener-Logos spec unified. Tending calculus, persistence. 39 tests. |
 | plans/micro-experience-factory | 0% | 2025-12-14 | active | PLAN phase complete. Micro-Experience Fa |
 | plans/meta/unified-engine-master-prompt | 30% | 2025-12-14 | active |  |
 | meta/forest-agentese | 95% | 2025-12-14 | active | Week 3 IMPLEMENT (95%): Live wiring comp |
@@ -52,10 +52,10 @@
 | plans/agent-town/phase5-visualization-streaming | 5% | 2025-12-14 | active | PLAN phase for Agent Town Phase 5. Focus |
 | plans/agent-town/phase7-llm-dialogue | 50% | 2025-12-14 | active | PLAN phase complete. Scoped LLM-backed c |
 | monetization/grand-initiative-monetization | 0% | 2025-12-14 | active | GRAND INITIATIVE: Comprehensive monetiza |
-| plans/core-apps/gestalt-architecture-visualizer | 60% | 2025-12-16 | active | Living Architecture Visualizer. Phases 1-4 complete (analysis, reactive, CLI, web). |
+| plans/core-apps/gestalt-architecture-visualizer | 70% | 2025-12-16 | active | Phases 1-4 complete. Elastic responsive UI, OTEL, property tests. 146 tests. |
 | plans/gestalt-visual-showcase | 0% | 2025-12-16 | active | Visual UI polish sprint: filters, legend, tooltips, animations. Showcase-ready. |
 | plans/gestalt-infrastructure-expansion | 0% | 2025-12-16 | dormant | Unified system topology - add DB/queue/API nodes. Awaits visual showcase. |
-| **plans/crown-jewels-enlightened** | 0% | 2025-12-16 | **active** | **THE ENLIGHTENED CROWN**: Radical restructuring. Tiered approach: Hero Path (Brain+Gestalt+Gardener) → Extension (Atelier+Coalition) → Full (Park+Domain). Consolidates all crown jewel plans. |
+| **plans/crown-jewels-enlightened** | 50% | 2025-12-16 | **active** | **Wave 0-3 complete**: Brain at 100%, Gestalt 70%, Gardener 40%. Wave 2+3 synergies shipped. Hero Path foundations ready. |
 
 ---
 
@@ -92,6 +92,7 @@
 
 | Plan | Completed | Notes |
 |------|-----------|-------|
+| plans/core-apps/holographic-brain | 2025-12-16 | **PRODUCTION-READY**. API, Web, CLI, imports, 1104 tests. |
 | plans/agent-town/phase5-cross-synergize | 2025-12-14 | CROSS-SYNERGIZE complete. Discovered 4 visualization vectors. |
 | plans/agent-town/phase5-strategize | 2025-12-14 | STRATEGIZE phase complete. Ordered backlog. |
 | plans/web-refactor/elastic-primitives | 2025-12-16 | Responsive layout: ElasticContainer/Card/Split/Placeholder. 32+ tests. |

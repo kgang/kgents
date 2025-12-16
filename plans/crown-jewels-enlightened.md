@@ -1,13 +1,35 @@
 ---
 path: plans/crown-jewels-enlightened
 status: active
-progress: 0
+progress: 50
 last_touched: 2025-12-16
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - ALL crown jewel work
 session_notes: |
+  2025-12-16 (evening): Wave 3 FOUNDATION complete!
+  - DomainToBrainHandler: auto-capture drill results (synergy handler)
+  - ParkToBrainHandler: auto-capture scenario results (synergy handler)
+  - ParkDomainBridge: integrate Domain timers into Park scenarios
+  - DialogueMask: 8 archetypal masks with eigenvector transforms
+  - Wave 3 event types: DRILL_COMPLETE, SCENARIO_COMPLETE, FORCE_USED, etc.
+  - 42 new tests for Wave 3 (all passing)
+
+  2025-12-16 (afternoon): Wave 2 UI Integration complete!
+  - Atelier Gestalt integration (analyze_artifact_code, 30 tests)
+  - Eigenvector personality visualization (EigenvectorRadar)
+  - Coalition Brain context enrichment (enrich_with_brain_context)
+  - Synergy CLI output (display_synergy_notification, 18 tests)
+
+  2025-12-16: Wave 2 CROSS-SYNERGIZE complete!
+  - Atelier → Brain synergy (auto-capture pieces)
+  - Coalition → Brain synergy (auto-capture tasks)
+  - Brain → Coalition context enrichment
+  - Coalition → Gardener bridge (spawn from sessions)
+  - 35 new tests for Wave 2 handlers
+  - Total: 607+ tests passing
+
   This document consolidates and replaces:
   - plans/core-apps-synthesis.md (original plan)
   - plans/crown-jewels-strategy-refresh.md (critical analysis)
@@ -18,13 +40,13 @@ session_notes: |
   The pivot: Convergent Crown strategy with hero paths.
 phase_ledger:
   PLAN: complete
-  RESEARCH: pending
-  DEVELOP: pending
-  IMPLEMENT: pending
+  RESEARCH: complete
+  DEVELOP: in_progress
+  IMPLEMENT: in_progress
   REFLECT: pending
 entropy:
   planned: 1.0
-  spent: 0.0
+  spent: 0.15
   returned: 0.0
 ---
 
@@ -407,39 +429,76 @@ celebrate(); // confetti on milestone completion
 
 **Goal**: Atelier and Coalition work, built on Tier 1 foundation.
 
+**Status**: CROSS-SYNERGIZE COMPLETE (2025-12-16)
+
 #### Atelier
-- Uses Brain for memory (auto-capture creations)
-- Uses Gestalt for code analysis (analyze artifacts)
-- Bidding system with eigenvector personality
+- [x] Uses Brain for memory (auto-capture creations)
+- [x] Uses Gestalt for code analysis (analyze artifacts) ✓ 2025-12-16
+- [x] Bidding system with eigenvector personality ✓ 2025-12-16 (EigenvectorRadar)
+
+Implementation:
+- `AtelierToBrainHandler`: auto-captures pieces to Brain
+- `emit_piece_created` / `emit_bid_accepted` synergy functions
+- `wrap_stream_with_synergy` decorator for automatic capture
+- `SynergyAwareWorkshop` mixin for easy integration
+- 296 tests passing
 
 #### Coalition
-- Uses Brain for context (query relevant memories)
-- Uses Gardener for orchestration (spawn coalitions from sessions)
-- Formation visualization with cross-jewel data
+- [x] Uses Brain for context (query relevant memories)
+- [x] Uses Gardener for orchestration (spawn coalitions from sessions)
+- [x] Formation visualization with cross-jewel data ✓ 2025-12-16 (enrich_with_brain_context)
+
+Implementation:
+- `CoalitionToBrainHandler`: auto-captures task completions to Brain
+- `BrainToCoalitionHandler`: enriches formation with Brain context
+- `emit_coalition_formed` / `emit_task_complete` synergy functions
+- `query_relevant_context` / `query_context_for_coalition` Brain queries
+- `GardenerCoalitionIntegration`: spawn_and_track, record_completion
+- `graft_coalition` gesture integrates with tending calculus
+- 221 tests passing
 
 **Success Criteria**:
-- [ ] Atelier creation auto-captures to Brain
-- [ ] Coalition queries Brain for relevant context
-- [ ] Both jewels feel like extensions of Tier 1, not separate apps
+- [x] Atelier creation auto-captures to Brain ✓ 2025-12-16
+- [x] Coalition queries Brain for relevant context ✓ 2025-12-16
+- [x] Synergy notifications visible in CLI ✓ 2025-12-16 (display_synergy_notification)
+- [ ] Both jewels feel like extensions of Tier 1, not separate apps (Web UI polish pending)
 
 ### Wave 3: Tier 3 & Full Integration (3-4 weeks)
 
 **Goal**: Park and Domain work, completing the Crown.
 
+**Status**: FOUNDATION COMPLETE (2025-12-16)
+
 #### Park
-- Uses Domain simulation timers
-- Scenario inhabitation with polynomial state visible
-- Character masks with eigenvector personalities
+- [x] Uses Domain simulation timers ✓ 2025-12-16 (ParkDomainBridge)
+- [x] Scenario inhabitation with polynomial state visible ✓ 2025-12-16 (IntegratedScenarioState)
+- [x] Character masks with eigenvector personalities ✓ 2025-12-16 (DialogueMask with 8 archetypes)
+
+Implementation:
+- `ParkDomainBridge`: Creates integrated scenarios with Domain timers
+- `IntegratedScenarioType`: CRISIS_PRACTICE, COMPLIANCE_DRILL, TABLETOP, INCIDENT_RESPONSE
+- `DialogueMask`: Trickster, Dreamer, Skeptic, Architect, Child, Sage, Warrior, Healer
+- `EigenvectorTransform`: Transforms player eigenvectors when wearing masks
+- `MaskedSessionState`: Tracks mask application and ability usage
+- Template factories: `create_data_breach_practice`, `create_service_outage_practice`
+- 42 tests passing
 
 #### Domain
-- Crisis simulation with full timer infrastructure
-- Compliance drill scenarios
-- Drill results auto-capture to Brain
+- [x] Crisis simulation with full timer infrastructure ✓ (existing)
+- [x] Compliance drill scenarios ✓ (existing)
+- [x] Drill results auto-capture to Brain ✓ 2025-12-16 (DomainToBrainHandler)
+
+Implementation:
+- `DomainToBrainHandler`: Auto-captures drill results to Brain as crystals
+- `ParkToBrainHandler`: Auto-captures scenario results to Brain
+- Wave 3 event types: DRILL_COMPLETE, DRILL_STARTED, TIMER_WARNING
+- Wave 3 event types: SCENARIO_COMPLETE, SERENDIPITY_INJECTED, FORCE_USED
+- Factory functions: `create_drill_complete_event`, `create_scenario_complete_event`
 
 **Success Criteria**:
-- [ ] Park scenario can include Domain simulation elements
-- [ ] Domain drill results appear in Brain automatically
-- [ ] All 7 jewels feel like one unified system
+- [x] Park scenario can include Domain simulation elements ✓ 2025-12-16
+- [x] Domain drill results appear in Brain automatically ✓ 2025-12-16
+- [ ] All 7 jewels feel like one unified system (Web UI integration pending)
 
 ---
 
