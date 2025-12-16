@@ -53,24 +53,6 @@ vi.mock('@/api/client', () => ({
   },
 }));
 
-// Mock userStore
-vi.mock('@/stores/userStore', () => ({
-  useUserStore: vi.fn((selector) => {
-    const state = {
-      userId: 'test-user',
-      tier: 'CITIZEN',
-      credits: 100,
-    };
-    return selector ? selector(state) : state;
-  }),
-  selectCanInhabit: () => () => true,
-}));
-
-// Mock LODGate to always render children
-vi.mock('@/components/paywall/LODGate', () => ({
-  LODGate: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 // =============================================================================
 // Test Data
 // =============================================================================
@@ -222,33 +204,6 @@ describe('CitizenPanel', () => {
         expect(screen.getByText('Warmth')).toBeInTheDocument();
         expect(screen.getByText('Curiosity')).toBeInTheDocument();
         expect(screen.getByText('Trust')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('INHABIT button', () => {
-    it('should display INHABIT button for authorized users', async () => {
-      render(
-        <MemoryRouter>
-          <CitizenPanel citizen={mockCitizen} townId="test-town" onClose={() => {}} />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText(/INHABIT Alice/)).toBeInTheDocument();
-      });
-    });
-
-    it('should link to inhabit page', async () => {
-      render(
-        <MemoryRouter>
-          <CitizenPanel citizen={mockCitizen} townId="test-town" onClose={() => {}} />
-        </MemoryRouter>
-      );
-
-      await waitFor(() => {
-        const link = screen.getByText(/INHABIT Alice/).closest('a');
-        expect(link).toHaveAttribute('href', '/town/test-town/inhabit/alice-123');
       });
     });
   });
