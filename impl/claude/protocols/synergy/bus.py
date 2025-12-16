@@ -282,12 +282,76 @@ def reset_synergy_bus() -> None:
 def _register_default_handlers(bus: SynergyEventBus) -> None:
     """Register the default synergy handlers."""
     # Import here to avoid circular imports
-    from .handlers import GestaltToBrainHandler
+    from .handlers import (
+        AtelierToBrainHandler,
+        BrainToCoalitionHandler,
+        CoalitionToBrainHandler,
+        GardenToBrainHandler,
+        GestaltToBrainHandler,
+        GestaltToGardenHandler,
+    )
+
+    # ==========================================================================
+    # Wave 0-1: Hero Path handlers
+    # ==========================================================================
 
     # Gestalt → Brain: Auto-capture architecture snapshots
     bus.register(
         SynergyEventType.ANALYSIS_COMPLETE,
         GestaltToBrainHandler(),
+    )
+
+    # ==========================================================================
+    # Wave 2: Extensions handlers
+    # ==========================================================================
+
+    # Atelier → Brain: Auto-capture created pieces
+    bus.register(
+        SynergyEventType.PIECE_CREATED,
+        AtelierToBrainHandler(),
+    )
+
+    # Coalition → Brain: Auto-capture task completions
+    bus.register(
+        SynergyEventType.TASK_ASSIGNED,
+        CoalitionToBrainHandler(),
+    )
+
+    # Brain → Coalition: Enrich formation with context
+    bus.register(
+        SynergyEventType.COALITION_FORMED,
+        BrainToCoalitionHandler(),
+    )
+
+    # ==========================================================================
+    # Wave 4: Garden synergy handlers (Gardener-Logos Phase 6)
+    # ==========================================================================
+
+    # Create shared handler instances
+    garden_brain_handler = GardenToBrainHandler()
+
+    # Garden → Brain: Auto-capture season transitions
+    bus.register(
+        SynergyEventType.SEASON_CHANGED,
+        garden_brain_handler,
+    )
+
+    # Garden → Brain: Auto-capture significant gestures
+    bus.register(
+        SynergyEventType.GESTURE_APPLIED,
+        garden_brain_handler,
+    )
+
+    # Garden → Brain: Auto-capture plot progress updates
+    bus.register(
+        SynergyEventType.PLOT_PROGRESS_UPDATED,
+        garden_brain_handler,
+    )
+
+    # Gestalt → Garden: Update plots when analysis completes
+    bus.register(
+        SynergyEventType.ANALYSIS_COMPLETE,
+        GestaltToGardenHandler(),
     )
 
 

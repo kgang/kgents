@@ -42,6 +42,10 @@ class SynergyEventType(Enum):
     SESSION_COMPLETE = "session_complete"
     ARTIFACT_CREATED = "artifact_created"
     LEARNING_RECORDED = "learning_recorded"
+    # Wave 4: Garden-specific events
+    SEASON_CHANGED = "season_changed"
+    GESTURE_APPLIED = "gesture_applied"
+    PLOT_PROGRESS_UPDATED = "plot_progress_updated"
 
     # Atelier events
     PIECE_CREATED = "piece_created"
@@ -50,6 +54,20 @@ class SynergyEventType(Enum):
     # Coalition events
     COALITION_FORMED = "coalition_formed"
     TASK_ASSIGNED = "task_assigned"
+
+    # Domain events (Wave 3)
+    DRILL_STARTED = "drill_started"
+    DRILL_COMPLETE = "drill_complete"
+    TIMER_WARNING = "timer_warning"
+    TIMER_CRITICAL = "timer_critical"
+    TIMER_EXPIRED = "timer_expired"
+
+    # Park events (Wave 3)
+    SCENARIO_STARTED = "scenario_started"
+    SCENARIO_COMPLETE = "scenario_complete"
+    SERENDIPITY_INJECTED = "serendipity_injected"
+    CONSENT_DEBT_HIGH = "consent_debt_high"
+    FORCE_USED = "force_used"
 
 
 class Jewel(Enum):
@@ -232,6 +250,515 @@ def create_artifact_created_event(
     )
 
 
+# =============================================================================
+# Wave 2: Atelier Events
+# =============================================================================
+
+
+def create_piece_created_event(
+    piece_id: str,
+    piece_type: str,
+    title: str,
+    builder_id: str,
+    session_id: str,
+    spectator_count: int = 0,
+    bid_count: int = 0,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create an Atelier piece created event.
+
+    When a builder completes a piece in the Atelier, this event
+    triggers auto-capture to Brain for memory persistence.
+
+    Args:
+        piece_id: Unique identifier for the piece
+        piece_type: Type of artifact (code, art, writing, etc.)
+        title: Human-readable title
+        builder_id: ID of the builder who created it
+        session_id: Atelier session ID
+        spectator_count: Number of spectators watching
+        bid_count: Number of spectator bids accepted
+
+    Returns:
+        SynergyEvent for PIECE_CREATED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.ATELIER,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.PIECE_CREATED,
+        source_id=piece_id,
+        payload={
+            "piece_type": piece_type,
+            "title": title,
+            "builder_id": builder_id,
+            "session_id": session_id,
+            "spectator_count": spectator_count,
+            "bid_count": bid_count,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_bid_accepted_event(
+    bid_id: str,
+    session_id: str,
+    spectator_id: str,
+    bid_type: str,
+    content: str,
+    tokens_spent: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create an Atelier bid accepted event.
+
+    When a builder accepts a spectator bid, this event can
+    trigger notifications or capture the interaction.
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.ATELIER,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.BID_ACCEPTED,
+        source_id=bid_id,
+        payload={
+            "session_id": session_id,
+            "spectator_id": spectator_id,
+            "bid_type": bid_type,
+            "content": content,
+            "tokens_spent": tokens_spent,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Wave 2: Coalition Events
+# =============================================================================
+
+
+def create_coalition_formed_event(
+    coalition_id: str,
+    task_template: str,
+    archetypes: list[str],
+    eigenvector_compatibility: float,
+    estimated_credits: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Coalition formed event.
+
+    When a coalition forms to execute a task, this event
+    notifies other jewels for context enrichment.
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.COALITION,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.COALITION_FORMED,
+        source_id=coalition_id,
+        payload={
+            "task_template": task_template,
+            "archetypes": archetypes,
+            "eigenvector_compatibility": eigenvector_compatibility,
+            "estimated_credits": estimated_credits,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_task_complete_event(
+    task_id: str,
+    coalition_id: str,
+    task_template: str,
+    output_format: str,
+    output_summary: str,
+    credits_spent: int,
+    handoffs: int,
+    duration_seconds: float,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Coalition task complete event.
+
+    When a coalition completes a task, this event triggers
+    auto-capture to Brain for historical tracking.
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.COALITION,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.TASK_ASSIGNED,  # Reuse for completion
+        source_id=task_id,
+        payload={
+            "coalition_id": coalition_id,
+            "task_template": task_template,
+            "output_format": output_format,
+            "output_summary": output_summary,
+            "credits_spent": credits_spent,
+            "handoffs": handoffs,
+            "duration_seconds": duration_seconds,
+            "completed": True,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Wave 3: Domain Events
+# =============================================================================
+
+
+def create_drill_complete_event(
+    drill_id: str,
+    drill_type: str,
+    drill_name: str,
+    difficulty: str,
+    team_size: int,
+    duration_seconds: float,
+    outcome: str,
+    score: int,
+    grade: str,
+    timer_outcomes: dict[str, Any] | None = None,
+    decisions: list[dict[str, Any]] | None = None,
+    recommendations: list[str] | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Domain drill complete event.
+
+    When an enterprise drill completes, this event triggers
+    auto-capture to Brain for compliance documentation.
+
+    Args:
+        drill_id: Unique drill instance identifier
+        drill_type: Type of drill (service_outage, data_breach, etc.)
+        drill_name: Human-readable drill name
+        difficulty: easy, medium, hard
+        team_size: Number of participants
+        duration_seconds: Drill duration
+        outcome: success, partial_success, failure
+        score: 0-100 performance score
+        grade: A+, A, B+, B, etc.
+        timer_outcomes: Dict of timer name → status/elapsed
+        decisions: List of key decision records
+        recommendations: List of improvement recommendations
+
+    Returns:
+        SynergyEvent for DRILL_COMPLETE
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.DOMAIN,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.DRILL_COMPLETE,
+        source_id=drill_id,
+        payload={
+            "drill_type": drill_type,
+            "drill_name": drill_name,
+            "difficulty": difficulty,
+            "team_size": team_size,
+            "duration_seconds": duration_seconds,
+            "outcome": outcome,
+            "score": score,
+            "grade": grade,
+            "timer_outcomes": timer_outcomes or {},
+            "decisions": decisions or [],
+            "recommendations": recommendations or [],
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_drill_started_event(
+    drill_id: str,
+    drill_type: str,
+    drill_name: str,
+    team_size: int,
+    timers: list[str],
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Domain drill started event."""
+    return SynergyEvent(
+        source_jewel=Jewel.DOMAIN,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.DRILL_STARTED,
+        source_id=drill_id,
+        payload={
+            "drill_type": drill_type,
+            "drill_name": drill_name,
+            "team_size": team_size,
+            "timers": timers,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_timer_warning_event(
+    timer_id: str,
+    timer_name: str,
+    drill_id: str,
+    remaining_seconds: float,
+    progress: float,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a timer warning event (approaching deadline)."""
+    return SynergyEvent(
+        source_jewel=Jewel.DOMAIN,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.TIMER_WARNING,
+        source_id=timer_id,
+        payload={
+            "timer_name": timer_name,
+            "drill_id": drill_id,
+            "remaining_seconds": remaining_seconds,
+            "progress": progress,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Wave 3: Park Events
+# =============================================================================
+
+
+def create_scenario_complete_event(
+    session_id: str,
+    scenario_name: str,
+    scenario_type: str,
+    duration_seconds: float,
+    consent_debt_final: float,
+    forces_used: int,
+    key_moments: list[dict[str, Any]] | None = None,
+    feedback: dict[str, Any] | None = None,
+    skill_changes: dict[str, Any] | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Park scenario complete event.
+
+    When an INHABIT session completes, this event triggers
+    auto-capture to Brain for learning tracking.
+
+    Args:
+        session_id: Unique session identifier
+        scenario_name: Human-readable scenario name
+        scenario_type: mystery, collaboration, conflict, emergence, practice
+        duration_seconds: Session duration
+        consent_debt_final: Final consent debt level [0, 1]
+        forces_used: Number of force mechanics used (max 3)
+        key_moments: List of significant moment records
+        feedback: K-gent feedback analysis
+        skill_changes: Dict of skill → before/after levels
+
+    Returns:
+        SynergyEvent for SCENARIO_COMPLETE
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.PARK,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.SCENARIO_COMPLETE,
+        source_id=session_id,
+        payload={
+            "scenario_name": scenario_name,
+            "scenario_type": scenario_type,
+            "duration_seconds": duration_seconds,
+            "consent_debt_final": consent_debt_final,
+            "forces_used": forces_used,
+            "key_moments": key_moments or [],
+            "feedback": feedback or {},
+            "skill_changes": skill_changes or {},
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_serendipity_injected_event(
+    injection_id: str,
+    session_id: str,
+    injection_type: str,
+    description: str,
+    intensity: float,
+    tension_level: float,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Park serendipity injection event."""
+    return SynergyEvent(
+        source_jewel=Jewel.PARK,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.SERENDIPITY_INJECTED,
+        source_id=injection_id,
+        payload={
+            "session_id": session_id,
+            "injection_type": injection_type,
+            "description": description,
+            "intensity": intensity,
+            "tension_level": tension_level,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_force_used_event(
+    force_id: str,
+    session_id: str,
+    target_citizen: str,
+    request: str,
+    consent_debt_before: float,
+    consent_debt_after: float,
+    forces_remaining: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Park force mechanic used event."""
+    return SynergyEvent(
+        source_jewel=Jewel.PARK,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.FORCE_USED,
+        source_id=force_id,
+        payload={
+            "session_id": session_id,
+            "target_citizen": target_citizen,
+            "request": request,
+            "consent_debt_before": consent_debt_before,
+            "consent_debt_after": consent_debt_after,
+            "forces_remaining": forces_remaining,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Wave 4: Garden Events (Gardener-Logos Phase 6)
+# =============================================================================
+
+
+def create_season_changed_event(
+    garden_id: str,
+    garden_name: str,
+    old_season: str,
+    new_season: str,
+    reason: str,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a garden season changed event.
+
+    When the garden transitions to a new season, this event broadcasts
+    to all jewels so they can adapt their behavior.
+
+    Args:
+        garden_id: Unique garden identifier
+        garden_name: Human-readable garden name
+        old_season: Previous season name (e.g., "DORMANT")
+        new_season: New season name (e.g., "SPROUTING")
+        reason: Why the transition occurred
+
+    Returns:
+        SynergyEvent for SEASON_CHANGED (broadcast to ALL)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.ALL,  # Broadcast to all jewels
+        event_type=SynergyEventType.SEASON_CHANGED,
+        source_id=garden_id,
+        payload={
+            "garden_name": garden_name,
+            "old_season": old_season,
+            "new_season": new_season,
+            "reason": reason,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_gesture_applied_event(
+    garden_id: str,
+    gesture_verb: str,
+    target: str,
+    success: bool,
+    state_changed: bool,
+    synergies_triggered: list[str],
+    tone: float = 0.5,
+    reasoning: str = "",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a garden gesture applied event.
+
+    When a tending gesture is applied to the garden, this event
+    notifies Brain for auto-capture of significant changes.
+
+    Args:
+        garden_id: Unique garden identifier
+        gesture_verb: The verb (OBSERVE, PRUNE, GRAFT, WATER, ROTATE, WAIT)
+        target: AGENTESE path that was tended
+        success: Whether the gesture succeeded
+        state_changed: Whether garden state was modified
+        synergies_triggered: List of triggered synergy effects
+        tone: Gesture tone (0=tentative, 1=definitive)
+        reasoning: Why this gesture was applied
+
+    Returns:
+        SynergyEvent for GESTURE_APPLIED (to Brain)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.GESTURE_APPLIED,
+        source_id=garden_id,
+        payload={
+            "verb": gesture_verb,
+            "target": target,
+            "success": success,
+            "state_changed": state_changed,
+            "synergies_triggered": synergies_triggered,
+            "tone": tone,
+            "reasoning": reasoning,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_plot_progress_event(
+    garden_id: str,
+    plot_name: str,
+    plot_path: str,
+    old_progress: float,
+    new_progress: float,
+    plan_path: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a plot progress updated event.
+
+    When a plot's progress changes (e.g., from Forest Protocol
+    plan updates), this event notifies Brain for tracking.
+
+    Args:
+        garden_id: Garden containing the plot
+        plot_name: Human-readable plot name
+        plot_path: AGENTESE path (e.g., "world.forge")
+        old_progress: Previous progress (0-1)
+        new_progress: New progress (0-1)
+        plan_path: Optional linked plan file path
+
+    Returns:
+        SynergyEvent for PLOT_PROGRESS_UPDATED (to Brain)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.PLOT_PROGRESS_UPDATED,
+        source_id=garden_id,
+        payload={
+            "plot_name": plot_name,
+            "plot_path": plot_path,
+            "old_progress": old_progress,
+            "new_progress": new_progress,
+            "plan_path": plan_path,
+            "progress_delta": new_progress - old_progress,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -239,9 +766,27 @@ __all__ = [
     # Data classes
     "SynergyEvent",
     "SynergyResult",
-    # Factory functions
+    # Factory functions - Wave 0/1
     "create_analysis_complete_event",
     "create_crystal_formed_event",
     "create_session_complete_event",
     "create_artifact_created_event",
+    # Factory functions - Wave 2: Atelier
+    "create_piece_created_event",
+    "create_bid_accepted_event",
+    # Factory functions - Wave 2: Coalition
+    "create_coalition_formed_event",
+    "create_task_complete_event",
+    # Factory functions - Wave 3: Domain
+    "create_drill_complete_event",
+    "create_drill_started_event",
+    "create_timer_warning_event",
+    # Factory functions - Wave 3: Park
+    "create_scenario_complete_event",
+    "create_serendipity_injected_event",
+    "create_force_used_event",
+    # Factory functions - Wave 4: Garden (Phase 6)
+    "create_season_changed_event",
+    "create_gesture_applied_event",
+    "create_plot_progress_event",
 ]
