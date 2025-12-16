@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from .garden import GardenState
+    from .persistence import GardenStore
 
 
 class TendingVerb(Enum):
@@ -176,6 +177,10 @@ class TendingResult:
 async def apply_gesture(
     garden: "GardenState",
     gesture: TendingGesture,
+    *,
+    store: "GardenStore | None" = None,
+    auto_save: bool = True,
+    emit_event: bool = True,
 ) -> TendingResult:
     """
     Apply a tending gesture to the garden.
@@ -186,6 +191,9 @@ async def apply_gesture(
     Args:
         garden: The garden to tend
         gesture: The gesture to apply
+        store: Optional GardenStore for persistence
+        auto_save: Whether to auto-save after successful gesture (requires store)
+        emit_event: Whether to emit synergy events for significant gestures
 
     Returns:
         TendingResult with outcome
@@ -215,18 +223,27 @@ async def apply_gesture(
         result = await handler(garden, gesture)
 
         # Record gesture in garden momentum
-        garden.add_gesture(
-            TendingGesture(
-                verb=gesture.verb,
-                target=gesture.target,
-                tone=gesture.tone,
-                reasoning=gesture.reasoning,
-                entropy_cost=gesture.entropy_cost,
-                observer=gesture.observer,
-                session_id=gesture.session_id,
-                result_summary="success" if result.success else "failed",
-            )
+        recorded_gesture = TendingGesture(
+            verb=gesture.verb,
+            target=gesture.target,
+            tone=gesture.tone,
+            reasoning=gesture.reasoning,
+            entropy_cost=gesture.entropy_cost,
+            observer=gesture.observer,
+            session_id=gesture.session_id,
+            result_summary="success" if result.success else "failed",
         )
+        garden.add_gesture(recorded_gesture)
+
+        # Auto-save if store provided and gesture succeeded
+        if store is not None and auto_save and result.accepted:
+            await store.save_gesture(garden.garden_id, recorded_gesture)
+            await store.save(garden)
+
+        # Emit synergy event for significant gestures (Phase 6)
+        # Only emit for state-changing gestures (not OBSERVE or WAIT)
+        if emit_event and result.accepted and gesture.verb.affects_state:
+            await _emit_gesture_applied_event(garden, gesture, result)
 
         return result
 
@@ -371,34 +388,121 @@ async def _handle_water(
     Handle WATER gesture: nurture what exists via TextGRAD.
 
     Watering applies textual gradients to improve prompts.
-    The tone determines learning rate.
+    The tone determines base learning rate, adjusted by season plasticity.
+
+    Phase 5: Season-aware TextGRAD
+    - learning_rate = tone × season.plasticity
+    - SPROUTING (0.9) → Aggressive improvements
+    - DORMANT (0.1) → Conservative/stable
+    - BLOOMING (0.3) → Crystallizing, less change
     """
     target = gesture.target
     synergies: list[str] = []
+    changes: list[str] = []
+    reasoning_trace: list[str] = []
+
+    # Calculate garden-aware learning rate
+    # Tone (0-1) × Plasticity (0.1-0.9) gives effective rate
+    learning_rate = gesture.tone * garden.season.plasticity
+    reasoning_trace.append(f"Base tone: {gesture.tone:.2f}")
+    reasoning_trace.append(f"Season plasticity: {garden.season.plasticity:.2f}")
+    reasoning_trace.append(f"Effective learning_rate: {learning_rate:.3f}")
 
     # Watering triggers TextGRAD if target is a prompt
     if target.startswith("concept.prompt"):
-        # Would invoke TextGRAD here
         synergies.append("textgrad:improvement_proposed")
 
-        # Season affects learning rate
-        learning_rate = gesture.tone * garden.season.plasticity
-        reasoning = f"TextGRAD at learning_rate={learning_rate:.2f}"
+        # Phase 5: Actually invoke TextGRAD with garden-aware parameters
+        try:
+            textgrad_result = await _invoke_textgrad_improvement(
+                target=target,
+                feedback=gesture.reasoning,
+                learning_rate=learning_rate,
+                garden_context={
+                    "season": garden.season.name,
+                    "plasticity": garden.season.plasticity,
+                    "active_plot": garden.active_plot,
+                },
+            )
+
+            if textgrad_result.content_changed:
+                changes.append(f"TextGRAD improved: {target}")
+                changes.extend(
+                    f"  Modified: {s}" for s in textgrad_result.sections_modified
+                )
+                synergies.append("textgrad:improvement_applied")
+            else:
+                changes.append(f"TextGRAD analyzed (no changes): {target}")
+
+            reasoning_trace.extend(textgrad_result.reasoning_trace)
+
+        except Exception as e:
+            # TextGRAD invocation failed - still record the watering attempt
+            reasoning_trace.append(f"TextGRAD error: {e}")
+            changes.append(f"Watered (TextGRAD unavailable): {target}")
+
     else:
-        reasoning = f"Nurtured: {target}"
+        # Non-prompt target - record nurturing intent
+        changes.append(f"Nurtured: {target}")
+        reasoning_trace.append("Target is not a prompt, recorded nurturing intent")
 
     return TendingResult(
         gesture=gesture,
         accepted=True,
-        state_changed=True,
-        changes=[f"Watered: {target}"],
+        state_changed=len(changes) > 0,
+        changes=changes,
         synergies_triggered=synergies,
-        reasoning_trace=(
-            reasoning,
-            f"Tone: {gesture.tone:.2f}",
-            f"Season plasticity: {garden.season.plasticity:.2f}",
-        ),
+        reasoning_trace=tuple(reasoning_trace),
     )
+
+
+async def _invoke_textgrad_improvement(
+    target: str,
+    feedback: str,
+    learning_rate: float,
+    garden_context: dict[str, Any],
+) -> Any:
+    """
+    Invoke TextGRAD improvement with garden-aware parameters.
+
+    Phase 5: This bridges the tending calculus with the Evergreen Prompt System.
+
+    Args:
+        target: The AGENTESE path to improve (e.g., "concept.prompt.task.X")
+        feedback: Natural language feedback for improvement
+        learning_rate: Garden-adjusted learning rate (tone × plasticity)
+        garden_context: Garden context dict (season, plasticity, active_plot)
+
+    Returns:
+        ImprovementResult from TextGRAD
+    """
+    from dataclasses import dataclass
+
+    # Import TextGRAD improver
+    try:
+        from protocols.prompt.textgrad import TextGRADImprover
+
+        # Create improver with garden-adjusted learning rate
+        improver = TextGRADImprover(learning_rate=learning_rate)
+
+        # For now, we create a minimal sections dict based on target
+        # In production, this would load the actual prompt sections
+        section_name = target.replace("concept.prompt.", "").replace(".", "_")
+        sections = {section_name: f"# {section_name}\n\nTarget for improvement."}
+
+        # Apply improvement
+        result = improver.improve(sections, feedback)
+        return result
+
+    except ImportError:
+        # TextGRAD not available - return stub result
+        @dataclass
+        class StubResult:
+            content_changed: bool = False
+            sections_modified: tuple[str, ...] = ()
+            reasoning_trace: tuple[str, ...] = ("TextGRAD import failed",)
+
+        return StubResult()
 
 
 async def _handle_rotate(
@@ -419,7 +523,7 @@ async def _handle_rotate(
             gesture=gesture,
             accepted=True,
             state_changed=True,
-            changes=[f"Season rotation requested"],
+            changes=["Season rotation requested"],
             synergies_triggered=[],
             reasoning_trace=(
                 f"Current season: {garden.season.name}",
@@ -535,6 +639,51 @@ def wait(reasoning: str = "") -> TendingGesture:
         reasoning=reasoning or "Allowing time to pass",
         entropy_cost=0.0,
     )
+
+
+# =============================================================================
+# Synergy Event Emission (Phase 6)
+# =============================================================================
+
+
+async def _emit_gesture_applied_event(
+    garden: "GardenState",
+    gesture: TendingGesture,
+    result: TendingResult,
+) -> None:
+    """
+    Emit a GESTURE_APPLIED synergy event.
+
+    Only called for significant (state-changing) gestures.
+    This allows Brain to auto-capture garden state changes.
+    """
+    try:
+        from protocols.synergy import get_synergy_bus
+        from protocols.synergy.events import create_gesture_applied_event
+
+        event = create_gesture_applied_event(
+            garden_id=garden.garden_id,
+            gesture_verb=gesture.verb.name,
+            target=gesture.target,
+            success=result.success,
+            state_changed=result.state_changed,
+            synergies_triggered=result.synergies_triggered,
+            tone=gesture.tone,
+            reasoning=gesture.reasoning,
+        )
+
+        # Emit event (fire-and-forget via bus)
+        await get_synergy_bus().emit(event)
+
+    except ImportError:
+        # Synergy module not available - skip silently
+        pass
+    except Exception as e:
+        # Log but don't fail the gesture
+        import logging
+
+        logger = logging.getLogger("kgents.gardener.synergy")
+        logger.warning(f"Failed to emit gesture event: {e}")
 
 
 __all__ = [
