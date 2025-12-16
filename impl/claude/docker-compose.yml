@@ -1,0 +1,36 @@
+# Docker Compose for kgents local development
+#
+# Provides PostgreSQL for D-gent Tier 3-4 persistence.
+#
+# Usage:
+#   docker-compose up -d              # Start services
+#   docker-compose down               # Stop services
+#   docker-compose down -v            # Stop and delete volumes
+#
+# After starting:
+#   export KGENTS_POSTGRES_URL=postgresql://kgents:kgents@localhost:5432/kgents
+#   export KGENTS_DGENT_BACKEND=POSTGRES
+#
+# This is the NEW simplified D-gent architecture (data-architecture-rewrite).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kgents-postgres
+    environment:
+      POSTGRES_USER: kgents
+      POSTGRES_PASSWORD: kgents
+      POSTGRES_DB: kgents
+    ports:
+      - "5432:5432"
+    volumes:
+      - kgents-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kgents -d kgents"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  kgents-postgres-data:
+    driver: local
