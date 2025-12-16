@@ -20,14 +20,26 @@ This module provides:
 
 from __future__ import annotations
 
+import functools
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    ParamSpec,
+    Protocol,
+    TypeVar,
+    runtime_checkable,
+)
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
-    from .node import AgentMeta
+    from .node import AgentMeta, Observer
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 # === Aspect Categories ===
@@ -66,6 +78,154 @@ class Aspect:
     description: str = ""
     requires_archetype: tuple[str, ...] = ()  # Empty = available to all
     side_effects: bool = False  # Whether invocation changes state
+
+
+# === Effect Types (v3) ===
+
+
+class Effect(Enum):
+    """
+    Declared side-effects for aspects (v3 API).
+
+    Every verb declares its side-effects for capability checking
+    and composition analysis.
+    """
+
+    # Read effects (safe, cacheable)
+    READS = "reads"
+
+    # Write effects (requires capability)
+    WRITES = "writes"
+    DELETES = "deletes"
+
+    # Economic effects
+    CHARGES = "charges"
+    EARNS = "earns"
+
+    # External effects
+    CALLS = "calls"  # LLM, tools, external APIs
+    EMITS = "emits"  # Events
+
+    # Consent effects
+    FORCES = "forces"  # Requires user consent
+    AUDITS = "audits"  # Logs decision rationale
+
+    def __call__(self, resource: str) -> "DeclaredEffect":
+        """Create a declared effect with resource binding."""
+        return DeclaredEffect(effect=self, resource=resource)
+
+
+@dataclass(frozen=True)
+class DeclaredEffect:
+    """An effect bound to a specific resource."""
+
+    effect: Effect
+    resource: str
+
+    def __str__(self) -> str:
+        return f"{self.effect.value}:{self.resource}"
+
+
+# === Category Rules (v3) ===
+
+
+CATEGORY_RULES: dict[AspectCategory, dict[str, bool]] = {
+    AspectCategory.PERCEPTION: {"can_mutate": False, "requires_elevation": False},
+    AspectCategory.MUTATION: {"can_mutate": True, "requires_elevation": True},
+    AspectCategory.COMPOSITION: {"can_mutate": False, "requires_elevation": False},
+    AspectCategory.INTROSPECTION: {"can_mutate": False, "requires_elevation": False},
+    AspectCategory.GENERATION: {"can_mutate": True, "requires_elevation": True},
+    AspectCategory.ENTROPY: {"can_mutate": False, "requires_elevation": False},
+}
+
+
+# === @aspect Decorator (v3) ===
+
+
+@dataclass
+class AspectMetadata:
+    """Runtime metadata attached to aspect methods by @aspect decorator."""
+
+    category: AspectCategory
+    effects: list[DeclaredEffect | Effect]
+    requires_archetype: tuple[str, ...]
+    idempotent: bool
+    description: str
+
+
+def aspect(
+    category: AspectCategory,
+    effects: list[DeclaredEffect | Effect] | None = None,
+    requires_archetype: tuple[str, ...] = (),
+    idempotent: bool = False,
+    description: str = "",
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
+    """
+    Decorator to mark a method as an AGENTESE aspect (v3 API).
+
+    Attaches metadata and optionally enforces category constraints at runtime.
+
+    Args:
+        category: The aspect category (PERCEPTION, MUTATION, etc.)
+        effects: List of declared effects (e.g., [Effect.READS("memory")])
+        requires_archetype: Archetypes required to invoke this aspect
+        idempotent: Whether repeated calls have the same effect
+        description: Human-readable description
+
+    Example:
+        @aspect(
+            category=AspectCategory.PERCEPTION,
+            effects=[Effect.READS("memory_crystals")],
+        )
+        async def recall(self, observer: Observer, query: str) -> Crystal | None:
+            ...
+
+        @aspect(
+            category=AspectCategory.MUTATION,
+            effects=[
+                Effect.WRITES("memory_crystals"),
+                Effect.CHARGES("tokens"),
+            ],
+        )
+        async def engram(self, observer: Observer, content: str) -> Crystal:
+            ...
+
+    The decorator attaches AspectMetadata to the function as __aspect_meta__.
+    """
+
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        # Store metadata on function
+        meta = AspectMetadata(
+            category=category,
+            effects=effects or [],
+            requires_archetype=requires_archetype,
+            idempotent=idempotent,
+            description=description or func.__doc__ or "",
+        )
+        func.__aspect_meta__ = meta  # type: ignore[attr-defined]
+
+        @functools.wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            # Runtime enforcement: PERCEPTION aspects should not mutate state
+            # This is a documentation/analysis hook; actual enforcement
+            # would require more sophisticated runtime tracking
+            return func(*args, **kwargs)
+
+        # Copy metadata to wrapper
+        wrapper.__aspect_meta__ = meta  # type: ignore[attr-defined]
+        return wrapper
+
+    return decorator
+
+
+def get_aspect_metadata(func: Callable[..., Any]) -> AspectMetadata | None:
+    """Get aspect metadata from a decorated function."""
+    return getattr(func, "__aspect_meta__", None)
+
+
+def is_aspect(func: Callable[..., Any]) -> bool:
+    """Check if a function is decorated with @aspect."""
+    return hasattr(func, "__aspect_meta__")
 
 
 # === Standard Aspects Registry ===
@@ -850,6 +1010,16 @@ __all__ = [
     # Enums and types
     "AspectCategory",
     "Aspect",
+    # v3 Effects
+    "Effect",
+    "DeclaredEffect",
+    # v3 Category Rules
+    "CATEGORY_RULES",
+    # v3 Decorator
+    "aspect",
+    "AspectMetadata",
+    "get_aspect_metadata",
+    "is_aspect",
     # Constants
     "CORE_ASPECTS",
     "STANDARD_ASPECTS",

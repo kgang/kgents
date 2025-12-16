@@ -40,6 +40,8 @@ from .adapter import (
 # Phase 3: Affordances
 from .affordances import (
     ARCHETYPE_AFFORDANCES,
+    # v3 Category Rules
+    CATEGORY_RULES,
     CONCEPT_AFFORDANCE_SET,
     # Constants
     CORE_ASPECTS,
@@ -57,15 +59,37 @@ from .affordances import (
     Aspect,
     # Types
     AspectCategory,
+    # v3 Aspect Decorator
+    AspectMetadata,
     CapabilityAffordanceMatcher,
     # Context sets
     ContextAffordanceSet,
+    # v3 Effects
+    DeclaredEffect,
+    Effect,
     StandardAffordanceMatcher,
     # Adapter
     UmweltAdapter,
+    # v3 decorator
+    aspect,
     create_affordance_registry,
     create_umwelt_adapter,
+    get_aspect_metadata,
     get_context_affordance_set,
+    is_aspect,
+)
+
+# v3 Alias System
+from .aliases import (
+    AliasError,
+    AliasNotFoundError,
+    AliasRecursionError,
+    AliasRegistry,
+    AliasShadowError,
+    create_alias_registry,
+    create_standard_aliases,
+    expand_aliases,
+    get_default_aliases_path,
 )
 
 # Phase 2: Context Resolvers
@@ -193,7 +217,30 @@ from .laws import (
     verify_and_emit_associativity,
     verify_and_emit_identity,
 )
-from .logos import ComposedPath, IdentityPath, Logos, create_logos
+from .logos import (
+    # v3 Path Composition
+    AgentesePath,
+    ComposedPath,
+    IdentityPath,
+    Logos,
+    UnboundComposedPath,
+    create_logos,
+    path,
+)
+
+# v3 Query System
+from .query import (
+    QueryBoundError,
+    QueryBuilder,
+    QueryMatch,
+    QueryResult,
+    QuerySyntaxError,
+    create_query_builder,
+    query,
+)
+
+# v3 API: Path is an alias for AgentesePath
+Path = AgentesePath
 from .node import (
     AffordanceSet,
     AgentMeta,
@@ -203,6 +250,8 @@ from .node import (
     EconomicRendering,
     JITLogosNode,
     LogosNode,
+    # v3 Observer
+    Observer,
     PoeticRendering,
     Renderable,
 )
@@ -264,6 +313,22 @@ __all__ = [
     "EconomicRendering",
     "JITLogosNode",
     "BaseLogosNode",
+    # v3 API: Observer
+    "Observer",
+    # v3 API: Path Composition
+    "AgentesePath",
+    "Path",
+    "UnboundComposedPath",
+    "path",
+    # v3 API: Effects
+    "Effect",
+    "DeclaredEffect",
+    "CATEGORY_RULES",
+    # v3 API: @aspect Decorator
+    "aspect",
+    "AspectMetadata",
+    "get_aspect_metadata",
+    "is_aspect",
     # Exceptions
     "AgentesError",
     "PathNotFoundError",
@@ -428,4 +493,22 @@ __all__ = [
     "create_adapter",
     "create_pattern_translator",
     "build_translation_prompt",
+    # v3 Query System
+    "QueryResult",
+    "QueryMatch",
+    "QueryBuilder",
+    "QuerySyntaxError",
+    "QueryBoundError",
+    "query",
+    "create_query_builder",
+    # v3 Alias System
+    "AliasRegistry",
+    "AliasError",
+    "AliasShadowError",
+    "AliasRecursionError",
+    "AliasNotFoundError",
+    "create_alias_registry",
+    "create_standard_aliases",
+    "expand_aliases",
+    "get_default_aliases_path",
 ]

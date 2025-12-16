@@ -36,13 +36,85 @@ T_in = TypeVar("T_in", contravariant=True)
 T_out = TypeVar("T_out", covariant=True)
 
 
-# === Agent Metadata ===
+# === Observer Base Class (v3) ===
+
+
+@dataclass(frozen=True)
+class Observer:
+    """
+    Lightweight observer for simple AGENTESE invocations (v3 API).
+
+    The minimal observer context required for path invocation.
+    Use this when you don't need full Umwelt context.
+
+    AGENTESE v3 Principle: Observer gradations allow lightweight calls
+    while preserving "no view from nowhere" semantics.
+
+    Examples:
+        # Simple invocation with default guest
+        await logos("world.garden.manifest")
+
+        # Developer observer
+        await logos("self.forest.manifest", Observer(archetype="developer"))
+
+        # With specific capabilities
+        await logos("self.soul.challenge", Observer(
+            archetype="developer",
+            capabilities=frozenset({"define", "refine"})
+        ))
+
+    Factory methods:
+        Observer.guest() - Anonymous guest observer
+        Observer.test() - Test observer with all capabilities
+        Observer.from_umwelt(umwelt) - Extract from full Umwelt
+    """
+
+    archetype: str = "guest"
+    capabilities: frozenset[str] = frozenset()
+
+    @classmethod
+    def guest(cls) -> "Observer":
+        """Create anonymous guest observer."""
+        return cls(archetype="guest", capabilities=frozenset())
+
+    @classmethod
+    def test(cls) -> "Observer":
+        """Create test observer with broad capabilities."""
+        return cls(
+            archetype="developer",
+            capabilities=frozenset({"define", "refine", "test", "debug"}),
+        )
+
+    @classmethod
+    def from_archetype(cls, archetype: str) -> "Observer":
+        """Create observer from archetype name."""
+        return cls(archetype=archetype, capabilities=frozenset())
+
+    @classmethod
+    def from_umwelt(cls, umwelt: "Umwelt[Any, Any]") -> "Observer":
+        """
+        Extract Observer from a full Umwelt.
+
+        Allows using Umwelt where Observer is expected.
+        """
+        dna = umwelt.dna
+        archetype = getattr(dna, "archetype", "guest")
+        caps = getattr(dna, "capabilities", ())
+        return cls(
+            archetype=archetype,
+            capabilities=frozenset(caps) if not isinstance(caps, frozenset) else caps,
+        )
+
+
+# === Agent Metadata (v1 compatibility) ===
 
 
 @dataclass(frozen=True)
 class AgentMeta:
     """
     Metadata about an agent for affordance filtering.
+
+    NOTE: v1 API - prefer Observer for new code.
 
     This is a lightweight view of the agent's identity, separate from
     the full Umwelt. Used by LogosNode.affordances() to determine
@@ -52,6 +124,22 @@ class AgentMeta:
     name: str
     archetype: str = "default"
     capabilities: tuple[str, ...] = ()
+
+    def to_observer(self) -> Observer:
+        """Convert to v3 Observer."""
+        return Observer(
+            archetype=self.archetype,
+            capabilities=frozenset(self.capabilities),
+        )
+
+    @classmethod
+    def from_observer(cls, observer: Observer, name: str = "unknown") -> "AgentMeta":
+        """Create from v3 Observer."""
+        return cls(
+            name=name,
+            archetype=observer.archetype,
+            capabilities=tuple(observer.capabilities),
+        )
 
 
 # === Renderable Protocol ===
@@ -277,9 +365,18 @@ class BaseLogosNode(ABC):
         """
         pass
 
-    def _umwelt_to_meta(self, umwelt: "Umwelt[Any, Any]") -> AgentMeta:
-        """Extract AgentMeta from Umwelt's DNA."""
-        dna = umwelt.dna
+    def _umwelt_to_meta(self, observer: "Observer | Umwelt[Any, Any]") -> AgentMeta:
+        """
+        Extract AgentMeta from Observer or Umwelt.
+
+        v3 API: Accepts both Observer (lightweight) and Umwelt (full context).
+        """
+        # v3 Observer - direct extraction
+        if isinstance(observer, Observer):
+            return AgentMeta.from_observer(observer)
+
+        # v1 Umwelt - extract from DNA
+        dna = observer.dna
         # Try to get archetype from DNA, fallback to defaults
         name = getattr(dna, "name", "unknown")
         archetype = getattr(dna, "archetype", "default")

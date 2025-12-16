@@ -133,11 +133,13 @@ class TestObserverRequirement:
     """Tests for observer enforcement."""
 
     @pytest.mark.asyncio
-    async def test_invoke_without_observer_fails(self, logos_with_nodes: Logos) -> None:
-        """invoke() without observer raises ObserverRequiredError."""
-        with pytest.raises(ObserverRequiredError) as exc:
-            await logos_with_nodes.invoke("world.house.manifest", None)  # type: ignore[arg-type]
-        assert "no view from nowhere" in str(exc.value)
+    async def test_invoke_without_observer_defaults_to_guest(
+        self, logos_with_nodes: Logos
+    ) -> None:
+        """v3 API: invoke() without observer defaults to Observer.guest()."""
+        # v3: None defaults to guest observer, not an error
+        result = await logos_with_nodes.invoke("world.house.manifest", None)
+        assert result is not None  # Guest observer can still get basic manifest
 
     @pytest.mark.asyncio
     async def test_invoke_with_observer_succeeds(

@@ -44,13 +44,136 @@ from .node import (
     BasicRendering,
     JITLogosNode,
     LogosNode,
+    Observer,
 )
 
 if TYPE_CHECKING:
     from bootstrap.types import Agent
     from bootstrap.umwelt import Umwelt
 
+    from .aliases import AliasRegistry
     from .middleware.curator import WundtCurator
+    from .query import QueryResult
+
+
+# === Standalone Path for Composition (v3) ===
+
+
+@dataclass
+class AgentesePath:
+    """
+    Standalone path for string-based composition (v3 API).
+
+    Allows composing paths with >> without needing a Logos instance:
+        pipeline = path("world.doc.manifest") >> "concept.summary.refine"
+        result = await pipeline.run(observer, logos)
+
+    Example:
+        # Basic composition
+        pipeline = path("world.doc.manifest") >> "self.memory.engram"
+
+        # Chained composition
+        pipeline = (
+            path("world.garden.manifest")
+            >> "concept.summary.refine"
+            >> "self.memory.engram"
+        )
+
+        # Execute with observer and logos
+        result = await pipeline.run(observer, logos)
+
+        # Or bind to logos first
+        bound = pipeline.bind(logos)
+        result = await bound.invoke(observer)
+    """
+
+    value: str
+
+    def __rshift__(
+        self, other: "str | AgentesePath | UnboundComposedPath"
+    ) -> "UnboundComposedPath":
+        """Compose with another path."""
+        if isinstance(other, UnboundComposedPath):
+            return UnboundComposedPath([self.value] + other.paths)
+        other_value = other.value if isinstance(other, AgentesePath) else other
+        return UnboundComposedPath([self.value, other_value])
+
+    def bind(self, logos: "Logos") -> "ComposedPath":
+        """Bind to a Logos instance for execution."""
+        return ComposedPath([self.value], logos)
+
+    async def run(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        logos: "Logos",
+        initial_input: Any = None,
+    ) -> Any:
+        """Execute this path with the given observer and logos."""
+        return await logos.invoke(self.value, observer, input=initial_input)
+
+
+@dataclass
+class UnboundComposedPath:
+    """
+    Composition of paths that hasn't been bound to a Logos yet (v3 API).
+
+    Created by path() >> "..." operations.
+    """
+
+    paths: list[str]
+
+    def __rshift__(
+        self, other: "str | AgentesePath | UnboundComposedPath"
+    ) -> "UnboundComposedPath":
+        """Compose with another path."""
+        if isinstance(other, str):
+            return UnboundComposedPath(self.paths + [other])
+        if isinstance(other, AgentesePath):
+            return UnboundComposedPath(self.paths + [other.value])
+        return UnboundComposedPath(self.paths + other.paths)
+
+    def __rrshift__(self, other: str) -> "UnboundComposedPath":
+        """Allow string >> UnboundComposedPath."""
+        return UnboundComposedPath([other] + self.paths)
+
+    def bind(self, logos: "Logos") -> "ComposedPath":
+        """Bind to a Logos instance for execution."""
+        return ComposedPath(self.paths, logos)
+
+    async def run(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        logos: "Logos",
+        initial_input: Any = None,
+    ) -> Any:
+        """Execute this composition with the given observer and logos."""
+        return await self.bind(logos).invoke(observer, initial_input)
+
+
+def path(p: str) -> AgentesePath:
+    """
+    Create a composable path for string-based composition (v3 API).
+
+    This is the primary entry point for building path compositions
+    without needing a Logos instance upfront.
+
+    Example:
+        # Single path
+        p = path("world.garden.manifest")
+
+        # Composition
+        pipeline = path("world.doc.manifest") >> "concept.summary.refine"
+
+        # Execute
+        result = await pipeline.run(observer, logos)
+
+    Args:
+        p: AGENTESE path string
+
+    Returns:
+        AgentesePath object that supports >> composition
+    """
+    return AgentesePath(p)
 
 
 # === Composed Path ===
@@ -82,7 +205,7 @@ class ComposedPath:
 
     async def invoke(
         self,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any]",
         initial_input: Any = None,
     ) -> Any:
         """
@@ -93,8 +216,10 @@ class ComposedPath:
 
         Track B (Law Enforcer): Emits law_check events for observability.
 
+        v3 API: Accepts both Observer (lightweight) and Umwelt (full context).
+
         Args:
-            observer: The observer's Umwelt (REQUIRED)
+            observer: Observer or Umwelt
             initial_input: Optional initial value for the pipeline
 
         Returns:
@@ -349,6 +474,9 @@ class Logos:
     # Telemetry middleware (Phase 6: OpenTelemetry integration)
     _telemetry_enabled: bool = False
 
+    # v3: Path aliases registry
+    _aliases: "AliasRegistry | None" = None
+
     def __post_init__(self) -> None:
         """Initialize context resolvers if not already set."""
         if not self._context_resolvers:
@@ -360,6 +488,36 @@ class Logos:
                 grammarian=self._grammarian,
                 capital_ledger=self._capital_ledger,
             )
+
+    # === v3 API: Make Logos callable ===
+
+    async def __call__(
+        self,
+        path: str,
+        observer: "Observer | Umwelt[Any, Any] | None" = None,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Invoke an AGENTESE path (v3 API).
+
+        Makes Logos callable for cleaner syntax:
+            result = await logos("world.house.manifest")
+            result = await logos("self.soul.challenge", observer)
+
+        v3 Enhancement: Observer can be:
+            - None: Uses Observer.guest() (anonymous invocation)
+            - Observer: Lightweight observer
+            - Umwelt: Full observer context (v1 compatibility)
+
+        Args:
+            path: Full AGENTESE path including aspect
+            observer: Optional observer (defaults to guest)
+            **kwargs: Aspect-specific arguments
+
+        Returns:
+            Aspect-specific result
+        """
+        return await self.invoke(path, observer, **kwargs)
 
     def resolve(
         self, path: str, observer: "Umwelt[Any, Any] | None" = None
@@ -450,33 +608,42 @@ class Logos:
     async def invoke(
         self,
         path: str,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any] | None" = None,
         **kwargs: Any,
     ) -> Any:
         """
         Invoke an AGENTESE path with aspect.
 
-        CRITICAL: Observer is REQUIRED. No view from nowhere.
+        v3 API: Observer can be None (defaults to guest), Observer, or Umwelt.
 
         Example:
-            logos.invoke("world.house.manifest", architect_umwelt)
-            logos.invoke("concept.justice.refine", philosopher_umwelt)
+            # v3 style - anonymous invocation
+            await logos.invoke("world.public.manifest")
+
+            # v3 style - lightweight observer
+            await logos.invoke("world.house.manifest", Observer(archetype="architect"))
+
+            # v1 style - full Umwelt (still supported)
+            await logos.invoke("world.house.manifest", architect_umwelt)
 
         Args:
             path: Full AGENTESE path including aspect
-            observer: The observer's Umwelt (REQUIRED)
+            observer: Observer, Umwelt, or None (defaults to guest)
             **kwargs: Aspect-specific arguments
 
         Returns:
             Aspect-specific result
 
         Raises:
-            ObserverRequiredError: If observer is None
             PathSyntaxError: If path doesn't include aspect
             AffordanceError: If observer lacks access to aspect
         """
+        # v3: Default to guest observer if None
         if observer is None:
-            raise ObserverRequiredError()
+            observer = Observer.guest()
+
+        # v3: Expand aliases
+        path = self._expand_aliases(path)
 
         parts = path.split(".")
         if len(parts) < 3:
@@ -491,8 +658,8 @@ class Logos:
 
         node = self.resolve(node_path)
 
-        # Get AgentMeta from observer's DNA
-        meta = self._umwelt_to_meta(observer)
+        # Get AgentMeta from observer (v3: supports Observer and Umwelt)
+        meta = self._observer_to_meta(observer)
 
         # Check affordances (Ethical principle)
         available = node.affordances(meta)
@@ -510,12 +677,12 @@ class Logos:
                 node, aspect, observer, path, **kwargs
             )
         else:
-            result = await node.invoke(aspect, observer, **kwargs)
+            result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
 
         # Apply curator filtering (Phase 5: Wundt Curve aesthetic filtering)
         # PAYADOR Enhancement (v2.5): Auto-apply curator for GENERATION aspects
         if self._curator is not None:
-            result = await self._curator.filter(result, observer, path, self)
+            result = await self._curator.filter(result, observer, path, self)  # type: ignore[arg-type]
         elif self._should_auto_curate(aspect):
             # Auto-create curator for GENERATION aspects
             result = await self._auto_curate(result, observer, path)
@@ -526,7 +693,7 @@ class Logos:
         self,
         node: LogosNode,
         aspect: str,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any]",
         path: str,
         **kwargs: Any,
     ) -> Any:
@@ -534,7 +701,7 @@ class Logos:
         from .telemetry import trace_invocation
 
         async with trace_invocation(path, observer) as span:
-            result = await node.invoke(aspect, observer, **kwargs)
+            result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
 
             # Record result type
             span.set_attribute("agentese.result.type", type(result).__name__)
@@ -753,8 +920,8 @@ class Logos:
                 suggestion="Valid contexts: world, self, concept, void, time",
             )
 
-        # Check observer affordance
-        meta = self._umwelt_to_meta(observer)
+        # Check observer affordance (v3: supports Observer and Umwelt)
+        meta = self._observer_to_meta(observer)
 
         # 'define' requires special permission (architect, developer, or explicit capability)
         can_define = (
@@ -896,13 +1063,27 @@ class Logos:
                 result.append(status)
         return result
 
-    def _umwelt_to_meta(self, umwelt: "Umwelt[Any, Any]") -> AgentMeta:
-        """Extract AgentMeta from Umwelt's DNA."""
-        dna = umwelt.dna
+    def _observer_to_meta(self, observer: "Observer | Umwelt[Any, Any]") -> AgentMeta:
+        """
+        Extract AgentMeta from Observer or Umwelt.
+
+        v3 API: Accepts both Observer (lightweight) and Umwelt (full context).
+        """
+        # v3 Observer - direct extraction
+        if isinstance(observer, Observer):
+            return AgentMeta.from_observer(observer)
+
+        # v1 Umwelt - extract from DNA
+        dna = observer.dna
         name = getattr(dna, "name", "unknown")
         archetype = getattr(dna, "archetype", "default")
         capabilities = getattr(dna, "capabilities", ())
         return AgentMeta(name=name, archetype=archetype, capabilities=capabilities)
+
+    # Alias for backward compatibility
+    def _umwelt_to_meta(self, umwelt: "Umwelt[Any, Any]") -> AgentMeta:
+        """Extract AgentMeta from Umwelt's DNA. Deprecated: use _observer_to_meta."""
+        return self._observer_to_meta(umwelt)
 
     # === PAYADOR (v2.5): Auto-Curator for GENERATION aspects ===
 
@@ -940,7 +1121,7 @@ class Logos:
     async def _auto_curate(
         self,
         result: Any,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any]",
         path: str,
     ) -> Any:
         """
@@ -951,7 +1132,7 @@ class Logos:
 
         Args:
             result: The result to filter
-            observer: The observer's Umwelt
+            observer: Observer or Umwelt
             path: The full AGENTESE path
 
         Returns:
@@ -966,7 +1147,7 @@ class Logos:
             high_threshold=0.95,  # Allow quite chaotic output
         )
 
-        return await auto_curator.filter(result, observer, path, self)
+        return await auto_curator.filter(result, observer, path, self)  # type: ignore[arg-type]
 
     # === Convenience Methods ===
 
@@ -1056,6 +1237,166 @@ class Logos:
             _capital_ledger=self._capital_ledger,
             _curator=self._curator,
             _telemetry_enabled=enabled,
+        )
+
+    # === v3 API: Query System ===
+
+    def query(
+        self,
+        pattern: str,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        tenant_id: str | None = None,
+        observer: "Observer | Umwelt[Any, Any] | None" = None,
+        capability_check: bool = True,
+        dry_run: bool = False,
+    ) -> "QueryResult":
+        """
+        Query the registry without invocation (v3 API).
+
+        This allows asking "what exists?" without triggering side effects.
+
+        Args:
+            pattern: Query pattern (must start with '?')
+                - ?world.*           - Query all world nodes
+                - ?*.*.manifest      - Query all manifestable paths
+                - ?self.memory.?     - Query affordances for self.memory
+            limit: Maximum results (default 100, max 1000)
+            offset: Pagination offset (default 0)
+            tenant_id: Optional tenant filter
+            observer: Observer for capability checking
+            capability_check: Whether to filter by capability (default True)
+            dry_run: If True, only estimate cost without executing
+
+        Returns:
+            QueryResult with matches and metadata
+
+        Raises:
+            QuerySyntaxError: If pattern is invalid
+            QueryBoundError: If limit exceeds 1000
+
+        Example:
+            # Query all world nodes
+            result = logos.query("?world.*")
+            for match in result:
+                print(match.path)
+
+            # Query with pagination
+            result = logos.query("?world.*", limit=10, offset=20)
+
+            # Query affordances
+            result = logos.query("?self.memory.?")
+        """
+        from .query import query as do_query
+
+        # Convert Umwelt to Observer if needed
+        obs: Observer | None = None
+        if observer is not None:
+            if isinstance(observer, Observer):
+                obs = observer
+            else:
+                # Extract from Umwelt
+                dna = observer.dna
+                obs = Observer(
+                    archetype=getattr(dna, "archetype", "guest"),
+                    capabilities=frozenset(getattr(dna, "capabilities", ())),
+                )
+
+        return do_query(
+            self,
+            pattern,
+            limit=limit,
+            offset=offset,
+            tenant_id=tenant_id,
+            observer=obs,
+            capability_check=capability_check,
+            dry_run=dry_run,
+        )
+
+    # === v3 API: Alias System ===
+
+    def _expand_aliases(self, path: str) -> str:
+        """
+        Expand aliases in a path.
+
+        Only the first segment is checked for aliases.
+        """
+        if self._aliases is None:
+            return path
+        return self._aliases.expand(path)
+
+    def alias(self, name: str, target: str) -> None:
+        """
+        Register a path alias (v3 API).
+
+        Aliases are prefix expansions: "me" -> "self.soul"
+        So "me.challenge" expands to "self.soul.challenge"
+
+        Rules:
+        - Prefix expansion only (alias must be first segment)
+        - No recursion (aliases don't expand within aliases)
+        - Shadowing forbidden (can't alias to context names)
+
+        Args:
+            name: Alias name (single segment)
+            target: Target path (e.g., "self.soul")
+
+        Example:
+            logos.alias("me", "self.soul")
+            await logos("me.challenge", observer)  # → self.soul.challenge
+        """
+        from .aliases import AliasRegistry
+
+        if self._aliases is None:
+            self._aliases = AliasRegistry()
+        self._aliases.register(name, target)
+
+    def unalias(self, name: str) -> None:
+        """
+        Remove a path alias.
+
+        Args:
+            name: Alias to remove
+        """
+        if self._aliases is not None:
+            self._aliases.unregister(name)
+
+    def get_aliases(self) -> dict[str, str]:
+        """
+        Get all registered aliases.
+
+        Returns:
+            Dict mapping alias names to target paths
+        """
+        if self._aliases is None:
+            return {}
+        return self._aliases.list_aliases()
+
+    def with_aliases(self, aliases: "AliasRegistry") -> "Logos":
+        """
+        Create a new Logos instance with alias registry.
+
+        Args:
+            aliases: AliasRegistry to use
+
+        Returns:
+            New Logos instance with aliases set
+        """
+        return Logos(
+            registry=self.registry,
+            spec_root=self.spec_root,
+            _cache=self._cache.copy(),
+            _jit_nodes=self._jit_nodes.copy(),
+            _context_resolvers=self._context_resolvers,
+            _narrator=self._narrator,
+            _d_gent=self._d_gent,
+            _b_gent=self._b_gent,
+            _grammarian=self._grammarian,
+            _capital_ledger=self._capital_ledger,
+            _curator=self._curator,
+            _telemetry_enabled=self._telemetry_enabled,
+            _aliases=aliases,
         )
 
 
