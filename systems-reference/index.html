@@ -788,10 +788,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#terrarium-agent-gateway" class="md-nav__link">
+  <a href="#terrarium-archived-superseded-by-agentese-universal-protocol" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Terrarium (Agent Gateway)
+        Terrarium (ARCHIVED - Superseded by AGENTESE Universal Protocol)
       
     </span>
   </a>
@@ -1589,19 +1589,15 @@
 </span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="o">...</span>
 </span></code></pre></div>
 <hr />
-<h2 id="terrarium-agent-gateway">Terrarium (Agent Gateway)</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.terrarium</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="n">Terrarium</span><span class="p">,</span> <span class="n">HolographicBuffer</span><span class="p">,</span> <span class="n">PrismRestBridge</span>
-</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="p">)</span>
-</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
-</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1"># Create gateway</span>
-</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="n">terrarium</span> <span class="o">=</span> <span class="n">Terrarium</span><span class="p">()</span>
-</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">terrarium</span><span class="o">.</span><span class="n">register_agent</span><span class="p">(</span><span class="n">agent_id</span><span class="p">,</span> <span class="n">flux_agent</span><span class="p">)</span>
-</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
-</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="c1"># Mount CLI agent as REST</span>
-</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="n">bridge</span> <span class="o">=</span> <span class="n">PrismRestBridge</span><span class="p">()</span>
-</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="n">bridge</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="n">terrarium</span><span class="o">.</span><span class="n">app</span><span class="p">,</span> <span class="n">cli_agent</span><span class="p">)</span>
-</span></code></pre></div>
+<h2 id="terrarium-archived-superseded-by-agentese-universal-protocol">Terrarium (ARCHIVED - Superseded by AGENTESE Universal Protocol)</h2>
+<p><strong>Status</strong>: Archived 2025-12-17. See <code>protocols/_archived/terrarium-archived/README.md</code>.</p>
+<p><strong>Superseded by</strong>:
+- <strong>AGENTESE Universal Gateway</strong> (<code>protocols/agentese/gateway.py</code>) - Auto-exposes nodes via HTTP/WebSocket
+- <strong>Synergy Event Bus</strong> (<code>protocols/synergy/bus.py</code>) - Cross-jewel communication</p>
+<p><strong>Preserved in <code>agents/flux/</code></strong>:
+- <code>HolographicBuffer</code> → <code>agents/flux/mirror.py</code>
+- <code>TerriumEvent</code>, <code>SemaphoreEvent</code> → <code>agents/flux/terrarium_events.py</code>
+- <code>SemanticMetricsCollector</code> → <code>agents/flux/semantic_metrics.py</code></p>
 <hr />
 <h2 id="infra-kubernetes">Infra (Kubernetes)</h2>
 <table>
@@ -1636,34 +1632,34 @@
 </table>
 <hr />
 <h2 id="key-import-patterns">Key Import Patterns</h2>
-<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1"># Categorical foundation</span>
-</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
-</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
-</span><span id="__span-19-4"><a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
-</span><span id="__span-19-5"><a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a>
-</span><span id="__span-19-6"><a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="c1"># Stream processing</span>
-</span><span id="__span-19-7"><a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
-</span><span id="__span-19-8"><a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>
-</span><span id="__span-19-9"><a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="c1"># AGENTESE</span>
-</span><span id="__span-19-10"><a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
-</span><span id="__span-19-11"><a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>
-</span><span id="__span-19-12"><a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="c1"># Reactive</span>
-</span><span id="__span-19-13"><a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
-</span><span id="__span-19-14"><a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>
-</span><span id="__span-19-15"><a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="c1"># Town</span>
-</span><span id="__span-19-16"><a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
-</span><span id="__span-19-17"><a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a>
-</span><span id="__span-19-18"><a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="c1"># Soul</span>
-</span><span id="__span-19-19"><a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
-</span><span id="__span-19-20"><a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a>
-</span><span id="__span-19-21"><a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="c1"># Memory</span>
-</span><span id="__span-19-22"><a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
-</span><span id="__span-19-23"><a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>
-</span><span id="__span-19-24"><a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="c1"># SaaS</span>
-</span><span id="__span-19-25"><a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
-</span><span id="__span-19-26"><a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
-</span><span id="__span-19-27"><a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
-</span><span id="__span-19-28"><a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Categorical foundation</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.poly</span><span class="w"> </span><span class="kn">import</span> <span class="n">PolyAgent</span><span class="p">,</span> <span class="n">MANIFEST</span><span class="p">,</span> <span class="n">WITNESS</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.operad</span><span class="w"> </span><span class="kn">import</span> <span class="n">AGENT_OPERAD</span><span class="p">,</span> <span class="n">Operation</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.sheaf</span><span class="w"> </span><span class="kn">import</span> <span class="n">KENT_SOUL</span><span class="p">,</span> <span class="n">query_soul</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="c1"># Stream processing</span>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">Flux</span><span class="p">,</span> <span class="n">FluxPipeline</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="c1"># AGENTESE</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese</span><span class="w"> </span><span class="kn">import</span> <span class="n">Logos</span><span class="p">,</span> <span class="n">create_wired_logos</span><span class="p">,</span> <span class="n">parse_path</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="c1"># Reactive</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.i.reactive</span><span class="w"> </span><span class="kn">import</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Computed</span><span class="p">,</span> <span class="n">KgentsWidget</span>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="c1"># Town</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.town</span><span class="w"> </span><span class="kn">import</span> <span class="n">Citizen</span><span class="p">,</span> <span class="n">TownFlux</span><span class="p">,</span> <span class="n">TOWN_OPERAD</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="c1"># Soul</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.k</span><span class="w"> </span><span class="kn">import</span> <span class="n">soul</span><span class="p">,</span> <span class="n">KgentFlux</span><span class="p">,</span> <span class="n">SemanticGatekeeper</span>
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a>
+</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="c1"># Memory</span>
+</span><span id="__span-18-22"><a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="kn">from</span><span class="w"> </span><span class="nn">agents.m</span><span class="w"> </span><span class="kn">import</span> <span class="n">HolographicMemory</span><span class="p">,</span> <span class="n">MemoryCrystal</span><span class="p">,</span> <span class="n">SemanticRouter</span>
+</span><span id="__span-18-23"><a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>
+</span><span id="__span-18-24"><a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="c1"># SaaS</span>
+</span><span id="__span-18-25"><a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_app</span>
+</span><span id="__span-18-26"><a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.billing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StripeClient</span>
+</span><span id="__span-18-27"><a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.licensing</span><span class="w"> </span><span class="kn">import</span> <span class="n">requires_tier</span>
+</span><span id="__span-18-28"><a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.tenancy</span><span class="w"> </span><span class="kn">import</span> <span class="n">set_tenant_context</span>
 </span></code></pre></div>
 <hr />
 <p><em>Last updated: 2025-12-16</em></p>
