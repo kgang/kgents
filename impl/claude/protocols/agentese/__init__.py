@@ -75,6 +75,14 @@ from .aliases import (
     expand_aliases,
     get_default_aliases_path,
 )
+from .container import (
+    Provider,
+    ProviderEntry,
+    ServiceContainer,
+    create_container,
+    get_container,
+    reset_container,
+)
 
 # =============================================================================
 # PUBLIC API - Context Factory (single entry point)
@@ -97,6 +105,11 @@ from .exceptions import (
     PathNotFoundError,
     PathSyntaxError,
     TastefulnessError,
+)
+from .gateway import (
+    AgenteseGateway,
+    create_gateway,
+    mount_gateway,
 )
 
 # =============================================================================
@@ -143,6 +156,20 @@ from .query import (
     QuerySyntaxError,
     create_query_builder,
     query,
+)
+
+# =============================================================================
+# PUBLIC API - Metaphysical Fullstack (AD-009)
+# =============================================================================
+from .registry import (
+    NODE_MARKER,
+    NodeMetadata,
+    NodeRegistry,
+    get_node_metadata,
+    get_registry,
+    is_node,
+    node,
+    reset_registry,
 )
 
 # =============================================================================
@@ -268,6 +295,27 @@ __all__ = [
     # === Adapter (2) ===
     "AgentesAdapter",
     "create_adapter",
+    # === Metaphysical Fullstack / AD-009 (17) ===
+    # Registry (@node decorator)
+    "node",
+    "is_node",
+    "get_node_metadata",
+    "NodeMetadata",
+    "NODE_MARKER",
+    "NodeRegistry",
+    "get_registry",
+    "reset_registry",
+    # Gateway (universal protocol)
+    "AgenteseGateway",
+    "create_gateway",
+    "mount_gateway",
+    # Container (DI)
+    "ServiceContainer",
+    "Provider",
+    "ProviderEntry",
+    "create_container",
+    "get_container",
+    "reset_container",
     # === Crown Jewel Brain Factory (1) ===
     "create_brain_logos",
 ]

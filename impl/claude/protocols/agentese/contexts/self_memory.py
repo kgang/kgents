@@ -19,6 +19,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from ..affordances import (
+    AspectCategory,
+    Effect,
+    aspect,
+)
 from ..node import (
     BaseLogosNode,
     BasicRendering,
@@ -117,6 +122,12 @@ class MemoryNode(BaseLogosNode):
         """Memory affordances available to all archetypes."""
         return MEMORY_AFFORDANCES
 
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("memory_state")],
+        help="Display brain status and health metrics",
+        examples=["kg brain", "kg brain status"],
+    )
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View current memory state."""
         # Try AssociativeMemory first
@@ -185,6 +196,8 @@ class MemoryNode(BaseLogosNode):
                 return await self._engram(observer, **kwargs)
             case "capture":
                 return await self._capture(observer, **kwargs)
+            case "topology":
+                return await self._topology(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -267,6 +280,13 @@ class MemoryNode(BaseLogosNode):
         self._checkpoints.append(checkpoint)
         return checkpoint
 
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("memory_crystals"), Effect.CALLS("embedder")],
+        help="Semantic search for similar memories",
+        examples=["kg brain search 'category theory'", "kg brain ghost 'agents'"],
+        budget_estimate="~50 tokens (embedding)",
+    )
     async def _recall(
         self,
         observer: "Umwelt[Any, Any]",
@@ -380,7 +400,9 @@ class MemoryNode(BaseLogosNode):
         # Try AssociativeMemory
         if self._associative_memory is not None:
             try:
-                content_bytes = content.encode() if isinstance(content, str) else content
+                content_bytes = (
+                    content.encode() if isinstance(content, str) else content
+                )
                 memory_id = await self._associative_memory.remember(
                     content=content_bytes,
                     metadata=kwargs.get("metadata", {}),
@@ -513,6 +535,16 @@ class MemoryNode(BaseLogosNode):
     # Crown Jewel Brain: High-level operations
     # =========================================================================
 
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[
+            Effect.WRITES("memory_crystals"),
+            Effect.CALLS("embedder"),
+        ],
+        help="Capture content to holographic memory",
+        examples=["kg brain capture 'Python is great for data science'"],
+        budget_estimate="~50 tokens (embedding)",
+    )
     async def _capture(
         self,
         observer: "Umwelt[Any, Any]",
@@ -557,7 +589,9 @@ class MemoryNode(BaseLogosNode):
         # Store via M-gent AssociativeMemory
         if self._associative_memory is not None:
             try:
-                content_bytes = content.encode() if isinstance(content, str) else content
+                content_bytes = (
+                    content.encode() if isinstance(content, str) else content
+                )
                 memory_id = await self._associative_memory.remember(
                     content=content_bytes,
                     metadata={**metadata, "concept_id": concept_id},
@@ -569,7 +603,7 @@ class MemoryNode(BaseLogosNode):
                     "storage": "associative_memory",
                     "metadata": metadata,
                 }
-            except Exception as e:
+            except Exception:
                 # Fall through to local storage
                 pass
 
@@ -586,6 +620,88 @@ class MemoryNode(BaseLogosNode):
             "storage": "local_memory",
             "metadata": metadata,
             "note": "AssociativeMemory not configured, stored in local memory",
+        }
+
+    async def _topology(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Return brain topology for 3D visualization.
+
+        AGENTESE: self.memory.topology
+
+        Returns format matching BrainTopologyResponse expected by frontend:
+        - nodes: list of topology nodes with 3D positions
+        - edges: list of connections between nodes
+        - gaps: list of knowledge gaps (not yet implemented)
+        - hub_ids: list of hub node IDs
+        - stats: aggregate statistics
+        """
+        import math
+
+        # Get memories from local dict or AssociativeMemory
+        memories = list(self._memories.items())
+        total_count = len(memories)
+
+        # Generate nodes from memories
+        nodes = []
+        for i, (key, memory) in enumerate(memories[:200]):  # Limit to 200
+            # Simple 3D positioning - spiral layout
+            angle = i * 0.5
+            radius = 2 + i * 0.1
+
+            content = ""
+            summary = key
+            captured_at = ""
+
+            if isinstance(memory, dict):
+                content = str(memory.get("content", ""))[:200]
+                summary = memory.get("concept_id", key)[:50]
+                captured_at = memory.get("captured_at", "")
+
+            nodes.append(
+                {
+                    "id": key,
+                    "label": summary,
+                    "x": radius * math.cos(angle),
+                    "y": (i % 5) * 0.5 - 1,  # Layer by index
+                    "z": radius * math.sin(angle),
+                    "resolution": 0.5,
+                    "content": content,
+                    "summary": summary,
+                    "captured_at": captured_at,
+                    "tags": [],
+                }
+            )
+
+        # Generate edges (connect sequential nodes)
+        edges = []
+        for i in range(len(nodes) - 1):
+            edges.append(
+                {
+                    "source": nodes[i]["id"],
+                    "target": nodes[i + 1]["id"],
+                    "similarity": 0.5 + (0.3 * (1 - i / max(len(nodes), 1))),
+                }
+            )
+
+        # Identify hubs (first few nodes)
+        hub_ids = [n["id"] for n in nodes[:3]] if nodes else []
+
+        return {
+            "nodes": nodes,
+            "edges": edges,
+            "gaps": [],  # Knowledge gaps - not yet implemented
+            "hub_ids": hub_ids,
+            "stats": {
+                "concept_count": total_count,
+                "edge_count": len(edges),
+                "hub_count": len(hub_ids),
+                "gap_count": 0,
+                "avg_resolution": 0.5,
+            },
         }
 
 
@@ -621,7 +737,10 @@ class MemoryGhostNode(BaseLogosNode):
         composting_count = 0
 
         # Check parent memory for composting memories (ghosts)
-        if self._parent_memory is not None and self._parent_memory._associative_memory is not None:
+        if (
+            self._parent_memory is not None
+            and self._parent_memory._associative_memory is not None
+        ):
             try:
                 from agents.m import Lifecycle
 
@@ -656,6 +775,12 @@ class MemoryGhostNode(BaseLogosNode):
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
+    @aspect(
+        category=AspectCategory.ENTROPY,
+        effects=[Effect.READS("memory_crystals")],
+        help="Surface a serendipitous memory from the void",
+        examples=["kg brain surface", "kg brain surface 'agents'"],
+    )
     async def _surface(
         self,
         observer: "Umwelt[Any, Any]",

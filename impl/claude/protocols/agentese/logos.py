@@ -806,8 +806,34 @@ class Logos:
         holon: str,
         rest: list[str],
     ) -> LogosNode:
-        """Resolve by context type using Phase 2 context resolvers."""
+        """Resolve by context type using Phase 2 context resolvers.
+
+        Resolution order (AD-009 Metaphysical Fullstack):
+        1. Check NodeRegistry for @node decorated classes (services/)
+        2. Use context-specific resolvers (agents/)
+        3. Check SimpleRegistry (legacy)
+        4. JIT generate from spec files
+        """
         handle = f"{context}.{holon}"
+
+        # AD-009: Check NodeRegistry first (@node decorated service nodes)
+        # This enables the Metaphysical Fullstack pattern where services
+        # auto-register their AGENTESE nodes
+        from .registry import get_registry
+
+        node_registry = get_registry()
+        if node_registry.has(handle):
+            # Get class and instantiate (sync - will be cached by registry)
+            # Note: For async resolution with DI, use gateway._invoke_path()
+            node_cls = node_registry.get(handle)
+            if node_cls is not None:
+                try:
+                    # Try to instantiate without dependencies
+                    # For full DI, use ServiceContainer
+                    return cast(LogosNode, node_cls())
+                except TypeError:
+                    # Node requires dependencies - will be handled by gateway
+                    pass
 
         # Phase 2: Use context-specific resolvers
         if context in self._context_resolvers:
@@ -816,7 +842,7 @@ class Logos:
             if hasattr(resolver, "resolve"):
                 return cast(LogosNode, resolver.resolve(holon, rest))
 
-        # Fallback: Check registry directly
+        # Fallback: Check registry directly (SimpleRegistry)
         node = self.registry.get(handle)
         if node:
             return node

@@ -7,7 +7,6 @@ Part of the Data Architecture Rewrite (plans/data-architecture-rewrite.md).
 from __future__ import annotations
 
 import pytest
-
 from agents.d.backends.memory import MemoryBackend
 from agents.d.bus import DataBus, DataEventType, get_data_bus, reset_data_bus
 from agents.d.datum import Datum
@@ -435,8 +434,8 @@ class TestUpgraderSynergyIntegration:
     @pytest.fixture
     def upgrader(self, memory_backend, jsonl_backend, data_bus):
         """Create AutoUpgrader with fast thresholds for testing."""
-        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
         from agents.d.router import Backend
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
 
         return AutoUpgrader(
             source=memory_backend,
@@ -504,8 +503,8 @@ class TestUpgraderSynergyIntegration:
         2. Force upgrade to JSONL
         3. Verify synergy event was emitted
         """
-        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
         from agents.d.router import Backend
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
         from protocols.synergy.bus import get_synergy_bus, reset_synergy_bus
         from protocols.synergy.events import SynergyEventType
 
@@ -564,8 +563,8 @@ class TestUpgraderSynergyIntegration:
         self, observer: Observer, memory_backend: MemoryBackend, jsonl_backend
     ) -> None:
         """History aspect tracks tier transitions."""
-        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
         from agents.d.router import Backend
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
 
         # Create upgrader
         upgrader = AutoUpgrader(

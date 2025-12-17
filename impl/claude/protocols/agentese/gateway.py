@@ -1,0 +1,533 @@
+"""
+AGENTESE Universal Gateway.
+
+Auto-exposes all registered @node decorated classes via HTTP/WebSocket.
+
+The Metaphysical Fullstack Pattern (AD-009):
+- The protocol IS the API
+- No explicit routes needed
+- All transports collapse to logos.invoke(path, observer, ...)
+
+This gateway:
+1. Mounts a single dynamic route that handles ALL AGENTESE paths
+2. Routes requests to registered nodes via NodeRegistry
+3. Falls back to Logos for non-registered paths
+4. Supports SSE streaming for async generators
+5. Supports WebSocket for bidirectional streams
+
+Example:
+    from protocols.agentese.gateway import AgenteseGateway
+
+    # Mount on FastAPI app
+    gateway = AgenteseGateway()
+    gateway.mount_on(app)
+
+    # Now all registered nodes are auto-exposed:
+    # GET  /agentese/self/memory/manifest
+    # POST /agentese/self/memory/capture
+    # GET  /agentese/world/town/manifest
+    # etc.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+from dataclasses import dataclass, field
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    AsyncGenerator,
+)
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI, Request, WebSocket
+
+from .node import Observer
+from .registry import get_registry
+
+# Graceful FastAPI import
+try:
+    from fastapi import APIRouter, HTTPException, Request, WebSocket
+    from fastapi.responses import JSONResponse, StreamingResponse
+
+    HAS_FASTAPI = True
+except ImportError:
+    HAS_FASTAPI = False
+    APIRouter = None  # type: ignore[assignment, misc]
+    Request = None  # type: ignore[assignment, misc]
+    WebSocket = None  # type: ignore[assignment, misc]
+    StreamingResponse = None  # type: ignore[assignment, misc]
+    JSONResponse = None  # type: ignore[assignment, misc]
+
+    class HTTPException(Exception):  # type: ignore[no-redef]
+        """Stub HTTPException."""
+
+        def __init__(self, status_code: int, detail: str | dict[str, Any]) -> None:
+            self.status_code = status_code
+            self.detail = detail
+            super().__init__(str(detail))
+
+
+logger = logging.getLogger(__name__)
+
+# Valid AGENTESE contexts
+VALID_CONTEXTS = frozenset({"world", "self", "concept", "void", "time"})
+
+
+# === Response Helpers ===
+
+
+def _to_json_safe(obj: Any) -> Any:
+    """Convert object to JSON-safe representation."""
+    if obj is None:
+        return None
+    if isinstance(obj, (str, int, float, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: _to_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_json_safe(v) for v in obj]
+    if hasattr(obj, "to_dict"):
+        return obj.to_dict()
+    if hasattr(obj, "__dict__"):
+        return {
+            k: _to_json_safe(v)
+            for k, v in obj.__dict__.items()
+            if not k.startswith("_")
+        }
+    return str(obj)
+
+
+def _extract_observer(request: "Request") -> Observer:
+    """
+    Extract Observer from HTTP headers.
+
+    Headers:
+    - X-Observer-Archetype: Observer archetype (default: "guest")
+    - X-Observer-Capabilities: Comma-separated capabilities (default: "")
+    """
+    archetype = request.headers.get("X-Observer-Archetype", "guest")
+    capabilities_str = request.headers.get("X-Observer-Capabilities", "")
+    capabilities = frozenset(
+        c.strip() for c in capabilities_str.split(",") if c.strip()
+    )
+
+    return Observer(archetype=archetype, capabilities=capabilities)
+
+
+async def _generate_sse(gen: AsyncGenerator[Any, None]) -> AsyncGenerator[str, None]:
+    """Convert async generator to SSE format."""
+    try:
+        async for chunk in gen:
+            data = _to_json_safe(chunk)
+            yield f"data: {json.dumps(data)}\n\n"
+    except Exception as e:
+        logger.error(f"SSE stream error: {e}")
+        yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+
+
+# === Gateway ===
+
+
+@dataclass
+class AgenteseGateway:
+    """
+    Universal gateway for AGENTESE protocol.
+
+    Auto-exposes all @node registered classes via HTTP.
+    The protocol IS the API - no explicit routes needed.
+
+    Attributes:
+        prefix: URL prefix for gateway routes (default: "/agentese")
+        container: Optional ServiceContainer for dependency injection
+        enable_streaming: Enable SSE streaming endpoints (default: True)
+        enable_websocket: Enable WebSocket endpoints (default: True)
+        fallback_to_logos: Fall back to Logos for unregistered paths (default: True)
+
+    Example:
+        gateway = AgenteseGateway(prefix="/api/v1")
+        gateway.mount_on(app)
+    """
+
+    prefix: str = "/agentese"
+    container: Any | None = None
+    enable_streaming: bool = True
+    enable_websocket: bool = True
+    fallback_to_logos: bool = True
+    _router: Any = field(default=None, repr=False)
+    _logos: Any = field(default=None, repr=False)
+
+    def _get_logos(self) -> Any:
+        """Get or create Logos instance for fallback resolution."""
+        if self._logos is None:
+            try:
+                from .logos import Logos
+
+                self._logos = Logos()
+            except ImportError:
+                logger.warning("Logos not available for fallback")
+        return self._logos
+
+    def mount_on(self, app: "FastAPI") -> None:
+        """
+        Mount gateway routes on FastAPI app.
+
+        This adds:
+        - GET  {prefix}/{path:path}/manifest - Manifest node
+        - POST {prefix}/{path:path}/{aspect} - Invoke aspect
+        - GET  {prefix}/{path:path}/affordances - List affordances
+        - GET  {prefix}/{path:path}/{aspect}/stream - SSE streaming
+        - WS   {prefix}/ws/{path:path} - WebSocket (if enabled)
+
+        Args:
+            app: FastAPI application instance
+        """
+        if not HAS_FASTAPI:
+            logger.error("Cannot mount gateway: FastAPI not available")
+            return
+
+        router = APIRouter(prefix=self.prefix, tags=["agentese-gateway"])
+        self._router = router
+
+        # === Manifest Endpoint ===
+        @router.get("/{path:path}/manifest")
+        async def manifest(path: str, request: Request) -> JSONResponse:
+            """Manifest a node to observer's view."""
+            from fastapi import HTTPException as FastAPIHTTPException
+
+            observer = _extract_observer(request)
+            agentese_path = path.replace("/", ".")
+
+            try:
+                result = await self._invoke_path(agentese_path, "manifest", observer)
+                return JSONResponse(
+                    content={
+                        "path": agentese_path,
+                        "aspect": "manifest",
+                        "result": _to_json_safe(result),
+                    }
+                )
+            except FastAPIHTTPException:
+                raise  # Re-raise HTTP exceptions unchanged
+            except Exception as e:
+                logger.error(f"Manifest error for {agentese_path}: {e}")
+                raise FastAPIHTTPException(status_code=500, detail=str(e))
+
+        # === Affordances Endpoint ===
+        @router.get("/{path:path}/affordances")
+        async def affordances(path: str, request: Request) -> JSONResponse:
+            """List affordances for a node."""
+            observer = _extract_observer(request)
+            agentese_path = path.replace("/", ".")
+
+            try:
+                result = await self._invoke_path(agentese_path, "affordances", observer)
+                return JSONResponse(
+                    content={
+                        "path": agentese_path,
+                        "affordances": result if isinstance(result, list) else [],
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Affordances error for {agentese_path}: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # === Aspect Invocation Endpoint ===
+        @router.post("/{path:path}/{aspect}")
+        async def invoke_aspect(
+            path: str,
+            aspect: str,
+            request: Request,
+        ) -> JSONResponse:
+            """Invoke an aspect on a node."""
+            observer = _extract_observer(request)
+            agentese_path = path.replace("/", ".")
+
+            # Parse request body for kwargs
+            try:
+                body = await request.json()
+                kwargs = body if isinstance(body, dict) else {}
+            except Exception:
+                kwargs = {}
+
+            try:
+                result = await self._invoke_path(
+                    agentese_path, aspect, observer, **kwargs
+                )
+                return JSONResponse(
+                    content={
+                        "path": agentese_path,
+                        "aspect": aspect,
+                        "result": _to_json_safe(result),
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Invoke error for {agentese_path}.{aspect}: {e}")
+                raise HTTPException(status_code=500, detail=str(e))
+
+        # === SSE Streaming Endpoint ===
+        if self.enable_streaming:
+
+            @router.get("/{path:path}/{aspect}/stream")
+            async def stream_aspect(
+                path: str,
+                aspect: str,
+                request: Request,
+            ) -> StreamingResponse:
+                """Stream aspect results via SSE."""
+                observer = _extract_observer(request)
+                agentese_path = path.replace("/", ".")
+
+                try:
+                    result = await self._invoke_path(
+                        agentese_path, aspect, observer, _stream=True
+                    )
+
+                    # If result is an async generator, stream it
+                    if hasattr(result, "__aiter__"):
+                        return StreamingResponse(
+                            _generate_sse(result),
+                            media_type="text/event-stream",
+                            headers={
+                                "Cache-Control": "no-cache",
+                                "Connection": "keep-alive",
+                                "X-Accel-Buffering": "no",
+                            },
+                        )
+                    else:
+                        # Single result, wrap in SSE format
+                        async def single_event() -> AsyncGenerator[str, None]:
+                            yield f"data: {json.dumps(_to_json_safe(result))}\n\n"
+
+                        return StreamingResponse(
+                            single_event(),
+                            media_type="text/event-stream",
+                        )
+                except Exception as e:
+                    logger.error(f"Stream error for {agentese_path}.{aspect}: {e}")
+                    raise HTTPException(status_code=500, detail=str(e))
+
+        # === WebSocket Endpoint ===
+        if self.enable_websocket:
+
+            @router.websocket("/ws/{path:path}")
+            async def websocket_handler(
+                websocket: WebSocket,
+                path: str,
+            ) -> None:
+                """WebSocket handler for bidirectional streaming."""
+                await websocket.accept()
+                agentese_path = path.replace("/", ".")
+
+                # Extract observer from query params or first message
+                observer = Observer.guest()
+
+                try:
+                    while True:
+                        # Receive message
+                        data = await websocket.receive_json()
+                        aspect = data.get("aspect", "manifest")
+                        kwargs = data.get("kwargs", {})
+
+                        # Update observer if provided
+                        if "observer" in data:
+                            obs_data = data["observer"]
+                            observer = Observer(
+                                archetype=obs_data.get("archetype", "guest"),
+                                capabilities=frozenset(
+                                    obs_data.get("capabilities", [])
+                                ),
+                            )
+
+                        # Invoke and send result
+                        try:
+                            result = await self._invoke_path(
+                                agentese_path, aspect, observer, **kwargs
+                            )
+
+                            # If streaming result, stream each chunk
+                            if hasattr(result, "__aiter__"):
+                                async for chunk in result:
+                                    await websocket.send_json(
+                                        {
+                                            "type": "chunk",
+                                            "data": _to_json_safe(chunk),
+                                        }
+                                    )
+                                await websocket.send_json({"type": "done"})
+                            else:
+                                await websocket.send_json(
+                                    {
+                                        "type": "result",
+                                        "data": _to_json_safe(result),
+                                    }
+                                )
+                        except Exception as e:
+                            await websocket.send_json(
+                                {
+                                    "type": "error",
+                                    "error": str(e),
+                                }
+                            )
+
+                except Exception as e:
+                    logger.debug(f"WebSocket closed for {agentese_path}: {e}")
+                finally:
+                    try:
+                        await websocket.close()
+                    except Exception:
+                        pass
+
+        # === Discovery Endpoints ===
+        @router.get("/discover")
+        async def discover() -> JSONResponse:
+            """List all registered AGENTESE paths."""
+            registry = get_registry()
+            return JSONResponse(
+                content={
+                    "paths": registry.list_paths(),
+                    "stats": registry.stats(),
+                }
+            )
+
+        @router.get("/discover/{context}")
+        async def discover_context(context: str) -> JSONResponse:
+            """List paths for a specific context."""
+            if context not in VALID_CONTEXTS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid context: {context}. Valid: {', '.join(VALID_CONTEXTS)}",
+                )
+            registry = get_registry()
+            return JSONResponse(
+                content={
+                    "context": context,
+                    "paths": registry.list_by_context(context),
+                }
+            )
+
+        # Mount router on app
+        app.include_router(router)
+        logger.info(f"AGENTESE Gateway mounted at {self.prefix}")
+
+    async def _invoke_path(
+        self,
+        path: str,
+        aspect: str,
+        observer: Observer,
+        **kwargs: Any,
+    ) -> Any:
+        """
+        Invoke an aspect on a path.
+
+        Resolution order:
+        1. Check NodeRegistry for @node registered class
+        2. Fall back to Logos for context resolver paths
+
+        Args:
+            path: AGENTESE path (e.g., "self.memory")
+            aspect: Aspect to invoke (e.g., "capture")
+            observer: Observer context
+            **kwargs: Aspect-specific arguments
+
+        Returns:
+            Aspect invocation result
+
+        Raises:
+            HTTPException: If path cannot be resolved
+        """
+        registry = get_registry()
+
+        # Try registry first
+        if registry.has(path):
+            node = await registry.resolve(path, self.container)
+            if node is not None:
+                # Observer is compatible with Umwelt for node.invoke
+                return await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
+
+        # Fall back to Logos
+        if self.fallback_to_logos:
+            logos = self._get_logos()
+            if logos is not None:
+                try:
+                    return await logos.invoke(f"{path}.{aspect}", observer, **kwargs)
+                except Exception as e:
+                    logger.debug(f"Logos fallback failed for {path}.{aspect}: {e}")
+
+        # Path not found - raise without catching
+        from fastapi import HTTPException as FastAPIHTTPException
+
+        raise FastAPIHTTPException(
+            status_code=404,
+            detail={
+                "error": f"Path not found: {path}",
+                "suggestion": "Check /agentese/discover for available paths",
+                "available_contexts": list(VALID_CONTEXTS),
+            },
+        )
+
+
+# === Factory Functions ===
+
+
+def create_gateway(
+    prefix: str = "/agentese",
+    container: Any | None = None,
+    enable_streaming: bool = True,
+    enable_websocket: bool = True,
+    fallback_to_logos: bool = True,
+) -> AgenteseGateway:
+    """
+    Create an AGENTESE gateway instance.
+
+    Args:
+        prefix: URL prefix for gateway routes
+        container: Optional ServiceContainer for dependency injection
+        enable_streaming: Enable SSE streaming endpoints
+        enable_websocket: Enable WebSocket endpoints
+        fallback_to_logos: Fall back to Logos for unregistered paths
+
+    Returns:
+        Configured AgenteseGateway instance
+    """
+    return AgenteseGateway(
+        prefix=prefix,
+        container=container,
+        enable_streaming=enable_streaming,
+        enable_websocket=enable_websocket,
+        fallback_to_logos=fallback_to_logos,
+    )
+
+
+def mount_gateway(
+    app: "FastAPI",
+    prefix: str = "/agentese",
+    **kwargs: Any,
+) -> AgenteseGateway:
+    """
+    Create and mount a gateway on a FastAPI app.
+
+    Convenience function combining create_gateway and mount_on.
+
+    Args:
+        app: FastAPI application instance
+        prefix: URL prefix for gateway routes
+        **kwargs: Additional gateway configuration
+
+    Returns:
+        Mounted AgenteseGateway instance
+    """
+    gateway = create_gateway(prefix=prefix, **kwargs)
+    gateway.mount_on(app)
+    return gateway
+
+
+# === Exports ===
+
+__all__ = [
+    "AgenteseGateway",
+    "create_gateway",
+    "mount_gateway",
+]

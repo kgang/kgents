@@ -231,7 +231,11 @@ class FlowNode(BaseLogosNode):
                 }
             return {"state": FlowState.DORMANT.value, "modality": None}
         except ImportError:
-            return {"state": "dormant", "modality": None, "note": "F-gent not installed"}
+            return {
+                "state": "dormant",
+                "modality": None,
+                "note": "F-gent not installed",
+            }
 
     async def _get_entropy(
         self,
@@ -260,7 +264,6 @@ class FlowNode(BaseLogosNode):
         """
         modality = kwargs.get("modality", "chat")
         config = kwargs.get("config", {})
-        agent = kwargs.get("agent")
 
         # Check if we have a pre-configured flow
         if modality == "chat" and self._chat_flow is not None:
@@ -276,7 +279,7 @@ class FlowNode(BaseLogosNode):
         # Starting a flow requires an agent in most cases
         # For now, return a "prepared" status that indicates ready for messages
         try:
-            from agents.f import FlowConfig, ChatConfig, ResearchConfig
+            from agents.f import ChatConfig, FlowConfig, ResearchConfig
 
             if modality == "chat":
                 # Mark as ready - actual ChatFlow requires agent at message time
@@ -364,7 +367,10 @@ class FlowNode(BaseLogosNode):
     ) -> dict[str, Any]:
         """Get current chat context window."""
         if self._chat_flow is None:
-            return {"error": "No chat flow active", "usage": "self.flow.start[modality='chat']"}
+            return {
+                "error": "No chat flow active",
+                "usage": "self.flow.start[modality='chat']",
+            }
 
         try:
             context = self._chat_flow.get_context()
@@ -471,7 +477,9 @@ class FlowNode(BaseLogosNode):
             synthesis = self._research_flow.synthesize()
             return {
                 "status": "synthesized",
-                "insights": synthesis.insights if hasattr(synthesis, "insights") else [],
+                "insights": synthesis.insights
+                if hasattr(synthesis, "insights")
+                else [],
                 "confidence": synthesis.confidence
                 if hasattr(synthesis, "confidence")
                 else "unknown",
@@ -524,14 +532,16 @@ class FlowNode(BaseLogosNode):
             return {"error": "content is required"}
 
         try:
-            result = self._collaboration_flow.post(
+            posted_result = self._collaboration_flow.post(
                 content=content,
                 agent_id=self._umwelt_to_meta(observer).name,
                 contribution_type=contribution_type,
             )
             return {
                 "status": "posted",
-                "contribution_id": result.id if hasattr(result, "id") else "unknown",
+                "contribution_id": posted_result.id
+                if hasattr(posted_result, "id")
+                else "unknown",
                 "type": contribution_type,
             }
         except Exception as e:
@@ -553,7 +563,7 @@ class FlowNode(BaseLogosNode):
             return {"error": "proposal_id is required"}
 
         try:
-            result = self._collaboration_flow.vote(
+            self._collaboration_flow.vote(
                 proposal_id=proposal_id,
                 agent_id=self._umwelt_to_meta(observer).name,
                 vote=vote_value,
@@ -585,8 +595,12 @@ class FlowNode(BaseLogosNode):
             return {
                 "status": "decided",
                 "proposal_id": proposal_id,
-                "outcome": decision.outcome if hasattr(decision, "outcome") else "unknown",
-                "votes": decision.vote_summary if hasattr(decision, "vote_summary") else {},
+                "outcome": decision.outcome
+                if hasattr(decision, "outcome")
+                else "unknown",
+                "votes": decision.vote_summary
+                if hasattr(decision, "vote_summary")
+                else {},
             }
         except Exception as e:
             return {"error": str(e)}
@@ -674,7 +688,7 @@ class ChatFlowNode(BaseLogosNode):
 
         chat = self._parent_flow._chat_flow
         try:
-            metrics = chat.get_metrics()
+            metrics: dict[str, Any] = chat.get_metrics()
             return metrics
         except Exception:
             return {
@@ -697,10 +711,10 @@ class ChatFlowNode(BaseLogosNode):
 
         chat = self._parent_flow._chat_flow
         try:
-            result = await chat.send_message(message)
+            response = await chat.send_message(message)
             return {
                 "status": "sent",
-                "response": result,
+                "response": response,
             }
         except Exception as e:
             return {"error": str(e)}
@@ -786,7 +800,7 @@ class ResearchFlowNode(BaseLogosNode):
 
         try:
             research = self._parent_flow._research_flow
-            result = research.refute(hypothesis_id, evidence)
+            research.refute(hypothesis_id, evidence)
             return {"status": "refuted", "hypothesis_id": hypothesis_id}
         except Exception as e:
             return {"error": str(e)}
@@ -808,7 +822,7 @@ class ResearchFlowNode(BaseLogosNode):
 
         try:
             research = self._parent_flow._research_flow
-            result = research.support(hypothesis_id, evidence)
+            research.support(hypothesis_id, evidence)
             return {"status": "supported", "hypothesis_id": hypothesis_id}
         except Exception as e:
             return {"error": str(e)}
@@ -850,10 +864,7 @@ class CollaborationFlowNode(BaseLogosNode):
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View collaboration flow state."""
-        if (
-            self._parent_flow is None
-            or self._parent_flow._collaboration_flow is None
-        ):
+        if self._parent_flow is None or self._parent_flow._collaboration_flow is None:
             return BasicRendering(
                 summary="Collaboration Flow",
                 content="No collaboration flow active",
@@ -902,10 +913,7 @@ class CollaborationFlowNode(BaseLogosNode):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Create a new proposal."""
-        if (
-            self._parent_flow is None
-            or self._parent_flow._collaboration_flow is None
-        ):
+        if self._parent_flow is None or self._parent_flow._collaboration_flow is None:
             return {"error": "No collaboration flow active"}
 
         content = kwargs.get("content")
@@ -931,10 +939,7 @@ class CollaborationFlowNode(BaseLogosNode):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Get contributions from blackboard."""
-        if (
-            self._parent_flow is None
-            or self._parent_flow._collaboration_flow is None
-        ):
+        if self._parent_flow is None or self._parent_flow._collaboration_flow is None:
             return {"error": "No collaboration flow active"}
 
         agent_id = kwargs.get("agent_id")

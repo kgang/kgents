@@ -45,6 +45,18 @@ DATA_AFFORDANCES: tuple[str, ...] = (
     "stats",  # Storage statistics
     # Sub-nodes
     "upgrader",  # Tier promotion observability
+    "table",  # Alembic table access (Dual-Track Architecture)
+)
+
+# Table-specific affordances (Dual-Track Architecture)
+TABLE_AFFORDANCES: tuple[str, ...] = (
+    "get",  # Get by ID from table
+    "put",  # Upsert to table
+    "delete",  # Delete from table
+    "list",  # List with filters
+    "count",  # Count records
+    "query",  # Direct SQL (advanced)
+    "models",  # List available models
 )
 
 # Upgrader-specific affordances
@@ -89,6 +101,9 @@ class DataNode(BaseLogosNode):
 
     # Upgrader sub-node (created lazily)
     _upgrader_node: "UpgraderNode | None" = None
+
+    # Table sub-node for Dual-Track Architecture (created lazily)
+    _table_node: "TableNode | None" = None
 
     @property
     def handle(self) -> str:
@@ -150,6 +165,9 @@ class DataNode(BaseLogosNode):
             case "upgrader":
                 # Return the upgrader sub-node
                 return self._upgrader_node
+            case "table":
+                # Return the table sub-node (Dual-Track Architecture)
+                return self._table_node
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -678,29 +696,487 @@ class UpgraderNode(BaseLogosNode):
         }
 
 
+# === Table Node (Dual-Track Architecture) ===
+
+
+@dataclass
+class TableNode(BaseLogosNode):
+    """
+    self.data.table - Alembic table access for application state.
+
+    Part of the Dual-Track Architecture:
+    - D-gent Track: Agent memory (schema-free)
+    - Alembic Track: Application state (typed, migrated)
+    - TableAdapter: Bridge via DgentProtocol
+
+    Enables agent access to typed, migrated tables through AGENTESE:
+    - get: Retrieve by ID
+    - put: Upsert record
+    - delete: Remove record
+    - list: Query with filters
+    - count: Count records
+    - models: List available models
+
+    AGENTESE: self.data.table.*
+              self.data.table.crystal.get[id="..."]
+              self.data.table.citizen.list[limit=10]
+    """
+
+    _handle: str = "self.data.table"
+
+    # Registry of TableAdapter instances by model name
+    _adapters: dict[str, Any] = field(default_factory=dict)
+
+    # Session factory for creating adapters on-demand
+    _session_factory: Any = None
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Table affordances available to all archetypes."""
+        return TABLE_AFFORDANCES
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View available tables and their status."""
+        if not self._adapters and self._session_factory is None:
+            return BasicRendering(
+                summary="Table Storage (Not Configured)",
+                content="No tables configured. Wire via create_data_resolver().",
+                metadata={"configured": False},
+            )
+
+        tables = list(self._adapters.keys())
+
+        return BasicRendering(
+            summary="Alembic Table Storage",
+            content=f"Available tables: {', '.join(tables) if tables else 'None loaded'}",
+            metadata={
+                "configured": True,
+                "tables": tables,
+                "count": len(tables),
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle table-specific aspects."""
+        match aspect:
+            case "models":
+                return await self._models(observer, **kwargs)
+            case "get":
+                return await self._get(observer, **kwargs)
+            case "put":
+                return await self._put(observer, **kwargs)
+            case "delete":
+                return await self._delete(observer, **kwargs)
+            case "list":
+                return await self._list(observer, **kwargs)
+            case "count":
+                return await self._count(observer, **kwargs)
+            case _:
+                # Check if it's a model name (e.g., self.data.table.crystal)
+                if aspect in self._adapters:
+                    return TableModelNode(
+                        _handle=f"self.data.table.{aspect}",
+                        _adapter=self._adapters[aspect],
+                    )
+                return {
+                    "aspect": aspect,
+                    "status": "not implemented or model not found",
+                }
+
+    async def _models(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        List available table models.
+
+        AGENTESE: self.data.table.models
+
+        Returns:
+            Dict with available model names and their table info
+        """
+        models = []
+        for name, adapter in self._adapters.items():
+            models.append(
+                {
+                    "name": name,
+                    "table": adapter.table_name,
+                    "id_field": adapter.id_field,
+                }
+            )
+
+        return {
+            "status": "ok",
+            "models": models,
+            "count": len(models),
+        }
+
+    async def _get(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get record by ID from specified table.
+
+        AGENTESE: self.data.table.get[model="crystal", id="..."]
+
+        Args:
+            model: Model name (required)
+            id: Record ID (required)
+        """
+        model = kwargs.get("model")
+        record_id = kwargs.get("id")
+
+        if not model or not record_id:
+            return {
+                "error": "model and id are required",
+                "usage": "self.data.table.get[model='crystal', id='xxx']",
+            }
+
+        if model not in self._adapters:
+            return {
+                "error": f"Unknown model: {model}",
+                "available": list(self._adapters.keys()),
+            }
+
+        adapter = self._adapters[model]
+        datum = await adapter.get(record_id)
+
+        if datum is None:
+            return {"status": "not_found", "model": model, "id": record_id}
+
+        import json
+
+        return {
+            "status": "found",
+            "model": model,
+            "id": datum.id,
+            "content": json.loads(datum.content.decode("utf-8")),
+            "created_at": datum.created_at,
+        }
+
+    async def _put(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Upsert record to specified table.
+
+        AGENTESE: self.data.table.put[model="crystal", id="...", data={...}]
+        """
+        model = kwargs.get("model")
+        record_id = kwargs.get("id")
+        data = kwargs.get("data", {})
+
+        if not model or not record_id:
+            return {
+                "error": "model and id are required",
+                "usage": "self.data.table.put[model='crystal', id='xxx', data={...}]",
+            }
+
+        if model not in self._adapters:
+            return {
+                "error": f"Unknown model: {model}",
+                "available": list(self._adapters.keys()),
+            }
+
+        import json
+
+        from agents.d.datum import Datum
+
+        datum = Datum.create(
+            content=json.dumps(data).encode("utf-8"),
+            id=record_id,
+        )
+
+        adapter = self._adapters[model]
+        result_id = await adapter.put(datum)
+
+        return {
+            "status": "stored",
+            "model": model,
+            "id": result_id,
+        }
+
+    async def _delete(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Delete record from specified table.
+
+        AGENTESE: self.data.table.delete[model="crystal", id="..."]
+        """
+        model = kwargs.get("model")
+        record_id = kwargs.get("id")
+
+        if not model or not record_id:
+            return {
+                "error": "model and id are required",
+                "usage": "self.data.table.delete[model='crystal', id='xxx']",
+            }
+
+        if model not in self._adapters:
+            return {
+                "error": f"Unknown model: {model}",
+                "available": list(self._adapters.keys()),
+            }
+
+        adapter = self._adapters[model]
+        success = await adapter.delete(record_id)
+
+        return {
+            "status": "deleted" if success else "not_found",
+            "model": model,
+            "id": record_id,
+        }
+
+    async def _list(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        List records from specified table.
+
+        AGENTESE: self.data.table.list[model="crystal", limit=10]
+        """
+        model = kwargs.get("model")
+
+        if not model:
+            return {
+                "error": "model is required",
+                "usage": "self.data.table.list[model='crystal', limit=10]",
+            }
+
+        if model not in self._adapters:
+            return {
+                "error": f"Unknown model: {model}",
+                "available": list(self._adapters.keys()),
+            }
+
+        adapter = self._adapters[model]
+        prefix = kwargs.get("prefix")
+        limit = kwargs.get("limit", 100)
+
+        data = await adapter.list(prefix=prefix, limit=limit)
+
+        import json
+
+        return {
+            "status": "ok",
+            "model": model,
+            "count": len(data),
+            "records": [
+                {
+                    "id": d.id,
+                    "preview": json.loads(d.content.decode("utf-8")),
+                }
+                for d in data[:10]  # Preview first 10
+            ],
+        }
+
+    async def _count(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Count records in specified table.
+
+        AGENTESE: self.data.table.count[model="crystal"]
+        """
+        model = kwargs.get("model")
+
+        if not model:
+            return {
+                "error": "model is required",
+                "usage": "self.data.table.count[model='crystal']",
+            }
+
+        if model not in self._adapters:
+            return {
+                "error": f"Unknown model: {model}",
+                "available": list(self._adapters.keys()),
+            }
+
+        adapter = self._adapters[model]
+        count = await adapter.count()
+
+        return {
+            "status": "ok",
+            "model": model,
+            "count": count,
+        }
+
+
+@dataclass
+class TableModelNode(BaseLogosNode):
+    """
+    self.data.table.<model> - Direct access to a specific table model.
+
+    Enables ergonomic access like:
+        self.data.table.crystal.get[id="xxx"]
+        self.data.table.citizen.list[limit=10]
+
+    Instead of:
+        self.data.table.get[model="crystal", id="xxx"]
+    """
+
+    _handle: str = "self.data.table.model"
+    _adapter: Any = None
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        return ("get", "put", "delete", "list", "count", "causal_chain")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View model table info."""
+        if self._adapter is None:
+            return BasicRendering(
+                summary="Table Model (Not Configured)",
+                content="Adapter not configured.",
+                metadata={"configured": False},
+            )
+
+        count = await self._adapter.count()
+
+        return BasicRendering(
+            summary=f"Table: {self._adapter.table_name}",
+            content=f"Records: {count}",
+            metadata={
+                "table": self._adapter.table_name,
+                "count": count,
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle model-specific aspects."""
+        if self._adapter is None:
+            return {"error": "Adapter not configured"}
+
+        match aspect:
+            case "get":
+                record_id = kwargs.get("id")
+                if not record_id:
+                    return {"error": "id is required"}
+                datum = await self._adapter.get(record_id)
+                if datum is None:
+                    return {"status": "not_found", "id": record_id}
+                import json
+
+                return {
+                    "status": "found",
+                    "id": datum.id,
+                    "content": json.loads(datum.content.decode("utf-8")),
+                }
+            case "list":
+                limit = kwargs.get("limit", 100)
+                prefix = kwargs.get("prefix")
+                data = await self._adapter.list(prefix=prefix, limit=limit)
+                import json
+
+                return {
+                    "count": len(data),
+                    "records": [
+                        {"id": d.id, "preview": json.loads(d.content.decode("utf-8"))}
+                        for d in data[:10]
+                    ],
+                }
+            case "count":
+                count = await self._adapter.count()
+                return {"count": count}
+            case "delete":
+                record_id = kwargs.get("id")
+                if not record_id:
+                    return {"error": "id is required"}
+                success = await self._adapter.delete(record_id)
+                return {
+                    "status": "deleted" if success else "not_found",
+                    "id": record_id,
+                }
+            case "causal_chain":
+                record_id = kwargs.get("id")
+                if not record_id:
+                    return {"error": "id is required"}
+                chain = await self._adapter.causal_chain(record_id)
+                import json
+
+                return {
+                    "chain_length": len(chain),
+                    "chain": [
+                        {"id": d.id, "preview": json.loads(d.content.decode("utf-8"))}
+                        for d in chain
+                    ],
+                }
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+
 # === Factory Function ===
 
 
-def create_data_resolver(dgent: Any = None, upgrader: Any = None) -> DataNode:
+def create_data_resolver(
+    dgent: Any = None,
+    upgrader: Any = None,
+    table_adapters: dict[str, Any] | None = None,
+) -> DataNode:
     """
-    Create a DataNode with optional D-gent backend and upgrader.
+    Create a DataNode with optional D-gent backend, upgrader, and table adapters.
 
     Args:
         dgent: D-gent backend (DgentProtocol implementation)
                If None, creates unconfigured node.
         upgrader: AutoUpgrader for tier promotion observability
                   If None, upgrader sub-node returns unconfigured state.
+        table_adapters: Dict mapping model name to TableAdapter instance
+                        Enables self.data.table.* paths for Dual-Track Architecture.
 
     Returns:
-        Configured DataNode with optional upgrader sub-node
+        Configured DataNode with optional upgrader and table sub-nodes
 
     Example:
         from agents.d.backends.memory import MemoryBackend
         from agents.d.upgrader import AutoUpgrader
+        from agents.d.adapters import TableAdapter
+        from models import Crystal, Citizen
+        from models.base import get_session_factory
 
         dgent = MemoryBackend()
         upgrader = AutoUpgrader(source=dgent, ...)
-        data_node = create_data_resolver(dgent, upgrader)
+
+        # Create table adapters for Crown Jewels
+        session_factory = get_session_factory()
+        table_adapters = {
+            "crystal": TableAdapter(Crystal, session_factory),
+            "citizen": TableAdapter(Citizen, session_factory),
+        }
+
+        data_node = create_data_resolver(dgent, upgrader, table_adapters)
+
+        # Now use AGENTESE:
+        # self.data.table.crystal.get[id="xxx"]
+        # self.data.table.citizen.list[limit=10]
     """
     node = DataNode()
     node._dgent = dgent
@@ -710,5 +1186,11 @@ def create_data_resolver(dgent: Any = None, upgrader: Any = None) -> DataNode:
     upgrader_node = UpgraderNode()
     upgrader_node._upgrader = upgrader
     node._upgrader_node = upgrader_node
+
+    # Create table sub-node (Dual-Track Architecture)
+    table_node = TableNode()
+    if table_adapters:
+        table_node._adapters = table_adapters
+    node._table_node = table_node
 
     return node

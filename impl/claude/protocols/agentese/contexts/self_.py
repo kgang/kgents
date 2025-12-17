@@ -31,6 +31,13 @@ if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
 # Import from submodules
+# Chat resolver for <node>.chat.* paths
+from .chat_resolver import (
+    ChatNode,
+    ChatResolver,
+    create_chat_node,
+    get_chat_resolver,
+)
 from .self_bus import (
     BUS_AFFORDANCES,
     BusNode,
@@ -75,6 +82,14 @@ from .self_memory import (
     MemoryNode,
 )
 from .self_semaphore import SemaphoreNode
+
+# Soul integration (Chat Protocol - Phase 2)
+from .self_soul import (
+    SOUL_AFFORDANCES,
+    SOUL_CHAT_AFFORDANCES,
+    SoulNode,
+    create_soul_node,
+)
 
 # V-gent Vector integration (Phase 7)
 from .self_vector import (
@@ -123,6 +138,16 @@ __all__ = [
     "create_citizen_node",
     "create_citizen_memory_node",
     "create_citizen_personality_node",
+    # Chat resolver (Chat Protocol - Phase 2)
+    "ChatNode",
+    "ChatResolver",
+    "create_chat_node",
+    "get_chat_resolver",
+    # Soul integration (Chat Protocol - Phase 2)
+    "SoulNode",
+    "SOUL_AFFORDANCES",
+    "SOUL_CHAT_AFFORDANCES",
+    "create_soul_node",
     # Resolver
     "SelfContextResolver",
     # Factory
@@ -171,6 +196,8 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
     "vector": VECTOR_AFFORDANCES,
     # Town Citizen integration (Phase 3 Crown Jewels)
     "citizen": CITIZEN_AFFORDANCES,
+    # Soul integration (Chat Protocol - Phase 2)
+    "soul": SOUL_CHAT_AFFORDANCES,
 }
 
 
@@ -832,6 +859,10 @@ class SelfContextResolver:
     _vgent: Any = None  # VgentProtocol from agents.v
     _vector: VectorNode | None = None
 
+    # Soul integration (Chat Protocol - Phase 2)
+    _kgent_soul: Any = None  # KgentSoul from agents.k
+    _soul: SoulNode | None = None
+
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
     _capabilities: CapabilitiesNode | None = None
@@ -868,6 +899,8 @@ class SelfContextResolver:
         self._flow = create_flow_resolver()
         # V-gent Vector integration (Phase 7)
         self._vector = VectorNode(_vgent=self._vgent)
+        # Soul integration (Chat Protocol - Phase 2)
+        self._soul = create_soul_node(soul=self._kgent_soul)
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
@@ -953,6 +986,39 @@ class SelfContextResolver:
             case "vector":
                 # self.vector.* → VectorNode for vector operations
                 return self._vector or VectorNode()
+            # Soul integration (Chat Protocol - Phase 2)
+            case "soul":
+                # self.soul.* → SoulNode for K-gent dialogue
+                soul_node = self._soul or create_soul_node()
+                if rest:
+                    sub_holon = rest[0]
+                    if sub_holon == "chat":
+                        # self.soul.chat.* → ChatNode for chat protocol
+                        return create_chat_node(
+                            parent_path="self.soul",
+                            parent_node=soul_node,
+                        )
+                return soul_node
+            # Forest Protocol integration (Wave 2)
+            case "forest":
+                # self.forest.* → ForestNode for plan management
+                from .forest import create_forest_node
+
+                return create_forest_node()
+            # Garden integration (Wave 2.5)
+            case "garden":
+                # self.garden.* → GardenNode for garden state/seasons/health
+                # Handle sub-paths: self.garden.tend.*, self.garden.persona.*, self.garden.inducer.*
+                if rest:
+                    sub_holon = rest[0]
+                    if sub_holon == "tend":
+                        from .tend import create_tend_node
+
+                        return create_tend_node()
+                    # Future: persona, inducer sub-nodes
+                from .garden import create_garden_node
+
+                return create_garden_node()
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)
@@ -984,6 +1050,8 @@ def create_self_resolver(
     data_bus: Any = None,
     # V-gent Vector integration (Phase 7)
     vgent: Any = None,
+    # Soul integration (Chat Protocol - Phase 2)
+    kgent_soul: Any = None,
 ) -> SelfContextResolver:
     """
     Create a SelfContextResolver with optional integrations.
@@ -1006,6 +1074,7 @@ def create_self_resolver(
         dgent_new: New simplified D-gent (DgentProtocol from data-architecture-rewrite)
         data_bus: DataBus for reactive data events
         vgent: V-gent backend (VgentProtocol from agents.v) for vector operations
+        kgent_soul: KgentSoul from agents.k for soul dialogue
 
     Returns:
         Configured SelfContextResolver
@@ -1033,5 +1102,7 @@ def create_self_resolver(
     resolver._data_bus = data_bus
     # V-gent Vector integration (Phase 7)
     resolver._vgent = vgent
+    # Soul integration (Chat Protocol - Phase 2)
+    resolver._kgent_soul = kgent_soul
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver

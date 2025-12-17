@@ -109,10 +109,16 @@ from .self_ import (
     # Data architecture rewrite (Phase 2)
     DATA_AFFORDANCES,
     SELF_AFFORDANCES,
+    # Soul integration (Chat Protocol - Phase 2)
+    SOUL_AFFORDANCES,
+    SOUL_CHAT_AFFORDANCES,
     # V-gent Vector integration (Phase 7)
     VECTOR_AFFORDANCES,
     BusNode,
     CapabilitiesNode,
+    # Chat resolver (Chat Protocol - Phase 2)
+    ChatNode,
+    ChatResolver,
     CitizenMemoryNode,
     CitizenNode,
     CitizenPersonalityNode,
@@ -122,14 +128,19 @@ from .self_ import (
     MemoryNode,
     SelfContextResolver,
     SemaphoreNode,
+    # Soul integration (Chat Protocol - Phase 2)
+    SoulNode,
     StateNode,
     VectorNode,
     create_bus_resolver,
+    create_chat_node,
     create_citizen_memory_node,
     create_citizen_node,
     create_citizen_personality_node,
     create_data_resolver,
     create_self_resolver,
+    create_soul_node,
+    get_chat_resolver,
 )
 
 # Jewel-Flow integration (F-gent Flow + Crown Jewels)
@@ -170,6 +181,20 @@ from .time import (
     TraceNode,
     create_time_resolver,
 )
+
+# Town Citizen integration (Chat Protocol - Phase 2.5)
+from .town_citizen import (
+    ARCHETYPE_PROMPTS,
+    CITIZEN_CHAT_AFFORDANCES,
+    DEFAULT_CITIZEN_PROMPT,
+    TownCitizenNode,
+    TownCitizenResolver,
+    build_citizen_system_prompt,
+    create_citizen_chat_node,
+    create_town_citizen_node,
+    get_citizen_resolver,
+    set_citizen_resolver,
+)
 from .void import (
     CapitalNode,
     EntropyNode,
@@ -189,6 +214,37 @@ from .world import (
     WorldNode,
     create_world_node,
     create_world_resolver,
+)
+
+# Atelier Node integration (Crown Jewels Metaphysical Upgrade)
+from .world_atelier import (
+    ATELIER_AFFORDANCES,
+    AtelierNode,
+    create_atelier_node,
+    get_atelier_node,
+    set_atelier_node,
+)
+
+# Park Node integration (Crisis Practice Scenarios)
+from .world_park import (
+    PARK_AFFORDANCES,
+    ForceNode,
+    MaskNode,
+    ParkNode,
+    ScenarioNode,
+    get_force_node,
+    get_mask_node,
+    get_park_node,
+    get_scenario_node,
+)
+
+# Town Node integration (Crown Jewels Metaphysical Upgrade)
+from .world_town import (
+    TOWN_AFFORDANCES,
+    TownNode,
+    create_town_node,
+    get_town_node,
+    set_town_node,
 )
 
 # === Unified Resolver Factory ===
@@ -316,6 +372,16 @@ __all__ = [
     "create_citizen_node",
     "create_citizen_memory_node",
     "create_citizen_personality_node",
+    # Chat resolver (Chat Protocol - Phase 2)
+    "ChatNode",
+    "ChatResolver",
+    "create_chat_node",
+    "get_chat_resolver",
+    # Soul integration (Chat Protocol - Phase 2)
+    "SOUL_AFFORDANCES",
+    "SOUL_CHAT_AFFORDANCES",
+    "SoulNode",
+    "create_soul_node",
     # Self judgment (SPECS critique)
     "Critique",
     "CritiqueWeights",
@@ -422,6 +488,39 @@ __all__ = [
     "ValidationResult",
     "create_prompt_node",
     "create_prompt_resolver",
+    # Town Citizen integration (Chat Protocol - Phase 2.5)
+    "ARCHETYPE_PROMPTS",
+    "CITIZEN_CHAT_AFFORDANCES",
+    "DEFAULT_CITIZEN_PROMPT",
+    "TownCitizenNode",
+    "TownCitizenResolver",
+    "build_citizen_system_prompt",
+    "create_citizen_chat_node",
+    "create_town_citizen_node",
+    "get_citizen_resolver",
+    "set_citizen_resolver",
+    # Town Node integration (Crown Jewels Metaphysical Upgrade)
+    "TOWN_AFFORDANCES",
+    "TownNode",
+    "create_town_node",
+    "get_town_node",
+    "set_town_node",
+    # Atelier Node integration (Crown Jewels Metaphysical Upgrade)
+    "ATELIER_AFFORDANCES",
+    "AtelierNode",
+    "create_atelier_node",
+    "get_atelier_node",
+    "set_atelier_node",
+    # Park Node integration (Crisis Practice Scenarios)
+    "PARK_AFFORDANCES",
+    "ParkNode",
+    "ScenarioNode",
+    "MaskNode",
+    "ForceNode",
+    "get_park_node",
+    "get_scenario_node",
+    "get_mask_node",
+    "get_force_node",
     # Unified factory
     "create_context_resolvers",
 ]

@@ -94,7 +94,7 @@ def get_semantic_collector() -> Any:
     global _semantic_collector
     if _semantic_collector is None:
         try:
-            from protocols.terrarium.semantic_metrics import SemanticMetricsCollector
+            from agents.flux.semantic_metrics import SemanticMetricsCollector
 
             tracker = get_cdc_lag_tracker()
             _semantic_collector = SemanticMetricsCollector(cdc_lag_tracker=tracker)

@@ -36,6 +36,7 @@ from typing import (
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
+    from .chat.config import ChatConfig
     from .node import AgentMeta, Observer
 
 P = ParamSpec("P")
@@ -150,6 +151,13 @@ class AspectMetadata:
     - examples: Usage examples for help output
     - see_also: Related aspects for discovery
     - since_version: Version tracking for deprecation
+
+    Extended for CLI integration (v3.2):
+    - help: Short help text (required for CLI exposure)
+    - long_help: Extended help text for detailed documentation
+    - streaming: Enable streaming output (Interactivity.STREAMING)
+    - interactive: Enable REPL mode (Interactivity.INTERACTIVE)
+    - budget_estimate: LLM cost estimate (required if CALLS effect present)
     """
 
     category: AspectCategory
@@ -161,6 +169,12 @@ class AspectMetadata:
     examples: list[str] = field(default_factory=list)
     see_also: list[str] = field(default_factory=list)
     since_version: str = "1.0"
+    # v3.2: Extended for CLI integration
+    help: str = ""  # Short help text
+    long_help: str = ""  # Extended help text
+    streaming: bool = False  # Enable streaming output
+    interactive: bool = False  # Enable REPL mode
+    budget_estimate: str | None = None  # LLM cost estimate (e.g., "~100 tokens")
 
 
 def aspect(
@@ -173,9 +187,15 @@ def aspect(
     examples: list[str] | None = None,
     see_also: list[str] | None = None,
     since_version: str = "1.0",
+    # v3.2: Extended for CLI integration
+    help: str = "",  # noqa: A002 - shadowing builtin is intentional for API clarity
+    long_help: str = "",
+    streaming: bool = False,
+    interactive: bool = False,
+    budget_estimate: str | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
-    Decorator to mark a method as an AGENTESE aspect (v3 API).
+    Decorator to mark a method as an AGENTESE aspect (v3.2 API).
 
     Attaches metadata and optionally enforces category constraints at runtime.
 
@@ -188,11 +208,17 @@ def aspect(
         examples: Usage examples for self-documentation (v3.1)
         see_also: Related aspects for discovery (v3.1)
         since_version: Version when aspect was introduced (v3.1)
+        help: Short help text for CLI (v3.2, required for CLI exposure)
+        long_help: Extended help text for detailed docs (v3.2)
+        streaming: Enable streaming output (v3.2)
+        interactive: Enable REPL mode (v3.2)
+        budget_estimate: LLM cost estimate (v3.2, required if CALLS effect)
 
     Example:
         @aspect(
             category=AspectCategory.PERCEPTION,
             effects=[Effect.READS("memory_crystals")],
+            help="Recall memories matching a query",
             examples=["self.memory.recall --query 'project goals'"],
             see_also=["engram", "forget"],
         )
@@ -203,10 +229,24 @@ def aspect(
             category=AspectCategory.MUTATION,
             effects=[
                 Effect.WRITES("memory_crystals"),
+                Effect.CALLS("llm"),
                 Effect.CHARGES("tokens"),
             ],
+            help="Store a memory crystal",
+            budget_estimate="~200 tokens",
+            streaming=True,
         )
         async def engram(self, observer: Observer, content: str) -> Crystal:
+            ...
+
+        @aspect(
+            category=AspectCategory.GENERATION,
+            effects=[Effect.CALLS("llm")],
+            help="Chat with K-gent",
+            interactive=True,
+            budget_estimate="~500 tokens/turn",
+        )
+        async def chat(self, observer: Observer) -> None:
             ...
 
     The decorator attaches AspectMetadata to the function as __aspect_meta__.
@@ -223,6 +263,12 @@ def aspect(
             examples=examples or [],
             see_also=see_also or [],
             since_version=since_version,
+            # v3.2 fields
+            help=help,
+            long_help=long_help,
+            streaming=streaming,
+            interactive=interactive,
+            budget_estimate=budget_estimate,
         )
         func.__aspect_meta__ = meta  # type: ignore[attr-defined]
 
@@ -1033,6 +1079,155 @@ def get_context_affordance_set(context: str) -> ContextAffordanceSet:
     return sets.get(context, WORLD_AFFORDANCE_SET)
 
 
+# === Chat Affordances (Chat Protocol Integration) ===
+
+# Standard chat affordances available to all chatty nodes
+CHAT_AFFORDANCES: tuple[str, ...] = (
+    "send",  # Send message, get response (MUTATION)
+    "stream",  # Streaming response (MUTATION, streaming=true)
+    "history",  # Get turn history (PERCEPTION)
+    "turn",  # Current turn number (PERCEPTION)
+    "context",  # Current context window (PERCEPTION)
+    "metrics",  # Token counts, latency (PERCEPTION)
+    "reset",  # Clear session (MUTATION)
+    "fork",  # Create branch session (GENERATION)
+)
+
+
+@dataclass(frozen=True)
+class ChattyConfig:
+    """
+    Configuration for the @chatty decorator.
+
+    Defines how chat affordances are configured for a node.
+    """
+
+    context_window: int = 8000
+    context_strategy: str = "summarize"  # "sliding", "summarize", "forget", "hybrid"
+    persist_history: bool = True
+    memory_key: str | None = None  # Auto-derived from node path if None
+    inject_memories: bool = True
+    memory_recall_limit: int = 5
+    entropy_budget: float = 1.0
+    entropy_decay_per_turn: float = 0.02
+
+
+# Marker attribute name for chatty nodes
+CHATTY_MARKER = "__chatty_config__"
+
+
+def chatty(
+    context_window: int = 8000,
+    context_strategy: str = "summarize",
+    persist_history: bool = True,
+    memory_key: str | None = None,
+    inject_memories: bool = True,
+    memory_recall_limit: int = 5,
+    entropy_budget: float = 1.0,
+    entropy_decay_per_turn: float = 0.02,
+) -> Callable[[type[T]], type[T]]:
+    """
+    Decorator to mark a LogosNode class as chatty.
+
+    Nodes decorated with @chatty expose the standard chat affordances:
+    - <node>.chat.send[message="..."]  - Send message, get response
+    - <node>.chat.stream[message="..."] - Streaming response
+    - <node>.chat.history               - Turn history
+    - <node>.chat.context               - Working context
+    - <node>.chat.metrics               - Token counts, latency
+    - <node>.chat.reset                 - Clear session
+
+    Example:
+        @chatty(
+            context_window=8000,
+            context_strategy="summarize",
+            persist_history=True,
+        )
+        class SoulNode(BaseLogosNode):
+            '''self.soul - K-gent soul interface.'''
+            ...
+
+    Args:
+        context_window: Maximum context window in tokens
+        context_strategy: Strategy for context overflow ("sliding", "summarize", "forget", "hybrid")
+        persist_history: Whether to persist conversation to D-gent
+        memory_key: Key for persistence (auto-derived from node path if None)
+        inject_memories: Whether to inject memories into context
+        memory_recall_limit: Max memories to inject
+        entropy_budget: Initial entropy budget (1.0 = full)
+        entropy_decay_per_turn: Entropy consumed per turn
+
+    Returns:
+        Decorated class with chatty marker and chat affordances
+    """
+    config = ChattyConfig(
+        context_window=context_window,
+        context_strategy=context_strategy,
+        persist_history=persist_history,
+        memory_key=memory_key,
+        inject_memories=inject_memories,
+        memory_recall_limit=memory_recall_limit,
+        entropy_budget=entropy_budget,
+        entropy_decay_per_turn=entropy_decay_per_turn,
+    )
+
+    def decorator(cls: type[T]) -> type[T]:
+        # Mark the class as chatty with its config
+        setattr(cls, CHATTY_MARKER, config)
+        return cls
+
+    return decorator
+
+
+def is_chatty(node: Any) -> bool:
+    """Check if a node (or its class) is decorated with @chatty."""
+    cls = node if isinstance(node, type) else type(node)
+    return hasattr(cls, CHATTY_MARKER)
+
+
+def get_chatty_config(node: Any) -> ChattyConfig | None:
+    """
+    Get the ChattyConfig from a @chatty decorated node.
+
+    Returns None if node is not chatty.
+    """
+    cls = node if isinstance(node, type) else type(node)
+    return getattr(cls, CHATTY_MARKER, None)
+
+
+def to_chat_config(chatty_config: ChattyConfig) -> "ChatConfig":
+    """
+    Convert ChattyConfig to a full ChatConfig for session creation.
+
+    Args:
+        chatty_config: The @chatty decorator config
+
+    Returns:
+        ChatConfig for use with ChatSessionFactory
+    """
+    from .chat.config import ChatConfig, ContextStrategy
+
+    strategy_map = {
+        "sliding": ContextStrategy.SLIDING,
+        "summarize": ContextStrategy.SUMMARIZE,
+        "forget": ContextStrategy.FORGET,
+        "hybrid": ContextStrategy.HYBRID,
+    }
+
+    return ChatConfig(
+        context_window=chatty_config.context_window,
+        context_strategy=strategy_map.get(
+            chatty_config.context_strategy, ContextStrategy.SUMMARIZE
+        ),
+        persist_history=chatty_config.persist_history,
+        memory_key=chatty_config.memory_key,
+        inject_memories=chatty_config.inject_memories,
+        memory_recall_limit=chatty_config.memory_recall_limit,
+        entropy_budget=chatty_config.entropy_budget,
+        entropy_decay_per_turn=chatty_config.entropy_decay_per_turn,
+    )
+
+
 __all__ = [
     # Enums and types
     "AspectCategory",
@@ -1071,4 +1266,12 @@ __all__ = [
     "VOID_AFFORDANCE_SET",
     "TIME_AFFORDANCE_SET",
     "get_context_affordance_set",
+    # Chat Protocol Integration
+    "CHAT_AFFORDANCES",
+    "ChattyConfig",
+    "CHATTY_MARKER",
+    "chatty",
+    "is_chatty",
+    "get_chatty_config",
+    "to_chat_config",
 ]

@@ -957,6 +957,297 @@ Respond with ONLY the imaginary solution. No preamble, no explanation."""
         }
 
 
+# === Joy Node (Oblique Strategies + Creative Disruption) ===
+
+
+@dataclass
+class JoyNode(BaseLogosNode):
+    """
+    void.joy - Creative disruption and Oblique Strategies.
+
+    The joy node provides playful, serendipitous creative nudges:
+    - oblique: Get an Oblique Strategy card (Brian Eno / Peter Schmidt)
+    - surprise: Request unexpected creative direction
+    - challenge: Get a creative challenge or constraint
+    - flinch: Identify what you're avoiding (productive friction)
+
+    Philosophy:
+        "The creative impulse lives at the edge of discomfort."
+        "Joy is not the absence of friction, but its transmutation."
+
+    These are PLAYFUL commands with Seriousness.PLAYFUL dimension.
+    """
+
+    _handle: str = "void.joy"
+    _pool: EntropyPool = field(default_factory=EntropyPool)
+
+    # Brian Eno / Peter Schmidt Oblique Strategies (subset)
+    _oblique_strategies: tuple[str, ...] = (
+        "Honor thy error as a hidden intention",
+        "What would your closest friend do?",
+        "Remove specifics and convert to ambiguities",
+        "Use an old idea",
+        "State the problem in words as clearly as possible",
+        "Only a part, not the whole",
+        "What wouldn't you do?",
+        "Emphasize differences",
+        "Emphasize repetitions",
+        "Work at a different speed",
+        "Reverse",
+        "Turn it upside down",
+        "Change instrument roles",
+        "Accretion",
+        "Go slowly all the way round the outside",
+        "A line has two sides",
+        "Make a sudden, destructive unpredictable action; incorporate",
+        "Consult other sources -promising -unpromising",
+        "Cut a vital connection",
+        "Discover the recipes you are using and abandon them",
+        "Don't be afraid of things because they're easy to do",
+        "Don't be frightened of clichés",
+        "Do nothing for as long as possible",
+        "Do something boring",
+        "Do the words need changing?",
+        "Faced with a choice, do both",
+        "Give way to your worst impulse",
+        "Go outside. Shut the door.",
+        "Ask people to work against their better judgment",
+        "Take a break",
+        "Use fewer notes",
+        "What mistakes did you make last time?",
+        "What would happen if you carried this to its logical conclusion?",
+        "You are an engineer",
+        "You don't have to be ashamed of using your own ideas",
+        "Ask your body",
+    )
+
+    # Surprise prompts
+    _surprise_prompts: tuple[str, ...] = (
+        "What if you approached this as a game instead of a task?",
+        "What's the most ridiculous solution you can imagine?",
+        "What would you do if you had unlimited time?",
+        "What part of this secretly excites you?",
+        "What would a child say about this problem?",
+        "What's the elegant mistake waiting to happen?",
+        "If this were a painting, what color is it missing?",
+        "What constraint would make this more fun?",
+    )
+
+    # Challenge templates
+    _challenge_templates: tuple[str, ...] = (
+        "Complete this in half the time you think it needs.",
+        "Do this without your main tool.",
+        "Explain your approach to someone who knows nothing about it.",
+        "What if the opposite were true?",
+        "Make it 10x simpler.",
+        "Make it 10x more complex.",
+        "What would the antagonist version of you do?",
+        "Start from the end and work backwards.",
+    )
+
+    # Flinch prompts (productive discomfort)
+    _flinch_prompts: tuple[str, ...] = (
+        "What are you avoiding right now?",
+        "What's the hard truth you're not acknowledging?",
+        "What conversation are you postponing?",
+        "What skill gap are you pretending doesn't exist?",
+        "What feedback are you afraid to receive?",
+        "What assumption are you protecting?",
+        "What would happen if you failed spectacularly?",
+        "What are you doing to look busy instead of being productive?",
+    )
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Everyone deserves joy."""
+        return ("oblique", "surprise", "challenge", "flinch", "play")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View joy interface."""
+        strategy = self._oblique_strategies[
+            int(self._pool.sample() * len(self._oblique_strategies))
+        ]
+        return BasicRendering(
+            summary="Joy Portal (Creative Disruption)",
+            content=f"Today's oblique strategy: {strategy}",
+            metadata={
+                "entropy_remaining": self._pool.remaining,
+                "oblique_count": len(self._oblique_strategies),
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle joy aspects."""
+        match aspect:
+            case "oblique":
+                return await self._oblique(observer, **kwargs)
+            case "surprise":
+                return await self._surprise(observer, **kwargs)
+            case "challenge":
+                return await self._challenge(observer, **kwargs)
+            case "flinch":
+                return await self._flinch(observer, **kwargs)
+            case "play":
+                return await self._play(observer, **kwargs)
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    async def _oblique(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Draw an Oblique Strategy card.
+
+        AGENTESE: void.joy.oblique
+
+        These are Brian Eno and Peter Schmidt's Oblique Strategies -
+        cryptic constraints that unlock creative thinking.
+        """
+        context = kwargs.get("context", "")
+        seed = kwargs.get("seed")
+
+        if seed is not None:
+            idx = int(float(seed) * len(self._oblique_strategies)) % len(
+                self._oblique_strategies
+            )
+        else:
+            try:
+                grant = self._pool.sip(0.02)
+                idx = int(grant["seed"] * len(self._oblique_strategies))
+            except BudgetExhaustedError:
+                idx = hash(context or "default") % len(self._oblique_strategies)
+
+        strategy = self._oblique_strategies[idx]
+
+        result: dict[str, Any] = {
+            "strategy": strategy,
+            "source": "oblique_strategies",
+            "eno_schmidt": True,
+        }
+
+        if context:
+            result["context"] = context
+            result["hint"] = f"Apply '{strategy}' to: {context}"
+
+        return result
+
+    async def _surprise(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get a surprise creative prompt."""
+        context = kwargs.get("context", "your work")
+
+        try:
+            grant = self._pool.sip(0.03)
+            seed = grant["seed"]
+        except BudgetExhaustedError:
+            seed = self._pool.sample()
+
+        idx = int(seed * len(self._surprise_prompts))
+        prompt = self._surprise_prompts[idx]
+
+        return {
+            "prompt": prompt,
+            "context": context,
+            "source": "void.joy.surprise",
+        }
+
+    async def _challenge(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get a creative challenge or constraint."""
+        difficulty = kwargs.get("difficulty", "medium")
+        context = kwargs.get("context", "your current task")
+
+        try:
+            grant = self._pool.sip(0.03)
+            seed = grant["seed"]
+        except BudgetExhaustedError:
+            seed = self._pool.sample()
+
+        idx = int(seed * len(self._challenge_templates))
+        challenge = self._challenge_templates[idx]
+
+        return {
+            "challenge": challenge,
+            "difficulty": difficulty,
+            "context": context,
+            "source": "void.joy.challenge",
+        }
+
+    async def _flinch(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Surface what you're avoiding (productive friction).
+
+        AGENTESE: void.joy.flinch
+
+        The flinch reveals the edge of growth.
+        """
+        context = kwargs.get("context", "")
+
+        try:
+            grant = self._pool.sip(0.04)
+            seed = grant["seed"]
+        except BudgetExhaustedError:
+            seed = self._pool.sample()
+
+        idx = int(seed * len(self._flinch_prompts))
+        prompt = self._flinch_prompts[idx]
+
+        result: dict[str, Any] = {
+            "prompt": prompt,
+            "philosophy": "The flinch reveals the edge of growth.",
+            "source": "void.joy.flinch",
+        }
+
+        if context:
+            result["context"] = context
+
+        return result
+
+    async def _play(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Pure play: combine all joy modes randomly."""
+        try:
+            grant = self._pool.sip(0.05)
+            seed = grant["seed"]
+        except BudgetExhaustedError:
+            seed = self._pool.sample()
+
+        mode = int(seed * 4)
+
+        match mode:
+            case 0:
+                return await self._oblique(observer, **kwargs)
+            case 1:
+                return await self._surprise(observer, **kwargs)
+            case 2:
+                return await self._challenge(observer, **kwargs)
+            case _:
+                return await self._flinch(observer, **kwargs)
+
+
 # === Metabolic Node ===
 
 
@@ -1159,7 +1450,7 @@ class VoidContextResolver:
     Resolver for void.* context.
 
     The void is always accessible to all agents.
-    It provides entropy, serendipity, gratitude, capital, pataphysics, and metabolism.
+    It provides entropy, serendipity, gratitude, capital, pataphysics, metabolism, joy.
     """
 
     # Shared entropy pool
@@ -1176,6 +1467,7 @@ class VoidContextResolver:
     _pataphysics: PataphysicsNode | None = None
     _metabolism: MetabolicNode | None = None
     _hypnagogia: HypnagogiaNode | None = None
+    _joy: JoyNode | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes with shared pool and ledger."""
@@ -1186,6 +1478,7 @@ class VoidContextResolver:
         self._pataphysics = PataphysicsNode(_pool=self._pool)
         self._metabolism = MetabolicNode()
         self._hypnagogia = HypnagogiaNode()
+        self._joy = JoyNode(_pool=self._pool)
 
         # Wire entropy pool to metabolic engine
         if self._metabolism._engine is not None:
@@ -1196,7 +1489,7 @@ class VoidContextResolver:
         Resolve a void.* path to a node.
 
         Args:
-            holon: The void subsystem (entropy, serendipity, gratitude, capital, pataphysics, metabolism)
+            holon: The void subsystem (entropy, serendipity, gratitude, capital, pataphysics, metabolism, joy)
             rest: Additional path components
 
         Returns:
@@ -1217,6 +1510,8 @@ class VoidContextResolver:
                 return self._metabolism or MetabolicNode()
             case "hypnagogia":
                 return self._hypnagogia or HypnagogiaNode()
+            case "joy":
+                return self._joy or JoyNode()
             case _:
                 # Generic void node for undefined holons
                 return GenericVoidNode(holon, self._pool)

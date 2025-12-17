@@ -1,30 +1,35 @@
 """
-AGENTESE Gardener Context: The 7th Crown Jewel
+AGENTESE Gardener Context: Development Session Polynomial
 
-The Gardener: Autopoietic development substrate that routes all CLI
-interactions through AGENTESE paths.
-
-> *"The form that generates forms. The garden that tends itself."*
+The Gardener manages structured development sessions following
+the SENSE → ACT → REFLECT polynomial cycle.
 
 Core paths:
-- concept.gardener.manifest → View Gardener status
+- concept.gardener.manifest → View Gardener status + active session
+- concept.gardener.session.manifest → View active session
+- concept.gardener.session.define → Start new session
+- concept.gardener.session.advance → Advance to next phase
+- concept.gardener.session.polynomial → Full polynomial visualization
+- concept.gardener.sessions.manifest → List recent sessions
 - concept.gardener.route → Route natural language to AGENTESE path (LLM-powered)
 - concept.gardener.propose → Get proactive suggestions
-- concept.gardener.session.* → Session management (create, resume, advance)
 
 The Gardener is not Kent's tool. It is Kent's collaborator.
 
-Synergies with other Crown Jewels:
-- Uses GARDENER_PATHS from crown_jewels.py for path registry
-- Integrates with forest context for session persistence hints
-- Routes to ALL crown jewel paths (Atelier, Coalition, Brain, Park, etc.)
+Wave 2.5: Migrated from CLI handler to AGENTESE-native.
+Per plans/cli/wave2.5-gardener-migration.md
 
-Per plans/core-apps/the-gardener.md Phase 1: AGENTESE-First CLI Refactor.
+AGENTESE: concept.gardener.*
+
+Principle Alignment:
+- Tasteful: Intentional development rhythm
+- Ethical: Human-in-the-loop advancement
+- Joy-Inducing: Visible polynomial state
 """
 
 from __future__ import annotations
 
-import re
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -33,6 +38,7 @@ from typing import TYPE_CHECKING, Any
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
+from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering
 
 if TYPE_CHECKING:
@@ -40,6 +46,73 @@ if TYPE_CHECKING:
 
 # OTEL tracer for observability
 _tracer = trace.get_tracer("kgents.gardener")
+
+
+# =============================================================================
+# Polynomial Phase Configuration (Wave 2.5)
+# =============================================================================
+
+PHASE_CONFIG = {
+    "SENSE": {
+        "emoji": "👁️",
+        "label": "Sensing",
+        "color": "cyan",
+        "desc": "Gather context",
+    },
+    "ACT": {
+        "emoji": "⚡",
+        "label": "Acting",
+        "color": "yellow",
+        "desc": "Execute intent",
+    },
+    "REFLECT": {
+        "emoji": "💭",
+        "label": "Reflecting",
+        "color": "purple",
+        "desc": "Consolidate learnings",
+    },
+}
+
+
+# Thread-safe GardenerContext management (from CLI handler)
+_gctx: Any = None
+_gctx_lock = threading.Lock()
+
+
+async def _get_gardener_context() -> Any:
+    """Get or create GardenerContext (thread-safe)."""
+    global _gctx
+    if _gctx is None:
+        with _gctx_lock:
+            if _gctx is None:
+                from agents.gardener.handlers import GardenerContext
+                from agents.gardener.persistence import create_session_store
+
+                store = create_session_store()
+                _gctx = GardenerContext(store=store)
+                await _gctx.init()
+    return _gctx
+
+
+def _render_polynomial(phase: str) -> str:
+    """Render ASCII polynomial state machine."""
+    states = ["SENSE", "ACT", "REFLECT"]
+    parts = []
+
+    for i, s in enumerate(states):
+        is_current = s == phase
+        emoji = PHASE_CONFIG[s]["emoji"]
+        label = PHASE_CONFIG[s]["label"]
+
+        if is_current:
+            parts.append(f"◀ {emoji} {label} ▶")
+        else:
+            parts.append(f"  {emoji} {label}  ")
+
+        if i < len(states) - 1:
+            parts.append(" → ")
+
+    return "".join(parts)
 
 
 # =============================================================================
@@ -382,8 +455,12 @@ GARDENER_ROLE_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "route",
         "propose",
         "session.manifest",
+        "session.define",
         "session.create",
         "session.resume",
+        "session.advance",
+        "session.polynomial",
+        "sessions.manifest",
     ),
     # Meta: full access
     "meta": (
@@ -391,11 +468,37 @@ GARDENER_ROLE_AFFORDANCES: dict[str, tuple[str, ...]] = {
         "route",
         "propose",
         "session.manifest",
+        "session.define",
         "session.create",
         "session.resume",
         "session.advance",
+        "session.polynomial",
+        "sessions.manifest",
+        "session.chat",
     ),
-    "default": ("manifest", "route"),
+    # Default (CLI) - full polynomial access
+    "default": (
+        "manifest",
+        "route",
+        "propose",
+        "session.manifest",
+        "session.define",
+        "session.advance",
+        "session.polynomial",
+        "sessions.manifest",
+    ),
+    # CLI archetype - matches what CLI handler needs
+    "cli": (
+        "manifest",
+        "route",
+        "propose",
+        "session.manifest",
+        "session.define",
+        "session.advance",
+        "session.polynomial",
+        "sessions.manifest",
+        "session.chat",
+    ),
 }
 
 
@@ -562,14 +665,24 @@ class GardenerNode(BaseLogosNode):
                 return await self._route(observer, **kwargs)
             case "propose":
                 return await self._propose(observer, **kwargs)
-            case "session.manifest":
-                return await self._session_manifest(observer, **kwargs)
+            # Polynomial session aspects (Wave 2.5)
+            case "session.manifest" | "session_manifest" | "status":
+                return await self._poly_session_manifest(observer, **kwargs)
+            case "session.define" | "session_define" | "start" | "create":
+                return await self._poly_session_define(observer, **kwargs)
+            case "session.advance" | "session_advance" | "advance" | "next":
+                return await self._poly_session_advance(observer, **kwargs)
+            case "session.polynomial" | "polynomial" | "poly":
+                return await self._poly_session_polynomial(observer, **kwargs)
+            case "sessions.manifest" | "sessions" | "list":
+                return await self._poly_sessions_list(observer, **kwargs)
+            case "session.chat" | "chat":
+                return await self._poly_session_chat(observer, **kwargs)
+            # Legacy session aspects
             case "session.create":
                 return await self._session_create(observer, **kwargs)
             case "session.resume":
                 return await self._session_resume(observer, **kwargs)
-            case "session.advance":
-                return await self._session_advance(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -1133,6 +1246,239 @@ Progress: {session.progress:.0%}
                 metadata=session.to_dict(),
             )
 
+    # =========================================================================
+    # Polynomial Session Aspects (Wave 2.5 - CLI Handler Integration)
+    # =========================================================================
+    # These use the CLI handler's GardenerContext for session persistence
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("session_state")],
+        help="View active polynomial session",
+        long_help="Show current session status including phase, counts, and intent.",
+        examples=["kg gardener", "kg gardener status"],
+    )
+    async def _poly_session_manifest(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """Get polynomial session status using CLI handler's context."""
+        gctx = await _get_gardener_context()
+
+        if not gctx.active_session:
+            return {
+                "status": "no_session",
+                "message": "No active session. Start one with: kg gardener start",
+            }
+
+        session = gctx.active_session
+        state = session.state
+        phase_cfg = PHASE_CONFIG.get(state.phase, PHASE_CONFIG["SENSE"])
+
+        return {
+            "status": "active",
+            "session_id": session.session_id,
+            "name": state.name,
+            "phase": state.phase,
+            "phase_emoji": phase_cfg["emoji"],
+            "phase_label": phase_cfg["label"],
+            "phase_desc": phase_cfg["desc"],
+            "sense_count": state.sense_count,
+            "act_count": state.act_count,
+            "reflect_count": state.reflect_count,
+            "intent": state.intent,
+            "plan_path": state.plan_path,
+            "polynomial": _render_polynomial(state.phase),
+        }
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.WRITES("session_state")],
+        help="Start a new polynomial session",
+        examples=["kg gardener start", "kg gardener start 'Feature X'"],
+    )
+    async def _poly_session_define(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """Create a new polynomial session."""
+        from agents.gardener.handlers import handle_session_create
+        from protocols.agentese.node import Observer
+
+        gctx = await _get_gardener_context()
+        obs_dict: dict[str, Any] = {}
+
+        name = kwargs.get("name")
+        create_kwargs: dict[str, Any] = {}
+        if name:
+            create_kwargs["name"] = name
+
+        result = await handle_session_create(gctx, obs_dict, **create_kwargs)
+
+        if result.get("status") == "error":
+            return {"status": "error", "message": result.get("message")}
+
+        session_data = result.get("session", {})
+        return {
+            "status": "created",
+            "session_id": session_data.get("session_id"),
+            "name": session_data.get("name"),
+            "phase": "SENSE",
+            "polynomial": _render_polynomial("SENSE"),
+            "message": "Session started in SENSE phase. Gather context before acting.",
+        }
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.WRITES("session_state")],
+        help="Advance to next polynomial phase",
+        examples=["kg gardener advance"],
+    )
+    async def _poly_session_advance(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """Advance SENSE→ACT→REFLECT polynomial."""
+        from agents.gardener.handlers import handle_session_advance
+        from protocols.agentese.node import Observer
+
+        gctx = await _get_gardener_context()
+
+        if not gctx.active_session:
+            return {
+                "status": "error",
+                "message": "No active session. Start one with: kg gardener start",
+            }
+
+        obs_dict: dict[str, Any] = {}
+        result = await handle_session_advance(gctx, obs_dict)
+
+        if result.get("status") == "error":
+            return {"status": "error", "message": result.get("message")}
+
+        new_phase = gctx.active_session.state.phase
+        phase_cfg = PHASE_CONFIG.get(new_phase, PHASE_CONFIG["SENSE"])
+
+        return {
+            "status": "advanced",
+            "phase": new_phase,
+            "phase_emoji": phase_cfg["emoji"],
+            "phase_label": phase_cfg["label"],
+            "phase_desc": phase_cfg["desc"],
+            "polynomial": _render_polynomial(new_phase),
+        }
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("session_state")],
+        help="Show polynomial state machine visualization",
+        examples=["kg gardener manifest", "kg gardener poly"],
+    )
+    async def _poly_session_polynomial(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """Get polynomial visualization data."""
+        gctx = await _get_gardener_context()
+
+        if not gctx.active_session:
+            return {"status": "error", "message": "No active session"}
+
+        state = gctx.active_session.state
+        current = state.phase
+
+        valid_transitions = {
+            "SENSE": ["ACT"],
+            "ACT": ["REFLECT", "SENSE (rollback)"],
+            "REFLECT": ["SENSE (cycle)"],
+        }
+
+        diagram = """
+    ┌─────────┐     advance     ┌─────────┐     advance    ┌───────────┐
+    │  SENSE  │────────────────▶│   ACT   │───────────────▶│  REFLECT  │
+    │   👁️   │                  │   ⚡    │                 │    💭     │
+    └─────────┘                  └─────────┘                 └───────────┘
+         ▲                            │                           │
+         │                            │ rollback                  │
+         │                            ▼                           │
+         │                       ┌─────────┐                      │
+         └───────────────────────│ SENSE ◀─┼──────────────────────┘
+                   cycle         └─────────┘     cycle
+        """
+
+        return {
+            "current_phase": current,
+            "polynomial_ascii": _render_polynomial(current),
+            "diagram": diagram,
+            "valid_transitions": valid_transitions.get(current, []),
+            "history": {
+                "sense_count": state.sense_count,
+                "act_count": state.act_count,
+                "reflect_count": state.reflect_count,
+            },
+        }
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("session_store")],
+        help="List recent polynomial sessions",
+        examples=["kg gardener sessions", "kg gardener list"],
+    )
+    async def _poly_sessions_list(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """List recent sessions from persistent store."""
+        gctx = await _get_gardener_context()
+        recent = await gctx.store.list_recent(limit=10)
+
+        active_id = gctx.active_session.session_id if gctx.active_session else None
+
+        sessions = []
+        for s in recent:
+            sessions.append(
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "phase": s.phase,
+                    "is_active": s.id == active_id,
+                }
+            )
+
+        return {
+            "sessions": sessions,
+            "count": len(sessions),
+            "active_id": active_id,
+        }
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.CALLS("llm"), Effect.CHARGES("tokens")],
+        help="Interactive tending chat mode",
+        examples=["kg gardener chat"],
+        budget_estimate="~500 tokens/turn",
+    )
+    async def _poly_session_chat(
+        self, observer: "Umwelt[Any, Any]", **kwargs: Any
+    ) -> dict[str, Any]:
+        """
+        Interactive tending chat.
+
+        Note: Full interactive mode is handled by CLI. This returns config.
+        """
+        gctx = await _get_gardener_context()
+
+        session_info = None
+        if gctx.active_session:
+            state = gctx.active_session.state
+            session_info = {
+                "name": state.name,
+                "phase": state.phase,
+                "intent": state.intent,
+            }
+
+        return {
+            "mode": "chat",
+            "session": session_info,
+            "gestures": ["observe", "prune", "graft", "water", "rotate", "wait"],
+            "hint": "Use 'kg gardener chat' for interactive mode",
+        }
+
 
 # =============================================================================
 # Gardener Context Resolver
@@ -1204,6 +1550,7 @@ __all__ = [
     "COMMAND_TO_PATH",
     "NL_PATTERN_HINTS",
     "GARDENER_ROLE_AFFORDANCES",
+    "PHASE_CONFIG",
     # Enums
     "RouteMethod",
     # Data classes
@@ -1218,4 +1565,7 @@ __all__ = [
     "create_gardener_node",
     "resolve_command_to_path",
     "get_all_command_mappings",
+    # Helpers
+    "_render_polynomial",
+    "_get_gardener_context",
 ]
