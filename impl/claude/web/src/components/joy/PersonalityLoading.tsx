@@ -39,6 +39,8 @@ export interface PersonalityLoadingProps {
   className?: string;
   /** Additional inline styles */
   style?: CSSProperties;
+  /** Use organic/forest-themed variant (for Gestalt forest mode) */
+  organic?: boolean;
 }
 
 // =============================================================================
@@ -50,6 +52,10 @@ interface JewelConfig {
   color: string;
   messages: string[];
   actionVerbs: Record<string, string>;
+  /** Organic/forest-themed messages (optional) */
+  organicMessages?: string[];
+  /** Organic emoji override */
+  organicEmoji?: string;
 }
 
 const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
@@ -86,6 +92,15 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
       detect: 'Detecting violations...',
       compute: 'Computing health grades...',
     },
+    // Forest-themed messages for organic mode
+    organicEmoji: '🌲',
+    organicMessages: [
+      'Surveying the forest canopy...',
+      'Tracing root systems...',
+      'Sensing ecosystem health...',
+      'Mapping the growth rings...',
+      'Feeling the pulse of the grove...',
+    ],
   },
   gardener: {
     emoji: '🌱',
@@ -214,18 +229,23 @@ export function PersonalityLoading({
   rotateInterval = 3000,
   className = '',
   style,
+  organic = false,
 }: PersonalityLoadingProps) {
   const { shouldAnimate } = useMotionPreferences();
   const config = JEWEL_CONFIG[jewel];
   const sizeConfig = SIZE_CONFIG[size];
+
+  // Use organic emoji/messages if available and organic mode is enabled
+  const displayEmoji = organic && config.organicEmoji ? config.organicEmoji : config.emoji;
+  const displayMessages = organic && config.organicMessages ? config.organicMessages : config.messages;
 
   // Get the message to display
   const getMessage = useMemo(() => {
     if (action && config.actionVerbs[action]) {
       return config.actionVerbs[action];
     }
-    return config.messages;
-  }, [action, config]);
+    return displayMessages;
+  }, [action, config, displayMessages]);
 
   // State for rotating messages
   const [messageIndex, setMessageIndex] = useState(0);
@@ -250,9 +270,9 @@ export function PersonalityLoading({
       className={`flex flex-col items-center justify-center ${sizeConfig.container} ${sizeConfig.gap} ${className}`}
       style={style}
     >
-      {/* Animated emoji */}
+      {/* Animated emoji - uses organic variant if enabled */}
       <Breathe intensity={0.4} speed="slow">
-        <span className={sizeConfig.emoji}>{config.emoji}</span>
+        <span className={sizeConfig.emoji}>{displayEmoji}</span>
       </Breathe>
 
       {/* Message with fade transition */}

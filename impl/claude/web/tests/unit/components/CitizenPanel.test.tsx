@@ -18,8 +18,7 @@ import type { CitizenCardJSON } from '@/reactive/types';
 vi.mock('@/api/client', () => ({
   townApi: {
     getCitizen: vi.fn().mockResolvedValue({
-      data: {
-        citizen: {
+      citizen: {
           name: 'Alice',
           archetype: 'Builder',
           phase: 'WORKING',
@@ -48,7 +47,6 @@ vi.mock('@/api/client', () => ({
             message: 'In the depths, structure emerges',
           },
         },
-      },
     }),
   },
 }));

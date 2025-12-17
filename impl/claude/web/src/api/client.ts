@@ -191,6 +191,13 @@ export const townApi = {
   create: async (data: CreateTownRequest = {}): Promise<Town> => {
     // Generate a town ID if not creating demo
     const townId = data.name?.toLowerCase().replace(/\s+/g, '-') || `town-${Date.now()}`;
+    return townApi.createWithId(townId, data);
+  },
+
+  /**
+   * Initialize a town with a specific ID via AUP: /api/v1/town/{town_id}/init
+   */
+  createWithId: async (townId: string, data: CreateTownRequest = {}): Promise<Town> => {
     const response = await apiClient.post<{
       town_id: string;
       status: string;

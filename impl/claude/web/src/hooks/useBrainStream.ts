@@ -111,10 +111,12 @@ export function useBrainStream({
   const [events, setEvents] = useState<BrainEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs
+  // Refs - stable across renders
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
+  const hasAutoConnected = useRef(false); // Prevent double-connect in StrictMode
+  const isDisconnecting = useRef(false); // Track intentional disconnects
   const callbacksRef = useRef({
     onCrystalFormed,
     onMemorySurfaced,
@@ -211,11 +213,36 @@ export function useBrainStream({
     }
   }, []);
 
-  // Connect to WebSocket
+  // Store config in refs to avoid recreating connect on every render
+  const subscribeEventsRef = useRef(subscribeEvents);
+  const maxReconnectAttemptsRef = useRef(maxReconnectAttempts);
+  const wsUrlRef = useRef(wsUrl);
+
+  useEffect(() => {
+    subscribeEventsRef.current = subscribeEvents;
+    maxReconnectAttemptsRef.current = maxReconnectAttempts;
+    wsUrlRef.current = wsUrl;
+  }, [subscribeEvents, maxReconnectAttempts, wsUrl]);
+
+  // Connect to WebSocket - stable function reference
   const connect = useCallback(() => {
-    // Close existing connection
+    // Skip if already connected or connecting
+    if (wsRef.current && wsRef.current.readyState === WebSocket.CONNECTING) {
+      console.log('[Brain Stream] Already connecting, skipping');
+      return;
+    }
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      console.log('[Brain Stream] Already connected, skipping');
+      return;
+    }
+
+    // Clear intentional disconnect flag
+    isDisconnecting.current = false;
+
+    // Close existing connection if any
     if (wsRef.current) {
       wsRef.current.close();
+      wsRef.current = null;
     }
 
     // Clear reconnect timeout
@@ -239,8 +266,9 @@ export function useBrainStream({
         callbacksRef.current.onConnect?.();
 
         // Subscribe to desired events
-        if (subscribeEvents.length > 0) {
-          subscribe(subscribeEvents);
+        const evts = subscribeEventsRef.current;
+        if (evts.length > 0) {
+          sendMessage('subscribe', { events: evts });
         }
       };
 
@@ -265,8 +293,15 @@ export function useBrainStream({
         wsRef.current = null;
         callbacksRef.current.onDisconnect?.();
 
-        // Auto-reconnect with exponential backoff
-        if (reconnectAttempts.current < maxReconnectAttempts && !event.wasClean) {
+        // Don't auto-reconnect if this was an intentional disconnect
+        if (isDisconnecting.current) {
+          console.log('[Brain Stream] Intentional disconnect, not reconnecting');
+          return;
+        }
+
+        // Auto-reconnect with exponential backoff (only for unclean closes)
+        const maxAttempts = maxReconnectAttemptsRef.current;
+        if (reconnectAttempts.current < maxAttempts && !event.wasClean) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
           console.log(`[Brain Stream] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
           reconnectAttempts.current += 1;
@@ -277,18 +312,21 @@ export function useBrainStream({
       console.error('[Brain Stream] Connection failed:', err);
       setError((err as Error).message);
     }
-  }, [getWsUrl, processMessage, subscribe, subscribeEvents, maxReconnectAttempts]);
+  }, [getWsUrl, processMessage, sendMessage]); // Minimal stable dependencies
 
-  // Disconnect from WebSocket
+  // Disconnect from WebSocket - stable function reference
   const disconnect = useCallback(() => {
+    // Mark as intentional disconnect to prevent auto-reconnect
+    isDisconnecting.current = true;
+
     // Clear reconnect timeout
     if (reconnectTimeout.current) {
       clearTimeout(reconnectTimeout.current);
       reconnectTimeout.current = null;
     }
 
-    // Reset reconnect attempts to prevent auto-reconnect
-    reconnectAttempts.current = maxReconnectAttempts;
+    // Reset reconnect attempts
+    reconnectAttempts.current = 0;
 
     if (wsRef.current) {
       console.log('[Brain Stream] Disconnecting');
@@ -296,19 +334,26 @@ export function useBrainStream({
       wsRef.current = null;
       setIsConnected(false);
     }
-  }, [maxReconnectAttempts]);
+  }, []); // No dependencies - stable function
 
-  // Auto-connect effect
+  // Auto-connect effect - handles React StrictMode double-mounting
   useEffect(() => {
-    if (autoConnect) {
+    if (autoConnect && !hasAutoConnected.current) {
+      hasAutoConnected.current = true;
       connect();
     }
 
     // Cleanup on unmount
     return () => {
+      // In StrictMode, the cleanup runs but then the effect runs again
+      // We only want to truly disconnect when the component is actually unmounting
+      // The hasAutoConnected ref prevents reconnection after StrictMode cleanup
       disconnect();
+      // Reset the flag so a true remount can reconnect
+      hasAutoConnected.current = false;
     };
-  }, [autoConnect, connect, disconnect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoConnect]); // Intentionally omit connect/disconnect - they're stable refs
 
   // Keepalive ping every 25 seconds
   useEffect(() => {

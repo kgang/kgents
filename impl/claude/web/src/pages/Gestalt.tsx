@@ -400,11 +400,19 @@ function Scene({
 
   return (
     <>
-      {/* Canonical lighting from SceneLighting */}
+      {/* Forest fog for atmospheric depth when organic theme is active */}
+      {organicTheme && (
+        <fog attach="fog" args={[FOREST_SCENE.fogColor, FOREST_SCENE.fogNear, FOREST_SCENE.fogFar]} />
+      )}
+
+      {/* Canonical lighting from SceneLighting - forest colors when organic theme */}
       <SceneLighting
         quality={illuminationQuality}
         bounds={shadowBounds}
         atmosphericFill
+        animateFillLights={organicTheme}
+        sunColor={organicTheme ? FOREST_SCENE.sunColor : undefined}
+        ambientColor={organicTheme ? FOREST_SCENE.ambientLight : undefined}
       />
 
       {/* Post-processing effects (SSAO for high/cinematic quality) */}
@@ -649,10 +657,13 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
  * Contextual loading state with personality.
  * Foundation 5: Personality & Joy
  */
-function TopologyLoading() {
+function TopologyLoading({ organic = false }: { organic?: boolean }) {
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900">
-      <PersonalityLoading jewel="gestalt" size="lg" />
+    <div
+      className="w-full h-full flex flex-col items-center justify-center"
+      style={{ background: organic ? FOREST_SCENE.background : DARK_SURFACES.canvas }}
+    >
+      <PersonalityLoading jewel="gestalt" size="lg" organic={organic} />
     </div>
   );
 }
@@ -806,7 +817,7 @@ export default function Gestalt() {
 
   const canvas3D = topology && (
     <ErrorBoundary key={topologyKey} fallback={<TopologyErrorFallback onRetry={handleRetry} />} resetKeys={[topologyKey]}>
-      <Suspense fallback={<TopologyLoading />}>
+      <Suspense fallback={<TopologyLoading organic={filters.organicTheme} />}>
         <Canvas
           camera={{ position: [0, 0, isMobile ? 30 : 25], fov: 55 }}
           gl={{ antialias: true, alpha: false }}
@@ -922,7 +933,7 @@ export default function Gestalt() {
               />
             </div>
           ) : loading && !topology ? (
-            <TopologyLoading />
+            <TopologyLoading organic={filters.organicTheme} />
           ) : (
             <>
               {canvas3D}
@@ -1110,7 +1121,7 @@ export default function Gestalt() {
         </div>
       ) : loading && !topology ? (
         <div className="flex-1">
-          <TopologyLoading />
+          <TopologyLoading organic={filters.organicTheme} />
         </div>
       ) : (
         <div className="flex-1 overflow-hidden">

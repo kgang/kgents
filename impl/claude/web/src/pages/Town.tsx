@@ -134,10 +134,14 @@ function BottomDrawer({ isOpen, onClose, title, children }: BottomDrawerProps) {
 }
 
 export default function Town() {
+  console.log('[Town] Component rendering START');
+
   const { townId: paramTownId } = useParams<{ townId: string }>();
+  console.log('[Town] paramTownId:', paramTownId);
 
   // Layout context
   const { density, isMobile, isDesktop } = useWindowLayout();
+  console.log('[Town] Layout:', { density, isMobile, isDesktop });
 
   // Local state
   const [townId, setTownId] = useState<string | null>(null);
@@ -166,9 +170,14 @@ export default function Town() {
 
   // Load or create town on mount
   useEffect(() => {
-    if (!paramTownId) return;
+    console.log('[Town] useEffect running, paramTownId:', paramTownId);
+    if (!paramTownId) {
+      console.log('[Town] No paramTownId, returning early');
+      return;
+    }
 
     const loadTown = async (id: string) => {
+      console.log('[Town] loadTown called with id:', id);
       setLoadingState('loading');
       setError(null);
       try {
@@ -187,16 +196,22 @@ export default function Town() {
     };
 
     const createAndLoadTown = async () => {
+      console.log('[Town] createAndLoadTown called');
       setLoadingState('creating');
       setError(null);
       try {
-        const response = await townApi.create({
+        console.log('[Town] Calling townApi.createWithId with:', paramTownId);
+        // Use paramTownId as the town ID so URL stays consistent
+        const response = await townApi.createWithId(paramTownId!, {
           name: 'Demo Town',
           phase: 3,
           enable_dialogue: false,
         });
         const newTownId = response.id;
-        window.history.replaceState(null, '', `/town/${newTownId}`);
+        // Only update URL if ID changed (shouldn't happen with createWithId)
+        if (newTownId !== paramTownId) {
+          window.history.replaceState(null, '', `/town/${newTownId}`);
+        }
         setTownId(newTownId);
         setLoadingState('loaded');
       } catch (err: unknown) {
