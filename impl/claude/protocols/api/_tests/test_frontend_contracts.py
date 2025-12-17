@@ -348,6 +348,7 @@ class TestColonyDashboardContract:
                 )
 
 
+@pytest.mark.skip(reason="protocols.api.town was archived - rebuild in services layer")
 class TestLiveStateContract:
     """Verify /live SSE endpoint emits data matching frontend types."""
 
