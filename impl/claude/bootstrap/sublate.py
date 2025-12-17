@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional, Protocol, Sequence
 
-from .types import (
+from agents.poly.types import (
     Agent,
     HoldTension,
     SublateInput,

@@ -33,7 +33,6 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [b-gents/](b-gents/) - Bio + Banker (resource-constrained systems)
    - [c-gents/](c-gents/) - Category Theory (composition)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
-   - [e-gents/](e-gents/) - Evolution (dialectical code improvement)
    - [f-gents/](f-gents/) - Forge (artifact synthesis)
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
    - [i-gents/](i-gents/) - Interface (Living Codex Garden visualization)
@@ -60,7 +59,6 @@ Agents don't exist in isolation. Key integration points:
 
 | Integration | Description |
 |-------------|-------------|
-| D+E | E-gents use D-gent memory for evolution state |
 | J+F | F-gent artifacts can be JIT-instantiated via J-gent |
 | T+* | T-gents can test any agent via Spy/Mock patterns |
 | T+U | T-gents test U-gent tools (MockAgent, SpyAgent, FlakyAgent) |
@@ -79,7 +77,6 @@ Agents don't exist in isolation. Key integration points:
 | O+* | O-gents observe all agents including bootstrap |
 | N+O | N-gent stories feed O-gent metrics |
 | B+B | B-Banker controls B-Bio's resource allocation |
-| B+E | B-Banker UVP regulates E-gent evolution via Sin Tax / Virtue Subsidy |
 | B+O | O-gent ValueLedgerObserver monitors B-Banker economic health |
 | B+W | W-gent renders B-Banker RoC dashboard and Value Tensor |
 | R+F | R-gent optimizes F-gent prototypes before crystallization |
@@ -89,7 +86,7 @@ Agents don't exist in isolation. Key integration points:
 | Ψ+H | Ψ-gent uses H-gent dialectics for ego/shadow synthesis |
 | Ψ+O | O-gent observes Ψ-gent Borromean register transitions |
 | Ψ+N | N-gent narrates Ψ-gent's integration journeys |
-| Ω+Y | Y-gent topology uses Ω-gent to manifest bodies |
+| Ω+Turn | Turn Protocol chrysalis uses Ω-gent to manifest bodies |
 | Ω+B | B-gent meters Ω-gent morphology costs (ATP, not Approval) |
 | Ω+D | D-gent sidecar provides state persistence via `with_sidecar()` |
 | Ω+N | N-gent chronicles Ω-gent pod lifecycle events |
@@ -108,6 +105,47 @@ impl/           ← Reference implementations (how agents are built)
 ```
 
 The specification is **prescriptive**: it defines the contract that any implementation must fulfill. An agent claiming to be a "B-gent" must satisfy the specification in `b-gents/`.
+
+---
+
+## Spec Hygiene
+
+> *"Spec is compression. If you can't compress it, you don't understand it."*
+
+### The Generative Principle
+
+A well-formed spec is **smaller than its implementation** but contains enough information to regenerate it. The spec is the compression; the impl is the decompression.
+
+### Seven Bloat Patterns (Avoid These)
+
+| Pattern | Signal | Fix |
+|---------|--------|-----|
+| **Implementation Creep** | Functions >10 lines | Extract to `impl/` |
+| **Roadmap Drift** | Week-by-week plans | Move to `plans/` |
+| **Framework Comparisons** | Decision matrices | Move to `docs/` |
+| **Gap Analyses** | Current vs Desired | Delete |
+| **Session Artifacts** | Continuation prompts | Move to `plans/_continuations/` |
+| **File Listings** | Directory trees | One-line reference |
+| **Test Code as Laws** | pytest functions | Algebraic equations |
+
+### Five Compression Patterns (Use These)
+
+1. **Type signatures with `...`** - Show shape, hide body
+2. **Laws as equations** - `F.map(g . f) = F.map(g) . F.map(f)`
+3. **AGENTESE path chains** - `self.memory.crystallize → concept.association.emerge`
+4. **ASCII diagrams** - Worth 100 lines of prose
+5. **Summary tables** - Compress enumeration
+
+### Line Limits
+
+| Spec Type | Target | Hard Limit |
+|-----------|--------|------------|
+| Simple agent | 100-200 | 300 |
+| Complex agent | 200-300 | 400 |
+| Protocol | 300-400 | 500 |
+| Core system | 400-500 | 600 |
+
+**Full guide**: `docs/skills/spec-hygiene.md` | **Template**: `docs/skills/spec-template.md`
 
 ## Contributing New Agents
 

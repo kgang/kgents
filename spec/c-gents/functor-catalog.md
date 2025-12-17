@@ -1,16 +1,15 @@
 # Functor Catalog: kgents Transformation Patterns
 
-> A comprehensive survey of functors across the kgents ecosystem.
+**Status:** Standard
+**Foundation:** All functors are polynomial endofunctors on `PolyAgent[S, A, B]`
 
----
+## Purpose
 
-## What This Document Is
+This catalog formalizes functor patterns across the kgents ecosystem. Many agent transformations follow functor laws but weren't explicitly documented as such. This reference makes them explicit, enabling systematic reasoning about agent transformations across genera.
 
-This catalog identifies and formalizes **functor patterns** found throughout kgents specifications. Many agent transformations follow functor laws but aren't explicitly documented as such. This document makes them explicit.
+## Core Insight
 
-**Purpose**: Enable systematic reasoning about agent transformations across genera.
-
-**Foundation**: All functors are **polynomial endofunctors** operating on `PolyAgent[S, A, B]`. See `spec/architecture/polyfunctor.md` for theory.
+Every agent transformation is a polynomial endofunctor that modifies positions (state space), directions (inputs), or transitions (dynamics).
 
 ---
 
@@ -33,6 +32,7 @@ Each functor transforms a polynomial agent `P(y) = Σ_{s ∈ S} y^{E(s)}` accord
 | **Trace** | Add emission state | Identity | Emit + forward | Observing |
 | **Sandbox** | Namespace isolation | Filter forbidden | Guard execution | Filtering |
 | **Flux** | Add flow state | Streams | Continuous dynamics | Lifting |
+| **State** | Add load/save state | Identity | Thread S through | Lifting |
 
 ---
 
@@ -53,901 +53,322 @@ Each functor transforms a polynomial agent `P(y) = Σ_{s ∈ S} y^{E(s)}` accord
 | **Trace** | `Agent[A,B] → Agent[A,B]` | W | 🔄 Implicit | Observability wrapping |
 | **Sandbox** | `Agent[A,B] → Agent[A,B]` | J | 🔄 Implicit | Safety isolation |
 | **Flux** | `Agent[A,B] → Agent[Flux[A], Flux[B]]` | C | 🔄 Planned | Discrete → Continuous flow |
+| **State** | `Agent[A,B] → StatefulAgent[S,A,B]` | S | ✅ Specified | State threading (monad) |
 
 ---
 
-## 1. Promise Functor (J-gents, C-gents)
+## 1. Promise Functor
 
-### Signature
-```
-Promise: Agent[A, B] → Agent[A, Promise[B]]
-```
+**Signature:** `Promise: Agent[A, B] → Agent[A, Promise[B]]`
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × PromiseState, A, Promise[B]]`
+where `PromiseState = { PENDING, RESOLVED, FAILED }`
 
-```
-Promise: PolyAgent[S, A, B] → PolyAgent[S × PromiseState, A, Promise[B]]
+**Transform:** Adds promise lifecycle state; defers computation until explicitly resolved.
 
-where PromiseState = { PENDING, RESOLVED, FAILED }
-```
+**Laws:**
+- Identity: `Promise(Id[A]) ≅ Id[Promise[A]]`
+- Composition: `Promise(f >> g) ≅ Promise(f) >> Promise(map(g))`
 
-**Position transform**: Adds promise lifecycle state to existing agent state.
-
-**Direction transform**: Identity (same inputs accepted).
-
-**Transition transform**:
-```
-Original: (s, a) → (s', b)
-Promised: (s, pending, a) → (s, pending, Promise(→ b))  # Defer
-          resolve() → (s', resolved, b)                   # Execute
-```
-
-### Description
-Defers computation until explicitly resolved. Enables lazy evaluation trees.
-
-### Laws
-```python
-# Identity
-Promise(Id[A]) ≅ Id[Promise[A]]
-
-# Composition
-Promise(f >> g) ≅ Promise(f) >> Promise(map(g))
-```
-
-### Status
-✅ **Fully documented** in `spec/c-gents/functors.md` and `spec/j-gents/lazy.md`
-
-### Implementation
-`impl/claude/agents/j/promise.py`
+**Status:** ✅ Fully documented in `spec/c-gents/functors.md` and `spec/j-gents/lazy.md`
+**Impl:** `impl/claude/agents/j/promise.py`
 
 ---
 
-## 2. View Functor (I-gents)
+## 2. View Functor
 
-### Signature
-```
-View: Agent[A, B] → Widget[Agent[A, B]]
-```
+**Signature:** `View: Agent[A, B] → Widget[Agent[A, B]]`
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[WidgetState, UIEvent, WidgetOutput]`
+where `WidgetState = { INITIAL, LOADING, DISPLAYING, ERROR }`
 
-```
-View: PolyAgent[S, A, B] → PolyAgent[WidgetState, UIEvent, WidgetOutput]
+**Transform:** Maps agent state to widget lifecycle; agent inputs become UI events. View is a **quotient morphism** collapsing agent state to visible widget state.
 
-where WidgetState = { INITIAL, LOADING, DISPLAYING, ERROR }
-```
+**Laws:**
+- Identity preservation: `View(Id)` produces `GlyphWidget(Id)`
+- Composition visualization: `View(f >> g)` produces `GraphWidget([View(f), View(g)])`
 
-**Position transform**: Maps agent state space to widget lifecycle states.
+**Key Insight:** Form reveals function—widget ontology corresponds to agent behavioral patterns.
 
-**Direction transform**: Agent inputs become UI events (clicks, gestures, data).
-
-**Transition transform**:
-```
-Agent dynamics → Render cycle:
-  (widget_state, event) → (new_widget_state, visual_update)
-```
-
-**Key polynomial insight**: View functor collapses complex agent state to visible widget state—a **quotient morphism**.
-
-### Description
-Maps agents to contextually adaptive UI components. Deterministic: same agent always produces same widget structure (content varies with state).
-
-### Laws
-```python
-# Identity preservation (structural)
-View(Id) produces GlyphWidget(Id)  # Minimal representation
-
-# Composition visualization
-View(f >> g) produces GraphWidget([View(f), View(g)])
-```
-
-### Key Insight
-**Form reveals function**: The widget ontology (Glyph, Card, Stream, Graph, etc.) directly corresponds to agent behavioral patterns.
-
-### Specification
-`spec/i-gents/view-functor.md` (~380 lines)
-
-### Status
-🔄 **Implicit** - Fully specified but not formally added to functor catalog
-
-### Formalization Opportunity
-Add View Functor to `spec/c-gents/functors.md` with:
-- Widget ontology mapping table
-- Context adaptation laws
-- Composition rendering rules
+**Status:** 🔄 Implicit (fully specified in `spec/i-gents/view-functor.md` but not in catalog)
 
 ---
 
-## 3. Metered Functor (B-gents)
+## 3. Metered Functor
 
-### Signature
-```
-Metered: Agent[A, B] → Transaction[A, B]
-```
+**Signature:** `Metered: Agent[A, B] → Transaction[A, B]`
 
-Where `Transaction[A, B]` wraps execution with:
-- Pre-execution: Token lease acquisition
-- Execution: Actual agent invocation
-- Post-execution: Cost settlement & receipt
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × BudgetState, A, (B, Receipt)]`
+where `BudgetState = { AVAILABLE(tokens), EXHAUSTED, RATE_LIMITED }`
 
-### Polynomial Interpretation
+**Transform:** Adds economic state; transitions blocked if budget exhausted. Budget is a **linear resource**—the polynomial fiber at EXHAUSTED has no valid directions.
 
-```
-Metered: PolyAgent[S, A, B] → PolyAgent[S × BudgetState, A, (B, Receipt)]
+**Laws:**
+- Cost preservation: `cost(Metered(f).invoke(x)) == cost(f.invoke(x))`
+- Composition economics: `Metered(f >> g) ≡ Metered(f) >> Metered(g)`
 
-where BudgetState = { AVAILABLE(tokens), EXHAUSTED, RATE_LIMITED }
-```
+**Key Insight:** Linear types—tokens cannot be copied, only spent.
 
-**Position transform**: Adds economic state (budget, rate limit counters) to agent state.
-
-**Direction transform**: Identity, but transitions may be blocked if budget exhausted.
-
-**Transition transform**:
-```
-Original: (s, a) → (s', b)
-Metered:  (s, available(n), a) →
-          if cost(a) ≤ n: (s', available(n - cost(a)), (b, receipt))
-          else: (s, exhausted, Error("Budget exhausted"))
-```
-
-**Key polynomial insight**: Budget is a **linear resource**—the polynomial fiber at EXHAUSTED has no valid directions.
-
-### Description
-Transforms any "free" agent into an "economic" agent operating within token budgets and rate limits.
-
-### Laws
-```python
-# Cost preservation
-cost(Metered(f).invoke(x)) == cost(f.invoke(x))  # No overhead beyond tracking
-
-# Composition economics
-Metered(f >> g) ≡ Metered(f) >> Metered(g)  # Costs are additive
-```
-
-### Key Insight
-**Linear Types**: Tokens cannot be copied, only spent. The functor enforces this via the CentralBank.
-
-### Specification
-`spec/b-gents/banker.md` (Section: "The Core Abstraction: The Metered Functor")
-
-### Status
-🔄 **Implicit** - Described as "core abstraction" but not formally cataloged as functor
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Token lease algebra
-- Rate limiting as functor constraint
-- Auction mechanism as resource allocation
+**Status:** 🔄 Implicit (described in `spec/b-gents/banker.md`)
 
 ---
 
-## 4. Personalization Functor (K-gent)
+## 4. Personalization Functor
 
-### Signature
-```
-K: Agent[A, B] → Agent[A, B]  (same signature, personalized behavior)
-```
+**Signature:** `K: Agent[A, B] → Agent[A, B]` (same signature, personalized behavior)
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S ∩ SoulCompatible, A, B]`
+where `SoulCompatible = { s ∈ S | eigenvector_alignment(s) ≥ threshold }`
 
-```
-K: PolyAgent[S, A, B] → PolyAgent[S ∩ SoulCompatible, A, B]
+**Transform:** Filters positions to soul-compatible subset (sheaf restriction). K-functor selects the fiber compatible with eigenvector context.
 
-where SoulCompatible = { s ∈ S | eigenvector_alignment(s) ≥ threshold }
-```
-
-**Position transform**: Filters positions to soul-compatible subset (sheaf restriction).
-
-**Direction transform**: Identity (same inputs accepted).
-
-**Transition transform**:
-```
-Original: (s, a) → (s', b)
-Personalized: (s, a) → (s', soul_mediate(b, context))
-```
-
-**Key polynomial insight**: K-functor is a **sheaf restriction**—it selects the fiber compatible with the eigenvector context. See `spec/agents/emergence.md` for SOUL_SHEAF.
-
-**Connection to SOUL_SHEAF**:
+**Connection to SOUL_SHEAF:**
 ```python
-# K-functor restricts to eigenvector-compatible positions
 K(agent, AESTHETIC) = SOUL_SHEAF.restrict(agent, AESTHETIC)
 ```
 
-### Description
-Lifts agents into "personalized space" - behavior is colored by the personality field without changing interface.
+**Laws:**
+- Identity: `K(Id) ≅ Id`
+- Composition: `K(f >> g) ≅ K(f) >> K(g)`
 
-### Laws
-```python
-# Identity preservation
-K(Id) ≅ Id  # Identity remains identity (but with personality)
+**Key Insight:** Personality as field—not stored preferences, but the shape of the space itself. K-gent is the fixed point: `K = Fix(λsystem. developer_adapts(system))`
 
-# Composition preservation
-K(f >> g) ≅ K(f) >> K(g)  # Personality pervades composition
-```
-
-### Key Insight
-**Personality as Field**: Not stored preferences, but the shape of the space itself. K-gent is the fixed point of system-developer mutual adaptation.
-
-```
-K = Fix(λsystem. developer_adapts(system))
-```
-
-### Specification
-`spec/k-gent/README.md` (Section: "The Functor Perspective")
-
-### Status
-🔄 **Implicit** - Described as functor but not in formal catalog
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Personality field equations
-- Fixed-point characterization
-- Unity of developer-system
+**Status:** 🔄 Implicit (described in `spec/k-gent/README.md`)
 
 ---
 
-## 5. Lens Functor (D-gents)
+## 5. Lens Functor
 
-### Signature
-```
-Lens[S, A]: (get: S → A, set: (S, A) → S)
-```
+**Signature:** `Lens[S, A]: (get: S → A, set: (S, A) → S)` (bidirectional)
 
-Lenses are **bidirectional functors** - they both extract and update.
+**Polynomial:** Bidirectional morphism with forward (get) and backward (set) maps.
+- Forward: `P(y) = Σ_{s ∈ S} y^{Get(s)}`
+- Backward: `P(y) = Σ_{s ∈ S} y^{Set(s)}`
 
-### Polynomial Interpretation
+**Transform:** Focus on sub-parts while preserving update capability.
 
-```
-Lens: PolyAgent[S, Op, Result] → PolyAgent[S, Op, Result]
+**Laws:**
+- GetPut: `lens.set(state, lens.get(state)) == state`
+- PutGet: `lens.get(lens.set(state, value)) == value`
+- PutPut: `lens.set(lens.set(state, v1), v2) == lens.set(state, v2)`
 
-where the polynomial is bidirectional:
-  Forward:  P(y) = Σ_{s ∈ S} y^{Get(s)}   # Read fiber
-  Backward: P(y) = Σ_{s ∈ S} y^{Set(s)}   # Write fiber
-```
-
-**Position transform**: Identity (same state space, focused view).
-
-**Direction transform**: Bidirectional—get reads, set writes.
-
-**Transition transform**:
-```
-Lens at focus f:
-  get: (s, READ) → (s, s.f)           # Extract subpart
-  set: (s, WRITE(v)) → (s{f=v}, ())   # Update subpart
-```
-
-**Key polynomial insight**: Lens is a **polynomial morphism with inverse**. The forward map (get) and backward map (set) form a bidirectional morphism in the polynomial category.
-
-### Description
-Compositional state access. Lenses focus on sub-parts of larger structures while preserving the ability to update.
-
-### Laws
+**Composition:**
 ```python
-# GetPut: Reading then writing is identity
-lens.set(state, lens.get(state)) == state
-
-# PutGet: Writing then reading returns what was written
-lens.get(lens.set(state, value)) == value
-
-# PutPut: Last write wins
-lens.set(lens.set(state, v1), v2) == lens.set(state, v2)
-```
-
-### Composition
-```python
-# Lens composition
 (lens1 >> lens2).get(state) == lens2.get(lens1.get(state))
 (lens1 >> lens2).set(state, val) == lens1.set(state, lens2.set(lens1.get(state), val))
 ```
 
-### Specification
-`spec/d-gents/lenses.md`
-
-### Status
-🔄 **Implicit** - Documented as lenses, but functor properties not emphasized
-
-### Formalization Opportunity
-Add to functor catalog emphasizing:
-- Bidirectional functor nature
-- Lens laws as functor constraints
-- Composition algebra
+**Status:** 🔄 Implicit (documented in `spec/d-gents/lenses.md`)
 
 ---
 
-## 6. Optimization Endofunctor (R-gents)
+## 6. Optimization Endofunctor
 
-### Signature
-```
-R: Agent[A, B] → Agent'[A, B]  (same signature, optimized prompts)
-```
+**Signature:** `R: Agent[A, B] → Agent'[A, B]` (same signature, optimized prompts)
 
-**Key property**: This is an **endofunctor** - it maps Agent category to itself.
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S, A, B]` (identical structure)
 
-### Polynomial Interpretation
+**Transform:** Pure endofunctor—only changes transition function implementation (the prompt), not the polynomial structure. Optimization within a fiber.
 
-```
-R: PolyAgent[S, A, B] → PolyAgent[S, A, B]
+**Laws:**
+- Identity: `R(Id) ≅ Id`
+- Composition: `R(f >> g) ≅ R(f) >> R(g)` or optimize pipeline as unit
+- Monotonicity: `Loss(R(agent)) ≤ Loss(agent)`
 
-# Same polynomial structure, different transition implementation
-```
+**Key Insight:** Unique among all kgents functors—preserves entire polynomial structure, operates on "implementation" not "interface."
 
-**Position transform**: Identity (same state space).
-
-**Direction transform**: Identity (same inputs accepted).
-
-**Transition transform**:
-```
-Original: (s, a) → (s', b)      via prompt P
-Optimized: (s, a) → (s', b')    via prompt R(P)
-where Loss(b') ≤ Loss(b)
-```
-
-**Key polynomial insight**: R is a **pure endofunctor**—it doesn't change the polynomial structure at all. It only changes the transition function's implementation (the prompt). This is optimization within a fiber.
-
-**Uniqueness**: Among all kgents functors, R alone preserves the entire polynomial structure. It operates on the "implementation" rather than the "interface."
-
-### Description
-Transforms agents by optimizing their prompts via teleprompters (DSPy, TextGrad, MIPROv2, OPRO). The optimized agent has identical interface but improved performance.
-
-### Laws
-```python
-# Identity (trivial optimization)
-R(Id) ≅ Id  # Optimizing identity is still identity
-
-# Composition (optimization distributes)
-R(f >> g) ≅ R(f) >> R(g)  # OR optimize pipeline as unit
-
-# Monotonicity (optimization doesn't degrade)
-Loss(R(agent)) ≤ Loss(agent)  # By definition of optimization
-```
-
-### Key Insight
-**Optimization as Endofunctor**: Unlike other functors that change structure, R changes *implementation* while preserving *interface*.
-
-### Specification
-`spec/r-gents/README.md` (Section: "The Endofunctor")
-
-### Status
-🔄 **Implicit** - Explicitly called "endofunctor" but not in formal catalog
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Loss function monotonicity
-- Teleprompter algebra
-- ROI-guided optimization
+**Status:** 🔄 Implicit (described in `spec/r-gents/README.md`)
 
 ---
 
-## 7. Spy Functor (T-gents)
+## 7. Spy Functor
 
-### Signature
-```
-Spy: Agent[A, A] → Agent[A, A]  (identity with logging side effect)
-```
+**Signature:** `Spy: Agent[A, A] → Agent[A, A]` (identity with logging)
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, A] → PolyAgent[S × History, A, A]`
+where `History = List[(timestamp, input, output)]`
 
-```
-Spy: PolyAgent[S, A, A] → PolyAgent[S × History, A, A]
+**Transform:** Adds writer fiber—history is a monoid that accumulates across transitions. This is the categorical Writer monad applied to polynomials.
 
-where History = List[(timestamp, input, output)]
-```
+**Laws:**
+- Identity: `Spy(label).invoke(x) == x` (value unchanged)
+- Composition transparency: `(f >> Spy(label) >> g) ≡ (f >> g)` (semantically)
+- History accumulation: `len(Spy.history)` increases with each invocation
 
-**Position transform**: Adds history accumulation state.
+**Key Insight:** Writer monad specialized to identity—accumulates log while passing values through.
 
-**Direction transform**: Identity (same inputs accepted).
-
-**Transition transform**:
-```
-Original: (s, a) → (s', a)  # Identity
-Spied:    (s, history, a) → (s', history ++ [(now, a, a)], a)
-```
-
-**Key polynomial insight**: Spy adds a **writer fiber**—the history is a monoid that accumulates across transitions. This is the categorical Writer monad applied to polynomials.
-
-### Description
-Wraps an identity agent with observation - records all inputs/outputs to history while passing data through unchanged.
-
-### Laws
-```python
-# Identity preservation (ignoring side effects)
-Spy(label).invoke(x) == x  # Value unchanged
-
-# Composition transparency
-(f >> Spy(label) >> g) ≡ (f >> g)  # Semantically equivalent
-
-# History accumulation
-len(Spy.history) increases with each invocation
-```
-
-### Key Insight
-**Writer Monad**: Spy is the Writer monad specialized to identity - it accumulates a log while passing values through.
-
-### Specification
-`spec/t-gents/taxonomy.md` (Section: "SpyAgent: The Writer Monad")
-
-### Status
-🔄 **Implicit** - Described as Writer monad but not in functor catalog
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Writer monad connection
-- Trace semantics
-- Integration with W-gent observability
+**Status:** 🔄 Implicit (described in `spec/t-gents/taxonomy.md`)
 
 ---
 
-## 8. Mock Functor (T-gents)
+## 8. Mock Functor
 
-### Signature
-```
-Mock: Agent[A, B] → Agent[A, B]  (constant output, ignores input)
-```
+**Signature:** `Mock: Agent[A, B] → Agent[A, B]` (constant output, ignores input)
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[Unit, Any, B]` (single-state, constant-output)
 
-```
-Mock: PolyAgent[S, A, B] → PolyAgent[Unit, Any, B]
+**Transform:** Terminal morphism—maps any polynomial to constant polynomial `P(y) = B`. Factors through terminal object.
 
-# Collapses to single-state, constant-output polynomial
-```
+**Laws:**
+- Constancy: `Mock(b).invoke(a1) == Mock(b).invoke(a2)` for all `a1, a2`
+- Identity absorption: `Mock(b) >> f ≠ f` unless f is also constant
+- Delay simulation: `time(Mock(b, delay=t).invoke(x)) ≈ t`
 
-**Position transform**: Collapses to terminal object (single state).
+**Key Insight:** Categorical constant—collapses all inputs to single output.
 
-**Direction transform**: Accepts all inputs (universal).
-
-**Transition transform**:
-```
-Mock(b): (*, a) → (*, b)  # ∀ a ∈ A
-```
-
-**Key polynomial insight**: Mock is a **terminal morphism**—it maps any polynomial to the constant polynomial `P(y) = B`. In category theory, this is factoring through the terminal object.
-
-### Description
-Replaces any agent with one that returns a fixed output, optionally with simulated latency.
-
-### Laws
-```python
-# Constancy
-Mock(b).invoke(a1) == Mock(b).invoke(a2)  # ∀ a1, a2 ∈ A
-
-# Identity absorption
-Mock(b) >> f ≠ f  # Unless f is also constant
-
-# Delay simulation
-time(Mock(b, delay=t).invoke(x)) ≈ t
-```
-
-### Key Insight
-**Constant Morphism**: Mock is the categorical constant - it collapses all inputs to a single output.
-
-### Specification
-`spec/t-gents/taxonomy.md` (Section: "MockAgent: The Constant Morphism")
-
-### Status
-🔄 **Implicit** - Described as constant morphism but not in functor catalog
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Constant functor properties
-- Testing algebra (mock composition)
-- Latency simulation semantics
+**Status:** 🔄 Implicit (described in `spec/t-gents/taxonomy.md`)
 
 ---
 
-## 9. Parser Functor (P-gents)
+## 9. Parser Functor
 
-### Signature
-```
-Parser: Text → ParseResult[A]
+**Signature:** `Parser: Text → ParseResult[A]`
+where `ParseResult[A] = Success(value: A, confidence: float) | Failure(error)`
 
-where ParseResult[A] = Success(value: A, confidence: float) | Failure(error)
-```
+**Polynomial:** `PolyAgent[ParseState, Text, ParseResult[A]]`
+where `ParseState = { READY, PARSING, REPAIRING, COMPLETE, FAILED }`
 
-### Polynomial Interpretation
+**Transform:** Non-trivial state machine—polynomial captures retry logic and repair strategies as explicit positions.
 
-```
-Parser: PolyAgent[ParseState, Text, ParseResult[A]]
+**Laws:**
+- Determinism: `Parser(strategy).parse(text) == Parser(strategy).parse(text)`
+- Composition (fallback): `(p1 | p2 | p3).parse(text)` returns first successful parse
+- Fusion (parallel merge): `Fuse(p1, p2).parse(text)` merges results from both
 
-where ParseState = { READY, PARSING, REPAIRING, COMPLETE, FAILED }
-```
+**Key Insight:** Stochastic-structural gap—traditional parsers assume deterministic syntax; P-gents handle LLM sampling distributions.
 
-**Position transform**: Adds parse lifecycle states.
-
-**Direction transform**: Restricts to text inputs only.
-
-**Transition transform**:
-```
-(ready, text) → (parsing, ...)
-(parsing, ...) → (complete, Success(a, confidence))
-                | (repairing, partial)
-                | (failed, Failure(error))
-(repairing, repair_hint) → (parsing, ...)  # Retry with hint
-```
-
-**Key polynomial insight**: Parser has a **non-trivial state machine**—the polynomial captures retry logic and repair strategies as explicit positions.
-
-### Description
-Extracts structured data from unstructured text. Handles LLM output variability via confidence scores and repair strategies.
-
-### Laws
-```python
-# Determinism (for same strategy)
-Parser(strategy).parse(text) == Parser(strategy).parse(text)
-
-# Composition (fallback chain)
-(p1 | p2 | p3).parse(text) returns first successful parse
-
-# Fusion (parallel merge)
-Fuse(p1, p2).parse(text) merges results from both parsers
-```
-
-### Key Insight
-**Stochastic-Structural Gap**: Traditional parsers assume deterministic syntax; P-gents handle LLM sampling distributions.
-
-### Specification
-`spec/p-gents/README.md`
-
-### Status
-🔄 **Implicit** - Described as morphisms but not formalized as functor
-
-### Formalization Opportunity
-Add to functor catalog with:
-- ParseResult functor laws
-- Fallback/Fusion algebra
-- Confidence propagation
+**Status:** 🔄 Implicit (described in `spec/p-gents/README.md`)
 
 ---
 
-## 10. Tool Functor (T-gents Phase 2 + J-gents)
+## 10. Tool Functor
 
-### Signature
-```
-Tool: Agent[A, B] → Tool[A, B]
+**Signature:** `Tool: Agent[A, B] → Tool[A, B]`
 
-where Tool[A, B] adds:
-- MCP protocol integration
-- Capability constraints (network, filesystem, etc.)
-- Sandboxed execution
-- Error handling via Result[B, ToolError]
-```
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × ToolState, A, Result[B, ToolError]]`
+where `ToolState = { READY, CHECKING_CAPS, EXECUTING, SANDBOXED }`
 
-### Polynomial Interpretation
+**Transform:** Adds capability-gated directions—some inputs not in fiber if capabilities missing.
 
-```
-Tool: PolyAgent[S, A, B] → PolyAgent[S × ToolState, A, Result[B, ToolError]]
+**Laws:**
+- Interface preservation: `Tool(agent).invoke(x)` same semantics as `agent.invoke(x)` (wrapped in Result)
+- Composition: `Tool(f >> g) ≅ Tool(f) >> Tool(g)`
+- Capability enforcement: Missing capabilities → ToolError
 
-where ToolState = { READY, CHECKING_CAPS, EXECUTING, SANDBOXED }
-```
+**Key Insight:** Tool-use bridge enabling agents to be invoked via MCP, Claude Desktop, or other protocols.
 
-**Position transform**: Adds tool execution lifecycle and capability state.
-
-**Direction transform**: Adds capability check to valid directions.
-```
-directions(s, ready) = { a ∈ A | capabilities_satisfied(a) }
-```
-
-**Transition transform**:
-```
-(s, ready, a) → capability_check(a) →
-  if ok: (s, executing, ...) → (s', ready, Ok(b))
-  else:  (s, ready, Err(CapabilityDenied))
-```
-
-**Key polynomial insight**: Tool functor adds **capability-gated directions**—some inputs are not in the fiber if capabilities are missing.
-
-### Description
-Wraps agents as MCP-compatible tools with safety constraints and standardized error handling.
-
-### Laws
-```python
-# Interface preservation
-Tool(agent).invoke(x) has same semantics as agent.invoke(x)
-# (but wrapped in Result[B, ToolError])
-
-# Composition preservation
-Tool(f >> g) ≅ Tool(f) >> Tool(g)
-
-# Capability enforcement
-If Tool requires network and disabled → returns ToolError
-```
-
-### Key Insight
-**Tool-Use Bridge**: Enables agents to be invoked via MCP, Claude Desktop, or other tool-use protocols.
-
-### Specification
-- `spec/t-gents/tool-use.md` (Phase 2)
-- `impl/claude/agents/j/t_integration.py` (JIT tool generation)
-
-### Status
-🔄 **Implicit** - Phase 2 implementation exists but not formalized as functor
-
-### Formalization Opportunity
-Add to functor catalog with:
-- MCP protocol mapping
-- Capability algebra
-- J-gent JIT tool generation
+**Status:** 🔄 Implicit (Phase 2 in `spec/u-gents/tool-use.md`)
+**Impl:** `impl/claude/agents/j/t_integration.py`
 
 ---
 
-## 11. Trace Functor (W-gents)
+## 11. Trace Functor
 
-### Signature
-```
-Trace: Agent[A, B] → Agent[A, B]  (with observability side effects)
-```
+**Signature:** `Trace: Agent[A, B] → Agent[A, B]` (with observability side effects)
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × TraceState, A, B]`
+where `TraceState = { TRACING(wire_id), EMITTING, IDLE }`
 
-```
-Trace: PolyAgent[S, A, B] → PolyAgent[S × TraceState, A, B]
+**Transform:** Side-effecting endofunctor—adds positions for emission state but observable output unchanged. Contrast with Spy: Trace is ephemeral (emits externally), Spy persists (accumulates internally).
 
-where TraceState = { TRACING(wire_id), EMITTING, IDLE }
-```
+**Laws:**
+- Transparency: `Trace(agent).invoke(x) == agent.invoke(x)` (ignoring wire emissions)
+- Composition: `Trace(f >> g) ≅ Trace(f) >> Trace(g)`
+- Ephemerality: Wire stops → all traces vanish (no persistence)
 
-**Position transform**: Adds ephemeral trace emission state.
+**Key Insight:** Ephemeral observability via Wire protocol, no internal trace.
 
-**Direction transform**: Identity (same inputs accepted).
-
-**Transition transform**:
-```
-Original: (s, a) → (s', b)
-Traced:   (s, tracing(wire), a) →
-          emit(wire, TraceEvent(a, b)) →
-          (s', tracing(wire), b)
-```
-
-**Key polynomial insight**: Trace is a **side-effecting endofunctor**—it adds positions for emission state but the observable output is unchanged. Contrast with Spy: Trace is ephemeral (emits externally), Spy persists (accumulates internally).
-
-### Description
-Wraps agent execution with real-time observability - emits events to Wire protocol without changing agent behavior.
-
-### Laws
-```python
-# Transparency (ignoring wire emissions)
-Trace(agent).invoke(x) == agent.invoke(x)  # Value unchanged
-
-# Composition preservation
-Trace(f >> g) ≅ Trace(f) >> Trace(g)  # Each stage traced
-
-# Ephemerality
-Wire stops → all traces vanish (no persistence)
-```
-
-### Key Insight
-**Ephemeral Observability**: Unlike Spy (which persists history), Trace emits to external observer and leaves no internal trace.
-
-### Specification
-`spec/w-gents/README.md`
-
-### Status
-🔄 **Implicit** - W-gents implement wrapping but not formalized as functor
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Wire protocol event algebra
-- Ephemerality guarantees
-- Integration with Spy functor
+**Status:** 🔄 Implicit (described in `spec/w-gents/README.md`)
 
 ---
 
-## 12. Sandbox Functor (J-gents)
+## 12. Sandbox Functor
 
-### Signature
-```
-Sandbox: Agent[A, B] → Agent[A, B]  (isolated execution)
-```
+**Signature:** `Sandbox: Agent[A, B] → Agent[A, B]` (isolated execution)
 
-### Polynomial Interpretation
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × Namespace, A, Result[B, SandboxError]]`
+where `Namespace = isolated execution context`
 
-```
-Sandbox: PolyAgent[S, A, B] → PolyAgent[S × Namespace, A, Result[B, SandboxError]]
+**Transform:** Filtering functor with namespace fiber—direction set shrinks based on sandbox policy, each transition gets fresh namespace.
 
-where Namespace = isolated execution context
-```
+**Laws:**
+- Safety: `Sandbox(agent, forbidden=["os"]).invoke(x)` → Error if agent attempts os access
+- Transparency (safe agents): If no violations, `Sandbox(agent).invoke(x) == agent.invoke(x)`
+- Composition isolation: Each `Sandbox(agent)` executes in fresh namespace
 
-**Position transform**: Adds namespace isolation state.
+**Key Insight:** Safety as functor constraint.
 
-**Direction transform**: Filters forbidden operations from valid directions.
-```
-directions_sandboxed(s, ns) = { a ∈ directions(s) | ¬forbidden(a, ns) }
-```
-
-**Transition transform**:
-```
-(s, ns, a) →
-  if forbidden(a, ns): (s, ns, Err(SandboxViolation(a)))
-  else: (s', fresh_ns, Ok(b))  # Fresh namespace per invocation
-```
-
-**Key polynomial insight**: Sandbox is a **filtering functor with namespace fiber**. The polynomial's direction set shrinks based on sandbox policy, and each transition gets a fresh namespace.
-
-### Description
-Executes JIT-compiled agents in restricted namespace - prevents dangerous operations while maintaining interface.
-
-### Laws
-```python
-# Safety (forbidden operations fail)
-Sandbox(agent, forbidden=["os", "sys"]).invoke(x)
-# → Error if agent attempts os/sys access
-
-# Transparency (for safe agents)
-If agent doesn't violate constraints:
-  Sandbox(agent).invoke(x) == agent.invoke(x)
-
-# Composition isolation
-Each Sandbox(agent) executes in fresh namespace
-```
-
-### Key Insight
-**Safety as Functor Constraint**: Sandboxing is a functor transformation with additional safety invariants.
-
-### Specification
-`spec/j-gents/jit.md` (Sandbox section)
-
-### Status
-🔄 **Implicit** - Implemented but not formalized as functor
-
-### Formalization Opportunity
-Add to functor catalog with:
-- Safety constraint algebra
-- Namespace isolation semantics
-- Composition with other functors (e.g., Trace(Sandbox(agent)))
+**Status:** 🔄 Implicit (described in `spec/j-gents/jit.md`)
 
 ---
 
-## 13. Flux Functor (agents/flux)
+## 13. Flux Functor
 
-### Signature
-```
-Flux: Agent[A, B] → Agent[Flux[A], Flux[B]]
-```
+**Signature:** `Flux: Agent[A, B] → Agent[Flux[A], Flux[B]]`
+where `Flux[T] = AsyncIterator[T]`
 
-Where `Flux[T] = AsyncIterator[T]` (asynchronous stream).
+**Polynomial:** `PolyAgent[S, A, B] → PolyAgent[S × FluxState, Stream[A], Stream[B]]`
+where `FluxState = { DORMANT, FLOWING(queue, backpressure), DRAINING, STOPPED }`
 
-### Polynomial Interpretation
+**Transform:** Continuous extension—lifts discrete polynomial dynamics to continuous-time. The polynomial becomes a **streaming polynomial** where each fiber is an async stream.
+
+**Dual mode via perturbation:**
+- DORMANT: `invoke(x)` → direct discrete call
+- FLOWING: `invoke(x)` → inject x as high-priority perturbation
+
+**Laws:**
+- Identity: `Flux(Id) ≅ Id_Flux`
+- Composition: `Flux(f >> g) ≅ Flux(f) >> Flux(g)`
+
+**Key Insight:** Operationalizes *"The noun is a lie. There is only the rate of change."*
 
 ```
-Flux: PolyAgent[S, A, B] → PolyAgent[S × FluxState, Stream[A], Stream[B]]
-
-where FluxState = { DORMANT, FLOWING(queue, backpressure), DRAINING, STOPPED }
-```
-
-**Position transform**: Adds streaming lifecycle positions.
-```
-positions_flux = positions × { DORMANT, FLOWING, DRAINING, STOPPED }
-```
-
-**Direction transform**: Wraps single inputs as streams.
-```
-directions_flux(s, flowing) = Stream[directions(s)]
+Static:  Agent: A → B           (point transformation)
+Dynamic: Flux(Agent): dA/dt → dB/dt  (continuous flow)
 ```
 
-**Transition transform**:
-```
-Discrete: (s, a) → (s', b)
-Flux:     (s, flowing(q, bp), stream) →
-          for each a in stream:
-            (s', flowing(q', bp'), yield b)
-          → continuous output stream
-```
-
-**Key polynomial insight**: Flux is a **continuous extension**—it lifts discrete polynomial dynamics to continuous-time dynamics. The polynomial `P(y) = Σ y^{E(s)}` becomes a **streaming polynomial** where each fiber is an async stream.
-
-**Dual mode via perturbation**:
-```
-If state = DORMANT: invoke(x) → direct discrete call
-If state = FLOWING: invoke(x) → inject x as high-priority perturbation
-```
-
-### Description
-Lifts an Agent from the domain of **Discrete State** to the domain of **Continuous Flow**. It transforms an agent that maps `A → B` into a process that maps `Flux[A] → Flux[B]`.
-
-This solves **The Sink Problem**: Where does the output go?
-- In Function Mode, output is returned to the caller.
-- In Flux Mode, output is emitted as a continuous stream.
-
-**Living Pipelines**: Because output flows, Flux agents compose via pipe:
+**Living Pipelines:**
 ```python
 pipeline = flux_a | flux_b | flux_c
 async for result in pipeline.start(source):
     ...
 ```
 
-### Laws
+**Status:** 🔄 Planned (spec in `spec/c-gents/flux.md`)
+**Impl:** `impl/claude/agents/flux/`
+
+---
+
+## 14. State Functor
+
+**Signature:** `State[S]: Agent[A, B] → StatefulAgent[S, A, B]`
+
+**Polynomial:** `PolyAgent[P, A, B] → PolyAgent[P × LoadSave, A, B]`
+where `LoadSave = { LOADING, READY, SAVING }`
+
+**Transform:** Adds monad fiber—state S flows through computation as monad, with load/save as effect handlers.
+
+**Description:** State is loaded before invocation, passed to inner agent as extended input `(A, S)`, saved after invocation.
+
+**Laws:**
+- Identity: `State.lift(Id) ≅ Id`
+- Composition: `State.lift(f >> g) ≅ State.lift(f) >> State.lift(g)`
+
+**Relationship to Symbiont:**
 ```python
-# Identity Preservation
-Flux(Id) ≅ Id_Flux  # Identity maps Flux[A] → Flux[A]
-
-# Composition Preservation
-Flux(f >> g) ≅ Flux(f) >> Flux(g)
+Symbiont = State[S].lift_logic(f) where backend is D-gent
 ```
 
-### Key Insight
-Flux operationalizes the quote *"The noun is a lie. There is only the rate of change."*
+The Symbiont pattern is the canonical composition of S-gent (state threading) and D-gent (persistence).
 
+**Composition with Flux:**
 ```
-Static:  Agent: A → B           (a point transformation)
-Dynamic: Flux(Agent): dA/dt → dB/dt  (a continuous flow)
-```
-
-### The Lift Operation
-```python
-class Flux:
-    @staticmethod
-    def lift(agent: Agent[A, B]) -> FluxAgent[A, B]:
-        """Lift to flux domain."""
-        return FluxAgent(inner=agent)
-
-    @staticmethod
-    def unlift(flux_agent: FluxAgent[A, B]) -> Agent[A, B]:
-        """Extract inner agent."""
-        return flux_agent.inner
+Flux ∘ State: Agent[A, B] → FluxAgent[A, B] with state threading
+# Creates streaming agent where each event: load state → process → save → yield
 ```
 
-### The Perturbation Principle
-When `invoke(x)` is called on a FluxAgent that is:
-- **DORMANT**: Direct invocation (discrete mode)
-- **FLOWING**: Inject `x` as high-priority perturbation into stream
-
-This preserves **State Integrity**: If agent has Symbiont memory, perturbation flows through the same state-loading path as normal events. No race conditions, no "schizophrenia."
-
-### Ouroboric Feedback
-```python
-config = FluxConfig(
-    feedback_fraction=0.3,  # 30% of outputs feed back to input
-    feedback_transform=lambda b: b.as_context(),  # B → A adapter
-)
-```
-
-| Fraction | Behavior |
-|----------|----------|
-| 0.0 | Pure reactive (no feedback) |
-| 0.1-0.3 | Light context accumulation |
-| 0.5 | Equal external/internal |
-| 1.0 | Full ouroboros (solipsism risk) |
-
-### Flux Topology (Physics of Flow)
-Agents are topological knots in event streams:
-
-| Metric | Meaning | Calculation |
-|--------|---------|-------------|
-| **Pressure** | Queue depth | `len(queues)` |
-| **Flow** | Throughput | `events/second` |
-| **Turbulence** | Error rate | `errors/events` |
-| **Temperature** | Token metabolism | From void/entropy |
-
-### Configuration
-```python
-@dataclass
-class FluxConfig:
-    # Entropy (J-gent physics)
-    entropy_budget: float = 1.0
-    entropy_decay: float = 0.01
-    max_events: int | None = None
-
-    # Backpressure
-    buffer_size: int = 100
-    drop_policy: str = "block"  # "block" | "drop_oldest" | "drop_newest"
-
-    # Ouroboros
-    feedback_fraction: float = 0.0
-    feedback_transform: Callable[[B], A] | None = None
-
-    # Observability
-    emit_pheromones: bool = True
-    agent_id: str | None = None
-```
-
-### Specification
-`spec/c-gents/flux.md`
-
-### Implementation
-`impl/claude/agents/flux/`
-
-### Status
-🔄 **Planned** - Specification complete
+**Status:** ✅ Specified in `spec/s-gents/`
+**Impl:** `impl/claude/agents/d/state_functor.py`
 
 ---
 
@@ -964,11 +385,9 @@ agent = Sandbox(agent)    # Add safety
 
 ### Parallel Application
 ```python
-# View and Trace simultaneously
+# View and Trace simultaneously (different concerns)
 widget = View(agent, context)
 traced = Trace(agent)
-
-# Different functors for different concerns
 ```
 
 ### Conditional Functor Selection
@@ -979,24 +398,6 @@ def wrap_agent(agent, mode):
         case "test": return Mock(agent, test_output)
         case "prod": return Metered(Trace(agent))
 ```
-
----
-
-## Formalization Roadmap
-
-### Priority 1: Update functor catalog
-- Add all 12 functors to `spec/c-gents/functors.md`
-- Include laws, examples, cross-references
-
-### Priority 2: Cross-genus integration
-- Document functor composition patterns
-- Show how functors interact (e.g., Metered(Trace(agent)))
-- Identify functor anti-patterns
-
-### Priority 3: Implementation alignment
-- Ensure all implementations satisfy functor laws
-- Add property-based tests for functor laws
-- Create functor composition utilities
 
 ---
 
@@ -1013,9 +414,8 @@ Spy(agent).invoke(x) != x  # Violates transparency
 
 ### 2. Implicit Functor Stacking
 ```python
-# BAD: Hidden wrapping
+# BAD: Hidden wrapping without documentation
 def run_agent(agent):
-    # Implicitly wraps without documenting
     return Metered(Trace(Personalize(agent)))
 
 # GOOD: Explicit composition
@@ -1031,22 +431,23 @@ Metered(Trace(agent)) != Trace(Metered(agent))
 # First: Measures traced execution cost
 # Second: Traces metering overhead
 
-# Document order dependencies
+# Always document order dependencies
 ```
 
 ---
 
-## See Also
+## Implementation Reference
 
-- [functors.md](functors.md) - Core functor theory with polynomial foundation
-- [monads.md](monads.md) - Functors with structure
-- [anatomy.md](../anatomy.md) - Agent lifecycle & wrapping
-- [../architecture/polyfunctor.md](../architecture/polyfunctor.md) - Polyfunctor architecture specification
-- [../agents/primitives.md](../agents/primitives.md) - 17 primitive polynomial agents
-- [../agents/operads.md](../agents/operads.md) - Operad composition grammar
-- [../agents/emergence.md](../agents/emergence.md) - Sheaf-based emergence (SOUL_SHEAF)
-- Individual genus specs for detailed functor descriptions
+All functors follow polynomial endofunctor structure. See:
+
+- `spec/c-gents/functors.md` - Core functor theory
+- `spec/c-gents/monads.md` - Functors with structure
+- `spec/architecture/polyfunctor.md` - Polyfunctor architecture
+- `spec/agents/primitives.md` - 17 primitive polynomial agents
+- `spec/agents/operads.md` - Operad composition grammar
+- `spec/agents/emergence.md` - Sheaf-based emergence
+- Individual genus specs for detailed descriptions
 
 ---
 
-**Status**: This catalog identifies 13 functors across kgents, each with polynomial interpretation. The polynomial foundation reveals how each functor transforms positions, directions, and transitions of polynomial agents. See `spec/architecture/polyfunctor.md` for the underlying theory.
+**Foundation:** `spec/architecture/polyfunctor.md` - The polynomial theory underlying all transformations

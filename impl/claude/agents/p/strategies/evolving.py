@@ -10,7 +10,7 @@ Why It's Better:
 - Data-driven: No manual reordering of fallback chains
 
 Use Cases:
-- Long-running E-gent evolution: Track code generation format drift
+- Long-running code evolution: Track code generation format drift
 - B-gent hypothesis format: Detect when LLM starts using new section headers
 - Cross-LLM compatibility: Different LLMs prefer different formats
 """

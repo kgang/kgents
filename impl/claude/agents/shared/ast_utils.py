@@ -1,7 +1,7 @@
 """
 Shared AST utilities for all agent genera.
 
-Extracted from J-gents Chaosmonger and E-gents ASTAnalyzer as per
+Extracted from J-gents Chaosmonger and various AST analyzers as per
 SYNERGY_REFACTOR_PLAN Phase 4A.
 
 Provides common AST operations:
@@ -350,7 +350,7 @@ def _has_base_case(func: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
     return False
 
 
-# --- Structure Extraction (from E-gents ASTAnalyzer) ---
+# --- Structure Extraction ---
 
 
 def extract_functions(tree: ast.AST) -> list[FunctionInfo]:

@@ -12,7 +12,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Generic, Optional, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

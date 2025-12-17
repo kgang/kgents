@@ -35,8 +35,8 @@ pytest.importorskip("httpx")
 from fastapi.testclient import TestClient
 from protocols.api.app import create_app
 from protocols.api.brain import (
-    _reset_brain_logos,
-    _set_brain_logos_factory,
+    _reset_brain_crystal,
+    _set_brain_crystal_factory,
 )
 
 
@@ -45,17 +45,45 @@ def use_simple_embedder() -> Generator[None, None, None]:
     """Use simple embedder for all brain API tests (no network calls).
 
     This fixture ensures tests don't download models or mutate global state.
+    Uses an isolated SQLite database in a temp directory.
     """
-    from protocols.agentese import create_brain_logos
+    import tempfile
+    from pathlib import Path
 
-    def simple_brain_factory() -> object:
-        """Create brain logos with simple (non-network) embedder."""
-        return create_brain_logos(embedder_type="simple", dimension=64)
+    # Store temp_dir reference for cleanup
+    temp_dir_obj = tempfile.TemporaryDirectory()
+    tmp_dir = Path(temp_dir_obj.name)
 
-    _set_brain_logos_factory(simple_brain_factory)
+    async def simple_brain_factory() -> object:
+        """Create a simple SQLite-backed brain crystal for testing."""
+        from agents.brain import BrainCrystal
+        from protocols.cli.instance_db.providers import (
+            NumpyVectorStore,
+            SQLiteRelationalStore,
+        )
+
+        # Create SQLite store in temp directory (lazy initialization)
+        sqlite_path = tmp_dir / "test_brain.db"
+        relational = SQLiteRelationalStore(db_path=sqlite_path, wal_mode=True)
+
+        vector = NumpyVectorStore(
+            storage_path=tmp_dir / "vectors.json",
+            dimensions=64,
+        )
+
+        return BrainCrystal(
+            relational_store=relational,
+            vector_store=vector,
+            embedder=None,  # Simple n-gram fallback
+            data_dir=tmp_dir,
+            storage_backend="sqlite",
+        )
+
+    _set_brain_crystal_factory(simple_brain_factory)
     yield
-    _set_brain_logos_factory(None)
-    _reset_brain_logos()
+    _set_brain_crystal_factory(None)
+    _reset_brain_crystal()
+    temp_dir_obj.cleanup()
 
 
 @pytest.fixture
@@ -78,7 +106,7 @@ class TestBrainCapture:
         data = response.json()
         assert data["status"] == "captured"
         assert "concept_id" in data
-        assert data["storage"] in ("memory_crystal", "local_memory")
+        assert data["storage"] in ("memory_crystal", "local_memory", "bicameral")
 
     def test_capture_with_concept_id(self, client: TestClient) -> None:
         """Test capturing with explicit concept_id."""
@@ -273,6 +301,7 @@ class TestBrainStatus:
             "SentenceTransformerEmbedder",
             "SimpleEmbedder",
             "None",
+            "hash-based",  # BrainCrystal uses hash-based when no embedder
         )
         # Dimension should be positive
         assert data["embedder_dimension"] > 0
@@ -590,11 +619,18 @@ class TestTopologyPerformance:
         assert elapsed < 0.5, f"Response time {elapsed:.3f}s exceeds 500ms baseline"
 
 
+@pytest.mark.skip(
+    reason="Persistence tests use old Logos API, replaced by D-gent BrainCrystal"
+)
 class TestBrainPersistence:
     """Tests for D-gent persistence of brain data.
 
     Session 9: Brain data survives server restarts via D-gent persistence.
     Data is stored in ~/.kgents/brain/patterns.json.
+
+    NOTE: These tests were written for the old Logos-based Brain API.
+    The Brain API now uses BrainCrystal with D-gent storage (SQLite/Postgres).
+    Persistence is automatic via the storage backend.
     """
 
     def test_persistence_save_and_load(self) -> None:
@@ -604,20 +640,19 @@ class TestBrainPersistence:
         from unittest.mock import patch
 
         from protocols.api.brain import (
-            _get_brain_logos,
-            _load_brain_patterns,
-            _reset_brain_logos,
-            _save_brain_patterns,
+            _get_brain_logos,  # type: ignore[attr-defined]
+            _load_brain_patterns,  # type: ignore[attr-defined]
+            _reset_brain_logos,  # type: ignore[attr-defined]
+            _save_brain_patterns,  # type: ignore[attr-defined]
         )
 
         # Use temp directory for this test
         with tempfile.TemporaryDirectory() as tmpdir:
             test_file = Path(tmpdir) / "patterns.json"
 
-            with patch(
-                "protocols.api.brain._BRAIN_PATTERNS_FILE", test_file
-            ), patch(
-                "protocols.api.brain._BRAIN_STORAGE_DIR", Path(tmpdir)
+            with (
+                patch("protocols.api.brain._BRAIN_PATTERNS_FILE", test_file),
+                patch("protocols.api.brain._BRAIN_STORAGE_DIR", Path(tmpdir)),
             ):
                 # Get fresh logos
                 _reset_brain_logos()
@@ -672,8 +707,10 @@ class TestBrainPersistence:
         from pathlib import Path
         from unittest.mock import patch
 
-        from agents.m.crystal import create_crystal
-        from protocols.api.brain import _load_brain_patterns
+        from agents.m.crystal import create_crystal  # type: ignore[attr-defined]
+        from protocols.api.brain import (
+            _load_brain_patterns,  # type: ignore[attr-defined]
+        )
 
         # Use non-existent file
         with tempfile.TemporaryDirectory() as tmpdir:

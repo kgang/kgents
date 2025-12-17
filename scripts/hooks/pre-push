@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 #
-# kgents pre-push hook (HEAVY)
+# kgents pre-push hook (HEAVY) - OPTIMIZED
 #
 # Philosophy: Gate pushes with rigorous verification.
 # This is the last line of defense before CI.
 #
+# Optimizations (2025-12-16):
+#   - Parallel test execution with pytest-xdist (-n auto)
+#   - Combined test passes (unit + law + property in single run)
+#   - Smart marker detection (skip empty passes)
+#   - Reduced collection overhead
+#
 # Checks:
 #   1. Ruff lint (strict, blocking)
 #   2. Mypy (strict, blocking)
-#   3. Unit tests (fast, blocking)
-#   4. Category laws (blocking)
-#   5. Integration tests (full suite, blocking)
+#   3. All tests in single parallel run (blocking)
 #
 # Optional (can skip with KGENTS_SKIP_HEAVY=1):
-#   - Property tests
 #   - Chaos tests (accursed share)
 #
 
@@ -44,8 +47,17 @@ fi
 # Check dependencies
 require_uv
 
-TOTAL_STEPS=5
+TOTAL_STEPS=3
 FAILED=0
+
+# Detect CPU count for parallel execution
+if command -v nproc &> /dev/null; then
+    CPU_COUNT=$(nproc)
+elif command -v sysctl &> /dev/null; then
+    CPU_COUNT=$(sysctl -n hw.ncpu 2>/dev/null || echo "auto")
+else
+    CPU_COUNT="auto"
+fi
 
 # =============================================================================
 # Step 1: Lint (strict - non-blocking until codebase is clean)
@@ -84,21 +96,38 @@ cd "$REPO_ROOT"
 echo ""
 
 # =============================================================================
-# Step 3: Unit tests (fast)
+# Step 3: All tests (parallel, combined pass)
 # =============================================================================
-section "Unit tests (not slow, not integration)" 3 $TOTAL_STEPS
+section "All tests (parallel: $CPU_COUNT workers)" 3 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
-TEST_OUTPUT=$(uv run pytest -m "not slow and not integration" --tb=no -q 2>&1)
+
+# Single combined test run with parallel execution
+# Excludes: slow, tier3 (E2E), accursed_share (chaos - run separately if needed)
+# Includes: unit, law, property tests in one pass
+#
+# Optimizations applied:
+#   1. Combined passes: unit + law + property in single run (was 5 separate)
+#   2. Parallel execution: -n $CPU_COUNT with loadfile distribution
+#   3. Eliminated empty passes: integration marker had 0 tests
+info "Running tests with $CPU_COUNT workers (combined pass)..."
+TEST_OUTPUT=$(uv run pytest \
+    -m "not slow and not tier3 and not accursed_share" \
+    -n "$CPU_COUNT" \
+    --tb=no \
+    -q \
+    --dist=loadfile \
+    2>&1)
 TEST_EXIT=$?
+
 if [ $TEST_EXIT -eq 0 ]; then
-    # Extract summary line (e.g., "5765 passed in 12.34s")
+    # Extract summary line (e.g., "19000 passed in 45.34s")
     SUMMARY=$(echo "$TEST_OUTPUT" | tail -1)
-    success "Unit tests: $SUMMARY"
+    success "All tests: $SUMMARY"
 else
     # Show last few lines on failure
-    SUMMARY=$(echo "$TEST_OUTPUT" | tail -3)
-    error "Unit tests failed:"
+    SUMMARY=$(echo "$TEST_OUTPUT" | tail -5)
+    error "Tests failed:"
     echo "$SUMMARY"
     FAILED=1
 fi
@@ -106,82 +135,19 @@ cd "$REPO_ROOT"
 echo ""
 
 # =============================================================================
-# Step 4: Category laws
+# Optional: Chaos tests (accursed share) - skip with KGENTS_SKIP_CHAOS=1
 # =============================================================================
-section "Category law verification" 4 $TOTAL_STEPS
-
-cd "$REPO_ROOT/impl/claude"
-LAW_OUTPUT=$(uv run pytest -m "law" --tb=no -q 2>&1)
-LAW_EXIT=$?
-if [ $LAW_EXIT -eq 0 ]; then
-    SUMMARY=$(echo "$LAW_OUTPUT" | tail -1)
-    success "Category laws: $SUMMARY"
-elif [ $LAW_EXIT -eq 5 ]; then
-    info "No law tests found"
-else
-    SUMMARY=$(echo "$LAW_OUTPUT" | tail -3)
-    error "Category law violations:"
-    echo "$SUMMARY"
-    FAILED=1
-fi
-cd "$REPO_ROOT"
-echo ""
-
-# =============================================================================
-# Step 5: Integration tests
-# =============================================================================
-section "Integration tests" 5 $TOTAL_STEPS
-
-cd "$REPO_ROOT/impl/claude"
-INT_OUTPUT=$(uv run pytest -m "integration" --tb=no -q 2>&1)
-INT_EXIT=$?
-if [ $INT_EXIT -eq 0 ]; then
-    SUMMARY=$(echo "$INT_OUTPUT" | tail -1)
-    success "Integration tests: $SUMMARY"
-elif [ $INT_EXIT -eq 5 ]; then
-    info "No integration tests found"
-else
-    SUMMARY=$(echo "$INT_OUTPUT" | tail -3)
-    error "Integration tests failed:"
-    echo "$SUMMARY"
-    FAILED=1
-fi
-cd "$REPO_ROOT"
-echo ""
-
-# =============================================================================
-# Optional: Property tests (if not skipped)
-# =============================================================================
-if [ "${KGENTS_SKIP_PROPERTY:-0}" != "1" ]; then
-    info "Running property tests..."
-    cd "$REPO_ROOT/impl/claude"
-    PROP_OUTPUT=$(uv run pytest -m "property" --tb=no -q 2>&1)
-    PROP_EXIT=$?
-    if [ $PROP_EXIT -eq 0 ]; then
-        SUMMARY=$(echo "$PROP_OUTPUT" | tail -1)
-        success "Property tests: $SUMMARY"
-    elif [ $PROP_EXIT -eq 5 ]; then
-        info "No property tests found"
-    else
-        warn "Property tests failed (non-blocking)"
-    fi
-    cd "$REPO_ROOT"
-    echo ""
-fi
-
-# =============================================================================
-# Chaos tests (accursed share) - run by default, skip with KGENTS_SKIP_CHAOS=1
-# =============================================================================
+# Note: Property tests are now included in the main test run above
 if [ "${KGENTS_SKIP_CHAOS:-0}" != "1" ]; then
-    info "Running chaos tests (accursed share)..."
+    info "Running chaos tests (accursed share, non-blocking)..."
     cd "$REPO_ROOT/impl/claude"
-    CHAOS_OUTPUT=$(uv run pytest -m "accursed_share" --tb=no -q 2>&1)
+    CHAOS_OUTPUT=$(uv run pytest -m "accursed_share" -n "$CPU_COUNT" --tb=no -q 2>&1)
     CHAOS_EXIT=$?
     if [ $CHAOS_EXIT -eq 0 ]; then
         SUMMARY=$(echo "$CHAOS_OUTPUT" | tail -1)
         success "Chaos tests: $SUMMARY"
     elif [ $CHAOS_EXIT -eq 5 ]; then
-        info "No chaos tests found"
+        info "No chaos tests found (skipped)"
     else
         info "Chaos tests discovered issues (expected, non-blocking)"
     fi

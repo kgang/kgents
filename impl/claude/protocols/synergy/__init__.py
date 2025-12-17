@@ -67,10 +67,18 @@ from .events import (
     create_bid_accepted_event,
     # Wave 2: Coalition factory functions
     create_coalition_formed_event,
+    create_consensus_reached_event,
+    create_contribution_posted_event,
     create_crystal_formed_event,
+    create_flow_completed_event,
+    # F-gent Flow factory functions (Phase 1)
+    create_flow_started_event,
+    create_hypothesis_created_event,
+    create_hypothesis_synthesized_event,
     create_piece_created_event,
     create_session_complete_event,
     create_task_complete_event,
+    create_turn_completed_event,
 )
 from .handlers import (
     AtelierToBrainHandler,
@@ -98,6 +106,14 @@ __all__ = [
     # Factory functions - Wave 2: Coalition
     "create_coalition_formed_event",
     "create_task_complete_event",
+    # Factory functions - F-gent Flow (Phase 1)
+    "create_flow_started_event",
+    "create_flow_completed_event",
+    "create_turn_completed_event",
+    "create_hypothesis_created_event",
+    "create_hypothesis_synthesized_event",
+    "create_consensus_reached_event",
+    "create_contribution_posted_event",
     # Bus
     "SynergyEventBus",
     "SynergyHandler",

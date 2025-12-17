@@ -40,7 +40,7 @@ Constants:
 
 from __future__ import annotations
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .analyzer import analyze_stability
 from .types import (

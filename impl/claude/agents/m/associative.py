@@ -14,13 +14,29 @@ Key Insight:
 Embeddings:
     Uses L-gent for semantic embeddings if available.
     Falls back to hash-based pseudo-embeddings (deterministic but not semantic).
+
+V-gent Integration (Phase 5):
+    AssociativeMemory can optionally use V-gent for similarity search.
+    This delegates the vector index to V-gent while M-gent handles
+    memory lifecycle (ACTIVE → DORMANT → DREAMING → COMPOSTING).
+
+    Two modes:
+    1. Internal index (default): _memories dict with linear scan
+    2. V-gent backed: Vectors stored in V-gent, Memory metadata in _memories
+
+    To use V-gent:
+        mgent = await AssociativeMemory.create_with_vgent(
+            dgent=dgent,
+            vgent=vgent,
+            embedder=embedder,
+        )
 """
 
 from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from agents.d.datum import Datum
 
@@ -34,6 +50,7 @@ from .protocol import (
 
 if TYPE_CHECKING:
     from agents.d.protocol import DgentProtocol
+    from agents.v.protocol import VgentProtocol
 
 
 # === Embedder Protocol ===
@@ -76,7 +93,12 @@ class AssociativeMemory:
         - Maintains embedding index for associative recall
         - Tracks Memory metadata (lifecycle, relevance, resolution)
 
-    Usage:
+    V-gent Integration (Optional):
+        - Use `create_with_vgent()` to delegate vector operations to V-gent
+        - M-gent still manages Memory lifecycle (ACTIVE → DORMANT → COMPOSTING)
+        - V-gent handles efficient similarity search
+
+    Usage (Original):
         dgent = MemoryBackend()  # Or any D-gent backend
         mgent = AssociativeMemory(dgent)
 
@@ -88,6 +110,17 @@ class AssociativeMemory:
 
         # Forget (graceful degradation)
         await mgent.forget(memory_id)
+
+    Usage (V-gent Backed):
+        from agents.v import MemoryVectorBackend
+
+        dgent = MemoryBackend()
+        vgent = MemoryVectorBackend(dimension=64)
+        mgent = await AssociativeMemory.create_with_vgent(dgent=dgent, vgent=vgent)
+
+        # Same API - V-gent handles the vector index
+        memory_id = await mgent.remember(b"Python is great")
+        results = await mgent.recall("programming languages", limit=5)
     """
 
     dgent: "DgentProtocol"
@@ -99,11 +132,53 @@ class AssociativeMemory:
     # Consolidation state
     _is_consolidating: bool = False
 
+    # V-gent backend (optional) - when set, delegates vector search
+    _vgent: "VgentProtocol | None" = field(default=None)
+
     def __post_init__(self) -> None:
         """Initialize default embedder if not provided."""
         if self.embedder is None:
             hash_embedder = HashEmbedder()
             self.embedder = hash_embedder.embed
+
+    @classmethod
+    async def create_with_vgent(
+        cls,
+        dgent: "DgentProtocol",
+        vgent: "VgentProtocol",
+        embedder: Embedder | None = None,
+    ) -> "AssociativeMemory":
+        """
+        Create AssociativeMemory with V-gent for vector operations.
+
+        This delegates similarity search to V-gent while M-gent
+        manages memory lifecycle (ACTIVE → DORMANT → COMPOSTING).
+
+        Args:
+            dgent: D-gent backend for datum storage
+            vgent: V-gent backend for vector index
+            embedder: Optional embedder (defaults to HashEmbedder)
+
+        Returns:
+            AssociativeMemory instance with V-gent integration
+
+        Example:
+            from agents.d.backends.memory import MemoryBackend
+            from agents.v import MemoryVectorBackend
+
+            dgent = MemoryBackend()
+            vgent = MemoryVectorBackend(dimension=64)
+            mgent = await AssociativeMemory.create_with_vgent(dgent, vgent)
+        """
+        instance = cls(dgent=dgent, embedder=embedder)
+        # Use object.__setattr__ since dataclass may be frozen in future
+        object.__setattr__(instance, "_vgent", vgent)
+        return instance
+
+    @property
+    def has_vgent(self) -> bool:
+        """Check if V-gent is configured for vector operations."""
+        return self._vgent is not None
 
     # === Core Operations ===
 
@@ -119,17 +194,27 @@ class AssociativeMemory:
         1. Store raw content in D-gent
         2. Compute embedding if not provided
         3. Create Memory and add to index
+        4. (If V-gent) Add vector to V-gent index
         """
         # Create and store datum in D-gent
+        # NOTE: Datum.create expects bytes but historical behavior stored decoded str
+        # We preserve that behavior for backward compatibility with existing data
         datum = Datum.create(
-            content=content if isinstance(content, str) else content.decode("utf-8", errors="ignore"),
+            content=content
+            if isinstance(content, str)
+            else content.decode("utf-8", errors="ignore"),  # type: ignore[arg-type]
             metadata=metadata or {},
         )
         datum_id = await self.dgent.put(datum)
 
         # Compute embedding if not provided
         if embedding is None:
-            text = content.decode("utf-8", errors="ignore") if isinstance(content, bytes) else content
+            text = (
+                content.decode("utf-8", errors="ignore")
+                if isinstance(content, bytes)
+                else content
+            )
+            assert self.embedder is not None, "Embedder should be set in __post_init__"
             embedding = await self.embedder(text)
 
         # Create memory and add to index
@@ -139,6 +224,10 @@ class AssociativeMemory:
             metadata=metadata or {},
         )
         self._memories[datum_id] = memory
+
+        # V-gent integration: add vector to V-gent index
+        if self._vgent is not None:
+            await self._vgent.add(datum_id, embedding, metadata)
 
         return datum_id
 
@@ -154,13 +243,31 @@ class AssociativeMemory:
         1. Embed the cue if it's text
         2. Find similar memories above threshold
         3. Return sorted by similarity
+
+        If V-gent is configured, uses V-gent for efficient similarity search.
+        Otherwise, falls back to linear scan of _memories.
         """
         # Get cue embedding
         if isinstance(cue, str):
+            assert self.embedder is not None, "Embedder should be set in __post_init__"
             cue_embedding = tuple(await self.embedder(cue))
         else:
             cue_embedding = tuple(cue)
 
+        # V-gent path: use efficient vector search
+        if self._vgent is not None:
+            return await self._recall_with_vgent(cue_embedding, limit, threshold)
+
+        # Original path: linear scan of _memories
+        return await self._recall_linear(cue_embedding, limit, threshold)
+
+    async def _recall_linear(
+        self,
+        cue_embedding: tuple[float, ...],
+        limit: int,
+        threshold: float,
+    ) -> list[RecallResult]:
+        """Linear scan recall (original implementation)."""
         # Find similar memories
         scored: list[tuple[Memory, float]] = []
         for memory in self._memories.values():
@@ -180,17 +287,83 @@ class AssociativeMemory:
         for memory, similarity in scored[:limit]:
             # Optionally fetch content from D-gent
             datum = await self.dgent.get(memory.datum_id)
-            content = datum.content.encode() if datum and isinstance(datum.content, str) else (datum.content if datum else None)
+            content = (
+                datum.content.encode()
+                if datum and isinstance(datum.content, str)
+                else (datum.content if datum else None)
+            )
 
             # Update memory access (reinforcement)
             updated_memory = memory.activate()
             self._memories[memory.datum_id] = updated_memory
 
-            results.append(RecallResult(
-                memory=updated_memory,
-                similarity=similarity,
-                datum_content=content,
-            ))
+            results.append(
+                RecallResult(
+                    memory=updated_memory,
+                    similarity=similarity,
+                    datum_content=content,
+                )
+            )
+
+        return results
+
+    async def _recall_with_vgent(
+        self,
+        cue_embedding: tuple[float, ...],
+        limit: int,
+        threshold: float,
+    ) -> list[RecallResult]:
+        """
+        V-gent backed recall (efficient similarity search).
+
+        Uses V-gent for similarity search, then enriches results
+        with Memory lifecycle data from _memories.
+        """
+        assert self._vgent is not None, "V-gent not configured"
+
+        # Search V-gent - request more candidates for lifecycle filtering
+        # We request 2x limit because some may be DREAMING
+        search_results = await self._vgent.search(
+            query=list(cue_embedding),
+            limit=limit * 2,
+            threshold=threshold,
+        )
+
+        # Build results with Memory lifecycle enrichment
+        results: list[RecallResult] = []
+        for vgent_result in search_results:
+            memory = self._memories.get(vgent_result.id)
+            if memory is None:
+                # Memory not in index - may have been removed
+                continue
+
+            # Skip DREAMING memories (not accessible during consolidation)
+            if memory.lifecycle == Lifecycle.DREAMING:
+                continue
+
+            # Fetch content from D-gent
+            datum = await self.dgent.get(memory.datum_id)
+            content = (
+                datum.content.encode()
+                if datum and isinstance(datum.content, str)
+                else (datum.content if datum else None)
+            )
+
+            # Update memory access (reinforcement)
+            updated_memory = memory.activate()
+            self._memories[memory.datum_id] = updated_memory
+
+            results.append(
+                RecallResult(
+                    memory=updated_memory,
+                    similarity=vgent_result.similarity,
+                    datum_content=content,
+                )
+            )
+
+            # Stop if we have enough results
+            if len(results) >= limit:
+                break
 
         return results
 
@@ -199,6 +372,10 @@ class AssociativeMemory:
         Begin graceful forgetting (transition to COMPOSTING).
 
         Cherished memories cannot be forgotten.
+
+        Note: When V-gent is configured, the vector remains in V-gent
+        but won't be returned by recall (lifecycle filter).
+        Full removal from V-gent happens during consolidation cleanup.
         """
         memory = self._memories.get(memory_id)
         if memory is None:
@@ -231,7 +408,7 @@ class AssociativeMemory:
         1. Mark DORMANT memories as DREAMING
         2. Apply relevance decay
         3. Demote low-relevance memories to COMPOSTING
-        4. (Optional) Merge similar memories
+        4. (If V-gent) Remove COMPOSTING vectors from V-gent
         5. Wake DREAMING memories back to DORMANT
         """
         start_time = time.time()
@@ -262,9 +439,16 @@ class AssociativeMemory:
                 else:
                     self._memories[memory_id] = decayed
 
-        # Phase 3: (Simplified) No merging in basic implementation
-        # A more sophisticated implementation would find similar memories
-        # and merge them to save space.
+        # Phase 3: V-gent cleanup - remove COMPOSTING vectors
+        # This is the "graceful forgetting" - vectors are removed from search
+        if self._vgent is not None:
+            composting_ids = [
+                m.datum_id
+                for m in self._memories.values()
+                if m.lifecycle == Lifecycle.COMPOSTING
+            ]
+            for memory_id in composting_ids:
+                await self._vgent.remove(memory_id)
 
         # Phase 4: Wake DREAMING memories
         await self.wake()
@@ -295,18 +479,28 @@ class AssociativeMemory:
         Get current memory system state.
         """
         total = len(self._memories)
-        active = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.ACTIVE)
-        dormant = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.DORMANT)
-        dreaming = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.DREAMING)
-        composting = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.COMPOSTING)
+        active = sum(
+            1 for m in self._memories.values() if m.lifecycle == Lifecycle.ACTIVE
+        )
+        dormant = sum(
+            1 for m in self._memories.values() if m.lifecycle == Lifecycle.DORMANT
+        )
+        dreaming = sum(
+            1 for m in self._memories.values() if m.lifecycle == Lifecycle.DREAMING
+        )
+        composting = sum(
+            1 for m in self._memories.values() if m.lifecycle == Lifecycle.COMPOSTING
+        )
 
         avg_resolution = (
             sum(m.resolution for m in self._memories.values()) / total
-            if total > 0 else 0.0
+            if total > 0
+            else 0.0
         )
         avg_relevance = (
             sum(m.relevance for m in self._memories.values()) / total
-            if total > 0 else 0.0
+            if total > 0
+            else 0.0
         )
 
         return MemoryStatus(

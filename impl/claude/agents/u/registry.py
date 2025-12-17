@@ -21,7 +21,7 @@ Integration:
 - P-gents: Schema parsing for registration
 
 References:
-- spec/t-gents/tool-use.md - Section 5.2 (Layer 2: Tool Registry)
+- spec/u-gents/tool-use.md - Section 5.2 (Layer 2: Tool Registry)
 """
 
 from __future__ import annotations

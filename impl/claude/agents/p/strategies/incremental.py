@@ -12,7 +12,7 @@ Benefits:
 
 Use Cases:
 - W-gent: Render partial visualizations as data arrives
-- E-gent code generation: Highlight complete functions while others generate
+- Code generation: Highlight complete functions while others generate
 - B-gent hypothesis streaming: Show hypotheses as they're generated
 """
 
@@ -480,7 +480,7 @@ class IncrementalParser:
 
 def incremental_json_parser(config: Optional[ParserConfig] = None) -> IncrementalParser:
     """
-    Create incremental JSON parser for streaming (W-gent, E-gent).
+    Create incremental JSON parser for streaming.
 
     Builds AST progressively as tokens arrive, enabling:
     - Progressive rendering (show partial results immediately)

@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # === Type Variables ===
 

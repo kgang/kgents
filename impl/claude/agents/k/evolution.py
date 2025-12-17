@@ -17,7 +17,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Optional, Protocol
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .persona import PersonaSeed, PersonaState
 

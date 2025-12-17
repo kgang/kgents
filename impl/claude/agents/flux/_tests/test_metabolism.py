@@ -13,7 +13,7 @@ from agents.flux import (
     FluxMetabolism,
     create_flux_metabolism,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 from protocols.agentese.metabolism import (
     FeverEvent,
     MetabolicEngine,

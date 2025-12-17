@@ -14,13 +14,13 @@ from typing import Any
 import pytest
 from agents.d.lens import identity_lens, key_lens
 from agents.d.volatile import VolatileAgent
-from bootstrap.dna import BaseDNA, DNAValidationError
 from bootstrap.umwelt import (
     HypotheticalProjector,
     LightweightUmwelt,
     Projector,
     Umwelt,
 )
+from protocols.config.dna import BaseDNA, DNAValidationError
 
 # ============================================================================
 # Mock Contracts

@@ -34,7 +34,7 @@ from agents.a.skeleton import (
     AgentInterface,
     AgentMeta,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .chaosmonger import StabilityConfig, analyze_stability
 from .meta_architect import (

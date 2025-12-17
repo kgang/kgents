@@ -3,12 +3,14 @@ AGENTESE Self Data Context
 
 Data persistence nodes for self.data.* paths:
 - DataNode: The agent's data persistence layer (D-gent)
+- UpgraderNode: Tier promotion visibility (Phase 5)
 
 Part of the Data Architecture Rewrite (plans/data-architecture-rewrite.md).
 Provides AGENTESE access to the new simplified D-gent API.
 
 Five core operations: put, get, delete, list, causal_chain
 Plus: exists, count, backend (diagnostics)
+Plus: upgrader (tier promotion observability)
 """
 
 from __future__ import annotations
@@ -30,17 +32,26 @@ if TYPE_CHECKING:
 
 DATA_AFFORDANCES: tuple[str, ...] = (
     # Core 5 methods (DgentProtocol)
-    "put",           # Store datum
-    "get",           # Retrieve datum by ID
-    "delete",        # Remove datum
-    "list",          # List data with filters
+    "put",  # Store datum
+    "get",  # Retrieve datum by ID
+    "delete",  # Remove datum
+    "list",  # List data with filters
     "causal_chain",  # Get causal ancestors
     # Additional methods
-    "exists",        # Check if datum exists
-    "count",         # Count total data
+    "exists",  # Check if datum exists
+    "count",  # Count total data
     # Diagnostics
-    "backend",       # Show current backend info
-    "stats",         # Storage statistics
+    "backend",  # Show current backend info
+    "stats",  # Storage statistics
+    # Sub-nodes
+    "upgrader",  # Tier promotion observability
+)
+
+# Upgrader-specific affordances
+UPGRADER_AFFORDANCES: tuple[str, ...] = (
+    "status",  # Quick health check
+    "history",  # Recent tier transitions
+    "pending",  # Data approaching promotion threshold
 )
 
 
@@ -58,6 +69,7 @@ class DataNode(BaseLogosNode):
     - delete: Remove datum
     - list: List data with optional filters
     - causal_chain: Get causal ancestors
+    - upgrader: Tier promotion observability (sub-node)
 
     AGENTESE: self.data.*
 
@@ -71,6 +83,12 @@ class DataNode(BaseLogosNode):
 
     # D-gent backend (injected via create_data_resolver)
     _dgent: Any = None
+
+    # AutoUpgrader for tier promotion (injected via create_data_resolver)
+    _upgrader: Any = None
+
+    # Upgrader sub-node (created lazily)
+    _upgrader_node: "UpgraderNode | None" = None
 
     @property
     def handle(self) -> str:
@@ -129,6 +147,9 @@ class DataNode(BaseLogosNode):
                 return await self._backend(observer, **kwargs)
             case "stats":
                 return await self._stats(observer, **kwargs)
+            case "upgrader":
+                # Return the upgrader sub-node
+                return self._upgrader_node
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -459,25 +480,235 @@ class DataNode(BaseLogosNode):
         return stats
 
 
+# === Upgrader Node ===
+
+
+@dataclass
+class UpgraderNode(BaseLogosNode):
+    """
+    self.data.upgrader - Tier promotion observability.
+
+    Makes data tier transitions visible:
+    - status: Current upgrader health
+    - history: Recent tier promotions
+    - pending: Data approaching promotion threshold
+
+    AGENTESE: self.data.upgrader.*
+
+    Phase 5 of D-gent Integration: Upgrader Observability.
+    """
+
+    _handle: str = "self.data.upgrader"
+
+    # AutoUpgrader instance (injected)
+    _upgrader: Any = None
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Upgrader affordances available to all archetypes."""
+        return UPGRADER_AFFORDANCES
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View current upgrader state."""
+        if self._upgrader is None:
+            return BasicRendering(
+                summary="Data Upgrader (Not Configured)",
+                content="AutoUpgrader not configured. Wire via create_data_resolver().",
+                metadata={"configured": False},
+            )
+
+        stats = self._upgrader.stats
+
+        return BasicRendering(
+            summary="Data Tier Upgrader",
+            content=(
+                f"Running: {self._upgrader._running}\n"
+                f"Memory → JSONL: {stats.upgrades_memory_to_jsonl}\n"
+                f"JSONL → SQLite: {stats.upgrades_jsonl_to_sqlite}\n"
+                f"SQLite → Postgres: {stats.upgrades_sqlite_to_postgres}\n"
+                f"Failures: {stats.upgrade_failures}"
+            ),
+            metadata={
+                "configured": True,
+                "running": self._upgrader._running,
+                "memory_to_jsonl": stats.upgrades_memory_to_jsonl,
+                "jsonl_to_sqlite": stats.upgrades_jsonl_to_sqlite,
+                "sqlite_to_postgres": stats.upgrades_sqlite_to_postgres,
+                "failures": stats.upgrade_failures,
+                "last_upgrade": stats.last_upgrade_time,
+            },
+        )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle upgrader-specific aspects."""
+        match aspect:
+            case "status":
+                return await self._status(observer, **kwargs)
+            case "history":
+                return await self._history(observer, **kwargs)
+            case "pending":
+                return await self._pending(observer, **kwargs)
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    async def _status(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Quick health check of upgrader.
+
+        AGENTESE: self.data.upgrader.status
+
+        Returns:
+            Dict with running status and recent activity
+        """
+        if self._upgrader is None:
+            return {"error": "AutoUpgrader not configured"}
+
+        stats = self._upgrader.stats
+
+        return {
+            "status": "running" if self._upgrader._running else "stopped",
+            "total_upgrades": (
+                stats.upgrades_memory_to_jsonl
+                + stats.upgrades_jsonl_to_sqlite
+                + stats.upgrades_sqlite_to_postgres
+            ),
+            "failures": stats.upgrade_failures,
+            "tracked_data": len(self._upgrader._datum_stats),
+            "last_upgrade": stats.last_upgrade_time,
+        }
+
+    async def _history(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get recent tier transitions.
+
+        AGENTESE: self.data.upgrader.history
+
+        Returns:
+            Dict with upgrade statistics by tier transition
+        """
+        if self._upgrader is None:
+            return {"error": "AutoUpgrader not configured"}
+
+        stats = self._upgrader.stats
+
+        return {
+            "transitions": {
+                "MEMORY_to_JSONL": stats.upgrades_memory_to_jsonl,
+                "JSONL_to_SQLITE": stats.upgrades_jsonl_to_sqlite,
+                "SQLITE_to_POSTGRES": stats.upgrades_sqlite_to_postgres,
+            },
+            "total": (
+                stats.upgrades_memory_to_jsonl
+                + stats.upgrades_jsonl_to_sqlite
+                + stats.upgrades_sqlite_to_postgres
+            ),
+            "failures": stats.upgrade_failures,
+            "last_upgrade_time": stats.last_upgrade_time,
+        }
+
+    async def _pending(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get data approaching promotion threshold.
+
+        AGENTESE: self.data.upgrader.pending
+
+        Args:
+            limit: Max items to return (default 10)
+
+        Returns:
+            Dict with data items close to promotion
+        """
+        if self._upgrader is None:
+            return {"error": "AutoUpgrader not configured"}
+
+        limit = kwargs.get("limit", 10)
+        policy = self._upgrader.policy
+
+        # Find data approaching thresholds
+        pending = []
+        for datum_id, stats in list(self._upgrader._datum_stats.items())[:limit]:
+            # Calculate progress toward next tier
+            progress = 0.0
+            next_tier = None
+
+            if stats.tier.name == "MEMORY":
+                progress = stats.access_count / policy.memory_to_jsonl_accesses
+                next_tier = "JSONL"
+            elif stats.tier.name == "JSONL":
+                progress = stats.access_count / policy.jsonl_to_sqlite_accesses
+                next_tier = "SQLITE"
+
+            if progress > 0.5:  # Only show items > 50% toward threshold
+                pending.append(
+                    {
+                        "id": datum_id[:16] + "...",
+                        "current_tier": stats.tier.name,
+                        "next_tier": next_tier,
+                        "progress": round(progress, 2),
+                        "access_count": stats.access_count,
+                    }
+                )
+
+        # Sort by progress (closest to promotion first)
+        pending.sort(key=lambda x: x["progress"], reverse=True)
+
+        return {
+            "pending": pending[:limit],
+            "total_tracked": len(self._upgrader._datum_stats),
+        }
+
+
 # === Factory Function ===
 
 
-def create_data_resolver(dgent: Any = None) -> DataNode:
+def create_data_resolver(dgent: Any = None, upgrader: Any = None) -> DataNode:
     """
-    Create a DataNode with optional D-gent backend.
+    Create a DataNode with optional D-gent backend and upgrader.
 
     Args:
         dgent: D-gent backend (DgentProtocol implementation)
                If None, creates unconfigured node.
+        upgrader: AutoUpgrader for tier promotion observability
+                  If None, upgrader sub-node returns unconfigured state.
 
     Returns:
-        Configured DataNode
+        Configured DataNode with optional upgrader sub-node
 
     Example:
         from agents.d.backends.memory import MemoryBackend
+        from agents.d.upgrader import AutoUpgrader
+
         dgent = MemoryBackend()
-        data_node = create_data_resolver(dgent)
+        upgrader = AutoUpgrader(source=dgent, ...)
+        data_node = create_data_resolver(dgent, upgrader)
     """
     node = DataNode()
     node._dgent = dgent
+    node._upgrader = upgrader
+
+    # Create upgrader sub-node
+    upgrader_node = UpgraderNode()
+    upgrader_node._upgrader = upgrader
+    node._upgrader_node = upgrader_node
+
     return node

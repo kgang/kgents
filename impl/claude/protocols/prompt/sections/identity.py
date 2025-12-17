@@ -78,16 +78,15 @@ Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta
 | B | Bgents | Bio/Scientific discovery + Economics + Distillation | — |
 | C | Cgents | Category Theory basis (composability) | — |
 | D | Dgents | Data Agents (state, memory, persistence) | `MEMORY_POLYNOMIAL` |
-| E | Egents | Evolution (teleological thermodynamics) | `EVOLUTION_POLYNOMIAL` |
+| F | Fgents | Flow (chat, research, collaboration substrate) | `FLOW_POLYNOMIAL` |
 | K | Kgent | Kent simulacra (interactive persona) | `SOUL_POLYNOMIAL` |
 | L | Lgents | Lattice/Library (semantic registry) | — |
 | M | Mgents | Memory/Map (holographic cartography) | — |
 | N | Ngents | Narrative (witness/trace) | — |
 | T | Tgents | Testing (algebraic reliability, Types I-V) | — |
 | U | Ugents | Utility (tool use, MCP integration) | — |
-| Y | Ygent | Y-Combinator (cognitive + somatic topology) | — |
 | Ψ | Psigent | Psychopomp (metaphor engine) | — |
-| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) | — |
+| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception, chrysalis) | — |
 
 **Note**: Polynomial agents (`PolyAgent[S, A, B]`) capture state-dependent behavior. See `docs/skills/polynomial-agent.md`."""
 

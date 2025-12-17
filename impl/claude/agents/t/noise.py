@@ -14,7 +14,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Generic, List, Optional, TypeVar
 
 if TYPE_CHECKING:
-    from bootstrap.types import Agent, ComposedAgent
+    from agents.poly.types import Agent, ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -205,6 +205,6 @@ class NoiseAgent(Generic[A]):
         Returns:
             Composed agent
         """
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         return ComposedAgent(self, other)  # type: ignore[arg-type]

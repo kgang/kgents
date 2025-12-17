@@ -37,14 +37,14 @@ from bootstrap import (
     compose,
 )
 
-# DNA imports
-from bootstrap.dna import (
-    Constraint,
-)
-
 # Umwelt imports
 from bootstrap.umwelt import (
     Umwelt,
+)
+
+# DNA imports
+from protocols.config.dna import (
+    Constraint,
 )
 
 
@@ -372,7 +372,7 @@ class TestGroundedWrapper:
 
     def test_grounded_wrapper_creation(self) -> None:
         """Test creating a Grounded wrapper."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class SimpleAgent(Agent[str, str]):
             @property
@@ -399,7 +399,7 @@ class TestGroundedWrapper:
     @pytest.mark.asyncio
     async def test_grounded_passes_valid_output(self) -> None:
         """Test Grounded passes valid outputs through."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class EchoAgent(Agent[str, str]):
             @property
@@ -429,7 +429,7 @@ class TestGroundedWrapper:
     @pytest.mark.asyncio
     async def test_grounded_rejects_invalid_output(self) -> None:
         """Test Grounded rejects outputs that violate contract."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class BadAgent(Agent[str, str]):
             @property
@@ -473,7 +473,7 @@ class TestBootstrapAgentComposition:
 
     def test_compose_function(self) -> None:
         """Test compose() function."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         @dataclass
         class AddOne(Agent[int, int]):

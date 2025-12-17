@@ -21,7 +21,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Generic, Protocol, TypeVar, runtime_checkable
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # Type variables for the functor structure
 A = TypeVar("A")

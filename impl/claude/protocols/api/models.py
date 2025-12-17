@@ -390,6 +390,11 @@ class BrainStatusResponse(BaseModel):
         ...,
         description="Whether CartographerAgent is configured",
     )
+    storage_backend: str = Field(
+        default="sqlite",
+        description="Storage backend: sqlite or postgres",
+        examples=["sqlite", "postgres"],
+    )
 
 
 # --- Brain Topology Models (3D Visualization) ---
@@ -642,7 +647,9 @@ class GardenerIntentRequest(BaseModel):
     """Intent for a gardener session."""
 
     description: str = Field(..., description="What the session aims to accomplish")
-    priority: str = Field(default="normal", description="Priority level: low, normal, high")
+    priority: str = Field(
+        default="normal", description="Priority level: low, normal, high"
+    )
 
 
 class GardenerSessionResponse(BaseModel):
@@ -651,8 +658,12 @@ class GardenerSessionResponse(BaseModel):
     session_id: str = Field(..., description="Unique session identifier")
     name: str = Field(..., description="Human-readable session name")
     phase: GardenerPhase = Field(..., description="Current session phase")
-    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
-    intent: Optional[GardenerIntentRequest] = Field(default=None, description="Session intent")
+    plan_path: Optional[str] = Field(
+        default=None, description="Path to associated plan file"
+    )
+    intent: Optional[GardenerIntentRequest] = Field(
+        default=None, description="Session intent"
+    )
     artifacts_count: int = Field(default=0, description="Number of artifacts created")
     learnings_count: int = Field(default=0, description="Number of learnings recorded")
     sense_count: int = Field(default=0, description="Times entered SENSE phase")
@@ -663,16 +674,24 @@ class GardenerSessionResponse(BaseModel):
 class GardenerCreateRequest(BaseModel):
     """Request to create a new gardener session."""
 
-    name: Optional[str] = Field(default=None, description="Session name (auto-generated if not provided)")
-    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
-    intent: Optional[GardenerIntentRequest] = Field(default=None, description="Initial session intent")
+    name: Optional[str] = Field(
+        default=None, description="Session name (auto-generated if not provided)"
+    )
+    plan_path: Optional[str] = Field(
+        default=None, description="Path to associated plan file"
+    )
+    intent: Optional[GardenerIntentRequest] = Field(
+        default=None, description="Initial session intent"
+    )
 
 
 class GardenerSessionListResponse(BaseModel):
     """List of gardener sessions."""
 
     sessions: list[GardenerSessionResponse] = Field(default_factory=list)
-    active_session_id: Optional[str] = Field(default=None, description="Currently active session ID")
+    active_session_id: Optional[str] = Field(
+        default=None, description="Currently active session ID"
+    )
 
 
 # =============================================================================
@@ -706,7 +725,9 @@ class GestureResponse(BaseModel):
 
     verb: TendingVerb
     target: str = Field(..., description="AGENTESE path target")
-    tone: float = Field(..., ge=0.0, le=1.0, description="How definitive (0=tentative, 1=definitive)")
+    tone: float = Field(
+        ..., ge=0.0, le=1.0, description="How definitive (0=tentative, 1=definitive)"
+    )
     reasoning: str = Field(default="", description="Why this gesture")
     entropy_cost: float = Field(default=0.0, description="Entropy cost")
     timestamp: str = Field(..., description="ISO timestamp")
@@ -817,12 +838,20 @@ class TransitionSignalsResponse(BaseModel):
 
     gesture_frequency: float = Field(..., description="Gestures per hour")
     gesture_diversity: int = Field(..., description="Unique verbs used recently")
-    plot_progress_delta: float = Field(..., ge=0.0, le=1.0, description="Progress change since season start")
+    plot_progress_delta: float = Field(
+        ..., ge=0.0, le=1.0, description="Progress change since season start"
+    )
     artifacts_created: int = Field(..., ge=0, description="Session artifacts count")
-    time_in_season_hours: float = Field(..., ge=0.0, description="Hours in current season")
-    entropy_spent_ratio: float = Field(..., ge=0.0, le=1.0, description="Entropy spent / budget ratio")
+    time_in_season_hours: float = Field(
+        ..., ge=0.0, description="Hours in current season"
+    )
+    entropy_spent_ratio: float = Field(
+        ..., ge=0.0, le=1.0, description="Entropy spent / budget ratio"
+    )
     reflect_count: int = Field(default=0, ge=0, description="Number of REFLECT cycles")
-    session_active: bool = Field(default=False, description="Whether there's an active session")
+    session_active: bool = Field(
+        default=False, description="Whether there's an active session"
+    )
 
 
 class TransitionSuggestionResponse(BaseModel):
@@ -835,10 +864,16 @@ class TransitionSuggestionResponse(BaseModel):
 
     from_season: GardenSeason = Field(..., description="Current season")
     to_season: GardenSeason = Field(..., description="Suggested new season")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.7+ triggers suggestion)")
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Confidence score (0.7+ triggers suggestion)"
+    )
     reason: str = Field(..., description="Human-readable reason for suggestion")
-    signals: TransitionSignalsResponse = Field(..., description="Signals that triggered suggestion")
-    triggered_at: str = Field(..., description="ISO timestamp when suggestion was generated")
+    signals: TransitionSignalsResponse = Field(
+        ..., description="Signals that triggered suggestion"
+    )
+    triggered_at: str = Field(
+        ..., description="ISO timestamp when suggestion was generated"
+    )
 
 
 class TendResponseWithSuggestion(BaseModel):
@@ -864,14 +899,18 @@ class TendResponseWithSuggestion(BaseModel):
 class TransitionAcceptRequest(BaseModel):
     """Request to accept a suggested season transition."""
 
-    from_season: GardenSeason = Field(..., description="The season being transitioned from (validation)")
+    from_season: GardenSeason = Field(
+        ..., description="The season being transitioned from (validation)"
+    )
     to_season: GardenSeason = Field(..., description="The season to transition to")
 
 
 class TransitionDismissRequest(BaseModel):
     """Request to dismiss a suggested season transition."""
 
-    from_season: GardenSeason = Field(..., description="The season being transitioned from")
+    from_season: GardenSeason = Field(
+        ..., description="The season being transitioned from"
+    )
     to_season: GardenSeason = Field(..., description="The dismissed target season")
 
 

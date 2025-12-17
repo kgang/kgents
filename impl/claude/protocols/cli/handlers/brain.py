@@ -25,6 +25,7 @@ Usage:
     kg brain list                 # List recent captures
     kg brain status               # Detailed brain statistics
     kg brain import --source obsidian --path /vault  # Import markdown
+    kg brain chat                 # Interactive chat with Brain memory
 
 AGENTESE Paths:
     self.memory.manifest          # Brain status
@@ -57,6 +58,7 @@ async def _get_brain() -> Any:
     global _brain_crystal
     if _brain_crystal is None:
         from agents.brain import get_brain_crystal
+
         _brain_crystal = await get_brain_crystal()
     return _brain_crystal
 
@@ -66,7 +68,27 @@ def _reset_brain() -> None:
     global _brain_crystal
     _brain_crystal = None
     from agents.brain import reset_brain_crystal
+
     reset_brain_crystal()
+
+
+def _run_async(coro: Any) -> Any:
+    """Run an async coroutine synchronously, handling running event loops.
+
+    This is needed for pytest-asyncio compatibility where an event loop
+    is already running.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        # If we get here, an event loop is already running
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, coro)
+            return future.result()
+    except RuntimeError:
+        # No running event loop, safe to use asyncio.run
+        return asyncio.run(coro)
 
 
 def print_help() -> None:
@@ -79,9 +101,12 @@ Commands:
   kg brain capture "content"    Capture content to memory
   kg brain search "query"       Semantic search for similar memories
   kg brain ghost "context"      Alias for search (surface memories)
+  kg brain surface              Serendipity: random memory from the void
+  kg brain surface "context"    Context-biased serendipity
   kg brain list                 List recent captures
   kg brain status               Detailed brain statistics
   kg brain import               Import from markdown vault
+  kg brain chat                 Interactive chat with holographic memory
 
 Options:
   --help, -h                    Show this help message
@@ -102,13 +127,18 @@ AGENTESE Paths:
   self.memory.manifest          Brain status
   self.memory.capture           Capture content
   self.memory.ghost.surface     Surface memories
+  void.memory.surface           Serendipity (Accursed Share)
+  self.jewel.brain.flow.chat.*  ChatFlow-based conversational memory
 
 Examples:
   kg brain capture "Python is great for data science"
   kg brain search "programming language"
   kg brain ghost "category theory"
+  kg brain surface               # Random serendipity
+  kg brain surface "agents"      # Context-biased serendipity
   kg brain list
   kg brain status
+  kg brain chat
   kg brain import --source obsidian --path ~/Documents/Obsidian/MyVault
 """
     print(help_text.strip())
@@ -163,7 +193,7 @@ def cmd_brain(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     subcommand = clean_args[0].lower() if clean_args else "status"
 
     # Run async handler
-    return asyncio.run(
+    return _run_async(
         _async_route(
             subcommand,
             clean_args[1:],
@@ -198,6 +228,10 @@ async def _async_route(
                 return await _handle_status(json_output)
             case "import":
                 return _handle_import(source_type, vault_path, json_output, dry_run)
+            case "chat":
+                return await _handle_chat(args, json_output, limit)
+            case "surface":
+                return await _handle_surface(args, json_output)
             case _:
                 print(f"Unknown subcommand: {subcommand}")
                 print("Use 'kg brain --help' for usage")
@@ -233,19 +267,29 @@ async def _handle_capture(args: list[str], json_output: bool) -> int:
 
     if json_output:
         import json
-        print(json.dumps({
-            "status": "captured",
-            "concept_id": result.concept_id,
-            "content": result.content[:100],
-            "captured_at": result.captured_at,
-            "has_embedding": result.has_embedding,
-            "storage": result.storage,
-        }, indent=2))
+
+        print(
+            json.dumps(
+                {
+                    "status": "captured",
+                    "concept_id": result.concept_id,
+                    "content": result.content[:100],
+                    "captured_at": result.captured_at,
+                    "has_embedding": result.has_embedding,
+                    "storage": result.storage,
+                },
+                indent=2,
+            )
+        )
     else:
         print(f"✓ Captured: {content[:50]}...")
         print(f"  ID: {result.concept_id}")
-        print(f"  Embedding: {'✓ semantic' if result.has_embedding else '○ hash-based'}")
-        print(f"  Storage: SQLite + {'Vector' if result.has_embedding else 'relational only'}")
+        print(
+            f"  Embedding: {'✓ semantic' if result.has_embedding else '○ hash-based'}"
+        )
+        print(
+            f"  Storage: SQLite + {'Vector' if result.has_embedding else 'relational only'}"
+        )
 
     return 0
 
@@ -276,20 +320,26 @@ async def _handle_search(args: list[str], json_output: bool, limit: int) -> int:
 
     if json_output:
         import json
-        print(json.dumps({
-            "query": query,
-            "count": len(results),
-            "results": [
+
+        print(
+            json.dumps(
                 {
-                    "concept_id": r.concept_id,
-                    "content": r.content[:200],
-                    "similarity": round(r.similarity, 3),
-                    "captured_at": r.captured_at,
-                    "is_stale": r.is_stale,
-                }
-                for r in results
-            ],
-        }, indent=2))
+                    "query": query,
+                    "count": len(results),
+                    "results": [
+                        {
+                            "concept_id": r.concept_id,
+                            "content": r.content[:200],
+                            "similarity": round(r.similarity, 3),
+                            "captured_at": r.captured_at,
+                            "is_stale": r.is_stale,
+                        }
+                        for r in results
+                    ],
+                },
+                indent=2,
+            )
+        )
     else:
         if not results:
             print("👻 No memories surfaced")
@@ -298,7 +348,9 @@ async def _handle_search(args: list[str], json_output: bool, limit: int) -> int:
             print(f"🔮 Found {len(results)} memories:")
             print()
             for i, r in enumerate(results, 1):
-                similarity_bar = "█" * int(r.similarity * 10) + "░" * (10 - int(r.similarity * 10))
+                similarity_bar = "█" * int(r.similarity * 10) + "░" * (
+                    10 - int(r.similarity * 10)
+                )
                 stale_marker = " ⚠️ stale" if r.is_stale else ""
                 print(f"  {i}. [{similarity_bar}] {r.similarity:.1%}{stale_marker}")
                 print(f"     {r.content[:80]}...")
@@ -322,14 +374,20 @@ async def _handle_list(json_output: bool, limit: int) -> int:
 
     if json_output:
         import json
-        print(json.dumps({
-            "count": len(captures),
-            "captures": captures,
-        }, indent=2))
+
+        print(
+            json.dumps(
+                {
+                    "count": len(captures),
+                    "captures": captures,
+                },
+                indent=2,
+            )
+        )
     else:
         if not captures:
             print("📭 No captures yet")
-            print("  Use: kg brain capture \"your content here\"")
+            print('  Use: kg brain capture "your content here"')
         else:
             print(f"📚 Recent captures ({len(captures)}):")
             print()
@@ -337,6 +395,76 @@ async def _handle_list(json_output: bool, limit: int) -> int:
                 print(f"  • {c['content']}")
                 print(f"    ID: {c['concept_id']} | {c['captured_at']}")
                 print()
+
+    return 0
+
+
+async def _handle_surface(args: list[str], json_output: bool) -> int:
+    """Handle brain surface command - serendipity from the void.
+
+    Surface a random-ish memory that might spark unexpected connections.
+    Optionally biased by context.
+
+    AGENTESE: void.memory.surface
+    """
+    # Display AGENTESE path header
+    display_path_header(
+        path="void.memory.surface",
+        aspect="sip",
+        effects=["SERENDIPITY_SURFACED"],
+    )
+
+    # Parse optional context
+    context = " ".join(args).strip() if args else None
+
+    brain = await _get_brain()
+    result = await brain.surface(context=context, entropy=0.7)
+
+    if result is None:
+        if json_output:
+            import json
+
+            print(json.dumps({"status": "empty", "message": "Brain is empty"}))
+        else:
+            print("🧠 Brain is empty")
+            print('  Use: kg brain capture "your content here"')
+        return 0
+
+    if json_output:
+        import json
+
+        print(
+            json.dumps(
+                {
+                    "status": "surfaced",
+                    "concept_id": result.concept_id,
+                    "content": result.content[:200],
+                    "surprise_factor": round(result.similarity, 3),
+                    "captured_at": result.captured_at,
+                    "context": context,
+                },
+                indent=2,
+            )
+        )
+    else:
+        # Display with void/serendipity theming
+        print()
+        if context:
+            print(f'🌀 From the void (context: "{context[:30]}..."):')
+        else:
+            print("🌀 From the void:")
+        print()
+        print(
+            f'  "{result.content[:150]}..."'
+            if len(result.content) > 150
+            else f'  "{result.content}"'
+        )
+        print()
+        print(f"  ID: {result.concept_id}")
+        print(f"  Surprise: {result.similarity:.0%}")
+        print(f"  Captured: {result.captured_at}")
+        print()
+        print("  💡 What unexpected connection does this spark?")
 
     return 0
 
@@ -355,28 +483,226 @@ async def _handle_status(json_output: bool) -> int:
 
     if json_output:
         import json
-        print(json.dumps({
-            "total_captures": status.total_captures,
-            "vector_count": status.vector_count,
-            "has_semantic": status.has_semantic,
-            "coherency_rate": round(status.coherency_rate, 3),
-            "ghosts_healed": status.ghosts_healed,
-            "storage_path": status.storage_path,
-            "status": "healthy",
-        }, indent=2))
+
+        print(
+            json.dumps(
+                {
+                    "total_captures": status.total_captures,
+                    "vector_count": status.vector_count,
+                    "has_semantic": status.has_semantic,
+                    "coherency_rate": round(status.coherency_rate, 3),
+                    "ghosts_healed": status.ghosts_healed,
+                    "storage_path": status.storage_path,
+                    "storage_backend": status.storage_backend,
+                    "status": "healthy",
+                },
+                indent=2,
+            )
+        )
     else:
+        backend_icon = "🐘" if status.storage_backend == "postgres" else "📦"
+        backend_label = (
+            "PostgreSQL" if status.storage_backend == "postgres" else "SQLite"
+        )
         print("🧠 Brain Status (D-gent Triad)")
         print("━" * 40)
         print(f"  Captures:     {status.total_captures}")
         print(f"  Vectors:      {status.vector_count}")
-        print(f"  Semantic:     {'✓ L-gent embeddings' if status.has_semantic else '○ hash-based'}")
+        print(
+            f"  Semantic:     {'✓ L-gent embeddings' if status.has_semantic else '○ hash-based'}"
+        )
         print(f"  Coherency:    {status.coherency_rate:.1%}")
         print(f"  Ghosts healed: {status.ghosts_healed}")
         print("━" * 40)
         print("  Status: ✓ Healthy")
-        print(f"  Storage: {status.storage_path}/brain.db")
+        print(f"  Backend: {backend_icon} {backend_label}")
+        if status.storage_backend == "sqlite":
+            print(f"  Storage: {status.storage_path}/brain.db")
+        else:
+            print(f"  Storage: PostgreSQL (KGENTS_POSTGRES_URL)")
 
     return 0
+
+
+# =============================================================================
+# Chat Command: Interactive Conversational Memory (Phase 2)
+# =============================================================================
+
+
+async def _handle_chat(
+    args: list[str],
+    json_output: bool,
+    limit: int,
+) -> int:
+    """
+    Handle brain chat command - interactive conversational memory queries.
+
+    Uses ChatFlow to provide turn-based conversation with Brain's semantic search.
+
+    AGENTESE: self.jewel.brain.flow.chat.*
+
+    Args:
+        args: Additional arguments (single query or empty for interactive)
+        json_output: Whether to output JSON
+        limit: Max results per query
+
+    Returns:
+        Exit code (0 for success, 1 for failure)
+    """
+    # Display AGENTESE path header
+    display_path_header(
+        path="self.jewel.brain.flow.chat.query",
+        aspect="define",
+        effects=["FLOW_STARTED", "TURN_COMPLETED", "MEMORY_SURFACED"],
+    )
+
+    brain = await _get_brain()
+
+    # If args provided, do single query (non-interactive)
+    if args:
+        query = " ".join(args).strip()
+        if not query:
+            print("Error: query cannot be empty")
+            return 1
+
+        results = await brain.search(query, limit=limit)
+
+        if json_output:
+            import json
+
+            print(
+                json.dumps(
+                    {
+                        "mode": "single_query",
+                        "query": query,
+                        "count": len(results),
+                        "results": [
+                            {
+                                "concept_id": r.concept_id,
+                                "content": r.content[:200],
+                                "similarity": round(r.similarity, 3),
+                                "captured_at": r.captured_at,
+                            }
+                            for r in results
+                        ],
+                    },
+                    indent=2,
+                )
+            )
+        else:
+            _print_chat_response(query, results)
+
+        return 0
+
+    # Interactive chat mode
+    print()
+    print("🧠 Brain Chat - Conversational Memory Interface")
+    print("━" * 50)
+    print("  Ask questions about your captured memories.")
+    print("  Type 'quit' or 'exit' to leave, 'clear' to reset context.")
+    print("━" * 50)
+    print()
+
+    # Track conversation context
+    turn_number = 0
+    context: list[dict[str, str]] = []
+
+    while True:
+        try:
+            # Prompt with turn indicator
+            prompt = f"[{turn_number}] You: " if turn_number > 0 else "You: "
+            user_input = input(prompt).strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n\n👋 Goodbye!")
+            break
+
+        if not user_input:
+            continue
+
+        if user_input.lower() in ("quit", "exit", "q"):
+            print("\n👋 Goodbye!")
+            break
+
+        if user_input.lower() == "clear":
+            context.clear()
+            turn_number = 0
+            print("\n🔄 Context cleared.\n")
+            continue
+
+        if user_input.lower() == "status":
+            status = await brain.status()
+            print(
+                f"\n  📊 {status.total_captures} captures | {status.vector_count} vectors | {status.coherency_rate:.0%} coherent\n"
+            )
+            continue
+
+        # Search brain with the query
+        results = await brain.search(user_input, limit=limit)
+
+        # Format and print response
+        _print_chat_response(user_input, results)
+
+        # Track context
+        context.append(
+            {
+                "role": "user",
+                "content": user_input,
+            }
+        )
+        context.append(
+            {
+                "role": "assistant",
+                "content": _summarize_results(results)
+                if results
+                else "No relevant memories found.",
+            }
+        )
+
+        turn_number += 1
+        print()
+
+    return 0
+
+
+def _print_chat_response(query: str, results: list) -> None:
+    """Print a chat-style response based on search results."""
+    if not results:
+        print("\n  🤔 I couldn't find any relevant memories for that query.")
+        print("     Try a different phrasing or check 'kg brain status'.\n")
+        return
+
+    # High confidence threshold for direct answer
+    top_result = results[0]
+    confidence = top_result.similarity
+
+    if confidence > 0.8:
+        # High confidence - direct answer style
+        print(f"\n  💡 Found a strong match ({confidence:.0%} confidence):")
+        print(f"     {top_result.content[:200]}...")
+    elif confidence > 0.5:
+        # Medium confidence - show options
+        print(f"\n  🔮 Found {len(results)} relevant memories:")
+        for i, r in enumerate(results[:3], 1):
+            similarity_bar = "█" * int(r.similarity * 5) + "░" * (
+                5 - int(r.similarity * 5)
+            )
+            print(f"     {i}. [{similarity_bar}] {r.content[:80]}...")
+    else:
+        # Low confidence - tentative
+        print(f"\n  👻 Found some loosely related memories (top {confidence:.0%}):")
+        print(f"     • {top_result.content[:100]}...")
+        if len(results) > 1:
+            print(f"     + {len(results) - 1} more with lower relevance")
+
+
+def _summarize_results(results: list) -> str:
+    """Summarize search results for context tracking."""
+    if not results:
+        return "No results found."
+
+    top = results[0]
+    summary = f"Found {len(results)} memories. Top result ({top.similarity:.0%}): {top.content[:100]}"
+    return summary
 
 
 def _handle_import(
@@ -408,24 +734,36 @@ def _handle_import(
         print("Usage: kg brain import --source obsidian --path /path/to/vault")
         return 1
 
+    # Validate source type
+    valid_sources = ("obsidian", "notion", "markdown")
+    if source_type.lower() not in valid_sources:
+        print(f"Error: Invalid source type: {source_type}")
+        print(f"Valid sources: {', '.join(valid_sources)}")
+        return 1
+
     from pathlib import Path
+
     vault = Path(vault_path).expanduser()
 
     if not vault.exists():
         print(f"Error: Path does not exist: {vault}")
         return 1
 
-    # Import the importer
+    # Import the parser
     try:
-        from agents.m.importers.markdown import MarkdownImporter
-
-        importer = MarkdownImporter(source_type=source_type)
+        from agents.m.importers.markdown import ObsidianVaultParser
     except ImportError:
         print("Error: Importer not available")
         return 1
 
-    # Scan files
-    files = importer.scan(vault)
+    # Scan files using the vault parser
+    try:
+        parser = ObsidianVaultParser(vault)
+        files = parser.discover_files()
+    except Exception as e:
+        print(f"Error: {e}")
+        return 1
+
     print(f"Found {len(files)} markdown files in {vault}")
 
     if dry_run:
@@ -448,7 +786,11 @@ def _handle_import(
                 title = md_file.stem
                 await brain.capture(
                     content=content,
-                    metadata={"title": title, "source": source_type, "path": str(md_file)},
+                    metadata={
+                        "title": title,
+                        "source": source_type,
+                        "path": str(md_file),
+                    },
                 )
                 imported += 1
                 if imported % 10 == 0:
@@ -461,4 +803,4 @@ def _handle_import(
         print(f"\n✓ Imported {imported} files ({errors} errors)")
         return 0 if errors == 0 else 1
 
-    return asyncio.run(do_import())
+    return _run_async(do_import())

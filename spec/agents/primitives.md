@@ -25,7 +25,7 @@ Primitives are the irreducible building blocks from which all other agents are c
 | **Perception** | 3 | Observer-dependent interaction |
 | **Entropy** | 3 | Accursed Share / void.* |
 | **Memory** | 2 | D-gent persistence |
-| **Teleological** | 2 | E-gent evolution + N-gent narrative |
+| **Teleological** | 2 | Evolve + Narrate primitives |
 
 ---
 
@@ -336,7 +336,8 @@ class MemoryResult:
 
 ## Teleological Primitives (2)
 
-Foundation for E-gent (Evolution) and N-gent (Narrative).
+Foundation for evolution and narrative patterns.
+Note: Originally designed for E-gent (Evolution, archived 2025-12-16) and N-gent (Narrative).
 
 ### 16. EVOLVE
 

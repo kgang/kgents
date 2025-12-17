@@ -2,7 +2,7 @@
 
 import pytest
 from agents.flux import Flux, FluxAgent, FluxConfig, FluxLifter, is_flux
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 # Test fixtures

@@ -519,7 +519,7 @@ These exist in `spec/` but not `impl/`:
 | Agent | Spec Location | Status |
 |-------|---------------|--------|
 | **Ω-gent** (Somatic) | `spec/omega-gents/` | Spec complete, no impl |
-| **Y-gent** (Topology) | `spec/y-gents/` | Partial |
+| **Y-gent** (Topology) | `spec/y-gents-archived/` | Archived - subsumed by Turn Protocol |
 | **I-gent v2.5** (Semantic Flux) | `plans/self/interface.md` | Spec complete, awaiting impl |
 | Z-gent (Zettelkasten) | — | Specced in principles |
 

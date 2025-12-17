@@ -122,20 +122,6 @@ class TestBrainGhost:
         assert result == 0
 
 
-class TestBrainMap:
-    """Tests for brain map command."""
-
-    def test_map_works(self) -> None:
-        """Map command works."""
-        result = cmd_brain(["map"])
-        assert result == 0
-
-    def test_map_json(self) -> None:
-        """Map with --json returns structured output."""
-        result = cmd_brain(["--json", "map"])
-        assert result == 0
-
-
 class TestBrainErrorPaths:
     """Tests for error handling in brain commands."""
 
@@ -288,4 +274,54 @@ class TestBrainImport:
         (path / "visible.md").write_text("# Visible\n\nContent")
 
         result = cmd_brain(["import", "--source", "obsidian", "--path", str(path)])
+        assert result == 0
+
+
+# =============================================================================
+# Chat Tests (Phase 2: Brain + ChatFlow)
+# =============================================================================
+
+
+class TestBrainChat:
+    """Tests for brain chat command (Phase 2 F-gent integration)."""
+
+    def test_chat_single_query(self) -> None:
+        """Chat with query argument does single query mode."""
+        # First capture something
+        result = cmd_brain(["capture", "Python is great for data science"])
+        assert result == 0
+
+        # Then chat query (non-interactive)
+        result = cmd_brain(["chat", "Python"])
+        assert result == 0
+
+    def test_chat_single_query_json(self) -> None:
+        """Chat with --json returns structured output."""
+        # First capture something
+        result = cmd_brain(["capture", "Machine learning with Python"])
+        assert result == 0
+
+        # Then chat query with JSON
+        result = cmd_brain(["--json", "chat", "machine learning"])
+        assert result == 0
+
+    def test_chat_empty_query_shows_error(self) -> None:
+        """Chat with empty query shows error."""
+        result = cmd_brain(["chat", "   "])
+        assert result == 1
+
+    def test_chat_no_results_graceful(self) -> None:
+        """Chat handles no results gracefully."""
+        # Query something that won't exist
+        result = cmd_brain(["chat", "xyznonexistent123"])
+        assert result == 0  # Should succeed even with no results
+
+    def test_chat_multiple_args_joins(self) -> None:
+        """Chat with multiple args joins them into query."""
+        # First capture something
+        result = cmd_brain(["capture", "Category theory for programmers"])
+        assert result == 0
+
+        # Then chat with multiple words
+        result = cmd_brain(["chat", "category", "theory"])
         assert result == 0

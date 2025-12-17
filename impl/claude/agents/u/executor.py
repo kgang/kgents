@@ -31,7 +31,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Optional, TypeVar
 
-from bootstrap.types import Err, Ok, Result, err, ok
+from agents.poly.types import Err, Ok, Result, err, ok
 
 from .core import Tool, ToolError, ToolErrorType, ToolTrace
 from .permissions import (

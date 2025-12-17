@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from agents.p.strategies.diff_based import (
     DiffBasedParser,
-    create_egent_diff_parser,
+    create_code_diff_parser,
     create_wgent_diff_parser,
 )
 
@@ -215,7 +215,7 @@ class TestConvenienceFunctions:
     def test_egent_diff_parser(self) -> None:
         """Test E-gent code diff parser."""
         code = "def foo() -> None:\n    pass"
-        parser = create_egent_diff_parser(code)
+        parser = create_code_diff_parser(code)
 
         diff = "s/pass/return 42/"
         result = parser.parse(diff)
@@ -294,7 +294,7 @@ def process(data) -> None:
     # TODO: implement
     pass
 """
-        parser = create_egent_diff_parser(base)
+        parser = create_code_diff_parser(base)
         diff = "s/pass/return [x * 2 for x in data]/"
         result = parser.parse(diff)
 

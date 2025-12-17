@@ -66,7 +66,7 @@ hint = VisualHint(
 )
 ```
 
-### Emit a Graph (Y-gent style)
+### Emit a Graph (F-gent research style)
 
 ```python
 hint = VisualHint(
@@ -295,7 +295,7 @@ def test_rendering():
 See `/Users/kentgang/git/kgents/impl/claude/agents/i/data/flux_hint_integration.py` for comprehensive examples including:
 
 - B-gent balance sheet tables
-- Y-gent topology graphs
+- F-gent research hypothesis graphs
 - K-gent cognitive state
 - Multi-agent orchestration
 - FluxAgent integration patterns

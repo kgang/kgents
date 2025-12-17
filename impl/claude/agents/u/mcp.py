@@ -20,7 +20,7 @@ Integration:
 - W-gents: Trace MCP calls for observability
 
 References:
-- spec/t-gents/tool-use.md (Phase 4: MCP Integration)
+- spec/u-gents/tool-use.md (Phase 4: MCP Integration)
 - MCP Specification 2025-06-18
 - JSON-RPC 2.0: https://www.jsonrpc.org/specification
 """
@@ -35,7 +35,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, TypeVar, Union
 
-from bootstrap.types import Err, Result, err, ok
+from agents.poly.types import Err, Result, err, ok
 
 from .core import Tool, ToolError, ToolErrorType, ToolMeta
 

@@ -59,13 +59,7 @@ AGENT_REGISTRY: dict[str, dict[str, Any]] = {
         "status": "active",
         "description": "Data persistence, memory, and state management",
     },
-    "e": {
-        "name": "E-gent",
-        "theme": "Evolution (teleological thermodynamics)",
-        "status": "active",
-        "description": "Code evolution via mutations, phages, and thermodynamic selection",
-        "tests": 353,
-    },
+    # E-gent archived 2025-12-16 - see impl/claude/agents/_archived/e-gent-archived/
     "f": {
         "name": "F-gent",
         "theme": "Forge (persistence layer)",

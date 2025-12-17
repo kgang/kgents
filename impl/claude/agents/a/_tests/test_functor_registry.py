@@ -24,7 +24,7 @@ from agents.a.functor import (
     compose_functors,
     identity_functor,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # =============================================================================
 # Test Fixtures
@@ -204,14 +204,13 @@ class TestCompositionMatrix:
     @pytest.mark.asyncio
     async def test_flux_state_composition(self) -> None:
         """Flux . State composition (streaming + state)."""
-        from agents.d.state_monad import StateMonadFunctor
-        from agents.d.volatile import VolatileAgent
         from agents.flux.functor import FluxFunctor
+        from agents.s import MemoryStateBackend, StateFunctor
 
-        memory: VolatileAgent[dict[str, int]] = VolatileAgent(_state={"count": 0})
+        backend = MemoryStateBackend(initial={"count": 0})
 
         # State(agent) first, then Flux
-        state_agent = StateMonadFunctor.lift(DoubleAgent(), memory=memory)
+        state_agent = StateFunctor.lift(DoubleAgent(), backend=backend)
         flux_agent = FluxFunctor.lift(state_agent)
 
         # Create source stream

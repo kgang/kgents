@@ -32,7 +32,7 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, Optional, TypeVar
 
 from agents.a.functor import FunctorRegistry, UniversalFunctor
-from bootstrap.types import Agent, ComposedAgent
+from agents.poly.types import Agent, ComposedAgent
 
 from .eigenvectors import KENT_EIGENVECTORS, KentEigenvectors
 from .persona import PersonaSeed, PersonaState

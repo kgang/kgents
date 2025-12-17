@@ -33,7 +33,7 @@ from datetime import datetime
 from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
 
 from agents.a.functor import FunctorRegistry, UniversalFunctor
-from bootstrap.types import Agent, ComposedAgent
+from agents.poly.types import Agent, ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")

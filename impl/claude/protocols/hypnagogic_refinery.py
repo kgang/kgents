@@ -6,12 +6,12 @@ by analyzing cold memories and compressing/optimizing them.
 
 Components:
 - M-gent: Identifies cold memories (rarely accessed paths)
-- E-gent: Retrieves actual code/data to optimize
+- L-gent: Retrieves actual code/data to optimize
 - R-gent: Compresses/optimizes using DSPy techniques
 
 Process:
 1. IDENTIFY (M-gent): Find cold memories by temperature
-2. RETRIEVE (E-gent): Get actual code/artifacts
+2. RETRIEVE (L-gent): Get actual code/artifacts
 3. REFINE (R-gent): Optimize with constraints (preserve semantics)
 4. APPLY: Apply optimizations with rollback capability
 

@@ -68,6 +68,9 @@ from typing import Any
 from .counter import (
     CounterAgent,
 )
+
+# ARCHIVED: E-gent integration (2025-12-16)
+# These are kept for backwards compatibility but raise NotImplementedError
 from .evolution_integration import (
     EvolutionPipelineValidationReport,
     PipelineStageReport,
@@ -240,7 +243,8 @@ __all__ = [
     "check_monad_right_identity",
     "check_monad_associativity",
     "validate_evolution_pipeline_laws",
-    # E-gent Integration (Cross-pollination T2.6)
+    # E-gent Integration (ARCHIVED 2025-12-16)
+    # Kept for backwards compatibility but raise NotImplementedError
     "PipelineValidationConfig",
     "PipelineStageReport",
     "EvolutionPipelineValidationReport",

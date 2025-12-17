@@ -74,6 +74,7 @@ class BrainStatus:
     coherency_rate: float
     ghosts_healed: int
     storage_path: str
+    storage_backend: str = "sqlite"  # "sqlite" or "postgres"
 
 
 class BrainCrystal:
@@ -98,12 +99,14 @@ class BrainCrystal:
         vector_store: Any | None,
         embedder: Any | None,
         data_dir: Path,
+        storage_backend: str = "sqlite",
     ) -> None:
         """Initialize BrainCrystal with stores."""
         self._relational = relational_store
         self._vector = vector_store
         self._embedder = embedder
         self._data_dir = data_dir
+        self._storage_backend = storage_backend
         self._initialized = False
 
         # Stats
@@ -133,6 +136,16 @@ class BrainCrystal:
             CREATE INDEX IF NOT EXISTS idx_captures_captured_at
             ON captures(captured_at)
         """)
+
+        # Migration: Add access_count column if missing (stigmergic trails)
+        # SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we check first
+        try:
+            await self._relational.execute(
+                "ALTER TABLE captures ADD COLUMN access_count INTEGER DEFAULT 0"
+            )
+        except Exception:
+            # Column already exists
+            pass
 
         # Initialize vector store (load existing vectors from disk)
         if self._vector is not None and hasattr(self._vector, "initialize"):
@@ -170,6 +183,7 @@ class BrainCrystal:
         if concept_id is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             import hashlib
+
             content_hash = hashlib.md5(content.encode()).hexdigest()[:8]
             concept_id = f"capture_{timestamp}_{content_hash}"
 
@@ -290,7 +304,8 @@ class BrainCrystal:
                 SearchResult(
                     concept_id=vec_result.id,
                     content=row["content"],
-                    similarity=1 - vec_result.distance,  # Convert distance to similarity
+                    similarity=1
+                    - vec_result.distance,  # Convert distance to similarity
                     captured_at=row["captured_at"],
                     is_stale=is_stale,
                 )
@@ -306,6 +321,19 @@ class BrainCrystal:
                 self._ghosts_healed += 1
             except Exception:
                 pass
+
+        # Increment access_count for surfaced results (stigmergic trails)
+        # This makes frequently accessed memories "glow brighter"
+        if results:
+            result_ids = [r.concept_id for r in results]
+            for rid in result_ids:
+                try:
+                    await self._relational.execute(
+                        "UPDATE captures SET access_count = COALESCE(access_count, 0) + 1 WHERE id = :id",
+                        {"id": rid},
+                    )
+                except Exception:
+                    pass  # Non-critical, don't fail search
 
         return results
 
@@ -356,7 +384,9 @@ class BrainCrystal:
             "concept_id": row["id"],
             "content": row["content"],
             "captured_at": row["captured_at"],
-            "metadata": json.loads(row["metadata_json"]) if row.get("metadata_json") else None,
+            "metadata": json.loads(row["metadata_json"])
+            if row.get("metadata_json")
+            else None,
         }
 
     async def list_captures(
@@ -379,11 +409,121 @@ class BrainCrystal:
         return [
             {
                 "concept_id": row["id"],
-                "content": row["content"][:100] + "..." if len(row["content"]) > 100 else row["content"],
+                "content": row["content"][:100] + "..."
+                if len(row["content"]) > 100
+                else row["content"],
                 "captured_at": row["captured_at"],
             }
             for row in rows
         ]
+
+    async def surface(
+        self,
+        context: str | None = None,
+        entropy: float = 0.7,
+    ) -> SearchResult | None:
+        """
+        Surface a serendipitous memory from the void.
+
+        The Accursed Share: Pull a random-ish relevant memory that might
+        spark unexpected connections. Higher entropy = more randomness.
+
+        Args:
+            context: Optional context to bias selection (None = fully random)
+            entropy: Randomness factor (0.0 = most relevant, 1.0 = fully random)
+
+        Returns:
+            A single SearchResult or None if brain is empty
+        """
+        import random
+
+        await self._ensure_initialized()
+
+        # Get total count
+        result = await self._relational.fetch_one(
+            "SELECT COUNT(*) as count FROM captures"
+        )
+        total = result["count"] if result else 0
+
+        if total == 0:
+            return None
+
+        if context and self._embedder is not None and self._vector is not None:
+            # Context-biased serendipity: search then randomly pick from results
+            # Higher entropy = sample from more results
+            search_limit = max(5, int(total * entropy * 0.5))
+            candidates = await self.search(context, limit=search_limit, threshold=0.2)
+
+            if candidates:
+                # Weighted random: favor higher similarity but allow surprises
+                weights = [(c.similarity ** (1 - entropy)) for c in candidates]
+                selected = random.choices(candidates, weights=weights, k=1)[0]
+                return selected
+
+        # Fully random: pick any memory
+        random_offset = random.randint(0, max(0, total - 1))
+        row = await self._relational.fetch_one(
+            """
+            SELECT id, content, captured_at FROM captures
+            ORDER BY captured_at DESC
+            LIMIT 1 OFFSET :offset
+            """,
+            {"offset": random_offset},
+        )
+
+        if row is None:
+            return None
+
+        return SearchResult(
+            concept_id=row["id"],
+            content=row["content"],
+            similarity=entropy,  # Use entropy as "surprise" score
+            captured_at=row["captured_at"],
+        )
+
+    async def get_topology_data(
+        self,
+        limit: int = 500,
+    ) -> list[dict[str, Any]]:
+        """
+        Get full topology data including embeddings for 3D visualization.
+
+        Returns:
+            List of captures with id, content preview, embedding, and captured_at
+        """
+        await self._ensure_initialized()
+
+        rows = await self._relational.fetch_all(
+            """
+            SELECT id, content, embedding_json, captured_at FROM captures
+            ORDER BY captured_at DESC
+            LIMIT :limit
+            """,
+            {"limit": limit},
+        )
+
+        result = []
+        for row in rows:
+            embedding = None
+            if row.get("embedding_json"):
+                try:
+                    embedding = json.loads(row["embedding_json"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            result.append(
+                {
+                    "concept_id": row["id"],
+                    "content": row["content"],
+                    "content_preview": row["content"][:100] + "..."
+                    if len(row["content"]) > 100
+                    else row["content"],
+                    "embedding": embedding,
+                    "captured_at": row["captured_at"],
+                }
+            )
+
+        return result
 
     async def status(self) -> BrainStatus:
         """Get brain health status."""
@@ -415,6 +555,7 @@ class BrainCrystal:
             coherency_rate=coherency_rate,
             ghosts_healed=self._ghosts_healed,
             storage_path=str(self._data_dir),
+            storage_backend=self._storage_backend,
         )
 
     async def _get_embedding(self, text: str) -> list[float]:
@@ -453,7 +594,7 @@ class BrainCrystal:
         # Generate character trigrams
         trigrams = []
         for i in range(len(text) - 2):
-            trigrams.append(text[i:i+3])
+            trigrams.append(text[i : i + 3])
 
         # Also add word-level features
         words = text.split()
@@ -478,6 +619,7 @@ class BrainCrystal:
     def _compute_hash(self, content: str) -> str:
         """Compute content hash for staleness detection."""
         import hashlib
+
         return hashlib.md5(content.encode()).hexdigest()
 
     async def close(self) -> None:
@@ -512,14 +654,34 @@ async def _create_brain_crystal() -> BrainCrystal:
     data_dir = _get_brain_data_dir()
 
     # Import stores lazily
-    from protocols.cli.instance_db.providers.sqlite import (
-        SQLiteRelationalStore,
+    from protocols.cli.instance_db.providers import (
         NumpyVectorStore,
+        StorageBackend,
+        create_relational_store,
+        get_current_backend,
     )
 
-    # Create SQLite relational store (Left Hemisphere)
-    db_path = data_dir / "brain.db"
-    relational = SQLiteRelationalStore(db_path, wal_mode=True)
+    # Create relational store - auto-selects Postgres if available, else SQLite
+    # This enables Brain to persist to Postgres in production environments
+    sqlite_path = data_dir / "brain.db"
+    relational = await create_relational_store(
+        backend="auto",
+        sqlite_path=sqlite_path,
+        wal_mode=True,
+    )
+
+    # Determine which backend was selected
+    current_backend = await get_current_backend()
+    import logging
+
+    logger = logging.getLogger(__name__)
+    backend_name = (
+        "postgres" if current_backend == StorageBackend.POSTGRES else "sqlite"
+    )
+    if current_backend == StorageBackend.POSTGRES:
+        logger.info("Brain using PostgreSQL backend")
+    else:
+        logger.info(f"Brain using SQLite backend at {sqlite_path}")
 
     # Create NumPy vector store (Right Hemisphere)
     # Use 128 dimensions (matches our simple embedding fallback)
@@ -531,6 +693,7 @@ async def _create_brain_crystal() -> BrainCrystal:
     try:
         # Try to get L-gent embedder
         from agents.l import create_best_available_embedder
+
         embedder = create_best_available_embedder()
         emb_dimension = getattr(embedder, "dimension", 128)
         # Only use if it provides real embeddings (not TF-IDF which needs fitting)
@@ -550,6 +713,7 @@ async def _create_brain_crystal() -> BrainCrystal:
         vector_store=vector,
         embedder=embedder,
         data_dir=data_dir,
+        storage_backend=backend_name,
     )
 
 

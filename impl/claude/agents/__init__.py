@@ -5,7 +5,9 @@ Each letter represents a distinct agent genus:
 - A-gents: Abstract architectures + Art/Creativity (the skeleton)
 - B-gents: Bio/Scientific discovery
 - C-gents: Category theory (composability)
+- D-gents: Data agents (persistence substrate, WHERE state lives)
 - K-gent: Kent simulacra
+- S-gents: State agents (state threading, HOW state flows)
 - T-gents: Testing agents (verification, perturbation, observation)
 - U-gents: Utility agents (tools, MCP, execution)
 
@@ -31,9 +33,9 @@ See agents.examples for runnable demonstrations.
 # ─────────────────────────────────────────────────────────────────────────────
 # The Skeleton: Agent Base Class
 # ─────────────────────────────────────────────────────────────────────────────
-from bootstrap.types import Agent, ComposedAgent
+from agents.poly.types import Agent, ComposedAgent
 
-from . import a, b, c, k, t, u
+from . import a, b, c, d, k, s, t, u
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Alethic Architecture: Halo Capability Protocol
@@ -111,12 +113,25 @@ from .k import (
     soul_lift,
 )
 
+# ─────────────────────────────────────────────────────────────────────────────
+# S-gent: State Threading
+# ─────────────────────────────────────────────────────────────────────────────
+from .s import (
+    MemoryStateBackend,
+    StateBackend,
+    StateConfig,
+    StatefulAgent,
+    StateFunctor,
+)
+
 __all__ = [
     # Submodules
     "a",
     "b",
     "c",
+    "d",
     "k",
+    "s",
     "t",
     "u",
     # The Skeleton
@@ -164,4 +179,10 @@ __all__ = [
     "Soul",
     "SoulFunctor",
     "soul_lift",
+    # S-gent: State
+    "StateBackend",
+    "StateConfig",
+    "StateFunctor",
+    "StatefulAgent",
+    "MemoryStateBackend",
 ]

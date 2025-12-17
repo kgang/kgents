@@ -12,10 +12,10 @@ import asyncio
 import random
 from typing import TYPE_CHECKING, Generic, Optional, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 if TYPE_CHECKING:
-    from bootstrap.types import ComposedAgent
+    from agents.poly.types import ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -99,6 +99,6 @@ class LatencyAgent(Agent[A, A], Generic[A]):
         Returns:
             Composed agent
         """
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         return ComposedAgent(self, other)

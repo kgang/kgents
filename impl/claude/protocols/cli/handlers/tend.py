@@ -160,15 +160,24 @@ async def _async_tend(
         if verb == "wait":
             target = ""
 
+        # At this point, target is guaranteed to be str (validated above or defaulted)
+        assert target is not None
+
         match verb:
             case "observe":
                 return await _handle_observe(target, observer, json_mode, ctx)
             case "prune":
-                return await _handle_prune(target, reason, tone, observer, json_mode, ctx)
+                return await _handle_prune(
+                    target, reason, tone, observer, json_mode, ctx
+                )
             case "graft":
-                return await _handle_graft(target, reason, tone, observer, json_mode, ctx)
+                return await _handle_graft(
+                    target, reason, tone, observer, json_mode, ctx
+                )
             case "water":
-                return await _handle_water(target, reason, tone, observer, json_mode, ctx)
+                return await _handle_water(
+                    target, reason, tone, observer, json_mode, ctx
+                )
             case "rotate":
                 return await _handle_rotate(target, reason, observer, json_mode, ctx)
             case "wait":
@@ -201,8 +210,8 @@ async def _handle_observe(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle OBSERVE gesture - perceive without changing."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import observe, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, observe
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -235,15 +244,15 @@ async def _handle_observe(
     else:
         emoji = gesture.verb.emoji
         lines = [
-            f"",
+            "",
             f"  {emoji} OBSERVE: {target}",
-            f"",
+            "",
         ]
         for obs in result.reasoning_trace:
             lines.append(f"    {obs}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Entropy cost: {gesture.entropy_cost:.3f}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 
@@ -259,8 +268,8 @@ async def _handle_prune(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle PRUNE gesture - mark for removal."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import prune, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, prune
 
     if not reason:
         _emit_output(
@@ -305,24 +314,24 @@ async def _handle_prune(
         emoji = gesture.verb.emoji
         status = "Accepted" if result.accepted else "Rejected"
         lines = [
-            f"",
+            "",
             f"  {emoji} PRUNE: {target}",
-            f"",
+            "",
             f"  Reason: {reason}",
             f"  Tone:   {tone:.0%} (definitiveness)",
             f"  Status: {status}",
-            f"",
+            "",
         ]
         for trace in result.reasoning_trace:
             lines.append(f"    {trace}")
         if result.changes:
-            lines.append(f"")
-            lines.append(f"  Changes:")
+            lines.append("")
+            lines.append("  Changes:")
             for change in result.changes:
                 lines.append(f"    - {change}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Entropy cost: {gesture.entropy_cost:.3f}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 
@@ -338,8 +347,8 @@ async def _handle_graft(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle GRAFT gesture - add something new."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import graft, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, graft
 
     if not reason:
         _emit_output(
@@ -384,24 +393,24 @@ async def _handle_graft(
         emoji = gesture.verb.emoji
         status = "Accepted" if result.accepted else "Rejected"
         lines = [
-            f"",
+            "",
             f"  {emoji} GRAFT: {target}",
-            f"",
+            "",
             f"  Addition: {reason}",
             f"  Tone:     {tone:.0%} (definitiveness)",
             f"  Status:   {status}",
-            f"",
+            "",
         ]
         for trace in result.reasoning_trace:
             lines.append(f"    {trace}")
         if result.changes:
-            lines.append(f"")
-            lines.append(f"  Changes:")
+            lines.append("")
+            lines.append("  Changes:")
             for change in result.changes:
                 lines.append(f"    - {change}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Entropy cost: {gesture.entropy_cost:.3f}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 
@@ -417,8 +426,8 @@ async def _handle_water(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle WATER gesture - nurture via TextGRAD."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import water, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, water
 
     if not feedback:
         _emit_output(
@@ -468,25 +477,25 @@ async def _handle_water(
         emoji = gesture.verb.emoji
         status = "Applied" if result.accepted else "Rejected"
         lines = [
-            f"",
+            "",
             f"  {emoji} WATER: {target}",
-            f"",
+            "",
             f"  Feedback:      {feedback}",
             f"  Tone:          {tone:.0%}",
             f"  Learning Rate: {learning_rate:.2f} (tone x plasticity)",
             f"  Status:        {status}",
-            f"",
+            "",
         ]
         for trace in result.reasoning_trace:
             lines.append(f"    {trace}")
         if result.synergies_triggered:
-            lines.append(f"")
-            lines.append(f"  Synergies triggered:")
+            lines.append("")
+            lines.append("  Synergies triggered:")
             for syn in result.synergies_triggered:
                 lines.append(f"    - {syn}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Entropy cost: {gesture.entropy_cost:.3f}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 
@@ -501,8 +510,8 @@ async def _handle_rotate(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle ROTATE gesture - change perspective."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import rotate, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, rotate
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -536,17 +545,17 @@ async def _handle_rotate(
     else:
         emoji = gesture.verb.emoji
         lines = [
-            f"",
+            "",
             f"  {emoji} ROTATE: {target}",
-            f"",
+            "",
             f"  Observer: {observer}",
-            f"",
+            "",
         ]
         for trace in result.reasoning_trace:
             lines.append(f"    {trace}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Entropy cost: {gesture.entropy_cost:.3f}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 
@@ -559,8 +568,8 @@ async def _handle_wait(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle WAIT gesture - intentional pause."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
-    from protocols.gardener_logos.tending import wait, apply_gesture
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+    from protocols.gardener_logos.tending import apply_gesture, wait
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -584,15 +593,15 @@ async def _handle_wait(
     else:
         emoji = gesture.verb.emoji
         lines = [
-            f"",
+            "",
             f"  {emoji} WAIT",
-            f"",
+            "",
         ]
         for trace in result.reasoning_trace:
             lines.append(f"    {trace}")
-        lines.append(f"")
-        lines.append(f"  Entropy cost: 0.000 (waiting is free)")
-        lines.append(f"")
+        lines.append("")
+        lines.append("  Entropy cost: 0.000 (waiting is free)")
+        lines.append("")
 
         _emit_output("\n".join(lines), output, ctx)
 

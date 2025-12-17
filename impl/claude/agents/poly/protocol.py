@@ -409,16 +409,16 @@ def to_bootstrap_agent(poly: PolyAgent[S, A, B]) -> Any:
     Convert a PolyAgent to a bootstrap Agent-compatible wrapper.
 
     This enables polynomial agents to work with existing code expecting
-    the bootstrap.types.Agent interface.
+    the Agent[A, B] interface.
 
-    Note: Returns Any to avoid circular import with bootstrap.types.
+    Note: Returns Any to avoid circular import with types module.
 
     Example:
         >>> poly = from_function("doubler", lambda x: x * 2)
         >>> agent = to_bootstrap_agent(poly)
         >>> await agent.invoke(21)  # Returns 42
     """
-    from bootstrap.types import Agent as BootstrapAgent
+    from .types import Agent as BootstrapAgent
 
     class PolyAgentWrapper(BootstrapAgent[A, B]):
         """Wrapper that adapts PolyAgent to bootstrap Agent interface."""

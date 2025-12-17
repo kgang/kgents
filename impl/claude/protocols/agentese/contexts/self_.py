@@ -31,13 +31,23 @@ if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
 # Import from submodules
-from .self_grow import SelfGrowResolver, create_self_grow_resolver
-from .self_judgment import CriticsLoop, Critique, RefinedArtifact
-from .self_memory import (
-    MEMORY_AFFORDANCES,
-    MemoryCartographyNode,
-    MemoryGhostNode,
-    MemoryNode,
+from .self_bus import (
+    BUS_AFFORDANCES,
+    BusNode,
+    create_bus_resolver,
+)
+
+# Town Citizen integration (Phase 3 Crown Jewels)
+from .self_citizen import (
+    CITIZEN_AFFORDANCES,
+    CITIZEN_MEMORY_AFFORDANCES,
+    CITIZEN_PERSONALITY_AFFORDANCES,
+    CitizenMemoryNode,
+    CitizenNode,
+    CitizenPersonalityNode,
+    create_citizen_memory_node,
+    create_citizen_node,
+    create_citizen_personality_node,
 )
 
 # Data architecture rewrite (Phase 2)
@@ -46,12 +56,31 @@ from .self_data import (
     DataNode,
     create_data_resolver,
 )
-from .self_bus import (
-    BUS_AFFORDANCES,
-    BusNode,
-    create_bus_resolver,
+
+# F-gent Flow integration (Phase 7)
+from .self_flow import (
+    FLOW_AFFORDANCES,
+    ChatFlowNode,
+    CollaborationFlowNode,
+    FlowNode,
+    ResearchFlowNode,
+    create_flow_resolver,
+)
+from .self_grow import SelfGrowResolver, create_self_grow_resolver
+from .self_judgment import CriticsLoop, Critique, RefinedArtifact
+from .self_memory import (
+    MEMORY_AFFORDANCES,
+    MemoryCartographyNode,
+    MemoryGhostNode,
+    MemoryNode,
 )
 from .self_semaphore import SemaphoreNode
+
+# V-gent Vector integration (Phase 7)
+from .self_vector import (
+    VECTOR_AFFORDANCES,
+    VectorNode,
+)
 from .vitals import VitalsContextResolver, create_vitals_resolver
 
 # Re-export for backwards compatibility
@@ -74,6 +103,26 @@ __all__ = [
     "BUS_AFFORDANCES",
     "create_data_resolver",
     "create_bus_resolver",
+    # F-gent Flow integration (Phase 7)
+    "FlowNode",
+    "ChatFlowNode",
+    "ResearchFlowNode",
+    "CollaborationFlowNode",
+    "FLOW_AFFORDANCES",
+    "create_flow_resolver",
+    # V-gent Vector integration (Phase 7)
+    "VectorNode",
+    "VECTOR_AFFORDANCES",
+    # Town Citizen integration (Phase 3 Crown Jewels)
+    "CitizenNode",
+    "CitizenMemoryNode",
+    "CitizenPersonalityNode",
+    "CITIZEN_AFFORDANCES",
+    "CITIZEN_MEMORY_AFFORDANCES",
+    "CITIZEN_PERSONALITY_AFFORDANCES",
+    "create_citizen_node",
+    "create_citizen_memory_node",
+    "create_citizen_personality_node",
     # Resolver
     "SelfContextResolver",
     # Factory
@@ -116,6 +165,12 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
     # Data architecture rewrite (Phase 2)
     "data": DATA_AFFORDANCES,
     "bus": BUS_AFFORDANCES,
+    # F-gent Flow integration (Phase 7)
+    "flow": FLOW_AFFORDANCES,
+    # V-gent Vector integration (Phase 7)
+    "vector": VECTOR_AFFORDANCES,
+    # Town Citizen integration (Phase 3 Crown Jewels)
+    "citizen": CITIZEN_AFFORDANCES,
 }
 
 
@@ -770,6 +825,13 @@ class SelfContextResolver:
     _dgent_new: Any = None  # New simplified D-gent (DgentProtocol)
     _data_bus: Any = None  # DataBus for reactive events
 
+    # F-gent Flow integration (Phase 7)
+    _flow: FlowNode | None = None
+
+    # V-gent Vector integration (Phase 7)
+    _vgent: Any = None  # VgentProtocol from agents.v
+    _vector: VectorNode | None = None
+
     # Singleton nodes for self context
     _memory: MemoryNode | None = None
     _capabilities: CapabilitiesNode | None = None
@@ -802,6 +864,10 @@ class SelfContextResolver:
         self._bus = create_bus_resolver(bus=self._data_bus)
         self._vitals_resolver = create_vitals_resolver()
         self._grow_resolver = create_self_grow_resolver()
+        # F-gent Flow integration (Phase 7)
+        self._flow = create_flow_resolver()
+        # V-gent Vector integration (Phase 7)
+        self._vector = VectorNode(_vgent=self._vgent)
 
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
@@ -870,6 +936,23 @@ class SelfContextResolver:
             case "bus":
                 # self.bus.* → BusNode for DataBus operations
                 return self._bus or BusNode()
+            # F-gent Flow integration (Phase 7)
+            case "flow":
+                # self.flow.* → FlowNode for chat/research/collaboration
+                flow_node = self._flow or create_flow_resolver()
+                if rest:
+                    sub_holon = rest[0]
+                    if sub_holon == "chat":
+                        return ChatFlowNode(_parent_flow=flow_node)
+                    elif sub_holon == "research":
+                        return ResearchFlowNode(_parent_flow=flow_node)
+                    elif sub_holon == "collaboration":
+                        return CollaborationFlowNode(_parent_flow=flow_node)
+                return flow_node
+            # V-gent Vector integration (Phase 7)
+            case "vector":
+                # self.vector.* → VectorNode for vector operations
+                return self._vector or VectorNode()
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)
@@ -899,6 +982,8 @@ def create_self_resolver(
     # Data architecture rewrite (Phase 2)
     dgent_new: Any = None,
     data_bus: Any = None,
+    # V-gent Vector integration (Phase 7)
+    vgent: Any = None,
 ) -> SelfContextResolver:
     """
     Create a SelfContextResolver with optional integrations.
@@ -920,6 +1005,7 @@ def create_self_resolver(
         embedder: L-gent Embedder for semantic embeddings (Session 4)
         dgent_new: New simplified D-gent (DgentProtocol from data-architecture-rewrite)
         data_bus: DataBus for reactive data events
+        vgent: V-gent backend (VgentProtocol from agents.v) for vector operations
 
     Returns:
         Configured SelfContextResolver
@@ -945,5 +1031,7 @@ def create_self_resolver(
     # Data architecture rewrite (Phase 2)
     resolver._dgent_new = dgent_new
     resolver._data_bus = data_bus
+    # V-gent Vector integration (Phase 7)
+    resolver._vgent = vgent
     resolver.__post_init__()  # Reinitialize with integrations
     return resolver

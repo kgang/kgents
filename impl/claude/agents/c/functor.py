@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Callable, Generic, Optional, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

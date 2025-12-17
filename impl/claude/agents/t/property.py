@@ -15,7 +15,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, List, Optional, Tuple, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")  # Input type
 B = TypeVar("B")  # Output type

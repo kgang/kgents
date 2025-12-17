@@ -6,7 +6,7 @@ Each domain operad extends AGENT_OPERAD with specialized operations:
 - PARSE_OPERAD: P-gent confidence, repair
 - REALITY_OPERAD: J-gent classification, collapse
 - MEMORY_OPERAD: D-gent persistence, recall, forget
-- EVOLUTION_OPERAD: E-gent mutation, selection, convergence
+- EVOLUTION_OPERAD: Generic evolution (mutation, selection, convergence)
 - NARRATIVE_OPERAD: N-gent chronicle, branch, merge
 """
 
@@ -56,7 +56,7 @@ __all__ = [
     # Memory (D-gent)
     "MEMORY_OPERAD",
     "create_memory_operad",
-    # Evolution (E-gent)
+    # Evolution (generic, E-gent archived)
     "EVOLUTION_OPERAD",
     "create_evolution_operad",
     # Narrative (N-gent)

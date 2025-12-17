@@ -25,7 +25,7 @@ from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.strategies.diff_based import (
     DiffBasedParser,
-    create_egent_diff_parser,
+    create_code_diff_parser,
     create_wgent_diff_parser,
 )
 from agents.p.strategies.evolving import (
@@ -67,7 +67,7 @@ __all__ = [
     # Phase 3 Novel Strategies
     "DiffBasedParser",
     "create_wgent_diff_parser",
-    "create_egent_diff_parser",
+    "create_code_diff_parser",
     "ProbabilisticASTParser",
     "ProbabilisticASTNode",
     "query_confident_fields",

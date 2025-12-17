@@ -20,7 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Awaitable, Callable, Generic, Optional, TypeVar
 
-from .types import Agent, FixConfig, FixResult
+from agents.poly.types import Agent, FixConfig, FixResult
 
 A = TypeVar("A")
 

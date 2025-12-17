@@ -130,7 +130,9 @@ recall(persist(x)) ≈ x
 ```
 Persisted data should be recallable.
 
-### Evolution Operad (E-gent)
+### Evolution Operad (ARCHIVED)
+
+> Note: E-gent archived 2025-12-16. This operad preserved for reference.
 
 For teleological evolution.
 

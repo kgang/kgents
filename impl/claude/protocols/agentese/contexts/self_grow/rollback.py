@@ -288,6 +288,8 @@ def create_rollback_node(
     Returns:
         Configured RollbackNode
     """
-    node = RollbackNode(_rollback_tokens=rollback_tokens)
+    node = RollbackNode(
+        _rollback_tokens=rollback_tokens if rollback_tokens is not None else {}
+    )
     node.__post_init__()
     return node

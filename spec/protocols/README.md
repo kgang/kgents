@@ -20,6 +20,7 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 
 | Protocol | Purpose | Key Agents | Status |
 |----------|---------|------------|--------|
+| [turn.md](turn.md) | Fixed-point event primitive, causal history | F, N, Ω | Spec v1.0 |
 | [cli.md](cli.md) | Human-agent interface membrane | P, K, O | Spec v1.0 |
 | [cross-pollination.md](cross-pollination.md) | Agent coordination without coupling | W, L, M, K | Spec v1.0 |
 | [mirror.md](mirror.md) | Organizational introspection | P, W, H, O, J | Spec v1.0 |

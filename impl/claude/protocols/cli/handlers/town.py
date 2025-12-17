@@ -22,6 +22,11 @@ Commands:
     kgents town inhabit <citizen>          See through a citizen's eyes
     kgents town intervene "<event>"        Inject a world event
 
+    Phase 3 - Living Town (Persistent Memory):
+    kgents town chat --citizen <name>      Chat with a citizen who remembers
+    kgents town witness                    See what citizens have been up to
+    kgents town gather --topic "<topic>"   Multi-citizen discussion
+
     Notifications (Kent's Motivation Loop):
     kgents town telegram status   Show Telegram notifier status
     kgents town telegram test     Send a test notification
@@ -37,7 +42,9 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
+    from agents.town.citizen import Citizen
     from agents.town.inhabit_session import InhabitSession
+    from agents.town.persistent_memory import PersistentCitizenMemory
     from protocols.cli.reflector import InvocationContext
 
 
@@ -144,6 +151,34 @@ def cmd_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         return _demo(args[1:], ctx)
     elif subcommand == "telegram":
         return _telegram_command(args[1:], ctx)
+    elif subcommand == "chat":
+        # Phase 3: Chat with a citizen who remembers
+        citizen_name = None
+        for i, arg in enumerate(args[1:]):
+            if arg == "--citizen" and i + 2 < len(args):
+                citizen_name = args[i + 2]
+                break
+        if not citizen_name and len(args) > 1:
+            citizen_name = args[1]  # Allow kg town chat <name> shorthand
+        if not citizen_name:
+            _emit("[TOWN] Usage: kgents town chat --citizen <name>", {}, ctx)
+            return 1
+        return _chat_citizen(citizen_name, ctx)
+    elif subcommand == "witness":
+        return _witness_activity(ctx)
+    elif subcommand == "gather":
+        # Phase 3: Multi-citizen discussion
+        topic = None
+        for i, arg in enumerate(args[1:]):
+            if arg == "--topic" and i + 2 < len(args):
+                topic = " ".join(args[i + 2 :]).strip('"')
+                break
+        if not topic and len(args) > 1:
+            topic = " ".join(args[1:]).strip('"')  # Allow kg town gather "topic"
+        if not topic:
+            _emit('[TOWN] Usage: kgents town gather --topic "<topic>"', {}, ctx)
+            return 1
+        return _gather_discussion(topic, ctx)
     elif subcommand == "help":
         _print_help()
         return 0
@@ -1167,6 +1202,663 @@ def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
     _emit("=" * 50, {}, ctx)
 
     return 0
+
+
+# =============================================================================
+# Phase 3: Living Town (Persistent Memory)
+# =============================================================================
+
+
+# Persistent memory storage (singleton for the session)
+_persistent_memories: dict[str, "PersistentCitizenMemory"] = {}
+
+
+async def _get_or_create_memory(
+    citizen: "Citizen",
+) -> "PersistentCitizenMemory":
+    """Get or create persistent memory for a citizen."""
+    from agents.town.persistent_memory import (
+        PersistentCitizenMemory,
+        create_persistent_memory,
+    )
+
+    if citizen.id not in _persistent_memories:
+        _persistent_memories[citizen.id] = await create_persistent_memory(citizen)
+    return _persistent_memories[citizen.id]
+
+
+def _chat_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
+    """
+    Chat with a citizen who remembers past conversations.
+
+    Phase 3 Crown Jewels: Citizens with persistent memory.
+
+    The citizen:
+    - Remembers previous conversations with Kent
+    - Has eigenvector-shaped personality
+    - Can have opinions influenced by memory
+    - Respects Right to Rest
+    """
+    from agents.town.persistent_memory import PersistentCitizenMemory
+
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    citizen = env.get_citizen_by_name(citizen_name)
+
+    if not citizen:
+        _emit(
+            f"[TOWN] Unknown citizen: {citizen_name}",
+            {"error": "unknown_citizen", "name": citizen_name},
+            ctx,
+        )
+        _emit(
+            f"  Available: {', '.join(c.name for c in env.citizens.values())}",
+            {},
+            ctx,
+        )
+        return 1
+
+    # Check if citizen is resting
+    if citizen.is_resting:
+        _emit(
+            f"[TOWN] {citizen_name} is resting. Respect the Right to Rest.",
+            {"error": "citizen_resting", "name": citizen_name},
+            ctx,
+        )
+        return 1
+
+    # Get or create persistent memory
+    async def _init_memory() -> PersistentCitizenMemory:
+        return await _get_or_create_memory(citizen)
+
+    memory = asyncio.run(_init_memory())
+
+    # Show intro
+    _emit(f"\n[CHAT] Conversation with {citizen_name}", {"citizen": citizen_name}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    # Show citizen's state
+    manifest = citizen.manifest(lod=2)
+    _emit(f"  {citizen_name} - {manifest.get('archetype', 'citizen')}", {}, ctx)
+    _emit(f'  "{manifest.get("metaphor", "")}"', {}, ctx)
+
+    # Show recent conversation history (if any)
+    async def _get_history() -> list[Any]:
+        return await memory.get_recent_conversations(limit=3)
+
+    history = asyncio.run(_get_history())
+    if history:
+        _emit("\n  Recent conversation:", {}, ctx)
+        for entry in history[-3:]:
+            speaker = entry.speaker
+            msg_preview = (
+                entry.message[:50] + "..." if len(entry.message) > 50 else entry.message
+            )
+            _emit(f"    {speaker}: {msg_preview}", {}, ctx)
+
+    _emit("\n  Commands:", {}, ctx)
+    _emit("    Type a message to chat", {}, ctx)
+    _emit("    /memory  - See what they remember", {}, ctx)
+    _emit("    /eigenvectors - See their personality", {}, ctx)
+    _emit("    /relationships - See who they know", {}, ctx)
+    _emit("    q - Exit chat", {}, ctx)
+    _emit("", {}, ctx)
+
+    # Chat loop
+    try:
+        while True:
+            user_input = input("  kent> ").strip()
+
+            if not user_input:
+                continue
+
+            if user_input.lower() == "q":
+                _emit("[CHAT] Ending conversation.", {}, ctx)
+                break
+
+            if user_input == "/memory":
+                # Show citizen's memories
+                summary = memory.memory_summary()
+                _emit(f"\n[MEMORY] {citizen_name}'s memories:", summary, ctx)
+                _emit(f"  Graph memories: {summary['graph_memory_size']}", {}, ctx)
+                _emit(f"  Conversations: {summary['conversation_count']}", {}, ctx)
+                if summary["recent_topics"]:
+                    _emit(
+                        f"  Recent topics: {', '.join(summary['recent_topics'])}",
+                        {},
+                        ctx,
+                    )
+                continue
+
+            if user_input == "/eigenvectors":
+                # Show eigenvectors
+                ev = citizen.eigenvectors.to_dict()
+                _emit(f"\n[PERSONALITY] {citizen_name}'s eigenvectors:", {}, ctx)
+                for key, val in ev.items():
+                    bar = _render_bar(val, max_val=1.0, width=10)
+                    _emit(f"  {key}: {bar} {val:.2f}", {}, ctx)
+                continue
+
+            if user_input == "/relationships":
+                # Show relationships
+                _emit(f"\n[RELATIONSHIPS] {citizen_name}'s connections:", {}, ctx)
+                if citizen.relationships:
+                    for other_id, weight in citizen.relationships.items():
+                        other = env.get_citizen_by_id(other_id)
+                        other_name = other.name if other else other_id[:6]
+                        sign = "+" if weight > 0 else ""
+                        _emit(f"  {other_name}: {sign}{weight:.2f}", {}, ctx)
+                else:
+                    _emit("  (no relationships yet)", {}, ctx)
+                continue
+
+            # Process chat message
+            async def _process_chat() -> str:
+                # Store Kent's message
+                await memory.add_conversation(
+                    speaker="kent",
+                    message=user_input,
+                    topic=_infer_topic(user_input),
+                )
+
+                # Generate citizen response based on personality and memory
+                response = _generate_citizen_response(citizen, user_input, memory)
+
+                # Store citizen's response
+                await memory.add_conversation(
+                    speaker=citizen_name.lower(),
+                    message=response,
+                    topic=_infer_topic(user_input),
+                )
+
+                return response
+
+            response = asyncio.run(_process_chat())
+            _emit(f"  {citizen_name}> {response}", {}, ctx)
+
+    except (EOFError, KeyboardInterrupt):
+        _emit("\n[CHAT] Interrupted.", {}, ctx)
+
+    # Save final state
+    async def _save_state() -> None:
+        from agents.town.persistent_memory import save_citizen_state
+
+        await save_citizen_state(citizen, memory)
+
+    asyncio.run(_save_state())
+
+    return 0
+
+
+def _generate_citizen_response(
+    citizen: "Citizen",
+    message: str,
+    memory: "PersistentCitizenMemory",
+) -> str:
+    """
+    Generate a response based on citizen personality and memory.
+
+    Uses LLM for rich personality responses with memory grounding.
+    Falls back to rule-based responses if LLM unavailable.
+    """
+    # Try LLM-powered response first
+    try:
+        response = asyncio.run(_generate_llm_citizen_response(citizen, message, memory))
+        return response
+    except Exception:
+        # Fallback to rule-based on any error
+        return _generate_fallback_response(citizen, message, memory)
+
+
+def _generate_fallback_response(
+    citizen: "Citizen",
+    message: str,
+    memory: "PersistentCitizenMemory",
+) -> str:
+    """
+    Fallback rule-based response when LLM is unavailable.
+    """
+    ev = citizen.eigenvectors
+
+    # Base responses by personality
+    responses = []
+
+    # Check for questions
+    if "?" in message:
+        if ev.curiosity > 0.7:
+            responses.append("That's a fascinating question! Let me think about it...")
+        elif ev.patience > 0.7:
+            responses.append("Hmm, I need to consider that carefully.")
+        else:
+            responses.append("Interesting. I'm not sure.")
+
+    # Check for specific topics
+    message_lower = message.lower()
+    if any(w in message_lower for w in ["hello", "hi", "hey"]):
+        if ev.warmth > 0.7:
+            responses.append("Hello! It's wonderful to see you again.")
+        else:
+            responses.append("Hello.")
+
+    if any(w in message_lower for w in ["think", "feel", "believe"]):
+        # Reference cosmotechnics
+        responses.append(f'As I see it, "{citizen.cosmotechnics.metaphor}"')
+
+    if any(w in message_lower for w in ["remember", "recall", "past"]):
+        if memory.conversations:
+            count = len(memory.conversations)
+            responses.append(f"Yes, I remember our {count} previous conversations...")
+        else:
+            responses.append("This is our first conversation, isn't it?")
+
+    # Default responses based on personality
+    if not responses:
+        if ev.warmth > 0.7 and ev.creativity > 0.5:
+            responses.append(
+                "I appreciate you sharing that with me. It makes me think..."
+            )
+        elif ev.curiosity > 0.7:
+            responses.append("Tell me more about that.")
+        elif ev.trust > 0.7:
+            responses.append("I hear you. That's meaningful.")
+        elif ev.patience > 0.5:
+            responses.append("I understand.")
+        else:
+            responses.append("I see.")
+
+    return responses[0]
+
+
+async def _generate_llm_citizen_response(
+    citizen: "Citizen",
+    message: str,
+    memory: "PersistentCitizenMemory",
+) -> str:
+    """
+    Generate LLM-powered response with personality and memory grounding.
+
+    Uses ClaudeCLIRuntime via K-gent's LLM client.
+
+    Architecture:
+    - System prompt: Archetype template with eigenvector values
+    - User prompt: Conversation context + current message
+    - Temperature: Per-archetype from dialogue_voice
+    """
+    from agents.k.llm import create_llm_client, has_llm_credentials
+    from agents.town.dialogue_voice import (
+        ARCHETYPE_SYSTEM_PROMPTS,
+        ARCHETYPE_TEMPERATURES,
+    )
+
+    # Check if LLM is available
+    if not has_llm_credentials():
+        raise RuntimeError("No LLM credentials available")
+
+    # Build system prompt from archetype template
+    ev = citizen.eigenvectors
+    archetype = citizen.archetype
+
+    # Get archetype prompt template (fallback to Scholar if archetype not found)
+    prompt_template = ARCHETYPE_SYSTEM_PROMPTS.get(
+        archetype, ARCHETYPE_SYSTEM_PROMPTS.get("Scholar", "You are {name}.")
+    )
+
+    system_prompt = prompt_template.format(
+        name=citizen.name,
+        warmth=ev.warmth,
+        curiosity=ev.curiosity,
+        trust=ev.trust,
+        creativity=ev.creativity,
+        patience=ev.patience,
+        resilience=ev.resilience,
+        ambition=ev.ambition,
+        operation="chat",
+    )
+
+    # Build user prompt with conversation context
+    user_prompt_parts = []
+
+    # Add conversation history context (foveation pattern: recent + relevant)
+    recent_convs = await memory.get_recent_conversations(limit=5)
+    if recent_convs:
+        user_prompt_parts.append("Recent conversation with Kent:")
+        for conv in recent_convs[-3:]:  # Last 3 exchanges
+            speaker_label = "Kent" if conv.speaker == "kent" else citizen.name
+            user_prompt_parts.append(f"  {speaker_label}: {conv.message[:200]}")
+        user_prompt_parts.append("")
+
+    # Add any relevant memories (search by message content)
+    message_keywords = [w for w in message.lower().split() if len(w) > 3]
+    if message_keywords:
+        relevant_memories = await memory.recall_by_content(
+            message_keywords[0], k_hops=1
+        )
+        if relevant_memories:
+            user_prompt_parts.append("Relevant memories:")
+            for mem in relevant_memories[:2]:  # Top 2 memories
+                user_prompt_parts.append(f"  - {mem['content'][:150]}")
+            user_prompt_parts.append("")
+
+    # Add cosmotechnics grounding
+    user_prompt_parts.append(f'Your cosmotechnics: "{citizen.cosmotechnics.metaphor}"')
+    user_prompt_parts.append(f'Opacity: "{citizen.cosmotechnics.opacity_statement}"')
+    user_prompt_parts.append("")
+
+    # Add the current message
+    user_prompt_parts.append(f"Kent says: {message}")
+    user_prompt_parts.append("")
+    user_prompt_parts.append(
+        f"Respond as {citizen.name} in 1-3 sentences, staying in character."
+    )
+
+    user_prompt = "\n".join(user_prompt_parts)
+
+    # Get temperature for this archetype
+    temperature = ARCHETYPE_TEMPERATURES.get(archetype, 0.6)
+
+    # Create LLM client and generate response
+    llm = create_llm_client(timeout=60.0, verbose=False)
+    response = await llm.generate(
+        system=system_prompt,
+        user=user_prompt,
+        temperature=temperature,
+        max_tokens=300,  # Keep responses concise
+    )
+
+    return response.text.strip()
+
+
+def _infer_topic(message: str) -> str | None:
+    """Infer a topic from a message."""
+    message_lower = message.lower()
+    topics = {
+        "greeting": ["hello", "hi", "hey", "greetings"],
+        "philosophy": ["think", "believe", "meaning", "life", "truth"],
+        "memory": ["remember", "recall", "past", "history"],
+        "emotion": ["feel", "happy", "sad", "angry", "love"],
+        "work": ["work", "project", "task", "doing"],
+    }
+
+    for topic, keywords in topics.items():
+        if any(kw in message_lower for kw in keywords):
+            return topic
+
+    return None
+
+
+def _witness_activity(ctx: "InvocationContext | None") -> int:
+    """
+    Witness what citizens have been doing.
+
+    Shows activity history, relationship changes, and notable events.
+    """
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+    flux = _simulation_state.get("flux")
+
+    _emit("\n[WITNESS] Town Activity Report", {}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    # Show simulation status
+    if flux:
+        status = flux.get_status()
+        _emit(f"  Day {status['day']} - {status['phase']}", status, ctx)
+        _emit(f"  Total events: {status['total_events']}", {}, ctx)
+
+    # Show citizen activities
+    _emit("\n  Citizen Status:", {}, ctx)
+    for citizen in env.citizens.values():
+        phase_icon = _phase_icon(citizen.phase.name)
+        _emit(
+            f"    {phase_icon} {citizen.name} ({citizen.archetype}) @ {citizen.region}",
+            {},
+            ctx,
+        )
+
+        # Show recent activity from memory if available
+        if citizen.id in _persistent_memories:
+            memory = _persistent_memories[citizen.id]
+            summary = memory.memory_summary()
+            if summary["conversation_count"] > 0:
+                _emit(
+                    f"       - {summary['conversation_count']} conversations with Kent",
+                    {},
+                    ctx,
+                )
+
+        # Show relationships
+        if citizen.relationships:
+            top_rel = sorted(
+                citizen.relationships.items(), key=lambda x: abs(x[1]), reverse=True
+            )[:2]
+            for other_id, weight in top_rel:
+                other = env.get_citizen_by_id(other_id)
+                other_name = other.name if other else other_id[:6]
+                rel_type = "friendly with" if weight > 0.3 else "neutral toward"
+                if weight < -0.3:
+                    rel_type = "tense with"
+                _emit(f"       - {rel_type} {other_name}", {}, ctx)
+
+    # Show notable events from flux trace
+    if flux and hasattr(flux, "trace"):
+        trace = flux.trace
+        recent_events = trace.events[-5:] if hasattr(trace, "events") else []
+        if recent_events:
+            _emit("\n  Recent Events:", {}, ctx)
+            for event in recent_events:
+                _emit(
+                    f"    - {event.message if hasattr(event, 'message') else str(event)[:50]}",
+                    {},
+                    ctx,
+                )
+
+    # Show tension and cooperation
+    _emit("\n  Emergence Metrics:", {}, ctx)
+    _emit(f"    Tension: {env.tension_index():.3f}", {}, ctx)
+    _emit(f"    Cooperation: {env.cooperation_level():.2f}", {}, ctx)
+    _emit(f"    Accursed Surplus: {env.total_accursed_surplus():.2f}", {}, ctx)
+
+    _emit("=" * 50, {}, ctx)
+    return 0
+
+
+def _gather_discussion(topic: str, ctx: "InvocationContext | None") -> int:
+    """
+    Multi-citizen discussion on a topic.
+
+    Gathers available citizens and has them discuss a topic,
+    each contributing from their cosmotechnics perspective.
+    """
+    if "environment" not in _simulation_state:
+        _emit(
+            "[TOWN] No simulation running. Use 'kgents town start' first.",
+            {"error": "not_running"},
+            ctx,
+        )
+        return 1
+
+    env = _simulation_state["environment"]
+
+    # Find available citizens (not resting)
+    available = [c for c in env.citizens.values() if c.is_available]
+
+    if len(available) < 2:
+        _emit(
+            "[TOWN] Not enough citizens available for a gathering (need at least 2).",
+            {"error": "insufficient_citizens", "available": len(available)},
+            ctx,
+        )
+        return 1
+
+    _emit(f'\n[GATHER] Town Discussion: "{topic}"', {"topic": topic}, ctx)
+    _emit("=" * 50, {}, ctx)
+    _emit(f"  {len(available)} citizens gathered:", {}, ctx)
+    for c in available:
+        _emit(f"    - {c.name} ({c.archetype})", {}, ctx)
+    _emit("", {}, ctx)
+
+    # Each citizen contributes based on their cosmotechnics
+    _emit("  Discussion:", {}, ctx)
+
+    for citizen in available:
+        # Generate response based on cosmotechnics and eigenvectors
+        contribution = _generate_discussion_contribution(citizen, topic)
+        _emit(f"\n  {citizen.name} ({citizen.cosmotechnics.name}):", {}, ctx)
+        _emit(f'    "{contribution}"', {}, ctx)
+
+        # Store in memory if persistent memory exists
+        if citizen.id in _persistent_memories:
+            memory = _persistent_memories[citizen.id]
+            asyncio.run(
+                memory.store_memory(
+                    key=f"gather_{_get_current_day()}_{topic[:20]}",
+                    content=f"Discussed '{topic}' with townspeople: {contribution}",
+                    metadata={"type": "gathering", "topic": topic},
+                )
+            )
+
+        # Update relationships (citizens who discuss together become closer)
+        for other in available:
+            if other.id != citizen.id:
+                citizen.update_relationship(other.id, 0.05)
+
+    # Show synthesis
+    _emit("\n  " + "-" * 46, {}, ctx)
+    _emit("  Synthesis:", {}, ctx)
+    synthesis = _synthesize_discussion(available, topic)
+    _emit(f'    "{synthesis}"', {}, ctx)
+
+    _emit("\n  The gathering disperses...", {}, ctx)
+    _emit("=" * 50, {}, ctx)
+
+    return 0
+
+
+def _generate_discussion_contribution(citizen: "Citizen", topic: str) -> str:
+    """Generate a citizen's contribution to a discussion based on their cosmotechnics."""
+    # Try LLM-powered contribution first
+    try:
+        return asyncio.run(_generate_llm_discussion_contribution(citizen, topic))
+    except Exception:
+        # Fallback to rule-based
+        return _generate_fallback_discussion_contribution(citizen, topic)
+
+
+def _generate_fallback_discussion_contribution(citizen: "Citizen", topic: str) -> str:
+    """Fallback rule-based discussion contribution."""
+    cosmo = citizen.cosmotechnics
+    ev = citizen.eigenvectors
+
+    # Base contributions by cosmotechnics
+    contributions = {
+        "gathering": f"I believe we should come together around {topic}. There is strength in congregation.",
+        "construction": f"We need to build something tangible from {topic}. Structure brings clarity.",
+        "exploration": f"Have we considered all angles of {topic}? There may be uncharted territory.",
+        "healing": f"How does {topic} affect our wellbeing? We must tend to the wounds it may cause.",
+        "memory": f"Let us not forget what we've learned before about {topic}. History guides us.",
+        "exchange": f"What value does {topic} create? Fair exchange benefits all.",
+        "cultivation": f"Ideas like {topic} need tending. We must nurture them patiently.",
+        "construction_v2": f"The architecture of {topic} matters. Let me sketch a framework.",
+        "exchange_v2": f"What are the trade-offs in {topic}? Every choice has a cost.",
+        "restoration": f"Can {topic} help us heal what's broken? That's what matters most.",
+        "synthesis_v2": f"I see patterns connecting {topic} to other ideas we've discussed.",
+        "memory_v2": f"I've witnessed how {topic} has evolved. Let me share what I've seen.",
+    }
+
+    base = contributions.get(cosmo.name, f"I have thoughts on {topic}.")
+
+    # Modify based on eigenvectors
+    if ev.creativity > 0.7:
+        base += " Perhaps we can approach this differently..."
+    elif ev.curiosity > 0.7:
+        base += " I want to understand more."
+    elif ev.warmth > 0.7:
+        base += " I care about how this affects everyone."
+
+    return base
+
+
+async def _generate_llm_discussion_contribution(citizen: "Citizen", topic: str) -> str:
+    """
+    Generate LLM-powered contribution to a group discussion.
+
+    Uses the citizen's archetype and cosmotechnics for grounded response.
+    """
+    from agents.k.llm import create_llm_client, has_llm_credentials
+    from agents.town.dialogue_voice import (
+        ARCHETYPE_SYSTEM_PROMPTS,
+        ARCHETYPE_TEMPERATURES,
+    )
+
+    if not has_llm_credentials():
+        raise RuntimeError("No LLM credentials available")
+
+    ev = citizen.eigenvectors
+    archetype = citizen.archetype
+
+    # Get archetype prompt template
+    prompt_template = ARCHETYPE_SYSTEM_PROMPTS.get(
+        archetype, ARCHETYPE_SYSTEM_PROMPTS.get("Scholar", "You are {name}.")
+    )
+
+    system_prompt = prompt_template.format(
+        name=citizen.name,
+        warmth=ev.warmth,
+        curiosity=ev.curiosity,
+        trust=ev.trust,
+        creativity=ev.creativity,
+        patience=ev.patience,
+        resilience=ev.resilience,
+        ambition=ev.ambition,
+        operation="council discussion",
+    )
+
+    user_prompt = f"""A town gathering has been called to discuss: "{topic}"
+
+Your cosmotechnics: "{citizen.cosmotechnics.metaphor}"
+
+Share your perspective on this topic in 1-2 sentences.
+Speak from your unique worldview as a {archetype}.
+Be genuine and thoughtful."""
+
+    temperature = ARCHETYPE_TEMPERATURES.get(archetype, 0.6)
+
+    llm = create_llm_client(timeout=45.0, verbose=False)
+    response = await llm.generate(
+        system=system_prompt,
+        user=user_prompt,
+        temperature=temperature,
+        max_tokens=150,
+    )
+
+    return response.text.strip()
+
+
+def _synthesize_discussion(citizens: list["Citizen"], topic: str) -> str:
+    """Synthesize the discussion from multiple perspectives."""
+    perspectives = [c.cosmotechnics.name for c in citizens]
+    unique = len(set(perspectives))
+
+    if unique >= 4:
+        return f"Many perspectives enriched our understanding of {topic}. The diversity of thought brings wisdom."
+    elif unique >= 2:
+        return f"Different approaches to {topic} complement each other. Together we see more clearly."
+    else:
+        return f"We share a common view on {topic}. Our unity gives us strength."
 
 
 # =============================================================================

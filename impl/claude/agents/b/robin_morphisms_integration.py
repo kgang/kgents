@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from agents.k import PersonaResponse
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 from runtime.base import Runtime
 
 from .hypothesis import HypothesisOutput

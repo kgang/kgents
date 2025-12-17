@@ -18,7 +18,7 @@ Integration:
 - Result monad for permission checks
 
 References:
-- spec/t-gents/tool-use.md - Security specification (Pattern 5)
+- spec/u-gents/tool-use.md - Security specification (Pattern 5)
 - spec/t-gents/README.md - T-gents testing foundations
 """
 
@@ -31,7 +31,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Callable, Optional, TypeVar
 
-from bootstrap.types import Result, err, ok
+from agents.poly.types import Result, err, ok
 
 # Type variables
 A = TypeVar("A")

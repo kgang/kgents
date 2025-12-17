@@ -28,7 +28,7 @@ Integration:
 - P-gent: Parse orchestration outputs
 
 References:
-- spec/t-gents/tool-use.md Phase 6
+- spec/u-gents/tool-use.md Phase 6
 - Category Theory for Computing Science (Barr & Wells)
 """
 
@@ -41,7 +41,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable, Generic, Optional, TypeVar, cast
 
-from bootstrap.types import Result, err, ok
+from agents.poly.types import Result, err, ok
 
 from .core import Tool, ToolError, ToolErrorType, ToolTrace
 

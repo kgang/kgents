@@ -29,7 +29,7 @@ Run:
 
 import asyncio
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 class {class_name}(Agent[str, str]):

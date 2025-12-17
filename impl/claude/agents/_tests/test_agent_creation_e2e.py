@@ -68,15 +68,15 @@ from agents.shared.fixtures_integration import (
     make_sample_source_code,
 )
 
-# Bootstrap imports
-# DNA imports
-from bootstrap.dna import (
-    Constraint,
-)
-
 # Umwelt imports
 from bootstrap.umwelt import (
     Umwelt,
+)
+
+# Bootstrap imports
+# DNA imports
+from protocols.config.dna import (
+    Constraint,
 )
 
 

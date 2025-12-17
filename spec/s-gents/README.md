@@ -1,223 +1,237 @@
-# S-gents: The Scribe
+# S-gents: State Agents
 
-> *"History is written by those who record it."*
+> *"The Symbiont IS the State Monad. S-gent makes this explicit."*
 
-S-gent is the **Session Agent**—a chronicler that maintains structured session memory, providing agents with the "previously on..." context they need to act coherently across turns.
+---
 
-## Bootstrap Derivation
+## Purpose
 
-S-gent is cleanly derivable from bootstrap agents:
+S-gent provides **state threading** for agent computation—the categorical State Monad lifted to the agent domain.
+
+| Concept | Traditional | S-gent |
+|---------|-------------|--------|
+| State Monad | `s -> (a, s)` | `Agent[A, B]` with S threading |
+| StateT | `s -> m (a, s)` | `StatefulAgent[S, A, B]` |
+| Composition | `>>=` (bind) | `>>` (agent composition) |
+
+---
+
+## The Core Insight
+
+**State is orthogonal to persistence.**
+
+- **D-gent**: WHERE state lives (memory, file, database)
+- **S-gent**: HOW state threads through computation
+
+The Symbiont pattern is `S >> D`—state threading backed by persistence.
 
 ```
-S = Ground + Compose
+┌─────────────────────────────────────────────────────────────┐
+│                    THE S-GENT INSIGHT                        │
+│                                                              │
+│  Traditional view:   Agent + Database = Stateful Agent       │
+│                      (couples logic to persistence)          │
+│                                                              │
+│  S-gent view:        Agent ──StateFunctor──▶ StatefulAgent   │
+│                              ↓                               │
+│                      StatefulAgent + D-gent = Symbiont       │
+│                      (orthogonal concerns, clean composition)│
+└─────────────────────────────────────────────────────────────┘
 ```
 
-| Capability | Bootstrap Agent | How |
-|------------|-----------------|-----|
-| Event recording | **Ground** | Factual capture of what happened |
-| Summarization | **Compose** | Compress events into summaries |
-| Relevance filtering | **Judge** | What's worth remembering? |
+---
 
-**No new irreducibles**—S-gent composes existing primitives for session continuity.
+## Theoretical Foundation
 
-## The Scribe Morphism
+### The State Monad
+
+In Haskell:
+```haskell
+newtype State s a = State { runState :: s -> (a, s) }
+```
+
+In kgents:
+```python
+# State monad: (Input, State) → (Output, NewState)
+LogicFunction = Callable[[I, S], tuple[O, S]]
+
+# StateFunctor lifts this to Agent[I, O] with S threading
+```
+
+### StateFunctor as Functor
 
 ```
-S: Event → SessionContext
-```
+StateFunctor[S]: C_Agent → C_Agent
 
 Where:
-- **Event**: Something that happened (tool call, user message, agent response)
-- **SessionContext**: Structured summary useful for next turn
-
-## Core Distinction
-
-| Agent | Memory Type | Scope | Structure |
-|-------|-------------|-------|-----------|
-| **M-gent** | Semantic | Long-term | HoloMap (landmarks, desire lines) |
-| **N-gent** | Narrative | Story | Arcs, events, characters |
-| **D-gent** | Raw | Persistent | Key-value, vector, graph |
-| **S-gent** | Session | Turn-by-turn | Structured context |
-
-S-gent fills the gap between raw D-gent persistence and semantic M-gent memory: **working memory for multi-turn interactions**.
-
-## Session Schema
-
-### Core Data Structures
-
-```python
-@dataclass
-class SessionEntry:
-    """A single recorded event in the session."""
-
-    timestamp: datetime
-    type: Literal["user", "agent", "tool", "error", "note"]
-    content: str
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    # Optional structured fields
-    tool_name: str | None = None
-    tool_result: str | None = None
-    confidence: float | None = None
-
-
-@dataclass
-class SessionContext:
-    """Structured context for the current turn."""
-
-    # Recent history (last N turns)
-    recent_entries: list[SessionEntry]
-
-    # Extracted state
-    entities: dict[str, str]      # Named things mentioned
-    goals: list[str]              # Active user goals
-    decisions: list[str]          # Decisions made this session
-    blockers: list[str]           # Known blockers/issues
-
-    # Compression
-    summary: str                  # One-paragraph session summary
-    turn_count: int
+- Objects: Agent[A, B]
+- Morphisms: Natural transformations
+- S: The state type
 ```
 
-### Entry Types
+StateFunctor lifts agents into stateful computation where state is:
+1. Loaded before each invocation
+2. Threaded through the computation
+3. Saved after each invocation
 
-| Type | Description | Example |
-|------|-------------|---------|
-| `user` | User message | "Add error handling to the API" |
-| `agent` | Agent response | "I'll add try-catch blocks..." |
-| `tool` | Tool invocation + result | "Bash: pytest → 5 tests passed" |
-| `error` | Error encountered | "TypeError: 'NoneType'..." |
-| `note` | Agent self-note | "User prefers verbose output" |
+---
 
-## The Scribe Agent
+## Contents
 
-```python
-class S(Agent[SessionEvent, SessionContext]):
-    """
-    The Scribe.
+| Document | Description |
+|----------|-------------|
+| [state-functor.md](state-functor.md) | The StateFunctor specification |
+| [composition.md](composition.md) | Flux and D-gent composition |
+| [laws.md](laws.md) | Functor laws and verification |
 
-    Mode: Passive (records events, provides context on request)
-    """
+---
 
-    # Session storage
-    entries: list[SessionEntry] = field(default_factory=list)
+## Relationship to Other Agents
 
-    # Extracted state (updated incrementally)
-    entities: dict[str, str] = field(default_factory=dict)
-    goals: list[str] = field(default_factory=list)
-    decisions: list[str] = field(default_factory=list)
-    blockers: list[str] = field(default_factory=list)
+| Agent | Relationship |
+|-------|--------------|
+| **D-gent** | Persistence backend for StateFunctor |
+| **Flux** | Composes as `Flux ∘ State` for streaming stateful agents |
+| **PolyAgent** | StatefulAgent can be lifted to polynomial positions |
+| **K-gent** | Soul state threads through K-gent interactions |
 
-    # Config
-    max_recent_entries: int = 10
-    summarize_threshold: int = 20
+---
 
-    async def record(self, event: SessionEvent) -> None:
-        """Record an event to session memory."""
-        entry = self._to_entry(event)
-        self.entries.append(entry)
+## The Symbiont: Canonical S >> D
 
-        # Extract state incrementally
-        await self._update_entities(entry)
-        await self._update_goals(entry)
-        await self._update_decisions(entry)
-        await self._update_blockers(entry)
-
-        # Compress if needed
-        if len(self.entries) > self.summarize_threshold:
-            await self._compress()
-
-    async def invoke(self, _: None = None) -> SessionContext:
-        """Get current session context."""
-        return SessionContext(
-            recent_entries=self.entries[-self.max_recent_entries:],
-            entities=self.entities,
-            goals=self.goals,
-            decisions=self.decisions,
-            blockers=self.blockers,
-            summary=await self._generate_summary(),
-            turn_count=len(self.entries)
-        )
-```
-
-## Context Injection Pattern
-
-S-gent provides context that other agents can use:
+The Symbiont pattern (`spec/d-gents/symbiont.md`) IS `StateFunctor.lift_logic` with a D-gent backend:
 
 ```python
-async def agent_with_session_memory(
-    user_message: str,
-    s_gent: S,
-    inner_agent: Agent[str, str]
-) -> str:
-    # Get session context
-    context = await s_gent.get_context_for_prompt()
+# These are equivalent:
+symbiont = Symbiont(logic_fn, dgent_memory)
 
-    # Inject into prompt
-    enriched_prompt = f"""
-Session Context:
-{context}
-
-User: {user_message}
-"""
-
-    # Record user message
-    await s_gent.record(SessionEvent(type="user", content=user_message))
-
-    # Get response
-    response = await inner_agent.invoke(enriched_prompt)
-
-    # Record response
-    await s_gent.record(SessionEvent(type="agent", content=response))
-
-    return response
+stateful = StateFunctor(
+    state_type=S,
+    backend=dgent_memory,
+).lift_logic(logic_fn)
 ```
 
-## Integration with Hippocampus
+Symbiont is the **canonical composition** of S-gent (state threading) and D-gent (persistence).
 
-S-gent can flush to Hippocampus when session ends:
+---
+
+## Quick Start
+
+### Pattern 1: Basic State Threading
 
 ```python
-async def end_session(s_gent: S, hippocampus: Hippocampus) -> None:
-    """Flush session memory to Hippocampus for long-term storage."""
-    context = await s_gent.invoke()
+from agents.d.state_functor import StateFunctor
+from agents.d.backends import SQLiteBackend
 
-    # Create signal for each decision worth remembering
-    for decision in context.decisions:
-        await hippocampus.remember(Signal(
-            signal_type="session.decision",
-            data={"decision": decision, "session_summary": context.summary}
-        ))
+state_functor = StateFunctor(
+    state_type=ConversationState,
+    backend=SQLiteBackend("conversations.db"),
+    initial_state=ConversationState(history=[]),
+)
 
-    # Clear session
-    s_gent.entries.clear()
+def chat_logic(message: str, state: ConversationState) -> tuple[str, ConversationState]:
+    new_history = state.history + [f"User: {message}"]
+    response = generate_response(new_history)
+    return response, ConversationState(history=new_history + [f"Bot: {response}"])
+
+chat_agent = state_functor.lift_logic(chat_logic)
+response = await chat_agent.invoke("Hello!")  # State threaded automatically
 ```
 
-## Anti-Patterns
+### Pattern 2: Flux(State(agent))
 
-S-gent must **never**:
+```python
+FluxState = StateFunctor.compose_flux(state_functor)
+flux_stateful = FluxState(process_agent)
 
-1. ❌ Store sensitive data without user consent
-2. ❌ Become a required dependency (agents should work without it)
-3. ❌ Replace M-gent for long-term memory (sessions are bounded)
-4. ❌ Control agent execution (it records, doesn't orchestrate)
-5. ❌ Grow unboundedly (compression is mandatory)
+async for result in flux_stateful.start(event_source):
+    print(result)  # Each event processed with state threaded
+```
 
-## Principles Alignment
+### Pattern 3: Typed State from Alembic
 
-| Principle | How S-gent Satisfies |
-|-----------|---------------------|
-| **Tasteful** | Does one thing: maintain session context |
-| **Curated** | Four extracted state types cover essential context |
-| **Ethical** | Makes conversation history transparent |
-| **Joy-Inducing** | Scribe metaphor gives personality |
-| **Composable** | Provides context as input—any agent can use it |
-| **Heterarchical** | Passive (records, doesn't control) |
-| **Generative** | Derivable from Ground + Compose |
+```python
+# Use TableAdapter for typed state backed by Alembic
+crystal_state = StateFunctor.from_table_adapter(
+    adapter=TableAdapter(Crystal, session_factory),
+    initial_state=Crystal(id="session_crystal", tags=[]),
+)
+crystal_agent = crystal_state.lift(analysis_agent)
+```
+
+---
+
+## AGENTESE Paths
+
+S-gent does not expose direct AGENTESE paths. State threading is implicit in agent composition. Access state through:
+
+- `self.data.*` (D-gent) for persisted state
+- Agent invocation for threaded state
+
+---
+
+## Design Principles
+
+### Separation of Concerns
+
+| Concern | Owner |
+|---------|-------|
+| State threading | S-gent (StateFunctor) |
+| Persistence | D-gent (DgentProtocol) |
+| Pure logic | User's logic function |
+
+### Functor Laws
+
+StateFunctor is a legitimate functor:
+
+| Law | Statement | Verification |
+|-----|-----------|--------------|
+| Identity | `StateFunctor.lift(Id) ≅ Id` | test_state_identity_law |
+| Composition | `lift(f >> g) ≅ lift(f) >> lift(g)` | test_state_composition_law |
+
+### Composition Hierarchy
+
+```
+Flux ∘ State ∘ D-gent
+
+Level 3: Flux        — Continuous event processing
+Level 2: State       — State threading (S-gent)
+Level 1: D-gent      — Persistence substrate
+Level 0: Pure logic  — (I, S) → (O, S)
+```
+
+---
+
+## Anti-patterns
+
+- **State without persistence**: Use D-gent backend, not in-memory only
+- **Bypassing state loading**: Always go through StatefulAgent.invoke()
+- **Mutable state in logic**: Logic function must be pure `(A, S) → (B, S)`
+- **Coupling logic to persistence**: Let S-gent handle threading, D-gent handle storage
+
+---
+
+## Implementation Location
+
+```
+impl/claude/agents/d/
+├── state_functor.py     # StateFunctor implementation
+├── symbiont.py          # Symbiont (S >> D composition)
+└── _tests/
+    └── test_state_functor.py  # Functor law verification
+```
+
+---
 
 ## See Also
 
-- [bootstrap.md](../bootstrap.md) - Ground and Compose primitives
-- [m-gents/](../m-gents/) - Long-term holographic memory
-- [d-gents/](../d-gents/) - Raw persistence
-- [protocols/cli/instance_db/hippocampus.py](../../protocols/cli/instance_db/hippocampus.py) - Short-term buffer
+- [state-functor.md](state-functor.md) — Full StateFunctor specification
+- [composition.md](composition.md) — Composition patterns with Flux and D-gent
+- [laws.md](laws.md) — Functor laws and verification approach
+- [../d-gents/symbiont.md](../d-gents/symbiont.md) — The canonical S >> D pattern
+- [../d-gents/dual-track.md](../d-gents/dual-track.md) — Dual-track persistence architecture
+- [../c-gents/functor-catalog.md](../c-gents/functor-catalog.md) — Functor catalog (§14: State)
+
+---
+
+*"State threads through computation like a river through landscape. D-gent is the riverbed. S-gent is the flow."*

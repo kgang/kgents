@@ -117,7 +117,7 @@ from .compression_economy import (
     create_zipper_budget,
 )
 
-# E-gent Integration (Evolution Economics)
+# Evolution Economics (E-gent archived 2025-12-16, module kept for utility)
 from .egent_integration import (
     # Prediction Market
     BetOutcome,
@@ -636,7 +636,7 @@ __all__ = [
     "benchmark_jit_speedup",
     "create_hf_tongue_builder",
     "estimate_jit_value",
-    # E-gent Integration (Evolution Economics)
+    # Evolution Economics (E-gent archived 2025-12-16, module kept for utility)
     "BetOutcome",
     "MutationBet",
     "MarketQuote",

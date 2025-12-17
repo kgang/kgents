@@ -52,7 +52,6 @@ qa/
 ├── README.md            # This file
 └── witnesses/           # Witness scripts by genus
     ├── __init__.py
-    ├── e_gent_witness.py    # E-gent thermodynamic evolution
     ├── b_gent_witness.py    # B-gent economics (future)
     ├── l_gent_witness.py    # L-gent semantics (future)
     └── ...
@@ -89,13 +88,13 @@ class Witness(Protocol):
 
 ```bash
 # Run a single witness
-python -m impl.claude.qa.witnesses.e_gent_witness
+python -m impl.claude.qa.witnesses.<genus>_gent_witness
 
 # Run all witnesses (future)
 python -m impl.claude.qa --all
 
 # Run with verbose output
-python -m impl.claude.qa.witnesses.e_gent_witness --verbose
+python -m impl.claude.qa.witnesses.<genus>_gent_witness --verbose
 ```
 
 ## Witness vs Test: When to Use Each

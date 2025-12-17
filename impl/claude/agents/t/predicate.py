@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Generic, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 

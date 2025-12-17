@@ -2,18 +2,22 @@
 Test fixtures for new M-gent tests.
 
 Provides Memory, AssociativeMemory, and DataBus fixtures.
+
+V-gent Integration (Phase 5):
+    - vgent_memory_backend: In-memory V-gent backend
+    - vgent_associative_memory: AssociativeMemory with V-gent integration
 """
 
 from __future__ import annotations
 
-import pytest
 from typing import AsyncGenerator
 
+import pytest
 from agents.d.backends.memory import MemoryBackend
 from agents.d.bus import DataBus, get_data_bus, reset_data_bus
-from agents.m.memory import Memory, Lifecycle, simple_embedding
 from agents.m.associative import AssociativeMemory
-
+from agents.m.memory import Lifecycle, Memory, simple_embedding
+from agents.v import MemoryVectorBackend
 
 # === Memory Fixtures ===
 
@@ -109,3 +113,51 @@ async def populated_memory(
         metadata={"topic": "ai"},
     )
     return associative_memory
+
+
+# === V-gent Integration Fixtures ===
+
+
+@pytest.fixture
+def vgent_memory_backend() -> MemoryVectorBackend:
+    """In-memory V-gent backend for testing.
+
+    Uses dimension=64 to match HashEmbedder default.
+    """
+    return MemoryVectorBackend(dimension=64)
+
+
+@pytest.fixture
+async def vgent_associative_memory(
+    memory_backend: MemoryBackend,
+    vgent_memory_backend: MemoryVectorBackend,
+) -> AssociativeMemory:
+    """AssociativeMemory with V-gent integration."""
+    return await AssociativeMemory.create_with_vgent(
+        dgent=memory_backend,
+        vgent=vgent_memory_backend,
+    )
+
+
+@pytest.fixture
+async def populated_vgent_memory(
+    vgent_associative_memory: AssociativeMemory,
+) -> AssociativeMemory:
+    """V-gent-backed AssociativeMemory with sample memories."""
+    await vgent_associative_memory.remember(
+        b"Python is a programming language",
+        metadata={"topic": "programming"},
+    )
+    await vgent_associative_memory.remember(
+        b"JavaScript runs in browsers",
+        metadata={"topic": "programming"},
+    )
+    await vgent_associative_memory.remember(
+        b"The quick brown fox jumps",
+        metadata={"topic": "animals"},
+    )
+    await vgent_associative_memory.remember(
+        b"Machine learning uses neural networks",
+        metadata={"topic": "ai"},
+    )
+    return vgent_associative_memory

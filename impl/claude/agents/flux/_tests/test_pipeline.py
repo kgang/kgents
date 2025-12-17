@@ -6,7 +6,7 @@ from typing import Any, AsyncIterator
 import pytest
 from agents.flux import Flux, FluxPipeline, pipeline
 from agents.flux.errors import FluxPipelineError
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 # Test fixtures

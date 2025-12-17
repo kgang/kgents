@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Protocol, runtime_checkabl
 
 from agents.flux.agent import FluxAgent
 from agents.flux.config import FluxConfig
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 if TYPE_CHECKING:
     pass

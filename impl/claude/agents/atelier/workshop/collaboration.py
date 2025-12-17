@@ -35,6 +35,7 @@ class CollaborationMode(Enum):
     ENSEMBLE = "ensemble"
     REFINEMENT = "refinement"
     CHAIN = "chain"
+    EXQUISITE = "exquisite"  # Exquisite corpse: limited visibility handoffs
 
 
 @dataclass
@@ -80,6 +81,9 @@ class Collaboration:
                 yield event
         elif self.mode == CollaborationMode.CHAIN:
             async for event in self._chain(commission):
+                yield event
+        elif self.mode == CollaborationMode.EXQUISITE:
+            async for event in self._exquisite(commission):
                 yield event
 
     async def _duet(self, commission: Commission) -> AsyncIterator[AtelierEvent]:
@@ -351,5 +355,130 @@ class Collaboration:
                 elif event.event_type == AtelierEventType.ERROR:
                     return
 
+    async def _exquisite(self, commission: Commission) -> AsyncIterator[AtelierEvent]:
+        """
+        Exquisite Corpse: Limited visibility handoffs.
 
-__all__ = ["Collaboration", "CollaborationMode", "CollaborationResult"]
+        Each artisan only sees the "edge" (last portion) of the previous work,
+        creating surprising continuations. Inspired by the Surrealist game.
+
+        Flow: A creates → B sees only last 10% → B continues → C sees only B's last 10% → ...
+
+        The visibility_ratio can be customized in commission context.
+        """
+        if not self.artisans:
+            yield AtelierEvent(
+                event_type=AtelierEventType.ERROR,
+                artisan="Collaboration",
+                commission_id=commission.id,
+                message="Exquisite corpse requires at least 1 artisan",
+            )
+            return
+
+        # Default visibility: see only last 10% of previous work
+        visibility_ratio = commission.context.get("visibility_ratio", 0.10)
+
+        yield AtelierEvent(
+            event_type=AtelierEventType.CONTEMPLATING,
+            artisan="Collaboration",
+            commission_id=commission.id,
+            message=f"Beginning exquisite corpse with {len(self.artisans)} artisans (visibility: {int(visibility_ratio * 100)}%)",
+        )
+
+        current_commission = commission
+        all_pieces: list[Piece] = []
+        full_content_parts: list[str] = []  # Track full content for final reveal
+
+        for i, artisan in enumerate(self.artisans):
+            is_last = i == len(self.artisans) - 1
+
+            async for event in artisan.stream(current_commission):
+                yield event
+                if event.event_type == AtelierEventType.PIECE_COMPLETE:
+                    piece = Piece.from_dict(event.data["piece"])
+                    all_pieces.append(piece)
+                    full_content_parts.append(f"[{artisan.name}]\n{piece.content}")
+
+                    if not is_last:
+                        # Extract the visible edge for next artisan
+                        visible_edge = _extract_edge(
+                            str(piece.content), visibility_ratio
+                        )
+
+                        # Prepare next commission with limited visibility
+                        current_commission = Commission(
+                            request=f"Continue from this fragment (you can only see the edge of what came before):\n\n---\n{visible_edge}\n---\n\n{commission.request}",
+                            patron=commission.patron,
+                            context={
+                                "source_piece_id": piece.id,
+                                "exquisite_position": i + 1,
+                                "collaboration": "exquisite",
+                                "visibility_ratio": visibility_ratio,
+                            },
+                        )
+                elif event.event_type == AtelierEventType.ERROR:
+                    return
+
+        # Create final merged piece with reveal
+        if all_pieces:
+            # The exquisite corpse reveals the full creation
+            merged_content = "\n\n✧ ✧ ✧\n\n".join(full_content_parts)
+
+            final_piece = Piece(
+                content=merged_content,
+                artisan="Exquisite Corpse",
+                commission_id=commission.id,
+                form="exquisite_corpse",
+                provenance=Provenance(
+                    interpretation=f"Exquisite corpse with {len(all_pieces)} contributors, each seeing only {int(visibility_ratio * 100)}% of the previous",
+                    considerations=[
+                        f"{p.artisan} contributed: {str(p.content)[:50]}..."
+                        for p in all_pieces
+                    ],
+                    choices=[
+                        Choice(
+                            decision="Limited visibility handoffs",
+                            reason="Surrealist technique for unexpected continuations",
+                            alternatives=[
+                                "Full visibility (chain mode)",
+                                "No visibility (parallel)",
+                            ],
+                        )
+                    ],
+                    inspirations=[p.id for p in all_pieces],
+                ),
+            )
+
+            yield AtelierEvent(
+                event_type=AtelierEventType.PIECE_COMPLETE,
+                artisan="Exquisite Corpse",
+                commission_id=commission.id,
+                message=f"✧ Exquisite corpse revealed! {len(all_pieces)} artisans contributed",
+                data={"piece": final_piece.to_dict()},
+            )
+
+
+def _extract_edge(content: str, ratio: float = 0.10) -> str:
+    """
+    Extract the visible "edge" of content for exquisite corpse mode.
+
+    For text: returns the last N% of characters/lines.
+    The extraction preserves line boundaries when possible.
+    """
+    if not content:
+        return ""
+
+    lines = content.split("\n")
+
+    if len(lines) <= 3:
+        # For very short content, show at least the last line
+        return lines[-1] if lines else ""
+
+    # Calculate visible lines (minimum 1)
+    visible_count = max(1, int(len(lines) * ratio))
+    visible_lines = lines[-visible_count:]
+
+    return "\n".join(visible_lines)
+
+
+__all__ = ["Collaboration", "CollaborationMode", "CollaborationResult", "_extract_edge"]

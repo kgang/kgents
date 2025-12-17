@@ -22,6 +22,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from agents.poly.types import Err
 from agents.u.core import ToolError, ToolErrorType
 from agents.u.mcp import (
     HttpSseTransport,
@@ -34,7 +35,6 @@ from agents.u.mcp import (
     MCPToolSchema,
     StdioTransport,
 )
-from bootstrap.types import Err
 
 # --- JSON-RPC Tests ---
 
@@ -581,7 +581,7 @@ async def test_mcp_tool_invoke_success() -> None:
     client.server_info = MCPServerInfo(name="test", version="1.0", capabilities={})
 
     # Mock call_tool to return success
-    from bootstrap.types import ok
+    from agents.poly.types import ok
 
     mock_call_tool = AsyncMock(return_value=ok("Search results"))
     with patch.object(client, "call_tool", mock_call_tool):
@@ -607,7 +607,7 @@ async def test_mcp_tool_invoke_error() -> None:
     client.server_info = MCPServerInfo(name="test", version="1.0", capabilities={})
 
     # Mock call_tool to return error
-    from bootstrap.types import err
+    from agents.poly.types import err
 
     tool_error = ToolError(
         error_type=ToolErrorType.NETWORK,
@@ -701,7 +701,7 @@ async def test_mcp_tool_composition() -> None:
     client.server_info = MCPServerInfo(name="test", version="1.0", capabilities={})
 
     # Mock call_tool
-    from bootstrap.types import ok
+    from agents.poly.types import ok
 
     mock_call_tool = AsyncMock(return_value=ok("HELLO WORLD"))
 

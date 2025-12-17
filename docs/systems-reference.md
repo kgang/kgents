@@ -123,6 +123,51 @@ async for result in flux_agent.start(source):
 
 ---
 
+## F-gent Flow (Conversational Modalities)
+
+**NEW 2025-12-16** — Chat, Research, and Collaboration substrates.
+
+| Component | Purpose |
+|-----------|---------|
+| `ChatFlow` | Turn-based conversation with context management |
+| `ResearchFlow` | Tree of thought exploration |
+| `CollaborationFlow` | Multi-agent blackboard patterns |
+| `FLOW_POLYNOMIAL` | Mode-dependent flow behavior |
+| `FLOW_OPERAD` | 13 composition operations |
+
+```python
+from agents.f import (
+    ChatFlow, Turn, ChatConfig,
+    ResearchFlow, HypothesisTree,
+    CollaborationFlow, Blackboard,
+    FLOW_POLYNOMIAL, FLOW_OPERAD, FlowState,
+)
+
+# Chat modality (requires agent)
+chat = ChatFlow(agent=my_agent, config=ChatConfig(context_window=128000))
+response = await chat.send_message("Hello!")
+
+# Research modality
+research = ResearchFlow(agent=my_agent)
+await research.branch("Hypothesis: X causes Y")
+synthesis = await research.synthesize()
+
+# Collaboration modality
+collab = CollaborationFlow(agents={"a": agent_a, "b": agent_b})
+await collab.post(agent_id="a", content="My idea", type="idea")
+```
+
+**AGENTESE Paths:**
+- `self.flow.state` — Current flow state
+- `self.flow.modality` — Active modality (chat/research/collaboration)
+- `self.flow.chat.*` — Chat operations (context, history, turn)
+- `self.flow.research.*` — Research operations (tree, branch, synthesize)
+- `self.flow.collaboration.*` — Collaboration operations (board, post, vote)
+
+**Note:** Flow (conversational modalities) is distinct from Flux (stream processing).
+
+---
+
 ## Agent Town (Multi-Agent Simulation)
 
 | Component | Purpose |

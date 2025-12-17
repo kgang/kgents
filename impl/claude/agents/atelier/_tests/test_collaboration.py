@@ -25,6 +25,7 @@ from agents.atelier.artisan import (
 from agents.atelier.workshop.collaboration import (
     Collaboration,
     CollaborationMode,
+    _extract_edge,
 )
 from agents.atelier.workshop.operad import (
     ATELIER_OPERAD,
@@ -276,3 +277,134 @@ class TestOperationLaws:
         op = ATELIER_OPERAD.get("refinement")
         assert op is not None
         assert op.law == CompositionLaw.ITERATIVE
+
+
+class TestExtractEdge:
+    """Tests for edge extraction in exquisite corpse mode."""
+
+    def test_extract_edge_empty(self) -> None:
+        """Empty content returns empty string."""
+        assert _extract_edge("") == ""
+
+    def test_extract_edge_short_content(self) -> None:
+        """Short content returns last line."""
+        content = "one\ntwo\nthree"
+        result = _extract_edge(content, 0.10)
+        assert result == "three"
+
+    def test_extract_edge_longer_content(self) -> None:
+        """Longer content returns appropriate percentage."""
+        # 10 lines, 10% = 1 line (minimum)
+        content = "\n".join(f"line {i}" for i in range(10))
+        result = _extract_edge(content, 0.10)
+        assert result == "line 9"
+
+    def test_extract_edge_20_percent(self) -> None:
+        """20% visibility extracts more lines."""
+        # 10 lines, 20% = 2 lines
+        content = "\n".join(f"line {i}" for i in range(10))
+        result = _extract_edge(content, 0.20)
+        assert "line 8" in result
+        assert "line 9" in result
+
+    def test_extract_edge_single_line(self) -> None:
+        """Single line content returns that line."""
+        content = "only line"
+        result = _extract_edge(content, 0.10)
+        assert result == "only line"
+
+
+class TestExquisiteCorpse:
+    """Tests for exquisite corpse collaboration mode."""
+
+    @pytest.mark.asyncio
+    async def test_exquisite_mode_exists(self) -> None:
+        """Exquisite mode is a valid collaboration mode."""
+        assert CollaborationMode.EXQUISITE.value == "exquisite"
+
+    @pytest.mark.asyncio
+    async def test_exquisite_mode_from_string(self) -> None:
+        """Can create collaboration with exquisite string."""
+        artisans = [MockArtisan("A"), MockArtisan("B"), MockArtisan("C")]
+        collab = Collaboration(cast(list[Artisan], artisans), "exquisite")
+        assert collab.mode == CollaborationMode.EXQUISITE
+
+    @pytest.mark.asyncio
+    async def test_exquisite_needs_artisan(self) -> None:
+        """Exquisite corpse with no artisans yields error."""
+        collab = Collaboration([], CollaborationMode.EXQUISITE)
+        commission = Commission(request="test")
+
+        events = []
+        async for event in collab.execute(commission):
+            events.append(event)
+
+        assert any(e.event_type == AtelierEventType.ERROR for e in events)
+
+    @pytest.mark.asyncio
+    async def test_exquisite_produces_merged_piece(self) -> None:
+        """Exquisite corpse produces a merged piece from all contributors."""
+        artisans = [
+            MockArtisan("First", "beginning"),
+            MockArtisan("Second", "middle"),
+            MockArtisan("Third", "ending"),
+        ]
+
+        collab = Collaboration(
+            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
+        )
+        commission = Commission(request="create something")
+
+        events = []
+        async for event in collab.execute(commission):
+            events.append(event)
+
+        # Should have final piece from "Exquisite Corpse"
+        complete_events = [
+            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
+        ]
+        final = complete_events[-1]
+        assert final.artisan == "Exquisite Corpse"
+
+        # Final piece should reference all contributors
+        piece_data = final.data["piece"]
+        assert piece_data["form"] == "exquisite_corpse"
+        inspirations = piece_data["provenance"]["inspirations"]
+        assert len(inspirations) == 3  # All three artisans' pieces
+
+    @pytest.mark.asyncio
+    async def test_exquisite_uses_visibility_ratio(self) -> None:
+        """Exquisite corpse respects visibility_ratio in context."""
+        artisans = [MockArtisan("A"), MockArtisan("B")]
+
+        collab = Collaboration(
+            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
+        )
+        commission = Commission(request="test", context={"visibility_ratio": 0.5})
+
+        events = []
+        async for event in collab.execute(commission):
+            events.append(event)
+
+        # Should complete without error
+        assert any(e.event_type == AtelierEventType.PIECE_COMPLETE for e in events)
+
+    @pytest.mark.asyncio
+    async def test_exquisite_contemplating_message(self) -> None:
+        """Exquisite corpse emits informative contemplating message."""
+        artisans = [MockArtisan("A"), MockArtisan("B")]
+        collab = Collaboration(
+            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
+        )
+        commission = Commission(request="test")
+
+        events = []
+        async for event in collab.execute(commission):
+            events.append(event)
+
+        # Should have contemplating event with visibility info
+        contemplating_events = [
+            e for e in events if e.event_type == AtelierEventType.CONTEMPLATING
+        ]
+        assert len(contemplating_events) >= 1
+        assert "visibility" in (contemplating_events[0].message or "").lower()

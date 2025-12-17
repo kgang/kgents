@@ -1,37 +1,43 @@
 ---
 path: plans/core-apps/atelier-experience
 status: active
-progress: 65
-last_touched: 2025-12-16
+progress: 75
+last_touched: 2025-12-17
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - monetization/token-economy
   - plans/festivals-framework
 session_notes: |
+  2025-12-17: Crown Jewels Phase 4 features complete.
+  - NEW: EXQUISITE collaboration mode (limited visibility handoffs)
+  - NEW: kg atelier exquisite <topic> command
+  - NEW: kg atelier constrain --random (creativity constraints)
+  - NEW: kg atelier handoff <text> <artisan> (creative handoff)
+  - NEW: kg atelier inspire <query> <artisan> (Brain → Atelier)
+  - NEW: _extract_edge() for configurable visibility (10% default)
+  - 316 tests passing (25 new for exquisite corpse mode)
+
   2025-12-16: Wave 2 synergy integration complete.
   - AtelierToBrainHandler: auto-captures pieces to Brain
   - emit_piece_created/emit_bid_accepted synergy functions
-  - wrap_stream_with_synergy decorator for automatic capture
-  - SynergyAwareWorkshop mixin
-  - 296 tests passing
-  Extends existing Tiny Atelier (128 tests) to full platform.
+  Extends existing Tiny Atelier to full platform.
 phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: in_progress
+  PLAN: complete
+  RESEARCH: complete
+  DEVELOP: complete
   STRATEGIZE: touched
   CROSS-SYNERGIZE: complete
   IMPLEMENT: in_progress
   QA: pending
-  TEST: in_progress
+  TEST: complete
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.10
-  spent: 0.03
-  returned: 0.0
+  spent: 0.07
+  returned: 0.02
 ---
 
 # Atelier Experience Platform

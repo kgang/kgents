@@ -22,21 +22,35 @@ Protocol:
 
 Backends:
     - MemoryVectorBackend: In-memory (Tier 0)
-    - DgentVectorBackend: D-gent persisted (Tier 1) [Phase 2]
+    - DgentVectorBackend: D-gent persisted (Tier 1)
     - PostgresVectorBackend: pgvector (Tier 2) [Phase 6]
     - QdrantBackend: Qdrant (Tier 3) [Phase 6]
 
+Router:
+    - VgentRouter: Auto-selects best backend with graceful degradation
+    - create_vgent: Factory function for creating routers
+
 Usage:
-    from agents.v import VgentProtocol, MemoryVectorBackend, Embedding, DistanceMetric
+    # Simple: Use the router (auto-selects best backend)
+    from agents.v import create_vgent
 
-    # Create a memory backend
+    vgent = create_vgent(dimension=768)
+    await vgent.add("doc1", [0.1, 0.2, ...])
+    results = await vgent.search([0.1, 0.2, ...], limit=10)
+
+    # Direct backend: Memory (ephemeral)
+    from agents.v import MemoryVectorBackend
+
     backend = MemoryVectorBackend(dimension=768)
-
-    # Add vectors
     await backend.add("doc1", [0.1, 0.2, ...])
 
-    # Search
-    results = await backend.search([0.1, 0.2, ...], limit=10)
+    # Direct backend: D-gent persistence (Tier 1)
+    from agents.d import DgentRouter
+    from agents.v import DgentVectorBackend
+
+    dgent = DgentRouter()
+    backend = DgentVectorBackend(dgent, dimension=768)
+    await backend.load_index()  # Load persisted vectors
 
 See Also:
     - spec/v-gents/core.md — Core protocol and types
@@ -46,11 +60,14 @@ See Also:
 
 from __future__ import annotations
 
-from .protocol import BaseVgent, VgentProtocol
-from .types import DistanceMetric, Embedding, SearchResult, VectorEntry
-
 # Backends
+from .backends.dgent import DgentVectorBackend
 from .backends.memory import MemoryVectorBackend
+from .protocol import BaseVgent, VgentProtocol
+
+# Router
+from .router import BackendStatus, VectorBackend, VgentRouter, create_vgent
+from .types import DistanceMetric, Embedding, SearchResult, VectorEntry
 
 __all__ = [
     # Types
@@ -63,4 +80,10 @@ __all__ = [
     "BaseVgent",
     # Backends
     "MemoryVectorBackend",
+    "DgentVectorBackend",
+    # Router
+    "VgentRouter",
+    "VectorBackend",
+    "BackendStatus",
+    "create_vgent",
 ]

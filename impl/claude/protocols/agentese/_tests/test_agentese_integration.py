@@ -150,12 +150,12 @@ class TestAgentDiscovery:
     async def test_list_all_agents(
         self, agent_resolver: AgentContextResolver, developer_umwelt: MagicMock
     ) -> None:
-        """world.agent.list returns all 25 agents."""
+        """world.agent.list returns all 24 agents (E-gent archived 2025-12-16)."""
         node = agent_resolver.resolve("agent", [])
         agents = await node.invoke("list", developer_umwelt)
-        assert len(agents) == 25
+        assert len(agents) == 24
         letters = {a["letter"] for a in agents}
-        assert "e" in letters  # E-gent (evolution)
+        assert "m" in letters  # M-gent (memory)
         assert "b" in letters  # B-gent (economics)
         assert "psi" in letters  # Ψ-gent (psychopomp)
 
@@ -166,26 +166,26 @@ class TestAgentDiscovery:
         """world.agent.search finds agents by theme."""
         node = agent_resolver.resolve("agent", [])
 
-        # Search for evolution-related
-        results = await node.invoke("search", developer_umwelt, query="evolution")
-        assert any(a["letter"] == "e" for a in results)
-
-        # Search for memory-related
+        # Search for memory-related (changed from 'evolution' - E-gent archived)
         results = await node.invoke("search", developer_umwelt, query="memory")
         assert any(a["letter"] == "m" for a in results)
+
+        # Search for economics-related
+        results = await node.invoke("search", developer_umwelt, query="economics")
+        assert any(a["letter"] == "b" for a in results)
 
     @pytest.mark.asyncio
     async def test_manifest_specific_agent(
         self, agent_resolver: AgentContextResolver, developer_umwelt: MagicMock
     ) -> None:
-        """world.agent.egent.manifest shows E-gent capabilities."""
+        """world.agent.mgent.manifest shows M-gent capabilities (E-gent archived 2025-12-16)."""
         from ..renderings import DeveloperRendering
 
-        node = agent_resolver.resolve("agent", ["e"])
+        node = agent_resolver.resolve("agent", ["m"])
         rendering = await node.manifest(developer_umwelt)
         assert isinstance(rendering, DeveloperRendering)
-        assert "E-gent" in rendering.entity
-        assert "evolution" in rendering.structure["theme"].lower()
+        assert "M-gent" in rendering.entity
+        assert "memory" in rendering.structure["theme"].lower()
 
 
 # === Integration Test: Observer-Dependent Affordances ===
@@ -341,26 +341,27 @@ class TestCrossContextWorkflow:
         Complete workflow: discover agents → select → manifest → invoke.
 
         This demonstrates how AGENTESE enables agent discovery.
+        (Changed from E-gent to M-gent - E-gent archived 2025-12-16)
         """
         # 1. Discover available agents
         list_node = agent_resolver.resolve("agent", [])
-        agents = await list_node.invoke("search", developer_umwelt, query="evolution")
-        e_info = next(a for a in agents if a["letter"] == "e")
+        agents = await list_node.invoke("search", developer_umwelt, query="memory")
+        m_info = next(a for a in agents if a["letter"] == "m")
 
-        # 2. Get E-gent node
-        e_node = agent_resolver.resolve("agent", [e_info["letter"]])
+        # 2. Get M-gent node
+        m_node = agent_resolver.resolve("agent", [m_info["letter"]])
 
-        # 3. Manifest E-gent capabilities
+        # 3. Manifest M-gent capabilities
         from ..renderings import DeveloperRendering
 
-        rendering = await e_node.manifest(developer_umwelt)
+        rendering = await m_node.manifest(developer_umwelt)
         assert isinstance(rendering, DeveloperRendering)
-        assert "E-gent" in rendering.entity
+        assert "M-gent" in rendering.entity
 
-        # 4. Check E-gent status
-        status = await e_node.invoke("status", developer_umwelt)
+        # 4. Check M-gent status
+        status = await m_node.invoke("status", developer_umwelt)
         assert status["status"] == "active"
-        assert "thermodynamics" in status["theme"].lower()
+        assert "memory" in status["theme"].lower()
 
     @pytest.mark.asyncio
     async def test_world_self_void_workflow(
@@ -446,7 +447,20 @@ class TestRegistryCompleteness:
                 and not d.startswith("_")
                 and not d.startswith(".")
                 # Exclude utility directories and experimental/wip modules
-                and d not in ("shared", "examples", "poly", "operad", "sheaf", "infra", "_archived", "brain", "gardener", "testing", "crown")
+                and d
+                not in (
+                    "shared",
+                    "examples",
+                    "poly",
+                    "operad",
+                    "sheaf",
+                    "infra",
+                    "_archived",
+                    "brain",
+                    "gardener",
+                    "testing",
+                    "crown",
+                )
                 # Exclude any test-generated agents (scaffolding creates these)
                 and not d.startswith("test")
                 and d != "archimedes"  # Common test fixture name

@@ -15,59 +15,31 @@ Integration:
 - Builds ON D-gent (every Memory references a Datum)
 - DataBus: Reactive updates when data changes
 - BusListener: Auto-indexing of new data
+- V-gent (optional): Delegate similarity search to V-gent for efficiency
+
+V-gent Integration (Phase 5):
+    Use `AssociativeMemory.create_with_vgent()` for V-gent backed similarity search:
+
+        from agents.d.backends.memory import MemoryBackend
+        from agents.v import MemoryVectorBackend
+        from agents.m import AssociativeMemory
+
+        dgent = MemoryBackend()
+        vgent = MemoryVectorBackend(dimension=64)
+        mgent = await AssociativeMemory.create_with_vgent(dgent, vgent)
+
+        # Same API - V-gent handles similarity search
+        await mgent.remember(b"Python is great")
+        results = await mgent.recall("programming languages")
 
 Legacy Support:
 - PheromoneField/Stigmergy: Kept for K-gent coordination
 """
 
 # New Architecture
-from .memory import Lifecycle, Memory, simple_embedding
-from .protocol import (
-    ConsolidationReport,
-    ExtendedMgentProtocol,
-    MemoryStatus,
-    MgentProtocol,
-    RecallResult,
-)
 from .associative import AssociativeMemory, HashEmbedder
-from .lifecycle import (
-    LifecycleEvent,
-    LifecycleManager,
-    RelevancePolicy,
-    ResolutionPolicy,
-    TimeoutPolicy,
-)
-from .consolidation_engine import ConsolidationConfig, ConsolidationEngine
 from .bus_listener import BusEventHandler, MgentBusListener
-from .soul_memory import MemoryCategory, SoulMemory, create_soul_memory
-
-# Legacy - Stigmergy (kept for K-gent)
-from .stigmergy import (
-    EnhancedStigmergicAgent,
-    PheromoneField,
-    SenseResult,
-    SimpleConceptSpace,
-    StigmergicAgent,
-    Trace,
-    create_ant_colony_optimization,
-)
-
-# Legacy stubs (DEPRECATED - for backward compatibility only)
-from .legacy import (
-    ActionHistory,
-    AssociativeWebMemory,
-    BudgetedMemory,
-    Cue,
-    DgentBackedHolographicMemory,
-    HolographicMemory,
-    ProspectiveAgent,
-    RecollectionAgent,
-    ResolutionBudget,
-    Situation,
-    TieredMemory,
-    create_budgeted_memory,
-    create_mock_bank,
-)
+from .consolidation_engine import ConsolidationConfig, ConsolidationEngine
 
 # Importers
 from .importers import (
@@ -87,6 +59,50 @@ from .importers import (
     generate_concept_id,
     parse_markdown,
     strip_markdown_formatting,
+)
+
+# Legacy stubs (DEPRECATED - for backward compatibility only)
+from .legacy import (
+    ActionHistory,
+    AssociativeWebMemory,
+    BudgetedMemory,
+    Cue,
+    DgentBackedHolographicMemory,
+    HolographicMemory,
+    ProspectiveAgent,
+    RecollectionAgent,
+    ResolutionBudget,
+    Situation,
+    TieredMemory,
+    create_budgeted_memory,
+    create_mock_bank,
+)
+from .lifecycle import (
+    LifecycleEvent,
+    LifecycleManager,
+    RelevancePolicy,
+    ResolutionPolicy,
+    TimeoutPolicy,
+)
+from .memory import Lifecycle, Memory, simple_embedding
+from .protocol import (
+    ConsolidationReport,
+    ExtendedMgentProtocol,
+    MemoryStatus,
+    MgentProtocol,
+    RecallResult,
+)
+from .soul_memory import MemoryCategory, SoulMemory, create_soul_memory
+
+# Legacy - Stigmergy (kept for K-gent)
+from .stigmergy import (
+    EnhancedStigmergicAgent,
+    PheromoneField,
+    SenseResult,
+    SimpleConceptSpace,
+    StigmergicAgent,
+    Trace,
+    create_ant_colony_optimization,
 )
 
 __all__ = [

@@ -123,6 +123,7 @@ class WorkshopFlux:
         request: str,
         mode: CollaborationMode | str = CollaborationMode.DUET,
         patron: str = "wanderer",
+        context: dict[str, Any] | None = None,
     ) -> AsyncIterator[AtelierEvent]:
         """
         Orchestrate a collaboration between artisans.
@@ -130,8 +131,9 @@ class WorkshopFlux:
         Args:
             artisan_names: Names of artisans to collaborate
             request: What to create together
-            mode: Collaboration mode (duet, ensemble, refinement, chain)
+            mode: Collaboration mode (duet, ensemble, refinement, chain, exquisite)
             patron: Who is requesting
+            context: Optional context dict (e.g., visibility_ratio for exquisite mode)
 
         Yields:
             AtelierEvent instances as collaboration progresses
@@ -156,7 +158,7 @@ class WorkshopFlux:
 
         # Create collaboration
         collab = Collaboration(artisans, mode)
-        commission = Commission(request=request, patron=patron)
+        commission = Commission(request=request, patron=patron, context=context or {})
 
         # Stream collaboration
         piece: Piece | None = None

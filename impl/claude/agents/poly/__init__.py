@@ -5,12 +5,18 @@ Agents as dynamical systems based on Spivak's polynomial functors.
 
 This module provides:
 - PolyAgent: The core polynomial agent type
+- Agent[A, B]: Bootstrap agent type (async invoke)
 - Primitives: 17 atomic polynomial agents
 - Composition: Sequential and parallel wiring
+- Types: Core domain types from bootstrap
 
 The key insight: Agent[A, B] ≅ A → B is a lie.
 PolyAgent[S, A, B] captures state-dependent behavior:
     P(y) = Σ_{s ∈ positions} y^{directions(s)}
+
+Migration: 2025-12-16
+- Bootstrap types migrated here from impl/claude/bootstrap/types.py
+- Bootstrap module re-exports from here for backward compatibility
 
 See: plans/ideas/impl/meta-construction.md
 """
@@ -48,7 +54,7 @@ from .primitives import (
     # Types - Entropy
     EntropyGrant,
     EntropyRequest,
-    # Types - Teleological (E-gent, N-gent)
+    # Types - Teleological (Evolve, Narrate)
     Evolution,
     EvolveState,
     FixState,
@@ -99,6 +105,38 @@ from .protocol import (
     to_bootstrap_agent,
 )
 
+# Bootstrap types (migrated from bootstrap/types.py)
+from .types import (
+    VOID,
+    Agent,
+    AgentProtocol,
+    ComposedAgent,
+    ContradictInput,
+    ContradictResult,
+    Err,
+    Facts,
+    FixConfig,
+    FixResult,
+    HoldTension,
+    JudgeInput,
+    Ok,
+    PartialVerdict,
+    PersonaSeed,
+    Principles,
+    Result,
+    SublateInput,
+    SublateResult,
+    Tension,
+    TensionMode,
+    VerdictType,
+    Void,
+    WorldSeed,
+    err,
+    ok,
+)
+from .types import Synthesis as BootstrapSynthesis
+from .types import Verdict as BootstrapVerdict
+
 __all__ = [
     # Protocol
     "PolyAgentProtocol",
@@ -146,7 +184,7 @@ __all__ = [
     "ForgetState",
     "Memory",
     "MemoryResult",
-    # Types - Teleological (E-gent, N-gent)
+    # Types - Teleological (Evolve, Narrate)
     "EvolveState",
     "NarrateState",
     "Organism",
@@ -179,4 +217,33 @@ __all__ = [
     "get_primitive",
     "all_primitives",
     "primitive_names",
+    # Bootstrap Types (migrated from bootstrap/types.py)
+    "Agent",
+    "AgentProtocol",
+    "ComposedAgent",
+    "Result",
+    "Ok",
+    "Err",
+    "ok",
+    "err",
+    "TensionMode",
+    "Tension",
+    "BootstrapSynthesis",
+    "HoldTension",
+    "VerdictType",
+    "PartialVerdict",
+    "BootstrapVerdict",
+    "Principles",
+    "PersonaSeed",
+    "WorldSeed",
+    "Facts",
+    "FixConfig",
+    "FixResult",
+    "ContradictInput",
+    "ContradictResult",
+    "SublateInput",
+    "SublateResult",
+    "JudgeInput",
+    "Void",
+    "VOID",
 ]

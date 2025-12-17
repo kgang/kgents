@@ -30,7 +30,7 @@ class TestFunctorCompositionEcosystem:
     async def test_maybe_functor_identity_law(self) -> None:
         """Maybe functor: F(id) = id."""
         from agents.c import Just, Nothing, maybe
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class IdAgent(Agent[int, int]):
             @property
@@ -55,7 +55,7 @@ class TestFunctorCompositionEcosystem:
     async def test_maybe_functor_composition_law(self) -> None:
         """Maybe functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import Just, maybe
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class Double(Agent[int, int]):
             @property
@@ -93,7 +93,7 @@ class TestFunctorCompositionEcosystem:
     async def test_either_functor_identity_law(self) -> None:
         """Either functor: F(id) = id."""
         from agents.c import Left, Right, either
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class IdAgent(Agent[str, str]):
             @property
@@ -119,7 +119,7 @@ class TestFunctorCompositionEcosystem:
     async def test_either_functor_composition_law(self) -> None:
         """Either functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import Right, either
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class ToUpper(Agent[str, str]):
             @property
@@ -153,7 +153,7 @@ class TestFunctorCompositionEcosystem:
     async def test_list_functor_identity_law(self) -> None:
         """List functor: F(id) = id."""
         from agents.c import list_agent
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class IdAgent(Agent[int, int]):
             @property
@@ -171,7 +171,7 @@ class TestFunctorCompositionEcosystem:
     async def test_list_functor_composition_law(self) -> None:
         """List functor: F(g ∘ f) = F(g) ∘ F(f)."""
         from agents.c import list_agent
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class Increment(Agent[int, int]):
             @property
@@ -256,7 +256,7 @@ class TestCategoryLawsEcosystem:
     @pytest.mark.asyncio
     async def test_composition_associativity(self) -> None:
         """Category: (f >> g) >> h = f >> (g >> h)."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class F(Agent[str, int]):
             @property
@@ -296,7 +296,7 @@ class TestCategoryLawsEcosystem:
     @pytest.mark.asyncio
     async def test_identity_left(self) -> None:
         """Category: id >> f = f."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class IdAgent(Agent[int, int]):
             @property
@@ -325,7 +325,7 @@ class TestCategoryLawsEcosystem:
     @pytest.mark.asyncio
     async def test_identity_right(self) -> None:
         """Category: f >> id = f."""
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent
 
         class IdAgent(Agent[int, int]):
             @property

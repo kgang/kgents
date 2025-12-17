@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import Awaitable, Callable, Optional, TypeVar, Union
 
 from agents.j.promise import Promise as JPromise
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

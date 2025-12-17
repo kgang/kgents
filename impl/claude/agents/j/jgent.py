@@ -23,8 +23,8 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any, Callable, Generic, Optional, TypeVar
 
-from bootstrap.dna import JGentDNA
-from bootstrap.types import Agent
+from agents.poly.types import Agent
+from protocols.config.dna import JGentDNA
 
 from .chaosmonger import StabilityConfig, analyze_stability
 from .meta_architect import (

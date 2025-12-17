@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 if TYPE_CHECKING:
     from agents.a.halo import CapabilityBase
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
 
 # The target artifact type produced by compilation
 Target = TypeVar("Target")

@@ -37,7 +37,7 @@ from ..wiring import (
 )
 
 if TYPE_CHECKING:
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
     from bootstrap.umwelt import Umwelt
 
 # =============================================================================
@@ -595,7 +595,7 @@ class TestInvoke:
 
             def lens(self, aspect: str) -> "Agent[Any, Any]":
                 # Return a stub agent - not used in this test
-                from bootstrap.types import Agent
+                from agents.poly.types import Agent
 
                 return Agent(lambda x: x)  # type: ignore[abstract, call-arg]
 
@@ -641,7 +641,7 @@ class TestInvoke:
 
             def lens(self, aspect: str) -> "Agent[Any, Any]":
                 # Return a stub agent - not used in this test
-                from bootstrap.types import Agent
+                from agents.poly.types import Agent
 
                 return Agent(lambda x: x)  # type: ignore[abstract, call-arg]
 

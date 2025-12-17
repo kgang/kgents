@@ -6,7 +6,7 @@ from typing import AsyncIterator
 import pytest
 from agents.flux import Flux, FluxAgent, FluxConfig, FluxPipeline, FluxState
 from agents.flux.sources import filtered, from_iterable, mapped, take
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 # Test agents
@@ -87,7 +87,7 @@ class TestFluxFunctorLaws:
     @pytest.mark.asyncio
     async def test_composition_law(self):
         """Flux(f >> g) ≅ Flux(f) >> Flux(g)"""
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         # Create agents
         double = DoubleAgent()

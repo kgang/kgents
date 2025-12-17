@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
+    from protocols.gardener_logos import GardenSeason
 
 
 def _print_help() -> None:
@@ -37,7 +38,9 @@ def _print_help() -> None:
     print("  season            Show current season info")
     print("  health            Show health metrics")
     print("  init              Initialize garden with default plots")
-    print("  transition <to>   Transition to new season (DORMANT|SPROUTING|BLOOMING|HARVEST|COMPOSTING)")
+    print(
+        "  transition <to>   Transition to new season (DORMANT|SPROUTING|BLOOMING|HARVEST|COMPOSTING)"
+    )
     print()
     print("AUTO-INDUCER (Phase 8):")
     print("  suggest           Check for suggested season transition")
@@ -174,7 +177,7 @@ async def _handle_show(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle default show action - display garden."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.projections.ascii import project_garden_to_ascii
     from protocols.gardener_logos.projections.json import project_garden_to_json
 
@@ -199,7 +202,7 @@ async def _handle_season(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle season subcommand - show current season info."""
-    from protocols.gardener_logos import create_garden, GardenSeason
+    from protocols.gardener_logos import GardenSeason, create_garden
 
     # Get or create garden
     garden = create_garden(name="kgents")
@@ -220,22 +223,22 @@ async def _handle_season(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  {season.emoji} SEASON: {season.name}",
-            f"",
+            "",
             f"  {_season_description(season)}",
-            f"",
+            "",
             f"  Plasticity:        {season.plasticity:.0%} (how much change accepted)",
             f"  Entropy Multiplier: {season.entropy_multiplier:.1f}x (operation cost)",
             f"  Since:             {garden.season_since.strftime('%Y-%m-%d %H:%M')}",
-            f"",
-            f"  Available seasons:",
-            f"    DORMANT    - Resting, low cost, stable",
-            f"    SPROUTING  - New ideas, high plasticity",
-            f"    BLOOMING   - Ideas crystallizing, visible",
-            f"    HARVEST    - Gathering, reflection",
-            f"    COMPOSTING - Breaking down old patterns",
-            f"",
+            "",
+            "  Available seasons:",
+            "    DORMANT    - Resting, low cost, stable",
+            "    SPROUTING  - New ideas, high plasticity",
+            "    BLOOMING   - Ideas crystallizing, visible",
+            "    HARVEST    - Gathering, reflection",
+            "    COMPOSTING - Breaking down old patterns",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 
@@ -247,7 +250,7 @@ async def _handle_health(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle health subcommand - show health metrics."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
     # Get or create garden
     garden = create_garden(name="kgents")
@@ -273,24 +276,28 @@ async def _handle_health(
     else:
         health_bar = _progress_bar(metrics.health_score, 20)
         entropy_remaining = max(0, metrics.entropy_budget - metrics.entropy_spent)
-        entropy_pct = entropy_remaining / metrics.entropy_budget if metrics.entropy_budget > 0 else 0
+        entropy_pct = (
+            entropy_remaining / metrics.entropy_budget
+            if metrics.entropy_budget > 0
+            else 0
+        )
         entropy_bar = _progress_bar(entropy_pct, 20)
 
         lines = [
-            f"",
-            f"  GARDEN HEALTH",
-            f"",
+            "",
+            "  GARDEN HEALTH",
+            "",
             f"  Overall:  {health_bar} {metrics.health_score:.0%}",
             f"  Entropy:  {entropy_bar} {entropy_pct:.0%} remaining",
-            f"",
-            f"  DETAILS:",
+            "",
+            "  DETAILS:",
             f"    Active Plots:    {metrics.active_plots}",
             f"    Recent Gestures: {metrics.recent_gestures}",
             f"    Session Cycles:  {metrics.session_cycles}",
             f"    Total Prompts:   {metrics.total_prompts}",
             f"    Entropy Budget:  {metrics.entropy_budget:.2f}",
             f"    Entropy Spent:   {metrics.entropy_spent:.2f}",
-            f"",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 
@@ -302,7 +309,7 @@ async def _handle_init(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle init subcommand - initialize garden with default plots."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -321,22 +328,22 @@ async def _handle_init(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  {garden.season.emoji} GARDEN INITIALIZED",
-            f"",
+            "",
             f"  Name: {garden.name}",
             f"  ID:   {garden.garden_id[:8]}...",
             f"  Season: {garden.season.name}",
-            f"",
+            "",
             f"  PLOTS ({len(garden.plots)}):",
         ]
         for name, plot in garden.plots.items():
             active_marker = " <active>" if name == garden.active_plot else ""
             lines.append(f"    - {plot.display_name} ({plot.path}){active_marker}")
-        lines.append(f"")
-        lines.append(f"  Run 'kg plot <name>' to view a specific plot.")
-        lines.append(f"  Run 'kg tend observe concept.gardener' to begin tending.")
-        lines.append(f"")
+        lines.append("")
+        lines.append("  Run 'kg plot <name>' to view a specific plot.")
+        lines.append("  Run 'kg tend observe concept.gardener' to begin tending.")
+        lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)
 
@@ -349,7 +356,7 @@ async def _handle_transition(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle transition subcommand - transition to new season."""
-    from protocols.gardener_logos import create_garden, GardenSeason
+    from protocols.gardener_logos import GardenSeason, create_garden
 
     if not args:
         _emit_output(
@@ -390,14 +397,14 @@ async def _handle_transition(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
-            f"  SEASON TRANSITION",
-            f"",
+            "",
+            "  SEASON TRANSITION",
+            "",
             f"  {old_season.emoji} {old_season.name} -> {new_season.emoji} {new_season.name}",
-            f"",
+            "",
             f"  Reason: {reason}",
             f"  Plasticity: {old_season.plasticity:.0%} -> {new_season.plasticity:.0%}",
-            f"",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 
@@ -414,10 +421,10 @@ async def _handle_suggest(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle suggest subcommand - check for season transition suggestion."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.seasons import (
-        suggest_season_transition,
         TransitionSignals,
+        suggest_season_transition,
     )
 
     # Get or create garden with plots for realistic signals
@@ -430,7 +437,7 @@ async def _handle_suggest(
     suggestion = suggest_season_transition(garden)
 
     if suggestion is None:
-        result = {
+        result: dict[str, Any] = {
             "status": "no_suggestion",
             "current_season": garden.season.name,
             "signals": signals.to_dict(),
@@ -439,22 +446,23 @@ async def _handle_suggest(
 
         if json_mode:
             import json
+
             _emit_output(json.dumps(result, indent=2), result, ctx)
         else:
             lines = [
-                f"",
+                "",
                 f"  {garden.season.emoji} AUTO-INDUCER: No Suggestion",
-                f"",
+                "",
                 f"  Current Season: {garden.season.name}",
-                f"  The garden is content. No transition suggested.",
-                f"",
-                f"  CURRENT SIGNALS:",
+                "  The garden is content. No transition suggested.",
+                "",
+                "  CURRENT SIGNALS:",
                 f"    Gesture frequency: {signals.gesture_frequency:.2f}/hour",
                 f"    Gesture diversity: {signals.gesture_diversity} verbs",
                 f"    Time in season:    {signals.time_in_season_hours:.1f} hours",
                 f"    Entropy usage:     {signals.entropy_spent_ratio:.0%}",
                 f"    Session active:    {'Yes' if signals.session_active else 'No'}",
-                f"",
+                "",
             ]
             _emit_output("\n".join(lines), result, ctx)
         return 0
@@ -472,28 +480,29 @@ async def _handle_suggest(
 
     if json_mode:
         import json
+
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         confidence_bar = _progress_bar(suggestion.confidence, 10)
         lines = [
-            f"",
+            "",
             f"  {suggestion.from_season.emoji} AUTO-INDUCER: Transition Suggested!",
-            f"",
+            "",
             f"  {suggestion.from_season.emoji} {suggestion.from_season.name} -> {suggestion.to_season.emoji} {suggestion.to_season.name}",
-            f"",
+            "",
             f"  Confidence: {confidence_bar} {suggestion.confidence:.0%}",
             f"  Reason:     {suggestion.reason}",
-            f"",
-            f"  SIGNALS:",
+            "",
+            "  SIGNALS:",
             f"    Gesture frequency: {signals.gesture_frequency:.2f}/hour",
             f"    Gesture diversity: {signals.gesture_diversity} verbs",
             f"    Time in season:    {signals.time_in_season_hours:.1f} hours",
             f"    Entropy usage:     {signals.entropy_spent_ratio:.0%}",
-            f"",
-            f"  ACTIONS:",
-            f"    kg garden accept   - Accept this transition",
-            f"    kg garden dismiss  - Dismiss (won't suggest for 4h)",
-            f"",
+            "",
+            "  ACTIONS:",
+            "    kg garden accept   - Accept this transition",
+            "    kg garden dismiss  - Dismiss (won't suggest for 4h)",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 
@@ -505,10 +514,10 @@ async def _handle_accept(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle accept subcommand - accept current transition suggestion."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.seasons import (
-        suggest_season_transition,
         clear_dismissals,
+        suggest_season_transition,
     )
 
     garden = create_garden(name="kgents")
@@ -524,6 +533,7 @@ async def _handle_accept(
         }
         if json_mode:
             import json
+
             _emit_output(json.dumps(result, indent=2), result, ctx)
         else:
             _emit_output(
@@ -536,7 +546,9 @@ async def _handle_accept(
     # Accept the transition
     old_season = suggestion.from_season
     new_season = suggestion.to_season
-    garden.transition_season(new_season, f"Accepted auto-inducer suggestion: {suggestion.reason}")
+    garden.transition_season(
+        new_season, f"Accepted auto-inducer suggestion: {suggestion.reason}"
+    )
 
     # Clear dismissals since we're accepting
     clear_dismissals(garden.garden_id)
@@ -550,19 +562,20 @@ async def _handle_accept(
 
     if json_mode:
         import json
+
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  {new_season.emoji} TRANSITION ACCEPTED",
-            f"",
+            "",
             f"  {old_season.emoji} {old_season.name} -> {new_season.emoji} {new_season.name}",
-            f"",
+            "",
             f"  Plasticity: {old_season.plasticity:.0%} -> {new_season.plasticity:.0%}",
             f"  Reason: {suggestion.reason}",
-            f"",
+            "",
             f"  The garden has transitioned to {new_season.name}.",
-            f"",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 
@@ -574,10 +587,10 @@ async def _handle_dismiss(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle dismiss subcommand - dismiss current transition suggestion."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.seasons import (
-        suggest_season_transition,
         dismiss_transition,
+        suggest_season_transition,
     )
 
     garden = create_garden(name="kgents")
@@ -587,12 +600,13 @@ async def _handle_dismiss(
     suggestion = suggest_season_transition(garden)
 
     if suggestion is None or not suggestion.should_suggest:
-        result = {
+        result: dict[str, Any] = {
             "status": "no_suggestion",
             "message": "No pending transition suggestion to dismiss.",
         }
         if json_mode:
             import json
+
             _emit_output(json.dumps(result, indent=2), result, ctx)
         else:
             _emit_output(
@@ -614,17 +628,18 @@ async def _handle_dismiss(
 
     if json_mode:
         import json
+
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
-            f"  TRANSITION DISMISSED",
-            f"",
+            "",
+            "  TRANSITION DISMISSED",
+            "",
             f"  {suggestion.from_season.emoji} {suggestion.from_season.name} -> {suggestion.to_season.emoji} {suggestion.to_season.name}",
-            f"",
-            f"  This suggestion won't be shown again for 4 hours.",
+            "",
+            "  This suggestion won't be shown again for 4 hours.",
             f"  The garden remains in {suggestion.from_season.name}.",
-            f"",
+            "",
         ]
         _emit_output("\n".join(lines), result, ctx)
 

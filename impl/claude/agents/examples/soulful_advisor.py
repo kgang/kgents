@@ -16,7 +16,7 @@ import asyncio
 from dataclasses import dataclass
 
 from agents.a import Capability, Kappa, get_halo
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 @dataclass

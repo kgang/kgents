@@ -1,6 +1,22 @@
 """
 L-gent Vector Database Backends: Scalable semantic search for large catalogs.
 
+.. deprecated::
+    This module is deprecated in favor of agents.v (V-gent).
+    Use VgentProtocol and V-gent backends for new code.
+
+    Migration path:
+    1. Replace: from agents.l import VectorBackend
+       With: from agents.v import VgentProtocol
+
+    2. Replace: from agents.l import ChromaDBBackend
+       With: from agents.l.vgent_adapter import VgentToLgentAdapter
+
+    3. For existing code, use the adapter:
+       from agents.v import MemoryVectorBackend
+       from agents.l.vgent_adapter import VgentToLgentAdapter
+       lgent_backend = VgentToLgentAdapter(MemoryVectorBackend(dimension=384))
+
 This module provides vector database backends for catalogs with >1000 entries:
 - ChromaDBBackend: Persistent vector DB with SQL + vectors
 - FAISSBackend: High-performance in-memory vector index
@@ -20,10 +36,19 @@ Architecture:
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Any, Optional, Protocol
 
 from .types import CatalogEntry
+
+# Emit deprecation warning on import
+warnings.warn(
+    "agents.l.vector_backend is deprecated. Use agents.v (V-gent) for new code. "
+    "See module docstring for migration path.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 @dataclass
@@ -647,6 +672,10 @@ def create_vector_backend(
 ) -> VectorBackend:
     """Create a vector backend based on available dependencies.
 
+    .. deprecated::
+        Use agents.v.create_vgent() instead for new code.
+        For backward compatibility, use agents.l.vgent_adapter.VgentToLgentAdapter.
+
     Args:
         dimension: Vector dimension
         backend_type: Backend type ("auto", "chroma", "faiss")
@@ -655,6 +684,12 @@ def create_vector_backend(
     Returns:
         Vector backend instance
     """
+    warnings.warn(
+        "create_vector_backend is deprecated. Use agents.v.create_vgent() instead. "
+        "For backward compatibility, use agents.l.vgent_adapter.VgentToLgentAdapter.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if backend_type == "auto":
         # Prefer ChromaDB for persistence, FAISS for speed
         if CHROMADB_AVAILABLE:

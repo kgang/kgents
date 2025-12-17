@@ -9,7 +9,6 @@ to the existing kgents ecosystem:
 - Analyst × N-gent: Narrative failure reports
 - Topologist × L-gent: Type lattice validation
 - Market × B-gent: Value tensor economics
-- RedTeam × E-gent: Teleological evolution
 - Cortex × O-gent: Observation wrapper
 
 Design Pattern: Graceful Degradation
@@ -31,7 +30,6 @@ LGENT_AVAILABLE = False
 DGENT_AVAILABLE = False
 NGENT_AVAILABLE = False
 BGENT_AVAILABLE = False
-EGENT_AVAILABLE = False
 OGENT_AVAILABLE = False
 
 # L-gent: Embeddings and Type Lattice
@@ -91,16 +89,6 @@ try:
 except ImportError:
     pass
 
-# E-gent v2: Evolution
-try:
-    from agents.e.demon import DemonConfig, TeleologicalDemon
-    from agents.e.mutator import Mutator, MutatorConfig
-    from agents.e.types import Intent, MutationVector, Phage
-
-    EGENT_AVAILABLE = True
-except ImportError:
-    pass
-
 # O-gent: Observation
 try:
     from agents.o.observer import Observer, ObserverFunctor
@@ -127,7 +115,6 @@ class IntegrationStatus:
     dgent_persistence: bool = DGENT_AVAILABLE
     ngent_narrative: bool = NGENT_AVAILABLE
     bgent_economics: bool = BGENT_AVAILABLE
-    egent_evolution: bool = EGENT_AVAILABLE
     ogent_observation: bool = OGENT_AVAILABLE
 
     def __repr__(self) -> str:
@@ -138,11 +125,10 @@ class IntegrationStatus:
                 self.dgent_persistence,
                 self.ngent_narrative,
                 self.bgent_economics,
-                self.egent_evolution,
                 self.ogent_observation,
             ]
         )
-        return f"IntegrationStatus({active}/7 active)"
+        return f"IntegrationStatus({active}/6 active)"
 
 
 def get_integration_status() -> IntegrationStatus:
@@ -451,93 +437,6 @@ class BudgetedMarket:
 
 
 # =============================================================================
-# RedTeam × E-gent: Teleological Evolution
-# =============================================================================
-
-
-class TeleologicalRedTeam:
-    """RedTeam enhanced with E-gent v2 teleological evolution.
-
-    Replaces basic genetic algorithm with:
-    - TeleologicalDemon: 5-layer intent-aligned selection
-    - Phage-based mutations: Active vectors with thermodynamics
-    - Mutator integration: L-gent schema-driven mutations
-    """
-
-    def __init__(self, base_red_team: Any, intent_threshold: float = 0.3) -> None:
-        """Initialize teleological red team.
-
-        Args:
-            base_red_team: RedTeam instance
-            intent_threshold: Alignment threshold for Demon (default low for test context)
-        """
-        self.base = base_red_team
-        self._demon = None
-        self._mutator = None
-
-        if EGENT_AVAILABLE:
-            # Use lenient config for test context: skip layer 3 (teleological)
-            # since adversarial evolution doesn't have real intent embeddings
-            self._demon = TeleologicalDemon(
-                DemonConfig(
-                    min_intent_alignment=intent_threshold,
-                    skip_layers={3},  # Skip teleological for test mutations
-                )
-            )
-            self._mutator = Mutator(MutatorConfig(default_temperature=0.8))
-
-    async def evolve_with_demon(
-        self, agent: Any, seed_inputs: list[Any], intent_description: str = ""
-    ) -> list[Any]:
-        """Evolve adversarial inputs with teleological filtering.
-
-        Args:
-            agent: Agent to test
-            seed_inputs: Starting inputs
-            intent_description: Desired intent for alignment
-
-        Returns:
-            Evolved population filtered by Demon
-        """
-        # Get base evolution
-        population: list[Any] = cast(
-            list[Any], await self.base.evolve_adversarial_suite(agent, seed_inputs)
-        )
-
-        if not self._demon:
-            return population
-
-        # Filter through Demon
-        intent = Intent(
-            description=intent_description or "Find security vulnerabilities",
-            embedding=[0.0] * 128,  # Placeholder
-            source="tests",
-        )
-        self._demon.set_intent(intent)
-
-        filtered = []
-        for individual in population:
-            # Create mock mutation vector for Demon
-            # Note: mutated_code must be valid Python for syntax check
-            vector = MutationVector(
-                schema_signature="adversarial",
-                description="Adversarial evolution mutation",
-                original_code="pass",  # Valid minimal Python
-                mutated_code="pass",  # Valid minimal Python
-                enthalpy_delta=-0.1,  # Slight complexity reduction
-                entropy_delta=individual.fitness / 100,  # Entropy from fitness
-            )
-            # Wrap vector in a Phage for Demon selection
-            phage = Phage(mutation=vector)
-
-            result = self._demon.select(phage)
-            if result.passed:
-                filtered.append(individual)
-
-        return filtered
-
-
-# =============================================================================
 # Cortex × O-gent: Observation Wrapper
 # =============================================================================
 
@@ -616,7 +515,6 @@ def create_enhanced_cortex(
     observe_agents: bool = True,
     use_lattice_validation: bool = True,
     use_bgent_budgeting: bool = True,
-    use_egent_evolution: bool = True,
 ) -> Any:
     """Create fully integrated Cortex with all available enhancements.
 
@@ -626,7 +524,6 @@ def create_enhanced_cortex(
         observe_agents: Whether to wrap agents with O-gent observers
         use_lattice_validation: Whether to use L-gent type lattice
         use_bgent_budgeting: Whether to use B-gent economics
-        use_egent_evolution: Whether to use E-gent teleological evolution
 
     Returns:
         Enhanced Cortex instance with available integrations
@@ -675,7 +572,6 @@ def format_integration_report() -> str:
         f" D-gent Persistence: {'[OK]' if status.dgent_persistence else '[--]'}",
         f" N-gent Narrative: {'[OK]' if status.ngent_narrative else '[--]'}",
         f" B-gent Economics: {'[OK]' if status.bgent_economics else '[--]'}",
-        f" E-gent Evolution: {'[OK]' if status.egent_evolution else '[--]'}",
         f" O-gent Observation: {'[OK]' if status.ogent_observation else '[--]'}",
         "-" * 60,
         f" Total: {status}",

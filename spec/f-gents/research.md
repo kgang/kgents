@@ -490,9 +490,54 @@ config = FlowConfig(modality="research", confidence_threshold=0.9)
 
 ---
 
+## Relationship to Turn Protocol
+
+Research Flow implements the **Y-combinator pattern**: recursive exploration until fixed point (stable synthesis).
+
+### Fixed-Point Semantics
+
+Research terminates when a hypothesis reaches stability:
+
+```python
+# Turn Protocol stability = Research Flow termination
+def is_research_complete(hypothesis: Hypothesis) -> bool:
+    """Check if hypothesis has stabilized (fixed point)."""
+    return hypothesis.confidence >= config.confidence_threshold
+```
+
+This is the same stability criterion as `Turn.is_stable()`:
+- Turn: `state_hash_pre == state_hash_post`
+- Research: `hypothesis.confidence >= threshold`
+
+Both are fixed-point conditions.
+
+### Integration
+
+Research Flow uses Turn Protocol infrastructure:
+
+| Research Concept | Turn Protocol Component |
+|------------------|------------------------|
+| Hypothesis tree | TraceMonoid (DAG structure) |
+| Branch operation | Turn with new dependencies |
+| Merge operation | Knot synchronization point |
+| Stability check | `is_stable()` via confidence |
+| Budget limits | TurnBudgetTracker |
+
+### Historical Note
+
+> Research Flow subsumes the cognitive topology originally specified in Y-gent.
+> See `spec/y-gents-archived/MIGRATION.md` for the full migration story.
+
+The branch/merge/prune operations, fixed-point iteration, and tree-of-thought patterns
+were originally Y-gent concepts. They now live in F-gent as the unified flow substrate.
+
+---
+
 ## See Also
 
 - `README.md` - F-gent overview
 - `collaboration.md` - Multi-agent blackboard pattern
+- `spec/protocols/turn.md` - Turn Protocol (fixed-point semantics)
+- `spec/y-gents-archived/` - Archived Y-gent spec (historical reference)
 - `spec/e-gents/evolution-agent.md` - Evolutionary exploration
 - Papers: "Tree of Thoughts" (Yao et al., 2023)

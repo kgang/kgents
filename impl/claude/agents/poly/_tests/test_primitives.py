@@ -8,7 +8,7 @@ These tests verify:
 4. Perception primitives handle observer-dependent behavior
 5. Entropy primitives interface with void.*
 6. Memory primitives (D-gent) handle persistence
-7. Teleological primitives (E-gent, N-gent) handle evolution and narrative
+7. Teleological primitives (Evolve, Narrate) handle evolution and narrative
 """
 
 import pytest
@@ -40,7 +40,7 @@ from agents.poly import (
     # Types - Entropy
     EntropyGrant,
     EntropyRequest,
-    # Types - Teleological (E-gent, N-gent)
+    # Types - Teleological (Evolve, Narrate)
     Evolution,
     EvolveState,
     FixState,
@@ -416,7 +416,7 @@ class TestMemoryPrimitives:
 
 
 class TestTeleologicalPrimitives:
-    """Tests for the 2 teleological primitives (E-gent, N-gent)."""
+    """Tests for the 2 teleological primitives (Evolve, Narrate)."""
 
     def test_evolve_mutates_organism(self) -> None:
         """EVOLVE applies mutation to organism."""

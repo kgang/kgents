@@ -1,714 +1,249 @@
 # M-gent Primitives
 
-> Memory agents for generative recall, consolidation, and ethical navigation.
+**Status:** Standard
+**Implementation:** `impl/claude/agents/m/` (consolidated with D-gent substrate)
 
----
+## Purpose
 
-## Core Agents
+M-gents provide the **cognitive layer** for memory operations: generative recall, consolidation during idle cycles, prospective memory (remembering the future), ethical navigation through experience, and stigmergic coordination through environmental traces. Unlike database lookups, M-gent operations are reconstructive, context-sensitive, and always return gracefully degraded results rather than failures.
 
-### RecollectionAgent
+## Core Insight
 
-The fundamental M-gent: generative memory retrieval.
+Memory is not storage retrieval—it is reconstruction from holographic patterns, where every query produces a composite view influenced by all stored memories.
+
+## Type Signatures
+
+### Core Memory Agents
 
 ```python
-RecollectionAgent: Cue → Recollection
-
+@dataclass
 class RecollectionAgent(Agent[Concept, Recollection]):
     """
-    Unlike a database lookup, recollection is RECONSTRUCTION:
-    - Partial matches always return something
-    - Results are influenced by all stored memories
-    - The "resolution" depends on the depth of the cue
+    Generative memory retrieval: reconstruction, not lookup.
+    - Partial matches always return something (graceful degradation)
+    - Results are composite views of resonant patterns
+    - Resolution proportional to pattern match strength
     """
     memory: HolographicMemory
-    reconstructor: Agent[Pattern, Recollection]  # LLM or decoder
+    reconstructor: Agent[Pattern, Recollection]
 
-    async def invoke(self, concept: Concept) -> Recollection:
-        # Find resonant patterns (vector similarity)
-        patterns = await self.memory.retrieve(concept)
 
-        # Reconstruct (generative, not lookup)
-        return await self.reconstructor.invoke(
-            ReconstructionRequest(
-                cue=concept,
-                resonant_patterns=patterns,
-                resolution=self.compute_resolution(patterns)
-            )
-        )
-```
-
-**Key Properties**:
-- Always returns something (graceful degradation)
-- Results are composite views, not isolated facts
-- Resolution proportional to pattern match strength
-
----
-
-### ConsolidationAgent
-
-Background memory processing during "sleep" cycles.
-
-```python
-ConsolidationAgent: HolographicMemory → HolographicMemory
-
+@dataclass
 class ConsolidationAgent(Agent[HolographicMemory, HolographicMemory]):
     """
-    The Hypnagogic Worker: runs when system is idle.
+    Background memory processing during idle cycles (hypnagogic worker).
 
     Operations:
-    1. COMPRESS: Reduce resolution of cold memories
-    2. STRENGTHEN: Increase resolution of hot memories
-    3. INTEGRATE: Merge similar memories (chunking)
-    4. FORGET: Reduce interference from irrelevant patterns
+    - COMPRESS: Reduce resolution of cold memories
+    - STRENGTHEN: Increase resolution of hot memories
+    - INTEGRATE: Merge similar memories (chunking)
+    - FORGET: Reduce interference from irrelevant patterns
     """
+    temperature_threshold: float
+    forget_threshold: timedelta
 
-    async def invoke(self, memory: HolographicMemory) -> HolographicMemory:
-        # Temperature-based processing
-        for pattern in memory.identify_cold():
-            if pattern.age > self.forget_threshold:
-                memory.demote(pattern, factor=0.5)  # Lower resolution
-            else:
-                memory.compress(pattern)  # Save space
 
-        for pattern in memory.identify_hot():
-            memory.promote(pattern, factor=1.2)  # Higher resolution
-
-        # Integration pass: merge near-duplicates
-        for cluster in memory.cluster_similar(threshold=0.9):
-            memory.integrate(cluster)
-
-        return memory
-```
-
-**The Hypnagogic Pattern**: System improves while idle; sleep is functional.
-
----
-
-### ProspectiveAgent
-
-Memory as prediction—"remember the future."
-
-```python
-ProspectiveAgent: Situation → PredictedActions
-
+@dataclass
 class ProspectiveAgent(Agent[Situation, list[PredictedAction]]):
     """
-    Uses holographic memory to find similar past situations,
-    then projects the actions that followed.
+    Memory as prediction: find similar past situations, project likely actions.
+    "Remembering the future" via pattern matching.
     """
     memory: HolographicMemory
-    action_log: ActionHistory  # D-gent for action sequences
+    action_log: ActionHistory
 
-    async def invoke(self, situation: Situation) -> list[PredictedAction]:
-        # Find similar past situations
-        similar_situations = await self.memory.retrieve(situation)
 
-        # What actions followed those situations?
-        predictions = []
-        for past_situation, similarity in similar_situations:
-            actions = await self.action_log.get_subsequent(past_situation)
-            for action in actions:
-                predictions.append(PredictedAction(
-                    action=action,
-                    confidence=similarity * action.success_rate,
-                    source_situation=past_situation
-                ))
-
-        return sorted(predictions, key=lambda p: -p.confidence)
-```
-
----
-
-### EthicalGeometryAgent
-
-Navigate action space using remembered ethical constraints.
-
-```python
-EthicalGeometryAgent: Action → EthicalPath
-
+@dataclass
 class EthicalGeometryAgent(Agent[ActionProposal, EthicalPath]):
     """
-    Ethics as geometry: actions exist in a space with forbidden
-    and virtuous regions. The geometry is LEARNED from experience.
-
-    - Actions that led to harm → forbidden regions expand
-    - Actions that led to good → virtuous regions strengthen
+    Ethics as learned geometry in action space.
+    - Harmful actions expand forbidden regions
+    - Beneficial actions strengthen virtuous regions
     - Boundaries are probabilistic, not binary
     """
-    geometry: EthicalGeometry  # Learned constraint manifold
+    geometry: EthicalGeometry
 
-    async def invoke(self, proposal: ActionProposal) -> EthicalPath:
-        position = self.geometry.locate(proposal.action)
+    @property
+    def energy_cost(self, action_vector: Vector) -> float:
+        """Distance from hazards minus alignment with values."""
+        ...
 
-        if position in self.geometry.forbidden:
-            alternatives = self.geometry.nearest_permissible(position)
-            return EthicalPath(
-                blocked=True,
-                reason=self.geometry.why_forbidden(position),
-                alternatives=alternatives
-            )
 
-        virtuous_option = self.geometry.nearest_virtuous(position)
-        return EthicalPath(
-            blocked=False,
-            current_path=position,
-            virtuous_alternative=virtuous_option,
-            distance_to_virtue=self.geometry.distance(position, virtuous_option)
-        )
-```
-
-**Energy Cost Model**:
-```python
+@dataclass
 class EthicalGeometry:
-    def energy_cost(self, proposed_action_vector) -> float:
-        # Distance from known "Bad Outcome" clusters
-        danger = self.proximity_to_hazard(proposed_action_vector)
-        # Alignment with "Core Values" vector
-        alignment = self.cosine_similarity(proposed_action_vector, self.values_vector)
-
-        return danger - alignment  # Going against ethics = uphill
+    """Learned constraint manifold for ethical navigation."""
+    forbidden_regions: list[Region]
+    virtuous_regions: list[Region]
+    values_vector: Vector
 ```
 
----
-
----
-
-## Stigmergic Primitives
-
-### PheromoneAgent
-
-Deposit and sense environmental traces for indirect coordination.
+### Stigmergic Primitives
 
 ```python
-PheromoneAgent: (Concept, Action) → TraceDeposit
-
+@dataclass
 class PheromoneAgent(Agent[tuple[Concept, Action], TraceDeposit]):
     """
     Environmental memory via pheromone-like traces.
-
-    Instead of storing memories explicitly, deposit traces
-    that influence future behavior through gradients.
-
-    Integration with void.tithe: trace deposit IS the tithe—
-    paying forward for future agents.
+    Deposit intensity proportional to outcome quality.
+    Integration: trace deposit IS void.tithe (paying forward).
     """
     field: PheromoneField
-    decay_rate: float = 0.1  # Natural forgetting per time unit
-
-    async def invoke(self, input: tuple[Concept, Action]) -> TraceDeposit:
-        concept, action = input
-        outcome = await self.evaluate_outcome(action)
-
-        # Deposit proportional to outcome quality
-        intensity = 1.0 + (outcome.success * 0.5)
-        await self.field.deposit(concept, intensity)
-
-        return TraceDeposit(
-            concept=concept,
-            intensity=intensity,
-            decay_rate=self.decay_rate,
-            timestamp=now()
-        )
+    decay_rate: float = 0.1
 
     async def follow_gradient(self, position: Concept) -> Concept:
         """Move toward strongest trace (ant algorithm)."""
-        neighbors = await self.field.sense(position)
-        if not neighbors:
-            return await self.explore()  # Bushwhacking
-        # Probabilistic selection biased by intensity
-        return self.weighted_choice(neighbors)
-```
+        ...
 
-### HiveMindAgent
 
-Collective memory emerging from distributed traces.
-
-```python
-HiveMindAgent: Query → CollectiveRecollection
-
+@dataclass
 class HiveMindAgent(Agent[Query, CollectiveRecollection]):
     """
-    Memory as emergent property of many trace depositors.
-
-    No central store—consensus emerges from accumulated traces.
-    Like ant colonies finding shortest paths without planning.
+    Collective memory emerging from distributed traces.
+    No central store—consensus from accumulated pheromones.
     """
     field: PheromoneField
     participants: list[StigmergicAgent]
-
-    async def invoke(self, query: Query) -> CollectiveRecollection:
-        # Multiple agents sense the field
-        readings = await asyncio.gather(*[
-            agent.sense(query.concept)
-            for agent in self.participants
-        ])
-
-        # Consensus from convergent readings
-        consensus = self.aggregate(readings)
-
-        return CollectiveRecollection(
-            query=query,
-            consensus=consensus,
-            confidence=self.agreement_score(readings),
-            trace_count=len([r for r in readings if r])
-        )
 ```
 
----
-
-## Wittgensteinian Primitives
-
-### LanguageGameAgent
-
-Memory retrieval as playing a language game.
+### Wittgensteinian Primitives
 
 ```python
-LanguageGameAgent: (Concept, Context) → ValidMoves
-
+@dataclass
 class LanguageGameAgent(Agent[tuple[Concept, Context], list[Move]]):
     """
-    Memory as knowing-how-to-play.
+    Memory as knowing-how-to-play a language game.
+    Meaning is use: a concept's memory is valid moves in context.
 
-    From Wittgenstein: meaning is use. A concept's "memory"
-    is the set of valid moves one can make with it in context.
-
-    Modeled as polynomial functor: P(y) = Σₛ y^{D(s)}
+    Polynomial structure: P(y) = Σₛ y^{D(s)}
     - S: positions (states)
     - D(s): directions (valid moves from state s)
     """
-    games: dict[str, LanguageGame]  # Known games
+    games: dict[str, LanguageGame]
 
-    async def invoke(self, input: tuple[Concept, Context]) -> list[Move]:
-        concept, context = input
 
-        # Find applicable game
-        game = self.find_game(context)
-        if not game:
-            return []  # Don't know how to play
-
-        # Current position from concept
-        position = game.locate(concept)
-
-        # Valid moves from this position
-        directions = game.directions(position)
-
-        return [
-            Move(
-                from_position=position,
-                direction=d,
-                result=game.apply(position, d),
-                grammar_check=game.is_grammatical(position, d)
-            )
-            for d in directions
-        ]
-
-    def find_game(self, context: Context) -> Optional[LanguageGame]:
-        """Which language game are we playing?"""
-        for name, game in self.games.items():
-            if game.matches_context(context):
-                return game
-        return None
-```
-
-### GrammarEvolver
-
-Learn the rules of language games from interaction.
-
-```python
-GrammarEvolver: Interaction → GameUpdate
-
+@dataclass
 class GrammarEvolver(Agent[Interaction, GameUpdate]):
     """
     Language games evolve through use.
-
-    When novel moves succeed, they become grammatical.
-    When moves fail, the game learns new constraints.
-
-    "For a large class of cases... the meaning of a word is its use."
+    - Successful novel moves → expand grammar
+    - Failed grammatical moves → add context constraints
     """
     games: dict[str, LanguageGame]
-
-    async def invoke(self, interaction: Interaction) -> GameUpdate:
-        game = self.games.get(interaction.game_name)
-        if not game:
-            # New game discovered
-            game = LanguageGame.bootstrap(interaction)
-            self.games[interaction.game_name] = game
-            return GameUpdate(action="created", game=game)
-
-        # Observe move and outcome
-        move = interaction.move
-        outcome = interaction.outcome
-
-        if outcome.success:
-            if not game.is_grammatical(move.from_position, move.direction):
-                # Successful novel move → expand grammar
-                game.add_valid_move(move.from_position, move.direction)
-                return GameUpdate(action="expanded", move=move)
-        else:
-            if game.is_grammatical(move.from_position, move.direction):
-                # Failed grammatical move → context matters more
-                game.add_context_constraint(move, interaction.context)
-                return GameUpdate(action="constrained", move=move)
-
-        return GameUpdate(action="unchanged")
 ```
 
----
-
-## Active Inference Primitives
-
-### FreeEnergyAgent
-
-Memory retrieval minimizing expected free energy.
+### Active Inference Primitives
 
 ```python
-FreeEnergyAgent: Observation → Action
-
+@dataclass
 class FreeEnergyAgent(Agent[Observation, Action]):
     """
-    Memory in service of self-evidencing.
-
-    Under the Free Energy Principle, agents are generative models
-    that minimize prediction error. Memory supports:
+    Memory in service of self-evidencing (Free Energy Principle).
+    Minimize prediction error via:
     1. Better predictions (reduce surprise)
     2. Policy selection (reduce expected future surprise)
     3. Model update (learning)
+
+    Expected Free Energy: G = pragmatic_value - epistemic_value
     """
-    generative_model: GenerativeModel  # Beliefs about world
-    preferences: Distribution  # Desired states
+    generative_model: GenerativeModel
+    preferences: Distribution
 
-    async def invoke(self, observation: Observation) -> Action:
-        # Update beliefs given observation (perception)
-        posterior = await self.infer_hidden_states(observation)
 
-        # Compute expected free energy for each possible action
-        policies = self.enumerate_policies()
-        G = {}
-        for policy in policies:
-            G[policy] = await self.expected_free_energy(
-                policy,
-                posterior,
-                self.preferences
-            )
-
-        # Select policy minimizing expected free energy
-        best_policy = min(policies, key=lambda p: G[p])
-
-        return best_policy.first_action()
-
-    async def expected_free_energy(
-        self,
-        policy: Policy,
-        beliefs: Distribution,
-        preferences: Distribution
-    ) -> float:
-        """
-        G = E[log Q(s) - log P(o|s) - log P(s)]
-
-        Balances:
-        - Epistemic value (information gain)
-        - Pragmatic value (achieving preferred states)
-        """
-        # Predict states under policy
-        predicted_states = await self.predict_under_policy(policy, beliefs)
-
-        # Epistemic: how much would we learn?
-        epistemic = self.info_gain(beliefs, predicted_states)
-
-        # Pragmatic: how close to preferences?
-        pragmatic = self.kl_divergence(predicted_states, preferences)
-
-        return pragmatic - epistemic  # Lower is better
-```
-
-### SurpriseMinimizer
-
-Consolidation driven by prediction error.
-
-```python
-SurpriseMinimizer: MemorySet → ConsolidatedMemory
-
+@dataclass
 class SurpriseMinimizer(Agent[set[Memory], HolographicMemory]):
     """
     Consolidation as free energy minimization.
-
-    Keep memories that reduce prediction error.
-    Compress memories that add only complexity.
-    Forget memories that conflict with world model.
+    - Keep memories that reduce prediction error
+    - Compress memories with marginal improvement
+    - Forget memories that increase free energy
     """
     world_model: GenerativeModel
-
-    async def invoke(self, memories: set[Memory]) -> HolographicMemory:
-        consolidated = HolographicMemory()
-
-        for memory in memories:
-            # How surprising is this memory given our model?
-            surprise = await self.compute_surprise(memory)
-
-            # How much does it improve the model?
-            improvement = await self.model_improvement(memory)
-
-            if improvement > surprise:
-                # Memory reduces overall free energy → keep
-                consolidated.store(memory, resolution=1.0)
-            elif improvement > 0:
-                # Marginal improvement → compress
-                consolidated.store(memory, resolution=0.5)
-            # else: memory increases free energy → forget
-
-        return consolidated
 ```
 
----
-
-## Advanced Primitives
-
-### TemporalLens
-
-View memory at different points in time.
+### Cartographic Primitives
 
 ```python
+@dataclass
+class CartographerAgent(Agent[tuple[ContextVector, Resolution], HoloMap]):
+    """
+    Project high-dimensional memory space into navigable topology.
+    Integrations: L-gent (terrain), N-gent (desire lines), B-gent (budget)
+    """
+    memory_space: HolographicMemory
+    resolution_strategy: ResolutionStrategy
+
+
+@dataclass
+class PathfinderAgent(Agent[Goal, NavigationPlan]):
+    """
+    Navigate via desire lines (historical paths) or bushwhack (explore).
+
+    Modes:
+    - Desire Line Navigation: Follow history (safe, high confidence)
+    - Bushwhacking: No history, must explore (risky, low confidence)
+    """
+    cartographer: CartographerAgent
+    trace_history: TraceMonoid
+
+
+@dataclass
+class ContextInjector(Agent[tuple[AgentState, Task], OptimalContext]):
+    """
+    The answer to: "What is the most perfect context injection for any given turn?"
+    Budget-constrained, foveated context with resolution varying by relevance.
+    """
+    cartographer: CartographerAgent
+    budget: TokenBudget
+```
+
+### Temporal Primitives
+
+```python
+@dataclass
 class TemporalLens:
-    """Time travel through memory."""
+    """Time travel through memory: reconstruct state at any point."""
+    unified: UnifiedMemory
 
-    async def at_time(self, t: datetime) -> MemorySnapshot:
-        """Reconstruct memory state at time t."""
-        return await self.unified.replay(t)
+    async def at_time(self, t: datetime) -> MemorySnapshot: ...
+    async def evolution(self, concept: Concept) -> list[MemoryState]: ...
 
-    async def evolution(self, concept: Concept) -> list[MemoryState]:
-        """How has understanding of concept changed over time?"""
-        timeline = await self.unified.timeline()
-        return [state for state in timeline if self.is_about(state, concept)]
-```
 
----
-
-### AssociativeWeb
-
-Memory linked by association.
-
-```python
-class AssociativeWeb:
-    """
-    Memories linked by explicit associations:
-    - "reminds_of"
-    - "contradicts"
-    - "supports"
-    - "caused_by"
-    """
-
-    async def spread_activation(
-        self,
-        start: Memory,
-        depth: int = 3
-    ) -> list[tuple[Memory, float]]:
-        """
-        Spreading activation from a memory.
-        Like neural activation: nearby memories activate,
-        activation decays with distance.
-        """
-        graph = await self.unified.trace(start.id, max_depth=depth)
-        activations = []
-        for node in graph["nodes"]:
-            distance = self.shortest_path(start.id, node)
-            activation = 1.0 / (1.0 + distance)  # Decay
-            activations.append((await self.load(node), activation))
-        return sorted(activations, key=lambda x: -x[1])
-```
-
----
-
-### ForgettingCurveAgent
-
-The Ebbinghaus forgetting curve as an agent.
-
-```python
+@dataclass
 class ForgettingCurveAgent(Agent[Memory, RetentionPlan]):
     """
-    R = e^(-t/S)
-    Where:
-    - R = retention (0 to 1)
-    - t = time since last recall
-    - S = strength (increases with repetition)
+    Ebbinghaus forgetting curve: R = e^(-t/S)
+    Spaced repetition via SM-2 algorithm.
     """
+    retention_threshold: float = 0.3
 
-    async def invoke(self, memory: Memory) -> RetentionPlan:
-        t = now() - memory.last_accessed
-        S = memory.strength
-        R = math.exp(-t / S)
+    def optimal_interval(self, strength: float) -> timedelta: ...
 
-        if R < 0.3:
-            # About to forget - needs review
-            return RetentionPlan(action="review", urgency="high")
-        elif R > 0.9:
-            # Well retained - can compress
-            return RetentionPlan(action="compress", urgency="low")
-        else:
-            return RetentionPlan(action="maintain", current_retention=R)
 
-    def optimal_interval(self, strength: float) -> timedelta:
-        """Spaced repetition: SM-2 algorithm."""
-        return timedelta(days=2.5 * strength)
-```
-
----
-
-### ContextualRecallAgent
-
-Memory retrieval influenced by current context.
-
-```python
+@dataclass
 class ContextualRecallAgent(Agent[ContextualQuery, list[Memory]]):
     """
-    The same cue retrieves different memories depending on:
-    - Current task (what am I doing?)
-    - Emotional state (how am I feeling?)
-    - Environment (where am I?)
-
-    Based on encoding specificity principle.
+    Memory retrieval influenced by current context.
+    Encoding specificity principle: same cue, different contexts → different recalls.
     """
-
-    def compute_context_relevance(
-        self,
-        memory: Memory,
-        current_task: str,
-        current_mood: str,
-        current_location: str
-    ) -> float:
-        task_match = self.similarity(memory.context.task, current_task)
-        mood_match = self.similarity(memory.context.mood, current_mood)
-        location_match = self.similarity(memory.context.location, current_location)
-
-        return 0.5 + 0.5 * (0.4 * task_match + 0.3 * mood_match + 0.3 * location_match)
+    context_weights: dict[str, float]
 ```
 
----
-
-## Integration with Other Gents
-
-### M-gent + D-gent
-
-M-gents are the **cognitive layer** on top of D-gent **storage**:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      M-gent (Cognitive)                      │
-│    RecollectionAgent, ConsolidationAgent, ProspectiveAgent   │
-├─────────────────────────────────────────────────────────────┤
-│                      D-gent (Storage)                        │
-│    VolatileAgent, PersistentAgent, UnifiedMemory, VectorAgent│
-└─────────────────────────────────────────────────────────────┘
-```
-
-### M-gent + L-gent
-
-L-gent's vector infrastructure provides the **embedding space**.
-
-### M-gent + N-gent
-
-N-gents tell stories; M-gents remember them as narratives.
-
-### M-gent + B-gent
-
-Memory has costs: storage, retrieval, consolidation. Integrates with B-gent economics.
-
----
-
-## Success Criteria
-
-### Functional
-- [ ] Holographic retrieval: partial match always returns results
-- [ ] Graceful degradation: 50% compression = 50% resolution loss (not 50% data loss)
-- [ ] Tiered memory: automatic promotion/demotion between tiers
-- [ ] Consolidation: background memory processing during idle
-
-### Performance
-- [ ] Recall latency: <100ms for working memory, <500ms for long-term
-- [ ] Compression ratio: 10:1 for cold memories
-- [ ] Budget compliance: memory operations respect token budget
-
----
-
-## Cartographic Primitives
-
-### CartographerAgent
-
-See [holographic.md#the-cartography-layer](holographic.md#the-cartography-layer).
+### Bi-Temporal Primitives
 
 ```python
-CartographerAgent: (ContextVector, Resolution) → HoloMap
-```
+@dataclass
+class BiTemporalFact:
+    """Every fact has two times: when it happened, when we learned it."""
+    content: Any
+    t_event: datetime      # When did this happen?
+    t_known: datetime      # When did we learn this?
+    superseded_by: Optional[str] = None
 
-The Cartographer projects high-dimensional memory space into navigable topology.
 
-**Integrations**:
-- L-gent: Provides embedding space (terrain)
-- N-gent: Provides SemanticTraces (desire lines)
-- B-gent: Constrains resolution via token budget
-
-### PathfinderAgent
-
-```python
-PathfinderAgent: Goal → NavigationPlan
-```
-
-Navigates via desire lines (historical paths) rather than inventing new routes.
-
-Two modes:
-1. **Desire Line Navigation**: Follow historical paths (safe, high confidence)
-2. **Bushwhacking**: No history, must explore (risky, low confidence)
-
-### ContextInjector
-
-```python
-ContextInjector: (AgentState, Task) → OptimalContext
-```
-
-Produces optimal, budget-constrained, foveated context for any turn.
-
-**The answer to**: "What is the most perfect context injection for any given turn?"
-
----
-
-## Integration Map (Updated)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      M-gent (Cognitive)                      │
-│    RecollectionAgent, ConsolidationAgent, ProspectiveAgent   │
-│    CartographerAgent, PathfinderAgent, ContextInjector       │
-├─────────────────────────────────────────────────────────────┤
-│           ↕ terrain              ↕ traces                    │
-│    ┌─────────────┐         ┌─────────────┐                  │
-│    │   L-gent    │         │   N-gent    │                  │
-│    │ (embeddings)│         │  (history)  │                  │
-│    └─────────────┘         └─────────────┘                  │
-├─────────────────────────────────────────────────────────────┤
-│                      D-gent (Storage)                        │
-│    VolatileAgent, PersistentAgent, UnifiedMemory, VectorAgent│
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Bi-Temporal Primitives
-
-### BiTemporalStore
-
-Memory with explicit event-time and knowledge-time separation.
-
-```python
-BiTemporalStore: BiTemporalQuery → list[BiTemporalFact]
-
+@dataclass
 class BiTemporalStore(Agent[BiTemporalQuery, list[BiTemporalFact]]):
     """
     Two-dimensional temporal memory.
-
-    Every fact has:
-    - t_event: when did this happen in the world?
-    - t_known: when did the agent learn this?
-
     Enables:
     - Point-in-time queries: "What did I know at time T?"
     - Retroactive correction: "I now know X was wrong"
@@ -716,164 +251,222 @@ class BiTemporalStore(Agent[BiTemporalQuery, list[BiTemporalFact]]):
     """
     facts: list[BiTemporalFact]
 
-    async def invoke(self, query: BiTemporalQuery) -> list[BiTemporalFact]:
-        results = []
-        for fact in self.facts:
-            # Match event time if specified
-            if query.as_of_event and fact.t_event > query.as_of_event:
-                continue
-            # Match knowledge time if specified
-            if query.as_of_known and fact.t_known > query.as_of_known:
-                continue
-            # Skip superseded facts unless we want the full history
-            if fact.superseded_by and not query.include_superseded:
-                continue
-            if query.matches(fact.content):
-                results.append(fact)
-        return results
+    async def correct(self, fact_id: str, new_content: Any, reason: str): ...
 
-    async def correct(self, fact_id: str, new_content: Any, reason: str):
-        """Retroactively correct a belief without losing history."""
-        old_fact = self.get(fact_id)
-        new_fact = BiTemporalFact(
-            content=new_content,
-            t_event=old_fact.t_event,  # Same event time
-            t_known=now(),             # New knowledge time
-        )
-        old_fact.superseded_by = new_fact.id
-        self.facts.append(new_fact)
-```
 
-### BeliefArchaeologist
-
-Trace how understanding has evolved over time.
-
-```python
-BeliefArchaeologist: Concept → BeliefTimeline
-
+@dataclass
 class BeliefArchaeologist(Agent[Concept, BeliefTimeline]):
     """
-    Excavate the layers of belief about a concept.
-
-    "What did I believe about X at time T?"
-    "When did my understanding change?"
-    "What caused the revision?"
+    Trace belief evolution over time.
+    Excavate layers: what was believed, when did it change, why?
     """
     store: BiTemporalStore
-
-    async def invoke(self, concept: Concept) -> BeliefTimeline:
-        # Get all versions, including superseded
-        all_facts = await self.store.invoke(
-            BiTemporalQuery(
-                pattern=concept,
-                include_superseded=True
-            )
-        )
-
-        # Build timeline
-        timeline = BeliefTimeline(concept=concept)
-        for fact in sorted(all_facts, key=lambda f: f.t_known):
-            timeline.add_epoch(
-                belief=fact.content,
-                started=fact.t_known,
-                ended=all_facts[fact.superseded_by].t_known if fact.superseded_by else None,
-                superseded_by=fact.superseded_by
-            )
-
-        return timeline
 ```
 
----
-
-## Trace Monoid Primitives
-
-### CausalConeAgent
-
-Navigate the causal structure of memory.
+### Trace Monoid Primitives
 
 ```python
-CausalConeAgent: MemoryEvent → CausalCone
+@dataclass
+class CausalCone:
+    """Causal structure of a memory event."""
+    event: MemoryEvent
+    past_cone: list[MemoryEvent]      # What caused this
+    future_cone: list[MemoryEvent]    # What this caused
+    concurrent: list[MemoryEvent]     # Independent events
 
+
+@dataclass
 class CausalConeAgent(Agent[MemoryEvent, CausalCone]):
     """
-    Memory respects causality.
-
-    Given an event, find:
-    - Past cone: what caused this?
-    - Future cone: what did this cause?
-    - Concurrent: what was independent?
+    Navigate causal structure: given event, find past/future/concurrent.
+    Memory respects causality (trace monoid structure).
     """
     weave: TraceMonoid
 
-    async def invoke(self, event: MemoryEvent) -> CausalCone:
-        past = self.weave.ancestors(event)
-        future = self.weave.descendants(event)
-        concurrent = self.weave.independent_of(event)
 
-        return CausalCone(
-            event=event,
-            past_cone=past,
-            future_cone=future,
-            concurrent=concurrent,
-            depth=max(len(past), len(future))
-        )
-```
-
-### KnotAgent
-
-Synchronization barrier for merging memory branches.
-
-```python
-KnotAgent: list[MemoryBranch] → MergedMemory
-
+@dataclass
 class KnotAgent(Agent[list[MemoryBranch], MergedMemory]):
     """
-    A Knot is a synchronization barrier in the Weave.
-
-    When multiple concurrent memory branches need to reconcile:
-    1. Identify conflicts
-    2. Apply merge strategy
-    3. Create unified view
-
-    Like a git merge for memories.
+    Synchronization barrier for merging concurrent memory branches.
+    Like git merge for memories: identify conflicts, apply strategy, unify.
     """
-
-    async def invoke(self, branches: list[MemoryBranch]) -> MergedMemory:
-        # Find common ancestor
-        common = self.find_common_ancestor(branches)
-
-        # Identify divergences
-        divergences = []
-        for branch in branches:
-            events_since = branch.events_since(common)
-            divergences.append(events_since)
-
-        # Detect conflicts (same concept, different content)
-        conflicts = self.detect_conflicts(divergences)
-
-        # Resolve
-        merged_events = []
-        for conflict in conflicts:
-            resolution = await self.resolve_conflict(conflict)
-            merged_events.append(resolution)
-
-        # Non-conflicting events just union
-        for div in divergences:
-            for event in div:
-                if event not in conflicts:
-                    merged_events.append(event)
-
-        return MergedMemory(
-            events=merged_events,
-            knot_point=now(),
-            source_branches=[b.id for b in branches]
-        )
+    merge_strategy: MergeStrategy
 ```
 
----
+### Advanced Primitives
+
+```python
+@dataclass
+class AssociativeWeb:
+    """
+    Memory linked by explicit associations.
+    Relations: reminds_of, contradicts, supports, caused_by
+    """
+    unified: UnifiedMemory
+
+    async def spread_activation(
+        self,
+        start: Memory,
+        depth: int = 3
+    ) -> list[tuple[Memory, float]]:
+        """Spreading activation with distance decay."""
+        ...
+```
+
+## Laws/Invariants
+
+### Holographic Law
+```
+∀ cue ∈ Concept: RecollectionAgent(cue) → Recollection
+(Always returns something, never fails)
+```
+
+### Graceful Degradation
+```
+compression_ratio(memory, 0.5) → resolution_loss(0.5)
+(50% compression = 50% fidelity loss, NOT 50% data loss)
+```
+
+### Temperature Conservation
+```
+∑ heat(memory) = constant
+(Total system temperature conserved across hot/cold promotion/demotion)
+```
+
+### Consolidation Idempotence
+```
+ConsolidationAgent(ConsolidationAgent(M)) ≈ ConsolidationAgent(M)
+(Repeated consolidation converges to stable state)
+```
+
+### Ethical Monotonicity
+```
+harmful_outcome(action) → expand(forbidden_region(action))
+beneficial_outcome(action) → strengthen(virtuous_region(action))
+(Ethics learned from experience, not hardcoded)
+```
+
+### Stigmergic Emergence
+```
+consensus(HiveMind) = aggregate(individual_traces)
+(Collective memory emerges without central coordination)
+```
+
+### Bi-Temporal Consistency
+```
+∀ t: query(as_of_known=t) returns beliefs_at(t)
+(Time travel queries are consistent with historical state)
+```
+
+### Causal Ordering
+```
+event_a → event_b ⟹ event_a ∈ past_cone(event_b)
+(Memory respects causal structure)
+```
+
+## Integration
+
+### AGENTESE Paths
+
+```python
+# M-gent via AGENTESE
+await logos.invoke("self.memory.recall", concept)          # RecollectionAgent
+await logos.invoke("self.memory.consolidate")              # ConsolidationAgent (idle)
+await logos.invoke("self.memory.prospect", situation)      # ProspectiveAgent
+await logos.invoke("self.ethics.navigate", action)         # EthicalGeometryAgent
+await logos.invoke("self.memory.at_time", timestamp)       # TemporalLens
+await logos.invoke("self.memory.belief_history", concept)  # BeliefArchaeologist
+
+# Stigmergic coordination
+await logos.invoke("world.pheromone.deposit", (concept, outcome))
+await logos.invoke("world.pheromone.follow")
+
+# Cartography
+await logos.invoke("self.memory.map", resolution)          # CartographerAgent
+await logos.invoke("self.memory.path", goal)               # PathfinderAgent
+await logos.invoke("self.memory.inject_context", task)     # ContextInjector
+```
+
+### Relation to Other Gents
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   M-gent (Cognitive)                     │
+│   Recollection, Consolidation, Prospective, Ethics      │
+│   Cartography, Context Injection                         │
+├─────────────────────────────────────────────────────────┤
+│          ↕ terrain           ↕ traces                    │
+│   ┌──────────────┐      ┌──────────────┐                │
+│   │    L-gent    │      │    N-gent    │                │
+│   │ (embeddings) │      │  (history)   │                │
+│   └──────────────┘      └──────────────┘                │
+├─────────────────────────────────────────────────────────┤
+│                   D-gent (Storage)                       │
+│   Volatile, Persistent, Unified, Vector                  │
+└─────────────────────────────────────────────────────────┘
+```
+
+**M-gent + D-gent**: M-gents are the cognitive operations; D-gents are the storage substrate.
+
+**M-gent + L-gent**: L-gent provides the vector embedding space (terrain for cartography).
+
+**M-gent + N-gent**: N-gents record narrative traces; M-gents remember them as stories.
+
+**M-gent + B-gent**: Memory has costs (storage, retrieval, consolidation). B-gent economics constrain operations.
+
+**M-gent + K-gent**: K-gent (soul) uses M-gent for persona memory and hypnagogic consolidation.
+
+## Anti-Patterns
+
+- **Database Fallacy**: Treating memory as exact retrieval. Memory is reconstruction—embrace fuzziness.
+- **Binary Ethics**: Hardcoding allowed/forbidden actions. Ethics is learned geometry, probabilistic.
+- **Synchronous Consolidation**: Running consolidation on critical path. It's a hypnagogic worker (idle-time only).
+- **Centralized Stigmergy**: Storing all traces in one place. Stigmergy is distributed by design.
+- **Forgetting as Deletion**: Treating forgetting as data loss. It's resolution reduction (compression).
+- **Context-Free Recall**: Ignoring current context when retrieving. Recall is always contextual.
+- **Single Timeline**: Conflating event-time and knowledge-time. Use bi-temporal for belief tracking.
+
+## Implementation Reference
+
+```
+impl/claude/agents/m/
+├── protocol.py              # Core protocols (HolographicMemory, etc.)
+├── memory.py                # RecollectionAgent, basic operations
+├── consolidation_engine.py  # ConsolidationAgent (hypnagogic worker)
+├── stigmergy.py             # PheromoneAgent, HiveMindAgent
+├── associative.py           # AssociativeWeb, spreading activation
+├── substrate.py             # Integration with D-gent storage
+├── lifecycle.py             # Memory lifecycle (hot/cold promotion)
+└── soul_memory.py           # K-gent integration (persona memory)
+
+impl/claude/agents/d/        # Storage substrate (D-gent)
+└── (volatile, persistent, unified, vector agents)
+
+impl/claude/agents/l/        # Vector embeddings (L-gent terrain)
+└── vector_db.py
+
+impl/claude/agents/n/        # Narrative traces (N-gent history)
+└── (trace recording)
+```
+
+**Tests**: Consolidated with D-gent storage layer tests.
+
+## Success Criteria
+
+### Functional
+- Holographic retrieval: partial match always returns results
+- Graceful degradation: compression reduces resolution, not data
+- Tiered memory: automatic hot/cold promotion/demotion
+- Consolidation: background processing during idle cycles
+
+### Performance
+- Recall latency: <100ms working memory, <500ms long-term
+- Compression ratio: 10:1 for cold memories
+- Budget compliance: respect token limits for context injection
 
 ## See Also
 
-- [holographic.md](holographic.md) - Architecture details
-- [README.md](README.md) - Philosophy and Four Pillars
-- [../anatomy.md](../anatomy.md) - Symbiont and Hypnagogic patterns
+- [holographic.md](holographic.md) - Holographic memory architecture
+- [README.md](README.md) - M-gent philosophy and four pillars
+- [../d-gents/README.md](../d-gents/README.md) - Storage substrate (D-gent)
+- [../anatomy.md](../anatomy.md) - Hypnagogic patterns

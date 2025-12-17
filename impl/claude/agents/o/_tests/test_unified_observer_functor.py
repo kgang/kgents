@@ -19,7 +19,7 @@ from agents.o.observer_functor import (
     observe,
     unobserve,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # =============================================================================
 # Test Fixtures

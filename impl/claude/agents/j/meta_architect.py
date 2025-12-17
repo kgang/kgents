@@ -29,9 +29,9 @@ import ast
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
+from agents.poly.types import Agent, JudgeInput, PartialVerdict, Verdict
 from bootstrap.judge import MINI_JUDGES
 from bootstrap.judge import Judge as BootstrapJudge
-from bootstrap.types import Agent, JudgeInput, PartialVerdict, Verdict
 
 # Template generation (Phase D - H12)
 from .templates import TemplateContext, generate_template

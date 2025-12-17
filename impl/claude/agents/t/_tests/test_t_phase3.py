@@ -30,7 +30,7 @@ from agents.t import (
     numeric_equality,
     semantic_equality,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 # Simple identity agent for testing

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from bootstrap.dna import (
+from protocols.config.dna import (
     BOUNDED_DEPTH,
     # Standard constraints
     EPISTEMIC_HUMILITY,

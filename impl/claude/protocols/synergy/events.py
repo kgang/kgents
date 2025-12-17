@@ -70,10 +70,19 @@ class SynergyEventType(Enum):
     FORCE_USED = "force_used"
 
     # D-gent events (Data layer)
-    DATA_STORED = "data_stored"       # Datum stored to backend
-    DATA_DELETED = "data_deleted"     # Datum removed from backend
-    DATA_UPGRADED = "data_upgraded"   # Datum promoted to higher tier
-    DATA_DEGRADED = "data_degraded"   # Datum demoted (graceful degradation)
+    DATA_STORED = "data_stored"  # Datum stored to backend
+    DATA_DELETED = "data_deleted"  # Datum removed from backend
+    DATA_UPGRADED = "data_upgraded"  # Datum promoted to higher tier
+    DATA_DEGRADED = "data_degraded"  # Datum demoted (graceful degradation)
+
+    # F-gent Flow events (Phase 1 Foundation)
+    FLOW_STARTED = "flow_started"  # Any flow started (chat/research/collaboration)
+    FLOW_COMPLETED = "flow_completed"  # Any flow completed
+    TURN_COMPLETED = "turn_completed"  # Chat turn completed (message + response)
+    HYPOTHESIS_CREATED = "hypothesis_created"  # Research branch created
+    HYPOTHESIS_SYNTHESIZED = "hypothesis_synthesized"  # Research synthesis complete
+    CONSENSUS_REACHED = "consensus_reached"  # Collaboration consensus
+    CONTRIBUTION_POSTED = "contribution_posted"  # Blackboard contribution
 
 
 class Jewel(Enum):
@@ -961,6 +970,330 @@ def create_data_degraded_event(
     )
 
 
+# =============================================================================
+# F-gent Flow Events (Phase 1 Foundation)
+# =============================================================================
+
+
+def create_flow_started_event(
+    flow_id: str,
+    jewel: Jewel,
+    modality: str,
+    session_id: str | None = None,
+    config: dict[str, Any] | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Flow started event.
+
+    When a jewel starts a Flow (ChatFlow, ResearchFlow, CollaborationFlow),
+    this event notifies other jewels.
+
+    Args:
+        flow_id: Unique flow identifier
+        jewel: Source jewel starting the flow
+        modality: Flow modality (chat, research, collaboration)
+        session_id: Optional parent session ID
+        config: Optional flow configuration
+
+    Returns:
+        SynergyEvent for FLOW_STARTED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.FLOW_STARTED,
+        source_id=flow_id,
+        payload={
+            "modality": modality,
+            "session_id": session_id,
+            "config": config or {},
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_flow_completed_event(
+    flow_id: str,
+    jewel: Jewel,
+    modality: str,
+    duration_seconds: float,
+    turns: int = 0,
+    hypotheses: int = 0,
+    contributions: int = 0,
+    entropy_spent: float = 0.0,
+    session_id: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Flow completed event.
+
+    When a flow completes, this event triggers auto-capture to Brain.
+
+    Args:
+        flow_id: Unique flow identifier
+        jewel: Source jewel that ran the flow
+        modality: Flow modality (chat, research, collaboration)
+        duration_seconds: Flow duration
+        turns: Number of turns (chat)
+        hypotheses: Number of hypotheses (research)
+        contributions: Number of contributions (collaboration)
+        entropy_spent: Entropy consumed
+        session_id: Optional parent session ID
+
+    Returns:
+        SynergyEvent for FLOW_COMPLETED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.FLOW_COMPLETED,
+        source_id=flow_id,
+        payload={
+            "modality": modality,
+            "duration_seconds": duration_seconds,
+            "turns": turns,
+            "hypotheses": hypotheses,
+            "contributions": contributions,
+            "entropy_spent": entropy_spent,
+            "session_id": session_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_turn_completed_event(
+    turn_id: str,
+    flow_id: str,
+    jewel: Jewel,
+    turn_number: int,
+    user_message_preview: str,
+    assistant_response_preview: str,
+    tokens_in: int,
+    tokens_out: int,
+    latency_seconds: float,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a ChatFlow turn completed event.
+
+    When a chat turn completes (message + response), this event
+    can trigger memory capture for important exchanges.
+
+    Args:
+        turn_id: Unique turn identifier
+        flow_id: Parent flow ID
+        jewel: Source jewel running the chat
+        turn_number: Turn number in conversation
+        user_message_preview: First 100 chars of user message
+        assistant_response_preview: First 100 chars of response
+        tokens_in: Input tokens
+        tokens_out: Output tokens
+        latency_seconds: Response latency
+
+    Returns:
+        SynergyEvent for TURN_COMPLETED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.TURN_COMPLETED,
+        source_id=turn_id,
+        payload={
+            "flow_id": flow_id,
+            "turn_number": turn_number,
+            "user_message_preview": user_message_preview[:100],
+            "assistant_response_preview": assistant_response_preview[:100],
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "latency_seconds": latency_seconds,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_hypothesis_created_event(
+    hypothesis_id: str,
+    flow_id: str,
+    jewel: Jewel,
+    hypothesis_content: str,
+    parent_id: str | None,
+    depth: int,
+    promise: float,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a ResearchFlow hypothesis created event.
+
+    When a new hypothesis branch is created, this event
+    notifies other jewels for tracking.
+
+    Args:
+        hypothesis_id: Unique hypothesis identifier
+        flow_id: Parent flow ID
+        jewel: Source jewel running research
+        hypothesis_content: The hypothesis text
+        parent_id: Parent hypothesis ID (None for root)
+        depth: Depth in hypothesis tree
+        promise: Estimated promise (0-1)
+
+    Returns:
+        SynergyEvent for HYPOTHESIS_CREATED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.HYPOTHESIS_CREATED,
+        source_id=hypothesis_id,
+        payload={
+            "flow_id": flow_id,
+            "content": hypothesis_content[:200],
+            "parent_id": parent_id,
+            "depth": depth,
+            "promise": promise,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_hypothesis_synthesized_event(
+    synthesis_id: str,
+    flow_id: str,
+    jewel: Jewel,
+    question: str,
+    answer: str,
+    confidence: float,
+    hypotheses_explored: int,
+    insights_count: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a ResearchFlow synthesis completed event.
+
+    When research synthesizes into a final answer, this event
+    triggers auto-capture to Brain.
+
+    Args:
+        synthesis_id: Unique synthesis identifier
+        flow_id: Parent flow ID
+        jewel: Source jewel
+        question: Original question
+        answer: Synthesized answer
+        confidence: Confidence in answer (0-1)
+        hypotheses_explored: Number of hypotheses explored
+        insights_count: Number of insights generated
+
+    Returns:
+        SynergyEvent for HYPOTHESIS_SYNTHESIZED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.HYPOTHESIS_SYNTHESIZED,
+        source_id=synthesis_id,
+        payload={
+            "flow_id": flow_id,
+            "question": question[:200],
+            "answer": answer[:500],
+            "confidence": confidence,
+            "hypotheses_explored": hypotheses_explored,
+            "insights_count": insights_count,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_consensus_reached_event(
+    decision_id: str,
+    flow_id: str,
+    jewel: Jewel,
+    proposal_content: str,
+    outcome: str,
+    vote_summary: dict[str, int],
+    participants: list[str],
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a CollaborationFlow consensus reached event.
+
+    When a collaboration reaches consensus on a proposal,
+    this event triggers auto-capture to Brain.
+
+    Args:
+        decision_id: Unique decision identifier
+        flow_id: Parent flow ID
+        jewel: Source jewel
+        proposal_content: The proposal that was decided
+        outcome: Decision outcome (approved, rejected, deferred)
+        vote_summary: Dict of vote type -> count
+        participants: List of participating agent IDs
+
+    Returns:
+        SynergyEvent for CONSENSUS_REACHED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.CONSENSUS_REACHED,
+        source_id=decision_id,
+        payload={
+            "flow_id": flow_id,
+            "proposal_content": proposal_content[:200],
+            "outcome": outcome,
+            "vote_summary": vote_summary,
+            "participants": participants,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_contribution_posted_event(
+    contribution_id: str,
+    flow_id: str,
+    jewel: Jewel,
+    agent_id: str,
+    contribution_type: str,
+    content_preview: str,
+    confidence: float,
+    round_number: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a CollaborationFlow contribution posted event.
+
+    When an agent posts a contribution to the blackboard,
+    this event notifies other participants.
+
+    Args:
+        contribution_id: Unique contribution identifier
+        flow_id: Parent flow ID
+        jewel: Source jewel
+        agent_id: ID of contributing agent
+        contribution_type: Type (idea, critique, question, evidence, synthesis)
+        content_preview: First 100 chars of content
+        confidence: Contribution confidence (0-1)
+        round_number: Current round
+
+    Returns:
+        SynergyEvent for CONTRIBUTION_POSTED
+    """
+    return SynergyEvent(
+        source_jewel=jewel,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONTRIBUTION_POSTED,
+        source_id=contribution_id,
+        payload={
+            "flow_id": flow_id,
+            "agent_id": agent_id,
+            "contribution_type": contribution_type,
+            "content_preview": content_preview[:100],
+            "confidence": confidence,
+            "round_number": round_number,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -997,4 +1330,12 @@ __all__ = [
     "create_data_deleted_event",
     "create_data_upgraded_event",
     "create_data_degraded_event",
+    # Factory functions - F-gent Flow (Phase 1)
+    "create_flow_started_event",
+    "create_flow_completed_event",
+    "create_turn_completed_event",
+    "create_hypothesis_created_event",
+    "create_hypothesis_synthesized_event",
+    "create_consensus_reached_event",
+    "create_contribution_posted_event",
 ]

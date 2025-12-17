@@ -14,7 +14,7 @@ from typing import Any, AsyncIterator, TypeVar
 import pytest
 from agents.a.functor import FunctorRegistry
 from agents.flux import Flux, FluxAgent, FluxFunctor
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 T = TypeVar("T")
 

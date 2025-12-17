@@ -44,7 +44,7 @@ from .reentry import ReentryContext
 from .token import SemaphoreToken
 
 if TYPE_CHECKING:
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
 
     from ..agent import FluxAgent
 

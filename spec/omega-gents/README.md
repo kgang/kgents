@@ -21,17 +21,22 @@ Traditional:  Agent ──request──▶ Infrastructure ──allocate──�
 MORPHEUS:     Agent ──manifest──▶ Morphology ──feel──▶ self.body.*
 ```
 
-**Key Distinction from Y-gent**: Y-gent handles **topology** (branching, merging, chrysalis state transitions). Ω-gent handles **morphology** (what resources compose the body) and **proprioception** (sensing that body's state). They compose:
+**Scope**: Ω-gent handles three related concerns:
+- **Morphology**: What resources compose the agent's body
+- **Proprioception**: Sensing that body's state (`self.body.*`)
+- **Chrysalis**: Liminal state during morphology transformation (see `chrysalis.md`)
 
 ```python
-# Y-gent: TOPOLOGY (shape of agent population)
-variants = await y_gent.branch(agent, count=3)
-winner = await y_gent.merge(variants, strategy=WINNER)
-
-# Ω-gent: MORPHOLOGY (shape of each agent's body)
+# Ω-gent: MORPHOLOGY (shape of agent's body)
 morphology = Base() >> with_cortex("A100") >> with_ganglia(3)
 await omega.manifest(morphology)
+
+# Ω-gent: CHRYSALIS (population topology)
+variants = await omega.branch_population(agent, count=3)
+winner = await omega.merge_population(variants, strategy=WINNER)
 ```
+
+**Historical Note**: Chrysalis and population topology were originally part of Y-gent. They have been migrated here as part of AD-009 (Turn Protocol subsumes Y-gent). See `spec/y-gents-archived/MIGRATION.md`.
 
 ---
 
@@ -163,7 +168,7 @@ class Morphology:
         """
         Hash of morphology for change detection.
 
-        Used by Y-gent chrysalis to detect when morphology has changed.
+        Used by chrysalis to detect when morphology has changed.
         """
         import hashlib
         import json
@@ -194,8 +199,8 @@ class OmegaGent:
     Translates morpheme compositions into Kubernetes resources
     and provides proprioceptive feedback to agents.
 
-    Design: Ω-gent is the body-maker; Y-gent is the body-shaper.
-    Ω-gent manifests; Y-gent branches, merges, and chrysalizes.
+    Design: Ω-gent handles both morphology (body shape) and chrysalis
+    (body transformation). It manifests, branches, merges, and chrysalizes.
     """
 
     metabolism: MetabolicPhysics  # B-gent integration
@@ -251,12 +256,12 @@ class OmegaGent:
         """
         Apply a morpheme to a running agent.
 
-        The transition is managed by Y-gent's chrysalis pattern.
-        Ω-gent provides the new body; Y-gent manages the transition.
+        If morphology changes significantly, enters chrysalis state.
+        See chrysalis.md for the full transformation protocol.
         """
         current = await self._get_current_morphology(agent_id)
         new_morphology = current >> morpheme
-        return new_morphology  # Y-gent handles the actual transition
+        return new_morphology  # Chrysalis handles the actual transition
 ```
 
 ### 3.3 Proprioception Types
@@ -438,12 +443,7 @@ class SomaticContext:
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │   ┌─────────┐                                                       │
-│   │  Y-gent │ ◀──── Topology (branch/merge/chrysalis)               │
-│   └────┬────┘       Y-gent calls Ω-gent to manifest new bodies      │
-│        │                                                             │
-│        ▼                                                             │
-│   ┌─────────┐                                                       │
-│   │  Ω-gent │ ◀──── Morphology + Proprioception                     │
+│   │  Ω-gent │ ◀──── Morphology + Proprioception + Chrysalis         │
 │   └────┬────┘                                                        │
 │        │                                                             │
 │   ┌────┴────┬────────────┬────────────┐                             │
@@ -454,10 +454,11 @@ class SomaticContext:
 │   │         │           │           │                                │
 │   │         │           │           │                                │
 │   │    State sidecar    │      Observes                              │
-│   │                     │      proprioception                        │
+│   │    (chrysalis seed) │      proprioception                        │
 │   │                     │                                            │
 │   Metabolic cost    Chronicles                                       │
-│                     lifecycle                                        │
+│   (morphology +     lifecycle                                        │
+│    chrysalis)       (incl. chrysalis)                                │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -466,10 +467,10 @@ class SomaticContext:
 
 | Integration | Description |
 |-------------|-------------|
-| Ω+Y | Y-gent topology uses Ω-gent to manifest bodies |
+| Ω+Turn | Turn Protocol uses Ω-gent chrysalis for body transformation |
 | Ω+B | B-gent meters morphology costs (ATP, not Approval) |
 | Ω+D | D-gent sidecar provides state persistence via `with_sidecar()` |
-| Ω+N | N-gent chronicles pod lifecycle events |
+| Ω+N | N-gent chronicles pod lifecycle events (including chrysalis) |
 | Ω+O | O-gent observes proprioception metrics |
 | Ω+Ψ | Ψ-gent metaphors can recommend morphology changes |
 
@@ -572,7 +573,7 @@ protocols/cli/handlers/
 - [ ] `self.body.strain` returns accurate CPU metric
 - [ ] `self.body.pressure` returns accurate memory metric
 - [ ] B-gent integration prevents over-budget manifests
-- [ ] Morphology changes integrate with Y-gent chrysalis
+- [ ] Morphology changes trigger chrysalis when significant
 
 ### Compositional
 
@@ -582,7 +583,7 @@ protocols/cli/handlers/
 
 ### Integration
 
-- [ ] Y-gent can request body for branched agents
+- [ ] Chrysalis can request body for branched agents
 - [ ] B-gent meters all morphology costs
 - [ ] N-gent chronicles lifecycle events
 - [ ] O-gent observes proprioception metrics

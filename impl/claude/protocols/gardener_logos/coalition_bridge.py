@@ -130,8 +130,6 @@ async def spawn_coalition_from_garden(
     Returns:
         (TendingGesture, coalition_id or None on failure)
     """
-    from agents.forge.synergy import emit_coalition_formed, query_context_for_coalition
-
     # Create the graft gesture
     gesture = graft_coalition(
         task_template=task_template,
@@ -140,11 +138,24 @@ async def spawn_coalition_from_garden(
         garden_session_id=garden.session_id,
     )
 
-    # Query for relevant context from Brain (result used for logging/tracing)
-    _ = await query_context_for_coalition(
-        task_template=task_template,
-        task_description=task_description,
-    )
+    # Query for relevant context from Brain (optional, graceful degradation)
+    try:
+        from protocols.agentese import create_brain_logos
+        from protocols.agentese.node import Observer
+
+        logos = create_brain_logos(embedder_type="auto")
+        observer = Observer.guest()
+
+        # Query for past tasks with same template
+        await logos.invoke(
+            "self.memory.query",
+            observer,
+            query=f"forge-{task_template}",
+            limit=5,
+        )
+    except Exception:
+        # Graceful degradation - Brain context is optional
+        pass
 
     # Generate coalition ID
     coalition_id = f"garden-coal-{uuid.uuid4().hex[:8]}"
@@ -152,14 +163,22 @@ async def spawn_coalition_from_garden(
     # Determine archetypes based on template
     archetypes = _suggest_archetypes_for_template(task_template)
 
-    # Emit coalition formed event
-    await emit_coalition_formed(
-        coalition_id=coalition_id,
-        task_template=task_template,
-        archetypes=archetypes,
-        eigenvector_compatibility=0.85,  # Would calculate from garden context
-        estimated_credits=_estimate_credits_for_template(task_template),
-    )
+    # Emit coalition formed event (inlined from agents.forge.synergy)
+    try:
+        from protocols.synergy import create_coalition_formed_event, get_synergy_bus
+
+        event = create_coalition_formed_event(
+            coalition_id=coalition_id,
+            task_template=task_template,
+            archetypes=archetypes,
+            eigenvector_compatibility=0.85,  # Would calculate from garden context
+            estimated_credits=_estimate_credits_for_template(task_template),
+        )
+        bus = get_synergy_bus()
+        await bus.emit(event)
+    except Exception:
+        # Graceful degradation - synergy events are optional
+        pass
 
     # Record gesture in garden
     garden.add_gesture(gesture)

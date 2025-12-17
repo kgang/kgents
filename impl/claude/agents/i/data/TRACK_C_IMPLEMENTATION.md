@@ -15,7 +15,7 @@ Track C implements the **Visual Hint Protocol**, enabling agents to define their
 
 > *"The I-gent is not a dashboard—it's a BROWSER that renders agent-emitted layout hints."*
 
-A B-gent (Banker) can emit a table. A Y-gent (Topology) can emit a graph. The framework renders whatever they yield.
+A B-gent (Banker) can emit a table. An F-gent (Research) can emit a hypothesis graph. The framework renders whatever they yield.
 
 ---
 
@@ -116,7 +116,7 @@ Comprehensive documentation showing how FluxAgents would emit hints.
 
 **Example Scenarios**:
 1. **B-gent (Banker)** emits table hints for balance sheets
-2. **Y-gent (Topology)** emits graph hints for agent connections
+2. **F-gent (Research)** emits graph hints for hypothesis trees
 3. **K-gent** emits density + sparkline hints for cognitive state
 4. **Multi-agent orchestration** with different priorities
 
@@ -146,7 +146,7 @@ async def process(self, event):
 - ✅ Default values
 - ✅ Data structure preservation
 - ✅ Priority handling
-- ✅ Real-world use cases (B-gent, Y-gent, K-gent)
+- ✅ Real-world use cases (B-gent, F-gent, K-gent)
 
 ### HintRegistry Tests (29 tests)
 
@@ -172,7 +172,7 @@ Agents define their own representation, not the framework.
 # B-gent knows it should be a table
 hint = VisualHint(type="table", data=ledger)
 
-# Y-gent knows it should be a graph
+# F-gent knows its hypothesis tree should be a graph
 hint = VisualHint(type="graph", data=topology)
 ```
 

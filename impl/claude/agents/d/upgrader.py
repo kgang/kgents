@@ -18,12 +18,24 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Callable, Awaitable
+from typing import Awaitable, Callable
 
+from .bus import DataBus, DataEvent, DataEventType
 from .datum import Datum
 from .protocol import DgentProtocol
 from .router import Backend, DgentRouter
-from .bus import DataBus, DataEvent, DataEventType
+
+# Synergy event imports (optional dependency)
+try:
+    from protocols.synergy.bus import SynergyEventBus, get_synergy_bus
+    from protocols.synergy.events import (
+        create_data_degraded_event,
+        create_data_upgraded_event,
+    )
+
+    _HAS_SYNERGY = True
+except ImportError:
+    _HAS_SYNERGY = False
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +123,8 @@ class AutoUpgrader:
         bus: DataBus | None = None,
         policy: UpgradePolicy | None = None,
         check_interval: float = 30.0,  # Seconds between upgrade checks
+        synergy_bus: "SynergyEventBus | None" = None,
+        emit_synergy: bool = True,  # Whether to emit synergy events
     ) -> None:
         """
         Initialize the AutoUpgrader.
@@ -122,6 +136,8 @@ class AutoUpgrader:
             bus: DataBus for listening to events (optional)
             policy: Upgrade policy (uses defaults if None)
             check_interval: How often to check for upgrade candidates
+            synergy_bus: SynergyEventBus for cross-jewel events (optional)
+            emit_synergy: Whether to emit synergy events (default True)
         """
         self.source = source
         self.source_tier = source_tier
@@ -129,6 +145,8 @@ class AutoUpgrader:
         self.bus = bus
         self.policy = policy or UpgradePolicy()
         self.check_interval = check_interval
+        self._synergy_bus = synergy_bus
+        self._emit_synergy = emit_synergy
 
         self._stats = UpgradeStats()
         self._datum_stats: dict[str, DatumStats] = {}
@@ -138,7 +156,9 @@ class AutoUpgrader:
         self._unsubscribe: Callable[[], None] | None = None
 
         # Callbacks
-        self._on_upgrade: list[Callable[[Datum, Backend, Backend], Awaitable[None]]] = []
+        self._on_upgrade: list[
+            Callable[[Datum, Backend, Backend], Awaitable[None]]
+        ] = []
 
     def on_upgrade(
         self, callback: Callable[[Datum, Backend, Backend], Awaitable[None]]
@@ -155,6 +175,39 @@ class AutoUpgrader:
                 await callback(datum, from_tier, to_tier)
             except Exception as e:
                 logger.warning(f"Upgrade callback error: {e}")
+
+    async def _emit_upgrade_synergy(
+        self,
+        datum_id: str,
+        from_tier: Backend,
+        to_tier: Backend,
+        reason: str = "access_pattern",
+    ) -> None:
+        """
+        Emit synergy event for tier transition.
+
+        Makes tier promotions visible in UI via the SynergyBus.
+        """
+        if not self._emit_synergy or not _HAS_SYNERGY:
+            return
+
+        # Get the bus (use injected or global singleton)
+        bus = self._synergy_bus or get_synergy_bus()
+
+        try:
+            event = create_data_upgraded_event(
+                datum_id=datum_id,
+                old_tier=from_tier.name,
+                new_tier=to_tier.name,
+                reason=reason,
+            )
+            await bus.emit(event)
+            logger.debug(
+                f"Synergy: DATA_UPGRADED {datum_id[:8]}... {from_tier.name} → {to_tier.name}"
+            )
+        except Exception as e:
+            # Don't fail upgrades if synergy emission fails
+            logger.warning(f"Synergy emission failed: {e}")
 
     async def _handle_bus_event(self, event: DataEvent) -> None:
         """Handle DataBus events to track access patterns."""
@@ -249,6 +302,9 @@ class AutoUpgrader:
 
             # Notify listeners
             await self._notify_upgrade(datum, from_tier, to_tier)
+
+            # Emit synergy event for UI visibility
+            await self._emit_upgrade_synergy(datum_id, from_tier, to_tier)
 
             logger.debug(f"Upgraded {datum_id[:8]}... from {from_tier} to {to_tier}")
             return True

@@ -26,7 +26,7 @@ from typing import (
     overload,
 )
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

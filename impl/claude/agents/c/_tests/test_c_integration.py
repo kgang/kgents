@@ -48,7 +48,7 @@ from agents.c import (
     race,
     switch,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # --- Helper Agents for Testing ---
 

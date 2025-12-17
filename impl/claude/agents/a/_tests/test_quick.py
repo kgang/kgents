@@ -2,7 +2,7 @@
 
 import pytest
 from agents.a.quick import FunctionAgent, agent, pipeline
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 class TestAgentDecorator:

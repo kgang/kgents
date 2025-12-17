@@ -30,7 +30,7 @@ from agents.j.factory_integration import (
     get_jit_meta,
     is_jit_agent,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # Mark wrapper as test agent (for runtime, not mypy)
 JITAgentWrapper.__is_test__ = True  # type: ignore[attr-defined]

@@ -2,20 +2,16 @@
 
 > *"Developers design agents. Projections are batteries included."*
 
-## Overview
+**Status:** Canonical
+**Implementation:** `impl/claude/agents/i/reactive/` (37+ tests), `impl/claude/system/projector/`
 
-The Projection Protocol defines how kgents content renders to any target medium. Developers write agents and their associated state machines. The projection layer handles the rest—whether output goes to ASCII terminal, JSON API, marimo notebook, WebGL, or VR headset.
+## Purpose
 
-This is not mere convenience. It is a **categorical guarantee**: the same agent definition, projected through different functors, produces semantically equivalent views.
+The Projection Protocol defines how kgents content renders to any target medium. Developers write agents and their state machines. The projection layer handles rendering—whether output goes to ASCII terminal, JSON API, marimo notebook, WebGL, or VR headset. This is not mere convenience—it is a **categorical guarantee**: the same agent definition, projected through different functors, produces semantically equivalent views.
 
-```
-Agent[S, A, B] ────────────► Projection[Target] ────────────► View[Target]
-     │                              │                              │
-     │                              │                              │
-     └── Design once ───────────────┴── Batteries included ────────┘
-```
+## Core Insight
 
----
+*"State is design. Projection is mechanical. Targets are isomorphic within fidelity."*
 
 ## Mathematical Foundation
 
@@ -57,9 +53,7 @@ compress(embed(view)) ≤ view
 state ≤ embed(compress(state))
 ```
 
-This formalizes the insight from `projector.py`: projection is fundamentally **lossy**. Different targets have different fidelity. A marimo heatmap captures more than an ASCII sparkline. The category theory ensures we lose information predictably.
-
----
+This formalizes the insight: projection is fundamentally **lossy**. Different targets have different fidelity. A marimo heatmap captures more than an ASCII sparkline. The category theory ensures we lose information predictably.
 
 ## The Projection Stack
 
@@ -101,8 +95,6 @@ TownWidget(...).to_json()    # API response
 TownWidget(...).to_vr()      # Future: WebXR scene
 ```
 
----
-
 ## Target Registry
 
 The projection system is extensible via the Target Registry:
@@ -134,8 +126,6 @@ class WebGLTarget(RenderTarget):
         ...
 ```
 
----
-
 ## Density Projection
 
 The Projection Protocol extends beyond target (CLI/Web/marimo) to include **DENSITY** as an orthogonal dimension.
@@ -162,22 +152,9 @@ widget.project(RenderTarget.WEB, density='compact')    # → Minimal chrome, dra
 widget.project(RenderTarget.WEB, density='spacious')   # → Full panels, legends
 ```
 
-The widget's `layout` field provides hints, but the projection target makes the final density decision based on available space:
-
-```typescript
-interface WidgetLayoutHints {
-  flex?: number;           // Flex grow factor
-  minWidth?: number;       // Collapse threshold
-  maxWidth?: number;       // Comfortable maximum
-  priority?: number;       // Truncation order
-  collapsible?: boolean;   // Can be hidden to save space
-  collapseAt?: number;     // Viewport width threshold
-}
-```
-
 ### The Isomorphism
 
-The key insight from the Gestalt Elastic refactor:
+The key insight:
 
 ```
 Screen Density ≅ Observer Umwelt ≅ Projection Target ≅ Content Detail Level
@@ -191,9 +168,7 @@ This is not metaphor—it is a categorical equivalence:
 | Affordance based on who grasps | Content based on available space |
 | `manifest` yields observer-view | `project` yields density-view |
 
-### Practical Application
-
-The density dimension allows widgets to define **content degradation** gracefully:
+### Content Degradation Levels
 
 ```typescript
 type ContentLevel = 'icon' | 'title' | 'summary' | 'full';
@@ -208,13 +183,9 @@ function getContentLevel(width: number): ContentLevel {
 
 Each level is a **lossy projection**—information removed predictably, matching the Galois connection principle.
 
----
-
 ## Layout Projection
 
 > *"The sidebar and the drawer are the same panel. Only the observer's capacity to receive differs."*
-
-Content projection is **lossy compression**—fewer labels, smaller numbers, truncated text. Layout projection is **structural isomorphism**—the same information, arranged differently for different interaction modalities.
 
 ### The Two Functors
 
@@ -259,7 +230,7 @@ The **same logical content** projects to **different interaction modalities**. T
 
 ### Layout Primitives
 
-The protocol defines three canonical layout primitives that compose to form all density-adaptive layouts:
+Three canonical layout primitives compose to form all density-adaptive layouts:
 
 | Primitive | Compact | Comfortable | Spacious |
 |-----------|---------|-------------|----------|
@@ -270,8 +241,6 @@ The protocol defines three canonical layout primitives that compose to form all 
 These primitives form the **basis** of the layout functor. All responsive layouts decompose into compositions of these primitives.
 
 ### The Three-Stage Layout Pattern
-
-Layouts project through three canonical stages:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -341,8 +310,6 @@ This is the **canonical pattern** for density-dependent values. The scattered co
 
 ### Composition Laws
 
-Layout projection preserves widget composition under certain conditions:
-
 **Vertical Composition (`//`)**:
 ```
 Layout[D](A // B) = Layout[D](A) // Layout[D](B)
@@ -366,64 +333,50 @@ Layout[compact](SidePanel >> MainContent)
 The >> composition transforms to overlay composition in compact mode.
 ```
 
+## 3D Target Projection (WebGL/WebXR)
+
+> *"Depth is not decoration—it is information."*
+
+### The Illumination Quality Dimension
+
+Just as density governs 2D layout projection, **illumination quality** governs 3D rendering fidelity:
+
+```
+Projection[3D] = (Density × IlluminationQuality) → 3D Scene
+
+Where IlluminationQuality ∈ {minimal, standard, high, cinematic}
+```
+
+| Quality | Shadows | Shadow Map | Use Case |
+|---------|---------|------------|----------|
+| `minimal` | None | N/A | Low-end mobile, battery saving |
+| `standard` | Soft | 1024px | Most devices |
+| `high` | PCF soft | 2048px | Desktop, high-end mobile |
+| `cinematic` | VSM/CSM | 4096px | Presentation, screenshots |
+
+### Semiotic Depth Cues
+
+3D projections leverage depth cues in order of perceptual strength:
+
+| Cue | Provided By | Priority |
+|-----|-------------|----------|
+| Occlusion | WebGL z-buffer | Automatic |
+| Shadows | DirectionalLight | Explicit (quality-dependent) |
+| Size gradient | Perspective camera | Automatic |
+| Motion parallax | OrbitControls | Interactive |
+| Shading | PBR materials | Automatic |
+
+**Key insight**: Shadows are the second-most-powerful depth cue after occlusion, yet often omitted due to performance concerns. Quality-dependent shadows solve this tradeoff.
+
 ### Connection to AGENTESE
 
-Layout projection is `manifest` specialized to physical capacity:
+3D projection is observer-dependent in two dimensions:
 
-| AGENTESE | Layout Projection |
-|----------|-------------------|
-| Observer umwelt | Viewport density |
-| Affordance for who grasps | Interaction modality for screen size |
-| `manifest` yields observer-view | `Layout[D]` yields density-structure |
-
-```python
-# AGENTESE observer-dependent projection
-await logos.invoke("world.panel.manifest", mobile_umwelt)
-# → Drawer with floating action trigger
-
-await logos.invoke("world.panel.manifest", desktop_umwelt)
-# → Fixed sidebar with resizable divider
-```
-
-The observer's **capacity to receive** includes not just cognitive bandwidth (content projection) but also **physical modality** (layout projection). A mobile user cannot drag a resize handle—they tap floating actions instead.
-
-### Component Density Propagation
-
-Components receive density as a parameter and decide internally how to adapt:
-
-```
-Anti-pattern: {isMobile ? <CompactPanel /> : <FullPanel />}
-Pattern:      <Panel density={density} />
-
-// Inside Panel:
-function Panel({ density }) {
-  const isDrawer = density === 'compact';
-  // Component owns its density interpretation
-}
-```
-
-This encapsulation ensures:
-1. Parent components remain density-agnostic
-2. Components can be reused at any density
-3. Testing targets density values, not scattered conditions
-
-### Layout Hints
-
-Widgets provide layout hints that inform projection decisions:
-
-```typescript
-interface LayoutHints {
-  collapseAt?: number;        // Viewport width to collapse
-  collapseTo?: 'drawer' | 'tab' | 'hidden';
-  priority?: number;          // Truncation order (lower = keep longer)
-  requiresFullWidth?: boolean; // Cannot share horizontal space
-  minTouchTarget?: number;     // Physical minimum (default 48)
-}
-```
-
-These hints guide the layout functor but do not determine it—the projection target makes the final decision based on available space.
-
----
+| AGENTESE Concept | 2D Manifestation | 3D Manifestation |
+|------------------|------------------|------------------|
+| Observer capacity | Viewport density | Device capability |
+| `manifest` result | Content + Layout | Content + Layout + Illumination |
+| Lossy compression | Fewer labels | Lower shadow fidelity |
 
 ## The Three Truths
 
@@ -472,8 +425,6 @@ cli_output = widget.to_cli()
 # But no information is added—only removed
 ```
 
----
-
 ## Integration with AGENTESE
 
 The Projection Protocol IS the `manifest` aspect operationalized:
@@ -502,7 +453,13 @@ await logos.invoke("world.town.manifest", marimo_umwelt)
 
 This is NOT cheating. The underlying state is identical. The projection adapts to the observer's medium.
 
----
+Layout projection is `manifest` specialized to physical capacity:
+
+| AGENTESE | Layout Projection |
+|----------|-------------------|
+| Observer umwelt | Viewport density |
+| Affordance for who grasps | Interaction modality for screen size |
+| `manifest` yields observer-view | `Layout[D]` yields density-structure |
 
 ## Widget Composition
 
@@ -543,78 +500,29 @@ dashboard.slots["sidebar"] = NavWidget(...)
 dashboard.slots["main"] = TownWidget(...)
 ```
 
----
-
-## Implementation Guide
-
-### For Agent Developers (Design Layer)
-
-1. Define your state as a frozen dataclass
-2. Create a widget class extending `KgentsWidget[YourState]`
-3. Implement `project()` if you need custom rendering; otherwise, derive from existing widgets
-
-```python
-from agents.i.reactive import KgentsWidget, RenderTarget
-
-@dataclass(frozen=True)
-class MyState:
-    value: int
-    label: str
-
-class MyWidget(KgentsWidget[MyState]):
-    def project(self, target: RenderTarget) -> Any:
-        s = self.state.value
-        match target:
-            case RenderTarget.CLI:
-                return f"[{s.label}] {s.value}"
-            case RenderTarget.JSON:
-                return {"label": s.label, "value": s.value}
-            case _:
-                return f"{s.label}: {s.value}"
-```
-
-### For Framework Developers (Projection Layer)
-
-Implement new targets by extending `RenderTarget` and registering with the registry.
-
-### For Users (Zero Code)
-
-Users invoke agents. Projections happen automatically based on context:
-- Terminal → CLI projection
-- API call → JSON projection
-- Notebook → marimo projection
-
----
-
 ## The marimo Integration
 
 marimo notebooks are a special case of the Projection Protocol. The reactive DAG model of marimo maps directly to the Signal/Computed/Effect model of kgents widgets.
 
-### LogosCell Pattern
-
-A marimo cell that hosts AGENTESE:
+**Key insight**: marimo LogosCell pattern IS AgenteseBridge pattern—direct mapping, no adapter layer needed.
 
 ```python
 @app.cell
 def agent_view(mo, agent_state):
     """Render agent state as marimo HTML."""
     widget = AgentWidget(agent_state)
-
-    # Last expression = displayed output
     mo.Html(widget.to_marimo())
 ```
 
-### No Adapter Layer Needed
+## Anti-Patterns
 
-The key insight from `meta.md`:
-> marimo LogosCell pattern IS AgenteseBridge pattern—direct mapping, no adapter layer needed
-
-This means:
-1. AGENTESE paths work directly in marimo cells
-2. Widget projections render as mo.Html
-3. Reactivity (Signal dependencies) maps to marimo's cell dependencies
-
----
+| Anti-Pattern | Why Bad | Correct Pattern |
+|--------------|---------|-----------------|
+| `{isMobile ? <CompactPanel /> : <FullPanel />}` | Scatters density logic | `<Panel density={density} />` |
+| Custom rendering per agent | Breaks DRY | Extend existing widget base |
+| Projection in business logic | Violates separation | State is pure, projection is separate layer |
+| Fidelity assumptions | Breaks target-independence | Accept lossy compression |
+| Scattered density conditionals | Unmaintainable | Density-parameterized constants table |
 
 ## Principles (Summary)
 
@@ -627,21 +535,9 @@ This means:
 | **Observable** | Same state → same output (determinism) |
 | **Extensible** | New targets registered without changing agents |
 
----
+## The Projection Gallery
 
-## Connection to Spec Principles
-
-| Principle | Projection Manifestation |
-|-----------|--------------------------|
-| Tasteful | Widget API is minimal: define state, get rendering |
-| Curated | Four core targets (CLI, TUI, marimo, JSON); others by registration |
-| Ethical | Projections are transparent—no hidden information |
-| Joy-Inducing | marimo renders ARE joy; ASCII has personality |
-| Composable | `>>` and `//` operators for widget composition |
-| Heterarchical | Any widget can project to any target |
-| Generative | State defines the space of possible views |
-
----
+The Projection Gallery demonstrates the protocol by rendering **every widget** to **every target** in a single view. Developers create **Pilots**—pre-configured widget demonstrations with variations—and the Gallery handles all projections. Full implementation at `impl/claude/protocols/projection/gallery/` with REST API at `/api/gallery` and React frontend at `web/src/pages/GalleryPage.tsx`.
 
 ## Future Targets
 
@@ -656,222 +552,13 @@ This means:
 | WebXR | Future | VR/AR experiences |
 | Audio | Future | Sonification of state |
 
----
+## Implementation Reference
 
-## 3D Target Projection (WebGL/WebXR)
-
-> *"Depth is not decoration—it is information."*
-
-The Projection Protocol extends to 3D targets with an additional orthogonal dimension: **illumination quality**.
-
-### The Illumination Quality Dimension
-
-Just as density governs 2D layout projection, **illumination quality** governs 3D rendering fidelity:
-
-```
-Projection[3D] = (Density × IlluminationQuality) → 3D Scene
-
-Where IlluminationQuality ∈ {minimal, standard, high, cinematic}
-```
-
-This is a **simplifying isomorphism** (AD-008): device capability checks are unified into a single named dimension.
-
-| Quality | Shadows | Shadow Map | Use Case |
-|---------|---------|------------|----------|
-| `minimal` | None | N/A | Low-end mobile, battery saving |
-| `standard` | Soft | 1024px | Most devices |
-| `high` | PCF soft | 2048px | Desktop, high-end mobile |
-| `cinematic` | VSM/CSM | 4096px | Presentation, screenshots |
-
-### Canonical Principles for 3D Targets
-
-1. **Consistent Lighting**: All 3D scenes use the same canonical lighting rig
-2. **Shadows as Depth Cues**: Shadows are not decorative—they provide spatial information
-3. **Quality Detection**: Illumination quality is detected from device capability, not configured
-4. **Selective Shadow Casting**: Only objects that benefit from shadows cast them
-
-### The Sun Pattern
-
-The primary light is a **DirectionalLight** positioned upper-right-front to match the human "light from above" prior:
-
-```
-Sun position: [15, 20, 15] (relative to scene center)
-```
-
-This creates shadows that fall to the lower-left, matching cognitive expectations.
-
-### Semiotic Depth Cues
-
-3D projections leverage depth cues in order of perceptual strength:
-
-| Cue | Provided By | Priority |
-|-----|-------------|----------|
-| Occlusion | WebGL z-buffer | Automatic |
-| Shadows | DirectionalLight | Explicit (quality-dependent) |
-| Size gradient | Perspective camera | Automatic |
-| Motion parallax | OrbitControls | Interactive |
-| Shading | PBR materials | Automatic |
-
-**Key insight**: Shadows are the second-most-powerful depth cue after occlusion, yet often omitted due to performance concerns. Quality-dependent shadows solve this tradeoff.
-
-### Connection to AGENTESE
-
-3D projection is observer-dependent in two dimensions:
-
-| AGENTESE Concept | 2D Manifestation | 3D Manifestation |
-|------------------|------------------|------------------|
-| Observer capacity | Viewport density | Device capability |
-| `manifest` result | Content + Layout | Content + Layout + Illumination |
-| Lossy compression | Fewer labels | Lower shadow fidelity |
-
-### Implementation Guidance
-
-See `docs/skills/3d-lighting-patterns.md` for implementation patterns and `plans/3d-visual-clarity.md` for the implementation plan.
-
----
-
-## The Projection Gallery
-
-The Projection Gallery is the canonical demonstration of the protocol. It renders **every widget** to **every target** in a single view, proving the protocol's guarantees hold in practice.
-
-### Architecture
-
-```
-Pilot[State] ────► Gallery.render() ────► { CLI, HTML, JSON }
-     │                    │                        │
-     │                    │                        │
-     └── Widget factory ──┴── Override injection ──┘
-```
-
-### Gallery Components
-
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `Pilot` | `protocols/projection/gallery/pilots.py` | Pre-configured widget demo |
-| `Gallery` | `protocols/projection/gallery/runner.py` | Render orchestrator |
-| `GalleryOverrides` | `protocols/projection/gallery/overrides.py` | Developer control injection |
-| `GalleryAPI` | `protocols/api/gallery.py` | REST endpoint |
-| `GalleryPage` | `web/src/pages/GalleryPage.tsx` | React frontend |
-
-### The Pilot Pattern
-
-A **Pilot** is a pre-configured widget demonstration:
-
-```python
-@dataclass
-class Pilot:
-    name: str                     # "glyph_idle", "agent_card_error"
-    category: PilotCategory       # PRIMITIVES, CARDS, CHROME, etc.
-    description: str              # One-line explanation
-    widget_factory: Callable      # Creates widget with overrides
-    tags: list[str]               # Searchable metadata
-```
-
-Pilots separate **what to show** from **how to show it**:
-
-```python
-# Define the demo
-register_pilot(Pilot(
-    name="glyph_entropy_sweep",
-    category=PilotCategory.PRIMITIVES,
-    description="Glyph with customizable entropy",
-    widget_factory=lambda overrides: GlyphWidget(
-        GlyphState(
-            entropy=overrides.get("entropy", 0.5),
-            phase="active",
-        )
-    ),
-    variations=[{"entropy": e} for e in [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]],
-    tags=["glyph", "entropy", "sweep"],
-))
-
-# Gallery handles all projections
-gallery = Gallery()
-gallery.show("glyph_entropy_sweep", target=RenderTarget.CLI)
-gallery.show("glyph_entropy_sweep", target=RenderTarget.MARIMO)
-gallery.show("glyph_entropy_sweep", target=RenderTarget.JSON)
-```
-
-### Override Injection
-
-The Gallery supports surgical state manipulation for rapid iteration:
-
-```python
-# Environment variables
-export KGENTS_GALLERY_ENTROPY=0.5
-export KGENTS_GALLERY_SEED=42
-
-# CLI flags
-python -m protocols.projection.gallery --entropy=0.8 --seed=123
-
-# Programmatic
-gallery = Gallery(GalleryOverrides(entropy=0.3, seed=999))
-
-# Per-widget override
-gallery.show("agent_card", overrides={"phase": "error", "breathing": False})
-```
-
-### Web Gallery API
-
-The REST API serves projections for the web frontend:
-
-```
-GET /api/gallery                    # All pilots, all projections
-GET /api/gallery?category=CARDS     # Filter by category
-GET /api/gallery?entropy=0.5        # With overrides
-GET /api/gallery/{pilot_name}       # Single pilot
-GET /api/gallery/categories         # Category metadata
-```
-
-Response shape:
-```json
-{
-  "pilots": [
-    {
-      "name": "glyph_idle",
-      "category": "PRIMITIVES",
-      "description": "Glyph in idle phase",
-      "tags": ["glyph", "idle"],
-      "projections": {
-        "cli": "○",
-        "html": "<span class=\"kgents-glyph\">○</span>",
-        "json": {"type": "glyph", "char": "○", "phase": "idle"}
-      }
-    }
-  ],
-  "categories": ["PRIMITIVES", "CARDS", "CHROME", ...],
-  "total": 25
-}
-```
-
-### The Gallery as Protocol Proof
-
-The Gallery proves the Projection Protocol's claims:
-
-| Claim | Gallery Evidence |
-|-------|------------------|
-| **Design once** | 25 pilots, each renders to 3+ targets |
-| **Batteries included** | No per-target code in pilots |
-| **Lossy by design** | CLI shows less than marimo |
-| **Deterministic** | Same seed → same output |
-| **Composable** | HStack/VStack pilots compose primitives |
-
-### Running the Gallery
-
-```bash
-# CLI gallery
-cd impl/claude
-python -m protocols.projection.gallery --all
-python -m protocols.projection.gallery --widget=agent_card --entropy=0.5
-
-# Web gallery
-cd impl/claude
-uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
-
-cd impl/claude/web
-npm run dev
-# Visit http://localhost:3000/gallery
-```
+- Widget base: `impl/claude/agents/i/reactive/widget.py`
+- Target registry: `impl/claude/agents/i/reactive/targets.py`
+- Projectors: `impl/claude/system/projector/` (local, k8s)
+- Gallery: `impl/claude/protocols/projection/gallery/`
+- 3D patterns: `docs/skills/3d-lighting-patterns.md`
 
 ---
 

@@ -56,7 +56,7 @@ from typing import (
     Union,
 )
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .events import (
     SoulEvent,

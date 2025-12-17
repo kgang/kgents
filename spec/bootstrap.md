@@ -4,6 +4,34 @@ The irreducible kernel from which all of kgents can be regenerated.
 
 ---
 
+## Implementation Status (2025-12-16)
+
+The bootstrap spec defines **what** the agents are. The implementation is now distributed:
+
+| Agent | Primary Location | AGENTESE Path |
+|-------|-----------------|---------------|
+| Types (Agent, Result, etc.) | `agents/poly/types.py` | - |
+| Id | `bootstrap/id.py` | - |
+| Compose | `bootstrap/compose.py` | - |
+| Judge | `bootstrap/judge.py` | `concept.principles.judge` |
+| Ground | `bootstrap/ground.py` | `self.ground.manifest` |
+| Contradict | `bootstrap/contradict.py` | `concept.dialectic.contradict` |
+| Sublate | `bootstrap/sublate.py` | `concept.dialectic.sublate` |
+| Fix | `bootstrap/fix.py` | - |
+| DNA | `protocols/config/dna.py` | `self.dna.express` |
+| Umwelt | `bootstrap/umwelt.py` | (inherent in all paths) |
+
+**Verification**:
+```bash
+# Run bootstrap tests
+uv run python -m pytest bootstrap/_tests/ -q
+
+# Verify via operad laws
+uv run python -c "from agents.operad import AGENT_OPERAD; print(AGENT_OPERAD)"
+```
+
+---
+
 ## The Bootstrap Problem
 
 > Given: An empty system.

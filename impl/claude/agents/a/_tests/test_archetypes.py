@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from ..archetypes import (
     Archetype,

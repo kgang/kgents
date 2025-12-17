@@ -11,6 +11,11 @@ Complete guide to running kgents locally, including the Agent Town web UI and ba
 ## Quick Start (TL;DR)
 
 ```bash
+# Terminal 0: Start Postgres (optional, enables persistence)
+cd impl/claude
+docker compose up -d
+source .env  # Sets KGENTS_POSTGRES_URL
+
 # Terminal 1: Backend
 cd impl/claude
 uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000
@@ -23,6 +28,7 @@ npm install && npm run dev
 #   http://localhost:3000           - Agent Town
 #   http://localhost:3000/gallery   - Projection Gallery
 #   http://localhost:3000/atelier   - Atelier
+#   http://localhost:3000/crown     - Crown Jewels (Brain)
 ```
 
 ## Detailed Setup
@@ -41,9 +47,32 @@ cd impl/claude/web
 npm install
 ```
 
-### 2. Backend API
+### 2. PostgreSQL (Optional but Recommended)
 
-The backend provides REST endpoints for Agent Town, AGENTESE, and K-gent Soul.
+PostgreSQL enables persistent storage for Crown Jewels (Brain, Gardener). Without it, data falls back to SQLite.
+
+```bash
+cd impl/claude
+
+# Start Postgres container
+docker compose up -d
+
+# Load environment variables (sets KGENTS_POSTGRES_URL)
+source .env
+
+# Verify Postgres is running
+docker compose ps  # Should show postgres "running"
+```
+
+**Storage Backends:**
+- **With Postgres**: Brain data persists across sessions and is shared
+- **Without Postgres**: Falls back to SQLite at `~/.local/share/kgents/brain/brain.db`
+
+Crown Jewels auto-detect and use Postgres when `KGENTS_POSTGRES_URL` is set.
+
+### 3. Backend API
+
+The backend provides REST endpoints for Agent Town, AGENTESE, Crown Jewels, and K-gent Soul.
 
 ```bash
 cd impl/claude
@@ -66,7 +95,7 @@ curl http://localhost:8000/
 # Should list all available endpoints
 ```
 
-### 3. Frontend Web UI
+### 4. Frontend Web UI
 
 ```bash
 cd impl/claude/web
@@ -80,7 +109,7 @@ npm run dev
 
 Visit `http://localhost:3000`
 
-### 4. Authentication (Development)
+### 5. Authentication (Development)
 
 The frontend uses Zustand for state management with localStorage persistence. For development, mock a logged-in user via browser console:
 

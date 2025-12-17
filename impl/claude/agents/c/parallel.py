@@ -13,7 +13,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable, Optional, Sequence, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

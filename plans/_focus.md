@@ -11,10 +11,9 @@
 
 ---
 ## KENT's WISHES
-* INDIVIDUALLY TAILORED, GENERATIONS OF BEST PRACTICES AND DESIGN THOUGHT
-* Fully leverage our category theory guarantees for max chaos
-* Substrates for building app-builders
-* (OG) Pixar like storytelling in our visual elements, design, and interactive narratives (implicit and explicit)
+* INDIVIDUALLY TAILORED YET HIGHLY REFINED
+* Fully leverage our category theory foundation
+* An app-builder building app-builder for app-building app-builders
 * Daring, bold, creative, opinionated but not gaudy
 * Make it easy for kent and kgents to do the correct, enlightened things
 

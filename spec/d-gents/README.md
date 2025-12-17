@@ -523,14 +523,31 @@ A D-gent is well-designed if:
 
 | Document | Description |
 |----------|-------------|
+| [architecture.md](architecture.md) | Core Datum/DgentProtocol architecture |
+| [dual-track.md](dual-track.md) | **NEW**: Dual-track (Agent Memory + Application State) |
 | [persistence.md](persistence.md) | Volatile vs. Persistent state management |
 | [lenses.md](lenses.md) | Lens laws, composition, and traversals |
 | [protocols.md](protocols.md) | The DataAgent protocol and implementations |
-| [symbiont.md](symbiont.md) | Endosymbiotic pattern for stateful agents |
-| [vision.md](vision.md) | **NEW**: Memory as Landscape + Noosphere Layer |
+| [symbiont.md](symbiont.md) | Endosymbiotic pattern (S >> D composition) |
+| [vision.md](vision.md) | Memory as Landscape + Noosphere Layer |
 | [vector.md](vector.md) | Semantic memory with embeddings |
 | [graph.md](graph.md) | Knowledge graphs as state |
 | [streams.md](streams.md) | Event sourcing and temporal state |
+
+---
+
+## Relationship to S-gent
+
+D-gent and S-gent are **orthogonal but composable**:
+
+| Concern | Agent | Responsibility |
+|---------|-------|----------------|
+| **WHERE** state lives | D-gent | Persistence substrate (backends, projection lattice) |
+| **HOW** state flows | S-gent | State threading through computation |
+
+The Symbiont pattern is `S >> D`: state threading backed by persistence.
+
+See: [../s-gents/README.md](../s-gents/README.md) for S-gent specification.
 
 ---
 

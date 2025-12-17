@@ -23,7 +23,6 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from agents.a.skeleton import AgentBehavior, AgentIdentity, AgentInterface, AgentMeta
-from bootstrap.types import Agent
 from agents.k import (
     DialogueInput,
     DialogueMode,
@@ -35,6 +34,7 @@ from agents.k import (
     PersonaSeed,
     PersonaState,
 )  # kgent, query_persona intentionally not imported (available via agents.k)
+from agents.poly.types import Agent
 from runtime.base import AgentResult, Runtime
 
 
@@ -44,6 +44,7 @@ from runtime.base import AgentResult, Runtime
 @dataclass
 class DialecticInput:
     """Input for dialectic synthesis."""
+
     thesis: str
     antithesis: str = ""
     context: dict[str, Any] = field(default_factory=dict)
@@ -52,6 +53,7 @@ class DialecticInput:
 @dataclass
 class DialecticOutput:
     """Output from dialectic synthesis."""
+
     thesis: str
     antithesis: str
     synthesis: str

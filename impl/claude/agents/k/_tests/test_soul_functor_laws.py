@@ -27,7 +27,7 @@ from agents.k.functor import (
     unlift,
     unwrap,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # =============================================================================
 # Test Fixtures: Agents

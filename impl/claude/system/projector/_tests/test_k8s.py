@@ -26,7 +26,7 @@ from agents.a.halo import (
     StatefulCapability,
     StreamableCapability,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 from system.projector import K8sProjector, K8sResource, manifests_to_yaml
 from system.projector.base import InvalidNameError, UnsupportedCapabilityError
 

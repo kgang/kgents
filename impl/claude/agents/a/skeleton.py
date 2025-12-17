@@ -26,7 +26,7 @@ from typing import Any, Generic, Protocol, Type, TypeVar, runtime_checkable
 
 # Re-export the bootstrap Agent as AbstractAgent
 # This is NOT a new class - it's the recognition that Agent IS the skeleton
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # Type alias for semantic clarity
 AbstractAgent = Agent
@@ -364,7 +364,7 @@ class BootstrapWitness:
                 violations.append(f"Composition law check failed: {e}")
 
         # Step 4: Create overall verdict
-        from bootstrap.types import Verdict
+        from agents.poly.types import Verdict
 
         if agents_exist and identity_ok and composition_ok:
             overall_verdict = Verdict.accept(["Bootstrap verified"])
@@ -1060,7 +1060,7 @@ class GroundedSkeleton(Agent[Any, AgentMeta]):
         Usage:
             meta = await GroundedSkeleton.describe(my_agent)
         """
-        from bootstrap.types import VOID
+        from agents.poly.types import VOID
 
         return await cls(agent).invoke(VOID)
 

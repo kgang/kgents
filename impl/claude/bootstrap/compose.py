@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from .types import Agent, ComposedAgent
+from agents.poly.types import Agent, ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")

@@ -16,8 +16,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from agents.poly.types import Agent
 from bootstrap import ID, compose
-from bootstrap.types import Agent
 
 if TYPE_CHECKING:
     from agents.o.bootstrap_witness import TestAgent

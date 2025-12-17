@@ -41,9 +41,9 @@ from agents.j.t_integration import (
     compile_tool_from_template,
     create_tool_from_source,
 )
+from agents.poly.types import Agent, Result
 from agents.u.core import ToolError, ToolErrorType, ToolMeta
 from agents.u.permissions import ToolCapabilities
-from bootstrap.types import Agent, Result
 
 # Mark wrapper as test agent
 JITToolWrapper.__is_test__ = True

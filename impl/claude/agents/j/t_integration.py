@@ -59,9 +59,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
+from agents.poly.types import Result, err, ok
 from agents.u.core import Tool, ToolError, ToolErrorType, ToolMeta
 from agents.u.permissions import ToolCapabilities
-from bootstrap.types import Result, err, ok
 
 from .chaosmonger import StabilityConfig, analyze_stability
 from .factory_integration import JITAgentMeta

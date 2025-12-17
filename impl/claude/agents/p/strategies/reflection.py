@@ -11,7 +11,7 @@ Benefits:
 - Confidence degrades with retry count
 
 Use Cases:
-- E-gent code generation: Fix import errors, type mismatches
+- Code generation: Fix import errors, type mismatches
 - B-gent hypothesis validation: Add missing falsifiability criteria
 - F-gent contract synthesis: Repair constraint violations
 """

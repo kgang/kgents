@@ -19,7 +19,7 @@ import asyncio
 from typing import AsyncIterator
 
 from agents.flux import Flux, FluxAgent, FluxConfig
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 class DoubleAgent(Agent[int, int]):

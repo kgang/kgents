@@ -81,7 +81,7 @@ if HYPOTHESIS_AVAILABLE:
     @st.composite
     def valid_dna(draw):
         """Generate valid DNA configurations."""
-        from bootstrap.dna import BaseDNA
+        from protocols.config.dna import BaseDNA
 
         exploration = draw(st.floats(min_value=0.01, max_value=0.5))
 
@@ -90,7 +90,7 @@ if HYPOTHESIS_AVAILABLE:
     @st.composite
     def invalid_dna(draw):
         """Generate intentionally invalid DNA for constraint testing."""
-        from bootstrap.dna import BaseDNA
+        from protocols.config.dna import BaseDNA
 
         # Invalid: exploration <= 0 or > 0.5
         invalid_exploration = draw(
@@ -105,7 +105,7 @@ if HYPOTHESIS_AVAILABLE:
     @st.composite
     def hypothesis_dna(draw):
         """Generate valid HypothesisDNA for B-gent testing."""
-        from bootstrap.dna import HypothesisDNA
+        from protocols.config.dna import HypothesisDNA
 
         confidence = draw(st.floats(min_value=0.1, max_value=0.8))
         max_hypotheses = draw(st.integers(min_value=1, max_value=10))

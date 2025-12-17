@@ -357,3 +357,235 @@ class TestSelfResolverIntegration:
         assert "bus" in SELF_AFFORDANCES
         assert SELF_AFFORDANCES["data"] == DATA_AFFORDANCES
         assert SELF_AFFORDANCES["bus"] == BUS_AFFORDANCES
+
+
+# =============================================================================
+# Phase 5: Upgrader Node Tests
+# =============================================================================
+
+
+class TestUpgraderNode:
+    """Tests for self.data.upgrader AGENTESE path."""
+
+    def test_affordances(self) -> None:
+        """UPGRADER_AFFORDANCES includes status, history, pending."""
+        from protocols.agentese.contexts.self_data import UPGRADER_AFFORDANCES
+
+        assert "status" in UPGRADER_AFFORDANCES
+        assert "history" in UPGRADER_AFFORDANCES
+        assert "pending" in UPGRADER_AFFORDANCES
+
+    def test_data_affordances_includes_upgrader(self) -> None:
+        """DATA_AFFORDANCES includes upgrader as sub-node."""
+        assert "upgrader" in DATA_AFFORDANCES
+
+    def test_create_data_resolver_creates_upgrader_node(
+        self, memory_backend: MemoryBackend
+    ) -> None:
+        """create_data_resolver creates upgrader sub-node."""
+        node = create_data_resolver(dgent=memory_backend)
+
+        assert node._upgrader_node is not None
+        assert node._upgrader_node.handle == "self.data.upgrader"
+
+    @pytest.mark.asyncio
+    async def test_manifest_unconfigured(self, observer: Observer) -> None:
+        """Manifest shows unconfigured state without upgrader."""
+        from protocols.agentese.contexts.self_data import UpgraderNode
+
+        node = UpgraderNode()
+        result = await node.manifest(observer)
+
+        assert "Not Configured" in result.summary
+        assert result.metadata["configured"] is False
+
+    @pytest.mark.asyncio
+    async def test_status_unconfigured(self, observer: Observer) -> None:
+        """Status returns error when not configured."""
+        from protocols.agentese.contexts.self_data import UpgraderNode
+
+        node = UpgraderNode()
+        result = await node._invoke_aspect("status", observer)
+
+        assert "error" in result
+        assert "not configured" in result["error"].lower()
+
+
+# =============================================================================
+# Phase 5: Upgrader + Synergy Integration Tests
+# =============================================================================
+
+
+class TestUpgraderSynergyIntegration:
+    """
+    Integration tests for upgrade → synergy event flow.
+
+    Phase 5 Goal: Make tier promotions visible in UI via synergy events.
+    """
+
+    @pytest.fixture
+    def jsonl_backend(self, tmp_path):
+        """Create fresh JSONL backend."""
+        from agents.d.backends.jsonl import JSONLBackend
+
+        backend = JSONLBackend(namespace="synergy_test", data_dir=tmp_path)
+        yield backend
+        backend.clear()
+
+    @pytest.fixture
+    def upgrader(self, memory_backend, jsonl_backend, data_bus):
+        """Create AutoUpgrader with fast thresholds for testing."""
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
+        from agents.d.router import Backend
+
+        return AutoUpgrader(
+            source=memory_backend,
+            source_tier=Backend.MEMORY,
+            targets={Backend.JSONL: jsonl_backend},
+            bus=data_bus,
+            policy=UpgradePolicy(
+                memory_to_jsonl_accesses=2,  # Fast threshold for testing
+                memory_to_jsonl_seconds=999.0,  # Don't trigger on time
+            ),
+            check_interval=0.05,  # Fast checks for testing
+            emit_synergy=True,
+        )
+
+    @pytest.mark.asyncio
+    async def test_upgrader_node_with_upgrader(
+        self, observer: Observer, memory_backend: MemoryBackend, upgrader
+    ) -> None:
+        """UpgraderNode shows correct state when wired."""
+        node = create_data_resolver(dgent=memory_backend, upgrader=upgrader)
+
+        # Get the upgrader sub-node
+        upgrader_node = await node._invoke_aspect("upgrader", observer)
+
+        # Check manifest
+        result = await upgrader_node.manifest(observer)
+        assert "Data Tier Upgrader" in result.summary
+        assert result.metadata["configured"] is True
+
+    @pytest.mark.asyncio
+    async def test_upgrader_status_shows_tracked_data(
+        self, observer: Observer, memory_backend: MemoryBackend, upgrader, data_bus
+    ) -> None:
+        """Status shows tracked data count."""
+        from agents.d.bus import DataEvent
+
+        await upgrader.start()
+        try:
+            # Emit events to trigger tracking
+            event = DataEvent.create(DataEventType.PUT, "test-datum")
+            await data_bus.emit(event)
+
+            import asyncio
+
+            await asyncio.sleep(0.05)  # Let event process
+
+            node = create_data_resolver(dgent=memory_backend, upgrader=upgrader)
+            upgrader_node = await node._invoke_aspect("upgrader", observer)
+            status = await upgrader_node._invoke_aspect("status", observer)
+
+            assert status["status"] == "running"
+            assert status["tracked_data"] >= 1
+        finally:
+            await upgrader.stop()
+
+    @pytest.mark.asyncio
+    async def test_upgrade_emits_synergy_event(
+        self, memory_backend: MemoryBackend, jsonl_backend, data_bus
+    ) -> None:
+        """
+        Upgrade emits DATA_UPGRADED synergy event.
+
+        This is the core Phase 5 test:
+        1. Store datum in memory
+        2. Force upgrade to JSONL
+        3. Verify synergy event was emitted
+        """
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
+        from agents.d.router import Backend
+        from protocols.synergy.bus import get_synergy_bus, reset_synergy_bus
+        from protocols.synergy.events import SynergyEventType
+
+        # Reset synergy bus for clean test
+        reset_synergy_bus()
+        synergy_bus = get_synergy_bus()
+
+        # Track received events
+        received_events = []
+
+        # Create a simple handler to capture events
+        class TestHandler:
+            name = "test_handler"
+
+            async def handle(self, event):
+                received_events.append(event)
+                from protocols.synergy.events import SynergyResult
+
+                return SynergyResult(success=True, handler_name=self.name)
+
+        # Register handler for DATA_UPGRADED events
+        synergy_bus.register(SynergyEventType.DATA_UPGRADED, TestHandler())
+
+        # Create upgrader with synergy emission enabled
+        upgrader = AutoUpgrader(
+            source=memory_backend,
+            source_tier=Backend.MEMORY,
+            targets={Backend.JSONL: jsonl_backend},
+            bus=data_bus,
+            policy=UpgradePolicy(memory_to_jsonl_accesses=2),
+            emit_synergy=True,
+            synergy_bus=synergy_bus,
+        )
+
+        # Store datum in memory (JSONL backend expects bytes)
+        datum = Datum.create(content=b"test data for synergy")
+        await memory_backend.put(datum)
+
+        # Force upgrade
+        success = await upgrader.force_upgrade(datum.id, Backend.JSONL)
+        assert success is True
+
+        # Wait for synergy event to be processed
+        await synergy_bus.drain(timeout=1.0)
+
+        # Verify synergy event was received
+        assert len(received_events) == 1
+        event = received_events[0]
+        assert event.event_type == SynergyEventType.DATA_UPGRADED
+        assert event.source_id == datum.id
+        assert event.payload["old_tier"] == "MEMORY"
+        assert event.payload["new_tier"] == "JSONL"
+
+    @pytest.mark.asyncio
+    async def test_upgrader_history_tracks_transitions(
+        self, observer: Observer, memory_backend: MemoryBackend, jsonl_backend
+    ) -> None:
+        """History aspect tracks tier transitions."""
+        from agents.d.upgrader import AutoUpgrader, UpgradePolicy
+        from agents.d.router import Backend
+
+        # Create upgrader
+        upgrader = AutoUpgrader(
+            source=memory_backend,
+            source_tier=Backend.MEMORY,
+            targets={Backend.JSONL: jsonl_backend},
+            policy=UpgradePolicy(memory_to_jsonl_accesses=2),
+            emit_synergy=False,  # Don't need synergy for this test
+        )
+
+        # Store and upgrade multiple data (JSONL backend expects bytes)
+        for i in range(3):
+            datum = Datum.create(content=f"history test {i}".encode())
+            await memory_backend.put(datum)
+            await upgrader.force_upgrade(datum.id, Backend.JSONL)
+
+        # Check history via UpgraderNode
+        node = create_data_resolver(dgent=memory_backend, upgrader=upgrader)
+        upgrader_node = await node._invoke_aspect("upgrader", observer)
+        history = await upgrader_node._invoke_aspect("history", observer)
+
+        assert history["transitions"]["MEMORY_to_JSONL"] == 3
+        assert history["total"] == 3

@@ -21,7 +21,7 @@ Graph Composition = Compose + Fix + Conditional
 
 This extension formalizes these existing capabilities into graph structures.
 
-## Why Not Y-gent?
+## Why Not Y-gent? (Historical Note)
 
 An earlier proposal suggested "Y-gent" as a separate genus for graph composition. Analysis revealed:
 
@@ -29,7 +29,12 @@ An earlier proposal suggested "Y-gent" as a separate genus for graph composition
 2. **Branch/merge exist** - `spec/c-gents/parallel.md` already defines parallel composition
 3. **Graph is just DAG of Compose** - No new primitive needed
 
-**Decision**: Merge graph patterns into C-gent rather than create new genus.
+**Decision**: Y-gent has been archived. Its concepts have been absorbed into:
+- **Turn Protocol** (`spec/protocols/turn.md`) - Fixed-point semantics, stability detection
+- **F-gent** (`spec/f-gents/research.md`) - Branch/merge/prune for hypothesis exploration
+- **Ω-gent** (`spec/omega-gents/chrysalis.md`) - Population topology (chrysalis pattern)
+
+See `spec/y-gents-archived/MIGRATION.md` for the full migration story.
 
 ## Graph of Thoughts
 

@@ -36,6 +36,7 @@ from agents.c import (
     maybe,
     switch,
 )
+from agents.poly.types import Agent
 
 # Bootstrap imports
 from bootstrap import (
@@ -44,7 +45,6 @@ from bootstrap import (
     compose,
 )
 from bootstrap.id import Id
-from bootstrap.types import Agent
 
 # Create typed identity for int operations
 ID: Id[int] = Id()

@@ -25,7 +25,7 @@ from typing import (
 )
 
 from agents.a.halo import Capability
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 if TYPE_CHECKING:
     from .eigenvectors import KentEigenvectors
@@ -222,7 +222,8 @@ class PersonaState:
             seed=PersonaSeed.from_dict(seed_data),
             current_focus=data.get("current_focus", "kgents specification"),
             recent_interests=data.get(
-                "recent_interests", ["category theory", "scientific agents", "personal AI"]
+                "recent_interests",
+                ["category theory", "scientific agents", "personal AI"],
             ),
             active_projects=data.get("active_projects", []),
             confidence=data.get("confidence", {}),

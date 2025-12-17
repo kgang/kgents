@@ -76,30 +76,33 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ---
 
-## Seven Jewel Crown (Project KPIs)
+## Seven Jewel Crown (2025-12-16 Vision Transform)
 
-| Jewel | Progress | Status |
-|-------|----------|--------|
-| **Brain** | 100% | ✅ PRODUCTION-READY (212+ M-gent tests) |
-| **Gardener** | 100% | ✅ PRODUCTION-READY (163+ tests) |
-| **Gestalt** | 70% | Elastic UI, OTEL, synergy toasts (92+ tests) |
-| **Atelier** | 65% | Wave 2 synergies |
-| **Coalition** | 55% | Brain+Gardener integration |
-| **Park** | 40% | DirectorAgent, masks (64 tests) |
-| **Domain** | 0% | Stub plan only |
+> *"The Crown is not seven apps. It is seven facets of one diamond."*
 
-**Crown Avg**: 61% | **Hero Path**: 90% (Brain+Gestalt+Gardener) | **Target**: 80% by Q2 2025
+| Jewel | Progress | Vision | Status |
+|-------|----------|--------|--------|
+| **Brain** | 100% | Spatial cathedral of memory | ✅ PRODUCTION |
+| **Gardener** | 100% | Cultivation practice for ideas | ✅ PRODUCTION |
+| **Gestalt** | 75% | Living garden where code breathes | Wave 1 polish |
+| **Atelier** | 65% | Fishbowl where spectators collaborate | Wave 2 synergy |
+| **Coalition** | 55% | Workshop where agents collaborate visibly | Wave 2 synergy |
+| **Park** | 50% | Westworld where hosts can say no | CLI complete |
+| **Domain** | 35% | Enterprise categorical foundation | Foundation only |
 
-**Web Synergy**: Toast system + Crown nav complete (`components/synergy/`)
+**Crown Avg**: 69% | **Hero Path**: 92% | **References**: Punchdrunk, Figma, Obsidian, MIT Memory Palace
+
+**Design DNA**: Observer-dependent • Consent-first • Visible process • Composable • Joy-inducing
 
 ---
 
 ## Status
 
-**Tests**: 18,600+ | **Reactive**: 627 tests | **Mypy**: 78 notes | **Web**: 9K LOC
+**Tests**: 18,750+ | **V-gent**: 199 tests (163 core + 36 AGENTESE) | **M-gent**: 145 tests | **Reactive**: 627 tests | **Mypy**: 78 notes
+**V-gent Phase 7 COMPLETE**: AGENTESE `self.vector.*` paths wired (add, search, get, remove, clear, count, exists, dimension, metric, status)
 **AGENTESE v3.1**: Self-doc (`help` aspect), WiredLogos in REPL, aliases (`/alias`), query API for `?`, docs/guides/
 **Projection**: WidgetEnvelope (error boundary, streaming), 7 widgets + Gestalt (Topology/Governance), chrome, SSE, 4 surfaces
-**Archived (2025-12-16)**: H-gent (dialectic), Q-gent (quartermaster), R-gent (refinery), Psi-gent (metaphor) → `agents/_archived/`
+**Archived (2025-12-16)**: E-gent (evolution), H-gent (dialectic), Q-gent (quartermaster), R-gent (refinery), Psi-gent (metaphor) → `agents/_archived/`
 
 ---
 

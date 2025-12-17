@@ -10,10 +10,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Generic, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 if TYPE_CHECKING:
-    from bootstrap.types import ComposedAgent
+    from agents.poly.types import ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -99,7 +99,7 @@ class CounterAgent(Agent[A, A], Generic[A]):
         Returns:
             Composed agent
         """
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         return ComposedAgent(self, other)
 
@@ -122,6 +122,6 @@ class CounterAgent(Agent[A, A], Generic[A]):
             >>> pipeline = data_loader >> processor >> counter
             >>> # Equivalent to: counter << processor << data_loader
         """
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         return ComposedAgent(other, self)

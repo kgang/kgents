@@ -29,7 +29,7 @@ from agents.f.gravity import (
     RequiredFields,
     TypeContract,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # ============================================================================
 # Mock Agent for Testing

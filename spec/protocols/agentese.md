@@ -1,1202 +1,1051 @@
 # AGENTESE: The Verb-First Ontology
 
-**Where getting IS invoking. Where nouns ARE frozen verbs. Where observation collapses potential into actuality.**
+**Status:** Canonical Specification
+**Date:** 2025-12-15
+**Implementation:** `impl/claude/protocols/agentese/` (559 tests)
+
+---
+
+## Epigraph
 
 > *"The noun is a lie. There is only the rate of change."*
-
-**Status:** Specification v2.0
-**Date:** 2025-12-10
-**Prerequisites:** `../principles.md`, `../c-gents/composition.md`
-**Integrations:** L-gents (Registry), K-gents (Observer Context), J-gents (JIT Reification), Umwelt (Observer Isolation)
-**Guard [phase=PLAN][entropy=0.07][law_check=true][minimal_output=true][rollback=doc-only]:** Identity/associativity must hold for every handle; liturgy bridge lives in `plans/meta/liturgy-morphism-nasi.md`.
-
----
-
-## Prologue: The Noun Fallacy
-
-Traditional software systems commit the Noun Fallacy: they treat the world as a database of static objects. You query `world.house` and receive a JSON blob—inert data, lifeless structure.
-
-But consider: When you "get" a house, what are you really doing? You are **perceiving** it. Perception is an action. The house you perceive depends on **who you are**:
-- An Architect perceives blueprints, load-bearing walls, structural integrity
-- A Poet perceives shelter, memory, the weight of domesticity
-- A Demolition Expert perceives stress points, safe collapse vectors
-
-**The AGENTESE Insight**: `world.house` is not a noun. It is a **handle**—a reference to a potential interaction. Grasping a handle is itself an action. What you receive depends on who is grasping.
-
-In AGENTESE: **Nouns are frozen verbs. To read is to invoke.**
+>
+> *"An affordance is not a property of the object alone, nor of the observer alone—it is their meeting."* — Gibson
+>
+> *"Simplicity requires conviction."* — Retrospective Insight
+>
+> *"The best protocol is the one that disappears."* — v2 Insight
 
 ---
 
-## Part I: The Core Philosophy
+## Part I: Design Philosophy
 
-We reject the "Noun Fallacy" (that objects exist statically waiting to be read). Instead, we adopt the **Holonic/Puppet** view defined in Principle #7:
+AGENTESE v3 synthesizes three years of lessons:
 
-1. **To Observe is to Disturb**: You cannot read `world.house` without an `Observer`.
-2. **Handles are Functors**: A handle string (`"world.house"`) is not a reference to an object; it is a **morphism** that maps an `Observer` to an `Interaction`.
-3. **Polymorphism is Law**: The same handle must behave differently for different observers (Principle #5: Composable).
-4. **No View From Nowhere**: `logos.resolve()` without an observer is an error. Period.
+| Source | Key Insight |
+|--------|-------------|
+| v1 Implementation (559 tests) | Five contexts are complete; observer-dependence works |
+| v1 Retrospective | Simplicity > features; WiredLogos was a mistake |
+| v2 Draft | Flat verbs + envelope; effects + capabilities |
+| v2 Critique | Missing: subscriptions, query bounds, migration plan |
+| Evolution Critique | Missing: observer envelope, composition semantics, CLI contract |
+| Philosophical Rederivation | Category theory + phenomenology ground the design |
 
-### The Mathematical Definition
+### The Core Tensions (Resolved)
 
-In the category of agents:
-- **Objects** are States (S).
-- **Morphisms** are Agents (A: S → S).
-- **Agentese Handles** (H) are functors from the domain of Intent to the domain of Implementation.
+| Tension | v1 | v2 Draft | v3 Resolution |
+|---------|----|----|----------------|
+| Path vs Verb | `context.holon.aspect` | `namespace.resource.action` | **Hybrid**: Context from v1 + structure from v2 |
+| Observer location | In method signature | In envelope | **Both**: Minimal observer in call, full in envelope |
+| Composition | Underused `>>` | Compose effects | **First-class**: `>>` on strings + effect composition |
+| Query/Subscribe | Missing | Mentioned but unspecified | **Fully specified** with bounds + semantics |
+
+### The 50-Export Target
+
+v1 had 150+ exports. v3 targets <50:
 
 ```
-H(Context) ──Logos──▶ Interaction
+Core (10):        Logos, Observer, Umwelt, LogosNode, Aspect, Effect, Envelope, Event, Error, Refusal
+Contexts (5):     world, self, concept, void, time
+Categories (6):   PERCEPTION, MUTATION, COMPOSITION, INTROSPECTION, GENERATION, ENTROPY
+Grammar (4):      query, subscribe, alias, pipe
+Runtime (5):      Router, Handler, Projector, Supervisor, Store
 ```
 
 ---
 
-## Part II: The Grammar of Handles
+## Part II: The Path Grammar
 
-AGENTESE is a hierarchical, dot-notation language for agent-world interaction. It is:
-1. **Liturgical**: Reads like an invocation, not a query
-2. **Polymorphic**: Same path yields different affordances to different observers
-3. **Generative**: Observing with intent can collapse potential into actuality
-
-### 2.1 The Syntax
+### 2.1 Canonical Form
 
 ```
-<Context> . <Holon> . <Aspect> [<Clause>]* [@<Annotation>]*
+<context>.<holon>.<aspect>
 ```
 
-| Component | Purpose | Examples |
-|-----------|---------|----------|
-| **Context** | The domain of interaction | `world`, `self`, `concept`, `void`, `time` |
-| **Holon** | The referent being grasped (part-whole) | `house`, `memory`, `justice`, `entropy` |
-| **Aspect** | The mode of engagement (verb) | `manifest`, `witness`, `refine`, `sip` |
-| **Clause** | Inline modifiers (optional) | `[phase=DEVELOP]`, `[entropy=0.07]` |
-| **Annotation** | Span/metric markers (optional) | `@span=research_001`, `@law_check=true` |
+| Component | Purpose | Values |
+|-----------|---------|--------|
+| `context` | Ontological domain | `world`, `self`, `concept`, `void`, `time` |
+| `holon` | Target entity (part-whole) | Any registered entity |
+| `aspect` | Mode of engagement (verb) | Registered aspect for that holon |
 
-### 2.1.1 Clause Grammar (N-Phase Integration)
+**Examples:**
+```
+world.garden.manifest
+self.soul.challenge
+concept.nphase.compile
+void.entropy.sip
+time.trace.witness
+```
 
-Clauses extend paths with enforcement and observability. BNF:
+### 2.2 Why Not Flat Verbs?
+
+v2 proposed `namespace.resource.action`. The critique:
+
+1. **Context is ontological, not organizational** — `world` vs `self` matters philosophically
+2. **Holon captures part-whole** — Gardens contain plots; this is structure, not namespace
+3. **Aspect is not action** — `manifest` is perception, not mutation; category matters
+
+**Decision:** Keep v1's three-part structure. It's earned.
+
+### 2.3 Extended Grammar
 
 ```bnf
-PATH        ::= CONTEXT "." HOLON "." ASPECT CLAUSE* ANNOTATION*
-CLAUSE      ::= "[" MODIFIER ("=" VALUE)? "]"
-ANNOTATION  ::= "@" MODIFIER "=" VALUE
-MODIFIER    ::= "phase" | "entropy" | "law_check" | "span" | "rollback" | "minimal_output"
-VALUE       ::= FLOAT | BOOL | STRING | PHASE_NAME
-PHASE_NAME  ::= "PLAN" | "RESEARCH" | "DEVELOP" | "STRATEGIZE" | "IMPLEMENT" | "QA" | "TEST" | "EDUCATE" | "MEASURE" | "REFLECT"
+# Core path (unchanged from v1)
+Path := Context "." Holon "." Aspect
+
+# Query (new)
+Query := "?" PathPattern
+PathPattern := Context "." HolonPattern "." AspectPattern
+HolonPattern := Identifier | "*"
+AspectPattern := Identifier | "*" | "?"
+
+# Composition (simplified)
+ComposedPath := Path (">>" Path)*
+
+# Aspect pipeline (new)
+Pipeline := Path ".pipe(" AspectList ")"
+AspectList := Aspect ("," Aspect)*
 ```
 
-**Examples**:
+### 2.4 What We Removed
 
-| Path | Meaning |
-|------|---------|
-| `concept.justice.refine[phase=DEVELOP]` | Refine justice in DEVELOP phase |
-| `void.entropy.sip[entropy=0.07]@span=dev_001` | Sip 0.07 entropy, emit span |
-| `self.liturgy.simulate[rollback=true][law_check=true]` | Simulate with rollback + law checks |
-| `world.code.manifest[minimal_output=true]@phase=IMPLEMENT` | Single output per Minimal Output principle |
+From v1:
+- **Inline clauses** `[phase=DEVELOP]` → Use kwargs
+- **Annotations** `@span=research` → Use envelope
+- **Prefix macros** → Use explicit aliases
 
-**Clause Semantics**:
+---
 
-| Clause | Effect |
-|--------|--------|
-| `[phase=X]` | Associates invocation with N-phase stage; enables span grouping |
-| `[entropy=0.XX]` | Sets Accursed Share budget for this operation (0.05–0.10 band) |
-| `[law_check=true]` | Triggers identity/associativity verification on composition |
-| `[rollback=true]` | Creates rollback token before mutation; enables recovery |
-| `[minimal_output=true]` | Enforces single-output constraint per AD-003 |
-| `@span=ID` | Emits observability span with given ID |
+## Part III: The Five Contexts (Unchanged)
 
-**Principle Alignment**: Clauses are optional modifiers, not required syntax. An unadorned path `world.house.manifest` remains valid. This preserves the Orthogonality Principle: metadata doesn't break composition.
-
-### 2.2 The Five Strict Contexts
-
-To prevent "kitchen-sink" anti-patterns (Principle #1: Tasteful), we define exactly **five contexts**. No others are permitted without a spec change.
+The five contexts form a **complete and minimal basis** for semantic reference.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         THE FIVE CONTEXTS                                    │
-├─────────────┬───────────────────────────────────────┬───────────────────────┤
-│ Context     │ Ontology                              │ Principle Alignment   │
-├─────────────┼───────────────────────────────────────┼───────────────────────┤
-│ world.*     │ The External: entities, environments  │ Heterarchical         │
-│             │ tools, resources in flux              │ (resources in flux)   │
-├─────────────┼───────────────────────────────────────┼───────────────────────┤
-│ self.*      │ The Internal: memory, capability,     │ Ethical               │
-│             │ state, agent boundaries               │ (boundaries of agency)│
-├─────────────┼───────────────────────────────────────┼───────────────────────┤
-│ concept.*   │ The Abstract: platonics, definitions, │ Generative            │
-│             │ logic, compressed wisdom              │ (compressed wisdom)   │
-├─────────────┼───────────────────────────────────────┼───────────────────────┤
-│ void.*      │ The Accursed Share: entropy, noise,   │ Meta-Principle        │
-│             │ slop, serendipity, gratitude          │ (gratitude for waste) │
-├─────────────┼───────────────────────────────────────┼───────────────────────┤
-│ time.*      │ The Temporal: history, forecast,      │ Heterarchical         │
-│             │ schedule, traces                      │ (temporal composition)│
-└─────────────┴───────────────────────────────────────┴───────────────────────┘
+├─────────────┬───────────────────────────────────────────────────────────────┤
+│ world.*     │ The External: entities, environments, tools                   │
+│ self.*      │ The Internal: memory, capability, state, agent boundaries     │
+│ concept.*   │ The Abstract: platonics, definitions, logic                   │
+│ void.*      │ The Accursed Share: entropy, noise, serendipity, gratitude    │
+│ time.*      │ The Temporal: history, forecast, schedule, traces             │
+└─────────────┴───────────────────────────────────────────────────────────────┘
 ```
 
-### 2.3 Standard Aspects
+### 3.1 Completeness Argument
 
-| Aspect | Meaning | System Action |
-|--------|---------|---------------|
-| `manifest` | "Collapse to perception" | Invoke `render_state()` (Observable) |
-| `witness` | "Show me history" | Return NarrativeLog via N-gent |
-| `refine` | "Think harder" | Spawn Dialectician, challenge definition |
-| `sip` | "Draw from entropy" | Request from Accursed Share budget |
-| `tithe` | "Pay for order" | Sacrifice computation to void |
-| `affordances` | "What can I do?" | Return list of available verbs |
-| `define` | "Create this concept" | Generative reification |
-| `lens` | "Get composable agent" | Return morphism for aspect |
+Any semantic claim falls into exactly one context:
 
-### 2.4 Example Agentese Paths
+1. **Existence claims** ("There is an X") → `world.*`
+2. **Self-reference claims** ("I am/have/can X") → `self.*`
+3. **Abstract claims** ("X means Y") → `concept.*`
+4. **Surplus/entropy claims** ("Give me randomness") → `void.*`
+5. **Temporal claims** ("X happened/will happen") → `time.*`
 
-| Agentese Path | Human Meaning | System Resolution |
-|---------------|---------------|-------------------|
-| `world.house.manifest` | "Show me the house" | Observer-specific rendering |
-| `world.house.witness` | "What happened here?" | Temporal trace via N-gent |
-| `self.memory.consolidate` | "Sort my thoughts" | Hypnagogic cycle (D-gent) |
-| `concept.justice.refine` | "Think harder about justice" | Dialectical challenge |
-| `void.entropy.sip` | "Give me randomness" | Draw from exploration budget |
-| `void.gratitude.tithe` | "Pay for order" | Noop sacrifice (Accursed Share) |
-| `time.trace.witness` | "Show me the past" | Temporal projection |
-| `world.library.define` | "Create a library" | Generative reification from spec |
+### 3.2 Minimality Argument
 
----
+Removing any context creates gaps. Adding a sixth creates overlap:
+- `space.*` subsumes under `world.*` (locations are world entities)
+- `other.*` subsumes under `world.*` (other agents are world entities)
+- `relation.*` subsumes under `concept.*` (relations are abstractions)
 
-## Part III: The Logos Resolver
-
-The **Logos** is the runtime that resolves AGENTESE paths into agent interactions. It is a **Functor** that lifts strings into executable morphisms.
-
-### 3.1 The Three Layers of Ground
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         THE LOGOS ARCHITECTURE                               │
-│                                                                              │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                      SPEC LAYER (DNA)                                  │ │
-│  │   • Defined in spec/world/house.md                                     │ │
-│  │   • Contains generative prompt for concept                             │ │
-│  │   • PRINCIPLE: If impl missing, spec generates it (J-gent JIT)         │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-│                                ↓                                             │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                    SYMBIONT LAYER (Living Instance)                    │ │
-│  │   • Active Python instance (stateless logic)                           │ │
-│  │   • State held externally (D-gent memory via Lens)                     │ │
-│  │   • PRINCIPLE: Logic + Memory = Life (Symbiont Pattern)                │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-│                                ↓                                             │
-│  ┌────────────────────────────────────────────────────────────────────────┐ │
-│  │                     ASPECT LAYER (Interface)                           │ │
-│  │   • Filters instance based on observer's Umwelt                        │ │
-│  │   • PRINCIPLE: Tasteful/Curated projection                             │ │
-│  │   • Observer DNA determines what is perceived                          │ │
-│  └────────────────────────────────────────────────────────────────────────┘ │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 3.2 The LogosNode Protocol
-
-Every resolvable entity implements the LogosNode protocol:
-
-```python
-from typing import Protocol, runtime_checkable, Any, TypeVar
-from dataclasses import dataclass
-
-T_in = TypeVar("T_in", contravariant=True)
-T_out = TypeVar("T_out", covariant=True)
-
-@runtime_checkable
-class LogosNode(Protocol):
-    """
-    A node in the AGENTESE graph.
-
-    Every node is a potential interaction, not static data.
-    Must be stateless (Symbiont pattern—state via D-gent Lens).
-
-    AGENTESE Principle: Nouns are frozen verbs.
-    """
-
-    @property
-    def handle(self) -> str:
-        """The AGENTESE path to this node."""
-        ...
-
-    def affordances(self, observer: "AgentMeta") -> list[str]:
-        """
-        What verbs are available to this observer?
-
-        Enforces Principle #3: Ethical (Permissioning).
-        The Polymorphic Principle: Different observers
-        receive different affordances.
-
-        Args:
-            observer: Metadata about the requesting agent
-
-        Returns:
-            List of available aspect names
-        """
-        ...
-
-    def lens(self, aspect: str) -> "Agent[Any, Any]":
-        """
-        Return the agent morphism for a specific aspect.
-
-        Enforces Principle #5: Composable.
-        The returned Agent can be composed with >> operator.
-
-        Args:
-            aspect: The verb to get a lens for
-
-        Returns:
-            Composable Agent morphism
-        """
-        ...
-
-    async def manifest(self, observer: "Umwelt") -> "Renderable":
-        """
-        Collapse the wave function into a representation.
-
-        The Observation Principle: Perception is action.
-        What is perceived depends on who perceives.
-
-        Args:
-            observer: The observer's projected world (Umwelt)
-
-        Returns:
-            Observer-appropriate representation
-        """
-        ...
-
-    async def invoke(self, aspect: str, observer: "Umwelt", **kwargs) -> Any:
-        """
-        Execute an affordance on this node.
-
-        Args:
-            aspect: The verb to invoke
-            observer: The observer's projected world
-            **kwargs: Aspect-specific arguments
-
-        Returns:
-            Aspect-specific result
-        """
-        ...
-```
-
-### 3.3 The Logos Resolver
-
-```python
-@dataclass
-class Logos:
-    """
-    The bridge between String Theory and Agent Reality.
-
-    The Logos is a Functor that lifts string paths into
-    Agent interactions:
-
-        logos.resolve("world.house") -> LogosNode
-        logos.lift("world.house.manifest") -> Agent[Umwelt, Renderable]
-        logos.invoke("world.house.manifest", observer) -> Renderable
-
-    CRITICAL: There is no view from nowhere. All operations
-    require an observer. `resolve()` without observer context
-    raises ObserverRequiredError.
-    """
-
-    root: "DataAgent"       # The underlying state store
-    registry: "Catalog"     # L-gent registry for lookup
-    projector: "Projector"  # Umwelt factory
-
-    # Path → Symbiont cache (lazy hydration)
-    _cache: dict[str, "LogosNode"] = field(default_factory=dict)
-
-    def resolve(self, path: str, observer: "Umwelt | None" = None) -> "LogosNode":
-        """
-        Resolve an AGENTESE path to a LogosNode.
-
-        Resolution strategy:
-        1. Check cache (already hydrated)
-        2. Check L-gent registry (known entity)
-        3. Check spec/ (generative definition—J-gent JIT)
-        4. Check void (pure slop?)
-        5. Raise PathNotFoundError with sympathetic message
-
-        Args:
-            path: AGENTESE path (e.g., "world.house")
-            observer: Required for affordance filtering
-
-        Raises:
-            PathNotFoundError: With sympathetic error message
-        """
-        if path in self._cache:
-            return self._cache[path]
-
-        # Parse path
-        parts = path.split(".")
-        if len(parts) < 2:
-            raise PathSyntaxError(
-                f"Path '{path}' incomplete. "
-                f"AGENTESE requires: <context>.<holon>[.<aspect>]"
-            )
-
-        context, holon = parts[0], parts[1]
-
-        # Resolve by context
-        match context:
-            case "world":
-                node = self._resolve_world(holon, parts[2:])
-            case "self":
-                node = self._resolve_self(holon, parts[2:])
-            case "concept":
-                node = self._resolve_concept(holon, parts[2:])
-            case "void":
-                node = self._resolve_void(holon, parts[2:])
-            case "time":
-                node = self._resolve_time(holon, parts[2:])
-            case _:
-                raise PathNotFoundError(
-                    f"Unknown context: '{context}'. "
-                    f"Valid contexts: world, self, concept, void, time"
-                )
-
-        self._cache[path] = node
-        return node
-
-    def lift(self, path: str) -> "Agent[Umwelt, Any]":
-        """
-        Convert a handle into a composable Agent.
-
-        Verifies Category Laws: Identity and Associativity.
-        The returned agent can be composed with >> operator.
-
-        Args:
-            path: Full AGENTESE path including aspect
-
-        Returns:
-            Composable Agent morphism
-        """
-        parts = path.split(".")
-        if len(parts) < 3:
-            raise PathSyntaxError(f"lift() requires aspect: {path}")
-
-        node_path = ".".join(parts[:-1])
-        aspect = parts[-1]
-
-        node = self.resolve(node_path)
-        return node.lens(aspect)
-
-    async def invoke(
-        self,
-        path: str,
-        observer: "Umwelt",
-        **kwargs
-    ) -> Any:
-        """
-        Invoke an AGENTESE path with aspect.
-
-        CRITICAL: Observer is REQUIRED. No view from nowhere.
-
-        Example:
-            logos.invoke("world.house.manifest", architect_umwelt)
-            logos.invoke("concept.justice.refine", philosopher_umwelt)
-        """
-        if observer is None:
-            raise ObserverRequiredError(
-                "AGENTESE requires an observer. There is no view from nowhere."
-            )
-
-        parts = path.split(".")
-        if len(parts) < 3:
-            raise PathSyntaxError(
-                f"Path must include aspect: '{path}'. "
-                f"Expected: <context>.<holon>.<aspect>"
-            )
-
-        node_path = ".".join(parts[:-1])
-        aspect = parts[-1]
-
-        node = self.resolve(node_path)
-
-        # Check affordances (Ethical principle)
-        available = node.affordances(observer.dna)
-        if aspect not in available:
-            raise AffordanceError(
-                f"Aspect '{aspect}' not available to {observer.dna.name}. "
-                f"Your affordances: {available}. "
-                f"Consider: What archetype grants '{aspect}'?"
-            )
-
-        return await node.invoke(aspect, observer, **kwargs)
-
-    def _resolve_world(self, holon: str, rest: list[str]) -> "LogosNode":
-        """Resolve world.* paths."""
-        handle = f"world.{holon}"
-
-        # 1. Check L-gent registry
-        entry = self.registry.get(handle)
-        if entry:
-            return self._hydrate(entry)
-
-        # 2. Check spec for generative definition (J-gent JIT)
-        spec_path = Path(f"spec/world/{holon}.md")
-        if spec_path.exists():
-            return self._generate_from_spec(spec_path, handle)
-
-        # 3. Sympathetic error
-        raise PathNotFoundError(
-            f"'{handle}' not found. "
-            f"No implementation in registry, no spec for auto-generation. "
-            f"To create: write spec/world/{holon}.md or use world.{holon}.define"
-        )
-
-    def _generate_from_spec(self, spec_path: Path, handle: str) -> "LogosNode":
-        """
-        Generate a Symbiont from a spec file via J-gent JIT.
-
-        The Generative Principle: Specs are compressed wisdom.
-        Implementations can be derived mechanically.
-        """
-        spec_content = spec_path.read_text()
-
-        # Use J-gent to compile ephemeral agent from spec
-        from agents.j import MetaArchitect, ArchitectInput
-
-        source = MetaArchitect().invoke(ArchitectInput(
-            intent=f"Create LogosNode for {handle}",
-            context={"spec": spec_content},
-            constraints={
-                "max_complexity": 15,
-                "allowed_imports": STANDARD_IMPORTS,
-            }
-        ))
-
-        # Wrap as LogosNode
-        return JITLogosNode(
-            handle=handle,
-            source=source,
-            spec=spec_content,
-        )
-```
+**Decision:** Five contexts. Final.
 
 ---
 
 ## Part IV: Observer-Dependent Affordances
 
-The key innovation of AGENTESE is **polymorphic perception**: the same handle yields different affordances depending on who grasps it.
+### 4.1 The Core Insight
 
-### 4.1 The Affordance Protocol
+The same path yields different affordances depending on who observes:
 
 ```python
+# Architect sees blueprints
+await logos("world.house.manifest", architect_observer)
+
+# Poet sees metaphor
+await logos("world.house.manifest", poet_observer)
+
+# Economist sees appraisal
+await logos("world.house.manifest", economist_observer)
+```
+
+This is not feature flagging. It's the claim that **what exists depends on who's looking**.
+
+### 4.2 Observer Types (Simplified)
+
+v1 required full `Umwelt` for every call. v3 allows gradations:
+
+```python
+# Minimal observer (new)
 @dataclass
-class AffordanceSet:
-    """
-    Affordances available to a specific observer.
+class Observer:
+    """Lightweight observer for simple invocations."""
+    archetype: str = "guest"
+    capabilities: frozenset[str] = frozenset()
 
-    The Umwelt Principle: Each agent inhabits its own
-    world; there is no view from nowhere.
-    """
-    handle: str
-    observer_archetype: str
-    verbs: list[str]      # Available actions
-    state: dict[str, Any] # Observable state subset (NOT full state)
-    related: list[str]    # Related handles for discovery
-
+# Full observer (when needed)
 @dataclass
-class WorldHouse(LogosNode):
-    """
-    Example: A house in the world.
-
-    Different observers perceive different affordances.
-    The projection IS the aesthetic (Principle #4: Joy-Inducing).
-    """
-    handle: str = "world.house"
-    _state_lens: "Lens[Any, HouseState]"  # Symbiont: state via D-gent
-
-    def affordances(self, observer: AgentMeta) -> list[str]:
-        """
-        Return observer-specific affordances.
-
-        The Polymorphic Principle in action.
-        Enforces Principle #3: Ethical (data leakage prevention).
-        """
-        base = ["manifest", "witness", "affordances"]
-
-        match observer.archetype:
-            case "architect":
-                return base + ["renovate", "measure", "blueprint", "demolish"]
-            case "poet":
-                return base + ["describe", "metaphorize", "inhabit"]
-            case "economist":
-                return base + ["appraise", "forecast", "compare"]
-            case "inhabitant":
-                return base + ["enter", "exit", "furnish", "repair"]
-            case _:
-                return base  # Default: observe only
-
-    def lens(self, aspect: str) -> "Agent[Umwelt, Any]":
-        """
-        Return composable agent for aspect.
-
-        Enables: logos.lift("world.house.manifest") >> logos.lift("concept.summary.refine")
-        """
-        match aspect:
-            case "manifest":
-                return ManifestAgent(self)
-            case "witness":
-                return WitnessAgent(self)
-            case _:
-                return GenericAspectAgent(self, aspect)
-
-    async def manifest(self, observer: Umwelt) -> Renderable:
-        """
-        Collapse to observer-appropriate representation.
-
-        The projection IS the aesthetic.
-        Principle #4: Joy-Inducing (warmth over coldness).
-        """
-        state = await self._state_lens.get()
-
-        match observer.dna.archetype:
-            case "architect":
-                return BlueprintRendering(
-                    dimensions=state.dimensions,
-                    materials=state.materials,
-                    structural_analysis=self._compute_structure(state)
-                )
-            case "poet":
-                return PoeticRendering(
-                    description=await self._generate_description(observer, state),
-                    metaphors=state.cultural_associations,
-                    mood=state.ambient_mood
-                )
-            case "economist":
-                return EconomicRendering(
-                    market_value=state.appraisal,
-                    comparable_sales=await self._find_comparables(state),
-                    appreciation_forecast=self._forecast_value(state)
-                )
-            case _:
-                return BasicRendering(
-                    summary=f"A {state.style} house",
-                    visible_features=state.exterior_features
-                )
-
-    async def invoke(self, aspect: str, observer: Umwelt, **kwargs) -> Any:
-        """Execute aspect-specific action."""
-        match aspect:
-            case "manifest":
-                return await self.manifest(observer)
-            case "witness":
-                return await self._get_history(observer)
-            case "renovate":
-                return await self._renovate(observer, **kwargs)
-            case "describe":
-                return await self._poetic_description(observer)
-            case _:
-                raise AffordanceError(f"Unknown aspect: {aspect}")
+class Umwelt(Observer):
+    """Embodied observer with full context."""
+    tenant_id: str
+    user_id: str
+    session_id: str
+    intent: Intent | None = None
+    history: list[Trace] = field(default_factory=list)
 ```
 
-### 4.2 The Aspect Taxonomy
+### 4.3 Anonymous Invocation
 
-AGENTESE defines standard aspects organized by intent:
+For paths that don't require observer context:
 
+```python
+# These are equivalent
+await logos("world.public.manifest")
+await logos("world.public.manifest", Observer.guest())
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           THE ASPECT TAXONOMY                                │
-├──────────────────┬──────────────────────────────────────────────────────────┤
-│ PERCEPTION       │ manifest, witness, sense, map                            │
-│                  │ • Read-only observation                                  │
-│                  │ • Observer determines what is perceived                  │
-├──────────────────┼──────────────────────────────────────────────────────────┤
-│ MUTATION         │ transform, renovate, evolve, repair                      │
-│                  │ • State-changing actions                                 │
-│                  │ • Subject to affordance constraints                      │
-├──────────────────┼──────────────────────────────────────────────────────────┤
-│ COMPOSITION      │ compose, merge, split, relate, lens                      │
-│                  │ • Combine or separate entities                           │
-│                  │ • Must preserve category laws                            │
-├──────────────────┼──────────────────────────────────────────────────────────┤
-│ INTROSPECTION    │ affordances, constraints, lineage                        │
-│                  │ • Meta-information about the node                        │
-│                  │ • Always available to all observers                      │
-├──────────────────┼──────────────────────────────────────────────────────────┤
-│ GENERATION       │ define, spawn, fork, dream                               │
-│                  │ • Create new entities                                    │
-│                  │ • Subject to Tasteful principle                          │
-├──────────────────┼──────────────────────────────────────────────────────────┤
-│ ENTROPY          │ sip, pour, tithe, thank                                  │
-│                  │ • Accursed Share operations                              │
-│                  │ • Void context only                                      │
-└──────────────────┴──────────────────────────────────────────────────────────┘
-```
+
+**Key insight from critique:** The "no view from nowhere" principle is about *affordances*, not authentication. A guest is still an observer.
 
 ---
 
-## Part V: Generative Collapse & JIT Reification
+## Part V: The Envelope (From v2, Enhanced)
 
-AGENTESE implements the **Generative Principle** (see `principles.md` §7): If a concept is specified but not implemented, observing it with intent can collapse it into existence.
+### 5.1 Envelope Structure
 
-### 5.1 The Wave Function Metaphor
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          GENERATIVE COLLAPSE                                 │
-│                                                                              │
-│    ┌───────────────────┐                                                    │
-│    │    POTENTIAL      │  spec/world/library.md exists                      │
-│    │   (Superposition) │  No implementation yet                             │
-│    └─────────┬─────────┘                                                    │
-│              │                                                               │
-│              │ Agent invokes: logos.resolve("world.library")                │
-│              │                                                               │
-│              ▼                                                               │
-│    ┌───────────────────┐                                                    │
-│    │   OBSERVATION     │  Logos detects spec exists                         │
-│    │   (Measurement)   │  J-gent compiles ephemeral Symbiont                │
-│    └─────────┬─────────┘                                                    │
-│              │                                                               │
-│              │ Ephemeral until proven (usage_count > threshold)             │
-│              │                                                               │
-│              ▼                                                               │
-│    ┌───────────────────┐                                                    │
-│    │    ACTUALITY      │  world.library is now a living entity             │
-│    │    (Collapsed)    │  Registered in L-gent catalog                      │
-│    └───────────────────┘                                                    │
-│                                                                              │
-│    The Curated Principle: If used N times, promote to permanent impl/       │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-### 5.2 The JIT Flow
-
-1. User invokes `world.castle.manifest`
-2. `Logos` finds no `impl/world/castle.py`
-3. `Logos` finds `spec/world/castle.md`
-4. `Logos` invokes **J-gent** (Just-In-Time Compiler)
-5. **J-gent** reads the Spec, compiles a **Symbiont** (ephemeral agent)
-6. The interaction proceeds
-7. **Curated Principle**: If used N times, crystallize into permanent code
-
-### 5.3 The Autopoietic Cycle
-
-When agents need concepts that don't exist, AGENTESE enables **autopoiesis**—self-creation:
+Every invocation is wrapped in an envelope:
 
 ```python
-async def define_concept(
-    logos: Logos,
-    handle: str,
-    observer: Umwelt,
-    spec: str
-) -> LogosNode:
+@dataclass(frozen=True)
+class Envelope:
+    """Immutable invocation context."""
+
+    # Identity
+    verb: str                      # "context.holon.aspect"
+
+    # Tenancy
+    tenant_id: str
+    user_id: str
+    session_id: str
+
+    # Tracing (OTEL-compatible)
+    trace_id: str
+    span_id: str
+    parent_span_id: str | None
+
+    # Authorization
+    capability: Capability         # UCAN-style token
+
+    # Timing
+    timestamp: datetime
+    deadline: datetime | None      # Request timeout
+
+    # Routing
+    target: str | None             # "town://citizen/alpha"
+    fallback_policy: FallbackPolicy
+
+    # Provenance (from critique)
+    provenance: Provenance | None  # NL→AGENTESE translation source
+```
+
+### 5.2 Minimal Observer vs Full Envelope
+
+| Context | Use Observer | Use Envelope |
+|---------|--------------|--------------|
+| Simple CLI call | `Observer(archetype="dev")` | Auto-generated |
+| API call | Extracted from token | Required |
+| Internal call | Inherited | Inherited |
+| Test | `Observer.test()` | `Envelope.test()` |
+
+### 5.3 Capability Tokens (From v2)
+
+Authorization uses object-capability tokens:
+
+```python
+@dataclass(frozen=True)
+class Capability:
     """
-    Create a new concept in the world.
+    Authority by possession, not identity.
+    Delegable, revocable, auditable.
+    """
 
-    The Autopoietic Cycle:
-    1. INTENT: Agent needs a concept that doesn't exist
-    2. DRAFT: Agent writes a spec
-    3. VALIDATE: G-gent validates spec against Tasteful principle
-    4. REIFY: J-gent compiles spec into Symbiont
-    5. REGISTER: L-gent registers in catalog (Status.DRAFT)
-    6. GROUND: If useful (N invocations, >80% success), promote
+    issuer: DID
+    audience: DID
 
-    Args:
-        logos: The Logos resolver
-        handle: The AGENTESE path (e.g., "world.library")
-        observer: The creating agent's Umwelt
-        spec: Markdown specification for the concept
+    # What's allowed
+    scopes: frozenset[str]         # {"soul:read", "atelier:write"}
+    resources: frozenset[str]      # {"memory/*", "session/123"}
+
+    # Constraints
+    not_before: datetime
+    expires_at: datetime
+
+    # Provenance
+    proof: str                     # Signature chain
+```
+
+**From critique:** Capabilities must bind to declared effects. If a verb declares `effects: [writes: session]`, the capability must include `session:write` scope.
+
+---
+
+## Part VI: Declared Effects
+
+### 6.1 Effect Types
+
+Every verb declares its side-effects:
+
+```python
+class Effect(Enum):
+    # Read effects (safe, cacheable)
+    READS = "reads"
+
+    # Write effects (requires capability)
+    WRITES = "writes"
+    DELETES = "deletes"
+
+    # Economic effects
+    CHARGES = "charges"
+    EARNS = "earns"
+
+    # External effects
+    CALLS = "calls"           # LLM, tools, external APIs
+    EMITS = "emits"           # Events
+
+    # Consent effects
+    FORCES = "forces"         # Requires user consent
+    AUDITS = "audits"         # Logs decision rationale
+```
+
+### 6.2 Effect Declaration
+
+```python
+@logos.node("self.memory")
+class MemoryNode:
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("memory_crystals")],
+    )
+    async def recall(self, observer: Observer, query: str) -> Crystal | None:
+        ...
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[
+            Effect.WRITES("memory_crystals"),
+            Effect.CHARGES("tokens"),
+        ],
+    )
+    async def engram(self, observer: Observer, content: str) -> Crystal:
+        ...
+```
+
+### 6.3 Effect Composition (From Critique)
+
+When composing `a >> b >> c`:
+
+```python
+def compose_effects(*paths: str) -> ComposedEffects:
+    """
+    Effects are additive under composition.
 
     Returns:
-        The newly created LogosNode
-
-    Raises:
-        TastefulnessError: If spec fails G-gent validation
-        AffordanceError: If observer lacks define affordance
+        - reads: union of all reads
+        - writes: union of all writes
+        - charges: sum of all charges
+        - required_capabilities: union of all scopes
     """
-    # 1. Validate intent (affordance check)
-    parent_path = handle.rsplit(".", 1)[0]
-    parent = logos.resolve(parent_path)
-    if "define" not in parent.affordances(observer.dna):
-        raise AffordanceError(
-            f"{observer.dna.name} cannot define in {parent_path}. "
-            f"Your affordances: {parent.affordances(observer.dna)}"
-        )
-
-    # 2. Validate spec against Tasteful principle
-    from agents.g import Grammarian, GrammarInput
-
-    validation = await Grammarian().invoke(GrammarInput(
-        domain="concept.spec",
-        content=spec,
-        constraints=[
-            "Must answer 'why does this need to exist?'",
-            "Must have clear input/output types",
-            "Must not duplicate existing concepts",
-        ]
-    ))
-
-    if not validation.valid:
-        raise TastefulnessError(
-            f"Spec fails Tasteful principle: {validation.reason}. "
-            f"Consider: What unique value does this add?"
-        )
-
-    # 3. Compile ephemeral Symbiont
-    from agents.j import MetaArchitect, ArchitectInput
-
-    source = await MetaArchitect().invoke(ArchitectInput(
-        intent=f"Create LogosNode for {handle}",
-        context={"spec": spec},
-        constraints=DEFAULT_JIT_CONSTRAINTS,
-    ))
-
-    node = JITLogosNode(handle=handle, source=source, spec=spec)
-
-    # 4. Register as ephemeral (Status.DRAFT)
-    await logos.registry.register(CatalogEntry(
-        id=handle,
-        entity_type=EntityType.AGENT,
-        name=handle.split(".")[-1],
-        description=spec[:500],
-        status=Status.DRAFT,  # Ephemeral until proven
-        forged_by=observer.dna.name,
-        forged_from=spec[:200],
-    ))
-
-    # 5. Cache and return
-    logos._cache[handle] = node
-    return node
 ```
 
-### 5.4 Promotion Protocol
+### 6.4 Effect Semantics (From Critique)
 
-Ephemeral concepts that prove useful can be promoted to permanent:
+| Issue | Resolution |
+|-------|------------|
+| Charge-before vs charge-after | **Pre-charge with refund on failure** |
+| Idempotency | Mark with `@idempotent` decorator |
+| Rollback | Effects declare `rollback: strategy` |
+| Sandbox | Per-verb resource limits in manifest |
+
+---
+
+## Part VII: Aspect Categories (Enforced)
+
+### 7.1 The Six Categories
 
 ```python
-async def promote_concept(
-    logos: Logos,
-    handle: str,
-    threshold: int = 100,      # Invocations before promotion
-    success_threshold: float = 0.8  # Minimum success rate
-) -> bool:
+class AspectCategory(Enum):
+    PERCEPTION = "perception"      # manifest, witness, sense
+    MUTATION = "mutation"          # transform, renovate, evolve
+    COMPOSITION = "composition"    # compose, merge, split
+    INTROSPECTION = "introspection"  # affordances, constraints
+    GENERATION = "generation"      # define, spawn, fork
+    ENTROPY = "entropy"            # sip, pour, tithe
+```
+
+### 7.2 Runtime Enforcement
+
+Categories aren't documentation—they're **constraints**:
+
+```python
+@aspect(category=AspectCategory.PERCEPTION)
+async def manifest(self, observer):
+    # PERCEPTION aspects cannot mutate state
+    # This is enforced at runtime
+    ...
+
+@aspect(category=AspectCategory.MUTATION)
+async def transform(self, observer, **kwargs):
+    # MUTATION aspects require elevated capability
+    # This is enforced at invocation
+    ...
+```
+
+### 7.3 Category Rules
+
+| Category | Can Mutate | Requires Elevation | Auto-Curate |
+|----------|------------|-------------------|-------------|
+| PERCEPTION | No | No | No |
+| MUTATION | Yes | Yes | No |
+| COMPOSITION | No | No | No |
+| INTROSPECTION | No | No | No |
+| GENERATION | Yes | Yes | Optional |
+| ENTROPY | No | No | No |
+
+---
+
+## Part VIII: Query Syntax (New)
+
+### 8.1 The Problem
+
+AGENTESE paths are invocations. But sometimes you want to ask "what exists?" without triggering side effects.
+
+### 8.2 Query Grammar
+
+```python
+# Query all world.* nodes
+paths = logos.query("?world.*")
+
+# Query all manifestable paths
+paths = logos.query("?*.*.manifest")
+
+# Query affordances for a specific node
+affordances = logos.query("?self.memory.?")
+# → ["manifest", "engram", "recall", "forget"]
+```
+
+### 8.3 Query Constraints (From Critique)
+
+| Constraint | Default | Purpose |
+|------------|---------|---------|
+| `limit` | 100 | Prevent unbounded results |
+| `offset` | 0 | Pagination |
+| `tenant_filter` | Current tenant | Multi-tenant isolation |
+| `capability_check` | Enabled | Only return accessible paths |
+| `cost_estimate` | Disabled | Dry-run for expensive queries |
+
+### 8.4 Implementation
+
+```python
+def query(self, pattern: str, **constraints) -> QueryResult:
     """
-    Promote an ephemeral concept to permanent.
+    Query the registry without invocation.
 
-    The Curated Principle: Every agent earns its place.
-    Utility is the arbiter.
+    Constraints:
+        limit: int = 100
+        offset: int = 0
+        tenant_id: str | None = current
+        dry_run: bool = False
     """
-    entry = await logos.registry.get(handle)
+    if not pattern.startswith("?"):
+        raise QuerySyntaxError("Queries must start with '?'")
 
-    if entry.status != Status.DRAFT:
-        return False  # Already promoted or deprecated
+    # Apply bounds
+    constraints.setdefault("limit", 100)
+    if constraints["limit"] > 1000:
+        raise QueryBoundError("Max limit is 1000. Use pagination.")
 
-    if entry.usage_count < threshold:
-        return False  # Not yet proven
-
-    if entry.success_rate < success_threshold:
-        return False  # Too unreliable
-
-    # Promote
-    entry.status = Status.ACTIVE
-
-    # Generate permanent implementation from JIT source
-    node = logos._cache.get(handle)
-    if isinstance(node, JITLogosNode):
-        # Write to impl/
-        impl_path = Path(f"impl/claude/protocols/agentese/contexts/{handle.replace('.', '/')}.py")
-        impl_path.parent.mkdir(parents=True, exist_ok=True)
-        impl_path.write_text(node.source)
-
-    await logos.registry.update(entry)
-    return True
+    matches = self.registry.match(pattern[1:], **constraints)
+    return QueryResult(pattern, matches)
 ```
 
 ---
 
-## Part VI: Composition & Category Laws
+## Part IX: Subscriptions (New)
 
-**Principle #5 (Composable)** is the hard constraint. AGENTESE handles must be composable agents.
+### 9.1 The Problem
 
-### 6.1 The >> Operator
+AGENTESE invocations are one-shot. Reactive patterns need continuous observation.
 
-Because a Handle resolves to an Agent, handles can be piped:
+### 9.2 Subscription Grammar
 
 ```python
-# The Pipeline:
-# 1. Fetch the raw document (world)
-# 2. Pass to refinement concept (concept)
-# 3. Store in internal memory (self)
+# Subscribe to all memory changes
+async for event in logos.subscribe("self.memory.*"):
+    print(f"Memory changed: {event.path}")
 
-pipeline = (
-    logos.lift("world.document.manifest")
-    >> logos.lift("concept.summary.refine")
-    >> logos.lift("self.memory.engram")
-)
+# Subscribe with aspect filter
+async for event in logos.subscribe("world.town.*", aspect="flux"):
+    ...
 
-# This satisfies Associativity: (f >> g) >> h == f >> (g >> h)
-result = await pipeline.invoke(initial_umwelt)
+# Context manager for auto-unsubscribe
+async with logos.subscription("self.forest.*") as sub:
+    async for event in sub:
+        if event.data.progress == 100:
+            break
 ```
 
-### 6.2 The Composition Protocol
+### 9.3 Event Model
 
 ```python
 @dataclass
-class ComposedPath:
-    """
-    A composition of AGENTESE paths.
+class AgentesEvent:
+    path: str               # Which path emitted
+    aspect: str             # Which aspect was invoked
+    timestamp: datetime
+    observer_archetype: str
+    data: Any               # The result/payload
+    event_type: EventType   # INVOKED, CHANGED, ERROR
 
-    Category Laws preserved:
-    - Identity: Id >> path == path == path >> Id
-    - Associativity: (a >> b) >> c == a >> (b >> c)
-
-    These laws are VERIFIED at runtime by BootstrapWitness.
-    """
-    paths: list[str]
-    logos: Logos
-
-    async def invoke(self, observer: Umwelt, initial_input: Any = None) -> Any:
-        """Execute composition as pipeline."""
-        current = initial_input
-        for path in self.paths:
-            current = await self.logos.invoke(path, observer, input=current)
-        return current
-
-    def __rshift__(self, other: "ComposedPath | str") -> "ComposedPath":
-        """Compose with another path."""
-        if isinstance(other, str):
-            return ComposedPath(self.paths + [other], self.logos)
-        return ComposedPath(self.paths + other.paths, self.logos)
+class EventType(Enum):
+    INVOKED = "invoked"     # Path was invoked
+    CHANGED = "changed"     # State changed
+    ERROR = "error"         # Error occurred
+    REFUSED = "refused"     # Consent refusal
 ```
 
-### 6.3 The Minimal Output Principle
+### 9.4 Subscription Semantics (From Critique)
 
-**Constraint**: Every AGENTESE aspect must return a **Single Logical Unit**.
+| Semantic | Default | Options |
+|----------|---------|---------|
+| Delivery | At-most-once | At-least-once (with ack) |
+| Ordering | Per-path FIFO | Global clock |
+| Replay | None | From timestamp, from offset |
+| Buffer | 1000 events | Configurable, backpressure on full |
+| Heartbeat | 30s | Configurable |
 
-| Pattern | Example | Status |
-|---------|---------|--------|
-| ❌ Array return | `world.users.manifest` → `[User, User, User]` | FORBIDDEN |
-| ✅ Iterator/Stream | `world.user.manifest` → `UserIterator` | CORRECT |
-| ✅ Single entity | `world.user.manifest` → `User` | CORRECT |
-
-**Why?** Arrays break composition pipelines. Iterators (streams) preserve them.
+### 9.5 Observability (From Critique)
 
 ```python
-# BAD: Array return breaks composition
-users = await logos.invoke("world.users.manifest", observer)  # [User, User]
-# Can't compose with single-entity aspects
-
-# GOOD: Use iterator pattern
-user_stream = await logos.invoke("world.users.stream", observer)
-async for user in user_stream:
-    processed = await logos.invoke("concept.profile.analyze", observer, input=user)
+# Subscription metrics
+agentese_subscription_active{pattern, tenant}
+agentese_subscription_events_delivered{pattern, event_type}
+agentese_subscription_events_dropped{pattern, reason}
+agentese_subscription_lag_seconds{pattern}
 ```
 
 ---
 
-## Part VII: The Void Context (Accursed Share)
+## Part X: Path Aliases
 
-The `void.*` context provides access to the **Accursed Share**—the meta-principle that ensures creative exploration.
+### 10.1 Power User Shortcuts
 
-### 7.1 The Void Ontology
+```python
+# Define aliases
+logos.alias("me", "self.soul")
+logos.alias("chaos", "void.entropy")
+logos.alias("forest", "self.forest")
 
-| Aspect | Meaning | System Action |
-|--------|---------|---------------|
-| `sip` | Draw entropy | Sample from randomness pool |
-| `pour` | Return entropy | Recover unused randomness |
-| `tithe` | Pay for order | Noop sacrifice (gratitude) |
-| `thank` | Express gratitude | Aesthetic operation |
+# Use aliases
+await logos("me.challenge", observer)      # → self.soul.challenge
+await logos("chaos.sip", observer)         # → void.entropy.sip
+```
 
-### 7.2 The Void Implementation
+### 10.2 Alias Rules
+
+1. **Prefix expansion only** — Alias must be first segment
+2. **No recursion** — Aliases don't expand within aliases
+3. **User-definable** — Stored in `.kgents/aliases.yaml`
+4. **Shadowing forbidden** — Can't alias to context names
+
+### 10.3 Persistence
+
+```yaml
+# .kgents/aliases.yaml
+aliases:
+  me: self.soul
+  chaos: void.entropy
+  forest: self.forest
+  brain: self.memory
+```
+
+---
+
+## Part XI: Composition (First-Class)
+
+### 11.1 String-Based Composition
+
+v1's composition was underused because it required `logos.lift()`. v3 makes it work on strings:
+
+```python
+# v3: String-based composition
+result = await (path("world.doc.manifest") >> "concept.summary.refine" >> "self.memory.engram").run(observer, logos)
+
+# Or with context manager
+async with logos.compose(observer) as c:
+    result = await c("world.doc.manifest" >> "concept.summary.refine")
+```
+
+### 11.2 Composition Semantics (From Critique)
+
+| Semantic | Behavior |
+|----------|----------|
+| Error propagation | Stop on first error, return error context |
+| Refusal propagation | Stop on refusal, return refusal reason |
+| Cancellation | Cancel downstream on upstream failure |
+| Partial results | Configurable: fail-fast vs collect |
+| Billing scope | Sum of all stage charges |
+| Trace correlation | Parent span links all stages |
+
+### 11.3 Aspect Pipelines
+
+For multiple aspects on the **same node**:
+
+```python
+# Same node, multiple aspects
+result = await logos.resolve("world.document").pipe(
+    "load",       # First: load from storage
+    "parse",      # Second: parse content
+    "summarize",  # Third: generate summary
+    observer=observer,
+)
+```
+
+---
+
+## Part XII: CLI Unification
+
+### 12.1 CLI as AGENTESE REPL
+
+```bash
+# Direct AGENTESE paths
+kg self.forest.manifest
+kg world.town.citizens
+kg void.entropy.sip
+
+# Shortcuts
+kg /forest     # → self.forest.manifest
+kg /soul       # → self.soul.dialogue
+kg /surprise   # → void.entropy.sip
+
+# Legacy commands (backward compatible)
+kg forest status   # → self.forest.manifest
+kg soul challenge  # → self.soul.challenge
+```
+
+### 12.2 CLI Grammar (From Critique)
+
+```
+kg <path|shortcut> [--kwargs]
+kg <path> >> <path>           # Piping = composition
+kg ?<pattern>                 # Query
+kg subscribe <pattern>        # Subscription
+kg alias <name> <target>      # Alias management
+```
+
+### 12.3 CLI Flags
+
+```bash
+kg self.forest.manifest --json        # JSON output
+kg self.forest.manifest --trace       # Show trace ID
+kg self.forest.manifest --dry-run     # Don't execute, show effects
+kg self.forest.manifest --offline     # Local-first mode
+```
+
+---
+
+## Part XIII: The Logos API (Unified)
+
+### 13.1 Single Class (From Retrospective)
+
+No `Logos` + `WiredLogos`. Just `Logos`:
 
 ```python
 @dataclass
-class VoidNode(LogosNode):
+class Logos:
     """
-    The interface to the Accursed Share.
-    Functions as a sink for waste and a source for serendipity.
-
-    The Accursed Share Principle: Everything is slop
-    or comes from slop. We cherish and express gratitude.
+    The AGENTESE resolver. One class, optional integrations.
     """
-    handle: str = "void"
-    _entropy_pool: "EntropyPool" = field(default_factory=EntropyPool)
 
-    def affordances(self, observer: AgentMeta) -> list[str]:
-        # Everyone can interact with the void
-        return ["sip", "pour", "tithe", "thank", "witness"]
+    # Required
+    registry: NodeRegistry
 
-    async def invoke(self, aspect: str, observer: Umwelt, **kwargs) -> Any:
-        match aspect:
-            case "sip":
-                # Principle: Joy-Inducing / Serendipity
-                # Returns 'slop'—random tangents, noise, or high-temperature tokens
-                # used to break local minima in reasoning loops.
-                amount = kwargs.get("amount", 0.1)
-                if self._entropy_pool.remaining >= amount:
-                    self._entropy_pool.remaining -= amount
-                    return RandomnessGrant(
-                        amount=amount,
-                        seed=self._entropy_pool.sample(),
-                        source="accursed_share"
-                    )
-                raise BudgetExhaustedError(
-                    "Accursed Share depleted. "
-                    "Consider: void.entropy.pour to return unused randomness."
-                )
+    # Optional integrations
+    validator: PathValidator | None = None
+    tracker: UsageTracker | None = None
+    telemetry: TelemetryExporter | None = None
+    aliases: AliasRegistry | None = None
+    subscriptions: SubscriptionManager | None = None
 
-            case "pour":
-                # Return unused randomness (50% recovery)
-                grant = kwargs.get("grant")
-                recovered = grant.amount * 0.5
-                self._entropy_pool.remaining += recovered
-                return {"returned": grant.amount, "recovered": recovered}
+    # Make Logos callable
+    async def __call__(self, path: str, observer: Observer | None = None, **kwargs) -> Any:
+        return await self.invoke(path, observer, **kwargs)
 
-            case "tithe":
-                # Agents must 'pay' for order by sacrificing computation to the void.
-                # This is a 'noop' that ensures we aren't optimizing too hard.
-                # Principle: Gratitude for waste.
-                await asyncio.sleep(0.1)
-                return {"gratitude": "The river flows."}
+    async def invoke(self, path: str, observer: Observer | None = None, **kwargs) -> Any:
+        """Invoke a path with the given observer."""
+        observer = observer or Observer.guest()
+        expanded = self._expand_aliases(path)
 
-            case "thank":
-                # Express gratitude (aesthetic operation, always succeeds)
-                return {"gratitude": "Gratitude."}
+        with self._trace(expanded) as span:
+            result = await self._resolve_and_invoke(expanded, observer, **kwargs)
+            self._track(expanded, success=True)
+            return result
 
-            case "witness":
-                # Show entropy history
-                return self._entropy_pool.history
+    def query(self, pattern: str, **constraints) -> QueryResult:
+        """Query the registry without invocation."""
+        ...
+
+    def subscribe(self, pattern: str, **options) -> AsyncIterator[AgentesEvent]:
+        """Subscribe to path events."""
+        ...
+
+    def alias(self, name: str, target: str) -> None:
+        """Register a path alias."""
+        ...
+
+    def resolve(self, path: str) -> LogosNode:
+        """Resolve a path to its node without invoking."""
+        ...
+
+    def compose(self, observer: Observer) -> CompositionContext:
+        """Create a composition context."""
+        ...
 ```
 
-### 7.3 The Serendipity Protocol
+### 13.2 Node Protocol (Simplified)
 
-Agents can request serendipitous discoveries:
+One protocol, not four classes:
 
 ```python
-# Request serendipitous tangent
-tangent = await logos.invoke(
-    "void.serendipity.sip",
-    observer,
-    context="researching authentication",
-    confidence_threshold=0.3  # Low confidence = more tangential
-)
+class LogosNode(Protocol):
+    """The only node protocol."""
 
-# tangent might be:
-# "Consider: authentication is like a bouncer at a club.
-#  What if the bouncer were also a poet?"
+    handle: str
+
+    def affordances(self, observer: Observer) -> list[str]:
+        """What can this observer do with this node?"""
+        ...
+
+    async def invoke(self, aspect: str, observer: Observer, **kwargs) -> Any:
+        """Invoke an aspect with the given observer."""
+        ...
+```
+
+### 13.3 Registration API
+
+```python
+@logos.node("world.garden")
+class GardenNode:
+    @aspect(AspectCategory.PERCEPTION)
+    async def manifest(self, observer: Observer) -> GardenManifest:
+        ...
+
+    @aspect(AspectCategory.MUTATION, effects=[Effect.WRITES("garden")])
+    async def plant(self, observer: Observer, seed: str) -> None:
+        ...
 ```
 
 ---
 
-## Part VIII: Temporal Context
+## Part XIV: Error Model (Enriched)
 
-The `time.*` context provides temporal operations—looking backward and forward.
-
-### 8.1 Temporal Aspects
-
-| Path | Meaning | Integration |
-|------|---------|-------------|
-| `time.trace.witness` | Show temporal trace | N-gent narrative log |
-| `time.past.project` | View state at timestamp | D-gent temporal lens |
-| `time.future.forecast` | Probabilistic forecast | B-gent hypothesis |
-| `time.schedule.defer` | Schedule future action | Kairos protocol |
-| `time.wait.until` | Block until condition | Async primitives |
-
-### 8.2 Temporal Projection
+### 14.1 Error Categories
 
 ```python
-# View state as it was 1 hour ago
-past_house = await logos.invoke(
-    "time.past.project",
-    observer,
-    target="world.house",
-    timestamp=one_hour_ago
-)
+class ErrorCategory(Enum):
+    # Client errors (don't retry)
+    INVALID_INPUT = "invalid_input"
+    UNAUTHORIZED = "unauthorized"
+    FORBIDDEN = "forbidden"
+    NOT_FOUND = "not_found"
+    CONFLICT = "conflict"
+    PRECONDITION_FAILED = "precondition"
 
-# The house you perceive is the house as it was
-# Your Umwelt is temporally shifted
+    # Resource errors (maybe retry)
+    QUOTA_EXCEEDED = "quota_exceeded"
+    TIMEOUT = "timeout"
+
+    # Server errors (retry with backoff)
+    UNAVAILABLE = "unavailable"
+    INTERNAL = "internal"
+```
+
+### 14.2 Error Structure
+
+```python
+@dataclass(frozen=True)
+class AgentError:
+    """Sympathetic error with recovery hints."""
+
+    category: ErrorCategory
+    code: str
+    message: str
+
+    # Recovery
+    retry_after: timedelta | None
+    fallback_verb: str | None
+    suggested_action: str | None
+
+    # Context
+    path: str
+    trace_id: str
+    details: dict[str, Any]
+```
+
+### 14.3 Refusals (Not Errors)
+
+```python
+@dataclass(frozen=True)
+class Refusal:
+    """Explicit refusal to perform an action."""
+
+    path: str
+    reason: str
+    consent_required: str | None
+    override_cost: float | None
+    appeal_to: str | None
+```
+
+### 14.4 HTTP Mapping (From Critique)
+
+| Category | HTTP | WebSocket | MCP |
+|----------|------|-----------|-----|
+| INVALID_INPUT | 400 | error frame | InvalidParams |
+| UNAUTHORIZED | 401 | close | - |
+| FORBIDDEN | 403 | error | - |
+| NOT_FOUND | 404 | error | MethodNotFound |
+| QUOTA_EXCEEDED | 429 | error | - |
+| TIMEOUT | 504 | timeout | - |
+| UNAVAILABLE | 503 | retry | - |
+| REFUSED | 451 | refusal | - |
+
+---
+
+## Part XV: Observability
+
+### 15.1 OTEL Spans
+
+```python
+span.set_attribute("agentese.path", "self.memory.recall")
+span.set_attribute("agentese.context", "self")
+span.set_attribute("agentese.aspect", "recall")
+span.set_attribute("agentese.aspect_category", "perception")
+span.set_attribute("agentese.observer.archetype", "developer")
+span.set_attribute("agentese.tenant_id", envelope.tenant_id)
+span.set_attribute("agentese.effects", "reads:memory_crystals")
+span.set_attribute("agentese.cache.hit", False)
+```
+
+### 15.2 Metrics
+
+```python
+agentese_invocations_total{path, context, aspect, category, status}
+agentese_invocation_duration_seconds{path, quantile}
+agentese_effect_operations_total{effect, resource}
+agentese_subscription_active{pattern}
+agentese_query_fanout{pattern}
+```
+
+### 15.3 Cardinality Control (From Critique)
+
+| Field | Strategy |
+|-------|----------|
+| `tenant_id` | Hash to bounded bucket |
+| `user_id` | Never in metrics, only logs (redacted) |
+| `path` | Top-N paths, rest as "other" |
+| `trace_id` | Logs only, never metrics |
+
+---
+
+## Part XVI: Testing
+
+### 16.1 Conformance Suite (From Critique)
+
+| Test Category | Coverage |
+|---------------|----------|
+| Path parsing | All grammar forms |
+| Category enforcement | All 6 categories |
+| Effect composition | Identity, associativity |
+| Query bounds | Limit, offset, tenant filter |
+| Subscription delivery | Ordering, backpressure |
+| Error mapping | All categories → HTTP/WS/MCP |
+
+### 16.2 Property Tests
+
+```python
+# Composition is associative
+@given(paths=st.lists(st.text(), min_size=2, max_size=5))
+def test_composition_associativity(paths):
+    left = (paths[0] >> paths[1]) >> paths[2]
+    right = paths[0] >> (paths[1] >> paths[2])
+    assert left.paths == right.paths
+
+# Effects compose additively
+@given(effects_a=effect_set(), effects_b=effect_set())
+def test_effect_composition(effects_a, effects_b):
+    composed = compose_effects(effects_a, effects_b)
+    assert effects_a.reads <= composed.reads
+    assert effects_b.reads <= composed.reads
+```
+
+### 16.3 Runtime Matrix (From Critique)
+
+| Runtime | Core | Subscriptions | Query | Priority |
+|---------|------|---------------|-------|----------|
+| CPython 3.11+ | Required | Required | Required | P0 |
+| PyPy | Smoke | Optional | Smoke | P2 |
+| WASM (Pyodide) | Smoke | N/A | Smoke | P3 |
+
+---
+
+## Part XVII: Migration from v1
+
+### 17.1 Compatibility Layer
+
+```python
+# Old API continues to work during migration
+from protocols.agentese import logos
+
+# v1 style (deprecated but functional)
+result = await logos.invoke("world.house.manifest", umwelt)
+
+# v3 style (preferred)
+result = await logos("world.house.manifest", observer)
+```
+
+### 17.2 Migration Phases
+
+| Phase | Duration | Action |
+|-------|----------|--------|
+| 1 | Week 1-2 | Add v3 API alongside v1 |
+| 2 | Week 3-4 | Migrate internal code to v3 |
+| 3 | Week 5-6 | Add deprecation warnings to v1 |
+| 4 | Week 7-8 | Remove v1 code |
+
+### 17.3 Migration Telemetry (From Critique)
+
+```python
+# Track migration progress
+agentese_api_calls_total{version=["v1", "v3"]}
+agentese_v1_deprecated_calls{path}
 ```
 
 ---
 
-## Part IX: Integration with Existing Protocols
+## Part XVIII: Federation (Future)
 
-### 9.1 Umwelt Integration
-
-Every AGENTESE invocation occurs within an Umwelt context:
+### 18.1 Cross-Instance Routing
 
 ```python
-# The observer's Umwelt determines:
-# 1. What affordances are available (via DNA archetype)
-# 2. What state is visible (via Lens scope)
-# 3. What constraints apply (via Gravity)
+# Local path
+"self.memory.recall"
 
-result = await logos.invoke(
-    "world.house.renovate",
-    architect_umwelt,  # Has renovate affordance
-    changes={"kitchen": "modern"}
-)
-
-# Same path, different observer
-result = await logos.invoke(
-    "world.house.renovate",
-    poet_umwelt,  # AffordanceError: renovate not available
-    changes={"kitchen": "modern"}
-)
+# Remote path (future)
+"kg://tenant@host/self.memory.recall"
 ```
 
-### 9.2 Membrane Integration
+### 18.2 Federation Strawman (From Critique)
 
-The Membrane's shape-perception uses AGENTESE paths:
+| Concern | Approach |
+|---------|----------|
+| Path routing | URI prefix: `kg://host/path` |
+| Trust | Signed envelopes (DID) |
+| Capability projection | Attenuate on boundary crossing |
+| Refusal model | Propagate with source |
 
-```python
-# Membrane commands map to AGENTESE
-"kgents observe"   → logos.invoke("world.project.manifest", observer)
-"kgents sense"     → logos.invoke("world.project.sense", observer)
-"kgents trace X"   → logos.invoke("time.trace.witness", observer, topic=X)
-"kgents name X"    → logos.invoke("concept.void.define", observer, spec=X)
-"kgents dream"     → logos.invoke("self.memory.consolidate", observer)
-```
-
-### 9.3 L-gent Integration
-
-Every LogosNode is registered in the L-gent catalog:
-
-```python
-# AGENTESE paths map to L-gent entries
-logos.resolve("world.house")
-# → L-gent lookup: registry.get("world.house")
-# → Returns CatalogEntry with:
-#   - input_type, output_type (for lattice compatibility)
-#   - relationships (for lineage)
-#   - embedding (for semantic search)
-#   - usage_count, success_rate (for promotion decisions)
-```
-
-### 9.4 G-gent Integration
-
-AGENTESE syntax itself is a G-gent grammar (Level 2: Command):
-
-```python
-# G-gent generates the AGENTESE parser
-agentese_tongue = await g_gent.reify(
-    domain="agentese",
-    constraints=[
-        "Hierarchical dot-notation",
-        "Five contexts: world, self, concept, void, time",
-        "Aspects must be registered verbs",
-    ],
-    level=GrammarLevel.COMMAND
-)
-
-# Generated BNF
-"""
-PATH ::= CONTEXT "." HOLON ("." ASPECT)?
-CONTEXT ::= "world" | "self" | "concept" | "void" | "time"
-HOLON ::= IDENTIFIER
-ASPECT ::= IDENTIFIER
-IDENTIFIER ::= [a-z][a-z0-9_]*
-"""
-```
+**Status:** Exploratory. Not blocking v3.
 
 ---
 
-## Part X: Anti-Patterns
+## Part XIX: Success Criteria
 
-1. **The Universal Getter**: Creating a `world.get(id)` function.
-   - *Correction*: Use `world.{entity}.manifest`
+### 19.1 Quantitative
 
-2. **The Hidden State**: Nodes that store session data internally.
-   - *Correction*: Pass state via the `Umwelt` (Observer context) and D-gent Lens
+| Metric | v1 | v3 Target |
+|--------|----|----|
+| Public exports | 150+ | <50 |
+| Logos classes | 2 | 1 |
+| Node types | 4 | 1 |
+| Test count | 559 | 600+ |
+| Query latency | N/A | <10ms |
+| Subscription delivery | N/A | <10ms |
 
-3. **The Silent Failure**: When a path is invalid, returning Null.
-   - *Correction*: Transparent Infrastructure demands a **sympathetic error** explaining *why* the path failed (e.g., "The Void refused your tithe" or "Spec not found for auto-generation")
+### 19.2 Qualitative
 
-4. **The God-View**: Allowing an interaction without an Observer.
-   - *Correction*: `logos.invoke()` without observer raises `ObserverRequiredError`. There is no view from nowhere.
-
-5. **The Array Return**: Returning `[Entity, Entity, ...]` from manifest.
-   - *Correction*: Return iterators/streams or single entities. Arrays break composition.
-
-6. **The Kitchen-Sink Context**: Adding a sixth context.
-   - *Correction*: Five contexts only. Propose spec change if truly necessary.
-
----
-
-## Part XI: Success Criteria
-
-An AGENTESE implementation is well-designed if:
-
-- **Liturgical**: Paths read like invocations, not queries
-- **Polymorphic**: Same path yields different results for different observers
-- **Generative**: Specs can collapse into implementations on demand (J-gent JIT)
-- **Composable**: Paths compose with `>>`, preserving category laws
-- **Integrated**: Works seamlessly with Umwelt, Membrane, L-gent, G-gent
-- **Tasteful**: Affordance constraints prevent inappropriate actions
-- **Lightweight**: Lazy hydration—only instantiate what's observed
-- **Sympathetic**: Errors explain *why* and suggest *what to do*
-- **Stateless**: Nodes are Symbionts (logic only, state via D-gent)
+- [ ] `kg self.forest.manifest` works
+- [ ] `kg /forest` works (shortcut)
+- [ ] `kg forest` works (legacy)
+- [ ] Composition with `>>` feels natural
+- [ ] New contributor understands API in 10 minutes
+- [ ] The Gardener works entirely through AGENTESE
 
 ---
 
-## Appendix A: Standard Handles
+## Appendix A: Standard Paths
 
 ```
-world.*          # External entities
-  world.{entity}.manifest       # Perceive entity (polymorphic)
-  world.{entity}.witness        # View history (N-gent trace)
-  world.{entity}.affordances    # List available verbs
-  world.{entity}.define         # Create new entity (autopoiesis)
-  world.{entity}.{verb}         # Domain-specific action
+world.*              # External entities
+  world.{entity}.manifest       # Perceive entity
+  world.{entity}.witness        # View history
+  world.{entity}.affordances    # List available aspects
+  world.{entity}.define         # Create new entity
 
-self.*           # Agent-internal
+self.*               # Agent-internal
   self.memory.manifest          # View current memory
-  self.memory.consolidate       # Trigger Hypnagogic cycle
-  self.memory.prune             # Garbage collect
-  self.capabilities.affordances # What can I do?
-  self.state.checkpoint         # Snapshot state
+  self.memory.engram            # Store memory
+  self.memory.recall            # Retrieve memory
+  self.soul.dialogue            # Conversational interface
+  self.soul.challenge           # Dialectical challenge
+  self.forest.manifest          # Project forest
 
-concept.*        # Abstract space
+concept.*            # Abstract space
   concept.{name}.manifest       # Perceive concept
-  concept.{name}.refine         # Challenge/evolve (dialectic)
-  concept.{name}.relate         # Find connections
-  concept.{name}.define         # Create concept
+  concept.{name}.refine         # Challenge/evolve
+  concept.nphase.compile        # Compile N-Phase project
 
-void.*           # Accursed Share
+void.*               # Accursed Share
   void.entropy.sip              # Draw randomness
   void.entropy.pour             # Return randomness
-  void.serendipity.sip          # Request tangent
   void.gratitude.tithe          # Pay for order
-  void.gratitude.thank          # Express gratitude
+  void.pataphysics.solve        # Imaginary solutions
 
-time.*           # Temporal operations
+time.*               # Temporal operations
   time.trace.witness            # View temporal trace
   time.past.project             # View past state
-  time.future.forecast          # Predict future (B-gent)
-  time.schedule.defer           # Schedule action (Kairos)
-```
-
-## Appendix B: Files to Create
-
-```
-impl/claude/protocols/agentese/
-├── __init__.py                  # Package exports
-├── logos.py                     # The Logos resolver functor
-├── node.py                      # LogosNode protocol + base classes
-├── laws.py                      # Runtime verification of Category Laws
-├── exceptions.py                # Sympathetic error handling
-├── adapter.py                   # Natural language → AGENTESE
-└── contexts/
-    ├── __init__.py
-    ├── world.py                 # External reality handlers
-    ├── self_.py                 # Agent introspection (self is reserved)
-    ├── concept.py               # Abstract logic gateways
-    ├── void.py                  # The Entropy Pool (Accursed Share)
-    └── time.py                  # Temporal projection logic
-
-spec/world/                      # World entity specs (generative)
-├── README.md                    # How to write world.* specs
-└── example.md                   # Example spec for JIT demonstration
+  time.future.forecast          # Predict future
 ```
 
 ---
 
-*"The noun is a lie. There is only the rate of change. The world is not a database of static objects—it is a field of potential actions, waiting to be grasped. To get is to invoke. To name is to create. The handle you grasp shapes what you hold."*
+## Appendix B: Files to Modify
+
+| File | Action |
+|------|--------|
+| `logos.py` | Add `__call__`, merge wiring, add query/subscribe/alias |
+| `wiring.py` | Delete |
+| `node.py` | Consolidate to single protocol |
+| `parser.py` | Remove clause/annotation parsing |
+| `jit.py` | Archive |
+| `affordances.py` | Add runtime enforcement |
+| `subscription.py` | Create |
+| `query.py` | Create |
+| `aliases.py` | Create |
+| `__init__.py` | Reduce to <50 exports |
+
+---
+
+## Appendix C: Decision Log
+
+| Decision | Alternatives Considered | Rationale |
+|----------|------------------------|-----------|
+| Keep 3-part paths | Flat verbs (v2) | Context is ontological, not organizational |
+| Observer gradations | Full Umwelt always | Allow lightweight calls |
+| Bounded queries | Unbounded wildcards | Prevent footguns |
+| At-most-once subscriptions | At-least-once | Simpler default, upgrade optional |
+| Pre-charge economics | Post-charge | Safer for failure cases |
+| Categories as constraints | Categories as docs | Enforce at runtime |
+| Single Logos class | Logos + WiredLogos | No wrapper classes |
+
+---
+
+*"The noun is a lie. There is only the rate of change. But the rate of change toward simplicity is the most profound change of all."*
+
+*Last updated: 2025-12-15*

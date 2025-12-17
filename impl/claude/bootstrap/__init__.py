@@ -1,6 +1,16 @@
 """
 Bootstrap Agents - The irreducible kernel of kgents.
 
+DEPRECATION NOTICE (2025-12-16):
+    This module is deprecated. Import from the new locations:
+
+    - Types: from agents.poly.types import Agent, Result, Tension, ...
+    - DNA: from protocols.config.dna import BaseDNA, HypothesisDNA, ...
+    - Operations: from agents.poly import PolyAgent, ...
+
+    This shim re-exports for backward compatibility and will emit
+    a DeprecationWarning on import.
+
 The 7 bootstrap agents from which all of kgents can be regenerated:
 - Id: Identity agent (composition unit)
 - Compose: Sequential composition (f >> g)
@@ -13,57 +23,58 @@ The 7 bootstrap agents from which all of kgents can be regenerated:
 See spec/bootstrap.md for the full specification.
 """
 
+import warnings
 from typing import Any, Dict, Optional
 
-from .compose import Compose, compose, decompose, depth, flatten, pipeline
-from .contradict import Contradict, TensionDetector, contradict
-from .fix import Fix, fix, iterate_until_stable, poll_until_stable
-from .ground import Ground, ground
+# Emit deprecation warning on import
+warnings.warn(
+    "The bootstrap module is deprecated. "
+    "Import from agents.poly.types (for Agent, Result, Tension, etc.) "
+    "or protocols.config.dna (for DNA classes) instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-# Agents
-from .id import ID, Id
-from .judge import Judge, accepts, judge
-from .sublate import Sublate, resolve_or_hold, sublate
-
-# Types
-from .types import (
+# === Types (from agents.poly.types) ===
+from agents.poly.types import (
     VOID,
-    # Base types
     Agent,
     AgentProtocol,
     ComposedAgent,
-    # Input/Output types
     ContradictInput,
     ContradictResult,
     Err,
     Facts,
-    # Fix types
     FixConfig,
     FixResult,
     HoldTension,
     JudgeInput,
     Ok,
     PartialVerdict,
-    # Ground types
     PersonaSeed,
     Principles,
-    # Result type
     Result,
     SublateInput,
     SublateResult,
     Synthesis,
-    # Tension types
     Tension,
     TensionMode,
-    # Verdict types
     Verdict,
     VerdictType,
-    # Void
     Void,
     WorldSeed,
     err,
     ok,
 )
+
+# === Agents (still in bootstrap for now, pending further migration) ===
+from .compose import Compose, compose, decompose, depth, flatten, pipeline
+from .contradict import Contradict, TensionDetector, contradict
+from .fix import Fix, fix, iterate_until_stable, poll_until_stable
+from .ground import Ground, ground
+from .id import ID, Id
+from .judge import Judge, accepts, judge
+from .sublate import Sublate, resolve_or_hold, sublate
 
 __all__ = [
     # Base types

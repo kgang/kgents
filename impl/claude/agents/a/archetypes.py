@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .halo import (
     HALO_ATTR,

@@ -21,7 +21,7 @@ Universal Functor Integration (Alethic Algebra Phase 3):
 
 from typing import Any, AsyncIterator, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .agent import FluxAgent
 from .config import FluxConfig

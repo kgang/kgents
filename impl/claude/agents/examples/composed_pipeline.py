@@ -21,7 +21,7 @@ import asyncio
 from typing import Generic, TypeVar
 
 from agents.c import Just, Maybe, MaybeFunctor, Nothing
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 T = TypeVar("T")
 

@@ -33,6 +33,16 @@ from .economics import (
     create_default_tracker,
 )
 from .event import Event
+from .fixed_point import (
+    ConvergenceMetrics,
+    FixedPointResult,
+    collapse_to_ground,
+    compute_convergence_metrics,
+    detect_cycle,
+    find_cycle_length,
+    is_stable,
+    iterate_until_stable,
+)
 from .metrics import (
     AgentCompressionStats,
     CompressionEvent,
@@ -88,6 +98,15 @@ __all__ = [
     "CausalCone",
     "CausalConeStats",
     "compute_cone_stats",
+    # Fixed-Point Iteration (Y-combinator pattern)
+    "is_stable",
+    "detect_cycle",
+    "find_cycle_length",
+    "iterate_until_stable",
+    "collapse_to_ground",
+    "FixedPointResult",
+    "ConvergenceMetrics",
+    "compute_convergence_metrics",
     # Yield Governance
     "YieldHandler",
     "ApprovalStrategy",

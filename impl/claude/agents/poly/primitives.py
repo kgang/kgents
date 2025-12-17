@@ -240,7 +240,9 @@ class MemoryResult:
 
 
 # =============================================================================
-# Teleological Primitives Types (E-gent, N-gent)
+# Teleological Primitives Types (Evolve, Narrate)
+# Note: Evolve was originally part of E-gent (archived 2025-12-16)
+# These are now standalone generic primitives
 # =============================================================================
 
 
@@ -712,7 +714,7 @@ FORGET = PolyAgent[ForgetState, str, MemoryResult](
 
 
 # =============================================================================
-# Teleological Primitives (2) - E-gent, N-gent
+# Teleological Primitives (2) - Evolve, Narrate
 # =============================================================================
 
 
@@ -864,7 +866,7 @@ PRIMITIVES: dict[str, PolyAgent[Any, Any, Any]] = {
     # Memory (2) - D-gent
     "remember": REMEMBER,
     "forget": FORGET,
-    # Teleological (2) - E-gent, N-gent
+    # Teleological (2) - Evolve, Narrate
     "evolve": EVOLVE,
     "narrate": NARRATE,
 }

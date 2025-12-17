@@ -10,35 +10,49 @@ providing a unified vector database layer as specified in the L-gent spec:
 
 Key Features:
 - DgentVectorBackend: VectorBackend protocol using D-gent's VectorAgent
-- VectorCatalog: Complete integration of Catalog + Vector DB
+- VectorCatalog: Complete integration of Catalog + Vector DB (now uses V-gent)
 - Sync utilities: Keep L-gent catalog and D-gent vectors in sync
 - Migration: Move between in-memory and D-gent backends
 
-Architecture:
+Architecture (Phase 9 - V-gent Integration):
     ┌─────────────────────────────────────────────────────────────┐
     │                       VectorCatalog                          │
-    │    (Unified view: metadata via Registry, vectors via D-gent) │
+    │    (Unified view: metadata via Registry, vectors via V-gent) │
     ├─────────────────────────────────────────────────────────────┤
-    │   PersistentRegistry              DgentVectorBackend         │
-    │   (D-gent: PersistentAgent)       (D-gent: VectorAgent)      │
+    │   PersistentRegistry              VgentProtocol              │
+    │   (D-gent: PersistentAgent)       (V-gent: any backend)      │
     └─────────────────────────────────────────────────────────────┘
 
-This is Phase 8 of L-gent: Full D-gent integration for production workloads.
+Phase 8: Full D-gent integration for production workloads.
+Phase 9: V-gent integration - VectorCatalog now uses VgentProtocol.
 """
 
 from __future__ import annotations
 
 # Import D-gent components
 import sys
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import TYPE_CHECKING, Any, Optional, Union, cast
 
 from .semantic import Embedder, SemanticResult
 from .types import Catalog, CatalogEntry, EntityType
 from .vector_backend import VectorBackend, VectorSearchResult
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# V-gent integration (Phase 9)
+VGENT_AVAILABLE = False
+try:
+    from agents.v import SearchResult as VgentSearchResult
+    from agents.v import VgentProtocol, create_vgent
+
+    VGENT_AVAILABLE = True
+except ImportError:
+    VgentProtocol = None  # type: ignore[misc, assignment]
+    create_vgent = None  # type: ignore[misc, assignment]
+    VgentSearchResult = None  # type: ignore[misc, assignment]
 
 # Check for numpy (required for D-gent VectorAgent)
 try:
@@ -309,26 +323,37 @@ class DgentVectorBackend:
 
 
 class VectorCatalog:
-    """Unified Catalog + Vector DB using D-gent storage.
+    """Unified Catalog + Vector DB using V-gent (or legacy D-gent) storage.
 
-    This is the complete L-gent + D-gent integration:
+    Phase 9 Update: Now supports VgentProtocol injection for vector operations.
+
+    This is the complete L-gent + V-gent integration:
     - Catalog metadata: D-gent PersistentAgent (via PersistentRegistry)
-    - Vector embeddings: D-gent VectorAgent (via DgentVectorBackend)
+    - Vector embeddings: VgentProtocol (any V-gent backend)
 
     All operations keep both in sync automatically.
 
-    Example:
-        catalog = await VectorCatalog.create(
+    Example (new - V-gent injection):
+        from agents.v import create_vgent
+
+        vgent = create_vgent(dimension=384)
+        catalog = await VectorCatalog.create_with_vgent(
             embedder=SentenceTransformerEmbedder(),
-            catalog_path=Path(".kgents/catalog.json"),
-            vector_path=Path(".kgents/vectors.json")
+            vgent=vgent,
         )
 
         # Register auto-indexes
         await catalog.register(entry)
 
-        # Search uses vectors
+        # Search uses V-gent vectors
         results = await catalog.search("process financial data")
+
+    Example (legacy - auto-creates DgentVectorBackend):
+        catalog = await VectorCatalog.create(
+            embedder=SentenceTransformerEmbedder(),
+            catalog_path=Path(".kgents/catalog.json"),
+            vector_path=Path(".kgents/vectors.json")
+        )
 
         # Sync check
         state = await catalog.sync_state()
@@ -338,15 +363,25 @@ class VectorCatalog:
         self,
         embedder: Embedder,
         catalog: Catalog,
-        vector_backend: DgentVectorBackend,
+        vector_backend: Union[DgentVectorBackend, "VgentProtocol"],
+        *,
+        _vgent: Optional["VgentProtocol"] = None,
     ):
         """Initialize unified catalog.
 
-        Note: Use VectorCatalog.create() factory method instead.
+        Note: Use VectorCatalog.create() or VectorCatalog.create_with_vgent()
+        factory methods instead.
+
+        Args:
+            embedder: Embedding implementation
+            catalog: Catalog instance
+            vector_backend: DgentVectorBackend (legacy) or VgentProtocol adapter
+            _vgent: Direct VgentProtocol (used internally for Phase 9 integration)
         """
         self.embedder = embedder
         self.catalog = catalog
         self.vector_backend = vector_backend
+        self._vgent = _vgent  # Direct V-gent reference for new methods
         self._fitted = False
 
     @classmethod
@@ -357,7 +392,10 @@ class VectorCatalog:
         vector_path: Optional[Path] = None,
         dimension: Optional[int] = None,
     ) -> "VectorCatalog":
-        """Create a unified VectorCatalog.
+        """Create a unified VectorCatalog (legacy D-gent backend).
+
+        .. deprecated::
+            Use create_with_vgent() for new code.
 
         Args:
             embedder: Embedding implementation
@@ -387,6 +425,71 @@ class VectorCatalog:
         )
 
         instance = cls(embedder, catalog, vector_backend)
+
+        # Index existing entries
+        if catalog.entries:
+            await instance._index_all()
+
+        return instance
+
+    @classmethod
+    async def create_with_vgent(
+        cls,
+        embedder: Embedder,
+        vgent: "VgentProtocol",
+        catalog: Optional[Catalog] = None,
+        catalog_path: Optional[Path] = None,
+    ) -> "VectorCatalog":
+        """Create a VectorCatalog using V-gent protocol (Phase 9).
+
+        This is the recommended way to create a VectorCatalog for new code.
+        It accepts any VgentProtocol implementation, giving you flexibility
+        to use MemoryVectorBackend, DgentVectorBackend, or custom backends.
+
+        Args:
+            embedder: Embedding implementation
+            vgent: V-gent protocol implementation (from agents.v)
+            catalog: Optional pre-existing catalog
+            catalog_path: Path for catalog persistence (optional)
+
+        Returns:
+            VectorCatalog instance
+
+        Example:
+            from agents.v import create_vgent, MemoryVectorBackend
+
+            # Option 1: Use router (auto-selects best backend)
+            vgent = create_vgent(dimension=384)
+
+            # Option 2: Explicit memory backend
+            vgent = MemoryVectorBackend(dimension=384)
+
+            catalog = await VectorCatalog.create_with_vgent(
+                embedder=SimpleEmbedder(dimension=384),
+                vgent=vgent,
+            )
+        """
+        if not VGENT_AVAILABLE:
+            raise ImportError(
+                "V-gent not available. Install agents.v or use create() instead."
+            )
+
+        # Load or create catalog
+        if catalog is None:
+            catalog = Catalog()
+            if catalog_path and catalog_path.exists():
+                import json
+
+                with open(catalog_path, "r") as f:
+                    data = json.load(f)
+                    catalog = Catalog.from_dict(data)
+
+        # Create adapter to use V-gent with legacy vector_backend interface
+        from .vgent_adapter import VgentToLgentAdapter
+
+        adapter = VgentToLgentAdapter(vgent)
+
+        instance = cls(embedder, catalog, adapter, _vgent=vgent)
 
         # Index existing entries
         if catalog.entries:

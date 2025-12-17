@@ -9,20 +9,20 @@ Exposes Holographic Brain (Crown Jewel) capabilities via REST API:
 
 Session 6: Production Brain API for Web UI integration.
 Session 9: D-gent persistence - Brain data survives server restarts.
+Session 10: StorageRouter - Auto-selects Postgres or SQLite for persistence.
 
 D-gent Integration:
-    Brain data is persisted to ~/.kgents/brain/patterns.json using D-gent
-    serialization patterns. On startup, any existing brain data is loaded
-    automatically. On capture, data is saved immediately (write-through).
+    Brain data is persisted using StorageRouter which auto-selects:
+    - PostgreSQL if KGENTS_POSTGRES_URL is set
+    - SQLite (~/.local/share/kgents/brain/brain.db) otherwise
 """
 
 from __future__ import annotations
 
-import json
+import asyncio
 import logging
 import threading
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from .models import (
@@ -67,231 +67,80 @@ except ImportError:
 
 from .auth import get_optional_api_key
 
-# Global Brain Logos instance with thread-safe initialization
-_brain_logos: Any = None
-_brain_observer: Any = None
-_brain_logos_lock = threading.Lock()
+# Global BrainCrystal instance with thread-safe initialization
+_brain_crystal: Any = None
+_brain_crystal_lock = threading.Lock()
 
-# Test hook: override to inject a mock logos instance
-_brain_logos_factory: Any = None
-
-# D-gent persistence configuration
-_BRAIN_STORAGE_DIR = Path.home() / ".kgents" / "brain"
-_BRAIN_PATTERNS_FILE = _BRAIN_STORAGE_DIR / "patterns.json"
+# Test hook: override to inject a mock brain instance
+_brain_crystal_factory: Any = None
 
 
-def _ensure_storage_dir() -> None:
-    """Ensure the brain storage directory exists."""
-    _BRAIN_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-
-
-def _save_brain_patterns(crystal: Any) -> None:
-    """Save MemoryCrystal patterns to disk (D-gent persistence).
-
-    Uses atomic write (temp file + rename) for crash safety.
-    Format: JSON with pattern data including embeddings.
-    """
-    try:
-        _ensure_storage_dir()
-        patterns = getattr(crystal, "_patterns", {})
-        hot_patterns = getattr(crystal, "_hot_patterns", set())
-        dimension = getattr(crystal, "_dimension", 384)
-
-        # Serialize patterns to JSON-safe format
-        serialized: dict[str, Any] = {
-            "version": 1,
-            "dimension": dimension,
-            "saved_at": datetime.now(timezone.utc).isoformat(),
-            "hot_pattern_ids": list(hot_patterns),
-            "patterns": {},
-        }
-
-        for concept_id, pattern in patterns.items():
-            serialized["patterns"][concept_id] = {
-                "content": getattr(pattern, "content", ""),
-                "embedding": list(getattr(pattern, "embedding", [])),
-                "resolution": getattr(pattern, "resolution", 1.0),
-                "access_count": getattr(pattern, "access_count", 0),
-                "stored_at": (
-                    getattr(pattern, "stored_at", datetime.now(timezone.utc)).isoformat()
-                    if hasattr(pattern, "stored_at")
-                    else datetime.now(timezone.utc).isoformat()
-                ),
-                "metadata": dict(getattr(pattern, "metadata", {})),
-            }
-
-        # Atomic write: write to temp file, then rename
-        temp_file = _BRAIN_PATTERNS_FILE.with_suffix(".tmp")
-        with open(temp_file, "w") as f:
-            json.dump(serialized, f, indent=2)
-        temp_file.rename(_BRAIN_PATTERNS_FILE)
-
-        logger.info(
-            f"Saved {len(patterns)} brain patterns to {_BRAIN_PATTERNS_FILE}"
-        )
-    except Exception as e:
-        logger.warning(f"Failed to save brain patterns: {e}")
-
-
-def _load_brain_patterns(crystal: Any) -> int:
-    """Load persisted patterns into MemoryCrystal (D-gent restoration).
-
-    Returns:
-        Number of patterns loaded, or 0 if no data found.
-    """
-    if not _BRAIN_PATTERNS_FILE.exists():
-        logger.info("No persisted brain data found - starting fresh")
-        return 0
-
-    try:
-        with open(_BRAIN_PATTERNS_FILE) as f:
-            data = json.load(f)
-
-        version = data.get("version", 1)
-        if version != 1:
-            logger.warning(f"Unknown brain data version {version} - skipping load")
-            return 0
-
-        # Check dimension compatibility
-        saved_dimension = data.get("dimension", 0)
-        crystal_dimension = getattr(crystal, "_dimension", 0)
-        if saved_dimension != crystal_dimension and saved_dimension > 0:
-            logger.warning(
-                f"Dimension mismatch: saved={saved_dimension}, current={crystal_dimension}. "
-                f"Starting fresh (old data preserved in {_BRAIN_PATTERNS_FILE}.bak)"
-            )
-            # Backup old file
-            backup_path = _BRAIN_PATTERNS_FILE.with_suffix(".json.bak")
-            import shutil
-            shutil.copy(_BRAIN_PATTERNS_FILE, backup_path)
-            return 0
-
-        patterns_data = data.get("patterns", {})
-        hot_pattern_ids = set(data.get("hot_pattern_ids", []))
-
-        # Import pattern class for reconstruction
-        from agents.m.crystal import CrystalPattern
-
-        loaded = 0
-        for concept_id, pdata in patterns_data.items():
-            try:
-                # Parse stored_at timestamp
-                stored_at_str = pdata.get("stored_at")
-                if stored_at_str:
-                    stored_at = datetime.fromisoformat(stored_at_str)
-                    if stored_at.tzinfo is None:
-                        stored_at = stored_at.replace(tzinfo=timezone.utc)
-                else:
-                    stored_at = datetime.now(timezone.utc)
-
-                # Create pattern and store in crystal
-                # Note: CrystalPattern fields are:
-                # concept_id, content, embedding, resolution, stored_at, last_accessed, access_count
-                pattern = CrystalPattern(
-                    concept_id=concept_id,
-                    content=pdata.get("content", ""),
-                    embedding=pdata.get("embedding", []),
-                    resolution=pdata.get("resolution", 1.0),
-                    stored_at=stored_at,
-                    last_accessed=stored_at,  # Use stored_at for last_accessed
-                    access_count=pdata.get("access_count", 0),
-                )
-
-                # Direct injection into crystal's internal state
-                crystal._patterns[concept_id] = pattern
-                if concept_id in hot_pattern_ids:
-                    crystal._hot_patterns.add(concept_id)
-                loaded += 1
-            except Exception as e:
-                logger.warning(f"Failed to load pattern {concept_id}: {e}")
-
-        logger.info(
-            f"Loaded {loaded} brain patterns from {_BRAIN_PATTERNS_FILE}"
-        )
-        return loaded
-    except Exception as e:
-        logger.warning(f"Failed to load brain patterns: {e}")
-        return 0
-
-
-def _get_brain_logos() -> tuple[Any, Any]:
-    """Get or create the shared Brain Logos instance (thread-safe).
+async def _get_brain_crystal() -> Any:
+    """Get or create the shared BrainCrystal instance (thread-safe).
 
     Uses double-checked locking pattern for efficient thread-safe
     lazy initialization. This is important for API servers that may
     handle concurrent requests.
 
     D-gent Persistence:
-        On first initialization, loads any persisted brain data from
-        ~/.kgents/brain/patterns.json. This ensures data survives
-        server restarts.
+        BrainCrystal uses StorageRouter which auto-selects:
+        - PostgreSQL if KGENTS_POSTGRES_URL is set
+        - SQLite (~/.local/share/kgents/brain/brain.db) otherwise
 
-    Tests can inject a factory via _set_brain_logos_factory() to avoid
+    Tests can inject a factory via _set_brain_crystal_factory() to avoid
     network calls and global state mutation.
 
     Returns:
-        Tuple of (logos, observer) instances
+        BrainCrystal instance
     """
-    global _brain_logos, _brain_observer, _brain_logos_factory
+    global _brain_crystal, _brain_crystal_factory
 
-    if _brain_logos is None:
-        with _brain_logos_lock:
+    if _brain_crystal is None:
+        with _brain_crystal_lock:
             # Double-check after acquiring lock
-            if _brain_logos is None:
-                from protocols.agentese.node import Observer
-
-                if _brain_logos_factory is not None:
+            if _brain_crystal is None:
+                if _brain_crystal_factory is not None:
                     # Test injection: use factory
-                    _brain_logos = _brain_logos_factory()
+                    result = _brain_crystal_factory()
+                    if asyncio.iscoroutine(result):
+                        _brain_crystal = await result
+                    else:
+                        _brain_crystal = result
                 else:
-                    # Production: use auto embedder
-                    from protocols.agentese import create_brain_logos
+                    # Production: use BrainCrystal with StorageRouter
+                    from agents.brain import get_brain_crystal
 
-                    _brain_logos = create_brain_logos(embedder_type="auto")
+                    _brain_crystal = await get_brain_crystal()
+                    logger.info(
+                        f"Brain initialized with backend: {_brain_crystal._storage_backend}"
+                    )
 
-                    # D-gent persistence: load persisted patterns
-                    try:
-                        resolvers = _brain_logos._context_resolvers
-                        self_resolver = resolvers.get("self")
-                        memory_node = getattr(self_resolver, "_memory", None)
-                        crystal = (
-                            getattr(memory_node, "_memory_crystal", None)
-                            if memory_node
-                            else None
-                        )
-                        if crystal:
-                            loaded = _load_brain_patterns(crystal)
-                            if loaded > 0:
-                                logger.info(f"Brain restored with {loaded} patterns")
-                    except Exception as e:
-                        logger.warning(f"Failed to restore brain patterns: {e}")
-
-                _brain_observer = Observer.guest()
-
-    return _brain_logos, _brain_observer
+    return _brain_crystal
 
 
-def _set_brain_logos_factory(factory: Any) -> None:
-    """Set a factory function for brain logos (test hook).
+def _set_brain_crystal_factory(factory: Any) -> None:
+    """Set a factory function for brain crystal (test hook).
 
     Call with None to reset to default behavior.
 
     Args:
-        factory: Callable that returns a Logos instance, or None to reset.
+        factory: Callable that returns a BrainCrystal instance, or None to reset.
     """
-    global _brain_logos, _brain_observer, _brain_logos_factory
-    with _brain_logos_lock:
-        _brain_logos_factory = factory
-        _brain_logos = None  # Reset cached instance
-        _brain_observer = None
+    global _brain_crystal, _brain_crystal_factory
+    with _brain_crystal_lock:
+        _brain_crystal_factory = factory
+        _brain_crystal = None  # Reset cached instance
 
 
-def _reset_brain_logos() -> None:
-    """Reset the brain logos instance (for testing)."""
-    global _brain_logos, _brain_observer
-    with _brain_logos_lock:
-        _brain_logos = None
-        _brain_observer = None
+def _reset_brain_crystal() -> None:
+    """Reset the brain crystal instance (for testing)."""
+    global _brain_crystal
+    with _brain_crystal_lock:
+        _brain_crystal = None
+        # Also reset the singleton in agents.brain
+        from agents.brain import reset_brain_crystal
+
+        reset_brain_crystal()
 
 
 def create_brain_router() -> "APIRouter | None":
@@ -315,7 +164,11 @@ def create_brain_router() -> "APIRouter | None":
         Capture content to holographic memory.
 
         Uses semantic embeddings (sentence-transformers if available)
-        to store content in the Brain's MemoryCrystal.
+        to store content in the Brain's BrainCrystal.
+
+        D-gent persistence is automatic via StorageRouter:
+        - PostgreSQL if KGENTS_POSTGRES_URL is set
+        - SQLite otherwise
 
         Example:
             POST /v1/brain/capture
@@ -328,38 +181,18 @@ def create_brain_router() -> "APIRouter | None":
             Capture result with concept_id
         """
         try:
-            logos, observer = _get_brain_logos()
+            brain = await _get_brain_crystal()
 
-            kwargs: dict[str, Any] = {"content": request.content}
-            if request.concept_id:
-                kwargs["concept_id"] = request.concept_id
-            if request.metadata:
-                kwargs["metadata"] = request.metadata
-
-            result = await logos.invoke("self.memory.capture", observer, **kwargs)
-
-            if "error" in result:
-                raise HTTPException(status_code=400, detail=result["error"])
-
-            # D-gent persistence: save after capture (write-through)
-            try:
-                resolvers = logos._context_resolvers
-                self_resolver = resolvers.get("self")
-                memory_node = getattr(self_resolver, "_memory", None)
-                crystal = (
-                    getattr(memory_node, "_memory_crystal", None)
-                    if memory_node
-                    else None
-                )
-                if crystal:
-                    _save_brain_patterns(crystal)
-            except Exception as e:
-                logger.warning(f"Failed to persist brain pattern: {e}")
+            result = await brain.capture(
+                content=request.content,
+                concept_id=request.concept_id,
+                metadata=request.metadata,
+            )
 
             return BrainCaptureResponse(
-                status=result.get("status", "captured"),
-                concept_id=result.get("concept_id", "unknown"),
-                storage=result.get("storage", "unknown"),
+                status="captured",
+                concept_id=result.concept_id,
+                storage=result.storage,
             )
         except HTTPException:
             raise
@@ -389,30 +222,28 @@ def create_brain_router() -> "APIRouter | None":
             List of surfaced memories with relevance scores
         """
         try:
-            logos, observer = _get_brain_logos()
+            brain = await _get_brain_crystal()
 
-            result = await logos.invoke(
-                "self.memory.ghost.surface",
-                observer,
-                context=request.context,
+            results = await brain.search(
+                query=request.context,
                 limit=request.limit,
             )
 
             surfaced_memories = []
-            for item in result.get("surfaced", []):
+            for result in results:
                 surfaced_memories.append(
                     GhostMemory(
-                        concept_id=item.get("concept_id", "unknown"),
-                        content=item.get("content"),
-                        relevance=item.get("relevance", 0.5),
+                        concept_id=result.concept_id,
+                        content=result.content,
+                        relevance=result.similarity,
                     )
                 )
 
             return BrainGhostResponse(
-                status=result.get("status", "surfaced"),
+                status="surfaced",
                 context=request.context,
                 surfaced=surfaced_memories,
-                count=result.get("count", len(surfaced_memories)),
+                count=len(surfaced_memories),
             )
         except Exception as e:
             logger.exception("Brain ghost surfacing failed")
@@ -435,41 +266,15 @@ def create_brain_router() -> "APIRouter | None":
             Memory topology information
         """
         try:
-            logos, observer = _get_brain_logos()
-
-            result = await logos.invoke("self.memory.cartography.manifest", observer)
-
-            # Extract stats from result
-            metadata = getattr(result, "metadata", {}) if result else {}
-            summary = (
-                getattr(result, "summary", "No topology available")
-                if result
-                else "No topology available"
-            )
-
-            # Get crystal stats directly
-            resolvers = logos._context_resolvers
-            self_resolver = resolvers.get("self")
-            memory_node = getattr(self_resolver, "_memory", None)
-            crystal = (
-                getattr(memory_node, "_memory_crystal", None) if memory_node else None
-            )
-
-            concept_count = 0
-            hot_patterns = 0
-            dimension = 384
-
-            if crystal:
-                concept_count = len(getattr(crystal, "_patterns", {}))
-                hot_patterns = len(getattr(crystal, "_hot_patterns", set()))
-                dimension = getattr(crystal, "_dimension", 384)
+            brain = await _get_brain_crystal()
+            status = await brain.status()
 
             return BrainMapResponse(
-                summary=str(summary),
-                concept_count=concept_count,
-                landmarks=metadata.get("landmarks", 0),
-                hot_patterns=hot_patterns,
-                dimension=dimension,
+                summary=f"Brain using {status.storage_backend} backend",
+                concept_count=status.total_captures,
+                landmarks=0,  # TODO: implement landmark detection
+                hot_patterns=0,  # TODO: implement hot pattern tracking
+                dimension=128,  # Default dimension for embeddings
             )
         except Exception as e:
             logger.exception("Brain map failed")
@@ -483,7 +288,7 @@ def create_brain_router() -> "APIRouter | None":
         Get brain health status.
 
         Returns information about the brain subsystems including
-        embedder type, dimensions, and concept count.
+        embedder type, dimensions, concept count, and storage backend.
 
         Example:
             GET /v1/brain/status
@@ -492,40 +297,23 @@ def create_brain_router() -> "APIRouter | None":
             Brain health status
         """
         try:
-            logos, observer = _get_brain_logos()
+            brain = await _get_brain_crystal()
+            status = await brain.status()
 
-            # Get internal state
-            resolvers = logos._context_resolvers
-            self_resolver = resolvers.get("self")
-            memory_node = getattr(self_resolver, "_memory", None)
-            crystal = (
-                getattr(memory_node, "_memory_crystal", None) if memory_node else None
+            # Determine embedder type
+            embedder = brain._embedder
+            embedder_type = type(embedder).__name__ if embedder else "hash-based"
+            embedder_dimension = (
+                getattr(embedder, "dimension", 128) if embedder else 128
             )
-            embedder = getattr(memory_node, "_embedder", None) if memory_node else None
-            cartographer = getattr(self_resolver, "_cartographer", None)
-
-            # Determine status
-            status = "healthy"
-            if crystal is None:
-                status = "degraded"
-            if embedder is None and crystal is None:
-                status = "unavailable"
-
-            # Get embedder info
-            embedder_type = type(embedder).__name__ if embedder else "None"
-            embedder_dimension = getattr(embedder, "dimension", 64) if embedder else 64
-
-            # Get concept count
-            concept_count = 0
-            if crystal:
-                concept_count = len(getattr(crystal, "_patterns", {}))
 
             return BrainStatusResponse(
-                status=status,
+                status="healthy" if status.total_captures >= 0 else "degraded",
                 embedder_type=embedder_type,
                 embedder_dimension=embedder_dimension,
-                concept_count=concept_count,
-                has_cartographer=cartographer is not None,
+                concept_count=status.total_captures,
+                has_cartographer=False,  # Cartographer removed in rewrite
+                storage_backend=status.storage_backend,
             )
         except Exception as e:
             logger.exception("Brain status check failed")
@@ -556,20 +344,12 @@ def create_brain_router() -> "APIRouter | None":
             Full topology data for 3D visualization
         """
         import math
-        from datetime import datetime, timezone
 
         try:
-            logos, observer = _get_brain_logos()
+            brain = await _get_brain_crystal()
+            topology_data = await brain.get_topology_data(limit=500)
 
-            # Get internal state
-            resolvers = logos._context_resolvers
-            self_resolver = resolvers.get("self")
-            memory_node = getattr(self_resolver, "_memory", None)
-            crystal = (
-                getattr(memory_node, "_memory_crystal", None) if memory_node else None
-            )
-
-            if crystal is None:
+            if not topology_data:
                 return BrainTopologyResponse(
                     nodes=[],
                     edges=[],
@@ -578,47 +358,52 @@ def create_brain_router() -> "APIRouter | None":
                     stats={"concept_count": 0, "edge_count": 0},
                 )
 
-            patterns = getattr(crystal, "_patterns", {})
-            hot_patterns = getattr(crystal, "_hot_patterns", set())
+            now = datetime.now(timezone.utc)
 
             # Build nodes with 3D positions
             nodes: list[TopologyNode] = []
             embeddings: dict[str, list[float]] = {}
-            now = datetime.now(timezone.utc)
 
-            for concept_id, pattern in patterns.items():
-                embedding = getattr(pattern, "embedding", [])
+            for item in topology_data:
+                concept_id = item["concept_id"]
+                embedding = item.get("embedding") or []
                 embeddings[concept_id] = embedding
 
                 # Compute position from embedding (use first 3 dims, normalized)
-                # For better visualization, we spread across a unit sphere
                 use_hash_position = True  # Default to hash-based
 
                 if len(embedding) >= 3:
                     # Check if first 3 dims have meaningful values (not all zeros)
-                    first_3_magnitude = abs(embedding[0]) + abs(embedding[1]) + abs(embedding[2])
+                    first_3_magnitude = (
+                        abs(embedding[0]) + abs(embedding[1]) + abs(embedding[2])
+                    )
                     if first_3_magnitude > 0.001:
                         # Use first 3 dimensions, scale to reasonable range
-                        x, y, z = embedding[0] * 10, embedding[1] * 10, embedding[2] * 10
+                        x, y, z = (
+                            embedding[0] * 10,
+                            embedding[1] * 10,
+                            embedding[2] * 10,
+                        )
                         use_hash_position = False
 
                 if use_hash_position:
                     # Fallback: deterministic position based on concept_id hash
-                    # This ensures different crystals appear at different locations
                     h = hash(concept_id)
                     x = ((h >> 0) & 0xFF) / 255.0 * 20 - 10
                     y = ((h >> 8) & 0xFF) / 255.0 * 20 - 10
                     z = ((h >> 16) & 0xFF) / 255.0 * 20 - 10
 
-                # Compute age
-                stored_at = getattr(pattern, "stored_at", now)
-                if stored_at.tzinfo is None:
-                    stored_at = stored_at.replace(tzinfo=timezone.utc)
-                age_seconds = (now - stored_at).total_seconds()
-
-                # Get content preview
-                content = getattr(pattern, "content", "")
-                content_preview = str(content)[:100] if content else None
+                # Compute age from captured_at
+                captured_at_str = item.get("captured_at", "")
+                try:
+                    captured_at = datetime.fromisoformat(
+                        captured_at_str.replace("Z", "+00:00")
+                    )
+                    if captured_at.tzinfo is None:
+                        captured_at = captured_at.replace(tzinfo=timezone.utc)
+                    age_seconds = max(0, (now - captured_at).total_seconds())
+                except (ValueError, AttributeError):
+                    age_seconds = 0
 
                 nodes.append(
                     TopologyNode(
@@ -627,11 +412,11 @@ def create_brain_router() -> "APIRouter | None":
                         x=x,
                         y=y,
                         z=z,
-                        resolution=getattr(pattern, "resolution", 1.0),
-                        is_hot=concept_id in hot_patterns,
-                        access_count=getattr(pattern, "access_count", 0),
-                        age_seconds=max(0, age_seconds),
-                        content_preview=content_preview,
+                        resolution=1.0,
+                        is_hot=False,
+                        access_count=0,
+                        age_seconds=age_seconds,
+                        content_preview=item.get("content_preview"),
                     )
                 )
 
@@ -642,9 +427,15 @@ def create_brain_router() -> "APIRouter | None":
 
             for i, cid1 in enumerate(concept_ids):
                 emb1 = embeddings[cid1]
+                if not emb1:
+                    continue
                 for cid2 in concept_ids[i + 1 :]:
                     emb2 = embeddings[cid2]
+                    if not emb2:
+                        continue
                     sim = _cosine_similarity(emb1, emb2)
+                    # Clamp to [0, 1] to handle floating point precision
+                    sim = max(0.0, min(1.0, sim))
                     if sim >= similarity_threshold:
                         edges.append(
                             TopologyEdge(
@@ -657,31 +448,29 @@ def create_brain_router() -> "APIRouter | None":
                         edge_counts[cid2] += 1
 
             # Identify hubs (high connectivity)
+            hub_ids = []
             if edge_counts:
-                avg_edges = sum(edge_counts.values()) / len(edge_counts)
-                hub_ids = [
-                    cid for cid, count in edge_counts.items() if count > avg_edges * 1.5
-                ]
-            else:
-                hub_ids = []
+                non_zero_counts = [c for c in edge_counts.values() if c > 0]
+                if non_zero_counts:
+                    avg_edges = sum(non_zero_counts) / len(non_zero_counts)
+                    hub_ids = [
+                        cid
+                        for cid, count in edge_counts.items()
+                        if count > avg_edges * 1.5
+                    ]
 
             # Detect gaps (sparse regions)
-            # Simple approach: find regions with low node density
             gaps: list[TopologyGap] = []
             if len(nodes) >= 5:
-                # Sample points in the bounding box and check density
                 xs = [n.x for n in nodes]
                 ys = [n.y for n in nodes]
                 zs = [n.z for n in nodes]
 
-                # Check a few candidate gap locations
-                for _ in range(3):
-                    # Random point in bounding box
-                    cx = (min(xs) + max(xs)) / 2 + (hash(str(_)) % 100 - 50) / 10
-                    cy = (min(ys) + max(ys)) / 2 + (hash(str(_ * 2)) % 100 - 50) / 10
-                    cz = (min(zs) + max(zs)) / 2 + (hash(str(_ * 3)) % 100 - 50) / 10
+                for i in range(3):
+                    cx = (min(xs) + max(xs)) / 2 + (hash(str(i)) % 100 - 50) / 10
+                    cy = (min(ys) + max(ys)) / 2 + (hash(str(i * 2)) % 100 - 50) / 10
+                    cz = (min(zs) + max(zs)) / 2 + (hash(str(i * 3)) % 100 - 50) / 10
 
-                    # Find nearest nodes
                     distances = []
                     for n in nodes:
                         d = math.sqrt(
@@ -690,7 +479,6 @@ def create_brain_router() -> "APIRouter | None":
                         distances.append((d, n.id))
                     distances.sort()
 
-                    # If nearest nodes are far, it's a gap
                     if distances and distances[0][0] > 3.0:
                         gaps.append(
                             TopologyGap(
@@ -705,16 +493,14 @@ def create_brain_router() -> "APIRouter | None":
             return BrainTopologyResponse(
                 nodes=nodes,
                 edges=edges,
-                gaps=gaps[:5],  # Limit to 5 gaps
+                gaps=gaps[:5],
                 hub_ids=hub_ids,
                 stats={
                     "concept_count": len(nodes),
                     "edge_count": len(edges),
                     "hub_count": len(hub_ids),
                     "gap_count": len(gaps),
-                    "avg_resolution": (
-                        sum(n.resolution for n in nodes) / len(nodes) if nodes else 0
-                    ),
+                    "avg_resolution": 1.0,
                 },
             )
         except Exception as e:

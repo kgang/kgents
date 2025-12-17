@@ -18,7 +18,6 @@ from testing.integrations import (
     LatticeValidatedTopology,
     ObservedCortex,
     PersistentWitnessStore,
-    TeleologicalRedTeam,
     create_enhanced_cortex,
     create_enhanced_oracle,
     create_persistent_analyst,
@@ -65,7 +64,6 @@ class TestIntegrationStatus:
         assert hasattr(status, "dgent_persistence")
         assert hasattr(status, "ngent_narrative")
         assert hasattr(status, "bgent_economics")
-        assert hasattr(status, "egent_evolution")
         assert hasattr(status, "ogent_observation")
 
     def test_status_repr(self) -> None:
@@ -73,7 +71,7 @@ class TestIntegrationStatus:
         status = get_integration_status()
         repr_str = repr(status)
         assert "IntegrationStatus" in repr_str
-        assert "/7 active" in repr_str
+        assert "/6 active" in repr_str
 
 
 class TestFormatIntegrationReport:
@@ -231,34 +229,6 @@ class TestBudgetedMarket:
 
 
 # =============================================================================
-# Red Team Integration Tests
-# =============================================================================
-
-
-class TestTeleologicalRedTeam:
-    """Tests for RedTeam × E-gent integration."""
-
-    def test_wrap_red_team(self) -> None:
-        """Should wrap base red team."""
-        base = RedTeam(population_size=10, generations=2)
-        wrapped = TeleologicalRedTeam(base)
-        assert wrapped.base == base
-
-    @pytest.mark.asyncio
-    async def test_evolve_without_egent(self) -> None:
-        """Should fall back to base evolution without E-gent."""
-        base = RedTeam(population_size=5, generations=2)
-        wrapped = TeleologicalRedTeam(base)
-
-        agent = MockAgent("Test")
-        seeds = ["hello"]
-
-        # Should work even without E-gent
-        population = await wrapped.evolve_with_demon(agent, seeds)
-        assert len(population) >= 1
-
-
-# =============================================================================
 # Cortex Integration Tests
 # =============================================================================
 
@@ -312,7 +282,6 @@ class TestEnhancedCortex:
             observe_agents=False,
             use_lattice_validation=True,
             use_bgent_budgeting=True,
-            use_egent_evolution=True,
         )
         assert cortex is not None
 
@@ -344,7 +313,6 @@ class TestGracefulDegradation:
             observe_agents=False,
             use_lattice_validation=False,
             use_bgent_budgeting=False,
-            use_egent_evolution=False,
         )
         assert cortex is not None
 

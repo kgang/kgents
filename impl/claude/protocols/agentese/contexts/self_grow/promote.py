@@ -341,14 +341,15 @@ class PromoteNode(BaseLogosNode):
                 spec_content=spec_content,
                 impl_content=impl_content,
             )
-            rollback_token.rollback_token = holon.germination_id  # Link back to nursery
+            # Link stored via handle (rollback_token.handle == holon handle)
             self._rollback_tokens[handle] = rollback_token
 
             # Mark as promoted
             holon.promoted_at = datetime.now()
             holon.rollback_token = rollback_token.token_id
 
-            # Remove from nursery
+            # Remove from nursery (nursery was checked at line 170)
+            assert self._nursery is not None  # Verified at function entry
             self._nursery.remove(holon.germination_id)
 
             # Remove from staged

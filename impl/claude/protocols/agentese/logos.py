@@ -48,7 +48,7 @@ from .node import (
 )
 
 if TYPE_CHECKING:
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
     from bootstrap.umwelt import Umwelt
 
     from .aliases import AliasRegistry

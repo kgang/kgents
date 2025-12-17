@@ -101,22 +101,58 @@ from .prompt import (
     create_prompt_resolver,
 )
 from .self_ import (
+    BUS_AFFORDANCES,
+    # Town Citizen integration (Phase 3 Crown Jewels)
+    CITIZEN_AFFORDANCES,
+    CITIZEN_MEMORY_AFFORDANCES,
+    CITIZEN_PERSONALITY_AFFORDANCES,
+    # Data architecture rewrite (Phase 2)
+    DATA_AFFORDANCES,
     SELF_AFFORDANCES,
+    # V-gent Vector integration (Phase 7)
+    VECTOR_AFFORDANCES,
+    BusNode,
     CapabilitiesNode,
+    CitizenMemoryNode,
+    CitizenNode,
+    CitizenPersonalityNode,
+    DataNode,
     IdentityNode,
     JudgmentNode,
     MemoryNode,
     SelfContextResolver,
     SemaphoreNode,
     StateNode,
-    create_self_resolver,
-    # Data architecture rewrite (Phase 2)
-    DATA_AFFORDANCES,
-    BUS_AFFORDANCES,
-    DataNode,
-    BusNode,
-    create_data_resolver,
+    VectorNode,
     create_bus_resolver,
+    create_citizen_memory_node,
+    create_citizen_node,
+    create_citizen_personality_node,
+    create_data_resolver,
+    create_self_resolver,
+)
+
+# Jewel-Flow integration (F-gent Flow + Crown Jewels)
+from .self_jewel_flow import (
+    ALL_JEWEL_FLOW_PATHS,
+    # Affordances
+    BRAIN_FLOW_AFFORDANCES,
+    # Path registries
+    BRAIN_FLOW_PATHS,
+    GARDENER_FLOW_AFFORDANCES,
+    GARDENER_FLOW_PATHS,
+    GESTALT_FLOW_AFFORDANCES,
+    GESTALT_FLOW_PATHS,
+    HERO_PATH_FLOW_PATHS,
+    BrainFlowNode,
+    GardenerFlowNode,
+    GestaltFlowNode,
+    # Nodes
+    JewelFlowNode,
+    # Factories
+    create_brain_flow_node,
+    create_gardener_flow_node,
+    create_gestalt_flow_node,
 )
 from .self_judgment import (
     CriticsLoop,
@@ -178,6 +214,8 @@ def create_context_resolvers(
     # Crown Jewel Brain (Session 3-4)
     cartographer: Any = None,
     embedder: Any = None,
+    # V-gent Vector integration (Phase 7)
+    vgent: Any = None,
 ) -> dict[str, Any]:
     """
     Create all five context resolvers with unified configuration.
@@ -199,6 +237,7 @@ def create_context_resolvers(
         inference_agent: ActiveInferenceAgent for free energy-based retention
         cartographer: CartographerAgent for holographic memory navigation
         embedder: L-gent Embedder for semantic embeddings (Session 4)
+        vgent: V-gent backend (VgentProtocol) for vector operations (Phase 7)
 
     Returns:
         Dictionary mapping context names to resolvers
@@ -222,6 +261,8 @@ def create_context_resolvers(
             # Crown Jewel Brain (Session 3-4)
             cartographer=cartographer,
             embedder=embedder,
+            # V-gent Vector integration (Phase 7)
+            vgent=vgent,
         ),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
         "void": create_void_resolver(
@@ -262,6 +303,19 @@ __all__ = [
     "BusNode",
     "create_data_resolver",
     "create_bus_resolver",
+    # V-gent Vector integration (Phase 7)
+    "VECTOR_AFFORDANCES",
+    "VectorNode",
+    # Town Citizen integration (Phase 3 Crown Jewels)
+    "CITIZEN_AFFORDANCES",
+    "CITIZEN_MEMORY_AFFORDANCES",
+    "CITIZEN_PERSONALITY_AFFORDANCES",
+    "CitizenNode",
+    "CitizenMemoryNode",
+    "CitizenPersonalityNode",
+    "create_citizen_node",
+    "create_citizen_memory_node",
+    "create_citizen_personality_node",
     # Self judgment (SPECS critique)
     "Critique",
     "CritiqueWeights",
@@ -342,6 +396,22 @@ __all__ = [
     "get_crown_jewel_registry",
     "list_self_time_paths",
     "register_crown_jewel_paths",
+    # Jewel-Flow integration (F-gent Flow + Crown Jewels)
+    "BRAIN_FLOW_PATHS",
+    "GARDENER_FLOW_PATHS",
+    "GESTALT_FLOW_PATHS",
+    "HERO_PATH_FLOW_PATHS",
+    "ALL_JEWEL_FLOW_PATHS",
+    "BRAIN_FLOW_AFFORDANCES",
+    "GARDENER_FLOW_AFFORDANCES",
+    "GESTALT_FLOW_AFFORDANCES",
+    "JewelFlowNode",
+    "BrainFlowNode",
+    "GardenerFlowNode",
+    "GestaltFlowNode",
+    "create_brain_flow_node",
+    "create_gardener_flow_node",
+    "create_gestalt_flow_node",
     # Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
     "PROMPT_ROLE_AFFORDANCES",
     "CheckpointSummaryDTO",

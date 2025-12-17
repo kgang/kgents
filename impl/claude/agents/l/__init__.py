@@ -63,24 +63,9 @@ from .advanced_lattice import (
     create_advanced_lattice,
     create_cached_lattice,
 )
-from .egent_integration import (
-    STANDARD_SCHEMAS,
-    # Code intent
-    CodeIntent,
-    # Extended registry
-    EgentSemanticRegistry,
-    # Type inference
-    InferredType,
-    # Mutation schemas
-    MutationSchema,
-    SchemaCategory,
-    cosine_similarity,
-    create_egent_registry,
-    extract_code_docstrings,
-    extract_code_names,
-    infer_types,
-    types_compatible,
-)
+
+# NOTE: E-gent integration archived 2025-12-16
+# See _archived/egent_integration.py if needed
 from .embedders import (
     OPENAI_AVAILABLE,
     SENTENCE_TRANSFORMERS_AVAILABLE,
@@ -181,6 +166,14 @@ if DGENT_VECTOR_AVAILABLE:
         migrate_to_dgent_backend,
     )
 
+# V-gent integration (Phase 9)
+from .vgent_adapter import (
+    LgentToVgentAdapter,
+    VgentToLgentAdapter,
+    create_vgent_adapter,
+    migrate_lgent_backend_to_vgent,
+)
+
 # Conditional imports for optional dependencies
 if SENTENCE_TRANSFORMERS_AVAILABLE:
     from .embedders import SentenceTransformerEmbedder
@@ -242,19 +235,8 @@ __all__ = [
     "create_semantic_brain",
     "SemanticRegistry",
     "create_semantic_registry",
-    # E-gent Integration
-    "MutationSchema",
-    "SchemaCategory",
-    "STANDARD_SCHEMAS",
-    "CodeIntent",
-    "extract_code_docstrings",
-    "extract_code_names",
-    "InferredType",
-    "infer_types",
-    "types_compatible",
-    "EgentSemanticRegistry",
-    "cosine_similarity",
-    "create_egent_registry",
+    # E-gent Integration (ARCHIVED 2025-12-16)
+    # See _archived/egent_integration.py if needed
     # Advanced Embedders (Phase 6)
     "EmbeddingMetadata",
     "CachedEmbedder",
@@ -307,3 +289,13 @@ if DGENT_VECTOR_AVAILABLE:
             "migrate_to_dgent_backend",
         ]
     )
+
+# V-gent adapter exports (Phase 9)
+__all__.extend(
+    [
+        "VgentToLgentAdapter",
+        "LgentToVgentAdapter",
+        "create_vgent_adapter",
+        "migrate_lgent_backend_to_vgent",
+    ]
+)

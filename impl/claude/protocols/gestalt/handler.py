@@ -183,6 +183,27 @@ async def _ensure_scanned(store: "GestaltStore") -> None:
         await store.scan()
 
 
+def _ensure_scanned_sync(store: "GestaltStore") -> None:
+    """
+    Synchronous wrapper for _ensure_scanned.
+
+    Handles both sync and async contexts:
+    - In async context (running event loop): runs in thread pool
+    - In sync context: uses asyncio.run()
+    """
+    try:
+        asyncio.get_running_loop()
+        # We're in an async context - run in thread pool to avoid blocking
+        import concurrent.futures
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, _ensure_scanned(store))
+            future.result(timeout=30)
+    except RuntimeError:
+        # No running event loop - use asyncio.run() directly
+        asyncio.run(_ensure_scanned(store))
+
+
 # Legacy compatibility functions
 def scan_codebase(
     root: Path | None = None, language: str = "python"
@@ -332,7 +353,7 @@ def handle_codebase_manifest(
 
     if store is None:
         store = _get_store()
-        asyncio.run(_ensure_scanned(store))
+        _ensure_scanned_sync(store)
 
     # Read from reactive Computed signals
     module_count = store.module_count.value
@@ -409,7 +430,7 @@ def handle_health_manifest(
 
     if store is None:
         store = _get_store()
-        asyncio.run(_ensure_scanned(store))
+        _ensure_scanned_sync(store)
 
     # Read from reactive Computed signals
     average_health = store.average_health.value
@@ -494,7 +515,7 @@ def handle_drift_witness(
 
     if store is None:
         store = _get_store()
-        asyncio.run(_ensure_scanned(store))
+        _ensure_scanned_sync(store)
 
     # Read from reactive Signal
     violations = store.violations.value
@@ -569,7 +590,7 @@ def handle_module_manifest(
 
     if store is None:
         store = _get_store()
-        asyncio.run(_ensure_scanned(store))
+        _ensure_scanned_sync(store)
 
     graph = store.graph.value
     violations_all = store.violations.value
@@ -811,7 +832,7 @@ def cmd_codebase(args: list[str], ctx: "InvocationContext | None" = None) -> int
             store = _get_store()
 
             # Ensure scanned for all commands
-            asyncio.run(_ensure_scanned(store))
+            _ensure_scanned_sync(store)
 
             # Record store metrics in span
             span.set_attribute(ATTR_MODULE_COUNT, store.module_count.value)

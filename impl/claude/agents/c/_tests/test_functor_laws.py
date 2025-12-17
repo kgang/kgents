@@ -24,7 +24,7 @@ from agents.c.functor import (
     MaybeFunctor,
     Right,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # =============================================================================
 # Test Fixtures

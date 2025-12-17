@@ -12,7 +12,7 @@ import time
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from bootstrap.types import Agent, ComposedAgent
+from agents.poly.types import Agent, ComposedAgent
 
 A = TypeVar("A")
 B = TypeVar("B")

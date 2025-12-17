@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 
 class Reality(Enum):
@@ -32,57 +32,63 @@ class Reality(Enum):
 DEFAULT_CHAOS_THRESHOLD = 0.1
 
 # Keywords that suggest atomicity (single operation)
-ATOMIC_KEYWORDS = frozenset({
-    "read",
-    "get",
-    "fetch",
-    "query",
-    "return",
-    "format",
-    "parse",
-    "convert",
-    "add",
-    "subtract",
-    "multiply",
-    "divide",
-    "calculate",
-    "check",
-    "validate",
-    "lookup",
-})
+ATOMIC_KEYWORDS = frozenset(
+    {
+        "read",
+        "get",
+        "fetch",
+        "query",
+        "return",
+        "format",
+        "parse",
+        "convert",
+        "add",
+        "subtract",
+        "multiply",
+        "divide",
+        "calculate",
+        "check",
+        "validate",
+        "lookup",
+    }
+)
 
 # Keywords that suggest complexity (decomposition needed)
-COMPLEX_KEYWORDS = frozenset({
-    "analyze",
-    "refactor",
-    "design",
-    "implement",
-    "fix",
-    "debug",
-    "optimize",
-    "migrate",
-    "improve",
-    "review",
-    "test",
-    "build",
-    "create",
-    "develop",
-    "integrate",
-})
+COMPLEX_KEYWORDS = frozenset(
+    {
+        "analyze",
+        "refactor",
+        "design",
+        "implement",
+        "fix",
+        "debug",
+        "optimize",
+        "migrate",
+        "improve",
+        "review",
+        "test",
+        "build",
+        "create",
+        "develop",
+        "integrate",
+    }
+)
 
 # Keywords that suggest unboundedness (collapse to Ground)
-CHAOTIC_KEYWORDS = frozenset({
-    "infinite",
-    "forever",
-    "everything",
-    "all",
-    "always",
-    "never",
-    "continuously",
-    "unlimited",
-    "perfect",
-    "complete",
-})
+CHAOTIC_KEYWORDS = frozenset(
+    {
+        "infinite",
+        "forever",
+        "everything",
+        "all",
+        "always",
+        "never",
+        "continuously",
+        "unlimited",
+        "perfect",
+        "complete",
+    }
+)
 
 
 # --- Input/Output Types ---
@@ -109,7 +115,9 @@ class ClassificationOutput:
 # --- Classification Logic ---
 
 
-def _check_budget(budget: float, threshold: float = DEFAULT_CHAOS_THRESHOLD) -> Reality | None:
+def _check_budget(
+    budget: float, threshold: float = DEFAULT_CHAOS_THRESHOLD
+) -> Reality | None:
     """
     Test 1: Budget Check.
 

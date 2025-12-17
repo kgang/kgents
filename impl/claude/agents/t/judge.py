@@ -19,8 +19,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional, Tuple, TypeVar
 
+from agents.poly.types import Agent, JudgeInput, Verdict
 from bootstrap.judge import Judge as BootstrapJudge
-from bootstrap.types import Agent, JudgeInput, Verdict
 from runtime.base import AgentContext, LLMAgent
 
 A = TypeVar("A")  # Intent type

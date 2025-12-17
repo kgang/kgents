@@ -9,7 +9,7 @@ input → [condition?] → [A] if true
 import asyncio
 from typing import Awaitable, Callable, TypeVar, Union
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")

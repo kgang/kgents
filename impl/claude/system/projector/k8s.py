@@ -51,7 +51,7 @@ _MAX_K8S_NAME_LENGTH = 63
 
 if TYPE_CHECKING:
     from agents.a.halo import CapabilityBase
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
 
 
 @dataclass

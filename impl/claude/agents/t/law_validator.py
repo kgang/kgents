@@ -7,7 +7,7 @@ This module provides agents that validate categorical laws:
 - Functor laws: F(id) = id, F(g . f) = F(g) . F(f)
 - Monad laws: Left identity, right identity, associativity
 
-Cross-pollination T2.6: Validates E-gent evolution pipeline laws.
+Cross-pollination T2.6: Validates agent pipeline categorical laws.
 """
 
 import logging
@@ -504,7 +504,7 @@ class LawValidator:
     """
     T-gent for validating categorical laws on agents and pipelines.
 
-    Cross-pollination T2.6: Validates E-gent evolution pipeline laws.
+    Can be used to validate any agent pipeline for categorical law compliance.
     """
 
     def __init__(self) -> None:
@@ -570,7 +570,7 @@ class LawValidator:
         self.laws_checked = []
 
 
-# --- E-gent Pipeline Law Validator (T2.6 Integration) ---
+# --- Generic Pipeline Law Validator ---
 
 
 async def validate_evolution_pipeline_laws(
@@ -580,15 +580,15 @@ async def validate_evolution_pipeline_laws(
     test_input: Any,
 ) -> LawValidationReport:
     """
-    Validate categorical laws for E-gent evolution pipeline.
+    Validate categorical laws for a 3-stage pipeline.
 
-    Cross-pollination T2.6: Validates that Ground >> Hypothesis >> Experiment
-    satisfies associativity and identity laws.
+    Validates that stage_1 >> stage_2 >> stage_3 satisfies
+    associativity and identity laws.
 
     Args:
-        ground_stage: The Ground stage agent
-        hypothesis_stage: The Hypothesis stage agent
-        experiment_stage: The Experiment stage agent
+        ground_stage: The first stage agent
+        hypothesis_stage: The second stage agent
+        experiment_stage: The third stage agent
         test_input: Test input for the pipeline
 
     Returns:
@@ -596,7 +596,7 @@ async def validate_evolution_pipeline_laws(
     """
     validator = LawValidator()
 
-    logger.info("🔍 Validating E-gent pipeline categorical laws...")
+    logger.info("🔍 Validating pipeline categorical laws...")
 
     # Check associativity: (Ground >> Hypothesis) >> Experiment ≡ Ground >> (Hypothesis >> Experiment)
     await validator.validate_pipeline_associativity(

@@ -1,20 +1,11 @@
 """
-T-gent + E-gent Integration: Evolution Pipeline Law Validation.
+T-gent Evolution Integration: Evolution Pipeline Law Validation.
 
-Cross-pollination Opportunity T2.6:
-    Problem: E-gent pipeline not formally verified for composition laws
-    Solution: T-gent validates associativity, identity for evolution stages
-    Impact: Mathematical confidence in pipeline correctness
+ARCHIVED: 2025-12-16
+E-gent has been archived. This module is kept for reference but is no longer active.
+See impl/claude/agents/_archived/e-gent-archived/ for the original E-gent implementation.
 
-NOTE: This module needs to be rewritten for the new E-gent v2 API.
-The old v1 pipeline (Ground >> Hypothesis >> Experiment >> Judge >> Sublate >> Incorporate)
-has been replaced with the ThermodynamicCycle (Sun → Mutate → Select → Wager → Infect → Payoff).
-
-TODO: Rewrite to validate:
-- ThermodynamicCycle phase composition
-- CyclePhase transitions
-- Temperature control laws
-- Gibbs Free Energy conservation
+Original purpose: T-gent validation of E-gent evolution pipeline categorical laws.
 """
 
 from dataclasses import dataclass

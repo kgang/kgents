@@ -20,7 +20,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
-    from bootstrap.types import Agent
+    from agents.poly.types import Agent
     from bootstrap.umwelt import Umwelt
 
 

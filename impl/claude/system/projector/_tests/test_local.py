@@ -30,7 +30,7 @@ from agents.a.halo import (
     has_capability,
 )
 from agents.flux import FluxAgent
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 from system.projector import LocalProjector
 from system.projector.base import CompilationError, UnsupportedCapabilityError
 from system.projector.local import SoulfulAdapter, StatefulAdapter, TurnBasedAdapter

@@ -254,12 +254,12 @@ class TestUserModeIntegration:
 
         _whisper_citizen("Alice", "Remember this message", None)
 
-        # Check memory store directly
-        store = alice.memory._store
+        # Check memory store directly (CitizenMemory._storage is a dict)
+        storage = alice.memory._storage
         # At least one whisper memory should be stored
         whisper_memories = [
             v
-            for v in store.state.values()
+            for v in storage.values()
             if isinstance(v, dict) and v.get("type") == "whisper"
         ]
         assert len(whisper_memories) >= 1
@@ -318,10 +318,10 @@ class TestUserModeIntegration:
 
         # Check at least one citizen has the intervention stored
         alice = env.get_citizen_by_name("Alice")
-        store = alice.memory._store
+        storage = alice.memory._storage
         intervention_memories = [
             v
-            for v in store.state.values()
+            for v in storage.values()
             if isinstance(v, dict) and v.get("type") == "intervention"
         ]
         assert len(intervention_memories) >= 1

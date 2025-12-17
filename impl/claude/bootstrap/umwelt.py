@@ -25,9 +25,9 @@ from typing import (
 from agents.d.lens import Lens, identity_lens, key_lens
 from agents.d.protocol import DataAgent
 
-# Optional: try importing DNA, gracefully handle if not available
+# DNA from protocols.config
 try:
-    from bootstrap.dna import DNA, DNAValidationError
+    from protocols.config.dna import DNA, DNAValidationError
 except ImportError:
     DNA = Any  # type: ignore[misc,assignment]
     DNAValidationError = Exception  # type: ignore[misc,assignment]

@@ -19,19 +19,23 @@ Deeply specifying and implementing the agent ecosystem with AGENTESE as the meta
 | A | Agents | Abstract architectures + Art/Creativity coaches | `ALETHIC_AGENT` |
 | B | Bgents | Bio/Scientific discovery + Economics + Distillation | — |
 | C | Cgents | Category Theory basis (composability) | — |
-| D | Dgents | Data Agents (state, memory, persistence) | `MEMORY_POLYNOMIAL` |
-| E | Egents | Evolution (teleological thermodynamics) | `EVOLUTION_POLYNOMIAL` |
+| D | Dgents | Data Agents (persistence substrate, WHERE state lives) | `MEMORY_POLYNOMIAL` |
+| F | Fgents | Flow (chat, research, collaboration substrate) | `FLOW_POLYNOMIAL` |
 | K | Kgent | Kent simulacra (interactive persona) | `SOUL_POLYNOMIAL` |
 | L | Lgents | Lattice/Library (semantic registry) | — |
 | M | Mgents | Memory/Map (holographic cartography) | — |
 | N | Ngents | Narrative (witness/trace) | — |
+| S | Sgents | State (threading, HOW state flows through computation) | `STATE_POLYNOMIAL` |
 | T | Tgents | Testing (algebraic reliability, Types I-V) | — |
 | U | Ugents | Utility (tool use, MCP integration) | — |
-| Y | Ygent | Y-Combinator (cognitive + somatic topology) | — |
 | Ψ | Psigent | Psychopomp (metaphor engine) | — |
-| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception) | — |
+| Ω | Omegagent | Somatic Orchestrator (morphemes, proprioception, chrysalis) | — |
+
+**Archived**: E-gent (Evolution) archived 2025-12-16. See `impl/claude/agents/_archived/e-gent-archived/`.
 
 **Note**: Polynomial agents (`PolyAgent[S, A, B]`) capture state-dependent behavior. See `docs/skills/polynomial-agent.md`.
+
+**Archived**: Y-gent (Y-Combinator) has been subsumed by the Turn Protocol + F-gent research flow. See `spec/y-gents-archived/MIGRATION.md`.
 
 ## Core Principles (Summary)
 
@@ -51,8 +55,8 @@ All kgents domains instantiate the same three-layer pattern:
 
 | Layer | Purpose | Examples |
 |-------|---------|----------|
-| **PolyAgent** | State machine with mode-dependent inputs | CitizenPolynomial, SOUL_POLYNOMIAL, MEMORY_POLYNOMIAL |
-| **Operad** | Composition grammar with laws | TOWN_OPERAD, NPHASE_OPERAD, SOUL_OPERAD |
+| **PolyAgent** | State machine with mode-dependent inputs | CitizenPolynomial, SOUL_POLYNOMIAL, MEMORY_POLYNOMIAL, FLOW_POLYNOMIAL |
+| **Operad** | Composition grammar with laws | TOWN_OPERAD, NPHASE_OPERAD, SOUL_OPERAD, FLOW_OPERAD |
 | **Sheaf** | Global coherence from local views | TownSheaf, ProjectSheaf, EigenvectorCoherence |
 
 **Key Insight**: Understanding one domain teaches you the others.
@@ -171,19 +175,21 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 
 ## Skills Directory
 
-`docs/skills/` contains 39 documented patterns for common tasks:
+`docs/skills/` contains 41 documented patterns for common tasks:
 
 | Skill | Description |
 |-------|-------------|
 | `agentese-path.md` | Adding AGENTESE paths (e.g., `self.soul.*`) |
 | `building-agent.md` | Creating `Agent[A, B]` with functors |
 | `cli-command.md` | Adding CLI commands to kgents |
-| `crown-jewel-patterns.md` | **NEW** Reusable patterns for all Crown Jewels |
+| `crown-jewel-patterns.md` | Reusable patterns for all Crown Jewels |
 | `flux-agent.md` | Lifting agents to stream processing |
-| `gardener-logos.md` | **NEW** Tending Calculus, Seasons, Auto-Inducer |
+| `gardener-logos.md` | Tending Calculus, Seasons, Auto-Inducer |
 | `handler-patterns.md` | CLI handler patterns |
 | `plan-file.md` | Forest Protocol plan files |
 | `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |
+| `spec-hygiene.md` | **NEW** Bloat patterns, compression patterns, distillation checklist |
+| `spec-template.md` | **NEW** Structure for writing spec files (200-400 lines) |
 | `test-patterns.md` | Testing conventions and fixtures |
 | `ux-reference-patterns.md` | Cross-cutting UX patterns from research |
 | `user-flow-documentation.md` | Documenting precise user flows with ASCII wireframes |

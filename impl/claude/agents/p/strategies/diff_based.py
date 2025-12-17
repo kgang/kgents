@@ -11,7 +11,7 @@ Why It's Better:
 
 Use Cases:
 - W-gent incremental updates: Patch base HTML template
-- E-gent code evolution: Generate diffs instead of full modules
+- Code evolution/refactoring: Generate diffs instead of full modules
 - F-gent artifact updates: Patch .alo.md files for version bumps
 """
 
@@ -332,12 +332,12 @@ def create_wgent_diff_parser(base_html: str) -> DiffBasedParser:
     )
 
 
-def create_egent_diff_parser(base_code: str) -> DiffBasedParser:
+def create_code_diff_parser(base_code: str) -> DiffBasedParser:
     """
-    Create a DiffBasedParser configured for E-gent code evolution.
+    Create a DiffBasedParser configured for code evolution/refactoring.
 
     Example:
-        parser = create_egent_diff_parser("def foo(): pass")
+        parser = create_code_diff_parser("def foo(): pass")
         diff = 's/pass/return 42/'
         result = parser.parse(diff)
     """

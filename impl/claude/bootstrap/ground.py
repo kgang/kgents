@@ -19,7 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
 
-from .types import VOID, Agent, Facts, PersonaSeed, Void, WorldSeed
+from agents.poly.types import VOID, Agent, Facts, PersonaSeed, Void, WorldSeed
 
 
 class Ground(Agent[Void, Facts]):

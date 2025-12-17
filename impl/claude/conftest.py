@@ -126,10 +126,9 @@ class IdentityAgent:
         return input
 
     def __rshift__(self, other: Any) -> Any:
-        from bootstrap import compose
-        from bootstrap.types import Agent
+        from agents.poly.types import Agent, ComposedAgent
 
-        return compose(cast(Agent[Any, Any], self), other)
+        return ComposedAgent(cast(Agent[Any, Any], self), other)
 
 
 @pytest.fixture
@@ -181,7 +180,7 @@ async def memory_store() -> Any:
 @pytest.fixture
 def test_dna() -> Any:
     """Standard test DNA configuration."""
-    from bootstrap.dna import BaseDNA
+    from protocols.config.dna import BaseDNA
 
     return BaseDNA.germinate(exploration_budget=0.1)
 
@@ -189,7 +188,7 @@ def test_dna() -> Any:
 @pytest.fixture
 def hypothesis_dna() -> Any:
     """Hypothesis DNA for B-gent testing."""
-    from bootstrap.dna import HypothesisDNA
+    from protocols.config.dna import HypothesisDNA
 
     return HypothesisDNA.germinate(
         confidence_threshold=0.7,
@@ -201,7 +200,7 @@ def hypothesis_dna() -> Any:
 @pytest.fixture
 def jgent_dna() -> Any:
     """J-gent DNA for judgment testing."""
-    from bootstrap.dna import JGentDNA
+    from protocols.config.dna import JGentDNA
 
     return JGentDNA.germinate(
         max_depth=5,

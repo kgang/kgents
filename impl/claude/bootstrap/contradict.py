@@ -24,7 +24,7 @@ import asyncio
 from dataclasses import dataclass
 from typing import Any, Optional, Protocol, Sequence
 
-from .types import (
+from agents.poly.types import (
     Agent,
     ContradictInput,
     ContradictResult,

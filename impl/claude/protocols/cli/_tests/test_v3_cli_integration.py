@@ -127,10 +127,10 @@ class TestLegacyRegistry:
         """Should resolve simple legacy commands."""
         from protocols.cli.legacy import resolve_legacy
 
-        result = resolve_legacy(["forest"])
+        result = resolve_legacy(["memory"])
 
         assert result.is_legacy
-        assert result.expanded == "self.forest.manifest"
+        assert result.expanded == "self.memory.manifest"
         assert result.remaining_args == []
 
     def test_multi_word_legacy_command(self) -> None:
@@ -147,7 +147,7 @@ class TestLegacyRegistry:
         """Should extract remaining args after legacy command."""
         from protocols.cli.legacy import resolve_legacy
 
-        result = resolve_legacy(["forest", "status", "--json"])
+        result = resolve_legacy(["memory", "status", "--json"])
 
         assert result.is_legacy
         assert result.remaining_args == ["--json"]
@@ -176,7 +176,7 @@ class TestLegacyRegistry:
         """is_legacy_command should detect legacy commands."""
         from protocols.cli.legacy import is_legacy_command
 
-        assert is_legacy_command(["forest"])
+        assert is_legacy_command(["memory"])
         assert is_legacy_command(["soul", "challenge"])
         assert not is_legacy_command(["unknown"])
 
@@ -184,9 +184,9 @@ class TestLegacyRegistry:
         """expand_legacy should return path and remaining args."""
         from protocols.cli.legacy import expand_legacy
 
-        path, remaining = expand_legacy(["forest", "status", "--json"])
+        path, remaining = expand_legacy(["memory", "status", "--json"])
 
-        assert path == "self.forest.manifest"
+        assert path == "self.memory.manifest"
         assert remaining == ["--json"]
 
 
@@ -249,10 +249,10 @@ class TestInputClassification:
         """Should classify legacy commands."""
         from protocols.cli.agentese_router import InputType, classify_input
 
-        result = classify_input(["forest", "status"])
+        result = classify_input(["memory", "status"])
 
         assert result.input_type == InputType.LEGACY
-        assert result.agentese_path == "self.forest.manifest"
+        assert result.agentese_path == "self.memory.manifest"
 
     def test_classify_unknown(self) -> None:
         """Should classify unknown commands."""

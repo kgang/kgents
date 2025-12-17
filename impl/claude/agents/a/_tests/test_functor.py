@@ -24,7 +24,7 @@ from agents.a.functor import (
     verify_functor,
     verify_identity_law,
 )
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 # =============================================================================
 # Test Fixtures

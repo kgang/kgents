@@ -12,9 +12,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
 
-from bootstrap import Agent
+from agents.poly.types import Agent, FixConfig, FixResult
 from bootstrap.fix import Fix
-from bootstrap.types import FixConfig, FixResult
 
 A = TypeVar("A")
 B = TypeVar("B")

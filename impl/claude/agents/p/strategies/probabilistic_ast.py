@@ -10,7 +10,7 @@ Why It's Better:
 - Adaptive: Adjust min_confidence threshold based on use case
 
 Use Cases:
-- E-gent code validation: Mark repaired imports as low-confidence
+- Code validation: Mark repaired imports as low-confidence
 - B-gent hypothesis parsing: Track confidence of inferred fields
 - L-gent catalog metadata: Mark auto-inferred tags as low-confidence
 """

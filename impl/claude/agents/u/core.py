@@ -19,7 +19,7 @@ Integration:
 - D-gent caching for performance
 
 References:
-- spec/t-gents/tool-use.md - Complete specification
+- spec/u-gents/tool-use.md - Complete specification
 - bootstrap.types - Base Agent[A, B] and Result monad
 - agents/p - Parser integration
 """
@@ -32,7 +32,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, Optional, Type, TypeVar
 
-from bootstrap.types import Agent, Result, err, ok
+from agents.poly.types import Agent, Result, err, ok
 
 # Type variables
 A = TypeVar("A")  # Input type

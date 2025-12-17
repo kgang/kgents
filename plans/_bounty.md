@@ -48,31 +48,23 @@ Use `#area` tags for discoverability: `#testing`, `#devex`, `#agentese`, `#k-gen
 ## Open Bounties
 
 ```
-GRIPE | 2025-12-12 | [MED] | functor registration tests fail in full suite but pass alone—isolation issue | #testing
-GRIPE | 2025-12-12 | [LOW] | K8s e2e tests require active cluster—should be marked @pytest.mark.e2e | #testing
-IDEA | 2025-12-12 | [HIGH] | self.soul.* AGENTESE paths exist but CLI doesn't use them—unify API | #k-gent #agentese
+IDEA | 2025-12-17 | [HIGH] | CLI handlers (44 total) bypass AGENTESE—route Brain/Town/Gardener through logos.invoke() | #agentese #cli
+IDEA | 2025-12-17 | [HIGH] | Town Phase 3 needs persistent citizen memory—citizens remember Kent across sessions | #crown #town
+IDEA | 2025-12-17 | [HIGH] | Cross-jewel synergy bus—CRYSTAL_FORMED/IDEA_HARVESTED events drive notifications | #crown #synergy
 WIN | 2025-12-12 | [HIGH] | if KgentFlux caches LLM responses per-eigenvector, could reduce cost 5-10x | #k-gent #performance
-IDEA | 2025-12-12 | [MED] | terrarium metrics widget could show bounty board status | #devex #meta
-IDEA | 2025-12-12 | [HIGH] | C-gent functors (Maybe/Either/List) lack unlift()—can't escape monad nesting | #arch #c-gent
-IDEA | 2025-12-12 | [HIGH] | 15+ CLI handlers bypass AGENTESE—route soul/semaphore/status through Logos | #agentese #cli
-GRIPE | 2025-12-12 | [HIGH] | void.dream only in MetabolicNode—should be standalone void.dream.* path | #agentese #void
 IDEA | 2025-12-12 | [HIGH] | Unify O-gent, N-gent, T-gent observers into single ObserverFunctor | #arch #functor
-WIN | 2025-12-12 | [HIGH] | D-gent protocol → StateMonad functor would enable Flux(State(agent)) composition | #arch #d-gent
-IDEA | 2025-12-12 | [HIGH] | FunctorRegistry exists but unused—register all functors for declarative composition | #arch #functor
-GRIPE | 2025-12-12 | [MED] | FluxAgent.invoke() semantics change based on _state (DORMANT vs FLOWING)—violates functor laws | #flux #testing
-IDEA | 2025-12-12 | [MED] | Add void.slop.* path for noise-as-resource operations (generate/absorb/transmute) | #agentese #void
-WIN | 2025-12-12 | [MED] | Natural language adapter exists but unused—wire to CLI for "kgents sip from the void" | #agentese #devex
-IDEA | 2025-12-12 | [MED] | 12 implicit functors in spec—formalize in spec/c-gents/functors.md with laws | #spec #functor
-GRIPE | 2025-12-12 | [MED] | K-gent access control specified (lines 193-208) but not implemented—security gap | #k-gent #spec
-IDEA | 2025-12-12 | [MED] | T-gent Type IV JudgeAgent needs formalized evaluation criteria algebra | #t-gent #spec
-WIN | 2025-12-12 | [MED] | Soul context is sticky—parameterize Persona type for Soul[A, P] generics | #k-gent #arch
-IDEA | 2025-12-12 | [MED] | pytest fixture `isolated_registry` would fix functor test isolation anti-pattern | #testing #devex
-IDEA | 2025-12-12 | [LOW] | parallel()/fan_out()/branch() should be proper functors, not special-case agents | #c-gent #arch
-WIN | 2025-12-12 | [LOW] | Cross-functor law tests (Soul >> Flux != Flux >> Soul)—composition matrix | #testing #functor
+IDEA | 2025-12-14 | [HIGH] | WebSocket + NDJSON merge—streaming endpoint emits NDJSON instead of raw text | #k-gent #streaming
 IDEA | 2025-12-14 | [MED] | FluxStream.pipe() returns FluxStream[Any]—preserve generics through operator chain | #k-gent #flux #types
 IDEA | 2025-12-14 | [MED] | Pipe streaming lacks backpressure—add async queue limits + consumer signaling | #k-gent #flux #perf
-IDEA | 2025-12-14 | [HIGH] | WebSocket + NDJSON merge—C18 endpoint emits NDJSON instead of raw text | #k-gent #streaming
 IDEA | 2025-12-14 | [MED] | FluxStream.merge() multi-source streaming—fan-in from multiple flux sources | #flux #arch
+IDEA | 2025-12-12 | [MED] | Add void.slop.* path for noise-as-resource operations (generate/absorb/transmute) | #agentese #void
+IDEA | 2025-12-12 | [MED] | pytest fixture `isolated_registry` would fix functor test isolation anti-pattern | #testing #devex
+IDEA | 2025-12-12 | [MED] | terrarium metrics widget could show bounty board status | #devex #meta
+WIN | 2025-12-12 | [MED] | Natural language adapter exists but unused—wire to CLI for "kgents sip from the void" | #agentese #devex
+IDEA | 2025-12-12 | [MED] | T-gent Type IV JudgeAgent needs formalized evaluation criteria algebra | #t-gent #spec
+WIN | 2025-12-12 | [MED] | Soul context is sticky—parameterize Persona type for Soul[A, P] generics | #k-gent #arch
+IDEA | 2025-12-12 | [LOW] | parallel()/fan_out()/branch() should be proper functors, not special-case agents | #c-gent #arch
+WIN | 2025-12-12 | [LOW] | Cross-functor law tests (Soul >> Flux != Flux >> Soul)—composition matrix | #testing #functor
 ```
 
 ---
@@ -85,10 +77,19 @@ IDEA | 2025-12-14 | [MED] | FluxStream.merge() multi-source streaming—fan-in f
 
 ---
 
-## Resolved
+## Resolved (2025-12-17 audit)
 
 ```
-(none yet)
+IDEA | 2025-12-12 | [RESOLVED: implemented] | C-gent functors lack unlift()—UniversalFunctor now has unlift() method | #arch #c-gent
+WIN | 2025-12-12 | [RESOLVED: arch-changed] | D-gent protocol → StateMonad—replaced with DgentRouter + MemoryBackend | #arch #d-gent
+GRIPE | 2025-12-12 | [RESOLVED: arch-changed] | void.dream only in MetabolicNode—void.* paths redesigned | #agentese #void
+GRIPE | 2025-12-12 | [WONTFIX: by-design] | FluxAgent.invoke() semantics change (DORMANT vs FLOWING)—intentional perturbation behavior | #flux
+IDEA | 2025-12-12 | [RESOLVED: exists] | FunctorRegistry exists but unused—now used in 14+ files | #arch #functor
+GRIPE | 2025-12-12 | [OBSOLETE: tests-removed] | K8s e2e tests require active cluster—tests no longer require this | #testing
+GRIPE | 2025-12-12 | [OBSOLETE: dedup] | functor registration tests fail in full suite—merged with isolated_registry bounty | #testing
+IDEA | 2025-12-12 | [OBSOLETE: dedup] | self.soul.* AGENTESE paths unused—merged with CLI handlers bounty | #k-gent #agentese
+IDEA | 2025-12-12 | [RESOLVED: spec-exists] | 12 implicit functors in spec—documented in spec/c-gents/ | #spec #functor
+GRIPE | 2025-12-12 | [NEEDS-VERIFICATION] | K-gent access control specified but not implemented—needs security audit | #k-gent #spec
 ```
 
 ---

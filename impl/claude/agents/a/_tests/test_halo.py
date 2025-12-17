@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from ..halo import (
     HALO_ATTR,

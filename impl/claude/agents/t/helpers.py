@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any, TypeVar
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -46,7 +46,9 @@ async def assert_agent_output(
     """
     result = await agent.invoke(input)
     if result != expected:
-        default_msg = f"Agent {agent.name}.invoke({input!r}) = {result!r}, expected {expected!r}"
+        default_msg = (
+            f"Agent {agent.name}.invoke({input!r}) = {result!r}, expected {expected!r}"
+        )
         raise AssertionError(msg or default_msg)
 
 

@@ -30,8 +30,8 @@ from agents.a.skeleton import (
     has_meta,
     verify_composition_types,
 )
+from agents.poly.types import VOID, Agent, VerdictType
 from bootstrap.id import Id
-from bootstrap.types import VOID, Agent, VerdictType
 
 # =============================================================================
 # Test Fixtures

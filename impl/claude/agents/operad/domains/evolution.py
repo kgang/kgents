@@ -1,13 +1,16 @@
 """
-Evolution Operad: E-gent Composition Grammar.
+Evolution Operad: Genetic/Evolutionary Composition Grammar.
 
-The Evolution Operad extends AGENT_OPERAD with E-gent specific operations:
+NOTE: The E-gent agent was archived on 2025-12-16, but this operad remains
+useful as a generic composition grammar for evolutionary algorithms.
+
+The Evolution Operad extends AGENT_OPERAD with evolution-specific operations:
 - mutate: Apply variation to genome
 - select: Filter by fitness
 - converge: Iterate until convergence
 - crossover: Combine two organisms
 
-These operations compose to create teleological evolution pipelines.
+These operations compose to create evolutionary pipelines.
 
 See: plans/ideas/impl/meta-construction.md
 """
@@ -170,7 +173,7 @@ def _verify_selection_pressure_law(
 
 def create_evolution_operad() -> Operad:
     """
-    Create the Evolution Operad (E-gent composition grammar).
+    Create the Evolution Operad (genetic/evolutionary composition grammar).
 
     Extends AGENT_OPERAD with:
     - mutate: Variation with witness
@@ -237,7 +240,7 @@ def create_evolution_operad() -> Operad:
         name="EvolutionOperad",
         operations=ops,
         laws=laws,
-        description="E-gent teleological evolution grammar",
+        description="Generic evolutionary algorithm composition grammar",
     )
 
 

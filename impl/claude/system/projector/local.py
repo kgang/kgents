@@ -34,7 +34,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .base import CompilationError, Projector, UnsupportedCapabilityError
 

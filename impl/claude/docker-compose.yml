@@ -1,17 +1,17 @@
 # Docker Compose for kgents local development
 #
-# Provides PostgreSQL for D-gent Tier 3-4 persistence.
+# Provides PostgreSQL for D-gent persistence (Brain, Gardener, etc.)
 #
 # Usage:
-#   docker-compose up -d              # Start services
-#   docker-compose down               # Stop services
-#   docker-compose down -v            # Stop and delete volumes
+#   docker compose up -d              # Start services
+#   docker compose down               # Stop services
+#   docker compose down -v            # Stop and delete volumes
 #
-# After starting:
-#   export KGENTS_POSTGRES_URL=postgresql://kgents:kgents@localhost:5432/kgents
-#   export KGENTS_DGENT_BACKEND=POSTGRES
+# Environment variables are auto-loaded from .env file.
+# To use in your shell: source .env
 #
-# This is the NEW simplified D-gent architecture (data-architecture-rewrite).
+# Crown Jewels (Brain, etc.) automatically detect and use Postgres
+# when KGENTS_POSTGRES_URL is set. Falls back to SQLite otherwise.
 
 services:
   postgres:

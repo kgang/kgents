@@ -23,7 +23,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, AsyncIterator, Generic, TypeVar, cast
 
-from bootstrap.types import Agent
+from agents.poly.types import Agent
 
 from .config import FluxConfig
 from .errors import FluxStateError
@@ -945,7 +945,7 @@ class FluxAgent(Generic[A, B]):
 
         Result is FluxAgent with composed inner.
         """
-        from bootstrap.types import ComposedAgent
+        from agents.poly.types import ComposedAgent
 
         composed = ComposedAgent(self.inner, other)
         return FluxAgent(inner=composed, config=self.config)
