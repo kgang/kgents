@@ -7,6 +7,10 @@ touched_by: claude-opus-4-5
 blocking: []
 enables:
   - ALL crown jewel work
+related_plans:
+  - plans/crown-jewels-metaphysical-upgrade.md  # Architecture upgrade
+  - plans/cli/wave1-crown-jewels.md             # CLI migration
+  - plans/agentese-v3-crown-synergy-audit.md    # v3 synergies
 session_notes: |
   2025-12-17 (late): Phase 3 LLM Integration Complete
   - Phase 1 (Brain): 100% COMPLETE - 8 CLI commands, 5 API endpoints, 65 tests
@@ -26,7 +30,13 @@ session_notes: |
 
   Tests: 28 town tests + 17 persistent memory + 12 citizen context = 57 tests passing
 
-  Next: Phase 5 Learning Companions or polish remaining 5% gaps
+  2025-12-17 (planning): ARCHITECTURE UPGRADE PLANNED
+  - Created plans/crown-jewels-metaphysical-upgrade.md
+  - Integrates CLI Isomorphic Projection + Metaphysical Fullstack
+  - Next major work: Extract services/, create nodes, thin handlers
+  - See Part XI in this file for upgrade path
+
+  Next: Execute metaphysical upgrade OR Phase 5 Learning Companions
 
 phase_ledger:
   PLAN: complete
@@ -788,7 +798,79 @@ Evening:
 
 ---
 
+## Part XI: Architecture Upgrade Path
+
+> *"The more fully defined, the more fully projected."* — Metaphysical Fullstack
+
+### The Next Evolution
+
+Crown Jewels Phases 1-4 are 88% complete functionally, but the **architecture** needs upgrading to fully realize the Isomorphic CLI and Metaphysical Fullstack patterns.
+
+### Current vs Target Architecture
+
+```
+CURRENT                                TARGET
+───────────────────────────────────    ──────────────────────────────────────
+handlers/brain.py (738 lines)          services/brain/
+  - Business logic                       ├── __init__.py (public API)
+  - Persistence code                     ├── persistence.py (TableAdapter)
+  - CLI formatting                       └── crystal.py (business logic)
+
+protocols/api/brain.py                 protocols/agentese/contexts/
+  - Explicit routes                      └── self_memory.py (@aspect node)
+  - Duplicate logic
+                                       handlers/brain.py (< 50 lines)
+                                         - Thin routing shim only
+```
+
+### Why This Matters
+
+1. **CLI and Web are truly isomorphic** - Same AGENTESE path, same code
+2. **No explicit API routes** - AGENTESE universal protocol auto-exposes
+3. **Persistence is consistent** - All D-gent + TableAdapter
+4. **Observability is unified** - Service-level spans everywhere
+
+### Implementation Plan
+
+See `plans/crown-jewels-metaphysical-upgrade.md` for:
+- Per-jewel migration checklist
+- Service extraction pattern
+- AGENTESE node creation
+- Dimension verification tests
+
+### Sequence
+
+```
+1. Execute Metaphysical Upgrade (25 hours estimated)
+   ├── Brain service extraction (6h)
+   ├── Soul service + @chatty (4h)
+   ├── Town service refactor (5h)
+   ├── Atelier service (4h)
+   ├── Gardener service refactor (3h)
+   └── Park service (3h)
+
+2. Execute Synergy Audit (plans/agentese-v3-crown-synergy-audit.md)
+   └── Unlocks subscriptions, pipelines, query syntax
+
+3. Continue Phase 5-7 (Learning, Homelab, Mirror)
+   └── Now on solid architectural foundation
+```
+
+### Decision Point
+
+**Option A**: Execute upgrade now, delay Phase 5
+- Pro: Clean architecture enables faster future work
+- Con: Delays new user-facing features
+
+**Option B**: Continue Phase 5, upgrade later
+- Pro: More features sooner
+- Con: Technical debt accumulates
+
+**Recommendation**: Option A - the upgrade unblocks v3 synergies that make Phase 5-7 significantly easier.
+
+---
+
 *"The Crown is not seven apps. It is Kent's extended mind."*
 
-*Updated: 2025-12-16 by claude-opus-4-5*
-*Phases 1-2 largely complete, integration layer is the priority.*
+*Updated: 2025-12-17 by claude-opus-4-5*
+*Phases 1-4 functionally complete, architecture upgrade planned.*

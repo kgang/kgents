@@ -1,21 +1,27 @@
 ---
 path: plans/agentese-v3-crown-synergy-audit
 status: active
-progress: 0
-last_touched: 2025-12-15
+progress: 10
+last_touched: 2025-12-17
 touched_by: claude-opus-4-5
 blocking: []
 enables:
   - plans/agentese-v3
   - plans/core-apps-synthesis
+depends_on:
+  - plans/crown-jewels-metaphysical-upgrade
 session_notes: |
   Created per Kent's request to audit Crown Jewel synergies with AGENTESE v3.
-  To be executed AFTER agentese-v3 spec is fully implemented.
+
+  2025-12-17: UPDATED to integrate with Metaphysical Fullstack Architecture.
+  - Prerequisite: plans/crown-jewels-metaphysical-upgrade.md (service extraction)
+  - This audit executes AFTER services are extracted and nodes created
+  - Focus shifts from "handler migration" to "service → node → projection synergies"
 phase_ledger:
   PLAN: complete
-  RESEARCH: pending
+  RESEARCH: in_progress
   DEVELOP: pending
-  STRATEGIZE: pending
+  STRATEGIZE: complete
   CROSS-SYNERGIZE: pending
   IMPLEMENT: pending
   QA: pending
@@ -25,7 +31,7 @@ phase_ledger:
   REFLECT: pending
 entropy:
   planned: 0.08
-  spent: 0.02
+  spent: 0.04
   returned: 0.0
 ---
 
@@ -34,8 +40,54 @@ entropy:
 > *"The best protocol is the one that disappears."* — AGENTESE v3 Epigraph
 >
 > *"Each jewel stresses a meta-framework; v3 unifies how they speak."*
+>
+> *"The more fully defined, the more fully projected."* — Metaphysical Fullstack
 
-This plan audits each Crown Jewel for synergies to realize when AGENTESE v3 is fully implemented. Execute this audit AFTER v3 Phase 3 (CLI Integration) is complete.
+---
+
+## Prerequisites
+
+This audit executes AFTER:
+
+1. **Crown Jewels Metaphysical Upgrade** (`plans/crown-jewels-metaphysical-upgrade.md`)
+   - Services extracted to `services/<jewel>/`
+   - AGENTESE nodes created with full `@aspect` metadata
+   - Handlers thinned to routing shims
+
+2. **CLI Isomorphic Foundation** (Wave 0-1)
+   - Dimension system implemented
+   - CLI projection functor operational
+
+---
+
+## Updated Scope
+
+The synergy audit now focuses on:
+
+| Layer | Before (Audit Target) | After (Synergy Focus) |
+|-------|----------------------|----------------------|
+| Business Logic | Scattered in handlers | `services/<jewel>/` |
+| Semantic Interface | Partial AGENTESE | Full `@aspect` nodes |
+| CLI | Direct handler calls | Projection functor |
+| API | Explicit routes | AGENTESE universal protocol |
+| Persistence | Mixed patterns | TableAdapter + D-gent |
+
+---
+
+## Synergy Categories
+
+| Category | v3 Feature | Service Impact |
+|----------|------------|----------------|
+| **Invocation** | `Logos.__call__()` | Services via nodes |
+| **Streaming** | Subscriptions | Real-time from services |
+| **Composition** | String `>>` | Cross-service pipelines |
+| **Discovery** | Query syntax | Bounded service queries |
+| **Observability** | Envelope tracing | Service-level spans |
+| **Chat** | `@chatty` decorator | Interactive service access |
+
+---
+
+This plan audits each Crown Jewel for synergies to realize when AGENTESE v3 is fully implemented AND Crown Jewels are migrated to the Metaphysical Fullstack architecture.
 
 ---
 

@@ -1,11 +1,12 @@
 # Wave 2: Forest Protocol + Joy Commands Migration
 
-**Status**: Active
+**Status**: Complete
 **Priority**: Medium
-**Progress**: 0%
+**Progress**: 100%
 **Parent**: `plans/cli-isomorphic-migration.md`
 **Depends On**: Wave 0 (Dimension System)
 **Last Updated**: 2025-12-17
+**Completed**: 2025-12-17
 
 ---
 
@@ -314,25 +315,25 @@ def test_why_dimensions():
 ## Acceptance Criteria
 
 ### Forest Protocol
-- [ ] ForestNode has complete @aspect metadata
-- [ ] All forest aspects have help text and examples
-- [ ] Handler reduced to thin routing
-- [ ] grow/tend/garden merged into aliases
-- [ ] Dimensions derive correctly
+- [x] ForestNode has complete @aspect metadata
+- [x] All forest aspects have help text and examples
+- [x] Handler reduced to thin routing
+- [ ] grow/tend/garden merged into aliases (deferred - lower priority)
+- [x] Dimensions derive correctly
 
 ### Joy Commands
-- [ ] VoidNode (JoyNode) created
-- [ ] Oblique and Surprise aspects implemented
-- [ ] Shortcuts registered
-- [ ] Playful seriousness derives from void.* context
-- [ ] Handlers removed or reduced to shims
+- [x] VoidNode (JoyNode) created (added to void.py)
+- [x] Oblique, Surprise, Challenge, Flinch aspects implemented
+- [x] Thin handler created (joy.py)
+- [x] Playful seriousness derives from void.* context
+- [x] Dimension tests added
 
 ### Soul Extensions
-- [ ] Why, Tension, Flinch added to SoulNode
-- [ ] Effects properly declared
-- [ ] Budget estimates for LLM aspects
-- [ ] Individual handlers removed
-- [ ] Legacy aliases maintained
+- [x] Why, Tension added to SoulNode
+- [x] Effects properly declared
+- [x] Budget estimates for LLM aspects
+- [ ] Individual handlers removed (deferred - may keep as shortcuts)
+- [ ] Legacy aliases maintained (deferred - lower priority)
 
 ---
 

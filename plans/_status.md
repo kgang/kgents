@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-16 (Chief reconciliation: 19,659 tests)
+> Last updated: 2025-12-17 (Chief reconciliation: 19,285 tests)
 
 ## Legend
 
@@ -370,4 +370,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-16 Morning Reconciliation (19,659 tests, 182 mypy notes - mostly import stubs for new migration/prompt code)*
+*Last verified: 2025-12-17 Reconciliation (19,285 tests, test collection errors fixed, archived tests excluded)*

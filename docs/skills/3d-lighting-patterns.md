@@ -377,6 +377,77 @@ function detectIlluminationQuality(): IlluminationQuality {
 
 ---
 
+## Geometry Defensive Patterns
+
+### The Silent NaN Catastrophe
+
+**Critical Learning**: Three.js geometry with NaN values renders as **invisible**—no error, no warning, just nothing.
+
+When `sphereGeometry` or any geometry receives NaN for radius/dimensions, it:
+1. Creates a geometry with NaN in the position buffer
+2. Computes `boundingSphere.radius = NaN`
+3. Renders **nothing** (silent failure)
+
+The only hint is a console warning:
+```
+THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN.
+The "position" attribute is likely to have NaN values.
+```
+
+**Root cause**: API data with undefined/null values passed to size calculations.
+
+```typescript
+// WRONG: Trusts API data blindly
+function calculateSize(accessCount: number, resolution: number): number {
+  return 0.5 * Math.log10(accessCount + 1) * resolution;
+  // If accessCount is undefined: Math.log10(undefined + 1) = NaN
+  // If resolution is undefined: 0.5 * X * undefined = NaN
+}
+
+// RIGHT: Defensive validation
+function calculateSize(accessCount: number, resolution: number): number {
+  const safeCount = typeof accessCount === 'number' && !isNaN(accessCount) ? accessCount : 1;
+  const safeRes = typeof resolution === 'number' && !isNaN(resolution) ? resolution : 0.5;
+  return 0.5 * Math.log10(safeCount + 1) * safeRes;
+}
+```
+
+### The Defensive Geometry Pattern
+
+Always validate numeric inputs before passing to Three.js geometry:
+
+```typescript
+// Defensive wrapper for geometry props
+function safeNumber(value: number, fallback: number): number {
+  return typeof value === 'number' && !isNaN(value) && isFinite(value)
+    ? value
+    : fallback;
+}
+
+// Usage in component
+const size = useMemo(() => {
+  const rawSize = calculateSize(node.access_count, node.resolution);
+  return safeNumber(rawSize, 0.5); // Fallback to 0.5 if NaN
+}, [node.access_count, node.resolution]);
+
+// Now safe to use
+<sphereGeometry args={[size, 32, 32]} />
+```
+
+### Debug Pattern for Invisible Geometry
+
+When 3D objects don't render, add debug logging:
+
+```typescript
+// DEBUG: Log raw values to catch undefined/NaN
+console.log(`[Component] ${id}: pos=(${x}, ${y}, ${z}), size=${size}`);
+// Look for: "pos=(undefined, NaN, 5.2)" or "size=NaN"
+```
+
+**Remember**: The browser console warning about NaN boundingSphere is your friend—always check for it when debugging invisible geometry.
+
+---
+
 ## Anti-Patterns
 
 ### 1. Per-Component Lighting

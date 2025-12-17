@@ -741,15 +741,32 @@ Violations indicate scattered conditionals that should be eliminated.
 
 ## Appendix B: Standard Dimensions by Path
 
-| Path Pattern | Execution | Statefulness | Backend | Seriousness |
-|--------------|-----------|--------------|---------|-------------|
-| `self.*.manifest` | sync | stateful | pure | neutral |
-| `self.soul.*` | async | stateful | llm | neutral |
-| `self.memory.*` | async | stateful | varies | neutral |
-| `world.town.*` | async | stateful | llm | playful |
-| `concept.*.refine` | async | stateless | llm | neutral |
-| `void.*` | sync | stateless | pure | playful |
-| `time.trace.*` | sync | stateful | pure | neutral |
+| Path Pattern | Execution | Statefulness | Backend | Seriousness | Interactivity |
+|--------------|-----------|--------------|---------|-------------|---------------|
+| `self.*.manifest` | sync | stateful | pure | neutral | oneshot |
+| `self.soul.*` | async | stateful | llm | neutral | oneshot |
+| `self.soul.chat.*` | async | stateful | llm | neutral | **interactive** |
+| `self.memory.*` | async | stateful | varies | neutral | oneshot |
+| `world.town.*` | async | stateful | llm | playful | oneshot |
+| `world.town.citizen.*.chat.*` | async | stateful | llm | playful | **interactive** |
+| `concept.*.refine` | async | stateless | llm | neutral | oneshot |
+| `void.*` | sync | stateless | pure | playful | oneshot |
+| `time.trace.*` | sync | stateful | pure | neutral | oneshot |
+
+### B.1 Interactive Mode
+
+Paths with `Interactivity.INTERACTIVE` trigger REPL mode in CLI:
+
+```bash
+# These enter interactive chat mode:
+kg self.soul.chat
+kg world.town.citizen.elara.chat
+
+# Bypass with one-shot flag:
+kg self.soul.chat --message "Quick question"
+```
+
+See `spec/protocols/chat.md` for full chat protocol specification.
 
 ---
 

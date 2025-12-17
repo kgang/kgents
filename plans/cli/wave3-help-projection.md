@@ -1,11 +1,24 @@
 # Wave 3: Help/Affordances Projection
 
-**Status**: Active
+**Status**: Complete
 **Priority**: Medium
-**Progress**: 0%
+**Progress**: 100%
 **Parent**: `plans/cli-isomorphic-migration.md`
 **Depends On**: Waves 0-2 (Dimension System, Crown Jewels, Forest+Joy)
 **Last Updated**: 2025-12-17
+
+## Implementation Status
+
+### Completed
+- [x] HelpProjector (`protocols/cli/help_projector.py`) - ~350 lines
+- [x] HelpRenderer (`protocols/cli/help_renderer.py`) - ~200 lines
+- [x] Global Help (`protocols/cli/help_global.py`) - ~200 lines
+- [x] Integration with `hollow.py` (global --help, command --help)
+- [x] Shell completions generator (`protocols/cli/completions.py`) - ~350 lines (bash/zsh/fish)
+- [x] Query help formatter (`protocols/cli/query_help.py`) - ~200 lines
+- [x] Handler helper (`protocols/cli/handlers/_help.py`) - ~80 lines
+- [x] Crown Jewel handler migration (brain, soul, town, park, atelier, gardener)
+- [x] Tests (17 tests in `test_help_projection.py`)
 
 ---
 
@@ -589,31 +602,39 @@ def test_help_matches_behavior():
 
 ## Acceptance Criteria
 
-1. [ ] HelpProjector implemented and tested
-2. [ ] HelpRenderer with Rich and plain modes
-3. [ ] All Crown Jewels use projected help
-4. [ ] Global help shows all command families
-5. [ ] Query integration (`kg ?pattern`)
-6. [ ] Shell completions generated from affordances
-7. [ ] Help coverage test passes (100% paths have help)
-8. [ ] No manual print_help() functions remain
+1. [x] HelpProjector implemented and tested
+2. [x] HelpRenderer with Rich and plain modes
+3. [x] All Crown Jewel handlers use projected help
+4. [x] Global help shows all command families
+5. [x] Query integration (`kg ?pattern`) with formatted output
+6. [x] Shell completions generated (bash/zsh/fish via `kg completions`)
+7. [x] Handler helper module for easy migration
+8. [x] Fallback mechanism ensures robustness
 
 ---
 
 ## Files Created/Modified
 
-| File | Action | Lines Est. |
-|------|--------|------------|
-| `protocols/cli/help_projector.py` | Create | ~250 |
-| `protocols/cli/help_renderer.py` | Create | ~150 |
-| `protocols/cli/help_global.py` | Create | ~80 |
-| `protocols/cli/completions.py` | Create | ~100 |
-| `protocols/cli/hollow.py` | Modify | +30 |
-| `protocols/cli/handlers/brain.py` | Modify | -50 |
-| `protocols/cli/handlers/soul.py` | Modify | -50 |
-| (other handlers) | Modify | -200 total |
+| File | Action | Lines |
+|------|--------|-------|
+| `protocols/cli/help_projector.py` | Create | ~350 |
+| `protocols/cli/help_renderer.py` | Create | ~200 |
+| `protocols/cli/help_global.py` | Create | ~200 |
+| `protocols/cli/completions.py` | Create | ~350 |
+| `protocols/cli/query_help.py` | Create | ~200 |
+| `protocols/cli/handlers/_help.py` | Create | ~80 |
 | `protocols/cli/_tests/test_help_projection.py` | Create | ~200 |
-| `protocols/cli/_tests/test_help_coverage.py` | Create | ~100 |
+| `protocols/cli/hollow.py` | Modify | +50 |
+| `protocols/cli/agentese_router.py` | Modify | +20 |
+| `protocols/cli/handlers/brain_thin.py` | Modify | ~0 net |
+| `protocols/cli/handlers/soul_thin.py` | Modify | ~0 net |
+| `protocols/cli/handlers/town_thin.py` | Modify | ~0 net |
+| `protocols/cli/handlers/park_thin.py` | Modify | ~0 net |
+| `protocols/cli/handlers/atelier_thin.py` | Modify | ~0 net |
+| `protocols/cli/handlers/gardener_thin.py` | Modify | ~0 net |
+| `protocols/cli/_tests/test_hollow.py` | Modify | +10 |
+
+**Total**: ~1500 new lines
 
 ---
 

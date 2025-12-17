@@ -487,21 +487,18 @@ with set_tenant_context(tenant_id):
 
 ---
 
-## Terrarium (Agent Gateway)
+## Terrarium (ARCHIVED - Superseded by AGENTESE Universal Protocol)
 
-```python
-from protocols.terrarium import (
-    Terrarium, HolographicBuffer, PrismRestBridge
-)
+**Status**: Archived 2025-12-17. See `protocols/_archived/terrarium-archived/README.md`.
 
-# Create gateway
-terrarium = Terrarium()
-terrarium.register_agent(agent_id, flux_agent)
+**Superseded by**:
+- **AGENTESE Universal Gateway** (`protocols/agentese/gateway.py`) - Auto-exposes nodes via HTTP/WebSocket
+- **Synergy Event Bus** (`protocols/synergy/bus.py`) - Cross-jewel communication
 
-# Mount CLI agent as REST
-bridge = PrismRestBridge()
-bridge.mount(terrarium.app, cli_agent)
-```
+**Preserved in `agents/flux/`**:
+- `HolographicBuffer` → `agents/flux/mirror.py`
+- `TerriumEvent`, `SemaphoreEvent` → `agents/flux/terrarium_events.py`
+- `SemanticMetricsCollector` → `agents/flux/semantic_metrics.py`
 
 ---
 

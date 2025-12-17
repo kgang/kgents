@@ -218,6 +218,52 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | `/diff-spec <spec>` | Compare implementation against specification |
 | `/debt <path>` | Technical debt audit |
 
+## Critical Learnings (Distilled)
+
+> *One insight per line. From `plans/meta.md`.*
+
+### Categorical (The Ground)
+```
+PolyAgent[S,A,B] > Agent[A,B]: mode-dependent behavior enables state machines
+Operads define grammar; algebras apply grammar to systems
+Sheaf gluing = emergence: compatible locals → global
+Functor law verification proves composition: if laws pass, arbitrary nesting is safe
+```
+
+### Graceful Degradation
+```
+Tier cascade: TEMPLATE never fails; budget exhaustion → graceful fallback
+Two-tier collection: try context, fallback direct
+Template fallbacks make CLI commands work without LLM
+Optional dep stubs: no-op stubs for type-checking; document intent, not silent failure
+```
+
+### Testing
+```
+DI > mocking: set_soul() injection pattern beats patch() for testability
+Property-based tests catch edge cases: Hypothesis found boundary issues humans missed
+Performance baselines as assertions: `assert elapsed < 1.0` catches regressions
+Stress test phase machines: Hypothesis with action sequences reveals invalid transitions
+```
+
+### Anti-Patterns (Avoid These)
+```
+Silent catch blocks: swallowing errors shows blank UI; always surface
+Generator Trap: pickle can't serialize stack frames—use Purgatory pattern
+Timer-driven loops create zombies—use event-driven Flux
+Bypassing running loops causes state schizophrenia
+Context dumping: large payloads tax every turn
+```
+
+### Design Heuristics
+```
+Skills pull before doing, push after learning
+Wiring > Creation: check if infrastructure exists before building new
+Teaching examples > reference docs: show the pattern in action
+String-based >> composition: "path.a" >> "path.b" natural idiom
+D-gent = WHERE state lives; S-gent = HOW state flows—placement matters
+```
+
 ---
 
-*Compiled: 2025-12-16T12:47:08 | Version: 1 | Sections: 9*
+*Compiled: 2025-12-16T12:47:08 | Version: 1 | Sections: 10*

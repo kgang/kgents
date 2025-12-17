@@ -1,7 +1,7 @@
 ---
 path: plans/d-gent-dual-track-architecture
-status: spec
-progress: 35
+status: complete
+progress: 100
 last_touched: 2025-12-17
 touched_by: claude-opus-4
 blocking: []
@@ -22,15 +22,36 @@ session_notes: |
   - Specified StateFunctor with lift(), lift_logic(), compose_flux()
   - Integrated with dual-track via StateFunctor.from_table_adapter()
   - Added functor laws verification tests
+  2025-12-17: SQLAlchemy ORM models implemented
+  - Kent approved: all 7 Crown Jewels get tables, self.data.table.*, SQLAlchemy, async+asyncpg
+  - Added sqlalchemy[asyncio] to dependencies
+  - Created models/base.py with Base, TimestampMixin, CausalMixin, session factory
+  - Created all 7 Crown Jewel model files (brain, town, gardener, gestalt, atelier, coalition, park)
+  - Created migration 002_crown_jewel_tables.py with 28 tables
+  2025-12-17: TableAdapter + AGENTESE wiring COMPLETE
+  - Fixed StateFunctor law tests (pytest-asyncio 1.3.0 installed)
+  - Implemented TableAdapter in agents/d/adapters/table_adapter.py (22 tests pass)
+  - Added TableStateBackend for StateFunctor integration
+  - Wired AGENTESE self.data.table.* paths (TableNode, TableModelNode)
+  - Factory create_data_resolver() now accepts table_adapters dict
+  - All 89 dual-track related tests pass
+  2025-12-17: Crown Jewel Persistence Services COMPLETE
+  - Created services/bootstrap.py with centralized DI for all 7 Crown Jewels
+  - Created GestaltPersistence (topology, blocks, links, snapshots)
+  - Created AtelierPersistence (workshops, artisans, contributions, exhibitions)
+  - Created CoalitionPersistence (coalitions, members, proposals, votes, outputs)
+  - Created ParkPersistence (hosts, memories, episodes, interactions, consent)
+  - Updated providers.py with backward-compatible getters for all services
+  - All 7 services instantiate successfully from bootstrap
 phase_ledger:
-  PLAN: in_progress
+  PLAN: complete
   RESEARCH: complete
-  DEVELOP: in_progress
-  IMPLEMENT: pending
-  REFLECT: pending
+  DEVELOP: complete
+  IMPLEMENT: complete
+  REFLECT: complete
 entropy:
   planned: 0.5
-  spent: 0.2
+  spent: 0.45
   returned: 0.0
 ---
 
@@ -1047,26 +1068,45 @@ impl/claude/
 
 ---
 
-## Open Questions for Kent
+## Kent's Decisions (2025-12-17)
 
-1. **Does the dual-track framing resonate?** Or should there be tighter integration?
+Answers from Kent on open questions:
 
-2. **Which Crown Jewels need Alembic tables first?**
-   - Brain crystals (for queryable tags, access_count)?
-   - Citizen memory (for persistent conversations)?
-   - Garden ideas (already partially in SQLite)?
+| Question | Decision |
+|----------|----------|
+| **Crown Jewels with tables** | ALL seven Crown Jewels get tables |
+| **AGENTESE path naming** | `self.data.table.*` is approved |
+| **SQLAlchemy vs raw SQL** | Move to SQLAlchemy ORM |
+| **Async support** | async + asyncpg approved, install it |
 
-3. **AGENTESE path naming**: Is `self.data.table.*` right, or prefer:
-   - `self.db.*`
-   - `self.state.*`
-   - `self.data.typed.*`
+### Implementation Status
 
-4. **SQLAlchemy vs raw SQL**: The current Alembic setup uses raw SQL. Should we:
-   - Continue with raw SQL (simpler, portable)?
-   - Add SQLAlchemy ORM (richer queries, relationships)?
-   - Hybrid (raw SQL migrations, ORM for queries)?
-
-5. **Sync vs async**: Current D-gent is async. SQLAlchemy async requires `asyncpg` for Postgres. Is this acceptable complexity?
+| Component | Status | Location |
+|-----------|--------|----------|
+| SQLAlchemy dependency | **COMPLETE** | `pyproject.toml` |
+| Base + session factory | **COMPLETE** | `models/base.py` |
+| Brain models | **COMPLETE** | `models/brain.py` |
+| Town models | **COMPLETE** | `models/town.py` |
+| Gardener models | **COMPLETE** | `models/gardener.py` |
+| Gestalt models | **COMPLETE** | `models/gestalt.py` |
+| Atelier models | **COMPLETE** | `models/atelier.py` |
+| Coalition models | **COMPLETE** | `models/coalition.py` |
+| Park models | **COMPLETE** | `models/park.py` |
+| Migration 002 | **COMPLETE** | `system/migrations/versions/20251217_002_crown_jewel_tables.py` |
+| TableAdapter | **COMPLETE** | `agents/d/adapters/table_adapter.py` (22 tests) |
+| TableStateBackend | **COMPLETE** | `agents/d/adapters/table_adapter.py` |
+| AGENTESE wiring | **COMPLETE** | `protocols/agentese/contexts/self_data.py` (TableNode, TableModelNode) |
+| StateFunctor | **COMPLETE** | `agents/s/state_functor.py` |
+| StateFunctor tests | **COMPLETE** | `agents/s/_tests/test_state_functor.py` (23 tests) |
+| StateFunctor law tests | **COMPLETE** | `agents/s/_tests/test_state_functor_laws.py` (8 tests) |
+| TableAdapter tests | **COMPLETE** | `agents/d/adapters/_tests/test_table_adapter.py` (22 tests) |
+| Bootstrap DI | **COMPLETE** | `services/bootstrap.py` |
+| GestaltPersistence | **COMPLETE** | `services/gestalt/persistence.py` |
+| AtelierPersistence | **COMPLETE** | `services/atelier/persistence.py` |
+| CoalitionPersistence | **COMPLETE** | `services/coalition/persistence.py` |
+| ParkPersistence | **COMPLETE** | `services/park/persistence.py` |
+| Updated providers | **COMPLETE** | `services/providers.py` (all 7 services) |
+| Crown Jewel integration | **COMPLETE** | All 7 persistence services wired |
 
 ---
 
@@ -1077,6 +1117,38 @@ impl/claude/
 - `spec/d-gents/vision.md` — Memory as Landscape (Noosphere)
 - `plans/crown-jewels-enlightened.md` — Crown Jewel requirements
 - `docs/skills/crown-jewel-patterns.md` — Implementation patterns
+
+---
+
+## Reflection (2025-12-17)
+
+### Learnings
+
+1. **Dual-track is the correct abstraction**: Agent memory (schema-free, append-only, causal) and application state (typed, migrated, queryable) serve fundamentally different purposes. Forcing one to act like the other creates impedance mismatch.
+
+2. **StateFunctor belongs in S-gent, not D-gent**: Initial placement in D-gent was wrong. D-gent is about WHERE state lives (persistence substrate). S-gent is about HOW state flows through computation. The functor that threads state is S-gent's responsibility.
+
+3. **TableAdapter as bridge functor works cleanly**: The lossy functor `APP_STATE → AGENT_MEMORY` enables agent access to typed data without forcing schema awareness into agent cognition. The `source=alembic` metadata tag preserves provenance.
+
+4. **Bootstrap DI pattern scales**: Lazy initialization + thread-safe access + injection points = clean testing. All 7 Crown Jewels wire through the same pattern with no special cases.
+
+5. **pytest-asyncio 1.3.0 required**: The async test fixtures needed explicit version bump. Document async testing deps.
+
+### Entropy Analysis
+
+| Metric | Value | Notes |
+|--------|-------|-------|
+| Planned | 0.5 | Medium-complexity plan |
+| Spent | 0.45 | Under budget |
+| Returned | 0.05 | Returned via clean abstractions reusable elsewhere |
+
+### Test Summary
+
+- **55 tests total** (all passing)
+- TableAdapter: 22 tests (protocol compliance, list filters, causal chains, metadata)
+- StateFunctor: 23 tests (state threading, composition, config)
+- Functor Laws: 8 tests (identity, composition, property-based)
+- 2 Hypothesis property tests verify laws hold for arbitrary inputs
 
 ---
 

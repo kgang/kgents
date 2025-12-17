@@ -32,6 +32,8 @@ entropy:
 
 **Protocol**: Append atomic learnings. Prune monthly. 200-line cap.
 
+**Transferred to CLAUDE.md** (2025-12-17): Core categorical, graceful degradation, testing, anti-patterns, and design heuristics distilled into Critical Learnings section. This file remains the append-only source; CLAUDE.md gets the curated subset.
+
 ---
 
 ## Learnings
@@ -88,6 +90,7 @@ Effect deps incomplete: callbacks in deps must include their own deps or use ref
 Immer MapSet: enable at app entry when Zustand stores use Map/Set—silent failures otherwise
 Contextual loading > spinner: rotating messages create perceived performance
 Error empathy: "Lost in the Ether" > "Network Error"—friendly titles reduce frustration
+Three.js NaN silent death: geometry with NaN radius renders invisible—validate API data before passing to sphereGeometry
 ```
 
 ### Testing & DevEx
@@ -204,6 +207,15 @@ Plot ↔ Plan linking: plots reference Forest Protocol plans; crown_jewel enum f
 Transition signals: gesture_frequency, diversity, plot_progress_delta, entropy_ratio → confidence
 ```
 
+### Dual-Track Architecture (2025-12-17 Reflection)
+```
+Dual-track persistence: agent memory (schema-free, causal) + app state (typed, migrated) = complementary
+TableAdapter is bridge functor: APP_STATE → AGENT_MEMORY; lossy but preserves provenance via metadata
+StateFunctor belongs in S-gent (HOW state flows), not D-gent (WHERE state lives)—placement matters
+Bootstrap DI pattern scales: lazy init + thread-safe + injection points = clean testing for all 7 jewels
+Functor law tests (identity + composition) verify correctness; Hypothesis property tests catch edge cases
+```
+
 ### Gardener-Logos Architecture (2025-12-16 Reflection)
 ```
 Ownership Pattern: Container owns Workflow; Container persists, Workflows come and go
@@ -225,6 +237,16 @@ Button verb consistency: team internalized naturally; systematic audit often fin
 Storybook deferral: setup cost only justified at scale; TypeScript + docs suffice initially
 Design token ceiling: 150+ exports is enough; resist urge to tokenize everything
 Accursed Share in design: intentional gaps enable emergence; over-specification kills joy
+```
+
+### AGENTESE Frontend Migration (2025-12-17)
+```
+unwrapAgentese() is the key helper: gateway envelope { path, aspect, result } must be unwrapped
+Town was gold standard: all APIs followed Town's pattern; retrofit is straightforward
+Consistency > partial migration: mixed .data/.value access patterns create bugs in aggregators
+Observable pattern: API-level migration enables page-level consistency automatically
+Dual-API mismatch kills SSE: AGENTESE singleton + AUP multi-tenant don't share state—pick one
+EventSource auth: can't send headers; add query param support (?api_key=...) for SSE endpoints
 ```
 
 ## Anti-Patterns
