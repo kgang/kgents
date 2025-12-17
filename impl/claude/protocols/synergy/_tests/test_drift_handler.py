@@ -9,16 +9,14 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
-
 from protocols.synergy.events import (
+    Jewel,
     SynergyEvent,
     SynergyEventType,
-    Jewel,
-    create_drift_detected_event,
     create_analysis_complete_event,
+    create_drift_detected_event,
 )
 from protocols.synergy.handlers.gestalt_brain import GestaltToBrainHandler
-
 
 # =============================================================================
 # Factory Function Tests
@@ -107,7 +105,8 @@ class TestGestaltToBrainHandler:
         """Handler supports DRIFT_DETECTED event."""
         assert SynergyEventType.DRIFT_DETECTED in handler.SUPPORTED_EVENTS
 
-    def test_skips_unsupported_events(self, handler):
+    @pytest.mark.asyncio
+    async def test_skips_unsupported_events(self, handler):
         """Handler skips events it doesn't support."""
         event = SynergyEvent(
             source_jewel=Jewel.BRAIN,
@@ -115,9 +114,8 @@ class TestGestaltToBrainHandler:
             event_type=SynergyEventType.CRYSTAL_FORMED,
             source_id="test",
         )
-        import asyncio
 
-        result = asyncio.get_event_loop().run_until_complete(handler.handle(event))
+        result = await handler.handle(event)
         # Skip returns success=True with skipped flag in metadata
         assert result.metadata.get("skipped") is True
         assert "not handling" in result.message.lower()

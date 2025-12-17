@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import {
   WidgetRenderer,
   Glyph,
@@ -16,7 +17,38 @@ import type {
   HStackJSON,
   VStackJSON,
   ColonyDashboardJSON,
+  LayoutContext,
 } from '@/reactive/types';
+
+// =============================================================================
+// Test Utilities
+// =============================================================================
+
+/**
+ * Spacious layout context for testing elastic components in full mode.
+ * This ensures CitizenCard and other elastic components render in 'full' mode.
+ */
+const SPACIOUS_CONTEXT: LayoutContext = {
+  availableWidth: 1024,
+  availableHeight: 768,
+  depth: 0,
+  parentLayout: 'stack',
+  isConstrained: false,
+  density: 'spacious',
+};
+
+// Mock the useLayoutContext hook to return our spacious context
+vi.mock('@/hooks/useLayoutContext', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/useLayoutContext')>('@/hooks/useLayoutContext');
+  return {
+    ...actual,
+    useLayoutContext: () => SPACIOUS_CONTEXT,
+  };
+});
+
+function WithLayoutContext({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
 
 // =============================================================================
 // Test Data Factories
@@ -223,32 +255,32 @@ describe('Sparkline', () => {
 
 describe('CitizenCard', () => {
   it('renders citizen name', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ name: 'Bob' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ name: 'Bob' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('Bob')).toBeInTheDocument();
   });
 
   it('renders phase glyph', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ phase: 'WORKING' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ phase: 'WORKING' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('●')).toBeInTheDocument();
   });
 
   it('renders archetype', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ archetype: 'Healer' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ archetype: 'Healer' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('Healer')).toBeInTheDocument();
   });
 
   it('renders N-Phase indicator', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ nphase: 'SENSE' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ nphase: 'SENSE' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('[S]')).toBeInTheDocument();
   });
 
   it('renders mood', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ mood: 'contemplative' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ mood: 'contemplative' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('contemplative')).toBeInTheDocument();
   });
 
   it('renders activity sparkline when present', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ activity: [0.5, 0.6, 0.7] })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ activity: [0.5, 0.6, 0.7] })} />, { wrapper: WithLayoutContext });
     const card = document.querySelector('.kgents-citizen-card');
     // Activity sparkline should be rendered
     expect(card?.textContent).toMatch(/[▁▂▃▄▅▆▇█]+/);
@@ -256,7 +288,7 @@ describe('CitizenCard', () => {
 
   it('calls onSelect with citizen_id when clicked', () => {
     const onSelect = vi.fn();
-    render(<CitizenCard {...createCitizenCardJSON({ citizen_id: 'test-id' })} onSelect={onSelect} />);
+    render(<CitizenCard {...createCitizenCardJSON({ citizen_id: 'test-id' })} onSelect={onSelect} />, { wrapper: WithLayoutContext });
 
     const card = screen.getByTestId('citizen-card');
     fireEvent.click(card);
@@ -265,14 +297,14 @@ describe('CitizenCard', () => {
   });
 
   it('applies selected styling when isSelected is true', () => {
-    render(<CitizenCard {...createCitizenCardJSON()} isSelected={true} />);
+    render(<CitizenCard {...createCitizenCardJSON()} isSelected={true} />, { wrapper: WithLayoutContext });
     const card = screen.getByTestId('citizen-card');
     expect(card).toHaveClass('border-blue-500');
     expect(card).toHaveClass('bg-blue-50');
   });
 
   it('sets data-citizen-id attribute', () => {
-    render(<CitizenCard {...createCitizenCardJSON({ citizen_id: 'xyz-456' })} />);
+    render(<CitizenCard {...createCitizenCardJSON({ citizen_id: 'xyz-456' })} />, { wrapper: WithLayoutContext });
     const card = screen.getByTestId('citizen-card');
     expect(card).toHaveAttribute('data-citizen-id', 'xyz-456');
   });
@@ -408,7 +440,7 @@ describe('ColonyDashboard', () => {
       createCitizenCardJSON({ citizen_id: 'c3', name: 'Carol' }),
     ];
 
-    render(<ColonyDashboard {...createColonyDashboardJSON({ citizens, grid_cols: 2 })} />);
+    render(<ColonyDashboard {...createColonyDashboardJSON({ citizens, grid_cols: 2 })} />, { wrapper: WithLayoutContext });
 
     expect(screen.getByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
@@ -482,7 +514,7 @@ describe('WidgetRenderer', () => {
   });
 
   it('dispatches to CitizenCard for type=citizen_card', () => {
-    render(<WidgetRenderer widget={createCitizenCardJSON({ name: 'Dispatch Test' })} />);
+    render(<WidgetRenderer widget={createCitizenCardJSON({ name: 'Dispatch Test' })} />, { wrapper: WithLayoutContext });
     expect(screen.getByText('Dispatch Test')).toBeInTheDocument();
   });
 
@@ -526,7 +558,7 @@ describe('WidgetRenderer', () => {
       ],
     };
 
-    render(<WidgetRenderer widget={nested} />);
+    render(<WidgetRenderer widget={nested} />, { wrapper: WithLayoutContext });
 
     expect(screen.getByText('Nested Alice')).toBeInTheDocument();
     expect(screen.getByText('Nested Bob')).toBeInTheDocument();

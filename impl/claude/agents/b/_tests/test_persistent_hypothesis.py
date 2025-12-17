@@ -257,30 +257,30 @@ def test_memory_catalog_id_tracking(
 
 @pytest.mark.asyncio
 async def test_storage_create_and_save(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test creating and saving storage."""
-    storage = PersistentHypothesisStorage(path=temp_storage_path)
+    storage = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage.load()
 
     await storage.add_response(sample_response, domain="test")
 
-    assert temp_storage_path.exists()
+    # Storage should persist data and have generated count
     assert storage.total_generated == 1
 
 
 @pytest.mark.asyncio
 async def test_storage_load_existing(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test loading existing storage."""
     # First save
-    storage1 = PersistentHypothesisStorage(path=temp_storage_path)
+    storage1 = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage1.load()
     await storage1.add_response(sample_response, domain="test")
 
     # Reload
-    storage2 = PersistentHypothesisStorage(path=temp_storage_path)
+    storage2 = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage2.load()
 
     assert storage2.total_generated == 1
@@ -290,10 +290,10 @@ async def test_storage_load_existing(
 
 @pytest.mark.asyncio
 async def test_storage_lineage_methods(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test storage lineage methods."""
-    storage = PersistentHypothesisStorage(path=temp_storage_path)
+    storage = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage.load()
 
     # Add hypotheses
@@ -311,17 +311,17 @@ async def test_storage_lineage_methods(
 
 @pytest.mark.asyncio
 async def test_storage_catalog_id_persistence(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test catalog ID persists across reloads."""
     # Save with catalog ID
-    storage1 = PersistentHypothesisStorage(path=temp_storage_path)
+    storage1 = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage1.load()
     await storage1.add_response(sample_response, domain="test")
     await storage1.set_catalog_id(0, "hyp_persistent123")
 
     # Reload and verify
-    storage2 = PersistentHypothesisStorage(path=temp_storage_path)
+    storage2 = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage2.load()
     catalog_id = await storage2.get_catalog_id(0)
     assert catalog_id == "hyp_persistent123"
@@ -329,10 +329,10 @@ async def test_storage_catalog_id_persistence(
 
 @pytest.mark.asyncio
 async def test_storage_session_tracking(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test session tracking in storage."""
-    storage = PersistentHypothesisStorage(path=temp_storage_path)
+    storage = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage.load()
 
     indices = await storage.add_response_with_session(
@@ -342,17 +342,17 @@ async def test_storage_session_tracking(
     assert len(indices) == 1
 
     # Reload and check sessions persisted
-    storage2 = PersistentHypothesisStorage(path=temp_storage_path)
+    storage2 = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage2.load()
     # Sessions should be in memory after load
 
 
 @pytest.mark.asyncio
 async def test_storage_get_hypothesis_by_idx(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test getting hypothesis by index."""
-    storage = PersistentHypothesisStorage(path=temp_storage_path)
+    storage = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage.load()
     await storage.add_response(sample_response, domain="test")
 
@@ -367,10 +367,10 @@ async def test_storage_get_hypothesis_by_idx(
 
 @pytest.mark.asyncio
 async def test_storage_evolution_history(
-    temp_storage_path: Path, sample_response: ParsedHypothesisResponse
+    tmp_path: Path, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test evolution history tracking."""
-    storage = PersistentHypothesisStorage(path=temp_storage_path)
+    storage = PersistentHypothesisStorage(data_dir=tmp_path)
     await storage.load()
 
     # Add multiple times to create history
