@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from agents.poly.types import Agent
 from agents.t import (
     DiffResult,
     IntGenerator,
@@ -30,7 +31,6 @@ from agents.t import (
     numeric_equality,
     semantic_equality,
 )
-from agents.poly.types import Agent
 
 
 # Simple identity agent for testing

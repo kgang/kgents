@@ -26,7 +26,41 @@ from .base import (
     get_async_session,
     get_engine,
     init_db,
+    close_db,
 )
+
+# Brain Crown Jewel
+from .brain import Crystal, CrystalTag, BrainSettings
+
+# Town Crown Jewel
+from .town import Citizen, Conversation, ConversationTurn, CitizenRelationship
+
+# Gardener Crown Jewel
+from .gardener import (
+    IdeaLifecycle,
+    GardenSession,
+    GardenIdea,
+    GardenPlot,
+    IdeaConnection,
+)
+
+# Gestalt Crown Jewel
+from .gestalt import Topology, CodeBlock, CodeLink, TopologySnapshot
+
+# Atelier Crown Jewel
+from .atelier import Workshop, Artisan, Exhibition, GalleryItem, ArtifactContribution
+
+# Coalition Crown Jewel
+from .coalition import (
+    Coalition,
+    CoalitionMember,
+    CoalitionProposal,
+    ProposalVote,
+    CoalitionOutput,
+)
+
+# Park Crown Jewel
+from .park import Host, HostMemory, Episode, Interaction, ParkLocation
 
 __all__ = [
     # Base infrastructure
@@ -36,4 +70,43 @@ __all__ = [
     "get_async_session",
     "get_engine",
     "init_db",
+    "close_db",
+    # Brain
+    "Crystal",
+    "CrystalTag",
+    "BrainSettings",
+    # Town
+    "Citizen",
+    "Conversation",
+    "ConversationTurn",
+    "CitizenRelationship",
+    # Gardener
+    "IdeaLifecycle",
+    "GardenSession",
+    "GardenIdea",
+    "GardenPlot",
+    "IdeaConnection",
+    # Gestalt
+    "Topology",
+    "CodeBlock",
+    "CodeLink",
+    "TopologySnapshot",
+    # Atelier
+    "Workshop",
+    "Artisan",
+    "Exhibition",
+    "GalleryItem",
+    "ArtifactContribution",
+    # Coalition
+    "Coalition",
+    "CoalitionMember",
+    "CoalitionProposal",
+    "ProposalVote",
+    "CoalitionOutput",
+    # Park
+    "Host",
+    "HostMemory",
+    "Episode",
+    "Interaction",
+    "ParkLocation",
 ]

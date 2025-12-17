@@ -30,7 +30,7 @@ from agents.flux.synapse import (
     SyncOperation,
     SyncTarget,
 )
-from protocols.terrarium.semantic_metrics import (
+from agents.flux.semantic_metrics import (
     QdrantPulse,
     ResonanceSignal,
 )

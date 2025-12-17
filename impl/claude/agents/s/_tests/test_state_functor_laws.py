@@ -18,10 +18,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
-
 from agents.poly.types import Agent
 from agents.s import MemoryStateBackend, StateFunctor
-
 
 # =============================================================================
 # Test Agents
@@ -348,7 +346,8 @@ class TestStateThreadingInvariants:
 # =============================================================================
 
 try:
-    from hypothesis import given, strategies as st
+    from hypothesis import given
+    from hypothesis import strategies as st
 
     class TestPropertyBasedLaws:
         """Property-based tests for functor laws."""

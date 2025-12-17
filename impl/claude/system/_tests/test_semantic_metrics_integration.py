@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 
 from agents.flux.synapse import CDCLagTracker
-from protocols.terrarium.semantic_metrics import (
+from agents.flux.semantic_metrics import (
     DurabilitySignal,
     HealthLevel,
     PostgresPulse,

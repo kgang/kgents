@@ -76,7 +76,7 @@ from .persona import DialogueMode
 from .soul import BudgetTier, KgentSoul
 
 if TYPE_CHECKING:
-    from protocols.terrarium.mirror import HolographicBuffer
+    from agents.flux.mirror import HolographicBuffer
 
 
 # =============================================================================

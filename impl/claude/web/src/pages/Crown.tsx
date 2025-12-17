@@ -254,6 +254,7 @@ export default function Crown() {
   const [demoMode, setDemoMode] = useState(false);
 
   // Fetch status from all jewels
+  // All APIs now return unwrapped data (AGENTESE pattern)
   const fetchStatus = useCallback(async () => {
     try {
       const [gestaltRes, brainRes, gardenRes] = await Promise.allSettled([
@@ -269,25 +270,25 @@ export default function Crown() {
         loading: false,
       };
 
-      // Check Gestalt status
-      if (gestaltRes.status === 'fulfilled' && gestaltRes.value.data) {
+      // Check Gestalt status (now returns unwrapped data)
+      if (gestaltRes.status === 'fulfilled' && gestaltRes.value) {
         newStatus.gestalt = {
           scanned: true,
-          health: gestaltRes.value.data.overall_grade,
+          health: gestaltRes.value.overall_grade,
         };
       }
 
-      // Check Brain status
-      if (brainRes.status === 'fulfilled' && brainRes.value.data) {
+      // Check Brain status (already unwrapped)
+      if (brainRes.status === 'fulfilled' && brainRes.value) {
         newStatus.brain = {
-          crystals: brainRes.value.data.concept_count,
+          crystals: brainRes.value.concept_count,
         };
       }
 
-      // Check Garden status
-      if (gardenRes.status === 'fulfilled' && gardenRes.value.data) {
+      // Check Garden status (already unwrapped)
+      if (gardenRes.status === 'fulfilled' && gardenRes.value) {
         newStatus.gardener = {
-          season: gardenRes.value.data.season,
+          season: gardenRes.value.season,
         };
       }
 

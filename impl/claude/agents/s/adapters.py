@@ -23,8 +23,8 @@ from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 from .protocol import StateBackend
 
 if TYPE_CHECKING:
-    from agents.d.protocol import DataAgent, DgentProtocol
     from agents.d.datum import Datum
+    from agents.d.protocol import DataAgent, DgentProtocol
 
 S = TypeVar("S")
 

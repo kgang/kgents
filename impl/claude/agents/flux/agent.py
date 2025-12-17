@@ -35,8 +35,7 @@ from .perturbation import (
 from .state import FluxState
 
 if TYPE_CHECKING:
-    from impl.claude.protocols.terrarium.mirror import HolographicBuffer
-
+    from .mirror import HolographicBuffer
     from .metabolism import FluxMetabolism
     from .pipeline import FluxPipeline
     from .semaphore.purgatory import Purgatory
@@ -862,7 +861,7 @@ class FluxAgent(Generic[A, B]):
             return
 
         try:
-            from protocols.terrarium.events import SemaphoreEvent
+            from .terrarium_events import SemaphoreEvent
 
             # Build context from token
             context: dict[str, Any] = {}
@@ -909,7 +908,7 @@ class FluxAgent(Generic[A, B]):
             return
 
         try:
-            from protocols.terrarium.events import EventType, TerriumEvent
+            from .terrarium_events import EventType, TerriumEvent
 
             terrium_event = TerriumEvent(
                 event_type=EventType.SEMAPHORE_RESOLVED,

@@ -1,4 +1,4 @@
-"""I-gent v2.5 Data - State, Registry, O-gent Polling, Terrarium Source, Visual Hints, Cognitive Loom, Dashboard Collectors, Pheromone Trails, and Weather."""
+"""I-gent v2.5 Data - State, Registry, O-gent Polling, Visual Hints, Cognitive Loom, Dashboard Collectors, Pheromone Trails, and Weather."""
 
 from .core_types import Phase
 from .dashboard_collectors import (
@@ -47,11 +47,6 @@ from .registry import (
     create_demo_registry_async,
 )
 from .state import AgentSnapshot, FluxState, SessionState, create_demo_flux_state
-from .terrarium_source import (
-    AgentMetrics,
-    TerrariumWebSocketSource,
-    observe_multiple,
-)
 from .weather import (
     OBLIQUE_STRATEGIES,
     Forecast,
@@ -92,10 +87,6 @@ __all__ = [
     "render_xyz_bar",
     "render_xyz_compact",
     "value_to_health_level",
-    # Terrarium Source
-    "AgentMetrics",
-    "TerrariumWebSocketSource",
-    "observe_multiple",
     # Visual Hints (Track C: Heterarchical UI)
     "VisualHint",
     "validate_hint",

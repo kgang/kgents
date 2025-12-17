@@ -30,6 +30,10 @@ from .models import (
     GardenStateResponse,
     GestureResponse,
     PlotResponse,
+    # Phase 2 Crown Jewels: Plot CRUD
+    PlotCreateRequest,
+    PlotListResponse,
+    PlotUpdateRequest,
     PolynomialEdge,
     PolynomialHistoryEntry,
     PolynomialPosition,
@@ -569,6 +573,181 @@ def create_gardener_router() -> "APIRouter | None":
             raise
         except Exception as e:
             logger.exception("Failed to focus plot")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Plot CRUD Endpoints (Phase 2 Crown Jewels completion)
+    # =========================================================================
+
+    @router.get("/garden/plots", response_model=PlotListResponse)
+    async def list_plots(
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> PlotListResponse:
+        """List all plots in the garden."""
+        try:
+            garden = await _get_or_create_garden()
+            garden_response = _garden_to_response(garden)
+            return PlotListResponse(
+                plots=list(garden_response.plots.values()),
+                total_count=len(garden_response.plots),
+                active_plot=garden_response.active_plot,
+            )
+        except Exception as e:
+            logger.exception("Failed to list plots")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.get("/garden/plots/{plot_name}", response_model=PlotResponse)
+    async def get_plot(
+        plot_name: str,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> PlotResponse:
+        """Get a specific plot by name."""
+        try:
+            garden = await _get_or_create_garden()
+
+            if plot_name not in garden.plots:
+                raise HTTPException(status_code=404, detail=f"Plot '{plot_name}' not found")
+
+            garden_response = _garden_to_response(garden)
+            return garden_response.plots[plot_name]
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to get plot")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.post("/garden/plots", response_model=PlotResponse)
+    async def create_plot(
+        request: PlotCreateRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> PlotResponse:
+        """Create a new garden plot."""
+        try:
+            from datetime import datetime
+
+            from protocols.gardener_logos.plots import PlotState
+
+            garden = await _get_or_create_garden()
+
+            # Check for duplicate name
+            if request.name in garden.plots:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Plot '{request.name}' already exists",
+                )
+
+            # Create the plot (note: created_at and last_tended are datetime objects)
+            now = datetime.now()
+            plot = PlotState(
+                name=request.name,
+                path=request.path,
+                description=request.description,
+                plan_path=request.plan_path,
+                crown_jewel=request.crown_jewel,
+                rigidity=request.rigidity,
+                progress=0.0,
+                created_at=now,
+                last_tended=now,
+                tags=request.tags,
+                metadata=request.metadata,
+            )
+
+            # Add to garden
+            garden.plots[request.name] = plot
+            garden.metrics.active_plots = len(garden.plots)
+
+            # Return the created plot
+            return PlotResponse(
+                name=plot.name,
+                path=plot.path,
+                description=plot.description,
+                plan_path=plot.plan_path,
+                crown_jewel=plot.crown_jewel,
+                prompts=[],
+                season_override=None,
+                rigidity=plot.rigidity,
+                progress=plot.progress,
+                created_at=plot.created_at.isoformat(),
+                last_tended=plot.last_tended.isoformat(),
+                tags=plot.tags,
+                metadata=plot.metadata,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to create plot")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.patch("/garden/plots/{plot_name}", response_model=PlotResponse)
+    async def update_plot(
+        plot_name: str,
+        request: PlotUpdateRequest,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> PlotResponse:
+        """Update a garden plot."""
+        try:
+            from datetime import datetime
+
+            garden = await _get_or_create_garden()
+
+            if plot_name not in garden.plots:
+                raise HTTPException(status_code=404, detail=f"Plot '{plot_name}' not found")
+
+            plot = garden.plots[plot_name]
+
+            # Update fields if provided
+            if request.description is not None:
+                plot.description = request.description
+            if request.progress is not None:
+                plot.progress = request.progress
+            if request.rigidity is not None:
+                plot.rigidity = request.rigidity
+            if request.season_override is not None:
+                from protocols.gardener_logos.garden import GardenSeason as GardenSeasonEnum
+
+                plot.season_override = GardenSeasonEnum[request.season_override.value]
+            if request.tags is not None:
+                plot.tags = request.tags
+            if request.metadata is not None:
+                plot.metadata = request.metadata
+
+            # Update last_tended (datetime object)
+            plot.last_tended = datetime.now()
+
+            # Return the updated plot
+            garden_response = _garden_to_response(garden)
+            return garden_response.plots[plot_name]
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to update plot")
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @router.delete("/garden/plots/{plot_name}")
+    async def delete_plot(
+        plot_name: str,
+        api_key: "ApiKeyData | None" = Depends(get_optional_api_key),
+    ) -> dict[str, str]:
+        """Delete a garden plot."""
+        try:
+            garden = await _get_or_create_garden()
+
+            if plot_name not in garden.plots:
+                raise HTTPException(status_code=404, detail=f"Plot '{plot_name}' not found")
+
+            # Remove the plot
+            del garden.plots[plot_name]
+            garden.metrics.active_plots = len(garden.plots)
+
+            # Clear active_plot if it was the deleted one
+            if garden.active_plot == plot_name:
+                garden.active_plot = None
+
+            return {"status": "deleted", "plot": plot_name}
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Failed to delete plot")
             raise HTTPException(status_code=500, detail=str(e))
 
     # =========================================================================

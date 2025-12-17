@@ -65,11 +65,11 @@ export default function ParkScenario() {
           parkApi.getStatus(),
         ]);
 
-        setMasks(masksRes.data);
+        setMasks(masksRes);
 
-        if (statusRes.data.running) {
+        if (statusRes.running) {
           const scenarioRes = await parkApi.getScenario();
-          setScenario(scenarioRes.data);
+          setScenario(scenarioRes);
           setViewState('running');
         }
       } catch (err) {
@@ -95,7 +95,7 @@ export default function ParkScenario() {
       const interval = setInterval(async () => {
         try {
           const res = await parkApi.tick({ count: 1 });
-          setScenario(res.data);
+          setScenario(res);
         } catch (err) {
           console.error('Tick failed:', err);
         }
@@ -118,7 +118,7 @@ export default function ParkScenario() {
         accelerated,
       });
 
-      setScenario(res.data);
+      setScenario(res);
       setViewState('running');
     } catch (err) {
       console.error('Failed to start scenario:', err);
@@ -132,7 +132,7 @@ export default function ParkScenario() {
     if (!scenario) return;
     try {
       const res = await parkApi.tick({ count });
-      setScenario(res.data);
+      setScenario(res);
     } catch (err) {
       console.error('Tick failed:', err);
     }
@@ -144,7 +144,7 @@ export default function ParkScenario() {
       const res = await parkApi.transitionPhase({
         phase: phase.toLowerCase() as 'normal' | 'incident' | 'response' | 'recovery',
       });
-      setScenario(res.data);
+      setScenario(res);
     } catch (err) {
       console.error('Transition failed:', err);
       setError('Invalid phase transition');
@@ -155,7 +155,7 @@ export default function ParkScenario() {
     if (!scenario) return;
     try {
       const res = await parkApi.maskAction({ action: 'don', mask_name: maskName });
-      setScenario(res.data);
+      setScenario(res);
     } catch (err) {
       console.error('Don mask failed:', err);
       setError('Cannot don mask');
@@ -166,7 +166,7 @@ export default function ParkScenario() {
     if (!scenario) return;
     try {
       const res = await parkApi.maskAction({ action: 'doff' });
-      setScenario(res.data);
+      setScenario(res);
     } catch (err) {
       console.error('Doff mask failed:', err);
     }
@@ -176,7 +176,7 @@ export default function ParkScenario() {
     if (!scenario) return;
     try {
       const res = await parkApi.useForce();
-      setScenario(res.data);
+      setScenario(res);
     } catch (err) {
       console.error('Force failed:', err);
       setError('Cannot use force - limit reached');
@@ -192,7 +192,7 @@ export default function ParkScenario() {
         setTickInterval(null);
       }
       const res = await parkApi.completeScenario({ outcome });
-      setSummary(res.data);
+      setSummary(res);
       setScenario(null);
       setViewState('summary');
 
@@ -202,7 +202,7 @@ export default function ParkScenario() {
       }
 
       // Wave 4: Show synergy toast for scenario completion
-      showScenarioCompleteToast(res.data.name, res.data.forces_used);
+      showScenarioCompleteToast(res.name, res.forces_used);
     } catch (err) {
       console.error('Complete failed:', err);
       setError('Failed to complete scenario');

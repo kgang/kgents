@@ -26,6 +26,14 @@ export {
 // Atelier streaming
 export { useAtelierStream, type UseAtelierStreamResult } from './useAtelierStream';
 
+// Brain WebSocket streaming (Phase 1 Crown Jewels completion)
+export {
+  useBrainStream,
+  type UseBrainStreamOptions,
+  type UseBrainStreamResult,
+  type BrainEvent,
+} from './useBrainStream';
+
 // Gestalt streaming (Sprint 1: Live Architecture)
 export {
   useGestaltStream,

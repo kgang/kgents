@@ -61,22 +61,13 @@ from .importers import (
     strip_markdown_formatting,
 )
 
-# Legacy stubs (DEPRECATED - for backward compatibility only)
-from .legacy import (
-    ActionHistory,
-    AssociativeWebMemory,
-    BudgetedMemory,
-    Cue,
-    DgentBackedHolographicMemory,
-    HolographicMemory,
-    ProspectiveAgent,
-    RecollectionAgent,
-    ResolutionBudget,
-    Situation,
-    TieredMemory,
-    create_budgeted_memory,
-    create_mock_bank,
-)
+# Legacy stubs removed - deprecated classes deleted:
+# - HolographicMemory, TieredMemory, DgentBackedHolographicMemory
+# - BudgetedMemory, ResolutionBudget, create_budgeted_memory, create_mock_bank
+# - ProspectiveAgent, RecollectionAgent, AssociativeWebMemory
+# - ActionHistory, Situation, Cue
+# Use AssociativeMemory, SoulMemory, ConsolidationEngine instead.
+
 from .lifecycle import (
     LifecycleEvent,
     LifecycleManager,

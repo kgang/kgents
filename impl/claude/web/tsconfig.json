@@ -24,7 +24,15 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@brain/*": ["../services/brain/web/*"],
+      "@town/*": ["../services/town/web/*"],
+      "@atelier/*": ["../services/atelier/web/*"],
+      "@park/*": ["../services/park/web/*"],
+      "@gardener/*": ["../services/gardener/web/*"],
+      "@coalition/*": ["../services/coalition/web/*"],
+      "@gestalt/*": ["../services/gestalt/web/*"],
+      "@shared/*": ["./src/shared/*"]
     }
   },
   "include": ["src", "tests"]

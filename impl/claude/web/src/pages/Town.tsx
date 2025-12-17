@@ -195,7 +195,7 @@ export default function Town() {
           phase: 3,
           enable_dialogue: false,
         });
-        const newTownId = response.data.id;
+        const newTownId = response.id;
         window.history.replaceState(null, '', `/town/${newTownId}`);
         setTownId(newTownId);
         setLoadingState('loaded');

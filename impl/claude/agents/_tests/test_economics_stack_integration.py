@@ -76,13 +76,7 @@ from agents.l import (
     SemanticRegistry,
 )
 
-# M-gent imports
-from agents.m import (
-    BudgetedMemory,
-    ResolutionBudget,
-    create_budgeted_memory,
-    create_mock_bank,
-)
+# M-gent: Legacy budgeted memory stubs removed - see agents.m.AssociativeMemory for new API
 
 # =============================================================================
 # Test Fixtures
@@ -293,55 +287,11 @@ class TestEconomicsJITIntegration:
 # =============================================================================
 # B × M Integration: Memory Economics
 # =============================================================================
-
-
-class TestEconomicsMemoryIntegration:
-    """B × M: Memory operations have costs."""
-
-    def test_budgeted_memory_creation(self) -> None:
-        """Test BudgetedMemory wraps holographic memory with costs."""
-        # create_mock_bank uses max_balance (not initial_tokens)
-        bank = create_mock_bank(max_balance=1000)
-        # create_budgeted_memory uses bank + account_id (not store_cost/recall_cost)
-        memory = create_budgeted_memory(
-            bank=bank,
-            account_id="test-account",
-        )
-
-        assert memory is not None
-        assert isinstance(memory, BudgetedMemory)
-
-    @pytest.mark.asyncio
-    async def test_memory_store_costs_tokens(self) -> None:
-        """Test storing patterns costs tokens."""
-        # Use larger balance to avoid InsufficientBudgetError
-        bank = create_mock_bank(max_balance=100000)
-        memory = create_budgeted_memory(
-            bank=bank,
-            account_id="test-account",
-        )
-
-        # Store pattern - async method with id, content, concepts
-        receipt = await memory.store(
-            id="test-pattern-001",
-            content={"test": "data"},
-            concepts=["test"],
-        )
-
-        # Should return receipt with cost info
-        assert receipt is not None
-
-    def test_resolution_budget_allocation(self) -> None:
-        """Test resolution budget allocates memory fidelity."""
-        # ResolutionBudget uses: cost_model, max_resolution_budget
-        budget = ResolutionBudget(
-            max_resolution_budget=1000,
-        )
-
-        # allocate_resolution takes patterns list and available budget
-        # We test the basic functionality
-        stats = budget.stats()
-        assert stats is not None
+# Note: TestEconomicsMemoryIntegration removed - deprecated stubs BudgetedMemory,
+# ResolutionBudget have been deleted. For new M-gent integration, use:
+# - agents.m.AssociativeMemory for semantic memory
+# - agents.m.SoulMemory for K-gent identity continuity
+# - agents.m.ConsolidationEngine for memory lifecycle management
 
 
 # =============================================================================
@@ -550,25 +500,5 @@ class TestEconomicsStackFullIntegration:
         assert capital.observations == 3
         assert capital.total_gas_consumed > 0
 
-    @pytest.mark.asyncio
-    async def test_memory_economics_flow(self) -> None:
-        """Test M-gent memory with B-gent economics."""
-        # 1. Create budgeted memory with correct API (larger balance)
-        bank = create_mock_bank(max_balance=100000)
-        memory = create_budgeted_memory(
-            bank=bank,
-            account_id="test-account",
-        )
-
-        # 2. Store patterns (async, uses id, content, concepts)
-        for i in range(3):
-            await memory.store(
-                id=f"pattern-{i}",
-                content={"i": i},
-                concepts=["test"],
-            )
-
-        # 3. Verify budget status
-        status = memory.budget_status()
-
-        assert status is not None
+    # test_memory_economics_flow removed - deprecated BudgetedMemory stubs deleted
+    # For new M-gent + B-gent integration, use AssociativeMemory with token tracking

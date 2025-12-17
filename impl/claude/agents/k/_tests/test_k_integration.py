@@ -33,7 +33,6 @@ from agents.k import (
 from agents.k.persistent_persona import (
     PersistentPersonaAgent,
 )
-from agents.m import HolographicMemory
 from agents.n import Chronicle, SemanticTrace
 
 
@@ -192,14 +191,15 @@ class TestPersonaQuery:
 class TestKgentMemoryIntegration:
     """Test K-gent × M-gent integration.
 
-    Note: HolographicMemory is a legacy stub with sync key-value semantics.
-    For semantic retrieval, use AssociativeMemory from the new M-gent architecture.
+    Note: These tests use simple dict storage for testing K-gent dialogues
+    can be stored. For production semantic memory, use AssociativeMemory
+    from the new M-gent architecture.
     """
 
     @pytest.mark.asyncio
     async def test_dialogue_history_storage(self) -> None:
-        """Test storing dialogue history in holographic memory."""
-        memory = HolographicMemory[DialogueOutput]()
+        """Test storing dialogue history."""
+        memory: dict[str, DialogueOutput] = {}
         agent = kgent()
 
         # Have several dialogues
@@ -214,19 +214,19 @@ class TestKgentMemoryIntegration:
             )
         )
 
-        # Store in memory (sync API on legacy stub)
-        memory.store("design_discussion", dialogue1)
-        memory.store("feature_discussion", dialogue2)
+        # Store in memory (simple dict)
+        memory["design_discussion"] = dialogue1
+        memory["feature_discussion"] = dialogue2
 
-        # Retrieve by exact key (legacy stub uses key lookup, not semantic search)
-        retrieved = memory.retrieve("design_discussion")
+        # Retrieve by key
+        retrieved = memory.get("design_discussion")
         assert retrieved is not None
         assert retrieved.response is not None
 
     @pytest.mark.asyncio
     async def test_preference_memory(self) -> None:
         """Test storing preference updates in memory."""
-        memory = HolographicMemory[PersonaResponse]()
+        memory: dict[str, PersonaResponse] = {}
         agent = query_persona()
 
         # Query preferences
@@ -234,11 +234,11 @@ class TestKgentMemoryIntegration:
             PersonaQuery(aspect="preference", topic="communication")
         )
 
-        # Store preference response (sync API on legacy stub)
-        memory.store("communication_prefs", response)
+        # Store preference response
+        memory["communication_prefs"] = response
 
-        # Retrieve by exact key
-        retrieved = memory.retrieve("communication_prefs")
+        # Retrieve by key
+        retrieved = memory.get("communication_prefs")
         assert retrieved is not None
 
 

@@ -34,6 +34,7 @@ import { ElasticSplit } from '../components/elastic/ElasticSplit';
 import { BottomDrawer } from '../components/elastic/BottomDrawer';
 import { FloatingActions } from '../components/elastic/FloatingActions';
 import { useWindowLayout } from '../hooks/useLayoutContext';
+import { useBrainStream } from '../hooks/useBrainStream';
 import {
   ObserverSwitcher,
   useObserverState,
@@ -405,9 +406,9 @@ export default function Brain() {
         brainApi.getTopology(0.3),
       ]);
 
-      setStatus(statusRes.data);
-      setMap(mapRes.data);
-      setTopology(topologyRes.data);
+      setStatus(statusRes);
+      setMap(mapRes);
+      setTopology(topologyRes);
       setConnectionError(null);
     } catch (error: unknown) {
       console.error('Failed to load brain data:', error);
@@ -437,20 +438,33 @@ export default function Brain() {
   }, [loadAllData]);
 
   // Refresh all data after capture
-  const refreshAfterCapture = async () => {
+  const refreshAfterCapture = useCallback(async () => {
     try {
       const [statusRes, mapRes, topologyRes] = await Promise.all([
         brainApi.getStatus(),
         brainApi.getMap(),
         brainApi.getTopology(0.3),
       ]);
-      setStatus(statusRes.data);
-      setMap(mapRes.data);
-      setTopology(topologyRes.data);
+      setStatus(statusRes);
+      setMap(mapRes);
+      setTopology(topologyRes);
     } catch (error) {
       console.error('Failed to refresh after capture:', error);
     }
-  };
+  }, []);
+
+  // WebSocket stream for real-time updates (Phase 1 Crown Jewels completion)
+  // Note: isConnected can be used for UI indicators if needed
+  const { isConnected: _wsConnected } = useBrainStream({
+    autoConnect: true,
+    onCrystalFormed: useCallback((data: { source_id: string }) => {
+      console.log('[Brain] WebSocket: crystal_formed event received', data.source_id);
+      // Auto-refresh topology when a new crystal is captured (from CLI or other sessions)
+      refreshAfterCapture();
+      // Show notification
+      crystalFormed(data.source_id);
+    }, [refreshAfterCapture, crystalFormed]),
+  });
 
   const handleNodeClick = useCallback((node: TopologyNode) => {
     setSelectedCrystal(node);
@@ -487,14 +501,14 @@ export default function Brain() {
 
       setMessage({
         type: 'success',
-        text: `Captured: ${response.data.concept_id}`,
+        text: `Captured: ${response.concept_id}`,
       });
 
       // Foundation 5: Celebrate successful capture!
       celebrate({ intensity: 'subtle' });
 
       // Wave 4: Show synergy toast notification
-      crystalFormed(response.data.concept_id);
+      crystalFormed(response.concept_id);
     } catch (error) {
       setMessage({
         type: 'error',
@@ -516,8 +530,8 @@ export default function Brain() {
         context: ghostContext,
         limit: 10,
       });
-      setGhostResults(response.data.surfaced);
-      if (response.data.count === 0) {
+      setGhostResults(response.surfaced);
+      if (response.count === 0) {
         setMessage({
           type: 'success',
           text: getEmptyState('noResults').description,

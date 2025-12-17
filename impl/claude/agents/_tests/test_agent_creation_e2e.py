@@ -20,9 +20,7 @@ import pytest
 # D-gent imports (Data)
 from agents.d import (
     Lens,
-    MemoryConfig,
     Symbiont,
-    UnifiedMemory,
     VolatileAgent,
     identity_lens,
 )
@@ -558,26 +556,8 @@ class TestLifecycleWithState:
         state = await memory.load()
         assert state == 9
 
-    @pytest.mark.asyncio
-    async def test_unified_memory_lifecycle(self) -> None:
-        """Test lifecycle with UnifiedMemory."""
-        volatile = VolatileAgent(_state={"version": 1})
-        config = MemoryConfig(
-            enable_temporal=True,
-            enable_semantic=True,
-        )
-        unified = UnifiedMemory(volatile, config)
-
-        # Save state changes
-        await unified.save({"version": 2})
-        await unified.witness("v2", {"version": 2})
-
-        await unified.save({"version": 3})
-        await unified.witness("v3", {"version": 3})
-
-        # Load current
-        current = await unified.load()
-        assert current["version"] == 3
+    # test_unified_memory_lifecycle removed - deprecated UnifiedMemory/MemoryConfig deleted
+    # For unified memory patterns, use VolatileAgent or DgentRouter directly
 
 
 # Run with: pytest impl/claude/agents/_tests/test_agent_creation_e2e.py -v

@@ -7,22 +7,31 @@ Main application factory that:
 - Adds middleware (CORS, Tenant Context, Metering)
 - Configures health checks
 - Provides multi-tenant support
+- Mounts AGENTESE Universal Gateway (AD-009)
+
+The Metaphysical Fullstack Pattern:
+- The protocol IS the API
+- All transports collapse to logos.invoke(path, observer, ...)
+- Service nodes are auto-exposed via gateway
 """
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Optional
 
 # Graceful FastAPI import
 try:
     from fastapi import FastAPI
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.responses import RedirectResponse
 
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
     FastAPI = None  # type: ignore[misc, assignment]
     CORSMiddleware = None  # type: ignore[misc, assignment]
+    RedirectResponse = None  # type: ignore[misc, assignment]
 
 from agents.k.soul import KgentSoul
 
@@ -30,6 +39,8 @@ from .auth import ApiKeyData, TenantContextMiddleware, get_optional_api_key
 from .metering import MeteringMiddleware
 from .models import HealthResponse
 from .soul import create_soul_router
+
+logger = logging.getLogger(__name__)
 
 # SaaS infrastructure (optional)
 try:
@@ -143,75 +154,95 @@ def create_app(
     if metrics_router is not None:
         app.include_router(metrics_router)
 
-    # Agent Town endpoints
-    from .town import create_town_router
-
-    town_router = create_town_router()
-    if town_router is not None:
-        app.include_router(town_router)
-
-    # N-Phase Session endpoints
+    # N-Phase Session endpoints (not yet AGENTESE-ified)
     from .nphase import create_nphase_router
 
     nphase_router = create_nphase_router()
     if nphase_router is not None:
         app.include_router(nphase_router)
 
-    # Workshop endpoints
+    # Workshop endpoints (not yet AGENTESE-ified)
     from .workshop import create_workshop_router
 
     workshop_router = create_workshop_router()
     if workshop_router is not None:
         app.include_router(workshop_router)
 
-    # Atelier endpoints (Tiny Atelier demo)
-    from .atelier import create_atelier_router
-
-    atelier_router = create_atelier_router()
-    if atelier_router is not None:
-        app.include_router(atelier_router)
-
-    # Gallery endpoints (Projection Component Gallery)
+    # Gallery endpoints (Projection Component Gallery - keep for now)
     from .gallery import create_gallery_router
 
     gallery_router = create_gallery_router()
     if gallery_router is not None:
         app.include_router(gallery_router)
 
-    # Brain endpoints (Holographic Brain / Crown Jewel)
-    from .brain import create_brain_router
+    # Brain WebSocket (real-time updates - keep for now)
+    from .brain_websocket import create_brain_websocket_router
 
-    brain_router = create_brain_router()
-    if brain_router is not None:
-        app.include_router(brain_router)
+    brain_ws_router = create_brain_websocket_router()
+    if brain_ws_router is not None:
+        app.include_router(brain_ws_router)
 
-    # Gestalt endpoints (Living Architecture Visualizer / Crown Jewel)
+    # Gestalt endpoints (Living Architecture Visualizer - not yet AGENTESE-ified)
     from .gestalt import create_gestalt_router
 
     gestalt_router = create_gestalt_router()
     if gestalt_router is not None:
         app.include_router(gestalt_router)
 
-    # Infrastructure endpoints (Gestalt Live - real-time monitoring)
+    # Infrastructure endpoints (Gestalt Live - not yet AGENTESE-ified)
     from .infrastructure import create_infrastructure_router
 
     infrastructure_router = create_infrastructure_router()
     if infrastructure_router is not None:
         app.include_router(infrastructure_router)
 
-    # Gardener endpoints (Wave 1: Hero Path)
+    # Gardener endpoints (not yet AGENTESE-ified)
     from .gardener import create_gardener_router
 
     gardener_router = create_gardener_router()
     if gardener_router is not None:
         app.include_router(gardener_router)
 
-    # Park endpoints (Wave 3: Punchdrunk Park)
-    from .park import create_park_router
+    # === AGENTESE Universal Gateway (AD-009) ===
+    # The protocol IS the API - auto-exposes all @node registered services
+    try:
+        from protocols.agentese.container import get_container
+        from protocols.agentese.gateway import mount_gateway
 
-    park_router = create_park_router()
-    if park_router is not None:
-        app.include_router(park_router)
+        container = get_container()
+        gateway = mount_gateway(
+            app,
+            prefix="/agentese",
+            container=container,
+            enable_streaming=True,
+            enable_websocket=True,
+            fallback_to_logos=True,
+        )
+        logger.info(f"AGENTESE Gateway mounted at /agentese")
+    except ImportError as e:
+        logger.warning(f"Could not mount AGENTESE Gateway: {e}")
+
+    # === Morpheus Legacy Redirect ===
+    # Redirect /v1/chat/completions to AGENTESE path (307 preserves POST method)
+    @app.api_route("/v1/chat/completions", methods=["POST", "GET"], tags=["legacy"])
+    async def legacy_chat_completions() -> RedirectResponse:
+        """
+        Legacy OpenAI-compatible endpoint.
+
+        Redirects to AGENTESE protocol: /agentese/world/morpheus/complete
+        Uses 307 to preserve POST method and body.
+
+        Deprecated: Use /agentese/world/morpheus/complete directly.
+        """
+        return RedirectResponse(
+            url="/agentese/world/morpheus/complete",
+            status_code=307,
+            headers={
+                "Deprecation": "true",
+                "Sunset": "2025-06-01",
+                "Link": '</agentese/world/morpheus/complete>; rel="successor-version"',
+            },
+        )
 
     # Health check endpoint
     @app.get("/health", response_model=HealthResponse, tags=["system"])
@@ -289,6 +320,19 @@ def create_app(
             **health,
         }
 
+    # === Service Provider Lifecycle ===
+    @app.on_event("startup")
+    async def startup_service_providers() -> None:
+        """Initialize service providers on app startup."""
+        try:
+            from services.providers import setup_providers
+            await setup_providers()
+            logger.info("Service providers initialized")
+        except ImportError as e:
+            logger.warning(f"Could not initialize service providers: {e}")
+        except Exception as e:
+            logger.error(f"Error initializing service providers: {e}")
+
     # SaaS lifecycle events
     if HAS_SAAS_CONFIG and init_saas_clients is not None:
 
@@ -318,23 +362,54 @@ def create_app(
             "docs": "/docs",
             "health": "/health",
             "endpoints": {
+                # === AGENTESE Gateway (Primary API) ===
+                "gateway": {
+                    "discover": "GET /agentese/discover",
+                    "manifest": "GET /agentese/{context}/{holon}/manifest",
+                    "invoke": "POST /agentese/{context}/{holon}/{aspect}",
+                    "affordances": "GET /agentese/{context}/{holon}/affordances",
+                    "stream": "GET /agentese/{context}/{holon}/{aspect}/stream (SSE)",
+                    "websocket": "WS /agentese/ws/{context}/{holon}",
+                },
+                # === Crown Jewels (via AGENTESE Gateway) ===
+                "brain": {
+                    "manifest": "GET /agentese/self/memory/manifest",
+                    "capture": "POST /agentese/self/memory/capture",
+                    "search": "POST /agentese/self/memory/search",
+                    "topology": "GET /agentese/self/memory/topology",
+                },
+                "town": {
+                    "manifest": "GET /agentese/world/town/manifest",
+                    "citizen_list": "POST /agentese/world/town/citizen/list",
+                    "citizen_get": "POST /agentese/world/town/citizen/get",
+                    "converse": "POST /agentese/world/town/converse",
+                    "inhabit": "/agentese/world/town/inhabit/*",
+                },
+                "atelier": {
+                    "manifest": "GET /agentese/world/atelier/manifest",
+                    "workshop": "/agentese/world/atelier/workshop/*",
+                    "artisan": "/agentese/world/atelier/artisan/*",
+                    "contribute": "POST /agentese/world/atelier/contribute",
+                    "exhibition": "/agentese/world/atelier/exhibition/*",
+                    "gallery": "/agentese/world/atelier/gallery/*",
+                },
+                "park": {
+                    "manifest": "GET /agentese/world/park/manifest",
+                    "host": "/agentese/world/park/host/*",
+                    "episode": "/agentese/world/park/episode/*",
+                    "location": "/agentese/world/park/location/*",
+                },
+                "morpheus": {
+                    "manifest": "GET /agentese/world/morpheus/manifest",
+                    "complete": "POST /agentese/world/morpheus/complete",
+                    "providers": "GET /agentese/world/morpheus/providers",
+                    "health": "GET /agentese/world/morpheus/health",
+                    "legacy": "POST /v1/chat/completions (307 redirect)",
+                },
+                # === Non-AGENTESE Endpoints ===
                 "soul": {
                     "governance": "/v1/soul/governance",
                     "dialogue": "/v1/soul/dialogue",
-                },
-                "agentese": {
-                    "invoke": "/v1/agentese/invoke",
-                    "resolve": "/v1/agentese/resolve",
-                    "affordances": "/v1/agentese/affordances",
-                },
-                "aup": {
-                    "manifest": "/api/v1/{context}/{holon}/manifest",
-                    "invoke": "/api/v1/{context}/{holon}/{aspect}",
-                    "affordances": "/api/v1/{context}/{holon}/affordances",
-                    "compose": "/api/v1/compose",
-                    "stream": "/api/v1/{context}/{holon}/{aspect}/stream",
-                    "resolve": "/api/v1/{context}/{holon}/resolve",
-                    "verify_laws": "/api/v1/verify-laws",
                 },
                 "kgent": {
                     "sessions": "/v1/kgent/sessions",
@@ -344,81 +419,33 @@ def create_app(
                     "stripe": "/webhooks/stripe",
                     "stripe_health": "/webhooks/stripe/health",
                 },
-                "town": {
-                    "create": "POST /v1/town",
-                    "get": "GET /v1/town/{town_id}",
-                    "citizens": "GET /v1/town/{town_id}/citizens",
-                    "citizen": "GET /v1/town/{town_id}/citizen/{name}",
-                    "live": "GET /v1/town/{town_id}/live",
-                },
                 "nphase": {
                     "sessions": "GET /v1/nphase/sessions",
                     "create": "POST /v1/nphase/sessions",
-                    "get": "GET /v1/nphase/sessions/{id}",
                     "advance": "POST /v1/nphase/sessions/{id}/advance",
-                    "checkpoint": "POST /v1/nphase/sessions/{id}/checkpoint",
-                    "handles": "GET /v1/nphase/sessions/{id}/handles",
-                    "detect": "POST /v1/nphase/sessions/{id}/detect",
                 },
                 "workshop": {
                     "get": "GET /v1/workshop",
-                    "assign_task": "POST /v1/workshop/task",
                     "stream": "GET /v1/workshop/stream",
                     "status": "GET /v1/workshop/status",
-                    "builders": "GET /v1/workshop/builders",
-                    "builder": "GET /v1/workshop/builder/{archetype}",
-                    "whisper": "POST /v1/workshop/builder/{archetype}/whisper",
-                    "perturb": "POST /v1/workshop/perturb",
-                    "reset": "POST /v1/workshop/reset",
-                    "artifacts": "GET /v1/workshop/artifacts",
-                },
-                "atelier": {
-                    "artisans": "GET /api/atelier/artisans",
-                    "commission": "POST /api/atelier/commission (SSE stream)",
-                    "collaborate": "POST /api/atelier/collaborate (SSE stream)",
-                    "gallery": "GET /api/atelier/gallery",
-                    "piece": "GET /api/atelier/gallery/{id}",
-                    "lineage": "GET /api/atelier/gallery/{id}/lineage",
-                    "search": "GET /api/atelier/gallery/search",
-                    "queue": "POST /api/atelier/queue",
-                    "pending": "GET /api/atelier/queue/pending",
-                    "process": "POST /api/atelier/queue/process (SSE stream)",
-                    "status": "GET /api/atelier/status",
                 },
                 "gallery": {
                     "all": "GET /api/gallery",
                     "categories": "GET /api/gallery/categories",
-                    "pilot": "GET /api/gallery/{pilot_name}",
                 },
                 "gestalt": {
                     "manifest": "GET /v1/world/codebase/manifest",
                     "health": "GET /v1/world/codebase/health",
-                    "drift": "GET /v1/world/codebase/drift",
-                    "module": "GET /v1/world/codebase/module/{name}",
                     "topology": "GET /v1/world/codebase/topology",
-                    "scan": "POST /v1/world/codebase/scan",
                 },
                 "infrastructure": {
                     "status": "GET /api/infra/status",
-                    "connect": "POST /api/infra/connect",
-                    "disconnect": "POST /api/infra/disconnect",
                     "topology": "GET /api/infra/topology",
                     "topology_stream": "GET /api/infra/topology/stream (SSE)",
-                    "events_stream": "GET /api/infra/events/stream (SSE)",
-                    "health": "GET /api/infra/health",
-                    "entity": "GET /api/infra/entity/{entity_id}",
                 },
-                "park": {
-                    "scenario": "GET /api/park/scenario",
-                    "start": "POST /api/park/scenario/start",
-                    "tick": "POST /api/park/scenario/tick",
-                    "phase": "POST /api/park/scenario/phase",
-                    "mask": "POST /api/park/scenario/mask",
-                    "force": "POST /api/park/scenario/force",
-                    "complete": "POST /api/park/scenario/complete",
-                    "masks": "GET /api/park/masks",
-                    "mask_detail": "GET /api/park/masks/{name}",
-                    "status": "GET /api/park/status",
+                "websocket": {
+                    "brain": "WS /ws/brain",
+                    "town": "WS /ws/town/{town_id}",
                 },
             },
         }

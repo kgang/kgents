@@ -128,13 +128,13 @@ export function CrownContext() {
       const newState: CrownState = { loading: false };
 
       // Brain crystal count
-      if (brainRes.status === 'fulfilled' && brainRes.value.data) {
-        newState.crystalCount = brainRes.value.data.concept_count;
+      if (brainRes.status === 'fulfilled' && brainRes.value) {
+        newState.crystalCount = brainRes.value.concept_count;
       }
 
       // Garden season and session
-      if (gardenRes.status === 'fulfilled' && gardenRes.value.data) {
-        const garden = gardenRes.value.data;
+      if (gardenRes.status === 'fulfilled' && gardenRes.value) {
+        const garden = gardenRes.value;
         newState.season = garden.season;
 
         // Check if there's an active Gardener session

@@ -754,6 +754,38 @@ class PlotResponse(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
+class PlotCreateRequest(BaseModel):
+    """Request to create a new garden plot (Phase 2 Crown Jewels completion)."""
+
+    name: str = Field(..., description="Plot name", min_length=1, max_length=100)
+    path: str = Field(..., description="AGENTESE path (e.g., world.feature.foo)")
+    description: str = Field(default="", max_length=500)
+    plan_path: Optional[str] = Field(default=None, description="Path to linked plan file")
+    crown_jewel: Optional[str] = Field(default=None, description="Linked Crown Jewel name")
+    rigidity: float = Field(default=0.5, ge=0.0, le=1.0, description="Plot plasticity")
+    tags: list[str] = Field(default_factory=list, description="Plot tags")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Custom metadata")
+
+
+class PlotUpdateRequest(BaseModel):
+    """Request to update a garden plot (Phase 2 Crown Jewels completion)."""
+
+    description: Optional[str] = Field(default=None, max_length=500)
+    progress: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    rigidity: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    season_override: Optional[GardenSeason] = None
+    tags: Optional[list[str]] = None
+    metadata: Optional[dict[str, Any]] = None
+
+
+class PlotListResponse(BaseModel):
+    """Response containing list of garden plots (Phase 2 Crown Jewels completion)."""
+
+    plots: list[PlotResponse]
+    total_count: int
+    active_plot: Optional[str] = None
+
+
 class GardenMetricsResponse(BaseModel):
     """Garden health metrics."""
 

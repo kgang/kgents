@@ -727,11 +727,12 @@ export default function Gestalt() {
     setError(null);
     try {
       // Sprint 2: Pass observer role to API for observer-dependent views
-      const response = await gestaltApi.getTopology(filters.maxNodes, 0.0, observer);
-      setTopology(response.data);
+      // gestaltApi now returns unwrapped data (AGENTESE pattern)
+      const topology = await gestaltApi.getTopology(filters.maxNodes, 0.0, observer);
+      setTopology(topology);
 
       // Foundation 5: Celebrate A+ health grade!
-      if (response.data.stats.overall_grade === 'A+') {
+      if (topology.stats.overall_grade === 'A+') {
         celebrateEpic();
       }
     } catch (err) {
@@ -753,8 +754,9 @@ export default function Gestalt() {
     }
 
     try {
-      const response = await gestaltApi.getModule(node.id);
-      setModuleDetails(response.data);
+      // gestaltApi now returns unwrapped data (AGENTESE pattern)
+      const moduleDetails = await gestaltApi.getModule(node.id);
+      setModuleDetails(moduleDetails);
     } catch (err) {
       console.error('Failed to load module details:', err);
     } finally {

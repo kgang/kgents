@@ -133,8 +133,10 @@ export function useTownStreamWidget({
       eventSourceRef.current.close();
     }
 
-    // Build URL with query params
-    const url = `/v1/town/${townId}/live?speed=${speed}&phases=${phases}&nphase_enabled=${nphaseEnabled}`;
+    // Build URL with query params - uses AUP town events endpoint
+    // Include API key as query param since EventSource can't send headers
+    const apiKey = localStorage.getItem('api_key') || 'kg_dev_bob';
+    const url = `/api/v1/town/${townId}/events?speed=${speed}&phases=${phases}&nphase_enabled=${nphaseEnabled}&api_key=${apiKey}`;
     console.log('[SSE Widget] Connecting to:', url);
 
     const es = new EventSource(url);
@@ -144,44 +146,70 @@ export function useTownStreamWidget({
     es.onopen = () => {
       console.log('[SSE Widget] Connected');
       setIsConnected(true);
+      setIsPlaying(true);
       callbacksRef.current.onConnect?.();
     };
 
-    // Handle live.start event
-    es.addEventListener('live.start', (e) => {
+    // Handle town.status event (initial status from AUP)
+    es.addEventListener('town.status', (e) => {
       const data = JSON.parse(e.data);
-      console.log('[SSE Widget] Stream started:', data);
-      setIsPlaying(true);
+      console.log('[SSE Widget] Status:', data);
+      // Transform status into partial dashboard state
+      setDashboard((prev) => ({
+        ...prev,
+        phase: data.phase || 'MORNING',
+        day: data.day || 1,
+        citizens: prev?.citizens || [],
+      } as ColonyDashboardJSON));
     });
 
-    // Handle live.state event (main dashboard state)
-    es.addEventListener('live.state', (e) => {
-      const state: ColonyDashboardJSON = JSON.parse(e.data);
-      console.log('[SSE Widget] State update:', state.citizens?.length ?? 0, 'citizens');
-      setDashboard(state);
-      callbacksRef.current.onDashboard?.(state);
+    // Handle town.isometric event (widget state with citizens from AUP)
+    es.addEventListener('town.isometric', (e) => {
+      const widget = JSON.parse(e.data);
+      console.log('[SSE Widget] Isometric update:', widget.citizens?.length ?? 0, 'citizens');
+      // Transform isometric widget data into ColonyDashboardJSON
+      const dashboardState: ColonyDashboardJSON = {
+        type: 'colony_dashboard',
+        colony_id: townId,
+        phase: widget.phase || 'MORNING',
+        day: widget.day || 1,
+        grid_cols: 3,
+        selected_citizen_id: null,
+        citizens: (widget.citizens || []).map((c: any) => ({
+          citizen_id: c.id || c.citizen_id,
+          name: c.name,
+          archetype: c.archetype,
+          region: c.region,
+          phase: c.phase,
+          position: c.position || { x: 0, y: 0 },
+          energy: c.energy ?? 1.0,
+          mood: c.mood ?? 0.5,
+        })),
+        metrics: widget.metrics || { tension: 0, cooperation: 0, accursed_surplus: 0 },
+      };
+      setDashboard(dashboardState);
+      callbacksRef.current.onDashboard?.(dashboardState);
     });
 
-    // Handle live.event event (individual simulation events)
+    // Handle town.event event (individual simulation events from AUP)
     // Uses batched handler to reduce render frequency
-    es.addEventListener('live.event', (e) => {
+    es.addEventListener('town.event', (e) => {
       const event: TownEvent = JSON.parse(e.data);
       console.log('[SSE Widget] Event:', event.operation, event.participants);
       addBatchedEvent(event);
     });
 
-    // Handle live.phase event (phase transitions)
-    es.addEventListener('live.phase', (e) => {
-      const data = JSON.parse(e.data);
-      console.log('[SSE Widget] Phase change:', data.phase);
+    // Legacy event names for compatibility
+    es.addEventListener('live.state', (e) => {
+      const state: ColonyDashboardJSON = JSON.parse(e.data);
+      console.log('[SSE Widget] Live state update:', state.citizens?.length ?? 0, 'citizens');
+      setDashboard(state);
+      callbacksRef.current.onDashboard?.(state);
     });
 
-    // Handle live.end event
-    es.addEventListener('live.end', (e) => {
-      const data = JSON.parse(e.data);
-      console.log('[SSE Widget] Stream ended:', data);
-      setIsPlaying(false);
-      callbacksRef.current.onDisconnect?.();
+    es.addEventListener('live.event', (e) => {
+      const event: TownEvent = JSON.parse(e.data);
+      addBatchedEvent(event);
     });
 
     // Error handler

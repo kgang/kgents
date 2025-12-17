@@ -29,7 +29,7 @@ from .errors import (
 from .protocol import BaseDgent, DgentProtocol
 
 # Router and Bus
-from .router import DgentRouter
+from .router import Backend, BackendStatus, DgentRouter
 from .bus import BusEnabledDgent, DataBus, DataEvent, DataEventType
 
 # Auto-Upgrader
@@ -71,18 +71,19 @@ from .lens import (
 )
 from .lens_agent import LensAgent, focused
 
-# Legacy support (DEPRECATED - kept for backward compatibility)
+# Adapters (Dual-Track Architecture)
+from .adapters import TableAdapter
+
+# Core stateful agents (NOT deprecated - actively used)
 from .volatile import VolatileAgent
 from .persistent import PersistentAgent
 from .symbiont import Symbiont
-from .legacy import (
-    MemoryConfig,
-    MemoryLoadResponse,
-    MemoryPolynomialAgent,
-    UnifiedMemory,
-    WitnessReport,
-)
 from .state_monad import StateMonadFunctor
+
+# Legacy stubs removed - deprecated classes deleted:
+# - UnifiedMemory, MemoryConfig, MemoryLoadResponse
+# - MemoryPolynomialAgent, WitnessReport
+# Use DgentProtocol, DataBus, PolyAgent instead.
 
 __all__ = [
     # Core Types
@@ -96,6 +97,8 @@ __all__ = [
     "SQLiteBackend",
     "PostgresBackend",
     # Router
+    "Backend",
+    "BackendStatus",
     "DgentRouter",
     # Bus
     "DataBus",
@@ -140,14 +143,11 @@ __all__ = [
     "validate_composed_lens",
     "LensAgent",
     "focused",
-    # Legacy (DEPRECATED)
+    # Adapters
+    "TableAdapter",
+    # Core stateful agents (not deprecated)
     "VolatileAgent",
     "PersistentAgent",
     "Symbiont",
-    "MemoryConfig",
-    "MemoryLoadResponse",
-    "MemoryPolynomialAgent",
-    "UnifiedMemory",
-    "WitnessReport",
     "StateMonadFunctor",
 ]

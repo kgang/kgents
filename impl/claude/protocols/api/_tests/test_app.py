@@ -89,11 +89,11 @@ class TestRootEndpoint:
         # Check endpoints - now nested by service
         endpoints = data["endpoints"]
         assert "soul" in endpoints
-        assert "agentese" in endpoints
+        assert "gateway" in endpoints  # AGENTESE Universal Gateway
         assert "kgent" in endpoints
         assert endpoints["soul"]["governance"] == "/v1/soul/governance"
         assert endpoints["soul"]["dialogue"] == "/v1/soul/dialogue"
-        assert endpoints["agentese"]["invoke"] == "/v1/agentese/invoke"
+        assert endpoints["gateway"]["invoke"] == "POST /agentese/{context}/{holon}/{aspect}"
         assert endpoints["kgent"]["sessions"] == "/v1/kgent/sessions"
 
 

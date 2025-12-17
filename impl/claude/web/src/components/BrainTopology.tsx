@@ -1,24 +1,29 @@
 /**
  * BrainTopology - 3D Visualization of Holographic Memory
  *
- * Spike 3B: Cartography 3D Enhancement
+ * A living visualization of the memory crystal field.
+ *
+ * Design Philosophy:
+ *   "Memories are not data points—they are living crystallizations of thought."
  *
  * Features:
- * - Force-directed 3D graph using three.js/react-three-fiber
- * - Crystal nodes with decay-based opacity (fresh=bright, fading=ghost)
- * - Hub crystal highlighting (larger, glowing)
- * - Click-to-expand crystal sidebar
+ * - OrganicCrystal nodes with breathing animation and resolution rings
+ * - CrystalVine curved connections with flow particles
+ * - Hub crystal highlighting with orbital rings
  * - Gap detection visualization (sparse regions highlighted)
  * - Mobile touch gestures for rotation/zoom
+ * - Cymatics background for ambient depth
+ *
+ * @see docs/creative/emergence-principles.md
+ * @see docs/skills/3d-lighting-patterns.md
  */
 
 import { useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Line } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import type {
   TopologyNode,
-  TopologyEdge,
   TopologyGap,
   BrainTopologyResponse,
 } from '../api/types';
@@ -27,6 +32,9 @@ import { SceneEffects } from './three/SceneEffects';
 import { QualitySelector } from './three/QualitySelector';
 import { calculateCenteredShadowBounds } from '../utils/three/calculateShadowBounds';
 import { useSceneContext } from '../hooks/useSceneContext';
+import { OrganicCrystal } from './brain/OrganicCrystal';
+import { SmartCrystalVine } from './brain/CrystalVine';
+import { PatternTile, PATTERN_PRESETS } from './three/CymaticsSampler';
 
 // =============================================================================
 // Types
@@ -41,178 +49,23 @@ interface BrainTopologyProps {
   showLabels?: boolean;
 }
 
-interface CrystalNodeProps {
-  node: TopologyNode;
-  isHub: boolean;
-  isSelected: boolean;
-  onClick: () => void;
-}
-
-interface TopologyEdgeProps {
-  edge: TopologyEdge;
-  nodes: Map<string, TopologyNode>;
-}
+// Note: Density type is used by OrganicCrystal internally
 
 interface GapSphereProps {
   gap: TopologyGap;
 }
 
 // =============================================================================
-// Color Utilities
+// NOTE: CrystalNode and TopologyEdgeComponent have been replaced by:
+// - OrganicCrystal (from ./brain/OrganicCrystal)
+// - SmartCrystalVine (from ./brain/CrystalVine)
+//
+// These new components implement emergence principles:
+// - Breathing animation
+// - Resolution rings (like tree rings)
+// - Curved organic connections
+// - Flow particles for active edges
 // =============================================================================
-
-/**
- * Get color based on resolution (decay state).
- * Fresh (1.0) = bright cyan/blue
- * Fading (0.5) = purple
- * Ghost (0.1) = dim gray
- */
-function getNodeColor(resolution: number, isHot: boolean): THREE.Color {
-  if (isHot) {
-    // Hot nodes are orange/gold
-    return new THREE.Color().setHSL(0.08, 0.9, 0.5 + resolution * 0.3);
-  }
-  // Normal nodes transition from cyan (fresh) to purple (fading) to gray (ghost)
-  const hue = 0.55 - resolution * 0.15; // 0.55 (cyan) to 0.4 (blue-purple)
-  const saturation = resolution * 0.8;
-  const lightness = 0.3 + resolution * 0.4;
-  return new THREE.Color().setHSL(hue, saturation, lightness);
-}
-
-/**
- * Get node size based on access count and hub status.
- */
-function getNodeSize(accessCount: number, isHub: boolean, resolution: number): number {
-  const baseSize = 0.15;
-  const accessBonus = Math.min(accessCount * 0.02, 0.2);
-  const hubBonus = isHub ? 0.15 : 0;
-  const resolutionFactor = 0.5 + resolution * 0.5;
-  return (baseSize + accessBonus + hubBonus) * resolutionFactor;
-}
-
-// =============================================================================
-// Crystal Node Component
-// =============================================================================
-
-function CrystalNode({ node, isHub, isSelected, onClick }: CrystalNodeProps) {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  // Animate on hover/select
-  useFrame(() => {
-    if (meshRef.current) {
-      const targetScale = hovered || isSelected ? 1.3 : 1.0;
-      meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.1
-      );
-    }
-  });
-
-  const color = useMemo(
-    () => getNodeColor(node.resolution, node.is_hot),
-    [node.resolution, node.is_hot]
-  );
-
-  const size = useMemo(
-    () => getNodeSize(node.access_count, isHub, node.resolution),
-    [node.access_count, isHub, node.resolution]
-  );
-
-  // Opacity based on resolution (decay visualization)
-  const opacity = useMemo(() => {
-    const minOpacity = 0.2;
-    const maxOpacity = 1.0;
-    return minOpacity + node.resolution * (maxOpacity - minOpacity);
-  }, [node.resolution]);
-
-  return (
-    <group position={[node.x, node.y, node.z]}>
-      {/* Main crystal sphere */}
-      <mesh
-        ref={meshRef}
-        castShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          onClick();
-        }}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={() => {
-          setHovered(false);
-          document.body.style.cursor = 'auto';
-        }}
-      >
-        <sphereGeometry args={[size, 16, 16]} />
-        <meshStandardMaterial
-          color={color}
-          transparent
-          opacity={opacity}
-          // Emissive for bloom: hubs glow warmly, selected glows bright
-          // Intensities increased to trigger bloom at high/cinematic quality
-          emissive={isHub || isSelected || node.is_hot ? color : undefined}
-          emissiveIntensity={
-            isSelected ? 2.0 :    // Selected: bright glow
-            isHub ? 1.5 :         // Hub: warm glow
-            node.is_hot ? 1.2 :   // Hot: noticeable glow
-            0
-          }
-        />
-      </mesh>
-
-      {/* Hub glow ring - increased opacity for bloom visibility */}
-      {isHub && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[size * 1.2, size * 1.5, 32]} />
-          <meshBasicMaterial color="#ffa500" transparent opacity={0.6} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-
-      {/* Selection ring - bright cyan for bloom halo */}
-      {isSelected && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[size * 1.3, size * 1.6, 32]} />
-          <meshBasicMaterial color="#00ffff" transparent opacity={0.7} side={THREE.DoubleSide} />
-        </mesh>
-      )}
-    </group>
-  );
-}
-
-// =============================================================================
-// Edge Component
-// =============================================================================
-
-function TopologyEdgeComponent({ edge, nodes }: TopologyEdgeProps) {
-  const sourceNode = nodes.get(edge.source);
-  const targetNode = nodes.get(edge.target);
-
-  if (!sourceNode || !targetNode) return null;
-
-  const points = useMemo(
-    () => [
-      new THREE.Vector3(sourceNode.x, sourceNode.y, sourceNode.z),
-      new THREE.Vector3(targetNode.x, targetNode.y, targetNode.z),
-    ],
-    [sourceNode, targetNode]
-  );
-
-  // Opacity based on similarity
-  const opacity = edge.similarity * 0.5;
-
-  return (
-    <Line
-      points={points}
-      color="#4a5568"
-      lineWidth={1}
-      transparent
-      opacity={opacity}
-    />
-  );
-}
 
 // =============================================================================
 // Gap Sphere Component
@@ -243,40 +96,10 @@ function GapSphereComponent({ gap }: GapSphereProps) {
 }
 
 // =============================================================================
-// Labels Component
+// NOTE: NodeLabels component has been removed.
+// Labels are now rendered by OrganicCrystal component directly,
+// with proper integration into the crystal's visual hierarchy.
 // =============================================================================
-
-function NodeLabels({ nodes, hubIds }: { nodes: TopologyNode[]; hubIds: string[] }) {
-  // Note: camera from useThree() could be used for billboard text in future
-
-  // Only show labels for hubs and high-resolution nodes
-  const visibleNodes = useMemo(
-    () =>
-      nodes.filter(
-        (n) => hubIds.includes(n.id) || n.resolution > 0.7 || n.access_count > 5
-      ),
-    [nodes, hubIds]
-  );
-
-  return (
-    <>
-      {visibleNodes.map((node) => (
-        <Text
-          key={`label-${node.id}`}
-          position={[node.x, node.y + 0.4, node.z]}
-          fontSize={0.15}
-          color="#ffffff"
-          anchorX="center"
-          anchorY="bottom"
-          outlineWidth={0.02}
-          outlineColor="#000000"
-        >
-          {node.label}
-        </Text>
-      ))}
-    </>
-  );
-}
 
 // =============================================================================
 // Scene Component
@@ -315,8 +138,28 @@ function Scene({
     [topology.nodes]
   );
 
+  // Determine which edges are connected to selected node
+  const activeEdgeSet = useMemo(() => {
+    if (!selectedNodeId) return new Set<number>();
+    const activeEdges = new Set<number>();
+    topology.edges.forEach((edge, i) => {
+      if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
+        activeEdges.add(i);
+      }
+    });
+    return activeEdges;
+  }, [selectedNodeId, topology.edges]);
+
   return (
     <>
+      {/* Cymatics background pattern - spiral for brain/memory theme */}
+      <PatternTile
+        config={PATTERN_PRESETS['spiral-5']}
+        size={60}
+        position={[0, 0, -25]}
+        animate
+      />
+
       {/* Canonical lighting from SceneLighting */}
       <SceneLighting
         quality={illuminationQuality}
@@ -330,29 +173,43 @@ function Scene({
       {/* Shadow-receiving ground plane */}
       <ShadowPlane y={-10} shadowOpacity={0.25} />
 
-      {/* Edges */}
+      {/* Organic Vine Connections (edges) */}
       {showEdges &&
-        topology.edges.map((edge, i) => (
-          <TopologyEdgeComponent key={`edge-${i}`} edge={edge} nodes={nodeMap} />
-        ))}
+        topology.edges.map((edge, i) => {
+          const sourceNode = nodeMap.get(edge.source);
+          const targetNode = nodeMap.get(edge.target);
+          if (!sourceNode || !targetNode) return null;
+
+          return (
+            <SmartCrystalVine
+              key={`vine-${i}`}
+              source={[sourceNode.x, sourceNode.y, sourceNode.z]}
+              target={[targetNode.x, targetNode.y, targetNode.z]}
+              similarity={edge.similarity}
+              isActive={activeEdgeSet.has(i)}
+              isDimmed={selectedNodeId !== null && !activeEdgeSet.has(i)}
+              animationEnabled
+            />
+          );
+        })}
 
       {/* Gaps */}
       {showGaps &&
         topology.gaps.map((gap, i) => <GapSphereComponent key={`gap-${i}`} gap={gap} />)}
 
-      {/* Nodes */}
+      {/* Organic Crystal Nodes */}
       {topology.nodes.map((node) => (
-        <CrystalNode
+        <OrganicCrystal
           key={node.id}
           node={node}
           isHub={hubSet.has(node.id)}
           isSelected={node.id === selectedNodeId}
           onClick={() => onNodeClick(node)}
+          showLabel={showLabels}
+          density="comfortable"
+          animationSpeed={1}
         />
       ))}
-
-      {/* Labels */}
-      {showLabels && <NodeLabels nodes={topology.nodes} hubIds={topology.hub_ids} />}
 
       {/* Camera Controls - mobile touch enabled */}
       <OrbitControls

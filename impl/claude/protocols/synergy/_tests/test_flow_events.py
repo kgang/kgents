@@ -5,18 +5,17 @@ Phase 1 Foundation: Cross-jewel communication events for Flow modalities.
 """
 
 import pytest
-
 from protocols.synergy.events import (
     Jewel,
     SynergyEventType,
-    # Flow event factories
-    create_flow_started_event,
-    create_flow_completed_event,
-    create_turn_completed_event,
-    create_hypothesis_created_event,
-    create_hypothesis_synthesized_event,
     create_consensus_reached_event,
     create_contribution_posted_event,
+    create_flow_completed_event,
+    # Flow event factories
+    create_flow_started_event,
+    create_hypothesis_created_event,
+    create_hypothesis_synthesized_event,
+    create_turn_completed_event,
 )
 
 

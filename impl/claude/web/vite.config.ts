@@ -16,6 +16,17 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Service module aliases (AD-009 Metaphysical Fullstack)
+      // These point to future co-located frontend components in services/
+      '@brain': path.resolve(__dirname, '../services/brain/web'),
+      '@town': path.resolve(__dirname, '../services/town/web'),
+      '@atelier': path.resolve(__dirname, '../services/atelier/web'),
+      '@park': path.resolve(__dirname, '../services/park/web'),
+      '@gardener': path.resolve(__dirname, '../services/gardener/web'),
+      '@coalition': path.resolve(__dirname, '../services/coalition/web'),
+      '@gestalt': path.resolve(__dirname, '../services/gestalt/web'),
+      // Shared components stay central
+      '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
   server: {
@@ -29,9 +40,18 @@ export default defineConfig({
         target: 'http://localhost:8000',
         changeOrigin: true,
       },
+      '/agentese': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
+      '/health': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+      },
       '/ws': {
         target: 'ws://localhost:8000',
         ws: true,
+        changeOrigin: true,
       },
     },
   },

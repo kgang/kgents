@@ -145,17 +145,24 @@ def clear_api_keys() -> None:
 
 
 if HAS_FASTAPI:
+    from fastapi import Query
 
     async def get_api_key(
-        x_api_key: str = Header(..., alias="X-API-Key"),
+        x_api_key: str = Header(None, alias="X-API-Key"),
+        api_key_query: str = Query(None, alias="api_key"),
     ) -> ApiKeyData:
         """
         FastAPI dependency for API key authentication.
 
-        Validates the API key from the X-API-Key header.
+        Supports both header and query param for API key:
+        - Header: X-API-Key (preferred for regular requests)
+        - Query: ?api_key=... (needed for SSE/EventSource which can't send headers)
+
+        Validates the API key from header or query param.
 
         Args:
-            x_api_key: API key from request header
+            x_api_key: API key from X-API-Key header (preferred)
+            api_key_query: API key from query param (for SSE/EventSource)
 
         Returns:
             Validated ApiKeyData
@@ -163,15 +170,24 @@ if HAS_FASTAPI:
         Raises:
             HTTPException: 401 if key is invalid or missing
         """
+        # Use header if present, otherwise fall back to query param
+        api_key = x_api_key or api_key_query
+
+        if api_key is None:
+            raise HTTPException(
+                status_code=401,
+                detail="API key required. Provide via X-API-Key header or api_key query param.",
+            )
+
         # Validate format
-        if not validate_api_key_format(x_api_key):
+        if not validate_api_key_format(api_key):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid API key format. Keys must start with 'kg_'",
             )
 
         # Look up key
-        key_data = lookup_api_key(x_api_key)
+        key_data = lookup_api_key(api_key)
         if key_data is None:
             raise HTTPException(
                 status_code=401,

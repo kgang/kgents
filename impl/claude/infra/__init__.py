@@ -38,9 +38,8 @@ Usage:
     # Access storage (Left Hemisphere)
     await cortex.storage.relational.execute("SELECT ...")
 
-    # Access semantics (Right Hemisphere via D-gent adapter)
-    from agents.d import UnifiedMemory
-    memory = UnifiedMemory.from_cortex(cortex)
+    # Access semantics (Right Hemisphere via M-gent)
+    # Use AssociativeMemory for semantic search, SoulMemory for identity
 """
 
 from .ground import (

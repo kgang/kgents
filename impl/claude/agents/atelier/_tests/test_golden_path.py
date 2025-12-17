@@ -216,6 +216,7 @@ class TestSSEResilience:
         assert hasattr(AtelierEventType, "HEARTBEAT")
         assert AtelierEventType.HEARTBEAT.value == "heartbeat"
 
+    @pytest.mark.skip(reason="protocols.api.atelier was removed during API consolidation")
     async def test_commission_status_tracking(self, temp_gallery):
         """Verify commission status is tracked for fallback polling."""
         from protocols.api.atelier import (

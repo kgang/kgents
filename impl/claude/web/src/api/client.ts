@@ -36,6 +36,108 @@ import type {
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
+// =============================================================================
+// AGENTESE Universal Protocol Types
+// =============================================================================
+
+/**
+ * AGENTESE Gateway response wrapper.
+ * All AGENTESE routes wrap the actual result in this envelope.
+ */
+interface AgenteseResponse<T> {
+  path: string;
+  aspect: string;
+  result: T;
+  error?: string;
+}
+
+/**
+ * Error type for AGENTESE-specific failures.
+ */
+export class AgenteseError extends Error {
+  constructor(
+    message: string,
+    public readonly path: string,
+    public readonly aspect?: string,
+    public readonly suggestion?: string
+  ) {
+    super(message);
+    this.name = 'AgenteseError';
+  }
+}
+
+/**
+ * Helper to extract the result from AGENTESE gateway response.
+ * Robustified to handle edge cases and provide informative errors.
+ *
+ * @throws {AgenteseError} If response envelope is malformed or contains an error
+ */
+function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
+  // Check for missing data envelope
+  if (!response.data) {
+    throw new AgenteseError(
+      'AGENTESE response missing data envelope',
+      'unknown',
+      undefined,
+      'Check backend logs for route handler errors'
+    );
+  }
+
+  // Check for AGENTESE-level errors
+  if (response.data.error) {
+    throw new AgenteseError(
+      response.data.error,
+      response.data.path || 'unknown',
+      response.data.aspect,
+      'Check /agentese/discover for available paths'
+    );
+  }
+
+  // Handle case where result is explicitly undefined (valid for some aspects)
+  if (response.data.result === undefined) {
+    // Log warning in development
+    if (import.meta.env.DEV) {
+      console.warn(
+        `[AGENTESE] ${response.data.path}/${response.data.aspect} returned undefined result`
+      );
+    }
+  }
+
+  return response.data.result;
+}
+
+/**
+ * Wrap an AGENTESE API call with development logging.
+ * Use this for debugging route resolution issues.
+ *
+ * @example
+ * ```typescript
+ * const result = await withAgenteseLogging('world.town.manifest', () =>
+ *   apiClient.get('/agentese/world/town/manifest')
+ * );
+ * ```
+ */
+export async function withAgenteseLogging<T>(
+  path: string,
+  call: () => Promise<T>
+): Promise<T> {
+  if (import.meta.env.DEV) {
+    console.debug(`[AGENTESE] Calling: ${path}`);
+  }
+  try {
+    const result = await call();
+    if (import.meta.env.DEV) {
+      console.debug(`[AGENTESE] ${path} succeeded:`, result);
+    }
+    return result;
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.error(`[AGENTESE] ${path} failed:`, error);
+    }
+    throw error;
+  }
+}
+
 /**
  * Axios instance with auth interceptor.
  */
@@ -78,57 +180,180 @@ apiClient.interceptors.response.use(
 );
 
 // =============================================================================
-// Town API
+// Town API - AGENTESE Universal Protocol
 // =============================================================================
 
 export const townApi = {
-  create: (data: CreateTownRequest = {}) => apiClient.post<Town>('/v1/town', data),
+  /**
+   * Initialize a new town via AUP: /api/v1/town/{town_id}/init
+   * Uses AUP routes (multi-tenant) instead of AGENTESE singleton.
+   */
+  create: async (data: CreateTownRequest = {}): Promise<Town> => {
+    // Generate a town ID if not creating demo
+    const townId = data.name?.toLowerCase().replace(/\s+/g, '-') || `town-${Date.now()}`;
+    const response = await apiClient.post<{
+      town_id: string;
+      status: string;
+      citizens: string[];
+      num_citizens: number;
+      dialogue: { enabled: boolean };
+    }>(`/api/v1/town/${townId}/init`, {
+      num_citizens: 5,
+      enable_dialogue: data.enable_dialogue ?? false,
+    });
+    // Transform AUP response to Town type
+    return {
+      id: response.data.town_id,
+      name: data.name || 'Demo Town',
+      citizen_count: response.data.num_citizens,
+      region_count: 3, // Default regions
+      coalition_count: 0,
+      total_token_spend: 0,
+      status: response.data.status === 'initialized' ? 'active' : 'paused',
+    };
+  },
 
-  get: (townId: string) => apiClient.get<Town>(`/v1/town/${townId}`),
+  /** Get town status via AUP: /api/v1/town/{town_id}/status */
+  get: async (townId: string): Promise<Town> => {
+    const response = await apiClient.get<{
+      town_id: string;
+      day: number;
+      phase: string;
+      total_events: number;
+      tension_index: number;
+      cooperation_level: number;
+      total_tokens?: number;
+    }>(`/api/v1/town/${townId}/status`);
+    return {
+      id: response.data.town_id,
+      name: townId,
+      citizen_count: 5, // Default - actual count comes from SSE
+      region_count: 3,
+      coalition_count: 0,
+      total_token_spend: response.data.total_tokens || 0,
+      status: 'active',
+    };
+  },
 
-  delete: (townId: string) => apiClient.delete(`/v1/town/${townId}`),
+  /** Delete/stop town - not yet implemented */
+  delete: (townId: string) => apiClient.delete(`/api/v1/town/${townId}`),
 
-  getCitizens: (townId: string) => apiClient.get<CitizensResponse>(`/v1/town/${townId}/citizens`),
+  /** Step simulation via AUP: /api/v1/town/{town_id}/step */
+  step: async (townId: string, _cycles: number = 1): Promise<unknown> => {
+    const response = await apiClient.post(`/api/v1/town/${townId}/step`);
+    return response.data;
+  },
 
-  getCitizen: (townId: string, name: string, lod: number = 0, userId: string = 'anonymous') =>
-    apiClient.get<CitizenDetailResponse>(
-      `/v1/town/${townId}/citizen/${name}?lod=${lod}&user_id=${userId}`
-    ),
+  /** Get citizens - derived from isometric widget via SSE events */
+  getCitizens: async (_townId: string): Promise<CitizensResponse> => {
+    // Citizens are streamed via SSE, not available via REST
+    // Return placeholder - the SSE stream will populate
+    return { citizens: [], total: 0, by_archetype: {}, by_region: {} };
+  },
 
-  getCoalitions: (townId: string) =>
-    apiClient.get<CoalitionsResponse>(`/v1/town/${townId}/coalitions`),
+  /** Get citizen detail - not available via AUP REST, use SSE */
+  getCitizen: async (
+    _townId: string,
+    name: string,
+    _lod: number = 0,
+    _userId: string = 'anonymous'
+  ): Promise<CitizenDetailResponse> => {
+    // Citizen details come from SSE stream - return placeholder
+    return {
+      lod: 0,
+      citizen: {
+        name,
+        archetype: 'unknown',
+        region: 'unknown',
+        phase: 'IDLE',
+      },
+      cost_credits: 0,
+    };
+  },
 
-  step: (townId: string, cycles: number = 1) =>
-    apiClient.post(`/v1/town/${townId}/step`, { cycles }),
+  /** Get coalitions - not yet implemented in AUP */
+  getCoalitions: async (_townId: string): Promise<CoalitionsResponse> => {
+    return { coalitions: [], bridge_citizens: [] };
+  },
 
-  getMetrics: (townId: string, since_hours?: number) =>
-    apiClient.get(`/v1/town/${townId}/metrics`, {
-      params: since_hours ? { since_hours } : undefined,
-    }),
+  /** Get metrics - available via status endpoint */
+  getMetrics: async (townId: string, _since_hours?: number): Promise<unknown> => {
+    const response = await apiClient.get(`/api/v1/town/${townId}/status`);
+    return response.data;
+  },
 };
 
 // =============================================================================
-// INHABIT API
+// INHABIT API - AGENTESE Universal Protocol
 // =============================================================================
 
 export const inhabitApi = {
-  start: (townId: string, citizenId: string, forceEnabled: boolean = false) =>
-    apiClient.post(`/v1/town/${townId}/inhabit/${citizenId}`, { force_enabled: forceEnabled }),
+  /** Start inhabit via AGENTESE: world.town.inhabit.start */
+  start: async (
+    _townId: string,
+    citizenId: string,
+    forceEnabled: boolean = false
+  ): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/start',
+      { citizen_id: citizenId, force_enabled: forceEnabled }
+    );
+    return unwrapAgentese(response);
+  },
 
-  getStatus: (townId: string, citizenId: string) =>
-    apiClient.get(`/v1/town/${townId}/inhabit/${citizenId}/status`),
+  /** Get inhabit status via AGENTESE: world.town.inhabit.status */
+  getStatus: async (_townId: string, citizenId: string): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/status',
+      { citizen_id: citizenId }
+    );
+    return unwrapAgentese(response);
+  },
 
-  suggest: (townId: string, citizenId: string, action: string) =>
-    apiClient.post(`/v1/town/${townId}/inhabit/${citizenId}/suggest`, { action }),
+  /** Suggest action via AGENTESE: world.town.inhabit.suggest */
+  suggest: async (_townId: string, citizenId: string, action: string): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/suggest',
+      { citizen_id: citizenId, action }
+    );
+    return unwrapAgentese(response);
+  },
 
-  force: (townId: string, citizenId: string, action: string, severity: number = 0.2) =>
-    apiClient.post(`/v1/town/${townId}/inhabit/${citizenId}/force`, { action, severity }),
+  /** Force action via AGENTESE: world.town.inhabit.force */
+  force: async (
+    _townId: string,
+    citizenId: string,
+    action: string,
+    severity: number = 0.2
+  ): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/force',
+      { citizen_id: citizenId, action, severity }
+    );
+    return unwrapAgentese(response);
+  },
 
-  apologize: (townId: string, citizenId: string, sincerity: number = 0.3) =>
-    apiClient.post(`/v1/town/${townId}/inhabit/${citizenId}/apologize`, { sincerity }),
+  /** Apologize via AGENTESE: world.town.inhabit.apologize */
+  apologize: async (
+    _townId: string,
+    citizenId: string,
+    sincerity: number = 0.3
+  ): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/apologize',
+      { citizen_id: citizenId, sincerity }
+    );
+    return unwrapAgentese(response);
+  },
 
-  end: (townId: string, citizenId: string) =>
-    apiClient.delete(`/v1/town/${townId}/inhabit/${citizenId}`),
+  /** End inhabit via AGENTESE: world.town.inhabit.end */
+  end: async (_townId: string, citizenId: string): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/world/town/inhabit/end',
+      { citizen_id: citizenId }
+    );
+    return unwrapAgentese(response);
+  },
 };
 
 // =============================================================================
@@ -246,63 +471,125 @@ export const galleryApi = {
 };
 
 // =============================================================================
-// Brain API (Holographic Brain)
+// Brain API (Holographic Brain) - AGENTESE Universal Protocol
 // =============================================================================
 
 export const brainApi = {
-  /** Capture content to holographic memory */
-  capture: (data: BrainCaptureRequest) =>
-    apiClient.post<BrainCaptureResponse>('/v1/brain/capture', data),
+  /** Capture content to holographic memory via AGENTESE: self.memory.capture */
+  capture: async (data: BrainCaptureRequest): Promise<BrainCaptureResponse> => {
+    const response = await apiClient.post<AgenteseResponse<BrainCaptureResponse>>(
+      '/agentese/self/memory/capture',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Surface ghost memories based on context */
-  ghost: (data: BrainGhostRequest) => apiClient.post<BrainGhostResponse>('/v1/brain/ghost', data),
+  /** Surface ghost memories via AGENTESE: self.memory.ghost */
+  ghost: async (data: BrainGhostRequest): Promise<BrainGhostResponse> => {
+    const response = await apiClient.post<AgenteseResponse<BrainGhostResponse>>(
+      '/agentese/self/memory/ghost',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get brain topology/cartography */
-  getMap: () => apiClient.get<BrainMapResponse>('/v1/brain/map'),
+  /** Get brain map via AGENTESE: self.memory.map */
+  getMap: async (): Promise<BrainMapResponse> => {
+    const response = await apiClient.get<AgenteseResponse<BrainMapResponse>>(
+      '/agentese/self/memory/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get brain status */
-  getStatus: () => apiClient.get<BrainStatusResponse>('/v1/brain/status'),
+  /** Get brain status via AGENTESE: self.memory.manifest */
+  getStatus: async (): Promise<BrainStatusResponse> => {
+    const response = await apiClient.get<AgenteseResponse<BrainStatusResponse>>(
+      '/agentese/self/memory/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get 3D topology data for visualization */
-  getTopology: (similarityThreshold = 0.3) =>
-    apiClient.get<BrainTopologyResponse>('/v1/brain/topology', {
-      params: { similarity_threshold: similarityThreshold },
-    }),
+  /** Get 3D topology data via AGENTESE: self.memory.topology */
+  getTopology: async (similarityThreshold = 0.3): Promise<BrainTopologyResponse> => {
+    const response = await apiClient.post<AgenteseResponse<BrainTopologyResponse>>(
+      '/agentese/self/memory/topology',
+      { similarity_threshold: similarityThreshold }
+    );
+    return unwrapAgentese(response);
+  },
 };
 
 // =============================================================================
-// Gestalt API (Living Architecture Visualizer)
+// Gestalt API (Living Architecture Visualizer) - AGENTESE Universal Protocol
+// Routes:
+//   world.codebase.manifest - Architecture overview
+//   world.codebase.health - Health metrics
+//   world.codebase.topology - 3D visualization data
+//   world.codebase.module/* - Module details
+//   world.codebase.scan - Trigger rescan
 // =============================================================================
 
 export const gestaltApi = {
-  /** Get full architecture manifest */
-  getManifest: () => apiClient.get<CodebaseManifestResponse>('/v1/world/codebase/manifest'),
+  /** Get full architecture manifest via AGENTESE: world.codebase.manifest */
+  getManifest: async (): Promise<CodebaseManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<CodebaseManifestResponse>>(
+      '/agentese/world/codebase/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get health metrics summary */
-  getHealth: () => apiClient.get<CodebaseHealthResponse>('/v1/world/codebase/health'),
+  /** Get health metrics summary via AGENTESE: world.codebase.health */
+  getHealth: async (): Promise<CodebaseHealthResponse> => {
+    const response = await apiClient.get<AgenteseResponse<CodebaseHealthResponse>>(
+      '/agentese/world/codebase/health'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get drift violations */
-  getDrift: () => apiClient.get<CodebaseDriftResponse>('/v1/world/codebase/drift'),
+  /** Get drift violations via AGENTESE: world.codebase.drift */
+  getDrift: async (): Promise<CodebaseDriftResponse> => {
+    const response = await apiClient.get<AgenteseResponse<CodebaseDriftResponse>>(
+      '/agentese/world/codebase/drift'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get module details */
-  getModule: (moduleName: string) =>
-    apiClient.get<CodebaseModuleResponse>(`/v1/world/codebase/module/${encodeURIComponent(moduleName)}`),
+  /** Get module details via AGENTESE: world.codebase.module.get */
+  getModule: async (moduleName: string): Promise<CodebaseModuleResponse> => {
+    const response = await apiClient.post<AgenteseResponse<CodebaseModuleResponse>>(
+      '/agentese/world/codebase/module/get',
+      { module_name: moduleName }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get topology for visualization (Sprint 2: observer-dependent views) */
-  getTopology: (maxNodes = 200, minHealth = 0.0, role?: string) =>
-    apiClient.get<CodebaseTopologyResponse>('/v1/world/codebase/topology', {
-      params: {
+  /** Get topology for visualization via AGENTESE: world.codebase.topology */
+  getTopology: async (
+    maxNodes = 200,
+    minHealth = 0.0,
+    role?: string
+  ): Promise<CodebaseTopologyResponse> => {
+    const response = await apiClient.post<AgenteseResponse<CodebaseTopologyResponse>>(
+      '/agentese/world/codebase/topology',
+      {
         max_nodes: maxNodes,
         min_health: minHealth,
-        ...(role && { role }), // Sprint 2: Observer role
-      },
-    }),
+        ...(role && { role }), // Observer role for observer-dependent views
+      }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Force rescan of codebase */
-  scan: (language = 'python', path?: string) =>
-    apiClient.post<CodebaseScanResponse>('/v1/world/codebase/scan', { language, path }),
+  /** Force rescan of codebase via AGENTESE: world.codebase.scan */
+  scan: async (language = 'python', path?: string): Promise<CodebaseScanResponse> => {
+    const response = await apiClient.post<AgenteseResponse<CodebaseScanResponse>>(
+      '/agentese/world/codebase/scan',
+      { language, path }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Create EventSource for topology stream (Sprint 1: Live Architecture) */
+  /** Create EventSource for topology stream via AGENTESE: world.codebase.topology/stream */
   createTopologyStream: (options?: {
     maxNodes?: number;
     minHealth?: number;
@@ -314,7 +601,8 @@ export const gestaltApi = {
     if (options?.minHealth) params.set('min_health', options.minHealth.toString());
     if (options?.pollInterval) params.set('poll_interval', options.pollInterval.toString());
     const queryString = params.toString();
-    return new EventSource(`${baseUrl}/v1/world/codebase/stream${queryString ? `?${queryString}` : ''}`);
+    // SSE endpoint uses AGENTESE gateway path
+    return new EventSource(`${baseUrl}/agentese/world/codebase/topology/stream${queryString ? `?${queryString}` : ''}`);
   },
 };
 
@@ -368,7 +656,11 @@ export const infraApi = {
 };
 
 // =============================================================================
-// Gardener API (Wave 1: Hero Path)
+// Gardener API (AGENTESE Universal Protocol)
+// Routes:
+//   concept.gardener.* - Session management
+//   self.garden.* - Idea lifecycle
+//   void.garden.* - Serendipity
 // =============================================================================
 
 import type {
@@ -396,73 +688,141 @@ interface GardenerPolynomialResponse {
 }
 
 export const gardenerApi = {
-  /** Get active session */
-  getSession: () =>
-    apiClient.get<GardenerSessionState>('/v1/gardener/session'),
+  /** Get active session via AGENTESE: concept.gardener.manifest */
+  getSession: async (): Promise<GardenerSessionState> => {
+    const response = await apiClient.get<AgenteseResponse<GardenerSessionState>>(
+      '/agentese/concept/gardener/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Create new session */
-  createSession: (data: GardenerCreateRequest = {}) =>
-    apiClient.post<GardenerSessionState>('/v1/gardener/session', data),
+  /** Create new session via AGENTESE: concept.gardener.start */
+  createSession: async (data: GardenerCreateRequest = {}): Promise<GardenerSessionState> => {
+    const response = await apiClient.post<AgenteseResponse<GardenerSessionState>>(
+      '/agentese/concept/gardener/start',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Advance to next phase */
-  advanceSession: () =>
-    apiClient.post<GardenerSessionState>('/v1/gardener/session/advance'),
+  /** Advance to next phase via AGENTESE: concept.gardener.advance */
+  advanceSession: async (): Promise<GardenerSessionState> => {
+    const response = await apiClient.post<AgenteseResponse<GardenerSessionState>>(
+      '/agentese/concept/gardener/advance',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get polynomial visualization for active session */
-  getPolynomial: () =>
-    apiClient.get<GardenerPolynomialResponse>('/v1/gardener/session/polynomial'),
+  /** Get polynomial visualization via AGENTESE: concept.gardener.polynomial */
+  getPolynomial: async (): Promise<GardenerPolynomialResponse> => {
+    const response = await apiClient.post<AgenteseResponse<GardenerPolynomialResponse>>(
+      '/agentese/concept/gardener/polynomial',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** List recent sessions */
-  listSessions: (limit = 10) =>
-    apiClient.get<GardenerSessionListResponse>('/v1/gardener/sessions', {
-      params: { limit },
-    }),
+  /** List recent sessions via AGENTESE: concept.gardener.sessions */
+  listSessions: async (limit = 10): Promise<GardenerSessionListResponse> => {
+    const response = await apiClient.post<AgenteseResponse<GardenerSessionListResponse>>(
+      '/agentese/concept/gardener/sessions',
+      { limit }
+    );
+    return unwrapAgentese(response);
+  },
 
   // =========================================================================
-  // Garden State API (Phase 7: Web Visualization)
+  // Garden State API (self.garden.* AGENTESE paths)
   // =========================================================================
 
-  /** Get garden state */
-  getGarden: () =>
-    apiClient.get<GardenStateResponse>('/v1/gardener/garden'),
+  /** Get garden state via AGENTESE: self.garden.manifest */
+  getGarden: async (): Promise<GardenStateResponse> => {
+    const response = await apiClient.get<AgenteseResponse<GardenStateResponse>>(
+      '/agentese/self/garden/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Apply a tending gesture */
-  tend: (verb: TendingVerb, target: string, options?: { tone?: number; reasoning?: string }) =>
-    apiClient.post<TendResponse>('/v1/gardener/garden/tend', {
-      verb,
-      target,
-      tone: options?.tone ?? 0.5,
-      reasoning: options?.reasoning ?? '',
-    }),
+  /** Apply a tending gesture via AGENTESE: self.garden.nurture */
+  tend: async (
+    verb: TendingVerb,
+    target: string,
+    options?: { tone?: number; reasoning?: string }
+  ): Promise<TendResponse> => {
+    const response = await apiClient.post<AgenteseResponse<TendResponse>>(
+      '/agentese/self/garden/nurture',
+      {
+        verb,
+        target,
+        tone: options?.tone ?? 0.5,
+        reasoning: options?.reasoning ?? '',
+      }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Transition garden season */
-  transitionSeason: (newSeason: GardenSeason, reason?: string) =>
-    apiClient.post<GardenStateResponse>('/v1/gardener/garden/season', {
-      new_season: newSeason,
-      reason: reason ?? '',
-    }),
+  /** Transition garden season via AGENTESE: self.garden.season */
+  transitionSeason: async (
+    newSeason: GardenSeason,
+    reason?: string
+  ): Promise<GardenStateResponse> => {
+    const response = await apiClient.post<AgenteseResponse<GardenStateResponse>>(
+      '/agentese/self/garden/season',
+      { new_season: newSeason, reason: reason ?? '' }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Focus on a specific plot */
-  focusPlot: (plotName: string) =>
-    apiClient.post<GardenStateResponse>(`/v1/gardener/garden/plot/${plotName}/focus`),
+  /** Focus on a specific plot via AGENTESE: self.garden.focus */
+  focusPlot: async (plotName: string): Promise<GardenStateResponse> => {
+    const response = await apiClient.post<AgenteseResponse<GardenStateResponse>>(
+      '/agentese/self/garden/focus',
+      { plot_name: plotName }
+    );
+    return unwrapAgentese(response);
+  },
 
   // =========================================================================
   // Auto-Inducer API (Phase 8: Season Transition Suggestions)
   // =========================================================================
 
-  /** Accept a suggested season transition */
-  acceptTransition: (fromSeason: GardenSeason, toSeason: GardenSeason) =>
-    apiClient.post<TransitionActionResponse>('/v1/gardener/garden/transition/accept', {
-      from_season: fromSeason,
-      to_season: toSeason,
-    }),
+  /** Accept a suggested season transition via AGENTESE: self.garden.transition.accept */
+  acceptTransition: async (
+    fromSeason: GardenSeason,
+    toSeason: GardenSeason
+  ): Promise<TransitionActionResponse> => {
+    const response = await apiClient.post<AgenteseResponse<TransitionActionResponse>>(
+      '/agentese/self/garden/transition/accept',
+      { from_season: fromSeason, to_season: toSeason }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Dismiss a suggested season transition */
-  dismissTransition: (fromSeason: GardenSeason, toSeason: GardenSeason) =>
-    apiClient.post<TransitionActionResponse>('/v1/gardener/garden/transition/dismiss', {
-      from_season: fromSeason,
-      to_season: toSeason,
-    }),
+  /** Dismiss a suggested season transition via AGENTESE: self.garden.transition.dismiss */
+  dismissTransition: async (
+    fromSeason: GardenSeason,
+    toSeason: GardenSeason
+  ): Promise<TransitionActionResponse> => {
+    const response = await apiClient.post<AgenteseResponse<TransitionActionResponse>>(
+      '/agentese/self/garden/transition/dismiss',
+      { from_season: fromSeason, to_season: toSeason }
+    );
+    return unwrapAgentese(response);
+  },
+
+  // =========================================================================
+  // Void Garden API (void.garden.* AGENTESE paths)
+  // =========================================================================
+
+  /** Serendipity from the void via AGENTESE: void.garden.sip */
+  surprise: async (): Promise<unknown> => {
+    const response = await apiClient.post<AgenteseResponse<unknown>>(
+      '/agentese/void/garden/sip',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
 };
 
 // Garden API types
@@ -586,44 +946,104 @@ import type {
   ParkStatusResponse,
 } from './types';
 
+// =============================================================================
+// Park API (AGENTESE Universal Protocol)
+// Routes:
+//   world.park.manifest - Park status
+//   world.park.scenario.* - Crisis practice scenarios
+//   world.park.mask.* - Dialogue masks
+//   world.park.force.* - Force mechanic
+// =============================================================================
+
 export const parkApi = {
-  /** Get current scenario state */
-  getScenario: () =>
-    apiClient.get<ParkScenarioState>('/api/park/scenario'),
+  /** Get current scenario state via AGENTESE: world.park.manifest */
+  getScenario: async (): Promise<ParkScenarioState> => {
+    const response = await apiClient.get<AgenteseResponse<ParkScenarioState>>(
+      '/agentese/world/park/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Start a new crisis practice scenario */
-  startScenario: (data: ParkStartScenarioRequest = {}) =>
-    apiClient.post<ParkScenarioState>('/api/park/scenario/start', data),
+  /** Start a new crisis practice scenario via AGENTESE: world.park.scenario.start */
+  startScenario: async (data: ParkStartScenarioRequest = {}): Promise<ParkScenarioState> => {
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioState>>(
+      '/agentese/world/park/scenario/start',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Tick scenario timers */
-  tick: (data: ParkTickRequest = { count: 1 }) =>
-    apiClient.post<ParkScenarioState>('/api/park/scenario/tick', data),
+  /** Tick scenario timers via AGENTESE: world.park.scenario.tick */
+  tick: async (data: ParkTickRequest = { count: 1 }): Promise<ParkScenarioState> => {
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioState>>(
+      '/agentese/world/park/scenario/tick',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Transition crisis phase */
-  transitionPhase: (data: ParkTransitionPhaseRequest) =>
-    apiClient.post<ParkScenarioState>('/api/park/scenario/phase', data),
+  /** Transition crisis phase via AGENTESE: world.park.scenario.phase */
+  transitionPhase: async (data: ParkTransitionPhaseRequest): Promise<ParkScenarioState> => {
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioState>>(
+      '/agentese/world/park/scenario/phase',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Don or doff a dialogue mask */
-  maskAction: (data: ParkMaskActionRequest) =>
-    apiClient.post<ParkScenarioState>('/api/park/scenario/mask', data),
+  /** Don or doff a dialogue mask via AGENTESE: world.park.mask.don/doff */
+  maskAction: async (data: ParkMaskActionRequest): Promise<ParkScenarioState> => {
+    const action = data.action === 'don' ? 'don' : 'doff';
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioState>>(
+      `/agentese/world/park/mask/${action}`,
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Use force mechanic */
-  useForce: () =>
-    apiClient.post<ParkScenarioState>('/api/park/scenario/force'),
+  /** Use force mechanic via AGENTESE: world.park.force.use */
+  useForce: async (): Promise<ParkScenarioState> => {
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioState>>(
+      '/agentese/world/park/force/use',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Complete scenario */
-  completeScenario: (data: ParkCompleteRequest = { outcome: 'success' }) =>
-    apiClient.post<ParkScenarioSummary>('/api/park/scenario/complete', data),
+  /** Complete scenario via AGENTESE: world.park.scenario.complete */
+  completeScenario: async (
+    data: ParkCompleteRequest = { outcome: 'success' }
+  ): Promise<ParkScenarioSummary> => {
+    const response = await apiClient.post<AgenteseResponse<ParkScenarioSummary>>(
+      '/agentese/world/park/scenario/complete',
+      data
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** List all available masks */
-  getMasks: () =>
-    apiClient.get<ParkMaskInfo[]>('/api/park/masks'),
+  /** List all available masks via AGENTESE: world.park.mask.manifest */
+  getMasks: async (): Promise<ParkMaskInfo[]> => {
+    const response = await apiClient.get<AgenteseResponse<{ masks: ParkMaskInfo[] }>>(
+      '/agentese/world/park/mask/manifest'
+    );
+    const result = unwrapAgentese(response);
+    return result.masks || [];
+  },
 
-  /** Get mask details */
-  getMask: (name: string) =>
-    apiClient.get<ParkMaskInfo>(`/api/park/masks/${name}`),
+  /** Get mask details via AGENTESE: world.park.mask.show */
+  getMask: async (name: string): Promise<ParkMaskInfo> => {
+    const response = await apiClient.post<AgenteseResponse<ParkMaskInfo>>(
+      '/agentese/world/park/mask/show',
+      { name }
+    );
+    return unwrapAgentese(response);
+  },
 
-  /** Get Park system status */
-  getStatus: () =>
-    apiClient.get<ParkStatusResponse>('/api/park/status'),
+  /** Get Park system status via AGENTESE: world.park.manifest */
+  getStatus: async (): Promise<ParkStatusResponse> => {
+    const response = await apiClient.get<AgenteseResponse<ParkStatusResponse>>(
+      '/agentese/world/park/manifest'
+    );
+    return unwrapAgentese(response);
+  },
 };

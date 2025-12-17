@@ -17,8 +17,8 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from protocols.terrarium.events import EventType, SemaphoreEvent
-from protocols.terrarium.mirror import HolographicBuffer
+from agents.flux.terrarium_events import EventType, SemaphoreEvent
+from agents.flux.mirror import HolographicBuffer
 
 from ...agent import FluxAgent
 from ...config import FluxConfig

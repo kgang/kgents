@@ -1,0 +1,28 @@
+# Kustomization for Morpheus Gateway
+#
+# Apply with: kubectl apply -k impl/claude/infra/morpheus/k8s/
+#
+# AGENTESE: world.morpheus.kustomization
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: morpheus-gateway
+
+namespace: kgents
+
+resources:
+  - ../../../k8s/manifests/rbac/morpheus-sa.yaml
+  - deployment.yaml
+  - service.yaml
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/managed-by: kustomize
+  kgents.io/component: morpheus
+
+# Images can be overridden for different environments
+images:
+  - name: kgents/morpheus
+    newTag: latest

@@ -512,6 +512,267 @@ class PersistentCitizenMemory:
 
 
 # =============================================================================
+# TownCollectiveMemory: Shared memory for the entire town
+# =============================================================================
+
+
+@dataclass
+class CollectiveEvent:
+    """
+    A town-wide event that citizens can reference.
+
+    These are shared memories that belong to the town, not individuals.
+    Examples:
+    - "Trade deal announced between Baker and Merchant"
+    - "Town meeting about water shortage"
+    - "New citizen joined: the wandering poet"
+    """
+
+    event_id: str
+    event_type: str  # "dialogue", "trade", "meeting", "announcement", etc.
+    content: str  # Human-readable summary
+    participants: list[str] = field(default_factory=list)  # Citizen IDs
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize to dictionary."""
+        return {
+            "event_id": self.event_id,
+            "event_type": self.event_type,
+            "content": self.content,
+            "participants": self.participants,
+            "timestamp": self.timestamp,
+            "metadata": self.metadata,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CollectiveEvent:
+        """Deserialize from dictionary."""
+        return cls(
+            event_id=data["event_id"],
+            event_type=data["event_type"],
+            content=data["content"],
+            participants=data.get("participants", []),
+            timestamp=data.get("timestamp", datetime.now().isoformat()),
+            metadata=data.get("metadata", {}),
+        )
+
+
+class TownCollectiveMemory:
+    """
+    Shared memory for the entire town using D-gent.
+
+    Phase 3 Crown Jewels completion: Cross-citizen memory.
+
+    Stores town-wide events that any citizen can reference in dialogue:
+    - Trade agreements
+    - Town meetings
+    - Announcements
+    - Significant dialogues
+
+    Namespace: "town:{town_id}:collective"
+
+    Memory IDs:
+        - "town:{id}:events" - list of CollectiveEvents
+        - "town:{id}:shared_knowledge" - consensus facts
+    """
+
+    def __init__(
+        self,
+        town_id: str,
+        dgent: DgentProtocol | None = None,
+        max_events: int = 100,
+    ) -> None:
+        """
+        Initialize collective memory.
+
+        Args:
+            town_id: The town's unique identifier
+            dgent: D-gent backend (auto-creates if None)
+            max_events: Maximum events to retain
+        """
+        self._town_id = town_id
+        self._dgent = dgent or DgentRouter()
+        self._namespace = f"town:{town_id}:collective"
+        self._max_events = max_events
+        self._events: list[CollectiveEvent] = []
+        self._loaded = False
+
+    async def load(self) -> None:
+        """Load collective memory from D-gent."""
+        if self._loaded:
+            return
+
+        try:
+            events_key = f"{self._namespace}:events"
+            datum = await self._dgent.get(events_key, self._namespace)
+            if datum and datum.content:
+                # Content is bytes, decode to string for JSON
+                content = datum.content
+                if isinstance(content, bytes):
+                    content = content.decode("utf-8")
+                events_data = json.loads(content)
+                self._events = [CollectiveEvent.from_dict(e) for e in events_data]
+        except Exception:
+            self._events = []
+
+        self._loaded = True
+
+    async def _save_events(self) -> None:
+        """Save events to D-gent."""
+        events_key = f"{self._namespace}:events"
+        events_data = [e.to_dict() for e in self._events]
+        datum = Datum.create(
+            id=events_key,
+            content=json.dumps(events_data).encode("utf-8"),
+            metadata={"type": "collective_events", "namespace": self._namespace},
+        )
+        await self._dgent.upsert(datum)
+
+    async def record_event(
+        self,
+        event_type: str,
+        content: str,
+        participants: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> CollectiveEvent:
+        """
+        Record a town-wide event.
+
+        Args:
+            event_type: Type of event (dialogue, trade, meeting, etc.)
+            content: Human-readable summary
+            participants: List of citizen IDs involved
+            metadata: Additional event data
+
+        Returns:
+            The recorded event
+        """
+        import uuid
+
+        event = CollectiveEvent(
+            event_id=str(uuid.uuid4()),
+            event_type=event_type,
+            content=content,
+            participants=participants or [],
+            timestamp=datetime.now().isoformat(),
+            metadata=metadata or {},
+        )
+
+        self._events.append(event)
+
+        # Trim to max_events (keep most recent)
+        if len(self._events) > self._max_events:
+            self._events = self._events[-self._max_events :]
+
+        await self._save_events()
+        return event
+
+    async def get_recent_events(
+        self,
+        limit: int = 10,
+        event_type: str | None = None,
+    ) -> list[CollectiveEvent]:
+        """
+        Get recent town events.
+
+        Args:
+            limit: Maximum number of events to return
+            event_type: Optional filter by event type
+
+        Returns:
+            List of recent events (most recent first)
+        """
+        events = self._events
+        if event_type:
+            events = [e for e in events if e.event_type == event_type]
+        return list(reversed(events[-limit:]))
+
+    async def get_events_involving(
+        self,
+        citizen_id: str,
+        limit: int = 5,
+    ) -> list[CollectiveEvent]:
+        """
+        Get events involving a specific citizen.
+
+        Args:
+            citizen_id: The citizen to search for
+            limit: Maximum number of events to return
+
+        Returns:
+            List of events involving the citizen (most recent first)
+        """
+        involving = [e for e in self._events if citizen_id in e.participants]
+        return list(reversed(involving[-limit:]))
+
+    async def get_shared_context(
+        self,
+        citizen_ids: list[str] | None = None,
+        limit: int = 5,
+    ) -> list[CollectiveEvent]:
+        """
+        Get shared context for dialogue grounding.
+
+        If citizen_ids provided, prioritizes events involving them.
+        Otherwise returns most recent events.
+
+        Args:
+            citizen_ids: Optional list of citizens to focus on
+            limit: Maximum number of events to return
+
+        Returns:
+            Events suitable for dialogue context
+        """
+        if citizen_ids:
+            # Find events involving any of the citizens
+            relevant = [
+                e
+                for e in self._events
+                if any(cid in e.participants for cid in citizen_ids)
+            ]
+            if len(relevant) >= limit:
+                return list(reversed(relevant[-limit:]))
+
+            # Pad with recent events if needed
+            recent = [e for e in self._events if e not in relevant]
+            combined = relevant + recent[-limit:]
+            return list(reversed(combined[-limit:]))
+
+        return await self.get_recent_events(limit)
+
+    def summary(self) -> dict[str, Any]:
+        """Get a summary of collective memory state."""
+        return {
+            "town_id": self._town_id,
+            "event_count": len(self._events),
+            "event_types": list({e.event_type for e in self._events}),
+            "recent_events": [e.content[:50] for e in self._events[-3:]],
+            "loaded": self._loaded,
+        }
+
+
+async def create_collective_memory(
+    town_id: str,
+    dgent: DgentProtocol | None = None,
+) -> TownCollectiveMemory:
+    """
+    Create and load collective memory for a town.
+
+    Args:
+        town_id: The town's unique identifier
+        dgent: Optional D-gent backend
+
+    Returns:
+        Loaded TownCollectiveMemory instance
+    """
+    memory = TownCollectiveMemory(town_id, dgent)
+    await memory.load()
+    return memory
+
+
+# =============================================================================
 # Factory Functions
 # =============================================================================
 
@@ -570,8 +831,13 @@ async def save_citizen_state(
 
 
 __all__ = [
+    # Individual citizen memory
     "ConversationEntry",
     "PersistentCitizenMemory",
     "create_persistent_memory",
     "save_citizen_state",
+    # Collective town memory (Phase 3 Crown Jewels)
+    "CollectiveEvent",
+    "TownCollectiveMemory",
+    "create_collective_memory",
 ]

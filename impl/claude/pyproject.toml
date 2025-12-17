@@ -32,6 +32,7 @@ dependencies = [
     "pytest-xdist>=3.8.0",
     # SQLAlchemy ORM (async + asyncpg for Postgres, aiosqlite for SQLite)
     "sqlalchemy[asyncio]>=2.0.0",
+    "pytest-asyncio>=1.3.0",
 ]
 
 [project.optional-dependencies]
@@ -65,6 +66,8 @@ testpaths = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# Exclude archived directories from test collection
+norecursedirs = ["_archived", "*-archived", ".*"]
 addopts = [
     "-v",
     "--strict-markers",

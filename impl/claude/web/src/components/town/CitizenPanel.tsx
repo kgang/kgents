@@ -31,7 +31,7 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
       setError(null);
       try {
         const res = await townApi.getCitizen(townId, citizen.name, currentLOD, 'anonymous');
-        setManifest(res.data.citizen);
+        setManifest(res.citizen);
       } catch (err) {
         console.error('Failed to fetch citizen:', err);
         setError('Failed to load citizen details');

@@ -39,7 +39,7 @@ export default function Garden() {
   const loadGarden = useCallback(async () => {
     try {
       const response = await gardenerApi.getGarden();
-      setGarden(response.data);
+      setGarden(response);
       setLoadingState('loaded');
     } catch (err) {
       console.error('[Garden] Failed to load:', err);
@@ -63,7 +63,7 @@ export default function Garden() {
           reasoning: reasoning || `Tending ${target} with ${verb.toLowerCase()}`,
         });
 
-        if (response.data.accepted) {
+        if (response.accepted) {
           // Reload garden to get updated state
           await loadGarden();
 
@@ -71,11 +71,11 @@ export default function Garden() {
           celebrate({ intensity: 'subtle' });
 
           // Phase 8: Check for transition suggestion
-          if (response.data.suggested_transition) {
-            setTransitionSuggestion(response.data.suggested_transition);
+          if (response.suggested_transition) {
+            setTransitionSuggestion(response.suggested_transition);
           }
         } else {
-          console.warn('[Garden] Tending not accepted:', response.data.error);
+          console.warn('[Garden] Tending not accepted:', response.error);
         }
       } catch (err) {
         console.error('[Garden] Tending failed:', err);
@@ -87,22 +87,23 @@ export default function Garden() {
   );
 
   // Phase 8: Accept transition suggestion
+  // gardenerApi now returns unwrapped data (AGENTESE pattern)
   const handleAcceptTransition = useCallback(async () => {
     if (!transitionSuggestion || isTransitionLoading) return;
 
     setIsTransitionLoading(true);
     try {
-      const response = await gardenerApi.acceptTransition(
+      const result = await gardenerApi.acceptTransition(
         transitionSuggestion.from_season,
         transitionSuggestion.to_season
       );
 
-      if (response.data.status === 'accepted') {
+      if (result.status === 'accepted') {
         // Clear suggestion and reload garden
         setTransitionSuggestion(null);
         await loadGarden();
       } else {
-        console.warn('[Garden] Transition not accepted:', response.data.message);
+        console.warn('[Garden] Transition not accepted:', result.message);
       }
     } catch (err) {
       console.error('[Garden] Failed to accept transition:', err);

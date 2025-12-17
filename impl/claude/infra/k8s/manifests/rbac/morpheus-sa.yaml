@@ -1,0 +1,62 @@
+# Morpheus Gateway ServiceAccount and RBAC
+#
+# Morpheus needs access to:
+# 1. claude-auth Secret (for OAuth tokens)
+# 2. Agent CRs (for routing decisions)
+# 3. Pheromone CRs (for stigmergy observation)
+#
+# AGENTESE: world.morpheus.rbac.manifest
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: morpheus-gateway
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: morpheus-gateway
+    app.kubernetes.io/part-of: kgents
+    app.kubernetes.io/component: llm-gateway
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: morpheus-gateway
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: morpheus-gateway
+    app.kubernetes.io/part-of: kgents
+rules:
+  # Read claude-auth secret for OAuth tokens
+  - apiGroups: [""]
+    resources: ["secrets"]
+    resourceNames: ["claude-auth"]
+    verbs: ["get"]
+  # Read Agent CRs for routing table
+  - apiGroups: ["kgents.io"]
+    resources: ["agents"]
+    verbs: ["get", "list", "watch"]
+  # Read Umwelt CRs for observer context
+  - apiGroups: ["kgents.io"]
+    resources: ["umwelts"]
+    verbs: ["get", "list"]
+  # Read/Write Pheromone CRs for rate limiting stigmergy
+  - apiGroups: ["kgents.io"]
+    resources: ["pheromones"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: morpheus-gateway
+  namespace: kgents
+  labels:
+    app.kubernetes.io/name: morpheus-gateway
+    app.kubernetes.io/part-of: kgents
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: morpheus-gateway
+subjects:
+  - kind: ServiceAccount
+    name: morpheus-gateway
+    namespace: kgents
