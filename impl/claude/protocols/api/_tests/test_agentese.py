@@ -140,8 +140,8 @@ class TestResolveEndpoint:
     def test_resolve_no_auth(self, client: TestClient) -> None:
         """Test resolve requires authentication."""
         response = client.get("/v1/agentese/resolve?path=world.house")
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing API key
+        assert response.status_code == 401
 
     def test_resolve_valid_path(self, client: TestClient) -> None:
         """Test resolve with valid path."""
@@ -159,8 +159,8 @@ class TestAffordancesEndpoint:
     def test_affordances_no_auth(self, client: TestClient) -> None:
         """Test affordances requires authentication."""
         response = client.get("/v1/agentese/affordances?path=world.house")
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing API key
+        assert response.status_code == 401
 
     def test_affordances_valid_path(self, client: TestClient) -> None:
         """Test affordances with valid path."""

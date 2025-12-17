@@ -10,9 +10,15 @@ Verifies:
 - live.end includes N-Phase summary
 
 See: plans/nphase-native-integration-wave4-prompt.md
+
+NOTE: This module is skipped - protocols.api.town was archived.
 """
 
 from __future__ import annotations
+
+import pytest
+
+pytestmark = pytest.mark.skip(reason="protocols.api.town was archived - rebuild in services layer")
 
 import json
 from typing import Any, AsyncIterator

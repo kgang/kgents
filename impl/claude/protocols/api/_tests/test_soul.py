@@ -119,7 +119,7 @@ class TestGovernanceEndpoint:
             },
         )
 
-        assert response.status_code == 422  # Missing header
+        assert response.status_code == 401  # Auth middleware returns 401 for missing API key
 
     def test_governance_invalid_api_key(
         self, client: TestClient, setup_test_keys: None
@@ -281,7 +281,7 @@ class TestDialogueEndpoint:
             },
         )
 
-        assert response.status_code == 422  # Missing header
+        assert response.status_code == 401  # Auth middleware returns 401 for missing API key
 
     def test_dialogue_tier_restrictions(
         self, client: TestClient, setup_test_keys: None
