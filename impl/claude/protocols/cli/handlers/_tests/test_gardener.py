@@ -16,9 +16,9 @@ from typing import Generator
 
 import pytest
 from protocols.cli.handlers.gardener import (
-    cmd_gardener,
-    _parse_gesture,
     GESTURE_PATTERNS,
+    _parse_gesture,
+    cmd_gardener,
 )
 
 

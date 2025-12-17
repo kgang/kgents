@@ -36,41 +36,40 @@ _reflector: Any = None
 
 __version__ = "0.2.0"
 
-# Help text (no imports required)
-HELP_TEXT = """\
-kgents - K-gents Agent Framework
+# Help text is now generated dynamically by help_global.py
+# This fallback is only used if the help module fails to load
+HELP_TEXT_FALLBACK = """\
+kgents - Tasteful, curated, ethical agents
 
 USAGE:
-  kgents <context> [subcommand] [args...]
-  kgents <context> --help
-  kgents -i                    # Interactive REPL mode
+  kg <command> [args...]       Run a command
+  kg <command> --help          Get command help
+  kg -i                        Interactive REPL
+  kg ?<pattern>                Query paths (e.g., ?self.*)
 
-COMMANDS (AGENTESE Contexts):
-  self      Internal state, memory, soul
-  world     Agents, infrastructure, resources
-  concept   Laws, principles, dialectics
-  void      Entropy, shadow, archetypes
-  time      Traces, turns, telemetry
-  do        Natural language intent
-  flow      Pipeline composition
+CROWN JEWELS:
+  brain       Holographic memory operations
+  soul        Digital consciousness dialogue
+  town        Agent simulation and coalitions
+  park        Punchdrunk-style experiences
+  atelier     Collaborative creative workshops
+  gardener    Development session management
 
-Run 'kgents <context>' for subcommands.
+FOREST PROTOCOL:
+  forest      Project health and plan status
+  garden      Hypnagogia and dream states
+  tend        Garden tending operations
 
-OPTIONS:
-  -i, --interactive   Enter AGENTESE REPL (interactive mode)
-  --version           Show version
-  --help, -h          Show this help
-  --explain           Show AGENTESE path for command
+JOY COMMANDS:
+  joy         Oblique strategies gateway
+  oblique     Draw an oblique strategy card
+  surprise-me Unexpected creative prompt
 
 EXAMPLES:
-  kgents -i                    # Interactive REPL
-  kgents self status           # System health
-  kgents self soul reflect     # K-gent reflection
-  kgents world agents list     # List registered agents
-  kgents concept laws          # Category laws
-  kgents void shadow           # Jungian shadow analysis
-  kgents time trace            # Call graph tracing
-  kgents do "test the API"     # Natural language intent
+  $ kg brain capture "Category theory is beautiful"
+  $ kg soul reflect
+  $ kg town inhabit alice
+  $ kg oblique
 
 For more: https://github.com/kgents/kgents
 """
@@ -109,20 +108,24 @@ COMMAND_REGISTRY: dict[str, str] = {
     "migrate": "protocols.cli.handlers.migrate:cmd_migrate",
     # ==========================================================================
     # Agent Town (Crown Jewel)
+    # Uses thin routing shim - all logic in agents/town/, services/town/
     # ==========================================================================
-    "town": "protocols.cli.handlers.town:cmd_town",
+    "town": "protocols.cli.handlers.town_thin:cmd_town",
     # ==========================================================================
     # Punchdrunk Park (Crown Jewel - Wave 3)
+    # Uses thin routing shim - all logic in agents/park/, services/park/
     # ==========================================================================
-    "park": "protocols.cli.handlers.park:cmd_park",
+    "park": "protocols.cli.handlers.park_thin:cmd_park",
     # ==========================================================================
-    # Tiny Atelier (Demo Workshop)
+    # Tiny Atelier (Crown Jewel - Creative Workshop)
+    # Uses thin routing shim - all logic in services/atelier/
     # ==========================================================================
-    "atelier": "protocols.cli.handlers.atelier:cmd_atelier",
+    "atelier": "protocols.cli.handlers.atelier_thin:cmd_atelier",
     # ==========================================================================
     # Holographic Brain (Crown Jewel - Memory)
+    # Uses thin routing shim - all logic in services/brain/
     # ==========================================================================
-    "brain": "protocols.cli.handlers.brain:cmd_brain",
+    "brain": "protocols.cli.handlers.brain_thin:cmd_brain",
     # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
@@ -130,6 +133,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     # Wave 4: Joy-Inducing Commands (CLI Quick Wins)
     # ==========================================================================
+    "joy": "protocols.cli.handlers.joy:cmd_joy",  # Wave 2: void.joy.*
     "challenge": "protocols.cli.handlers.challenge:cmd_challenge",
     "oblique": "protocols.cli.handlers.oblique:cmd_oblique",
     "constrain": "protocols.cli.handlers.constrain:cmd_constrain",
@@ -162,9 +166,9 @@ COMMAND_REGISTRY: dict[str, str] = {
     "prompt": "protocols.cli.handlers.prompt:cmd_prompt",
     # ==========================================================================
     # Gardener: Development Session Management (concept.gardener.*)
-    # Wave 1: Hero Path Polish
+    # Uses thin routing shim - all logic in agents/gardener/, services/gardener/
     # ==========================================================================
-    "gardener": "protocols.cli.handlers.gardener:cmd_gardener",
+    "gardener": "protocols.cli.handlers.gardener_thin:cmd_gardener",
     # ==========================================================================
     # Gardener-Logos: Garden Tending (Phase 2 CLI)
     # ==========================================================================
@@ -178,6 +182,20 @@ COMMAND_REGISTRY: dict[str, str] = {
     "water": "protocols.cli.handlers.tend:cmd_water",
     "rotate": "protocols.cli.handlers.tend:cmd_rotate",
     # Note: "wait" conflicts with potential shell command, use "kg tend wait"
+    # ==========================================================================
+    # Chat: Session Management (Phase 4 - Chat Protocol Persistence)
+    # ==========================================================================
+    "chat": "protocols.cli.handlers.chat:cmd_chat",
+    # ==========================================================================
+    # Completions: Shell completions generator (Wave 3)
+    # ==========================================================================
+    "completions": "protocols.cli.completions:cmd_completions",
+    # ==========================================================================
+    # Query: Alias for ?pattern (avoids shell glob issues with ?)
+    # Usage: kg query self.* OR kg q self.*
+    # ==========================================================================
+    "query": "protocols.cli.handlers.query:cmd_query",
+    "q": "protocols.cli.handlers.query:cmd_query",
 }
 
 
@@ -668,6 +686,53 @@ def _handle_agentese(args: list[str], flags: dict[str, Any]) -> int:
         _sync_shutdown(verbose=verbose)
 
 
+def _show_global_help() -> int:
+    """
+    Show global help using the new help system.
+
+    Falls back to static help text if the help module fails to load.
+    """
+    try:
+        from protocols.cli.help_global import show_global_help
+        return show_global_help()
+    except ImportError:
+        # Fallback to static help text
+        print(HELP_TEXT_FALLBACK)
+        return 0
+
+
+def _show_command_help(command: str) -> int:
+    """
+    Show help for a specific command using the new help system.
+
+    Falls back to handler-provided help if projection fails.
+    """
+    try:
+        from protocols.cli.help_projector import create_help_projector
+        from protocols.cli.help_renderer import render_help
+
+        # Get the AGENTESE path for this command
+        from protocols.cli.help_projector import PATH_TO_COMMAND
+
+        # Reverse lookup: command -> path
+        path = None
+        for p, cmd in PATH_TO_COMMAND.items():
+            if cmd == command:
+                path = p
+                break
+
+        if path:
+            projector = create_help_projector()
+            help_obj = projector.project(path)
+            print(render_help(help_obj))
+            return 0
+    except Exception:
+        pass
+
+    # Fallback: return 1 to indicate handler should show its own help
+    return -1  # Special return code: use handler's help
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """
     The Hollow Shell entry point.
@@ -693,8 +758,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Fast path: --help (no bootstrap)
     if flags["help"] and not remaining:
-        print(HELP_TEXT)
-        return 0
+        return _show_global_help()
 
     # Fast path: --version (no bootstrap)
     if flags["version"]:
@@ -709,8 +773,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # No command given
     if not remaining:
-        print(HELP_TEXT)
-        return 0
+        return _show_global_help()
 
     # Extract command
     command = remaining[0]
@@ -745,6 +808,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # Check for command-level help (no bootstrap needed)
     if flags["help"] or "--help" in command_args or "-h" in command_args:
+        # Try projected help first
+        result = _show_command_help(command)
+        if result >= 0:
+            return result
+        # Fallback to handler's built-in help
         handler = resolve_command(command)
         if handler:
             filtered_args = [a for a in command_args if a not in ("--help", "-h")]

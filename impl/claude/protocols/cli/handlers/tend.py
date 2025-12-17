@@ -53,9 +53,26 @@ def _print_help() -> None:
     print("  --help, -h         Show this help")
 
 
+# =============================================================================
+# AGENTESE Thin Routing (Wave 2.5)
+# =============================================================================
+
+# Verb -> AGENTESE path mapping
+TEND_VERB_MAP: dict[str, str] = {
+    "observe": "self.garden.tend.observe",
+    "prune": "self.garden.tend.prune",
+    "graft": "self.garden.tend.graft",
+    "water": "self.garden.tend.water",
+    "rotate": "self.garden.tend.rotate",
+    "wait": "self.garden.tend.wait",
+}
+
+
 def cmd_tend(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Main entry point for the tend command.
+
+    Wave 2.5: Routes to self.garden.tend.* AGENTESE paths via thin routing.
 
     Args:
         args: Command-line arguments (after the command name)
@@ -112,7 +129,27 @@ def cmd_tend(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         _print_help()
         return 0
 
-    # Run async handler
+    # Try thin routing to AGENTESE path (Wave 2.5)
+    if verb in TEND_VERB_MAP and json_mode:
+        from protocols.cli.projection import project_command
+
+        path = TEND_VERB_MAP[verb]
+        kwargs: dict[str, Any] = {"json_output": True}
+
+        if target:
+            kwargs["target"] = target
+        if reason:
+            kwargs["reason"] = reason
+        if feedback:
+            kwargs["feedback"] = feedback
+        kwargs["tone"] = tone
+
+        try:
+            return project_command(path=path, args=list(args), ctx=ctx, kwargs=kwargs)
+        except Exception:
+            pass  # Fall through to legacy handlers
+
+    # Run async handler (legacy Rich output)
     return asyncio.run(
         _async_tend(
             verb=verb,

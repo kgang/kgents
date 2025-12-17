@@ -519,7 +519,7 @@ async def _handle_status(json_output: bool) -> int:
         if status.storage_backend == "sqlite":
             print(f"  Storage: {status.storage_path}/brain.db")
         else:
-            print(f"  Storage: PostgreSQL (KGENTS_POSTGRES_URL)")
+            print("  Storage: PostgreSQL (KGENTS_POSTGRES_URL)")
 
     return 0
 

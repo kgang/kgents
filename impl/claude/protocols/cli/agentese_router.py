@@ -312,9 +312,67 @@ class AgentesRouter:
                 "kwargs": kwargs,
             }
 
+        # Special handling for interactive chat paths
+        # These need to route to ChatProjection REPL instead of Logos invoke
+        if path.endswith(".chat") or ".chat." in path:
+            return await self._handle_chat(path, kwargs, ctx)
+
         # Use invoke() method - works with both Logos and WiredLogos
         result = await self.logos.invoke(path, self.observer, **kwargs)
         return result
+
+    async def _handle_chat(
+        self,
+        path: str,
+        kwargs: dict[str, Any],
+        ctx: "InvocationContext | None",
+    ) -> Any:
+        """
+        Handle interactive chat paths.
+
+        Routes to ChatProjection REPL for paths like:
+        - self.soul.chat
+        - world.town.citizen.elara.chat
+        - self.soul.chat.send (with message kwarg for one-shot)
+        """
+        from protocols.cli.chat_projection import run_chat_repl, run_chat_one_shot
+
+        # Extract parent path (remove .chat.* suffix)
+        parent_path = path
+        if ".chat." in path:
+            parent_path = path.split(".chat.")[0]
+        elif path.endswith(".chat"):
+            parent_path = path[:-5]
+
+        # Check for one-shot message
+        message = kwargs.get("message")
+
+        # Derive entity name from path
+        parts = parent_path.split(".")
+        if "soul" in parts:
+            entity_name = "K-gent"
+        elif "citizen" in parts and len(parts) > 3:
+            entity_name = parts[3].title()
+        else:
+            entity_name = parts[-1].title()
+
+        # One-shot mode
+        if message:
+            run_chat_one_shot(
+                node_path=parent_path,
+                message=message,
+                observer=self.observer,
+                json_output=self._config.json_output,
+            )
+            return None  # Output handled by chat projection
+
+        # Interactive REPL mode
+        run_chat_repl(
+            node_path=parent_path,
+            observer=self.observer,
+            entity_name=entity_name,
+        )
+        return None  # Output handled by chat projection
 
     async def _handle_query(
         self,
@@ -325,10 +383,17 @@ class AgentesRouter:
         pattern = classified.agentese_path
         kwargs = self._parse_kwargs(classified.remaining_args)
 
+        # Show help if no pattern
+        if not pattern:
+            from protocols.cli.query_help import show_query_help
+            show_query_help()
+            return None
+
         # Extract query constraints from kwargs
         limit = int(kwargs.pop("limit", 100))
         offset = int(kwargs.pop("offset", 0))
         dry_run = bool(kwargs.pop("dry_run", False))
+        json_output = bool(kwargs.pop("json", self.config.json_output))
 
         from protocols.agentese import query as agentese_query
 
@@ -341,6 +406,14 @@ class AgentesRouter:
             observer=self.observer,
             dry_run=dry_run,
         )
+
+        # Format output (unless JSON requested)
+        if not json_output:
+            from protocols.cli.query_help import format_query_result
+            formatted = format_query_result(result)
+            print(formatted)
+            return None
+
         return result
 
     async def _handle_subscribe(

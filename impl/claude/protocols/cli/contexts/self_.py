@@ -115,8 +115,8 @@ def _handle_dream(args: list[str], ctx: "InvocationContext | None" = None) -> in
 
 
 def _handle_soul(args: list[str], ctx: "InvocationContext | None" = None) -> int:
-    """Handle self soul -> delegating to existing soul handler."""
-    from protocols.cli.handlers.soul import cmd_soul
+    """Handle self soul -> delegating to thin soul handler (routes through AGENTESE)."""
+    from protocols.cli.handlers.soul_thin import cmd_soul
 
     return cmd_soul(args, ctx)
 

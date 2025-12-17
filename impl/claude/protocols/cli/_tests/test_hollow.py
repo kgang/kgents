@@ -29,10 +29,11 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - K-gents Agent Framework" in out
-        assert "AGENTESE Contexts" in out
-        assert "self" in out
-        assert "world" in out
+        # New help format: "Tasteful, curated, ethical agents"
+        assert "kgents" in out
+        assert "Tasteful" in out or "Crown Jewels" in out
+        assert "brain" in out
+        assert "soul" in out
 
     def test_help_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --help prints help."""
@@ -42,7 +43,8 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - K-gents Agent Framework" in out
+        assert "kgents" in out
+        assert "brain" in out or "Crown Jewels" in out
 
     def test_help_short_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents -h prints help."""
@@ -52,7 +54,8 @@ class TestHelpAndVersion:
         out = capsys.readouterr().out
 
         assert result == 0
-        assert "kgents - K-gents Agent Framework" in out
+        assert "kgents" in out
+        assert "brain" in out or "Crown Jewels" in out
 
     def test_version(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --version prints version."""

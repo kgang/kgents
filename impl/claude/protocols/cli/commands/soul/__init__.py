@@ -39,6 +39,7 @@ SPECIAL_COMMANDS = {
     "garden",
     "validate",
     "dream",
+    "chat",  # Phase 3 - Chat Protocol interactive REPL
 }
 BEING_COMMANDS = {"history", "propose", "commit", "crystallize", "resume"}
 
@@ -74,6 +75,7 @@ def print_help() -> None:
     print("  garden              View PersonaGarden state (patterns, preferences)")
     print("  validate <file>     Check file against principles (Semantic Gatekeeper)")
     print("  dream               Trigger hypnagogia (dream cycle) manually")
+    print("  chat                Interactive chat REPL with K-gent")
     print()
     print("BEING COMMANDS (cross-session identity):")
     print("  history             View soul change history (who was I?)")
@@ -97,4 +99,5 @@ def print_help() -> None:
     print("  --dry-run           For 'dream': show what would change without applying")
     print("  --sync              For 'garden': sync patterns from hypnagogia first")
     print("  --path <dir>        For 'watch': directory to watch (default: cwd)")
+    print("  --message <msg>     For 'chat': send one message and exit (non-interactive)")
     print("  --help, -h          Show this help")

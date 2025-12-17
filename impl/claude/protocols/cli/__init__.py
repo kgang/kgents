@@ -6,6 +6,8 @@ providing the membrane between human intention and agent action.
 
 Key components:
 - Core types: Command, Result, OutputFormat, Budget
+- Dimensions: 6-dimensional command space (Execution × Statefulness × Backend × Intent × Seriousness × Interactivity)
+- Validation: Aspect registration validation
 - Membrane commands: sense, trace, map, touch, name, hold, release
 - I-gent synergy: Garden views, status whisper, semantic glint
 
@@ -28,11 +30,45 @@ from .cli_types import (
     OutputLevel,
     PersonaMode,
 )
+from .dimensions import (
+    # Dimension enums
+    Backend,
+    CommandDimensions,
+    Execution,
+    Intent,
+    Interactivity,
+    Seriousness,
+    Statefulness,
+    # Constants
+    DEFAULT_DIMENSIONS,
+    PROTECTED_RESOURCES,
+    # Derivation functions
+    derive_backend,
+    derive_dimensions,
+    derive_from_category,
+    derive_intent,
+    derive_interactivity,
+    derive_seriousness,
+)
 from .membrane_cli import (
     MembraneCLI,
     membrane_observe,
     membrane_sense,
     membrane_trace,
+)
+from .projection import (
+    CLIProjection,
+    TerminalOutput,
+    project_command,
+    route_to_path,
+)
+from .validation import (
+    ValidationError,
+    ValidationResult,
+    ValidationSeverity,
+    format_validation_report,
+    validate_all_registrations,
+    validate_aspect_registration,
 )
 
 __all__ = [
@@ -43,11 +79,36 @@ __all__ = [
     "PersonaMode",
     "ErrorSeverity",
     "ErrorRecoverability",
+    # Dimension enums
+    "Execution",
+    "Statefulness",
+    "Backend",
+    "Intent",
+    "Seriousness",
+    "Interactivity",
     # Core types
     "CommandResult",
     "OutputEnvelope",
     "ErrorInfo",
     "BudgetStatus",
+    "CommandDimensions",
+    # Constants
+    "DEFAULT_DIMENSIONS",
+    "PROTECTED_RESOURCES",
+    # Derivation functions
+    "derive_from_category",
+    "derive_backend",
+    "derive_seriousness",
+    "derive_intent",
+    "derive_interactivity",
+    "derive_dimensions",
+    # Validation
+    "ValidationSeverity",
+    "ValidationError",
+    "ValidationResult",
+    "validate_aspect_registration",
+    "validate_all_registrations",
+    "format_validation_report",
     # Context
     "CLIContext",
     # Membrane CLI
@@ -55,4 +116,9 @@ __all__ = [
     "membrane_observe",
     "membrane_sense",
     "membrane_trace",
+    # Projection
+    "CLIProjection",
+    "TerminalOutput",
+    "project_command",
+    "route_to_path",
 ]

@@ -34,6 +34,7 @@ LEGACY_COMMANDS: dict[str, str] = {
     # "forest trees": "self.forest.trees",
     # Soul / K-gent
     "soul": "self.soul.dialogue",
+    "soul chat": "self.soul.chat",  # Interactive chat REPL
     "soul reflect": "self.soul.reflect",
     "soul challenge": "self.soul.challenge",
     "soul advise": "self.soul.advise",

@@ -1,7 +1,7 @@
 """
-Forest Handler: AGENTESE-native forest health operations.
+Forest Handler: Thin routing to self.forest.* AGENTESE paths.
 
-Replaces manual Chief of Staff reconciliation with self.forest.* paths.
+This handler routes CLI commands to ForestNode aspects via the projection functor.
 
 Usage:
     kg forest                 # Show manifest (canopy view)
@@ -12,6 +12,8 @@ Usage:
     kg forest tithe --execute # Actually archive stale plans
     kg forest reconcile       # Full reconciliation
     kg forest reconcile --commit  # Reconcile and git commit
+    kg forest sip             # Select dormant plan (accursed share)
+    kg forest define <path>   # Create new plan scaffold
 
 AGENTESE Paths:
     self.forest.manifest   - Canopy view from plan YAML headers
@@ -19,161 +21,76 @@ AGENTESE Paths:
     self.forest.witness    - Drift report (what's stale)
     self.forest.tithe      - Archive stale plans
     self.forest.reconcile  - Full meta file reconciliation
+    self.forest.sip        - Select from accursed share
+    self.forest.define     - Create new plan
 
 > "The garden tends itself, but only because we planted it together."
 """
 
 from __future__ import annotations
 
-import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
+
+# Subcommand -> AGENTESE path mapping
+# ForestNode is registered via SelfContextResolver at "self.forest"
+FOREST_SUBCOMMAND_MAP: dict[str, str] = {
+    "manifest": "self.forest.manifest",
+    "status": "self.forest.status",
+    "witness": "self.forest.witness",
+    "tithe": "self.forest.tithe",
+    "reconcile": "self.forest.reconcile",
+    "sip": "self.forest.sip",  # Could also be void.forest.sip
+    "refine": "self.forest.refine",
+    "define": "self.forest.define",
+}
 
 
 def cmd_forest(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     AGENTESE-native forest health operations.
 
-    kg forest - Manage forest health via self.forest.* paths.
+    Routes CLI invocations to self.forest.* paths via the projection functor.
     """
-    if ctx is None:
-        try:
-            from protocols.cli.hollow import get_invocation_context
-
-            ctx = get_invocation_context("forest", args)
-        except ImportError:
-            pass
-
-    # Parse args
+    # Help
     if "--help" in args or "-h" in args:
         print(__doc__)
         return 0
 
-    # Determine subcommand
-    subcommand = "manifest"  # default
-    execute = "--execute" in args
-    commit = "--commit" in args
-
-    # Find subcommand
+    # Parse subcommand (default: manifest)
+    subcommand = "manifest"
     for arg in args:
-        if arg in ("manifest", "status", "witness", "tithe", "reconcile"):
+        if arg in FOREST_SUBCOMMAND_MAP:
             subcommand = arg
             break
 
-    return asyncio.run(
-        _async_forest(subcommand, execute=execute, commit=commit, ctx=ctx)
+    # Route to AGENTESE path
+    path = FOREST_SUBCOMMAND_MAP.get(subcommand, "self.forest.manifest")
+
+    # Parse kwargs from remaining args
+    kwargs: dict[str, str | bool] = {}
+    if "--execute" in args:
+        kwargs["execute"] = True
+    if "--commit" in args:
+        kwargs["commit"] = True
+    if "--json" in args:
+        kwargs["json_output"] = True
+
+    # Handle positional args (e.g., plan path for define)
+    positional = [a for a in args if not a.startswith("-") and a not in FOREST_SUBCOMMAND_MAP]
+    if positional and subcommand == "define":
+        kwargs["path"] = positional[0]
+    if positional and subcommand == "refine":
+        kwargs["plan_path"] = positional[0]
+
+    # Project through CLI functor
+    from protocols.cli.projection import project_command
+
+    return project_command(
+        path=path,
+        args=args,
+        ctx=ctx,
+        kwargs=kwargs,  # type: ignore[arg-type]
     )
-
-
-class _MockDNA:
-    """Mock DNA for CLI invocation."""
-
-    def __init__(self, archetype: str = "ops") -> None:
-        self.name = "cli-observer"
-        self.archetype = archetype
-        self.capabilities: tuple[str, ...] = ()
-
-
-class _MockObserver:
-    """Mock observer for CLI invocation - satisfies Umwelt protocol."""
-
-    def __init__(self, archetype: str = "ops") -> None:
-        self.dna = _MockDNA(archetype=archetype)
-        self.gravity: tuple[Any, ...] = ()
-        self.context: dict[str, Any] = {}
-
-
-async def _async_forest(
-    subcommand: str,
-    execute: bool = False,
-    commit: bool = False,
-    ctx: "InvocationContext | None" = None,
-) -> int:
-    """Async implementation of forest command."""
-    try:
-        from protocols.agentese.contexts.forest import ForestNode, create_forest_node
-
-        node: ForestNode = create_forest_node()
-
-        # Create a simple observer (mock for CLI)
-        observer = _MockObserver(archetype="ops")
-
-        match subcommand:
-            case "manifest":
-                result = await node._invoke_aspect("manifest", observer)
-                _emit_output(
-                    result.content,
-                    {"action": "manifest", "metadata": result.metadata},
-                    ctx,
-                )
-                return 0
-
-            case "status":
-                result = await node._invoke_aspect("status", observer)
-                _emit_output(
-                    result.content,
-                    {"action": "status", "metadata": result.metadata},
-                    ctx,
-                )
-                return 0
-
-            case "witness":
-                result = await node._invoke_aspect("witness", observer)
-                _emit_output(
-                    result.content,
-                    {"action": "witness", "metadata": result.metadata},
-                    ctx,
-                )
-                return 0
-
-            case "tithe":
-                result = await node._invoke_aspect("tithe", observer, execute=execute)
-                _emit_output(
-                    result.content,
-                    {"action": "tithe", "metadata": result.metadata},
-                    ctx,
-                )
-                return 0
-
-            case "reconcile":
-                result = await node._invoke_aspect("reconcile", observer, commit=commit)
-                _emit_output(
-                    result.content,
-                    {"action": "reconcile", "metadata": result.metadata},
-                    ctx,
-                )
-                return 0
-
-            case _:
-                _emit_output(
-                    f"Unknown subcommand: {subcommand}",
-                    {"error": f"Unknown subcommand: {subcommand}"},
-                    ctx,
-                )
-                return 1
-
-    except ImportError as e:
-        error_human = f"[FOREST] Import error: {e}"
-        error_semantic = {"error": f"Import error: {e}"}
-        _emit_output(error_human, error_semantic, ctx)
-        return 1
-
-    except Exception as e:
-        error_human = f"[FOREST] Error: {e}"
-        error_semantic = {"error": str(e)}
-        _emit_output(error_human, error_semantic, ctx)
-        return 1
-
-
-def _emit_output(
-    human: str,
-    semantic: dict[str, Any],
-    ctx: "InvocationContext | None",
-) -> None:
-    """Emit output via dual-channel if ctx available, else print."""
-    if ctx is not None:
-        ctx.output(human=human, semantic=semantic)
-    else:
-        print(human)

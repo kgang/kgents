@@ -1163,11 +1163,40 @@ def _print_gesture_response(gesture: str, target: str, session_info: str) -> Non
 # =============================================================================
 
 
+# =============================================================================
+# AGENTESE Thin Routing (Wave 2.5)
+# =============================================================================
+
+# Subcommand -> AGENTESE path mapping for thin routing
+GARDENER_SUBCOMMAND_MAP: dict[str, str] = {
+    # Session management (concept.gardener.session.*)
+    "status": "concept.gardener.session.manifest",
+    "session": "concept.gardener.session.manifest",
+    "start": "concept.gardener.session.define",
+    "create": "concept.gardener.session.define",
+    "new": "concept.gardener.session.define",
+    "advance": "concept.gardener.session.advance",
+    "next": "concept.gardener.session.advance",
+    "cycle": "concept.gardener.session.advance",
+    "manifest": "concept.gardener.session.polynomial",
+    "polynomial": "concept.gardener.session.polynomial",
+    "poly": "concept.gardener.session.polynomial",
+    "sessions": "concept.gardener.sessions.manifest",
+    "list": "concept.gardener.sessions.manifest",
+    "chat": "concept.gardener.session.chat",
+    # Routing and suggestions
+    "route": "concept.gardener.route",
+    "propose": "concept.gardener.propose",
+}
+
+
 def cmd_gardener(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     concept.gardener: Development Session Management.
 
     Manage structured development sessions with the SENSE → ACT → REFLECT cycle.
+
+    Wave 2.5: Routes to AGENTESE paths via thin routing when possible.
     """
     # Parse path visibility flags (Wave 0 Foundation 1)
     args_list = list(args)
@@ -1178,10 +1207,30 @@ def cmd_gardener(args: list[str], ctx: "InvocationContext | None" = None) -> int
         _print_help()
         return 0
 
+    # Parse subcommand
+    subcommand = args_list[0].lower() if args_list else "status"
+
+    # Check if we can use thin routing to AGENTESE path
+    # Note: Rich output and some complex features still use legacy handlers
+    if subcommand in GARDENER_SUBCOMMAND_MAP and "--rich" not in args_list:
+        from protocols.cli.projection import project_command
+
+        path = GARDENER_SUBCOMMAND_MAP[subcommand]
+        kwargs: dict[str, Any] = {}
+
+        # Handle subcommand-specific kwargs
+        if subcommand in ("start", "create", "new") and len(args_list) > 1:
+            kwargs["name"] = " ".join(args_list[1:])
+
+        # Try thin routing; fall back to rich handlers on error
+        try:
+            return project_command(path=path, args=args_list, ctx=ctx, kwargs=kwargs)
+        except Exception:
+            pass  # Fall through to rich handlers
+
+    # Legacy handlers for Rich output and complex features
     if not args_list:
         return _run_async(_show_status(ctx))
-
-    subcommand = args_list[0].lower()
 
     match subcommand:
         case "status" | "session":
@@ -1206,7 +1255,7 @@ def cmd_gardener(args: list[str], ctx: "InvocationContext | None" = None) -> int
         case "chat":
             return _run_async(_chat_mode(args_list[1:], ctx))
 
-        # Garden commands (idea lifecycle)
+        # Garden commands (idea lifecycle - PersonaGarden)
         case "garden":
             return _run_async(_show_garden_status(ctx))
 

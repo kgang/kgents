@@ -53,9 +53,28 @@ def _print_help() -> None:
     print("  --help, -h        Show this help")
 
 
+# =============================================================================
+# AGENTESE Thin Routing (Wave 2.5)
+# =============================================================================
+
+# Subcommand -> AGENTESE path mapping
+GARDEN_SUBCOMMAND_MAP: dict[str, str] = {
+    "show": "self.garden.manifest",
+    "season": "self.garden.season",
+    "health": "self.garden.health",
+    "init": "self.garden.init",
+    "transition": "self.garden.transition",
+    "suggest": "self.garden.suggest",
+    "accept": "self.garden.accept",
+    "dismiss": "self.garden.dismiss",
+}
+
+
 def cmd_garden(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """
     Main entry point for the garden command.
+
+    Wave 2.5: Routes to self.garden.* AGENTESE paths via thin routing.
 
     Args:
         args: Command-line arguments (after the command name)
@@ -108,7 +127,25 @@ def cmd_garden(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     if subcommand is None:
         subcommand = "show"
 
-    # Run async handler
+    # Try thin routing to AGENTESE path (Wave 2.5)
+    if subcommand in GARDEN_SUBCOMMAND_MAP and json_mode:
+        from protocols.cli.projection import project_command
+
+        path = GARDEN_SUBCOMMAND_MAP[subcommand]
+        kwargs: dict[str, Any] = {"json_output": True}
+
+        # Handle transition target
+        if subcommand == "transition" and subcommand_args:
+            kwargs["target"] = subcommand_args[0]
+            if len(subcommand_args) > 1:
+                kwargs["reason"] = " ".join(subcommand_args[1:])
+
+        try:
+            return project_command(path=path, args=list(args), ctx=ctx, kwargs=kwargs)
+        except Exception:
+            pass  # Fall through to legacy handlers
+
+    # Run async handler (legacy Rich output)
     return asyncio.run(
         _async_garden(
             subcommand=subcommand,

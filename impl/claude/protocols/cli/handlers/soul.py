@@ -15,6 +15,8 @@ Usage:
     kgents soul stream             # Ambient FLOWING mode (Phase 3)
     kgents soul starters           # Show starter prompts
     kgents soul manifest           # Show current soul state
+    kgents soul chat               # Interactive chat REPL
+    kgents soul chat --message "X" # One-shot chat message
 
 This module is a thin router. Implementation is in commands/soul/.
 """
@@ -165,6 +167,10 @@ async def _async_route(
 
         # Route to handlers
         match mode.lower():
+            # Chat command (Phase 3 - Chat Protocol)
+            case "chat":
+                return await _execute_chat(prompt, args, ctx)
+
             # Quick commands
             case "vibe":
                 return await quick.execute_vibe(ctx, soul)
@@ -303,3 +309,55 @@ def cmd_challenge(args: list[str], ctx: "ReflectorContext | None" = None) -> int
 def cmd_explore(args: list[str], ctx: "ReflectorContext | None" = None) -> int:
     """Alias: kgents explore -> kgents soul explore."""
     return cmd_soul(["explore"] + args, ctx)
+
+
+# --- Chat Command (Phase 3 - Chat Protocol) ---
+
+
+async def _execute_chat(
+    prompt: str | None,
+    args: list[str],
+    ctx: Any,
+) -> int:
+    """
+    Execute the chat command - interactive REPL with K-gent.
+
+    Usage:
+        kgents soul chat               # Enter interactive chat REPL
+        kgents soul chat --message "X" # One-shot: send message, get response
+        kgents soul chat --json        # Output as JSON (one-shot only)
+
+    This routes through the CLI projection to the ChatProjection REPL.
+    """
+    from protocols.cli.projection import project_command
+
+    # Parse --message flag for one-shot mode
+    message = None
+    json_output = "--json" in args
+
+    for i, arg in enumerate(args):
+        if arg == "--message" and i + 1 < len(args):
+            message = args[i + 1]
+            break
+        elif arg.startswith("--message="):
+            message = arg.split("=", 1)[1]
+            break
+
+    # If prompt provided without --message flag, treat as message
+    if prompt and not message:
+        message = prompt
+
+    # Build kwargs
+    kwargs: dict[str, Any] = {}
+    if message:
+        kwargs["message"] = message
+
+    # Project to chat path
+    return project_command(
+        path="self.soul.chat",
+        args=args,
+        ctx=ctx,
+        json_output=json_output,
+        kwargs=kwargs,
+        entity_name="K-gent",
+    )
