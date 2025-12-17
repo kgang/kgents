@@ -841,7 +841,8 @@ class TestPropertyBased:
     def test_frontmatter_title_preserved(self, title: str, body: str) -> None:
         """Title in frontmatter is preserved after parsing."""
         # Skip titles with problematic YAML characters
-        if any(c in title for c in [":", "\n", "---", "'"]):
+        # '#' is YAML comment, causes value to be None
+        if any(c in title for c in [":", "\n", "---", "'", "#"]):
             return
         content = f"---\ntitle: {title}\n---\n{body}"
         fm, _ = extract_frontmatter(content)
