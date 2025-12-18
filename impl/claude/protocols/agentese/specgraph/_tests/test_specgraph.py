@@ -610,9 +610,7 @@ class TestTownRoundtrip:
         reflect_result = reflect_jewel("town", impl_root)
 
         # Verify structural alignment
-        assert reflect_result.confidence >= 0.66, (
-            "Town should have at least polynomial+operad"
-        )
+        assert reflect_result.confidence >= 0.66, "Town should have at least polynomial+operad"
         assert reflect_result.spec_node is not None
 
         reflected = reflect_result.spec_node
@@ -632,9 +630,7 @@ class TestTownRoundtrip:
         if spec_node.operad and reflected.operad:
             spec_ops = {op.name for op in spec_node.operad.operations}
             impl_ops = {op.name for op in reflected.operad.operations}
-            assert spec_ops == impl_ops, (
-                f"Operation mismatch: spec={spec_ops}, impl={impl_ops}"
-            )
+            assert spec_ops == impl_ops, f"Operation mismatch: spec={spec_ops}, impl={impl_ops}"
 
     def test_town_polynomial_positions(self) -> None:
         """Verify Town polynomial has the 5 canonical positions."""
@@ -665,7 +661,7 @@ class TestTownRoundtrip:
         assert result.spec_node.operad is not None
 
         operations = {op.name for op in result.spec_node.operad.operations}
-        # Core + Phase 2 operations
+        # Core + Phase 2 + Coalition operations
         expected = {
             "greet",
             "gossip",
@@ -675,6 +671,8 @@ class TestTownRoundtrip:
             "celebrate",
             "mourn",
             "teach",
+            "coalition_form",
+            "coalition_dissolve",
         }
         assert operations == expected, f"Expected {expected}, got {operations}"
 
@@ -715,6 +713,4 @@ class TestTownRoundtrip:
         town_in_aligned = any("town" in comp.lower() for comp in audit.aligned)
         town_in_gaps = any("town" in gap.component.lower() for gap in audit.gaps)
 
-        assert town_in_aligned or not town_in_gaps, (
-            f"Town should be aligned. Gaps: {audit.gaps}"
-        )
+        assert town_in_aligned or not town_in_gaps, f"Town should be aligned. Gaps: {audit.gaps}"

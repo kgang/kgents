@@ -15,49 +15,86 @@
 import { useEffect, useCallback, useState } from 'react';
 import { apiClient } from '../api/client';
 import { useAsyncState } from './useAsyncState';
+// Import the generated types (still named WorldAtelier*)
+// Re-export as WorldForge* aliases for forward compatibility
 import type {
   // Manifest
-  WorldForgeManifestResponse,
+  WorldAtelierManifestResponse,
   // Workshop types
-  WorldForgeWorkshopListResponse,
-  WorldForgeWorkshopGetRequest,
-  WorldForgeWorkshopGetResponse,
-  WorldForgeWorkshopCreateRequest,
-  WorldForgeWorkshopCreateResponse,
-  WorldForgeWorkshopEndRequest,
-  WorldForgeWorkshopEndResponse,
+  WorldAtelierWorkshopListResponse,
+  WorldAtelierWorkshopGetRequest,
+  WorldAtelierWorkshopGetResponse,
+  WorldAtelierWorkshopCreateRequest,
+  WorldAtelierWorkshopCreateResponse,
+  WorldAtelierWorkshopEndRequest,
+  WorldAtelierWorkshopEndResponse,
   // Artisan types
-  WorldForgeArtisanListRequest,
-  WorldForgeArtisanListResponse,
-  WorldForgeArtisanJoinRequest,
-  WorldForgeArtisanJoinResponse,
+  WorldAtelierArtisanListRequest,
+  WorldAtelierArtisanListResponse,
+  WorldAtelierArtisanJoinRequest,
+  WorldAtelierArtisanJoinResponse,
   // Contribution types
-  WorldForgeContributeRequest,
-  WorldForgeContributeResponse,
-  WorldForgeContributionListResponse,
+  WorldAtelierContributeRequest,
+  WorldAtelierContributeResponse,
+  WorldAtelierContributionListResponse,
   // Exhibition types
-  WorldForgeExhibitionCreateRequest,
-  WorldForgeExhibitionCreateResponse,
-  WorldForgeExhibitionOpenRequest,
-  WorldForgeExhibitionOpenResponse,
-  WorldForgeExhibitionViewRequest,
-  WorldForgeExhibitionViewResponse,
+  WorldAtelierExhibitionCreateRequest,
+  WorldAtelierExhibitionCreateResponse,
+  WorldAtelierExhibitionOpenRequest,
+  WorldAtelierExhibitionOpenResponse,
+  WorldAtelierExhibitionViewRequest,
+  WorldAtelierExhibitionViewResponse,
   // Gallery types
-  WorldForgeGalleryListRequest,
-  WorldForgeGalleryListResponse,
-  WorldForgeGalleryAddRequest,
-  WorldForgeGalleryAddResponse,
+  WorldAtelierGalleryListRequest,
+  WorldAtelierGalleryListResponse,
+  WorldAtelierGalleryAddRequest,
+  WorldAtelierGalleryAddResponse,
   // Festival types
-  WorldForgeFestivalListResponse,
-  WorldForgeFestivalCreateRequest,
-  WorldForgeFestivalCreateResponse,
-  WorldForgeFestivalEnterRequest,
-  WorldForgeFestivalEnterResponse,
+  WorldAtelierFestivalListResponse,
+  WorldAtelierFestivalCreateRequest,
+  WorldAtelierFestivalCreateResponse,
+  WorldAtelierFestivalEnterRequest,
+  WorldAtelierFestivalEnterResponse,
   // Token/Bid types
-  WorldForgeTokensManifestResponse,
-  WorldForgeBidSubmitRequest,
-  WorldForgeBidSubmitResponse,
+  WorldAtelierTokensManifestResponse,
+  WorldAtelierBidSubmitRequest,
+  WorldAtelierBidSubmitResponse,
 } from '../api/types/_generated/world-atelier';
+
+// Type aliases for Forge naming (forward compatibility)
+export type WorldForgeManifestResponse = WorldAtelierManifestResponse;
+export type WorldForgeWorkshopListResponse = WorldAtelierWorkshopListResponse;
+export type WorldForgeWorkshopGetRequest = WorldAtelierWorkshopGetRequest;
+export type WorldForgeWorkshopGetResponse = WorldAtelierWorkshopGetResponse;
+export type WorldForgeWorkshopCreateRequest = WorldAtelierWorkshopCreateRequest;
+export type WorldForgeWorkshopCreateResponse = WorldAtelierWorkshopCreateResponse;
+export type WorldForgeWorkshopEndRequest = WorldAtelierWorkshopEndRequest;
+export type WorldForgeWorkshopEndResponse = WorldAtelierWorkshopEndResponse;
+export type WorldForgeArtisanListRequest = WorldAtelierArtisanListRequest;
+export type WorldForgeArtisanListResponse = WorldAtelierArtisanListResponse;
+export type WorldForgeArtisanJoinRequest = WorldAtelierArtisanJoinRequest;
+export type WorldForgeArtisanJoinResponse = WorldAtelierArtisanJoinResponse;
+export type WorldForgeContributeRequest = WorldAtelierContributeRequest;
+export type WorldForgeContributeResponse = WorldAtelierContributeResponse;
+export type WorldForgeContributionListResponse = WorldAtelierContributionListResponse;
+export type WorldForgeExhibitionCreateRequest = WorldAtelierExhibitionCreateRequest;
+export type WorldForgeExhibitionCreateResponse = WorldAtelierExhibitionCreateResponse;
+export type WorldForgeExhibitionOpenRequest = WorldAtelierExhibitionOpenRequest;
+export type WorldForgeExhibitionOpenResponse = WorldAtelierExhibitionOpenResponse;
+export type WorldForgeExhibitionViewRequest = WorldAtelierExhibitionViewRequest;
+export type WorldForgeExhibitionViewResponse = WorldAtelierExhibitionViewResponse;
+export type WorldForgeGalleryListRequest = WorldAtelierGalleryListRequest;
+export type WorldForgeGalleryListResponse = WorldAtelierGalleryListResponse;
+export type WorldForgeGalleryAddRequest = WorldAtelierGalleryAddRequest;
+export type WorldForgeGalleryAddResponse = WorldAtelierGalleryAddResponse;
+export type WorldForgeFestivalListResponse = WorldAtelierFestivalListResponse;
+export type WorldForgeFestivalCreateRequest = WorldAtelierFestivalCreateRequest;
+export type WorldForgeFestivalCreateResponse = WorldAtelierFestivalCreateResponse;
+export type WorldForgeFestivalEnterRequest = WorldAtelierFestivalEnterRequest;
+export type WorldForgeFestivalEnterResponse = WorldAtelierFestivalEnterResponse;
+export type WorldForgeTokensManifestResponse = WorldAtelierTokensManifestResponse;
+export type WorldForgeBidSubmitRequest = WorldAtelierBidSubmitRequest;
+export type WorldForgeBidSubmitResponse = WorldAtelierBidSubmitResponse;
 
 // =============================================================================
 // AGENTESE Response Wrapper

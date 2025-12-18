@@ -85,6 +85,12 @@ def import_all_operads() -> None:
     except ImportError:
         pass  # Optional
 
+    # Traced operad (Différance Engine)
+    try:
+        from agents.differance.operad import TRACED_OPERAD
+    except ImportError:
+        pass  # Optional
+
 
 # Import on module load
 import_all_operads()
@@ -107,6 +113,7 @@ EXPECTED_OPERADS = [
     "NPHASE",  # N-Phase operad uses uppercase name
     "BrainOperad",  # Phase 4: Brain vertical slice
     "DirectorOperad",  # Phase 4: Park vertical slice
+    "TracedOperad",  # Différance Engine: trace-recording composition
 ]
 
 # Full operads that should extend AGENT_OPERAD completely
@@ -118,6 +125,7 @@ FULL_OPERADS = [
     "GrowthOperad",
     "BrainOperad",  # Phase 4
     "DirectorOperad",  # Phase 4
+    "TracedOperad",  # Différance Engine
 ]
 
 # Subset operads (intentionally filtered views of a parent operad)
@@ -131,6 +139,7 @@ DOMAIN_OPERADS = [
     "MOTION",  # Design system - animation composition
     "DESIGN",  # Design system - unified
     "EMERGENCE",  # Cymatics pattern composition (extends DESIGN, not AGENT)
+    "GARDEN",  # Garden Protocol - plan composition (PlanState, not PolyAgent)
 ]
 
 # Legacy operads (not yet migrated to canonical pattern)

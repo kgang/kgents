@@ -131,11 +131,12 @@ export function Brain2D({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- categories depends on topology
   }, [categories, searchQuery]);
 
-  // Get selected crystal data
-  const selectedCrystalData = useMemo(() => {
+  // Get selected crystal data - transform to TopologyNode for CrystalDetail
+  const selectedCrystalData = useMemo((): TopologyNode | null => {
     if (!selectedCrystal) return null;
-    return topology.nodes.find((n) => n.id === selectedCrystal) || null;
-  }, [selectedCrystal, topology.nodes]);
+    const node = topology.nodes.find((n) => n.id === selectedCrystal);
+    return node ? toTopologyNode(node, topology.hub_ids) : null;
+  }, [selectedCrystal, topology.nodes, topology.hub_ids]);
 
   // Handlers
   const handleCrystalSelect = useCallback(

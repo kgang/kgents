@@ -32,6 +32,8 @@
 |------|----------|--------|-------|
 | **plans/crown-jewels-genesis-phase2** | 0% | **active** | NEW. Atelier rebuild (Weeks 3-5). Phase 1 foundation complete. |
 | **plans/crown-jewels-enlightened** | 88% | **active** | Master plan. Phase 1-4 complete. |
+| **plans/differance-cultivation** | 100% | **complete** | Phase 5 FRUITING complete. 192 tests. Contracts + hooks + component ready. |
+| **plans/differance-crown-jewel-wiring** | 0% | **planning** | NEW. Wire traces into Brain/Gardener. Next phase of differance. |
 | plans/park-town-design-overhaul | 100% | **complete** | Design specs complete. Enables frontend impl. |
 | **plans/town-visualizer-renaissance** | 55% | **active** | Master plan for Town frontend. Backend complete, frontend ~60%. |
 | plans/town-rebuild | 100% | **complete** | Backend complete (230 tests: Sheaf, Events, AGENTESE nodes). |

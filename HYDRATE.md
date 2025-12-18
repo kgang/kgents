@@ -86,13 +86,15 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 |-------|---|--------|
 | Brain | 100 | Spatial cathedral of memory |
 | Gardener | 100 | Cultivation practice for ideas |
-| Gestalt | 70 | Living garden where code breathes |
-| Atelier | 75 | Fishbowl where spectators collaborate |
+| Gestalt | 85 | Living garden where code breathes |
+| **Forge** | 0 | **Developer's workshop for metaphysical fullstack agents** |
 | Coalition | 55 | Workshop where agents collaborate visibly |
 | Park | 40 | Westworld where hosts can say no |
 | Domain | 0 | Enterprise categorical foundation |
 
 **Design DNA**: Observer-dependent • Consent-first • Visible process • Composable • Joy-inducing
+
+**Strategic Note**: Atelier → Metaphysical Forge transformation. See `spec/protocols/metaphysical-forge.md`.
 
 ---
 
