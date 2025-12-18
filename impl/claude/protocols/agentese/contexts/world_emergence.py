@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -100,6 +101,10 @@ PATTERN_FAMILIES: dict[str, dict[str, Any]] = {
 # =============================================================================
 
 
+@node(
+    "world.emergence",
+    description="Cymatics Design Sampler - visual pattern exploration",
+)
 @dataclass
 class EmergenceNode(BaseLogosNode):
     """

@@ -47,6 +47,35 @@ if TYPE_CHECKING:
 from .node import Observer
 from .registry import get_registry
 
+# === Auto-import node modules to register @node decorators ===
+# This ensures all nodes are in the registry before discovery
+
+
+def _import_node_modules() -> None:
+    """
+    Import all AGENTESE node modules to trigger @node registration.
+
+    This is called lazily when the gateway is mounted, ensuring
+    all nodes are discoverable via /agentese/discover.
+    """
+    try:
+        # Import contexts to register world.*, self.*, etc. nodes
+        from . import contexts  # noqa: F401
+
+        # Import specific node modules that use @node decorator
+        # Autopoietic kernel interface (self.system.*)
+        from .contexts import (
+            self_system,  # noqa: F401
+            world_emergence,  # noqa: F401
+            world_gestalt_live,  # noqa: F401
+            world_park,  # noqa: F401
+        )
+
+        logger.debug("AGENTESE node modules imported for registration")
+    except ImportError as e:
+        logger.warning(f"Could not import some node modules: {e}")
+
+
 # Graceful FastAPI import
 try:
     from fastapi import APIRouter, HTTPException, Request, WebSocket
@@ -187,6 +216,9 @@ class AgenteseGateway:
         if not HAS_FASTAPI:
             logger.error("Cannot mount gateway: FastAPI not available")
             return
+
+        # Import node modules to populate registry
+        _import_node_modules()
 
         router = APIRouter(prefix=self.prefix, tags=["agentese-gateway"])
         self._router = router

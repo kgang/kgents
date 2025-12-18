@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -86,6 +87,9 @@ ENTITY_KINDS: dict[str, dict[str, str]] = {
 # =============================================================================
 
 
+@node(
+    "world.gestalt.live", description="Real-time 3D infrastructure topology visualizer"
+)
 @dataclass
 class GestaltLiveNode(BaseLogosNode):
     """
@@ -136,7 +140,9 @@ class GestaltLiveNode(BaseLogosNode):
         ]
 
         for kind_id, kind_info in ENTITY_KINDS.items():
-            lines.append(f"  [{kind_info['shape']}] {kind_info['name']}: {kind_info['description']}")
+            lines.append(
+                f"  [{kind_info['shape']}] {kind_info['name']}: {kind_info['description']}"
+            )
 
         lines.append("")
         lines.append("Visit /gestalt/live for real-time visualization")
