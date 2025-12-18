@@ -207,7 +207,7 @@ describe('PathProjection jewel inference', () => {
     { path: 'world.codebase.topology', expected: 'gestalt' },
     { path: 'concept.gardener', expected: 'gardener' },
     { path: 'self.garden.nurture', expected: 'gardener' },
-    { path: 'world.atelier', expected: 'atelier' },
+    { path: 'world.forge', expected: 'forge' },
     { path: 'world.town', expected: 'coalition' },
     { path: 'world.town.citizens', expected: 'coalition' },
     { path: 'world.park', expected: 'park' },
@@ -240,14 +240,14 @@ describe('PathProjection jewel inference', () => {
 
     render(
       <Wrapper>
-        <PathProjection path="self.memory" aspect="manifest" jewel="atelier">
+        <PathProjection path="self.memory" aspect="manifest" jewel="forge">
           {() => <div>Content</div>}
         </PathProjection>
       </Wrapper>
     );
 
     // Should use explicit jewel instead of inferred
-    expect(screen.getByTestId('personality-loading')).toHaveAttribute('data-jewel', 'atelier');
+    expect(screen.getByTestId('personality-loading')).toHaveAttribute('data-jewel', 'forge');
   });
 });
 

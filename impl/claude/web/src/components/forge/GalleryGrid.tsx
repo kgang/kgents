@@ -11,7 +11,7 @@
  */
 
 // React import not needed for JSX in modern React
-import type { PieceSummary } from '@/api/atelier';
+import type { PieceSummary } from '@/api/forge';
 import { PieceCard } from './PieceCard';
 
 interface GalleryGridProps {

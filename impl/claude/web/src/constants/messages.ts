@@ -42,12 +42,12 @@ export const LOADING_MESSAGES: Record<JewelName, readonly string[]> = {
     'Cultivating ideas...',
     'Preparing the soil...',
   ],
-  atelier: [
-    'Gathering artisans...',
+  forge: [
+    'Heating the forge...',
     'Preparing the workshop...',
-    'Mixing creative palettes...',
-    'Setting up the canvas...',
-    'Summoning inspiration...',
+    'Gathering the tools...',
+    'Setting up the anvil...',
+    'Ready to build...',
   ],
   coalition: [
     'Convening the council...',

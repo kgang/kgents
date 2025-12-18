@@ -1,5 +1,5 @@
 /**
- * LoadingPanel: Gentle loading state for the Atelier.
+ * LoadingPanel: Gentle loading state for the Forge.
  *
  * Features:
  * - Animated indicator

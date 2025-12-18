@@ -9,7 +9,7 @@
  * Crown Jewel identifiers.
  * Must match the Python Jewel enum in protocols/synergy/events.py
  */
-export type Jewel = 'brain' | 'gestalt' | 'gardener' | 'atelier' | 'coalition' | 'park' | 'domain' | 'dgent';
+export type Jewel = 'brain' | 'gestalt' | 'gardener' | 'forge' | 'coalition' | 'park' | 'domain' | 'dgent';
 
 /**
  * Known synergy event types.
@@ -145,13 +145,13 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     borderColor: 'border-green-500/30',
     path: '/gardener',
   },
-  atelier: {
-    name: 'Atelier',
+  forge: {
+    name: 'Forge',
     icon: '🎨',
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
-    path: '/atelier',
+    path: '/forge',
   },
   coalition: {
     name: 'Coalition',

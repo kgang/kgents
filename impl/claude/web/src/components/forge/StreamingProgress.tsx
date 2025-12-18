@@ -9,7 +9,7 @@
  */
 
 // React import not needed for JSX in modern React
-import type { AtelierEvent } from '@/api/atelier';
+import type { AtelierEvent } from '@/api/forge';
 
 interface StreamingProgressProps {
   /** Current status */

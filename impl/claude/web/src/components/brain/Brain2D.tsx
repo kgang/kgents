@@ -76,11 +76,9 @@ export interface Brain2DProps {
 
 type DrawerContent = 'detail' | 'capture' | 'ghost' | 'settings';
 
-// =============================================================================
-// Constants - Living Earth Palette
-// =============================================================================
-
-const _BRAIN_COLORS = {
+// Living Earth Palette constants exported for testing
+// (Colors applied directly via Tailwind classes in components)
+export const BRAIN_COLORS = {
   primary: '#D4A574', // Amber - crystals
   healthy: '#4A6B4A', // Sage - healthy state
   hub: '#E8C4A0', // Honey - hot crystals

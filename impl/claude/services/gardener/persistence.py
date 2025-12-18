@@ -14,11 +14,23 @@ AGENTESE aspects exposed:
 - idea.harvest: Promote idea to next lifecycle stage
 - manifest: Show garden status
 
+Differance Integration (Phase 6C):
+- start_session() → trace with alternatives (resume_previous)
+- end_session() → trace with alternatives (extend)
+- plant_idea() → trace with alternatives (different_lifecycle, auto_connect)
+- nurture_idea() → trace with alternatives (prune, water)
+- harvest_idea() → trace with alternatives (stay, compost)
+- create_plot() → trace with alternatives (use_existing)
+- get/list → NO traces (read-only)
+
 See: docs/skills/metaphysical-fullstack.md
+See: plans/differance-crown-jewel-wiring.md (Phase 6C)
 """
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -29,6 +41,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol, TableAdapter
+from agents.differance.alternatives import get_alternatives
+from agents.differance.integration import DifferanceIntegration
 from models.gardener import (
     GardenIdea,
     GardenPlot,
@@ -39,6 +53,8 @@ from models.gardener import (
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -144,6 +160,8 @@ class GardenerPersistence:
         self.ideas = idea_adapter
         self.dgent = dgent
         self._current_session_id: str | None = None
+        # Differance integration for trace recording (Phase 6C)
+        self._differance = DifferanceIntegration("gardener")
 
     # =========================================================================
     # Session Management
@@ -180,7 +198,7 @@ class GardenerPersistence:
 
             self._current_session_id = session_id
 
-            return SessionView(
+            result = SessionView(
                 id=session_id,
                 title=title,
                 notes=notes,
@@ -191,6 +209,23 @@ class GardenerPersistence:
                 else "",
                 is_active=True,
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="session_start",
+                        inputs=(title or "untitled",),
+                        output=session_id,
+                        context=f"Started session: {title or 'untitled'}",
+                        alternatives=get_alternatives("gardener", "session_start"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for session_start trace recording")
+
+            return result
 
     async def end_session(
         self,
@@ -241,7 +276,7 @@ class GardenerPersistence:
             if self._current_session_id == session_id:
                 self._current_session_id = None
 
-            return SessionView(
+            result = SessionView(
                 id=session_id,
                 title=garden_session.title,
                 notes=garden_session.notes,
@@ -252,6 +287,23 @@ class GardenerPersistence:
                 else "",
                 is_active=False,
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="session_end",
+                        inputs=(session_id,),
+                        output=f"ended:{session_id}",
+                        context=f"Ended session with {idea_count} ideas",
+                        alternatives=get_alternatives("gardener", "session_end"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for session_end trace recording")
+
+            return result
 
     async def get_current_session(self) -> SessionView | None:
         """Get the current active session."""
@@ -389,7 +441,7 @@ class GardenerPersistence:
             session.add(idea)
             await session.commit()
 
-            return IdeaView(
+            result = IdeaView(
                 id=idea_id,
                 content=content,
                 lifecycle=IdeaLifecycle.SEED.value,
@@ -403,6 +455,23 @@ class GardenerPersistence:
                 created_at=idea.created_at.isoformat() if idea.created_at else "",
                 connections=[],
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="plant",
+                        inputs=(content[:100],),  # Truncate for trace
+                        output=idea_id,
+                        context=f"Planted idea in {plot_name or 'default plot'}",
+                        alternatives=get_alternatives("gardener", "plant"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for plant trace recording")
+
+            return result
 
     async def nurture_idea(
         self,

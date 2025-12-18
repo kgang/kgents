@@ -11,15 +11,19 @@
 
 **Core Vision**: Seven artisans (K-gent, Architect, Smith, Herald, Projector, Sentinel, Witness) that help Kent commission, design, implement, expose, project, secure, and test new agents. Every artifact traverses all Crown Jewels.
 
-**2D Renaissance Phase 3** — COMPLETE. Gestalt2D fully implemented with Living Earth aesthetic. 4 new components (~800 lines), 28 passing tests. Spec: `spec/protocols/2d-renaissance.md`.
+**2D Renaissance Phase 4 — COMPLETE.** Brain2D fully implemented with Living Earth aesthetic. 4 new components (~1000 lines), 13 passing tests. Spec: `spec/protocols/2d-renaissance.md`.
+
+**2D Renaissance Phase 3** — COMPLETE. Gestalt2D fully implemented with Living Earth aesthetic. 4 new components (~800 lines), 28 passing tests.
 
 **Town Frontend** — 60% done. Backend is solid (1559 tests: Sheaf, Events, AGENTESE nodes). Frontend components exist: TownOverview, CitizenBrowser, CoalitionGraph. Mesa (2D) is the visualization now.
 
 **Coalition/Park** — Waiting on Town patterns. Once Town's consent model is proven, the others will follow fast.
 
-**Brain & Gardener** — Production-ready. 100% complete. Could ship now. (3D canvases mothballed, 2D placeholders active)
+**Brain** — 100% complete with Brain2D! CrystalTree (tree-based cartography), CaptureForm (memory capture), GhostSurface (serendipitous recall). Ship-ready.
 
-**Gestalt** — 85%. Full Gestalt2D with layer cards, violation feed, module detail. Living Earth aesthetic applied.
+**Gardener** — 100% complete. Gardener2D with season orb, plot tiles, tending palette. Ship-ready.
+
+**Gestalt** — 100%. Full Gestalt2D with layer cards, violation feed, module detail. Living Earth aesthetic applied.
 
 ---
 
@@ -56,6 +60,28 @@
 ---
 
 ## Session Notes
+
+### 2025-12-18 late — Developer Cockpit (Anti-Sausage Portal)
+**Kent's daily entry point** — Replaced Crown (Hero Path) with developer-focused Cockpit:
+
+**Created**:
+- `pages/Cockpit.tsx` (~500 lines) — Main cockpit page
+- `components/cockpit/VoiceAnchor.tsx` — Rotating voice anchors with breathing
+- `constants/voiceAnchors.ts` — Kent's quotes from _focus.md
+
+**Features**:
+- Voice anchor rotating display with click-to-rotate
+- Session Start Ritual checklist (persists in sessionStorage)
+- Crown Jewel status cards with ghost count badges
+- Quick Launch breathing buttons
+- Recent Traces placeholder (awaiting Différance wiring)
+- Anti-Sausage Check end-of-session checklist
+
+**Deleted**: `pages/Crown.tsx` (user-facing Hero Path — replaced entirely per Kent's choice)
+
+**Key Quote**: *"The cockpit is where Kent meets himself at the start of each day."*
+
+**Synergy**: Integrates with `plans/differance-crown-jewel-wiring.md` Phase 6D — Recent Traces will show heritage when wired.
 
 ### 2025-12-18 late — Différance Engine Phase 5 Complete (FRUITING)
 Implemented **Phase 5** of the Différance Engine (Crown Jewel integration infrastructure):

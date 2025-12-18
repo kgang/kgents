@@ -106,7 +106,7 @@ export const JEWEL_IDENTITY = {
   park: '#4A6B4A',    // Sage - Organic growth, living hosts
   town: '#6B4E3D',    // Wood - Grounded, community, reliable
   coalition: '#D4A574', // Amber - Collaboration glow
-  atelier: '#C08552',  // Copper - Creative fire
+  forge: '#C08552',  // Copper - Creative fire
   brain: '#2E4A2E',   // Fern - Deep thought
   garden: '#4A6B4A',  // Sage - Cultivation, growth
   domain: '#8B5A2B',  // Bronze - Integration, grounding
@@ -310,7 +310,7 @@ export const LIVING_EARTH_FLAT = {
   'jewel-park': JEWEL_IDENTITY.park,
   'jewel-town': JEWEL_IDENTITY.town,
   'jewel-coalition': JEWEL_IDENTITY.coalition,
-  'jewel-atelier': JEWEL_IDENTITY.atelier,
+  'jewel-forge': JEWEL_IDENTITY.forge,
   'jewel-brain': JEWEL_IDENTITY.brain,
   'jewel-garden': JEWEL_IDENTITY.garden,
   'jewel-domain': JEWEL_IDENTITY.domain,

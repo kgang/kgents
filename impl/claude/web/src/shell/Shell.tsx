@@ -61,7 +61,7 @@ function CrownContext() {
     if (path.startsWith('/brain')) return 'brain';
     if (path.startsWith('/gestalt')) return 'gestalt';
     if (path.startsWith('/gardener') || path.startsWith('/garden')) return 'gardener';
-    if (path.startsWith('/atelier')) return 'atelier';
+    if (path.startsWith('/forge')) return 'forge';
     if (path.startsWith('/town') || path.startsWith('/inhabit')) return 'coalition';
     if (path.startsWith('/park')) return 'park';
     if (path.startsWith('/workshop')) return 'domain';
@@ -107,7 +107,7 @@ function QuickNav() {
     { name: 'brain', route: '/brain' },
     { name: 'gestalt', route: '/gestalt' },
     { name: 'gardener', route: '/gardener' },
-    { name: 'atelier', route: '/atelier' },
+    { name: 'forge', route: '/forge' },
     { name: 'coalition', route: '/town' },
     { name: 'park', route: '/park' },
   ];

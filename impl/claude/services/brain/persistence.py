@@ -12,12 +12,21 @@ AGENTESE aspects exposed:
 - surface: Serendipity from the void
 - manifest: Show brain status
 
+Differance Integration (Phase 6B):
+- capture() → trace with alternatives (auto_tag, defer_embedding)
+- surface() → trace with alternatives (different_seed, context_weighted)
+- delete() → trace with alternatives (archive_instead, soft_delete)
+- search/get/list → NO traces (read-only, high frequency)
+
 See: docs/skills/metaphysical-fullstack.md
+See: plans/differance-crown-jewel-wiring.md (Phase 6B)
 """
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+import logging
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -28,10 +37,14 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol, TableAdapter
+from agents.differance.alternatives import get_alternatives
+from agents.differance.integration import DifferanceIntegration
 from models.brain import Crystal, CrystalTag
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -106,6 +119,8 @@ class BrainPersistence:
         self.dgent = dgent
         self.embedder = embedder
         self._ghosts_healed = 0
+        # Differance integration for trace recording (Phase 6B)
+        self._differance = DifferanceIntegration("brain")
 
     # =========================================================================
     # AGENTESE Aspects
@@ -193,7 +208,7 @@ class BrainPersistence:
         # Check if we have embeddings
         has_embedding = self.embedder is not None
 
-        return CaptureResult(
+        result = CaptureResult(
             crystal_id=crystal_id,
             content=content,
             summary=summary,
@@ -203,6 +218,25 @@ class BrainPersistence:
             datum_id=datum_id,
             tags=tags,
         )
+
+        # Fire-and-forget trace recording (Phase 6B)
+        # Non-blocking: don't await, don't slow down capture
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(
+                self._differance.record(
+                    operation="capture",
+                    inputs=(content[:100],),  # Truncate for trace
+                    output=crystal_id,
+                    context=f"Captured {source_type}",
+                    alternatives=get_alternatives("brain", "capture"),
+                )
+            )
+        except RuntimeError:
+            # No event loop - skip trace (graceful degradation)
+            logger.debug("No event loop for capture trace recording")
+
+        return result
 
     async def search(
         self,
@@ -344,7 +378,7 @@ class BrainPersistence:
             crystal.touch()
             await session.commit()
 
-            return SearchResult(
+            result = SearchResult(
                 crystal_id=crystal.id,
                 content=content,
                 summary=crystal.summary,
@@ -352,6 +386,23 @@ class BrainPersistence:
                 captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
                 is_stale=False,
             )
+
+            # Fire-and-forget trace recording (Phase 6B)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="surface",
+                        inputs=(context[:50] if context else "random",),
+                        output=crystal.id,
+                        context=f"Surfaced with entropy={entropy:.2f}",
+                        alternatives=get_alternatives("brain", "surface"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for surface trace recording")
+
+            return result
 
     async def manifest(self) -> BrainStatus:
         """
@@ -484,6 +535,9 @@ class BrainPersistence:
             if crystal is None:
                 return False
 
+            # Capture summary before deletion for trace
+            deleted_summary = crystal.summary[:50] if crystal.summary else "unknown"
+
             # Delete from D-gent first
             if crystal.datum_id:
                 await self.dgent.delete(crystal.datum_id)
@@ -491,6 +545,22 @@ class BrainPersistence:
             # Delete from table (cascade deletes tags)
             await session.delete(crystal)
             await session.commit()
+
+            # Fire-and-forget trace recording (Phase 6B)
+            # Record what was lost — irreversible operation
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="delete",
+                        inputs=(crystal_id,),
+                        output=f"deleted:{crystal_id}",
+                        context=f"Deleted crystal: {deleted_summary}...",
+                        alternatives=get_alternatives("brain", "delete"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for delete trace recording")
 
             return True
 

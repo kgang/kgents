@@ -37,7 +37,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useShell } from './ShellProvider';
-import { JEWEL_COLORS, type JewelName } from '@/constants/jewels';
+import { getJewelColor, type JewelName } from '@/constants/jewels';
 import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
 import { apiClient } from '@/api/client';
 import type { PathInfo, Density } from './types';
@@ -467,7 +467,7 @@ function CrownJewelsSection({
             currentRoute === jewel.route || currentRoute.startsWith(`${jewel.route}/`);
           const isExpanded = expandedJewels.has(jewel.name);
           const hasChildren = jewel.children && jewel.children.length > 0;
-          const color = JEWEL_COLORS[jewel.name];
+          const color = getJewelColor(jewel.name);
           const Icon = jewel.icon;
 
           return (

@@ -69,7 +69,64 @@ _trace_monoid: ContextVar["TraceMonoid | None"] = ContextVar("trace_monoid", def
 
 # Mutable trace buffer for sync recording
 # (TraceMonoid is frozen, so we use a list for sync accumulation)
+# NOTE: Module-level buffer is deprecated; use ContextVar-based buffer for test isolation
 _trace_buffer: list["WiringTrace"] = []
+
+# ContextVar-based buffer for test isolation (Phase 6A)
+_isolated_trace_buffer: ContextVar[list["WiringTrace"] | None] = ContextVar(
+    "isolated_trace_buffer", default=None
+)
+
+
+def _get_active_buffer() -> list["WiringTrace"]:
+    """
+    Get the active trace buffer.
+
+    Returns isolated buffer if set (for testing), otherwise global buffer.
+    This enables pytest-xdist parallel test isolation.
+    """
+    isolated = _isolated_trace_buffer.get()
+    if isolated is not None:
+        return isolated
+    return _trace_buffer
+
+
+def create_isolated_buffer() -> list["WiringTrace"]:
+    """
+    Create and set an isolated buffer for the current context.
+
+    Use in pytest fixtures for test isolation:
+
+        @pytest.fixture(autouse=True)
+        def differance_buffer():
+            buffer = create_isolated_buffer()
+            yield buffer
+            reset_isolated_buffer()
+    """
+    buffer: list["WiringTrace"] = []
+    _isolated_trace_buffer.set(buffer)
+    return buffer
+
+
+def reset_isolated_buffer() -> None:
+    """Reset the isolated buffer to None, reverting to global buffer."""
+    _isolated_trace_buffer.set(None)
+
+
+# Correlation ID for request-level tracing (Phase 6A)
+_current_correlation_id: ContextVar[str | None] = ContextVar(
+    "correlation_id", default=None
+)
+
+
+def get_correlation_id() -> str | None:
+    """Get the current correlation ID from context."""
+    return _current_correlation_id.get()
+
+
+def set_correlation_id(correlation_id: str | None) -> None:
+    """Set the correlation ID in context."""
+    _current_correlation_id.set(correlation_id)
 
 
 def get_current_trace_id() -> str | None:
@@ -104,20 +161,21 @@ def set_trace_monoid(monoid: "TraceMonoid | None") -> None:
 
 def get_trace_buffer() -> list["WiringTrace"]:
     """Get the mutable trace buffer (for sync recording)."""
-    return _trace_buffer
+    return _get_active_buffer()
 
 
 def clear_trace_buffer() -> list["WiringTrace"]:
     """Clear and return the trace buffer contents."""
     global _trace_buffer
-    traces = _trace_buffer.copy()
-    _trace_buffer.clear()
+    buffer = _get_active_buffer()
+    traces = buffer.copy()
+    buffer.clear()
     return traces
 
 
 def _append_to_monoid_buffer(trace: "WiringTrace") -> None:
-    """Append trace to the mutable buffer."""
-    _trace_buffer.append(trace)
+    """Append trace to the active buffer."""
+    _get_active_buffer().append(trace)
 
 
 # =============================================================================
@@ -463,9 +521,15 @@ __all__ = [
     "set_differance_store",
     "get_trace_monoid",
     "set_trace_monoid",
+    # Correlation ID (Phase 6A)
+    "get_correlation_id",
+    "set_correlation_id",
     # Trace buffer
     "get_trace_buffer",
     "clear_trace_buffer",
+    # Buffer isolation (Phase 6A - for testing)
+    "create_isolated_buffer",
+    "reset_isolated_buffer",
     # Trace context
     "TraceContext",
     "get_trace_context",

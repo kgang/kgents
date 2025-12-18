@@ -27,7 +27,8 @@ const ROUTE_TO_JEWEL: Record<string, Jewel> = {
   '/gestalt/live': 'gestalt',
   '/gardener': 'gardener',
   '/garden': 'gardener',
-  '/atelier': 'atelier',
+  '/forge': 'forge',
+  '/atelier': 'forge', // Legacy route
   '/town': 'coalition',
   '/workshop': 'coalition',
   '/inhabit': 'coalition',
@@ -44,7 +45,8 @@ const ROUTE_TO_PATH: Record<string, string> = {
   '/gestalt/live': 'world.infra.*',
   '/gardener': 'concept.gardener.*',
   '/garden': 'concept.garden.*',
-  '/atelier': 'world.atelier.*',
+  '/forge': 'world.forge.*',
+  '/atelier': 'world.forge.*', // Legacy route
   '/town': 'world.town.*',
   '/workshop': 'world.workshop.*',
   '/inhabit': 'world.citizen.*',

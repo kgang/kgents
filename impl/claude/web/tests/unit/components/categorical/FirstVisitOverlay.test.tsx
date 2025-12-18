@@ -214,8 +214,8 @@ describe('FirstVisitOverlay - All Jewel Types', () => {
     });
   });
 
-  it('renders atelier jewel correctly', async () => {
-    render(<FirstVisitOverlay jewel="atelier" />);
+  it('renders forge jewel correctly', async () => {
+    render(<FirstVisitOverlay jewel="forge" />);
     await waitFor(() => {
       expect(screen.getByText('Welcome to Atelier')).toBeInTheDocument();
     });
@@ -506,7 +506,7 @@ describe('useResetFirstVisit', () => {
   it('resets all jewels when no argument provided', async () => {
     localStorageMock.setItem('kgents_first_visit_town', 'true');
     localStorageMock.setItem('kgents_first_visit_park', 'true');
-    localStorageMock.setItem('kgents_first_visit_atelier', 'true');
+    localStorageMock.setItem('kgents_first_visit_forge', 'true');
 
     const TestComponent = () => {
       const reset = useResetFirstVisit();
@@ -518,7 +518,7 @@ describe('useResetFirstVisit', () => {
 
     expect(localStorageMock.getItem('kgents_first_visit_town')).toBeNull();
     expect(localStorageMock.getItem('kgents_first_visit_park')).toBeNull();
-    expect(localStorageMock.getItem('kgents_first_visit_atelier')).toBeNull();
+    expect(localStorageMock.getItem('kgents_first_visit_forge')).toBeNull();
   });
 });
 

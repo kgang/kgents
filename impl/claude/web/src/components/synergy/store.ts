@@ -220,7 +220,7 @@ export const synergyToast = {
 
   /** Atelier → Brain: Piece created */
   pieceCreated: (title: string) => {
-    showSynergyToast('atelier', 'brain', 'piece_created', `"${title}"`, {
+    showSynergyToast('forge', 'brain', 'piece_created', `"${title}"`, {
       label: 'View Crystal',
       href: '/brain',
     });

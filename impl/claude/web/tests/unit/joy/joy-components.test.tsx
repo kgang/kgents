@@ -278,8 +278,8 @@ describe('PersonalityLoading', () => {
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with atelier jewel Lucide icon', () => {
-    render(<PersonalityLoading jewel="atelier" />);
+  it('renders with forge jewel Lucide icon', () => {
+    render(<PersonalityLoading jewel="forge" />);
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 

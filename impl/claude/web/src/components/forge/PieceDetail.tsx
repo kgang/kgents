@@ -12,7 +12,7 @@
  */
 
 // React import not needed for JSX in modern React
-import type { Piece } from '@/api/atelier';
+import type { Piece } from '@/api/forge';
 
 interface PieceDetailProps {
   piece: Piece;

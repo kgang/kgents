@@ -11,7 +11,7 @@
  */
 
 import { useMemo } from 'react';
-import type { LineageResponse, LineageNode } from '@/api/atelier';
+import type { LineageResponse, LineageNode } from '@/api/forge';
 
 interface LineageTreeProps {
   lineage: LineageResponse;

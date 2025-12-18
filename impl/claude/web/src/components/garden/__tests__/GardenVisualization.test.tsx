@@ -17,7 +17,7 @@ import type { GardenJSON, PlotJSON, GestureJSON } from '@/reactive/types';
 // =============================================================================
 
 const mockPlot: PlotJSON = {
-  name: 'atelier',
+  name: 'forge',
   path: 'world.atelier',
   description: 'Creative workshop for artifact creation',
   plan_path: null,
@@ -212,7 +212,7 @@ describe('PlotCard', () => {
     );
 
     fireEvent.click(screen.getByRole('button'));
-    expect(onSelect).toHaveBeenCalledWith('atelier');
+    expect(onSelect).toHaveBeenCalledWith('forge');
   });
 
   it('shows tags', () => {
@@ -374,7 +374,7 @@ describe('GardenVisualization', () => {
     // Click on the plot card
     fireEvent.click(screen.getByText('Atelier'));
 
-    expect(onPlotSelect).toHaveBeenCalledWith('atelier');
+    expect(onPlotSelect).toHaveBeenCalledWith('forge');
   });
 });
 

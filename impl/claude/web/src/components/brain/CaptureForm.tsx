@@ -13,7 +13,7 @@ import { useState, useCallback } from 'react';
 import { Sparkles, Tag, Loader2, Check, AlertCircle } from 'lucide-react';
 import { celebrate } from '@/components/joy';
 import { brainApi } from '@/api/client';
-import type { SelfMemoryCaptureResponse } from '@/api/types';
+import type { BrainCaptureResponse } from '@/api/types';
 
 // =============================================================================
 // Types
@@ -21,7 +21,7 @@ import type { SelfMemoryCaptureResponse } from '@/api/types';
 
 export interface CaptureFormProps {
   /** Callback after successful capture */
-  onCapture?: (result: SelfMemoryCaptureResponse) => void;
+  onCapture?: (result: BrainCaptureResponse) => void;
   /** Default tags to include */
   defaultTags?: string[];
   /** Compact mode for mobile/drawer */
@@ -46,7 +46,7 @@ export function CaptureForm({
   const [tagsInput, setTagsInput] = useState(defaultTags.join(', '));
   const [state, setState] = useState<CaptureState>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [lastCapture, setLastCapture] = useState<SelfMemoryCaptureResponse | null>(null);
+  const [lastCapture, setLastCapture] = useState<BrainCaptureResponse | null>(null);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -68,11 +68,11 @@ export function CaptureForm({
           .filter((t) => t.length > 0);
 
         // Call AGENTESE capture endpoint via brainApi
-        const result = (await brainApi.capture({
+        // Note: tags not yet supported in BrainCaptureRequest - content + metadata only
+        const result = await brainApi.capture({
           content: content.trim(),
-          tags,
-          source_type: 'web-capture',
-        })) as SelfMemoryCaptureResponse;
+          metadata: { tags, source_type: 'web-capture' },
+        });
 
         // Success!
         setState('success');
@@ -164,7 +164,7 @@ export function CaptureForm({
       {state === 'success' && lastCapture && (
         <div className="flex items-center gap-2 text-green-400 text-sm bg-green-900/20 px-3 py-2 rounded-lg">
           <Check className="w-4 h-4" />
-          <span>Captured: {lastCapture.summary || lastCapture.crystal_id.slice(0, 8)}</span>
+          <span>Captured: {lastCapture.concept_id?.slice(0, 8) || 'memory'}</span>
         </div>
       )}
 

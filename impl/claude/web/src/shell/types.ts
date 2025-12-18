@@ -110,7 +110,7 @@ export type CrownJewel =
   | 'brain'
   | 'gestalt'
   | 'gardener'
-  | 'atelier'
+  | 'forge'
   | 'coalition'
   | 'park'
   | 'domain';

@@ -96,7 +96,7 @@ export default function Workshop() {
             >
               {isLoading && (
                 <div className="h-full flex items-center justify-center" style={{ minHeight: isMobile ? '200px' : '300px' }}>
-                  <PersonalityLoading jewel="atelier" action="create" />
+                  <PersonalityLoading jewel="forge" action="create" />
                 </div>
               )}
 

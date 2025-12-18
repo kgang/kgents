@@ -926,7 +926,7 @@ export function useSubmitBid(): MutationResult<
 // =============================================================================
 
 export const forgeQueryKeys = {
-  all: ['atelier'] as const,
+  all: ['forge'] as const,
   manifest: () => [...forgeQueryKeys.all, 'manifest'] as const,
   workshops: () => [...forgeQueryKeys.all, 'workshops'] as const,
   workshopsList: () => [...forgeQueryKeys.workshops(), 'list'] as const,
@@ -940,42 +940,4 @@ export const forgeQueryKeys = {
   tokens: () => [...forgeQueryKeys.all, 'tokens'] as const,
 };
 
-// =============================================================================
-// Re-export types for convenience
-// =============================================================================
-
-export type {
-  WorldForgeManifestResponse,
-  WorldForgeWorkshopListResponse,
-  WorldForgeWorkshopGetRequest,
-  WorldForgeWorkshopGetResponse,
-  WorldForgeWorkshopCreateRequest,
-  WorldForgeWorkshopCreateResponse,
-  WorldForgeWorkshopEndRequest,
-  WorldForgeWorkshopEndResponse,
-  WorldForgeArtisanListRequest,
-  WorldForgeArtisanListResponse,
-  WorldForgeArtisanJoinRequest,
-  WorldForgeArtisanJoinResponse,
-  WorldForgeContributeRequest,
-  WorldForgeContributeResponse,
-  WorldForgeContributionListResponse,
-  WorldForgeExhibitionCreateRequest,
-  WorldForgeExhibitionCreateResponse,
-  WorldForgeExhibitionOpenRequest,
-  WorldForgeExhibitionOpenResponse,
-  WorldForgeExhibitionViewRequest,
-  WorldForgeExhibitionViewResponse,
-  WorldForgeGalleryListRequest,
-  WorldForgeGalleryListResponse,
-  WorldForgeGalleryAddRequest,
-  WorldForgeGalleryAddResponse,
-  WorldForgeFestivalListResponse,
-  WorldForgeFestivalCreateRequest,
-  WorldForgeFestivalCreateResponse,
-  WorldForgeFestivalEnterRequest,
-  WorldForgeFestivalEnterResponse,
-  WorldForgeTokensManifestResponse,
-  WorldForgeBidSubmitRequest,
-  WorldForgeBidSubmitResponse,
-};
+// Types are already exported via type aliases at the top of this file

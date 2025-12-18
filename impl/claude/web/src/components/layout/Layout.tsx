@@ -71,9 +71,9 @@ export function Layout() {
               />
               <span className="text-gray-600">│</span>
               <NavLink
-                to="/atelier"
-                jewel="atelier"
-                label="Atelier"
+                to="/forge"
+                jewel="forge"
+                label="Forge"
                 currentPath={location.pathname}
               />
               <NavLink

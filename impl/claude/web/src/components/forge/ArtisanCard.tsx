@@ -8,7 +8,7 @@
  */
 
 import { useState } from 'react';
-import type { Artisan } from '@/api/atelier';
+import type { Artisan } from '@/api/forge';
 import { EigenvectorRadar, EigenvectorBars } from '@/components/eigenvector';
 
 interface ArtisanCardProps {

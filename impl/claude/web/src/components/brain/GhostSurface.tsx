@@ -15,7 +15,6 @@ import { useState, useCallback } from 'react';
 import { Sparkles, Loader2, AlertCircle, ExternalLink } from 'lucide-react';
 import { Breathe, PopOnMount } from '@/components/joy';
 import { brainApi } from '@/api/client';
-import type { BrainGhostResponse } from '@/api/types';
 
 // =============================================================================
 // Types
@@ -57,19 +56,20 @@ export function GhostSurface({ onSurface, compact = false, className = '' }: Gho
 
     try {
       // Call AGENTESE ghost endpoint (wraps surface with optional LLM explanation)
-      const response = (await brainApi.ghost({
-        context: context.trim() || undefined,
+      // BrainGhostResponse has { surfaced: GhostMemory[], context, status, count }
+      const response = await brainApi.ghost({
+        context: context.trim() || 'recent thoughts',
         limit: 1,
-      })) as BrainGhostResponse;
+      });
 
-      if (response.crystals && response.crystals.length > 0) {
-        const firstCrystal = response.crystals[0];
+      if (response.surfaced && response.surfaced.length > 0) {
+        const firstGhost = response.surfaced[0];
         setState('surfaced');
         setResult({
-          crystal_id: firstCrystal.crystal_id,
-          content: firstCrystal.content || '',
-          summary: firstCrystal.summary || '',
-          similarity: firstCrystal.similarity || 0,
+          crystal_id: firstGhost.concept_id,
+          content: firstGhost.content || '',
+          summary: firstGhost.content?.slice(0, 100) || 'Ghost memory surfaced',
+          similarity: firstGhost.relevance || 0.5,
         });
       } else {
         setState('empty');

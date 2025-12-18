@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { ArtisanCard } from './ArtisanCard';
-import { atelierApi, type Artisan } from '@/api/atelier';
+import { forgeApi, type Artisan } from '@/api/forge';
 
 interface ArtisanGridProps {
   /** Allow selecting multiple artisans */
@@ -34,7 +34,7 @@ export function ArtisanGrid({
     async function fetchArtisans() {
       try {
         setLoading(true);
-        const response = await atelierApi.getArtisans();
+        const response = await forgeApi.getArtisans();
         setArtisans(response.data.artisans);
         setError(null);
       } catch (err) {

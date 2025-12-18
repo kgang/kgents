@@ -1,10 +1,10 @@
 /**
- * Atelier API Client
+ * Forge API Client
  *
- * API client for Tiny Atelier endpoints.
+ * API client for Forge endpoints.
  * Handles commission streaming, gallery management, and collaboration.
  *
- * Theme: Orisinal.com aesthetic - whimsical, minimal, melancholic but hopeful.
+ * The Forge is where Kent builds - not a fishbowl for spectators.
  */
 
 import { apiClient } from './client';
@@ -102,7 +102,7 @@ export interface CommissionQueuedResponse {
   status: string;
 }
 
-export interface AtelierStatus {
+export interface ForgeStatus {
   status: string;
   total_commissions: number;
   total_pieces: number;
@@ -112,7 +112,7 @@ export interface AtelierStatus {
 }
 
 // SSE Event types
-export type AtelierEventType =
+export type ForgeEventType =
   | 'commission_received'
   | 'contemplating'
   | 'working'
@@ -120,8 +120,8 @@ export type AtelierEventType =
   | 'piece_complete'
   | 'error';
 
-export interface AtelierEvent {
-  event_type: AtelierEventType;
+export interface ForgeEvent {
+  event_type: ForgeEventType;
   artisan: string;
   commission_id: string | null;
   message: string;
@@ -129,20 +129,25 @@ export interface AtelierEvent {
   timestamp: string;
 }
 
+// Legacy aliases for backward compatibility
+export type AtelierStatus = ForgeStatus;
+export type AtelierEventType = ForgeEventType;
+export type AtelierEvent = ForgeEvent;
+
 // =============================================================================
 // API Functions
 // =============================================================================
 
-export const atelierApi = {
+export const forgeApi = {
   /**
    * List available artisans
    */
-  getArtisans: () => apiClient.get<ArtisansResponse>('/api/atelier/artisans'),
+  getArtisans: () => apiClient.get<ArtisansResponse>('/api/forge/artisans'),
 
   /**
    * Get workshop status
    */
-  getStatus: () => apiClient.get<AtelierStatus>('/api/atelier/status'),
+  getStatus: () => apiClient.get<ForgeStatus>('/api/forge/status'),
 
   /**
    * List gallery pieces
@@ -152,24 +157,24 @@ export const atelierApi = {
     form?: string;
     limit?: number;
     offset?: number;
-  }) => apiClient.get<GalleryResponse>('/api/atelier/gallery', { params }),
+  }) => apiClient.get<GalleryResponse>('/api/forge/gallery', { params }),
 
   /**
    * Get a piece with full provenance
    */
-  getPiece: (pieceId: string) => apiClient.get<Piece>(`/api/atelier/gallery/${pieceId}`),
+  getPiece: (pieceId: string) => apiClient.get<Piece>(`/api/forge/gallery/${pieceId}`),
 
   /**
    * Get piece lineage
    */
   getLineage: (pieceId: string) =>
-    apiClient.get<LineageResponse>(`/api/atelier/gallery/${pieceId}/lineage`),
+    apiClient.get<LineageResponse>(`/api/forge/gallery/${pieceId}/lineage`),
 
   /**
    * Search gallery
    */
   searchGallery: (query: string, limit?: number) =>
-    apiClient.get<GalleryResponse>('/api/atelier/gallery/search', {
+    apiClient.get<GalleryResponse>('/api/forge/gallery/search', {
       params: { query, limit },
     }),
 
@@ -177,13 +182,13 @@ export const atelierApi = {
    * Delete a piece
    */
   deletePiece: (pieceId: string) =>
-    apiClient.delete(`/api/atelier/gallery/${pieceId}`),
+    apiClient.delete(`/api/forge/gallery/${pieceId}`),
 
   /**
    * Queue a commission for background processing
    */
   queueCommission: (artisan: string, request: string, patron?: string) =>
-    apiClient.post<CommissionQueuedResponse>('/api/atelier/queue', {
+    apiClient.post<CommissionQueuedResponse>('/api/forge/queue', {
       artisan,
       request,
       patron,
@@ -192,8 +197,11 @@ export const atelierApi = {
   /**
    * Get pending queue
    */
-  getPending: () => apiClient.get<PendingResponse>('/api/atelier/queue/pending'),
+  getPending: () => apiClient.get<PendingResponse>('/api/forge/queue/pending'),
 };
+
+// Legacy alias for backward compatibility
+export const atelierApi = forgeApi;
 
 // =============================================================================
 // SSE Stream URLs
@@ -205,19 +213,19 @@ export const atelierApi = {
 export function getCommissionStreamUrl(): string {
   // Note: SSE is POST but EventSource only supports GET
   // We'll use fetch with ReadableStream instead
-  return '/api/atelier/commission';
+  return '/api/forge/commission';
 }
 
 /**
  * Get SSE URL for collaboration
  */
 export function getCollaborateStreamUrl(): string {
-  return '/api/atelier/collaborate';
+  return '/api/forge/collaborate';
 }
 
 /**
  * Get SSE URL for processing queue
  */
 export function getProcessQueueStreamUrl(all?: boolean): string {
-  return `/api/atelier/queue/process${all ? '?all=true' : ''}`;
+  return `/api/forge/queue/process${all ? '?all=true' : ''}`;
 }

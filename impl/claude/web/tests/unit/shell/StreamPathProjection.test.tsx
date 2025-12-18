@@ -429,11 +429,11 @@ describe('StreamPathProjection crown jewel', () => {
     const loader = createLoaderResult();
     const stream = createStreamResult();
 
-    const jewels: Array<'brain' | 'gestalt' | 'gardener' | 'atelier' | 'coalition' | 'park' | 'domain'> = [
+    const jewels: Array<'brain' | 'gestalt' | 'gardener' | 'forge' | 'coalition' | 'park' | 'domain'> = [
       'brain',
       'gestalt',
       'gardener',
-      'atelier',
+      'forge',
       'coalition',
       'park',
       'domain',

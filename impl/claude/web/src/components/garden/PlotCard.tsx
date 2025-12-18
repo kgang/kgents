@@ -23,7 +23,7 @@ interface PlotCardProps {
 
 /** Map Crown Jewel names to JewelName type for icon lookup */
 const JEWEL_NAME_MAP: Record<string, JewelName> = {
-  Atelier: 'atelier',
+  Forge: 'forge',
   Coalition: 'coalition',
   Brain: 'brain',
   Park: 'park',

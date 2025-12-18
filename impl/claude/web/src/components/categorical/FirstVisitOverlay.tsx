@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 // Types
 // =============================================================================
 
-export type JewelType = 'town' | 'park' | 'atelier' | 'coalition' | 'brain' | 'gardener' | 'gestalt';
+export type JewelType = 'town' | 'park' | 'forge' | 'coalition' | 'brain' | 'gardener' | 'gestalt';
 
 export interface FirstVisitOverlayProps {
   /** Which jewel this is for */
@@ -79,8 +79,8 @@ const JEWEL_CONFIGS: Record<JewelType, JewelConfig> = {
       'Mask-based affordances',
     ],
   },
-  atelier: {
-    title: 'Welcome to Atelier',
+  forge: {
+    title: 'Welcome to the Forge',
     subtitle: 'The fishbowl where spectators collaborate',
     description:
       'Watch and influence creative sessions in real-time. Your participation shapes the outcome through earned actions.',

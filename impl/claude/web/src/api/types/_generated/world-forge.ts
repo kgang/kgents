@@ -1,12 +1,12 @@
 /**
- * Generated types for AGENTESE path: world.atelier
+ * Generated types for AGENTESE path: world.forge
  * DO NOT EDIT - regenerate with: npm run sync-types
  */
 
 /**
- * Atelier health status manifest response.
+ * Forge health status manifest response.
  */
-export interface WorldAtelierManifestResponse {
+export interface WorldForgeManifestResponse {
   total_workshops: number;
   active_workshops: number;
   total_artisans: number;
@@ -19,7 +19,7 @@ export interface WorldAtelierManifestResponse {
 /**
  * Response for workshop list aspect.
  */
-export interface WorldAtelierWorkshopListResponse {
+export interface WorldForgeWorkshopListResponse {
   count: number;
   workshops: {
     id: string;
@@ -37,7 +37,7 @@ export interface WorldAtelierWorkshopListResponse {
 /**
  * Response for contribution list.
  */
-export interface WorldAtelierContributionListResponse {
+export interface WorldForgeContributionListResponse {
   count: number;
   contributions: {
     id: string;
@@ -55,7 +55,7 @@ export interface WorldAtelierContributionListResponse {
 /**
  * Response for festival list.
  */
-export interface WorldAtelierFestivalListResponse {
+export interface WorldForgeFestivalListResponse {
   count: number;
   festivals: {
     id: string;
@@ -73,14 +73,14 @@ export interface WorldAtelierFestivalListResponse {
 /**
  * Request for workshop details.
  */
-export interface WorldAtelierWorkshopGetRequest {
+export interface WorldForgeWorkshopGetRequest {
   workshop_id: string;
 }
 
 /**
  * Response for workshop details.
  */
-export interface WorldAtelierWorkshopGetResponse {
+export interface WorldForgeWorkshopGetResponse {
   /** Summary of a workshop. */
   workshop: {
     id: string;
@@ -98,7 +98,7 @@ export interface WorldAtelierWorkshopGetResponse {
 /**
  * Request to create a workshop.
  */
-export interface WorldAtelierWorkshopCreateRequest {
+export interface WorldForgeWorkshopCreateRequest {
   name: string;
   description?: string | null;
   theme?: string | null;
@@ -108,7 +108,7 @@ export interface WorldAtelierWorkshopCreateRequest {
 /**
  * Response after creating a workshop.
  */
-export interface WorldAtelierWorkshopCreateResponse {
+export interface WorldForgeWorkshopCreateResponse {
   /** Summary of a workshop. */
   workshop: {
     id: string;
@@ -126,14 +126,14 @@ export interface WorldAtelierWorkshopCreateResponse {
 /**
  * Request to end a workshop.
  */
-export interface WorldAtelierWorkshopEndRequest {
+export interface WorldForgeWorkshopEndRequest {
   workshop_id: string;
 }
 
 /**
  * Response after ending a workshop.
  */
-export interface WorldAtelierWorkshopEndResponse {
+export interface WorldForgeWorkshopEndResponse {
   success: boolean;
   workshop_id: string;
 }
@@ -141,7 +141,7 @@ export interface WorldAtelierWorkshopEndResponse {
 /**
  * Request for artisan list.
  */
-export interface WorldAtelierArtisanListRequest {
+export interface WorldForgeArtisanListRequest {
   workshop_id: string;
   specialty?: string | null;
   active_only?: boolean;
@@ -150,7 +150,7 @@ export interface WorldAtelierArtisanListRequest {
 /**
  * Response for artisan list.
  */
-export interface WorldAtelierArtisanListResponse {
+export interface WorldForgeArtisanListResponse {
   count: number;
   artisans: {
     id: string;
@@ -167,7 +167,7 @@ export interface WorldAtelierArtisanListResponse {
 /**
  * Request to join a workshop.
  */
-export interface WorldAtelierArtisanJoinRequest {
+export interface WorldForgeArtisanJoinRequest {
   workshop_id: string;
   name: string;
   specialty: string;
@@ -178,7 +178,7 @@ export interface WorldAtelierArtisanJoinRequest {
 /**
  * Response after joining a workshop.
  */
-export interface WorldAtelierArtisanJoinResponse {
+export interface WorldForgeArtisanJoinResponse {
   /** Summary of an artisan. */
   artisan: {
     id: string;
@@ -195,7 +195,7 @@ export interface WorldAtelierArtisanJoinResponse {
 /**
  * Request to submit a contribution.
  */
-export interface WorldAtelierContributeRequest {
+export interface WorldForgeContributeRequest {
   artisan_id: string;
   content: string;
   content_type?: string;
@@ -208,7 +208,7 @@ export interface WorldAtelierContributeRequest {
 /**
  * Response after contributing.
  */
-export interface WorldAtelierContributeResponse {
+export interface WorldForgeContributeResponse {
   /** Summary of a contribution. */
   contribution: {
     id: string;
@@ -226,7 +226,7 @@ export interface WorldAtelierContributeResponse {
 /**
  * Request to create an exhibition.
  */
-export interface WorldAtelierExhibitionCreateRequest {
+export interface WorldForgeExhibitionCreateRequest {
   workshop_id: string;
   name: string;
   description?: string | null;
@@ -236,7 +236,7 @@ export interface WorldAtelierExhibitionCreateRequest {
 /**
  * Response after creating an exhibition.
  */
-export interface WorldAtelierExhibitionCreateResponse {
+export interface WorldForgeExhibitionCreateResponse {
   /** Summary of an exhibition. */
   exhibition: {
     id: string;
@@ -255,14 +255,14 @@ export interface WorldAtelierExhibitionCreateResponse {
 /**
  * Request to open an exhibition.
  */
-export interface WorldAtelierExhibitionOpenRequest {
+export interface WorldForgeExhibitionOpenRequest {
   exhibition_id: string;
 }
 
 /**
  * Response after opening an exhibition.
  */
-export interface WorldAtelierExhibitionOpenResponse {
+export interface WorldForgeExhibitionOpenResponse {
   success: boolean;
   exhibition_id: string;
 }
@@ -270,14 +270,14 @@ export interface WorldAtelierExhibitionOpenResponse {
 /**
  * Request to view an exhibition.
  */
-export interface WorldAtelierExhibitionViewRequest {
+export interface WorldForgeExhibitionViewRequest {
   exhibition_id: string;
 }
 
 /**
  * Response after viewing an exhibition.
  */
-export interface WorldAtelierExhibitionViewResponse {
+export interface WorldForgeExhibitionViewResponse {
   /** Summary of an exhibition. */
   exhibition: {
     id: string;
@@ -296,14 +296,14 @@ export interface WorldAtelierExhibitionViewResponse {
 /**
  * Request for gallery list.
  */
-export interface WorldAtelierGalleryListRequest {
+export interface WorldForgeGalleryListRequest {
   exhibition_id: string;
 }
 
 /**
  * Response for gallery list.
  */
-export interface WorldAtelierGalleryListResponse {
+export interface WorldForgeGalleryListResponse {
   count: number;
   items: {
     id: string;
@@ -320,7 +320,7 @@ export interface WorldAtelierGalleryListResponse {
 /**
  * Request to add item to gallery.
  */
-export interface WorldAtelierGalleryAddRequest {
+export interface WorldForgeGalleryAddRequest {
   exhibition_id: string;
   artifact_content: string;
   artifact_type?: string;
@@ -332,7 +332,7 @@ export interface WorldAtelierGalleryAddRequest {
 /**
  * Response after adding to gallery.
  */
-export interface WorldAtelierGalleryAddResponse {
+export interface WorldForgeGalleryAddResponse {
   /** Summary of a gallery item. */
   item: {
     id: string;
@@ -349,7 +349,7 @@ export interface WorldAtelierGalleryAddResponse {
 /**
  * Token balance manifest.
  */
-export interface WorldAtelierTokensManifestResponse {
+export interface WorldForgeTokensManifestResponse {
   user_id: string;
   balance: number;
   earning_rate: number | null;
@@ -359,7 +359,7 @@ export interface WorldAtelierTokensManifestResponse {
 /**
  * Request to submit a bid.
  */
-export interface WorldAtelierBidSubmitRequest {
+export interface WorldForgeBidSubmitRequest {
   session_id: string;
   bid_type: string;
   content: string;
@@ -368,7 +368,7 @@ export interface WorldAtelierBidSubmitRequest {
 /**
  * Response after submitting a bid.
  */
-export interface WorldAtelierBidSubmitResponse {
+export interface WorldForgeBidSubmitResponse {
   success: boolean;
   bid_id: string | null;
   new_balance: string;
@@ -379,7 +379,7 @@ export interface WorldAtelierBidSubmitResponse {
 /**
  * Request to create a festival.
  */
-export interface WorldAtelierFestivalCreateRequest {
+export interface WorldForgeFestivalCreateRequest {
   title: string;
   theme: string;
   description?: string | null;
@@ -390,7 +390,7 @@ export interface WorldAtelierFestivalCreateRequest {
 /**
  * Response after creating a festival.
  */
-export interface WorldAtelierFestivalCreateResponse {
+export interface WorldForgeFestivalCreateResponse {
   /** Summary of a festival. */
   festival: {
     id: string;
@@ -408,7 +408,7 @@ export interface WorldAtelierFestivalCreateResponse {
 /**
  * Request to enter a festival.
  */
-export interface WorldAtelierFestivalEnterRequest {
+export interface WorldForgeFestivalEnterRequest {
   festival_id: string;
   artisan: string;
   prompt: string;
@@ -419,7 +419,7 @@ export interface WorldAtelierFestivalEnterRequest {
 /**
  * Response after entering a festival.
  */
-export interface WorldAtelierFestivalEnterResponse {
+export interface WorldForgeFestivalEnterResponse {
   /** Summary of a festival entry. */
   entry: {
     id: string;
@@ -431,3 +431,74 @@ export interface WorldAtelierFestivalEnterResponse {
     submitted_at: string;
   };
 }
+
+// =============================================================================
+// Legacy Type Aliases (for backwards compatibility during migration)
+// =============================================================================
+
+/** @deprecated Use WorldForgeManifestResponse instead */
+export type WorldAtelierManifestResponse = WorldForgeManifestResponse;
+/** @deprecated Use WorldForgeWorkshopListResponse instead */
+export type WorldAtelierWorkshopListResponse = WorldForgeWorkshopListResponse;
+/** @deprecated Use WorldForgeContributionListResponse instead */
+export type WorldAtelierContributionListResponse = WorldForgeContributionListResponse;
+/** @deprecated Use WorldForgeFestivalListResponse instead */
+export type WorldAtelierFestivalListResponse = WorldForgeFestivalListResponse;
+/** @deprecated Use WorldForgeWorkshopGetRequest instead */
+export type WorldAtelierWorkshopGetRequest = WorldForgeWorkshopGetRequest;
+/** @deprecated Use WorldForgeWorkshopGetResponse instead */
+export type WorldAtelierWorkshopGetResponse = WorldForgeWorkshopGetResponse;
+/** @deprecated Use WorldForgeWorkshopCreateRequest instead */
+export type WorldAtelierWorkshopCreateRequest = WorldForgeWorkshopCreateRequest;
+/** @deprecated Use WorldForgeWorkshopCreateResponse instead */
+export type WorldAtelierWorkshopCreateResponse = WorldForgeWorkshopCreateResponse;
+/** @deprecated Use WorldForgeWorkshopEndRequest instead */
+export type WorldAtelierWorkshopEndRequest = WorldForgeWorkshopEndRequest;
+/** @deprecated Use WorldForgeWorkshopEndResponse instead */
+export type WorldAtelierWorkshopEndResponse = WorldForgeWorkshopEndResponse;
+/** @deprecated Use WorldForgeArtisanListRequest instead */
+export type WorldAtelierArtisanListRequest = WorldForgeArtisanListRequest;
+/** @deprecated Use WorldForgeArtisanListResponse instead */
+export type WorldAtelierArtisanListResponse = WorldForgeArtisanListResponse;
+/** @deprecated Use WorldForgeArtisanJoinRequest instead */
+export type WorldAtelierArtisanJoinRequest = WorldForgeArtisanJoinRequest;
+/** @deprecated Use WorldForgeArtisanJoinResponse instead */
+export type WorldAtelierArtisanJoinResponse = WorldForgeArtisanJoinResponse;
+/** @deprecated Use WorldForgeContributeRequest instead */
+export type WorldAtelierContributeRequest = WorldForgeContributeRequest;
+/** @deprecated Use WorldForgeContributeResponse instead */
+export type WorldAtelierContributeResponse = WorldForgeContributeResponse;
+/** @deprecated Use WorldForgeExhibitionCreateRequest instead */
+export type WorldAtelierExhibitionCreateRequest = WorldForgeExhibitionCreateRequest;
+/** @deprecated Use WorldForgeExhibitionCreateResponse instead */
+export type WorldAtelierExhibitionCreateResponse = WorldForgeExhibitionCreateResponse;
+/** @deprecated Use WorldForgeExhibitionOpenRequest instead */
+export type WorldAtelierExhibitionOpenRequest = WorldForgeExhibitionOpenRequest;
+/** @deprecated Use WorldForgeExhibitionOpenResponse instead */
+export type WorldAtelierExhibitionOpenResponse = WorldForgeExhibitionOpenResponse;
+/** @deprecated Use WorldForgeExhibitionViewRequest instead */
+export type WorldAtelierExhibitionViewRequest = WorldForgeExhibitionViewRequest;
+/** @deprecated Use WorldForgeExhibitionViewResponse instead */
+export type WorldAtelierExhibitionViewResponse = WorldForgeExhibitionViewResponse;
+/** @deprecated Use WorldForgeGalleryListRequest instead */
+export type WorldAtelierGalleryListRequest = WorldForgeGalleryListRequest;
+/** @deprecated Use WorldForgeGalleryListResponse instead */
+export type WorldAtelierGalleryListResponse = WorldForgeGalleryListResponse;
+/** @deprecated Use WorldForgeGalleryAddRequest instead */
+export type WorldAtelierGalleryAddRequest = WorldForgeGalleryAddRequest;
+/** @deprecated Use WorldForgeGalleryAddResponse instead */
+export type WorldAtelierGalleryAddResponse = WorldForgeGalleryAddResponse;
+/** @deprecated Use WorldForgeTokensManifestResponse instead */
+export type WorldAtelierTokensManifestResponse = WorldForgeTokensManifestResponse;
+/** @deprecated Use WorldForgeBidSubmitRequest instead */
+export type WorldAtelierBidSubmitRequest = WorldForgeBidSubmitRequest;
+/** @deprecated Use WorldForgeBidSubmitResponse instead */
+export type WorldAtelierBidSubmitResponse = WorldForgeBidSubmitResponse;
+/** @deprecated Use WorldForgeFestivalCreateRequest instead */
+export type WorldAtelierFestivalCreateRequest = WorldForgeFestivalCreateRequest;
+/** @deprecated Use WorldForgeFestivalCreateResponse instead */
+export type WorldAtelierFestivalCreateResponse = WorldForgeFestivalCreateResponse;
+/** @deprecated Use WorldForgeFestivalEnterRequest instead */
+export type WorldAtelierFestivalEnterRequest = WorldForgeFestivalEnterRequest;
+/** @deprecated Use WorldForgeFestivalEnterResponse instead */
+export type WorldAtelierFestivalEnterResponse = WorldForgeFestivalEnterResponse;

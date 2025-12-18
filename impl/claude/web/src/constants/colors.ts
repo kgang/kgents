@@ -412,7 +412,7 @@ export function getLivingEarthColor(name: string): string {
  */
 export const JEWEL_IDENTITY_COLORS = {
   town: LIVING_EARTH.amber, // Collaboration, warmth
-  atelier: LIVING_EARTH.honey, // Creation, artisan craft
+  forge: LIVING_EARTH.honey, // Creation, artisan craft
   park: LIVING_EARTH.copper, // Drama, performance
   domain: LIVING_EARTH.bronze, // Integration, grounding
   brain: SEMANTIC_COLORS.knowledge, // Cyan - knowledge

@@ -7,7 +7,7 @@ import { SynergyToaster } from './components/synergy';
 import { PageTransition, PersonalityLoading } from './components/joy';
 
 // Essential pages only
-const Crown = lazy(() => import('./pages/Crown'));
+const Cockpit = lazy(() => import('./pages/Cockpit'));
 const Town = lazy(() => import('./pages/Town'));
 const Forge = lazy(() => import('./pages/Forge'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
@@ -48,9 +48,8 @@ function App() {
             <Routes location={location}>
               {/* OS Shell - Unified layout with three persistent layers */}
               <Route element={<Shell />}>
-                {/* Crown landing page - Hero Path entry point */}
-                <Route path="/" element={<Crown />} />
-                <Route path="/crown" element={<Crown />} />
+                {/* Cockpit — Kent's developer portal (Anti-Sausage Protocol manifest) */}
+                <Route path="/" element={<Cockpit />} />
 
                 {/* Crown Jewels */}
                 <Route path="/brain" element={<Brain />} />

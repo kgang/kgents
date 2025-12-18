@@ -26,6 +26,7 @@ import { LayerCard } from './LayerCard';
 import { ViolationFeed } from './ViolationFeed';
 import { ModuleDetail } from './ModuleDetail';
 import { FilterPanel } from './FilterPanel';
+import { GestaltTree } from './GestaltTree';
 
 // =============================================================================
 // Types
@@ -69,6 +70,7 @@ export function Gestalt2D({
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerContent, setDrawerContent] = useState<'filters' | 'detail'>('filters');
+  const [viewMode, setViewMode] = useState<'tree' | 'grid'>('tree'); // Tree is now default!
 
   // Apply filters to modules
   const filteredNodes = useMemo(() => {
@@ -133,27 +135,38 @@ export function Gestalt2D({
         />
 
         {/* Main Content */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
-          {/* Layers */}
-          {Object.entries(layerGroups)
-            .sort((a, b) => b[1].length - a[1].length)
-            .map(([layer, nodes]) => (
-              <LayerCard
-                key={layer}
-                layer={layer}
-                nodes={nodes}
-                color={LAYER_COLORS[layer] || LAYER_COLORS.default}
-                selectedModule={selectedModule}
-                onModuleSelect={handleModuleSelect}
-                compact
-              />
-            ))}
+        {viewMode === 'tree' ? (
+          <GestaltTree
+            modules={filteredNodes}
+            links={topology.links}
+            selectedModule={selectedModule}
+            onModuleSelect={handleModuleSelect}
+            compact
+            className="flex-1"
+          />
+        ) : (
+          <div className="flex-1 overflow-y-auto p-3 space-y-4">
+            {/* Layers */}
+            {Object.entries(layerGroups)
+              .sort((a, b) => b[1].length - a[1].length)
+              .map(([layer, nodes]) => (
+                <LayerCard
+                  key={layer}
+                  layer={layer}
+                  nodes={nodes}
+                  color={LAYER_COLORS[layer] || LAYER_COLORS.default}
+                  selectedModule={selectedModule}
+                  onModuleSelect={handleModuleSelect}
+                  compact
+                />
+              ))}
 
-          {/* Violations */}
-          {violations.length > 0 && (
-            <ViolationFeed violations={violations} maxDisplay={5} compact />
-          )}
-        </div>
+            {/* Violations */}
+            {violations.length > 0 && (
+              <ViolationFeed violations={violations} maxDisplay={5} compact />
+            )}
+          </div>
+        )}
 
         {/* Floating Filter Button */}
         <button
@@ -220,26 +233,36 @@ export function Gestalt2D({
         collapsePriority="secondary"
         className="flex-1"
         primary={
-          <div className="h-full overflow-y-auto p-4 space-y-4">
-            {/* Layer Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {Object.entries(layerGroups)
-                .sort((a, b) => b[1].length - a[1].length)
-                .map(([layer, nodes]) => (
-                  <LayerCard
-                    key={layer}
-                    layer={layer}
-                    nodes={nodes}
-                    color={LAYER_COLORS[layer] || LAYER_COLORS.default}
-                    selectedModule={selectedModule}
-                    onModuleSelect={handleModuleSelect}
-                  />
-                ))}
-            </div>
+          viewMode === 'tree' ? (
+            <GestaltTree
+              modules={filteredNodes}
+              links={topology.links}
+              selectedModule={selectedModule}
+              onModuleSelect={handleModuleSelect}
+              className="h-full"
+            />
+          ) : (
+            <div className="h-full overflow-y-auto p-4 space-y-4">
+              {/* Layer Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {Object.entries(layerGroups)
+                  .sort((a, b) => b[1].length - a[1].length)
+                  .map(([layer, nodes]) => (
+                    <LayerCard
+                      key={layer}
+                      layer={layer}
+                      nodes={nodes}
+                      color={LAYER_COLORS[layer] || LAYER_COLORS.default}
+                      selectedModule={selectedModule}
+                      onModuleSelect={handleModuleSelect}
+                    />
+                  ))}
+              </div>
 
-            {/* Violations */}
-            {violations.length > 0 && <ViolationFeed violations={violations} maxDisplay={10} />}
-          </div>
+              {/* Violations */}
+              {violations.length > 0 && <ViolationFeed violations={violations} maxDisplay={10} />}
+            </div>
+          )
         }
         secondary={
           <div className="h-full overflow-y-auto border-l border-gray-700">

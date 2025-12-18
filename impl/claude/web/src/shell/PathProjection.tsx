@@ -125,7 +125,7 @@ function inferJewel(path: string): CrownJewel | undefined {
     { pattern: /^self\.memory/, jewel: 'brain' },
     { pattern: /^world\.codebase/, jewel: 'gestalt' },
     { pattern: /^concept\.gardener|^self\.garden/, jewel: 'gardener' },
-    { pattern: /^world\.atelier/, jewel: 'atelier' },
+    { pattern: /^world\.atelier/, jewel: 'forge' },
     { pattern: /^world\.town/, jewel: 'coalition' },
     { pattern: /^world\.park/, jewel: 'park' },
     { pattern: /^world\.domain/, jewel: 'domain' },

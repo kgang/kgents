@@ -26,7 +26,7 @@ import { useMotionPreferences } from './useMotionPreferences';
 import { JEWEL_ICONS, JEWEL_COLORS, type JewelName } from '../../constants/jewels';
 import { Leaf as TreeIcon } from 'lucide-react'; // For organic/forest mode
 
-export type CrownJewel = 'brain' | 'gestalt' | 'gardener' | 'atelier' | 'coalition' | 'park' | 'domain';
+export type CrownJewel = 'brain' | 'gestalt' | 'gardener' | 'forge' | 'coalition' | 'park' | 'domain';
 
 export interface PersonalityLoadingProps {
   /** Which jewel context */
@@ -116,18 +116,17 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
       implement: 'Planting seeds...',
     },
   },
-  atelier: {
+  forge: {
     messages: [
-      'Mixing the palette...',
-      'Consulting the muses...',
-      'Preparing the canvas...',
-      'Gathering inspiration...',
-      'Awakening creativity...',
+      'Heating the forge...',
+      'Preparing the tools...',
+      'Laying out the anvil...',
+      'Gathering materials...',
+      'Ready to build...',
     ],
     actionVerbs: {
-      create: 'Creating your piece...',
-      collaborate: 'Coordinating artisans...',
-      bid: 'Processing auction...',
+      create: 'Building your artifact...',
+      collaborate: 'Coordinating builders...',
       refine: 'Refining the work...',
     },
   },

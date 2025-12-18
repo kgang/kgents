@@ -12,7 +12,7 @@
  */
 
 import React, { useState } from 'react';
-import type { Artisan, Piece } from '@/api/atelier';
+import type { Artisan, Piece } from '@/api/forge';
 
 interface CollaborationBuilderProps {
   artisans: Artisan[];

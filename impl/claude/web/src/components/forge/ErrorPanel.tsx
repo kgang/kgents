@@ -1,5 +1,5 @@
 /**
- * ErrorPanel: Friendly error display for the Atelier.
+ * ErrorPanel: Friendly error display for the Forge.
  *
  * Features:
  * - Clear error messaging
