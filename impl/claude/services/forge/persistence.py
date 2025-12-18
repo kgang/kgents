@@ -30,7 +30,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol, TableAdapter
-from models.forge import (
+from models.atelier import (
     ArtifactContribution,
     Artisan,
     Exhibition,

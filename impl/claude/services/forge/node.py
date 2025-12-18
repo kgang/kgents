@@ -50,7 +50,6 @@ from .contracts import (
     ArtisanJoinResponse,
     ArtisanListRequest,
     ArtisanListResponse,
-    ForgeManifestResponse,
     BidSubmitRequest,
     BidSubmitResponse,
     ContributeRequest,
@@ -68,6 +67,7 @@ from .contracts import (
     FestivalEnterRequest,
     FestivalEnterResponse,
     FestivalListResponse,
+    ForgeManifestResponse,
     GalleryAddRequest,
     GalleryAddResponse,
     GalleryListRequest,
@@ -83,18 +83,18 @@ from .contracts import (
 )
 from .persistence import (
     ArtisanView,
-    ForgePersistence,
-    ForgeStatus,
     ContributionView,
     ExhibitionView,
+    ForgePersistence,
+    ForgeStatus,
     GalleryItemView,
     WorkshopView,
 )
 
 if TYPE_CHECKING:
-    from agents.forge.bidding import BidQueue, BidResult, BidType
-    from agents.forge.economy import AsyncTokenPool
-    from agents.forge.festival import Festival, FestivalManager
+    from agents.atelier.bidding import BidQueue, BidResult, BidType
+    from agents.atelier.economy import AsyncTokenPool
+    from agents.atelier.festival import Festival, FestivalManager
 
 
 # === Rendering Types ===
@@ -289,9 +289,7 @@ class ContributionListRendering:
         return {
             "type": "contribution_list",
             "count": len(self.contributions),
-            "contributions": [
-                ContributionRendering(c).to_dict() for c in self.contributions
-            ],
+            "contributions": [ContributionRendering(c).to_dict() for c in self.contributions],
         }
 
     def to_text(self) -> str:
@@ -411,9 +409,7 @@ class GalleryListRendering:
         "artisan.list": Contract(ArtisanListRequest, ArtisanListResponse),
         "artisan.join": Contract(ArtisanJoinRequest, ArtisanJoinResponse),
         "contribute": Contract(ContributeRequest, ContributeResponse),
-        "exhibition.create": Contract(
-            ExhibitionCreateRequest, ExhibitionCreateResponse
-        ),
+        "exhibition.create": Contract(ExhibitionCreateRequest, ExhibitionCreateResponse),
         "exhibition.open": Contract(ExhibitionOpenRequest, ExhibitionOpenResponse),
         "exhibition.view": Contract(ExhibitionViewRequest, ExhibitionViewResponse),
         "gallery.list": Contract(GalleryListRequest, GalleryListResponse),
@@ -911,7 +907,7 @@ class ForgeNode(BaseLogosNode):
                 {"error": "not_enabled", "feature": "token_pool"},
             )
 
-        from agents.forge.bidding import BidType as BT
+        from agents.atelier.bidding import BidType as BT
 
         user_id = getattr(observer, "identity", None) or "anonymous"
 
@@ -970,7 +966,7 @@ class ForgeNode(BaseLogosNode):
                 {"error": "not_enabled", "feature": "festivals"},
             )
 
-        from agents.forge.festival import FestivalStatus, Season
+        from agents.atelier.festival import FestivalStatus, Season
 
         # Parse filters
         status_filter = FestivalStatus(status) if status else None

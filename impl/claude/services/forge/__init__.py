@@ -1,63 +1,48 @@
 """
-Forge Crown Jewel: Creative Workshop Fishbowl.
+Forge Crown Jewel: The Metaphysical Fullstack Developer Workshop.
 
-The Forge is a collaborative creative workshop where spectators can
-observe and participate in the creative process.
+The Forge is where Kent builds agents using categorical artisans.
+Unlike Atelier (spectator fishbowl), the Forge is about commission-driven
+creation with seven specialized artisans.
 
 AGENTESE Paths:
-- world.forge.manifest - Show workshop status
-- world.forge.workshop.* - Workshop management
-- world.forge.artisan.* - Artisan participation
-- world.forge.contribute - Submit creative work
-- world.forge.exhibition.* - Exhibition curation
-- world.forge.gallery.* - Gallery viewing
-- world.forge.tokens.* - Spectator economy
-- world.forge.bid.* - Constraint injection
-- world.forge.festival.* - Seasonal events
+- world.forge.manifest - Show forge status
+- world.forge.commission.* - Commission workflow (K-gent review)
+- world.forge.artisan.* - Artisan interaction
+- world.forge.artifact.* - Artifact gallery
+
+Seven Artisans (one per stack layer + cross-cutting):
+1. K-gent (Soul): Taste-maker, governance, personality
+2. Architect: Categorical design (PolyAgent, Operad, Sheaf)
+3. Smith: Implementation (service modules, business logic)
+4. Herald: Protocol (AGENTESE nodes, contracts)
+5. Projector: Surfaces (CLI, Web, marimo)
+6. Sentinel: Security (vulnerabilities, hardening)
+7. Witness: Testing (T-gent taxonomy)
 
 Design DNA:
-- Fishbowl transparency: Process is visible
-- Collaborative: Multiple participants can contribute
-- Exhibition-ready: Works can be showcased
-- Spectator economy: Watch to earn, bid to influence
+- Commission-driven: Kent initiates, K-gent reviews
+- Artisan workflow: Each layer has a specialist
+- Cross-jewel integration: Every artifact touches all Crown Jewels
+- Differance tracking: Full heritage graph of decisions
 
-Service Architecture:
-- ForgeNode: AGENTESE universal gateway
-- ForgePersistence: Workshop/exhibition storage
-- ForgeEconomyService: Token pool management
-- ForgeBiddingService: Constraint injection queue
-- ForgeFestivalService: Seasonal creative events
-
-See: docs/skills/metaphysical-fullstack.md
+See: spec/protocols/metaphysical-forge.md
 """
 
-from .bidding_service import (
-    ForgeBiddingService,
-    BidView,
-    QueueStatusView,
-    SpectatorStatsView,
-    get_bid_cost,
-    get_bid_priority,
-)
-from .economy_service import (
-    ForgeEconomyService,
-    EconomyStatusView,
-    TokenBalanceView,
-)
 from .festival_service import (
-    ForgeFestivalService,
     FestivalEntryView,
     FestivalSummaryView,
     FestivalView,
+    ForgeFestivalService,
 )
 from .node import (
     ArtisanListRendering,
     ArtisanRendering,
-    ForgeManifestRendering,
-    ForgeNode,
     ContributionListRendering,
     ContributionRendering,
     ExhibitionRendering,
+    ForgeManifestRendering,
+    ForgeNode,
     GalleryItemRendering,
     GalleryListRendering,
     WorkshopListRendering,
@@ -65,10 +50,10 @@ from .node import (
 )
 from .persistence import (
     ArtisanView,
-    ForgePersistence,
-    ForgeStatus,
     ContributionView,
     ExhibitionView,
+    ForgePersistence,
+    ForgeStatus,
     GalleryItemView,
     WorkshopView,
 )
@@ -94,18 +79,7 @@ __all__ = [
     "ExhibitionRendering",
     "GalleryItemRendering",
     "GalleryListRendering",
-    # Economy Service
-    "ForgeEconomyService",
-    "TokenBalanceView",
-    "EconomyStatusView",
-    # Bidding Service
-    "ForgeBiddingService",
-    "BidView",
-    "SpectatorStatsView",
-    "QueueStatusView",
-    "get_bid_cost",
-    "get_bid_priority",
-    # Festival Service
+    # Festival Service (kept for seasonal events)
     "ForgeFestivalService",
     "FestivalView",
     "FestivalEntryView",

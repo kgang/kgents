@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from agents.forge.festival import (
+from agents.atelier.festival import (
     Festival,
     FestivalEntry,
     FestivalManager,
@@ -202,9 +202,7 @@ def _festival_to_view(festival: Festival) -> FestivalView:
         status=festival.status.value,
         starts_at=festival.starts_at.isoformat(),
         ends_at=festival.ends_at.isoformat(),
-        voting_ends_at=festival.voting_ends_at.isoformat()
-        if festival.voting_ends_at
-        else None,
+        voting_ends_at=festival.voting_ends_at.isoformat() if festival.voting_ends_at else None,
         entry_count=len(festival.entries),
         is_accepting_entries=festival.is_accepting_entries,
         is_voting=festival.is_voting,
