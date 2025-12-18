@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from protocols.prompt.fusion.conflict import (
     Conflict,
     ConflictDetector,
@@ -111,15 +112,11 @@ class TestSemanticSimilarity:
 
     def test_similarity_result_helpers(self):
         """Test SimilarityResult helper methods."""
-        high = SimilarityResult(
-            score=0.95, strategy=SimilarityStrategy.COMBINED, reasoning="test"
-        )
+        high = SimilarityResult(score=0.95, strategy=SimilarityStrategy.COMBINED, reasoning="test")
         assert high.is_high_similarity()
         assert not high.is_low_similarity()
 
-        low = SimilarityResult(
-            score=0.1, strategy=SimilarityStrategy.COMBINED, reasoning="test"
-        )
+        low = SimilarityResult(score=0.1, strategy=SimilarityStrategy.COMBINED, reasoning="test")
         assert not low.is_high_similarity()
         assert low.is_low_similarity()
 
@@ -167,12 +164,8 @@ class TestConflictDetector:
         detector = ConflictDetector()
         conflicts = detector.detect(content_a, content_b, "a", "b")
         # Should detect structural difference
-        struct_conflicts = [
-            c for c in conflicts if c.conflict_type == ConflictType.INCOMPATIBLE
-        ]
-        assert (
-            len(struct_conflicts) > 0 or len(conflicts) >= 0
-        )  # At least runs without error
+        struct_conflicts = [c for c in conflicts if c.conflict_type == ConflictType.INCOMPATIBLE]
+        assert len(struct_conflicts) > 0 or len(conflicts) >= 0  # At least runs without error
 
     def test_section_overwrite(self):
         """Overlapping sections with different content should be detected."""
@@ -598,9 +591,7 @@ class TestSimilarityValidation:
         from protocols.prompt.fusion.similarity import SimilarityError
 
         with pytest.raises(SimilarityError, match="must be between"):
-            SemanticSimilarity(
-                weights={"jaccard": 2.0, "tfidf": 0.5, "structural": 0.2}
-            )
+            SemanticSimilarity(weights={"jaccard": 2.0, "tfidf": 0.5, "structural": 0.2})
 
         with pytest.raises(SimilarityError, match="must be numeric"):
             SemanticSimilarity(weights={"jaccard": "high"})  # type: ignore
@@ -692,9 +683,7 @@ class TestResolutionValidation:
 
         # Should not raise, just clamp
         resolver = PolicyResolver()
-        resolution = resolver.resolve(
-            conflict, "a", "b", rigidity_a=2.0, rigidity_b=-0.5
-        )
+        resolution = resolver.resolve(conflict, "a", "b", rigidity_a=2.0, rigidity_b=-0.5)
         assert resolution is not None
 
 

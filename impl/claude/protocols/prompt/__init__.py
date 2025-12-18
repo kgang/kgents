@@ -1,30 +1,23 @@
 """
 Evergreen Prompt System: Self-Cultivating CLAUDE.md
 
-The prompt that reads itself is the prompt that writes itself.
+NOTE: Core compilation infrastructure archived 2025-12-18.
+See: protocols/_archived/evergreen-prompt-2025-12-18/README.md
 
-This package provides:
-- PROMPT_POLYNOMIAL: State machine for prompt lifecycle
-- PromptCompiler: Compile sections into final CLAUDE.md
-- Section compilers: Compile individual sections from sources
-- Evolution protocol: Propose, validate, approve changes
+Remaining exports:
+- section_base: Section dataclass, NPhase enum, utilities
+- soft_section: SoftSection for rigidity spectrum
+- sources: FileSource, LLMSource for content retrieval
+- rollback: RollbackRegistry for history
+- monad: PromptM monad for composition
+- fusion: Conflict detection and resolution
+- metrics: Compilation metrics
+- habits: Code/git analysis
 
-Wave 3+ additions (Reformation):
-- SoftSection: Sections with rigidity spectrum (0.0-1.0)
-- Sources: FileSource, LLMSource for content retrieval
-- RollbackRegistry: Full history with instant rollback
-- Reasoning traces: Transparency for all inference
-
-AGENTESE paths:
+AGENTESE paths (deprecated - use self.forest.* instead):
 - concept.prompt.manifest: Render current CLAUDE.md
 - concept.prompt.evolve: Propose prompt evolution
-- concept.prompt.validate: Run category law checks
-- concept.prompt.compile: Force recompilation
-
-See: spec/protocols/evergreen-prompt-system.md
 """
-
-from .compiler import CompilationContext, CompiledPrompt, PromptCompiler
 
 # Wave 5: Fusion
 from .fusion import (
@@ -59,12 +52,6 @@ from .monad import (
     sequence,
     traverse,
 )
-from .polynomial import (
-    PROMPT_POLYNOMIAL,
-    PromptInput,
-    PromptOutput,
-    PromptState,
-)
 
 # Wave 3+: Rollback
 from .rollback import (
@@ -74,6 +61,7 @@ from .rollback import (
     RollbackRegistry,
 )
 from .section_base import (
+    NPhase,
     Section,
     SectionCompiler,
     extract_markdown_section,
@@ -102,16 +90,8 @@ from .sources import (
 )
 
 __all__ = [
-    # State machine
-    "PromptState",
-    "PromptInput",
-    "PromptOutput",
-    "PROMPT_POLYNOMIAL",
-    # Compilation
-    "PromptCompiler",
-    "CompilationContext",
-    "CompiledPrompt",
-    # Sections
+    # Sections (base types only - compilers archived)
+    "NPhase",
     "Section",
     "SectionCompiler",
     # Wave 2: File reading utilities

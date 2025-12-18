@@ -8,6 +8,7 @@ and gradient system work correctly.
 from __future__ import annotations
 
 import pytest
+
 from protocols.prompt.textgrad import (
     FeedbackParser,
     FeedbackTarget,
@@ -266,9 +267,7 @@ class TestFeedbackParser:
         result = parser.parse("make principles concise")
         gradient = result.to_gradient(base_magnitude=0.7)
         assert len(gradient) == 1
-        assert gradient.steps[0].magnitude == pytest.approx(
-            0.7 * 0.7
-        )  # Base * confidence
+        assert gradient.steps[0].magnitude == pytest.approx(0.7 * 0.7)  # Base * confidence
 
 
 class TestFeedbackTarget:
@@ -372,9 +371,7 @@ class TestTextGRADImprover:
 
     def test_learning_rate_scales_changes(self) -> None:
         """Test that learning rate affects change magnitude."""
-        sections = {
-            "test": "Content line 1\nContent line 2\nContent line 3\nContent line 4"
-        }
+        sections = {"test": "Content line 1\nContent line 2\nContent line 3\nContent line 4"}
 
         low_lr = TextGRADImprover(learning_rate=0.1)
         high_lr = TextGRADImprover(learning_rate=0.9)

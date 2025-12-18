@@ -12,6 +12,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.prompt.habits import (
     GitPattern,
     HabitEncoder,
@@ -44,10 +45,7 @@ class TestHabitEncoderConfig:
         assert config.git_enabled is True
         assert config.session_enabled is True
         assert config.code_enabled is True
-        assert (
-            config.git_weight + config.session_weight + config.code_weight
-            == pytest.approx(1.0)
-        )
+        assert config.git_weight + config.session_weight + config.code_weight == pytest.approx(1.0)
 
     def test_config_validation(self) -> None:
         """Test validation rejects invalid weights."""
@@ -256,8 +254,7 @@ class TestSessionPatternAnalyzer:
             {
                 "display": "morning task",
                 "timestamp": int(
-                    (now - timedelta(hours=i)).replace(hour=9 + (i % 3)).timestamp()
-                    * 1000
+                    (now - timedelta(hours=i)).replace(hour=9 + (i % 3)).timestamp() * 1000
                 ),
                 "project": "/Users/test/project",
             }

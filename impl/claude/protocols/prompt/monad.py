@@ -24,7 +24,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Callable, Generic, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # Type variables for generic monad
 A = TypeVar("A")
@@ -166,13 +169,9 @@ class PromptM(Generic[A]):
 
     def __repr__(self) -> str:
         """Readable representation for debugging."""
-        provenance_str = (
-            ", ".join(s.name for s in self.provenance) if self.provenance else "none"
-        )
+        provenance_str = ", ".join(s.name for s in self.provenance) if self.provenance else "none"
         trace_count = len(self.reasoning_trace)
-        checkpoint_str = (
-            f", checkpoint={self.checkpoint_id}" if self.checkpoint_id else ""
-        )
+        checkpoint_str = f", checkpoint={self.checkpoint_id}" if self.checkpoint_id else ""
         return f"PromptM(value={self.value!r}, provenance=[{provenance_str}], traces={trace_count}{checkpoint_str})"
 
 
@@ -343,9 +342,7 @@ def improve(
         if result.content_changed:
             # Re-parse the improved content into sections
             # This is a simplified version - proper impl would track per-section
-            improved_sections = _parse_sections(
-                result.improved_content, sections.keys()
-            )
+            improved_sections = _parse_sections(result.improved_content, sections.keys())
 
         return PromptM(
             value=improved_sections,

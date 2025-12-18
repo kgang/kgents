@@ -14,6 +14,7 @@ Also tests:
 """
 
 import pytest
+
 from protocols.prompt.monad import (
     PromptM,
     Source,
@@ -46,7 +47,9 @@ class TestMonadicLaws:
         equivalent to just applying the function.
         """
         x = Section(name="test", content="hello", token_cost=5, required=True)
-        f = lambda s: PromptM.unit(s.with_content(s.content.upper()))
+
+        def f(s):
+            return PromptM.unit(s.with_content(s.content.upper()))
 
         # Left side: unit(x).bind(f)
         left = PromptM.unit(x).bind(f)
@@ -87,16 +90,19 @@ class TestMonadicLaws:
         section = Section(name="test", content="hello", token_cost=5, required=True)
         m = PromptM.unit(section)
 
-        f = lambda s: PromptM(
-            value=s.with_content(s.content.upper()),
-            reasoning_trace=("uppercased",),
-            provenance=(),
-        )
-        g = lambda s: PromptM(
-            value=s.with_content(s.content + "!"),
-            reasoning_trace=("exclaimed",),
-            provenance=(),
-        )
+        def f(s):
+            return PromptM(
+                value=s.with_content(s.content.upper()),
+                reasoning_trace=("uppercased",),
+                provenance=(),
+            )
+
+        def g(s):
+            return PromptM(
+                value=s.with_content(s.content + "!"),
+                reasoning_trace=("exclaimed",),
+                provenance=(),
+            )
 
         # Left side: (m >>= f) >>= g
         left = m.bind(f).bind(g)
@@ -114,16 +120,20 @@ class TestMonadicLaws:
             reasoning_trace=("m",),
             provenance=(),
         )
-        f = lambda x: PromptM(
-            value=x + "_f",
-            reasoning_trace=("f",),
-            provenance=(Source.FILE,),
-        )
-        g = lambda x: PromptM(
-            value=x + "_g",
-            reasoning_trace=("g",),
-            provenance=(Source.LLM,),
-        )
+
+        def f(x):
+            return PromptM(
+                value=x + "_f",
+                reasoning_trace=("f",),
+                provenance=(Source.FILE,),
+            )
+
+        def g(x):
+            return PromptM(
+                value=x + "_g",
+                reasoning_trace=("g",),
+                provenance=(Source.LLM,),
+            )
 
         left = m.bind(f).bind(g)
         right = m.bind(lambda x: f(x).bind(g))
@@ -168,7 +178,9 @@ class TestFunctor:
         """Functor composition: map(f . g) ≡ map(f) . map(g)"""
         m = PromptM.unit("hello")
         f = str.upper
-        g = lambda s: s + "!"
+
+        def g(s):
+            return s + "!"
 
         # map(f . g)
         left = m.map(lambda x: f(g(x)))
@@ -194,11 +206,13 @@ class TestTraceAccumulation:
             reasoning_trace=("step1",),
             provenance=(),
         )
-        f = lambda x: PromptM(
-            value=x + "_end",
-            reasoning_trace=("step2",),
-            provenance=(),
-        )
+
+        def f(x):
+            return PromptM(
+                value=x + "_end",
+                reasoning_trace=("step2",),
+                provenance=(),
+            )
 
         result = m.bind(f)
 
@@ -230,11 +244,13 @@ class TestProvenance:
             reasoning_trace=(),
             provenance=(Source.FILE,),
         )
-        f = lambda x: PromptM(
-            value=x + "_end",
-            reasoning_trace=(),
-            provenance=(Source.LLM,),
-        )
+
+        def f(x):
+            return PromptM(
+                value=x + "_end",
+                reasoning_trace=(),
+                provenance=(Source.LLM,),
+            )
 
         result = m.bind(f)
 
@@ -350,9 +366,7 @@ class TestLiftingFunctions:
         """Lifting functions can be chained."""
         m = PromptM.unit("hello")
         result = (
-            m.bind(lift_trace("step1"))
-            .bind(lift_provenance(Source.FILE))
-            .bind(lift_trace("step2"))
+            m.bind(lift_trace("step1")).bind(lift_provenance(Source.FILE)).bind(lift_trace("step2"))
         )
 
         assert result.reasoning_trace == ("step1", "step2")
@@ -370,7 +384,9 @@ class TestOperators:
     def test_rshift_is_bind(self) -> None:
         """>> operator is alias for bind."""
         m = PromptM.unit("hello")
-        f = lambda x: PromptM.unit(x.upper())
+
+        def f(x):
+            return PromptM.unit(x.upper())
 
         result1 = m >> f
         result2 = m.bind(f)
@@ -430,12 +446,14 @@ class TestIntegration:
     def test_checkpoint_overwritten_by_bind(self) -> None:
         """Later bind can set new checkpoint."""
         m = PromptM.unit("hello").with_checkpoint("old")
-        f = lambda x: PromptM(
-            value=x.upper(),
-            reasoning_trace=(),
-            provenance=(),
-            checkpoint_id="new",
-        )
+
+        def f(x):
+            return PromptM(
+                value=x.upper(),
+                reasoning_trace=(),
+                provenance=(),
+                checkpoint_id="new",
+            )
 
         result = m.bind(f)
         assert result.checkpoint_id == "new"
@@ -447,8 +465,7 @@ class TestIntegration:
 
 
 try:
-    from hypothesis import given
-    from hypothesis import strategies as st
+    from hypothesis import given, strategies as st
 
     class TestMonadProperties:
         """Property-based tests for monad laws."""
@@ -456,7 +473,9 @@ try:
         @given(st.text(min_size=1, max_size=100))
         def test_left_identity_property(self, x: str) -> None:
             """Left identity holds for arbitrary strings."""
-            f = lambda s: PromptM.unit(s.upper())
+
+            def f(s):
+                return PromptM.unit(s.upper())
 
             left = PromptM.unit(x).bind(f)
             right = f(x)
@@ -475,8 +494,12 @@ try:
         def test_associativity_property(self, x: str) -> None:
             """Associativity holds for arbitrary strings."""
             m = PromptM.unit(x)
-            f = lambda s: PromptM.unit(s.upper())
-            g = lambda s: PromptM.unit(s + "!")
+
+            def f(s):
+                return PromptM.unit(s.upper())
+
+            def g(s):
+                return PromptM.unit(s + "!")
 
             left = m.bind(f).bind(g)
             right = m.bind(lambda a: f(a).bind(g))

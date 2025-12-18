@@ -41,9 +41,7 @@ class FeedbackTarget:
 
     def to_gradient_step(self, magnitude: float = 0.5) -> GradientStep:
         """Convert to a GradientStep."""
-        description = (
-            f"{self.feedback_type.name.lower()}: {self.direction.name.lower()}"
-        )
+        description = f"{self.feedback_type.name.lower()}: {self.direction.name.lower()}"
         if self.specifics:
             description += f" ({self.specifics})"
 
@@ -189,7 +187,7 @@ class FeedbackParser:
             return ParsedFeedback(
                 original=feedback,
                 targets=(),
-                reasoning=("Empty feedback, no changes"),
+                reasoning=("Empty feedback, no changes",),
             )
 
         feedback_lower = feedback.lower()
@@ -278,12 +276,10 @@ class FeedbackParser:
         # Look for quoted content
         quoted = re.findall(r'"([^"]+)"', text)
         if quoted:
-            return quoted[0]
+            return str(quoted[0])
 
         # Look for content after "about" or "regarding"
-        match = re.search(
-            rf"{section}\s+(?:about|regarding|on)\s+(.+?)(?:\.|$)", text, re.I
-        )
+        match = re.search(rf"{section}\s+(?:about|regarding|on)\s+(.+?)(?:\.|$)", text, re.I)
         if match:
             return match.group(1).strip()
 

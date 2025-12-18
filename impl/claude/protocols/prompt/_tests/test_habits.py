@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.prompt.habits.git_analyzer import (
     GitAnalyzerError,
     GitPattern,

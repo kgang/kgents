@@ -104,9 +104,7 @@ class SemanticSimilarity:
         """
         # Validate strategy
         if not isinstance(strategy, SimilarityStrategy):
-            raise SimilarityError(
-                f"Invalid strategy: {strategy}. Must be SimilarityStrategy enum."
-            )
+            raise SimilarityError(f"Invalid strategy: {strategy}. Must be SimilarityStrategy enum.")
 
         self.strategy = strategy
         self.weights = weights or {
@@ -122,9 +120,7 @@ class SemanticSimilarity:
         """Validate that weights are within acceptable range."""
         for key, value in self.weights.items():
             if not isinstance(value, (int, float)):
-                raise SimilarityError(
-                    f"Weight '{key}' must be numeric, got {type(value).__name__}"
-                )
+                raise SimilarityError(f"Weight '{key}' must be numeric, got {type(value).__name__}")
             if value < MIN_WEIGHT or value > MAX_WEIGHT:
                 raise SimilarityError(
                     f"Weight '{key}' must be between {MIN_WEIGHT} and {MAX_WEIGHT}, got {value}"
@@ -133,22 +129,16 @@ class SemanticSimilarity:
         # Warn if weights don't sum to ~1.0
         total = sum(self.weights.values())
         if abs(total - 1.0) > 0.1:
-            logger.warning(
-                f"Weights sum to {total:.2f}, expected ~1.0. Results may be unexpected."
-            )
+            logger.warning(f"Weights sum to {total:.2f}, expected ~1.0. Results may be unexpected.")
 
     def _validate_content(self, content: str, name: str) -> None:
         """Validate content string."""
         if content is None:
             raise SimilarityError(f"{name} cannot be None")
         if not isinstance(content, str):
-            raise SimilarityError(
-                f"{name} must be a string, got {type(content).__name__}"
-            )
+            raise SimilarityError(f"{name} must be a string, got {type(content).__name__}")
         if len(content) > MAX_CONTENT_LENGTH:
-            raise SimilarityError(
-                f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars"
-            )
+            raise SimilarityError(f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars")
 
     def compare(self, content_a: str, content_b: str) -> SimilarityResult:
         """
@@ -280,7 +270,7 @@ class SemanticSimilarity:
                 idf[term] = math.log(2.0)  # ~0.69
 
         # TF-IDF vectors (normalized TF * IDF)
-        def tfidf_vector(tf: Counter) -> dict[str, float]:
+        def tfidf_vector(tf: Counter[str]) -> dict[str, float]:
             total = sum(tf.values())
             if total == 0:
                 return {}
@@ -320,7 +310,7 @@ class SemanticSimilarity:
         """
 
         # Extract structural features
-        def extract_features(text: str) -> dict:
+        def extract_features(text: str) -> dict[str, int | float | bool]:
             lines = text.split("\n")
             return {
                 "headers": len(re.findall(r"^#+\s", text, re.MULTILINE)),

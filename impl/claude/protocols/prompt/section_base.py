@@ -409,7 +409,7 @@ def run_sync(coro):
 
     try:
         # Check if there's a running event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
     except RuntimeError:
         # No running loop - safe to create one and run
         return asyncio.run(coro)

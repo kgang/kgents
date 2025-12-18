@@ -81,9 +81,7 @@ class GitPatternAnalyzer:
                 timeout=5,
             )
             if result.returncode != 0:
-                raise GitAnalyzerError(
-                    f"Not a git repository: {self.repo_path}\n{result.stderr}"
-                )
+                raise GitAnalyzerError(f"Not a git repository: {self.repo_path}\n{result.stderr}")
             self._validated = True
         except subprocess.TimeoutExpired:
             raise GitAnalyzerError(f"Git validation timed out for: {self.repo_path}")
@@ -166,15 +164,11 @@ class GitPatternAnalyzer:
         conventional_pattern = re.compile(
             r"^(feat|fix|docs|style|refactor|test|chore|build|ci|perf|revert)(\(.+\))?[!:]"
         )
-        conventional_count = sum(
-            1 for m in messages if conventional_pattern.match(m.lower())
-        )
+        conventional_count = sum(1 for m in messages if conventional_pattern.match(m.lower()))
         conventional_ratio = conventional_count / len(messages)
 
         # Detect emoji usage
-        emoji_pattern = re.compile(
-            r"[\U0001F300-\U0001F9FF]|[\u2600-\u26FF]|[\u2700-\u27BF]"
-        )
+        emoji_pattern = re.compile(r"[\U0001F300-\U0001F9FF]|[\u2600-\u26FF]|[\u2700-\u27BF]")
         emoji_count = sum(1 for m in messages if emoji_pattern.search(m))
         emoji_ratio = emoji_count / len(messages)
 
@@ -255,7 +249,7 @@ class GitPatternAnalyzer:
         total_changes = sum(dir_counts.values())
 
         # Find top files
-        top_files = file_counts.most_common(5)
+        file_counts.most_common(5)
 
         # Determine focus pattern
         top_dir, top_count = top_dirs[0] if top_dirs else ("unknown", 0)
@@ -270,14 +264,10 @@ class GitPatternAnalyzer:
 
         # Add top directory ratios
         for i, (dir_path, count) in enumerate(top_dirs[:3]):
-            details[f"dir_{i}_ratio"] = (
-                count / total_changes if total_changes > 0 else 0
-            )
+            details[f"dir_{i}_ratio"] = count / total_changes if total_changes > 0 else 0
 
         if focus_ratio > 0.5:
-            description = (
-                f"Concentrated focus on {top_dir} ({focus_ratio:.0%} of changes)"
-            )
+            description = f"Concentrated focus on {top_dir} ({focus_ratio:.0%} of changes)"
             confidence = focus_ratio
         elif len(dir_counts) < 5:
             description = f"Focused on {len(dir_counts)} directories"
@@ -341,7 +331,7 @@ class GitPatternAnalyzer:
         # Analyze days of week
         days = [d.weekday() for d in dates]
         weekday_count = sum(1 for d in days if d < 5)
-        weekend_count = total - weekday_count
+        total - weekday_count
 
         details = {
             "morning_ratio": morning / total if total > 0 else 0,

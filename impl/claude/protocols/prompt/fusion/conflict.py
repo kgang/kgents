@@ -90,9 +90,7 @@ class Conflict:
     @property
     def summary(self) -> str:
         """One-line summary of the conflict."""
-        return (
-            f"[{self.severity.name}] {self.conflict_type.name}: {self.description[:60]}"
-        )
+        return f"[{self.severity.name}] {self.conflict_type.name}: {self.description[:60]}"
 
     def is_blocking(self) -> bool:
         """Check if this conflict blocks merging."""
@@ -153,13 +151,9 @@ class ConflictDetector:
         if content is None:
             raise ConflictError(f"{name} cannot be None")
         if not isinstance(content, str):
-            raise ConflictError(
-                f"{name} must be a string, got {type(content).__name__}"
-            )
+            raise ConflictError(f"{name} must be a string, got {type(content).__name__}")
         if len(content) > MAX_CONTENT_LENGTH:
-            raise ConflictError(
-                f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars"
-            )
+            raise ConflictError(f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars")
 
     def detect(
         self,
@@ -199,9 +193,7 @@ class ConflictDetector:
             return conflicts
 
         # Check for duplication
-        dup_conflict = self._check_duplication(
-            content_a, content_b, source_a_name, source_b_name
-        )
+        dup_conflict = self._check_duplication(content_a, content_b, source_a_name, source_b_name)
         if dup_conflict:
             conflicts.append(dup_conflict)
             # If it's near-duplicate, likely no other conflicts
@@ -337,9 +329,7 @@ class ConflictDetector:
                     )
             except re.error as e:
                 # Log and skip invalid patterns
-                logger.warning(
-                    f"Invalid regex pattern skipped: {pattern_pos} / {pattern_neg}: {e}"
-                )
+                logger.warning(f"Invalid regex pattern skipped: {pattern_pos} / {pattern_neg}: {e}")
                 continue
 
         return conflicts
@@ -357,8 +347,6 @@ class ConflictDetector:
         has_markdown_b = bool(re.search(r"^#+\s", content_b, re.MULTILINE))
 
         # Check if one has code blocks and other doesn't
-        has_code_a = "```" in content_a
-        has_code_b = "```" in content_b
 
         # Check if one is table-formatted
         has_table_a = "|" in content_a and "---" in content_a

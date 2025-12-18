@@ -14,6 +14,7 @@ Also tests:
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.prompt.rollback import (
     Checkpoint,
     CheckpointId,
@@ -465,9 +466,7 @@ class TestJSONCheckpointStorage:
         storage.save(checkpoint)
 
         # Verify file was created
-        checkpoint_path = (
-            tmp_path / "checkpoints" / "checkpoints" / f"{checkpoint.id}.json"
-        )
+        checkpoint_path = tmp_path / "checkpoints" / "checkpoints" / f"{checkpoint.id}.json"
         assert checkpoint_path.exists()
 
         # Load and verify
@@ -535,8 +534,7 @@ class TestJSONCheckpointStorage:
 
 
 try:
-    from hypothesis import given
-    from hypothesis import strategies as st
+    from hypothesis import given, strategies as st
 
     class TestRollbackProperties:
         """Property-based tests for rollback system."""
