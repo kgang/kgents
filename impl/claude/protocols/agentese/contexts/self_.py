@@ -91,6 +91,14 @@ from .self_soul import (
     create_soul_node,
 )
 
+# Autopoietic kernel interface (AD-009)
+from .self_system import (
+    SYSTEM_AFFORDANCES,
+    SystemNode,
+    get_system_node,
+    create_system_node,
+)
+
 # V-gent Vector integration (Phase 7)
 from .self_vector import (
     VECTOR_AFFORDANCES,
@@ -148,6 +156,11 @@ __all__ = [
     "SOUL_AFFORDANCES",
     "SOUL_CHAT_AFFORDANCES",
     "create_soul_node",
+    # System (Autopoietic kernel - AD-009)
+    "SystemNode",
+    "SYSTEM_AFFORDANCES",
+    "get_system_node",
+    "create_system_node",
     # Resolver
     "SelfContextResolver",
     # Factory
@@ -198,6 +211,8 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
     "citizen": CITIZEN_AFFORDANCES,
     # Soul integration (Chat Protocol - Phase 2)
     "soul": SOUL_CHAT_AFFORDANCES,
+    # Autopoietic kernel (AD-009)
+    "system": SYSTEM_AFFORDANCES,
 }
 
 
