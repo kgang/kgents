@@ -150,8 +150,10 @@ import { EmpathyError, InlineError } from '@/components/joy/EmpathyError';
 ### The Empty State Pattern
 
 ```tsx
+import { PlusCircle } from 'lucide-react';
+
 function EmptyState({
-  emoji,
+  icon: Icon,
   title,
   subtitle,
   action,
@@ -160,7 +162,7 @@ function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center p-8 text-center">
       <Breathe intensity={0.3}>
-        <span className="text-4xl mb-4">{emoji}</span>
+        <Icon className="w-12 h-12 text-gray-400 mb-4" />
       </Breathe>
       <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
       <p className="text-gray-400 mb-4 max-w-md">{subtitle}</p>
@@ -176,9 +178,9 @@ function EmptyState({
   );
 }
 
-// Usage
+// Usage (no emojis - use Lucide icons)
 <EmptyState
-  emoji="🌱"
+  icon={PlusCircle}
   title="Nothing here yet"
   subtitle="This is where your memories will appear. Ready when you are."
   action="Capture first memory"
@@ -327,13 +329,26 @@ import { ElasticSplit } from '@/components/elastic/ElasticSplit';
 
 ## Part V: Jewel Theming
 
-### Jewel Colors
+### Jewel Colors and Icons
 
 ```typescript
-import { JEWEL_COLORS } from '@/constants/jewels';
+import { JEWEL_COLORS, JEWEL_ICONS } from '@/constants/jewels';
+import { Brain, Network, Leaf, Palette, Users, Theater, Building } from 'lucide-react';
+
+// Jewel icons (NO emojis)
+const JEWEL_ICONS = {
+  brain:     Brain,
+  gestalt:   Network,
+  gardener:  Leaf,
+  atelier:   Palette,
+  coalition: Users,
+  park:      Theater,
+  domain:    Building,
+} as const;
 
 // Use in components
 <div style={{ color: JEWEL_COLORS.brain.primary }}>
+  <Brain className="w-5 h-5" />
   Brain content
 </div>
 
@@ -346,19 +361,20 @@ import { JEWEL_COLORS } from '@/constants/jewels';
 ### Jewel-Specific Components
 
 ```tsx
-// Personality loading already knows jewels
+// Personality loading uses icons, not emojis
 <PersonalityLoading jewel="gestalt" />
 
-// Create jewel-aware wrapper
+// Create jewel-aware wrapper with icon
 function JewelCard({ jewel, children }: { jewel: CrownJewel; children: ReactNode }) {
   const color = JEWEL_COLORS[jewel].primary;
+  const Icon = JEWEL_ICONS[jewel];
 
   return (
     <Card>
-      <div
-        className="w-1 h-full absolute left-0 top-0 rounded-l-lg"
-        style={{ backgroundColor: color }}
-      />
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className="w-5 h-5" style={{ color }} />
+        <span style={{ color }}>{jewel}</span>
+      </div>
       {children}
     </Card>
   );
@@ -533,7 +549,87 @@ const { shouldAnimate } = useMotionPreferences();
 
 ---
 
-## Part X: Contribution Guidelines
+## Part X: OS Shell Integration
+
+### The Shell Pattern
+
+All pages render within the OS Shell. See `spec/protocols/os-shell.md` for full specification.
+
+```tsx
+// Shell provides context to all children
+<ShellProvider>
+  <ObserverDrawer />
+  <div className="flex">
+    <NavigationTree />
+    <main><Outlet /></main>
+  </div>
+  <Terminal />
+</ShellProvider>
+```
+
+### Projection-First Pages
+
+Pages should delegate rendering to PathProjection, not contain business logic:
+
+```tsx
+// Before: Page with embedded logic (WRONG)
+export default function TownPage() {
+  const [citizens, setCitizens] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // ... 200 lines of fetch, state, handlers ...
+  return <ComplexTownLayout citizens={citizens} ... />;
+}
+
+// After: Projection passthrough (CORRECT)
+export default function TownPage() {
+  return (
+    <PathProjection path="world.town" aspect="manifest">
+      {(data, { density, observer }) => (
+        <TownVisualization data={data} density={density} />
+      )}
+    </PathProjection>
+  );
+}
+```
+
+### Using Observer Context
+
+```tsx
+import { useObserver } from '@/shell/ShellProvider';
+
+function MyComponent() {
+  const { observer, capabilities } = useObserver();
+
+  // Observer-dependent rendering
+  if (observer.archetype === 'developer') {
+    return <DebugView />;
+  }
+
+  // Capability-based affordances
+  {capabilities.has('write') && <EditButton />}
+}
+```
+
+### Terminal Integration
+
+The terminal is available throughout the shell:
+
+```tsx
+import { useTerminal } from '@/shell/Terminal';
+
+function MyComponent() {
+  const { execute, history } = useTerminal();
+
+  // Execute AGENTESE path
+  const handleAction = () => {
+    execute('self.memory.capture --content "..."');
+  };
+}
+```
+
+---
+
+## Part XI: Contribution Guidelines
 
 ### When Adding New Components
 

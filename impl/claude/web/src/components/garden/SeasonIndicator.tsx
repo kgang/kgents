@@ -7,9 +7,12 @@
  * - BLOOMING: Ideas crystallizing, high visibility
  * - HARVEST: Time to gather and consolidate
  * - COMPOSTING: Breaking down old patterns
+ *
+ * @see docs/creative/visual-system.md - NO EMOJIS policy
  */
 
 import type { GardenSeason } from '@/reactive/types';
+import { getSeasonIcon } from '@/constants';
 
 interface SeasonIndicatorProps {
   season: GardenSeason;
@@ -19,37 +22,32 @@ interface SeasonIndicatorProps {
   className?: string;
 }
 
-/** Season visual configuration */
+/** Season visual configuration (using Lucide icons per visual-system.md) */
 const SEASON_CONFIG: Record<
   GardenSeason,
-  { emoji: string; color: string; bgColor: string; description: string }
+  { color: string; bgColor: string; description: string }
 > = {
   DORMANT: {
-    emoji: '💤',
     color: 'text-gray-400',
     bgColor: 'bg-gray-800',
     description: 'Garden is resting',
   },
   SPROUTING: {
-    emoji: '🌱',
     color: 'text-green-400',
     bgColor: 'bg-green-900/30',
     description: 'New ideas emerging',
   },
   BLOOMING: {
-    emoji: '🌸',
     color: 'text-pink-400',
     bgColor: 'bg-pink-900/30',
     description: 'Ideas crystallizing',
   },
   HARVEST: {
-    emoji: '🌾',
     color: 'text-amber-400',
     bgColor: 'bg-amber-900/30',
     description: 'Time to gather',
   },
   COMPOSTING: {
-    emoji: '🍂',
     color: 'text-orange-400',
     bgColor: 'bg-orange-900/30',
     description: 'Breaking down patterns',
@@ -64,6 +62,7 @@ export function SeasonIndicator({
   className = '',
 }: SeasonIndicatorProps) {
   const config = SEASON_CONFIG[season];
+  const SeasonIcon = getSeasonIcon(season);
 
   // Format time since season started
   const timeSince = seasonSince ? formatTimeSince(seasonSince) : null;
@@ -72,7 +71,7 @@ export function SeasonIndicator({
     <div className={`rounded-lg p-4 ${config.bgColor} ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{config.emoji}</span>
+        <SeasonIcon className={`w-8 h-8 ${config.color}`} />
         <div>
           <h3 className={`font-semibold ${config.color}`}>{season}</h3>
           <p className="text-xs text-gray-400">{config.description}</p>
@@ -122,12 +121,13 @@ export function SeasonBadge({
   className?: string;
 }) {
   const config = SEASON_CONFIG[season];
+  const SeasonIcon = getSeasonIcon(season);
 
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color} ${className}`}
     >
-      <span>{config.emoji}</span>
+      <SeasonIcon className="w-3.5 h-3.5" />
       <span>{season}</span>
     </span>
   );

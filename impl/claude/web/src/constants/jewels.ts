@@ -1,11 +1,27 @@
 /**
- * Crown Jewel Colors and Emoji
+ * Crown Jewel Colors, Icons, and Emoji
  *
  * Each Crown Jewel has a semantic color that defines its personality.
  * Colors are derived from meaning, not aesthetic whim.
  *
+ * IMPORTANT: Per visual-system.md and os-shell.md, kgents uses Lucide icons
+ * exclusively for semantic iconography. Emojis are NOT used in kgents-authored
+ * copy. JEWEL_EMOJI is deprecated - use JEWEL_ICONS instead.
+ *
  * @see docs/creative/visual-system.md
+ * @see spec/protocols/os-shell.md
  */
+
+import {
+  Brain,
+  Network,
+  Leaf,
+  Palette,
+  Users,
+  Theater,
+  Building,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type JewelName =
   | 'brain'
@@ -48,10 +64,39 @@ export const JEWEL_COLORS: Record<JewelName, JewelColor> = {
 } as const;
 
 /**
+ * Crown Jewel Icons (Lucide)
+ *
+ * Per visual-system.md: "kgents uses Lucide icons exclusively for semantic iconography."
+ * These replace JEWEL_EMOJI for all kgents-authored copy.
+ *
+ * Icon guidelines:
+ * - Match icon color to jewel color
+ * - 24px base size, 20px for compact density
+ * - Outline style default, filled for selected/active states
+ */
+export const JEWEL_ICONS: Record<JewelName, LucideIcon> = {
+  brain: Brain,       // Cyan family - Knowledge, memory
+  gestalt: Network,   // Green family - Growth, health
+  gardener: Leaf,     // Lime family - Cultivation, nurturing
+  atelier: Palette,   // Amber family - Creation, creativity
+  coalition: Users,   // Violet family - Collaboration, synthesis
+  park: Theater,      // Pink family - Drama, narrative
+  domain: Building,   // Red family - Urgency, crisis
+} as const;
+
+/**
+ * Get jewel icon by name, with fallback to Brain
+ */
+export function getJewelIcon(name: string): LucideIcon {
+  const key = name.toLowerCase() as JewelName;
+  return JEWEL_ICONS[key] ?? Brain;
+}
+
+/**
  * Crown Jewel Emoji
  *
- * Emojis are first-class citizens in kgents, not decorative.
- * Used for: loading states, empty states, celebrations, error states.
+ * @deprecated Use JEWEL_ICONS instead. Emojis are NOT used in kgents-authored copy.
+ * This is kept for backward compatibility with user-generated content only.
  */
 export const JEWEL_EMOJI: Record<JewelName, string> = {
   brain: '\u{1F9E0}', // brain

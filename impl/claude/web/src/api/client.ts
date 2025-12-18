@@ -103,7 +103,25 @@ function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
     }
   }
 
-  return response.data.result;
+  const result = response.data.result;
+
+  // Handle BasicRendering-style responses where actual data is in metadata
+  // This pattern is used by Crown Jewels (Park, Town, etc.) for CLI-friendly output
+  if (
+    result &&
+    typeof result === 'object' &&
+    'metadata' in result &&
+    'summary' in result &&
+    'content' in result
+  ) {
+    // Check if metadata has the actual data (not just an error)
+    const metadata = (result as { metadata: unknown }).metadata;
+    if (metadata && typeof metadata === 'object' && !('error' in metadata && Object.keys(metadata as object).length === 1)) {
+      return metadata as T;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -163,9 +181,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear auth and redirect
-      localStorage.removeItem('api_key');
-      window.location.href = '/';
+      // Unauthorized - dispatch event but DON'T clear key
+      // (clearing the key causes cascading failures)
+      window.dispatchEvent(
+        new CustomEvent('auth-required', {
+          detail: { url: error.config?.url },
+        })
+      );
     }
     if (error.response?.status === 402) {
       // Payment required - dispatch paywall event

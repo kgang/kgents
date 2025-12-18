@@ -4,11 +4,13 @@ Gestalt Crown Jewel: Living Garden Where Code Breathes.
 The Gestalt provides a holistic view of the codebase as a living organism,
 with topology visualization and governance monitoring.
 
-AGENTESE Paths:
-- self.gestalt.manifest - Show codebase health
-- self.gestalt.topology - Dependency graph visualization
-- self.gestalt.governance - Soul governance status
-- self.gestalt.breath - Activity pulse
+AGENTESE Paths (via @node("world.codebase")):
+- world.codebase.manifest  - Full architecture graph
+- world.codebase.health    - Health metrics summary
+- world.codebase.topology  - 3D visualization data
+- world.codebase.drift     - Drift violations
+- world.codebase.module    - Module details
+- world.codebase.scan      - Force rescan
 
 Design DNA:
 - Organic: Code as living system
@@ -18,12 +20,14 @@ Design DNA:
 See: docs/skills/metaphysical-fullstack.md
 """
 
+# Import node to register with @node decorator
+from .node import GestaltNode
 from .persistence import (
-    GestaltPersistence,
-    TopologyView,
     CodeBlockView,
     CodeLinkView,
+    GestaltPersistence,
     GestaltStatus,
+    TopologyView,
 )
 
 __all__ = [
@@ -32,4 +36,6 @@ __all__ = [
     "CodeBlockView",
     "CodeLinkView",
     "GestaltStatus",
+    # Node
+    "GestaltNode",
 ]

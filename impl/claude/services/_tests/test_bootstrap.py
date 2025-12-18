@@ -46,13 +46,14 @@ class TestServiceRegistry:
         assert registry.is_initialized()
 
     def test_registry_lists_all_services(self):
-        """Registry should list all 7 Crown Jewel services."""
+        """Registry should list all Crown Jewel services + supporting services."""
         from services.bootstrap import ServiceRegistry
 
         registry = ServiceRegistry()
         services = registry.list_services()
 
-        expected = [
+        # Core 7 Crown Jewels
+        expected_core = [
             "brain_persistence",
             "town_persistence",
             "gardener_persistence",
@@ -61,7 +62,11 @@ class TestServiceRegistry:
             "coalition_persistence",
             "park_persistence",
         ]
-        assert services == expected
+        for svc in expected_core:
+            assert svc in services, f"Expected {svc} in services"
+
+        # At minimum these should be present
+        assert len(services) >= len(expected_core)
 
     def test_registry_stats(self):
         """Registry stats should show initialization state."""

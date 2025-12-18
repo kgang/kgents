@@ -5,10 +5,14 @@
  * - Plan files (e.g., plans/coalition-forge.md)
  * - Crown jewels (e.g., Atelier, Brain)
  * - Custom focus areas (e.g., "refactoring auth")
+ *
+ * Uses JEWEL_ICONS (Lucide) instead of emojis per visual-system.md.
  */
 
+import { FolderOpen, type LucideIcon } from 'lucide-react';
 import type { PlotJSON, GardenSeason } from '@/reactive/types';
 import { SeasonBadge } from './SeasonIndicator';
+import { JEWEL_ICONS, JEWEL_COLORS, type JewelName } from '@/constants/jewels';
 
 interface PlotCardProps {
   plot: PlotJSON;
@@ -17,23 +21,35 @@ interface PlotCardProps {
   onSelect?: (plotName: string) => void;
 }
 
-/** Crown jewel emoji mapping */
-const CROWN_JEWEL_EMOJI: Record<string, string> = {
-  Atelier: '🎨',
-  Coalition: '🤝',
-  Brain: '🧠',
-  Park: '🎭',
-  Domain: '🔬',
-  Gestalt: '🏛️',
-  Gardener: '🌱',
+/** Map Crown Jewel names to JewelName type for icon lookup */
+const JEWEL_NAME_MAP: Record<string, JewelName> = {
+  Atelier: 'atelier',
+  Coalition: 'coalition',
+  Brain: 'brain',
+  Park: 'park',
+  Domain: 'domain',
+  Gestalt: 'gestalt',
+  Gardener: 'gardener',
 };
+
+/** Get icon for a crown jewel (Lucide icon) */
+function getJewelIconForPlot(crownJewel: string | null | undefined): { icon: LucideIcon; color: string } {
+  if (!crownJewel) {
+    return { icon: FolderOpen, color: '#64748B' }; // Slate for generic folders
+  }
+  const jewelName = JEWEL_NAME_MAP[crownJewel];
+  if (jewelName) {
+    return { icon: JEWEL_ICONS[jewelName], color: JEWEL_COLORS[jewelName].primary };
+  }
+  return { icon: FolderOpen, color: '#64748B' };
+}
 
 export function PlotCard({ plot, isActive, gardenSeason, onSelect }: PlotCardProps) {
   const effectiveSeason = plot.season_override || gardenSeason;
   const isActiveRecently = isPlotActiveRecently(plot.last_tended);
 
-  // Determine display emoji
-  const emoji = plot.crown_jewel ? CROWN_JEWEL_EMOJI[plot.crown_jewel] || '📁' : '📁';
+  // Get Lucide icon for the plot
+  const { icon: PlotIcon, color: iconColor } = getJewelIconForPlot(plot.crown_jewel);
 
   return (
     <button
@@ -50,7 +66,7 @@ export function PlotCard({ plot, isActive, gardenSeason, onSelect }: PlotCardPro
       {/* Header */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span className="text-xl">{emoji}</span>
+          <PlotIcon className="w-5 h-5" style={{ color: iconColor }} />
           <div>
             <h4 className="font-medium text-white">{formatPlotName(plot.name)}</h4>
             {plot.crown_jewel && (
@@ -124,7 +140,7 @@ export function PlotListItem({
   isActive: boolean;
   onSelect?: (plotName: string) => void;
 }) {
-  const emoji = plot.crown_jewel ? CROWN_JEWEL_EMOJI[plot.crown_jewel] || '📁' : '📁';
+  const { icon: PlotIcon, color: iconColor } = getJewelIconForPlot(plot.crown_jewel);
   const isActiveRecently = isPlotActiveRecently(plot.last_tended);
 
   return (
@@ -135,7 +151,7 @@ export function PlotListItem({
         ${isActive ? 'bg-green-900/30 text-green-400' : 'hover:bg-gray-800 text-gray-300'}
       `}
     >
-      <span>{emoji}</span>
+      <PlotIcon className="w-4 h-4" style={{ color: iconColor }} />
       <span className="flex-1 text-left text-sm truncate">{formatPlotName(plot.name)}</span>
       <span
         className={`w-1.5 h-1.5 rounded-full ${isActiveRecently ? 'bg-green-500' : 'bg-gray-600'}`}

@@ -15,12 +15,15 @@
 export {
   // Jewel colors and types
   JEWEL_COLORS,
-  JEWEL_EMOJI,
+  JEWEL_ICONS,
   JEWEL_TAILWIND_COLORS,
   getJewelColor,
-  getJewelEmoji,
+  getJewelIcon,
   type JewelName,
   type JewelColor,
+  // @deprecated - use JEWEL_ICONS instead
+  JEWEL_EMOJI,
+  getJewelEmoji,
 } from './jewels';
 
 export {
@@ -154,6 +157,42 @@ export {
   // Quality descriptions
   QUALITY_DESCRIPTIONS,
 } from './lighting';
+
+// =============================================================================
+// Semantic Icons
+// =============================================================================
+
+export {
+  // Phase icons
+  PHASE_ICONS,
+  GARDENER_PHASE_ICONS,
+  CITIZEN_PHASE_ICONS,
+  getPhaseIcon,
+  // Builder icons
+  BUILDER_ICONS_LUCIDE,
+  getBuilderIcon,
+  // Park icons
+  CRISIS_PHASE_ICONS,
+  TIMER_STATUS_ICONS,
+  MASK_ARCHETYPE_ICONS,
+  getCrisisPhaseIcon,
+  getMaskArchetypeIcon,
+  // Infrastructure icons
+  INFRA_ENTITY_ICONS,
+  SEVERITY_ICONS,
+  getInfraEntityIcon,
+  getSeverityIcon,
+  // Status icons
+  STATUS_ICONS,
+  ERROR_ICONS,
+  // Garden icons
+  SEASON_ICONS,
+  VERB_ICONS,
+  getSeasonIcon,
+  getVerbIcon,
+  // Action icons (for FloatingActions)
+  ACTION_ICONS,
+} from './icons';
 
 // =============================================================================
 // Forest Theme (Gestalt Organic Visualization)

@@ -6,7 +6,7 @@
  * Shows the crisis polynomial: NORMAL -> INCIDENT -> RESPONSE -> RECOVERY -> NORMAL
  *
  * Features:
- * - Visual state machine diagram
+ * - Visual state machine diagram (Lucide icons per visual-system.md)
  * - Current phase highlight
  * - Valid transition buttons
  * - Transition history
@@ -14,7 +14,7 @@
 
 import type { ParkCrisisPhase, ParkScenarioState } from '../../api/types';
 import { PARK_PHASE_CONFIG } from '../../api/types';
-import { STATE_COLORS, GRAYS } from '../../constants';
+import { STATE_COLORS, GRAYS, getCrisisPhaseIcon } from '../../constants';
 
 interface PhaseTransitionProps {
   currentPhase: ParkCrisisPhase;
@@ -49,6 +49,7 @@ function PhaseNode({
   compact,
 }: PhaseNodeProps) {
   const config = PARK_PHASE_CONFIG[phase];
+  const PhaseIcon = getCrisisPhaseIcon(phase);
   const canClick = isAvailable && !disabled && onClick;
 
   return (
@@ -72,12 +73,10 @@ function PhaseNode({
         boxShadow: isCurrent ? `0 0 20px ${config.color}40` : undefined,
       }}
     >
-      <span
-        className={`text-xl ${compact ? 'text-lg' : 'text-2xl'}`}
+      <PhaseIcon
+        className={`${compact ? 'w-5 h-5' : 'w-6 h-6'}`}
         style={{ color: isCurrent ? config.color : '#9ca3af' }}
-      >
-        {config.emoji}
-      </span>
+      />
       <span
         className={`font-medium ${compact ? 'text-[10px]' : 'text-xs'} mt-1`}
         style={{ color: isCurrent ? config.color : '#9ca3af' }}
@@ -116,7 +115,7 @@ function PhaseArrow({ active, compact }: { active: boolean; compact?: boolean })
 
 export function PhaseTransition({
   currentPhase,
-  availableTransitions,
+  availableTransitions = [],
   phaseTransitions,
   onTransition,
   disabled = false,
@@ -125,9 +124,12 @@ export function PhaseTransition({
 }: PhaseTransitionProps) {
   const currentIndex = PHASE_ORDER.indexOf(currentPhase);
 
+  // Safeguard: ensure availableTransitions is an array
+  const transitions = availableTransitions ?? [];
+
   // Check if a phase is available for transition
   const isAvailable = (phase: ParkCrisisPhase) =>
-    availableTransitions.includes(phase);
+    transitions.includes(phase);
 
   return (
     <div className={`${className}`}>
@@ -168,9 +170,9 @@ export function PhaseTransition({
       </div>
 
       {/* Available transitions hint */}
-      {availableTransitions.length > 0 && !disabled && (
+      {transitions.length > 0 && !disabled && (
         <p className="text-center text-xs text-gray-400 mb-4">
-          Available: {availableTransitions.map(p => PARK_PHASE_CONFIG[p].label).join(', ')}
+          Available: {transitions.map(p => PARK_PHASE_CONFIG[p].label).join(', ')}
         </p>
       )}
 
@@ -215,6 +217,7 @@ interface PhaseIndicatorProps {
 
 export function PhaseIndicator({ currentPhase, className = '' }: PhaseIndicatorProps) {
   const config = PARK_PHASE_CONFIG[currentPhase];
+  const PhaseIcon = getCrisisPhaseIcon(currentPhase);
 
   return (
     <div
@@ -224,7 +227,7 @@ export function PhaseIndicator({ currentPhase, className = '' }: PhaseIndicatorP
         color: config.color,
       }}
     >
-      <span className="text-sm">{config.emoji}</span>
+      <PhaseIcon className="w-4 h-4" />
       <span className="text-xs font-medium">{config.label}</span>
     </div>
   );

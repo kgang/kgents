@@ -4,16 +4,19 @@
  * Wave 3: Punchdrunk Park crisis practice.
  *
  * Features:
- * - 8 mask cards with archetype icons
+ * - 8 mask cards with archetype icons (Lucide)
  * - Eigenvector transform preview
  * - Don/doff controls
  * - Active mask indicator
+ *
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
 
 import { useState, useMemo } from 'react';
+import { Theater, Check } from 'lucide-react';
 import type { ParkMaskInfo, ParkMaskArchetype, ParkEigenvectorTransform } from '../../api/types';
 import { PARK_MASK_CONFIG, PARK_EIGENVECTOR_CONFIG } from '../../api/types';
-import { STATE_COLORS, GRAYS, SEMANTIC_COLORS } from '../../constants';
+import { STATE_COLORS, GRAYS, SEMANTIC_COLORS, getMaskArchetypeIcon } from '../../constants';
 
 interface MaskSelectorProps {
   masks: ParkMaskInfo[];
@@ -212,6 +215,7 @@ interface MaskCardProps {
 function MaskCard({ mask, isActive, onSelect, disabled, compact }: MaskCardProps) {
   const config = PARK_MASK_CONFIG[mask.archetype as ParkMaskArchetype];
   const [showDetails, setShowDetails] = useState(false);
+  const MaskIcon = getMaskArchetypeIcon(mask.archetype);
 
   if (compact) {
     return (
@@ -227,7 +231,7 @@ function MaskCard({ mask, isActive, onSelect, disabled, compact }: MaskCardProps
           ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
-        <span className="text-xl">{config?.emoji || '🎭'}</span>
+        <MaskIcon className="w-5 h-5" style={{ color: config?.color || '#6b7280' }} />
         <div className="text-left">
           <p className="text-xs font-medium text-gray-200">{mask.name}</p>
           <p className="text-[10px] text-gray-500">{mask.description}</p>
@@ -250,12 +254,12 @@ function MaskCard({ mask, isActive, onSelect, disabled, compact }: MaskCardProps
       {/* Header */}
       <div className="p-3">
         <div className="flex items-center gap-2 mb-2">
-          <span
-            className="text-2xl p-2 rounded-lg"
+          <div
+            className="p-2 rounded-lg"
             style={{ backgroundColor: `${config?.color || '#6b7280'}22` }}
           >
-            {config?.emoji || '🎭'}
-          </span>
+            <MaskIcon className="w-6 h-6" style={{ color: config?.color || '#6b7280' }} />
+          </div>
           <div>
             <p className="text-sm font-medium text-gray-200">{mask.name}</p>
             <p className="text-xs text-gray-500">{mask.archetype}</p>
@@ -345,7 +349,7 @@ function MaskCard({ mask, isActive, onSelect, disabled, compact }: MaskCardProps
       {/* Active indicator */}
       {isActive && (
         <div className="absolute -top-2 -right-2 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
-          <span className="text-[10px]">✓</span>
+          <Check className="w-3 h-3 text-white" />
         </div>
       )}
     </div>
@@ -364,7 +368,7 @@ export function MaskSelector({
   if (masks.length === 0) {
     return (
       <div className={`text-center py-8 text-gray-500 ${className}`}>
-        <span className="text-4xl mb-2 block">🎭</span>
+        <Theater className="w-10 h-10 mx-auto mb-2 opacity-50" />
         <p className="text-sm">No masks available</p>
       </div>
     );
@@ -428,13 +432,14 @@ export function CurrentMaskBadge({ mask, onDoff, className = '' }: CurrentMaskBa
   if (!mask) {
     return (
       <div className={`flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 rounded-lg ${className}`}>
-        <span className="text-lg opacity-50">🎭</span>
+        <Theater className="w-5 h-5 opacity-50" />
         <span className="text-xs text-gray-500">No mask</span>
       </div>
     );
   }
 
   const config = PARK_MASK_CONFIG[mask.archetype as ParkMaskArchetype];
+  const MaskIcon = getMaskArchetypeIcon(mask.archetype);
 
   return (
     <div
@@ -444,7 +449,7 @@ export function CurrentMaskBadge({ mask, onDoff, className = '' }: CurrentMaskBa
       `}
       style={{ backgroundColor: `${config?.color || '#6b7280'}22` }}
     >
-      <span className="text-lg">{config?.emoji || '🎭'}</span>
+      <MaskIcon className="w-5 h-5" style={{ color: config?.color || '#9ca3af' }} />
       <div>
         <p className="text-xs font-medium" style={{ color: config?.color || '#9ca3af' }}>
           {mask.name}

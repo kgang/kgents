@@ -31,6 +31,13 @@ export const ColonyDashboard = memo(function ColonyDashboard({
   onSelectCitizen,
   className,
 }: ColonyDashboardProps) {
+  // Defensive defaults for metrics (SSE stream may not include all fields)
+  const safeMetrics = {
+    total_events: metrics?.total_events ?? 0,
+    entropy_budget: metrics?.entropy_budget ?? 0,
+    total_tokens: metrics?.total_tokens ?? 0,
+  };
+
   return (
     <div
       className={`kgents-colony-dashboard border rounded-lg overflow-hidden ${className || ''}`}
@@ -47,13 +54,13 @@ export const ColonyDashboard = memo(function ColonyDashboard({
       {/* Status bar */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 bg-gray-100 text-sm border-b">
         <span>
-          <strong>Colony:</strong> {colony_id.slice(0, 12)}
+          <strong>Colony:</strong> {colony_id?.slice(0, 12) ?? 'unknown'}
         </span>
         <span>
-          <strong>Citizens:</strong> {citizens.length}
+          <strong>Citizens:</strong> {citizens?.length ?? 0}
         </span>
         <span>
-          <strong>Events:</strong> {metrics.total_events}
+          <strong>Events:</strong> {safeMetrics.total_events}
         </span>
       </div>
 
@@ -73,7 +80,7 @@ export const ColonyDashboard = memo(function ColonyDashboard({
         }
         className="min-h-[200px]"
       >
-        {citizens.map((citizen) => (
+        {(citizens ?? []).map((citizen) => (
           <CitizenCard
             key={citizen.citizen_id}
             {...citizen}
@@ -85,8 +92,8 @@ export const ColonyDashboard = memo(function ColonyDashboard({
 
       {/* Footer */}
       <div className="flex justify-between flex-wrap gap-x-4 px-4 py-2 bg-gray-100 text-sm border-t">
-        <span>Entropy: {metrics.entropy_budget.toFixed(2)}</span>
-        <span>Tokens: {metrics.total_tokens}</span>
+        <span>Entropy: {safeMetrics.entropy_budget.toFixed(2)}</span>
+        <span>Tokens: {safeMetrics.total_tokens}</span>
       </div>
     </div>
   );

@@ -6,6 +6,55 @@ This document inventories all production-ready infrastructure in kgents. When pl
 
 ---
 
+## Data Bus Infrastructure (Event-Driven Communication)
+
+**The Reactive Data Flow Backbone** — Three-layer event bus architecture enabling agents to communicate without tight coupling.
+
+| Bus | Location | Scope | Purpose |
+|-----|----------|-------|---------|
+| **DataBus** | `agents/d/bus.py` | Single process | D-gent storage events (PUT, DELETE, UPGRADE, DEGRADE) |
+| **SynergyBus** | `protocols/synergy/bus.py` | Cross-jewel | Crown Jewel coordination (60+ event types) |
+| **EventBus** | `agents/town/event_bus.py` | Fan-out | UI/streaming distribution with backpressure |
+
+```python
+# DataBus: React to storage operations
+from agents.d.bus import get_data_bus, DataEventType
+
+bus = get_data_bus()
+bus.subscribe(DataEventType.PUT, async_handler)
+
+# SynergyBus: Crown Jewel coordination
+from protocols.synergy import get_synergy_bus, create_analysis_complete_event
+
+synergy = get_synergy_bus()
+await synergy.emit(create_analysis_complete_event(...))
+
+# EventBus: Fan-out streaming
+from agents.town.event_bus import EventBus
+
+bus = EventBus[TownEvent](max_queue_size=1000)
+sub = bus.subscribe()
+async for event in sub:
+    process(event)
+```
+
+**Key Integrations:**
+- `BusEnabledDgent` — Wraps D-gent to auto-emit events
+- `MgentBusListener` — Auto-indexes data as memories
+- `wire_data_to_synergy()` — Bridges DataBus → SynergyBus
+- `BusNode` — AGENTESE access via `self.bus.*`
+
+**AGENTESE Paths:**
+- `self.bus.manifest` — Bus state overview
+- `self.bus.subscribe` — Subscribe to events
+- `self.bus.replay` — Catch up on missed events
+- `self.bus.latest` — Most recent event
+- `self.bus.stats` — Bus statistics
+
+**Skills**: `docs/skills/data-bus-integration.md`
+
+---
+
 ## Gardener-Logos (NEW 2025-12-16)
 
 **The Meta-Tending Substrate** — Unifies The Gardener Crown Jewel with Prompt Logos into a single system for tending the garden of prompts.
@@ -540,6 +589,17 @@ from agents.k import soul, KgentFlux, SemanticGatekeeper
 # Memory
 from agents.m import HolographicMemory, MemoryCrystal, SemanticRouter
 
+# Data Bus (event-driven communication)
+from agents.d.bus import (
+    DataBus, DataEvent, DataEventType,
+    BusEnabledDgent, get_data_bus
+)
+from protocols.synergy import (
+    get_synergy_bus, SynergyEventType, Jewel,
+    create_analysis_complete_event, create_crystal_formed_event
+)
+from agents.town.event_bus import EventBus, Subscription
+
 # SaaS
 from protocols.api import create_app
 from protocols.billing import StripeClient
@@ -549,4 +609,4 @@ from protocols.tenancy import set_tenant_context
 
 ---
 
-*Last updated: 2025-12-16*
+*Last updated: 2025-12-17*

@@ -23,3 +23,6 @@ export type { OrganicCrystalProps } from './OrganicCrystal';
 
 export { CrystalVine, SmartCrystalVine } from './CrystalVine';
 export type { CrystalVineProps, SmartCrystalVineProps } from './CrystalVine';
+
+export { BrainCanvas } from './BrainCanvas';
+export type { BrainCanvasProps } from './BrainCanvas';

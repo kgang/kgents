@@ -4,6 +4,8 @@
  * Humane error states with personality - not hostile, but helpful.
  * Transforms failures into guidance with warmth.
  *
+ * Uses Lucide icons per visual-system.md - no emojis in kgents-authored copy.
+ *
  * Foundation 5: Personality & Joy - Empathetic Errors
  *
  * @example
@@ -23,6 +25,16 @@ import { motion } from 'framer-motion';
 import { Shake } from './Shake';
 import { Breathe } from './Breathe';
 import { useMotionPreferences } from './useMotionPreferences';
+import {
+  Wifi,
+  MapPin,
+  Lock,
+  Clock,
+  FileText,
+  HelpCircle,
+  AlertTriangle,
+  type LucideIcon,
+} from 'lucide-react';
 
 export type ErrorType = 'network' | 'notfound' | 'permission' | 'timeout' | 'validation' | 'unknown';
 
@@ -56,51 +68,62 @@ export interface EmpathyErrorProps {
 // =============================================================================
 
 interface ErrorConfig {
-  emoji: string;
+  icon: LucideIcon;
+  color: string;
   title: string;
   subtitle: string;
   suggestion: string;
   actionLabel: string;
 }
 
+/**
+ * Error type configurations with Lucide icons.
+ * Per visual-system.md: no emojis in kgents-authored copy.
+ */
 const ERROR_CONFIG: Record<ErrorType, ErrorConfig> = {
   network: {
-    emoji: '📡',
+    icon: Wifi,
+    color: '#3B82F6', // blue-500
     title: 'Lost in the void...',
     subtitle: 'The connection wandered off. It happens to the best of us.',
     suggestion: 'Check your internet connection and try again.',
     actionLabel: 'Reconnect',
   },
   notfound: {
-    emoji: '🗺️',
+    icon: MapPin,
+    color: '#8B5CF6', // violet-500
     title: 'Nothing here...',
     subtitle: "This place doesn't exist yet. Maybe it's waiting to be created.",
     suggestion: 'Double-check the URL or navigate back home.',
     actionLabel: 'Go Home',
   },
   permission: {
-    emoji: '🔐',
+    icon: Lock,
+    color: '#F59E0B', // amber-500
     title: "Door's locked...",
     subtitle: "You'll need the right key to enter here.",
     suggestion: 'Check your permissions or contact an administrator.',
     actionLabel: 'Request Access',
   },
   timeout: {
-    emoji: '⏰',
+    icon: Clock,
+    color: '#64748B', // slate-500
     title: 'Taking too long...',
     subtitle: 'The universe is slow today. Even servers need a moment sometimes.',
     suggestion: 'Try again, or check back in a moment.',
     actionLabel: 'Try Again',
   },
   validation: {
-    emoji: '📝',
+    icon: FileText,
+    color: '#EC4899', // pink-500
     title: 'Something needs fixing...',
     subtitle: "The input wasn't quite right. Let's correct it together.",
     suggestion: 'Review the highlighted fields and try again.',
     actionLabel: 'Review',
   },
   unknown: {
-    emoji: '🌀',
+    icon: HelpCircle,
+    color: '#6366F1', // indigo-500
     title: 'Something unexpected...',
     subtitle: 'Even the wisest agents encounter mysteries.',
     suggestion: 'Try refreshing, or come back in a moment.',
@@ -115,7 +138,7 @@ const ERROR_CONFIG: Record<ErrorType, ErrorConfig> = {
 const SIZE_CONFIG = {
   sm: {
     container: 'p-4',
-    emoji: 'text-3xl',
+    iconSize: 32, // Lucide icon size
     title: 'text-base',
     subtitle: 'text-sm',
     suggestion: 'text-xs',
@@ -123,7 +146,7 @@ const SIZE_CONFIG = {
   },
   md: {
     container: 'p-6',
-    emoji: 'text-5xl',
+    iconSize: 56, // Lucide icon size
     title: 'text-lg',
     subtitle: 'text-base',
     suggestion: 'text-sm',
@@ -131,7 +154,7 @@ const SIZE_CONFIG = {
   },
   lg: {
     container: 'p-8',
-    emoji: 'text-7xl',
+    iconSize: 80, // Lucide icon size
     title: 'text-xl',
     subtitle: 'text-lg',
     suggestion: 'text-base',
@@ -145,6 +168,7 @@ const SIZE_CONFIG = {
 
 /**
  * Empathetic error display with personality and actionable guidance.
+ * Uses Lucide icons instead of emojis per visual-system.md.
  */
 export function EmpathyError({
   type,
@@ -167,6 +191,8 @@ export function EmpathyError({
   const displaySubtitle = subtitle || config.subtitle;
   const displayAction = action || config.actionLabel;
 
+  const IconComponent = config.icon;
+
   return (
     <motion.div
       className={`flex flex-col items-center text-center ${sizeConfig.container} ${className}`}
@@ -176,9 +202,14 @@ export function EmpathyError({
       transition={{ duration: 0.3 }}
       role="alert"
     >
-      {/* Emoji with gentle breathing animation */}
+      {/* Icon with gentle breathing animation - Lucide icons per visual-system.md */}
       <Breathe intensity={0.3} speed="slow">
-        <span className={`${sizeConfig.emoji} mb-4`}>{config.emoji}</span>
+        <IconComponent
+          size={sizeConfig.iconSize}
+          color={config.color}
+          strokeWidth={1.5}
+          className="mb-4"
+        />
       </Breathe>
 
       {/* Title */}
@@ -228,6 +259,7 @@ export function EmpathyError({
 
 /**
  * Inline error for form fields and small contexts.
+ * Uses Lucide AlertTriangle icon instead of emoji.
  */
 export interface InlineErrorProps {
   /** Error message */
@@ -246,7 +278,7 @@ export function InlineError({
   return (
     <Shake trigger={shake} intensity="gentle">
       <p className={`text-sm text-red-400 flex items-center gap-1.5 ${className}`}>
-        <span>⚠️</span>
+        <AlertTriangle size={14} strokeWidth={2} />
         {message}
       </p>
     </Shake>

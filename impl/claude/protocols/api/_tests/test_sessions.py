@@ -68,8 +68,8 @@ class TestCreateSession:
             "/v1/kgent/sessions",
             json={"title": "Test Session"},
         )
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_create_session_read_only_fails(self, client: TestClient) -> None:
         """Test create session requires write scope."""
@@ -115,8 +115,8 @@ class TestListSessions:
     def test_list_sessions_no_auth(self, client: TestClient) -> None:
         """Test list sessions requires authentication."""
         response = client.get("/v1/kgent/sessions")
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_list_sessions_empty(self, client: TestClient) -> None:
         """Test list sessions when none exist."""
@@ -155,8 +155,8 @@ class TestGetSession:
         """Test get session requires authentication."""
         fake_id = "00000000-0000-0000-0000-000000000099"
         response = client.get(f"/v1/kgent/sessions/{fake_id}")
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_get_session_not_found(self, client: TestClient) -> None:
         """Test get session returns 404 for nonexistent session."""
@@ -206,8 +206,8 @@ class TestSendMessage:
             f"/v1/kgent/sessions/{fake_id}/messages",
             json={"message": "Hello"},
         )
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_send_message_read_only_fails(self, client: TestClient) -> None:
         """Test send message requires write scope."""
@@ -266,8 +266,8 @@ class TestGetMessages:
         """Test get messages requires authentication."""
         fake_id = "00000000-0000-0000-0000-000000000099"
         response = client.get(f"/v1/kgent/sessions/{fake_id}/messages")
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_get_messages_not_found(self, client: TestClient) -> None:
         """Test get messages for nonexistent session."""

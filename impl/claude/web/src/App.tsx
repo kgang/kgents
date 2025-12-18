@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Layout } from './components/layout/Layout';
+import { Shell } from './shell';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { SynergyToaster } from './components/synergy';
 import { PageTransition, PersonalityLoading } from './components/joy';
@@ -41,25 +41,33 @@ function App() {
         <AnimatePresence mode="wait" initial={false}>
           <PageTransition key={location.pathname} variant="fade">
             <Routes location={location}>
-              {/* Crown landing page - Hero Path entry point (Wave 4) */}
-              <Route element={<Layout />}>
+              {/* OS Shell - Unified layout with three persistent layers */}
+              <Route element={<Shell />}>
+                {/* Crown landing page - Hero Path entry point */}
                 <Route path="/" element={<Crown />} />
                 <Route path="/crown" element={<Crown />} />
-                <Route path="/town" element={<Navigate to="/town/default" replace />} />
-                <Route path="/town/:townId" element={<Town />} />
-                <Route path="/atelier" element={<Atelier />} />
-                <Route path="/gallery" element={<GalleryPage />} />
-                <Route path="/gallery/layout" element={<LayoutGallery />} />
+
+                {/* Crown Jewels */}
                 <Route path="/brain" element={<Brain />} />
-                <Route path="/workshop" element={<Workshop />} />
-                <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
                 <Route path="/gestalt" element={<Gestalt />} />
                 <Route path="/gestalt/live" element={<GestaltLive />} />
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
+                <Route path="/atelier" element={<Atelier />} />
+                <Route path="/town" element={<Navigate to="/town/default" replace />} />
+                <Route path="/town/:townId" element={<Town />} />
+                <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
                 <Route path="/park" element={<ParkScenario />} />
+                <Route path="/workshop" element={<Workshop />} />
+
+                {/* Galleries */}
+                <Route path="/gallery" element={<GalleryPage />} />
+                <Route path="/gallery/layout" element={<LayoutGallery />} />
+
+                {/* Other */}
                 <Route path="/emergence" element={<EmergenceDemo />} />
               </Route>
+
               {/* 404 catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>

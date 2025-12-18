@@ -17,9 +17,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Crown as CrownIcon, Check } from 'lucide-react';
 import { brainApi, gestaltApi, gardenerApi } from '../api/client';
 import { Breathe } from '../components/joy';
-import { JEWEL_COLORS, JEWEL_EMOJI } from '../constants/jewels';
+import { JEWEL_COLORS, JEWEL_ICONS, type JewelName } from '../constants/jewels';
 
 interface CrownStatus {
   gestalt: { scanned: boolean; health?: string };
@@ -31,44 +32,45 @@ interface CrownStatus {
 
 /**
  * Hero path step configuration.
+ * Uses JEWEL_ICONS (Lucide) instead of emojis per visual-system.md.
  */
 const HERO_STEPS = [
   {
     step: 1,
-    jewel: 'gestalt' as const,
+    jewel: 'gestalt' as JewelName,
     title: 'Scan Your Codebase',
     subtitle: 'Understand the shape of your code',
     description:
       "Gestalt analyzes your codebase's architecture, dependencies, and health in seconds.",
     href: '/gestalt',
     action: 'Start Scan',
-    emoji: JEWEL_EMOJI.gestalt,
+    icon: JEWEL_ICONS.gestalt,
     color: JEWEL_COLORS.gestalt.primary,
     path: 'world.codebase.*',
   },
   {
     step: 2,
-    jewel: 'brain' as const,
+    jewel: 'brain' as JewelName,
     title: 'See What We Learned',
     subtitle: 'Knowledge crystallizes automatically',
     description:
       'Brain captures insights from your scan. Every analysis becomes a searchable memory crystal.',
     href: '/brain',
     action: 'View Crystals',
-    emoji: JEWEL_EMOJI.brain,
+    icon: JEWEL_ICONS.brain,
     color: JEWEL_COLORS.brain.primary,
     path: 'self.memory.*',
   },
   {
     step: 3,
-    jewel: 'gardener' as const,
+    jewel: 'gardener' as JewelName,
     title: 'Start Improving It',
     subtitle: 'Cultivate better code',
     description:
       'The Gardener helps you plan, act, and reflect on improvements with context from Brain and Gestalt.',
     href: '/gardener',
     action: 'Open Gardener',
-    emoji: JEWEL_EMOJI.gardener,
+    icon: JEWEL_ICONS.gardener,
     color: JEWEL_COLORS.gardener.primary,
     path: 'concept.gardener.*',
   },
@@ -130,13 +132,15 @@ function HeroStepCard({
 
       {/* Completed checkmark */}
       {completed && (
-        <div className="absolute -top-3 right-4 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-sm">
-          ✓
+        <div className="absolute -top-3 right-4 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white">
+          <Check className="w-4 h-4" />
         </div>
       )}
 
-      {/* Emoji */}
-      <div className="text-4xl mb-4 mt-2">{step.emoji}</div>
+      {/* Jewel Icon */}
+      <div className="mb-4 mt-2">
+        <step.icon className="w-10 h-10" style={{ color: step.color }} />
+      </div>
 
       {/* Title */}
       <h3 className="text-lg font-bold text-white mb-1">{step.title}</h3>
@@ -164,26 +168,30 @@ function HeroStepCard({
 
 /**
  * Extension jewels preview.
+ * Uses JEWEL_ICONS (Lucide) instead of emojis per visual-system.md.
  */
 function ExtensionJewels() {
   const extensions = [
     {
       name: 'Atelier',
-      emoji: JEWEL_EMOJI.atelier,
+      jewel: 'atelier' as JewelName,
+      icon: JEWEL_ICONS.atelier,
       color: JEWEL_COLORS.atelier.primary,
       href: '/atelier',
       description: 'Creative collaboration',
     },
     {
       name: 'Coalition',
-      emoji: JEWEL_EMOJI.coalition,
+      jewel: 'coalition' as JewelName,
+      icon: JEWEL_ICONS.coalition,
       color: JEWEL_COLORS.coalition.primary,
       href: '/town',
       description: 'Agent orchestration',
     },
     {
       name: 'Park',
-      emoji: JEWEL_EMOJI.park,
+      jewel: 'park' as JewelName,
+      icon: JEWEL_ICONS.park,
       color: JEWEL_COLORS.park.primary,
       href: '/park',
       description: 'Crisis practice',
@@ -207,7 +215,7 @@ function ExtensionJewels() {
             to={ext.href}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 hover:bg-gray-800 transition-colors border border-gray-700"
           >
-            <span className="text-xl">{ext.emoji}</span>
+            <ext.icon className="w-5 h-5" style={{ color: ext.color }} />
             <div>
               <span className="text-sm font-medium text-gray-300">{ext.name}</span>
               <span className="text-xs text-gray-500 block">{ext.description}</span>
@@ -328,8 +336,8 @@ export default function Crown() {
           className="text-center mb-12"
         >
           <Breathe intensity={0.3} speed="slow">
-            <h1 className="text-4xl font-bold mb-2">
-              <span className="text-3xl mr-2">👑</span>
+            <h1 className="text-4xl font-bold mb-2 flex items-center justify-center gap-3">
+              <CrownIcon className="w-8 h-8 text-amber-400" />
               kgents Crown
             </h1>
           </Breathe>

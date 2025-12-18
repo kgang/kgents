@@ -51,8 +51,15 @@ kgents is a **garden**, not a factory. Gardens require:
 | [motion-language.md](motion-language.md) | Animation principles, timing, personality in movement |
 | [voice-and-tone.md](voice-and-tone.md) | Writing style, error messages, personality in words |
 | [mood-board.md](mood-board.md) | Visual inspiration, reference imagery, aesthetic touchstones |
-| [projection-aesthetics.md](projection-aesthetics.md) | How density/target affects visual expression |
 | [implementation-guide.md](implementation-guide.md) | Practical application for developers |
+
+## Related Specifications
+
+| Spec | Purpose |
+|------|---------|
+| [spec/protocols/os-shell.md](../../spec/protocols/os-shell.md) | Unified layout wrapper and router |
+| [spec/protocols/projection.md](../../spec/protocols/projection.md) | Projection Protocol (density, targets) |
+| [spec/protocols/agentese.md](../../spec/protocols/agentese.md) | AGENTESE verb-first ontology |
 
 ---
 
@@ -89,6 +96,34 @@ Users should **never** feel:
 - Patronized by over-explanation
 - Alienated by cold technical language
 - Anxious about making mistakes
+
+---
+
+## Key Design Policies
+
+### No Emojis in kgents Copy
+
+> *"Emojis in copy are garnish. kgents is the main course."*
+
+All kgents-authored text content uses **Lucide icons**, not emojis:
+- Navigation labels use icons
+- Buttons and actions use icons
+- Empty states use icons
+- Loading states use glyphs or icons
+
+**Exceptions:** User-generated content, explicit personality moments (sparingly).
+
+See `visual-system.md` for the JEWEL_ICONS mapping.
+
+### OS Shell Pattern
+
+The web interface is an **operating system interface** for autopoiesis, not a collection of pages:
+- **Observer Drawer** (top) — Always shows who is observing
+- **Navigation Tree** (sidebar) — AGENTESE ontology, not arbitrary routes
+- **Terminal** (bottom) — Direct gateway interaction with persistence
+- **Content Canvas** — Projection-first, minimal page logic
+
+See `spec/protocols/os-shell.md` for full specification.
 
 ---
 

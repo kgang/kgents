@@ -5,7 +5,7 @@
  *
  * Features:
  * - Color-coded progress bar (green -> yellow -> red)
- * - Status emoji indicators
+ * - Status icon indicators (Lucide per visual-system.md)
  * - Accelerated mode indicator
  * - Animated critical state
  */
@@ -13,8 +13,7 @@
 import { useMemo } from 'react';
 import type { ParkTimerInfo, ParkTimerStatus } from '../../api/types';
 import { PARK_TIMER_CONFIG } from '../../api/types';
-// Design tokens available for future use (using Tailwind classes for now)
-// import { STATE_COLORS, HEALTH_COLORS } from '../../constants';
+import { TIMER_STATUS_ICONS } from '../../constants';
 
 interface TimerDisplayProps {
   timer: ParkTimerInfo;
@@ -62,6 +61,7 @@ export function TimerDisplay({
   className = '',
 }: TimerDisplayProps) {
   const config = PARK_TIMER_CONFIG[timer.status];
+  const StatusIcon = TIMER_STATUS_ICONS[timer.status];
   const progressColor = useMemo(() => getProgressColor(timer.progress), [timer.progress]);
   const statusBg = useMemo(() => getStatusBg(timer.status), [timer.status]);
   const isCritical = timer.status === 'CRITICAL' || timer.status === 'EXPIRED';
@@ -69,9 +69,7 @@ export function TimerDisplay({
   if (compact) {
     return (
       <div className={`flex items-center gap-2 ${className}`}>
-        <span className="font-mono text-xs" style={{ color: config.color }}>
-          {config.emoji}
-        </span>
+        <StatusIcon className="w-4 h-4" style={{ color: config.color }} />
         <span className="text-xs text-gray-300 font-mono">{timer.countdown}</span>
         <div className="flex-1 h-1 bg-gray-700 rounded-full overflow-hidden">
           <div
@@ -95,12 +93,7 @@ export function TimerDisplay({
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <span
-            className="font-mono text-lg"
-            style={{ color: config.color }}
-          >
-            {config.emoji}
-          </span>
+          <StatusIcon className="w-5 h-5" style={{ color: config.color }} />
           <span className="text-sm font-medium text-gray-200">{timer.name}</span>
         </div>
         {accelerated && (

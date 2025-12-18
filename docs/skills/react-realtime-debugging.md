@@ -218,6 +218,91 @@ useEffect(() => {
 }, [isPlaying, townId, connect]);
 ```
 
+### Pattern G: WebSocket + React StrictMode Connect/Disconnect Loops
+
+**Symptom**: WebSocket connects then immediately disconnects, rapid open/close cycles in backend logs
+
+**Signal**: Backend shows:
+```
+INFO: connection open
+INFO: connection closed
+INFO: connection open
+INFO: connection closed
+```
+
+**Cause**: React StrictMode double-mounts components in dev, AND unstable callback references cause effect re-runs:
+
+```typescript
+// BAD: connect/disconnect recreated every render, effect re-runs
+const connect = useCallback(() => { ... }, [config, handler]); // New ref each render!
+const disconnect = useCallback(() => { ... }, [maxAttempts]);
+
+useEffect(() => {
+  if (autoConnect) connect();
+  return () => disconnect();
+}, [autoConnect, connect, disconnect]); // Triggers cleanup → reconnect loop
+```
+
+**Fix**: Three-part solution:
+
+1. **Refs for callbacks**: Store handlers and config in refs to avoid recreating functions:
+```typescript
+const handlersRef = useRef({ onMessage, onError });
+handlersRef.current = { onMessage, onError }; // Update ref, not identity
+
+const connect = useCallback(() => {
+  ws.onmessage = (e) => handlersRef.current.onMessage(e); // Fresh handler
+}, []); // Stable: no callback deps
+```
+
+2. **Guard against double-connect**: Use ref to track connection state:
+```typescript
+const hasAutoConnected = useRef(false);
+const isDisconnecting = useRef(false);
+
+const connect = useCallback(() => {
+  if (wsRef.current?.readyState === WebSocket.OPEN) return; // Already connected
+  if (wsRef.current?.readyState === WebSocket.CONNECTING) return; // Connecting
+  isDisconnecting.current = false;
+  // ... connect logic
+}, []);
+```
+
+3. **Intentional disconnect tracking**: Prevent auto-reconnect on cleanup:
+```typescript
+const disconnect = useCallback(() => {
+  isDisconnecting.current = true; // Mark intentional
+  wsRef.current?.close(1000, 'User disconnect');
+}, []);
+
+// In onclose handler:
+ws.onclose = (event) => {
+  if (isDisconnecting.current) return; // Don't auto-reconnect
+  // ... exponential backoff reconnect
+};
+```
+
+4. **StrictMode-safe effect**: Only depend on primitive config, not functions:
+```typescript
+useEffect(() => {
+  if (autoConnect && !hasAutoConnected.current) {
+    hasAutoConnected.current = true;
+    connect();
+  }
+  return () => {
+    disconnect();
+    hasAutoConnected.current = false; // Allow reconnect on true remount
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [autoConnect]); // Intentionally omit stable functions
+```
+
+**Prevention**: When building WebSocket hooks:
+- Store all dynamic config in refs, not useCallback deps
+- Always check connection state before connecting
+- Track intentional vs unintentional disconnects
+- Use a `hasConnected` ref for StrictMode protection
+
 ## Debugging Checklist
 
 ```
@@ -232,6 +317,7 @@ useEffect(() => {
 [ ] No stale closures? (use refs for event handlers)
 [ ] Effect dependencies complete?
 [ ] No duplicate keys? (deduplicate streamed data by ID)
+[ ] No connect/disconnect loops? (StrictMode + stable refs)
 ```
 
 ## Testing Real-time Features
@@ -274,3 +360,5 @@ expect(store.getState().events).toHaveLength(1);
 - **Don't use `navigate()` for same-component updates**: Use history API or state directly
 - **Don't put callbacks in effect deps without understanding identity**: Wrap in useCallback or use refs
 - **Don't assume stream data is unique**: Always deduplicate at the hook/store layer, not in render
+- **Don't ignore StrictMode**: Dev-mode double-mount exposes real bugs; fix the root cause, don't disable StrictMode
+- **Don't put connect/disconnect in effect deps**: Store config in refs, make functions stable with `[]` deps

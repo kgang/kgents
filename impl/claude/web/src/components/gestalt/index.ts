@@ -46,3 +46,7 @@ export { OrganicNode } from './OrganicNode';
 export type { OrganicNodeProps } from './OrganicNode';
 export { VineEdge, SmartVineEdge } from './VineEdge';
 export type { VineEdgeProps, SmartVineEdgeProps } from './VineEdge';
+
+// Projection-First Visualization Component
+export { GestaltVisualization, default as GestaltVisualizationDefault } from './GestaltVisualization';
+export type { GestaltVisualizationProps } from './GestaltVisualization';

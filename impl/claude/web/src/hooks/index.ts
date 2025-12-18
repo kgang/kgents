@@ -23,6 +23,9 @@ export {
   type UseTownStreamWidgetResult,
 } from './useTownStreamWidget';
 
+// Town loading hook (projection-first extraction)
+export { useTownLoader } from './useTownLoader';
+
 // Atelier streaming
 export { useAtelierStream, type UseAtelierStreamResult } from './useAtelierStream';
 

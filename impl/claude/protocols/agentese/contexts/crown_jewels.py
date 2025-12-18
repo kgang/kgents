@@ -469,6 +469,54 @@ GESTALT_PATHS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Gestalt Live: Real-time Infrastructure Visualizer (world.gestalt.live.*)
+GESTALT_LIVE_PATHS: dict[str, dict[str, Any]] = {
+    "world.gestalt.live.manifest": {
+        "aspect": "manifest",
+        "description": "Real-time 3D infrastructure topology visualization",
+        "effects": [],
+    },
+    "world.gestalt.live.subscribe": {
+        "aspect": "witness",
+        "description": "Subscribe to live infrastructure updates (SSE)",
+        "effects": [],
+    },
+    "world.gestalt.live.entity.manifest": {
+        "aspect": "manifest",
+        "description": "View entity details (pods, services, deployments)",
+        "effects": [],
+    },
+    "world.gestalt.live.events.witness": {
+        "aspect": "witness",
+        "description": "View infrastructure events feed",
+        "effects": [],
+    },
+}
+
+# Emergence: Cymatics Design Sampler (world.emergence.*)
+EMERGENCE_PATHS: dict[str, dict[str, Any]] = {
+    "world.emergence.manifest": {
+        "aspect": "manifest",
+        "description": "Cymatics design sampler - visual exploration of pattern families",
+        "effects": [],
+    },
+    "world.emergence.pattern.manifest": {
+        "aspect": "manifest",
+        "description": "View pattern family variations (chladni, interference, mandala, etc.)",
+        "effects": [],
+    },
+    "world.emergence.preset.manifest": {
+        "aspect": "manifest",
+        "description": "Browse curated pattern presets",
+        "effects": [],
+    },
+    "world.emergence.configure": {
+        "aspect": "define",
+        "description": "Configure custom pattern parameters",
+        "effects": [],
+    },
+}
+
 # Crown Jewel 7: The Gardener
 GARDENER_PATHS: dict[str, dict[str, Any]] = {
     "concept.gardener.manifest": {
@@ -534,6 +582,8 @@ ALL_CROWN_JEWEL_PATHS: dict[str, dict[str, Any]] = {
     **PARK_PATHS,
     **SIMULATION_PATHS,
     **GESTALT_PATHS,
+    **GESTALT_LIVE_PATHS,
+    **EMERGENCE_PATHS,
     **GARDENER_PATHS,
 }
 
@@ -578,6 +628,8 @@ class CrownJewelRegistry:
             ),
             "simulation": ("world.simulation.", "concept.drill.", "time.simulation."),
             "gestalt": ("world.codebase.", "concept.governance."),
+            "gestalt_live": ("world.gestalt.live.",),
+            "emergence": ("world.emergence.",),
             "gardener": ("concept.gardener.", "self.forest.", "self.meta."),
         }
 
@@ -670,6 +722,8 @@ __all__ = [
     "PARK_PATHS",
     "SIMULATION_PATHS",
     "GESTALT_PATHS",
+    "GESTALT_LIVE_PATHS",
+    "EMERGENCE_PATHS",
     "GARDENER_PATHS",
     # Unified registry
     "ALL_CROWN_JEWEL_PATHS",

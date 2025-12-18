@@ -4,15 +4,17 @@
  * Jewel-specific loading messages that give personality to wait states.
  * Instead of generic "Loading...", show contextual messages.
  *
+ * Uses Lucide icons per visual-system.md - no emojis in kgents-authored copy.
+ *
  * Foundation 5: Personality & Joy - Personality Loading States
  *
  * @example
  * ```tsx
  * <PersonalityLoading jewel="brain" />
- * // "Crystallizing memories..."
+ * // Shows Brain icon with "Crystallizing memories..."
  *
  * <PersonalityLoading jewel="gestalt" action="analyzing" />
- * // "Analyzing architecture..."
+ * // Shows Network icon with "Analyzing architecture..."
  * ```
  */
 
@@ -21,6 +23,8 @@ import type { CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Breathe } from './Breathe';
 import { useMotionPreferences } from './useMotionPreferences';
+import { JEWEL_ICONS, JEWEL_COLORS, type JewelName } from '../../constants/jewels';
+import { Leaf as TreeIcon } from 'lucide-react'; // For organic/forest mode
 
 export type CrownJewel = 'brain' | 'gestalt' | 'gardener' | 'atelier' | 'coalition' | 'park' | 'domain';
 
@@ -48,20 +52,18 @@ export interface PersonalityLoadingProps {
 // =============================================================================
 
 interface JewelConfig {
-  emoji: string;
-  color: string;
   messages: string[];
   actionVerbs: Record<string, string>;
   /** Organic/forest-themed messages (optional) */
   organicMessages?: string[];
-  /** Organic emoji override */
-  organicEmoji?: string;
 }
 
+/**
+ * Jewel-specific messages for loading states.
+ * Icons and colors come from JEWEL_ICONS and JEWEL_COLORS constants.
+ */
 const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
   brain: {
-    emoji: '🧠',
-    color: '#06B6D4', // cyan-500
     messages: [
       'Crystallizing memories...',
       'Traversing the hologram...',
@@ -77,8 +79,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     },
   },
   gestalt: {
-    emoji: '🏗️',
-    color: '#22C55E', // green-500
     messages: [
       'Analyzing architecture...',
       'Computing health metrics...',
@@ -93,7 +93,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
       compute: 'Computing health grades...',
     },
     // Forest-themed messages for organic mode
-    organicEmoji: '🌲',
     organicMessages: [
       'Surveying the forest canopy...',
       'Tracing root systems...',
@@ -103,8 +102,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     ],
   },
   gardener: {
-    emoji: '🌱',
-    color: '#84CC16', // lime-500
     messages: [
       'Preparing the garden...',
       'Gathering context...',
@@ -120,8 +117,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     },
   },
   atelier: {
-    emoji: '🎨',
-    color: '#F59E0B', // amber-500
     messages: [
       'Mixing the palette...',
       'Consulting the muses...',
@@ -137,8 +132,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     },
   },
   coalition: {
-    emoji: '🤝',
-    color: '#8B5CF6', // violet-500
     messages: [
       'Assembling the team...',
       'Coordinating specialists...',
@@ -154,8 +147,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     },
   },
   park: {
-    emoji: '🎭',
-    color: '#EC4899', // pink-500
     messages: [
       'Setting the stage...',
       'Preparing the scene...',
@@ -171,8 +162,6 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
     },
   },
   domain: {
-    emoji: '🏛️',
-    color: '#EF4444', // red-500
     messages: [
       'Initializing simulation...',
       'Loading scenarios...',
@@ -196,19 +185,19 @@ const JEWEL_CONFIG: Record<CrownJewel, JewelConfig> = {
 const SIZE_CONFIG = {
   sm: {
     container: 'p-3',
-    emoji: 'text-2xl',
+    iconSize: 24, // Lucide icon size
     text: 'text-xs',
     gap: 'gap-2',
   },
   md: {
     container: 'p-4',
-    emoji: 'text-4xl',
+    iconSize: 40, // Lucide icon size
     text: 'text-sm',
     gap: 'gap-3',
   },
   lg: {
     container: 'p-6',
-    emoji: 'text-6xl',
+    iconSize: 64, // Lucide icon size
     text: 'text-base',
     gap: 'gap-4',
   },
@@ -220,6 +209,7 @@ const SIZE_CONFIG = {
 
 /**
  * Personality loading indicator with jewel-specific messaging.
+ * Uses Lucide icons instead of emojis per visual-system.md.
  */
 export function PersonalityLoading({
   jewel,
@@ -235,8 +225,11 @@ export function PersonalityLoading({
   const config = JEWEL_CONFIG[jewel];
   const sizeConfig = SIZE_CONFIG[size];
 
-  // Use organic emoji/messages if available and organic mode is enabled
-  const displayEmoji = organic && config.organicEmoji ? config.organicEmoji : config.emoji;
+  // Get the icon component from JEWEL_ICONS - use TreeIcon for organic mode
+  const IconComponent = organic && jewel === 'gestalt' ? TreeIcon : JEWEL_ICONS[jewel as JewelName];
+  const iconColor = JEWEL_COLORS[jewel as JewelName]?.primary ?? '#64748B';
+
+  // Use organic messages if available and organic mode is enabled
   const displayMessages = organic && config.organicMessages ? config.organicMessages : config.messages;
 
   // Get the message to display
@@ -270,9 +263,13 @@ export function PersonalityLoading({
       className={`flex flex-col items-center justify-center ${sizeConfig.container} ${sizeConfig.gap} ${className}`}
       style={style}
     >
-      {/* Animated emoji - uses organic variant if enabled */}
+      {/* Animated icon - uses Lucide icons per visual-system.md */}
       <Breathe intensity={0.4} speed="slow">
-        <span className={sizeConfig.emoji}>{displayEmoji}</span>
+        <IconComponent
+          size={sizeConfig.iconSize}
+          color={iconColor}
+          strokeWidth={1.5}
+        />
       </Breathe>
 
       {/* Message with fade transition */}
@@ -285,7 +282,7 @@ export function PersonalityLoading({
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2 }}
             className={`text-gray-400 ${sizeConfig.text}`}
-            style={{ color: config.color }}
+            style={{ color: iconColor }}
           >
             {currentMessage}
           </motion.p>
@@ -299,6 +296,7 @@ export function PersonalityLoading({
 
 /**
  * Inline personality loading for smaller contexts.
+ * Uses Lucide icons instead of emojis.
  */
 export function PersonalityLoadingInline({
   jewel,
@@ -308,6 +306,9 @@ export function PersonalityLoadingInline({
   className?: string;
 }) {
   const config = JEWEL_CONFIG[jewel];
+  const IconComponent = JEWEL_ICONS[jewel as JewelName];
+  const iconColor = JEWEL_COLORS[jewel as JewelName]?.primary ?? '#64748B';
+
   const randomMessage = useMemo(
     () => config.messages[Math.floor(Math.random() * config.messages.length)],
     [config]
@@ -316,9 +317,9 @@ export function PersonalityLoadingInline({
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <Breathe intensity={0.3}>
-        <span>{config.emoji}</span>
+        <IconComponent size={16} color={iconColor} strokeWidth={1.5} />
       </Breathe>
-      <span className="text-gray-400" style={{ color: config.color }}>
+      <span className="text-gray-400" style={{ color: iconColor }}>
         {randomMessage}
       </span>
     </span>

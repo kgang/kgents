@@ -8,9 +8,13 @@
  * - WATER: Nurture via TextGRAD
  * - ROTATE: Change perspective
  * - WAIT: Allow time to pass
+ *
+ * @see docs/creative/visual-system.md - NO EMOJIS policy
  */
 
 import type { GestureJSON, TendingVerb } from '@/reactive/types';
+import { getVerbIcon } from '@/constants';
+import { Sprout } from 'lucide-react';
 
 interface GestureHistoryProps {
   gestures: GestureJSON[];
@@ -18,14 +22,14 @@ interface GestureHistoryProps {
   className?: string;
 }
 
-/** Verb visual configuration */
-const VERB_CONFIG: Record<TendingVerb, { emoji: string; color: string; bgColor: string }> = {
-  OBSERVE: { emoji: '👁️', color: 'text-blue-400', bgColor: 'bg-blue-900/30' },
-  PRUNE: { emoji: '✂️', color: 'text-red-400', bgColor: 'bg-red-900/30' },
-  GRAFT: { emoji: '🌿', color: 'text-green-400', bgColor: 'bg-green-900/30' },
-  WATER: { emoji: '💧', color: 'text-cyan-400', bgColor: 'bg-cyan-900/30' },
-  ROTATE: { emoji: '🔄', color: 'text-purple-400', bgColor: 'bg-purple-900/30' },
-  WAIT: { emoji: '⏳', color: 'text-gray-400', bgColor: 'bg-gray-800' },
+/** Verb visual configuration (using Lucide icons per visual-system.md) */
+const VERB_CONFIG: Record<TendingVerb, { color: string; bgColor: string }> = {
+  OBSERVE: { color: 'text-blue-400', bgColor: 'bg-blue-900/30' },
+  PRUNE: { color: 'text-red-400', bgColor: 'bg-red-900/30' },
+  GRAFT: { color: 'text-green-400', bgColor: 'bg-green-900/30' },
+  WATER: { color: 'text-cyan-400', bgColor: 'bg-cyan-900/30' },
+  ROTATE: { color: 'text-purple-400', bgColor: 'bg-purple-900/30' },
+  WAIT: { color: 'text-gray-400', bgColor: 'bg-gray-800' },
 };
 
 export function GestureHistory({ gestures, maxDisplay = 10, className = '' }: GestureHistoryProps) {
@@ -34,7 +38,7 @@ export function GestureHistory({ gestures, maxDisplay = 10, className = '' }: Ge
   if (displayGestures.length === 0) {
     return (
       <div className={`text-center py-4 text-gray-500 ${className}`}>
-        <span className="text-2xl mb-2 block">🌱</span>
+        <Sprout className="w-8 h-8 mx-auto mb-2 text-green-500" />
         <p className="text-sm">No gestures yet</p>
         <p className="text-xs">Start tending your garden</p>
       </div>
@@ -55,6 +59,7 @@ export function GestureHistory({ gestures, maxDisplay = 10, className = '' }: Ge
 /** Individual gesture display */
 function GestureItem({ gesture }: { gesture: GestureJSON }) {
   const config = VERB_CONFIG[gesture.verb];
+  const VerbIcon = getVerbIcon(gesture.verb);
   const timeStr = formatGestureTime(gesture.timestamp);
 
   return (
@@ -62,7 +67,7 @@ function GestureItem({ gesture }: { gesture: GestureJSON }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm">{config.emoji}</span>
+          <VerbIcon className={`w-4 h-4 ${config.color}`} />
           <span className={`text-sm font-medium ${config.color}`}>{gesture.verb}</span>
         </div>
         <span className="text-xs text-gray-500">{timeStr}</span>
@@ -110,6 +115,7 @@ export function GestureList({
     <ul className={`space-y-1 ${className}`}>
       {displayGestures.map((gesture, index) => {
         const config = VERB_CONFIG[gesture.verb];
+        const VerbIcon = getVerbIcon(gesture.verb);
         const timeStr = formatGestureTime(gesture.timestamp);
 
         return (
@@ -117,7 +123,7 @@ export function GestureList({
             key={`${gesture.timestamp}-${index}`}
             className="flex items-center gap-2 text-xs text-gray-400"
           >
-            <span>{config.emoji}</span>
+            <VerbIcon className={`w-3.5 h-3.5 ${config.color}`} />
             <span className={config.color}>{gesture.verb.toLowerCase()}</span>
             <span className="text-gray-600 truncate flex-1 font-mono text-[10px]">
               {shortenTarget(gesture.target)}

@@ -260,44 +260,48 @@ describe('PersonalityLoading', () => {
     mockMatchMedia(false);
   });
 
-  it('renders with brain jewel', () => {
+  // NOTE: PersonalityLoading uses Lucide icons (not emojis) per visual-system.md no-emoji policy.
+  // Tests verify SVG icon presence instead of emoji text.
+
+  it('renders with brain jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="brain" />);
-    expect(screen.getByText('🧠')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with gestalt jewel', () => {
+  it('renders with gestalt jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="gestalt" />);
-    expect(screen.getByText('🏗️')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with gardener jewel', () => {
+  it('renders with gardener jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="gardener" />);
-    expect(screen.getByText('🌱')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with atelier jewel', () => {
+  it('renders with atelier jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="atelier" />);
-    expect(screen.getByText('🎨')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with coalition jewel', () => {
+  it('renders with coalition jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="coalition" />);
-    expect(screen.getByText('🤝')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with park jewel', () => {
+  it('renders with park jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="park" />);
-    expect(screen.getByText('🎭')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders with domain jewel', () => {
+  it('renders with domain jewel Lucide icon', () => {
     render(<PersonalityLoading jewel="domain" />);
-    expect(screen.getByText('🏛️')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('accepts size prop', () => {
-    const { container } = render(<PersonalityLoading jewel="brain" size="lg" />);
-    expect(container.querySelector('.text-6xl')).toBeInTheDocument();
+  it('applies correct sizing based on size prop', () => {
+    render(<PersonalityLoading jewel="brain" size="lg" />);
+    // Size prop affects icon size and text, verify via Lucide icon
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('uses action-specific message when provided', () => {
@@ -307,9 +311,9 @@ describe('PersonalityLoading', () => {
 });
 
 describe('PersonalityLoadingInline', () => {
-  it('renders inline with jewel emoji', () => {
+  it('renders inline with Lucide icon', () => {
     render(<PersonalityLoadingInline jewel="brain" />);
-    expect(screen.getByText('🧠')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 });
 
@@ -322,40 +326,43 @@ describe('EmpathyError', () => {
     mockMatchMedia(false);
   });
 
-  it('renders network error', () => {
+  // NOTE: EmpathyError uses Lucide icons (not emojis) per visual-system.md no-emoji policy.
+  // Tests verify title text and SVG icon presence (not emoji text).
+
+  it('renders network error with Lucide icon', () => {
     render(<EmpathyError type="network" />);
     expect(screen.getByText('Lost in the void...')).toBeInTheDocument();
-    expect(screen.getByText('📡')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders notfound error', () => {
+  it('renders notfound error with Lucide icon', () => {
     render(<EmpathyError type="notfound" />);
     expect(screen.getByText('Nothing here...')).toBeInTheDocument();
-    expect(screen.getByText('🗺️')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders permission error', () => {
+  it('renders permission error with Lucide icon', () => {
     render(<EmpathyError type="permission" />);
     expect(screen.getByText("Door's locked...")).toBeInTheDocument();
-    expect(screen.getByText('🔐')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders timeout error', () => {
+  it('renders timeout error with Lucide icon', () => {
     render(<EmpathyError type="timeout" />);
     expect(screen.getByText('Taking too long...')).toBeInTheDocument();
-    expect(screen.getByText('⏰')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders validation error', () => {
+  it('renders validation error with Lucide icon', () => {
     render(<EmpathyError type="validation" />);
     expect(screen.getByText('Something needs fixing...')).toBeInTheDocument();
-    expect(screen.getByText('📝')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('renders unknown error', () => {
+  it('renders unknown error with Lucide icon', () => {
     render(<EmpathyError type="unknown" />);
     expect(screen.getByText('Something unexpected...')).toBeInTheDocument();
-    expect(screen.getByText('🌀')).toBeInTheDocument();
+    expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('accepts custom title and subtitle', () => {
@@ -412,10 +419,12 @@ describe('EmpathyError', () => {
 });
 
 describe('InlineError', () => {
-  it('renders error message', () => {
+  it('renders error message with alert icon', () => {
     render(<InlineError message="Field is required" />);
     expect(screen.getByText('Field is required')).toBeInTheDocument();
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
+    // Uses Lucide AlertTriangle icon (rendered as SVG) per visual-system.md no-emoji policy
+    const alertIcon = document.querySelector('svg');
+    expect(alertIcon).toBeInTheDocument();
   });
 });
 

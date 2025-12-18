@@ -255,15 +255,17 @@ Same AgentCardState →
 
 **The Jewel Personality Map:**
 
-| Jewel | Emoji | Color | Mood | Voice |
-|-------|-------|-------|------|-------|
-| Brain | 🧠 | Cyan | Curious, contemplative | Thoughtful |
-| Gestalt | 🏗️ | Green | Analytical, systematic | Precise |
-| Gardener | 🌱 | Lime | Nurturing, patient | Encouraging |
-| Atelier | 🎨 | Amber | Creative, playful | Expressive |
-| Coalition | 🤝 | Violet | Collaborative, diplomatic | Facilitating |
-| Park | 🎭 | Pink | Dramatic, immersive | Evocative |
-| Domain | 🏛️ | Red | Urgent, authoritative | Serious |
+| Jewel | Icon | Color | Mood | Voice |
+|-------|------|-------|------|-------|
+| Brain | Brain | Cyan | Curious, contemplative | Thoughtful |
+| Gestalt | Network | Green | Analytical, systematic | Precise |
+| Gardener | Leaf | Lime | Nurturing, patient | Encouraging |
+| Atelier | Palette | Amber | Creative, playful | Expressive |
+| Coalition | Users | Violet | Collaborative, diplomatic | Facilitating |
+| Park | Theater | Pink | Dramatic, immersive | Evocative |
+| Domain | Building | Red | Urgent, authoritative | Serious |
+
+*Icons from Lucide library. No emojis in kgents-authored copy.*
 
 ---
 

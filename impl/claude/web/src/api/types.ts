@@ -372,12 +372,16 @@ export const BUILDER_COLORS: Record<BuilderArchetype, string> = {
   Sync: '#ec4899', // pink
 };
 
+/**
+ * @deprecated Use BUILDER_ICONS_LUCIDE from '@/constants' instead.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
+ */
 export const BUILDER_ICONS: Record<BuilderArchetype, string> = {
-  Scout: '🔍',
-  Sage: '📐',
-  Spark: '⚡',
-  Steady: '🔧',
-  Sync: '🔗',
+  Scout: 'compass',
+  Sage: 'graduation-cap',
+  Spark: 'zap',
+  Steady: 'hammer',
+  Sync: 'link',
 };
 
 // =============================================================================
@@ -554,6 +558,9 @@ export interface NPhaseState {
 
 /**
  * N-Phase visual configuration.
+ *
+ * NOTE: For icons, import PHASE_ICONS from '@/constants' instead of using emoji strings.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
 export const NPHASE_CONFIG = {
   colors: {
@@ -561,10 +568,14 @@ export const NPHASE_CONFIG = {
     ACT: '#f59e0b', // amber - executing
     REFLECT: '#8b5cf6', // purple - reviewing
   },
+  /**
+   * @deprecated Use PHASE_ICONS from '@/constants' instead.
+   * Kept for backward compatibility - values are now Lucide icon names.
+   */
   icons: {
-    UNDERSTAND: '🔍',
-    ACT: '⚡',
-    REFLECT: '💭',
+    UNDERSTAND: 'eye',
+    ACT: 'zap',
+    REFLECT: 'message-circle',
   },
   descriptions: {
     UNDERSTAND: 'Gathering context and analyzing the situation',
@@ -987,7 +998,10 @@ export interface PolynomialPosition {
   id: string;
   label: string;
   description?: string;
+  /** @deprecated Use `icon` instead. Per visual-system.md, kgents uses Lucide icons. */
   emoji?: string;
+  /** Lucide icon name (lowercase, hyphenated). Use with icon constants from '@/constants/icons'. */
+  icon?: string;
   is_current: boolean;
   is_terminal: boolean;
   color?: string;
@@ -1041,6 +1055,10 @@ export interface PolynomialVisualizationResponse {
 
 /**
  * Configuration for polynomial visualization styling.
+ *
+ * NOTE: For icons, import from '@/constants' (GARDENER_PHASE_ICONS, PHASE_ICONS, CITIZEN_PHASE_ICONS).
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
+ * The 'icon' field contains Lucide icon names (lowercase, hyphenated).
  */
 export const POLYNOMIAL_CONFIG = {
   // Default colors for positions
@@ -1052,31 +1070,31 @@ export const POLYNOMIAL_CONFIG = {
   },
   // Gardener session phases
   gardener: {
-    SENSE: { color: '#3b82f6', emoji: '👁️', label: 'Sense' },
-    ACT: { color: '#f59e0b', emoji: '⚡', label: 'Act' },
-    REFLECT: { color: '#8b5cf6', emoji: '💭', label: 'Reflect' },
+    SENSE: { color: '#3b82f6', icon: 'eye', label: 'Sense' },
+    ACT: { color: '#f59e0b', icon: 'zap', label: 'Act' },
+    REFLECT: { color: '#8b5cf6', icon: 'message-circle', label: 'Reflect' },
   },
   // N-Phase development phases
   nphase: {
-    PLAN: { color: '#94a3b8', emoji: '📋', label: 'Plan' },
-    RESEARCH: { color: '#3b82f6', emoji: '🔍', label: 'Research' },
-    DEVELOP: { color: '#22c55e', emoji: '🛠️', label: 'Develop' },
-    STRATEGIZE: { color: '#8b5cf6', emoji: '🎯', label: 'Strategize' },
-    'CROSS-SYNERGIZE': { color: '#ec4899', emoji: '🔗', label: 'Cross-Synergize' },
-    IMPLEMENT: { color: '#f59e0b', emoji: '⚙️', label: 'Implement' },
-    QA: { color: '#06b6d4', emoji: '🔬', label: 'QA' },
-    TEST: { color: '#10b981', emoji: '🧪', label: 'Test' },
-    EDUCATE: { color: '#a855f7', emoji: '📚', label: 'Educate' },
-    MEASURE: { color: '#f97316', emoji: '📊', label: 'Measure' },
-    REFLECT: { color: '#6366f1', emoji: '🪞', label: 'Reflect' },
+    PLAN: { color: '#94a3b8', icon: 'clipboard-list', label: 'Plan' },
+    RESEARCH: { color: '#3b82f6', icon: 'search', label: 'Research' },
+    DEVELOP: { color: '#22c55e', icon: 'wrench', label: 'Develop' },
+    STRATEGIZE: { color: '#8b5cf6', icon: 'target', label: 'Strategize' },
+    'CROSS-SYNERGIZE': { color: '#ec4899', icon: 'link', label: 'Cross-Synergize' },
+    IMPLEMENT: { color: '#f59e0b', icon: 'cog', label: 'Implement' },
+    QA: { color: '#06b6d4', icon: 'microscope', label: 'QA' },
+    TEST: { color: '#10b981', icon: 'test-tube', label: 'Test' },
+    EDUCATE: { color: '#a855f7', icon: 'graduation-cap', label: 'Educate' },
+    MEASURE: { color: '#f97316', icon: 'bar-chart-3', label: 'Measure' },
+    REFLECT: { color: '#6366f1', icon: 'book-open', label: 'Reflect' },
   },
   // Citizen polynomial phases
   citizen: {
-    IDLE: { color: '#94a3b8', emoji: '⚪', label: 'Idle' },
-    SOCIALIZING: { color: '#ec4899', emoji: '💬', label: 'Socializing' },
-    WORKING: { color: '#f59e0b', emoji: '🔧', label: 'Working' },
-    REFLECTING: { color: '#8b5cf6', emoji: '💭', label: 'Reflecting' },
-    RESTING: { color: '#22c55e', emoji: '💤', label: 'Resting' },
+    IDLE: { color: '#94a3b8', icon: 'circle-dot', label: 'Idle' },
+    SOCIALIZING: { color: '#ec4899', icon: 'message-circle', label: 'Socializing' },
+    WORKING: { color: '#f59e0b', icon: 'wrench', label: 'Working' },
+    REFLECTING: { color: '#8b5cf6', icon: 'book-open', label: 'Reflecting' },
+    RESTING: { color: '#22c55e', icon: 'cloud', label: 'Resting' },
   },
 } as const;
 
@@ -1298,33 +1316,39 @@ export interface EntityAnimationState {
 
 /**
  * Entity kind visual config.
+ *
+ * NOTE: For icons, import INFRA_ENTITY_ICONS from '@/constants'.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
 export const INFRA_ENTITY_CONFIG: Record<InfraEntityKind, {
   icon: string;
   color: string;
   shape: 'sphere' | 'octahedron' | 'dodecahedron' | 'box' | 'cone' | 'cylinder' | 'torus';
 }> = {
-  namespace: { icon: '📦', color: '#6366f1', shape: 'torus' },
-  node: { icon: '🖥️', color: '#8b5cf6', shape: 'box' },
-  pod: { icon: '🫛', color: '#22c55e', shape: 'sphere' },
-  service: { icon: '🔗', color: '#3b82f6', shape: 'octahedron' },
-  deployment: { icon: '🚀', color: '#f59e0b', shape: 'dodecahedron' },
-  container: { icon: '📦', color: '#06b6d4', shape: 'box' },
-  nats_subject: { icon: '📨', color: '#a855f7', shape: 'cone' },
-  nats_stream: { icon: '💨', color: '#ec4899', shape: 'cylinder' },
-  database: { icon: '🗄️', color: '#ef4444', shape: 'cylinder' },
-  volume: { icon: '💾', color: '#f97316', shape: 'box' },
-  custom: { icon: '⚙️', color: '#6b7280', shape: 'sphere' },
+  namespace: { icon: 'box', color: '#6366f1', shape: 'torus' },
+  node: { icon: 'monitor', color: '#8b5cf6', shape: 'box' },
+  pod: { icon: 'server', color: '#22c55e', shape: 'sphere' },
+  service: { icon: 'link', color: '#3b82f6', shape: 'octahedron' },
+  deployment: { icon: 'play', color: '#f59e0b', shape: 'dodecahedron' },
+  container: { icon: 'box', color: '#06b6d4', shape: 'box' },
+  nats_subject: { icon: 'mail', color: '#a855f7', shape: 'cone' },
+  nats_stream: { icon: 'wind', color: '#ec4899', shape: 'cylinder' },
+  database: { icon: 'database', color: '#ef4444', shape: 'cylinder' },
+  volume: { icon: 'hard-drive', color: '#f97316', shape: 'box' },
+  custom: { icon: 'cog', color: '#6b7280', shape: 'sphere' },
 };
 
 /**
  * Event severity visual config.
+ *
+ * NOTE: For icons, import SEVERITY_ICONS from '@/constants'.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
 export const INFRA_SEVERITY_CONFIG: Record<InfraEvent['severity'], { icon: string; color: string }> = {
-  info: { icon: 'ℹ️', color: '#3b82f6' },
-  warning: { icon: '⚠️', color: '#f59e0b' },
-  error: { icon: '❌', color: '#ef4444' },
-  critical: { icon: '🔥', color: '#dc2626' },
+  info: { icon: 'info', color: '#3b82f6' },
+  warning: { icon: 'alert-triangle', color: '#f59e0b' },
+  error: { icon: 'x-circle', color: '#ef4444' },
+  critical: { icon: 'alert-triangle', color: '#dc2626' },
 };
 
 // =============================================================================
@@ -1531,39 +1555,48 @@ export interface ParkStatusResponse {
 
 /**
  * Crisis phase visual config.
+ *
+ * NOTE: For icons, import CRISIS_PHASE_ICONS from '@/constants'.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const PARK_PHASE_CONFIG: Record<ParkCrisisPhase, { color: string; emoji: string; label: string }> = {
-  NORMAL: { color: '#22c55e', emoji: '✓', label: 'Normal' },
-  INCIDENT: { color: '#f59e0b', emoji: '!', label: 'Incident' },
-  RESPONSE: { color: '#ef4444', emoji: '⚡', label: 'Response' },
-  RECOVERY: { color: '#3b82f6', emoji: '↺', label: 'Recovery' },
+export const PARK_PHASE_CONFIG: Record<ParkCrisisPhase, { color: string; icon: string; label: string }> = {
+  NORMAL: { color: '#22c55e', icon: 'check-circle', label: 'Normal' },
+  INCIDENT: { color: '#f59e0b', icon: 'alert-triangle', label: 'Incident' },
+  RESPONSE: { color: '#ef4444', icon: 'zap', label: 'Response' },
+  RECOVERY: { color: '#3b82f6', icon: 'refresh-cw', label: 'Recovery' },
 };
 
 /**
  * Timer status visual config.
+ *
+ * NOTE: For icons, import TIMER_STATUS_ICONS from '@/constants'.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const PARK_TIMER_CONFIG: Record<ParkTimerStatus, { color: string; emoji: string }> = {
-  PENDING: { color: '#6b7280', emoji: '[ ]' },
-  ACTIVE: { color: '#22c55e', emoji: '[>]' },
-  WARNING: { color: '#f59e0b', emoji: '[!]' },
-  CRITICAL: { color: '#ef4444', emoji: '[X]' },
-  EXPIRED: { color: '#dc2626', emoji: '[x]' },
-  COMPLETED: { color: '#22c55e', emoji: '[o]' },
-  PAUSED: { color: '#6b7280', emoji: '[-]' },
+export const PARK_TIMER_CONFIG: Record<ParkTimerStatus, { color: string; icon: string }> = {
+  PENDING: { color: '#6b7280', icon: 'circle' },
+  ACTIVE: { color: '#22c55e', icon: 'play' },
+  WARNING: { color: '#f59e0b', icon: 'alert-triangle' },
+  CRITICAL: { color: '#ef4444', icon: 'x-circle' },
+  EXPIRED: { color: '#dc2626', icon: 'x-circle' },
+  COMPLETED: { color: '#22c55e', icon: 'check-circle' },
+  PAUSED: { color: '#6b7280', icon: 'pause' },
 };
 
 /**
  * Mask archetype visual config.
+ *
+ * NOTE: For icons, import MASK_ARCHETYPE_ICONS from '@/constants'.
+ * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const PARK_MASK_CONFIG: Record<ParkMaskArchetype, { color: string; emoji: string }> = {
-  TRICKSTER: { color: '#f59e0b', emoji: '🎭' },
-  DREAMER: { color: '#a855f7', emoji: '💭' },
-  SKEPTIC: { color: '#6366f1', emoji: '🔍' },
-  ARCHITECT: { color: '#3b82f6', emoji: '🏗️' },
-  CHILD: { color: '#ec4899', emoji: '🌟' },
-  SAGE: { color: '#8b5cf6', emoji: '🦉' },
-  WARRIOR: { color: '#ef4444', emoji: '⚔️' },
-  HEALER: { color: '#22c55e', emoji: '💚' },
+export const PARK_MASK_CONFIG: Record<ParkMaskArchetype, { color: string; icon: string }> = {
+  TRICKSTER: { color: '#f59e0b', icon: 'sparkles' },
+  DREAMER: { color: '#a855f7', icon: 'cloud' },
+  SKEPTIC: { color: '#6366f1', icon: 'search' },
+  ARCHITECT: { color: '#3b82f6', icon: 'building-2' },
+  CHILD: { color: '#ec4899', icon: 'star' },
+  SAGE: { color: '#8b5cf6', icon: 'owl' },
+  WARRIOR: { color: '#ef4444', icon: 'swords' },
+  HEALER: { color: '#22c55e', icon: 'heart' },
 };
 
 /**

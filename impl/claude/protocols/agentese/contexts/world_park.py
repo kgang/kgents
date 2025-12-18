@@ -64,6 +64,95 @@ DEFAULT_EIGENVECTORS: dict[str, float] = {
 }
 
 
+def _build_scenario_state() -> dict[str, Any]:
+    """Build full scenario state dict for frontend consumption."""
+    scenario = _park_state.get("scenario")
+    if scenario is None:
+        return {"error": "not_running"}
+
+    masked_state = _park_state.get("masked_state")
+    started_at = _park_state.get("started_at")
+
+    # Get valid transitions from current phase
+    phase_transitions_map = {
+        "NORMAL": ["INCIDENT"],
+        "INCIDENT": ["RESPONSE"],
+        "RESPONSE": ["RECOVERY"],
+        "RECOVERY": [],
+    }
+    current_phase = scenario.crisis_phase.name if scenario.crisis_phase else "NORMAL"
+    available = phase_transitions_map.get(current_phase, [])
+
+    # Build timer info
+    timers_info = []
+    for t in scenario.timers:
+        timers_info.append(
+            {
+                "name": t.config.name,
+                "timer_type": t.config.timer_type.name
+                if hasattr(t.config, "timer_type")
+                else "SLA",
+                "status": t.status.name if t.status else "PENDING",
+                "progress": t.progress,
+                "remaining_seconds": getattr(t, "remaining_seconds", 0),
+                "total_seconds": getattr(t.config, "duration_seconds", 3600),
+            }
+        )
+
+    # Build mask info
+    mask_info = None
+    eigenvectors = None
+    if masked_state:
+        mask_info = {
+            "name": masked_state.mask.name,
+            "description": masked_state.mask.description,
+            "archetype": masked_state.mask.archetype.name
+            if hasattr(masked_state.mask, "archetype")
+            else "TRICKSTER",
+        }
+        eigenvectors = masked_state.transformed_eigenvectors
+
+    # Build phase transitions list
+    phase_transitions = []
+    for pt in getattr(scenario, "phase_transitions", []):
+        phase_transitions.append(
+            {
+                "timestamp": pt.timestamp.isoformat()
+                if hasattr(pt, "timestamp")
+                else None,
+                "from": pt.from_phase.name if hasattr(pt, "from_phase") else "NORMAL",
+                "to": pt.to_phase.name if hasattr(pt, "to_phase") else "INCIDENT",
+                "consent_debt": getattr(pt, "consent_debt", 0.0),
+                "forces_used": getattr(pt, "forces_used", 0),
+            }
+        )
+
+    # Get accelerated from scenario config's timers (park TimerConfig, not drills TimerConfig)
+    accelerated = False
+    if hasattr(scenario.config, "timers") and scenario.config.timers:
+        accelerated = getattr(scenario.config.timers[0], "accelerated", False)
+
+    return {
+        "scenario_id": scenario.scenario_id,
+        "name": scenario.config.name,
+        "scenario_type": scenario.config.scenario_type.name,
+        "is_active": not getattr(scenario, "is_completed", False),
+        "timers": timers_info,
+        "any_timer_critical": scenario.any_timer_critical,
+        "any_timer_expired": scenario.any_timer_expired,
+        "crisis_phase": current_phase,
+        "available_transitions": available,
+        "phase_transitions": phase_transitions,
+        "consent_debt": scenario.consent_debt,
+        "forces_used": scenario.forces_used,
+        "forces_remaining": 3 - scenario.forces_used,
+        "mask": mask_info,
+        "eigenvectors": eigenvectors,
+        "started_at": started_at.isoformat() if started_at else None,
+        "accelerated": accelerated,
+    }
+
+
 # =============================================================================
 # ParkNode - world.park.*
 # =============================================================================
@@ -314,14 +403,11 @@ class ScenarioNode(BaseLogosNode):
             ]
         )
 
+        # Return full scenario state for frontend
         return BasicRendering(
             summary=f"Scenario Started: {scenario.config.name}",
             content="\n".join(lines),
-            metadata={
-                "scenario_id": scenario.scenario_id,
-                "name": scenario.config.name,
-                "timers": [t.config.name for t in scenario.timers],
-            },
+            metadata=_build_scenario_state(),
         )
 
     @aspect(
@@ -376,13 +462,11 @@ class ScenarioNode(BaseLogosNode):
         elif scenario.any_timer_expired:
             lines.append("\n  [!] Timer EXPIRED! Scenario pressure at maximum.")
 
+        # Return full scenario state for frontend
         return BasicRendering(
             summary=f"Ticked {count}x",
             content="\n".join(lines),
-            metadata={
-                "count": count,
-                "changed": [t.config.name for t in changed_timers],
-            },
+            metadata=_build_scenario_state(),
         )
 
     @aspect(
@@ -394,11 +478,21 @@ class ScenarioNode(BaseLogosNode):
     async def phase(
         self,
         observer: "Umwelt[Any, Any]",
-        target: str,
+        target: str | None = None,
+        phase: str | None = None,
         **kwargs: Any,
     ) -> Renderable:
         """Transition to a new crisis phase."""
         from agents.domain.drills import CrisisPhase
+
+        # Accept both 'target' and 'phase' parameter names (frontend uses 'phase')
+        target_phase = target or phase
+        if not target_phase:
+            return BasicRendering(
+                summary="Missing Phase",
+                content="Please specify target phase: normal, incident, response, or recovery",
+                metadata={"error": "missing_phase"},
+            )
 
         scenario = _park_state.get("scenario")
         if scenario is None:
@@ -417,15 +511,15 @@ class ScenarioNode(BaseLogosNode):
             "recovery": CrisisPhase.RECOVERY,
         }
 
-        if target.lower() not in phase_map:
+        if target_phase.lower() not in phase_map:
             return BasicRendering(
                 summary="Invalid Phase",
-                content=f"Unknown phase: {target}\nValid phases: normal, incident, response, recovery",
+                content=f"Unknown phase: {target_phase}\nValid phases: normal, incident, response, recovery",
                 metadata={"error": "invalid_phase"},
             )
 
-        target_phase = phase_map[target.lower()]
-        result = bridge.transition_crisis_phase(scenario, target_phase)
+        crisis_phase = phase_map[target_phase.lower()]
+        result = bridge.transition_crisis_phase(scenario, crisis_phase)
 
         if result["success"]:
             lines = [
@@ -439,10 +533,11 @@ class ScenarioNode(BaseLogosNode):
                 for event in result["triggered_events"]:
                     lines.append(f"      {event.injection_type}: {event.description}")
 
+            # Return full scenario state for frontend
             return BasicRendering(
                 summary=f"Transitioned to {result['to_phase']}",
                 content="\n".join(lines),
-                metadata=result,
+                metadata=_build_scenario_state(),
             )
         else:
             valid = result.get("valid_transitions", [])
@@ -703,10 +798,11 @@ class MaskNode(BaseLogosNode):
         if mask.restrictions:
             lines.append(f"  Restricted: {', '.join(mask.restrictions)}")
 
+        # Return full scenario state for frontend
         return BasicRendering(
             summary=f"Donned: {mask.name}",
             content="\n".join(lines),
-            metadata={"mask": name},
+            metadata=_build_scenario_state(),
         )
 
     @aspect(
@@ -729,10 +825,11 @@ class MaskNode(BaseLogosNode):
         mask_name = current.mask.name
         _park_state["masked_state"] = None
 
+        # Return full scenario state for frontend
         return BasicRendering(
             summary=f"Removed: {mask_name}",
             content=f"\n[PARK] You remove {mask_name}.\n  Your eigenvectors return to baseline.",
-            metadata={"mask": mask_name},
+            metadata=_build_scenario_state(),
         )
 
     async def _invoke_aspect(
@@ -851,6 +948,7 @@ class ForceNode(BaseLogosNode):
             except Exception:
                 pass
 
+            # Return full scenario state for frontend
             return BasicRendering(
                 summary="Force Used",
                 content=(
@@ -858,12 +956,7 @@ class ForceNode(BaseLogosNode):
                     f"  Consent debt: {old_debt:.2f} -> {scenario.consent_debt:.2f}\n"
                     f"  Forces remaining: {3 - scenario.forces_used}/3"
                 ),
-                metadata={
-                    "success": True,
-                    "old_debt": old_debt,
-                    "new_debt": scenario.consent_debt,
-                    "forces_remaining": 3 - scenario.forces_used,
-                },
+                metadata=_build_scenario_state(),
             )
         else:
             return BasicRendering(

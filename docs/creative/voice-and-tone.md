@@ -268,14 +268,16 @@ Empty states are **invitations**, not voids.
 ### Empty State Formula
 
 ```
-[Emoji/Illustration] + [What's empty] + [Why/Opportunity] + [Action]
+[Icon] + [What's empty] + [Why/Opportunity] + [Action]
 ```
+
+**Note:** Use Lucide icons, not emojis. See `visual-system.md` for icon guidelines.
 
 ### Empty State Templates
 
 #### No Results
 ```
-🔍 No results found
+[SearchIcon] No results found
 Nothing matched your search. Try different keywords
 or broaden your filters.
 [Clear filters]
@@ -283,7 +285,7 @@ or broaden your filters.
 
 #### First Time / No Content
 ```
-🌱 Nothing here yet
+[PlusCircleIcon] Nothing here yet
 This is where your [content type] will appear.
 Ready when you are.
 [Create first one]
@@ -291,7 +293,7 @@ Ready when you are.
 
 #### Filtered to Empty
 ```
-📭 Nothing matches
+[FilterIcon] Nothing matches
 Your filters are set pretty narrow. Try adjusting
 or clearing some filters.
 [Clear all filters]
@@ -299,7 +301,7 @@ or clearing some filters.
 
 #### Permission-Gated
 ```
-🔐 Access required
+[LockIcon] Access required
 You'll need permission to see what's here.
 [Request access]
 ```

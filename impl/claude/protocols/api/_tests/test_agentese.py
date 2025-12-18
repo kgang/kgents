@@ -69,8 +69,8 @@ class TestInvokeEndpoint:
                 "observer": {"name": "test", "archetype": "developer"},
             },
         )
-        # FastAPI returns 422 for missing required header
-        assert response.status_code == 422
+        # Auth middleware returns 401 for missing credentials
+        assert response.status_code == 401
 
     def test_invoke_invalid_key(self, client: TestClient) -> None:
         """Test invoke with invalid API key."""

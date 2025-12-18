@@ -5,6 +5,10 @@
  *
  * These functions create PolynomialVisualization objects for different
  * polynomial agents: Gardener, N-Phase, Citizen, etc.
+ *
+ * NOTE: Per visual-system.md, kgents uses Lucide icons exclusively.
+ * The 'icon' field contains Lucide icon names (lowercase, hyphenated).
+ * For rendering, use the icon constants from '@/constants/icons'.
  */
 
 import type {
@@ -60,11 +64,12 @@ const POLYNOMIAL_COLORS = {
 
 /**
  * Phase configuration for Gardener.
+ * Uses Lucide icon names per visual-system.md.
  */
 const GARDENER_PHASES = [
-  { id: 'SENSE', label: 'Sense', emoji: '👁️', color: POLYNOMIAL_COLORS.sense, description: 'Gather context' },
-  { id: 'ACT', label: 'Act', emoji: '⚡', color: POLYNOMIAL_COLORS.act, description: 'Execute intent' },
-  { id: 'REFLECT', label: 'Reflect', emoji: '💭', color: POLYNOMIAL_COLORS.reflect, description: 'Consolidate learnings' },
+  { id: 'SENSE', label: 'Sense', icon: 'eye', color: POLYNOMIAL_COLORS.sense, description: 'Gather context' },
+  { id: 'ACT', label: 'Act', icon: 'zap', color: POLYNOMIAL_COLORS.act, description: 'Execute intent' },
+  { id: 'REFLECT', label: 'Reflect', icon: 'message-circle', color: POLYNOMIAL_COLORS.reflect, description: 'Consolidate learnings' },
 ] as const;
 
 /**
@@ -103,10 +108,11 @@ export function createGardenerVisualization(
   const currentPhase = session.phase;
 
   // Build positions with current marked
+  // NOTE: Using 'icon' field (Lucide icon name) instead of deprecated 'emoji'
   const positions: PolynomialPosition[] = GARDENER_PHASES.map((p) => ({
     id: p.id,
     label: p.label,
-    emoji: p.emoji,
+    icon: p.icon,
     color: p.color,
     description: p.description,
     is_current: p.id === currentPhase,
@@ -143,19 +149,20 @@ export function createGardenerVisualization(
 
 /**
  * N-Phase development cycle phases.
+ * Uses Lucide icon names per visual-system.md.
  */
 const NPHASE_PHASES = [
-  { id: 'PLAN', label: 'Plan', emoji: '📋', color: POLYNOMIAL_COLORS.plan },
-  { id: 'RESEARCH', label: 'Research', emoji: '🔍', color: POLYNOMIAL_COLORS.research },
-  { id: 'DEVELOP', label: 'Develop', emoji: '🛠️', color: POLYNOMIAL_COLORS.develop },
-  { id: 'STRATEGIZE', label: 'Strategize', emoji: '🎯', color: POLYNOMIAL_COLORS.strategize },
-  { id: 'CROSS-SYNERGIZE', label: 'Cross-Synergize', emoji: '🔗', color: POLYNOMIAL_COLORS.crossSynergize },
-  { id: 'IMPLEMENT', label: 'Implement', emoji: '⚙️', color: POLYNOMIAL_COLORS.implement },
-  { id: 'QA', label: 'QA', emoji: '🔬', color: POLYNOMIAL_COLORS.qa },
-  { id: 'TEST', label: 'Test', emoji: '🧪', color: POLYNOMIAL_COLORS.test },
-  { id: 'EDUCATE', label: 'Educate', emoji: '📚', color: POLYNOMIAL_COLORS.educate },
-  { id: 'MEASURE', label: 'Measure', emoji: '📊', color: POLYNOMIAL_COLORS.measure },
-  { id: 'REFLECT', label: 'Reflect', emoji: '🪞', color: POLYNOMIAL_COLORS.reflectPhase },
+  { id: 'PLAN', label: 'Plan', icon: 'clipboard-list', color: POLYNOMIAL_COLORS.plan },
+  { id: 'RESEARCH', label: 'Research', icon: 'search', color: POLYNOMIAL_COLORS.research },
+  { id: 'DEVELOP', label: 'Develop', icon: 'wrench', color: POLYNOMIAL_COLORS.develop },
+  { id: 'STRATEGIZE', label: 'Strategize', icon: 'target', color: POLYNOMIAL_COLORS.strategize },
+  { id: 'CROSS-SYNERGIZE', label: 'Cross-Synergize', icon: 'link', color: POLYNOMIAL_COLORS.crossSynergize },
+  { id: 'IMPLEMENT', label: 'Implement', icon: 'cog', color: POLYNOMIAL_COLORS.implement },
+  { id: 'QA', label: 'QA', icon: 'microscope', color: POLYNOMIAL_COLORS.qa },
+  { id: 'TEST', label: 'Test', icon: 'test-tube', color: POLYNOMIAL_COLORS.test },
+  { id: 'EDUCATE', label: 'Educate', icon: 'graduation-cap', color: POLYNOMIAL_COLORS.educate },
+  { id: 'MEASURE', label: 'Measure', icon: 'bar-chart-3', color: POLYNOMIAL_COLORS.measure },
+  { id: 'REFLECT', label: 'Reflect', icon: 'book-open', color: POLYNOMIAL_COLORS.reflectPhase },
 ] as const;
 
 /**
@@ -200,10 +207,11 @@ export function createNPhaseVisualization(
   planName: string,
   progress: number = 0,
 ): PolynomialVisualization {
+  // NOTE: Using 'icon' field (Lucide icon name) instead of deprecated 'emoji'
   const positions: PolynomialPosition[] = NPHASE_PHASES.map((p) => ({
     id: p.id,
     label: p.label,
-    emoji: p.emoji,
+    icon: p.icon,
     color: p.color,
     is_current: p.id === currentPhase,
     is_terminal: p.id === 'REFLECT',
@@ -237,13 +245,14 @@ export function createNPhaseVisualization(
 
 /**
  * Citizen polynomial phases.
+ * Uses Lucide icon names per visual-system.md.
  */
 const CITIZEN_PHASES = [
-  { id: 'IDLE', label: 'Idle', emoji: '⚪', color: POLYNOMIAL_COLORS.idle, description: 'Ready for interaction' },
-  { id: 'SOCIALIZING', label: 'Socializing', emoji: '💬', color: POLYNOMIAL_COLORS.socializing, description: 'Engaged in social activity' },
-  { id: 'WORKING', label: 'Working', emoji: '🔧', color: POLYNOMIAL_COLORS.working, description: 'Performing solo work' },
-  { id: 'REFLECTING', label: 'Reflecting', emoji: '💭', color: POLYNOMIAL_COLORS.reflecting, description: 'Internal contemplation' },
-  { id: 'RESTING', label: 'Resting', emoji: '💤', color: POLYNOMIAL_COLORS.resting, description: 'Right to Rest active' },
+  { id: 'IDLE', label: 'Idle', icon: 'circle-dot', color: POLYNOMIAL_COLORS.idle, description: 'Ready for interaction' },
+  { id: 'SOCIALIZING', label: 'Socializing', icon: 'message-circle', color: POLYNOMIAL_COLORS.socializing, description: 'Engaged in social activity' },
+  { id: 'WORKING', label: 'Working', icon: 'wrench', color: POLYNOMIAL_COLORS.working, description: 'Performing solo work' },
+  { id: 'REFLECTING', label: 'Reflecting', icon: 'book-open', color: POLYNOMIAL_COLORS.reflecting, description: 'Internal contemplation' },
+  { id: 'RESTING', label: 'Resting', icon: 'cloud', color: POLYNOMIAL_COLORS.resting, description: 'Right to Rest active' },
 ] as const;
 
 /**
@@ -280,10 +289,11 @@ export function createCitizenVisualization(
   currentPhase: string,
   archetype?: string,
 ): PolynomialVisualization {
+  // NOTE: Using 'icon' field (Lucide icon name) instead of deprecated 'emoji'
   const positions: PolynomialPosition[] = CITIZEN_PHASES.map((p) => ({
     id: p.id,
     label: p.label,
-    emoji: p.emoji,
+    icon: p.icon,
     color: p.color,
     description: p.description,
     is_current: p.id === currentPhase,

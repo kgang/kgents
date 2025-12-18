@@ -3,8 +3,17 @@
  *
  * UI components for Tiny Atelier - a demo app showcasing the kgents ecosystem.
  * Theme: Orisinal.com aesthetic - whimsical, minimal, melancholic but hopeful.
+ *
+ * Projection-First Pattern:
+ * - AtelierVisualization: Main canvas (receives data from PathProjection)
+ * - Individual components: Building blocks for the visualization
  */
 
+// Main visualization (for projection-first pages)
+export { AtelierVisualization } from './AtelierVisualization';
+export type { AtelierVisualizationProps, AtelierStatusData } from './AtelierVisualization';
+
+// Building blocks
 export { ArtisanCard } from './ArtisanCard';
 export { ArtisanGrid } from './ArtisanGrid';
 export { CommissionForm } from './CommissionForm';

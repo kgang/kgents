@@ -279,27 +279,41 @@ const SHADOWS = {
 
 **Icon Library:** Lucide (open source, consistent style)
 
-### The Emoji System
+### The Icon System (No Emojis)
 
-Emojis are **first-class citizens** in kgents, not decorative:
+> *"Emojis in copy are garnish. kgents is the main course."*
+
+kgents uses **Lucide icons** exclusively for semantic iconography. Emojis are NOT used in kgents-authored copy.
 
 ```typescript
-const JEWEL_EMOJI = {
-  brain:     '🧠',
-  gestalt:   '🏗️',
-  gardener:  '🌱',
-  atelier:   '🎨',
-  coalition: '🤝',
-  park:      '🎭',
-  domain:    '🏛️',
+import { Brain, Network, Leaf, Palette, Users, Theater, Building } from 'lucide-react';
+
+const JEWEL_ICONS = {
+  brain:     Brain,      // Cyan family
+  gestalt:   Network,    // Green family
+  gardener:  Leaf,       // Lime family
+  atelier:   Palette,    // Amber family
+  coalition: Users,      // Violet family
+  park:      Theater,    // Pink family
+  domain:    Building,   // Red family
 } as const;
 ```
 
-**Usage:**
-- Loading states (with personality)
-- Empty states (with character)
-- Celebrations (earned, not gratuitous)
-- Error states (empathy, not panic)
+**Icon Guidelines:**
+- Use semantic icons from Lucide library
+- Match icon color to jewel color
+- 24px base size, 20px for compact density
+- Outline style default, filled for selected/active states
+
+**Exceptions (emojis allowed):**
+- User-generated content (users may use emojis)
+- Explicit personality moments in loading states (sparingly)
+- Data display where emojis are part of the data
+
+**Anti-patterns:**
+- Emojis in navigation labels
+- Emojis in buttons or actions
+- Emojis as primary visual identifiers
 
 ---
 
@@ -331,29 +345,37 @@ All layouts adapt to **three density levels** (see AD-008):
 <ElasticCard density={density}>{children}</ElasticCard>
 ```
 
-### The Dashboard Pattern
+### The OS Shell Pattern
 
-Standard dashboard layout:
+kgents uses the **OS Shell** layout pattern for the unified web interface. See `spec/protocols/os-shell.md` for full specification.
 
 ```
-┌─────────────────────────────────────────────┐
-│  Header (h-16)                              │
-├────────┬────────────────────────────────────┤
-│        │                                    │
-│  Nav   │           Canvas                   │
-│  (w-64)│           (flex-1)                 │
-│        │                                    │
-│        │                                    │
-├────────┴────────────────────────────────────┤
-│  Status bar (h-8, optional)                 │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  Observer Drawer (top-fixed, collapsible, 40px)         │
+├─────────────┬───────────────────────────────────────────┤
+│  Navigation │                                           │
+│  Tree       │         Content Canvas                    │
+│  (sidebar)  │         (route-determined)                │
+│             │                                           │
+│  - world.*  │                                           │
+│  - self.*   │                                           │
+│  - concept.*│                                           │
+│  - void.*   │                                           │
+│  - time.*   │                                           │
+├─────────────┴───────────────────────────────────────────┤
+│  Terminal (bottom, collapsible)                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-Adapts in compact mode:
-- Nav collapses to hamburger + drawer
-- Header slim or hidden
-- Canvas fills viewport
-- Floating actions provide navigation
+**Three Persistent Layers:**
+1. **Observer Drawer** (top) - Shows observer umwelt, expands for devex
+2. **Navigation Tree** (sidebar) - AGENTESE ontology navigation
+3. **Terminal** (bottom) - Direct gateway interaction with persistence
+
+**Density Adaptation:**
+- `spacious`: All three layers visible, resizable
+- `comfortable`: Collapsible sidebar, minimal terminal
+- `compact`: Hamburger nav, floating terminal trigger
 
 ---
 

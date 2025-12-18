@@ -91,6 +91,8 @@ Immer MapSet: enable at app entry when Zustand stores use Map/Set—silent failu
 Contextual loading > spinner: rotating messages create perceived performance
 Error empathy: "Lost in the Ether" > "Network Error"—friendly titles reduce frustration
 Three.js NaN silent death: geometry with NaN radius renders invisible—validate API data before passing to sphereGeometry
+StrictMode + WebSocket = double-mount: use refs (hasConnected, isDisconnecting) to guard connect/disconnect
+Stable callbacks for WS: store config in refs, keep useCallback deps empty—prevents effect re-trigger loops
 ```
 
 ### Testing & DevEx

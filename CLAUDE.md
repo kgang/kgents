@@ -108,12 +108,13 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 
 ## Built Infrastructure (CHECK FIRST!)
 
-**16 production systems** are fully implemented. Before building anything new, check `docs/systems-reference.md`.
+**17 production systems** are fully implemented. Before building anything new, check `docs/systems-reference.md`.
 
 | Category | Systems |
 |----------|---------|
 | **Categorical** | PolyAgent, Operad, Sheaf (use for ANY domain) |
 | **Streaming** | Flux (discrete → continuous agents) |
+| **Event-Driven** | DataBus, SynergyBus, EventBus (reactive data flow) |
 | **Semantics** | AGENTESE (8 phases shipped: parser, JIT, laws, wiring) |
 | **Simulation** | Agent Town (citizens, coalitions, dialogue) |
 | **Soul** | K-gent (LLM dialogue, hypnagogia, gatekeeper) |
@@ -175,7 +176,7 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 
 ## Skills Directory
 
-`docs/skills/` contains 41 documented patterns for common tasks:
+`docs/skills/` contains 42 documented patterns for common tasks:
 
 | Skill | Description |
 |-------|-------------|
@@ -183,13 +184,14 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | `building-agent.md` | Creating `Agent[A, B]` with functors |
 | `cli-command.md` | Adding CLI commands to kgents |
 | `crown-jewel-patterns.md` | Reusable patterns for all Crown Jewels |
+| `data-bus-integration.md` | **NEW** DataBus, SynergyBus, EventBus patterns |
 | `flux-agent.md` | Lifting agents to stream processing |
 | `gardener-logos.md` | Tending Calculus, Seasons, Auto-Inducer |
 | `handler-patterns.md` | CLI handler patterns |
 | `plan-file.md` | Forest Protocol plan files |
 | `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |
-| `spec-hygiene.md` | **NEW** Bloat patterns, compression patterns, distillation checklist |
-| `spec-template.md` | **NEW** Structure for writing spec files (200-400 lines) |
+| `spec-hygiene.md` | Bloat patterns, compression patterns, distillation checklist |
+| `spec-template.md` | Structure for writing spec files (200-400 lines) |
 | `test-patterns.md` | Testing conventions and fixtures |
 | `ux-reference-patterns.md` | Cross-cutting UX patterns from research |
 | `user-flow-documentation.md` | Documenting precise user flows with ASCII wireframes |
@@ -253,6 +255,15 @@ Generator Trap: pickle can't serialize stack frames—use Purgatory pattern
 Timer-driven loops create zombies—use event-driven Flux
 Bypassing running loops causes state schizophrenia
 Context dumping: large payloads tax every turn
+```
+
+### Event-Driven Architecture
+```
+Three buses: DataBus (storage) → SynergyBus (cross-jewel) → EventBus (fan-out)
+DataBus guarantees: at-least-once, causal ordering, non-blocking, bounded buffer
+SynergyBus: fire-and-forget with handler isolation; use factory functions for events
+EventBus: backpressure via bounded queues; slow subscribers get dropped events
+Bridge pattern: DataBus → SynergyBus via wire_data_to_synergy()
 ```
 
 ### Design Heuristics

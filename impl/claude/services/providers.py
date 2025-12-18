@@ -33,14 +33,14 @@ from protocols.agentese.container import get_container
 if TYPE_CHECKING:
     from agents.d import DgentProtocol, TableAdapter
     from models.brain import Crystal
+    from services.atelier import AtelierPersistence
     from services.brain import BrainPersistence
     from services.chat import ChatPersistence, ChatSessionFactory
-    from services.gardener import GardenerPersistence
-    from services.town import TownPersistence
-    from services.gestalt import GestaltPersistence
-    from services.atelier import AtelierPersistence
     from services.coalition import CoalitionPersistence
+    from services.gardener import GardenerPersistence
+    from services.gestalt import GestaltPersistence
     from services.park import ParkPersistence
+    from services.town import TownPersistence
     from sqlalchemy.ext.asyncio import async_sessionmaker
 
 logger = logging.getLogger(__name__)
@@ -52,14 +52,13 @@ logger = logging.getLogger(__name__)
 
 from services.bootstrap import (
     ServiceRegistry,
-    get_registry,
-    reset_registry,
     bootstrap_services,
+    get_registry,
     get_service,
     inject_service,
+    reset_registry,
     reset_services,
 )
-
 
 # =============================================================================
 # Backward-Compatible Provider Functions
@@ -182,7 +181,9 @@ async def setup_providers() -> None:
     container.register("gardener_persistence", get_gardener_persistence, singleton=True)
     container.register("gestalt_persistence", get_gestalt_persistence, singleton=True)
     container.register("atelier_persistence", get_atelier_persistence, singleton=True)
-    container.register("coalition_persistence", get_coalition_persistence, singleton=True)
+    container.register(
+        "coalition_persistence", get_coalition_persistence, singleton=True
+    )
     container.register("park_persistence", get_park_persistence, singleton=True)
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     container.register("chat_factory", get_chat_factory, singleton=True)
@@ -225,6 +226,13 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.debug(f"AtelierNode not available: {e}")
 
+    try:
+        from services.gestalt import GestaltNode  # noqa: F401
+
+        logger.info("GestaltNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.debug(f"GestaltNode not available: {e}")
+
     # Log registry stats
     from protocols.agentese.registry import get_registry as get_agentese_registry
 
@@ -239,7 +247,7 @@ def setup_providers_sync() -> None:
 
     Registers only sync providers. Call setup_providers() for async ones.
     """
-    container = get_container()
+    _ = get_container()  # Ensure container is initialized
     logger.debug("Sync providers registered (no-op, use setup_providers for async)")
 
 
