@@ -16,9 +16,10 @@
 * An app-builder building app-builder for app-building app-builders
 * Daring, bold, creative, opinionated but not gaudy
 * Make it easy for kent and kgents to do the correct, enlightened things
+* something expressive for my 4 yr old niec and my 35 yr old sister
 
 ## KENT's NEVERS
-* Do not place requirements for hitting some number of tests. Describe the tests themselves conceptually. Apply the principle Generativity
+* FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!
 
 ## KENT's INFO2AGENTS
 * Whenever you write a prompt, it'll always be executed with /hydrate

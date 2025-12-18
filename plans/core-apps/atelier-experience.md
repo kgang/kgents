@@ -9,6 +9,15 @@ enables:
   - monetization/token-economy
   - plans/festivals-framework
 session_notes: |
+  2025-12-18: Crown Jewels Genesis Phase 1 foundation complete.
+  - NEW: useGrowing hook (31 tests) - organic growth animations
+  - NEW: useUnfurling hook (38 tests) - leaf-like panel expansion
+  - NEW: useFlowing hook (28 tests) - particle stream along paths
+  - NEW: LIVING_EARTH color palette (Warm Earth, Living Green, Ghibli Glow)
+  - NEW: OrganicToast, BreathingContainer, UnfurlPanel components
+  - 97 new animation hook tests
+  - Phase 2 continuation: plans/crown-jewels-genesis-phase2.md
+
   2025-12-17: Crown Jewels Phase 4 features complete.
   - NEW: EXQUISITE collaboration mode (limited visibility handoffs)
   - NEW: kg atelier exquisite <topic> command

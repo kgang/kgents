@@ -1,6 +1,6 @@
 # Implementation Status Matrix
 
-> Last updated: 2025-12-17 (Chief reconciliation: 19,285 tests)
+> Last updated: 2025-12-18 (Forest Reconciliation: 19,641 tests)
 
 ## Legend
 
@@ -12,7 +12,34 @@
 
 ---
 
-## Archived (Complete)
+## Archived (Complete) — 2025-12-18 Deep Audit
+
+### Week 51 Archival (45+ files)
+
+| Category | Archive Path | Count |
+|----------|--------------|-------|
+| Complete Plans | `_archive/2025-12-week51/complete/` | 15 |
+| Superseded Plans | `_archive/2025-12-week51/superseded/` | 6 |
+| Dormant Plans | `_archive/2025-12-week51/dormant/` | 12 |
+| SaaS Research | `_archive/saas-research-complete/` | 12 |
+| Agent Town Strategy | `_archive/agent-town-strategy/` | 3 |
+| Web Refactor Fragments | `_archive/web-refactor-fragments/` | 4 |
+| Meta Planning | `_archive/meta-archived/` | 7 |
+
+### Complete Plans Archived (Week 51)
+
+| Plan | Tests | Notes |
+|------|-------|-------|
+| crown-jewels-metaphysical-upgrade | — | All 6 jewels migrated |
+| d-gent-dual-track-architecture | 89 | TableAdapter + StateFunctor |
+| design-language-consolidation | 67 | DESIGN_OPERAD shipped |
+| chat-morpheus-synergy | 39 | Functor composition |
+| holographic-brain | 212+ | PRODUCTION-READY |
+| the-gardener | 163+ | PRODUCTION-READY |
+| agentese-repl-master-plan | 289 | 7 waves complete |
+| cli/wave0-3 + chat | 581+ | Isomorphic CLI complete |
+
+### Previously Archived
 
 | Plan | Archive Path | Tests |
 |------|--------------|-------|
@@ -370,4 +397,4 @@ cd impl/claude && uv run mypy .
 
 ---
 
-*Last verified: 2025-12-17 Reconciliation (19,285 tests, test collection errors fixed, archived tests excluded)*
+*Last verified: 2025-12-18 Forest Reconciliation (19,641 tests, 4 orphaned test files archived)*
