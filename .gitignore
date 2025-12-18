@@ -223,6 +223,8 @@ impl/claude/.evolve_logs/
 
 # Archive directories (anywhere in repo)
 _archive/
+# Exception: commands archive is tracked for reference
+!commands/_archive/
 
 # Legacy paths (kept for backwards compat)
 plans/_epilogues/
