@@ -24,7 +24,7 @@ import { CitizenPanel } from './CitizenPanel';
 import { TownTracePanel } from './TownTracePanel';
 import { ObserverSelector, type ObserverUmwelt } from './ObserverSelector';
 import { ColonyDashboard } from '../../widgets/dashboards';
-import { ElasticSplit, ElasticContainer } from '../elastic';
+import { ElasticSplit } from '../elastic';
 import { BottomDrawer } from '../elastic/BottomDrawer';
 // FloatingActions removed for mobile - using fixed bottom toolbar instead
 import { FirstVisitOverlay } from '../categorical/FirstVisitOverlay';
@@ -420,28 +420,26 @@ export function TownVisualization({
             </div>
           </header>
 
-          <div className="flex-1 relative" ref={mesaContainerRef}>
-            <div className="absolute inset-0">
-              <Mesa
-                width={mesaSize.width}
-                height={mesaSize.height}
-                citizens={dashboard?.citizens || []}
-                events={events}
-                selectedCitizenId={selectedCitizenId}
-                onSelectCitizen={(id) => {
-                  setSelectedCitizenId(id);
-                  if (id) setCitizenDrawerOpen(true);
-                }}
-                mobile // Enable mobile optimizations
-              />
-            </div>
+          <div className="flex-1 min-h-0 relative" ref={mesaContainerRef}>
+            {/* Mesa with minimum dimensions to ensure rendering */}
+            <Mesa
+              width={Math.max(mesaSize.width, 300)}
+              height={Math.max(mesaSize.height, 200)}
+              citizens={dashboard?.citizens || []}
+              events={events}
+              selectedCitizenId={selectedCitizenId}
+              onSelectCitizen={(id) => {
+                setSelectedCitizenId(id);
+                if (id) setCitizenDrawerOpen(true);
+              }}
+              mobile // Enable mobile optimizations
+            />
 
             <div className="absolute top-2 left-2 bg-violet-950/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] text-gray-300">
               <span>Day {dashboard?.day || 1}</span>
               {' | '}
               <span className="text-violet-400">{dashboard?.citizens.length || 0}</span> citizens
             </div>
-
           </div>
 
           {/* Fixed bottom toolbar - doesn't float over content */}
@@ -541,25 +539,56 @@ export function TownVisualization({
   // Tablet/Desktop Layout
   // ==========================================================================
 
+  // In comfortable density (tablet), Shell chrome is shown so we use a compact header
+  // In spacious density (desktop), we show the full TownHeader
+  const showFullHeader = density === 'spacious';
+
   return (
     <FirstVisitOverlay jewel="town">
       <div className="h-full flex flex-col">
-        <TownHeader
-          townId={townId}
-          phase={dashboard?.phase || 'MORNING'}
-          day={dashboard?.day || 1}
-          citizenCount={dashboard?.citizens.length || 0}
-          isPlaying={isPlaying}
-          isConnected={isConnected}
-          speed={speed}
-          onTogglePlay={handleTogglePlay}
-          onSpeedChange={onSpeedChange}
-          density={density}
-          observer={observer}
-          onObserverChange={setObserver}
-          teachingEnabled={teachingEnabled}
-          onToggleTeaching={toggleTeaching}
-        />
+        {showFullHeader ? (
+          <TownHeader
+            townId={townId}
+            phase={dashboard?.phase || 'MORNING'}
+            day={dashboard?.day || 1}
+            citizenCount={dashboard?.citizens.length || 0}
+            isPlaying={isPlaying}
+            isConnected={isConnected}
+            speed={speed}
+            onTogglePlay={handleTogglePlay}
+            onSpeedChange={onSpeedChange}
+            density={density}
+            observer={observer}
+            onObserverChange={setObserver}
+            teachingEnabled={teachingEnabled}
+            onToggleTeaching={toggleTeaching}
+          />
+        ) : (
+          /* Minimal header for tablet - just controls, no duplicate info */
+          <div className="bg-violet-950/50 border-b border-violet-500/30 px-2 py-1 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <span>D{dashboard?.day || 1}</span>
+              <span className={`font-medium ${getPhaseColor(dashboard?.phase || 'MORNING')}`}>
+                {dashboard?.phase || 'MORNING'}
+              </span>
+              <span className="text-violet-400">{dashboard?.citizens.length || 0}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleTeaching}
+                className={`p-1 rounded ${teachingEnabled ? 'bg-blue-500/30 text-blue-400' : 'text-gray-500'}`}
+              >
+                <Lightbulb className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleTogglePlay}
+                className="flex items-center gap-1 bg-violet-500/30 rounded px-2 py-0.5 text-xs"
+              >
+                {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-hidden">
           <ElasticSplit
@@ -570,20 +599,17 @@ export function TownVisualization({
             minPaneSize={280}
             resizable={isDesktop}
             primary={
-              <ElasticContainer layout="stack" overflow="scroll" className="h-full bg-violet-950">
-                <div className="flex-1 relative" ref={mesaContainerRef}>
-                  <div className="absolute inset-0">
-                    <Mesa
-                      width={mesaSize.width}
-                      height={mesaSize.height}
-                      citizens={dashboard?.citizens || []}
-                      events={events}
-                      selectedCitizenId={selectedCitizenId}
-                      onSelectCitizen={setSelectedCitizenId}
-                    />
-                  </div>
-                </div>
-              </ElasticContainer>
+              <div className="h-full w-full bg-violet-950 relative" ref={mesaContainerRef}>
+                {/* Mesa needs explicit dimensions - use container size or minimum */}
+                <Mesa
+                  width={Math.max(mesaSize.width, 300)}
+                  height={Math.max(mesaSize.height, 300)}
+                  citizens={dashboard?.citizens || []}
+                  events={events}
+                  selectedCitizenId={selectedCitizenId}
+                  onSelectCitizen={setSelectedCitizenId}
+                />
+              </div>
             }
             secondary={
               <div className="h-full flex flex-col bg-violet-950/30 border-l border-violet-500/30">
