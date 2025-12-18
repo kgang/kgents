@@ -9,17 +9,9 @@ enables: []
 session_notes: |
   Header added for forest compliance (STRATEGIZE).
 phase_ledger:
-  PLAN: touched
-  RESEARCH: touched
-  DEVELOP: skipped  # reason: doc-only
-  STRATEGIZE: touched
-  CROSS-SYNERGIZE: skipped  # reason: doc-only
-  IMPLEMENT: skipped  # reason: doc-only
-  QA: skipped  # reason: doc-only
-  TEST: skipped  # reason: doc-only
-  EDUCATE: skipped  # reason: doc-only
-  MEASURE: deferred  # reason: metrics backlog
-  REFLECT: touched
+  SENSE: complete
+  ACT: skipped  # reason: doc-only
+  REFLECT: complete
 entropy:
   planned: 0.05
   spent: 0.0

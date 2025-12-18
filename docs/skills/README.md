@@ -2,29 +2,25 @@
 
 > *"13 skills are necessary and sufficient to build any kgents component."*
 
-This directory contains **skill documents**—detailed how-to guides for common development tasks.
+These skills compose: `Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection`
 
 ---
 
-## Minimal Skills (from autopoietic-architecture.md)
-
-These 13 skills compose: `Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection`
-
-### Foundation (Categorical Ground)
+## Foundation (Categorical Ground)
 
 | Skill | Purpose |
 |-------|---------|
 | [polynomial-agent](polynomial-agent.md) | State machines with mode-dependent inputs |
 | [building-agent](building-agent.md) | Agent[A,B] with functors |
 
-### Protocol (AGENTESE)
+## Protocol (AGENTESE)
 
 | Skill | Purpose |
 |-------|---------|
 | [agentese-path](agentese-path.md) | Adding AGENTESE paths |
 | [agentese-node-registration](agentese-node-registration.md) | @node decorator, discovery, contracts |
 
-### Architecture (Vertical Slice)
+## Architecture (Vertical Slice)
 
 | Skill | Purpose |
 |-------|---------|
@@ -32,7 +28,7 @@ These 13 skills compose: `Component = Foundation ∘ Protocol ∘ Architecture �
 | [metaphysical-fullstack](metaphysical-fullstack.md) | AD-009 stack |
 | [data-bus-integration](data-bus-integration.md) | Event-driven communication |
 
-### Process (N-Phase)
+## Process (N-Phase)
 
 | Skill | Purpose |
 |-------|---------|
@@ -40,7 +36,7 @@ These 13 skills compose: `Component = Foundation ∘ Protocol ∘ Architecture �
 | [spec-template](spec-template.md) | Writing specs (200-400 lines) |
 | [spec-hygiene](spec-hygiene.md) | Bloat patterns, distillation |
 
-### Projection (Multi-Target)
+## Projection (Multi-Target)
 
 | Skill | Purpose |
 |-------|---------|
@@ -50,26 +46,16 @@ These 13 skills compose: `Component = Foundation ∘ Protocol ∘ Architecture �
 
 ---
 
-## Extended Skills (Active)
-
-| Skill | Domain | Purpose |
-|-------|--------|---------|
-| [vertical-slice-pattern](vertical-slice-pattern.md) | Architecture | 7-layer reference (Town as gold standard) |
-| [specgraph-workflow](specgraph-workflow.md) | Process | Spec ⇄ Impl bidirectional flow |
-| [agentese-contract-protocol](agentese-contract-protocol.md) | Protocol | Phase 7 BE/FE type sync |
-| [frontend-contracts](frontend-contracts.md) | Projection | TypeScript contract validation |
-| [flux-agent](flux-agent.md) | Streaming | Lift agents to continuous streams |
-| [reactive-primitives](reactive-primitives.md) | UI | Signal/Computed/Effect patterns |
-| [gardener-logos](gardener-logos.md) | DevEx | Cultivation practice for ideas |
-| [agent-town-archetypes](agent-town-archetypes.md) | Simulation | Citizen role patterns |
-| [turn-projectors](turn-projectors.md) | Projection | Turn → CLI/TUI/JSON/marimo |
-
----
-
 ## Archived Skills
 
-Skills not in the minimal or extended sets are in `_archived/` (30-day retention).
+Extended skills archived to `docs/_archive/2025-12-18-consolidation/`:
+- agent-town-archetypes, flux-agent, reactive-primitives
+- agentese-contract-protocol, frontend-contracts
+- gardener-logos, specgraph-workflow, turn-projectors
+- vertical-slice-pattern
+
+These can be restored if needed. Check git history for full list.
 
 ---
 
-*Consolidated: 2025-12-18 | Skills: 22 active, 31 archived*
+*Consolidated: 2025-12-18 | Skills: 13 active*

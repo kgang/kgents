@@ -127,17 +127,20 @@ await logos.invoke("world.house.manifest", economist_umwelt)  # → Appraisal
 ## Key Directories
 
 - `spec/` - The specification (conceptual, implementation-agnostic)
-- `spec/protocols/agentese.md` - AGENTESE specification
-- `spec/protocols/projection.md` - Projection Protocol (CLI/TUI/marimo/JSON/VR)
-- `spec/protocols/auto-inducer.md` - Phase transition signifiers
 - `impl/` - Reference implementations (Claude Code + Open Router)
-- `impl/claude/protocols/agentese/` - AGENTESE implementation (559 tests)
-- `impl/claude/agents/i/reactive/` - Reactive substrate (widgets, projections)
-- `docs/` - Supporting documentation
-- `docs/skills` - Project specific procedural knowledge
-- `docs/systems-reference.md` - **Full inventory of built systems**
-- `docs/local-development.md` - **Local dev setup guide**
 - `impl/claude/web/` - Agent Town React frontend (see `web/README.md`)
+- `plans/` - Forest Protocol plans
+
+## Docs Quick Reference (5 core + 13 skills)
+
+| Doc | When to Read |
+|-----|--------------|
+| `docs/systems-reference.md` | **Before building ANYTHING** |
+| `docs/local-development.md` | Setting up locally |
+| `docs/quickstart.md` | First time setup |
+| `docs/architecture-overview.md` | Understanding the design |
+| `docs/categorical-foundations.md` | When you need the "why" |
+| `docs/skills/` | How to build specific things (13 minimal skills) |
 
 ## Running Locally
 
@@ -156,23 +159,28 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 
 ## Session Context
 
-**Branch**: `main` | **Session**: 2025-12-16 12:47
+**Branch**: `main` | **Session**: 2025-12-18
 
 
 ## Current Focus (Forest Protocol)
 
-**Forest Health**: 32 active, 20 complete, 28% avg
+**Forest Health**: 31 active, 22 complete, 43% avg
 
 ### Active Plans
 
 | Plan | Progress | Status |
 |------|----------|--------|
-| coalition-forge | 40% | active |
-| domain-simulation | 35% | active |
-| punchdrunk-park | 50% | active |
-| atelier-experience | 60% | active |
-| design-language-consolidation | 5% | active |
-| gardener-logos | 100% | **complete** |
+| atelier-experience | 75% | active |
+| coalition-forge | 55% | active |
+| punchdrunk-park | 40% | active |
+| domain-simulation | 0% | active (stub) |
+
+### Recently Completed
+
+| Plan | Completed |
+|------|-----------|
+| design-language-consolidation | 2025-12-18 |
+| gardener-logos | 2025-12-16 |
 
 
 ## The Metaphysical Agent Stack (AD-009)
@@ -201,55 +209,21 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 
 **Full Spec**: `plans/autopoietic-architecture.md`
 
-## Minimal Skills (Full-Resolution Agent)
+## Minimal Skills (13 Total)
 
-> *"12 skills are necessary and sufficient to build any kgents component."*
+> *"13 skills are necessary and sufficient to build any kgents component."*
 
 These skills compose: `Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection`
 
-### Foundation (Categorical Ground)
-| Skill | Purpose |
-|-------|---------|
-| `polynomial-agent.md` | State machines with mode-dependent inputs |
-| `building-agent.md` | Agent[A,B] with functors |
+| Category | Skills |
+|----------|--------|
+| **Foundation** | `polynomial-agent.md`, `building-agent.md` |
+| **Protocol** | `agentese-path.md`, `agentese-node-registration.md` |
+| **Architecture** | `crown-jewel-patterns.md`, `metaphysical-fullstack.md`, `data-bus-integration.md` |
+| **Process** | `plan-file.md`, `spec-template.md`, `spec-hygiene.md` |
+| **Projection** | `projection-target.md`, `test-patterns.md`, `elastic-ui-patterns.md` |
 
-### Protocol (AGENTESE)
-| Skill | Purpose |
-|-------|---------|
-| `agentese-path.md` | Adding AGENTESE paths |
-| `agentese-node-registration.md` | @node decorator, discovery |
-
-### Architecture (Vertical Slice)
-| Skill | Purpose |
-|-------|---------|
-| `crown-jewel-patterns.md` | Service module structure |
-| `metaphysical-fullstack.md` | AD-009 stack |
-| `data-bus-integration.md` | Event-driven communication |
-
-### Process (N-Phase)
-| Skill | Purpose |
-|-------|---------|
-| `plan-file.md` | Forest Protocol plans |
-| `spec-template.md` | Writing specs (200-400 lines) |
-| `spec-hygiene.md` | Bloat patterns, distillation |
-
-### Projection (Multi-Target)
-| Skill | Purpose |
-|-------|---------|
-| `projection-target.md` | CLI/TUI/JSON/marimo |
-| `test-patterns.md` | Testing conventions |
-
-## Extended Skills Directory
-
-`docs/skills/` contains 50+ documented patterns. The 12 minimal skills above are sufficient for most work. Extended skills for specific domains:
-
-| Domain | Skills |
-|--------|--------|
-| **Agent Town** | `agent-town-archetypes.md`, `agent-town-coalitions.md`, `agent-town-inhabit.md` |
-| **Streaming** | `flux-agent.md`, `reactive-primitives.md` |
-| **Frontend** | `elastic-ui-patterns.md`, `ui-isomorphism-detection.md`, `3d-lighting-patterns.md` |
-| **UX Research** | `ux-reference-patterns.md`, `user-flow-documentation.md` |
-| **DevEx** | `gardener-logos.md`, `agent-observability.md` |
+Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore if needed.
 
 ## Working With This Repo
 
@@ -336,4 +310,4 @@ D-gent = WHERE state lives; S-gent = HOW state flows—placement matters
 
 ---
 
-*Compiled: 2025-12-16T12:47:08 | Version: 1 | Sections: 10*
+*Compiled: 2025-12-18T09:00:00 | Version: 2 | Sections: 10*
