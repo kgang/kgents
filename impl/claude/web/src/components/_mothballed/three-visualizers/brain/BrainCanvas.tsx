@@ -32,23 +32,21 @@ import { ErrorBoundary } from '../error/ErrorBoundary';
 import { ElasticSplit } from '../elastic/ElasticSplit';
 import { BottomDrawer } from '../elastic/BottomDrawer';
 import { FloatingActions } from '../elastic/FloatingActions';
-import {
-  ObserverSwitcher,
-  useObserverState,
-  DEFAULT_OBSERVERS,
-} from '../path';
-import {
-  PersonalityLoading,
-  Breathe,
-  PopOnMount,
-  celebrate,
-} from '../joy';
+import { ObserverSwitcher, useObserverState, DEFAULT_OBSERVERS } from '../path';
+import { PersonalityLoading, Breathe, PopOnMount, celebrate } from '../joy';
 import { CrystalDetail } from './CrystalDetail';
 import { useSynergyToast } from '../synergy';
 import { useBrainStream } from '../../hooks/useBrainStream';
 import { getEmptyState, getLoadingMessage } from '../../constants';
 import type { Density } from '../../shell/types';
-import { Brain as BrainIcon, RefreshCw, Network, LayoutGrid, Sparkles, Settings } from 'lucide-react';
+import {
+  Brain as BrainIcon,
+  RefreshCw,
+  Network,
+  LayoutGrid,
+  Sparkles,
+  Settings,
+} from 'lucide-react';
 
 // =============================================================================
 // Types
@@ -111,8 +109,8 @@ function TopologyErrorFallback({ onRetry }: { onRetry: () => void }) {
       <BrainIcon className="w-12 h-12 text-gray-600 mb-4" />
       <h3 className="text-lg font-semibold text-gray-300 mb-2">3D Rendering Failed</h3>
       <p className="text-gray-500 text-sm text-center mb-4 max-w-md">
-        The 3D topology couldn't be rendered. This can happen on devices without WebGL support
-        or when GPU memory is limited.
+        The 3D topology couldn't be rendered. This can happen on devices without WebGL support or
+        when GPU memory is limited.
       </p>
       <div className="flex gap-3">
         <button
@@ -122,7 +120,7 @@ function TopologyErrorFallback({ onRetry }: { onRetry: () => void }) {
           Try Again
         </button>
         <button
-          onClick={() => window.location.href = '#panels'}
+          onClick={() => (window.location.href = '#panels')}
           className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
         >
           Use 2D View
@@ -138,8 +136,8 @@ function EmptyBrainState() {
       <BrainIcon className="w-12 h-12 text-cyan-600 mb-4" />
       <h3 className="text-lg font-semibold text-gray-300 mb-2">Your Brain is Empty</h3>
       <p className="text-gray-500 text-sm text-center mb-4 max-w-md">
-        Start capturing thoughts, notes, or information using the "Quick Capture" panel.
-        Your brain data will persist across server restarts.
+        Start capturing thoughts, notes, or information using the "Quick Capture" panel. Your brain
+        data will persist across server restarts.
       </p>
       <div className="text-xs text-gray-600 mt-4">
         Data stored in: <code className="text-cyan-400">~/.kgents/brain/patterns.json</code>
@@ -191,7 +189,9 @@ function ControlPanel({
         />
       </div>
 
-      <h3 className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+      <h3
+        className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}
+      >
         Display
       </h3>
       <div className={isCompact ? 'flex flex-wrap gap-4' : 'space-y-2'}>
@@ -207,7 +207,9 @@ function ControlPanel({
               onChange={(e) => opt.onChange(e.target.checked)}
               className={`${isCompact ? 'w-3 h-3' : 'w-4 h-4'} rounded bg-gray-700 border-gray-600`}
             />
-            <span className={`text-gray-300 group-hover:text-white transition-colors ${isCompact ? 'text-xs' : 'text-sm'}`}>
+            <span
+              className={`text-gray-300 group-hover:text-white transition-colors ${isCompact ? 'text-xs' : 'text-sm'}`}
+            >
               {opt.label}
             </span>
           </label>
@@ -250,10 +252,14 @@ function CapturePanel({
   const maxResults = MAX_GHOST_RESULTS[density];
 
   return (
-    <div className={`${isCompact ? 'p-3 space-y-4' : 'p-4 space-y-6'} ${isDrawer ? 'rounded-t-xl' : ''}`}>
+    <div
+      className={`${isCompact ? 'p-3 space-y-4' : 'p-4 space-y-6'} ${isDrawer ? 'rounded-t-xl' : ''}`}
+    >
       {/* Quick capture */}
       <div>
-        <h3 className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+        <h3
+          className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}
+        >
           Quick Capture
         </h3>
         <textarea
@@ -274,7 +280,9 @@ function CapturePanel({
 
       {/* Ghost surfacing */}
       <div>
-        <h3 className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+        <h3
+          className={`font-semibold text-gray-400 mb-2 uppercase tracking-wide ${isCompact ? 'text-[10px]' : 'text-xs'}`}
+        >
           Ghost Surfacing
         </h3>
         <div className="flex gap-2 mb-2">
@@ -302,12 +310,8 @@ function CapturePanel({
                 className={`bg-gray-800 rounded p-2 border-l-2 border-purple-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}
               >
                 <div className="flex justify-between mb-1">
-                  <span className="text-gray-400 font-mono truncate">
-                    {memory.concept_id}
-                  </span>
-                  <span className="text-purple-400">
-                    {(memory.relevance * 100).toFixed(0)}%
-                  </span>
+                  <span className="text-gray-400 font-mono truncate">{memory.concept_id}</span>
+                  <span className="text-purple-400">{(memory.relevance * 100).toFixed(0)}%</span>
                 </div>
                 <p className="text-gray-300 line-clamp-2">{memory.content}</p>
               </div>
@@ -359,9 +363,13 @@ function PanelsView({
     <div className={`${isCompact ? 'p-3' : 'max-w-4xl mx-auto p-6'}`}>
       {/* Status Panel */}
       <div className={`bg-gray-800 rounded-lg ${isCompact ? 'p-3 mb-3' : 'p-4 mb-6'}`}>
-        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>Brain Status</h2>
+        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>
+          Brain Status
+        </h2>
         {status ? (
-          <div className={`grid ${isCompact ? 'grid-cols-2 gap-2 text-xs' : 'grid-cols-2 md:grid-cols-4 gap-4 text-sm'}`}>
+          <div
+            className={`grid ${isCompact ? 'grid-cols-2 gap-2 text-xs' : 'grid-cols-2 md:grid-cols-4 gap-4 text-sm'}`}
+          >
             <div>
               <span className="text-gray-400">Status:</span>
               <span className={`ml-2 ${getStatusColor(status.status)}`}>{status.status}</span>
@@ -390,9 +398,13 @@ function PanelsView({
 
       {/* Topology Stats */}
       <div className={`bg-gray-800 rounded-lg ${isCompact ? 'p-3 mb-3' : 'p-4 mb-6'}`}>
-        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>Memory Topology</h2>
+        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>
+          Memory Topology
+        </h2>
         {map ? (
-          <div className={`grid ${isCompact ? 'grid-cols-2 gap-2 text-xs' : 'grid-cols-2 md:grid-cols-4 gap-4 text-sm'}`}>
+          <div
+            className={`grid ${isCompact ? 'grid-cols-2 gap-2 text-xs' : 'grid-cols-2 md:grid-cols-4 gap-4 text-sm'}`}
+          >
             <div>
               <span className="text-gray-400">Concepts:</span>
               <span className="ml-2">{map.concept_count}</span>
@@ -421,7 +433,9 @@ function PanelsView({
 
       {/* Capture Panel */}
       <div className={`bg-gray-800 rounded-lg ${isCompact ? 'p-3 mb-3' : 'p-4 mb-6'}`}>
-        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>Capture Content</h2>
+        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>
+          Capture Content
+        </h2>
         <div className={isCompact ? 'space-y-2' : 'flex gap-3'}>
           <textarea
             value={captureContent}
@@ -442,7 +456,9 @@ function PanelsView({
 
       {/* Ghost Surface Panel */}
       <div className={`bg-gray-800 rounded-lg ${isCompact ? 'p-3' : 'p-4'}`}>
-        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>Ghost Surfacing</h2>
+        <h2 className={`font-semibold ${isCompact ? 'text-sm mb-2' : 'text-lg mb-3'}`}>
+          Ghost Surfacing
+        </h2>
         <div className={`flex gap-2 ${isCompact ? 'mb-2' : 'mb-4'}`}>
           <input
             type="text"
@@ -472,13 +488,19 @@ function PanelsView({
                 className={`bg-gray-700 rounded p-2 border-l-2 border-purple-500 ${isCompact ? 'text-[10px]' : ''}`}
               >
                 <div className="flex justify-between items-start mb-1">
-                  <span className={`text-gray-400 font-mono ${isCompact ? '' : 'text-xs'}`}>{memory.concept_id}</span>
-                  <span className={`px-1.5 py-0.5 bg-purple-900 rounded ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+                  <span className={`text-gray-400 font-mono ${isCompact ? '' : 'text-xs'}`}>
+                    {memory.concept_id}
+                  </span>
+                  <span
+                    className={`px-1.5 py-0.5 bg-purple-900 rounded ${isCompact ? 'text-[10px]' : 'text-xs'}`}
+                  >
                     {(memory.relevance * 100).toFixed(0)}%
                   </span>
                 </div>
                 <p className={`${isCompact ? 'line-clamp-1' : 'text-sm'}`}>
-                  {memory.content || <span className="text-gray-500 italic">{getEmptyState('noData').title}</span>}
+                  {memory.content || (
+                    <span className="text-gray-500 italic">{getEmptyState('noData').title}</span>
+                  )}
                 </p>
               </div>
             ))}
@@ -575,11 +597,14 @@ export function BrainCanvas({
   // WebSocket stream for real-time updates
   useBrainStream({
     autoConnect: true,
-    onCrystalFormed: useCallback((data: { source_id: string }) => {
-      console.log('[Brain] WebSocket: crystal_formed event received', data.source_id);
-      refreshAfterCapture();
-      crystalFormed(data.source_id);
-    }, [refreshAfterCapture, crystalFormed]),
+    onCrystalFormed: useCallback(
+      (data: { source_id: string }) => {
+        console.log('[Brain] WebSocket: crystal_formed event received', data.source_id);
+        refreshAfterCapture();
+        crystalFormed(data.source_id);
+      },
+      [refreshAfterCapture, crystalFormed]
+    ),
   });
 
   const handleNodeClick = useCallback((node: TopologyNode) => {
@@ -640,9 +665,12 @@ export function BrainCanvas({
 
   const getStatusColor = (s: string) => {
     switch (s) {
-      case 'healthy': return 'text-green-400';
-      case 'degraded': return 'text-yellow-400';
-      default: return 'text-red-400';
+      case 'healthy':
+        return 'text-green-400';
+      case 'degraded':
+        return 'text-yellow-400';
+      default:
+        return 'text-red-400';
     }
   };
 
@@ -680,7 +708,9 @@ export function BrainCanvas({
 
   // Stats overlay
   const statsOverlay = status && (
-    <div className={`absolute top-3 left-3 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg ${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-300`}>
+    <div
+      className={`absolute top-3 left-3 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg ${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-300`}
+    >
       <Breathe intensity={status.status === 'healthy' ? 0.3 : 0} speed="slow">
         <span className={`font-semibold ${getStatusColor(status.status)}`}>{status.status}</span>
       </Breathe>
@@ -750,7 +780,12 @@ export function BrainCanvas({
             actions={[
               {
                 id: 'view',
-                icon: viewMode === 'topology' ? <LayoutGrid className="w-5 h-5" /> : <Network className="w-5 h-5" />,
+                icon:
+                  viewMode === 'topology' ? (
+                    <LayoutGrid className="w-5 h-5" />
+                  ) : (
+                    <Network className="w-5 h-5" />
+                  ),
                 label: viewMode === 'topology' ? 'Switch to panels' : 'Switch to 3D',
                 onClick: () => setViewMode((v) => (v === 'topology' ? 'panels' : 'topology')),
                 variant: 'primary',
@@ -914,7 +949,9 @@ export function BrainCanvas({
             <button
               onClick={() => setViewMode('topology')}
               className={`px-3 py-1 rounded transition-colors ${isTablet ? 'text-xs' : 'text-sm'} ${
-                viewMode === 'topology' ? 'bg-cyan-600 text-white' : 'text-gray-400 hover:text-white'
+                viewMode === 'topology'
+                  ? 'bg-cyan-600 text-white'
+                  : 'text-gray-400 hover:text-white'
               }`}
             >
               {isDesktop ? '3D Topology' : '3D'}

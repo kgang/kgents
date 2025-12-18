@@ -3,15 +3,19 @@
  *
  * Agent Town visualization components for the Crown Jewel.
  *
- * @see spec/protocols/os-shell.md - Part IV: Gallery Primitive Reliance
- * @see plans/park-town-design-overhaul.md - Phase 2 enhancements
+ * 2D Renaissance (2025-12-18): TownCanvas3D mothballed.
+ * See _mothballed/three-visualizers/town/ for preserved component.
+ *
+ * What remains: Mesa (2D), all panel components - the real UI.
+ *
+ * @see spec/protocols/2d-renaissance.md
  */
 
-// Core visualization (projection-first)
+// Core visualization (projection-first, 2D)
 export { TownVisualization, default as TownVisualizationDefault } from './TownVisualization';
 export type { TownVisualizationProps } from './TownVisualization';
 
-// Sub-components
+// Sub-components (ALL KEEP - 2D first)
 export { Mesa } from './Mesa';
 export { CitizenPanel } from './CitizenPanel';
 export { VirtualizedCitizenList } from './VirtualizedCitizenList';
@@ -27,6 +31,9 @@ export { TownOverview, default as TownOverviewDefault } from './TownOverview';
 export { CitizenBrowser, default as CitizenBrowserDefault } from './CitizenBrowser';
 export { CoalitionGraph, default as CoalitionGraphDefault } from './CoalitionGraph';
 
-// 3D Projection (Town Renaissance)
-export { TownCanvas3D, default as TownCanvas3DDefault } from './TownCanvas3D';
-export type { TownCanvas3DProps } from './TownCanvas3D';
+// =============================================================================
+// MOTHBALLED (2025-12-18): Three.js visualization component
+// Preserved in: _mothballed/three-visualizers/town/
+// - TownCanvas3D.tsx (383 lines)
+// Revival condition: VR/AR projections or 3D town visualization
+// =============================================================================

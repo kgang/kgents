@@ -221,10 +221,7 @@ function RelationshipEdge3D({ from, to, strength, type }: RelationshipEdge3DProp
   }, [type]);
 
   // Simple line edge (lighter weight than TopologyEdge3D)
-  const points = useMemo(
-    () => [new THREE.Vector3(...from), new THREE.Vector3(...to)],
-    [from, to]
-  );
+  const points = useMemo(() => [new THREE.Vector3(...from), new THREE.Vector3(...to)], [from, to]);
 
   return (
     <Line

@@ -1,33 +1,58 @@
 /**
  * Gestalt Components
  *
- * Visual showcase components for the Living Architecture Visualizer.
+ * UI components for the Living Architecture Visualizer.
  *
- * Sprint 3: Forest Theme - Organic, plant-like visualization
- * "The codebase is a forest, not a machine."
+ * 2D Renaissance (2025-12-18): Three.js components mothballed.
+ * See _mothballed/three-visualizers/gestalt/ for preserved components.
  *
- * @see plans/gestalt-visual-showcase.md
- * @see plans/_continuations/gestalt-sprint3.md
+ * Phase 3 (2025-12-18): Gestalt2D implementation complete.
+ * - Gestalt2D: Main container with ElasticSplit
+ * - LayerCard: Health-colored layer panels
+ * - ViolationFeed: Streaming violation alerts
+ * - ModuleDetail: Module detail side panel
+ *
+ * @see spec/protocols/2d-renaissance.md
  */
 
 // Types
 export * from './types';
 
-// Chunk 1: Filter Components
+// =============================================================================
+// Gestalt2D Components (Phase 3 - 2D Renaissance)
+// =============================================================================
+
+export { Gestalt2D } from './Gestalt2D';
+export type { Gestalt2DProps } from './Gestalt2D';
+
+export { LayerCard } from './LayerCard';
+export type { LayerCardProps } from './LayerCard';
+
+export { ViolationFeed } from './ViolationFeed';
+export type { ViolationFeedProps } from './ViolationFeed';
+
+export { ModuleDetail } from './ModuleDetail';
+export type { ModuleDetailProps } from './ModuleDetail';
+
+// =============================================================================
+// Filter Components (KEEP - reusable)
+// =============================================================================
+
 export { FilterPanel } from './FilterPanel';
 export { HealthFilter } from './HealthFilter';
 export { ModuleSearch } from './ModuleSearch';
 export { ViewPresets } from './ViewPresets';
 
-// Chunk 2: Legend & Tooltip Components
+// =============================================================================
+// Legend & Tooltip Components (KEEP - reusable)
+// =============================================================================
+
 export { Legend } from './Legend';
 export type { LegendProps, NodeKindConfig, EdgeKindConfig } from './Legend';
 export { NodeTooltip, StandaloneTooltip } from './NodeTooltip';
 export type { NodeTooltipProps, StandaloneTooltipProps } from './NodeTooltip';
 
-// Chunk 3: Edge Styling & Animation Components (Original)
-export { AnimatedEdge, StaticEdge, SmartEdge } from './AnimatedEdge';
-export type { AnimatedEdgeProps, StaticEdgeProps, SmartEdgeProps } from './AnimatedEdge';
+// Edge Styles (KEEP - types and utilities, no Three.js)
 export {
   EDGE_STYLES,
   getEdgeStyle,
@@ -41,12 +66,12 @@ export {
 } from './EdgeStyles';
 export type { EdgeStyle, EdgeType, FlowAnimationConfig } from './EdgeStyles';
 
-// Sprint 3: Organic/Forest Theme Components
-export { OrganicNode } from './OrganicNode';
-export type { OrganicNodeProps } from './OrganicNode';
-export { VineEdge, SmartVineEdge } from './VineEdge';
-export type { VineEdgeProps, SmartVineEdgeProps } from './VineEdge';
-
-// Projection-First Visualization Component
-export { GestaltVisualization, default as GestaltVisualizationDefault } from './GestaltVisualization';
-export type { GestaltVisualizationProps } from './GestaltVisualization';
+// =============================================================================
+// MOTHBALLED (2025-12-18): Three.js visualization components
+// Preserved in: _mothballed/three-visualizers/gestalt/
+// - GestaltVisualization.tsx (1060 lines)
+// - OrganicNode.tsx
+// - VineEdge.tsx
+// - AnimatedEdge.tsx
+// Revival condition: VR/AR projections or 3D-specific requirements
+// =============================================================================

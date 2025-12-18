@@ -12,7 +12,11 @@
  */
 
 import { TopologyNode3D } from '../three/primitives';
-import { CRYSTAL_THEME, getCrystalTier, calculateCrystalSize } from '../three/primitives/themes/crystal';
+import {
+  CRYSTAL_THEME,
+  getCrystalTier,
+  calculateCrystalSize,
+} from '../three/primitives/themes/crystal';
 import type { Density } from '../three/primitives/themes/types';
 import type { TopologyNode } from '../../api/types';
 

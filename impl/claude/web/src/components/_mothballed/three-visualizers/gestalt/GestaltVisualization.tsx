@@ -49,12 +49,7 @@ import {
   DEFAULT_FILTER_STATE,
   TOOLTIP_DELAY_MS,
 } from './index';
-import {
-  PersonalityLoading,
-  EmpathyError,
-  Breathe,
-  celebrateEpic,
-} from '../joy';
+import { PersonalityLoading, EmpathyError, Breathe, celebrateEpic } from '../joy';
 import { useObserverState } from '../path';
 import { useSynergyToast } from '../synergy';
 import { DARK_SURFACES, FOREST_SCENE } from '../../constants';
@@ -143,7 +138,14 @@ function getNodeSize(linesOfCode: number, healthScore: number, density: Density)
 // Module Node Component
 // =============================================================================
 
-function ModuleNode({ node, isSelected, onClick, showLabel, density, enableTooltip = true }: ModuleNodeProps) {
+function ModuleNode({
+  node,
+  isSelected,
+  onClick,
+  showLabel,
+  density,
+  enableTooltip = true,
+}: ModuleNodeProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -172,10 +174,7 @@ function ModuleNode({ node, isSelected, onClick, showLabel, density, enableToolt
   useFrame(() => {
     if (meshRef.current) {
       const targetScale = hovered || isSelected ? 1.5 : 1.0;
-      meshRef.current.scale.lerp(
-        new THREE.Vector3(targetScale, targetScale, targetScale),
-        0.12
-      );
+      meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.12);
     }
   });
 
@@ -255,7 +254,13 @@ function ModuleNode({ node, isSelected, onClick, showLabel, density, enableToolt
 // Layer Rings Component
 // =============================================================================
 
-function LayerRings({ layers, nodeMap }: { layers: string[]; nodeMap: Map<string, CodebaseModule> }) {
+function LayerRings({
+  layers,
+  nodeMap,
+}: {
+  layers: string[];
+  nodeMap: Map<string, CodebaseModule>;
+}) {
   const layerRings = useMemo(() => {
     return layers
       .map((layer, idx) => {
@@ -267,7 +272,10 @@ function LayerRings({ layers, nodeMap }: { layers: string[]; nodeMap: Map<string
         const avgZ = layerNodes.reduce((sum, n) => sum + n.z, 0) / layerNodes.length;
 
         const radius =
-          Math.max(...layerNodes.map((n) => Math.sqrt(Math.pow(n.x - avgX, 2) + Math.pow(n.y - avgY, 2))), 2) + 1;
+          Math.max(
+            ...layerNodes.map((n) => Math.sqrt(Math.pow(n.x - avgX, 2) + Math.pow(n.y - avgY, 2))),
+            2
+          ) + 1;
 
         const hue = (idx / Math.max(layers.length, 1)) * 0.4 + 0.1;
         const color = new THREE.Color().setHSL(hue, 0.6, 0.5);
@@ -285,7 +293,12 @@ function LayerRings({ layers, nodeMap }: { layers: string[]; nodeMap: Map<string
             <group key={ring.layer} position={ring.center}>
               <mesh rotation={[Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[ring.radius - 0.08, ring.radius + 0.08, 64]} />
-                <meshBasicMaterial color={ring.color} transparent opacity={0.12} side={THREE.DoubleSide} />
+                <meshBasicMaterial
+                  color={ring.color}
+                  transparent
+                  opacity={0.12}
+                  side={THREE.DoubleSide}
+                />
               </mesh>
             </group>
           )
@@ -347,7 +360,10 @@ function Scene({
   const filteredLinks = useMemo(
     () =>
       topology.links.filter(
-        (l) => filteredNodeIds.has(l.source) && filteredNodeIds.has(l.target) && (showViolations || !l.is_violation)
+        (l) =>
+          filteredNodeIds.has(l.source) &&
+          filteredNodeIds.has(l.target) &&
+          (showViolations || !l.is_violation)
       ),
     [topology.links, filteredNodeIds, showViolations]
   );
@@ -385,15 +401,15 @@ function Scene({
     );
   }, [selectedNodeId, filteredLinks]);
 
-  const shadowBounds = useMemo(
-    () => calculateCenteredShadowBounds(filteredNodes),
-    [filteredNodes]
-  );
+  const shadowBounds = useMemo(() => calculateCenteredShadowBounds(filteredNodes), [filteredNodes]);
 
   return (
     <>
       {organicTheme && (
-        <fog attach="fog" args={[FOREST_SCENE.fogColor, FOREST_SCENE.fogNear, FOREST_SCENE.fogFar]} />
+        <fog
+          attach="fog"
+          args={[FOREST_SCENE.fogColor, FOREST_SCENE.fogNear, FOREST_SCENE.fogFar]}
+        />
       )}
 
       <SceneLighting
@@ -449,7 +465,7 @@ function Scene({
           );
         })}
 
-      {filteredNodes.map((node) => (
+      {filteredNodes.map((node) =>
         organicTheme ? (
           <OrganicNode
             key={node.id}
@@ -469,7 +485,7 @@ function Scene({
             density={density}
           />
         )
-      ))}
+      )}
 
       <OrbitControls
         enablePan
@@ -502,7 +518,14 @@ interface ModuleDetailPanelProps {
   isDrawer?: boolean;
 }
 
-function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, isDrawer }: ModuleDetailPanelProps) {
+function ModuleDetailPanel({
+  module,
+  moduleDetails,
+  onClose,
+  loading,
+  density,
+  isDrawer,
+}: ModuleDetailPanelProps) {
   const gradeConfig = HEALTH_GRADE_CONFIG[module.health_grade] || HEALTH_GRADE_CONFIG['?'];
   const isCompact = density === 'compact';
 
@@ -517,7 +540,9 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
       <div className={`${isCompact ? 'p-3' : 'p-4'} border-b border-gray-700 bg-gray-800`}>
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
-            <h3 className={`font-semibold text-white truncate ${isCompact ? 'text-base' : 'text-lg'}`}>
+            <h3
+              className={`font-semibold text-white truncate ${isCompact ? 'text-base' : 'text-lg'}`}
+            >
               {module.label}
             </h3>
             <p className="text-xs text-gray-400 font-mono truncate" title={module.id}>
@@ -540,11 +565,15 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
           >
             {module.health_grade}
           </span>
-          <span className={`${isCompact ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-gray-700 text-gray-300 rounded`}>
+          <span
+            className={`${isCompact ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-gray-700 text-gray-300 rounded`}
+          >
             {Math.round(module.health_score * 100)}%
           </span>
           {module.layer && (
-            <span className={`${isCompact ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-indigo-900/50 text-indigo-300 rounded`}>
+            <span
+              className={`${isCompact ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'} bg-indigo-900/50 text-indigo-300 rounded`}
+            >
               {module.layer}
             </span>
           )}
@@ -557,11 +586,22 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
             { label: 'Lines', value: module.lines_of_code.toLocaleString() },
             { label: 'Coupling', value: `${Math.round(module.coupling * 100)}%` },
             { label: 'Cohesion', value: `${Math.round(module.cohesion * 100)}%` },
-            { label: 'Instability', value: module.instability !== null ? `${Math.round(module.instability * 100)}%` : 'N/A' },
+            {
+              label: 'Instability',
+              value:
+                module.instability !== null ? `${Math.round(module.instability * 100)}%` : 'N/A',
+            },
           ].map((stat) => (
-            <div key={stat.label} className={`bg-gray-700/50 rounded-lg ${isCompact ? 'p-2 text-center' : 'p-3'}`}>
-              <p className={`text-gray-400 ${isCompact ? 'text-[10px]' : 'text-xs'} mb-0.5`}>{stat.label}</p>
-              <p className={`font-semibold text-white ${isCompact ? 'text-sm' : 'text-xl'}`}>{stat.value}</p>
+            <div
+              key={stat.label}
+              className={`bg-gray-700/50 rounded-lg ${isCompact ? 'p-2 text-center' : 'p-3'}`}
+            >
+              <p className={`text-gray-400 ${isCompact ? 'text-[10px]' : 'text-xs'} mb-0.5`}>
+                {stat.label}
+              </p>
+              <p className={`font-semibold text-white ${isCompact ? 'text-sm' : 'text-xl'}`}>
+                {stat.value}
+              </p>
             </div>
           ))}
         </div>
@@ -569,7 +609,9 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
         <div className="mb-4">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-gray-400">Health</span>
-            <span style={{ color: gradeConfig.color }}>{Math.round(module.health_score * 100)}%</span>
+            <span style={{ color: gradeConfig.color }}>
+              {Math.round(module.health_score * 100)}%
+            </span>
           </div>
           <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
             <div
@@ -607,7 +649,9 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
 
             {moduleDetails.dependencies.length > 0 && (
               <div className="mb-4">
-                <h4 className={`font-semibold text-gray-400 mb-2 ${isCompact ? 'text-xs' : 'text-sm'}`}>
+                <h4
+                  className={`font-semibold text-gray-400 mb-2 ${isCompact ? 'text-xs' : 'text-sm'}`}
+                >
                   Dependencies ({moduleDetails.dependencies.length})
                 </h4>
                 <div className="max-h-24 overflow-y-auto bg-gray-900/50 rounded-lg p-2 text-xs font-mono text-gray-300 space-y-0.5">
@@ -617,7 +661,9 @@ function ModuleDetailPanel({ module, moduleDetails, onClose, loading, density, i
                     </div>
                   ))}
                   {moduleDetails.dependencies.length > (isCompact ? 8 : 12) && (
-                    <div className="text-gray-500">+{moduleDetails.dependencies.length - (isCompact ? 8 : 12)} more</div>
+                    <div className="text-gray-500">
+                      +{moduleDetails.dependencies.length - (isCompact ? 8 : 12)} more
+                    </div>
                   )}
                 </div>
               </div>
@@ -675,7 +721,11 @@ export function GestaltVisualization({
   onMaxNodesChange,
 }: GestaltVisualizationProps) {
   // Illumination quality
-  const { quality: illuminationQuality, isAutoDetected, override: overrideQuality } = useIlluminationQuality();
+  const {
+    quality: illuminationQuality,
+    isAutoDetected,
+    override: overrideQuality,
+  } = useIlluminationQuality();
   const shadowsEnabled = illuminationQuality !== 'minimal';
 
   // Selection state
@@ -700,13 +750,16 @@ export function GestaltVisualization({
     }
   }, [controlledMaxNodes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFiltersChange = useCallback((updates: Partial<FilterState>) => {
-    // If maxNodes is being updated and we have a controlled callback, call it
-    if ('maxNodes' in updates && updates.maxNodes !== undefined && onMaxNodesChange) {
-      onMaxNodesChange(updates.maxNodes);
-    }
-    setFilters((prev) => ({ ...prev, ...updates }));
-  }, [onMaxNodesChange]);
+  const handleFiltersChange = useCallback(
+    (updates: Partial<FilterState>) => {
+      // If maxNodes is being updated and we have a controlled callback, call it
+      if ('maxNodes' in updates && updates.maxNodes !== undefined && onMaxNodesChange) {
+        onMaxNodesChange(updates.maxNodes);
+      }
+      setFilters((prev) => ({ ...prev, ...updates }));
+    },
+    [onMaxNodesChange]
+  );
 
   // Panel state (mobile drawers)
   const [panelState, setPanelState] = useState<PanelState>({
@@ -727,24 +780,27 @@ export function GestaltVisualization({
     }
   }, [topology?.stats.overall_grade]);
 
-  const handleNodeClick = useCallback(async (node: CodebaseModule) => {
-    setSelectedModule(node);
-    setModuleDetails(null);
-    setDetailsLoading(true);
+  const handleNodeClick = useCallback(
+    async (node: CodebaseModule) => {
+      setSelectedModule(node);
+      setModuleDetails(null);
+      setDetailsLoading(true);
 
-    if (width < PANEL_COLLAPSE_BREAKPOINT) {
-      setPanelState((s) => ({ ...s, details: true }));
-    }
+      if (width < PANEL_COLLAPSE_BREAKPOINT) {
+        setPanelState((s) => ({ ...s, details: true }));
+      }
 
-    try {
-      const moduleDetails = await gestaltApi.getModule(node.id);
-      setModuleDetails(moduleDetails);
-    } catch (err) {
-      console.error('Failed to load module details:', err);
-    } finally {
-      setDetailsLoading(false);
-    }
-  }, [width]);
+      try {
+        const moduleDetails = await gestaltApi.getModule(node.id);
+        setModuleDetails(moduleDetails);
+      } catch (err) {
+        console.error('Failed to load module details:', err);
+      } finally {
+        setDetailsLoading(false);
+      }
+    },
+    [width]
+  );
 
   const handleCloseSidebar = useCallback(() => {
     setSelectedModule(null);
@@ -780,13 +836,19 @@ export function GestaltVisualization({
   // ==========================================================================
 
   const canvas3D = topology && (
-    <ErrorBoundary key={topologyKey} fallback={<TopologyErrorFallback onRetry={handleRetry} />} resetKeys={[topologyKey]}>
+    <ErrorBoundary
+      key={topologyKey}
+      fallback={<TopologyErrorFallback onRetry={handleRetry} />}
+      resetKeys={[topologyKey]}
+    >
       <Suspense fallback={<TopologyLoading organic={filters.organicTheme} />}>
         <Canvas
           camera={{ position: [0, 0, isMobile ? 30 : 25], fov: 55 }}
           gl={{ antialias: true, alpha: false }}
           shadows={shadowsEnabled ? 'soft' : false}
-          style={{ background: filters.organicTheme ? FOREST_SCENE.background : DARK_SURFACES.canvas }}
+          style={{
+            background: filters.organicTheme ? FOREST_SCENE.background : DARK_SURFACES.canvas,
+          }}
         >
           <Scene
             topology={topology}
@@ -812,7 +874,9 @@ export function GestaltVisualization({
   // ==========================================================================
 
   const statsOverlay = topology && (
-    <div className={`absolute top-3 left-3 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg ${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-300`}>
+    <div
+      className={`absolute top-3 left-3 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg ${isMobile ? 'text-[10px]' : 'text-xs'} text-gray-300`}
+    >
       <span className="text-green-400 font-semibold">{topology.stats.node_count}</span> modules
       {!isMobile && (
         <>
@@ -846,11 +910,7 @@ export function GestaltVisualization({
   );
 
   const legendOverlay = !isMobile && (
-    <Legend
-      position="top-right"
-      density={density}
-      defaultCollapsed={isTablet}
-    />
+    <Legend position="top-right" density={density} defaultCollapsed={isTablet} />
   );
 
   // ==========================================================================
@@ -865,11 +925,18 @@ export function GestaltVisualization({
             <Network className="w-5 h-5 text-green-400" />
             <span className="font-semibold">Gestalt</span>
             {topology && (
-              <Breathe intensity={topology.stats.overall_grade === 'A+' || topology.stats.overall_grade === 'A' ? 0.3 : 0}>
+              <Breathe
+                intensity={
+                  topology.stats.overall_grade === 'A+' || topology.stats.overall_grade === 'A'
+                    ? 0.3
+                    : 0
+                }
+              >
                 <span
                   className="text-xs font-bold px-1.5 py-0.5 rounded"
                   style={{
-                    backgroundColor: HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color + '33',
+                    backgroundColor:
+                      HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color + '33',
                     color: HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color,
                   }}
                 >
@@ -886,15 +953,19 @@ export function GestaltVisualization({
 
           <FloatingActions
             actions={[
-              ...(onScan ? [{
-                id: 'scan',
-                icon: <Network className="w-4 h-4" />,
-                label: 'Rescan',
-                onClick: handleScan,
-                variant: 'primary' as const,
-                loading: loading,
-                disabled: loading,
-              }] : []),
+              ...(onScan
+                ? [
+                    {
+                      id: 'scan',
+                      icon: <Network className="w-4 h-4" />,
+                      label: 'Rescan',
+                      onClick: handleScan,
+                      variant: 'primary' as const,
+                      loading: loading,
+                      disabled: loading,
+                    },
+                  ]
+                : []),
               {
                 id: 'controls',
                 icon: <Network className="w-4 h-4" />,
@@ -902,13 +973,17 @@ export function GestaltVisualization({
                 onClick: () => setPanelState((s) => ({ ...s, controls: !s.controls })),
                 isActive: panelState.controls,
               },
-              ...(selectedModule ? [{
-                id: 'details',
-                icon: <Network className="w-4 h-4" />,
-                label: 'Toggle details',
-                onClick: () => setPanelState((s) => ({ ...s, details: !s.details })),
-                isActive: panelState.details,
-              } as FloatingAction] : []),
+              ...(selectedModule
+                ? [
+                    {
+                      id: 'details',
+                      icon: <Network className="w-4 h-4" />,
+                      label: 'Toggle details',
+                      onClick: () => setPanelState((s) => ({ ...s, details: !s.details })),
+                      isActive: panelState.details,
+                    } as FloatingAction,
+                  ]
+                : []),
             ]}
             position="bottom-right"
           />
@@ -984,7 +1059,7 @@ export function GestaltVisualization({
     </div>
   );
 
-  const splitRatio = selectedModule ? (isDesktop ? 0.65 : 0.55) : (isDesktop ? 0.82 : 0.72);
+  const splitRatio = selectedModule ? (isDesktop ? 0.65 : 0.55) : isDesktop ? 0.82 : 0.72;
 
   return (
     <div className="h-full flex flex-col bg-gray-900 text-white overflow-hidden">
@@ -995,11 +1070,18 @@ export function GestaltVisualization({
               <Network className="w-6 h-6 text-green-400" />
               <span>Gestalt</span>
               {topology && (
-                <Breathe intensity={topology.stats.overall_grade === 'A+' || topology.stats.overall_grade === 'A' ? 0.3 : 0}>
+                <Breathe
+                  intensity={
+                    topology.stats.overall_grade === 'A+' || topology.stats.overall_grade === 'A'
+                      ? 0.3
+                      : 0
+                  }
+                >
                   <span
                     className="text-sm font-normal px-2 py-0.5 rounded ml-2"
                     style={{
-                      backgroundColor: HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color + '33',
+                      backgroundColor:
+                        HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color + '33',
                       color: HEALTH_GRADE_CONFIG[topology.stats.overall_grade]?.color,
                     }}
                   >
@@ -1011,7 +1093,9 @@ export function GestaltVisualization({
             <p className={`text-gray-400 mt-0.5 ${isTablet ? 'text-xs' : 'text-sm'}`}>
               {topology.stats.node_count} modules | {topology.stats.link_count} dependencies
               {topology.stats.violation_count > 0 && (
-                <span className="text-red-400 ml-2">| {topology.stats.violation_count} violations</span>
+                <span className="text-red-400 ml-2">
+                  | {topology.stats.violation_count} violations
+                </span>
               )}
             </p>
           </div>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks -- Mothballed: legacy code preserved for reference */
 /**
  * BrainTopology - 3D Visualization of Holographic Memory
  *
@@ -22,11 +23,7 @@ import { useRef, useState, useMemo, useCallback } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
-import type {
-  TopologyNode,
-  TopologyGap,
-  BrainTopologyResponse,
-} from '../api/types';
+import type { TopologyNode, TopologyGap, BrainTopologyResponse } from '../api/types';
 import { SceneLighting, ShadowPlane } from './three/SceneLighting';
 import { SceneEffects } from './three/SceneEffects';
 import { QualitySelector } from './three/QualitySelector';
@@ -85,12 +82,7 @@ function GapSphereComponent({ gap }: GapSphereProps) {
   return (
     <mesh ref={meshRef} position={[gap.x, gap.y, gap.z]}>
       <sphereGeometry args={[gap.radius * 0.3, 16, 16]} />
-      <meshBasicMaterial
-        color="#ff4444"
-        transparent
-        opacity={0.15}
-        wireframe
-      />
+      <meshBasicMaterial color="#ff4444" transparent opacity={0.15} wireframe />
     </mesh>
   );
 }
@@ -125,10 +117,7 @@ function Scene({
   showLabels,
   illuminationQuality = 'standard',
 }: SceneProps) {
-  const nodeMap = useMemo(
-    () => new Map(topology.nodes.map((n) => [n.id, n])),
-    [topology.nodes]
-  );
+  const nodeMap = useMemo(() => new Map(topology.nodes.map((n) => [n.id, n])), [topology.nodes]);
 
   const hubSet = useMemo(() => new Set(topology.hub_ids), [topology.hub_ids]);
 
@@ -153,19 +142,10 @@ function Scene({
   return (
     <>
       {/* Cymatics background pattern - spiral for brain/memory theme */}
-      <PatternTile
-        config={PATTERN_PRESETS['spiral-5']}
-        size={60}
-        position={[0, 0, -25]}
-        animate
-      />
+      <PatternTile config={PATTERN_PRESETS['spiral-5']} size={60} position={[0, 0, -25]} animate />
 
       {/* Canonical lighting from SceneLighting */}
-      <SceneLighting
-        quality={illuminationQuality}
-        bounds={shadowBounds}
-        atmosphericFill
-      />
+      <SceneLighting quality={illuminationQuality} bounds={shadowBounds} atmosphericFill />
 
       {/* Post-processing effects (SSAO for high/cinematic quality) */}
       <SceneEffects quality={illuminationQuality} />
@@ -194,8 +174,7 @@ function Scene({
         })}
 
       {/* Gaps */}
-      {showGaps &&
-        topology.gaps.map((gap, i) => <GapSphereComponent key={`gap-${i}`} gap={gap} />)}
+      {showGaps && topology.gaps.map((gap, i) => <GapSphereComponent key={`gap-${i}`} gap={gap} />)}
 
       {/* Organic Crystal Nodes */}
       {topology.nodes.map((node) => (
@@ -248,8 +227,7 @@ function CrystalSidebar({ node, onClose }: CrystalSidebarProps) {
   }, [node.age_seconds]);
 
   const resolutionPercent = Math.round(node.resolution * 100);
-  const decayState =
-    node.resolution > 0.7 ? 'Fresh' : node.resolution > 0.4 ? 'Fading' : 'Ghost';
+  const decayState = node.resolution > 0.7 ? 'Fresh' : node.resolution > 0.4 ? 'Fading' : 'Ghost';
 
   return (
     <div className="absolute right-0 top-0 h-full w-80 bg-gray-800/95 border-l border-gray-700 p-4 overflow-y-auto">
@@ -364,7 +342,8 @@ export function BrainTopology({
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
 
   // Get scene context for quality-appropriate lighting
-  const { illuminationQuality, shadowsEnabled, isAutoDetectedQuality, overrideQuality } = useSceneContext();
+  const { illuminationQuality, shadowsEnabled, isAutoDetectedQuality, overrideQuality } =
+    useSceneContext();
 
   const handleNodeClick = useCallback(
     (node: TopologyNode) => {

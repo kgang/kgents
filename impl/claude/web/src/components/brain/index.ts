@@ -6,23 +6,23 @@
  * Design Philosophy:
  *   "Memories are not data points—they are living crystallizations of thought."
  *
- * Components follow emergence principles from docs/creative/:
- * - OrganicCrystal: Living memory nodes with breathing animation
- * - CrystalVine: Organic curved connections between memories
- * - CrystalDetail: Observer-dependent crystal inspection
+ * 2D Renaissance (2025-12-18): Three.js components mothballed.
+ * See _mothballed/three-visualizers/brain/ for preserved components.
  *
- * @see plans/core-apps/holographic-brain.md
- * @see docs/creative/emergence-principles.md
+ * What remains: CrystalDetail - reusable in Brain2D.
+ *
+ * @see spec/protocols/2d-renaissance.md
  */
 
+// KEEP: CrystalDetail (no Three.js dependency)
 export { CrystalDetail } from './CrystalDetail';
 export type { CrystalDetailProps } from './CrystalDetail';
 
-export { OrganicCrystal } from './OrganicCrystal';
-export type { OrganicCrystalProps } from './OrganicCrystal';
-
-export { CrystalVine, SmartCrystalVine } from './CrystalVine';
-export type { CrystalVineProps, SmartCrystalVineProps } from './CrystalVine';
-
-export { BrainCanvas } from './BrainCanvas';
-export type { BrainCanvasProps } from './BrainCanvas';
+// =============================================================================
+// MOTHBALLED (2025-12-18): Three.js visualization components
+// Preserved in: _mothballed/three-visualizers/brain/
+// - BrainCanvas.tsx (1004 lines)
+// - OrganicCrystal.tsx
+// - CrystalVine.tsx
+// Revival condition: VR/AR projections or 3D memory visualization
+// =============================================================================

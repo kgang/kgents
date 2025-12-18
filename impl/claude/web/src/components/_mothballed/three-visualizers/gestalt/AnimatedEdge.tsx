@@ -206,7 +206,9 @@ export function AnimatedEdge({
       />
 
       {/* Violation glow effect */}
-      {isViolation && !isDimmed && <ViolationGlow source={sourceVec} target={targetVec} style={style} />}
+      {isViolation && !isDimmed && (
+        <ViolationGlow source={sourceVec} target={targetVec} style={style} />
+      )}
 
       {/* Flow particles */}
       {showParticles &&
@@ -249,7 +251,10 @@ export function StaticEdge({
   isDimmed = false,
 }: StaticEdgeProps) {
   const baseStyle = useMemo(() => getEdgeStyle(isViolation, edgeType), [isViolation, edgeType]);
-  const style = useMemo(() => (isDimmed ? getDimmedStyle(baseStyle) : baseStyle), [baseStyle, isDimmed]);
+  const style = useMemo(
+    () => (isDimmed ? getDimmedStyle(baseStyle) : baseStyle),
+    [baseStyle, isDimmed]
+  );
 
   const points = useMemo(
     () => [new THREE.Vector3(...source), new THREE.Vector3(...target)],
@@ -305,7 +310,13 @@ export function SmartEdge({
 
   if (!shouldAnimate) {
     return (
-      <StaticEdge source={source} target={target} isViolation={isViolation} edgeType={edgeType} isDimmed={isDimmed} />
+      <StaticEdge
+        source={source}
+        target={target}
+        isViolation={isViolation}
+        edgeType={edgeType}
+        isDimmed={isDimmed}
+      />
     );
   }
 
