@@ -113,7 +113,21 @@ class Operad:
     laws: list[Law] = field(default_factory=list)
     description: str = ""
 
-    def compose(self, op_name: str, *agents: PolyAgent[Any, Any, Any]) -> PolyAgent[Any, Any, Any]:
+    def get(self, op_name: str) -> Operation | None:
+        """
+        Get an operation by name.
+
+        Args:
+            op_name: Name of the operation
+
+        Returns:
+            Operation if found, None otherwise
+        """
+        return self.operations.get(op_name)
+
+    def compose(
+        self, op_name: str, *agents: PolyAgent[Any, Any, Any]
+    ) -> PolyAgent[Any, Any, Any]:
         """
         Apply an operation to compose agents.
 

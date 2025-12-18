@@ -80,11 +80,14 @@ from agents.f.operad import (
     COLLABORATION_OPERAD,
     FLOW_OPERAD,
     RESEARCH_OPERAD,
+    Law,
     Operad,
     Operation,
-    OpLaw,
     get_operad,
 )
+
+# Alias for backward compatibility
+OpLaw = Law
 from agents.f.pipeline import FlowPipeline
 from agents.f.polynomial import (
     CHAT_POLYNOMIAL,

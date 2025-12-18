@@ -430,23 +430,32 @@ class TestOperad:
 
     def test_operad_operations(self) -> None:
         """Should have all operations."""
-        assert GROWTH_OPERAD.get_operation("recognize") is not None
-        assert GROWTH_OPERAD.get_operation("propose") is not None
-        assert GROWTH_OPERAD.get_operation("validate") is not None
-        assert GROWTH_OPERAD.get_operation("germinate") is not None
-        assert GROWTH_OPERAD.get_operation("promote") is not None
+        # Use canonical .get() method
+        assert GROWTH_OPERAD.get("recognize") is not None
+        assert GROWTH_OPERAD.get("propose") is not None
+        # Note: validate was renamed to growth_validate
+        assert GROWTH_OPERAD.get("growth_validate") is not None
+        assert GROWTH_OPERAD.get("germinate") is not None
+        assert GROWTH_OPERAD.get("promote") is not None
 
     def test_valid_composition(self) -> None:
         """Should compose valid pipelines."""
-        composed = GROWTH_OPERAD.compose("recognize", "propose", "validate")
+        from ..operad import compose_typed
+
+        # Note: GROWTH_OPERATION_META uses "validate" key for type checking
+        composed = compose_typed("recognize", "propose", "validate")
+        assert composed is not None
         assert composed.name == "recognize >> propose >> validate"
         assert composed.total_entropy_cost == 0.5
 
     def test_invalid_composition_fails(self) -> None:
         """Should reject invalid compositions."""
-        with pytest.raises(ValueError, match="Type mismatch"):
-            # Skip propose - validate expects HolonProposal, not GapRecognition
-            GROWTH_OPERAD.compose("recognize", "validate")
+        from ..operad import compose_typed
+
+        # Skip propose - validate expects HolonProposal, not GapRecognition
+        composed = compose_typed("recognize", "validate")
+        # compose_typed returns None for invalid compositions (instead of raising)
+        assert composed is None
 
     def test_law_tests_pass(self) -> None:
         """All operad law tests should pass."""
