@@ -103,9 +103,16 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ---
 
-## Skills (docs/skills/)
+## Skills: Your First Stop (docs/skills/)
 
-agentese-path • building-agent • cli-command • flux-agent • polynomial-agent • plan-file • test-patterns • reactive-primitives • modal-scope-branching • turn-projectors • saas-patterns • agent-town-* • gardener-logos • **metaphysical-fullstack** (NEW)
+**Universal** (apply to ANY task): `metaphysical-fullstack.md` • `crown-jewel-patterns.md` • `test-patterns.md` • `elastic-ui-patterns.md`
+
+**By Domain**:
+- Foundation: `polynomial-agent.md` • `building-agent.md`
+- Protocol: `agentese-path.md` • `agentese-node-registration.md`
+- Architecture: `crown-jewel-patterns.md` • `metaphysical-fullstack.md` • `data-bus-integration.md`
+- Process: `plan-file.md` • `spec-template.md` • `spec-hygiene.md`
+- Projection: `projection-target.md` • `test-patterns.md` • `elastic-ui-patterns.md`
 
 ---
 
@@ -115,6 +122,5 @@ agentese-path • building-agent • cli-command • flux-agent • polynomial-a
 cd impl/claude && uv run pytest -q && uv run mypy .
 ```
 
----
 
-*Lines: 120. Ceiling: 120.*
+*Lines: 124. Ceiling: 160.*

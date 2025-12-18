@@ -417,6 +417,22 @@ When you name the dimension, you're naming the functor's **domain**. When you cr
 
 > *"Depth is not decoration—it is information."*
 
+### The 3D Projection Functor
+
+The complete 3D projection functor:
+
+```
+P[3D] : State × Theme × Quality → Three.js Scene
+
+Full Composition:
+  Scene = SceneLighting ∘ SceneEffects ∘ LOD[Budget](Nodes ∘ Edges) ∘ Touch
+
+Where:
+  - LOD[Budget] : (nodeCount, cameraDistance) → renderComplexity
+  - Touch : isTouchDevice → touchTargetMultiplier
+  - Theme : crystal | forest | (custom)
+```
+
 ### The Illumination Quality Dimension
 
 Just as density governs 2D layout projection, **illumination quality** governs 3D rendering fidelity:
@@ -433,6 +449,44 @@ Where IlluminationQuality ∈ {minimal, standard, high, cinematic}
 | `standard` | Soft | 1024px | Most devices |
 | `high` | PCF soft | 2048px | Desktop, high-end mobile |
 | `cinematic` | VSM/CSM | 4096px | Presentation, screenshots |
+
+### The LOD Functor
+
+LOD (Level of Detail) is a budget-aware functor for scaling rendering complexity:
+
+```
+LOD : (NodeCount × CameraDistance × Budget) → LODLevel
+
+LODLevel = {
+  full:    segments=32, labels=true,  animation=true,  particles=true
+  reduced: segments=16, labels=true,  animation=true,  particles=false
+  minimal: segments=8,  labels=false, animation=false, particles=false
+  culled:  (not rendered - frustum culled)
+}
+
+Budget modulation:
+  nodeCount < 50  → budget = 1.0 (normal distances)
+  nodeCount < 100 → budget = 0.75 (25% closer thresholds)
+  nodeCount ≥ 100 → budget = 0.5 (aggressive culling)
+```
+
+This ensures 60fps with 100+ nodes by dynamically reducing detail at distance.
+
+### 3D Primitives
+
+The unified primitive system provides theme-agnostic building blocks:
+
+| Primitive | Purpose | Theme Input |
+|-----------|---------|-------------|
+| `TopologyNode3D` | Nodes (spheres with glow, labels, rings) | `ThemePalette` |
+| `TopologyEdge3D` | Edges (curved lines with particles) | `ThemePalette` |
+| `SelectionRing` | Selection indicator | Color |
+| `HoverRing` | Hover indicator | Color |
+| `FlowParticles` | Edge animation | Color |
+| `NodeLabel3D` | Billboarded text | Color |
+| `GrowthRings` | Forest theme rings | Color |
+
+Domain wrappers (OrganicCrystal, OrganicNode, etc.) are thin—they only provide domain-specific tier and size calculations.
 
 ### Semiotic Depth Cues
 
@@ -628,7 +682,7 @@ The Projection Gallery demonstrates the protocol by rendering **every widget** t
 | marimo | ✓ Shipped | anywidget + mo.Html |
 | JSON | ✓ Shipped | API responses |
 | SSE | ✓ Shipped | Streaming events |
-| WebGL | Planned | Three.js scenes |
+| WebGL | ✓ Shipped | Three.js primitives (TopologyNode3D, TopologyEdge3D, LOD, themes) |
 | WebXR | Future | VR/AR experiences |
 | Audio | Future | Sonification of state |
 
@@ -638,7 +692,108 @@ The Projection Gallery demonstrates the protocol by rendering **every widget** t
 - Target registry: `impl/claude/agents/i/reactive/targets.py`
 - Projectors: `impl/claude/system/projector/` (local, k8s)
 - Gallery: `impl/claude/protocols/projection/gallery/`
-- 3D patterns: `docs/skills/3d-lighting-patterns.md`
+- 3D primitives: `impl/claude/web/src/components/three/primitives/`
+- 3D themes: `impl/claude/web/src/components/three/primitives/themes/`
+- LOD system: `impl/claude/web/src/components/three/primitives/useLOD.tsx`
+- Touch hooks: `impl/claude/web/src/components/three/primitives/useTouch.ts`
+- Quality detection: `impl/claude/web/src/hooks/useIlluminationQuality.ts`
+- Skill guide: `docs/skills/3d-projection-patterns.md`
+
+---
+
+## Implementation Learnings (Town Visualizer Renaissance)
+
+> *Battle-tested patterns from the Town Crown Jewel implementation.*
+
+### Teaching Mode Pattern
+
+Teaching Mode provides a toggle-able pedagogical layer that explains categorical concepts without cluttering the UI:
+
+```typescript
+// Hook with localStorage persistence
+const { enabled, toggle } = useTeachingMode();
+
+// Conditional wrapper
+<WhenTeaching>
+  <TeachingCallout title="Polynomial State">
+    Citizens transition through phases via PolyAgent[S,A,B].
+  </TeachingCallout>
+</WhenTeaching>
+
+// Toggle component with aria-label for accessibility
+<TeachingToggle compact />
+```
+
+**Key Insight**: Teaching callouts should use `aria-label="Teaching Mode: ON"` pattern for testability and accessibility.
+
+### AGENTESE E2E Testing
+
+AGENTESE endpoints require special mocking—they're POST requests through a gateway, not REST resources:
+
+```typescript
+// WRONG: REST-style mock
+await page.route('**/v1/town/*/citizens', ...);
+
+// CORRECT: AGENTESE gateway mock
+await page.route('**/agentese/world/town/citizen.list', async (route) => {
+  await route.fulfill({
+    body: JSON.stringify({
+      path: 'world.town',
+      aspect: 'citizen.list',
+      result: { citizens: mockCitizens, total: mockCitizens.length },
+    }),
+  });
+});
+```
+
+### Three-Bus Event Architecture
+
+The event-driven architecture uses three layered buses with clear responsibilities:
+
+```
+DataBus (L1 persistence)
+    ↓ wire_data_to_synergy()
+SynergyBus (L2 cross-jewel routing with wildcards)
+    ↓ wire_synergy_to_event()
+EventBus (L3 UI fan-out)
+```
+
+**Cross-Jewel Handlers**: SynergyBus enables loose coupling between Crown Jewels:
+- `town.citizen.*` → K-gent handlers (personality/dialogue)
+- `town.gossip.*` → Atelier handlers (social graph visualization)
+- `town.relationship.*` → M-gent handlers (memory crystallization)
+
+### E2E Selector Stability
+
+Stable selectors for Playwright tests, in order of preference:
+
+1. **aria-label** - `button[aria-label="Teaching Mode: ON"]`
+2. **data-testid** - `[data-testid="citizen-panel"]`
+3. **Specific role + name** - `getByRole('heading', { name: /Coalition Graph/i })`
+4. **Structural** - `h2:has-text("Coalitions")` with context
+5. **Text content (last resort)** - `getByText(/Alice/)`
+
+**Anti-Pattern**: Never use bare `getByText()` for words that appear multiple times on the page.
+
+### Density-Aware Stat Cards
+
+The stat card pattern with navigation and content degradation:
+
+```typescript
+<div
+  onClick={() => navigate(route)}
+  className={`cursor-pointer hover:bg-gray-800/50 ${densityPadding}`}
+>
+  <p className="text-sm text-gray-400">{label}</p>
+  <p className="text-2xl font-bold">{value}</p>
+  <span className="text-xs text-violet-400">View details →</span>
+</div>
+```
+
+**Density Values**:
+- `compact`: p-3, text-xl
+- `comfortable`: p-4, text-2xl
+- `spacious`: p-5, text-3xl
 
 ---
 

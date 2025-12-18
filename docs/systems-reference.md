@@ -327,6 +327,65 @@ card.to_json()     # API
 
 ---
 
+## 3D Projection Primitives (Three.js)
+
+**Unified 3D visualization system** for topology graphs with theme-parameterized rendering.
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `TopologyNode3D` | `web/src/components/three/primitives/` | Generic 3D node with theme slots |
+| `TopologyEdge3D` | `web/src/components/three/primitives/` | Generic 3D edge (curved/straight) |
+| `SelectionRing` | `web/src/components/three/primitives/` | Reusable selection indicator |
+| `HoverRing` | `web/src/components/three/primitives/` | Reusable hover indicator |
+| `FlowParticle` | `web/src/components/three/primitives/` | Animated flow particles |
+| `NodeLabel3D` | `web/src/components/three/primitives/` | 3D text labels |
+| `GrowthRings` | `web/src/components/three/primitives/` | Concentric ring indicators |
+| **Themes** | `web/src/components/three/primitives/themes/` | Crystal (Brain), Forest (Gestalt) |
+| **Animation** | `web/src/components/three/primitives/animation.ts` | Breathing, hover, selection presets |
+
+```tsx
+import {
+  TopologyNode3D, TopologyEdge3D,
+  CRYSTAL_THEME, FOREST_THEME,
+  ANIMATION_PRESETS
+} from '@/components/three/primitives';
+
+// Generic node with crystal theme (Brain)
+<TopologyNode3D
+  position={[x, y, z]}
+  theme={CRYSTAL_THEME}
+  data={node}
+  getTier={(n) => getResolutionTier(n)}
+  getSize={(n, d) => calculateSize(n, d)}
+  isSelected={isSelected}
+  density={density}
+  onClick={handleClick}
+/>
+
+// Generic edge with forest theme (Gestalt)
+<TopologyEdge3D
+  source={sourcePos}
+  target={targetPos}
+  theme={FOREST_THEME}
+  strength={0.8}
+  showFlowParticles={isActive}
+/>
+```
+
+**Architecture**: `P[3D] : State x Theme x Quality -> Scene`
+
+**Quality Levels**: `minimal` | `standard` | `high` | `cinematic`
+
+**AGENTESE Paths**:
+- `concept.projection.three.node.manifest` — Node primitive config
+- `concept.projection.three.edge.manifest` — Edge primitive config
+- `concept.projection.three.theme.list` — Available themes
+- `concept.projection.three.quality.adapt` — Quality adaptation
+
+**Skills**: `docs/skills/3d-projection-patterns.md`
+
+---
+
 ## Elastic Primitives (Responsive Layout)
 
 | Component | Location | Purpose |
