@@ -157,6 +157,15 @@ from .self_ import (
     get_chat_resolver,
 )
 
+# Self Différance navigation (spec/impl traversal)
+from .self_differance import (
+    SELF_DIFFERANCE_AFFORDANCES,
+    SelfDifferanceNode,
+    create_self_differance_node,
+    get_self_differance_node,
+    set_self_differance_node,
+)
+
 # Jewel-Flow integration (F-gent Flow + Crown Jewels)
 from .self_jewel_flow import (
     ALL_JEWEL_FLOW_PATHS,
@@ -215,6 +224,18 @@ from .time import (
     TimeContextResolver,
     TraceNode,
     create_time_resolver,
+)
+
+# Différance Engine integration (Ghost Heritage DAG)
+from .time_differance import (
+    DIFFERANCE_BRANCH_AFFORDANCES,
+    DIFFERANCE_TRACE_AFFORDANCES,
+    BranchNode,
+    DifferanceTraceNode,
+    create_differance_node,
+    get_branch_node,
+    get_differance_node,
+    set_differance_node,
 )
 
 # Town Citizen integration (Chat Protocol - Phase 2.5)
@@ -480,6 +501,21 @@ __all__ = [
     "ScheduleNode",
     "ScheduledAction",
     "create_time_resolver",
+    # Différance Engine (time.differance.* - Ghost Heritage DAG)
+    "DIFFERANCE_TRACE_AFFORDANCES",
+    "DIFFERANCE_BRANCH_AFFORDANCES",
+    "DifferanceTraceNode",
+    "BranchNode",
+    "create_differance_node",
+    "get_differance_node",
+    "set_differance_node",
+    "get_branch_node",
+    # Self Différance (self.differance.* - Spec/Impl Navigation)
+    "SELF_DIFFERANCE_AFFORDANCES",
+    "SelfDifferanceNode",
+    "create_self_differance_node",
+    "get_self_differance_node",
+    "set_self_differance_node",
     # Agent discovery (world.agent.*)
     "AgentContextResolver",
     "AgentNode",

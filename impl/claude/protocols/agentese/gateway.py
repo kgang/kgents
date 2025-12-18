@@ -72,7 +72,9 @@ def _import_node_modules() -> None:
             design,  # noqa: F401 - Design Language System (concept.design.*)
             forest,  # noqa: F401 - Forest Protocol (self.forest.*)
             gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
+            self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
+            time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
             world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
@@ -109,7 +111,7 @@ def _import_node_modules() -> None:
             logger.debug(f"Could not import morpheus node: {e}")
 
         try:
-            from services.atelier import (
+            from services.atelier import (  # type: ignore[import-untyped]
                 node as atelier_node,  # noqa: F401  # world.atelier.*
             )
         except ImportError as e:

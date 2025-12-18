@@ -194,14 +194,10 @@ class TraceNode(BaseLogosNode):
             results = [t for t in results if query.lower() in str(t).lower()]
 
         if start_time:
-            results = [
-                t for t in results if "timestamp" in t and t["timestamp"] >= start_time
-            ]
+            results = [t for t in results if "timestamp" in t and t["timestamp"] >= start_time]
 
         if end_time:
-            results = [
-                t for t in results if "timestamp" in t and t["timestamp"] <= end_time
-            ]
+            results = [t for t in results if "timestamp" in t and t["timestamp"] <= end_time]
 
         return {
             "query": query,
@@ -472,9 +468,7 @@ class TraceNode(BaseLogosNode):
                 }
 
             else:
-                return {
-                    "error": f"Unknown source: {source}. Use 'static' or 'runtime'."
-                }
+                return {"error": f"Unknown source: {source}. Use 'static' or 'runtime'."}
 
         except ImportError as e:
             return {"error": f"weave module not available: {e}", "aspect": "render"}
@@ -806,9 +800,7 @@ class FutureNode(BaseLogosNode):
             "target": target,
             "steps": steps,
             "parameters": parameters,
-            "simulation": [
-                {"step": i, "state": f"simulated_state_{i}"} for i in range(steps)
-            ],
+            "simulation": [{"step": i, "state": f"simulated_state_{i}"} for i in range(steps)],
             "note": "Full simulation requires B-gent integration",
         }
 
@@ -899,9 +891,7 @@ class ScheduleNode(BaseLogosNode):
 
         # Determine scheduled time
         if at:
-            scheduled_for = (
-                at if isinstance(at, datetime) else datetime.fromisoformat(at)
-            )
+            scheduled_for = at if isinstance(at, datetime) else datetime.fromisoformat(at)
         elif delay:
             if isinstance(delay, (int, float)):
                 delay = timedelta(seconds=delay)
@@ -941,9 +931,7 @@ class ScheduleNode(BaseLogosNode):
 
         action = self._actions[action_id]
         if action.status != "pending":
-            return {
-                "error": f"Action {action_id} is not pending (status: {action.status})"
-            }
+            return {"error": f"Action {action_id} is not pending (status: {action.status})"}
 
         action.status = "cancelled"
         return {
@@ -994,19 +982,23 @@ class TimeContextResolver:
     """
     Resolver for time.* context.
 
-    Provides temporal operations: traces, projection, forecasting, scheduling.
+    Provides temporal operations: traces, projection, forecasting, scheduling,
+    and differance (ghost heritage DAG).
     """
 
     # Integration points
     _narrator: Any = None  # N-gent for traces
     _d_gent: Any = None  # D-gent for temporal projection
     _b_gent: Any = None  # B-gent for forecasting
+    _differance_store: Any = None  # DifferanceStore for heritage
 
     # Singleton nodes
     _trace: TraceNode | None = None
     _past: PastNode | None = None
     _future: FutureNode | None = None
     _schedule: ScheduleNode | None = None
+    _differance: Any | None = None  # DifferanceTraceNode
+    _branch: Any | None = None  # BranchNode
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes."""
@@ -1015,12 +1007,26 @@ class TimeContextResolver:
         self._future = FutureNode(_b_gent=self._b_gent)
         self._schedule = ScheduleNode()
 
+        # Initialize differance nodes (lazy import to avoid circular)
+        try:
+            from .time_differance import (
+                BranchNode,
+                DifferanceTraceNode,
+            )
+
+            self._differance = DifferanceTraceNode()
+            if self._differance_store:
+                self._differance.set_store(self._differance_store)
+            self._branch = BranchNode()
+        except ImportError:
+            pass
+
     def resolve(self, holon: str, rest: list[str]) -> BaseLogosNode:
         """
         Resolve a time.* path to a node.
 
         Args:
-            holon: The time subsystem (trace, past, future, schedule)
+            holon: The time subsystem (trace, past, future, schedule, differance, branch)
             rest: Additional path components
 
         Returns:
@@ -1035,6 +1041,30 @@ class TimeContextResolver:
                 return self._future or FutureNode()
             case "schedule":
                 return self._schedule or ScheduleNode()
+            case "differance":
+                if self._differance:
+                    # _differance is typed Any for lazy import; cast for return
+                    return cast(BaseLogosNode, self._differance)
+                # Fallback to lazy import
+                try:
+                    from .time_differance import DifferanceTraceNode
+
+                    node: BaseLogosNode = DifferanceTraceNode()
+                    return node
+                except ImportError:
+                    return GenericTimeNode(holon)
+            case "branch":
+                if self._branch:
+                    # _branch is typed Any for lazy import; cast for return
+                    return cast(BaseLogosNode, self._branch)
+                # Fallback to lazy import
+                try:
+                    from .time_differance import BranchNode
+
+                    branch_node: BaseLogosNode = BranchNode()
+                    return branch_node
+                except ImportError:
+                    return GenericTimeNode(holon)
             case _:
                 return GenericTimeNode(holon)
 
@@ -1081,11 +1111,24 @@ def create_time_resolver(
     narrator: Any = None,
     d_gent: Any = None,
     b_gent: Any = None,
+    differance_store: Any = None,
 ) -> TimeContextResolver:
-    """Create a TimeContextResolver with optional integrations."""
+    """
+    Create a TimeContextResolver with optional integrations.
+
+    Args:
+        narrator: N-gent for traces
+        d_gent: D-gent for temporal projection
+        b_gent: B-gent for forecasting
+        differance_store: DifferanceStore for heritage DAG queries
+
+    Returns:
+        Configured TimeContextResolver
+    """
     resolver = TimeContextResolver()
     resolver._narrator = narrator
     resolver._d_gent = d_gent
     resolver._b_gent = b_gent
+    resolver._differance_store = differance_store
     resolver.__post_init__()
     return resolver

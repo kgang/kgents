@@ -67,6 +67,7 @@ def trace_monoid_strategy(draw: st.DrawFn, max_traces: int = 5) -> TraceMonoid:
     """Generate random TraceMonoid instances with valid causal chains."""
     num_traces = draw(st.integers(min_value=0, max_value=max_traces))
     traces: list[WiringTrace] = []
+    used_ids: set[str] = set()
 
     for i in range(num_traces):
         # Each trace can optionally have a parent from previous traces
@@ -75,7 +76,33 @@ def trace_monoid_strategy(draw: st.DrawFn, max_traces: int = 5) -> TraceMonoid:
         else:
             parent_id = None
 
-        trace = draw(wiring_trace_strategy(parent_id=parent_id))
+        # Generate a unique trace_id by using the index
+        # This ensures no collisions even with hypothesis shrinking
+        trace_id = (
+            f"trace_{i:08d}_{draw(st.text(alphabet='0123456789abcdef', min_size=4, max_size=8))}"
+        )
+
+        # Ensure uniqueness
+        while trace_id in used_ids:
+            trace_id = f"trace_{i:08d}_{draw(st.text(alphabet='0123456789abcdef', min_size=4, max_size=8))}"
+        used_ids.add(trace_id)
+
+        trace = WiringTrace(
+            trace_id=trace_id,
+            timestamp=datetime.now(timezone.utc),
+            operation=draw(st.sampled_from(["seq", "par", "branch", "fix", "trace"])),
+            inputs=tuple(draw(st.lists(st.text(min_size=1, max_size=10), min_size=1, max_size=3))),
+            output=draw(st.text(min_size=1, max_size=20)),
+            context=draw(st.text(min_size=5, max_size=100)),
+            alternatives=tuple(draw(st.lists(alternative_strategy(), max_size=3))),
+            positions_before={
+                "state": frozenset(draw(st.lists(st.text(min_size=1, max_size=5), max_size=3)))
+            },
+            positions_after={
+                "state": frozenset(draw(st.lists(st.text(min_size=1, max_size=5), max_size=3)))
+            },
+            parent_trace_id=parent_id,
+        )
         traces.append(trace)
 
     return TraceMonoid(traces=tuple(traces))

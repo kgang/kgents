@@ -26,6 +26,8 @@ if TYPE_CHECKING:
     from agents.d import DataBus, DgentProtocol, DgentRouter
     from agents.d.datum import Datum
 
+    from .heritage import GhostHeritageDAG
+
 
 class DifferanceStore:
     """
@@ -223,6 +225,44 @@ class DifferanceStore:
             Total count of traces
         """
         return await self._dgent.count()
+
+    async def heritage_dag(
+        self,
+        root_id: str,
+        depth: int = 10,
+    ) -> GhostHeritageDAG:
+        """
+        Build a GhostHeritageDAG for the given root trace.
+
+        This method loads the relevant traces from storage and
+        builds the heritage DAG for visualization.
+
+        Args:
+            root_id: ID of the target trace
+            depth: Maximum depth to traverse (default: 10)
+
+        Returns:
+            GhostHeritageDAG for visualization
+
+        Example:
+            >>> store = DifferanceStore()
+            >>> # ... append some traces ...
+            >>> dag = await store.heritage_dag("trace_xyz")
+            >>> dag.chosen_path()
+            ('trace_abc', 'trace_def', 'trace_xyz')
+        """
+        from .heritage import GhostHeritageDAG, build_heritage_dag
+
+        # Load the trace and its ancestry
+        traces = await self.causal_chain(root_id)
+
+        if not traces:
+            return GhostHeritageDAG(nodes={}, edges=(), root_id="")
+
+        # Build monoid from traces
+        monoid = TraceMonoid(traces=tuple(traces))
+
+        return build_heritage_dag(monoid, root_id, depth)
 
     def _serialize(self, trace: WiringTrace) -> Datum:
         """
