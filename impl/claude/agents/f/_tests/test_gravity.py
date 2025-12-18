@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.f.gravity import (
     BoundedLength,
     ComposedContract,
@@ -527,9 +528,7 @@ class TestGravityBuilder:
 
     def test_builder_with_facts(self) -> None:
         """Builder adds FactConsistency."""
-        gravity: list[GravityContract] = (
-            GravityBuilder().with_facts({"sky": "blue"}).build()
-        )
+        gravity: list[GravityContract] = GravityBuilder().with_facts({"sky": "blue"}).build()
 
         assert len(gravity) == 1
         assert isinstance(gravity[0], FactConsistency)
@@ -567,18 +566,14 @@ class TestGravityBuilder:
             def check(self, output: Any) -> str | None:
                 return None
 
-        gravity: list[GravityContract] = (
-            GravityBuilder().with_contract(CustomContract()).build()
-        )
+        gravity: list[GravityContract] = GravityBuilder().with_contract(CustomContract()).build()
 
         assert len(gravity) == 1
         assert gravity[0].name == "Custom"
 
     def test_builder_compose(self) -> None:
         """Builder.compose creates ComposedContract."""
-        composed = (
-            GravityBuilder().with_type(dict).with_required_fields(["id"]).compose()
-        )
+        composed = GravityBuilder().with_type(dict).with_required_fields(["id"]).compose()
 
         assert isinstance(composed, ComposedContract)
 
@@ -637,10 +632,7 @@ class TestGravityIntegration:
     async def test_validation_rejects_invalid(self) -> None:
         """Pipeline rejects invalid responses."""
         gravity: list[GravityContract] = (
-            GravityBuilder()
-            .with_type(dict)
-            .with_required_fields(["status", "data"])
-            .build()
+            GravityBuilder().with_type(dict).with_required_fields(["status", "data"]).build()
         )
 
         # Create agent that returns invalid response
@@ -663,11 +655,7 @@ class TestGravityIntegration:
     async def test_ethical_and_type_combined(self) -> None:
         """Ethical and type contracts work together."""
         gravity: list[GravityContract] = (
-            GravityBuilder()
-            .with_ethics("strict")
-            .with_type(str)
-            .with_max_length(500)
-            .build()
+            GravityBuilder().with_ethics("strict").with_type(str).with_max_length(500).build()
         )
 
         # Valid agent

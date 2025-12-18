@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from agents.atelier.artisan import Commission
 from agents.atelier.workshop.commission import (
     CommissionQueue,
@@ -126,9 +127,7 @@ class TestCommissionQueue:
         commission = Commission(request="test", patron="alice")
         await queue.enqueue(commission, "calligrapher")
 
-        await queue.update_status(
-            commission.id, QueueStatus.COMPLETE, piece_id="piece-123"
-        )
+        await queue.update_status(commission.id, QueueStatus.COMPLETE, piece_id="piece-123")
 
         queued = await queue.get(commission.id)
         assert queued.status == QueueStatus.COMPLETE
@@ -140,9 +139,7 @@ class TestCommissionQueue:
         commission = Commission(request="test", patron="alice")
         await queue.enqueue(commission, "calligrapher")
 
-        await queue.update_status(
-            commission.id, QueueStatus.FAILED, error="Something went wrong"
-        )
+        await queue.update_status(commission.id, QueueStatus.FAILED, error="Something went wrong")
 
         queued = await queue.get(commission.id)
         assert queued.status == QueueStatus.FAILED

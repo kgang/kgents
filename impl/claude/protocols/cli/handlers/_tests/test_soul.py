@@ -17,6 +17,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from protocols.cli.commands.soul import print_help
 from protocols.cli.commands.soul.ambient import execute_stream
 from protocols.cli.shared.streaming import invoke_with_retry
@@ -573,9 +574,7 @@ class TestSoulStreamIntegration:
         mock_flux.invoke = AsyncMock(side_effect=[RuntimeError("transient"), "success"])
         mock_event = MagicMock()
 
-        result = await invoke_with_retry(
-            mock_flux, mock_event, max_retries=2, timeout_seconds=5.0
-        )
+        result = await invoke_with_retry(mock_flux, mock_event, max_retries=2, timeout_seconds=5.0)
 
         assert result == "success"
         assert mock_flux.invoke.call_count == 2
@@ -590,9 +589,7 @@ class TestSoulStreamIntegration:
         mock_event = MagicMock()
 
         with pytest.raises(RuntimeError, match="permanent"):
-            await invoke_with_retry(
-                mock_flux, mock_event, max_retries=1, timeout_seconds=5.0
-            )
+            await invoke_with_retry(mock_flux, mock_event, max_retries=1, timeout_seconds=5.0)
 
         # Should have tried original + 1 retry = 2 attempts
         assert mock_flux.invoke.call_count == 2
@@ -612,6 +609,4 @@ class TestSoulStreamIntegration:
         mock_event = MagicMock()
 
         with pytest.raises(asyncio.TimeoutError):
-            await invoke_with_retry(
-                mock_flux, mock_event, max_retries=0, timeout_seconds=0.1
-            )
+            await invoke_with_retry(mock_flux, mock_event, max_retries=0, timeout_seconds=0.1)

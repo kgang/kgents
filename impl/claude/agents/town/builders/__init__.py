@@ -20,15 +20,6 @@ See: plans/agent-town/builders-workshop.md
 """
 
 # Polynomial
-from agents.town.builders.polynomial import (
-    BUILDER_POLYNOMIAL,
-    BuilderInput,
-    BuilderOutput,
-    BuilderPhase,
-    builder_directions,
-    builder_transition,
-)
-
 # Base class
 from agents.town.builders.base import Builder
 
@@ -40,6 +31,21 @@ from agents.town.builders.cosmotechnics import (
     EXPERIMENTATION,
     ORCHESTRATION,
 )
+from agents.town.builders.polynomial import (
+    BUILDER_POLYNOMIAL,
+    BuilderInput,
+    BuilderOutput,
+    BuilderPhase,
+    builder_directions,
+    builder_transition,
+)
+
+# Factory functions
+from agents.town.builders.sage import SAGE_EIGENVECTORS, create_sage
+from agents.town.builders.scout import SCOUT_EIGENVECTORS, create_scout
+from agents.town.builders.spark import SPARK_EIGENVECTORS, create_spark
+from agents.town.builders.steady import STEADY_EIGENVECTORS, create_steady
+from agents.town.builders.sync import SYNC_EIGENVECTORS, create_sync
 
 # Voice patterns
 from agents.town.builders.voice import (
@@ -49,13 +55,6 @@ from agents.town.builders.voice import (
     STEADY_VOICE_PATTERNS,
     SYNC_VOICE_PATTERNS,
 )
-
-# Factory functions
-from agents.town.builders.sage import SAGE_EIGENVECTORS, create_sage
-from agents.town.builders.spark import SPARK_EIGENVECTORS, create_spark
-from agents.town.builders.steady import STEADY_EIGENVECTORS, create_steady
-from agents.town.builders.scout import SCOUT_EIGENVECTORS, create_scout
-from agents.town.builders.sync import SYNC_EIGENVECTORS, create_sync
 
 __all__ = [
     # Polynomial

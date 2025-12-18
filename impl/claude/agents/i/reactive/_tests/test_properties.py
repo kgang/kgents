@@ -12,6 +12,8 @@ import math
 from typing import Callable, TypeVar
 
 import pytest
+from hypothesis import given, settings, strategies as st
+
 from agents.i.reactive.entropy import (
     PHI,
     VisualDistortion,
@@ -27,8 +29,6 @@ from agents.i.reactive.joy import (
     seeded_random,
 )
 from agents.i.reactive.signal import Computed, Signal
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -45,14 +45,10 @@ class TestEntropyDeterminism:
     @given(
         entropy=st.floats(min_value=-10.0, max_value=10.0, allow_nan=False),
         seed=st.integers(min_value=-(2**31), max_value=2**31 - 1),
-        t=st.floats(
-            min_value=0.0, max_value=1e9, allow_nan=False, allow_infinity=False
-        ),
+        t=st.floats(min_value=0.0, max_value=1e9, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=200)
-    def test_entropy_to_distortion_deterministic(
-        self, entropy: float, seed: int, t: float
-    ) -> None:
+    def test_entropy_to_distortion_deterministic(self, entropy: float, seed: int, t: float) -> None:
         """Same inputs always produce exactly the same VisualDistortion."""
         result1 = entropy_to_distortion(entropy, seed, t)
         result2 = entropy_to_distortion(entropy, seed, t)
@@ -151,9 +147,7 @@ class TestEntropyExtremeValues:
 
     @given(
         seed=st.integers(min_value=-(2**31), max_value=2**31 - 1),
-        t=st.floats(
-            min_value=0.0, max_value=1e12, allow_nan=False, allow_infinity=False
-        ),
+        t=st.floats(min_value=0.0, max_value=1e12, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=100)
     def test_distortion_values_finite(self, seed: int, t: float) -> None:
@@ -391,9 +385,7 @@ class TestEntropyInvariants:
     @given(
         entropy=st.floats(min_value=0.0, max_value=1.0),
         seed=st.integers(),
-        t=st.floats(
-            min_value=0.0, max_value=1e6, allow_nan=False, allow_infinity=False
-        ),
+        t=st.floats(min_value=0.0, max_value=1e6, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=100)
     def test_distortion_is_frozen(self, entropy: float, seed: int, t: float) -> None:

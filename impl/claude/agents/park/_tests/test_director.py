@@ -17,6 +17,7 @@ import time
 from typing import Any
 
 import pytest
+
 from agents.park.director import (
     DIRECTOR_POLYNOMIAL,
     DifficultyAdjustment,
@@ -499,9 +500,7 @@ class TestDirectorIntegration:
 
         # Tick during cooldown
         result2 = await director.tick()
-        assert "cooldown" in result2.get("status", "") or "cooling" in result2.get(
-            "status", ""
-        )
+        assert "cooldown" in result2.get("status", "") or "cooling" in result2.get("status", "")
 
     @pytest.mark.asyncio
     async def test_consent_debt_extends_cooldown(self) -> None:
@@ -542,8 +541,7 @@ class TestDirectorIntegration:
 # =============================================================================
 
 
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
 
 
 class TestPropertyBasedMetrics:
@@ -579,9 +577,7 @@ class TestPropertyBasedMetrics:
         resistance_ratio=st.floats(min_value=0.0, max_value=1.0),
     )
     @settings(max_examples=50)
-    def test_counts_monotonically_increase(
-        self, num_actions: int, resistance_ratio: float
-    ) -> None:
+    def test_counts_monotonically_increase(self, num_actions: int, resistance_ratio: float) -> None:
         """Action and resistance counts never decrease."""
         metrics = PacingMetrics()
         prev_action_count = 0
@@ -714,9 +710,7 @@ class TestPropertyBasedStress:
         for _ in range(num_ticks):
             # If in INJECTING phase, complete it first
             if director.phase == DirectorPhase.INJECTING:
-                director._phase, _ = director._poly.invoke(
-                    DirectorPhase.INJECTING, "complete"
-                )
+                director._phase, _ = director._poly.invoke(DirectorPhase.INJECTING, "complete")
             # COOLDOWN and other phases accept tick
             result = await director.tick()
             assert "status" in result
@@ -784,9 +778,7 @@ class TestPerformanceBaselines:
         duration_ms = (time.perf_counter() - start) * 1000
 
         # Injection should be fast (< 20ms)
-        assert duration_ms < 20.0, (
-            f"Injection took {duration_ms:.2f}ms, expected < 20ms"
-        )
+        assert duration_ms < 20.0, f"Injection took {duration_ms:.2f}ms, expected < 20ms"
 
     def test_metrics_update_performance(self) -> None:
         """Metrics update should complete within 1ms."""
@@ -798,9 +790,7 @@ class TestPerformanceBaselines:
         duration_ms = (time.perf_counter() - start) * 1000
 
         # 100 updates should take < 50ms total (< 0.5ms each)
-        assert duration_ms < 50.0, (
-            f"100 updates took {duration_ms:.2f}ms, expected < 50ms"
-        )
+        assert duration_ms < 50.0, f"100 updates took {duration_ms:.2f}ms, expected < 50ms"
 
     def test_injection_decision_performance(self) -> None:
         """Injection decision evaluation should complete within 5ms."""
@@ -814,9 +804,7 @@ class TestPerformanceBaselines:
         duration_ms = (time.perf_counter() - start) * 1000
 
         # 100 evaluations should take < 50ms total (< 0.5ms each)
-        assert duration_ms < 50.0, (
-            f"100 evaluations took {duration_ms:.2f}ms, expected < 50ms"
-        )
+        assert duration_ms < 50.0, f"100 evaluations took {duration_ms:.2f}ms, expected < 50ms"
 
     def test_entropy_sampling_performance(self) -> None:
         """Entropy sampling should be very fast (< 0.1ms per sample)."""
@@ -828,9 +816,7 @@ class TestPerformanceBaselines:
         duration_ms = (time.perf_counter() - start) * 1000
 
         # 1000 samples should take < 50ms (< 0.05ms each)
-        assert duration_ms < 50.0, (
-            f"1000 samples took {duration_ms:.2f}ms, expected < 50ms"
-        )
+        assert duration_ms < 50.0, f"1000 samples took {duration_ms:.2f}ms, expected < 50ms"
 
     @pytest.mark.asyncio
     async def test_high_frequency_tick_sequence(self) -> None:
@@ -843,16 +829,12 @@ class TestPerformanceBaselines:
                 director.update_metrics(action_resisted=i % 3 == 0, consent_debt=0.3)
             # Handle INJECTING phase
             if director.phase == DirectorPhase.INJECTING:
-                director._phase, _ = director._poly.invoke(
-                    DirectorPhase.INJECTING, "complete"
-                )
+                director._phase, _ = director._poly.invoke(DirectorPhase.INJECTING, "complete")
             await director.tick()
         duration_ms = (time.perf_counter() - start) * 1000
 
         # 100 ticks + metrics updates should take < 200ms
-        assert duration_ms < 200.0, (
-            f"100 ticks took {duration_ms:.2f}ms, expected < 200ms"
-        )
+        assert duration_ms < 200.0, f"100 ticks took {duration_ms:.2f}ms, expected < 200ms"
 
 
 # =============================================================================

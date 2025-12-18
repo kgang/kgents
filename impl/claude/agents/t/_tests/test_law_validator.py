@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 import pytest
+
 from agents.t.law_validator import (
     LawValidationReport,
     LawValidator,
@@ -79,9 +80,7 @@ async def test_associativity_violation() -> None:
 
     # With stateful operations, associativity may be violated
     # This test demonstrates detection capability
-    assert (
-        violation is not None or violation is None
-    )  # Result depends on evaluation order
+    assert violation is not None or violation is None  # Result depends on evaluation order
 
 
 # --- Test: Identity Laws ---

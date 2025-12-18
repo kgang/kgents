@@ -17,8 +17,9 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
-from agents.flux.terrarium_events import EventType, SemaphoreEvent
+
 from agents.flux.mirror import HolographicBuffer
+from agents.flux.terrarium_events import EventType, SemaphoreEvent
 
 from ...agent import FluxAgent
 from ...config import FluxConfig
@@ -369,9 +370,7 @@ class TestEndToEndFlow:
 
         # Mirror should have ejection events
         ejection_events = [
-            e
-            for e in buffer.get_snapshot()
-            if e.get("type") == EventType.SEMAPHORE_EJECTED.value
+            e for e in buffer.get_snapshot() if e.get("type") == EventType.SEMAPHORE_EJECTED.value
         ]
         assert len(ejection_events) == 2
 

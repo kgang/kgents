@@ -15,7 +15,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Final, Generator
+from typing import Final, Generator, List
 
 from ..datum import Datum
 from ..protocol import BaseDgent
@@ -119,9 +119,7 @@ class SQLiteBackend(BaseDgent):
 
             def do_put() -> str:
                 with self._get_connection() as conn:
-                    metadata_json = (
-                        json.dumps(datum.metadata) if datum.metadata else None
-                    )
+                    metadata_json = json.dumps(datum.metadata) if datum.metadata else None
 
                     conn.execute(
                         """
@@ -180,11 +178,11 @@ class SQLiteBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data with filters, sorted by created_at descending."""
         async with self._lock:
 
-            def do_list() -> list[Datum]:
+            def do_list() -> List[Datum]:
                 with self._get_connection() as conn:
                     query = "SELECT * FROM data WHERE 1=1"
                     params: list[str | float] = []
@@ -205,11 +203,11 @@ class SQLiteBackend(BaseDgent):
 
             return await asyncio.to_thread(do_list)
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal ancestors of a datum using recursive CTE."""
         async with self._lock:
 
-            def do_chain() -> list[Datum]:
+            def do_chain() -> List[Datum]:
                 with self._get_connection() as conn:
                     # Use recursive CTE to get full chain
                     cursor = conn.execute(

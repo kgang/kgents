@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.l import (
     # Vector backend
     CHROMADB_AVAILABLE,
@@ -258,9 +259,7 @@ class TestGraphBrain:
         sample_lattice: TypeLattice,
     ) -> None:
         """Test convenience function."""
-        brain = await create_graph_brain(
-            sample_registry, sample_lineage, sample_lattice
-        )
+        brain = await create_graph_brain(sample_registry, sample_lineage, sample_lattice)
         assert isinstance(brain, GraphBrain)
 
 
@@ -315,9 +314,7 @@ class TestQueryFusion:
         fusion = QueryFusion(keyword, semantic, graph)
 
         # Semantic patterns
-        assert (
-            fusion._classify_query("summarize documents") == QueryType.SEMANTIC_INTENT
-        )
+        assert fusion._classify_query("summarize documents") == QueryType.SEMANTIC_INTENT
         assert fusion._classify_query("analyze sentiment") == QueryType.SEMANTIC_INTENT
 
     async def test_query_classification_type_query(
@@ -350,9 +347,7 @@ class TestQueryFusion:
 
         # Relationship patterns
         assert fusion._classify_query("depends on cleaner") == QueryType.RELATIONSHIP
-        assert (
-            fusion._classify_query("compatible with parser") == QueryType.RELATIONSHIP
-        )
+        assert fusion._classify_query("compatible with parser") == QueryType.RELATIONSHIP
 
     async def test_search_combines_results(
         self,
@@ -532,9 +527,7 @@ class TestPhase7EdgeCases:
         brain = GraphBrain(sample_registry, sample_lineage, sample_lattice)
 
         # Try to find compatible for nonexistent artifact
-        results = await brain.find_compatible(
-            "nonexistent_id", SearchDirection.DOWNSTREAM
-        )
+        results = await brain.find_compatible("nonexistent_id", SearchDirection.DOWNSTREAM)
 
         # Should return empty list
         assert results == []

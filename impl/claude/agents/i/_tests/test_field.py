@@ -9,6 +9,7 @@ Tests the core field dynamics:
 """
 
 import pytest
+
 from agents.i.core_types import Phase
 from agents.i.field import (
     DialecticPhase,
@@ -352,9 +353,7 @@ class TestFieldSimulator:
 
         # Add active sublate agent
         state.add_entity(
-            Entity(
-                id="s", entity_type=EntityType.SUBLATE, x=10, y=10, phase=Phase.ACTIVE
-            )
+            Entity(id="s", entity_type=EntityType.SUBLATE, x=10, y=10, phase=Phase.ACTIVE)
         )
 
         sim = FieldSimulator(state)

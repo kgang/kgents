@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.town.telegram_notifier import (
     MockTelegramNotifier,
     TelegramConfig,
@@ -373,8 +374,6 @@ class TestWebhookIntegration:
         """Webhook handler can use TelegramNotifier."""
         from protocols.api.webhooks import (
             reset_telegram_notifier as reset_webhook_notifier,
-        )
-        from protocols.api.webhooks import (
             set_telegram_notifier as set_webhook_notifier,
         )
 

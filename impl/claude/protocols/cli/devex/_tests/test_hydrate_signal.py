@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Generator
 
 import pytest
+
 from protocols.cli.devex.hydrate_signal import (
     _SIGNAL_MARKER,
     HydrateEvent,
@@ -45,12 +46,8 @@ class TestAppendHydrateSignal:
 
     def test_appends_multiple_signals(self, temp_project: Path) -> None:
         """Multiple signals accumulate."""
-        append_hydrate_signal(
-            HydrateEvent.SESSION_START, "first", project_root=temp_project
-        )
-        append_hydrate_signal(
-            HydrateEvent.TEST_RUN, "second", project_root=temp_project
-        )
+        append_hydrate_signal(HydrateEvent.SESSION_START, "first", project_root=temp_project)
+        append_hydrate_signal(HydrateEvent.TEST_RUN, "second", project_root=temp_project)
         append_hydrate_signal(HydrateEvent.CUSTOM, "third", project_root=temp_project)
 
         content = (temp_project / "HYDRATE.md").read_text()
@@ -87,12 +84,8 @@ class TestGetRecentSignals:
 
     def test_returns_recent_signals(self, temp_project: Any) -> None:
         """Returns signals in reverse chronological order."""
-        append_hydrate_signal(
-            HydrateEvent.SESSION_START, "first", project_root=temp_project
-        )
-        append_hydrate_signal(
-            HydrateEvent.TEST_RUN, "second", project_root=temp_project
-        )
+        append_hydrate_signal(HydrateEvent.SESSION_START, "first", project_root=temp_project)
+        append_hydrate_signal(HydrateEvent.TEST_RUN, "second", project_root=temp_project)
         append_hydrate_signal(HydrateEvent.CUSTOM, "third", project_root=temp_project)
 
         signals = get_recent_signals(limit=10, project_root=temp_project)
@@ -106,9 +99,7 @@ class TestGetRecentSignals:
     def test_respects_limit(self, temp_project: Path) -> None:
         """Respects the limit parameter."""
         for i in range(5):
-            append_hydrate_signal(
-                HydrateEvent.CUSTOM, f"signal-{i}", project_root=temp_project
-            )
+            append_hydrate_signal(HydrateEvent.CUSTOM, f"signal-{i}", project_root=temp_project)
 
         signals = get_recent_signals(limit=2, project_root=temp_project)
 

@@ -24,12 +24,12 @@ from opentelemetry import trace
 
 from .gateway import MorpheusGateway, RateLimitError
 from .observability import (
+    ATTR_TOKENS_IN,
+    ATTR_TOKENS_OUT,
     MorpheusTelemetry,
     record_completion,
     record_rate_limit,
     record_time_to_first_token,
-    ATTR_TOKENS_IN,
-    ATTR_TOKENS_OUT,
 )
 from .types import ChatRequest, ChatResponse, StreamChunk
 
@@ -177,9 +177,7 @@ class MorpheusPersistence:
             providers=provider_statuses,
         )
 
-    async def complete(
-        self, request: ChatRequest, archetype: str = "guest"
-    ) -> CompletionResult:
+    async def complete(self, request: ChatRequest, archetype: str = "guest") -> CompletionResult:
         """
         Process a chat completion request with telemetry.
 
@@ -222,7 +220,7 @@ class MorpheusPersistence:
                     tokens_in = response.usage.prompt_tokens
                     tokens_out = response.usage.completion_tokens
 
-        except RateLimitError as e:
+        except RateLimitError:
             success = False
             record_rate_limit(archetype, request.model)
             raise
@@ -274,9 +272,7 @@ class MorpheusPersistence:
 
         try:
             if self._telemetry:
-                async with self._telemetry.trace_stream(
-                    request, archetype, provider_name
-                ) as span:
+                async with self._telemetry.trace_stream(request, archetype, provider_name):
                     async for chunk in self._gateway.stream(request, archetype):
                         # Record time to first token
                         if first_token_time is None and chunk.choices:
@@ -284,9 +280,7 @@ class MorpheusPersistence:
                             if delta.content:
                                 first_token_time = time.monotonic()
                                 ttft = first_token_time - start
-                                record_time_to_first_token(
-                                    request.model, provider_name, ttft
-                                )
+                                record_time_to_first_token(request.model, provider_name, ttft)
                         total_tokens += 1
                         yield chunk
             else:
@@ -298,7 +292,7 @@ class MorpheusPersistence:
                     total_tokens += 1
                     yield chunk
 
-        except RateLimitError as e:
+        except RateLimitError:
             record_rate_limit(archetype, request.model)
             raise
         finally:

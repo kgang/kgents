@@ -24,7 +24,6 @@ from agents.atelier.gallery.lineage import LineageGraph
 from agents.atelier.gallery.seeds import clear_seeds, create_sample_pieces, seed_gallery
 from agents.atelier.gallery.store import Gallery
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

@@ -5,6 +5,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
+
 from protocols.tenancy.models import (
     SubscriptionTier,
     UsageEventType,
@@ -248,12 +249,8 @@ class TestUsageTracking:
         tenant = await service.create_tenant(name="Summary", slug="summary")
 
         # Record multiple events
-        await service.record_usage(
-            tenant.id, UsageEventType.AGENTESE_INVOKE, "api", 100, 50
-        )
-        await service.record_usage(
-            tenant.id, UsageEventType.KGENT_MESSAGE, "api", 200, 100
-        )
+        await service.record_usage(tenant.id, UsageEventType.AGENTESE_INVOKE, "api", 100, 50)
+        await service.record_usage(tenant.id, UsageEventType.KGENT_MESSAGE, "api", 200, 100)
 
         summary = await service.get_usage_summary(tenant.id)
 

@@ -176,8 +176,8 @@ def generate_suggested_fix(
                 f"`# gestalt: suppress {source_module}->{target_module}`"
             )
         return (
-            f"Assign layers to both modules and ensure the dependency "
-            f"follows your layer architecture rules."
+            "Assign layers to both modules and ensure the dependency "
+            "follows your layer architecture rules."
         )
 
     elif rule_type == RuleType.RING:
@@ -189,8 +189,8 @@ def generate_suggested_fix(
                 f"Option 3: Use dependency injection to invert the dependency"
             )
         return (
-            f"In clean/onion architecture, outer rings should depend on inner rings. "
-            f"Consider inverting this dependency or restructuring modules."
+            "In clean/onion architecture, outer rings should depend on inner rings. "
+            "Consider inverting this dependency or restructuring modules."
         )
 
     elif rule_type == RuleType.DENY:
@@ -238,12 +238,8 @@ class GovernanceConfig:
     ring_assignments: dict[str, str] = field(default_factory=dict)
 
     # Patterns for auto-assignment
-    layer_patterns: dict[str, list[str]] = field(
-        default_factory=dict
-    )  # layer -> patterns
-    ring_patterns: dict[str, list[str]] = field(
-        default_factory=dict
-    )  # ring -> patterns
+    layer_patterns: dict[str, list[str]] = field(default_factory=dict)  # layer -> patterns
+    ring_patterns: dict[str, list[str]] = field(default_factory=dict)  # ring -> patterns
 
     def assign_layers(self, graph: ArchitectureGraph) -> None:
         """Auto-assign layers to modules based on patterns."""
@@ -390,9 +386,7 @@ def check_drift(
 
         # Check custom drift rules
         for drift_rule in config.drift_rules:
-            if target_module and not drift_rule.check(
-                edge, source_module, target_module
-            ):
+            if target_module and not drift_rule.check(edge, source_module, target_module):
                 suppressed, reason = config.is_suppressed(edge)
                 violations.append(
                     DriftViolation(

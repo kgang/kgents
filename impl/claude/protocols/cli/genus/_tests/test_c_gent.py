@@ -12,6 +12,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+
 from protocols.cli.genus.c_gent import (
     _deserialize_ledger,
     _render_balance,
@@ -50,9 +51,7 @@ class TestSerialization:
         assert "config" in data
         assert data["config"]["initial_capital"] == 0.5
 
-    def test_serialize_with_events(
-        self, ledger_with_events: EventSourcedLedger
-    ) -> None:
+    def test_serialize_with_events(self, ledger_with_events: EventSourcedLedger) -> None:
         """Ledger with events serializes correctly."""
         data = _serialize_ledger(ledger_with_events)
 
@@ -60,9 +59,7 @@ class TestSerialization:
         assert data["events"][0]["event_type"] == "ISSUE"
         assert data["events"][0]["agent"] == "agent-a"
 
-    def test_roundtrip_preserves_events(
-        self, ledger_with_events: EventSourcedLedger
-    ) -> None:
+    def test_roundtrip_preserves_events(self, ledger_with_events: EventSourcedLedger) -> None:
         """Serialization → deserialization preserves events."""
         data = _serialize_ledger(ledger_with_events)
         restored = _deserialize_ledger(data)
@@ -73,9 +70,7 @@ class TestSerialization:
 
     def test_roundtrip_preserves_config(self) -> None:
         """Custom config is preserved through roundtrip."""
-        ledger = EventSourcedLedger(
-            initial_capital=0.3, max_capital=0.8, decay_rate=0.02
-        )
+        ledger = EventSourcedLedger(initial_capital=0.3, max_capital=0.8, decay_rate=0.02)
         data = _serialize_ledger(ledger)
         restored = _deserialize_ledger(data)
 
@@ -246,9 +241,7 @@ class TestTitheCommand:
         captured = capsys.readouterr()
         assert "invalid" in captured.out.lower()
 
-    def test_tithe_insufficient_capital(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_tithe_insufficient_capital(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Tithe fails if insufficient capital."""
         ledger = EventSourcedLedger()
         # Default agent has 0.5 initial capital

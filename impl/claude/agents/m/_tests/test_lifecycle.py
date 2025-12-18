@@ -10,17 +10,16 @@ import time
 
 import pytest
 
-from agents.m.memory import Memory, Lifecycle, simple_embedding
 from agents.m.lifecycle import (
+    VALID_TRANSITIONS,
     LifecycleEvent,
     LifecycleManager,
     RelevancePolicy,
     ResolutionPolicy,
     TimeoutPolicy,
     is_valid_transition,
-    VALID_TRANSITIONS,
 )
-
+from agents.m.memory import Lifecycle, Memory, simple_embedding
 
 # === Lifecycle Event Tests ===
 

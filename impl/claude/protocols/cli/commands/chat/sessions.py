@@ -98,13 +98,13 @@ async def execute_sessions(
                 first_turn = session.turns[0]
                 user_msg = first_turn.get("user_message", "")
                 preview = user_msg[:60] + "..." if len(user_msg) > 60 else user_msg
-                output.emit(f"   > \"{preview}\"")
+                output.emit(f'   > "{preview}"')
 
             output.emit("")
 
         # Footer
         output.emit("-" * 60)
-        output.emit(f"Resume a session: kg chat resume <name|id>")
+        output.emit("Resume a session: kg chat resume <name|id>")
 
         return 0
 

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.f.config import FlowConfig
 from agents.f.flow import AgentProtocol, Flow, FlowAgent, FlowEvent
 from agents.f.operad import (
@@ -163,17 +164,13 @@ class TestPolynomialTransitions:
 
     def test_research_synthesize_transition(self) -> None:
         """Research: CONVERGING + synthesize → COLLAPSED."""
-        new_state, output = RESEARCH_POLYNOMIAL.invoke(
-            FlowState.CONVERGING, "synthesize"
-        )
+        new_state, output = RESEARCH_POLYNOMIAL.invoke(FlowState.CONVERGING, "synthesize")
         assert new_state == FlowState.COLLAPSED
         assert output["event"] == "synthesized"
 
     def test_collaboration_consensus_transition(self) -> None:
         """Collaboration: CONVERGING + synthesize → COLLAPSED (consensus)."""
-        new_state, output = COLLABORATION_POLYNOMIAL.invoke(
-            FlowState.CONVERGING, "synthesize"
-        )
+        new_state, output = COLLABORATION_POLYNOMIAL.invoke(FlowState.CONVERGING, "synthesize")
         assert new_state == FlowState.COLLAPSED
         assert output["event"] == "consensus_reached"
 
@@ -289,9 +286,7 @@ class TestOperadLaws:
 
     def test_perturbation_integrity_law(self) -> None:
         """Perturbation injects with priority, never bypasses."""
-        law = next(
-            (l for l in FLOW_OPERAD.laws if l.name == "perturbation_integrity"), None
-        )
+        law = next((l for l in FLOW_OPERAD.laws if l.name == "perturbation_integrity"), None)
         assert law is not None
         assert "inject_priority" in law.equation
 

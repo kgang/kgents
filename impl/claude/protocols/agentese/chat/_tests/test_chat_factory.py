@@ -12,6 +12,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+
 from protocols.agentese.chat.config import (
     CITIZEN_CHAT_CONFIG,
     SOUL_CHAT_CONFIG,
@@ -200,9 +201,7 @@ class TestFactorySessionCreation:
     ) -> None:
         """Test session creation with custom config."""
         config = ChatConfig(max_turns=5)
-        session = await factory.create_session(
-            "self.soul", mock_observer, config=config
-        )
+        session = await factory.create_session("self.soul", mock_observer, config=config)
 
         assert session.config.max_turns == 5
 
@@ -223,9 +222,7 @@ class TestFactorySessionCreation:
     ) -> None:
         """Test force_new creates a new session."""
         session1 = await factory.create_session("self.soul", mock_observer)
-        session2 = await factory.create_session(
-            "self.soul", mock_observer, force_new=True
-        )
+        session2 = await factory.create_session("self.soul", mock_observer, force_new=True)
 
         assert session1.session_id != session2.session_id
 
@@ -251,9 +248,7 @@ class TestFactorySessionCreation:
     ) -> None:
         """Test different nodes get different sessions."""
         session1 = await factory.create_session("self.soul", mock_observer)
-        session2 = await factory.create_session(
-            "world.town.citizen.elara", mock_observer
-        )
+        session2 = await factory.create_session("world.town.citizen.elara", mock_observer)
 
         assert session1.session_id != session2.session_id
 
@@ -265,9 +260,7 @@ class TestFactorySessionRetrieval:
     """Tests for session retrieval methods."""
 
     @pytest.mark.asyncio
-    async def test_get_session(
-        self, factory: ChatSessionFactory, mock_observer: MagicMock
-    ) -> None:
+    async def test_get_session(self, factory: ChatSessionFactory, mock_observer: MagicMock) -> None:
         """Test get_session() retrieves cached session."""
         created = await factory.create_session("self.soul", mock_observer)
         retrieved = factory.get_session("self.soul", mock_observer)
@@ -369,9 +362,7 @@ class TestFactoryIntegration:
         assert same_session.turn_count == 1
 
         # Create a different session type
-        citizen_session = await factory.create_session(
-            "world.town.citizen.elara", mock_observer
-        )
+        citizen_session = await factory.create_session("world.town.citizen.elara", mock_observer)
         assert citizen_session.turn_count == 0
 
         # List sessions (should have 2: soul and citizen)
@@ -379,9 +370,7 @@ class TestFactoryIntegration:
         assert len(sessions) == 2
 
         # Force new soul session (replaces old one)
-        new_session = await factory.create_session(
-            "self.soul", mock_observer, force_new=True
-        )
+        new_session = await factory.create_session("self.soul", mock_observer, force_new=True)
         assert new_session.turn_count == 0
         assert new_session.session_id != session.session_id
 

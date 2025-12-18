@@ -8,6 +8,7 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
+
 from protocols.cli.prism import CLICapable, Prism, expose
 
 

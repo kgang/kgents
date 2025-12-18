@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.billing.webhooks import (
     DefaultWebhookHandlers,
     WebhookEvent,
@@ -77,15 +78,11 @@ class TestWebhookHandler:
             nonlocal handler_called
             handler_called = True
 
-        webhook_handler.register_handler(
-            WebhookEventType.CUSTOMER_CREATED, test_handler
-        )
+        webhook_handler.register_handler(WebhookEventType.CUSTOMER_CREATED, test_handler)
 
         # Verify handler is registered
         assert WebhookEventType.CUSTOMER_CREATED.value in webhook_handler._handlers
-        assert (
-            len(webhook_handler._handlers[WebhookEventType.CUSTOMER_CREATED.value]) == 1
-        )
+        assert len(webhook_handler._handlers[WebhookEventType.CUSTOMER_CREATED.value]) == 1
 
     def test_register_multiple_handlers(self, webhook_handler: WebhookHandler) -> None:
         """Test registering multiple handlers for same event type."""
@@ -114,9 +111,7 @@ class TestWebhookHandler:
             handler_called = True
             received_event = event
 
-        webhook_handler.register_handler(
-            WebhookEventType.CUSTOMER_CREATED, test_handler
-        )
+        webhook_handler.register_handler(WebhookEventType.CUSTOMER_CREATED, test_handler)
 
         event = WebhookEvent(
             id="evt_test",
@@ -144,9 +139,7 @@ class TestWebhookHandler:
 
         assert result is False
 
-    def test_handle_event_multiple_handlers(
-        self, webhook_handler: WebhookHandler
-    ) -> None:
+    def test_handle_event_multiple_handlers(self, webhook_handler: WebhookHandler) -> None:
         """Test all handlers are called for an event."""
         handler1_called = False
         handler2_called = False
@@ -187,9 +180,7 @@ class TestWebhookHandler:
             nonlocal handler2_called
             handler2_called = True
 
-        webhook_handler.register_handler(
-            WebhookEventType.CUSTOMER_CREATED, failing_handler
-        )
+        webhook_handler.register_handler(WebhookEventType.CUSTOMER_CREATED, failing_handler)
         webhook_handler.register_handler(WebhookEventType.CUSTOMER_CREATED, handler2)
 
         event = WebhookEvent(
@@ -324,13 +315,9 @@ class TestDefaultWebhookHandlers:
         DefaultWebhookHandlers.on_invoice_paid(event)
 
         captured = capsys.readouterr()
-        assert (
-            "Invoice paid: in_123 for customer cus_123 - amount: $29.99" in captured.out
-        )
+        assert "Invoice paid: in_123 for customer cus_123 - amount: $29.99" in captured.out
 
-    def test_on_invoice_payment_failed(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_on_invoice_payment_failed(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test invoice.payment_failed handler."""
         event = WebhookEvent(
             id="evt_test",
@@ -344,9 +331,7 @@ class TestDefaultWebhookHandlers:
         captured = capsys.readouterr()
         assert "Invoice payment failed: in_123 for customer cus_123" in captured.out
 
-    def test_on_checkout_session_completed(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_on_checkout_session_completed(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test checkout.session.completed handler."""
         event = WebhookEvent(
             id="evt_test",

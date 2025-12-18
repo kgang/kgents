@@ -66,9 +66,7 @@ def add_imports(content: str) -> str:
     for i, line in enumerate(lines):
         new_lines.append(line)
         # Add imports after the first import or from line
-        if not imports_added and (
-            line.startswith("import ") or line.startswith("from ")
-        ):
+        if not imports_added and (line.startswith("import ") or line.startswith("from ")):
             # Check if next line is also an import
             if i + 1 < len(lines) and (
                 lines[i + 1].startswith("import ")
@@ -163,7 +161,7 @@ def fix_test_file(path: Path) -> int:
     if content != original:
         path.write_text(content)
         # Count how many fixes
-        fixes = sum(
+        sum(
             1
             for m in re.finditer(pattern, original)
             if re.sub(pattern, fix_function_signature, m.group(0)) != m.group(0)

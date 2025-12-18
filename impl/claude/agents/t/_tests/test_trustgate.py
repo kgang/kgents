@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import pytest
+
 from agents.t.trustgate import (
     Proposal,
     TrustDecision,
@@ -84,9 +85,7 @@ class TestStandardApproval:
     """Tests for standard approval path."""
 
     @pytest.mark.asyncio
-    async def test_approve_good_proposal(
-        self, gate: TrustGate, good_proposal: Proposal
-    ) -> None:
+    async def test_approve_good_proposal(self, gate: TrustGate, good_proposal: Proposal) -> None:
         """Good proposal with high judgment score is approved."""
         decision = await gate.evaluate(
             good_proposal,
@@ -100,9 +99,7 @@ class TestStandardApproval:
         assert "judgment passed" in decision.reason
 
     @pytest.mark.asyncio
-    async def test_approve_credits_agent(
-        self, gate: TrustGate, good_proposal: Proposal
-    ) -> None:
+    async def test_approve_credits_agent(self, gate: TrustGate, good_proposal: Proposal) -> None:
         """Approved proposal credits the agent."""
         initial_balance = gate.capital_ledger.balance("test-agent")
 
@@ -116,9 +113,7 @@ class TestStandardApproval:
         assert new_balance > initial_balance
 
     @pytest.mark.asyncio
-    async def test_approve_records_event(
-        self, gate: TrustGate, good_proposal: Proposal
-    ) -> None:
+    async def test_approve_records_event(self, gate: TrustGate, good_proposal: Proposal) -> None:
         """Approved proposal creates CREDIT event."""
         await gate.evaluate(
             good_proposal,
@@ -139,9 +134,7 @@ class TestStandardDenial:
     """Tests for standard denial path."""
 
     @pytest.mark.asyncio
-    async def test_deny_risky_proposal(
-        self, gate: TrustGate, risky_proposal: Proposal
-    ) -> None:
+    async def test_deny_risky_proposal(self, gate: TrustGate, risky_proposal: Proposal) -> None:
         """Risky proposal with low judgment score is denied."""
         decision = await gate.evaluate(
             risky_proposal,
@@ -198,9 +191,7 @@ class TestBypassApproval:
     ) -> None:
         """Valid bypass token approves risky proposal."""
         # Mint bypass token
-        token = funded_gate.capital_ledger.mint_bypass(
-            "test-agent", "trust_gate", cost=0.1
-        )
+        token = funded_gate.capital_ledger.mint_bypass("test-agent", "trust_gate", cost=0.1)
         assert token is not None
 
         decision = await funded_gate.evaluate(
@@ -222,9 +213,7 @@ class TestBypassApproval:
         initial_balance = funded_gate.capital_ledger.balance("test-agent")
 
         # Mint token (deducts cost)
-        token = funded_gate.capital_ledger.mint_bypass(
-            "test-agent", "trust_gate", cost=0.1
-        )
+        token = funded_gate.capital_ledger.mint_bypass("test-agent", "trust_gate", cost=0.1)
         assert token is not None
 
         after_mint = funded_gate.capital_ledger.balance("test-agent")
@@ -246,9 +235,7 @@ class TestBypassApproval:
         self, funded_gate: TrustGate, risky_proposal: Proposal
     ) -> None:
         """Bypass decision includes cost in reason."""
-        token = funded_gate.capital_ledger.mint_bypass(
-            "test-agent", "trust_gate", cost=0.15
-        )
+        token = funded_gate.capital_ledger.mint_bypass("test-agent", "trust_gate", cost=0.15)
         assert token is not None
 
         decision = await funded_gate.evaluate(
@@ -293,9 +280,7 @@ class TestTokenValidation:
         )
 
         assert decision.approved is False
-        assert (
-            "expired" in decision.reason.lower() or "invalid" in decision.reason.lower()
-        )
+        assert "expired" in decision.reason.lower() or "invalid" in decision.reason.lower()
 
     @pytest.mark.asyncio
     async def test_reject_wrong_gate_token(
@@ -351,12 +336,8 @@ class TestAlgebraicCost:
 
     def test_high_risk_increases_cost(self, gate: TrustGate) -> None:
         """Higher risk increases bypass cost."""
-        low_risk_cost = gate.compute_bypass_cost(
-            risk=0.1, judgment_score=0.5, resources_ok=True
-        )
-        high_risk_cost = gate.compute_bypass_cost(
-            risk=0.9, judgment_score=0.5, resources_ok=True
-        )
+        low_risk_cost = gate.compute_bypass_cost(risk=0.1, judgment_score=0.5, resources_ok=True)
+        high_risk_cost = gate.compute_bypass_cost(risk=0.9, judgment_score=0.5, resources_ok=True)
         assert high_risk_cost > low_risk_cost
 
     def test_low_judgment_increases_cost(self, gate: TrustGate) -> None:
@@ -411,9 +392,7 @@ class TestCreateTrustGate:
         assert gate.risk_threshold == 0.1
         assert gate.good_proposal_reward == 0.05
 
-    def test_create_with_existing_ledger(
-        self, funded_ledger: EventSourcedLedger
-    ) -> None:
+    def test_create_with_existing_ledger(self, funded_ledger: EventSourcedLedger) -> None:
         """Factory accepts existing ledger."""
         gate = create_trust_gate(ledger=funded_ledger)
 
@@ -434,9 +413,7 @@ class TestOCapPattern:
     ) -> None:
         """Token IS the capability, not agent identity."""
         # Agent A mints token
-        token = funded_gate.capital_ledger.mint_bypass(
-            "agent-a", "trust_gate", cost=0.1
-        )
+        token = funded_gate.capital_ledger.mint_bypass("agent-a", "trust_gate", cost=0.1)
         assert token is not None
 
         # Token can be used (token.agent matches, but we don't check caller)
@@ -493,9 +470,7 @@ class TestIntegration:
         assert bypass_cost is not None
 
         # Step 2: Mint bypass token
-        token = funded_gate.capital_ledger.mint_bypass(
-            "test-agent", "trust_gate", cost=bypass_cost
-        )
+        token = funded_gate.capital_ledger.mint_bypass("test-agent", "trust_gate", cost=bypass_cost)
         assert token is not None
 
         # Step 3: Re-evaluate with token
@@ -557,9 +532,7 @@ class TestJudgeAgentIntegration:
         assert 0.6 < decision.judgment_score < 0.8
 
     @pytest.mark.asyncio
-    async def test_heuristic_used_for_low_risk(
-        self, ledger: EventSourcedLedger
-    ) -> None:
+    async def test_heuristic_used_for_low_risk(self, ledger: EventSourcedLedger) -> None:
         """Low-risk proposals use heuristic even with JudgeAgent."""
         from unittest.mock import AsyncMock, MagicMock
 

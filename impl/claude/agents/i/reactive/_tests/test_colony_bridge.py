@@ -18,6 +18,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.i.reactive.colony_bridge import (
     ActivityBuffer,
     ColonyDashboardBridge,
@@ -316,9 +317,7 @@ class TestColonyDashboardBridge:
         assert alice_after is not None
         assert len(alice_after) > len(alice_initial or ())
 
-    def test_process_event_sync(
-        self, sample_flux: TownFlux, sample_event: TownEvent
-    ) -> None:
+    def test_process_event_sync(self, sample_flux: TownFlux, sample_event: TownEvent) -> None:
         """Test synchronous event processing."""
         bridge = ColonyDashboardBridge(sample_flux)
 
@@ -354,9 +353,7 @@ class TestColonyDashboardBridge:
 
         assert bridge.current_state.total_events == 0
 
-    def test_clear_activity(
-        self, sample_flux: TownFlux, sample_event: TownEvent
-    ) -> None:
+    def test_clear_activity(self, sample_flux: TownFlux, sample_event: TownEvent) -> None:
         """Test clear_activity removes activity history."""
         bridge = ColonyDashboardBridge(sample_flux)
 

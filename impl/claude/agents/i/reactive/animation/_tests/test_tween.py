@@ -1,6 +1,7 @@
 """Tests for Tween animation primitive."""
 
 import pytest
+
 from agents.i.reactive.animation.easing import Easing, EasingCurve
 from agents.i.reactive.animation.tween import (
     Interpolator,
@@ -290,9 +291,7 @@ class TestTweenLooping:
         tw = Tween.create(
             start=0.0,
             end=100.0,
-            config=TweenConfig(
-                duration_ms=100.0, loops=1, yoyo=True, easing=Easing.LINEAR
-            ),
+            config=TweenConfig(duration_ms=100.0, loops=1, yoyo=True, easing=Easing.LINEAR),
         )
         tw.start()
         tw.update(100.0)  # Forward complete

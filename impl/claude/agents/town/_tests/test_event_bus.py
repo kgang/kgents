@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.town.event_bus import EventBus, Subscription, create_town_event_bus
 
 

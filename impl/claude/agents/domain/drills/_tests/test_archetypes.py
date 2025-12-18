@@ -9,6 +9,7 @@ Verifies:
 """
 
 import pytest
+
 from agents.domain.drills.archetypes import (
     ADVOCACY,
     CISO_SPEC,
@@ -178,12 +179,8 @@ class TestEigenvectorCreation:
         eigenvectors = spec.create_eigenvectors(stress_level=0.0)
 
         # Base value is 0.5, biases are added
-        assert eigenvectors.curiosity == pytest.approx(
-            0.5 + spec.curiosity_bias, abs=0.01
-        )
-        assert eigenvectors.resilience == pytest.approx(
-            0.5 + spec.resilience_bias, abs=0.01
-        )
+        assert eigenvectors.curiosity == pytest.approx(0.5 + spec.curiosity_bias, abs=0.01)
+        assert eigenvectors.resilience == pytest.approx(0.5 + spec.resilience_bias, abs=0.01)
 
     def test_create_eigenvectors_with_stress(self) -> None:
         """Eigenvectors are amplified under stress."""
@@ -343,9 +340,7 @@ class TestArchetypeHelpers:
 
     def test_get_archetype_responsibilities(self) -> None:
         """Can get responsibilities for archetype."""
-        responsibilities = get_archetype_responsibilities(
-            CrisisArchetype.ON_CALL_ENGINEER
-        )
+        responsibilities = get_archetype_responsibilities(CrisisArchetype.ON_CALL_ENGINEER)
 
         assert len(responsibilities) >= 3
         assert "First response" in responsibilities[0]

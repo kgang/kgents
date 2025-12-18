@@ -45,23 +45,22 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 # V-gent integration (Phase 9)
 VGENT_AVAILABLE = False
 try:
-    from agents.v import SearchResult as VgentSearchResult
-    from agents.v import VgentProtocol, create_vgent
+    from agents.v import SearchResult as VgentSearchResult, VgentProtocol, create_vgent
 
     VGENT_AVAILABLE = True
 except ImportError:
-    VgentProtocol = None  # type: ignore[misc, assignment]
-    create_vgent = None  # type: ignore[misc, assignment]
-    VgentSearchResult = None  # type: ignore[misc, assignment]
+    VgentProtocol = None
+    create_vgent = None
+    VgentSearchResult = None
 
 # Check for numpy (required for D-gent VectorAgent)
 try:
     import numpy as np
     from agents.d.vector import NUMPY_AVAILABLE, DistanceMetric, VectorAgent
 except ImportError:
-    np = None  # type: ignore[assignment]
-    VectorAgent = None  # type: ignore[assignment, misc]
-    DistanceMetric = None  # type: ignore[assignment, misc]
+    np = None
+    VectorAgent = None
+    DistanceMetric = None
     NUMPY_AVAILABLE = False
 
 
@@ -247,9 +246,7 @@ class DgentVectorBackend:
         entries = await self._agent.load()
         return len(entries)
 
-    def _matches_filters(
-        self, metadata: dict[str, Any], filters: dict[str, Any]
-    ) -> bool:
+    def _matches_filters(self, metadata: dict[str, Any], filters: dict[str, Any]) -> bool:
         """Check if metadata matches filters."""
         for key, value in filters.items():
             if metadata.get(key) != value:
@@ -470,9 +467,7 @@ class VectorCatalog:
             )
         """
         if not VGENT_AVAILABLE:
-            raise ImportError(
-                "V-gent not available. Install agents.v or use create() instead."
-            )
+            raise ImportError("V-gent not available. Install agents.v or use create() instead.")
 
         # Load or create catalog
         if catalog is None:
@@ -595,9 +590,7 @@ class VectorCatalog:
 
         return results
 
-    async def find_gaps(
-        self, query: str, radius: float = 1.0
-    ) -> Optional[dict[str, Any]]:
+    async def find_gaps(self, query: str, radius: float = 1.0) -> Optional[dict[str, Any]]:
         """Find gaps in catalog coverage near a query.
 
         Args:

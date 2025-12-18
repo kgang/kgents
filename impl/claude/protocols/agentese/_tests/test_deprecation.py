@@ -83,6 +83,7 @@ class TestRemovedV1Symbols:
     def test_pathparser_removed(self) -> None:
         """PathParser is no longer accessible (raises AttributeError)."""
         import pytest
+
         from protocols import agentese
 
         with pytest.raises(AttributeError, match="has no attribute 'PathParser'"):
@@ -91,6 +92,7 @@ class TestRemovedV1Symbols:
     def test_clause_removed(self) -> None:
         """Clause is no longer accessible."""
         import pytest
+
         from protocols import agentese
 
         with pytest.raises(AttributeError, match="has no attribute 'Clause'"):
@@ -99,6 +101,7 @@ class TestRemovedV1Symbols:
     def test_phase_removed(self) -> None:
         """Phase is no longer accessible."""
         import pytest
+
         from protocols import agentese
 
         with pytest.raises(AttributeError, match="has no attribute 'Phase'"):
@@ -107,6 +110,7 @@ class TestRemovedV1Symbols:
     def test_compose_removed(self) -> None:
         """compose() is no longer accessible (use >> instead)."""
         import pytest
+
         from protocols import agentese
 
         with pytest.raises(AttributeError, match="has no attribute 'compose'"):
@@ -115,11 +119,10 @@ class TestRemovedV1Symbols:
     def test_world_context_resolver_removed(self) -> None:
         """WorldContextResolver is no longer accessible."""
         import pytest
+
         from protocols import agentese
 
-        with pytest.raises(
-            AttributeError, match="has no attribute 'WorldContextResolver'"
-        ):
+        with pytest.raises(AttributeError, match="has no attribute 'WorldContextResolver'"):
             _ = agentese.WorldContextResolver  # type: ignore[attr-defined]
 
 

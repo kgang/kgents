@@ -4,18 +4,19 @@ Tests for ConsolidationEngine.
 Tests the "sleep" cycle functionality for memory reorganization.
 """
 
-import pytest
 import time
 
+import pytest
+
 from agents.d.backends.memory import MemoryBackend
-from agents.m.memory import Lifecycle, Memory
 from agents.m.associative import AssociativeMemory
 from agents.m.consolidation_engine import (
-    ConsolidationEngine,
     ConsolidationConfig,
+    ConsolidationEngine,
     create_consolidation_engine,
 )
 from agents.m.lifecycle import LifecycleEvent
+from agents.m.memory import Lifecycle, Memory
 
 
 @pytest.fixture
@@ -204,13 +205,10 @@ class TestConsolidationMerging:
         engine = ConsolidationEngine(mgent, config)
 
         # Store two nearly identical memories
-        id1 = await mgent.remember(
-            b"Python programming",
-            embedding=[1.0, 0.0, 0.0]
-        )
+        id1 = await mgent.remember(b"Python programming", embedding=[1.0, 0.0, 0.0])
         id2 = await mgent.remember(
             b"Python coding",
-            embedding=[1.0, 0.0, 0.0]  # Identical embedding
+            embedding=[1.0, 0.0, 0.0],  # Identical embedding
         )
 
         # Deactivate both

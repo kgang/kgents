@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 import yaml
+
 from agents.town.archetypes import (
     ArchetypeKind,
     create_builder,
@@ -351,9 +352,7 @@ class TownEnvironment:
         # Load citizens
         for citizen_data in data.get("citizens", []):
             eigenvectors = Eigenvectors.from_dict(citizen_data.get("eigenvectors", {}))
-            cosmo = cosmo_map.get(
-                citizen_data.get("cosmotechnics", "gathering"), GATHERING
-            )
+            cosmo = cosmo_map.get(citizen_data.get("cosmotechnics", "gathering"), GATHERING)
 
             # Parse phase if present
             phase_name = citizen_data.get("phase", "IDLE")

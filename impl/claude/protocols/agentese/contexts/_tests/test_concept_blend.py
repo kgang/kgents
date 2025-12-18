@@ -21,8 +21,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
 
 from ...node import AgentMeta, BasicRendering
 from ..concept_blend import (
@@ -366,9 +365,7 @@ class TestBlendNode:
         assert "Conceptual Blending" in result.summary
 
     @pytest.mark.asyncio
-    async def test_forge_aspect(
-        self, blend_node: BlendNode, observer: MockUmwelt
-    ) -> None:
+    async def test_forge_aspect(self, blend_node: BlendNode, observer: MockUmwelt) -> None:
         """forge aspect creates blend."""
         result = await blend_node.invoke(
             "forge",
@@ -381,9 +378,7 @@ class TestBlendNode:
         assert result.input_space_b == "git"
 
     @pytest.mark.asyncio
-    async def test_forge_caches_result(
-        self, blend_node: BlendNode, observer: MockUmwelt
-    ) -> None:
+    async def test_forge_caches_result(self, blend_node: BlendNode, observer: MockUmwelt) -> None:
         """forge caches results for same inputs."""
         result1 = await blend_node.invoke(
             "forge",
@@ -400,9 +395,7 @@ class TestBlendNode:
         assert result1 is result2  # Same cached object
 
     @pytest.mark.asyncio
-    async def test_analyze_aspect(
-        self, blend_node: BlendNode, observer: MockUmwelt
-    ) -> None:
+    async def test_analyze_aspect(self, blend_node: BlendNode, observer: MockUmwelt) -> None:
         """analyze aspect decomposes blend."""
         result = await blend_node.invoke(
             "analyze",
@@ -414,9 +407,7 @@ class TestBlendNode:
         assert "complexity" in result
 
     @pytest.mark.asyncio
-    async def test_generic_aspect(
-        self, blend_node: BlendNode, observer: MockUmwelt
-    ) -> None:
+    async def test_generic_aspect(self, blend_node: BlendNode, observer: MockUmwelt) -> None:
         """generic aspect finds shared structure."""
         result = await blend_node.invoke(
             "generic",
@@ -428,9 +419,7 @@ class TestBlendNode:
         assert "has_voting" in result
 
     @pytest.mark.asyncio
-    async def test_emergent_aspect(
-        self, blend_node: BlendNode, observer: MockUmwelt
-    ) -> None:
+    async def test_emergent_aspect(self, blend_node: BlendNode, observer: MockUmwelt) -> None:
         """emergent aspect extracts novel features."""
         result = await blend_node.invoke(
             "emergent",

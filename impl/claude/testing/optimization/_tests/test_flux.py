@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import AsyncIterator
 
 import pytest
+
 from testing.optimization import TestTier
 from testing.optimization.flux import (
     OptimizationEvent,
@@ -165,9 +166,7 @@ class TestRecommendations:
         events = [
             TestEvent(event_type="start"),
             # Add an expensive test
-            TestEvent(
-                event_type="test_result", test_id="test_expensive", duration_s=45.0
-            ),
+            TestEvent(event_type="test_result", test_id="test_expensive", duration_s=45.0),
             TestEvent(event_type="end"),
         ]
         output = await collect_events(flux, events_from_list(events))
@@ -219,9 +218,7 @@ class TestSummary:
 
         events = [
             TestEvent(event_type="start"),
-            TestEvent(
-                event_type="test_result", test_id="test_instant", duration_s=0.05
-            ),
+            TestEvent(event_type="test_result", test_id="test_instant", duration_s=0.05),
             TestEvent(event_type="test_result", test_id="test_fast", duration_s=0.3),
             TestEvent(event_type="end"),
         ]

@@ -10,6 +10,7 @@ Verifies:
 """
 
 import pytest
+
 from agents.o.observer_functor import (
     ListSink,
     ObservationEvent,
@@ -217,12 +218,8 @@ class TestUnifiedObserverFunctorLaws:
         sink = ListSink()
 
         # Lift then compose
-        lifted_double = UnifiedObserverFunctor.lift(
-            double, sink=sink, non_blocking=False
-        )
-        lifted_add_one = UnifiedObserverFunctor.lift(
-            add_one, sink=sink, non_blocking=False
-        )
+        lifted_double = UnifiedObserverFunctor.lift(double, sink=sink, non_blocking=False)
+        lifted_add_one = UnifiedObserverFunctor.lift(add_one, sink=sink, non_blocking=False)
 
         result_1 = await lifted_double.invoke(5)
         result_2 = await lifted_add_one.invoke(result_1)

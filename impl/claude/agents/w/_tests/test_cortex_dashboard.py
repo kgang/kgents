@@ -8,6 +8,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from agents.o.cortex_observer import (
     CortexObserver,
     create_mock_cortex_observer,

@@ -78,7 +78,7 @@ class GardenToBrainHandler(BaseSynergyHandler):
         if not self._auto_capture:
             self._logger.info(f"Would capture season change: {old_season} → {new_season}")
             return self.success(
-                message=f"Dry run - would capture season transition",
+                message="Dry run - would capture season transition",
                 metadata={
                     "old_season": old_season,
                     "new_season": new_season,
@@ -87,7 +87,9 @@ class GardenToBrainHandler(BaseSynergyHandler):
 
         # Actually capture to Brain
         try:
-            concept_id = f"garden-season-{event.source_id}-{event.timestamp.strftime('%Y%m%d-%H%M%S')}"
+            concept_id = (
+                f"garden-season-{event.source_id}-{event.timestamp.strftime('%Y%m%d-%H%M%S')}"
+            )
             crystal_id = await self._capture_to_brain(
                 content=content,
                 concept_id=concept_id,
@@ -145,7 +147,9 @@ class GardenToBrainHandler(BaseSynergyHandler):
 
         # Capture to Brain
         try:
-            concept_id = f"garden-gesture-{event.source_id}-{event.timestamp.strftime('%Y%m%d-%H%M%S')}"
+            concept_id = (
+                f"garden-gesture-{event.source_id}-{event.timestamp.strftime('%Y%m%d-%H%M%S')}"
+            )
             crystal_id = await self._capture_to_brain(
                 content=content,
                 concept_id=concept_id,
@@ -176,8 +180,7 @@ class GardenToBrainHandler(BaseSynergyHandler):
         # >= 10% change OR milestone crossings (25%, 50%, 75%, 100%)
         milestones = {0.25, 0.5, 0.75, 1.0}
         crossed_milestone = any(
-            old_progress < m <= new_progress or new_progress < m <= old_progress
-            for m in milestones
+            old_progress < m <= new_progress or new_progress < m <= old_progress for m in milestones
         )
 
         if abs(progress_delta) < 0.1 and not crossed_milestone:
@@ -195,7 +198,7 @@ class GardenToBrainHandler(BaseSynergyHandler):
         if not self._auto_capture:
             self._logger.info(f"Would capture progress: {plot_name} → {new_progress:.0%}")
             return self.success(
-                message=f"Dry run - would capture progress",
+                message="Dry run - would capture progress",
                 metadata={"plot_name": plot_name, "new_progress": new_progress},
             )
 

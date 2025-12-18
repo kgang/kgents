@@ -7,6 +7,7 @@ Wave 5 - Reality Wiring: Clock tests
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.wiring.clock import (
     Clock,
     ClockConfig,

@@ -11,6 +11,7 @@ Target: 15+ tests for operad alone.
 """
 
 import pytest
+
 from agents.emergence import (
     CIRCADIAN_MODIFIERS,
     EMERGENCE_OPERAD,
@@ -165,9 +166,7 @@ class TestLaws:
 
     def test_pattern_commutativity_structural(self):
         """pattern_commutativity law is structural (design choice)."""
-        law = next(
-            l for l in EMERGENCE_OPERAD.laws if l.name == "pattern_commutativity"
-        )
+        law = next(l for l in EMERGENCE_OPERAD.laws if l.name == "pattern_commutativity")
         result = law.verify()
         assert result.status == LawStatus.STRUCTURAL
 

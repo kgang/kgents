@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from agents.k.watcher import (
     ComplexityHeuristic,
     DocsHeuristic,
@@ -170,10 +171,7 @@ def another_public():
 
             result = h.check(str(path), content)
             assert result.triggered is True
-            assert (
-                "public_function" in result.message
-                or "another_public" in result.message
-            )
+            assert "public_function" in result.message or "another_public" in result.message
 
 
 class TestDocsHeuristic:

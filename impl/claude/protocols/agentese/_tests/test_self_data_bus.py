@@ -7,6 +7,7 @@ Part of the Data Architecture Rewrite (plans/data-architecture-rewrite.md).
 from __future__ import annotations
 
 import pytest
+
 from agents.d.backends.memory import MemoryBackend
 from agents.d.bus import DataBus, DataEventType, get_data_bus, reset_data_bus
 from agents.d.datum import Datum
@@ -88,9 +89,7 @@ class TestDataNode:
         assert "content is required" in result["error"]
 
     @pytest.mark.asyncio
-    async def test_put_stores_data(
-        self, observer: Observer, memory_backend: MemoryBackend
-    ) -> None:
+    async def test_put_stores_data(self, observer: Observer, memory_backend: MemoryBackend) -> None:
         """Put aspect stores datum and returns ID."""
         node = create_data_resolver(dgent=memory_backend)
         result = await node._invoke_aspect(
@@ -236,9 +235,7 @@ class TestBusNode:
         assert "Not Configured" in result.summary
 
     @pytest.mark.asyncio
-    async def test_manifest_configured(
-        self, observer: Observer, data_bus: DataBus
-    ) -> None:
+    async def test_manifest_configured(self, observer: Observer, data_bus: DataBus) -> None:
         """Manifest shows bus statistics."""
         node = create_bus_resolver(bus=data_bus)
         result = await node.manifest(observer)
@@ -246,9 +243,7 @@ class TestBusNode:
         assert result.metadata["configured"] is True
 
     @pytest.mark.asyncio
-    async def test_stats_returns_bus_stats(
-        self, observer: Observer, data_bus: DataBus
-    ) -> None:
+    async def test_stats_returns_bus_stats(self, observer: Observer, data_bus: DataBus) -> None:
         """Stats aspect returns bus statistics."""
         node = create_bus_resolver(bus=data_bus)
         result = await node._invoke_aspect("stats", observer)
@@ -258,9 +253,7 @@ class TestBusNode:
         assert "total_emitted" in result
 
     @pytest.mark.asyncio
-    async def test_latest_when_no_events(
-        self, observer: Observer, data_bus: DataBus
-    ) -> None:
+    async def test_latest_when_no_events(self, observer: Observer, data_bus: DataBus) -> None:
         """Latest aspect returns no_events when empty."""
         node = create_bus_resolver(bus=data_bus)
         result = await node._invoke_aspect("latest", observer)
@@ -290,23 +283,17 @@ class TestBusNode:
         node = create_bus_resolver(bus=data_bus)
 
         # Subscribe first
-        await node._invoke_aspect(
-            "subscribe", observer, event_type="ALL", handler_id="to_remove"
-        )
+        await node._invoke_aspect("subscribe", observer, event_type="ALL", handler_id="to_remove")
         assert "to_remove" in node._subscriptions
 
         # Unsubscribe
-        result = await node._invoke_aspect(
-            "unsubscribe", observer, handler_id="to_remove"
-        )
+        result = await node._invoke_aspect("unsubscribe", observer, handler_id="to_remove")
 
         assert result["status"] == "unsubscribed"
         assert "to_remove" not in node._subscriptions
 
     @pytest.mark.asyncio
-    async def test_history_returns_events(
-        self, observer: Observer, data_bus: DataBus
-    ) -> None:
+    async def test_history_returns_events(self, observer: Observer, data_bus: DataBus) -> None:
         """History aspect returns buffered events."""
         from agents.d.bus import DataEvent
 

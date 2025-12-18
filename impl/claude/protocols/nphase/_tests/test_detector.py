@@ -22,7 +22,6 @@ from protocols.nphase.detector import (
 )
 from protocols.nphase.operad import NPhase
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -85,9 +84,7 @@ class TestContinueSignifier:
         assert signal.action == SignalAction.CONTINUE
         assert signal.target_phase == NPhase.ACT
 
-    def test_detect_continue_with_surrounding_text(
-        self, detector: PhaseDetector
-    ) -> None:
+    def test_detect_continue_with_surrounding_text(self, detector: PhaseDetector) -> None:
         """Signifier detected in middle of text."""
         output = "Done with research. ⟿[ACT] Let's implement."
         signal = detector.detect(output, NPhase.UNDERSTAND)
@@ -196,9 +193,7 @@ class TestElasticSignifier:
 class TestHeuristicDetection:
     """Tests for pattern-based phase detection."""
 
-    def test_detect_heuristic_understand_patterns(
-        self, detector: PhaseDetector
-    ) -> None:
+    def test_detect_heuristic_understand_patterns(self, detector: PhaseDetector) -> None:
         """UNDERSTAND phase patterns detected."""
         understand_texts = [
             "Let me start by reading the file to understand the structure.",
@@ -255,9 +250,7 @@ class TestHeuristicDetection:
         if signal.action == SignalAction.HEURISTIC:
             assert signal.confidence < 1.0
 
-    def test_heuristic_no_transition_same_phase(
-        self, detector: PhaseDetector
-    ) -> None:
+    def test_heuristic_no_transition_same_phase(self, detector: PhaseDetector) -> None:
         """No heuristic suggestion if already in detected phase."""
         output = "Reading and exploring the codebase."
         signal = detector.detect(output, NPhase.UNDERSTAND)
@@ -351,9 +344,7 @@ class TestPhaseSignal:
 
     def test_is_transition_heuristic(self) -> None:
         """HEURISTIC action is a transition."""
-        signal = PhaseSignal(
-            action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.5
-        )
+        signal = PhaseSignal(action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.5)
         assert signal.is_transition is True
 
     def test_is_transition_halt(self) -> None:
@@ -368,16 +359,12 @@ class TestPhaseSignal:
 
     def test_should_auto_advance_high_confidence(self) -> None:
         """High confidence transition should auto-advance."""
-        signal = PhaseSignal(
-            action=SignalAction.CONTINUE, target_phase=NPhase.ACT, confidence=1.0
-        )
+        signal = PhaseSignal(action=SignalAction.CONTINUE, target_phase=NPhase.ACT, confidence=1.0)
         assert signal.should_auto_advance is True
 
     def test_should_auto_advance_low_confidence(self) -> None:
         """Low confidence transition should not auto-advance."""
-        signal = PhaseSignal(
-            action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.3
-        )
+        signal = PhaseSignal(action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.3)
         assert signal.should_auto_advance is False
 
     def test_to_dict_continue(self) -> None:
@@ -398,9 +385,7 @@ class TestPhaseSignal:
 
     def test_to_dict_halt(self) -> None:
         """Serialize HALT signal to dict."""
-        signal = PhaseSignal(
-            action=SignalAction.HALT, reason="needs input", confidence=1.0
-        )
+        signal = PhaseSignal(action=SignalAction.HALT, reason="needs input", confidence=1.0)
 
         data = signal.to_dict()
 
@@ -524,9 +509,7 @@ class TestConfiguration:
         """Auto-advance threshold affects recommendation."""
         low_threshold_detector = PhaseDetector(auto_advance_threshold=0.3)
 
-        signal = PhaseSignal(
-            action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.5
-        )
+        signal = PhaseSignal(action=SignalAction.HEURISTIC, target_phase=NPhase.ACT, confidence=0.5)
 
         assert low_threshold_detector.should_auto_advance(signal) is True
 

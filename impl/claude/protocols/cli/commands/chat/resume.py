@@ -126,9 +126,9 @@ async def _enter_chat_with_session(
 
     This restores the session state and enters the chat REPL.
     """
+    from protocols.agentese.chat import ChatConfig, ChatSession
     from protocols.cli.chat_projection import ChatProjection
     from protocols.cli.shared import OutputFormatter
-    from protocols.agentese.chat import ChatSession, ChatConfig
 
     output = OutputFormatter(ctx)
 
@@ -156,8 +156,9 @@ async def _enter_chat_with_session(
         )
 
         # Restore turns
-        from protocols.agentese.chat.session import Turn, Message
         from datetime import datetime
+
+        from protocols.agentese.chat.session import Message, Turn
 
         for turn_data in session.turns:
             # Reconstruct turns
@@ -174,8 +175,12 @@ async def _enter_chat_with_session(
                 turn_number=turn_data.get("turn_number", 0),
                 user_message=user_msg,
                 assistant_response=assistant_msg,
-                started_at=datetime.fromisoformat(turn_data.get("started_at", datetime.now().isoformat())),
-                completed_at=datetime.fromisoformat(turn_data.get("completed_at", datetime.now().isoformat())),
+                started_at=datetime.fromisoformat(
+                    turn_data.get("started_at", datetime.now().isoformat())
+                ),
+                completed_at=datetime.fromisoformat(
+                    turn_data.get("completed_at", datetime.now().isoformat())
+                ),
                 tokens_in=turn_data.get("tokens_in", 0),
                 tokens_out=turn_data.get("tokens_out", 0),
                 context_before=0,

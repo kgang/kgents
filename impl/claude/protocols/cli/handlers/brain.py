@@ -79,7 +79,7 @@ def _run_async(coro: Any) -> Any:
     is already running.
     """
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # If we get here, an event loop is already running
         import concurrent.futures
 
@@ -284,12 +284,8 @@ async def _handle_capture(args: list[str], json_output: bool) -> int:
     else:
         print(f"✓ Captured: {content[:50]}...")
         print(f"  ID: {result.concept_id}")
-        print(
-            f"  Embedding: {'✓ semantic' if result.has_embedding else '○ hash-based'}"
-        )
-        print(
-            f"  Storage: SQLite + {'Vector' if result.has_embedding else 'relational only'}"
-        )
+        print(f"  Embedding: {'✓ semantic' if result.has_embedding else '○ hash-based'}")
+        print(f"  Storage: SQLite + {'Vector' if result.has_embedding else 'relational only'}")
 
     return 0
 
@@ -348,9 +344,7 @@ async def _handle_search(args: list[str], json_output: bool, limit: int) -> int:
             print(f"🔮 Found {len(results)} memories:")
             print()
             for i, r in enumerate(results, 1):
-                similarity_bar = "█" * int(r.similarity * 10) + "░" * (
-                    10 - int(r.similarity * 10)
-                )
+                similarity_bar = "█" * int(r.similarity * 10) + "░" * (10 - int(r.similarity * 10))
                 stale_marker = " ⚠️ stale" if r.is_stale else ""
                 print(f"  {i}. [{similarity_bar}] {r.similarity:.1%}{stale_marker}")
                 print(f"     {r.content[:80]}...")
@@ -501,16 +495,12 @@ async def _handle_status(json_output: bool) -> int:
         )
     else:
         backend_icon = "🐘" if status.storage_backend == "postgres" else "📦"
-        backend_label = (
-            "PostgreSQL" if status.storage_backend == "postgres" else "SQLite"
-        )
+        backend_label = "PostgreSQL" if status.storage_backend == "postgres" else "SQLite"
         print("🧠 Brain Status (D-gent Triad)")
         print("━" * 40)
         print(f"  Captures:     {status.total_captures}")
         print(f"  Vectors:      {status.vector_count}")
-        print(
-            f"  Semantic:     {'✓ L-gent embeddings' if status.has_semantic else '○ hash-based'}"
-        )
+        print(f"  Semantic:     {'✓ L-gent embeddings' if status.has_semantic else '○ hash-based'}")
         print(f"  Coherency:    {status.coherency_rate:.1%}")
         print(f"  Ghosts healed: {status.ghosts_healed}")
         print("━" * 40)
@@ -683,9 +673,7 @@ def _print_chat_response(query: str, results: list) -> None:
         # Medium confidence - show options
         print(f"\n  🔮 Found {len(results)} relevant memories:")
         for i, r in enumerate(results[:3], 1):
-            similarity_bar = "█" * int(r.similarity * 5) + "░" * (
-                5 - int(r.similarity * 5)
-            )
+            similarity_bar = "█" * int(r.similarity * 5) + "░" * (5 - int(r.similarity * 5))
             print(f"     {i}. [{similarity_bar}] {r.content[:80]}...")
     else:
         # Low confidence - tentative
@@ -701,7 +689,9 @@ def _summarize_results(results: list) -> str:
         return "No results found."
 
     top = results[0]
-    summary = f"Found {len(results)} memories. Top result ({top.similarity:.0%}): {top.content[:100]}"
+    summary = (
+        f"Found {len(results)} memories. Top result ({top.similarity:.0%}): {top.content[:100]}"
+    )
     return summary
 
 

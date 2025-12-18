@@ -31,50 +31,46 @@ Service Architecture:
 See: docs/skills/metaphysical-fullstack.md
 """
 
+from .bidding_service import (
+    AtelierBiddingService,
+    BidView,
+    QueueStatusView,
+    SpectatorStatsView,
+    get_bid_cost,
+    get_bid_priority,
+)
+from .economy_service import (
+    AtelierEconomyService,
+    EconomyStatusView,
+    TokenBalanceView,
+)
+from .festival_service import (
+    AtelierFestivalService,
+    FestivalEntryView,
+    FestivalSummaryView,
+    FestivalView,
+)
+from .node import (
+    ArtisanListRendering,
+    ArtisanRendering,
+    AtelierManifestRendering,
+    AtelierNode,
+    ContributionListRendering,
+    ContributionRendering,
+    ExhibitionRendering,
+    GalleryItemRendering,
+    GalleryListRendering,
+    WorkshopListRendering,
+    WorkshopRendering,
+)
 from .persistence import (
+    ArtisanView,
     AtelierPersistence,
     AtelierStatus,
-    ArtisanView,
     ContributionView,
     ExhibitionView,
     GalleryItemView,
     WorkshopView,
-)
-
-from .node import (
-    AtelierNode,
-    AtelierManifestRendering,
-    WorkshopRendering,
-    WorkshopListRendering,
-    ArtisanRendering,
-    ArtisanListRendering,
-    ContributionRendering,
-    ContributionListRendering,
-    ExhibitionRendering,
-    GalleryItemRendering,
-    GalleryListRendering,
-)
-
-from .economy_service import (
-    AtelierEconomyService,
-    TokenBalanceView,
-    EconomyStatusView,
-)
-
-from .bidding_service import (
-    AtelierBiddingService,
-    BidView,
-    SpectatorStatsView,
-    QueueStatusView,
-    get_bid_cost,
-    get_bid_priority,
-)
-
-from .festival_service import (
-    AtelierFestivalService,
-    FestivalView,
-    FestivalEntryView,
-    FestivalSummaryView,
 )
 
 __all__ = [

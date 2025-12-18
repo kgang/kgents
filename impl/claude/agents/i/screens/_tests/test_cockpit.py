@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.i.data.core_types import Phase
 from agents.i.data.garden import PolynomialState, YieldTurn
 from agents.i.data.state import AgentSnapshot
@@ -59,27 +60,21 @@ class TestSemaphoreDisplay:
 
     def test_active_semaphore(self) -> None:
         """Active semaphore shows bullet."""
-        display = SemaphoreDisplay(
-            semaphores=[{"name": "test.process", "status": "active"}]
-        )
+        display = SemaphoreDisplay(semaphores=[{"name": "test.process", "status": "active"}])
         result = display.render()
         assert "test.process" in result
         assert "●" in result
 
     def test_waiting_semaphore(self) -> None:
         """Waiting semaphore shows empty circle."""
-        display = SemaphoreDisplay(
-            semaphores=[{"name": "test.process", "status": "waiting"}]
-        )
+        display = SemaphoreDisplay(semaphores=[{"name": "test.process", "status": "waiting"}])
         result = display.render()
         assert "test.process" in result
         assert "○" in result
 
     def test_idle_semaphore(self) -> None:
         """Idle semaphore shows dashed circle."""
-        display = SemaphoreDisplay(
-            semaphores=[{"name": "test.process", "status": "idle"}]
-        )
+        display = SemaphoreDisplay(semaphores=[{"name": "test.process", "status": "idle"}])
         result = display.render()
         assert "test.process" in result
         assert "◌" in result
@@ -108,9 +103,7 @@ class TestThoughtsStream:
 
     def test_single_thought(self) -> None:
         """Single thought is rendered."""
-        stream = ThoughtsStream(
-            thoughts=[{"time": "12:00:00", "content": "Test thought"}]
-        )
+        stream = ThoughtsStream(thoughts=[{"time": "12:00:00", "content": "Test thought"}])
         result = stream.render()
         assert "12:00:00" in result
         assert "Test thought" in result
@@ -129,9 +122,7 @@ class TestThoughtsStream:
 
     def test_limits_to_five(self) -> None:
         """Only shows last 5 thoughts."""
-        thoughts = [
-            {"time": f"12:00:{i:02d}", "content": f"Thought {i}"} for i in range(10)
-        ]
+        thoughts = [{"time": f"12:00:{i:02d}", "content": f"Thought {i}"} for i in range(10)]
         stream = ThoughtsStream(thoughts=thoughts)
         result = stream.render()
         # Only first 5 should be rendered
@@ -140,9 +131,7 @@ class TestThoughtsStream:
     def test_truncates_long_content(self) -> None:
         """Long content is truncated at 50 chars."""
         long_content = "A" * 100
-        stream = ThoughtsStream(
-            thoughts=[{"time": "12:00:00", "content": long_content}]
-        )
+        stream = ThoughtsStream(thoughts=[{"time": "12:00:00", "content": long_content}])
         result = stream.render()
         # Should be truncated
         assert len(result.split("\n")[0]) < 100
@@ -346,9 +335,7 @@ class TestCockpitScreenBindings:
         """Screen has back binding (Escape)."""
         from textual.binding import Binding
 
-        bindings = {
-            b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)
-        }
+        bindings = {b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)}
         assert "escape" in bindings
         assert bindings["escape"] == "back"
 
@@ -356,9 +343,7 @@ class TestCockpitScreenBindings:
         """Screen has zoom bindings (+/-)."""
         from textual.binding import Binding
 
-        bindings = {
-            b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)
-        }
+        bindings = {b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)}
         assert "plus" in bindings
         assert bindings["plus"] == "zoom_in"
         assert "minus" in bindings
@@ -368,9 +353,7 @@ class TestCockpitScreenBindings:
         """Screen has temperature bindings (h/l)."""
         from textual.binding import Binding
 
-        bindings = {
-            b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)
-        }
+        bindings = {b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)}
         assert "h" in bindings
         assert bindings["h"] == "decrease_temp"
         assert "l" in bindings
@@ -380,9 +363,7 @@ class TestCockpitScreenBindings:
         """Screen has Loom view binding (t)."""
         from textual.binding import Binding
 
-        bindings = {
-            b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)
-        }
+        bindings = {b.key: b.action for b in CockpitScreen.BINDINGS if isinstance(b, Binding)}
         assert "t" in bindings
         assert bindings["t"] == "show_loom"
 

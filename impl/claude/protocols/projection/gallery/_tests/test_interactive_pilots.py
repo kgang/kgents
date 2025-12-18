@@ -12,6 +12,7 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.widget import RenderTarget
 from protocols.projection.gallery.pilots import (
     OPERAD_DEFINITIONS,
@@ -88,9 +89,7 @@ class TestPolynomialPlayground:
     def test_valid_inputs_computed_from_edges(self) -> None:
         """Valid inputs should be computed from current state's edges."""
         pilot = PILOT_REGISTRY["polynomial_playground"]
-        result = pilot.render(
-            RenderTarget.JSON, {"preset": "traffic_light", "state": "RED"}
-        )
+        result = pilot.render(RenderTarget.JSON, {"preset": "traffic_light", "state": "RED"})
         # From RED, only 'tick' leads to GREEN
         assert "valid_inputs" in result
         assert "tick" in result["valid_inputs"]

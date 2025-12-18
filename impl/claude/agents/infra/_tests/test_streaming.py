@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.infra.collectors.base import BaseCollector, CollectorConfig
 from agents.infra.models import (
     InfraConnection,
@@ -342,8 +343,7 @@ class TestDiffAlgorithm:
         added = [
             u
             for u in updates
-            if u.kind == TopologyUpdateKind.CONNECTION_ADDED
-            or u.kind == "connection_added"
+            if u.kind == TopologyUpdateKind.CONNECTION_ADDED or u.kind == "connection_added"
         ]
         assert len(added) == 1
 
@@ -363,8 +363,7 @@ class TestDiffAlgorithm:
         removed = [
             u
             for u in updates
-            if u.kind == TopologyUpdateKind.CONNECTION_REMOVED
-            or u.kind == "connection_removed"
+            if u.kind == TopologyUpdateKind.CONNECTION_REMOVED or u.kind == "connection_removed"
         ]
         assert len(removed) == 1
 
@@ -519,9 +518,9 @@ class TestPositionPreservation:
 
         # New entity should keep its calculated position
         assert collector._last_topology is not None
-        new_entity = [
-            e for e in collector._last_topology.entities if e.id == "pod/default/pod-2"
-        ][0]
+        new_entity = [e for e in collector._last_topology.entities if e.id == "pod/default/pod-2"][
+            0
+        ]
         assert new_entity.x == 20.0
         assert new_entity.y == 30.0
         assert new_entity.z == 40.0

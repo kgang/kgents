@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from agents.i.reactive.adapters.marimo_trace import (
     AgentTraceState,
     AgentTraceWidget,

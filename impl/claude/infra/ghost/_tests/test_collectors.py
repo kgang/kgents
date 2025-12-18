@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from infra.ghost.collectors import (
     CollectorResult,
     FlinchCollector,

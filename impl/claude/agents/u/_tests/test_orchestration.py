@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.poly.types import Err
 from agents.u.core import Tool, ToolErrorType, ToolMeta
 from agents.u.orchestration import (
@@ -162,9 +163,7 @@ async def test_sequential_basic() -> None:
 @pytest.mark.asyncio
 async def test_sequential_single_tool() -> None:
     """Test sequential with single tool."""
-    orchestrator: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator(
-        [AddOneTool()]
-    )
+    orchestrator: SequentialOrchestrator[Any, Any, Any] = SequentialOrchestrator([AddOneTool()])
 
     result = await orchestrator.execute(NumberInput(value=10))
 

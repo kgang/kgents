@@ -17,6 +17,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 
 import pytest
+
 from agents.town.environment import create_mpp_environment
 from agents.town.event_bus import EventBus
 from agents.town.flux import TownFlux
@@ -89,9 +90,7 @@ class TestPhaseGovernorBasic:
     """Basic PhaseGovernor functionality."""
 
     @pytest.mark.asyncio
-    async def test_run_yields_events(
-        self, flux: TownFlux, fast_config: PhaseTimingConfig
-    ) -> None:
+    async def test_run_yields_events(self, flux: TownFlux, fast_config: PhaseTimingConfig) -> None:
         """run() yields events from flux."""
         governor = PhaseGovernor(flux=flux, config=fast_config)
 
@@ -129,9 +128,7 @@ class TestPhaseGovernorBasic:
             break  # Just check first event
 
     @pytest.mark.asyncio
-    async def test_stopped_after_run(
-        self, flux: TownFlux, fast_config: PhaseTimingConfig
-    ) -> None:
+    async def test_stopped_after_run(self, flux: TownFlux, fast_config: PhaseTimingConfig) -> None:
         """State is stopped after run completes."""
         governor = PhaseGovernor(flux=flux, config=fast_config)
 
@@ -171,17 +168,13 @@ class TestPhaseGovernorPauseResume:
         assert len(events) >= 2
 
     @pytest.mark.asyncio
-    async def test_toggle_pause(
-        self, flux: TownFlux, fast_config: PhaseTimingConfig
-    ) -> None:
+    async def test_toggle_pause(self, flux: TownFlux, fast_config: PhaseTimingConfig) -> None:
         """toggle_pause() switches state."""
         governor = PhaseGovernor(flux=flux, config=fast_config)
 
         # Start running
         run_task = asyncio.create_task(
-            asyncio.wait_for(
-                self._collect_events(governor.run(num_phases=1)), timeout=2.0
-            )
+            asyncio.wait_for(self._collect_events(governor.run(num_phases=1)), timeout=2.0)
         )
 
         await asyncio.sleep(0.01)
@@ -255,9 +248,7 @@ class TestPhaseGovernorStop:
     """Stop functionality."""
 
     @pytest.mark.asyncio
-    async def test_stop_ends_run(
-        self, flux: TownFlux, fast_config: PhaseTimingConfig
-    ) -> None:
+    async def test_stop_ends_run(self, flux: TownFlux, fast_config: PhaseTimingConfig) -> None:
         """stop() ends run() early."""
         governor = PhaseGovernor(flux=flux, config=fast_config)
 

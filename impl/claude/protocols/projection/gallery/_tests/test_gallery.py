@@ -17,6 +17,7 @@ import os
 from unittest.mock import patch
 
 import pytest
+
 from agents.i.reactive.widget import RenderTarget
 from protocols.projection.gallery.overrides import (
     DEFAULT_OVERRIDES,
@@ -74,9 +75,7 @@ class TestGalleryOverrides:
 
     def test_with_widget_override_merges(self) -> None:
         """Widget-specific overrides should merge with existing."""
-        overrides = GalleryOverrides().with_widget_override(
-            "glyph_active", {"phase": "error"}
-        )
+        overrides = GalleryOverrides().with_widget_override("glyph_active", {"phase": "error"})
         overrides = overrides.with_widget_override("glyph_active", {"entropy": 0.5})
 
         widget_overrides = overrides.get_widget_override("glyph_active")

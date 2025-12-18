@@ -46,7 +46,6 @@ from enum import Enum
 
 from .models import InfraConnection, InfraEntity, InfraEntityKind
 
-
 # =============================================================================
 # Layout Configuration
 # =============================================================================
@@ -55,8 +54,8 @@ from .models import InfraConnection, InfraEntity, InfraEntityKind
 class LayoutStrategy(str, Enum):
     """Available layout strategies."""
 
-    SEMANTIC = "semantic"       # Principled semantic layout (default)
-    FORCE_DIRECTED = "force"    # Classic force-directed (fallback)
+    SEMANTIC = "semantic"  # Principled semantic layout (default)
+    FORCE_DIRECTED = "force"  # Classic force-directed (fallback)
     HIERARCHICAL = "hierarchical"  # Strict layer-based (for debugging)
 
 
@@ -68,18 +67,18 @@ class LayoutConfig:
     strategy: LayoutStrategy = LayoutStrategy.SEMANTIC
 
     # Stack-based spacing (v2 compact layout)
-    stack_spacing: float = 3.0          # X distance between stacks within namespace
-    namespace_depth: float = 8.0        # Z distance between namespace slices
-    layer_spacing: float = 3.0          # Y distance between abstraction layers
+    stack_spacing: float = 3.0  # X distance between stacks within namespace
+    namespace_depth: float = 8.0  # Z distance between namespace slices
+    layer_spacing: float = 3.0  # Y distance between abstraction layers
 
     # Legacy spacing (for fallback)
-    namespace_spacing: float = 12.0     # X distance between namespace centers
-    entity_spacing: float = 2.5         # Minimum distance between entities
+    namespace_spacing: float = 12.0  # X distance between namespace centers
+    entity_spacing: float = 2.5  # Minimum distance between entities
 
     # Z-axis health encoding (within namespace slice)
-    health_depth_scale: float = 2.0     # How far unhealthy entities come forward
-    warning_threshold: float = 0.7      # Health below this = warning
-    critical_threshold: float = 0.5     # Health below this = critical
+    health_depth_scale: float = 2.0  # How far unhealthy entities come forward
+    warning_threshold: float = 0.7  # Health below this = warning
+    critical_threshold: float = 0.5  # Health below this = critical
 
     # Force-directed refinement (applied after semantic placement)
     refinement_iterations: int = 30
@@ -101,41 +100,32 @@ class LayoutConfig:
 SEMANTIC_LAYERS: dict[InfraEntityKind, int] = {
     # Layer 3: Entry points (top)
     InfraEntityKind.INGRESS: 3,
-
     # Layer 2: Services (traffic routing)
     InfraEntityKind.SERVICE: 2,
-
     # Layer 1: Orchestrators
     InfraEntityKind.DEPLOYMENT: 1,
     InfraEntityKind.STATEFULSET: 1,
     InfraEntityKind.DAEMONSET: 1,
-
     # Layer 0: Workers (bottom)
     InfraEntityKind.POD: 0,
     InfraEntityKind.CONTAINER: 0,
-
     # Infrastructure (placed below workers)
     InfraEntityKind.NODE: -1,
     InfraEntityKind.PVC: -1,
     InfraEntityKind.VOLUME: -1,
-
     # Config/Secrets (same layer as orchestrators)
     InfraEntityKind.CONFIGMAP: 1,
     InfraEntityKind.SECRET: 1,
-
     # NATS/messaging (parallel to services)
     InfraEntityKind.NATS_SERVER: 2,
     InfraEntityKind.NATS_SUBJECT: 1,
     InfraEntityKind.NATS_STREAM: 1,
     InfraEntityKind.NATS_CONSUMER: 0,
-
     # Database (infrastructure layer)
     InfraEntityKind.DATABASE: -1,
     InfraEntityKind.DATABASE_CONNECTION: 0,
-
     # Namespace container (above all)
     InfraEntityKind.NAMESPACE: 4,
-
     # Catch-all
     InfraEntityKind.CUSTOM: 0,
     InfraEntityKind.NETWORK: -1,
@@ -300,9 +290,7 @@ def _identify_stacks(
                 # Add neighbors that are in the same namespace
                 for neighbor_id in adjacency.get(current.id, set()):
                     if neighbor_id in ns_entity_ids and neighbor_id not in visited:
-                        neighbor = next(
-                            (e for e in ns_entities if e.id == neighbor_id), None
-                        )
+                        neighbor = next((e for e in ns_entities if e.id == neighbor_id), None)
                         if neighbor:
                             queue.append(neighbor)
 
@@ -541,7 +529,7 @@ def _refine_with_connections(
 
         # Repulsion between entities in same layer and namespace
         for i, e1 in enumerate(entities):
-            for e2 in entities[i + 1:]:
+            for e2 in entities[i + 1 :]:
                 # Only repel within same namespace
                 if e1.namespace != e2.namespace:
                     continue
@@ -689,13 +677,11 @@ def _force_directed_layout(
         connections_by_entity[conn.source_id].append(conn.target_id)
 
     for _ in range(config.refinement_iterations * 2):
-        forces: dict[str, tuple[float, float, float]] = {
-            e.id: (0.0, 0.0, 0.0) for e in entities
-        }
+        forces: dict[str, tuple[float, float, float]] = {e.id: (0.0, 0.0, 0.0) for e in entities}
 
         # Repulsion
         for i, e1 in enumerate(entities):
-            for e2 in entities[i + 1:]:
+            for e2 in entities[i + 1 :]:
                 dx = e1.x - e2.x
                 dy = e1.y - e2.y
                 dz = e1.z - e2.z

@@ -38,7 +38,22 @@ from typing import TYPE_CHECKING, Any
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
 
+from services.gardener.contracts import (
+    ConceptGardenerManifestResponse,
+    ConceptGardenerPolynomialResponse,
+    ConceptGardenerProposeResponse,
+    ConceptGardenerRouteRequest,
+    ConceptGardenerRouteResponse,
+    ConceptGardenerSessionAdvanceRequest,
+    ConceptGardenerSessionAdvanceResponse,
+    ConceptGardenerSessionDefineRequest,
+    ConceptGardenerSessionDefineResponse,
+    ConceptGardenerSessionManifestResponse,
+    ConceptGardenerSessionsListResponse,
+)
+
 from ..affordances import AspectCategory, Effect, aspect
+from ..contract import Contract, Response
 from ..node import BaseLogosNode, BasicRendering
 from ..registry import node
 
@@ -571,6 +586,28 @@ class GardenerSession:
 @node(
     "concept.gardener",
     description="The 7th Crown Jewel - Development session orchestrator",
+    contracts={
+        # Perception aspects
+        "manifest": Response(ConceptGardenerManifestResponse),
+        "session.manifest": Response(ConceptGardenerSessionManifestResponse),
+        "session.polynomial": Response(ConceptGardenerPolynomialResponse),
+        "sessions.manifest": Response(ConceptGardenerSessionsListResponse),
+        "propose": Response(ConceptGardenerProposeResponse),
+        # Mutation aspects
+        "session.define": Contract(
+            ConceptGardenerSessionDefineRequest,
+            ConceptGardenerSessionDefineResponse,
+        ),
+        "session.advance": Contract(
+            ConceptGardenerSessionAdvanceRequest,
+            ConceptGardenerSessionAdvanceResponse,
+        ),
+        # Route (with LLM)
+        "route": Contract(
+            ConceptGardenerRouteRequest,
+            ConceptGardenerRouteResponse,
+        ),
+    },
 )
 @dataclass
 class GardenerNode(BaseLogosNode):
@@ -599,9 +636,7 @@ class GardenerNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Return role-gated affordances."""
-        return GARDENER_ROLE_AFFORDANCES.get(
-            archetype, GARDENER_ROLE_AFFORDANCES["default"]
-        )
+        return GARDENER_ROLE_AFFORDANCES.get(archetype, GARDENER_ROLE_AFFORDANCES["default"])
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> BasicRendering:
         """
@@ -631,9 +666,7 @@ class GardenerNode(BaseLogosNode):
                         "TEST": "🧪",
                         "REFLECT": "🪞",
                     }.get(session.current_phase, "📌")
-                    lines.append(
-                        f"  {phase_emoji} {session.name} ({session.current_phase})"
-                    )
+                    lines.append(f"  {phase_emoji} {session.name} ({session.current_phase})")
                     if session.plan_path:
                         lines.append(f"     Plan: {session.plan_path}")
 
@@ -769,9 +802,7 @@ class GardenerNode(BaseLogosNode):
                     result = await self._try_llm_route(input_text)
                     if result.confidence > 0.5:
                         span.set_attribute("gardener.method", RouteMethod.LLM.value)
-                        span.set_attribute(
-                            "gardener.resolved_path", result.resolved_path
-                        )
+                        span.set_attribute("gardener.resolved_path", result.resolved_path)
                         span.set_attribute("gardener.confidence", result.confidence)
                         span.set_status(Status(StatusCode.OK))
                         return self._render_route_result(result)

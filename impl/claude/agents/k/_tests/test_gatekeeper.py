@@ -18,6 +18,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
+
 from agents.k.gatekeeper import (
     Principle,
     SemanticGatekeeper,
@@ -151,9 +152,7 @@ class TestHeuristicPatterns:
     """Tests for heuristic pattern detection."""
 
     @pytest.mark.asyncio
-    async def test_detect_hardcoded_password(
-        self, gatekeeper: SemanticGatekeeper
-    ) -> None:
+    async def test_detect_hardcoded_password(self, gatekeeper: SemanticGatekeeper) -> None:
         """Test detecting hardcoded passwords."""
         content = """
 def connect():
@@ -169,9 +168,7 @@ def connect():
         )
 
     @pytest.mark.asyncio
-    async def test_detect_hardcoded_api_key(
-        self, gatekeeper: SemanticGatekeeper
-    ) -> None:
+    async def test_detect_hardcoded_api_key(self, gatekeeper: SemanticGatekeeper) -> None:
         """Test detecting hardcoded API keys."""
         content = """
 API_KEY = "sk_live_abc123"
@@ -305,9 +302,7 @@ class TestFileValidation:
     """Tests for file validation."""
 
     @pytest.mark.asyncio
-    async def test_validate_existing_file(
-        self, temp_file: Callable[[str], str]
-    ) -> None:
+    async def test_validate_existing_file(self, temp_file: Callable[[str], str]) -> None:
         """Test validating an existing file."""
         path = temp_file("def hello(): pass")
         result = await validate_file(path)
@@ -344,9 +339,7 @@ class TestConvenienceFunctions:
         assert len(result.violations) > 0
 
     @pytest.mark.asyncio
-    async def test_validate_file_function(
-        self, temp_file: Callable[[str], str]
-    ) -> None:
+    async def test_validate_file_function(self, temp_file: Callable[[str], str]) -> None:
         """Test validate_file convenience function."""
         path = temp_file("class MySingleton: pass")
         result = await validate_file(path)
@@ -485,9 +478,7 @@ class KitchenSink:
         assert any("kitchen-sink" in v.message.lower() for v in result.violations)
 
     @pytest.mark.asyncio
-    async def test_lean_module_has_insight(
-        self, analyzer: TastefullnessAnalyzer
-    ) -> None:
+    async def test_lean_module_has_insight(self, analyzer: TastefullnessAnalyzer) -> None:
         """Test that lean modules get positive insights."""
         content = """
 from typing import Optional
@@ -518,9 +509,7 @@ class TestComposabilityAnalyzer:
         return ComposabilityAnalyzer()
 
     @pytest.mark.asyncio
-    async def test_detect_mutable_default(
-        self, analyzer: ComposabilityAnalyzer
-    ) -> None:
+    async def test_detect_mutable_default(self, analyzer: ComposabilityAnalyzer) -> None:
         """Test detecting mutable default arguments."""
         content = """
 def add_item(item, items=[]):
@@ -531,9 +520,7 @@ def add_item(item, items=[]):
         assert any("mutable default" in v.message.lower() for v in result.violations)
 
     @pytest.mark.asyncio
-    async def test_detect_dependency_injection(
-        self, analyzer: ComposabilityAnalyzer
-    ) -> None:
+    async def test_detect_dependency_injection(self, analyzer: ComposabilityAnalyzer) -> None:
         """Test that DI pattern is recognized as positive."""
         content = """
 class Service:

@@ -24,8 +24,7 @@ from enum import Enum
 from typing import Any, Optional
 
 from .graph_search import GraphBrain, GraphResult
-from .search import Search
-from .search import SearchResult as KeywordResult
+from .search import Search, SearchResult as KeywordResult
 from .semantic import SemanticBrain, SemanticResult
 from .types import CatalogEntry
 
@@ -288,9 +287,7 @@ class QueryFusion:
             rrf_score = semantic_weight / (k + rank)
             scores[entry_id]["score"] += rrf_score
             scores[entry_id]["sources"]["semantic"] = sem_result.similarity
-            scores[entry_id]["explanations"].append(
-                f"Semantic: {sem_result.explanation}"
-            )
+            scores[entry_id]["explanations"].append(f"Semantic: {sem_result.explanation}")
 
         # Add graph scores
         for rank, graph_result in enumerate(graph_results, start=1):
@@ -305,9 +302,7 @@ class QueryFusion:
             rrf_score = graph_weight / (k + rank)
             scores[entry_id]["score"] += rrf_score
             scores[entry_id]["sources"]["graph"] = 1.0 / graph_result.path_length
-            scores[entry_id]["explanations"].append(
-                f"Graph: {graph_result.explanation}"
-            )
+            scores[entry_id]["explanations"].append(f"Graph: {graph_result.explanation}")
 
         # Convert to FusedResult and sort
         fused: list[FusedResult] = []

@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 
 from .help_projector import NODE_EMOJIS, NODE_TITLES, PATH_TO_COMMAND
 
-
 # === Context Emojis ===
 
 CONTEXT_EMOJIS = {
@@ -193,9 +192,7 @@ def _render_rich(pattern: str, matches: list[FormattedMatch]) -> str:
                     f"  [cyan]{path_display:35}[/] [green]kg {m.cli_command:20}[/] [dim]{m.description}[/]"
                 )
             else:
-                console.print(
-                    f"  [cyan]{path_display:35}[/] [dim]{m.description}[/]"
-                )
+                console.print(f"  [cyan]{path_display:35}[/] [dim]{m.description}[/]")
 
         console.print()
 

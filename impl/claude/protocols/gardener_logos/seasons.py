@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from .garden import GardenSeason
 
@@ -72,18 +72,18 @@ class TransitionSignals:
         time_in_season_hours = time_in_season.total_seconds() / 3600
 
         # Calculate gesture frequency (gestures per hour in last 24h)
-        recent_gestures = [
-            g for g in garden.recent_gestures
-            if g.is_recent(hours=24)
-        ]
+        recent_gestures = [g for g in garden.recent_gestures if g.is_recent(hours=24)]
 
         if time_in_season_hours > 0:
             # Use min of time in season or 24h for frequency calc
             period_hours = min(time_in_season_hours, 24.0)
-            gestures_in_period = len([
-                g for g in garden.recent_gestures
-                if (now - g.timestamp).total_seconds() / 3600 <= period_hours
-            ])
+            gestures_in_period = len(
+                [
+                    g
+                    for g in garden.recent_gestures
+                    if (now - g.timestamp).total_seconds() / 3600 <= period_hours
+                ]
+            )
             gesture_frequency = gestures_in_period / max(period_hours, 0.1)
         else:
             gesture_frequency = 0.0
@@ -110,8 +110,8 @@ class TransitionSignals:
         artifacts_created = 0
 
         if garden.session is not None:
-            reflect_count = getattr(garden.session.state, 'reflect_count', 0)
-            artifacts = getattr(garden.session.state, 'artifacts', [])
+            reflect_count = getattr(garden.session.state, "reflect_count", 0)
+            artifacts = getattr(garden.session.state, "artifacts", [])
             artifacts_created = len(artifacts)
 
         return cls(
@@ -179,6 +179,7 @@ class SeasonTransition:
 # Each rule: (from_season, to_season, evaluator_function)
 # Evaluator returns (confidence: float, reason: str)
 
+
 def _eval_dormant_to_sprouting(signals: TransitionSignals) -> tuple[float, str]:
     """
     DORMANT → SPROUTING
@@ -199,7 +200,9 @@ def _eval_dormant_to_sprouting(signals: TransitionSignals) -> tuple[float, str]:
     # Must have entropy to grow
     if signals.entropy_spent_ratio < 0.5:
         confidence += 0.3
-        reasons.append(f"Entropy available ({(1-signals.entropy_spent_ratio)*100:.0f}% remaining)")
+        reasons.append(
+            f"Entropy available ({(1 - signals.entropy_spent_ratio) * 100:.0f}% remaining)"
+        )
     elif signals.entropy_spent_ratio < 0.7:
         confidence += 0.15
         reasons.append("Some entropy available")
@@ -230,13 +233,13 @@ def _eval_sprouting_to_blooming(signals: TransitionSignals) -> tuple[float, str]
     # Primary trigger: progress being made
     if signals.plot_progress_delta > 0.3:
         confidence += 0.5
-        reasons.append(f"Strong progress ({signals.plot_progress_delta*100:.0f}%)")
+        reasons.append(f"Strong progress ({signals.plot_progress_delta * 100:.0f}%)")
     elif signals.plot_progress_delta > 0.2:
         confidence += 0.4
-        reasons.append(f"Good progress ({signals.plot_progress_delta*100:.0f}%)")
+        reasons.append(f"Good progress ({signals.plot_progress_delta * 100:.0f}%)")
     elif signals.plot_progress_delta > 0.1:
         confidence += 0.2
-        reasons.append(f"Some progress ({signals.plot_progress_delta*100:.0f}%)")
+        reasons.append(f"Some progress ({signals.plot_progress_delta * 100:.0f}%)")
 
     # Time requirement: ideas need time to form
     if signals.time_in_season_hours >= 2.0:
@@ -341,10 +344,10 @@ def _eval_composting_to_dormant(signals: TransitionSignals) -> tuple[float, str]
     # Primary trigger: entropy exhausted
     if signals.entropy_spent_ratio > 0.8:
         confidence += 0.6
-        reasons.append(f"Entropy depleted ({signals.entropy_spent_ratio*100:.0f}% used)")
+        reasons.append(f"Entropy depleted ({signals.entropy_spent_ratio * 100:.0f}% used)")
     elif signals.entropy_spent_ratio > 0.6:
         confidence += 0.35
-        reasons.append(f"Entropy running low ({signals.entropy_spent_ratio*100:.0f}% used)")
+        reasons.append(f"Entropy running low ({signals.entropy_spent_ratio * 100:.0f}% used)")
 
     # Time trigger: composting complete
     if signals.time_in_season_hours > 6.0:
@@ -364,10 +367,9 @@ def _eval_composting_to_dormant(signals: TransitionSignals) -> tuple[float, str]
 
 
 # Map seasons to their transition evaluators
-TRANSITION_RULES: dict[
-    GardenSeason,
-    list[tuple[GardenSeason, callable]]
-] = {
+# TransitionEvaluator = Callable taking GardenState and returning (confidence, reason)
+TransitionEvaluator = Callable[["GardenState"], tuple[float, str]]
+TRANSITION_RULES: dict[GardenSeason, list[tuple[GardenSeason, TransitionEvaluator]]] = {
     GardenSeason.DORMANT: [
         (GardenSeason.SPROUTING, _eval_dormant_to_sprouting),
     ],

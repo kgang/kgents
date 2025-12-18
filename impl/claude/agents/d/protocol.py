@@ -119,7 +119,7 @@ class DgentProtocol(Protocol):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """
         List data with optional filters.
 
@@ -133,7 +133,7 @@ class DgentProtocol(Protocol):
         """
         ...
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """
         Get causal ancestors of a datum.
 
@@ -214,10 +214,10 @@ class BaseDgent:
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data with optional filters."""
         raise NotImplementedError
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal ancestors of a datum."""
         raise NotImplementedError

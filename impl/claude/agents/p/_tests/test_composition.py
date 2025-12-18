@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from typing import Any
 
 import pytest
+
 from agents.p.composition import FallbackParser, FusionParser, SwitchParser
 from agents.p.core import IdentityParser, Parser, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
@@ -297,9 +298,7 @@ class TestSwitchParser:
     def test_real_world_format_detection(self) -> None:
         """Real-world example: Format detection."""
         routes: dict[Any, Parser[Any]] = {
-            lambda t: t.strip().startswith("{"): AlwaysSuccessParser(
-                "json", 0.95, "json"
-            ),
+            lambda t: t.strip().startswith("{"): AlwaysSuccessParser("json", 0.95, "json"),
             lambda t: "###" in t: AnchorBasedParser(anchor="###ITEM:"),
             lambda t: True: IdentityParser[Any](),
         }

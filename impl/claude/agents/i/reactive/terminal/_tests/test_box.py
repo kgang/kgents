@@ -12,6 +12,7 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.terminal.box import (
     BoxChars,
     BoxRenderer,
@@ -121,9 +122,7 @@ class TestBoxRenderer:
     def test_box_title_alignment_left(self) -> None:
         """Title aligned left."""
         renderer = BoxRenderer()
-        lines = renderer.box(
-            BoxSpec(width=30, height=4, title="Left", title_align="left")
-        )
+        lines = renderer.box(BoxSpec(width=30, height=4, title="Left", title_align="left"))
 
         # Title should be near the start
         title_pos = lines[0].index("Left")
@@ -132,9 +131,7 @@ class TestBoxRenderer:
     def test_box_title_alignment_center(self) -> None:
         """Title aligned center."""
         renderer = BoxRenderer()
-        lines = renderer.box(
-            BoxSpec(width=30, height=4, title="Center", title_align="center")
-        )
+        lines = renderer.box(BoxSpec(width=30, height=4, title="Center", title_align="center"))
 
         title_pos = lines[0].index("Center")
         # Should be roughly in the middle
@@ -143,9 +140,7 @@ class TestBoxRenderer:
     def test_box_title_alignment_right(self) -> None:
         """Title aligned right."""
         renderer = BoxRenderer()
-        lines = renderer.box(
-            BoxSpec(width=30, height=4, title="Right", title_align="right")
-        )
+        lines = renderer.box(BoxSpec(width=30, height=4, title="Right", title_align="right"))
 
         title_pos = lines[0].index("Right")
         # Should be near the end

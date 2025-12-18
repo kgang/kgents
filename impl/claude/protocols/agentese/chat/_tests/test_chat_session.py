@@ -15,6 +15,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from protocols.agentese.chat.config import ChatConfig, ContextStrategy
 from protocols.agentese.chat.session import (
     ChatSession,
@@ -278,9 +279,7 @@ class TestChatSessionSend:
         assert session.entropy == 0.9
 
     @pytest.mark.asyncio
-    async def test_send_collapses_on_entropy_depletion(
-        self, mock_observer: MagicMock
-    ) -> None:
+    async def test_send_collapses_on_entropy_depletion(self, mock_observer: MagicMock) -> None:
         """Test session collapses when entropy depletes."""
         config = ChatConfig(entropy_budget=0.05, entropy_decay_per_turn=0.1)
         session = ChatSession(

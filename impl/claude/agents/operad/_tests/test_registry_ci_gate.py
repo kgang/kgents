@@ -19,6 +19,7 @@ Phase 1 Operad Unification (2025-12-17):
 from __future__ import annotations
 
 import pytest
+
 from agents.operad.core import AGENT_OPERAD, Law, Operad, OperadRegistry, Operation
 from agents.poly import from_function
 
@@ -211,12 +212,8 @@ class TestOperadRegistryCIGate:
                 continue
 
             # Subset operads should at least have seq and par
-            assert "seq" in operad.operations, (
-                f"Subset operad '{name}' missing 'seq' operation"
-            )
-            assert "par" in operad.operations, (
-                f"Subset operad '{name}' missing 'par' operation"
-            )
+            assert "seq" in operad.operations, f"Subset operad '{name}' missing 'seq' operation"
+            assert "par" in operad.operations, f"Subset operad '{name}' missing 'par' operation"
 
     def test_full_operads_extend_agent_operad_laws(self) -> None:
         """Full operads extend AGENT_OPERAD laws."""
@@ -299,9 +296,7 @@ class TestOperadCoverageMetrics:
         for name, operad in sorted(registered.items()):
             ops_count = len(operad.operations)
             laws_count = len(operad.laws)
-            universal_ops = sum(
-                1 for op in UNIVERSAL_OPERATIONS if op in operad.operations
-            )
+            universal_ops = sum(1 for op in UNIVERSAL_OPERATIONS if op in operad.operations)
             universal_laws = sum(
                 1 for law in UNIVERSAL_LAWS if any(l.name == law for l in operad.laws)
             )
@@ -309,9 +304,7 @@ class TestOperadCoverageMetrics:
             print(
                 f"    Operations: {ops_count} ({universal_ops}/{len(UNIVERSAL_OPERATIONS)} universal)"
             )
-            print(
-                f"    Laws: {laws_count} ({universal_laws}/{len(UNIVERSAL_LAWS)} universal)"
-            )
+            print(f"    Laws: {laws_count} ({universal_laws}/{len(UNIVERSAL_LAWS)} universal)")
 
         # Assert minimum coverage
         assert len(registered) >= len(EXPECTED_OPERADS), (

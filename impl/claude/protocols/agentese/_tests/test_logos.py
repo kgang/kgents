@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from testing.fixtures import as_umwelt
 
 if TYPE_CHECKING:
@@ -133,9 +134,7 @@ class TestObserverRequirement:
     """Tests for observer enforcement."""
 
     @pytest.mark.asyncio
-    async def test_invoke_without_observer_defaults_to_guest(
-        self, logos_with_nodes: Logos
-    ) -> None:
+    async def test_invoke_without_observer_defaults_to_guest(self, logos_with_nodes: Logos) -> None:
         """v3 API: invoke() without observer defaults to Observer.guest()."""
         # v3: None defaults to guest observer, not an error
         result = await logos_with_nodes.invoke("world.house.manifest", None)
@@ -146,9 +145,7 @@ class TestObserverRequirement:
         self, logos_with_nodes: Logos, mock_umwelt: MockUmwelt
     ) -> None:
         """invoke() with observer works."""
-        result = await logos_with_nodes.invoke(
-            "world.house.manifest", as_umwelt(mock_umwelt)
-        )
+        result = await logos_with_nodes.invoke("world.house.manifest", as_umwelt(mock_umwelt))
         assert result is not None
 
     def test_resolve_works_without_observer(self, logos_with_nodes: Logos) -> None:
@@ -197,9 +194,7 @@ class TestAffordanceEnforcement:
         assert "default" in str(exc.value)  # observer archetype
 
     @pytest.mark.asyncio
-    async def test_affordance_error_lists_available(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_affordance_error_lists_available(self, mock_umwelt: MockUmwelt) -> None:
         """AffordanceError shows what IS available."""
         registry = SimpleRegistry()
         registry.register(
@@ -401,9 +396,7 @@ class TestSympatheticErrors:
     ) -> None:
         """AffordanceError lists available alternatives."""
         with pytest.raises(AffordanceError) as exc:
-            await logos_with_nodes.invoke(
-                "world.house.demolish", as_umwelt(mock_umwelt)
-            )
+            await logos_with_nodes.invoke("world.house.demolish", as_umwelt(mock_umwelt))
         error = str(exc.value)
         # Should list what IS available
         assert "manifest" in error or "affordances" in error.lower()
@@ -476,9 +469,7 @@ class TestCuratorMiddleware:
         assert curated_logos.registry is logos_with_nodes.registry
 
     @pytest.mark.asyncio
-    async def test_curator_filter_called_on_invoke(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_curator_filter_called_on_invoke(self, mock_umwelt: MockUmwelt) -> None:
         """Curator filter is called during invoke."""
         from unittest.mock import AsyncMock
 
@@ -505,17 +496,13 @@ class TestCuratorMiddleware:
         self, logos_with_nodes: Logos, mock_umwelt: MockUmwelt
     ) -> None:
         """invoke() without curator returns raw result."""
-        result = await logos_with_nodes.invoke(
-            "world.house.manifest", as_umwelt(mock_umwelt)
-        )
+        result = await logos_with_nodes.invoke("world.house.manifest", as_umwelt(mock_umwelt))
 
         # Should be the raw result (BasicRendering)
         assert isinstance(result, BasicRendering)
 
     @pytest.mark.asyncio
-    async def test_curator_exempt_paths_bypass_filter(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_curator_exempt_paths_bypass_filter(self, mock_umwelt: MockUmwelt) -> None:
         """Exempt paths bypass curator filtering."""
         from unittest.mock import AsyncMock
 
@@ -582,27 +569,21 @@ class TestAutoCurator:
             "dialectic",
         }
         for aspect in expected_generation:
-            assert logos._should_auto_curate(aspect), (
-                f"{aspect} should be in GENERATION aspects"
-            )
+            assert logos._should_auto_curate(aspect), f"{aspect} should be in GENERATION aspects"
 
     def test_perception_aspects_not_auto_curated(self) -> None:
         """PERCEPTION aspects should NOT be auto-curated."""
         logos = Logos()
         perception_aspects = ["manifest", "witness", "sense", "map"]
         for aspect in perception_aspects:
-            assert not logos._should_auto_curate(aspect), (
-                f"{aspect} should NOT be auto-curated"
-            )
+            assert not logos._should_auto_curate(aspect), f"{aspect} should NOT be auto-curated"
 
     def test_mutation_aspects_not_auto_curated(self) -> None:
         """MUTATION aspects should NOT be auto-curated."""
         logos = Logos()
         mutation_aspects = ["transform", "renovate", "evolve", "repair"]
         for aspect in mutation_aspects:
-            assert not logos._should_auto_curate(aspect), (
-                f"{aspect} should NOT be auto-curated"
-            )
+            assert not logos._should_auto_curate(aspect), f"{aspect} should NOT be auto-curated"
 
     def test_blend_is_auto_curated(self) -> None:
         """blend is a GENERATION aspect and should be auto-curated."""
@@ -615,9 +596,7 @@ class TestAutoCurator:
         assert logos._should_auto_curate("solve")
 
     @pytest.mark.asyncio
-    async def test_auto_curate_applies_wundt_filter(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_auto_curate_applies_wundt_filter(self, mock_umwelt: MockUmwelt) -> None:
         """_auto_curate should apply Wundt filtering."""
         logos = Logos()
 
@@ -632,9 +611,7 @@ class TestAutoCurator:
         assert isinstance(result, str)
 
     @pytest.mark.asyncio
-    async def test_auto_curate_conservative_thresholds(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_auto_curate_conservative_thresholds(self, mock_umwelt: MockUmwelt) -> None:
         """Auto-curator should use conservative (permissive) thresholds."""
         # Very simple content should pass conservative thresholds
         logos = Logos()
@@ -675,9 +652,7 @@ class TestAutoCurator:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_explicit_curator_skips_auto_curation(
-        self, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_explicit_curator_skips_auto_curation(self, mock_umwelt: MockUmwelt) -> None:
         """When explicit curator is set, auto-curator should NOT be used."""
         from unittest.mock import AsyncMock, MagicMock
 

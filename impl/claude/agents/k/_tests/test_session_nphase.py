@@ -15,6 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from agents.k.session import SoulHistory, SoulPersistence, SoulSession
 from agents.k.soul import KgentSoul
 from protocols.nphase.operad import NPhase
@@ -174,9 +175,7 @@ class TestLoadWithNPhase:
         self, tmp_path: Path, nphase_session: NPhaseSession
     ) -> None:
         """SoulSession.load() accepts nphase_session parameter."""
-        session = await SoulSession.load(
-            soul_dir=tmp_path, nphase_session=nphase_session
-        )
+        session = await SoulSession.load(soul_dir=tmp_path, nphase_session=nphase_session)
 
         assert session.nphase_session is nphase_session
 

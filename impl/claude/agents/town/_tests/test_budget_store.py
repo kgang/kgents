@@ -11,6 +11,7 @@ Covers:
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.town.budget_store import (
     SUBSCRIPTION_TIERS,
     ConsentState,

@@ -149,9 +149,7 @@ class MetaTendingContext:
                     "path": plot.path,
                     "progress": f"{plot.progress * 100:.0f}",
                     "season_emoji": (
-                        plot.season_override.emoji
-                        if plot.season_override
-                        else garden.season.emoji
+                        plot.season_override.emoji if plot.season_override else garden.season.emoji
                     ),
                 }
             )
@@ -166,9 +164,7 @@ class MetaTendingContext:
             plots=plots,
             recent_gestures=garden.recent_gestures[-5:],
             health_score=garden.metrics.health_score,
-            entropy_remaining=max(
-                0, garden.metrics.entropy_budget - garden.metrics.entropy_spent
-            ),
+            entropy_remaining=max(0, garden.metrics.entropy_budget - garden.metrics.entropy_spent),
             session_cycles=garden.metrics.session_cycles,
             observation_request=observation_request,
         )
@@ -189,9 +185,7 @@ def render_meta_tending_prompt(context: MetaTendingContext) -> str:
     # Format plots
     plot_lines = []
     for p in context.plots:
-        plot_lines.append(
-            f"- {p['name']} [{p['path']}]: {p['progress']}% {p['season_emoji']}"
-        )
+        plot_lines.append(f"- {p['name']} [{p['path']}]: {p['progress']}% {p['season_emoji']}")
     plots_str = "\n".join(plot_lines) if plot_lines else "- (no plots yet)"
 
     # Build prompt
@@ -359,30 +353,21 @@ def _parse_meta_response(response: str) -> MetaTendingResult:
     season_assessment = ""
 
     current_section = ""
-    current_lines: list[str] = []
 
     for line in response.split("\n"):
         line = line.strip()
 
         # Detect section headers
-        if line.lower().startswith("## observation") or line.lower().startswith(
-            "**observation"
-        ):
+        if line.lower().startswith("## observation") or line.lower().startswith("**observation"):
             current_section = "observations"
             continue
-        elif line.lower().startswith("## pattern") or line.lower().startswith(
-            "**pattern"
-        ):
+        elif line.lower().startswith("## pattern") or line.lower().startswith("**pattern"):
             current_section = "patterns"
             continue
-        elif line.lower().startswith("## suggest") or line.lower().startswith(
-            "**suggest"
-        ):
+        elif line.lower().startswith("## suggest") or line.lower().startswith("**suggest"):
             current_section = "gestures"
             continue
-        elif line.lower().startswith("## season") or line.lower().startswith(
-            "**season"
-        ):
+        elif line.lower().startswith("## season") or line.lower().startswith("**season"):
             current_section = "season"
             continue
 

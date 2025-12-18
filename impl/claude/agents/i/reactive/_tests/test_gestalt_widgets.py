@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.gestalt import (
     GovernanceEntry,
     GovernanceTableState,
@@ -202,12 +203,8 @@ class TestGovernanceTableState:
         """show_inactive=False filters out revoked/suspended."""
         state = GovernanceTableState(
             entries=(
-                GovernanceEntry(
-                    agent_id="active", agent_name="Active", status="active"
-                ),
-                GovernanceEntry(
-                    agent_id="revoked", agent_name="Revoked", status="revoked"
-                ),
+                GovernanceEntry(agent_id="active", agent_name="Active", status="active"),
+                GovernanceEntry(agent_id="revoked", agent_name="Revoked", status="revoked"),
             ),
             show_inactive=False,
         )
@@ -255,9 +252,7 @@ class TestGovernanceTableWidget:
         """CLI projection includes consent bar."""
         widget = GovernanceTableWidget(
             GovernanceTableState(
-                entries=(
-                    GovernanceEntry(agent_id="x", agent_name="X", consent_level=0.5),
-                ),
+                entries=(GovernanceEntry(agent_id="x", agent_name="X", consent_level=0.5),),
             )
         )
         result = widget.project(RenderTarget.CLI)
@@ -319,9 +314,7 @@ class TestGovernanceTableWidget:
         from protocols.projection.schema import WidgetStatus
 
         widget = GovernanceTableWidget(
-            GovernanceTableState(
-                entries=(GovernanceEntry(agent_id="test", agent_name="Test"),)
-            )
+            GovernanceTableState(entries=(GovernanceEntry(agent_id="test", agent_name="Test"),))
         )
         envelope = widget.to_envelope()
 

@@ -37,13 +37,13 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from .dimensions import (
+    DEFAULT_DIMENSIONS,
     Backend,
     CommandDimensions,
     Execution,
     Interactivity,
     Seriousness,
     derive_dimensions,
-    DEFAULT_DIMENSIONS,
 )
 
 if TYPE_CHECKING:
@@ -76,12 +76,16 @@ class TerminalOutput:
 
     def to_json(self) -> str:
         """Render as JSON."""
-        return json.dumps({
-            "content": self.content,
-            "metadata": self.metadata,
-            "exit_code": self.exit_code,
-            "error": self.error,
-        }, indent=2, default=str)
+        return json.dumps(
+            {
+                "content": self.content,
+                "metadata": self.metadata,
+                "exit_code": self.exit_code,
+                "error": self.error,
+            },
+            indent=2,
+            default=str,
+        )
 
     def to_plain(self) -> str:
         """Render as plain text."""
@@ -496,7 +500,7 @@ def _parse_kwargs_from_args(args: list[str], path: str) -> dict[str, Any]:
 def _run_async(coro: Any) -> Any:
     """Run an async coroutine synchronously, handling running event loops."""
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # If we get here, an event loop is already running
         import concurrent.futures
 

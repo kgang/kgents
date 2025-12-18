@@ -12,6 +12,7 @@ Tests:
 from datetime import datetime
 
 import pytest
+
 from agents.w.value_dashboard import (
     DashboardPanel,
     DashboardState,

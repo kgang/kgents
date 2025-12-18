@@ -7,6 +7,7 @@ Tests cortex health observation, metrics collection, and subscriptions.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from agents.o.cortex_observer import (
     CoherencyStatus,
     CortexHealth,

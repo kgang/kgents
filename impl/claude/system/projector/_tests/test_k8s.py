@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.a.halo import (
     Capability,
     CapabilityBase,
@@ -463,10 +464,7 @@ class TestK8sProjector:
         sm_selector = sm.spec["selector"]["matchLabels"]
 
         assert "app.kubernetes.io/name" in sm_selector
-        assert (
-            sm_selector["app.kubernetes.io/name"]
-            == service_labels["app.kubernetes.io/name"]
-        )
+        assert sm_selector["app.kubernetes.io/name"] == service_labels["app.kubernetes.io/name"]
 
     # -----------------------------------------------------------------------
     # Streamable Capability
@@ -736,9 +734,7 @@ class TestLabelsAndAnnotations:
         resources = projector.compile(PlainAgent)
 
         for r in resources:
-            assert (
-                r.metadata["labels"]["app.kubernetes.io/managed-by"] == "k8s-projector"
-            )
+            assert r.metadata["labels"]["app.kubernetes.io/managed-by"] == "k8s-projector"
 
 
 # ===========================================================================
@@ -986,9 +982,7 @@ class TestRFC1123NameValidation:
             # but base should still be valid
             assert len(name) <= 63, f"Name too long: {name}"
             # For compound names, check they don't have invalid chars
-            assert re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$", name), (
-                f"Invalid name: {name}"
-            )
+            assert re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$", name), f"Invalid name: {name}"
 
     def test_namespace_rfc1123_validation(self) -> None:
         """Namespace is validated for RFC 1123 compliance."""

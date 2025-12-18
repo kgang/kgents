@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.g.forge_integration import (
     FGENT_AVAILABLE,
     InterfaceTongue,
@@ -237,9 +238,7 @@ class TestCreateArtifactInterface:
 
         # Constraints should be in tongue (constraints are plain strings)
         constraint_descs = list(interface.tongue.constraints)
-        assert (
-            "Read-only" in constraint_descs or "No DROP statements" in constraint_descs
-        )
+        assert "Read-only" in constraint_descs or "No DROP statements" in constraint_descs
 
     @pytest.mark.asyncio
     async def test_create_interface_with_examples(self) -> None:
@@ -303,9 +302,7 @@ class TestBindHandlers:
         assert "CHECK" in result.handlers
         assert "ADD" in result.handlers
 
-    def test_bind_handlers_returns_same_instance(
-        self, sample_interface: InterfaceTongue
-    ) -> None:
+    def test_bind_handlers_returns_same_instance(self, sample_interface: InterfaceTongue) -> None:
         """Test that bind_handlers modifies and returns same instance."""
         result = bind_handlers(sample_interface, {"TEST": lambda n, c: n})
 
@@ -347,9 +344,7 @@ class TestCreateInvocationHandler:
 class TestEmbedTongueInContract:
     """Tests for embed_tongue_in_contract function."""
 
-    def test_embed_creates_new_contract(
-        self, sample_interface: InterfaceTongue
-    ) -> None:
+    def test_embed_creates_new_contract(self, sample_interface: InterfaceTongue) -> None:
         """Test that embedding creates a new contract."""
         from agents.f.contract import Contract
 
@@ -365,9 +360,7 @@ class TestEmbedTongueInContract:
         assert result is not original
         assert result.agent_name == original.agent_name
 
-    def test_embed_sets_interface_tongue(
-        self, sample_interface: InterfaceTongue
-    ) -> None:
+    def test_embed_sets_interface_tongue(self, sample_interface: InterfaceTongue) -> None:
         """Test that embedding sets interface_tongue field."""
         from agents.f.contract import Contract
 
@@ -398,9 +391,7 @@ class TestEmbedTongueInContract:
         assert "DSL<" in result.input_type
         assert sample_interface.tongue.domain in result.input_type
 
-    def test_embed_adds_tongue_invariants(
-        self, sample_interface: InterfaceTongue
-    ) -> None:
+    def test_embed_adds_tongue_invariants(self, sample_interface: InterfaceTongue) -> None:
         """Test that embedding adds tongue-related invariants."""
         from agents.f.contract import Contract
 
@@ -415,14 +406,10 @@ class TestEmbedTongueInContract:
 
         # Should have at least one invariant about the interface
         assert len(result.invariants) > 0
-        interface_invariants = [
-            inv for inv in result.invariants if "Interface" in inv.description
-        ]
+        interface_invariants = [inv for inv in result.invariants if "Interface" in inv.description]
         assert len(interface_invariants) > 0
 
-    def test_embed_preserves_original_invariants(
-        self, sample_interface: InterfaceTongue
-    ) -> None:
+    def test_embed_preserves_original_invariants(self, sample_interface: InterfaceTongue) -> None:
         """Test that original invariants are preserved."""
         from agents.f.contract import Contract, Invariant
 
@@ -489,9 +476,7 @@ class TestForgeWithInterface:
 
         # Constraints should be reflected in interface (constraints are plain strings)
         constraint_descs = list(interface.tongue.constraints)
-        assert any(
-            "Read-only" in c or "modification" in c.lower() for c in constraint_descs
-        )
+        assert any("Read-only" in c or "modification" in c.lower() for c in constraint_descs)
 
     @pytest.mark.asyncio
     async def test_forge_with_handlers(self, calendar_handlers: dict[str, Any]) -> None:
@@ -578,9 +563,7 @@ class TestIntegration:
 
         # 4. Verify
         assert enhanced_contract.interface_tongue is not None
-        assert (
-            enhanced_contract.interface_tongue["tongue_name"] == interface.tongue.name
-        )
+        assert enhanced_contract.interface_tongue["tongue_name"] == interface.tongue.name
         assert "DSL<" in enhanced_contract.input_type
 
 

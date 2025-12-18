@@ -12,11 +12,13 @@ from functools import reduce
 from typing import Any, Callable
 
 import pytest
+
 from bootstrap import ID, compose
 
 # Optional hypothesis import with graceful fallback
 try:
     from hypothesis import assume, given, settings
+
     from testing.strategies import agent_chains, simple_agents
 
     HYPOTHESIS_AVAILABLE = True

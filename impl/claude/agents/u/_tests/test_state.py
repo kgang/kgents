@@ -51,9 +51,7 @@ class TestDgentClientInit:
         from agents.u.state import DgentClient
 
         client = DgentClient()
-        assert "localhost:8081" in client.base_url or "DGENT_URL" in str(
-            client.base_url
-        )
+        assert "localhost:8081" in client.base_url or "DGENT_URL" in str(client.base_url)
 
     def test_custom_url(self) -> None:
         """Test custom URL."""
@@ -161,6 +159,7 @@ class TestDgentClientGet:
     async def test_get_connection_error(self) -> None:
         """Test get raises DgentConnectionError on connection failure."""
         import httpx
+
         from agents.u.state import DgentClient, DgentConnectionError
 
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -249,9 +248,7 @@ class TestDgentClientPut:
 
         mock_response = MagicMock()
         mock_response.status_code = 409
-        mock_response.json.return_value = {
-            "detail": "Version conflict: expected 5, found 1"
-        }
+        mock_response.json.return_value = {"detail": "Version conflict: expected 5, found 1"}
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()

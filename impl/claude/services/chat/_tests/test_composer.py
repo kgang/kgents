@@ -8,8 +8,9 @@ Per spec/protocols/chat-morpheus-synergy.md:
 - Graceful degradation on errors
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from services.chat.composer import (
     ChatMorpheusComposer,
@@ -36,7 +37,9 @@ def _make_session(node_path: str = "self.soul") -> MagicMock:
     return session
 
 
-def _make_morpheus_result(content: str = "Hello!", tokens_in: int = 10, tokens_out: int = 5) -> MagicMock:
+def _make_morpheus_result(
+    content: str = "Hello!", tokens_in: int = 10, tokens_out: int = 5
+) -> MagicMock:
     """Create a mock CompletionResult."""
     result = MagicMock()
     result.response.choices = [MagicMock(message=MagicMock(content=content))]
@@ -92,9 +95,7 @@ class TestComposeTurn:
         assert request.messages[-1].role == "user"
 
     @pytest.mark.asyncio
-    async def test_observer_affects_model_selection(
-        self, mock_morpheus: MagicMock
-    ) -> None:
+    async def test_observer_affects_model_selection(self, mock_morpheus: MagicMock) -> None:
         """Verify different observers get different models."""
         composer = ChatMorpheusComposer(morpheus=mock_morpheus)
 
@@ -181,6 +182,7 @@ class TestComposeTurn:
         session = _make_session()
         # Simulate existing conversation
         from services.chat.session import Message
+
         session.get_messages.return_value = [
             Message(role="user", content="Hello"),
             Message(role="assistant", content="Hi there!"),
@@ -204,6 +206,7 @@ class TestComposeStream:
         self, composer: ChatMorpheusComposer, mock_morpheus: MagicMock
     ) -> None:
         """Verify tokens are yielded as they arrive."""
+
         # Setup mock streaming
         async def mock_stream(*args, **kwargs):
             for word in ["Hello", " ", "world", "!"]:
@@ -227,6 +230,7 @@ class TestComposeStream:
         self, composer: ChatMorpheusComposer, mock_morpheus: MagicMock
     ) -> None:
         """Verify streaming errors yield error message."""
+
         async def mock_stream_error(*args, **kwargs):
             yield MagicMock(choices=[MagicMock(delta=MagicMock(content="Start"))])
             raise Exception("Stream interrupted")

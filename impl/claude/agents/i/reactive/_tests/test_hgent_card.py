@@ -7,6 +7,7 @@ Tests for ShadowCardWidget and DialecticCardWidget.
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.hgent_card import (
     DialecticCardState,
     DialecticCardWidget,

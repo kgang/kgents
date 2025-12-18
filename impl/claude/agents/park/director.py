@@ -31,9 +31,10 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Callable, FrozenSet
 
-from agents.poly.protocol import PolyAgent
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+
+from agents.poly.protocol import PolyAgent
 
 if TYPE_CHECKING:
     from agents.town.inhabit_session import InhabitSession
@@ -168,9 +169,7 @@ class PacingMetrics:
         conflict_factor = self.resistance_rate  # More resistance → higher tension
         debt_factor = self.consent_debt  # More debt → higher tension
 
-        self.tension_level = (
-            0.3 * engagement_factor + 0.3 * conflict_factor + 0.4 * debt_factor
-        )
+        self.tension_level = 0.3 * engagement_factor + 0.3 * conflict_factor + 0.4 * debt_factor
         self.tension_level = max(0.0, min(1.0, self.tension_level))
 
     @property
@@ -329,9 +328,7 @@ class DirectorConfig:
 
     # Difficulty adjustment
     difficulty_window: int = 10  # Number of actions to consider
-    difficulty_resistance_threshold: float = (
-        0.5  # Resistance rate for difficulty decrease
-    )
+    difficulty_resistance_threshold: float = 0.5  # Resistance rate for difficulty decrease
 
     # Intervention probability at different tension levels
     low_tension_inject_prob: float = 0.7  # Inject when boring
@@ -657,8 +654,7 @@ def _evaluate_injection(
         return InjectionDecision(
             should_inject=False,
             injection=None,
-            cooldown_seconds=config.min_injection_cooldown
-            - metrics.time_since_injection,
+            cooldown_seconds=config.min_injection_cooldown - metrics.time_since_injection,
             reason="cooldown_active",
         )
 
@@ -873,15 +869,9 @@ class DirectorAgent:
 
             # Record resulting metrics
             span.set_attribute(ATTR_DIRECTOR_TENSION, self._state.metrics.tension_level)
-            span.set_attribute(
-                ATTR_DIRECTOR_CONSENT_DEBT, self._state.metrics.consent_debt
-            )
-            span.set_attribute(
-                ATTR_DIRECTOR_ACTION_COUNT, self._state.metrics.action_count
-            )
-            span.set_attribute(
-                "director.resistance_rate", self._state.metrics.resistance_rate
-            )
+            span.set_attribute(ATTR_DIRECTOR_CONSENT_DEBT, self._state.metrics.consent_debt)
+            span.set_attribute(ATTR_DIRECTOR_ACTION_COUNT, self._state.metrics.action_count)
+            span.set_attribute("director.resistance_rate", self._state.metrics.resistance_rate)
             span.set_status(Status(StatusCode.OK))
 
     async def tick(self) -> dict[str, Any]:
@@ -945,9 +935,7 @@ class DirectorAgent:
                 span.set_attribute(ATTR_DIRECTOR_DECISION, decision.should_inject)
                 span.set_attribute(ATTR_DIRECTOR_REASON, decision.reason)
                 if decision.injection:
-                    span.set_attribute(
-                        ATTR_DIRECTOR_INJECTION_TYPE, decision.injection.type
-                    )
+                    span.set_attribute(ATTR_DIRECTOR_INJECTION_TYPE, decision.injection.type)
                     span.set_attribute(
                         ATTR_DIRECTOR_INJECTION_INTENSITY, decision.injection.intensity
                     )
@@ -1004,22 +992,14 @@ class DirectorAgent:
 
                 # Record injection details
                 span.set_attribute(ATTR_DIRECTOR_INJECTION_TYPE, injection.type)
-                span.set_attribute(
-                    ATTR_DIRECTOR_INJECTION_INTENSITY, injection.intensity
-                )
-                span.set_attribute(
-                    "director.injection.description", injection.description
-                )
+                span.set_attribute(ATTR_DIRECTOR_INJECTION_INTENSITY, injection.intensity)
+                span.set_attribute("director.injection.description", injection.description)
 
                 # Transition to injecting phase
-                self._phase, _ = self._poly.invoke(
-                    DirectorPhase.OBSERVING, "force_inject"
-                )
+                self._phase, _ = self._poly.invoke(DirectorPhase.OBSERVING, "force_inject")
 
                 # Complete the injection
-                self._phase, result = self._poly.invoke(
-                    DirectorPhase.INJECTING, "complete"
-                )
+                self._phase, result = self._poly.invoke(DirectorPhase.INJECTING, "complete")
 
                 span.set_attribute("director.new_phase", self._phase.name)
                 span.set_attribute(
@@ -1137,9 +1117,7 @@ def project_director_to_ascii(
     tension_filled = int(tension * 10)
     tension_bar = "█" * tension_filled + "░" * (10 - tension_filled)
     tension_pct = f"{int(tension * 100)}%"
-    tension_line = (
-        f"│  Tension:     {tension_bar}  {tension_pct:<5}" + " " * (width - 35) + "│"
-    )
+    tension_line = f"│  Tension:     {tension_bar}  {tension_pct:<5}" + " " * (width - 35) + "│"
     lines.append(tension_line)
 
     # Consent debt bar
@@ -1164,15 +1142,10 @@ def project_director_to_ascii(
 
     # Injection count and cooldown
     cooldown_remaining = max(0, state.cooldown_until - time.time())
-    cooldown_str = (
-        f"Cooldown: {int(cooldown_remaining)}s" if cooldown_remaining > 0 else "Ready"
-    )
+    cooldown_str = f"Cooldown: {int(cooldown_remaining)}s" if cooldown_remaining > 0 else "Ready"
     inj_header = f"│ Injections: {metrics.injection_count}"
     inj_header = (
-        inj_header
-        + " " * (width - len(inj_header) - len(cooldown_str) - 2)
-        + cooldown_str
-        + " │"
+        inj_header + " " * (width - len(inj_header) - len(cooldown_str) - 2) + cooldown_str + " │"
     )
     lines.append(inj_header)
 

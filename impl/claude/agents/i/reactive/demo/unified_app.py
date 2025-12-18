@@ -149,36 +149,24 @@ class UnifiedDashboard:
         ]
 
         if self.agents:
-            html_parts.append(
-                '<div class="kgents-agents" style="margin-bottom: 16px;">'
-            )
-            html_parts.append(
-                '<h3 style="color: #0d6efd; margin-bottom: 8px;">Agents</h3>'
-            )
-            html_parts.append(
-                '<div style="display: flex; flex-wrap: wrap; gap: 12px;">'
-            )
+            html_parts.append('<div class="kgents-agents" style="margin-bottom: 16px;">')
+            html_parts.append('<h3 style="color: #0d6efd; margin-bottom: 8px;">Agents</h3>')
+            html_parts.append('<div style="display: flex; flex-wrap: wrap; gap: 12px;">')
             for agent in self.agents:
                 html_parts.append(agent.to_marimo())
             html_parts.append("</div>")
             html_parts.append("</div>")
 
         if self.metrics:
-            html_parts.append(
-                '<div class="kgents-metrics" style="margin-bottom: 16px;">'
-            )
-            html_parts.append(
-                '<h3 style="color: #198754; margin-bottom: 8px;">Metrics</h3>'
-            )
+            html_parts.append('<div class="kgents-metrics" style="margin-bottom: 16px;">')
+            html_parts.append('<h3 style="color: #198754; margin-bottom: 8px;">Metrics</h3>')
             for metric in self.metrics:
                 html_parts.append(metric.to_marimo())
             html_parts.append("</div>")
 
         if self.capacities:
             html_parts.append('<div class="kgents-capacities">')
-            html_parts.append(
-                '<h3 style="color: #fd7e14; margin-bottom: 8px;">Capacities</h3>'
-            )
+            html_parts.append('<h3 style="color: #fd7e14; margin-bottom: 8px;">Capacities</h3>')
             for capacity in self.capacities:
                 html_parts.append(capacity.to_marimo())
             html_parts.append("</div>")
@@ -329,11 +317,12 @@ def run_tui(dashboard: UnifiedDashboard) -> None:
     - ThemeBinding manages dark/light modes
     """
     try:
-        from agents.i.reactive.adapters import TextualAdapter
         from textual.app import App, ComposeResult
         from textual.binding import Binding
         from textual.containers import Horizontal, Vertical
         from textual.widgets import Footer, Header, Static
+
+        from agents.i.reactive.adapters import TextualAdapter
 
     except ImportError as e:
         print(f"TUI mode requires textual: {e}")
@@ -436,9 +425,7 @@ def run_tui(dashboard: UnifiedDashboard) -> None:
 # =============================================================================
 
 
-def benchmark_renders(
-    dashboard: UnifiedDashboard, iterations: int = 1000
-) -> dict[str, float]:
+def benchmark_renders(dashboard: UnifiedDashboard, iterations: int = 1000) -> dict[str, float]:
     """
     Benchmark render times across targets.
 

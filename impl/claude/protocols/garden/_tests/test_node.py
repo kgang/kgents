@@ -13,8 +13,9 @@ from datetime import date
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import protocols.garden.node as garden_node_module
 import pytest
+
+import protocols.garden.node as garden_node_module
 from protocols.garden.node import (
     PLAN_AFFORDANCES,
     PlanNode,

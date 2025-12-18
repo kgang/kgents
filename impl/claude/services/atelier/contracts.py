@@ -444,6 +444,77 @@ class FestivalEnterResponse:
     entry: FestivalEntrySummary
 
 
+# === Spectator Types (Phase 2: FishbowlCanvas) ===
+
+
+@dataclass(frozen=True)
+class SpectatorJoinRequest:
+    """Request to join a session as a spectator."""
+
+    session_id: str
+    citizen_id: str | None = None
+    display_name: str | None = None
+
+
+@dataclass(frozen=True)
+class SpectatorJoinResponse:
+    """Response after joining as a spectator."""
+
+    spectator_id: str
+    token_balance: int
+    session_id: str
+    success: bool
+
+
+@dataclass(frozen=True)
+class SpectatorCursor:
+    """Spectator cursor position for overlay."""
+
+    id: str
+    position_x: float
+    position_y: float
+    citizen_id: str | None = None
+    eigenvector: list[float] | None = None
+    last_update: str = ""
+
+
+@dataclass(frozen=True)
+class SpectatorCursorUpdateRequest:
+    """Request to update spectator cursor position."""
+
+    session_id: str
+    spectator_id: str
+    position_x: float
+    position_y: float
+
+
+@dataclass(frozen=True)
+class SpectatorCursorUpdateResponse:
+    """Response after updating cursor position."""
+
+    success: bool
+
+
+@dataclass(frozen=True)
+class BidQueueResponse:
+    """Response for current bid queue."""
+
+    session_id: str
+    bids: list[dict[str, Any]]
+    spectator_count: int
+    is_live: bool
+
+
+@dataclass(frozen=True)
+class SessionStreamEvent:
+    """SSE event for session streaming."""
+
+    event_type: str
+    session_id: str
+    timestamp: str
+    data: dict[str, Any] = field(default_factory=dict)
+
+
 # === Exports ===
 
 __all__ = [
@@ -497,4 +568,12 @@ __all__ = [
     "FestivalEnterRequest",
     "FestivalEntrySummary",
     "FestivalEnterResponse",
+    # Spectator (Phase 2: FishbowlCanvas)
+    "SpectatorJoinRequest",
+    "SpectatorJoinResponse",
+    "SpectatorCursor",
+    "SpectatorCursorUpdateRequest",
+    "SpectatorCursorUpdateResponse",
+    "BidQueueResponse",
+    "SessionStreamEvent",
 ]

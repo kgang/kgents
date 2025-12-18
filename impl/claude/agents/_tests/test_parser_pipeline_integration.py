@@ -24,8 +24,6 @@ from agents.f import (
 from agents.g import (
     GrammarFormat,
     GrammarLevel,
-)
-from agents.g import (
     ParserConfig as GParserConfig,
 )
 from agents.g.tongue import TongueBuilder
@@ -244,9 +242,7 @@ class TestParserErrorRecovery:
         json_parser = ProbabilisticASTParser(config=ParserConfig())
 
         # Second parser that extracts anchored content
-        anchor_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
-            anchor="RESULT:"
-        )
+        anchor_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="RESULT:")
 
         fallback: FallbackParser[Any] = FallbackParser(
             json_parser,

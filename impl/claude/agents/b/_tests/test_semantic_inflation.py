@@ -19,6 +19,7 @@ Tests cover:
 from datetime import datetime
 
 import pytest
+
 from agents.b.semantic_inflation import (
     AudienceLevel,
     AudienceProfile,
@@ -432,9 +433,7 @@ class TestInflationBudget:
         budget = InflationBudget()
 
         complexity = ComplexityVector(structural=0.3)
-        decision = budget.evaluate(
-            "agent1", complexity, base_tokens=100, available_budget=500
-        )
+        decision = budget.evaluate("agent1", complexity, base_tokens=100, available_budget=500)
 
         assert decision.approved is True
 
@@ -475,8 +474,7 @@ class TestInflationBudget:
         # Should still approve but with reduced explanation
         if decision.approved:
             assert (
-                decision.deflation_required is True
-                or decision.allocation.explanation_tokens < 50
+                decision.deflation_required is True or decision.allocation.explanation_tokens < 50
             )
 
     def test_per_agent_audience(self) -> None:
@@ -672,9 +670,7 @@ async def process_data() -> None:
     def test_analyze_text(self) -> None:
         """Test analysis of text."""
         analyzer = ComplexityAnalyzer()
-        text = (
-            "First, do this. Then, do that. After that, finally complete the process."
-        )
+        text = "First, do this. Then, do that. After that, finally complete the process."
         complexity = analyzer.analyze_text(text)
         assert complexity.temporal > 0.1  # Has temporal words
 
@@ -814,12 +810,8 @@ class TestConvenienceFunctions:
     def test_calculate_inflation_pressure_with_level(self) -> None:
         """Test pressure calculation with audience level."""
         complexity = ComplexityVector(structural=0.5)
-        expert_pressure = calculate_inflation_pressure(
-            complexity, 100, AudienceLevel.EXPERT
-        )
-        novice_pressure = calculate_inflation_pressure(
-            complexity, 100, AudienceLevel.NOVICE
-        )
+        expert_pressure = calculate_inflation_pressure(complexity, 100, AudienceLevel.EXPERT)
+        novice_pressure = calculate_inflation_pressure(complexity, 100, AudienceLevel.NOVICE)
         assert novice_pressure.pressure_score > expert_pressure.pressure_score
 
     def test_get_deflation_recommendations(self) -> None:
@@ -895,9 +887,7 @@ async def process_batch(items) -> None:
         complexity = ComplexityVector(structural=0.5, conceptual=0.5)
         base_tokens = 100
 
-        expert_tokens = estimate_explanation_tokens(
-            complexity, base_tokens, AudienceLevel.EXPERT
-        )
+        expert_tokens = estimate_explanation_tokens(complexity, base_tokens, AudienceLevel.EXPERT)
         layperson_tokens = estimate_explanation_tokens(
             complexity, base_tokens, AudienceLevel.LAYPERSON
         )

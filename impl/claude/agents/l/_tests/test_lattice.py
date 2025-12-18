@@ -15,6 +15,7 @@ Meet/Join Laws:
 from __future__ import annotations
 
 import pytest
+
 from agents.l.lattice import (
     SubtypeEdge,
     TypeKind,
@@ -112,9 +113,7 @@ class TestSubtypeLaws:
             TypeNode(id="SpecialInt", kind=TypeKind.PRIMITIVE, name="Special Integer")
         )
         lattice.add_subtype_edge(
-            SubtypeEdge(
-                subtype_id="SpecialInt", supertype_id="int", reason="refinement of int"
-            )
+            SubtypeEdge(subtype_id="SpecialInt", supertype_id="int", reason="refinement of int")
         )
 
         # Transitivity: SpecialInt ≤ int ≤ Any
@@ -124,13 +123,9 @@ class TestSubtypeLaws:
 
     def test_is_subtype_direct_edge(self, lattice: TypeLattice) -> None:
         """Test direct edge detection."""
-        lattice.register_type(
-            TypeNode(id="JSON", kind=TypeKind.RECORD, name="JSON Object")
-        )
+        lattice.register_type(TypeNode(id="JSON", kind=TypeKind.RECORD, name="JSON Object"))
         lattice.add_subtype_edge(
-            SubtypeEdge(
-                subtype_id="JSON", supertype_id="str", reason="JSON is string-based"
-            )
+            SubtypeEdge(subtype_id="JSON", supertype_id="str", reason="JSON is string-based")
         )
 
         assert lattice.is_subtype("JSON", "str")
@@ -141,15 +136,11 @@ class TestSubtypeLaws:
         lattice.register_type(TypeNode(id="B", kind=TypeKind.PRIMITIVE, name="Type B"))
 
         # Add A ≤ B
-        lattice.add_subtype_edge(
-            SubtypeEdge(subtype_id="A", supertype_id="B", reason="test")
-        )
+        lattice.add_subtype_edge(SubtypeEdge(subtype_id="A", supertype_id="B", reason="test"))
 
         # Try to add B ≤ A (would create cycle)
         with pytest.raises(ValueError, match="would create cycle"):
-            lattice.add_subtype_edge(
-                SubtypeEdge(subtype_id="B", supertype_id="A", reason="test")
-            )
+            lattice.add_subtype_edge(SubtypeEdge(subtype_id="B", supertype_id="A", reason="test"))
 
 
 # ─────────────────────────────────────────────────────────────
@@ -200,9 +191,7 @@ class TestMeetJoinLaws:
 
 
 @pytest.mark.asyncio
-async def test_can_compose_compatible_types(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_can_compose_compatible_types(registry: Registry, lattice: TypeLattice) -> None:
     """Test composition of compatible agents."""
     # Register agents
     await registry.register(
@@ -235,9 +224,7 @@ async def test_can_compose_compatible_types(
 
 
 @pytest.mark.asyncio
-async def test_can_compose_incompatible_types(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_can_compose_incompatible_types(registry: Registry, lattice: TypeLattice) -> None:
     """Test composition of incompatible agents."""
     await registry.register(
         CatalogEntry(
@@ -270,9 +257,7 @@ async def test_can_compose_incompatible_types(
 
 
 @pytest.mark.asyncio
-async def test_can_compose_missing_type_info(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_can_compose_missing_type_info(registry: Registry, lattice: TypeLattice) -> None:
     """Test composition when type info is missing."""
     await registry.register(
         CatalogEntry(
@@ -292,9 +277,7 @@ async def test_can_compose_missing_type_info(
 
 
 @pytest.mark.asyncio
-async def test_verify_pipeline_all_compatible(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_verify_pipeline_all_compatible(registry: Registry, lattice: TypeLattice) -> None:
     """Test pipeline verification when all stages are compatible."""
     # Create chain: str → str → int
     await registry.register(
@@ -427,28 +410,20 @@ async def test_find_path_via_agents(registry: Registry, lattice: TypeLattice) ->
 @pytest.mark.asyncio
 async def test_find_path_no_path_exists(lattice: TypeLattice) -> None:
     """Test find_path when no path exists."""
-    lattice.register_type(
-        TypeNode(id="IsolatedA", kind=TypeKind.PRIMITIVE, name="Isolated A")
-    )
-    lattice.register_type(
-        TypeNode(id="IsolatedB", kind=TypeKind.PRIMITIVE, name="Isolated B")
-    )
+    lattice.register_type(TypeNode(id="IsolatedA", kind=TypeKind.PRIMITIVE, name="Isolated A"))
+    lattice.register_type(TypeNode(id="IsolatedB", kind=TypeKind.PRIMITIVE, name="Isolated B"))
 
     paths = await lattice.find_path("IsolatedA", "IsolatedB")
     assert paths is None
 
 
 @pytest.mark.asyncio
-async def test_suggest_composition_valid_pipeline(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_suggest_composition_valid_pipeline(registry: Registry, lattice: TypeLattice) -> None:
     """Test suggest_composition finds valid compositions."""
     # Register types
     lattice.register_type(TypeNode(id="HTML", kind=TypeKind.PRIMITIVE, name="HTML"))
     lattice.register_type(TypeNode(id="Text", kind=TypeKind.PRIMITIVE, name="Text"))
-    lattice.register_type(
-        TypeNode(id="Sentiment", kind=TypeKind.PRIMITIVE, name="Sentiment")
-    )
+    lattice.register_type(TypeNode(id="Sentiment", kind=TypeKind.PRIMITIVE, name="Sentiment"))
 
     # Register agents
     await registry.register(
@@ -575,18 +550,14 @@ async def test_suggest_composition_prefers_shorter_pipelines(
 
 def test_register_type_creates_edges_to_any(lattice: TypeLattice) -> None:
     """Test that registering a type creates edges to Any."""
-    lattice.register_type(
-        TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type")
-    )
+    lattice.register_type(TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type"))
 
     assert lattice.is_subtype("CustomType", "Any")
 
 
 def test_register_type_creates_edges_from_never(lattice: TypeLattice) -> None:
     """Test that registering a type creates edges from Never."""
-    lattice.register_type(
-        TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type")
-    )
+    lattice.register_type(TypeNode(id="CustomType", kind=TypeKind.RECORD, name="Custom Type"))
 
     assert lattice.is_subtype("Never", "CustomType")
 
@@ -608,13 +579,9 @@ async def test_agents_accepting_finds_compatible_agents(
     registry: Registry, lattice: TypeLattice
 ) -> None:
     """Test _agents_accepting finds agents with compatible input types."""
-    lattice.register_type(
-        TypeNode(id="SpecialStr", kind=TypeKind.PRIMITIVE, name="Special String")
-    )
+    lattice.register_type(TypeNode(id="SpecialStr", kind=TypeKind.PRIMITIVE, name="Special String"))
     lattice.add_subtype_edge(
-        SubtypeEdge(
-            subtype_id="SpecialStr", supertype_id="str", reason="refinement of str"
-        )
+        SubtypeEdge(subtype_id="SpecialStr", supertype_id="str", reason="refinement of str")
     )
 
     await registry.register(
@@ -641,17 +608,11 @@ async def test_agents_accepting_finds_compatible_agents(
 
 
 @pytest.mark.asyncio
-async def test_full_pipeline_planning_workflow(
-    registry: Registry, lattice: TypeLattice
-) -> None:
+async def test_full_pipeline_planning_workflow(registry: Registry, lattice: TypeLattice) -> None:
     """Test complete workflow: define types, register agents, plan pipeline."""
     # 1. Define custom types
-    lattice.register_type(
-        TypeNode(id="RawHTML", kind=TypeKind.PRIMITIVE, name="Raw HTML")
-    )
-    lattice.register_type(
-        TypeNode(id="CleanText", kind=TypeKind.PRIMITIVE, name="Clean Text")
-    )
+    lattice.register_type(TypeNode(id="RawHTML", kind=TypeKind.PRIMITIVE, name="Raw HTML"))
+    lattice.register_type(TypeNode(id="CleanText", kind=TypeKind.PRIMITIVE, name="Clean Text"))
     lattice.register_type(
         TypeNode(id="SentimentScore", kind=TypeKind.RECORD, name="Sentiment Score")
     )

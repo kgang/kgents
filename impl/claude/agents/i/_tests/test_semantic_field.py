@@ -13,6 +13,7 @@ Tests:
 from typing import Any
 
 import pytest
+
 from agents.i.semantic_field import (
     FieldCoordinate,
     IntentPayload,
@@ -781,10 +782,7 @@ class TestPheromoneKindProperties:
 
     def test_warning_decays_fast(self) -> None:
         """Warnings should decay faster than metaphors."""
-        assert (
-            SemanticPheromoneKind.WARNING.decay_rate
-            > SemanticPheromoneKind.METAPHOR.decay_rate
-        )
+        assert SemanticPheromoneKind.WARNING.decay_rate > SemanticPheromoneKind.METAPHOR.decay_rate
 
     def test_warning_has_wide_radius(self) -> None:
         """Warnings should broadcast widely."""
@@ -804,10 +802,7 @@ class TestPheromoneKindProperties:
 
     def test_prior_decays_slowly(self) -> None:
         """Priors should decay slowly (persona is stable)."""
-        assert (
-            SemanticPheromoneKind.PRIOR.decay_rate
-            < SemanticPheromoneKind.MUTATION.decay_rate
-        )
+        assert SemanticPheromoneKind.PRIOR.decay_rate < SemanticPheromoneKind.MUTATION.decay_rate
 
     def test_prior_has_wide_radius(self) -> None:
         """Priors should broadcast widely to affect all agents."""
@@ -1259,9 +1254,7 @@ class TestPhase1Integration:
         position = FieldCoordinate()
 
         # H-gent achieves a synthesis
-        hegel.emit_synthesis(
-            "Efficiency", "Reliability", "Robust efficiency", 0.85, position
-        )
+        hegel.emit_synthesis("Efficiency", "Reliability", "Robust efficiency", 0.85, position)
 
         # Psi-gent (metaphor solver) emits a related metaphor
         psi.emit_metaphor("robust_efficiency", "bridge_engineering", 0.75, position)
@@ -1394,9 +1387,7 @@ class TestEvolutionFieldSensor:
         refinery_emitter.emit_refinement("b", "compression", 2.0, position)
         refinery_emitter.emit_refinement("c", "optimization", 1.3, position)
 
-        best_opt = evolution_sensor.get_best_refinement(
-            position, improvement_type="optimization"
-        )
+        best_opt = evolution_sensor.get_best_refinement(position, improvement_type="optimization")
 
         assert best_opt is not None
         assert best_opt.target_id == "a"
@@ -1501,9 +1492,7 @@ class TestRefineryFieldSensor:
         evolution_emitter.emit_mutation("m3", 0.1, 3, position)
 
         # Sense only positive mutations
-        positive = refinery_sensor.sense_positive_mutations(
-            position, min_fitness_delta=0.1
-        )
+        positive = refinery_sensor.sense_positive_mutations(position, min_fitness_delta=0.1)
 
         assert len(positive) == 2
         assert all(m.fitness_delta >= 0.1 for m in positive)
@@ -1603,9 +1592,7 @@ class TestPersonaFieldSensor:
         hegel_emitter.emit_synthesis("D", "E", "C2", 0.8, position)
         hegel_emitter.emit_synthesis("G", "H", "C3", 0.9, position)
 
-        high_conf = persona_sensor.get_high_confidence_syntheses(
-            position, min_confidence=0.7
-        )
+        high_conf = persona_sensor.get_high_confidence_syntheses(position, min_confidence=0.7)
 
         assert len(high_conf) == 2
         assert all(s.confidence >= 0.7 for s in high_conf)
@@ -1738,9 +1725,7 @@ class TestHegelFieldSensor:
         hegel_sensor = create_hegel_sensor(field)
         position = FieldCoordinate()
 
-        persona_emitter.emit_prior_change(
-            "risk_tolerance", 0.75, "kent", position, confidence=0.9
-        )
+        persona_emitter.emit_prior_change("risk_tolerance", 0.75, "kent", position, confidence=0.9)
 
         value = hegel_sensor.get_prior_value("risk_tolerance", position)
 
@@ -1849,9 +1834,7 @@ class TestPhase2Integration:
         assert len(syntheses) == 1
 
         # 5. E-gent discovers bold mutation
-        evolution_emitter.emit_mutation(
-            "bold_mut", 0.4, 1, position, mutation_type="structural"
-        )
+        evolution_emitter.emit_mutation("bold_mut", 0.4, 1, position, mutation_type="structural")
 
         # 6. R-gent senses mutation, identifies refinement opportunity
         mutations = refinery_sensor.sense_mutations(position)
@@ -1946,9 +1929,7 @@ class TestDataFieldEmitter:
         emitter = create_data_emitter(field)
         position = FieldCoordinate()
 
-        phero_id = emitter.emit_updated(
-            "e1", "key/path", position, old_hash="old", new_hash="new"
-        )
+        phero_id = emitter.emit_updated("e1", "key/path", position, old_hash="old", new_hash="new")
 
         assert phero_id.startswith("phero-")
 
@@ -2321,9 +2302,7 @@ class TestWireFieldEmitter:
         position = FieldCoordinate()
 
         emitter.emit_dispatch("m1", "a", "b", position, intercepted_by=())
-        emitter.emit_dispatch(
-            "m2", "a", "b", position, intercepted_by=("i1", "i2", "i3")
-        )
+        emitter.emit_dispatch("m2", "a", "b", position, intercepted_by=("i1", "i2", "i3"))
 
         pheromones = field.get_all(SemanticPheromoneKind.DISPATCH)
         intensities = {p.payload.message_id: p.intensity for p in pheromones}
@@ -2529,14 +2508,8 @@ class TestPhase3PheromoneKindProperties:
 
     def test_dispatch_decays_fastest(self) -> None:
         """Test DISPATCH decays fastest (operational signals)."""
-        assert (
-            SemanticPheromoneKind.DISPATCH.decay_rate
-            > SemanticPheromoneKind.STATE.decay_rate
-        )
-        assert (
-            SemanticPheromoneKind.DISPATCH.decay_rate
-            > SemanticPheromoneKind.TEST.decay_rate
-        )
+        assert SemanticPheromoneKind.DISPATCH.decay_rate > SemanticPheromoneKind.STATE.decay_rate
+        assert SemanticPheromoneKind.DISPATCH.decay_rate > SemanticPheromoneKind.TEST.decay_rate
 
     def test_test_has_wide_radius(self) -> None:
         """Test TEST signals have wide radius (many care about test results)."""
@@ -2563,9 +2536,7 @@ class TestPhase3Integration:
         data.emit_created("entity_001", "users/kent", position)
 
         # T-gent runs tests on it
-        test.emit_test_result(
-            "test_user_creation", "passed", position, affected_agents=("d",)
-        )
+        test.emit_test_result("test_user_creation", "passed", position, affected_agents=("d",))
 
         # Observer sees both
         observed = observer.observe_all(position)
@@ -2633,9 +2604,7 @@ class TestPhase3Integration:
         data_emitter.emit_created("entity_001", "users/kent", position)
 
         # 2. W-gent routes message about it
-        wire_emitter.emit_dispatch(
-            "msg_001", "d", "t", position, message_type="data_created"
-        )
+        wire_emitter.emit_dispatch("msg_001", "d", "t", position, message_type="data_created")
 
         # 3. T-gent runs tests
         test_emitter.emit_test_result(

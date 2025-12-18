@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.animation.animated import (
     AnimatedWidget,
     AnimationMixin,

@@ -22,6 +22,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
+
 from protocols.agentese.contexts.projection import (
     ACTIONS_BEHAVIORS,
     # Behaviors
@@ -229,9 +230,7 @@ class TestPanelNode:
     """Tests for world.panel.* paths."""
 
     @pytest.mark.asyncio
-    async def test_manifest_compact_returns_drawer(
-        self, mock_umwelt: MagicMock
-    ) -> None:
+    async def test_manifest_compact_returns_drawer(self, mock_umwelt: MagicMock) -> None:
         """world.panel.manifest returns drawer in compact mode."""
         # The panel node will use default spacious capacity
         # To test with compact, we would need to inject capacity into observer
@@ -434,9 +433,7 @@ class TestProjectionResolver:
         resolver = create_projection_resolver()
         assert resolver.resolve("unknown.path") is None
 
-    def test_resolver_with_custom_capacity(
-        self, compact_capacity: PhysicalCapacity
-    ) -> None:
+    def test_resolver_with_custom_capacity(self, compact_capacity: PhysicalCapacity) -> None:
         """Resolver can be created with custom capacity."""
         resolver = create_projection_resolver(compact_capacity)
         assert resolver.layout_node._capacity == compact_capacity

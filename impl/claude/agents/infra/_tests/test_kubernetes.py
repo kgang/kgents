@@ -17,6 +17,7 @@ import asyncio
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.infra.collectors.kubernetes import (
     KubernetesConfig,
     MockKubernetesCollector,
@@ -77,10 +78,7 @@ class TestEventSeverity:
 
     def test_failed_event(self):
         """Failed events are ERROR severity."""
-        assert (
-            _k8s_event_severity("Warning", "FailedScheduling")
-            == InfraEventSeverity.ERROR
-        )
+        assert _k8s_event_severity("Warning", "FailedScheduling") == InfraEventSeverity.ERROR
 
     def test_oom_event(self):
         """OOM events are ERROR severity (same category as other failures)."""
@@ -380,9 +378,7 @@ class TestConnectionBuilding:
 
         # Each service should have at least one connection
         service_ids = {s.id for s in services}
-        service_connections = [
-            c for c in topology.connections if c.source_id in service_ids
-        ]
+        service_connections = [c for c in topology.connections if c.source_id in service_ids]
 
         assert len(service_connections) > 0
 
@@ -393,16 +389,12 @@ class TestConnectionBuilding:
         topology = await collector.collect_topology()
 
         # Find deployments
-        deployments = [
-            e for e in topology.entities if e.kind == InfraEntityKind.DEPLOYMENT
-        ]
+        deployments = [e for e in topology.entities if e.kind == InfraEntityKind.DEPLOYMENT]
         assert len(deployments) > 0
 
         # Each deployment should have at least one connection
         deployment_ids = {d.id for d in deployments}
-        deployment_connections = [
-            c for c in topology.connections if c.source_id in deployment_ids
-        ]
+        deployment_connections = [c for c in topology.connections if c.source_id in deployment_ids]
 
         assert len(deployment_connections) > 0
 
@@ -458,9 +450,7 @@ class TestEntityCreation:
         await collector.connect()
         topology = await collector.collect_topology()
 
-        deployments = [
-            e for e in topology.entities if e.kind == InfraEntityKind.DEPLOYMENT
-        ]
+        deployments = [e for e in topology.entities if e.kind == InfraEntityKind.DEPLOYMENT]
         assert len(deployments) > 0
 
         for deploy in deployments:
@@ -469,7 +459,4 @@ class TestEntityCreation:
             assert deploy.namespace is not None
             assert deploy.source == "kubernetes"
             # Should have replica metrics
-            assert (
-                "desired_replicas" in deploy.custom_metrics
-                or deploy.custom_metrics == {}
-            )
+            assert "desired_replicas" in deploy.custom_metrics or deploy.custom_metrics == {}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.joy import (
     CATCHPHRASES,
     CELEBRATIONS,
@@ -162,14 +163,10 @@ class TestRollForSerendipity:
         """High entropy makes serendipity more likely."""
         # Use larger sample and different seed ranges for more reliable test
         low_entropy_hits = sum(
-            1
-            for seed in range(10000, 15000)
-            if roll_for_serendipity(seed, entropy=0.1) is not None
+            1 for seed in range(10000, 15000) if roll_for_serendipity(seed, entropy=0.1) is not None
         )
         high_entropy_hits = sum(
-            1
-            for seed in range(10000, 15000)
-            if roll_for_serendipity(seed, entropy=0.9) is not None
+            1 for seed in range(10000, 15000) if roll_for_serendipity(seed, entropy=0.9) is not None
         )
 
         # High entropy should have more or equal hits

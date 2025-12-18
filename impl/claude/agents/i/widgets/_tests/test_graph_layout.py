@@ -12,6 +12,7 @@ Tests verify:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.widgets.graph_layout import (
     SEMANTIC_POSITIONS,
     GraphLayout,
@@ -73,9 +74,7 @@ class TestSemanticPositions:
         """All predefined types should have semantic positions."""
         expected_types = ["A", "B", "C", "D", "E", "K", "L", "M", "N", "T", "U", "Y"]
         for agent_type in expected_types:
-            assert agent_type in SEMANTIC_POSITIONS, (
-                f"{agent_type} should have a position"
-            )
+            assert agent_type in SEMANTIC_POSITIONS, f"{agent_type} should have a position"
 
 
 class TestComputeSemanticLayout:

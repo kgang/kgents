@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from testing.fixtures import as_umwelt
 
 from .. import (
@@ -472,9 +473,7 @@ class TestLogosJITIntegration:
         assert node1 is node2
 
     @pytest.mark.asyncio
-    async def test_jit_node_tracked_via_define(
-        self, tmp_path: Path, sample_spec: str
-    ) -> None:
+    async def test_jit_node_tracked_via_define(self, tmp_path: Path, sample_spec: str) -> None:
         """JIT nodes created via define_concept are tracked for promotion."""
         logos = create_logos(spec_root=tmp_path)
 
@@ -485,9 +484,7 @@ class TestLogosJITIntegration:
         assert "world.garden" in logos._jit_nodes
 
     @pytest.mark.asyncio
-    async def test_get_jit_status_via_define(
-        self, tmp_path: Path, sample_spec: str
-    ) -> None:
+    async def test_get_jit_status_via_define(self, tmp_path: Path, sample_spec: str) -> None:
         """Get JIT node status for defined concept."""
         logos = create_logos(spec_root=tmp_path)
 
@@ -502,9 +499,7 @@ class TestLogosJITIntegration:
         assert status["usage_count"] >= 0
 
     @pytest.mark.asyncio
-    async def test_list_jit_nodes_via_define(
-        self, tmp_path: Path, sample_spec: str
-    ) -> None:
+    async def test_list_jit_nodes_via_define(self, tmp_path: Path, sample_spec: str) -> None:
         """List all JIT nodes after defining concepts."""
         logos = create_logos(spec_root=tmp_path)
 
@@ -653,9 +648,7 @@ class TestPromoteConcept:
     """Tests for promote_concept()."""
 
     @pytest.mark.asyncio
-    async def test_promote_concept_success(
-        self, tmp_path: Path, sample_spec: str
-    ) -> None:
+    async def test_promote_concept_success(self, tmp_path: Path, sample_spec: str) -> None:
         """Successfully promote a JIT concept."""
         logos = create_logos(spec_root=tmp_path)
 
@@ -688,9 +681,7 @@ class TestPromoteConcept:
         assert "not a JIT node" in result.reason
 
     @pytest.mark.asyncio
-    async def test_promote_concept_not_ready(
-        self, tmp_path: Path, sample_spec: str
-    ) -> None:
+    async def test_promote_concept_not_ready(self, tmp_path: Path, sample_spec: str) -> None:
         """Promoting node that doesn't meet criteria fails."""
         logos = create_logos(spec_root=tmp_path)
 

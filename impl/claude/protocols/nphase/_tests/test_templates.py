@@ -3,6 +3,7 @@ Tests for N-Phase Templates.
 """
 
 import pytest
+
 from protocols.nphase.templates import (
     PHASE_FAMILIES,
     PHASE_TEMPLATES,

@@ -12,6 +12,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.g import (
     create_command_tongue,
     create_recursive_tongue,
@@ -139,9 +140,7 @@ def test_command_tongue_parse_invalid() -> None:
 
     assert not result.success
     assert (
-        result.error is None
-        or "DELETE" not in result.error
-        or "No valid command" in result.error
+        result.error is None or "DELETE" not in result.error or "No valid command" in result.error
     )
 
 
@@ -238,9 +237,7 @@ def test_command_round_trip() -> None:
 # ============================================================================
 
 
-@pytest.mark.skipif(
-    True, reason="Lark optional - Phase 3 focuses on Schema + Command levels"
-)
+@pytest.mark.skipif(True, reason="Lark optional - Phase 3 focuses on Schema + Command levels")
 def test_recursive_tongue_parse() -> None:
     """Test parsing with Lark recursive tongue."""
     tongue = create_recursive_tongue(

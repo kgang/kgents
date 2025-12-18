@@ -7,6 +7,7 @@ Tests ClaudeCLIRuntime integration for artisan work.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from agents.atelier.llm import (
     ArtisanLLMAgent,
     ArtisanRequest,

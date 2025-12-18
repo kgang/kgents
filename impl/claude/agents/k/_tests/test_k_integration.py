@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from agents.k import (
     DialogueInput,
     DialogueMode,
@@ -204,14 +205,10 @@ class TestKgentMemoryIntegration:
 
         # Have several dialogues
         dialogue1 = await agent.invoke(
-            DialogueInput(
-                message="What about design patterns?", mode=DialogueMode.EXPLORE
-            )
+            DialogueInput(message="What about design patterns?", mode=DialogueMode.EXPLORE)
         )
         dialogue2 = await agent.invoke(
-            DialogueInput(
-                message="I want to add more features", mode=DialogueMode.CHALLENGE
-            )
+            DialogueInput(message="I want to add more features", mode=DialogueMode.CHALLENGE)
         )
 
         # Store in memory (simple dict)
@@ -230,9 +227,7 @@ class TestKgentMemoryIntegration:
         agent = query_persona()
 
         # Query preferences
-        response = await agent.invoke(
-            PersonaQuery(aspect="preference", topic="communication")
-        )
+        response = await agent.invoke(PersonaQuery(aspect="preference", topic="communication"))
 
         # Store preference response
         memory["communication_prefs"] = response
@@ -265,9 +260,7 @@ def _make_trace(
         outputs=outputs,
         input_hash=hashlib.sha256(input_bytes).hexdigest()[:16],
         input_snapshot=input_bytes,
-        output_hash=hashlib.sha256(str(outputs).encode()).hexdigest()[:16]
-        if outputs
-        else None,
+        output_hash=hashlib.sha256(str(outputs).encode()).hexdigest()[:16] if outputs else None,
         gas_consumed=100,
         duration_ms=10,
         metadata={"mode": mode} if mode else {},
@@ -423,9 +416,7 @@ class TestKgentCrossAgentIntegration:
         query_agent = query_persona()
 
         # Query preferences for robin agent
-        robin_prefs = await query_agent.invoke(
-            PersonaQuery(aspect="all", for_agent="robin")
-        )
+        robin_prefs = await query_agent.invoke(PersonaQuery(aspect="all", for_agent="robin"))
 
         # Should have robin-specific style
         assert robin_prefs.suggested_style
@@ -516,9 +507,7 @@ class TestKgentComposition:
         assert hasattr(agent, "name")
         assert agent.name == "K-gent"
 
-        result = await agent.invoke(
-            DialogueInput(message="Test", mode=DialogueMode.REFLECT)
-        )
+        result = await agent.invoke(DialogueInput(message="Test", mode=DialogueMode.REFLECT))
         assert isinstance(result, DialogueOutput)
 
     @pytest.mark.asyncio
@@ -539,8 +528,6 @@ class TestKgentComposition:
         agent = kgent()
 
         for mode in DialogueMode:
-            result = await agent.invoke(
-                DialogueInput(message=f"Test {mode.value}", mode=mode)
-            )
+            result = await agent.invoke(DialogueInput(message=f"Test {mode.value}", mode=mode))
             assert result.mode == mode
             assert result.response  # Each mode should generate a response

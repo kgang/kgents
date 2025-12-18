@@ -10,6 +10,7 @@ Philosophy verification:
 import math
 
 import pytest
+
 from agents.i.reactive.animation.cymatics import (
     ChladniPattern,
     CymaticsEngine,
@@ -262,9 +263,7 @@ class TestInterference:
         engine.add_source(
             VibrationSource(frequency=1.0, amplitude=1.0, position=(-0.2, 0), phase=0)
         )
-        engine.add_source(
-            VibrationSource(frequency=1.0, amplitude=1.0, position=(0.2, 0), phase=0)
-        )
+        engine.add_source(VibrationSource(frequency=1.0, amplitude=1.0, position=(0.2, 0), phase=0))
 
         pattern = engine.compute(time=0.25)
 

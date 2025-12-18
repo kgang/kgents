@@ -32,7 +32,6 @@ from protocols.cli.projection import (
     route_to_path,
 )
 
-
 # === Test TerminalOutput ===
 
 

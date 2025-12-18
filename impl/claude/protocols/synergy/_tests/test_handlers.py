@@ -5,6 +5,7 @@ Foundation 4 - Wave 0: Cross-jewel event processors.
 """
 
 import pytest
+
 from protocols.synergy.events import (
     Jewel,
     SynergyEvent,

@@ -205,9 +205,7 @@ def _ensure_scanned_sync(store: "GestaltStore") -> None:
 
 
 # Legacy compatibility functions
-def scan_codebase(
-    root: Path | None = None, language: str = "python"
-) -> ArchitectureGraph:
+def scan_codebase(root: Path | None = None, language: str = "python") -> ArchitectureGraph:
     """
     Scan the codebase and build the architecture graph.
 
@@ -436,8 +434,6 @@ def handle_health_manifest(
     average_health = store.average_health.value
     overall_grade = store.overall_grade.value
     grade_distribution = store.grade_distribution.value
-    worst_modules_raw = store.worst_modules.value  # List of (name, health_score)
-    module_healths = store.module_healths.value
     graph = store.graph.value
 
     # Get modules sorted by health for detailed info
@@ -485,8 +481,7 @@ def handle_health_manifest(
     worst_modules_list = cast(list[dict[str, Any]], result["worst_modules"])
     for mod in worst_modules_list:
         lines.append(
-            f"  {mod['grade']:3} {mod['name']} "
-            f"(coupling={mod['coupling']}, drift={mod['drift']})"
+            f"  {mod['grade']:3} {mod['name']} (coupling={mod['coupling']}, drift={mod['drift']})"
         )
 
     return "\n".join(lines)
@@ -553,9 +548,7 @@ def handle_drift_witness(
     ]
     for v in violations[:10]:  # Show fewer with more detail
         status = "[suppressed] " if v.suppressed else ""
-        lines.append(
-            f"  {status}{v.severity.upper()}: {v.source_module} -> {v.target_module}"
-        )
+        lines.append(f"  {status}{v.severity.upper()}: {v.source_module} -> {v.target_module}")
         lines.append(f"    Rule: {v.rule_name} (line {v.edge.line_number})")
         if v.suggested_fix and not v.suppressed:
             # Show first line of suggested fix
@@ -636,9 +629,7 @@ def handle_module_manifest(
         ),
         "dependencies": deps[:20],
         "dependents": dependents[:20],
-        "violations": [
-            {"rule": v.rule_name, "target": v.target_module} for v in violations
-        ],
+        "violations": [{"rule": v.rule_name, "target": v.target_module} for v in violations],
     }
 
     if json_output:
@@ -697,9 +688,7 @@ def _run_watch_mode(store: "GestaltStore") -> None:
             f"\r⟳ Updated: {graph.module_count} modules, {graph.edge_count} edges",
             end="",
         )
-        print(
-            f" | {store.overall_grade.value} ({round(store.average_health.value * 100)}%)"
-        )
+        print(f" | {store.overall_grade.value} ({round(store.average_health.value * 100)}%)")
 
     def on_violation_change(violations: list[DriftViolation]) -> None:
         """Callback when violations change."""
@@ -713,9 +702,7 @@ def _run_watch_mode(store: "GestaltStore") -> None:
 
     try:
         print(f"👁 Watching {store.root} for changes...")
-        print(
-            f"   Current: {store.module_count.value} modules, {store.overall_grade.value}"
-        )
+        print(f"   Current: {store.module_count.value} modules, {store.overall_grade.value}")
         print("   Press Ctrl+C to stop\n")
 
         # Keep running until interrupted
@@ -847,9 +834,7 @@ def cmd_codebase(args: list[str], ctx: "InvocationContext | None" = None) -> int
             # Route to appropriate handler
             result: dict[str, Any] | str
             if not args or args[0] in ("manifest", "status"):
-                result = handle_codebase_manifest(
-                    args[1:] if args else [], json_output, store
-                )
+                result = handle_codebase_manifest(args[1:] if args else [], json_output, store)
             elif args[0] == "health":
                 result = handle_health_manifest(args[1:], json_output, store)
             elif args[0] == "drift":

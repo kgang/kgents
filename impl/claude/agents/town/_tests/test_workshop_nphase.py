@@ -14,6 +14,7 @@ See: plans/nphase-native-integration-wave4-prompt.md
 from __future__ import annotations
 
 import pytest
+
 from agents.town.workshop import (
     WorkshopEnvironment,
     WorkshopEventType,

@@ -16,8 +16,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..garden import GardenState
-    from ..plots import PlotState
     from ..personality import TendingPersonality
+    from ..plots import PlotState
 
 
 def project_garden_to_ascii(
@@ -110,9 +110,7 @@ def project_garden_to_ascii(
         lines.append(_pad_line(f"  ├── ID: {garden.session_id[:8]}...", width))
         if garden.memory_crystals:
             lines.append(
-                _pad_line(
-                    f"  └── Crystals: {len(garden.memory_crystals)} from Brain", width
-                )
+                _pad_line(f"  └── Crystals: {len(garden.memory_crystals)} from Brain", width)
             )
         lines.append(_pad_line("", width))
 
@@ -134,9 +132,7 @@ def project_garden_to_ascii(
     # Health and entropy bars
     health_pct = garden.metrics.health_score
     health_bar = _progress_bar(health_pct, 10)
-    entropy_remaining = max(
-        0, garden.metrics.entropy_budget - garden.metrics.entropy_spent
-    )
+    entropy_remaining = max(0, garden.metrics.entropy_budget - garden.metrics.entropy_spent)
     entropy_pct = (
         entropy_remaining / garden.metrics.entropy_budget
         if garden.metrics.entropy_budget > 0
@@ -144,7 +140,9 @@ def project_garden_to_ascii(
     )
     entropy_bar = _progress_bar(entropy_pct, 10)
 
-    status_line = f"  Health: {health_bar} {health_pct:.0%}  │  Entropy: {entropy_bar} {entropy_pct:.0%}"
+    status_line = (
+        f"  Health: {health_bar} {health_pct:.0%}  │  Entropy: {entropy_bar} {entropy_pct:.0%}"
+    )
     lines.append(_pad_line(status_line, width))
     lines.append(_pad_line("", width))
 

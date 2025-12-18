@@ -10,6 +10,7 @@ The Categorical Imperative: agents act through the lens of identity.
 """
 
 import pytest
+
 from agents.a.functor import (
     FunctorRegistry,
     verify_composition_law,
@@ -158,9 +159,7 @@ class TestSoulFunctorLaws:
     async def test_identity_law_preserves_context(self) -> None:
         """F(id) should preserve soul context."""
         lifted = SoulFunctor.lift(IdentityAgent())
-        input_soul = Soul(
-            value=42, eigenvectors=KENT_EIGENVECTORS, metadata={"test": "value"}
-        )
+        input_soul = Soul(value=42, eigenvectors=KENT_EIGENVECTORS, metadata={"test": "value"})
 
         result = await lifted.invoke(input_soul)
 

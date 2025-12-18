@@ -11,6 +11,7 @@ Verifies:
 from datetime import datetime
 
 import pytest
+
 from agents.domain.drills.polynomial import (
     CRISIS_POLYNOMIAL,
     CloseInput,
@@ -214,9 +215,7 @@ class TestCrisisTransitions:
 
     def test_recovery_to_normal_on_close(self) -> None:
         """RECOVERY + CloseInput → NORMAL."""
-        close = CrisisInput.close(
-            postmortem_scheduled=True, documentation_complete=True
-        )
+        close = CrisisInput.close(postmortem_scheduled=True, documentation_complete=True)
         new_phase, output = crisis_transition(CrisisPhase.RECOVERY, close)
 
         assert new_phase == CrisisPhase.NORMAL

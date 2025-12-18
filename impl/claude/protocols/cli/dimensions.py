@@ -29,7 +29,12 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from protocols.agentese.affordances import AspectMetadata, DeclaredEffect, Effect
+    from protocols.agentese.affordances import (
+        AspectCategory,
+        AspectMetadata,
+        DeclaredEffect,
+        Effect,
+    )
 
 
 # === Dimension Enums ===
@@ -149,14 +154,16 @@ class CommandDimensions:
 
     def __str__(self) -> str:
         """Compact representation for tracing."""
-        return "/".join([
-            self.execution.name,
-            self.statefulness.name,
-            self.backend.name,
-            self.intent.name,
-            self.seriousness.name,
-            self.interactivity.name,
-        ])
+        return "/".join(
+            [
+                self.execution.name,
+                self.statefulness.name,
+                self.backend.name,
+                self.intent.name,
+                self.seriousness.name,
+                self.interactivity.name,
+            ]
+        )
 
     @property
     def is_async(self) -> bool:
@@ -192,22 +199,24 @@ class CommandDimensions:
 # === Protected Resources ===
 
 # Resources that trigger SENSITIVE seriousness when written
-PROTECTED_RESOURCES: frozenset[str] = frozenset({
-    "soul",
-    "memory",
-    "forest",
-    "config",
-    "credentials",
-    "garden",
-    "crystal",
-})
+PROTECTED_RESOURCES: frozenset[str] = frozenset(
+    {
+        "soul",
+        "memory",
+        "forest",
+        "config",
+        "credentials",
+        "garden",
+        "crystal",
+    }
+)
 
 
 # === Derivation Rules ===
 
 
 def derive_from_category(
-    category: "protocols.agentese.affordances.AspectCategory",
+    category: "AspectCategory",
 ) -> tuple[Execution, Statefulness]:
     """
     Derive execution and statefulness from aspect category.
@@ -311,7 +320,7 @@ def derive_seriousness(
 
 
 def derive_intent(
-    category: "protocols.agentese.affordances.AspectCategory",
+    category: "AspectCategory",
 ) -> Intent:
     """
     Derive intent from aspect category.
@@ -407,8 +416,7 @@ def derive_dimensions(
 
     # Step 2: Override execution if CALLS effect present
     has_calls = any(
-        isinstance(e, DeclaredEffect) and e.effect == Effect.CALLS
-        for e in meta.effects
+        isinstance(e, DeclaredEffect) and e.effect == Effect.CALLS for e in meta.effects
     )
     if has_calls:
         execution = Execution.ASYNC

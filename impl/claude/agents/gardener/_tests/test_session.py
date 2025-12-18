@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+
 from agents.gardener.persistence import (
     SessionHistoryEvent,
     SessionStore,
@@ -152,9 +153,7 @@ class TestPhaseTransitions:
         assert result.get("cycle_complete") is True
 
     @pytest.mark.asyncio
-    async def test_full_cycle_increments_counters(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_full_cycle_increments_counters(self, session: GardenerSession) -> None:
         """Full cycle increments phase counters."""
         assert session.state.sense_count == 0
 
@@ -238,9 +237,7 @@ class TestSensePhase:
         assert session.intent.priority == "high"
 
     @pytest.mark.asyncio
-    async def test_sense_not_available_in_other_phases(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_sense_not_available_in_other_phases(self, session: GardenerSession) -> None:
         """sense() only works in SENSE phase."""
         await session.advance()  # SENSE → ACT
         result = await session.sense()
@@ -299,9 +296,7 @@ class TestActPhase:
         assert result["status"] == "artifact_recorded"
 
     @pytest.mark.asyncio
-    async def test_artifact_not_available_in_other_phases(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_artifact_not_available_in_other_phases(self, session: GardenerSession) -> None:
         """record_artifact() only works in ACT phase."""
         # In SENSE phase
         result = await session.record_artifact(SessionArtifact(artifact_type="code"))
@@ -374,9 +369,7 @@ class TestReflectPhase:
         assert result["status"] == "error"
 
     @pytest.mark.asyncio
-    async def test_learn_not_available_in_other_phases(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_learn_not_available_in_other_phases(self, session: GardenerSession) -> None:
         """learn() only works in REFLECT phase."""
         result = await session.learn("Test")
         assert result["status"] == "error"
@@ -447,9 +440,7 @@ class TestStateManagement:
         assert restored.content == artifact.content
 
     @pytest.mark.asyncio
-    async def test_manifest_returns_current_state(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_manifest_returns_current_state(self, session: GardenerSession) -> None:
         """manifest() returns current state."""
         result = await session.manifest()
         assert result["status"] == "manifest"
@@ -591,9 +582,7 @@ class TestResume:
         # Create and advance a session
         original = create_gardener_session(name="Original")
         await original.advance()  # SENSE → ACT
-        await original.record_artifact(
-            SessionArtifact(artifact_type="code", path="test.py")
-        )
+        await original.record_artifact(SessionArtifact(artifact_type="code", path="test.py"))
 
         # Serialize state
         state_dict = original.state.to_dict()
@@ -659,9 +648,7 @@ class TestProjections:
         assert "counters" in dict_output
 
     @pytest.mark.asyncio
-    async def test_projection_updates_with_state(
-        self, session: GardenerSession
-    ) -> None:
+    async def test_projection_updates_with_state(self, session: GardenerSession) -> None:
         """Projections reflect current state."""
         # Initial projection
         dict1 = project_session_to_dict(session)
@@ -706,15 +693,11 @@ class TestPolynomialProtocol:
     def test_polynomial_invoke_returns_valid_transitions(self) -> None:
         """Polynomial invoke returns valid phase transitions."""
         # Test SENSE → ACT
-        new_phase, result = GARDENER_SESSION_POLYNOMIAL.invoke(
-            SessionPhase.SENSE, "advance"
-        )
+        new_phase, result = GARDENER_SESSION_POLYNOMIAL.invoke(SessionPhase.SENSE, "advance")
         assert new_phase == SessionPhase.ACT
 
         # Test manifest stays in same phase
-        new_phase, result = GARDENER_SESSION_POLYNOMIAL.invoke(
-            SessionPhase.ACT, "manifest"
-        )
+        new_phase, result = GARDENER_SESSION_POLYNOMIAL.invoke(SessionPhase.ACT, "manifest")
         assert new_phase == SessionPhase.ACT
 
 

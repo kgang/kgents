@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+
 from agents.k.session import (
     PersistedSoulState,
     SoulChange,
@@ -349,9 +350,7 @@ class TestSessionIntegration:
             session = await SoulSession.load(soul_dir)
 
             # Propose a change
-            change = await session.propose_change(
-                "Increase verbosity for deep explanations"
-            )
+            change = await session.propose_change("Increase verbosity for deep explanations")
             assert change.status == "pending"
 
             # Commit with felt-sense
@@ -370,9 +369,7 @@ class TestSessionIntegration:
 
             # History should now include the resume
             history = session.who_was_i(10)
-            assert any(
-                "Resumed from crystal" in c.get("description", "") for c in history
-            )
+            assert any("Resumed from crystal" in c.get("description", "") for c in history)
 
 
 # =============================================================================
@@ -535,9 +532,7 @@ class TestChangeApplication:
             await session.resume_crystal(crystal.id)
 
             # Joy should be back to initial value
-            assert session.soul.eigenvectors.joy.value == pytest.approx(
-                initial_joy, abs=0.001
-            )
+            assert session.soul.eigenvectors.joy.value == pytest.approx(initial_joy, abs=0.001)
 
     @pytest.mark.asyncio
     async def test_eigenvector_persistence_across_sessions(self) -> None:
@@ -556,9 +551,7 @@ class TestChangeApplication:
 
             # Session 2: Should have the modified value
             session2 = await SoulSession.load(soul_dir)
-            assert session2.soul.eigenvectors.categorical.value == pytest.approx(
-                0.95, abs=0.001
-            )
+            assert session2.soul.eigenvectors.categorical.value == pytest.approx(0.95, abs=0.001)
 
     @pytest.mark.asyncio
     async def test_eigenvector_confidence_modification(self) -> None:
@@ -630,9 +623,7 @@ class TestDialogueGardenIntegration:
                 tokens_used=50,
             )
 
-            with patch.object(
-                session._soul, "dialogue", new=AsyncMock(return_value=mock_output)
-            ):
+            with patch.object(session._soul, "dialogue", new=AsyncMock(return_value=mock_output)):
                 await session.dialogue("How do you think about problems?")
 
             # Check that patterns were planted
@@ -673,9 +664,7 @@ class TestDialogueGardenIntegration:
                 auto_plant_calls.append(kwargs)
                 return await original_auto_plant(**kwargs)
 
-            with patch.object(
-                session._soul, "dialogue", new=AsyncMock(return_value=mock_output)
-            ):
+            with patch.object(session._soul, "dialogue", new=AsyncMock(return_value=mock_output)):
                 with patch.object(
                     garden, "auto_plant_from_dialogue", side_effect=tracking_auto_plant
                 ):
@@ -685,10 +674,7 @@ class TestDialogueGardenIntegration:
             assert len(auto_plant_calls) == 1
             call = auto_plant_calls[0]
             assert call["message"] == "How do you approach problems?"
-            assert (
-                call["response"]
-                == "I always prefer categorical approaches to problems."
-            )
+            assert call["response"] == "I always prefer categorical approaches to problems."
             assert "eigenvector_affinities" in call
 
     @pytest.mark.asyncio
@@ -718,9 +704,7 @@ class TestDialogueGardenIntegration:
                 tokens_used=50,
             )
 
-            with patch.object(
-                session._soul, "dialogue", new=AsyncMock(return_value=mock_output)
-            ):
+            with patch.object(session._soul, "dialogue", new=AsyncMock(return_value=mock_output)):
                 await session.dialogue("What's your preference?")
 
             # Check that newly planted patterns have eigenvector affinities
@@ -761,9 +745,7 @@ class TestDialogueGardenIntegration:
 
             initial_stats = await garden.stats()
 
-            with patch.object(
-                session._soul, "dialogue", new=AsyncMock(return_value=mock_output)
-            ):
+            with patch.object(session._soul, "dialogue", new=AsyncMock(return_value=mock_output)):
                 await session.dialogue("What do you tend to do?")
 
             final_stats = await garden.stats()

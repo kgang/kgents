@@ -301,7 +301,7 @@ def _display_plain(info: PathInfo, verbose: bool) -> None:
 
 def _display_compact(info: PathInfo) -> None:
     """Display path header in compact single-line format."""
-    emoji = CONTEXT_EMOJI.get(info.context or "", "")
+    CONTEXT_EMOJI.get(info.context or "", "")
     effects_str = f" [{', '.join(info.effects)}]" if info.effects else ""
     print(f"[{info.path}] {info.aspect}{effects_str}")
 

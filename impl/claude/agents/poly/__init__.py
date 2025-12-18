@@ -126,16 +126,16 @@ from .types import (
     Result,
     SublateInput,
     SublateResult,
+    Synthesis as BootstrapSynthesis,
     Tension,
     TensionMode,
+    Verdict as BootstrapVerdict,
     VerdictType,
     Void,
     WorldSeed,
     err,
     ok,
 )
-from .types import Synthesis as BootstrapSynthesis
-from .types import Verdict as BootstrapVerdict
 
 __all__ = [
     # Protocol

@@ -12,7 +12,17 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Integer, Float, Text, DateTime, JSON, ForeignKey, Index, Boolean
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
@@ -91,7 +101,9 @@ class CodeBlock(TimestampMixin, Base):
 
     # Code identity
     name: Mapped[str] = mapped_column(String(256), nullable=False)
-    block_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "function", "class", "module", "file"
+    block_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # "function", "class", "module", "file"
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     line_start: Mapped[int | None] = mapped_column(Integer, nullable=True)
     line_end: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -150,7 +162,9 @@ class CodeLink(TimestampMixin, Base):
     )
 
     # Link type
-    link_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "import", "call", "inherit", "data_flow"
+    link_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # "import", "call", "inherit", "data_flow"
     strength: Mapped[float] = mapped_column(Float, default=1.0)
 
     # Optional metadata

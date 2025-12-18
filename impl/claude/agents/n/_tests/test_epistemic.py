@@ -18,6 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import pytest
+
 from agents.n.bard import (
     Narrative,
     NarrativeGenre,
@@ -710,9 +711,7 @@ class TestContradiction:
 class TestRashomonNarrative:
     """Tests for RashomonNarrative."""
 
-    def _make_narrative(
-        self, narrator_id: str, confidence: float
-    ) -> UnreliableNarrative:
+    def _make_narrative(self, narrator_id: str, confidence: float) -> UnreliableNarrative:
         """Helper to create unreliable narrative."""
         narrative = Narrative(
             text=f"Story from {narrator_id}",
@@ -810,9 +809,7 @@ class TestRashomonNarrative:
                 annotated_traces=[
                     UnreliableTrace(
                         trace=trace,
-                        reliability=ReliabilityAnnotation(
-                            confidence=0.3
-                        ),  # Very different
+                        reliability=ReliabilityAnnotation(confidence=0.3),  # Very different
                         interpretation="B says Y",
                     )
                 ],

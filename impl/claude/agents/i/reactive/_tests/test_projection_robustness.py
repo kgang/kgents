@@ -13,6 +13,8 @@ import time
 from typing import Any, cast
 
 import pytest
+from hypothesis import given, settings, strategies as st
+
 from agents.i.reactive.primitives.agent_card import AgentCardState, AgentCardWidget
 from agents.i.reactive.primitives.density_field import (
     DensityFieldState,
@@ -29,8 +31,6 @@ from agents.i.reactive.primitives.hgent_card import (
 )
 from agents.i.reactive.primitives.yield_card import YieldCardState, YieldCardWidget
 from agents.i.reactive.widget import KgentsWidget, RenderTarget
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 # =============================================================================
 # Performance Benchmarks
@@ -104,9 +104,7 @@ class TestEnvelopePerformance:
             Entity(id=f"e{i}", x=i * 2, y=i, char=chr(65 + i), phase="active", heat=0.5)
             for i in range(5)
         )
-        widget = DensityFieldWidget(
-            DensityFieldState(width=20, height=10, entities=entities)
-        )
+        widget = DensityFieldWidget(DensityFieldState(width=20, height=10, entities=entities))
 
         iterations = 500
 
@@ -139,9 +137,7 @@ class TestEnvelopePerformance:
                 widget.to_envelope(RenderTarget.JSON)
             elapsed = (time.perf_counter() - t0) * 1000 / 100  # ms per call
 
-            assert elapsed < 1.0, (
-                f"{widget.__class__.__name__} envelope too slow: {elapsed:.3f}ms"
-            )
+            assert elapsed < 1.0, f"{widget.__class__.__name__} envelope too slow: {elapsed:.3f}ms"
 
 
 # =============================================================================
@@ -185,9 +181,7 @@ class TestProjectionDeterminism:
         t=st.floats(0.0, 100000.0),
     )
     @settings(max_examples=50)
-    def test_agent_card_deterministic_cli(
-        self, entropy: float, seed: int, t: float
-    ) -> None:
+    def test_agent_card_deterministic_cli(self, entropy: float, seed: int, t: float) -> None:
         """AgentCard CLI projection is deterministic."""
         state = AgentCardState(entropy=entropy, seed=seed, t=t)
 
@@ -217,9 +211,7 @@ class TestProjectionDeterminism:
         timestamp=st.floats(1000000.0, 2000000000.0),
     )
     @settings(max_examples=30)
-    def test_yield_card_deterministic(
-        self, importance: float, timestamp: float
-    ) -> None:
+    def test_yield_card_deterministic(self, importance: float, timestamp: float) -> None:
         """YieldCard projection is deterministic."""
         state = YieldCardState(
             yield_id="hyp-yield",
@@ -285,9 +277,7 @@ class TestProjectionCompleteness:
                     result = widget.project(target)
                     assert result is not None, f"{name} -> {target.name} returned None"
                 except Exception as e:
-                    pytest.fail(
-                        f"{name} -> {target.name} raised {type(e).__name__}: {e}"
-                    )
+                    pytest.fail(f"{name} -> {target.name} raised {type(e).__name__}: {e}")
 
     def test_all_widgets_envelope_to_all_targets(self) -> None:
         """Every widget envelope works for every target without exception."""
@@ -303,9 +293,7 @@ class TestProjectionCompleteness:
                     WidgetStatus.DONE,
                     WidgetStatus.ERROR,
                     WidgetStatus.STALE,
-                ), (
-                    f"{name} -> {target.name} has unexpected status: {envelope.meta.status}"
-                )
+                ), f"{name} -> {target.name} has unexpected status: {envelope.meta.status}"
 
     @given(
         entropy=st.floats(0.0, 1.0),
@@ -371,6 +359,4 @@ class TestEnvelopeInvariants:
                 assert "data" in parsed
                 assert "meta" in parsed
             except Exception as e:
-                pytest.fail(
-                    f"{widget.__class__.__name__} envelope not serializable: {e}"
-                )
+                pytest.fail(f"{widget.__class__.__name__} envelope not serializable: {e}")

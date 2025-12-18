@@ -18,6 +18,7 @@ import asyncio
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.api.action_metrics import (
     ACTION_CREDITS,
     MODEL_COSTS_PER_1M,
@@ -596,9 +597,7 @@ async def test_instrument_action_async():
     store = get_metrics_store()
     store.clear()
 
-    @instrument_action(
-        "lod3", model="haiku", user_id="u1", town_id="t1", credits_charged=10
-    )
+    @instrument_action("lod3", model="haiku", user_id="u1", town_id="t1", credits_charged=10)
     async def test_action() -> dict[str, int]:
         await asyncio.sleep(0.01)  # Simulate work
         return {"tokens_in": 100, "tokens_out": 50}
@@ -626,9 +625,7 @@ def test_instrument_action_sync():
     store = get_metrics_store()
     store.clear()
 
-    @instrument_action(
-        "lod3", model="haiku", user_id="u2", town_id="t2", credits_charged=10
-    )
+    @instrument_action("lod3", model="haiku", user_id="u2", town_id="t2", credits_charged=10)
     def test_action() -> dict[str, int]:
         return {"tokens_in": 100, "tokens_out": 50}
 
@@ -658,9 +655,7 @@ async def test_instrument_action_with_object_result():
             self.tokens_in = 200
             self.tokens_out = 100
 
-    @instrument_action(
-        "lod4", model="sonnet", user_id="u3", town_id="t3", credits_charged=100
-    )
+    @instrument_action("lod4", model="sonnet", user_id="u3", town_id="t3", credits_charged=100)
     async def test_action() -> Result:
         return Result()
 
@@ -684,9 +679,7 @@ async def test_instrument_action_with_tokens_used():
         def __init__(self):
             self.tokens_used = 150
 
-    @instrument_action(
-        "dialogue", model="haiku", user_id="u4", town_id="t4", credits_charged=0
-    )
+    @instrument_action("dialogue", model="haiku", user_id="u4", town_id="t4", credits_charged=0)
     async def test_action() -> Result:
         return Result()
 
@@ -704,9 +697,7 @@ async def test_instrument_action_error_handling():
     store = get_metrics_store()
     store.clear()
 
-    @instrument_action(
-        "lod3", model="haiku", user_id="u5", town_id="t5", credits_charged=10
-    )
+    @instrument_action("lod3", model="haiku", user_id="u5", town_id="t5", credits_charged=10)
     async def test_action() -> dict[str, int]:
         raise ValueError("Test error")
 

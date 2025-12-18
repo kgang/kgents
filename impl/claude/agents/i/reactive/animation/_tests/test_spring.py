@@ -1,6 +1,7 @@
 """Tests for Spring dynamics."""
 
 import pytest
+
 from agents.i.reactive.animation.spring import (
     Spring,
     SpringConfig,

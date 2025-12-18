@@ -22,7 +22,6 @@ from protocols.cli.validation import (
     validate_aspect_registration,
 )
 
-
 # === ValidationError Tests ===
 
 

@@ -7,6 +7,7 @@ import tempfile
 from typing import Any, Generator
 
 import pytest
+
 from agents.l.catalog import CatalogEntry, EntityType, Registry, Status
 
 
@@ -57,9 +58,7 @@ async def test_catalog_entry_serialization(sample_entry: CatalogEntry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_register_and_get(
-    temp_storage: str, sample_entry: CatalogEntry
-) -> None:
+async def test_registry_register_and_get(temp_storage: str, sample_entry: CatalogEntry) -> None:
     """Test registering and retrieving entries."""
     registry = Registry(storage_path=temp_storage)
 
@@ -75,9 +74,7 @@ async def test_registry_register_and_get(
 
 
 @pytest.mark.asyncio
-async def test_registry_persistence(
-    temp_storage: str, sample_entry: CatalogEntry
-) -> None:
+async def test_registry_persistence(temp_storage: str, sample_entry: CatalogEntry) -> None:
     """Test that registry persists across instances."""
     # First instance - register entry
     registry1 = Registry(storage_path=temp_storage)
@@ -137,9 +134,7 @@ async def test_registry_list_by_type(temp_storage: str) -> None:
 
 
 @pytest.mark.asyncio
-async def test_registry_deprecate(
-    temp_storage: str, sample_entry: CatalogEntry
-) -> None:
+async def test_registry_deprecate(temp_storage: str, sample_entry: CatalogEntry) -> None:
     """Test deprecating an entry."""
     registry = Registry(storage_path=temp_storage)
 
@@ -171,9 +166,7 @@ async def test_registry_deprecate(
 
 
 @pytest.mark.asyncio
-async def test_registry_record_usage(
-    temp_storage: str, sample_entry: CatalogEntry
-) -> None:
+async def test_registry_record_usage(temp_storage: str, sample_entry: CatalogEntry) -> None:
     """Test recording usage statistics."""
     registry = Registry(storage_path=temp_storage)
 

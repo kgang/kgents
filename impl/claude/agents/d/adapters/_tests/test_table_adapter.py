@@ -30,7 +30,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from agents.d.adapters.table_adapter import TableAdapter, TableStateBackend
 from agents.d.datum import Datum
 
-
 # =============================================================================
 # Test Models
 # =============================================================================
@@ -38,6 +37,7 @@ from agents.d.datum import Datum
 
 class TestBase(DeclarativeBase):
     """Test-only SQLAlchemy base."""
+
     pass
 
 
@@ -88,14 +88,18 @@ async def temp_db() -> AsyncGenerator[tuple[AsyncEngine, async_sessionmaker[Asyn
 
 
 @pytest.fixture
-def adapter(temp_db: tuple[AsyncEngine, async_sessionmaker[AsyncSession]]) -> TableAdapter[TestModel]:
+def adapter(
+    temp_db: tuple[AsyncEngine, async_sessionmaker[AsyncSession]],
+) -> TableAdapter[TestModel]:
     """TableAdapter for TestModel."""
     _, factory = temp_db
     return TableAdapter(model=TestModel, session_factory=factory)
 
 
 @pytest.fixture
-def causal_adapter(temp_db: tuple[AsyncEngine, async_sessionmaker[AsyncSession]]) -> TableAdapter[CausalTestModel]:
+def causal_adapter(
+    temp_db: tuple[AsyncEngine, async_sessionmaker[AsyncSession]],
+) -> TableAdapter[CausalTestModel]:
     """TableAdapter for CausalTestModel."""
     _, factory = temp_db
     return TableAdapter(model=CausalTestModel, session_factory=factory)
@@ -282,12 +286,16 @@ class TestTableAdapterCausalChain:
         assert len(chain) == 3
         assert [d.id for d in chain] == ["A", "B", "C"]
 
-    async def test_causal_chain_missing(self, causal_adapter: TableAdapter[CausalTestModel]) -> None:
+    async def test_causal_chain_missing(
+        self, causal_adapter: TableAdapter[CausalTestModel]
+    ) -> None:
         """causal_chain() returns empty for missing ID."""
         chain = await causal_adapter.causal_chain("nonexistent")
         assert chain == []
 
-    async def test_causal_chain_model_without_causality(self, adapter: TableAdapter[TestModel]) -> None:
+    async def test_causal_chain_model_without_causality(
+        self, adapter: TableAdapter[TestModel]
+    ) -> None:
         """causal_chain() returns single item for models without causal_parent."""
         datum = Datum.create(b'{"name": "test", "value": 0}', id="no-causality")
         await adapter.put(datum)
@@ -335,7 +343,9 @@ class TestTableStateBackend:
         assert loaded.name == "default"
         assert loaded.value == 0
 
-    async def test_state_error_on_missing_no_initial(self, adapter: TableAdapter[TestModel]) -> None:
+    async def test_state_error_on_missing_no_initial(
+        self, adapter: TableAdapter[TestModel]
+    ) -> None:
         """Error raised when key missing and no initial."""
         backend = adapter.as_state_backend("missing-key")
 

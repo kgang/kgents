@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.billing.stripe_client import (
     StripeClient,
     StripeConfig,
@@ -183,9 +184,7 @@ class TestStripeClient:
             payment_method_types=["card"],
         )
 
-    def test_create_checkout_session_no_metadata(
-        self, stripe_client: StripeClient
-    ) -> None:
+    def test_create_checkout_session_no_metadata(self, stripe_client: StripeClient) -> None:
         """Test creating checkout session without metadata."""
         mock_session = {"id": "cs_test123"}
         mock_stripe.checkout.Session.create.return_value = mock_session
@@ -247,9 +246,7 @@ class TestStripeClient:
 class TestCreateStripeClient:
     """Tests for create_stripe_client factory."""
 
-    def test_create_stripe_client_with_config(
-        self, stripe_config: StripeConfig
-    ) -> None:
+    def test_create_stripe_client_with_config(self, stripe_config: StripeConfig) -> None:
         """Test factory creates client with provided config."""
         with patch("protocols.billing.stripe_client.STRIPE_AVAILABLE", True):
             client = create_stripe_client(stripe_config)

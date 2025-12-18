@@ -9,6 +9,7 @@ Tests entity creation, health scoring, and topology aggregation.
 from datetime import datetime
 
 import pytest
+
 from agents.infra.health import (
     HealthThresholds,
     calculate_entity_health,
@@ -189,9 +190,7 @@ class TestInfraTopology:
         entities = [
             InfraEntity(id="1", kind=InfraEntityKind.POD, name="healthy", health=0.9),
             InfraEntity(id="2", kind=InfraEntityKind.POD, name="warning", health=0.6),
-            InfraEntity(
-                id="3", kind=InfraEntityKind.SERVICE, name="critical", health=0.3
-            ),
+            InfraEntity(id="3", kind=InfraEntityKind.SERVICE, name="critical", health=0.3),
         ]
 
         topology = InfraTopology(

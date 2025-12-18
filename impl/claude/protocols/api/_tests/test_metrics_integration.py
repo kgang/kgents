@@ -11,6 +11,7 @@ Demonstrates end-to-end metrics flow:
 from __future__ import annotations
 
 import pytest
+
 from protocols.api.action_metrics import get_metrics_store
 
 

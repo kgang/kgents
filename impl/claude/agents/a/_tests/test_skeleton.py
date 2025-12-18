@@ -8,6 +8,7 @@ Tests cover:
 """
 
 import pytest
+
 from agents.a.skeleton import (
     # Existing
     AbstractAgent,
@@ -290,9 +291,7 @@ class TestCompositionTypeVerification:
 
         is_valid, explanation = verify_composition_types(f, g)
         assert is_valid is False
-        assert (
-            "mismatch" in explanation.lower() or "incompatible" in explanation.lower()
-        )
+        assert "mismatch" in explanation.lower() or "incompatible" in explanation.lower()
 
 
 # =============================================================================

@@ -10,6 +10,7 @@ Verifies end-to-end behavior:
 from __future__ import annotations
 
 import pytest
+
 from agents.town.citizen import Citizen
 from agents.town.environment import create_mpp_environment
 from agents.town.flux import TownFlux, TownPhase
@@ -106,9 +107,7 @@ class TestOperadIntegration:
         results = PRECONDITION_CHECKER.validate_operation("greet", [alice, bob], env)
 
         # Should fail locality check
-        locality_result = next(
-            (r for r in results if r.precondition == "locality"), None
-        )
+        locality_result = next((r for r in results if r.precondition == "locality"), None)
         assert locality_result is not None
         assert not locality_result.passed
 

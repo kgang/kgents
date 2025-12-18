@@ -138,9 +138,7 @@ def _gallery_directions(state: GalleryState) -> FrozenSet[type]:
             return frozenset([CloseInput])
 
 
-def _gallery_transition(
-    state: GalleryState, input: Any
-) -> tuple[GalleryState, GalleryOutput]:
+def _gallery_transition(state: GalleryState, input: Any) -> tuple[GalleryState, GalleryOutput]:
     """Execute gallery state transition."""
     match input:
         case FilterInput(category=cat):
@@ -252,9 +250,7 @@ def _directions_wrapper(state: GalleryState) -> FrozenSet[type]:
 
 
 # Wrapper for the transition function
-def _transition_wrapper(
-    state: GalleryState, inp: Any
-) -> tuple[GalleryState, GalleryOutput]:
+def _transition_wrapper(state: GalleryState, inp: Any) -> tuple[GalleryState, GalleryOutput]:
     return _gallery_transition(state, inp)
 
 
@@ -274,7 +270,7 @@ GALLERY_POSITIONS: FrozenSet[GalleryState] = frozenset(
 GALLERY_POLYNOMIAL: PolyAgent[GalleryState, Any, GalleryOutput] = PolyAgent(
     name="GalleryPolynomial",
     positions=GALLERY_POSITIONS,
-    _directions=_directions_wrapper,  # type: ignore
+    _directions=_directions_wrapper,
     _transition=_transition_wrapper,
 )
 

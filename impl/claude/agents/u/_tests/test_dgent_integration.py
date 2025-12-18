@@ -382,6 +382,7 @@ class TestDgentSidecarHealthPattern:
     async def test_graceful_degradation_on_sidecar_unavailable(self) -> None:
         """Test graceful handling when sidecar is unavailable."""
         import httpx
+
         from agents.u.state import DgentClient, DgentConnectionError
 
         with patch("httpx.AsyncClient") as mock_client_class:

@@ -10,6 +10,7 @@ Verifies:
 """
 
 import pytest
+
 from agents.domain.drills.operad import (
     CLOSE_METABOLICS,
     COMMUNICATE_METABOLICS,
@@ -244,17 +245,13 @@ class TestPreconditionChecker:
 
     def test_closure_requires_postmortem(self) -> None:
         """Closure requires postmortem to be scheduled."""
-        result = PRECONDITION_CHECKER.check_closure_requirements(
-            postmortem_scheduled=False
-        )
+        result = PRECONDITION_CHECKER.check_closure_requirements(postmortem_scheduled=False)
         assert not result.passed
         assert "postmortem" in result.message.lower()
 
     def test_closure_with_postmortem_passes(self) -> None:
         """Closure with scheduled postmortem passes."""
-        result = PRECONDITION_CHECKER.check_closure_requirements(
-            postmortem_scheduled=True
-        )
+        result = PRECONDITION_CHECKER.check_closure_requirements(postmortem_scheduled=True)
         assert result.passed
 
     def test_validate_operation_detect(self) -> None:
@@ -264,16 +261,12 @@ class TestPreconditionChecker:
 
     def test_validate_operation_escalate_in_normal(self) -> None:
         """Validate escalate in NORMAL fails detection check."""
-        results = PRECONDITION_CHECKER.validate_operation(
-            "escalate", CrisisPhase.NORMAL
-        )
+        results = PRECONDITION_CHECKER.validate_operation("escalate", CrisisPhase.NORMAL)
         assert any(not r.passed for r in results)
 
     def test_validate_operation_escalate_in_incident(self) -> None:
         """Validate escalate in INCIDENT passes."""
-        results = PRECONDITION_CHECKER.validate_operation(
-            "escalate", CrisisPhase.INCIDENT
-        )
+        results = PRECONDITION_CHECKER.validate_operation("escalate", CrisisPhase.INCIDENT)
         assert all(r.passed for r in results)
 
 
@@ -418,9 +411,7 @@ class TestOperadIntegration:
         communicate_agent = from_function("Communicate", lambda x: {"sent": True})
 
         # Use par from AGENT_OPERAD (inherited)
-        par_composed = CRISIS_OPERAD.compose(
-            "par", investigate_agent, communicate_agent
-        )
+        par_composed = CRISIS_OPERAD.compose("par", investigate_agent, communicate_agent)
         assert par_composed is not None
 
     def test_operad_description(self) -> None:
@@ -443,14 +434,14 @@ class TestOperadIntegration:
 # =============================================================================
 
 
+from hypothesis import given, settings, strategies as st
+
 from agents.domain.drills.operad import (
     CrisisAuditEvent,
     CrisisAuditStore,
     emit_crisis_audit,
     get_audit_store,
 )
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 # Strategies for generating test data
 phase_strategy = st.sampled_from(list(CrisisPhase))
@@ -492,13 +483,9 @@ class TestPropertyBasedMetabolics:
         credits=st.integers(min_value=0, max_value=1000),
     )
     @settings(max_examples=50)
-    def test_metabolics_fields_valid(
-        self, token_cost: int, drama: float, credits: int
-    ) -> None:
+    def test_metabolics_fields_valid(self, token_cost: int, drama: float, credits: int) -> None:
         """Metabolics always has valid fields."""
-        met = OperationMetabolics(
-            token_cost=token_cost, drama_potential=drama, credits=credits
-        )
+        met = OperationMetabolics(token_cost=token_cost, drama_potential=drama, credits=credits)
         assert met.token_cost >= 0
         assert 0 <= met.drama_potential <= 1
         assert met.credits >= 0
@@ -518,23 +505,15 @@ class TestPropertyBasedPreconditions:
 
     @given(phase=phase_strategy, confirmed=st.booleans())
     @settings(max_examples=20)
-    def test_containment_check_deterministic(
-        self, phase: CrisisPhase, confirmed: bool
-    ) -> None:
+    def test_containment_check_deterministic(self, phase: CrisisPhase, confirmed: bool) -> None:
         """Containment check is deterministic."""
-        result1 = PRECONDITION_CHECKER.check_containment_before_recovery(
-            phase, confirmed
-        )
-        result2 = PRECONDITION_CHECKER.check_containment_before_recovery(
-            phase, confirmed
-        )
+        result1 = PRECONDITION_CHECKER.check_containment_before_recovery(phase, confirmed)
+        result2 = PRECONDITION_CHECKER.check_containment_before_recovery(phase, confirmed)
         assert result1.passed == result2.passed
 
     @given(msg_type=message_type_strategy, approver=st.text(max_size=50) | st.none())
     @settings(max_examples=30)
-    def test_communication_compliance_invariants(
-        self, msg_type: str, approver: str | None
-    ) -> None:
+    def test_communication_compliance_invariants(self, msg_type: str, approver: str | None) -> None:
         """Communication compliance follows approval rules."""
         result = PRECONDITION_CHECKER.check_communication_compliance(msg_type, approver)
         # Internal never requires approval
@@ -546,9 +525,7 @@ class TestPropertyBasedPreconditions:
 
     @given(phase=phase_strategy, operation=operation_strategy)
     @settings(max_examples=40)
-    def test_validate_operation_returns_list(
-        self, phase: CrisisPhase, operation: str
-    ) -> None:
+    def test_validate_operation_returns_list(self, phase: CrisisPhase, operation: str) -> None:
         """validate_operation always returns a list."""
         results = PRECONDITION_CHECKER.validate_operation(operation, phase)
         assert isinstance(results, list)
@@ -748,9 +725,7 @@ class TestTgentMetabolicCounter:
             + CONTAIN_METABOLICS.token_cost
         )
         expected_credits = (
-            DETECT_METABOLICS.credits
-            + ESCALATE_METABOLICS.credits
-            + CONTAIN_METABOLICS.credits
+            DETECT_METABOLICS.credits + ESCALATE_METABOLICS.credits + CONTAIN_METABOLICS.credits
         )
 
         assert counter.total_tokens == expected_tokens
@@ -767,9 +742,7 @@ class TestTgentMetabolicCounter:
         counter.accumulate(ESCALATE_METABOLICS, "escalate")
         counter.accumulate(DETECT_METABOLICS, "detect")
 
-        expected_drama = (
-            ESCALATE_METABOLICS.drama_potential + DETECT_METABOLICS.drama_potential
-        )
+        expected_drama = ESCALATE_METABOLICS.drama_potential + DETECT_METABOLICS.drama_potential
         assert abs(counter.total_drama - expected_drama) < 0.001
 
     def test_counter_full_drill_cost(self) -> None:

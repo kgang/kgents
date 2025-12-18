@@ -31,12 +31,11 @@ from agents.flux.synapse import (
     CDCLagTracker,
     ChangeEvent,
     ChangeOperation,
-    SyncResult,
     SynapseConfig,
     SynapseProcessor,
+    SyncResult,
     create_synapse,
 )
-
 
 # ===========================================================================
 # Mock Vector Store (Enhanced for Integration)
@@ -51,12 +50,8 @@ class MockVectorStore:
     Simulates vector operations with in-memory storage.
     """
 
-    vectors: dict[str, dict[str, tuple[list[float], dict[str, Any]]]] = field(
-        default_factory=dict
-    )
-    upserts: list[tuple[str, str, list[float], dict[str, Any]]] = field(
-        default_factory=list
-    )
+    vectors: dict[str, dict[str, tuple[list[float], dict[str, Any]]]] = field(default_factory=dict)
+    upserts: list[tuple[str, str, list[float], dict[str, Any]]] = field(default_factory=list)
     deletes: list[tuple[str, str]] = field(default_factory=list)
     failure_mode: str | None = None
     failure_count: int = 0
@@ -163,14 +158,16 @@ class MockPostgres:
         self.tables[table][row_id] = data
 
         # Add to outbox (simulates trigger)
-        self.outbox_events.append({
-            "id": self._sequence,
-            "event_type": "INSERT",
-            "table_name": table,
-            "row_id": row_id,
-            "payload": data,
-            "created_at": datetime.now(timezone.utc),
-        })
+        self.outbox_events.append(
+            {
+                "id": self._sequence,
+                "event_type": "INSERT",
+                "table_name": table,
+                "row_id": row_id,
+                "payload": data,
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
 
         return row_id
 
@@ -186,14 +183,16 @@ class MockPostgres:
         existing.update(data)
         self.tables[table][row_id] = existing
 
-        self.outbox_events.append({
-            "id": self._sequence,
-            "event_type": "UPDATE",
-            "table_name": table,
-            "row_id": row_id,
-            "payload": existing,
-            "created_at": datetime.now(timezone.utc),
-        })
+        self.outbox_events.append(
+            {
+                "id": self._sequence,
+                "event_type": "UPDATE",
+                "table_name": table,
+                "row_id": row_id,
+                "payload": existing,
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
 
     async def delete(self, table: str, row_id: str) -> None:
         """Delete row and add to outbox."""
@@ -202,14 +201,16 @@ class MockPostgres:
         if table in self.tables and row_id in self.tables[table]:
             del self.tables[table][row_id]
 
-        self.outbox_events.append({
-            "id": self._sequence,
-            "event_type": "DELETE",
-            "table_name": table,
-            "row_id": row_id,
-            "payload": {},
-            "created_at": datetime.now(timezone.utc),
-        })
+        self.outbox_events.append(
+            {
+                "id": self._sequence,
+                "event_type": "DELETE",
+                "table_name": table,
+                "row_id": row_id,
+                "payload": {},
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
 
     def get_pending_outbox(self) -> list[dict[str, Any]]:
         """Get unprocessed outbox events."""
@@ -391,8 +392,12 @@ def transient_failing_qdrant() -> MockVectorStore:
 # ===========================================================================
 
 try:
-    from testcontainers.postgres import PostgresContainer  # type: ignore[import-not-found]
-    from testcontainers.core.container import DockerContainer  # type: ignore[import-not-found]
+    from testcontainers.core.container import (
+        DockerContainer,  # type: ignore[import-not-found]
+    )
+    from testcontainers.postgres import (
+        PostgresContainer,  # type: ignore[import-not-found]
+    )
 
     CONTAINERS_AVAILABLE = True
 

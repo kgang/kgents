@@ -14,6 +14,7 @@ import asyncio
 from typing import AsyncIterator
 
 import pytest
+
 from agents.k.flux import FluxEvent, FluxStream
 from agents.k.llm import StreamingLLMResponse
 
@@ -44,9 +45,7 @@ async def data_source_with_metadata(
     )
 
 
-async def slow_source(
-    values: list[str], delay: float = 0.01
-) -> AsyncIterator[FluxEvent[str]]:
+async def slow_source(values: list[str], delay: float = 0.01) -> AsyncIterator[FluxEvent[str]]:
     """Create a slow data source with delays."""
     for value in values:
         await asyncio.sleep(delay)
@@ -66,9 +65,7 @@ class TestFluxStreamMap:
         """map() should transform data events."""
         source = FluxStream(data_source(["hello", "world"]))
 
-        result = source.map(
-            lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e
-        )
+        result = source.map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
 
         values = await result.collect()
         assert values == ["HELLO", "WORLD"]
@@ -78,9 +75,7 @@ class TestFluxStreamMap:
         """map() should pass metadata events through unchanged."""
         source = FluxStream(data_source_with_metadata(["a", "b"], tokens=50))
 
-        result = source.map(
-            lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e
-        )
+        result = source.map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
 
         events = []
         async for event in result:

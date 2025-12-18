@@ -217,9 +217,7 @@ def extract_frontmatter(content: str) -> tuple[FrontmatterData, str]:
                 # Ensure tags is a list
                 if "tags" in parsed and isinstance(parsed["tags"], str):
                     parsed["tags"] = [t.strip() for t in parsed["tags"].split(",")]
-                return FrontmatterData(
-                    **{str(k): v for k, v in parsed.items()}
-                ), remaining_content
+                return FrontmatterData(**{str(k): v for k, v in parsed.items()}), remaining_content
         except yaml.YAMLError:
             pass
 
@@ -234,7 +232,7 @@ def extract_frontmatter(content: str) -> tuple[FrontmatterData, str]:
                 # Handle simple lists: [item1, item2]
                 if value.startswith("[") and value.endswith("]"):
                     items = value[1:-1].split(",")
-                    value = [item.strip().strip("\"'") for item in items]  # type: ignore
+                    value = [item.strip().strip("\"'") for item in items]
                 frontmatter[key] = value  # type: ignore
 
     return frontmatter, remaining_content

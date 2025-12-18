@@ -10,9 +10,10 @@ Verifies:
 - Health manifest
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from dataclasses import dataclass, field
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 @pytest.fixture
@@ -63,9 +64,7 @@ def mock_episode_adapter(mock_session_factory):
 class TestParkPersistenceInit:
     """Test ParkPersistence initialization."""
 
-    def test_init_stores_dependencies(
-        self, mock_host_adapter, mock_episode_adapter, mock_dgent
-    ):
+    def test_init_stores_dependencies(self, mock_host_adapter, mock_episode_adapter, mock_dgent):
         """Should store adapters and dgent."""
         from services.park import ParkPersistence
 
@@ -285,8 +284,9 @@ class TestEpisodeManagement:
         self, mock_host_adapter, mock_episode_adapter, mock_dgent, mock_session
     ):
         """Should mark episode as completed."""
-        from services.park import ParkPersistence
         from datetime import datetime
+
+        from services.park import ParkPersistence
 
         @dataclass
         class MockEpisode:

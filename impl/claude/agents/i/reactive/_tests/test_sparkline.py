@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.sparkline import SparklineState, SparklineWidget
 from agents.i.reactive.widget import RenderTarget
 
@@ -143,9 +144,7 @@ class TestSparklineProjectCLI:
 
     def test_project_cli_with_bounds(self) -> None:
         """CLI projection shows bounds when requested."""
-        widget = SparklineWidget(
-            SparklineState(values=(0.2, 0.5, 0.8), show_bounds=True)
-        )
+        widget = SparklineWidget(SparklineState(values=(0.2, 0.5, 0.8), show_bounds=True))
         result = widget.project(RenderTarget.CLI)
         assert "[0.20-0.80]" in result
 
@@ -317,10 +316,17 @@ class TestSparklineProjectionLaws:
         def append_value(s: SparklineState) -> SparklineState:
             new_values = s.values + (0.75,)
             if len(new_values) > s.max_length:
-                new_values = new_values[-s.max_length:]
+                new_values = new_values[-s.max_length :]
             return SparklineState(
-                values=new_values, max_length=s.max_length, fg=s.fg, bg=s.bg,
-                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+                values=new_values,
+                max_length=s.max_length,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
+                show_bounds=s.show_bounds,
             )
 
         def identity(s: SparklineState) -> SparklineState:
@@ -336,14 +342,28 @@ class TestSparklineProjectionLaws:
         def scale_values(s: SparklineState) -> SparklineState:
             scaled = tuple(min(1.0, v * 1.2) for v in s.values)
             return SparklineState(
-                values=scaled, max_length=s.max_length, fg=s.fg, bg=s.bg,
-                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+                values=scaled,
+                max_length=s.max_length,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
+                show_bounds=s.show_bounds,
             )
 
         def add_label(s: SparklineState) -> SparklineState:
             return SparklineState(
-                values=s.values, max_length=s.max_length, fg=s.fg, bg=s.bg,
-                entropy=s.entropy, seed=s.seed, t=s.t, label="Memory", show_bounds=s.show_bounds,
+                values=s.values,
+                max_length=s.max_length,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label="Memory",
+                show_bounds=s.show_bounds,
             )
 
         widget = SparklineWidget(SparklineState(values=(0.3, 0.5, 0.7)))
@@ -370,8 +390,15 @@ class TestSparklineProjectionLaws:
         def shift_values(s: SparklineState) -> SparklineState:
             shifted = s.values[1:] + (0.5,) if s.values else (0.5,)
             return SparklineState(
-                values=shifted, max_length=s.max_length, fg=s.fg, bg=s.bg,
-                entropy=s.entropy, seed=s.seed, t=s.t, label=s.label, show_bounds=s.show_bounds,
+                values=shifted,
+                max_length=s.max_length,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
+                show_bounds=s.show_bounds,
             )
 
         def identity(s: SparklineState) -> SparklineState:

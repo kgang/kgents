@@ -12,6 +12,7 @@ Tests verify:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.widgets.slider import (
     SLIDER_CHARS,
     Slider,

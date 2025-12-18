@@ -18,6 +18,7 @@ from datetime import datetime
 from typing import Any
 
 import pytest
+
 from agents.town.timeline_widget import (
     TimelineEvent,
     TimelineState,
@@ -521,9 +522,7 @@ class TestTimelineWidgetCallbacks:
         # Capture values at callback time since state object is mutable
         received_values: list[tuple[bool, float]] = []
 
-        widget.on_state_change(
-            lambda s: received_values.append((s.is_playing, s.playback_speed))
-        )
+        widget.on_state_change(lambda s: received_values.append((s.is_playing, s.playback_speed)))
 
         widget.play()
         widget.pause()

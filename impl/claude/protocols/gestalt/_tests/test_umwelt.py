@@ -9,15 +9,14 @@ from __future__ import annotations
 import pytest
 
 from protocols.gestalt.umwelt import (
-    GestaltUmwelt,
     OBSERVER_TO_UMWELT,
-    UmweltConfig,
     UMWELT_CONFIGS,
-    get_umwelt_config,
+    GestaltUmwelt,
+    UmweltConfig,
     compute_node_score,
     filter_node_for_umwelt,
+    get_umwelt_config,
 )
-
 
 # =============================================================================
 # GestaltUmwelt Enum Tests

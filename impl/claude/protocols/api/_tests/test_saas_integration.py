@@ -360,6 +360,7 @@ class TestHealthEndpoint:
         """Test /health/saas when SaaS not configured."""
         pytest.importorskip("fastapi")
         from fastapi.testclient import TestClient
+
         from protocols.api.app import create_app
         from protocols.config.clients import reset_saas_clients
         from protocols.config.saas import reset_cached_config

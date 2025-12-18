@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Generator
 
 import pytest
+
 from agents.town.environment import create_mpp_environment
 from agents.town.flux import TownFlux
 from protocols.cli.handlers.town import (
@@ -258,9 +259,7 @@ class TestUserModeIntegration:
         storage = alice.memory._storage
         # At least one whisper memory should be stored
         whisper_memories = [
-            v
-            for v in storage.values()
-            if isinstance(v, dict) and v.get("type") == "whisper"
+            v for v in storage.values() if isinstance(v, dict) and v.get("type") == "whisper"
         ]
         assert len(whisper_memories) >= 1
 
@@ -320,8 +319,6 @@ class TestUserModeIntegration:
         alice = env.get_citizen_by_name("Alice")
         storage = alice.memory._storage
         intervention_memories = [
-            v
-            for v in storage.values()
-            if isinstance(v, dict) and v.get("type") == "intervention"
+            v for v in storage.values() if isinstance(v, dict) and v.get("type") == "intervention"
         ]
         assert len(intervention_memories) >= 1

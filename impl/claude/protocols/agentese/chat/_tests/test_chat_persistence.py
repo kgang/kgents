@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
+
 from agents.d import DgentRouter, MemoryBackend
 from protocols.agentese.chat.config import ChatConfig
 from protocols.agentese.chat.persistence import (
@@ -257,9 +258,7 @@ class TestChatSessionPersistence:
         soul_sessions = await persistence.list_sessions(node_path="self.soul")
         assert len(soul_sessions) == 2
 
-        citizen_sessions = await persistence.list_sessions(
-            node_path="world.town.citizen.elara"
-        )
+        citizen_sessions = await persistence.list_sessions(node_path="world.town.citizen.elara")
         assert len(citizen_sessions) == 1
 
     @pytest.mark.asyncio
@@ -283,12 +282,8 @@ class TestChatSessionPersistence:
         session1._turns.append(
             Turn(
                 turn_number=1,
-                user_message=Message(
-                    role="user", content="How do I implement authentication?"
-                ),
-                assistant_response=Message(
-                    role="assistant", content="Use OAuth or JWT"
-                ),
+                user_message=Message(role="user", content="How do I implement authentication?"),
+                assistant_response=Message(role="assistant", content="Use OAuth or JWT"),
                 started_at=datetime.now(),
                 completed_at=datetime.now(),
                 tokens_in=10,
@@ -311,9 +306,7 @@ class TestChatSessionPersistence:
             Turn(
                 turn_number=1,
                 user_message=Message(role="user", content="How do I write unit tests?"),
-                assistant_response=Message(
-                    role="assistant", content="Use pytest fixtures"
-                ),
+                assistant_response=Message(role="assistant", content="Use pytest fixtures"),
                 started_at=datetime.now(),
                 completed_at=datetime.now(),
                 tokens_in=10,
@@ -577,9 +570,7 @@ class TestMemoryInjector:
             Turn(
                 turn_number=1,
                 user_message=Message(role="user", content="How do I implement auth?"),
-                assistant_response=Message(
-                    role="assistant", content="Use OAuth or JWT tokens"
-                ),
+                assistant_response=Message(role="assistant", content="Use OAuth or JWT tokens"),
                 started_at=datetime.now(),
                 completed_at=datetime.now(),
                 tokens_in=10,
@@ -645,9 +636,7 @@ class TestMemoryInjector:
             Turn(
                 turn_number=1,
                 user_message=Message(role="user", content="How do databases work?"),
-                assistant_response=Message(
-                    role="assistant", content="SQL queries fetch data"
-                ),
+                assistant_response=Message(role="assistant", content="SQL queries fetch data"),
                 started_at=datetime.now(),
                 completed_at=datetime.now(),
                 tokens_in=10,

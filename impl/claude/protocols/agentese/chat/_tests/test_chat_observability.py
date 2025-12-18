@@ -15,6 +15,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.agentese.chat.config import ChatConfig
 from protocols.agentese.chat.observability import (
     ATTR_CONTEXT_UTILIZATION,
@@ -445,9 +446,7 @@ class TestChatTelemetry:
         return ChatTelemetry()
 
     @pytest.mark.asyncio
-    async def test_trace_session_basic(
-        self, telemetry: ChatTelemetry, mock_session: ChatSession
-    ):
+    async def test_trace_session_basic(self, telemetry: ChatTelemetry, mock_session: ChatSession):
         """trace_session creates a session span."""
         async with telemetry.trace_session(mock_session) as span:
             assert span is not None
@@ -474,9 +473,7 @@ class TestChatTelemetry:
         assert summary["total_errors"] == 1
 
     @pytest.mark.asyncio
-    async def test_trace_turn_basic(
-        self, telemetry: ChatTelemetry, mock_session: ChatSession
-    ):
+    async def test_trace_turn_basic(self, telemetry: ChatTelemetry, mock_session: ChatSession):
         """trace_turn creates a turn span."""
         async with telemetry.trace_turn(mock_session, "Hello") as span:
             # Manually add a turn to simulate send()
@@ -499,9 +496,7 @@ class TestChatTelemetry:
         assert summary["total_turns"] == 1
 
     @pytest.mark.asyncio
-    async def test_trace_turn_with_error(
-        self, telemetry: ChatTelemetry, mock_session: ChatSession
-    ):
+    async def test_trace_turn_with_error(self, telemetry: ChatTelemetry, mock_session: ChatSession):
         """trace_turn handles errors gracefully."""
         with pytest.raises(RuntimeError):
             async with telemetry.trace_turn(mock_session, "Hello") as span:
@@ -513,9 +508,7 @@ class TestChatTelemetry:
         assert summary["total_errors"] == 1
 
     @pytest.mark.asyncio
-    async def test_trace_context_render(
-        self, telemetry: ChatTelemetry, mock_session: ChatSession
-    ):
+    async def test_trace_context_render(self, telemetry: ChatTelemetry, mock_session: ChatSession):
         """trace_context_render creates a context render span."""
         async with telemetry.trace_context_render(mock_session) as span:
             assert span is not None
@@ -523,13 +516,9 @@ class TestChatTelemetry:
             pass
 
     @pytest.mark.asyncio
-    async def test_trace_llm_call(
-        self, telemetry: ChatTelemetry, mock_session: ChatSession
-    ):
+    async def test_trace_llm_call(self, telemetry: ChatTelemetry, mock_session: ChatSession):
         """trace_llm_call creates an LLM call span."""
-        async with telemetry.trace_llm_call(
-            mock_session, model="claude-3-haiku"
-        ) as span:
+        async with telemetry.trace_llm_call(mock_session, model="claude-3-haiku") as span:
             assert span is not None
             # Simulate LLM call
             pass
@@ -550,9 +539,7 @@ class TestChatTelemetry:
                     turn = Turn(
                         turn_number=4,
                         user_message=Message(role="user", content="What's up?"),
-                        assistant_response=Message(
-                            role="assistant", content="All good!"
-                        ),
+                        assistant_response=Message(role="assistant", content="All good!"),
                         started_at=datetime.now(),
                         completed_at=datetime.now(),
                         tokens_in=20,

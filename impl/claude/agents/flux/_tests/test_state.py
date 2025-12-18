@@ -1,6 +1,7 @@
 """Tests for FluxState enum."""
 
 import pytest
+
 from agents.flux.state import FluxState
 
 

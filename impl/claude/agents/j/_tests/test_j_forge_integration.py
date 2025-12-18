@@ -9,6 +9,7 @@ J-gent instantiates them with runtime parameters.
 from __future__ import annotations
 
 import pytest
+
 from agents.f import Contract, parse_intent, synthesize_contract
 from agents.j import ArchitectConstraints
 from agents.j.forge_integration import (
@@ -169,9 +170,7 @@ async def test_instantiate_template_basic(parameterized_contract: Contract) -> N
     # Check parameters were filled in contract
     assert "CSV" in agent.contract.semantic_intent
     assert "JSON" in agent.contract.semantic_intent
-    assert (
-        "CSV" not in agent.contract.output_type or "JSON" in agent.contract.output_type
-    )
+    assert "CSV" not in agent.contract.output_type or "JSON" in agent.contract.output_type
 
 
 @pytest.mark.asyncio
@@ -184,10 +183,7 @@ async def test_instantiate_template_agent_name_filled(
 
     agent = await instantiate_template(template, params)
 
-    assert (
-        "XML" in agent.contract.agent_name
-        or "DataProcessor" in agent.contract.agent_name
-    )
+    assert "XML" in agent.contract.agent_name or "DataProcessor" in agent.contract.agent_name
 
 
 @pytest.mark.asyncio
@@ -250,10 +246,7 @@ async def test_forge_and_instantiate_workflow() -> None:
 
     assert isinstance(agent, InstantiatedAgent)
     assert agent.source is not None
-    assert (
-        "NGINX" in agent.contract.semantic_intent
-        or "error" in agent.contract.semantic_intent
-    )
+    assert "NGINX" in agent.contract.semantic_intent or "error" in agent.contract.semantic_intent
 
 
 @pytest.mark.asyncio
@@ -285,9 +278,7 @@ def test_registry_register_and_get(parameterized_contract: Contract) -> None:
     assert retrieved == template
 
 
-def test_registry_list_all(
-    parameterized_contract: Contract, simple_contract: Contract
-) -> None:
+def test_registry_list_all(parameterized_contract: Contract, simple_contract: Contract) -> None:
     """List all registered templates."""
     registry = TemplateRegistry()
 
@@ -300,9 +291,7 @@ def test_registry_list_all(
     assert "template2" in all_names
 
 
-def test_registry_search(
-    parameterized_contract: Contract, simple_contract: Contract
-) -> None:
+def test_registry_search(parameterized_contract: Contract, simple_contract: Contract) -> None:
     """Search templates by intent keywords."""
     registry = TemplateRegistry()
 
@@ -345,17 +334,12 @@ async def test_integration_f_gent_contract_to_j_gent_instantiation() -> None:
     assert len(template.parameters) >= 1  # At least input_format and output_format
 
     # 3. J-gent: Instantiate with runtime params
-    params = TemplateParameters(
-        values={"input_format": "CSV", "output_format": "Parquet"}
-    )
+    params = TemplateParameters(values={"input_format": "CSV", "output_format": "Parquet"})
     agent = await instantiate_template(template, params)
 
     # 4. Verify result
     assert agent.source is not None
-    assert (
-        "CSV" in agent.contract.semantic_intent
-        or "Parquet" in agent.contract.semantic_intent
-    )
+    assert "CSV" in agent.contract.semantic_intent or "Parquet" in agent.contract.semantic_intent
 
 
 @pytest.mark.asyncio
@@ -372,9 +356,7 @@ async def test_integration_reusable_template() -> None:
     template = contract_to_template(contract)
 
     # Instantiate multiple times with different params
-    params1 = TemplateParameters(
-        values={"data_type": "JSON", "schema_type": "JSON Schema"}
-    )
+    params1 = TemplateParameters(values={"data_type": "JSON", "schema_type": "JSON Schema"})
     agent1 = await instantiate_template(template, params1)
 
     params2 = TemplateParameters(values={"data_type": "XML", "schema_type": "XSD"})

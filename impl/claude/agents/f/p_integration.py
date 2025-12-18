@@ -17,11 +17,7 @@ from typing import Any, Iterator, Optional
 
 from agents.p.core import (
     Parser,
-)
-from agents.p.core import (
     ParserConfig as PParserConfig,
-)
-from agents.p.core import (
     ParseResult as PParseResult,
 )
 
@@ -152,12 +148,8 @@ class FgentArtifactParser:
         # Parse fields
         id_match = re.search(r'id:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
         version_match = re.search(r'version:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
-        created_at_match = re.search(
-            r'created_at:\s*["\']?([^"\'\n]+)["\']?', yaml_text
-        )
-        created_by_match = re.search(
-            r'created_by:\s*["\']?([^"\'\n]+)["\']?', yaml_text
-        )
+        created_at_match = re.search(r'created_at:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
+        created_by_match = re.search(r'created_by:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
         status_match = re.search(r'status:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
         hash_match = re.search(r'hash:\s*["\']?([^"\'\n]+)["\']?', yaml_text)
 
@@ -165,27 +157,19 @@ class FgentArtifactParser:
         tags = []
         tags_section = re.search(r"tags:\s*\n((?:\s*-\s*[^\n]+\n?)*)", yaml_text)
         if tags_section:
-            tag_lines = re.findall(
-                r'-\s*["\']?([^"\'\n]+)["\']?', tags_section.group(1)
-            )
+            tag_lines = re.findall(r'-\s*["\']?([^"\'\n]+)["\']?', tags_section.group(1))
             tags = tag_lines
 
         # Parse dependencies
         dependencies = []
-        deps_section = re.search(
-            r"dependencies:\s*\n((?:\s*-\s*[^\n]+\n?)*)", yaml_text
-        )
+        deps_section = re.search(r"dependencies:\s*\n((?:\s*-\s*[^\n]+\n?)*)", yaml_text)
         if deps_section:
-            dep_lines = re.findall(
-                r'-\s*["\']?([^"\'\n]+)["\']?', deps_section.group(1)
-            )
+            dep_lines = re.findall(r'-\s*["\']?([^"\'\n]+)["\']?', deps_section.group(1))
             dependencies = dep_lines
 
         return ArtifactMetadata(
             id=id_match.group(1) if id_match else "unknown",
-            version=Version.parse(version_match.group(1))
-            if version_match
-            else Version(1, 0, 0),
+            version=Version.parse(version_match.group(1)) if version_match else Version(1, 0, 0),
             created_at=created_at_match.group(1) if created_at_match else "",
             created_by=created_by_match.group(1) if created_by_match else "f-gent",
             status=ArtifactStatus(status_match.group(1))
@@ -198,9 +182,7 @@ class FgentArtifactParser:
 
     def _parse_intent(self, text: str) -> Intent:
         """Parse THE INTENT section."""
-        intent_section = re.search(
-            r"# 1\. THE INTENT.*?\n(.*?)(?=\n#|\Z)", text, re.DOTALL
-        )
+        intent_section = re.search(r"# 1\. THE INTENT.*?\n(.*?)(?=\n#|\Z)", text, re.DOTALL)
         if not intent_section:
             raise ValueError("No INTENT section found")
 
@@ -214,9 +196,7 @@ class FgentArtifactParser:
 
         # Parse behavior
         behavior = []
-        behavior_section = re.search(
-            r"\*\*Behavior\*\*:\s*\n((?:\s*-\s*[^\n]+\n?)*)", intent_text
-        )
+        behavior_section = re.search(r"\*\*Behavior\*\*:\s*\n((?:\s*-\s*[^\n]+\n?)*)", intent_text)
         if behavior_section:
             behavior = re.findall(r"-\s*(.+)", behavior_section.group(1))
 
@@ -250,31 +230,19 @@ class FgentArtifactParser:
         contract_text = contract_section.group(1)
 
         # Parse agent name (try multiple formats)
-        name_match = re.search(
-            r"\*\*Agent Name\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE
-        )
+        name_match = re.search(r"\*\*Agent Name\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE)
         if not name_match:
-            name_match = re.search(
-                r"Agent Name:\s*`([^`]+)`", contract_text, re.MULTILINE
-            )
+            name_match = re.search(r"Agent Name:\s*`([^`]+)`", contract_text, re.MULTILINE)
         agent_name = name_match.group(1) if name_match else "UnknownAgent"
 
         # Parse input/output types
-        input_match = re.search(
-            r"\*\*Input Type\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE
-        )
+        input_match = re.search(r"\*\*Input Type\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE)
         if not input_match:
-            input_match = re.search(
-                r"Input Type:\s*`([^`]+)`", contract_text, re.MULTILINE
-            )
+            input_match = re.search(r"Input Type:\s*`([^`]+)`", contract_text, re.MULTILINE)
 
-        output_match = re.search(
-            r"\*\*Output Type\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE
-        )
+        output_match = re.search(r"\*\*Output Type\*\*:\s*`([^`]+)`", contract_text, re.MULTILINE)
         if not output_match:
-            output_match = re.search(
-                r"Output Type:\s*`([^`]+)`", contract_text, re.MULTILINE
-            )
+            output_match = re.search(r"Output Type:\s*`([^`]+)`", contract_text, re.MULTILINE)
 
         input_type = input_match.group(1) if input_match else "Any"
         output_type = output_match.group(1) if output_match else "Any"
@@ -332,17 +300,11 @@ class FgentArtifactParser:
             confidence += 0.15
 
         # Contract has agent name and types
-        if (
-            artifact.contract.agent_name
-            and artifact.contract.agent_name != "UnknownAgent"
-        ):
+        if artifact.contract.agent_name and artifact.contract.agent_name != "UnknownAgent":
             confidence += 0.1
 
         # Source code present
-        if (
-            artifact.source_code.code
-            and "No implementation found" not in artifact.source_code.code
-        ):
+        if artifact.source_code.code and "No implementation found" not in artifact.source_code.code:
             confidence += 0.15
 
         return min(1.0, max(0.0, confidence))

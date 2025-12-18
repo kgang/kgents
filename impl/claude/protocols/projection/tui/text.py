@@ -9,14 +9,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from protocols.projection.schema import WidgetMeta
-from protocols.projection.tui.base import TUIWidget
 from rich.console import RenderableType
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.text import Text
 from textual.widgets import Static
+
+from protocols.projection.schema import WidgetMeta
+from protocols.projection.tui.base import TUIWidget
 
 
 @dataclass(frozen=True)

@@ -22,8 +22,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
 
 from ..self_judgment import (
     CriticsLoop,
@@ -160,12 +159,8 @@ class TestCritiqueWeights:
         """Surprise weight can be computed from novelty and utility."""
         if novelty + utility <= 1.0:
             surprise = 1.0 - novelty - utility
-            weights = CritiqueWeights(
-                novelty=novelty, utility=utility, surprise=surprise
-            )
-            assert (
-                abs(weights.novelty + weights.utility + weights.surprise - 1.0) < 0.001
-            )
+            weights = CritiqueWeights(novelty=novelty, utility=utility, surprise=surprise)
+            assert abs(weights.novelty + weights.utility + weights.surprise - 1.0) < 0.001
 
 
 # === Critique Tests ===
@@ -514,9 +509,7 @@ class TestUtilityAssessment:
     """Tests for utility assessment."""
 
     @pytest.mark.asyncio
-    async def test_utility_without_purpose_uses_coherence(
-        self, observer: MockUmwelt
-    ) -> None:
+    async def test_utility_without_purpose_uses_coherence(self, observer: MockUmwelt) -> None:
         """Without purpose, utility is based on coherence."""
         loop = CriticsLoop()
 
@@ -532,9 +525,7 @@ class TestUtilityAssessment:
         assert critique_empty.utility < 0.5
 
     @pytest.mark.asyncio
-    async def test_utility_with_purpose_checks_alignment(
-        self, observer: MockUmwelt
-    ) -> None:
+    async def test_utility_with_purpose_checks_alignment(self, observer: MockUmwelt) -> None:
         """With purpose, utility checks keyword alignment."""
         loop = CriticsLoop()
 
@@ -618,9 +609,7 @@ class TestReasoningGeneration:
         assert critique.reasoning.endswith(".")
 
     @pytest.mark.asyncio
-    async def test_suggestions_generated_for_low_scores(
-        self, observer: MockUmwelt
-    ) -> None:
+    async def test_suggestions_generated_for_low_scores(self, observer: MockUmwelt) -> None:
         """Suggestions are generated when scores are low."""
         loop = CriticsLoop()
         loop.add_prior_work("Identical content")

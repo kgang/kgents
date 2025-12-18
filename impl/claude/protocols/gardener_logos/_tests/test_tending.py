@@ -8,21 +8,22 @@ Validates:
 - Gesture application
 """
 
-import pytest
 from datetime import datetime, timedelta
 
-from ..garden import create_garden, GardenSeason
+import pytest
+
+from ..garden import GardenSeason, create_garden
 from ..tending import (
-    TendingVerb,
     TendingGesture,
     TendingResult,
+    TendingVerb,
     apply_gesture,
+    graft,
     observe,
     prune,
-    graft,
-    water,
     rotate,
     wait,
+    water,
 )
 
 

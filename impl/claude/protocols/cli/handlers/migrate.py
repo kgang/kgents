@@ -53,6 +53,7 @@ def _upgrade(args: list[str], ctx: "InvocationContext | None") -> int:
 
     try:
         from alembic import command  # type: ignore[import-not-found]
+
         from system.migrations import get_alembic_config
 
         config = get_alembic_config()
@@ -74,6 +75,7 @@ def _downgrade(args: list[str], ctx: "InvocationContext | None") -> int:
 
     try:
         from alembic import command
+
         from system.migrations import get_alembic_config
 
         config = get_alembic_config()
@@ -93,6 +95,7 @@ def _status(ctx: "InvocationContext | None") -> int:
     """Show current migration status."""
     try:
         from alembic import command
+
         from system.migrations import get_alembic_config
 
         config = get_alembic_config()
@@ -111,6 +114,7 @@ def _history(ctx: "InvocationContext | None") -> int:
     """Show migration history."""
     try:
         from alembic import command
+
         from system.migrations import get_alembic_config
 
         config = get_alembic_config()

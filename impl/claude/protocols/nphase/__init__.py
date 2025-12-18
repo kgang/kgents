@@ -89,14 +89,15 @@ from .session import (
     list_sessions,
     reset_session_store,
 )
+
+# Handle is in both session.py and state.py - disambiguate
 from .state import (
     CumulativeState,
+    Handle as StateHandle,
     NPhaseStateUpdater,
     PhaseOutput,
     state_updater,
 )
-# Handle is in both session.py and state.py - disambiguate
-from .state import Handle as StateHandle
 
 __all__ = [
     # Enums

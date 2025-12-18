@@ -4,6 +4,7 @@ CP4 Checkpoint: Verify streaming with accurate token counts.
 """
 
 import pytest
+
 from agents.k.llm import MockLLMClient, StreamingLLMResponse
 from agents.k.persona import DialogueInput, DialogueMode, KgentAgent
 from agents.k.soul import KgentSoul
@@ -201,9 +202,7 @@ class TestKgentSoulStreamingBudget:
     @pytest.mark.asyncio
     async def test_session_tracks_streaming_tokens(self) -> None:
         """Test that session stats track tokens from streaming."""
-        mock_llm = MockLLMClient(
-            responses=["First response", "Second response", "Third response"]
-        )
+        mock_llm = MockLLMClient(responses=["First response", "Second response", "Third response"])
         soul = KgentSoul(llm=mock_llm)
 
         # Initial state

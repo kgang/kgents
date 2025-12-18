@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.primitives.agent_card import AgentCardState, AgentCardWidget
 from agents.i.reactive.widget import RenderTarget
 
@@ -360,9 +361,7 @@ class TestAgentCardDeterminism:
 
         assert widget1.project(RenderTarget.CLI) == widget2.project(RenderTarget.CLI)
         assert widget1.project(RenderTarget.JSON) == widget2.project(RenderTarget.JSON)
-        assert widget1.project(RenderTarget.MARIMO) == widget2.project(
-            RenderTarget.MARIMO
-        )
+        assert widget1.project(RenderTarget.MARIMO) == widget2.project(RenderTarget.MARIMO)
 
 
 class TestAgentCardProjectionIntegration:

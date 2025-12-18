@@ -9,6 +9,7 @@ from __future__ import annotations
 import io
 
 import pytest
+
 from protocols.synergy.cli_output import (
     ARROW,
     CRYSTAL_ICON,

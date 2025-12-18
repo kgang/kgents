@@ -19,7 +19,6 @@ import pytest
 from protocols.agentese.node import AgentMeta, Observer
 from protocols.agentese.registry import get_registry, reset_registry
 
-
 # === Fixtures ===
 
 
@@ -140,8 +139,8 @@ class TestBrainNodeRegistration:
 
     def test_node_has_metadata_marker(self):
         """BrainNode has @node metadata marker."""
-        from services.brain.node import BrainNode
         from protocols.agentese.registry import NODE_MARKER, get_node_metadata
+        from services.brain.node import BrainNode
 
         # Check marker is present on class
         assert hasattr(BrainNode, NODE_MARKER)
@@ -154,8 +153,8 @@ class TestBrainNodeRegistration:
 
     def test_node_class_can_be_registered(self):
         """BrainNode can be manually registered with registry."""
-        from services.brain.node import BrainNode
         from protocols.agentese.registry import get_node_metadata
+        from services.brain.node import BrainNode
 
         # Get metadata and manually register (simulating import-time behavior)
         registry = get_registry()
@@ -171,8 +170,8 @@ class TestBrainNodeRegistration:
 
     def test_node_handle_matches_path(self, mock_persistence):
         """BrainNode.handle matches @node path."""
-        from services.brain.node import BrainNode
         from protocols.agentese.registry import get_node_metadata
+        from services.brain.node import BrainNode
 
         node = BrainNode(brain_persistence=mock_persistence)
         meta = get_node_metadata(BrainNode)

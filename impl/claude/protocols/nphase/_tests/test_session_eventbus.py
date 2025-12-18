@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+
 from agents.town.event_bus import EventBus
 from protocols.nphase.events import (
     NPhaseEvent,
@@ -48,9 +49,7 @@ def nphase_session() -> NPhaseSession:
 # =============================================================================
 
 
-async def collect_events(
-    bus: EventBus[NPhaseEvent], timeout: float = 0.05
-) -> list[NPhaseEvent]:
+async def collect_events(bus: EventBus[NPhaseEvent], timeout: float = 0.05) -> list[NPhaseEvent]:
     """Collect events from bus for a short period."""
     events: list[NPhaseEvent] = []
 
@@ -81,9 +80,7 @@ async def collect_events(
 class TestEventBusBasics:
     """Test basic event bus integration."""
 
-    def test_session_has_event_bus_property(
-        self, nphase_session: NPhaseSession
-    ) -> None:
+    def test_session_has_event_bus_property(self, nphase_session: NPhaseSession) -> None:
         """Session has event_bus property."""
         assert nphase_session.event_bus is None
 
@@ -138,9 +135,7 @@ class TestPhaseTransitionEvents:
         await asyncio.wait_for(task, timeout=0.1)
 
         # Should have one transition event
-        transition_events = [
-            e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION
-        ]
+        transition_events = [e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION]
         assert len(transition_events) == 1
 
         event = transition_events[0]
@@ -176,9 +171,7 @@ class TestPhaseTransitionEvents:
         event_bus.close()
         await asyncio.wait_for(task, timeout=0.1)
 
-        transition_events = [
-            e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION
-        ]
+        transition_events = [e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION]
 
         assert len(transition_events) == 1
         event = transition_events[0]
@@ -222,9 +215,7 @@ class TestCheckpointEvents:
         event_bus.close()
         await asyncio.wait_for(task, timeout=0.1)
 
-        checkpoint_events = [
-            e for e in events if e.event_type == NPhaseEventType.PHASE_CHECKPOINT
-        ]
+        checkpoint_events = [e for e in events if e.event_type == NPhaseEventType.PHASE_CHECKPOINT]
         assert len(checkpoint_events) == 1
 
         event = checkpoint_events[0]
@@ -262,12 +253,8 @@ class TestCheckpointEvents:
         await asyncio.wait_for(task, timeout=0.1)
 
         # Should have checkpoint event (auto) + transition event
-        checkpoint_events = [
-            e for e in events if e.event_type == NPhaseEventType.PHASE_CHECKPOINT
-        ]
-        transition_events = [
-            e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION
-        ]
+        checkpoint_events = [e for e in events if e.event_type == NPhaseEventType.PHASE_CHECKPOINT]
+        transition_events = [e for e in events if e.event_type == NPhaseEventType.PHASE_TRANSITION]
 
         assert len(checkpoint_events) == 1
         assert len(transition_events) == 1

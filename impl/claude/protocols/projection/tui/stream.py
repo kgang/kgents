@@ -9,10 +9,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from protocols.projection.tui.base import TUIWidget
 from rich.console import RenderableType
 from rich.text import Text
 from textual.widgets import Static
+
+from protocols.projection.tui.base import TUIWidget
 
 
 @dataclass(frozen=True)

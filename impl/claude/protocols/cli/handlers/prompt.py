@@ -294,12 +294,11 @@ def _handle_validate(args: list[str]) -> int:
 
         # Display results
         print("\nLaw Checks:")
-        all_passed = True
         for law_name, passed in result.law_checks:
             status = "[PASS]" if passed else "[FAIL]"
             print(f"  {status} {law_name}")
             if not passed:
-                all_passed = False
+                pass
 
         if result.warnings:
             print("\nWarnings:")

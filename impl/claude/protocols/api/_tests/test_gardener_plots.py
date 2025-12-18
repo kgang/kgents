@@ -22,7 +22,6 @@ from fastapi.testclient import TestClient
 
 from protocols.api.app import create_app
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

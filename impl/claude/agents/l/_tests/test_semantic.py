@@ -9,6 +9,7 @@ Test Coverage:
 """
 
 import pytest
+
 from agents.l.semantic import (
     SemanticBrain,
     SemanticResult,
@@ -120,9 +121,7 @@ class TestSemanticBrain:
         }
 
     @pytest.mark.asyncio
-    async def test_search_by_intent(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_search_by_intent(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test searching by natural language intent."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -135,9 +134,7 @@ class TestSemanticBrain:
         assert results[0].entry.name == "SentimentAnalyzer"
 
     @pytest.mark.asyncio
-    async def test_search_with_threshold(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_search_with_threshold(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test threshold filtering."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -145,16 +142,12 @@ class TestSemanticBrain:
         results_low = await brain.search("document processing", threshold=0.0, limit=10)
 
         # High threshold - fewer results
-        results_high = await brain.search(
-            "document processing", threshold=0.8, limit=10
-        )
+        results_high = await brain.search("document processing", threshold=0.8, limit=10)
 
         assert len(results_high) <= len(results_low)
 
     @pytest.mark.asyncio
-    async def test_search_with_filters(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_search_with_filters(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test search with entity type filtering."""
         # Add a contract entry
         sample_entries["contract1"] = CatalogEntry(
@@ -178,9 +171,7 @@ class TestSemanticBrain:
         assert all(r.entry.entity_type == EntityType.AGENT for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_with_status_filter(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_search_with_status_filter(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test search with status filtering."""
         # Deprecate one entry
         sample_entries["agent3"].status = Status.DEPRECATED
@@ -197,9 +188,7 @@ class TestSemanticBrain:
         assert all(r.entry.status != Status.DEPRECATED for r in results)
 
     @pytest.mark.asyncio
-    async def test_add_entry_after_fit(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_add_entry_after_fit(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test adding entries after initial fit."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -234,9 +223,7 @@ class TestSemanticBrain:
         assert not any(r.entry.id == "agent1" for r in results)
 
     @pytest.mark.asyncio
-    async def test_similarity_scores(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_similarity_scores(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test that similarity scores are in valid range."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -246,9 +233,7 @@ class TestSemanticBrain:
             assert 0.0 <= result.similarity <= 1.0
 
     @pytest.mark.asyncio
-    async def test_ranking_by_similarity(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_ranking_by_similarity(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test that results are ranked by similarity (descending)."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -260,9 +245,7 @@ class TestSemanticBrain:
                 assert results[i].similarity >= results[i + 1].similarity
 
     @pytest.mark.asyncio
-    async def test_limit_parameter(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_limit_parameter(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test limit parameter."""
         brain = await create_semantic_brain(sample_entries)
 
@@ -293,9 +276,7 @@ class TestSemanticBrain:
         assert any(r.entry.name == "PDFParser" for r in results)
 
     @pytest.mark.asyncio
-    async def test_explanation_field(
-        self, sample_entries: dict[str, CatalogEntry]
-    ) -> None:
+    async def test_explanation_field(self, sample_entries: dict[str, CatalogEntry]) -> None:
         """Test that results include explanation."""
         brain = await create_semantic_brain(sample_entries)
 

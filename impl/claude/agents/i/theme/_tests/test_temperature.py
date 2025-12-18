@@ -10,6 +10,7 @@ Philosophy verification:
 import math
 
 import pytest
+
 from agents.i.theme.temperature import (
     STATE_TEMPERATURES,
     BreathingIndicator,
@@ -148,11 +149,7 @@ class TestBreathingIndicator:
         test_times = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.7, 10.3]
         for t in test_times:
             opacity = BreathingIndicator.get_opacity_at_time(t)
-            assert (
-                BreathingIndicator.MIN_OPACITY
-                <= opacity
-                <= BreathingIndicator.MAX_OPACITY
-            )
+            assert BreathingIndicator.MIN_OPACITY <= opacity <= BreathingIndicator.MAX_OPACITY
 
     def test_opacity_is_smooth(self) -> None:
         """Opacity should change smoothly (no jumps)."""
@@ -168,9 +165,7 @@ class TestBreathingIndicator:
         """Should use sine wave for natural breathing."""
         # At quarter cycle (1s), sine wave is at 0 (mid-opacity)
         opacity_at_1s = BreathingIndicator.get_opacity_at_time(1.0)
-        mid_opacity = (
-            BreathingIndicator.MIN_OPACITY + BreathingIndicator.MAX_OPACITY
-        ) / 2
+        mid_opacity = (BreathingIndicator.MIN_OPACITY + BreathingIndicator.MAX_OPACITY) / 2
         # sin(0) = 0, so opacity should be mid-point (0.45)
         assert abs(opacity_at_1s - mid_opacity) < 0.01
 

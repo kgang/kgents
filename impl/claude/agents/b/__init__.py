@@ -303,6 +303,7 @@ from .semantic_inflation import (
     ComplexityVector,
     # CPI types
     CPISnapshot,
+    DeflationNegotiator as InflationDeflationNegotiator,  # Renamed to avoid collision
     DeflationProposal,
     # Deflation types
     DeflationStrategy,
@@ -321,9 +322,6 @@ from .semantic_inflation import (
     create_inflation_budget,
     estimate_explanation_tokens,
     get_deflation_recommendations,
-)
-from .semantic_inflation import (
-    DeflationNegotiator as InflationDeflationNegotiator,  # Renamed to avoid collision
 )
 
 # Syntax Tax (B×G Phase 3: Chomsky-based pricing)

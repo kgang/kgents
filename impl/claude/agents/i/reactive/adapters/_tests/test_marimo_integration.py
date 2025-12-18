@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from agents.i.reactive.adapters import (
     AgentTraceState,
     AgentTraceWidget,

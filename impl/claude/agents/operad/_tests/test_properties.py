@@ -10,6 +10,8 @@ These tests ensure the mathematical foundations are sound.
 """
 
 import pytest
+from hypothesis import assume, given, settings, strategies as st
+
 from agents.operad.core import AGENT_OPERAD
 from agents.poly import (
     ID,
@@ -19,8 +21,6 @@ from agents.poly import (
     parallel,
     sequential,
 )
-from hypothesis import assume, given, settings
-from hypothesis import strategies as st
 
 # =============================================================================
 # Strategies
@@ -43,13 +43,9 @@ def simple_agents(draw: st.DrawFn) -> PolyAgent:
     if fn_type == 0:
         return ID
     elif fn_type == 1:
-        return from_function(
-            "Inc", lambda x: x + 1 if isinstance(x, (int, float)) else x
-        )
+        return from_function("Inc", lambda x: x + 1 if isinstance(x, (int, float)) else x)
     elif fn_type == 2:
-        return from_function(
-            "Double", lambda x: x * 2 if isinstance(x, (int, float)) else x
-        )
+        return from_function("Double", lambda x: x * 2 if isinstance(x, (int, float)) else x)
     else:
         return from_function("Const", lambda x: "const")
 
@@ -140,9 +136,7 @@ class TestAssociativityLaw:
         c=simple_agents(),
     )
     @settings(max_examples=50)
-    def test_associativity_structural(
-        self, a: PolyAgent, b: PolyAgent, c: PolyAgent
-    ) -> None:
+    def test_associativity_structural(self, a: PolyAgent, b: PolyAgent, c: PolyAgent) -> None:
         """(a >> b) >> c and a >> (b >> c) should have same structure."""
         left_assoc = sequential(sequential(a, b), c)
         right_assoc = sequential(a, sequential(b, c))
@@ -202,9 +196,7 @@ class TestParallelComposition:
 
     @given(a=simple_agents(), b=simple_agents(), input_val=st.integers())
     @settings(max_examples=30)
-    def test_parallel_behavioral(
-        self, a: PolyAgent, b: PolyAgent, input_val: int
-    ) -> None:
+    def test_parallel_behavioral(self, a: PolyAgent, b: PolyAgent, input_val: int) -> None:
         """par(a, b) should produce (a(x), b(x))."""
         try:
             composed = parallel(a, b)
@@ -257,9 +249,7 @@ class TestOperadLaws:
         c=simple_agents(),
     )
     @settings(max_examples=20)
-    def test_laws_with_random_agents(
-        self, a: PolyAgent, b: PolyAgent, c: PolyAgent
-    ) -> None:
+    def test_laws_with_random_agents(self, a: PolyAgent, b: PolyAgent, c: PolyAgent) -> None:
         """Laws should verify for random agents."""
         for law in AGENT_OPERAD.laws:
             try:
@@ -304,9 +294,7 @@ class TestPrimitiveProperties:
 
     @given(p1=primitives(), p2=primitives())
     @settings(max_examples=30)
-    def test_all_primitives_parallel_composable(
-        self, p1: PolyAgent, p2: PolyAgent
-    ) -> None:
+    def test_all_primitives_parallel_composable(self, p1: PolyAgent, p2: PolyAgent) -> None:
         """All primitives should be parallel composable."""
         composed = parallel(p1, p2)
         assert composed is not None
@@ -356,9 +344,7 @@ class TestCompositionClosure:
         c=simple_agents(),
     )
     @settings(max_examples=20)
-    def test_nested_composition_closure(
-        self, a: PolyAgent, b: PolyAgent, c: PolyAgent
-    ) -> None:
+    def test_nested_composition_closure(self, a: PolyAgent, b: PolyAgent, c: PolyAgent) -> None:
         """Nested compositions should remain valid PolyAgents."""
         nested1 = sequential(parallel(a, b), c)
         nested2 = parallel(sequential(a, b), c)

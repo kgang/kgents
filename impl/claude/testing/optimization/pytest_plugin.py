@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from testing.optimization import (
     OptimizationRecommendation,
     RefinementTracker,
@@ -64,9 +65,7 @@ class TestOptimizationPlugin:
         """Initialize the plugin with configuration."""
         self.config = config
         self.enabled = config.getoption("--profile-tests", default=False)
-        self.show_recommendations = config.getoption(
-            "--show-recommendations", default=False
-        )
+        self.show_recommendations = config.getoption("--show-recommendations", default=False)
 
         # Initialize tracker with persistence path
         profiles_path = _PROFILES_PATH if self.enabled else None
@@ -106,8 +105,8 @@ class TestOptimizationPlugin:
             return
 
         # Get terminal reporter for output
-        terminalreporter: TerminalReporter | None = (
-            self.config.pluginmanager.get_plugin("terminalreporter")
+        terminalreporter: TerminalReporter | None = self.config.pluginmanager.get_plugin(
+            "terminalreporter"
         )
 
         if terminalreporter is None:
@@ -119,9 +118,7 @@ class TestOptimizationPlugin:
         # Summary statistics
         avg_duration = self.total_duration_ms / max(self.test_count, 1)
         terminalreporter.write_line(f"Total tests profiled: {self.test_count}")
-        terminalreporter.write_line(
-            f"Total duration: {self.total_duration_ms / 1000:.2f}s"
-        )
+        terminalreporter.write_line(f"Total duration: {self.total_duration_ms / 1000:.2f}s")
         terminalreporter.write_line(f"Average duration: {avg_duration:.2f}ms")
 
         # Tier distribution
@@ -130,9 +127,7 @@ class TestOptimizationPlugin:
             count = self.tier_counts[tier.value]
             pct = (count / max(self.test_count, 1)) * 100
             bar = "█" * int(pct / 5) + "░" * (20 - int(pct / 5))
-            terminalreporter.write_line(
-                f"  {tier.value:10s} {bar} {count:5d} ({pct:5.1f}%)"
-            )
+            terminalreporter.write_line(f"  {tier.value:10s} {bar} {count:5d} ({pct:5.1f}%)")
 
         # Recommendations (if enabled and slow tests found)
         if self.show_recommendations:
@@ -150,9 +145,7 @@ class TestOptimizationPlugin:
         # Expensive tests warning
         expensive = self.tracker.expensive_tests()
         if expensive:
-            terminalreporter.write_line(
-                f"\n⚠ {len(expensive)} expensive tests (>30s) detected:"
-            )
+            terminalreporter.write_line(f"\n⚠ {len(expensive)} expensive tests (>30s) detected:")
             for profile in expensive[:5]:  # Top 5
                 terminalreporter.write_line(
                     f"  - {profile.test_id}: {profile.duration_ms / 1000:.2f}s"
@@ -254,9 +247,7 @@ def generate_report(profiles_path: Path | None = None) -> str:
         for rec in recommendations[:10]:
             lines.append(f"  - [{rec.action}] {rec.test_id}")
             lines.append(f"    {rec.rationale}")
-            lines.append(
-                f"    Estimated savings: {rec.estimated_savings_ms / 1000:.2f}s"
-            )
+            lines.append(f"    Estimated savings: {rec.estimated_savings_ms / 1000:.2f}s")
 
     return "\n".join(lines)
 

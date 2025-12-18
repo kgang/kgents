@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+
 from field.holographic import HolographicField
 
 from ..foraging import ForageAction, ForagingPolicy
@@ -143,9 +144,7 @@ class TestForaging:
         assert hypha.free_energy_state is not None
 
     @pytest.mark.asyncio
-    async def test_forage_with_custom_observation(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_forage_with_custom_observation(self, small_config: HyphaConfig) -> None:
         """forage() uses provided observation."""
         hypha = create_hypha("test", "Test", config=small_config)
 
@@ -160,9 +159,7 @@ class TestForaging:
         )
 
     @pytest.mark.asyncio
-    async def test_forage_with_reward_estimator(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_forage_with_reward_estimator(self, small_config: HyphaConfig) -> None:
         """forage() uses reward estimator."""
         hypha = create_hypha("test", "Test", config=small_config)
 
@@ -178,9 +175,7 @@ class TestExplore:
     """Tests for explore action."""
 
     @pytest.mark.asyncio
-    async def test_high_surprise_triggers_explore(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_high_surprise_triggers_explore(self, small_config: HyphaConfig) -> None:
         """
         Exit Criteria: High surprise -> EXPLORE
 
@@ -273,9 +268,7 @@ class TestPrune:
     """Tests for prune action."""
 
     @pytest.mark.asyncio
-    async def test_low_surprise_low_reward_triggers_prune(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_low_surprise_low_reward_triggers_prune(self, small_config: HyphaConfig) -> None:
         """
         Exit Criteria: Low surprise, low reward -> PRUNE
 
@@ -350,9 +343,7 @@ class TestVitality:
         assert hypha.vitality == 1.0
 
     @pytest.mark.asyncio
-    async def test_vitality_reflects_success_rate(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_vitality_reflects_success_rate(self, small_config: HyphaConfig) -> None:
         """Vitality = (explore + exploit) / forage_count."""
         hypha = create_hypha("test", "Test", config=small_config)
 
@@ -364,9 +355,7 @@ class TestVitality:
         await hypha.forage(observation=observation)
 
         # All forages should be explores
-        expected_vitality = (
-            hypha.explore_count + hypha.exploit_count
-        ) / hypha.forage_count
+        expected_vitality = (hypha.explore_count + hypha.exploit_count) / hypha.forage_count
         assert hypha.vitality == pytest.approx(expected_vitality)
 
 
@@ -400,9 +389,7 @@ class TestReset:
         assert hypha.is_active is True
 
     @pytest.mark.asyncio
-    async def test_reset_clears_free_energy_state(
-        self, small_config: HyphaConfig
-    ) -> None:
+    async def test_reset_clears_free_energy_state(self, small_config: HyphaConfig) -> None:
         """reset() clears free_energy_state."""
         hypha = create_hypha("test", "Test", config=small_config)
         await hypha.forage()
@@ -453,9 +440,7 @@ class TestColony:
 class TestResonate:
     """Tests for resonance with holographic field."""
 
-    def test_resonate_without_hologram_returns_zero(
-        self, small_config: HyphaConfig
-    ) -> None:
+    def test_resonate_without_hologram_returns_zero(self, small_config: HyphaConfig) -> None:
         """resonate() returns 0 if no hologram."""
         hypha = create_hypha("test", "Test", config=small_config)
 

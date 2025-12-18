@@ -4,6 +4,7 @@ import pickle
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.flux.semaphore import SemaphoreReason, SemaphoreToken
 
 

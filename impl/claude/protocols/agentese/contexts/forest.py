@@ -38,6 +38,13 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Literal
 
 import yaml
 
+# Garden Protocol integration (Phase 1 of migration)
+from protocols.garden.types import (
+    GardenPlanHeader,
+    migrate_forest_to_garden,
+    parse_garden_header,
+)
+
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import (
     BaseLogosNode,
@@ -72,6 +79,10 @@ def parse_forest_md(forest_path: Path | str) -> ForestManifest:
     """
     Parse _forest.md and extract tree data.
 
+    .. deprecated:: 2025-12-18
+        Use `ForestNode._collect_plans_from_headers()` instead.
+        This function parses stale file data. YAML headers are source of truth.
+
     Extracts from Active/Dormant/Blocked/Complete tables:
     - Plan path
     - Progress percentage
@@ -84,6 +95,14 @@ def parse_forest_md(forest_path: Path | str) -> ForestManifest:
     Returns:
         ForestManifest with real tree data
     """
+    import warnings
+
+    warnings.warn(
+        "parse_forest_md is deprecated. Use ForestNode._collect_plans_from_headers() "
+        "or invoke self.forest.manifest for live data from YAML headers.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     path = Path(forest_path)
     if not path.exists():
         return ForestManifest()
@@ -501,9 +520,7 @@ class ForestManifest:
             "complete_trees": self.complete_trees,
             "average_progress": self.average_progress,
             "accursed_share_next": self.accursed_share_next,
-            "last_updated": self.last_updated.isoformat()
-            if self.last_updated
-            else None,
+            "last_updated": self.last_updated.isoformat() if self.last_updated else None,
             "trees": self.trees,
         }
 
@@ -542,11 +559,12 @@ class PlanFromHeader:
     blocking: list[str] = field(default_factory=list)
     enables: list[str] = field(default_factory=list)
     touched_by: str = ""
+    # Garden Protocol fields (optional, for dual-format support)
+    format: Literal["forest", "garden"] = "forest"
+    garden_header: GardenPlanHeader | None = None
 
     @classmethod
-    def from_yaml_header(
-        cls, file_path: Path, header: dict[str, Any]
-    ) -> "PlanFromHeader":
+    def from_yaml_header(cls, file_path: Path, header: dict[str, Any]) -> "PlanFromHeader":
         """Create PlanFromHeader from parsed YAML frontmatter."""
         last_touched_raw = header.get("last_touched", date.today())
         if isinstance(last_touched_raw, str):
@@ -575,6 +593,43 @@ class PlanFromHeader:
             blocking=header.get("blocking", []) or [],
             enables=header.get("enables", []) or [],
             touched_by=header.get("touched_by", ""),
+            format="forest",
+            garden_header=None,
+        )
+
+    @classmethod
+    def from_garden_header(cls, file_path: Path, garden: GardenPlanHeader) -> "PlanFromHeader":
+        """
+        Create PlanFromHeader from a Garden Protocol header.
+
+        Converts Garden Protocol fields to Forest Protocol equivalents for
+        backwards compatibility during migration.
+
+        Args:
+            file_path: Path to the plan file
+            garden: Parsed GardenPlanHeader
+
+        Returns:
+            PlanFromHeader with Garden Protocol data
+        """
+        # Extract notes from letter (first line, max 100 chars)
+        notes = ""
+        if garden.letter:
+            lines = garden.letter.strip().split("\n")
+            if lines:
+                notes = lines[0][:100]
+
+        return cls(
+            path=garden.path,
+            progress=garden.progress_equivalent,
+            status=garden.status_equivalent,  # type: ignore[arg-type]
+            last_touched=garden.last_gardened,
+            notes=notes,
+            blocking=[],  # Garden uses resonates_with instead
+            enables=garden.resonates_with,  # Map resonates_with to enables
+            touched_by=garden.gardener,
+            format="garden",
+            garden_header=garden,
         )
 
 
@@ -971,9 +1026,7 @@ class ForestNode(BaseLogosNode):
         Uses FOREST_ROLE_AFFORDANCES mapping.
         Falls back to 'default' for unknown archetypes.
         """
-        return FOREST_ROLE_AFFORDANCES.get(
-            archetype, FOREST_ROLE_AFFORDANCES["default"]
-        )
+        return FOREST_ROLE_AFFORDANCES.get(archetype, FOREST_ROLE_AFFORDANCES["default"])
 
     @aspect(
         category=AspectCategory.PERCEPTION,
@@ -985,28 +1038,14 @@ class ForestNode(BaseLogosNode):
     )
     async def manifest(self, observer: "Umwelt[Any, Any]") -> BasicRendering:
         """
-        Return forest canopy view.
+        Return forest canopy view from live YAML headers.
 
         AGENTESE: concept.forest.manifest
 
-        Parses _forest.md and returns real tree data:
-        1. Parse _forest.md tables
-        2. Count trees by status
-        3. Compute average progress
-        4. Identify accursed share candidate (longest dormant)
+        Delegates to _manifest_from_headers() which parses plan YAML headers directly.
+        This provides live, accurate data rather than stale _forest.md parsing.
         """
-        # Parse real forest data
-        forest_manifest = parse_forest_md(self._forest_path)
-
-        return BasicRendering(
-            summary="Forest Canopy",
-            content=forest_manifest.to_text(),
-            metadata={
-                "status": "live",
-                "plan_count": forest_manifest.total_trees,
-                "manifest": forest_manifest.to_dict(),
-            },
-        )
+        return await self._manifest_from_headers(observer)
 
     async def _invoke_aspect(
         self,
@@ -1059,7 +1098,15 @@ class ForestNode(BaseLogosNode):
         return _PROJECT_ROOT / "impl" / "claude"
 
     async def _collect_plans_from_headers(self) -> list[PlanFromHeader]:
-        """Collect all plans by parsing YAML headers from plan files."""
+        """
+        Collect all plans by parsing YAML headers from plan files.
+
+        Supports dual-format: Garden Protocol and Forest Protocol.
+        Tries Garden Protocol first, falls back to Forest Protocol.
+
+        Migration Phase 1: Garden Protocol headers are recognized but
+        converted to PlanFromHeader for backwards compatibility.
+        """
         plans: list[PlanFromHeader] = []
         plans_dir = self._get_project_root() / self._plans_root
 
@@ -1076,6 +1123,16 @@ class ForestNode(BaseLogosNode):
             if "_epilogues" in str(md_file):
                 continue
 
+            # Try Garden Protocol first (has 'mood' or 'season' fields)
+            garden_header = parse_garden_header(md_file)
+            if garden_header:
+                try:
+                    plans.append(PlanFromHeader.from_garden_header(md_file, garden_header))
+                    continue
+                except Exception:
+                    pass  # Fall through to Forest Protocol
+
+            # Fall back to Forest Protocol
             header = parse_plan_yaml_header(md_file)
             if header:
                 try:
@@ -1179,9 +1236,7 @@ class ForestNode(BaseLogosNode):
             if p.status == "active" and p.progress == 0:
                 days = (date.today() - p.last_touched).days
                 if days > 7:
-                    issues.append(
-                        f"{p.path}: active with 0% progress, untouched {days} days"
-                    )
+                    issues.append(f"{p.path}: active with 0% progress, untouched {days} days")
 
         return issues, no_header_count
 
@@ -1203,6 +1258,7 @@ class ForestNode(BaseLogosNode):
 
         AGENTESE: self.forest.manifest
 
+        Supports dual-format: Garden Protocol and Forest Protocol.
         Replaces parse_forest_md with direct YAML header parsing.
         """
         plans = await self._collect_plans_from_headers()
@@ -1213,6 +1269,10 @@ class ForestNode(BaseLogosNode):
         dormant = [p for p in plans if p.status == "dormant"]
         blocked = [p for p in plans if p.status == "blocked"]
         complete = [p for p in plans if p.status == "complete"]
+
+        # Count Garden vs Forest format plans
+        garden_count = sum(1 for p in plans if p.format == "garden")
+        forest_count = sum(1 for p in plans if p.format == "forest")
 
         # Calculate average progress (exclude complete)
         progresses = [p.progress for p in active + dormant + blocked]
@@ -1246,8 +1306,20 @@ class ForestNode(BaseLogosNode):
             f"- **Average Progress**: {avg_progress:.0f}%",
             f"- **Test Count**: {test_count:,}",
             f"- **Files Without YAML Header**: {no_header_count}",
-            "",
         ]
+
+        # Add format migration status
+        if garden_count > 0:
+            lines.extend(
+                [
+                    "",
+                    "### Protocol Migration",
+                    f"- **Garden Protocol**: {garden_count}",
+                    f"- **Forest Protocol**: {forest_count}",
+                ]
+            )
+
+        lines.append("")
 
         # Add sanity warnings if any
         if sanity_issues:
@@ -1265,21 +1337,46 @@ class ForestNode(BaseLogosNode):
                 lines.append(f"- ... and {len(sanity_issues) - 10} more issues")
             lines.append("")
 
+        # Active Trees section
         lines.extend(
             [
                 "---",
                 "",
                 "## Active Trees",
                 "",
-                "| Plan | Progress | Last Touched | Status | Notes |",
-                "|------|----------|--------------|--------|-------|",
             ]
         )
 
-        for p in sorted(active, key=lambda x: x.last_touched, reverse=True):
-            lines.append(
-                f"| {p.path} | {p.progress}% | {p.last_touched} | {p.status} | {p.notes[:40]} |"
+        # Use different table format based on whether we have Garden plans
+        garden_active = [p for p in active if p.format == "garden"]
+        if garden_active:
+            lines.extend(
+                [
+                    "| Plan | Mood | Season | Momentum | Last Gardened | Notes |",
+                    "|------|------|--------|----------|---------------|-------|",
+                ]
             )
+            for p in sorted(active, key=lambda x: x.last_touched, reverse=True):
+                if p.format == "garden" and p.garden_header:
+                    g = p.garden_header
+                    lines.append(
+                        f"| {g.name} | {g.mood.value} | {g.season.value} | {g.momentum:.0%} | {g.last_gardened} | {p.notes[:30]} |"
+                    )
+                else:
+                    lines.append(
+                        f"| {p.path} | - | - | {p.progress}% | {p.last_touched} | {p.notes[:30]} |"
+                    )
+        else:
+            lines.extend(
+                [
+                    "| Plan | Progress | Last Touched | Status | Notes |",
+                    "|------|----------|--------------|--------|-------|",
+                ]
+            )
+            for p in sorted(active, key=lambda x: x.last_touched, reverse=True):
+                lines.append(
+                    f"| {p.path} | {p.progress}% | {p.last_touched} | {p.status} | {p.notes[:40]} |"
+                )
 
         if dormant:
             lines.extend(
@@ -1296,9 +1393,7 @@ class ForestNode(BaseLogosNode):
             for p in sorted(dormant, key=lambda x: x.last_touched):
                 days = (date.today() - p.last_touched).days
                 action = "Archive" if days > 30 else "Review"
-                lines.append(
-                    f"| {p.path} | {p.progress}% | {p.last_touched} | {days} | {action} |"
-                )
+                lines.append(f"| {p.path} | {p.progress}% | {p.last_touched} | {days} | {action} |")
 
         if complete:
             lines.extend(
@@ -1331,6 +1426,9 @@ class ForestNode(BaseLogosNode):
                 "accursed_share_next": accursed_next,
                 "sanity_issues_count": len(sanity_issues),
                 "no_header_count": no_header_count,
+                # Garden Protocol migration tracking
+                "garden_protocol_count": garden_count,
+                "forest_protocol_count": forest_count,
             },
         )
 
@@ -1429,9 +1527,7 @@ class ForestNode(BaseLogosNode):
             if p.status == "active" and p.progress == 0:
                 days = (date.today() - p.last_touched).days
                 if days > 7:
-                    issues.append(
-                        PlanIssue(p.path, f"0% progress, {days} days since touched")
-                    )
+                    issues.append(PlanIssue(p.path, f"0% progress, {days} days since touched"))
 
         # Find stale plans
         stale = [
@@ -1449,9 +1545,7 @@ class ForestNode(BaseLogosNode):
                     orphans.append(ref)
 
         drift = DriftReport(
-            test_count_drift=DriftItem(
-                documented=documented_tests, actual=actual_tests
-            ),
+            test_count_drift=DriftItem(documented=documented_tests, actual=actual_tests),
             mypy_drift=DriftItem(documented=0, actual=actual_mypy),
             plan_header_issues=issues,
             stale_plans=stale,
@@ -1497,9 +1591,7 @@ class ForestNode(BaseLogosNode):
         archived = []
         skipped = []
         today = date.today()
-        archive_dir = (
-            self._get_project_root() / self._plans_root / "_archive" / today.isoformat()
-        )
+        archive_dir = self._get_project_root() / self._plans_root / "_archive" / today.isoformat()
 
         for p in plans:
             if p.status != "dormant":
@@ -1787,15 +1879,13 @@ Generated by `self.forest.reconcile`
         """
         entropy_budget = kwargs.get("entropy_budget", 0.07)
 
-        # Parse real forest data
-        forest_manifest = parse_forest_md(self._forest_path)
+        # Use live YAML header parsing instead of stale _forest.md
+        plans = await self._collect_plans_from_headers()
 
-        # Find dormant trees
-        dormant_trees = [
-            t for t in forest_manifest.trees if t.get("status") == "dormant"
-        ]
+        # Find dormant plans
+        dormant_plans = [p for p in plans if p.status == "dormant"]
 
-        if not dormant_trees:
+        if not dormant_plans:
             return {
                 "selected_plan": None,
                 "rationale": "No dormant plans available",
@@ -1805,20 +1895,20 @@ Generated by `self.forest.reconcile`
                 "status": "empty",
             }
 
-        # Sort by days_since descending (longest dormant first)
+        # Sort by days since last touch descending (longest dormant first)
+        today = date.today()
         sorted_dormant = sorted(
-            dormant_trees,
-            key=lambda t: t.get("days_since", 0),
+            dormant_plans,
+            key=lambda p: (today - p.last_touched).days,
             reverse=True,
         )
 
         # Select the longest dormant
         selected = sorted_dormant[0]
-        selected_path = selected.get("path", "")
-        days_dormant = selected.get("days_since", 0)
+        days_dormant = (today - selected.last_touched).days
 
         return {
-            "selected_plan": selected_path,  # String, not list
+            "selected_plan": selected.path,  # String, not list
             "rationale": f"Longest dormant ({days_dormant} days)",
             "entropy_spent": min(entropy_budget, 0.05),
             "entropy_remaining": max(0.0, entropy_budget - 0.05),

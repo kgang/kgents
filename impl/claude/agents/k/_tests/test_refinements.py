@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
+
 from agents.k.eigenvectors import KentEigenvectors
 from agents.k.refinements import (
     ConstitutionArticle,
@@ -199,9 +200,7 @@ class TestSoulPathResolver:
             assert "confidence" in value[name]
 
     @pytest.mark.asyncio
-    async def test_resolve_individual_eigenvector(
-        self, resolver: SoulPathResolver
-    ) -> None:
+    async def test_resolve_individual_eigenvector(self, resolver: SoulPathResolver) -> None:
         """Test resolving individual eigenvector paths."""
         paths = [
             SoulPath.AESTHETIC,
@@ -239,9 +238,7 @@ class TestSoulPathResolver:
         assert result.value["acknowledged"] is True
 
     @pytest.mark.asyncio
-    async def test_resolve_tithe_with_gratitude(
-        self, resolver: SoulPathResolver
-    ) -> None:
+    async def test_resolve_tithe_with_gratitude(self, resolver: SoulPathResolver) -> None:
         """Test tithe resolution with explicit gratitude."""
         result = await resolver.resolve(
             SoulPath.TITHE.value,
@@ -272,9 +269,7 @@ class TestSoulPathResolver:
         assert "Unknown path" in result.value["error"]
 
     @pytest.mark.asyncio
-    async def test_resolve_with_handler_exception(
-        self, resolver: SoulPathResolver
-    ) -> None:
+    async def test_resolve_with_handler_exception(self, resolver: SoulPathResolver) -> None:
         """Test that handler exceptions are caught gracefully."""
 
         # Register a handler that raises
@@ -453,9 +448,7 @@ class TestGracefulDegradation:
         status = degradation.status()
         assert status["error_counts"]["llm"] == 2
 
-    def test_auto_degrade_after_three_errors(
-        self, degradation: GracefulDegradation
-    ) -> None:
+    def test_auto_degrade_after_three_errors(self, degradation: GracefulDegradation) -> None:
         """Test auto-degradation after 3 errors."""
         # Not degraded after 2 errors
         degradation.record_error("llm", ValueError("error1"))
@@ -466,15 +459,11 @@ class TestGracefulDegradation:
         degradation.record_error("llm", ValueError("error3"))
         assert degradation.is_degraded("llm") is True
 
-    def test_is_degraded_unknown_feature(
-        self, degradation: GracefulDegradation
-    ) -> None:
+    def test_is_degraded_unknown_feature(self, degradation: GracefulDegradation) -> None:
         """Test is_degraded returns False for unknown features."""
         assert degradation.is_degraded("unknown") is False
 
-    def test_multiple_features_independent(
-        self, degradation: GracefulDegradation
-    ) -> None:
+    def test_multiple_features_independent(self, degradation: GracefulDegradation) -> None:
         """Test that features degrade independently."""
         # Degrade llm
         for _ in range(3):
@@ -502,9 +491,7 @@ class TestGracefulDegradation:
         status = degradation.status()
         assert status["error_counts"]["llm"] == 0
 
-    def test_restore_non_degraded_feature(
-        self, degradation: GracefulDegradation
-    ) -> None:
+    def test_restore_non_degraded_feature(self, degradation: GracefulDegradation) -> None:
         """Test restoring a non-degraded feature returns False."""
         result = degradation.restore("unknown")
         assert result is False
@@ -608,9 +595,7 @@ class TestFractalExpander:
         assert check_depth(result, expander._max_depth)
 
     @pytest.mark.asyncio
-    async def test_expand_respects_branching_factor(
-        self, expander: FractalExpander
-    ) -> None:
+    async def test_expand_respects_branching_factor(self, expander: FractalExpander) -> None:
         """Test that expansion respects branching_factor."""
         result = await expander.expand("Wide idea")
 
@@ -623,9 +608,7 @@ class TestFractalExpander:
         assert check_branching(result, expander._branching_factor)
 
     @pytest.mark.asyncio
-    async def test_expand_generates_children_content(
-        self, expander: FractalExpander
-    ) -> None:
+    async def test_expand_generates_children_content(self, expander: FractalExpander) -> None:
         """Test that expansion generates meaningful children."""
         result = await expander.expand("architecture")
 
@@ -732,9 +715,7 @@ class TestHolographicConstitution:
         """Create a HolographicConstitution."""
         return HolographicConstitution()
 
-    def test_constitution_has_articles(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_constitution_has_articles(self, constitution: HolographicConstitution) -> None:
         """Test that constitution initializes with articles."""
         assert len(constitution._articles) == 6
 
@@ -750,9 +731,7 @@ class TestHolographicConstitution:
         assert article.number == 6
         assert article.title == "Joy"
 
-    def test_get_article_invalid_number(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_get_article_invalid_number(self, constitution: HolographicConstitution) -> None:
         """Test getting article with invalid number returns None."""
         article = constitution.get_article(0)
         assert article is None
@@ -772,33 +751,25 @@ class TestHolographicConstitution:
         assert len(joy_articles) > 0
         assert joy_articles[0].title == "Joy"
 
-    def test_get_by_eigenvector_unknown(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_get_by_eigenvector_unknown(self, constitution: HolographicConstitution) -> None:
         """Test getting articles for unknown eigenvector returns empty."""
         articles = constitution.get_by_eigenvector("unknown")
         assert articles == []
 
-    def test_holographic_lookup_keyword(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_holographic_lookup_keyword(self, constitution: HolographicConstitution) -> None:
         """Test holographic lookup by keyword."""
         # Search for "morphisms" should find Composability (contains "Agents are morphisms")
         results = constitution.holographic_lookup("morphisms")
         titles = [a.title for a in results]
         assert "Composability" in titles
 
-    def test_holographic_lookup_title_match(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_holographic_lookup_title_match(self, constitution: HolographicConstitution) -> None:
         """Test holographic lookup with title match."""
         results = constitution.holographic_lookup("minimalism")
         assert len(results) > 0
         assert results[0].title == "Minimalism"
 
-    def test_holographic_lookup_no_match(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_holographic_lookup_no_match(self, constitution: HolographicConstitution) -> None:
         """Test holographic lookup with no matching terms."""
         results = constitution.holographic_lookup("xyzzy")
         assert results == []
@@ -834,9 +805,7 @@ class TestHolographicConstitution:
         for article in constitution._articles:
             assert len(article.eigenvector_weights) > 0
 
-    def test_all_articles_have_examples(
-        self, constitution: HolographicConstitution
-    ) -> None:
+    def test_all_articles_have_examples(self, constitution: HolographicConstitution) -> None:
         """Test that all articles have examples."""
         for article in constitution._articles:
             assert len(article.examples) > 0

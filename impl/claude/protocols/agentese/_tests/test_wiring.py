@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from testing.fixtures import as_umwelt
 
 from ..exceptions import (
@@ -272,9 +273,7 @@ class TestUmweltIntegration:
         architect_affordances = wired_logos.integrations.umwelt.get_affordances(
             as_umwelt(architect_umwelt)
         )
-        poet_affordances = wired_logos.integrations.umwelt.get_affordances(
-            as_umwelt(poet_umwelt)
-        )
+        poet_affordances = wired_logos.integrations.umwelt.get_affordances(as_umwelt(poet_umwelt))
 
         assert "renovate" in architect_affordances
         assert "renovate" not in poet_affordances
@@ -287,12 +286,8 @@ class TestUmweltIntegration:
         poet_umwelt: MockUmwelt,
     ) -> None:
         """Test can_invoke checks observer affordances."""
-        assert wired_logos.integrations.umwelt.can_invoke(
-            as_umwelt(architect_umwelt), "renovate"
-        )
-        assert not wired_logos.integrations.umwelt.can_invoke(
-            as_umwelt(poet_umwelt), "renovate"
-        )
+        assert wired_logos.integrations.umwelt.can_invoke(as_umwelt(architect_umwelt), "renovate")
+        assert not wired_logos.integrations.umwelt.can_invoke(as_umwelt(poet_umwelt), "renovate")
 
 
 # =============================================================================
@@ -363,9 +358,7 @@ class TestMembraneBridge:
         """Test executing Membrane command via AGENTESE."""
         # The "observe" command maps to "world.project.manifest"
         # WorldContextResolver creates placeholder nodes, so this succeeds
-        result = await wired_logos.execute_membrane_command(
-            "observe", as_umwelt(architect_umwelt)
-        )
+        result = await wired_logos.execute_membrane_command("observe", as_umwelt(architect_umwelt))
         # For architects, should return BlueprintRendering
         assert result is not None
 
@@ -375,9 +368,7 @@ class TestMembraneBridge:
     ) -> None:
         """Test that unknown Membrane commands raise PathNotFoundError."""
         with pytest.raises(PathNotFoundError):
-            await wired_logos.execute_membrane_command(
-                "unknown_cmd", as_umwelt(architect_umwelt)
-            )
+            await wired_logos.execute_membrane_command("unknown_cmd", as_umwelt(architect_umwelt))
 
 
 # =============================================================================
@@ -514,9 +505,7 @@ affordances:
 # Garden
 A beautiful garden.
 """
-        node = await wired.define_concept(
-            "world.garden", spec, as_umwelt(architect_umwelt)
-        )
+        node = await wired.define_concept("world.garden", spec, as_umwelt(architect_umwelt))
 
         # Check L-gent registration
         assert "world.garden" in mock_lgent_registry._entries
@@ -560,9 +549,7 @@ class TestInvoke:
         try:
             await wired_logos.invoke("world.house.manifest", None)
         except ObserverRequiredError:
-            pytest.fail(
-                "ObserverRequiredError should not be raised for None observer in v3 API"
-            )
+            pytest.fail("ObserverRequiredError should not be raised for None observer in v3 API")
         except Exception:
             pass  # Other exceptions are fine (path may not be registered)
 
@@ -572,9 +559,7 @@ class TestInvoke:
     ) -> None:
         """Test that invoke validates path."""
         with pytest.raises(PathSyntaxError):
-            await wired_logos.invoke(
-                "invalid.path.manifest", as_umwelt(architect_umwelt)
-            )
+            await wired_logos.invoke("invalid.path.manifest", as_umwelt(architect_umwelt))
 
     @pytest.mark.asyncio
     async def test_invoke_tracks_success(
@@ -609,9 +594,7 @@ class TestInvoke:
 
         wired_logos.register("world.test", TestNode())
 
-        result = await wired_logos.invoke(
-            "world.test.manifest", as_umwelt(architect_umwelt)
-        )
+        result = await wired_logos.invoke("world.test.manifest", as_umwelt(architect_umwelt))
         assert len(mock_lgent_registry._usage_log) == 1
         assert mock_lgent_registry._usage_log[0][1] is True  # success
 
@@ -662,9 +645,7 @@ class TestInvoke:
 
         # Try to invoke unavailable aspect
         with pytest.raises(AffordanceError):
-            await wired_logos.invoke(
-                "world.limited.unavailable", as_umwelt(architect_umwelt)
-            )
+            await wired_logos.invoke("world.limited.unavailable", as_umwelt(architect_umwelt))
 
         # Usage should be tracked with failure
         assert len(mock_lgent_registry._usage_log) == 1
@@ -720,9 +701,7 @@ class TestEdgeCases:
 
     def test_hydrate_lgent_entry_returns_none(self, wired_logos: WiredLogos) -> None:
         """Test that L-gent entries are hydrated via Logos."""
-        result = wired_logos._hydrate_lgent_entry(
-            MockLgentEntry("test", "test"), "test"
-        )
+        result = wired_logos._hydrate_lgent_entry(MockLgentEntry("test", "test"), "test")
         assert result is None  # Falls back to Logos
 
     def test_sync_lgent_lookup_no_registry(self) -> None:

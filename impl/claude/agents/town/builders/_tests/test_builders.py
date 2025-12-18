@@ -23,9 +23,6 @@ import pytest
 from agents.town.builders import (
     ARCHITECTURE,
     BUILDER_POLYNOMIAL,
-    Builder,
-    BuilderInput,
-    BuilderPhase,
     CRAFTSMANSHIP,
     DISCOVERY,
     EXPERIMENTATION,
@@ -40,6 +37,9 @@ from agents.town.builders import (
     STEADY_VOICE_PATTERNS,
     SYNC_EIGENVECTORS,
     SYNC_VOICE_PATTERNS,
+    Builder,
+    BuilderInput,
+    BuilderPhase,
     create_sage,
     create_scout,
     create_spark,
@@ -47,7 +47,6 @@ from agents.town.builders import (
     create_sync,
 )
 from agents.town.polynomial import CitizenPhase
-
 
 # =============================================================================
 # Fixtures
@@ -195,9 +194,7 @@ class TestSpecialty:
         """Builder not in specialty when IDLE."""
         assert not sage.is_in_specialty
 
-    def test_is_in_specialty_true_when_in_specialty_phase(
-        self, sage: Builder
-    ) -> None:
+    def test_is_in_specialty_true_when_in_specialty_phase(self, sage: Builder) -> None:
         """Builder is in specialty when in their specialty phase."""
         # Move sage to DESIGNING via handoff
         sage.builder_transition(
@@ -330,9 +327,7 @@ class TestStateTransitions:
 class TestHandoffs:
     """Test builder handoffs."""
 
-    def test_handoff_to_sage_moves_to_designing(
-        self, scout: Builder, sage: Builder
-    ) -> None:
+    def test_handoff_to_sage_moves_to_designing(self, scout: Builder, sage: Builder) -> None:
         """Handoff to Sage moves to DESIGNING phase."""
         scout.start_task("research auth")
         output = scout.handoff_to(sage, artifact={"research": "..."}, message="Ready to design")
@@ -340,42 +335,28 @@ class TestHandoffs:
         assert output.success
         assert "Sage" in output.message
 
-    def test_handoff_to_spark_moves_to_prototyping(
-        self, sage: Builder, spark: Builder
-    ) -> None:
+    def test_handoff_to_spark_moves_to_prototyping(self, sage: Builder, spark: Builder) -> None:
         """Handoff to Spark moves to PROTOTYPING phase."""
-        sage.builder_transition(
-            BuilderInput.handoff(from_builder="Scout", to_builder="Sage")
-        )
+        sage.builder_transition(BuilderInput.handoff(from_builder="Scout", to_builder="Sage"))
         output = sage.handoff_to(spark, artifact={"design": "..."})
         assert sage.builder_phase == BuilderPhase.PROTOTYPING
         assert output.success
 
-    def test_handoff_to_steady_moves_to_refining(
-        self, spark: Builder, steady: Builder
-    ) -> None:
+    def test_handoff_to_steady_moves_to_refining(self, spark: Builder, steady: Builder) -> None:
         """Handoff to Steady moves to REFINING phase."""
-        spark.builder_transition(
-            BuilderInput.handoff(from_builder="Sage", to_builder="Spark")
-        )
+        spark.builder_transition(BuilderInput.handoff(from_builder="Sage", to_builder="Spark"))
         output = spark.handoff_to(steady, artifact={"prototype": "..."})
         assert spark.builder_phase == BuilderPhase.REFINING
         assert output.success
 
-    def test_handoff_to_sync_moves_to_integrating(
-        self, steady: Builder, sync: Builder
-    ) -> None:
+    def test_handoff_to_sync_moves_to_integrating(self, steady: Builder, sync: Builder) -> None:
         """Handoff to Sync moves to INTEGRATING phase."""
-        steady.builder_transition(
-            BuilderInput.handoff(from_builder="Spark", to_builder="Steady")
-        )
+        steady.builder_transition(BuilderInput.handoff(from_builder="Spark", to_builder="Steady"))
         output = steady.handoff_to(sync, artifact={"refined": "..."})
         assert steady.builder_phase == BuilderPhase.INTEGRATING
         assert output.success
 
-    def test_handoff_chain_follows_natural_flow(
-        self, workshop_team: list[Builder]
-    ) -> None:
+    def test_handoff_chain_follows_natural_flow(self, workshop_team: list[Builder]) -> None:
         """Full handoff chain follows natural flow."""
         scout, sage, spark, steady, sync = (
             workshop_team[3],  # Scout
@@ -451,11 +432,13 @@ class TestCitizenIntegration:
         """Builder has N-Phase state (from Citizen)."""
         assert sage.nphase_state is not None
         from protocols.nphase.operad import NPhase
+
         assert sage.nphase_phase == NPhase.SENSE
 
     def test_builder_can_advance_nphase(self, sage: Builder) -> None:
         """Builder can advance N-Phase."""
         from protocols.nphase.operad import NPhase
+
         record = sage.advance_nphase(NPhase.ACT, payload={"action": "design"})
         assert record["to"] == "ACT"
         assert sage.nphase_phase == NPhase.ACT
@@ -593,23 +576,17 @@ class TestEigenvectors:
 class TestWorkshopTeam:
     """Test all 5 builders working together."""
 
-    def test_all_builders_have_unique_specialties(
-        self, workshop_team: list[Builder]
-    ) -> None:
+    def test_all_builders_have_unique_specialties(self, workshop_team: list[Builder]) -> None:
         """All builders have unique specialty phases."""
         specialties = [b.specialty for b in workshop_team]
         assert len(set(specialties)) == 5
 
-    def test_all_builders_have_unique_cosmotechnics(
-        self, workshop_team: list[Builder]
-    ) -> None:
+    def test_all_builders_have_unique_cosmotechnics(self, workshop_team: list[Builder]) -> None:
         """All builders have unique cosmotechnics."""
         cosmotechnics = [b.cosmotechnics.name for b in workshop_team]
         assert len(set(cosmotechnics)) == 5
 
-    def test_all_builders_have_unique_archetypes(
-        self, workshop_team: list[Builder]
-    ) -> None:
+    def test_all_builders_have_unique_archetypes(self, workshop_team: list[Builder]) -> None:
         """All builders have unique archetypes."""
         archetypes = [b.archetype for b in workshop_team]
         assert len(set(archetypes)) == 5
@@ -618,13 +595,11 @@ class TestWorkshopTeam:
         """Builders have diverse eigenvector profiles."""
         # Check that no two builders have identical eigenvectors
         for i, b1 in enumerate(workshop_team):
-            for b2 in workshop_team[i + 1:]:
+            for b2 in workshop_team[i + 1 :]:
                 drift = b1.eigenvectors.drift(b2.eigenvectors)
                 assert drift > 0.1, f"{b1.archetype} and {b2.archetype} too similar"
 
-    def test_team_can_collaborate_on_task(
-        self, workshop_team: list[Builder]
-    ) -> None:
+    def test_team_can_collaborate_on_task(self, workshop_team: list[Builder]) -> None:
         """Team can collaborate through the full development cycle."""
         scout, sage, spark, steady, sync = (
             workshop_team[3],  # Scout
@@ -643,9 +618,7 @@ class TestWorkshopTeam:
         scout.handoff_to(sage, artifact={"research": "patterns found"})
 
         # 3. Sage designs
-        sage.builder_transition(
-            BuilderInput.handoff(from_builder="Scout", to_builder="Sage")
-        )
+        sage.builder_transition(BuilderInput.handoff(from_builder="Scout", to_builder="Sage"))
         assert sage.builder_phase == BuilderPhase.DESIGNING
         sage.continue_work("Designing component architecture")
 
@@ -653,9 +626,7 @@ class TestWorkshopTeam:
         sage.handoff_to(spark, artifact={"design": "component arch"})
 
         # 5. Spark prototypes
-        spark.builder_transition(
-            BuilderInput.handoff(from_builder="Sage", to_builder="Spark")
-        )
+        spark.builder_transition(BuilderInput.handoff(from_builder="Sage", to_builder="Spark"))
         assert spark.builder_phase == BuilderPhase.PROTOTYPING
         spark.continue_work("Quick prototype with React")
 
@@ -663,9 +634,7 @@ class TestWorkshopTeam:
         spark.handoff_to(steady, artifact={"prototype": "MVP working"})
 
         # 7. Steady refines
-        steady.builder_transition(
-            BuilderInput.handoff(from_builder="Spark", to_builder="Steady")
-        )
+        steady.builder_transition(BuilderInput.handoff(from_builder="Spark", to_builder="Steady"))
         assert steady.builder_phase == BuilderPhase.REFINING
         steady.continue_work("Adding tests, fixing edge cases")
 
@@ -673,9 +642,7 @@ class TestWorkshopTeam:
         steady.handoff_to(sync, artifact={"refined": "production ready"})
 
         # 9. Sync integrates
-        sync.builder_transition(
-            BuilderInput.handoff(from_builder="Steady", to_builder="Sync")
-        )
+        sync.builder_transition(BuilderInput.handoff(from_builder="Steady", to_builder="Sync"))
         assert sync.builder_phase == BuilderPhase.INTEGRATING
         output = sync.complete_work(summary="Dashboard shipped!")
 

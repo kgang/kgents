@@ -8,6 +8,7 @@ Tests:
 """
 
 import pytest
+
 from agents.atelier.ui.widgets import (
     AtelierState,
     AtelierWidget,

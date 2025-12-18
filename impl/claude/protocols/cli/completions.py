@@ -35,7 +35,6 @@ if TYPE_CHECKING:
 from .help_projector import PATH_TO_COMMAND
 from .hollow import COMMAND_REGISTRY
 
-
 # === Completion Data ===
 
 
@@ -99,10 +98,10 @@ def generate_bash_completions() -> str:
         subs = get_subcommands(cmd)
         if subs:
             subcommand_cases.append(
-                f'        {cmd})\n'
+                f"        {cmd})\n"
                 f'            COMPREPLY=($(compgen -W "{" ".join(subs)}" -- "$cur"))\n'
-                f'            return 0\n'
-                f'            ;;'
+                f"            return 0\n"
+                f"            ;;"
             )
 
     subcommand_switch = "\n".join(subcommand_cases) if subcommand_cases else ""
@@ -168,16 +167,16 @@ def generate_zsh_completions() -> str:
         if subs:
             sub_descs = [f"'{s}:{_get_subcommand_description(cmd, s)}'" for s in subs]
             subcommand_funcs.append(
-                f'_kgents_{cmd}() {{\n'
-                f'    local -a subcmds\n'
-                f'    subcmds=(\n'
-                f'        {chr(10).join("        " + d for d in sub_descs)}\n'
-                f'    )\n'
+                f"_kgents_{cmd}() {{\n"
+                f"    local -a subcmds\n"
+                f"    subcmds=(\n"
+                f"        {chr(10).join('        ' + d for d in sub_descs)}\n"
+                f"    )\n"
                 f'    _describe "subcommand" subcmds\n'
-                f'}}'
+                f"}}"
             )
 
-    return f'''#compdef kg kgents
+    return f"""#compdef kg kgents
 # kgents zsh completions (auto-generated)
 #
 # Installation (choose one):
@@ -244,7 +243,7 @@ _kgents() {{
 if (( $+functions[compdef] )); then
     compdef _kgents kg kgents
 fi
-'''
+"""
 
 
 # === Fish Completions ===
@@ -375,7 +374,8 @@ def cmd_completions(args: list[str]) -> int:
         kg completions fish    Generate fish completions
     """
     if "--help" in args or "-h" in args or not args:
-        print("""
+        print(
+            """
 kg completions - Generate shell completions
 
 Usage:
@@ -394,7 +394,8 @@ Installation:
 
   # Fish
   kg completions fish > ~/.config/fish/completions/kg.fish
-""".strip())
+""".strip()
+        )
         return 0
 
     shell = args[0].lower()

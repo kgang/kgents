@@ -15,7 +15,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-
 # =============================================================================
 # Distance Metrics
 # =============================================================================
@@ -172,9 +171,7 @@ class Embedding:
                 f"Vector length {len(self.vector)} != declared dimension {self.dimension}"
             )
 
-    def similarity(
-        self, other: Embedding, metric: DistanceMetric | None = None
-    ) -> float:
+    def similarity(self, other: Embedding, metric: DistanceMetric | None = None) -> float:
         """
         Compute similarity to another embedding.
 
@@ -189,9 +186,7 @@ class Embedding:
             ValueError: If dimensions don't match
         """
         if self.dimension != other.dimension:
-            raise ValueError(
-                f"Dimension mismatch: {self.dimension} != {other.dimension}"
-            )
+            raise ValueError(f"Dimension mismatch: {self.dimension} != {other.dimension}")
         metric = metric or DistanceMetric.COSINE
         return metric.similarity(self.vector, other.vector)
 
@@ -210,16 +205,12 @@ class Embedding:
             ValueError: If dimensions don't match
         """
         if self.dimension != other.dimension:
-            raise ValueError(
-                f"Dimension mismatch: {self.dimension} != {other.dimension}"
-            )
+            raise ValueError(f"Dimension mismatch: {self.dimension} != {other.dimension}")
         metric = metric or DistanceMetric.COSINE
         return metric.distance(self.vector, other.vector)
 
     @classmethod
-    def from_list(
-        cls, vector: list[float], source: str = "unknown", **metadata: Any
-    ) -> Embedding:
+    def from_list(cls, vector: list[float], source: str = "unknown", **metadata: Any) -> Embedding:
         """
         Create Embedding from a list of floats.
 

@@ -24,7 +24,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Generic, TypeVar, cast
+from typing import Any, Callable, Generic, List, TypeVar, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -43,11 +43,7 @@ def _default_serialize(obj: Any) -> bytes:
     """
     if hasattr(obj, "__dict__"):
         # SQLAlchemy model: extract columns
-        data = {
-            k: v
-            for k, v in obj.__dict__.items()
-            if not k.startswith("_")
-        }
+        data = {k: v for k, v in obj.__dict__.items() if not k.startswith("_")}
         # Handle datetime serialization
         for k, v in data.items():
             if hasattr(v, "isoformat"):
@@ -140,10 +136,12 @@ class TableAdapter(BaseDgent, Generic[T]):
                 # Handle timestamps if model supports them
                 if hasattr(self.model, "created_at") and "created_at" not in data:
                     from datetime import datetime
+
                     data["created_at"] = datetime.fromtimestamp(datum.created_at)
 
                 if hasattr(self.model, "updated_at") and "updated_at" not in data:
                     from datetime import datetime
+
                     data["updated_at"] = datetime.fromtimestamp(datum.created_at)
 
                 instance = self.model(**data)
@@ -186,7 +184,7 @@ class TableAdapter(BaseDgent, Generic[T]):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """
         List from table with filters.
 
@@ -209,6 +207,7 @@ class TableAdapter(BaseDgent, Generic[T]):
             # Filter by created_at timestamp
             if after and hasattr(self.model, "created_at"):
                 from datetime import datetime
+
                 created_col = getattr(self.model, "created_at")
                 after_dt = datetime.fromtimestamp(after)
                 query = query.where(created_col > after_dt)
@@ -224,7 +223,7 @@ class TableAdapter(BaseDgent, Generic[T]):
 
             return [self._model_to_datum(inst) for inst in instances]
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """
         Get causal chain via recursive query.
 
@@ -238,7 +237,7 @@ class TableAdapter(BaseDgent, Generic[T]):
             datum = await self.get(id)
             return [datum] if datum else []
 
-        chain: list[Datum] = []
+        chain: List[Datum] = []
         current_id: str | None = id
 
         async with self.session_factory() as session:
@@ -291,7 +290,9 @@ class TableAdapter(BaseDgent, Generic[T]):
         if hasattr(instance, "created_at"):
             created = getattr(instance, "created_at")
             if created:
-                created_at = created.timestamp() if hasattr(created, "timestamp") else float(created)
+                created_at = (
+                    created.timestamp() if hasattr(created, "timestamp") else float(created)
+                )
 
         # Get causal_parent if available
         causal_parent = None
@@ -364,9 +365,7 @@ class TableStateBackend(Generic[T]):
         if datum is None:
             if self.initial is not None:
                 return self.initial
-            raise ValueError(
-                f"No state found for key '{self.key}' and no initial provided"
-            )
+            raise ValueError(f"No state found for key '{self.key}' and no initial provided")
 
         # Deserialize and reconstruct model
         data = self.adapter.deserialize(datum.content, self.adapter.model)

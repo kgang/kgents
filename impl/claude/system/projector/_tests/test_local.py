@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.a.halo import (
     Capability,
     CapabilityBase,

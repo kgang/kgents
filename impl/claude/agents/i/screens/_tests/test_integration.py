@@ -8,6 +8,7 @@ This test suite verifies that all major screens:
 """
 
 import pytest
+
 from agents.i.screens import (
     CockpitScreen,
     FluxScreen,

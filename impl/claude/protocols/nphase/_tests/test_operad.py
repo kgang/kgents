@@ -5,6 +5,7 @@ Tests the N-Phase development cycle operad: operations, laws, and transitions.
 """
 
 import pytest
+
 from agents.operad.core import LawStatus, OperadRegistry
 from protocols.nphase.operad import (
     DETAILED_TO_COMPRESSED,

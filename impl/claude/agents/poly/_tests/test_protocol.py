@@ -11,6 +11,7 @@ These tests verify:
 from typing import Any
 
 import pytest
+
 from agents.poly import (
     PolyAgent,
     WiringDiagram,

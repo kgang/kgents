@@ -5,6 +5,7 @@ Verifies sparkline generation, reactive updates, and edge cases.
 """
 
 import pytest
+
 from agents.i.widgets.sparkline import Sparkline, generate_sparkline
 
 

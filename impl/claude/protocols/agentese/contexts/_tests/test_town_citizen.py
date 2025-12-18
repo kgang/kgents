@@ -5,6 +5,7 @@ Tests the TownCitizenNode, archetype system prompts, and chat affordances.
 """
 
 import pytest
+
 from protocols.agentese.affordances import (
     CHAT_AFFORDANCES,
     chatty,

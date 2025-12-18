@@ -79,8 +79,9 @@ async def _cmd_tether(
 ) -> int:
     """Execute the tether command."""
     try:
-        from infra.k8s import ClusterStatus, KindCluster
         from infra.k8s.tether import TetherState, create_tether
+
+        from infra.k8s import ClusterStatus, KindCluster
     except ImportError as e:
         print(f"Import error: {e}")
         print("Make sure infra.k8s is properly installed")

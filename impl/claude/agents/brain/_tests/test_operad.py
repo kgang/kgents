@@ -1,6 +1,7 @@
 """Tests for BrainOperad composition grammar."""
 
 import pytest
+
 from agents.brain.operad import (
     ASSOCIATE_METABOLICS,
     BRAIN_OPERAD,

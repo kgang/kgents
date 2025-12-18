@@ -17,6 +17,7 @@ Test Coverage:
 from __future__ import annotations
 
 import pytest
+
 from agents.poly.types import Err, Ok
 from agents.u.core import Tool, ToolErrorType, ToolMeta
 from agents.u.executor import SecureToolExecutor
@@ -125,9 +126,7 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, high_security_context)
         assert permission == PermissionLevel.DENIED
 
-    def test_file_write_denied_without_access(
-        self, classifier: PermissionClassifier
-    ) -> None:
+    def test_file_write_denied_without_access(self, classifier: PermissionClassifier) -> None:
         """Test file write denied when context forbids it."""
         caps = ToolCapabilities(requires_file_write=True)
         context = AgentContext(
@@ -145,9 +144,7 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, basic_context)
         assert permission == PermissionLevel.DENIED
 
-    def test_pii_access_allowed_with_authorization(
-        self, classifier: PermissionClassifier
-    ) -> None:
+    def test_pii_access_allowed_with_authorization(self, classifier: PermissionClassifier) -> None:
         """Test PII access allowed when authorized."""
         caps = ToolCapabilities(accesses_pii=True)
         context = AgentContext(
@@ -176,9 +173,7 @@ class TestPermissionClassifier:
         permission = classifier.classify(caps, context)
         assert permission == PermissionLevel.RESTRICTED
 
-    def test_production_environment_always_audited(
-        self, classifier: PermissionClassifier
-    ) -> None:
+    def test_production_environment_always_audited(self, classifier: PermissionClassifier) -> None:
         """Test production environment forces audit."""
         caps = ToolCapabilities()
         context = AgentContext(
@@ -212,9 +207,7 @@ class TestCustomPermissionRules:
     ) -> None:
         """Test custom rule can override default classification."""
 
-        def allow_all_in_dev(
-            caps: ToolCapabilities, ctx: AgentContext
-        ) -> PermissionLevel | None:
+        def allow_all_in_dev(caps: ToolCapabilities, ctx: AgentContext) -> PermissionLevel | None:
             if ctx.environment == "development":
                 return PermissionLevel.ALLOWED
             return None
@@ -233,16 +226,12 @@ class TestCustomPermissionRules:
     ) -> None:
         """Test multiple custom rules checked in order."""
 
-        def deny_expensive(
-            caps: ToolCapabilities, ctx: AgentContext
-        ) -> PermissionLevel | None:
+        def deny_expensive(caps: ToolCapabilities, ctx: AgentContext) -> PermissionLevel | None:
             if caps.max_cost_usd > 5.0:
                 return PermissionLevel.DENIED
             return None
 
-        def allow_readonly(
-            caps: ToolCapabilities, ctx: AgentContext
-        ) -> PermissionLevel | None:
+        def allow_readonly(caps: ToolCapabilities, ctx: AgentContext) -> PermissionLevel | None:
             if not caps.requires_file_write:
                 return PermissionLevel.ALLOWED
             return None
@@ -614,9 +603,7 @@ class TestSecureToolExecutor:
         assert executor.token.uses == 1
 
     @pytest.mark.asyncio
-    async def test_execute_with_expired_token(
-        self, basic_context: AgentContext
-    ) -> None:
+    async def test_execute_with_expired_token(self, basic_context: AgentContext) -> None:
         """Test execution fails with expired token."""
         tool = SimpleStringTool()
         caps = ToolCapabilities()
@@ -727,9 +714,7 @@ class TestSecurityIntegration:
         assert all(log.context_id == "prod_agent" for log in logs)
 
     @pytest.mark.asyncio
-    async def test_security_escalation_scenario(
-        self, basic_context: AgentContext
-    ) -> None:
+    async def test_security_escalation_scenario(self, basic_context: AgentContext) -> None:
         """Test security context change mid-execution."""
         tool = NetworkTool()
         caps = ToolCapabilities(requires_network=True)

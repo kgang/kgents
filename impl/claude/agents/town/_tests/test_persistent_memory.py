@@ -5,6 +5,7 @@ Phase 3 Crown Jewels: Living Town with persistent citizen memory.
 """
 
 import pytest
+
 from agents.d import MemoryBackend
 from agents.town.citizen import GATHERING, Citizen, Eigenvectors
 from agents.town.memory import GraphMemory
@@ -240,9 +241,7 @@ class TestCreatePersistentMemory:
     """Tests for factory function."""
 
     @pytest.mark.asyncio
-    async def test_create_for_citizen(
-        self, citizen: Citizen, dgent: MemoryBackend
-    ) -> None:
+    async def test_create_for_citizen(self, citizen: Citizen, dgent: MemoryBackend) -> None:
         """Test creating memory for a citizen."""
         memory = await create_persistent_memory(citizen, dgent)
 

@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 import pytest
+
 from protocols.agentese.contexts.self_ import (
     SelfContextResolver,
     create_self_resolver,
@@ -339,15 +340,9 @@ class TestSearchOperation:
     ) -> None:
         """Search finds similar vectors."""
         # Add vectors
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[1.0, 0.0, 0.0]
-        )
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc2", embedding=[0.0, 1.0, 0.0]
-        )
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc3", embedding=[0.9, 0.1, 0.0]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[1.0, 0.0, 0.0])
+        await vector_node._invoke_aspect("add", observer, id="doc2", embedding=[0.0, 1.0, 0.0])
+        await vector_node._invoke_aspect("add", observer, id="doc3", embedding=[0.9, 0.1, 0.0])
 
         # Search for similar to doc1
         result = await vector_node._invoke_aspect(
@@ -372,9 +367,7 @@ class TestSearchOperation:
     ) -> None:
         """Search respects threshold."""
         # Add vectors
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[1.0, 0.0, 0.0]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[1.0, 0.0, 0.0])
         await vector_node._invoke_aspect(
             "add",
             observer,
@@ -465,9 +458,7 @@ class TestRemoveOperation:
     ) -> None:
         """Remove deletes vector."""
         # Add first
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[0.1, 0.2, 0.3]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[0.1, 0.2, 0.3])
 
         # Remove
         result = await vector_node._invoke_aspect("remove", observer, id="doc1")
@@ -506,12 +497,8 @@ class TestClearOperation:
     ) -> None:
         """Clear removes all vectors."""
         # Add vectors
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[0.1, 0.2, 0.3]
-        )
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc2", embedding=[0.4, 0.5, 0.6]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[0.1, 0.2, 0.3])
+        await vector_node._invoke_aspect("add", observer, id="doc2", embedding=[0.4, 0.5, 0.6])
 
         # Clear
         result = await vector_node._invoke_aspect("clear", observer)
@@ -548,12 +535,8 @@ class TestCountOperation:
         observer: Any,
     ) -> None:
         """Count reflects added vectors."""
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[0.1, 0.2, 0.3]
-        )
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc2", embedding=[0.4, 0.5, 0.6]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[0.1, 0.2, 0.3])
+        await vector_node._invoke_aspect("add", observer, id="doc2", embedding=[0.4, 0.5, 0.6])
 
         result = await vector_node._invoke_aspect("count", observer)
 
@@ -595,9 +578,7 @@ class TestExistsOperation:
         observer: Any,
     ) -> None:
         """Exists returns true for existing vectors."""
-        await vector_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[0.1, 0.2, 0.3]
-        )
+        await vector_node._invoke_aspect("add", observer, id="doc1", embedding=[0.1, 0.2, 0.3])
 
         result = await vector_node._invoke_aspect("exists", observer, id="doc1")
 
@@ -705,12 +686,8 @@ class TestVgentIntegration:
     ) -> None:
         """Search uses V-gent when available."""
         # Add vectors
-        await vgent_node._invoke_aspect(
-            "add", observer, id="doc1", embedding=[1.0, 0.0, 0.0]
-        )
-        await vgent_node._invoke_aspect(
-            "add", observer, id="doc2", embedding=[0.0, 1.0, 0.0]
-        )
+        await vgent_node._invoke_aspect("add", observer, id="doc1", embedding=[1.0, 0.0, 0.0])
+        await vgent_node._invoke_aspect("add", observer, id="doc2", embedding=[0.0, 1.0, 0.0])
 
         # Search
         result = await vgent_node._invoke_aspect(

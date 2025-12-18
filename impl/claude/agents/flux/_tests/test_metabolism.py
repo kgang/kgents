@@ -6,6 +6,7 @@ import asyncio
 from typing import Any, AsyncIterator
 
 import pytest
+
 from agents.flux import (
     Flux,
     FluxAgent,

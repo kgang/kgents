@@ -11,6 +11,7 @@ Covers:
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.api.payments import (
     MockPaymentClient,
     create_payment_client,
@@ -103,9 +104,7 @@ def test_handle_subscription_created():
                 "user_id": "user1",
                 "tier": "RESIDENT",
             },
-            "current_period_end": int(
-                (datetime.now() + timedelta(days=30)).timestamp()
-            ),
+            "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
     }
 
@@ -127,9 +126,7 @@ def test_handle_subscription_updated():
                 "tier": "CITIZEN",
             },
             "status": "active",
-            "current_period_end": int(
-                (datetime.now() + timedelta(days=30)).timestamp()
-            ),
+            "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
     }
 

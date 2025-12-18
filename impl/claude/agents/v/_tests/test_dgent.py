@@ -16,8 +16,8 @@ from __future__ import annotations
 from typing import AsyncIterator
 
 import pytest
-from agents.d import Datum
-from agents.d import MemoryBackend as DgentMemoryBackend
+
+from agents.d import Datum, MemoryBackend as DgentMemoryBackend
 
 from ..backends.dgent import DgentVectorBackend
 from ..types import DistanceMetric, Embedding
@@ -97,9 +97,7 @@ class TestDgentBackendBasics:
         assert backend.namespace == "custom"
 
     @pytest.mark.asyncio
-    async def test_default_metric_is_cosine(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_default_metric_is_cosine(self, dgent_memory: DgentMemoryBackend) -> None:
         """Default metric is cosine."""
         backend = DgentVectorBackend(dgent=dgent_memory, dimension=8)
         assert backend.metric == DistanceMetric.COSINE
@@ -212,9 +210,7 @@ class TestBatchOperations:
         assert await dgent_backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_add_batch_with_raw_vectors(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_add_batch_with_raw_vectors(self, dgent_backend: DgentVectorBackend) -> None:
         """Batch add with raw vectors."""
         entries = [
             ("entry_1", list(make_unit_vector(1)), None),
@@ -248,9 +244,7 @@ class TestSearch:
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_search_finds_exact_match(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_finds_exact_match(self, dgent_backend: DgentVectorBackend) -> None:
         """Search finds exact match with similarity ~1.0."""
         emb = make_embedding(1)
         await dgent_backend.add("test", emb)
@@ -262,9 +256,7 @@ class TestSearch:
         assert results[0].similarity == pytest.approx(1.0, abs=1e-5)
 
     @pytest.mark.asyncio
-    async def test_search_with_limit(
-        self, populated_dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_with_limit(self, populated_dgent_backend: DgentVectorBackend) -> None:
         """Search respects limit parameter."""
         query = make_embedding(0)
 
@@ -272,9 +264,7 @@ class TestSearch:
         assert len(results) == 3
 
     @pytest.mark.asyncio
-    async def test_search_sorted_by_similarity(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_sorted_by_similarity(self, dgent_backend: DgentVectorBackend) -> None:
         """Results are sorted by similarity (highest first)."""
         base = make_embedding(1)
         similar = make_similar_embedding(base, noise=0.1, seed=42)
@@ -292,9 +282,7 @@ class TestSearch:
         assert results[1].id == "similar"
 
     @pytest.mark.asyncio
-    async def test_search_with_threshold(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_with_threshold(self, dgent_backend: DgentVectorBackend) -> None:
         """Search filters by similarity threshold."""
         base = make_embedding(1)
         similar = make_similar_embedding(base, noise=0.1)
@@ -310,9 +298,7 @@ class TestSearch:
         assert results[0].id == "base"
 
     @pytest.mark.asyncio
-    async def test_search_with_raw_vector(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_with_raw_vector(self, dgent_backend: DgentVectorBackend) -> None:
         """Search with raw vector list."""
         raw = list(make_unit_vector(1))
         await dgent_backend.add("test", raw)
@@ -331,9 +317,7 @@ class TestMetadataFiltering:
     """Test metadata filter functionality."""
 
     @pytest.mark.asyncio
-    async def test_search_with_single_filter(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_with_single_filter(self, dgent_backend: DgentVectorBackend) -> None:
         """Filter results by single metadata key."""
         await dgent_backend.add("a", make_embedding(1), {"type": "foo"})
         await dgent_backend.add("b", make_embedding(2), {"type": "bar"})
@@ -345,19 +329,11 @@ class TestMetadataFiltering:
         assert all(r.metadata["type"] == "foo" for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_with_multiple_filters(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_with_multiple_filters(self, dgent_backend: DgentVectorBackend) -> None:
         """Filter results by multiple metadata keys."""
-        await dgent_backend.add(
-            "a", make_embedding(1), {"type": "foo", "status": "active"}
-        )
-        await dgent_backend.add(
-            "b", make_embedding(2), {"type": "foo", "status": "inactive"}
-        )
-        await dgent_backend.add(
-            "c", make_embedding(3), {"type": "bar", "status": "active"}
-        )
+        await dgent_backend.add("a", make_embedding(1), {"type": "foo", "status": "active"})
+        await dgent_backend.add("b", make_embedding(2), {"type": "foo", "status": "inactive"})
+        await dgent_backend.add("c", make_embedding(3), {"type": "bar", "status": "active"})
 
         results = await dgent_backend.search(
             make_embedding(1), filters={"type": "foo", "status": "active"}
@@ -367,15 +343,11 @@ class TestMetadataFiltering:
         assert results[0].id == "a"
 
     @pytest.mark.asyncio
-    async def test_search_filter_no_match(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_filter_no_match(self, dgent_backend: DgentVectorBackend) -> None:
         """Filter with no matching entries returns empty."""
         await dgent_backend.add("a", make_embedding(1), {"type": "foo"})
 
-        results = await dgent_backend.search(
-            make_embedding(1), filters={"type": "nonexistent"}
-        )
+        results = await dgent_backend.search(make_embedding(1), filters={"type": "nonexistent"})
 
         assert results == []
 
@@ -406,9 +378,7 @@ class TestPersistence:
         assert datum.metadata["_dimension"] == str(TEST_DIMENSION)
 
     @pytest.mark.asyncio
-    async def test_load_index_restores_vectors(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_load_index_restores_vectors(self, dgent_memory: DgentMemoryBackend) -> None:
         """load_index() restores vectors from D-gent."""
         # Create first backend and add vectors
         backend1 = DgentVectorBackend(
@@ -444,9 +414,7 @@ class TestPersistence:
         assert entry2.metadata["tag"] == "second"
 
     @pytest.mark.asyncio
-    async def test_load_index_returns_count(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_load_index_returns_count(self, dgent_memory: DgentMemoryBackend) -> None:
         """load_index() returns number of vectors loaded."""
         backend = DgentVectorBackend(
             dgent=dgent_memory,
@@ -536,9 +504,7 @@ class TestSerialization:
     """Test vector serialization/deserialization."""
 
     @pytest.mark.asyncio
-    async def test_serialization_roundtrip(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_serialization_roundtrip(self, dgent_backend: DgentVectorBackend) -> None:
         """Vector survives serialization roundtrip."""
         original = make_unit_vector(42)
 
@@ -550,9 +516,7 @@ class TestSerialization:
             assert abs(a - b) < 1e-6
 
     @pytest.mark.asyncio
-    async def test_serialization_preserves_values(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_serialization_preserves_values(self, dgent_backend: DgentVectorBackend) -> None:
         """Known values serialize correctly."""
         vector = (0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8)
 
@@ -573,9 +537,7 @@ class TestDimensionValidation:
     """Test dimension validation."""
 
     @pytest.mark.asyncio
-    async def test_add_wrong_dimension_embedding(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_add_wrong_dimension_embedding(self, dgent_backend: DgentVectorBackend) -> None:
         """Adding embedding with wrong dimension raises."""
         wrong_dim = Embedding(
             vector=(0.1, 0.2, 0.3),  # 3 dimensions, backend expects TEST_DIMENSION
@@ -587,9 +549,7 @@ class TestDimensionValidation:
             await dgent_backend.add("test", wrong_dim)
 
     @pytest.mark.asyncio
-    async def test_add_wrong_dimension_list(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_add_wrong_dimension_list(self, dgent_backend: DgentVectorBackend) -> None:
         """Adding raw vector with wrong dimension raises."""
         wrong_dim = [0.1, 0.2, 0.3]  # 3 dimensions, backend expects TEST_DIMENSION
 
@@ -597,9 +557,7 @@ class TestDimensionValidation:
             await dgent_backend.add("test", wrong_dim)
 
     @pytest.mark.asyncio
-    async def test_search_wrong_dimension(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_search_wrong_dimension(self, dgent_backend: DgentVectorBackend) -> None:
         """Search with wrong dimension raises."""
         await dgent_backend.add("test", make_embedding(1))
 
@@ -682,9 +640,7 @@ class TestEdgeCases:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_limit_larger_than_count(
-        self, dgent_backend: DgentVectorBackend
-    ) -> None:
+    async def test_limit_larger_than_count(self, dgent_backend: DgentVectorBackend) -> None:
         """Limit larger than entry count returns all entries."""
         await dgent_backend.add("a", make_embedding(1))
         await dgent_backend.add("b", make_embedding(2))
@@ -702,9 +658,7 @@ class TestEdgeCases:
         assert "test_vectors" in repr_str
 
     @pytest.mark.asyncio
-    async def test_load_index_skips_wrong_dimension(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_load_index_skips_wrong_dimension(self, dgent_memory: DgentMemoryBackend) -> None:
         """load_index() skips vectors with wrong dimension."""
         # Store a vector with wrong dimension directly in D-gent
         import struct

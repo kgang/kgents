@@ -8,6 +8,7 @@ and navigation through the Loom.
 from datetime import datetime
 
 import pytest
+
 from agents.i.data.loom import CognitiveBranch, CognitiveTree
 from agents.i.widgets.branch_tree import LOOM_CHARS, BranchTree
 

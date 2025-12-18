@@ -21,12 +21,11 @@ from __future__ import annotations
 
 from typing import Generic, Protocol, TypeVar, runtime_checkable
 
-S = TypeVar("S")  # State type
-S_co = TypeVar("S_co", covariant=True)  # Covariant state for protocol
+S = TypeVar("S")  # State type (invariant - used for both input and output)
 
 
 @runtime_checkable
-class StateBackend(Protocol[S_co]):
+class StateBackend(Protocol[S]):
     """
     Minimal interface for state persistence.
 
@@ -68,7 +67,7 @@ class StateBackend(Protocol[S_co]):
         assert await backend.load() == {"count": 1}
     """
 
-    async def load(self) -> S_co:
+    async def load(self) -> S:
         """
         Load current state.
 
@@ -81,7 +80,7 @@ class StateBackend(Protocol[S_co]):
         """
         ...
 
-    async def save(self, state: S_co) -> None:
+    async def save(self, state: S) -> None:
         """
         Persist new state.
 
@@ -93,11 +92,6 @@ class StateBackend(Protocol[S_co]):
             external mutation from affecting stored state.
         """
         ...
-
-
-# Type alias for state logic functions
-StateLogic = Generic[S]
-"""Type for pure state logic: (Input, State) → (Output, NewState)"""
 
 
 __all__ = [

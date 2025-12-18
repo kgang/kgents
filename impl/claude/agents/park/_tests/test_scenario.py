@@ -26,6 +26,8 @@ T-gent Types:
 from __future__ import annotations
 
 import pytest
+from hypothesis import given, strategies as st
+
 from agents.park.scenario import (
     CitizenSpec,
     ScenarioRegistry,
@@ -44,8 +46,6 @@ from agents.park.scenarios import (
     TOWN_BRIDGE_PROJECT,
 )
 from agents.town.citizen import GATHERING, Citizen, Eigenvectors
-from hypothesis import given
-from hypothesis import strategies as st
 
 # =============================================================================
 # ScenarioType Tests
@@ -1043,9 +1043,7 @@ class TestPropertyBased:
         elapsed=st.floats(min_value=0.0, max_value=10000.0),
         tick_count=st.integers(min_value=1, max_value=100),
     )
-    def test_session_time_accumulates_correctly(
-        self, elapsed: float, tick_count: int
-    ) -> None:
+    def test_session_time_accumulates_correctly(self, elapsed: float, tick_count: int) -> None:
         """Session time should accumulate correctly across ticks."""
         from agents.park.scenario import ScenarioSession
 
@@ -1088,9 +1086,7 @@ class TestStressAndEdgeCases:
     def test_many_citizens_scenario(self) -> None:
         """Scenario with many citizens works correctly."""
         specs = [
-            CitizenSpec(
-                name=f"Citizen_{i}", archetype="Builder", region=f"region_{i % 5}"
-            )
+            CitizenSpec(name=f"Citizen_{i}", archetype="Builder", region=f"region_{i % 5}")
             for i in range(100)
         ]
         template = ScenarioTemplate(
@@ -1120,9 +1116,7 @@ class TestStressAndEdgeCases:
         session.start()
         # Record 1000 interactions
         for i in range(1000):
-            session.record_interaction(
-                f"citizen_{i}", f"citizen_{i + 1}", "dialogue", f"msg_{i}"
-            )
+            session.record_interaction(f"citizen_{i}", f"citizen_{i + 1}", "dialogue", f"msg_{i}")
         assert len(session.interactions) == 1000
 
     def test_rapid_tick_succession(self) -> None:

@@ -29,15 +29,16 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from agents.i.screens.base import KgentsModalScreen
-from agents.i.widgets.entropy import entropy_to_border_style, entropy_to_params
-from protocols.agentese.metabolism.fever import FeverEvent, FeverStream
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Center, Container, Vertical
 from textual.reactive import reactive
 from textual.screen import ModalScreen
 from textual.widgets import Static
+
+from agents.i.screens.base import KgentsModalScreen
+from agents.i.widgets.entropy import entropy_to_border_style, entropy_to_params
+from protocols.agentese.metabolism.fever import FeverEvent, FeverStream
 
 # =============================================================================
 # Entropy State

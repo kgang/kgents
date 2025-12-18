@@ -9,6 +9,7 @@ Covers:
 """
 
 import pytest
+
 from agents.town.kill_switch import (
     AlertSeverity,
     KillSwitchMonitor,
@@ -90,9 +91,7 @@ def test_metric_calculator_force_rate():
     calc = MetricCalculator()
 
     # 40 sessions with force out of 100 INHABIT sessions → 40%
-    metric = calc.calculate_force_rate(
-        sessions_with_force=40, total_inhabit_sessions=100
-    )
+    metric = calc.calculate_force_rate(sessions_with_force=40, total_inhabit_sessions=100)
 
     assert metric.metric_type == KillSwitchType.FORCE_RATE
     assert metric.value == 0.40
@@ -103,9 +102,7 @@ def test_metric_calculator_force_rate_high():
     calc = MetricCalculator()
 
     # 35 out of 100 → 35% (above 30% threshold)
-    metric = calc.calculate_force_rate(
-        sessions_with_force=35, total_inhabit_sessions=100
-    )
+    metric = calc.calculate_force_rate(sessions_with_force=35, total_inhabit_sessions=100)
 
     assert metric.value > 0.30
 

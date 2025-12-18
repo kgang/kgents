@@ -9,6 +9,7 @@ Tests cover:
 """
 
 import pytest
+
 from agents.l.semantic import SimpleEmbedder
 from agents.l.types import Catalog, CatalogEntry, EntityType, Status
 from agents.l.vgent_adapter import (
@@ -209,9 +210,7 @@ class TestLgentToVgentAdapter:
         assert count == 2
 
     @pytest.mark.asyncio
-    async def test_search_returns_vgent_results(
-        self, adapter: LgentToVgentAdapter
-    ) -> None:
+    async def test_search_returns_vgent_results(self, adapter: LgentToVgentAdapter) -> None:
         """Test search returns V-gent SearchResult."""
         vec = [0.1] * 128
 

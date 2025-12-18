@@ -5,6 +5,7 @@ These tests verify the core claim: generate_component produces valid JSX.
 """
 
 import pytest
+
 from agents.design import (
     CONTENT_OPERAD,
     DESIGN_OPERAD,
@@ -86,9 +87,7 @@ class TestLayoutGeneration:
         canvas = ComponentSpec(name="Canvas", type="Canvas")
         panel = ComponentSpec(name="Panel", type="Panel")
 
-        jsx = generate_component(
-            LAYOUT_OPERAD, "split", canvas, panel, density=Density.COMPACT
-        )
+        jsx = generate_component(LAYOUT_OPERAD, "split", canvas, panel, density=Density.COMPACT)
 
         assert "BottomDrawer" in jsx
         assert "ElasticSplit" not in jsx

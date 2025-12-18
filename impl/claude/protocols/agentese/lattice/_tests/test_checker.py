@@ -7,6 +7,7 @@ Verify lattice position before concept creation.
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese.lattice.checker import (
     ConsistencyResult,
     LatticeConsistencyChecker,

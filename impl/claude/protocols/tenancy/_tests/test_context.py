@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from uuid import uuid4
 
 import pytest
+
 from protocols.tenancy.context import (
     InsufficientPermissionError,
     TenantContext,

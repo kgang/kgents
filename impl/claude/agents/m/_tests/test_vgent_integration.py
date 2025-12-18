@@ -14,6 +14,7 @@ Key behaviors tested:
 from __future__ import annotations
 
 import pytest
+
 from agents.d.backends.memory import MemoryBackend
 from agents.m.associative import AssociativeMemory
 from agents.m.memory import Lifecycle, Memory

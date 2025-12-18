@@ -15,10 +15,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal, Sequence, cast
 
 if TYPE_CHECKING:
-    from .session import Message
-    from .model_selector import MorpheusConfig
-    from services.morpheus.types import ChatRequest, ChatMessage as MorpheusMessage
     from services.morpheus.persistence import CompletionResult
+    from services.morpheus.types import ChatMessage as MorpheusMessage, ChatRequest
+
+    from .model_selector import MorpheusConfig
+    from .session import Message
 
 
 def to_morpheus_request(
@@ -42,7 +43,7 @@ def to_morpheus_request(
     Returns:
         ChatRequest ready for Morpheus gateway
     """
-    from services.morpheus.types import ChatRequest, ChatMessage as MorpheusMessage
+    from services.morpheus.types import ChatMessage as MorpheusMessage, ChatRequest
 
     messages: list[MorpheusMessage] = []
 
@@ -55,7 +56,7 @@ def to_morpheus_request(
         # Map chat roles to Morpheus roles (type-safe casting)
         role: Literal["system", "user", "assistant"] = (
             msg.role if msg.role in ("system", "user", "assistant") else "user"
-        )  # type: ignore[assignment]
+        )
 
         messages.append(MorpheusMessage(role=role, content=msg.content))
 

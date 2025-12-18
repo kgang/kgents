@@ -139,9 +139,7 @@ def validate_schema(
 
         value = data[field]
         if not validator(value):
-            errors.append(
-                f"Invalid value for {full_path}: got {type(value).__name__} = {value!r}"
-            )
+            errors.append(f"Invalid value for {full_path}: got {type(value).__name__} = {value!r}")
 
     return errors
 
@@ -199,12 +197,8 @@ class TestCitizenCardContract:
         assert "eigenvectors" in json_output, "Missing eigenvectors field"
         eigenvectors = json_output["eigenvectors"]
 
-        errors = validate_schema(
-            eigenvectors, CITIZEN_EIGENVECTORS_SCHEMA, "eigenvectors"
-        )
-        assert not errors, "Eigenvectors schema validation failed:\n" + "\n".join(
-            errors
-        )
+        errors = validate_schema(eigenvectors, CITIZEN_EIGENVECTORS_SCHEMA, "eigenvectors")
+        assert not errors, "Eigenvectors schema validation failed:\n" + "\n".join(errors)
 
     def test_citizen_card_uses_citizen_id_not_id(self, citizen_widget: Any) -> None:
         """
@@ -220,9 +214,7 @@ class TestCitizenCardContract:
         assert "citizen_id" in json_output, "Must use 'citizen_id' not 'id'"
         assert "id" not in json_output, "Must NOT have 'id' field (use 'citizen_id')"
 
-    def test_citizen_card_eigenvectors_has_all_fields(
-        self, citizen_widget: Any
-    ) -> None:
+    def test_citizen_card_eigenvectors_has_all_fields(self, citizen_widget: Any) -> None:
         """
         CRITICAL: Verify eigenvectors has warmth, curiosity, trust.
 
@@ -331,9 +323,7 @@ class TestColonyDashboardContract:
         for i, citizen in enumerate(json_output["citizens"]):
             # Validate against CitizenCardJSON schema
             errors = validate_schema(citizen, CITIZEN_CARD_SCHEMA, f"citizens[{i}]")
-            assert not errors, f"Citizen {i} schema validation failed:\n" + "\n".join(
-                errors
-            )
+            assert not errors, f"Citizen {i} schema validation failed:\n" + "\n".join(errors)
 
             # Validate eigenvectors nested structure
             if "eigenvectors" in citizen:
@@ -342,9 +332,8 @@ class TestColonyDashboardContract:
                     CITIZEN_EIGENVECTORS_SCHEMA,
                     f"citizens[{i}].eigenvectors",
                 )
-                assert not eig_errors, (
-                    f"Citizen {i} eigenvectors validation failed:\n"
-                    + "\n".join(eig_errors)
+                assert not eig_errors, f"Citizen {i} eigenvectors validation failed:\n" + "\n".join(
+                    eig_errors
                 )
 
 
@@ -358,10 +347,11 @@ class TestLiveStateContract:
 
         This function is used by the /live SSE endpoint to emit state updates.
         """
+        from protocols.api.town import build_colony_dashboard
+
         from agents.i.reactive.widget import RenderTarget
         from agents.town.environment import create_phase3_environment
         from agents.town.flux import TownFlux
-        from protocols.api.town import build_colony_dashboard
 
         # Create a minimal environment
         env = create_phase3_environment()
@@ -378,14 +368,10 @@ class TestLiveStateContract:
         # Validate each citizen
         for i, citizen in enumerate(json_output["citizens"]):
             errors = validate_schema(citizen, CITIZEN_CARD_SCHEMA, f"citizens[{i}]")
-            assert not errors, f"Citizen {i} schema validation failed:\n" + "\n".join(
-                errors
-            )
+            assert not errors, f"Citizen {i} schema validation failed:\n" + "\n".join(errors)
 
             # Extra strict: verify the exact fields that caused the bug
-            assert "citizen_id" in citizen, (
-                f"citizens[{i}] must have 'citizen_id' not 'id'"
-            )
+            assert "citizen_id" in citizen, f"citizens[{i}] must have 'citizen_id' not 'id'"
             assert "eigenvectors" in citizen, f"citizens[{i}] must have 'eigenvectors'"
             assert "warmth" in citizen["eigenvectors"], (
                 f"citizens[{i}].eigenvectors must have 'warmth'"

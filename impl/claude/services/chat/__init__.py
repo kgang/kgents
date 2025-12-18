@@ -28,58 +28,58 @@ See: docs/skills/metaphysical-fullstack.md
 See: spec/protocols/chat.md
 """
 
+from .composer import ChatMorpheusComposer, TurnResult, create_composer
 from .config import ChatConfig, ContextStrategy
-from .session import ChatSession, ChatSessionState, Turn, Message, SessionBudget
+from .context_projector import WorkingContextProjector
 from .factory import (
-    ChatSessionFactory,
     ChatServiceFactory,
+    ChatSessionFactory,
     SystemPromptContext,
     generate_session_id,
     get_chat_factory,
-    set_chat_factory,
     reset_chat_factory,
+    set_chat_factory,
 )
-from .composer import ChatMorpheusComposer, TurnResult, create_composer
 from .model_selector import (
-    MorpheusConfig,
-    ModelSelector,
-    default_model_selector,
-    budget_aware_selector,
-    TokenBudget,
     TIER_BUDGETS,
+    ModelSelector,
+    MorpheusConfig,
+    TokenBudget,
+    budget_aware_selector,
+    default_model_selector,
 )
-from .transformer import (
-    to_morpheus_request,
-    from_morpheus_response,
-    extract_usage,
-    to_streaming_request,
-)
-from .context_projector import WorkingContextProjector
-from .persistence import (
-    PersistedSession,
-    ChatPersistence,
-    MemoryInjector,
-    get_persistence,
-    get_memory_injector,
-    reset_persistence,
+from .node import (
+    ChatManifestRendering,
+    ChatNode,
+    ChatResponseRendering,
+    SessionDetailRendering,
+    SessionListRendering,
 )
 from .observability import (
     ChatTelemetry,
-    record_turn,
-    record_session_event,
-    record_error,
-    get_chat_metrics_summary,
     get_active_session_count,
-    reset_chat_metrics,
-    get_chat_tracer,
     get_chat_meter,
+    get_chat_metrics_summary,
+    get_chat_tracer,
+    record_error,
+    record_session_event,
+    record_turn,
+    reset_chat_metrics,
 )
-from .node import (
-    ChatNode,
-    ChatManifestRendering,
-    SessionListRendering,
-    SessionDetailRendering,
-    ChatResponseRendering,
+from .persistence import (
+    ChatPersistence,
+    MemoryInjector,
+    PersistedSession,
+    get_memory_injector,
+    get_persistence,
+    reset_persistence,
+)
+from .session import ChatSession, ChatSessionState, Message, SessionBudget, Turn
+from .transformer import (
+    extract_usage,
+    from_morpheus_response,
+    to_morpheus_request,
+    to_streaming_request,
 )
 
 __all__ = [

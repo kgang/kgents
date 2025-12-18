@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.bar import BarState, BarWidget
 from agents.i.reactive.widget import RenderTarget
 
@@ -130,9 +131,7 @@ class TestBarProjectCLI:
 
     def test_project_cli_vertical(self) -> None:
         """Vertical bar uses newlines."""
-        widget = BarWidget(
-            BarState(value=0.5, width=4, orientation="vertical", style="solid")
-        )
+        widget = BarWidget(BarState(value=0.5, width=4, orientation="vertical", style="solid"))
         result = widget.project(RenderTarget.CLI)
         assert "\n" in result
         lines = result.split("\n")
@@ -306,9 +305,16 @@ class TestBarProjectionLaws:
 
         def scale_value(s: BarState) -> BarState:
             return BarState(
-                value=min(1.0, s.value * 1.5), width=s.width, orientation=s.orientation,
-                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
-                t=s.t, label=s.label,
+                value=min(1.0, s.value * 1.5),
+                width=s.width,
+                orientation=s.orientation,
+                style=s.style,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
             )
 
         def identity(s: BarState) -> BarState:
@@ -323,16 +329,30 @@ class TestBarProjectionLaws:
 
         def change_style(s: BarState) -> BarState:
             return BarState(
-                value=s.value, width=s.width, orientation=s.orientation,
-                style="gradient", fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
-                t=s.t, label=s.label,
+                value=s.value,
+                width=s.width,
+                orientation=s.orientation,
+                style="gradient",
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
             )
 
         def add_label(s: BarState) -> BarState:
             return BarState(
-                value=s.value, width=s.width, orientation=s.orientation,
-                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
-                t=s.t, label="Progress",
+                value=s.value,
+                width=s.width,
+                orientation=s.orientation,
+                style=s.style,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label="Progress",
             )
 
         widget = BarWidget(BarState(value=0.6, width=20, style="solid"))
@@ -358,9 +378,16 @@ class TestBarProjectionLaws:
 
         def increment_value(s: BarState) -> BarState:
             return BarState(
-                value=min(1.0, s.value + 0.1), width=s.width, orientation=s.orientation,
-                style=s.style, fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed,
-                t=s.t, label=s.label,
+                value=min(1.0, s.value + 0.1),
+                width=s.width,
+                orientation=s.orientation,
+                style=s.style,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
             )
 
         def identity(s: BarState) -> BarState:

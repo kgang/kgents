@@ -11,13 +11,14 @@ Verifies:
 from collections.abc import AsyncGenerator
 from typing import Any
 
+import pytest
+
 # Import modules to trigger auto-registration
 import agents.c.functor  # noqa: F401 - needed for registration
 import agents.d.state_monad  # noqa: F401 - needed for registration
 import agents.flux.functor  # noqa: F401 - needed for registration
 import agents.k.functor  # noqa: F401 - needed for registration
 import agents.o.observer_functor  # noqa: F401 - needed for registration
-import pytest
 from agents.a.functor import (
     FunctorRegistry,
     UniversalFunctor,
@@ -126,9 +127,7 @@ class TestFunctorRegistration:
                     functors_with_unlift += 1  # Other error, but has unlift
 
         # At least 4 new functors should have unlift (Maybe, Either, List, Observer, State, etc.)
-        assert functors_with_unlift >= 4, (
-            f"Only {functors_with_unlift} functors with unlift"
-        )
+        assert functors_with_unlift >= 4, f"Only {functors_with_unlift} functors with unlift"
 
 
 # =============================================================================
@@ -188,9 +187,7 @@ class TestFunctorComposition:
 
         # Observer(Maybe(agent))
         maybe_agent = MaybeFunctor.lift(DoubleAgent())
-        observed = UnifiedObserverFunctor.lift(
-            maybe_agent, sink=sink, non_blocking=False
-        )
+        observed = UnifiedObserverFunctor.lift(maybe_agent, sink=sink, non_blocking=False)
 
         result = await observed.invoke(Just(5))
 
@@ -232,9 +229,7 @@ class TestCompositionMatrix:
 
         # Logged(agent) first, then Observer
         logged_agent = LoggedFunctor.lift(DoubleAgent())
-        observed = UnifiedObserverFunctor.lift(
-            logged_agent, sink=sink, non_blocking=False
-        )
+        observed = UnifiedObserverFunctor.lift(logged_agent, sink=sink, non_blocking=False)
 
         result = await observed.invoke(5)
 

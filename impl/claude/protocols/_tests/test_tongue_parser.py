@@ -11,6 +11,7 @@ Tests:
 """
 
 import pytest
+
 from protocols.tongue_parser import (
     TongueContext,
     TongueDocument,

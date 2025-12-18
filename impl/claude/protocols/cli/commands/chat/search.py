@@ -10,6 +10,7 @@ import json
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from protocols.agentese.chat.persistence import PersistedSession
     from protocols.cli.shared import InvocationContext
 
 

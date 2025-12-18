@@ -13,15 +13,16 @@ Navigation:
 
 from __future__ import annotations
 
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.screen import Screen
+from textual.widgets import Footer, Header, Static
+
 from agents.i.data.state import create_demo_flux_state
 from agents.i.screens.cockpit import CockpitScreen, create_demo_snapshot
 from agents.i.screens.flux import FluxScreen
 from agents.i.screens.loom import LoomScreen
 from agents.i.screens.mri import MRIScreen
-from textual.app import App, ComposeResult
-from textual.binding import Binding
-from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
 
 
 class MenuScreen(Screen[None]):

@@ -9,6 +9,7 @@ from collections.abc import Generator
 from pathlib import Path
 
 import pytest
+
 from agents.atelier.artisan import Choice, Piece, Provenance
 from agents.atelier.gallery.lineage import LineageGraph, LineageNode
 from agents.atelier.gallery.store import Gallery
@@ -23,9 +24,7 @@ class TestGallery:
         with tempfile.TemporaryDirectory() as tmpdir:
             yield Gallery(storage_path=Path(tmpdir))
 
-    def make_piece(
-        self, id: str = "test", inspirations: list[str] | None = None
-    ) -> Piece:
+    def make_piece(self, id: str = "test", inspirations: list[str] | None = None) -> Piece:
         """Create a test piece."""
         return Piece(
             id=id,
@@ -265,9 +264,7 @@ class TestLineageGraph:
         graph = LineageGraph()
 
         graph.add_piece(self.make_piece("root", artisan="Writer"))
-        graph.add_piece(
-            self.make_piece("child", artisan="Editor", inspirations=["root"])
-        )
+        graph.add_piece(self.make_piece("child", artisan="Editor", inspirations=["root"]))
 
         tree = graph.render_tree("root")
 

@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable
 
 import numpy as np
+
 from field.hdc_ops import DIMENSIONS
 from field.holographic import HolographicField
 from weave.event import Event
@@ -141,9 +142,7 @@ class Hypha:
         expected = self.generative_model.predict(ctx)
 
         # 2. SENSE
-        actual = (
-            observation if observation is not None else np.zeros(self.config.dimensions)
-        )
+        actual = observation if observation is not None else np.zeros(self.config.dimensions)
 
         # 3. ERROR
         self.free_energy_state = FreeEnergyState(
@@ -214,9 +213,7 @@ class Hypha:
         await self.weave.record(
             content={
                 "action": "explore",
-                "surprise": self.free_energy_state.surprise
-                if self.free_energy_state
-                else 0,
+                "surprise": self.free_energy_state.surprise if self.free_energy_state else 0,
             },
             source=self.id,
         )
@@ -243,9 +240,7 @@ class Hypha:
                     "action": "success",
                 }
             )
-            self.hologram.imprint(
-                success_pattern, strength=self.config.imprint_strength
-            )
+            self.hologram.imprint(success_pattern, strength=self.config.imprint_strength)
 
         # Record in Weave
         await self.weave.record(

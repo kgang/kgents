@@ -16,8 +16,7 @@ from typing import Any, TypeVar
 
 # Hypothesis imports are optional
 try:
-    from hypothesis import assume, given, settings
-    from hypothesis import strategies as st
+    from hypothesis import assume, given, settings, strategies as st
 
     HYPOTHESIS_AVAILABLE = True
 except ImportError:
@@ -148,9 +147,7 @@ if HYPOTHESIS_AVAILABLE:
                 st.floats(allow_nan=False),
                 st.text(max_size=100),
                 st.lists(st.integers(), max_size=10),
-                st.dictionaries(
-                    st.text(min_size=1, max_size=20), st.integers(), max_size=5
-                ),
+                st.dictionaries(st.text(min_size=1, max_size=20), st.integers(), max_size=5),
             )
         )
 

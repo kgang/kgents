@@ -26,13 +26,14 @@ from textual.widgets import Footer, Header, ProgressBar, Static
 from .base import KgentsScreen
 
 if TYPE_CHECKING:
+    from agents.m.compaction import Compactor
+    from agents.m.crystallization_integration import CrystallizationEvent
+
     from agents.m import (
         Allocation,
         CategoricalRouter,
         SharedSubstrate,
     )
-    from agents.m.compaction import Compactor
-    from agents.m.crystallization_integration import CrystallizationEvent
 
 
 # =============================================================================
@@ -175,14 +176,12 @@ class GradientHeatmapWidget(Static):
         lines = ["[bold]Routing Gradients[/]\n"]
 
         # Sort by intensity (descending)
-        sorted_gradients = sorted(
-            self._gradients, key=lambda g: g.intensity, reverse=True
-        )[:10]  # Top 10
+        sorted_gradients = sorted(self._gradients, key=lambda g: g.intensity, reverse=True)[
+            :10
+        ]  # Top 10
 
         # Find max intensity for normalization
-        max_intensity = (
-            max(g.intensity for g in sorted_gradients) if sorted_gradients else 1.0
-        )
+        max_intensity = max(g.intensity for g in sorted_gradients) if sorted_gradients else 1.0
 
         for g in sorted_gradients:
             # Normalize intensity for color
@@ -233,9 +232,7 @@ class CompactionTimelineWidget(Static):
         lines = ["[bold]Compaction Timeline[/]\n"]
 
         # Most recent first
-        sorted_events = sorted(self._events, key=lambda e: e.timestamp, reverse=True)[
-            :5
-        ]  # Last 5
+        sorted_events = sorted(self._events, key=lambda e: e.timestamp, reverse=True)[:5]  # Last 5
 
         for e in sorted_events:
             # Calculate compression ratio
@@ -291,9 +288,7 @@ class CrystallizationTimelineWidget(Static):
         lines = ["[bold]Crystallization Events[/]\n"]
 
         # Most recent first
-        sorted_events = sorted(self._events, key=lambda e: e.timestamp, reverse=True)[
-            :5
-        ]  # Last 5
+        sorted_events = sorted(self._events, key=lambda e: e.timestamp, reverse=True)[:5]  # Last 5
 
         for e in sorted_events:
             # Time ago
@@ -727,9 +722,7 @@ class SubstrateScreen(KgentsScreen):
 
     def action_show_promotions(self) -> None:
         """Show promotion-eligible allocations."""
-        eligible = [
-            a for a in self.allocations if a.at_soft_limit and not a.is_dedicated
-        ]
+        eligible = [a for a in self.allocations if a.at_soft_limit and not a.is_dedicated]
         if eligible:
             names = ", ".join(a.agent_id for a in eligible)
             self.notify(f"Promotion candidates: {names}")

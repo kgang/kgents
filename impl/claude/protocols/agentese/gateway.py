@@ -83,9 +83,11 @@ def _import_node_modules() -> None:
         # These are the authoritative implementations with persistence layers
         try:
             from services.town import (
+                coalition_node,  # noqa: F401  # world.town.coalition.*
                 inhabit_node,  # noqa: F401  # world.town.inhabit.*
+                node as town_node,  # noqa: F401  # world.town.*
+                workshop_node,  # noqa: F401  # world.town.workshop.*
             )
-            from services.town import node as town_node  # noqa: F401  # world.town.*
         except ImportError as e:
             logger.debug(f"Could not import town nodes: {e}")
 
@@ -124,6 +126,15 @@ def _import_node_modules() -> None:
             from services.park import node as park_node  # noqa: F401  # world.park.*
         except ImportError as e:
             logger.debug(f"Could not import park node: {e}")
+
+        # === Garden Protocol nodes (Next-generation planning) ===
+        try:
+            from protocols.garden import (
+                node as garden_node,  # noqa: F401  # self.forest.plan.*
+                session as garden_session,  # noqa: F401  # self.forest.session.*
+            )
+        except ImportError as e:
+            logger.debug(f"Could not import garden nodes: {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
@@ -175,11 +186,7 @@ def _to_json_safe(obj: Any) -> Any:
     if hasattr(obj, "to_dict"):
         return obj.to_dict()
     if hasattr(obj, "__dict__"):
-        return {
-            k: _to_json_safe(v)
-            for k, v in obj.__dict__.items()
-            if not k.startswith("_")
-        }
+        return {k: _to_json_safe(v) for k, v in obj.__dict__.items() if not k.startswith("_")}
     return str(obj)
 
 
@@ -193,9 +200,7 @@ def _extract_observer(request: "Request") -> Observer:
     """
     archetype = request.headers.get("X-Observer-Archetype", "guest")
     capabilities_str = request.headers.get("X-Observer-Capabilities", "")
-    capabilities = frozenset(
-        c.strip() for c in capabilities_str.split(",") if c.strip()
-    )
+    capabilities = frozenset(c.strip() for c in capabilities_str.split(",") if c.strip())
 
     return Observer(archetype=archetype, capabilities=capabilities)
 
@@ -339,9 +344,7 @@ class AgenteseGateway:
                 kwargs = {}
 
             try:
-                result = await self._invoke_path(
-                    agentese_path, aspect, observer, **kwargs
-                )
+                result = await self._invoke_path(agentese_path, aspect, observer, **kwargs)
                 return JSONResponse(
                     content={
                         "path": agentese_path,
@@ -367,9 +370,7 @@ class AgenteseGateway:
                 agentese_path = path.replace("/", ".")
 
                 try:
-                    result = await self._invoke_path(
-                        agentese_path, aspect, observer, _stream=True
-                    )
+                    result = await self._invoke_path(agentese_path, aspect, observer, _stream=True)
 
                     # If result is an async generator, stream it
                     if hasattr(result, "__aiter__"):
@@ -422,9 +423,7 @@ class AgenteseGateway:
                             obs_data = data["observer"]
                             observer = Observer(
                                 archetype=obs_data.get("archetype", "guest"),
-                                capabilities=frozenset(
-                                    obs_data.get("capabilities", [])
-                                ),
+                                capabilities=frozenset(obs_data.get("capabilities", [])),
                             )
 
                         # Invoke and send result

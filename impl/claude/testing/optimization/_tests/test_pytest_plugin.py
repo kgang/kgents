@@ -15,6 +15,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from testing.optimization import RefinementTracker, TestTier
 from testing.optimization.pytest_plugin import (
     TestOptimizationPlugin,
@@ -38,9 +39,7 @@ class TestPluginOptions:
         pytest_addoption(parser)
 
         # Verify group was created
-        parser.getgroup.assert_called_once_with(
-            "optimization", "Test optimization options"
-        )
+        parser.getgroup.assert_called_once_with("optimization", "Test optimization options")
 
         # Verify options were added
         assert group.addoption.call_count >= 2
@@ -140,14 +139,10 @@ class TestOptimizationPluginUnit:
         )
 
         # Fast test (100ms-1s)
-        plugin.pytest_runtest_logreport(
-            MagicMock(when="call", nodeid="test_fast", duration=0.5)
-        )
+        plugin.pytest_runtest_logreport(MagicMock(when="call", nodeid="test_fast", duration=0.5))
 
         # Slow test (5s-30s)
-        plugin.pytest_runtest_logreport(
-            MagicMock(when="call", nodeid="test_slow", duration=10.0)
-        )
+        plugin.pytest_runtest_logreport(MagicMock(when="call", nodeid="test_slow", duration=10.0))
 
         assert plugin.tier_counts["instant"] == 1
         assert plugin.tier_counts["fast"] == 1
@@ -230,9 +225,7 @@ class TestSessionFinish:
         plugin = TestOptimizationPlugin(config)
 
         # Add some test data
-        plugin.pytest_runtest_logreport(
-            MagicMock(when="call", nodeid="test_fast", duration=0.5)
-        )
+        plugin.pytest_runtest_logreport(MagicMock(when="call", nodeid="test_fast", duration=0.5))
 
         plugin.pytest_sessionfinish(MagicMock(), 0)
 
@@ -257,8 +250,7 @@ class TestConfigureHook:
         config.pluginmanager.register.assert_called()
         call_args = config.pluginmanager.register.call_args
         assert (
-            call_args[1] == {"name": "test_optimization"}
-            or call_args[0][1] == "test_optimization"
+            call_args[1] == {"name": "test_optimization"} or call_args[0][1] == "test_optimization"
         )
 
     def test_configure_skips_when_disabled(self) -> None:

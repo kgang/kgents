@@ -73,9 +73,7 @@ DISPUTE_METABOLICS = OperationMetabolics(token_cost=600, drama_potential=0.8)
 CELEBRATE_METABOLICS = OperationMetabolics(
     token_cost=400, drama_potential=0.2, scales_with_arity=True
 )
-MOURN_METABOLICS = OperationMetabolics(
-    token_cost=500, drama_potential=0.5, scales_with_arity=True
-)
+MOURN_METABOLICS = OperationMetabolics(token_cost=500, drama_potential=0.5, scales_with_arity=True)
 TEACH_METABOLICS = OperationMetabolics(token_cost=800, drama_potential=0.2)
 
 
@@ -310,6 +308,82 @@ def _teach_compose(
 
 
 # =============================================================================
+# Coalition Operations (Town Renaissance)
+# =============================================================================
+
+
+COALITION_FORM_METABOLICS = OperationMetabolics(
+    token_cost=700, drama_potential=0.5, scales_with_arity=True
+)
+COALITION_DISSOLVE_METABOLICS = OperationMetabolics(token_cost=300, drama_potential=0.6)
+
+
+def _coalition_form_compose(
+    *citizens: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a coalition formation.
+
+    CoalitionForm: Citizen* → Coalition
+
+    Multiple citizens form a coalition with shared purpose.
+    Requires minimum 3 citizens (k-clique basis).
+    Triggers SynergyBus event for cross-jewel coordination.
+    """
+    if len(citizens) < 3:
+        raise ValueError("Coalition formation requires at least 3 citizens")
+
+    names = [c.name for c in citizens]
+
+    def coalition_form_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "coalition_form",
+            "members": names,
+            "input": input,
+            "metabolics": {
+                "tokens": COALITION_FORM_METABOLICS.estimate_tokens(len(citizens)),
+                "drama": COALITION_FORM_METABOLICS.drama_potential,
+            },
+            "effects": {
+                "coalition_created": True,
+                "trust_boost": +0.2,
+                "synergy_event": "town.social.coalition.formed",
+            },
+        }
+
+    return from_function(f"coalition_form({','.join(names)})", coalition_form_fn)
+
+
+def _coalition_dissolve_compose(
+    coalition: PolyAgent[Any, Any, Any],
+) -> PolyAgent[Any, Any, Any]:
+    """
+    Compose a coalition dissolution.
+
+    CoalitionDissolve: Coalition → Void
+
+    Coalition disbands. May be due to decay, conflict, or completion.
+    """
+
+    def dissolve_fn(input: Any) -> dict[str, Any]:
+        return {
+            "operation": "coalition_dissolve",
+            "coalition": coalition.name,
+            "input": input,
+            "metabolics": {
+                "tokens": COALITION_DISSOLVE_METABOLICS.token_cost,
+                "drama": COALITION_DISSOLVE_METABOLICS.drama_potential,
+            },
+            "effects": {
+                "coalition_dissolved": True,
+                "synergy_event": "town.social.coalition.dissolved",
+            },
+        }
+
+    return from_function(f"coalition_dissolve({coalition.name})", dissolve_fn)
+
+
+# =============================================================================
 # Town Laws
 # =============================================================================
 
@@ -457,6 +531,23 @@ def create_town_operad() -> Operad:
         signature="Citizen × Citizen → SkillTransfer",
         compose=_teach_compose,
         description="Skill transfer from teacher to student (Phase 2)",
+    )
+
+    # Coalition operations (Town Renaissance)
+    ops["coalition_form"] = Operation(
+        name="coalition_form",
+        arity=-1,  # Variable arity (min 3)
+        signature="Citizen* → Coalition",
+        compose=_coalition_form_compose,
+        description="Form coalition from 3+ citizens (Town Renaissance)",
+    )
+
+    ops["coalition_dissolve"] = Operation(
+        name="coalition_dissolve",
+        arity=1,
+        signature="Coalition → Void",
+        compose=_coalition_dissolve_compose,
+        description="Dissolve an existing coalition (Town Renaissance)",
     )
 
     # Inherit universal laws and add town-specific ones
@@ -623,6 +714,9 @@ __all__ = [
     "CELEBRATE_METABOLICS",
     "MOURN_METABOLICS",
     "TEACH_METABOLICS",
+    # Coalition Metabolics (Town Renaissance)
+    "COALITION_FORM_METABOLICS",
+    "COALITION_DISSOLVE_METABOLICS",
     # Operad
     "TOWN_OPERAD",
     "create_town_operad",

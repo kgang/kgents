@@ -14,6 +14,7 @@ import asyncio
 from datetime import datetime
 
 import pytest
+
 from agents.poly.types import Err, Ok
 from agents.u.core import Tool, ToolError, ToolErrorType, ToolMeta
 from agents.u.executor import (
@@ -260,9 +261,7 @@ async def test_circuit_breaker_half_open_after_timeout() -> None:
 async def test_circuit_breaker_closes_after_successes() -> None:
     """Test circuit breaker closes after success threshold in HALF_OPEN."""
     tool = FailingTool(fail_count=3, error_type=ToolErrorType.NETWORK)
-    config = CircuitBreakerConfig(
-        failure_threshold=3, success_threshold=2, timeout_seconds=1
-    )
+    config = CircuitBreakerConfig(failure_threshold=3, success_threshold=2, timeout_seconds=1)
     circuit = CircuitBreakerTool(tool, config)
 
     # Open circuit
@@ -400,9 +399,7 @@ async def test_retry_executor_no_retry_on_non_recoverable() -> None:
 async def test_retry_executor_exponential_backoff() -> None:
     """Test RetryExecutor uses exponential backoff."""
     tool = AlwaysFailingTool(ToolErrorType.NETWORK)
-    config = RetryConfig(
-        max_attempts=4, initial_delay_ms=100, backoff_multiplier=2.0, jitter=False
-    )
+    config = RetryConfig(max_attempts=4, initial_delay_ms=100, backoff_multiplier=2.0, jitter=False)
     executor = RetryExecutor(tool, config)
 
     start = datetime.now()

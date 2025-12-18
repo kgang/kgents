@@ -7,6 +7,7 @@ Verifies tree construction, traversal, and the Shadow (ghost branches).
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.i.data.loom import CognitiveBranch, CognitiveTree
 
 
@@ -562,9 +563,7 @@ class TestCognitiveTreeNavigation:
         assert branching_tree.navigate_left() is True
         assert branching_tree.current_id == "selected"  # First sibling
 
-    def test_navigate_left_from_first_fails(
-        self, branching_tree: CognitiveTree
-    ) -> None:
+    def test_navigate_left_from_first_fails(self, branching_tree: CognitiveTree) -> None:
         """Cannot navigate left from first sibling."""
         branching_tree.current_id = "selected"  # First sibling
         assert branching_tree.navigate_left() is False
@@ -576,9 +575,7 @@ class TestCognitiveTreeNavigation:
         assert branching_tree.navigate_right() is True
         assert branching_tree.current_id == "ghost"  # Second sibling
 
-    def test_navigate_right_from_last_fails(
-        self, branching_tree: CognitiveTree
-    ) -> None:
+    def test_navigate_right_from_last_fails(self, branching_tree: CognitiveTree) -> None:
         """Cannot navigate right from last sibling."""
         branching_tree.current_id = "ghost"  # Last sibling
         assert branching_tree.navigate_right() is False

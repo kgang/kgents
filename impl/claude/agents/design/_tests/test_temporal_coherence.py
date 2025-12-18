@@ -15,6 +15,8 @@ coherence can ensure temporal coherence.
 import time
 
 import pytest
+from hypothesis import assume, given, settings, strategies as st
+
 from agents.design import (
     AnimationConstraint,
     AnimationPhase,
@@ -31,8 +33,6 @@ from agents.design.sheaf import (
     create_design_sheaf_with_hierarchy,
     create_widget_context,
 )
-from hypothesis import assume, given, settings
-from hypothesis import strategies as st
 
 # =============================================================================
 # Test Fixtures
@@ -132,9 +132,7 @@ class TestAnimationPhase:
 class TestTemporalOverlap:
     """Tests for sheaf temporal_overlap() method."""
 
-    def test_non_siblings_no_overlap(
-        self, sibling_sheaf: DesignSheaf, now: float
-    ) -> None:
+    def test_non_siblings_no_overlap(self, sibling_sheaf: DesignSheaf, now: float) -> None:
         """Non-sibling contexts don't get temporal overlap."""
         nav = sibling_sheaf.get_context("nav")  # under sidebar
         content = sibling_sheaf.get_context("content")  # under main
@@ -146,9 +144,7 @@ class TestTemporalOverlap:
         overlap = sibling_sheaf.temporal_overlap(nav, state1, content, state2)
         assert overlap is None
 
-    def test_siblings_without_animation_no_overlap(
-        self, sibling_sheaf: DesignSheaf
-    ) -> None:
+    def test_siblings_without_animation_no_overlap(self, sibling_sheaf: DesignSheaf) -> None:
         """Siblings without animation phases don't overlap."""
         sidebar = sibling_sheaf.get_context("sidebar")
         main = sibling_sheaf.get_context("main")
@@ -176,9 +172,7 @@ class TestTemporalOverlap:
         assert overlap.contexts == ("sidebar", "main")
         assert overlap.sync_strategy == SyncStrategy.STAGGER
 
-    def test_siblings_sequential_no_overlap(
-        self, sibling_sheaf: DesignSheaf, now: float
-    ) -> None:
+    def test_siblings_sequential_no_overlap(self, sibling_sheaf: DesignSheaf, now: float) -> None:
         """Siblings animating sequentially don't overlap."""
         sidebar = sibling_sheaf.get_context("sidebar")
         main = sibling_sheaf.get_context("main")
@@ -203,27 +197,20 @@ class TestSyncStrategyInference:
         """Entering + exiting = STAGGER."""
         phase1 = AnimationPhase("entering", 0.0, 100.0, 0.3)
         phase2 = AnimationPhase("exiting", 0.0, 100.0, 0.3)
-        assert (
-            sibling_sheaf._infer_sync_strategy(phase1, phase2) == SyncStrategy.STAGGER
-        )
+        assert sibling_sheaf._infer_sync_strategy(phase1, phase2) == SyncStrategy.STAGGER
 
     def test_exiting_entering_stagger(self, sibling_sheaf: DesignSheaf) -> None:
         """Exiting + entering = STAGGER (symmetric)."""
         phase1 = AnimationPhase("exiting", 0.0, 100.0, 0.3)
         phase2 = AnimationPhase("entering", 0.0, 100.0, 0.3)
-        assert (
-            sibling_sheaf._infer_sync_strategy(phase1, phase2) == SyncStrategy.STAGGER
-        )
+        assert sibling_sheaf._infer_sync_strategy(phase1, phase2) == SyncStrategy.STAGGER
 
     def test_same_phase_lock_step(self, sibling_sheaf: DesignSheaf) -> None:
         """Same phase = LOCK_STEP."""
         for phase_name in ["entering", "active", "exiting", "idle"]:
             phase1 = AnimationPhase(phase_name, 0.0, 100.0, 0.3)  # type: ignore
             phase2 = AnimationPhase(phase_name, 0.0, 100.0, 0.3)  # type: ignore
-            assert (
-                sibling_sheaf._infer_sync_strategy(phase1, phase2)
-                == SyncStrategy.LOCK_STEP
-            )
+            assert sibling_sheaf._infer_sync_strategy(phase1, phase2) == SyncStrategy.LOCK_STEP
 
     def test_active_with_other_interpolate(self, sibling_sheaf: DesignSheaf) -> None:
         """Active + any = INTERPOLATE_BOUNDARY."""
@@ -247,9 +234,7 @@ class TestSyncStrategyInference:
 class TestGlueWithConstraints:
     """Tests for glue_with_constraints() method."""
 
-    def test_no_constraints_without_animations(
-        self, sibling_sheaf: DesignSheaf
-    ) -> None:
+    def test_no_constraints_without_animations(self, sibling_sheaf: DesignSheaf) -> None:
         """No constraints when no animation phases."""
         sidebar = sibling_sheaf.get_context("sidebar")
         main = sibling_sheaf.get_context("main")
@@ -299,9 +284,7 @@ class TestGlueWithConstraints:
         assert constraint.involves("main")
         assert not constraint.involves("footer")
 
-    def test_multiple_sibling_pairs(
-        self, sibling_sheaf: DesignSheaf, now: float
-    ) -> None:
+    def test_multiple_sibling_pairs(self, sibling_sheaf: DesignSheaf, now: float) -> None:
         """Multiple sibling pairs can each produce constraints."""
         nav = sibling_sheaf.get_context("nav")  # under sidebar
         actions = sibling_sheaf.get_context("actions")  # under sidebar
@@ -363,9 +346,7 @@ class TestTemporalCoherenceProperties:
 
     @given(phase_names, phase_names)
     @settings(max_examples=50)
-    def test_sync_strategy_deterministic(
-        self, phase1_name: str, phase2_name: str
-    ) -> None:
+    def test_sync_strategy_deterministic(self, phase1_name: str, phase2_name: str) -> None:
         """Same phase names always produce same strategy."""
         sheaf = create_design_sheaf_with_hierarchy(containers=["a"], widgets={})
         phase1 = AnimationPhase(phase1_name, 0.5, 100.0, 0.3)  # type: ignore
@@ -385,9 +366,7 @@ class TestTemporalCoherenceProperties:
 
         phase1 = AnimationPhase("entering", 0.5, base_time, duration1)
         # Phase 2 starts after phase 1 ends
-        phase2 = AnimationPhase(
-            "entering", 0.5, base_time + duration1 + 0.001, duration2
-        )
+        phase2 = AnimationPhase("entering", 0.5, base_time + duration1 + 0.001, duration2)
 
         assert not phase1.overlaps_temporally(phase2)
 

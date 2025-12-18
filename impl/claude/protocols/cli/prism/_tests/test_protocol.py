@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
+
 from protocols.cli.prism import CLICapable
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.l.advanced_lattice import (
     AdvancedLattice,
     CachedLattice,
@@ -208,12 +209,8 @@ class TestAdvancedLatticeIntersections:
 
     def test_intersection_subtyping(self, advanced_lattice: AdvancedLattice) -> None:
         """Intersection is subtype of each member."""
-        advanced_lattice.register_type(
-            TypeNode(id="A", kind=TypeKind.CONTRACT, name="A")
-        )
-        advanced_lattice.register_type(
-            TypeNode(id="B", kind=TypeKind.CONTRACT, name="B")
-        )
+        advanced_lattice.register_type(TypeNode(id="A", kind=TypeKind.CONTRACT, name="A"))
+        advanced_lattice.register_type(TypeNode(id="B", kind=TypeKind.CONTRACT, name="B"))
 
         inter_id = advanced_lattice.create_intersection("A", "B")
 
@@ -224,17 +221,13 @@ class TestAdvancedLatticeIntersections:
 class TestNormalization:
     """Tests for type normalization."""
 
-    def test_normalize_union_removes_never(
-        self, advanced_lattice: AdvancedLattice
-    ) -> None:
+    def test_normalize_union_removes_never(self, advanced_lattice: AdvancedLattice) -> None:
         """Never is removed from unions."""
         result = advanced_lattice.normalize("str | Never")
 
         assert result == "str"
 
-    def test_normalize_intersection_removes_any(
-        self, advanced_lattice: AdvancedLattice
-    ) -> None:
+    def test_normalize_intersection_removes_any(self, advanced_lattice: AdvancedLattice) -> None:
         """Any is removed from intersections."""
         result = advanced_lattice.normalize("str & Any")
 
@@ -259,12 +252,8 @@ class TestVarianceChecking:
 
     def test_covariant(self, advanced_lattice: AdvancedLattice) -> None:
         """Covariant position allows subtyping."""
-        advanced_lattice.register_type(
-            TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal")
-        )
-        advanced_lattice.register_type(
-            TypeNode(id="Cat", kind=TypeKind.RECORD, name="Cat")
-        )
+        advanced_lattice.register_type(TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal"))
+        advanced_lattice.register_type(TypeNode(id="Cat", kind=TypeKind.RECORD, name="Cat"))
         advanced_lattice.add_subtype_edge(
             SubtypeEdge(subtype_id="Cat", supertype_id="Animal", reason="Cat is Animal")
         )
@@ -273,20 +262,14 @@ class TestVarianceChecking:
 
     def test_contravariant(self, advanced_lattice: AdvancedLattice) -> None:
         """Contravariant position reverses subtyping."""
-        advanced_lattice.register_type(
-            TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal")
-        )
-        advanced_lattice.register_type(
-            TypeNode(id="Cat", kind=TypeKind.RECORD, name="Cat")
-        )
+        advanced_lattice.register_type(TypeNode(id="Animal", kind=TypeKind.RECORD, name="Animal"))
+        advanced_lattice.register_type(TypeNode(id="Cat", kind=TypeKind.RECORD, name="Cat"))
         advanced_lattice.add_subtype_edge(
             SubtypeEdge(subtype_id="Cat", supertype_id="Animal", reason="Cat is Animal")
         )
 
         # In contravariant position, Animal ≤ Cat (reversed)
-        assert advanced_lattice.check_variance(
-            "Callable", "Animal", "Cat", "contravariant"
-        )
+        assert advanced_lattice.check_variance("Callable", "Animal", "Cat", "contravariant")
 
     def test_invariant(self, advanced_lattice: AdvancedLattice) -> None:
         """Invariant position requires exact match."""
@@ -297,9 +280,7 @@ class TestVarianceChecking:
 class TestStructuralSubtyping:
     """Tests for structural subtyping."""
 
-    def test_record_subtype_has_all_fields(
-        self, advanced_lattice: AdvancedLattice
-    ) -> None:
+    def test_record_subtype_has_all_fields(self, advanced_lattice: AdvancedLattice) -> None:
         """Record subtype must have all fields."""
         advanced_lattice.register_type(
             TypeNode(
@@ -323,9 +304,7 @@ class TestStructuralSubtyping:
         # Point doesn't have z, so it's not a subtype of Point3D
         assert not advanced_lattice.is_structural_subtype("Point", "Point3D")
 
-    def test_record_subtype_field_types(
-        self, advanced_lattice: AdvancedLattice
-    ) -> None:
+    def test_record_subtype_field_types(self, advanced_lattice: AdvancedLattice) -> None:
         """Record subtype fields must have compatible types."""
         advanced_lattice.register_type(
             TypeNode(
@@ -358,9 +337,7 @@ class TestMeetJoinWithUnions:
         # Should create union since no common supertype (except Any)
         assert " | " in result or result == "Any"
 
-    def test_meet_with_union_distributes(
-        self, advanced_lattice: AdvancedLattice
-    ) -> None:
+    def test_meet_with_union_distributes(self, advanced_lattice: AdvancedLattice) -> None:
         """Meet distributes over union."""
         # Create union
         union = advanced_lattice.create_union("str", "int")

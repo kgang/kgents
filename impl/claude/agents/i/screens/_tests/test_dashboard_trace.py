@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.i.data.dashboard_collectors import (
     DashboardMetrics,
     TraceAnalysisMetrics,

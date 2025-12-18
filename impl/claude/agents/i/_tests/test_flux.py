@@ -12,6 +12,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from agents.i.data.state import (
     AgentSnapshot,
     FluxState,
@@ -113,9 +114,7 @@ class TestDensityCharacters:
     def test_position_affects_density(self) -> None:
         """Different positions produce variation for texture."""
         # Same activity at different positions should vary
-        chars = {
-            activity_to_density_char(0.5, x, y) for x in range(5) for y in range(5)
-        }
+        chars = {activity_to_density_char(0.5, x, y) for x in range(5) for y in range(5)}
         # Should have some variation (not all the same)
         assert len(chars) > 1
 
@@ -1673,7 +1672,9 @@ class TestFD3Message:
 
     def test_from_json(self) -> None:
         """Message can be created from JSON."""
-        json_str = '{"type": "event", "payload": {"event": "startup"}, "timestamp": "2024-01-15T10:30:00"}'
+        json_str = (
+            '{"type": "event", "payload": {"event": "startup"}, "timestamp": "2024-01-15T10:30:00"}'
+        )
         msg = FD3Message.from_json(json_str)
 
         assert msg.type == "event"

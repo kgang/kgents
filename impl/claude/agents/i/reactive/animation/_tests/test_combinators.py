@@ -1,6 +1,7 @@
 """Tests for animation combinators (Sequence, Parallel)."""
 
 import pytest
+
 from agents.i.reactive.animation.combinators import (
     CombinatorState,
     Parallel,

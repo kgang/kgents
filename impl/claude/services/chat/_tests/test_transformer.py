@@ -5,17 +5,18 @@ Per spec/protocols/chat-morpheus-synergy.md Part II §2.3:
 Transform functions are natural transformations between Chat and Morpheus categories.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
-from services.chat.transformer import (
-    to_morpheus_request,
-    from_morpheus_response,
-    extract_usage,
-    to_streaming_request,
-)
+import pytest
+
 from services.chat.model_selector import MorpheusConfig
 from services.chat.session import Message
+from services.chat.transformer import (
+    extract_usage,
+    from_morpheus_response,
+    to_morpheus_request,
+    to_streaming_request,
+)
 
 
 @pytest.fixture
@@ -96,9 +97,7 @@ class TestFromMorpheusResponse:
     def test_extracts_content(self) -> None:
         """Extract content from result."""
         result = MagicMock()
-        result.response.choices = [
-            MagicMock(message=MagicMock(content="Hello from Claude!"))
-        ]
+        result.response.choices = [MagicMock(message=MagicMock(content="Hello from Claude!"))]
 
         content = from_morpheus_response(result)
 

@@ -24,6 +24,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
@@ -230,9 +231,7 @@ class TestJITToolWrapper:
         assert tool.name == "simple"
 
     @pytest.mark.asyncio
-    async def test_wrapper_invoke_success(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_wrapper_invoke_success(self, simple_tool_source: AgentSource) -> None:
         """Test wrapper invocation returns Result.Ok on success."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -287,9 +286,7 @@ class FailingTool:
         assert tool.meta.identity.name == "test"
 
     @pytest.mark.asyncio
-    async def test_wrapper_jit_tool_meta_property(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_wrapper_jit_tool_meta_property(self, simple_tool_source: AgentSource) -> None:
         """Test wrapper jit_tool_meta property."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -321,9 +318,7 @@ class TestCreateToolFromSource:
         assert tool.name == "basic"
 
     @pytest.mark.asyncio
-    async def test_creation_with_custom_sandbox(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_creation_with_custom_sandbox(self, simple_tool_source: AgentSource) -> None:
         """Test tool creation with custom sandbox config."""
         custom_config = SandboxConfig(
             timeout_seconds=5.0,
@@ -340,9 +335,7 @@ class TestCreateToolFromSource:
         assert tool.jit_tool_meta.jit_meta.sandbox_config == custom_config
 
     @pytest.mark.asyncio
-    async def test_stability_score_computed(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_stability_score_computed(self, simple_tool_source: AgentSource) -> None:
         """Test that stability score is computed."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -363,9 +356,7 @@ class TestCompileToolFromTemplate:
     """Tests for compile_tool_from_template function."""
 
     @pytest.mark.asyncio
-    async def test_basic_template_compilation(
-        self, custom_template: ToolTemplate
-    ) -> None:
+    async def test_basic_template_compilation(self, custom_template: ToolTemplate) -> None:
         """Test basic template compilation."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -373,9 +364,7 @@ class TestCompileToolFromTemplate:
         assert tool.jit_tool_meta.template == custom_template
 
     @pytest.mark.asyncio
-    async def test_template_with_parameters(
-        self, custom_template: ToolTemplate
-    ) -> None:
+    async def test_template_with_parameters(self, custom_template: ToolTemplate) -> None:
         """Test template compilation with custom parameters."""
         tool = await compile_tool_from_template(
             custom_template,
@@ -387,9 +376,7 @@ class TestCompileToolFromTemplate:
         assert result.unwrap() == "CUSTOM: test"
 
     @pytest.mark.asyncio
-    async def test_template_default_parameters(
-        self, custom_template: ToolTemplate
-    ) -> None:
+    async def test_template_default_parameters(self, custom_template: ToolTemplate) -> None:
         """Test template uses default parameters."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -804,9 +791,7 @@ class TestMetadataProvenance:
     """Tests for metadata and provenance tracking."""
 
     @pytest.mark.asyncio
-    async def test_template_preserved_in_meta(
-        self, custom_template: ToolTemplate
-    ) -> None:
+    async def test_template_preserved_in_meta(self, custom_template: ToolTemplate) -> None:
         """Test that template is preserved in JITToolMeta."""
         tool = await compile_tool_from_template(custom_template)
 
@@ -814,9 +799,7 @@ class TestMetadataProvenance:
         assert tool.jit_tool_meta.template.name == "Custom Echo"
 
     @pytest.mark.asyncio
-    async def test_source_preserved_in_meta(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_source_preserved_in_meta(self, simple_tool_source: AgentSource) -> None:
         """Test that source is preserved in metadata chain."""
         tool = await create_tool_from_source(
             source=simple_tool_source,
@@ -900,9 +883,7 @@ class TestTGentsTypeIntegration:
     """Tests for integration with T-gents type system."""
 
     @pytest.mark.asyncio
-    async def test_tool_returns_result_monad(
-        self, simple_tool_source: AgentSource
-    ) -> None:
+    async def test_tool_returns_result_monad(self, simple_tool_source: AgentSource) -> None:
         """Test that JIT tools return Result monad."""
         tool = await create_tool_from_source(
             source=simple_tool_source,

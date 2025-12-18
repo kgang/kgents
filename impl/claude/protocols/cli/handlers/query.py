@@ -61,18 +61,21 @@ def _discover_paths() -> list[str]:
     # 1. From thin handler routing tables
     try:
         from protocols.cli.handlers.brain_thin import BRAIN_SUBCOMMAND_TO_PATH
+
         paths.update(BRAIN_SUBCOMMAND_TO_PATH.values())
     except ImportError:
         pass
 
     try:
         from protocols.cli.handlers.soul_thin import SOUL_SUBCOMMAND_TO_PATH
+
         paths.update(SOUL_SUBCOMMAND_TO_PATH.values())
     except ImportError:
         pass
 
     try:
         from protocols.cli.handlers.town_thin import TOWN_SUBCOMMAND_TO_PATH
+
         paths.update(TOWN_SUBCOMMAND_TO_PATH.values())
     except ImportError:
         pass
@@ -82,6 +85,7 @@ def _discover_paths() -> list[str]:
             MASK_SUBCOMMAND_TO_PATH,
             PARK_SUBCOMMAND_TO_PATH,
         )
+
         paths.update(PARK_SUBCOMMAND_TO_PATH.values())
         paths.update(MASK_SUBCOMMAND_TO_PATH.values())
     except ImportError:
@@ -92,6 +96,7 @@ def _discover_paths() -> list[str]:
             ATELIER_SUBCOMMAND_TO_PATH,
             ATELIER_TWO_WORD_TO_PATH,
         )
+
         paths.update(ATELIER_SUBCOMMAND_TO_PATH.values())
         paths.update(ATELIER_TWO_WORD_TO_PATH.values())
     except ImportError:
@@ -99,6 +104,7 @@ def _discover_paths() -> list[str]:
 
     try:
         from protocols.cli.handlers.gardener_thin import GARDENER_SUBCOMMAND_TO_PATH
+
         paths.update(GARDENER_SUBCOMMAND_TO_PATH.values())
     except ImportError:
         pass
@@ -106,12 +112,14 @@ def _discover_paths() -> list[str]:
     # Non-thin handlers
     try:
         from protocols.cli.handlers.joy import JOY_SUBCOMMAND_MAP
+
         paths.update(JOY_SUBCOMMAND_MAP.values())
     except ImportError:
         pass
 
     try:
         from protocols.cli.handlers.forest import FOREST_SUBCOMMAND_MAP
+
         paths.update(FOREST_SUBCOMMAND_MAP.values())
     except ImportError:
         pass
@@ -119,6 +127,7 @@ def _discover_paths() -> list[str]:
     # 2. From Crown Jewels registry (comprehensive path collection)
     try:
         from protocols.agentese.contexts.crown_jewels import ALL_CROWN_JEWEL_PATHS
+
         paths.update(ALL_CROWN_JEWEL_PATHS.keys())
     except ImportError:
         pass
@@ -126,6 +135,7 @@ def _discover_paths() -> list[str]:
     # 3. From node registry (@node decorated classes)
     try:
         from protocols.agentese.registry import get_registry
+
         registry = get_registry()
         paths.update(registry.list_paths())
     except Exception:
@@ -134,6 +144,7 @@ def _discover_paths() -> list[str]:
     # 4. From help projector (path -> command mapping)
     try:
         from protocols.cli.help_projector import PATH_TO_COMMAND
+
         paths.update(PATH_TO_COMMAND.keys())
     except ImportError:
         pass
@@ -141,6 +152,7 @@ def _discover_paths() -> list[str]:
     # 5. Add base contexts (always valid)
     try:
         from protocols.agentese.contexts import VALID_CONTEXTS
+
         paths.update(VALID_CONTEXTS)
     except ImportError:
         paths.update({"world", "self", "concept", "void", "time"})
@@ -209,8 +221,8 @@ def _query_known_paths(
         matches = [p for p in known_paths if p == pattern or p.startswith(pattern + ".")]
 
     # Apply pagination
-    total = len(matches)
-    matches = matches[offset:offset + limit]
+    len(matches)
+    matches = matches[offset : offset + limit]
 
     return matches
 
@@ -328,6 +340,7 @@ def cmd_query(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         # Use the formatted output from query_help
         try:
             from protocols.cli.query_help import format_query_result
+
             formatted = format_query_result(result)
             print(formatted)
         except ImportError:

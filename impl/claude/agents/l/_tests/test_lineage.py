@@ -14,6 +14,7 @@ Comprehensive test coverage for:
 from __future__ import annotations
 
 import pytest
+
 from agents.l import (
     LineageError,
     LineageGraph,
@@ -157,9 +158,7 @@ async def test_has_edge(simple_graph: LineageGraph) -> None:
     """Test checking if edge exists."""
     assert await simple_graph.has_edge("v2.0", "v1.0", RelationshipType.SUCCESSOR_TO)
     assert await simple_graph.has_edge("v3.0", "v2.0", "successor_to")  # String variant
-    assert not await simple_graph.has_edge(
-        "v1.0", "v2.0", RelationshipType.SUCCESSOR_TO
-    )
+    assert not await simple_graph.has_edge("v1.0", "v2.0", RelationshipType.SUCCESSOR_TO)
 
 
 @pytest.mark.asyncio
@@ -237,9 +236,7 @@ async def test_get_relationships_by_target(complex_graph: LineageGraph) -> None:
 @pytest.mark.asyncio
 async def test_get_relationships_by_type(complex_graph: LineageGraph) -> None:
     """Test filtering relationships by type."""
-    rels = await complex_graph.get_relationships(
-        relationship_type=RelationshipType.FORKED_FROM
-    )
+    rels = await complex_graph.get_relationships(relationship_type=RelationshipType.FORKED_FROM)
     assert len(rels) == 1
     assert rels[0].source_id == "NewsScraper_v1.0"
     assert rels[0].target_id == "BaseScraper_v2.0"
@@ -393,9 +390,7 @@ async def test_deprecated_relationships_excluded_by_default(
     simple_graph: LineageGraph,
 ) -> None:
     """Test that deprecated relationships are excluded by default."""
-    await simple_graph.deprecate_relationship(
-        "v2.0", "v1.0", RelationshipType.SUCCESSOR_TO, "test"
-    )
+    await simple_graph.deprecate_relationship("v2.0", "v1.0", RelationshipType.SUCCESSOR_TO, "test")
 
     # Without include_deprecated, should not appear
     rels = await simple_graph.get_relationships(source_id="v2.0")

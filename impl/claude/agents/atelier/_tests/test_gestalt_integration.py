@@ -7,6 +7,7 @@ Wave 2: Extensions - Atelier uses Gestalt for code analysis.
 from __future__ import annotations
 
 import pytest
+
 from agents.atelier.gestalt_integration import (
     CodeIssue,
     GestaltArtifactAnalysis,

@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import AsyncGenerator
 
 import pytest
+
 from agents.d.backends.memory import MemoryBackend
 from agents.d.bus import DataBus, get_data_bus, reset_data_bus
 from agents.m.associative import AssociativeMemory

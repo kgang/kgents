@@ -14,6 +14,17 @@ Architecture (data-architecture-rewrite):
 Use DgentRouter for all persistence needs - it auto-selects the best backend.
 """
 
+# Adapters (Dual-Track Architecture)
+from .adapters import TableAdapter
+
+# Backends
+from .backends import (
+    JSONLBackend,
+    MemoryBackend,
+    PostgresBackend,
+    SQLiteBackend,
+)
+from .bus import BusEnabledDgent, DataBus, DataEvent, DataEventType
 from .datum import Datum
 
 # Errors
@@ -23,24 +34,6 @@ from .errors import (
     StateNotFoundError,
     StateSerializationError,
     StorageError,
-)
-
-# Protocols
-from .protocol import BaseDgent, DgentProtocol
-
-# Router and Bus
-from .router import Backend, BackendStatus, DgentRouter
-from .bus import BusEnabledDgent, DataBus, DataEvent, DataEventType
-
-# Auto-Upgrader
-from .upgrader import AutoUpgrader, DatumStats, UpgradePolicy, migrate_data, verify_migration
-
-# Backends
-from .backends import (
-    JSONLBackend,
-    MemoryBackend,
-    PostgresBackend,
-    SQLiteBackend,
 )
 
 # Optics (schema-at-read)
@@ -70,15 +63,27 @@ from .lens import (
     verify_traversal_laws,
 )
 from .lens_agent import LensAgent, focused
+from .persistent import PersistentAgent
 
-# Adapters (Dual-Track Architecture)
-from .adapters import TableAdapter
+# Protocols
+from .protocol import BaseDgent, DgentProtocol
+
+# Router and Bus
+from .router import Backend, BackendStatus, DgentRouter
+from .state_monad import StateMonadFunctor
+from .symbiont import Symbiont
+
+# Auto-Upgrader
+from .upgrader import (
+    AutoUpgrader,
+    DatumStats,
+    UpgradePolicy,
+    migrate_data,
+    verify_migration,
+)
 
 # Core stateful agents (NOT deprecated - actively used)
 from .volatile import VolatileAgent
-from .persistent import PersistentAgent
-from .symbiont import Symbiont
-from .state_monad import StateMonadFunctor
 
 # Legacy stubs removed - deprecated classes deleted:
 # - UnifiedMemory, MemoryConfig, MemoryLoadResponse

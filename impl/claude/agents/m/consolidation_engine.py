@@ -21,16 +21,16 @@ from __future__ import annotations
 import asyncio
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Callable, Awaitable
+from typing import TYPE_CHECKING, Awaitable, Callable
 
-from .memory import Lifecycle, Memory
-from .protocol import ConsolidationReport
 from .lifecycle import (
-    LifecycleManager,
     LifecycleEvent,
+    LifecycleManager,
     RelevancePolicy,
     ResolutionPolicy,
 )
+from .memory import Lifecycle, Memory
+from .protocol import ConsolidationReport
 
 if TYPE_CHECKING:
     from .associative import AssociativeMemory
@@ -138,17 +138,11 @@ class ConsolidationEngine:
         # Listeners for consolidation events
         self._listeners: list[Callable[[LifecycleEvent], Awaitable[None] | None]] = []
 
-    def add_listener(
-        self,
-        listener: Callable[[LifecycleEvent], Awaitable[None] | None]
-    ) -> None:
+    def add_listener(self, listener: Callable[[LifecycleEvent], Awaitable[None] | None]) -> None:
         """Add a listener for lifecycle events during consolidation."""
         self._listeners.append(listener)
 
-    def remove_listener(
-        self,
-        listener: Callable[[LifecycleEvent], Awaitable[None] | None]
-    ) -> None:
+    def remove_listener(self, listener: Callable[[LifecycleEvent], Awaitable[None] | None]) -> None:
         """Remove a listener."""
         if listener in self._listeners:
             self._listeners.remove(listener)
@@ -170,7 +164,7 @@ class ConsolidationEngine:
         Returns report with statistics on what changed.
         """
         start_time = time.time()
-        total_memories = await self.mgent.count()
+        await self.mgent.count()
 
         # Phase 1: Mark DORMANT as DREAMING
         dreaming_memories = await self._enter_dreaming()
@@ -189,7 +183,7 @@ class ConsolidationEngine:
             strengthened_count = await self._strengthen_associations()
 
         # Phase 5: Degrade COMPOSTING resolution
-        degraded_count = await self._degrade_composting()
+        await self._degrade_composting()
 
         # Phase 6: Wake DREAMING -> DORMANT
         await self.mgent.wake()
@@ -276,7 +270,7 @@ class ConsolidationEngine:
             if mem_a.lifecycle != Lifecycle.DREAMING:
                 continue
 
-            for j, (id_b, mem_b) in enumerate(memories[i + 1:], i + 1):
+            for j, (id_b, mem_b) in enumerate(memories[i + 1 :], i + 1):
                 if id_b in processed:
                     continue
                 if mem_b.lifecycle != Lifecycle.DREAMING:

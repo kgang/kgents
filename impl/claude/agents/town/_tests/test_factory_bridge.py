@@ -14,6 +14,7 @@ Test Categories:
 from __future__ import annotations
 
 import pytest
+
 from agents.town.environment import create_mpp_environment, create_phase2_environment
 from agents.town.factory_bridge import (
     FactoryBridge,

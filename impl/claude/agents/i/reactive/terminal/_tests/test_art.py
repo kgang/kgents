@@ -13,6 +13,7 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.terminal.art import (
     BarStyle,
     Gauge,
@@ -155,9 +156,7 @@ class TestSparklines:
 
     def test_sparkline_custom_range(self) -> None:
         """Sparkline with custom min/max."""
-        result = render_sparkline(
-            Sparkline(values=(25.0, 50.0, 75.0), min_val=0.0, max_val=100.0)
-        )
+        result = render_sparkline(Sparkline(values=(25.0, 50.0, 75.0), min_val=0.0, max_val=100.0))
         assert len(result) == 3
 
     def test_braille_sparkline(self) -> None:
@@ -195,22 +194,16 @@ class TestProgressIndicators:
 
     def test_progress_bar_brackets(self) -> None:
         """Progress bar bracket styles."""
-        square = render_progress(
-            ProgressBar(value=0.5, width=20, bracket_style="square")
-        )
+        square = render_progress(ProgressBar(value=0.5, width=20, bracket_style="square"))
         assert "[" in square
 
-        round_bar = render_progress(
-            ProgressBar(value=0.5, width=20, bracket_style="round")
-        )
+        round_bar = render_progress(ProgressBar(value=0.5, width=20, bracket_style="round"))
         assert "(" in round_bar
 
         angle = render_progress(ProgressBar(value=0.5, width=20, bracket_style="angle"))
         assert "<" in angle
 
-        no_bracket = render_progress(
-            ProgressBar(value=0.5, width=20, bracket_style="none")
-        )
+        no_bracket = render_progress(ProgressBar(value=0.5, width=20, bracket_style="none"))
         assert "[" not in no_bracket
 
     def test_progress_bar_with_label(self) -> None:

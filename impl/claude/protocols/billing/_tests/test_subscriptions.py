@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.billing.subscriptions import (
     Subscription,
     SubscriptionManager,
@@ -208,22 +209,18 @@ class TestSubscriptionManager:
         assert sub.id == "sub_get123"
         mock_stripe.Subscription.retrieve.assert_called_once_with("sub_get123")
 
-    def test_get_subscription_not_found(
-        self, subscription_manager: SubscriptionManager
-    ) -> None:
+    def test_get_subscription_not_found(self, subscription_manager: SubscriptionManager) -> None:
         """Test retrieving non-existent subscription returns None."""
         mock_stripe.error.InvalidRequestError = Exception
-        mock_stripe.Subscription.retrieve.side_effect = (
-            mock_stripe.error.InvalidRequestError("Not found")
+        mock_stripe.Subscription.retrieve.side_effect = mock_stripe.error.InvalidRequestError(
+            "Not found"
         )
 
         sub = subscription_manager.get_subscription("sub_nonexistent")
 
         assert sub is None
 
-    def test_get_customer_subscriptions(
-        self, subscription_manager: SubscriptionManager
-    ) -> None:
+    def test_get_customer_subscriptions(self, subscription_manager: SubscriptionManager) -> None:
         """Test retrieving all customer subscriptions."""
         mock_list = MagicMock()
         mock_list.data = [
@@ -244,25 +241,17 @@ class TestSubscriptionManager:
     ) -> None:
         """Test retrieving only active customer subscriptions."""
         mock_list = MagicMock()
-        mock_list.data = [
-            make_stripe_subscription(subscription_id="sub_active", status="active")
-        ]
+        mock_list.data = [make_stripe_subscription(subscription_id="sub_active", status="active")]
         mock_stripe.Subscription.list.return_value = mock_list
 
-        subs = subscription_manager.get_customer_subscriptions(
-            "cus_abc", active_only=True
-        )
+        subs = subscription_manager.get_customer_subscriptions("cus_abc", active_only=True)
 
         assert len(subs) == 1
         # Compare by value to avoid enum identity issues after module reload
         assert subs[0].status.value == "active"
-        mock_stripe.Subscription.list.assert_called_once_with(
-            customer="cus_abc", status="active"
-        )
+        mock_stripe.Subscription.list.assert_called_once_with(customer="cus_abc", status="active")
 
-    def test_update_subscription_price(
-        self, subscription_manager: SubscriptionManager
-    ) -> None:
+    def test_update_subscription_price(self, subscription_manager: SubscriptionManager) -> None:
         """Test updating subscription price."""
         # Mock retrieve to get current subscription
         mock_stripe.Subscription.retrieve.return_value = make_stripe_subscription(
@@ -275,9 +264,7 @@ class TestSubscriptionManager:
             price_id="price_new",
         )
 
-        sub = subscription_manager.update_subscription(
-            "sub_update123", price_id="price_new"
-        )
+        sub = subscription_manager.update_subscription("sub_update123", price_id="price_new")
 
         assert sub.price_id == "price_new"
         mock_stripe.Subscription.modify.assert_called_once()
@@ -285,18 +272,14 @@ class TestSubscriptionManager:
         assert call_args[0][0] == "sub_update123"
         assert "items" in call_args[1]
 
-    def test_update_subscription_metadata(
-        self, subscription_manager: SubscriptionManager
-    ) -> None:
+    def test_update_subscription_metadata(self, subscription_manager: SubscriptionManager) -> None:
         """Test updating subscription metadata."""
         mock_stripe.Subscription.modify.return_value = make_stripe_subscription(
             subscription_id="sub_meta123",
             metadata={"updated": "true"},
         )
 
-        sub = subscription_manager.update_subscription(
-            "sub_meta123", metadata={"updated": "true"}
-        )
+        sub = subscription_manager.update_subscription("sub_meta123", metadata={"updated": "true"})
 
         assert sub.metadata == {"updated": "true"}
         mock_stripe.Subscription.modify.assert_called_once_with(
@@ -312,9 +295,7 @@ class TestSubscriptionManager:
             cancel_at_period_end=True,
         )
 
-        sub = subscription_manager.cancel_subscription(
-            "sub_cancel123", at_period_end=True
-        )
+        sub = subscription_manager.cancel_subscription("sub_cancel123", at_period_end=True)
 
         assert sub.cancel_at_period_end is True
         mock_stripe.Subscription.modify.assert_called_once_with(
@@ -330,17 +311,13 @@ class TestSubscriptionManager:
             status="canceled",
         )
 
-        sub = subscription_manager.cancel_subscription(
-            "sub_immediate123", at_period_end=False
-        )
+        sub = subscription_manager.cancel_subscription("sub_immediate123", at_period_end=False)
 
         # Compare by value to avoid enum identity issues after module reload
         assert sub.status.value == "canceled"
         mock_stripe.Subscription.cancel.assert_called_once_with("sub_immediate123")
 
-    def test_reactivate_subscription(
-        self, subscription_manager: SubscriptionManager
-    ) -> None:
+    def test_reactivate_subscription(self, subscription_manager: SubscriptionManager) -> None:
         """Test reactivating a subscription."""
         mock_stripe.Subscription.modify.return_value = make_stripe_subscription(
             subscription_id="sub_reactivate123",
@@ -365,6 +342,4 @@ class TestSubscriptionManager:
         }
 
         with pytest.raises(ValueError, match="has no items to update"):
-            subscription_manager.update_subscription(
-                "sub_empty123", price_id="price_new"
-            )
+            subscription_manager.update_subscription("sub_empty123", price_id="price_new")

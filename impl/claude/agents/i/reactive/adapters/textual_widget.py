@@ -22,11 +22,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Callable, Generic, TypeVar
 
-from agents.i.reactive.signal import Signal
-from agents.i.reactive.widget import KgentsWidget, RenderTarget
 from rich.text import Text
 from textual.widget import Widget
 from textual.widgets import Static
+
+from agents.i.reactive.signal import Signal
+from agents.i.reactive.widget import KgentsWidget, RenderTarget
 
 if TYPE_CHECKING:
     from textual.app import ComposeResult

@@ -5,6 +5,7 @@ Tests for NotebookTheme - CSS generation for notebooks.
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.adapters.marimo_theme import (
     NotebookTheme,
     create_notebook_theme,

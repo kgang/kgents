@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from protocols.nphase.operad import NPhase
 from protocols.nphase.session import (
     Handle,
@@ -197,16 +198,12 @@ class TestPhaseAdvancement:
         assert session.cycle_count == 1
         assert session.current_phase == NPhase.UNDERSTAND
 
-    def test_advance_phase_invalid_understand_to_reflect(
-        self, session: NPhaseSession
-    ) -> None:
+    def test_advance_phase_invalid_understand_to_reflect(self, session: NPhaseSession) -> None:
         """Invalid transition: UNDERSTAND → REFLECT raises error."""
         with pytest.raises(ValueError, match="Invalid transition"):
             session.advance_phase(NPhase.REFLECT)
 
-    def test_advance_phase_invalid_act_to_understand(
-        self, session: NPhaseSession
-    ) -> None:
+    def test_advance_phase_invalid_act_to_understand(self, session: NPhaseSession) -> None:
         """Invalid transition: ACT → UNDERSTAND raises error."""
         session.advance_phase(NPhase.ACT)
 
@@ -436,9 +433,7 @@ class TestLedger:
         """Ledger entries include cycle count."""
         session.advance_phase(NPhase.ACT, auto_checkpoint=False)
         session.advance_phase(NPhase.REFLECT, auto_checkpoint=False)
-        session.advance_phase(
-            NPhase.UNDERSTAND, auto_checkpoint=False
-        )  # Cycle 1 starts
+        session.advance_phase(NPhase.UNDERSTAND, auto_checkpoint=False)  # Cycle 1 starts
         session.advance_phase(NPhase.ACT, auto_checkpoint=False)
 
         assert session.ledger[0].cycle_count == 0

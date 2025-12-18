@@ -7,6 +7,7 @@ Verifies that all C-gent functors satisfy the functor laws:
 """
 
 import pytest
+
 from agents.a.functor import (
     FunctorRegistry,
     verify_composition_law,

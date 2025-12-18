@@ -57,8 +57,9 @@ from agents.i.reactive.signal import Signal
 from agents.i.reactive.widget import KgentsWidget, RenderTarget
 
 if TYPE_CHECKING:
-    from agents.i.reactive.pipeline.theme import Theme
     from textual.widget import Widget as TextualWidget
+
+    from agents.i.reactive.pipeline.theme import Theme
 
 S = TypeVar("S")
 W = TypeVar("W", bound="ComposableWidget")
@@ -174,19 +175,14 @@ class HStack(KgentsWidget[None]):
         """Project a single child with theme if it supports it."""
         # Protocol defines project(target) only; some widgets may accept theme
         # Use duck typing for extended interface
-        if (
-            hasattr(child.project, "__code__")
-            and "theme" in child.project.__code__.co_varnames
-        ):
+        if hasattr(child.project, "__code__") and "theme" in child.project.__code__.co_varnames:
             return child.project(target, theme=theme)  # type: ignore[call-arg]
         return child.project(target)
 
     def _to_cli(self, theme: Theme | None) -> str:
         """CLI: Join with spaces or separator."""
         sep = self.separator if self.separator else " " * self.gap
-        parts = [
-            str(self._project_child(c, RenderTarget.CLI, theme)) for c in self.children
-        ]
+        parts = [str(self._project_child(c, RenderTarget.CLI, theme)) for c in self.children]
         return sep.join(parts)
 
     def _to_tui(self, theme: Theme | None) -> Any:
@@ -213,9 +209,7 @@ class HStack(KgentsWidget[None]):
     def _to_marimo(self, theme: Theme | None) -> str:
         """MARIMO: HTML div with inline-flex."""
         gap_px = self.gap * 8  # Rough character-to-pixel conversion
-        parts = [
-            self._project_child(c, RenderTarget.MARIMO, theme) for c in self.children
-        ]
+        parts = [self._project_child(c, RenderTarget.MARIMO, theme) for c in self.children]
 
         html = f'<div class="kgents-hstack" style="display: inline-flex; gap: {gap_px}px; align-items: center;">'
         html += "".join(str(p) for p in parts)
@@ -228,9 +222,7 @@ class HStack(KgentsWidget[None]):
             "type": "hstack",
             "gap": self.gap,
             "separator": self.separator,
-            "children": [
-                self._project_child(c, RenderTarget.JSON, theme) for c in self.children
-            ],
+            "children": [self._project_child(c, RenderTarget.JSON, theme) for c in self.children],
         }
 
     def with_gap(self, gap: int) -> HStack:
@@ -241,9 +233,7 @@ class HStack(KgentsWidget[None]):
         """Return new HStack with separator string."""
         return HStack(children=self.children, gap=self.gap, separator=separator)
 
-    def to_textual(
-        self, *, id: str | None = None, classes: str | None = None
-    ) -> TextualWidget:
+    def to_textual(self, *, id: str | None = None, classes: str | None = None) -> TextualWidget:
         """
         Convert this HStack to a Textual widget tree.
 
@@ -257,8 +247,9 @@ class HStack(KgentsWidget[None]):
         Returns:
             Textual Horizontal container with children
         """
-        from agents.i.reactive.adapters.textual_widget import TextualAdapter
         from textual.containers import Horizontal
+
+        from agents.i.reactive.adapters.textual_widget import TextualAdapter
 
         children: list[TextualWidget] = []
         for child in self.children:
@@ -380,10 +371,7 @@ class VStack(KgentsWidget[None]):
         """Project a single child with theme if it supports it."""
         # Protocol defines project(target) only; some widgets may accept theme
         # Use duck typing for extended interface
-        if (
-            hasattr(child.project, "__code__")
-            and "theme" in child.project.__code__.co_varnames
-        ):
+        if hasattr(child.project, "__code__") and "theme" in child.project.__code__.co_varnames:
             return child.project(target, theme=theme)  # type: ignore[call-arg]
         return child.project(target)
 
@@ -393,9 +381,7 @@ class VStack(KgentsWidget[None]):
         if self.separator:
             sep_lines = f"\n{self.separator}\n"
 
-        parts = [
-            str(self._project_child(c, RenderTarget.CLI, theme)) for c in self.children
-        ]
+        parts = [str(self._project_child(c, RenderTarget.CLI, theme)) for c in self.children]
         return sep_lines.join(parts)
 
     def _to_tui(self, theme: Theme | None) -> Any:
@@ -403,9 +389,7 @@ class VStack(KgentsWidget[None]):
         try:
             from rich.console import Group
 
-            parts = [
-                self._project_child(c, RenderTarget.TUI, theme) for c in self.children
-            ]
+            parts = [self._project_child(c, RenderTarget.TUI, theme) for c in self.children]
             return Group(*parts)
         except ImportError:
             return self._to_cli(theme)
@@ -413,9 +397,7 @@ class VStack(KgentsWidget[None]):
     def _to_marimo(self, theme: Theme | None) -> str:
         """MARIMO: HTML div with flex-column."""
         gap_px = self.gap * 16  # Line height approximation
-        parts = [
-            self._project_child(c, RenderTarget.MARIMO, theme) for c in self.children
-        ]
+        parts = [self._project_child(c, RenderTarget.MARIMO, theme) for c in self.children]
 
         html = f'<div class="kgents-vstack" style="display: flex; flex-direction: column; gap: {gap_px}px;">'
         html += "".join(str(p) for p in parts)
@@ -428,9 +410,7 @@ class VStack(KgentsWidget[None]):
             "type": "vstack",
             "gap": self.gap,
             "separator": self.separator,
-            "children": [
-                self._project_child(c, RenderTarget.JSON, theme) for c in self.children
-            ],
+            "children": [self._project_child(c, RenderTarget.JSON, theme) for c in self.children],
         }
 
     def with_gap(self, gap: int) -> VStack:
@@ -441,9 +421,7 @@ class VStack(KgentsWidget[None]):
         """Return new VStack with separator line."""
         return VStack(children=self.children, gap=self.gap, separator=separator)
 
-    def to_textual(
-        self, *, id: str | None = None, classes: str | None = None
-    ) -> TextualWidget:
+    def to_textual(self, *, id: str | None = None, classes: str | None = None) -> TextualWidget:
         """
         Convert this VStack to a Textual widget tree.
 
@@ -457,8 +435,9 @@ class VStack(KgentsWidget[None]):
         Returns:
             Textual Vertical container with children
         """
-        from agents.i.reactive.adapters.textual_widget import TextualAdapter
         from textual.containers import Vertical
+
+        from agents.i.reactive.adapters.textual_widget import TextualAdapter
 
         children: list[TextualWidget] = []
         for child in self.children:

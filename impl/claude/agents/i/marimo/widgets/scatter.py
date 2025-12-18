@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import traitlets
+
 from agents.i.marimo.widgets.base import KgentsWidget
 
 if TYPE_CHECKING:

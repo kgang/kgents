@@ -1,6 +1,7 @@
 """Tests for FrameScheduler."""
 
 import pytest
+
 from agents.i.reactive.animation.frame import (
     FrameScheduler,
     FrameSchedulerConfig,
@@ -150,9 +151,7 @@ class TestFrameProcessing:
 
     def test_delta_clamped(self) -> None:
         """Large deltas are clamped."""
-        scheduler = FrameScheduler.create(
-            config=FrameSchedulerConfig(max_delta_ms=50.0)
-        )
+        scheduler = FrameScheduler.create(config=FrameSchedulerConfig(max_delta_ms=50.0))
         received_delta: list[float] = []
         scheduler.request_frame(lambda d, f, t: received_delta.append(d))
 
@@ -226,9 +225,7 @@ class TestFrameSchedulerClockIntegration:
         scheduler = FrameScheduler.create(clock=clock)
 
         frame_count = [0]
-        scheduler.request_frame(
-            lambda d, f, t: frame_count.__setitem__(0, frame_count[0] + 1)
-        )
+        scheduler.request_frame(lambda d, f, t: frame_count.__setitem__(0, frame_count[0] + 1))
 
         # Tick clock multiple times
         for _ in range(5):

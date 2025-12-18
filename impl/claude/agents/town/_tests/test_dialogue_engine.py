@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Any, AsyncIterator
 
 import pytest
+
 from agents.k.llm import MockLLMClient
 from agents.town.citizen import GATHERING, Citizen, Eigenvectors
 from agents.town.dialogue_engine import (
@@ -726,9 +727,7 @@ class TestErrorHandling:
         prompt = engine._build_system_prompt(alice, "greet")
 
         # Should use Builder prompt as fallback
-        assert (
-            "Builder" not in prompt or len(prompt) > 0
-        )  # Either uses fallback or doesn't crash
+        assert "Builder" not in prompt or len(prompt) > 0  # Either uses fallback or doesn't crash
 
     def test_unknown_operation_uses_default_model(self) -> None:
         """Unknown operation uses default haiku model."""
@@ -1139,9 +1138,7 @@ class TestLiveLLMIntegration:
         )
 
         # Reasonable bounds for greet (1-3 sentences)
-        assert 10 < result.tokens_used < 500, (
-            f"Unexpected token count: {result.tokens_used}"
-        )
+        assert 10 < result.tokens_used < 500, f"Unexpected token count: {result.tokens_used}"
 
 
 # =============================================================================

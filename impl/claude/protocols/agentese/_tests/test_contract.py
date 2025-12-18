@@ -11,6 +11,7 @@ from enum import Enum
 from typing import Any
 
 import pytest
+
 from protocols.agentese.contract import (
     Contract,
     ContractRegistry,

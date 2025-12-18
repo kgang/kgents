@@ -7,6 +7,7 @@ Foundation 4 - Wave 0: Cross-jewel communication infrastructure.
 from typing import Any
 
 import pytest
+
 from protocols.synergy.bus import (
     SynergyEventBus,
     get_synergy_bus,

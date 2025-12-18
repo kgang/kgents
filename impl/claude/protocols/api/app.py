@@ -82,9 +82,7 @@ def create_app(
         ImportError: If FastAPI is not installed
     """
     if not HAS_FASTAPI:
-        raise ImportError(
-            "FastAPI is not installed. Install with: pip install fastapi uvicorn"
-        )
+        raise ImportError("FastAPI is not installed. Install with: pip install fastapi uvicorn")
 
     # Create app
     app = FastAPI(
@@ -210,7 +208,7 @@ def create_app(
         from protocols.agentese.gateway import mount_gateway
 
         container = get_container()
-        gateway = mount_gateway(
+        mount_gateway(
             app,
             prefix="/agentese",
             container=container,
@@ -218,7 +216,7 @@ def create_app(
             enable_websocket=True,
             fallback_to_logos=True,
         )
-        logger.info(f"AGENTESE Gateway mounted at /agentese")
+        logger.info("AGENTESE Gateway mounted at /agentese")
     except ImportError as e:
         logger.warning(f"Could not mount AGENTESE Gateway: {e}")
 
@@ -326,6 +324,7 @@ def create_app(
         """Initialize service providers on app startup."""
         try:
             from services.providers import setup_providers
+
             await setup_providers()
             logger.info("Service providers initialized")
         except ImportError as e:

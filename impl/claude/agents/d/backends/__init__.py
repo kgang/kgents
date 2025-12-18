@@ -10,8 +10,8 @@ The projection lattice (from least to most durable):
 All backends implement DgentProtocol (5 methods).
 """
 
-from .memory import MemoryBackend
 from .jsonl import JSONLBackend
+from .memory import MemoryBackend
 from .sqlite import SQLiteBackend
 
 __all__ = [
@@ -23,6 +23,7 @@ __all__ = [
 # PostgresBackend is optional (requires asyncpg)
 try:
     from .postgres import PostgresBackend
+
     __all__.append("PostgresBackend")
 except ImportError:
     PostgresBackend = None  # type: ignore

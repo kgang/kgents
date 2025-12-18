@@ -4,6 +4,7 @@ import asyncio
 from typing import Any, AsyncIterator
 
 import pytest
+
 from agents.flux import Flux, FluxAgent, FluxConfig, FluxState
 from agents.flux.errors import FluxStateError
 from agents.poly.types import Agent
@@ -423,6 +424,4 @@ class TestNoAsyncSleepInCore:
             and "No asyncio.sleep()" not in line  # Exclude docstring
         ]
 
-        assert len(lines_with_sleep) == 0, (
-            f"Found asyncio.sleep in core: {lines_with_sleep}"
-        )
+        assert len(lines_with_sleep) == 0, f"Found asyncio.sleep in core: {lines_with_sleep}"

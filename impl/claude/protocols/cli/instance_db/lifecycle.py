@@ -27,6 +27,7 @@ from .storage import StorageProvider, XDGPaths
 
 if TYPE_CHECKING:
     from agents.d.bicameral import BicameralMemory
+
     from agents.o.cortex_observer import CortexObserver
     from weave import TheWeave
 
@@ -271,9 +272,7 @@ class LifecycleManager:
         - Both → FULL
         """
         global_exists = (paths.data / "membrane.db").exists()
-        project_exists = (
-            project_path is not None and (project_path / ".kgents/cortex.db").exists()
-        )
+        project_exists = project_path is not None and (project_path / ".kgents/cortex.db").exists()
 
         if not global_exists and not project_exists:
             # Check if this is first run (no config either)
@@ -324,9 +323,7 @@ class LifecycleManager:
         hostname = socket.gethostname()
         pid = os.getpid()
         now = datetime.now().isoformat()
-        project_hash = (
-            self._compute_project_hash(project_path) if project_path else None
-        )
+        project_hash = self._compute_project_hash(project_path) if project_path else None
 
         await storage.relational.execute(
             """
@@ -359,9 +356,7 @@ class LifecycleManager:
             event_type="instance.started",
             timestamp=datetime.now().isoformat(),
             instance_id=instance_id,
-            project_hash=self._compute_project_hash(project_path)
-            if project_path
-            else None,
+            project_hash=self._compute_project_hash(project_path) if project_path else None,
             data={
                 "mode": mode.value,
                 "hostname": socket.gethostname(),
@@ -568,11 +563,7 @@ class LifecycleManager:
 
         Should be called periodically (e.g., every 30 seconds).
         """
-        if (
-            not self._state
-            or not self._state.storage_provider
-            or not self._state.instance_id
-        ):
+        if not self._state or not self._state.storage_provider or not self._state.instance_id:
             return
 
         now = datetime.now().isoformat()

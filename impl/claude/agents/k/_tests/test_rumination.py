@@ -9,6 +9,7 @@ import asyncio
 from datetime import timedelta
 
 import pytest
+
 from agents.k.events import (
     SoulEventType,
     is_ambient_event,
@@ -126,9 +127,7 @@ class TestGenerateSelfChallenge:
         soul = KgentSoul()
         eigenvectors = soul.eigenvectors
 
-        thesis, antithesis, synthesis, eigenvector = generate_self_challenge(
-            eigenvectors
-        )
+        thesis, antithesis, synthesis, eigenvector = generate_self_challenge(eigenvectors)
 
         assert thesis is not None
         assert antithesis is not None

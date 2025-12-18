@@ -15,6 +15,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from infra.ghost.collectors import CollectorResult, GhostCollector
 from infra.ghost.daemon import GhostDaemon, create_ghost_daemon
 

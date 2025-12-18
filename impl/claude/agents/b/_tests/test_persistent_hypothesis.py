@@ -8,6 +8,7 @@ and session management.
 from pathlib import Path
 
 import pytest
+
 from agents.b.hypothesis_parser import (
     Hypothesis,
     NoveltyLevel,
@@ -81,9 +82,7 @@ def test_memory_add_response_with_session(
     memory: HypothesisMemory, sample_response: ParsedHypothesisResponse
 ) -> None:
     """Test adding response with session tracking."""
-    _indices = memory.add_response(
-        sample_response, domain="test", session_id="session-1"
-    )
+    _indices = memory.add_response(sample_response, domain="test", session_id="session-1")
 
     assert len(memory.sessions) == 1
     assert memory.sessions[0]["session_id"] == "session-1"
@@ -146,9 +145,7 @@ def test_memory_find_similar(memory: HypothesisMemory) -> None:
     )
     memory.add_response(response, domain="biochem")
 
-    similar = memory.find_similar(
-        "Protein X forms aggregates at acidic pH", threshold=0.3
-    )
+    similar = memory.find_similar("Protein X forms aggregates at acidic pH", threshold=0.3)
     assert len(similar) >= 1
 
 

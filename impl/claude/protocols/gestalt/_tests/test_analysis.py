@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from protocols.gestalt.analysis import (
     ArchitectureGraph,
     DependencyEdge,

@@ -7,6 +7,7 @@ Law tests verify compilation invariants.
 from pathlib import Path
 
 import pytest
+
 from protocols.nphase.compiler import NPhasePromptCompiler, compiler
 from protocols.nphase.schema import (
     Classification,
@@ -33,16 +34,12 @@ def sample_project() -> ProjectDefinition:
             non_goals=("Don't build runtime",),
             parallel_tracks={"T1": "Core", "T2": "CLI"},
         ),
-        decisions=(
-            Decision(id="D1", choice="Python dataclasses", rationale="Type safety"),
-        ),
+        decisions=(Decision(id="D1", choice="Python dataclasses", rationale="Type safety"),),
         file_map=(
             FileRef(path="schema.py", lines="1-100", purpose="Schema definitions"),
             FileRef(path="compiler.py", purpose="Compiler logic"),
         ),
-        invariants=(
-            Invariant(name="Idempotent", requirement="compile(x) == compile(x)"),
-        ),
+        invariants=(Invariant(name="Idempotent", requirement="compile(x) == compile(x)"),),
         components=(
             Component(id="C1", name="Schema", location="schema.py", effort=Effort.M),
             Component(
@@ -74,9 +71,7 @@ class TestNPhasePromptCompiler:
         content = str(prompt)
         assert content.startswith("# sample-project: N-Phase Meta-Prompt")
 
-    def test_compile_includes_project_name(
-        self, sample_project: ProjectDefinition
-    ) -> None:
+    def test_compile_includes_project_name(self, sample_project: ProjectDefinition) -> None:
         """Output includes project name."""
         prompt = compiler.compile(sample_project)
         assert "sample-project" in str(prompt)
@@ -93,18 +88,14 @@ class TestNPhasePromptCompiler:
         for file_ref in sample_project.file_map:
             assert file_ref.path in content
 
-    def test_compile_includes_invariants(
-        self, sample_project: ProjectDefinition
-    ) -> None:
+    def test_compile_includes_invariants(self, sample_project: ProjectDefinition) -> None:
         """Law: compile(project) contains all invariants."""
         prompt = compiler.compile(sample_project)
         content = str(prompt)
         for inv in sample_project.invariants:
             assert inv.name in content
 
-    def test_compile_includes_components(
-        self, sample_project: ProjectDefinition
-    ) -> None:
+    def test_compile_includes_components(self, sample_project: ProjectDefinition) -> None:
         """Law: compile(project) contains all components."""
         prompt = compiler.compile(sample_project)
         content = str(prompt)
@@ -118,9 +109,7 @@ class TestNPhasePromptCompiler:
         for wave in sample_project.waves:
             assert wave.name in content
 
-    def test_compile_includes_all_11_phases(
-        self, sample_project: ProjectDefinition
-    ) -> None:
+    def test_compile_includes_all_11_phases(self, sample_project: ProjectDefinition) -> None:
         """11-phase mode includes all phases."""
         prompt = compiler.compile(sample_project)
         content = str(prompt)
@@ -200,9 +189,7 @@ class TestNPhasePrompt:
         prompt = compiler.compile(sample_project)
         assert str(prompt) == prompt.content
 
-    def test_save_writes_file(
-        self, sample_project: ProjectDefinition, tmp_path: Path
-    ) -> None:
+    def test_save_writes_file(self, sample_project: ProjectDefinition, tmp_path: Path) -> None:
         """save() writes to file."""
         prompt = compiler.compile(sample_project)
         output_path = tmp_path / "output.md"

@@ -15,7 +15,6 @@ from typing import Any
 
 import pytest
 
-from ..datum import Datum
 from ..backends.memory import MemoryBackend
 from ..bus import (
     BusEnabledDgent,
@@ -25,6 +24,7 @@ from ..bus import (
     get_data_bus,
     reset_data_bus,
 )
+from ..datum import Datum
 
 
 @pytest.fixture
@@ -278,9 +278,7 @@ class TestBusEnabledDgent:
     """Tests for BusEnabledDgent wrapper."""
 
     @pytest.mark.asyncio
-    async def test_put_emits_event(
-        self, bus: DataBus, memory_backend: MemoryBackend
-    ) -> None:
+    async def test_put_emits_event(self, bus: DataBus, memory_backend: MemoryBackend) -> None:
         """put() emits PUT event."""
         dgent = BusEnabledDgent(memory_backend, bus)
 
@@ -300,9 +298,7 @@ class TestBusEnabledDgent:
         assert received[0].datum_id == d.id
 
     @pytest.mark.asyncio
-    async def test_delete_emits_event(
-        self, bus: DataBus, memory_backend: MemoryBackend
-    ) -> None:
+    async def test_delete_emits_event(self, bus: DataBus, memory_backend: MemoryBackend) -> None:
         """delete() emits DELETE event when successful."""
         dgent = BusEnabledDgent(memory_backend, bus)
 
@@ -341,9 +337,7 @@ class TestBusEnabledDgent:
         assert len(received) == 0
 
     @pytest.mark.asyncio
-    async def test_get_does_not_emit(
-        self, bus: DataBus, memory_backend: MemoryBackend
-    ) -> None:
+    async def test_get_does_not_emit(self, bus: DataBus, memory_backend: MemoryBackend) -> None:
         """get() does not emit events (reads are silent)."""
         dgent = BusEnabledDgent(memory_backend, bus)
 

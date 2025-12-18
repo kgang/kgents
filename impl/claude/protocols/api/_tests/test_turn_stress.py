@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
+
 from protocols.api.turn import Turn, turns_to_json, turns_to_markdown
 
 # =============================================================================
@@ -22,12 +22,8 @@ from protocols.api.turn import Turn, turns_to_json, turns_to_markdown
 class TestTurnProperties:
     """Property-based tests for Turn invariants."""
 
-    @given(
-        st.text(), st.text(), st.floats(min_value=0, max_value=1e15, allow_nan=False)
-    )
-    def test_turn_projector_consistency(
-        self, speaker: str, content: str, ts: float
-    ) -> None:
+    @given(st.text(), st.text(), st.floats(min_value=0, max_value=1e15, allow_nan=False))
+    def test_turn_projector_consistency(self, speaker: str, content: str, ts: float) -> None:
         """All projectors produce consistent output for same input."""
         turn = Turn(speaker=speaker, content=content, timestamp=ts)
         cli1 = turn.to_cli()
@@ -35,9 +31,7 @@ class TestTurnProperties:
         assert cli1 == cli2  # Deterministic
 
     @given(st.text(min_size=0, max_size=100), st.text(min_size=0, max_size=1000))
-    def test_turn_cli_contains_speaker_and_content(
-        self, speaker: str, content: str
-    ) -> None:
+    def test_turn_cli_contains_speaker_and_content(self, speaker: str, content: str) -> None:
         """CLI output always contains speaker and content."""
         turn = Turn(speaker=speaker, content=content, timestamp=0.0)
         cli = turn.to_cli()
@@ -93,13 +87,9 @@ class TestTurnProperties:
             max_size=10,
         )
     )
-    def test_turn_with_meta_preserves_original(
-        self, extra_meta: dict[str, str]
-    ) -> None:
+    def test_turn_with_meta_preserves_original(self, extra_meta: dict[str, str]) -> None:
         """with_meta creates new Turn without modifying original."""
-        original = Turn(
-            speaker="user", content="Hi", timestamp=0.0, meta={"key": "val"}
-        )
+        original = Turn(speaker="user", content="Hi", timestamp=0.0, meta={"key": "val"})
         updated = original.with_meta(**extra_meta)
 
         # Original unchanged
@@ -168,9 +158,7 @@ class TestTurnsToJsonProperties:
             max_size=20,
         )
     )
-    def test_turns_to_json_length_matches(
-        self, turn_data: list[tuple[str, str]]
-    ) -> None:
+    def test_turns_to_json_length_matches(self, turn_data: list[tuple[str, str]]) -> None:
         """JSON list has same length as input."""
         turns = [
             Turn(speaker=speaker, content=content, timestamp=float(i))
@@ -269,9 +257,7 @@ class TestTurnBoundaryValues:
 
     def test_turn_html_in_content(self) -> None:
         """Turn handles HTML in content (not escaped in CLI)."""
-        turn = Turn(
-            speaker="user", content="<script>alert('xss')</script>", timestamp=0.0
-        )
+        turn = Turn(speaker="user", content="<script>alert('xss')</script>", timestamp=0.0)
         cli = turn.to_cli()
         assert "<script>" in cli  # CLI is plain text
 
@@ -331,9 +317,7 @@ class TestTurnDeterminism:
         st.floats(min_value=0, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=50)
-    def test_repeated_cli_identical(
-        self, speaker: str, content: str, ts: float
-    ) -> None:
+    def test_repeated_cli_identical(self, speaker: str, content: str, ts: float) -> None:
         """Multiple to_cli calls return identical results."""
         turn = Turn(speaker=speaker, content=content, timestamp=ts)
         results = [turn.to_cli() for _ in range(10)]
@@ -345,9 +329,7 @@ class TestTurnDeterminism:
         st.floats(min_value=0, allow_nan=False, allow_infinity=False),
     )
     @settings(max_examples=50)
-    def test_repeated_json_identical(
-        self, speaker: str, content: str, ts: float
-    ) -> None:
+    def test_repeated_json_identical(self, speaker: str, content: str, ts: float) -> None:
         """Multiple to_json calls return identical results."""
         turn = Turn(speaker=speaker, content=content, timestamp=ts)
         results = [turn.to_json() for _ in range(10)]

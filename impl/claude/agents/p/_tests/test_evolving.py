@@ -7,6 +7,7 @@ import tempfile
 from typing import Any, Iterator, cast
 
 import pytest
+
 from agents.p.core import Parser, ParserConfig, ParseResult
 from agents.p.strategies.anchor import AnchorBasedParser
 from agents.p.strategies.evolving import (
@@ -182,10 +183,7 @@ class TestStrategyRanking:
         # Check format_a is dominant
         parser.report_drift()
         # Both have success, but format_a tried first more often
-        assert (
-            parser._stats["format_a"].success_count
-            >= parser._stats["format_b"].success_count
-        )
+        assert parser._stats["format_a"].success_count >= parser._stats["format_b"].success_count
 
 
 class TestDriftDetection:

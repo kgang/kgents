@@ -35,7 +35,6 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import Any
 
-
 # =============================================================================
 # Mask Types
 # =============================================================================
@@ -339,8 +338,7 @@ SAGE_MASK = DialogueMask(
     archetype=MaskArchetype.SAGE,
     name="The Sage",
     description="+30% wisdom, +20% patience",
-    flavor_text="Listen deeply, speak rarely. "
-    "The sage knows that silence teaches more than words.",
+    flavor_text="Listen deeply, speak rarely. The sage knows that silence teaches more than words.",
     transform=EigenvectorTransform(
         wisdom_delta=+0.3,
         empathy_delta=+0.2,

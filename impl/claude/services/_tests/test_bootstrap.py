@@ -8,8 +8,9 @@ Verifies:
 - All 7 Crown Jewel services available
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 class TestServiceRegistry:
@@ -259,7 +260,7 @@ class TestBackwardCompatibleProviders:
     @pytest.mark.asyncio
     async def test_setup_providers(self):
         """setup_providers should work."""
-        from services.providers import setup_providers, reset_services
+        from services.providers import reset_services, setup_providers
 
         reset_services()
         await setup_providers()
@@ -269,15 +270,15 @@ class TestBackwardCompatibleProviders:
     async def test_provider_getters(self):
         """Individual provider getters should work."""
         from services.providers import (
-            setup_providers,
-            reset_services,
+            get_atelier_persistence,
             get_brain_persistence,
-            get_town_persistence,
+            get_coalition_persistence,
             get_gardener_persistence,
             get_gestalt_persistence,
-            get_atelier_persistence,
-            get_coalition_persistence,
             get_park_persistence,
+            get_town_persistence,
+            reset_services,
+            setup_providers,
         )
 
         reset_services()

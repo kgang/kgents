@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from protocols.gestalt.analysis import (
     ArchitectureGraph,
     DependencyEdge,
@@ -253,16 +254,12 @@ class TestComputedDerivations:
         assert scanned_store.drift_count.value >= 0
 
     @pytest.mark.asyncio
-    async def test_active_drift_count_lte_total(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_active_drift_count_lte_total(self, scanned_store: GestaltStore) -> None:
         """Active drift count is <= total drift count."""
         assert scanned_store.active_drift_count.value <= scanned_store.drift_count.value
 
     @pytest.mark.asyncio
-    async def test_module_healths_matches_modules(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_module_healths_matches_modules(self, scanned_store: GestaltStore) -> None:
         """Module healths map matches module count."""
         healths = scanned_store.module_healths.value
         # May not have health for all modules
@@ -283,9 +280,7 @@ class TestComputedDerivations:
             assert healths == sorted(healths)
 
     @pytest.mark.asyncio
-    async def test_grade_distribution_complete(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_grade_distribution_complete(self, scanned_store: GestaltStore) -> None:
         """Grade distribution contains all grades."""
         dist = scanned_store.grade_distribution.value
         expected_grades = ["A+", "A", "B+", "B", "C+", "C", "D", "F"]
@@ -337,9 +332,7 @@ class TestIncrementalUpdates:
         # Create and scan a temp file first
         temp_file = scanned_store.root / "temp_module.py"
         temp_file.write_text('"""Temp."""\n')
-        await scanned_store.scan_incremental(
-            [FileDiff(path=temp_file, change_type="created")]
-        )
+        await scanned_store.scan_incremental([FileDiff(path=temp_file, change_type="created")])
 
         initial_count = scanned_store.module_count.value
 
@@ -359,18 +352,14 @@ class TestIncrementalUpdates:
         assert not result.has_changes
 
     @pytest.mark.asyncio
-    async def test_incremental_updates_computeds(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_incremental_updates_computeds(self, scanned_store: GestaltStore) -> None:
         """Incremental update triggers computed recalculation."""
         new_file = scanned_store.root / "another.py"
         new_file.write_text('"""Another."""\nimport helper\n')
 
         initial_edges = scanned_store.edge_count.value
 
-        await scanned_store.scan_incremental(
-            [FileDiff(path=new_file, change_type="created")]
-        )
+        await scanned_store.scan_incremental([FileDiff(path=new_file, change_type="created")])
 
         # Should have one more edge (another imports helper)
         assert scanned_store.edge_count.value >= initial_edges
@@ -572,9 +561,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_create_gestalt_store_with_watch(self, temp_project: Path) -> None:
         """create_gestalt_store can start watching."""
-        store = await create_gestalt_store(
-            root=temp_project, auto_scan=True, watch=True
-        )
+        store = await create_gestalt_store(root=temp_project, auto_scan=True, watch=True)
         try:
             assert store.watching
         finally:
@@ -590,9 +577,7 @@ class TestPerformanceBudget:
     """Tests for performance requirements."""
 
     @pytest.mark.asyncio
-    async def test_incremental_update_under_2s(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_incremental_update_under_2s(self, scanned_store: GestaltStore) -> None:
         """Incremental updates complete in under 2 seconds."""
         new_file = scanned_store.root / "perf_test.py"
         new_file.write_text('"""Perf test."""\n')
@@ -620,9 +605,7 @@ class TestPerformanceBudget:
         assert elapsed < 0.1, f"1000 computed accesses took {elapsed:.3f}s"
 
     @pytest.mark.asyncio
-    async def test_subscription_callback_fast(
-        self, scanned_store: GestaltStore
-    ) -> None:
+    async def test_subscription_callback_fast(self, scanned_store: GestaltStore) -> None:
         """Subscription callbacks are called quickly."""
         callback_times: list[float] = []
 

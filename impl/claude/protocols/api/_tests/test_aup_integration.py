@@ -68,6 +68,7 @@ def mock_logos() -> MagicMock:
 def test_client(mock_logos: MagicMock) -> Any:
     """Create a test client with mocked Logos."""
     from fastapi.testclient import TestClient
+
     from protocols.api.app import create_app
     from protocols.api.bridge_impl import LogosAgenteseBridge
 
@@ -143,9 +144,7 @@ class TestManifestEndpoint:
         assert detail["code"] == "SYNTAX_ERROR"
         assert "available" in detail
 
-    def test_manifest_default_observer(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_manifest_default_observer(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Manifest uses default observer when headers not provided."""
         response = test_client.get("/api/v1/self/soul/manifest")
 
@@ -159,9 +158,7 @@ class TestManifestEndpoint:
 class TestAffordancesEndpoint:
     """Tests for GET /api/v1/{context}/{holon}/affordances."""
 
-    def test_affordances_returns_list(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_affordances_returns_list(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Affordances endpoint returns filtered list."""
         response = test_client.get(
             "/api/v1/world/house/affordances",
@@ -194,9 +191,7 @@ class TestInvokeEndpoint:
         data = response.json()
         assert "invalid" in data["detail"]["error"].lower()
 
-    def test_invoke_endpoint_exists(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_invoke_endpoint_exists(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Invoke endpoint is registered and accepts POST."""
         # Test that the endpoint exists (may fail with 404/500 depending on path)
         response = test_client.post(
@@ -213,9 +208,7 @@ class TestInvokeEndpoint:
 class TestComposeEndpoint:
     """Tests for POST /api/v1/compose."""
 
-    def test_compose_validates_path_syntax(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_compose_validates_path_syntax(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Compose validates path syntax (missing aspect)."""
         response = test_client.post(
             "/api/v1/compose",
@@ -229,9 +222,7 @@ class TestComposeEndpoint:
         data = response.json()
         assert "aspect" in data["detail"]["error"].lower()
 
-    def test_compose_validates_context(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_compose_validates_context(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Compose validates context in paths."""
         response = test_client.post(
             "/api/v1/compose",
@@ -246,9 +237,7 @@ class TestComposeEndpoint:
         assert "bad" in data["detail"]["error"].lower()
         assert "available" in data["detail"]
 
-    def test_compose_endpoint_exists(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_compose_endpoint_exists(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Compose endpoint is registered and accepts POST."""
         # Test that the endpoint exists
         response = test_client.post(
@@ -267,9 +256,7 @@ class TestComposeEndpoint:
 class TestResolveEndpoint:
     """Tests for GET /api/v1/{context}/{holon}/resolve."""
 
-    def test_resolve_returns_metadata(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_resolve_returns_metadata(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Resolve endpoint returns path metadata."""
         response = test_client.get(
             "/api/v1/world/field/resolve",
@@ -289,9 +276,7 @@ class TestResolveEndpoint:
 class TestVerifyLawsEndpoint:
     """Tests for POST /api/v1/verify-laws."""
 
-    def test_verify_laws_endpoint_exists(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_verify_laws_endpoint_exists(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Verify laws endpoint is registered."""
         response = test_client.post(
             "/api/v1/verify-laws",
@@ -343,9 +328,7 @@ class TestHeaderExtraction:
         assert response.status_code == 200
         assert response.json()["meta"]["observer"] == "custom-archetype"
 
-    def test_extracts_capabilities(
-        self, test_client: Any, mock_logos: MagicMock
-    ) -> None:
+    def test_extracts_capabilities(self, test_client: Any, mock_logos: MagicMock) -> None:
         """Extracts X-Observer-Capabilities as comma-separated list."""
         # This is tested implicitly through the mock
         # Real test would verify the capabilities reach Logos
@@ -392,9 +375,7 @@ class TestBridgeImplUnit:
         from protocols.api.bridge_impl import BridgeError, LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
 
-        mock_logos.invoke.side_effect = PathNotFoundError(
-            "Path not found", path="world.missing"
-        )
+        mock_logos.invoke.side_effect = PathNotFoundError("Path not found", path="world.missing")
 
         bridge = LogosAgenteseBridge(logos=mock_logos, telemetry_enabled=False)
         observer = ObserverContext()

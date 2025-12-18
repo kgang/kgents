@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.adapters.marimo_logos import (
     LogosCell,
     LogosCellPath,

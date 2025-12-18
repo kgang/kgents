@@ -76,5 +76,5 @@ def cmd_joy(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         path=path,
         args=args,
         ctx=ctx,
-        kwargs=kwargs,  # type: ignore[arg-type]
+        kwargs=kwargs,
     )

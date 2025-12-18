@@ -12,6 +12,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from agents.town.citizen import (
     CONSTRUCTION,
     EXPLORATION,

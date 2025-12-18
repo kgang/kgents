@@ -7,14 +7,14 @@ Tests the wiring between K-gent's soul and M-gent's memory system.
 import pytest
 
 from agents.d.backends.memory import MemoryBackend
-from agents.m.memory import Lifecycle, Memory
 from agents.m.associative import AssociativeMemory
+from agents.m.memory import Lifecycle, Memory
 from agents.m.soul_memory import (
-    SoulMemory,
-    MemoryCategory,
     BeliefMemory,
     ContextMemory,
+    MemoryCategory,
     PatternMemory,
+    SoulMemory,
     create_soul_memory,
 )
 
@@ -43,9 +43,7 @@ class TestBeliefMemory:
     @pytest.mark.asyncio
     async def test_remember_belief_returns_belief_memory(self, soul_memory):
         """remember_belief returns a BeliefMemory."""
-        belief = await soul_memory.remember_belief(
-            "Simplicity is the ultimate sophistication"
-        )
+        belief = await soul_memory.remember_belief("Simplicity is the ultimate sophistication")
 
         assert isinstance(belief, BeliefMemory)
         assert belief.content == "Simplicity is the ultimate sophistication"
@@ -111,9 +109,7 @@ class TestPatternMemory:
     @pytest.mark.asyncio
     async def test_remember_pattern_returns_pattern_memory(self, soul_memory):
         """remember_pattern returns a PatternMemory."""
-        pattern = await soul_memory.remember_pattern(
-            "Kent often uses categorical abstractions"
-        )
+        pattern = await soul_memory.remember_pattern("Kent often uses categorical abstractions")
 
         assert isinstance(pattern, PatternMemory)
         assert "categorical" in pattern.pattern
@@ -283,7 +279,6 @@ class TestAssociativeRecall:
         belief = await soul_memory.remember_belief("Category theory is beautiful")
         # Set same embedding for test
         mem = mgent._memories[belief.memory_id]
-        from agents.m.memory import Memory
         mgent._memories[belief.memory_id] = Memory(
             datum_id=mem.datum_id,
             embedding=tuple(embedding),
@@ -309,7 +304,6 @@ class TestAssociativeRecall:
         seed_id = await soul_memory.plant_seed("Experimental testing idea")
 
         # Set same embedding for both
-        from agents.m.memory import Memory
         for mid in [belief.memory_id, seed_id]:
             mem = mgent._memories[mid]
             mgent._memories[mid] = Memory(
@@ -340,7 +334,6 @@ class TestAssociativeRecall:
         seed_id = await soul_memory.plant_seed("Testing seed")
 
         # Set explicit embedding for seed
-        from agents.m.memory import Memory
         mem = mgent._memories[seed_id]
         mgent._memories[seed_id] = Memory(
             datum_id=mem.datum_id,
@@ -378,7 +371,6 @@ class TestAssociativeRecall:
         pattern = await soul_memory.remember_pattern("Tends toward minimal solutions")
 
         # Set same embedding for all
-        from agents.m.memory import Memory
         for mid in [belief1.memory_id, belief2.memory_id, pattern.memory_id]:
             mem = mgent._memories[mid]
             mgent._memories[mid] = Memory(

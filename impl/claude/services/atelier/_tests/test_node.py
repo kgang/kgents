@@ -21,30 +21,29 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from protocols.agentese.node import BasicRendering, Observer
 from services.atelier import AtelierPersistence
 from services.atelier.node import (
-    AtelierNode,
-    AtelierManifestRendering,
-    WorkshopRendering,
-    WorkshopListRendering,
-    ArtisanRendering,
     ArtisanListRendering,
-    ContributionRendering,
+    ArtisanRendering,
+    AtelierManifestRendering,
+    AtelierNode,
     ContributionListRendering,
+    ContributionRendering,
     ExhibitionRendering,
     GalleryItemRendering,
     GalleryListRendering,
+    WorkshopListRendering,
+    WorkshopRendering,
 )
 from services.atelier.persistence import (
-    AtelierStatus,
-    WorkshopView,
     ArtisanView,
+    AtelierStatus,
     ContributionView,
     ExhibitionView,
     GalleryItemView,
+    WorkshopView,
 )
-from protocols.agentese.node import BasicRendering, Observer
-
 
 # === Fixtures ===
 

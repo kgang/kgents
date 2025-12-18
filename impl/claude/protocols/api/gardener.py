@@ -19,20 +19,20 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 from .models import (
+    GardenComputedResponse,
     GardenerCreateRequest,
     GardenerIntentRequest,
     GardenerPhase,
     GardenerSessionListResponse,
     GardenerSessionResponse,
-    GardenComputedResponse,
     GardenMetricsResponse,
     GardenSeason,
     GardenStateResponse,
     GestureResponse,
-    PlotResponse,
     # Phase 2 Crown Jewels: Plot CRUD
     PlotCreateRequest,
     PlotListResponse,
+    PlotResponse,
     PlotUpdateRequest,
     PolynomialEdge,
     PolynomialHistoryEntry,
@@ -298,7 +298,9 @@ def create_gardener_router() -> "APIRouter | None":
             result = await handle_session_create(ctx, observer, **kwargs)
 
             if result.get("status") == "error":
-                raise HTTPException(status_code=400, detail=result.get("message", "Creation failed"))
+                raise HTTPException(
+                    status_code=400, detail=result.get("message", "Creation failed")
+                )
 
             session_data = result.get("session", {})
             return _session_dict_to_response(session_data)
@@ -703,7 +705,9 @@ def create_gardener_router() -> "APIRouter | None":
             if request.rigidity is not None:
                 plot.rigidity = request.rigidity
             if request.season_override is not None:
-                from protocols.gardener_logos.garden import GardenSeason as GardenSeasonEnum
+                from protocols.gardener_logos.garden import (
+                    GardenSeason as GardenSeasonEnum,
+                )
 
                 plot.season_override = GardenSeasonEnum[request.season_override.value]
             if request.tags is not None:

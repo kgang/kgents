@@ -8,6 +8,7 @@ Validates:
 """
 
 import pytest
+
 from agents.gallery import (
     GALLERY_OPERAD,
     GALLERY_POLYNOMIAL,
@@ -230,9 +231,7 @@ class TestGalleryIntegration:
         """Both polynomial and operad can be used together."""
         # Polynomial handles navigation state
         state = GALLERY_INITIAL
-        state, _ = GALLERY_POLYNOMIAL.transition(
-            state, SelectPilotInput(pilot_name="test")
-        )
+        state, _ = GALLERY_POLYNOMIAL.transition(state, SelectPilotInput(pilot_name="test"))
 
         # Operad handles composition
         reset_op = GALLERY_OPERAD.get("reset")

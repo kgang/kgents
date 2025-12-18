@@ -14,8 +14,8 @@ Property-based tests ensure the spec is correct regardless of implementation.
 from __future__ import annotations
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
+
 from protocols.agentese.middleware.curator import (
     EXEMPT_ASPECTS,
     EXEMPT_PATHS,

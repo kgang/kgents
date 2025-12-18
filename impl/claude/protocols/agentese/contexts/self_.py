@@ -95,8 +95,8 @@ from .self_soul import (
 from .self_system import (
     SYSTEM_AFFORDANCES,
     SystemNode,
-    get_system_node,
     create_system_node,
+    get_system_node,
 )
 
 # V-gent Vector integration (Phase 7)
@@ -612,9 +612,7 @@ class JudgmentNode(BaseLogosNode):
         prior_work = kwargs.get("prior_work")
 
         loop = self._get_or_create_loop()
-        critique = await loop.critique(
-            artifact, observer, purpose=purpose, prior_work=prior_work
-        )
+        critique = await loop.critique(artifact, observer, purpose=purpose, prior_work=prior_work)
         return critique.to_dict()
 
     async def _refine_artifact(
@@ -654,8 +652,7 @@ class JudgmentNode(BaseLogosNode):
         generator_kwargs = {
             k: v
             for k, v in kwargs.items()
-            if k
-            not in ("logos", "generator_path", "purpose", "threshold", "max_iterations")
+            if k not in ("logos", "generator_path", "purpose", "threshold", "max_iterations")
         }
 
         loop = CriticsLoop(threshold=threshold, max_iterations=max_iterations)

@@ -10,6 +10,7 @@ These tests verify:
 """
 
 import pytest
+
 from agents.design import (
     # Operads
     CONTENT_OPERAD,
@@ -113,9 +114,7 @@ class TestMotionOperad:
     def test_motion_should_animate_law(self) -> None:
         """Verify motion gating law passes."""
         verifications = MOTION_OPERAD.verify_all_laws()
-        gating_law = next(
-            v for v in verifications if v.law_name == "motion_should_animate"
-        )
+        gating_law = next(v for v in verifications if v.law_name == "motion_should_animate")
         assert gating_law.passed
 
 
@@ -142,9 +141,7 @@ class TestDesignOperad:
     def test_composition_natural_law(self) -> None:
         """Verify composition naturality law passes."""
         verifications = DESIGN_OPERAD.verify_all_laws()
-        natural_law = next(
-            v for v in verifications if v.law_name == "composition_natural"
-        )
+        natural_law = next(v for v in verifications if v.law_name == "composition_natural")
         assert natural_law.passed
 
     def test_all_laws_pass(self) -> None:
@@ -155,9 +152,7 @@ class TestDesignOperad:
         # Laws can be PASSED (runtime verified) or STRUCTURAL (type-level verified)
         acceptable_statuses = {LawStatus.PASSED, LawStatus.STRUCTURAL}
         for v in verifications:
-            assert v.status in acceptable_statuses, (
-                f"Law {v.law_name} failed: {v.message}"
-            )
+            assert v.status in acceptable_statuses, f"Law {v.law_name} failed: {v.message}"
 
 
 # =============================================================================

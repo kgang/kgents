@@ -19,7 +19,6 @@ import pytest
 from ..backends.memory import MemoryVectorBackend
 from ..types import DistanceMetric, Embedding, VectorEntry
 
-
 # =============================================================================
 # Constants
 # =============================================================================
@@ -51,9 +50,7 @@ def make_unit_vector(seed: int, dimension: int = TEST_DIMENSION) -> tuple[float,
     return tuple(x / magnitude for x in raw)
 
 
-def make_embedding(
-    seed: int, dimension: int = TEST_DIMENSION, source: str = "test"
-) -> Embedding:
+def make_embedding(seed: int, dimension: int = TEST_DIMENSION, source: str = "test") -> Embedding:
     """
     Generate a deterministic test embedding.
 
@@ -74,9 +71,7 @@ def make_embedding(
     )
 
 
-def make_similar_embedding(
-    base: Embedding, noise: float = 0.1, seed: int = 42
-) -> Embedding:
+def make_similar_embedding(base: Embedding, noise: float = 0.1, seed: int = 42) -> Embedding:
     """
     Generate an embedding similar to the base with added noise.
 
@@ -121,9 +116,7 @@ def memory_backend() -> MemoryVectorBackend:
 @pytest.fixture
 def euclidean_backend() -> MemoryVectorBackend:
     """Fresh in-memory backend with euclidean metric."""
-    return MemoryVectorBackend(
-        dimension=TEST_DIMENSION, metric=DistanceMetric.EUCLIDEAN
-    )
+    return MemoryVectorBackend(dimension=TEST_DIMENSION, metric=DistanceMetric.EUCLIDEAN)
 
 
 @pytest.fixture

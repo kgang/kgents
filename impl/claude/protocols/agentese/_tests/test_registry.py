@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from protocols.agentese.node import BaseLogosNode, BasicRendering, Observer, Renderable
 from protocols.agentese.registry import (
     NODE_MARKER,
@@ -358,9 +359,7 @@ class TestRegistryIntegration:
             def handle(self) -> str:
                 return "test.invokable"
 
-            async def _invoke_aspect(
-                self, aspect: str, observer: Any, **kwargs: Any
-            ) -> Any:
+            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
                 if aspect == "greet":
                     return f"Hello, {kwargs.get('name', 'World')}!"
                 return await super()._invoke_aspect(aspect, observer, **kwargs)

@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
+
 from protocols.agentese.lattice.lineage import (
     STANDARD_PARENTS,
     ConceptLineage,
@@ -449,12 +450,8 @@ class TestExitCriteria:
 
         # Create chain: A -> B -> C
         lineage_a = ConceptLineage(handle="concept.cycle_a", extends=["concept"])
-        lineage_b = ConceptLineage(
-            handle="concept.cycle_b", extends=["concept.cycle_a"]
-        )
-        lineage_c = ConceptLineage(
-            handle="concept.cycle_c", extends=["concept.cycle_b"]
-        )
+        lineage_b = ConceptLineage(handle="concept.cycle_b", extends=["concept.cycle_a"])
+        lineage_c = ConceptLineage(handle="concept.cycle_c", extends=["concept.cycle_b"])
 
         checker.register_lineage(lineage_a)
         checker.register_lineage(lineage_b)
@@ -509,8 +506,5 @@ class TestExitCriteria:
         assert child.has_lineage is True
         assert child.lineage is not None
         assert "concept.entity" in child.lineage.extends
-        assert (
-            child.lineage.justification
-            == "Agents are specialized entities with autonomy."
-        )
+        assert child.lineage.justification == "Agents are specialized entities with autonomy."
         assert child.lineage.created_by == "test_observer"

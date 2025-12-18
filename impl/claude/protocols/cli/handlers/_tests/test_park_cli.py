@@ -20,7 +20,6 @@ from protocols.cli.handlers.park import (
     cmd_park,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -443,7 +442,13 @@ class TestDefaults:
     def test_all_eigenvector_keys(self):
         """Test all expected eigenvector keys present."""
         expected = {
-            "creativity", "trust", "empathy", "authority",
-            "playfulness", "wisdom", "directness", "warmth"
+            "creativity",
+            "trust",
+            "empathy",
+            "authority",
+            "playfulness",
+            "wisdom",
+            "directness",
+            "warmth",
         }
         assert set(DEFAULT_EIGENVECTORS.keys()) == expected

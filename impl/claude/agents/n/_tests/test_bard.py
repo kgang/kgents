@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.n.bard import (
     Bard,
     Chapter,
@@ -523,9 +524,7 @@ class TestBard:
         assert llm.call_count == 1
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_genre(
-        self, sample_traces: list[SemanticTrace]
-    ) -> None:
+    async def test_invoke_respects_genre(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard includes genre in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -539,9 +538,7 @@ class TestBard:
             assert f"GENRE: {genre.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_verbosity(
-        self, sample_traces: list[SemanticTrace]
-    ) -> None:
+    async def test_invoke_respects_verbosity(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard includes verbosity in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -554,9 +551,7 @@ class TestBard:
             assert f"VERBOSITY: {verbosity.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_respects_perspective(
-        self, sample_traces: list[SemanticTrace]
-    ) -> None:
+    async def test_invoke_respects_perspective(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard includes perspective in prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -569,9 +564,7 @@ class TestBard:
             assert f"PERSPECTIVE: {perspective.value}" in llm.last_prompt
 
     @pytest.mark.asyncio
-    async def test_invoke_custom_prompt(
-        self, sample_traces: list[SemanticTrace]
-    ) -> None:
+    async def test_invoke_custom_prompt(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard includes custom prompt."""
         llm = SimpleLLMProvider()
         bard = Bard(llm=llm)
@@ -596,9 +589,7 @@ class TestBard:
         assert narrative.title == "Custom Title"
 
     @pytest.mark.asyncio
-    async def test_invoke_generates_title(
-        self, sample_traces: list[SemanticTrace]
-    ) -> None:
+    async def test_invoke_generates_title(self, sample_traces: list[SemanticTrace]) -> None:
         """Bard generates title from traces."""
         bard = Bard()
         request = NarrativeRequest(traces=sample_traces)
@@ -606,10 +597,7 @@ class TestBard:
         narrative = await bard.invoke(request)
 
         # Should generate a title based on agents
-        assert (
-            "parser" in narrative.title.lower()
-            or "generator" in narrative.title.lower()
-        )
+        assert "parser" in narrative.title.lower() or "generator" in narrative.title.lower()
 
     def test_chapter_detection_agent_change(self) -> None:
         """Bard detects chapters on agent changes."""
@@ -618,15 +606,11 @@ class TestBard:
 
         traces = [
             make_trace(trace_id="t1", agent_id="a1", timestamp=base_time),
-            make_trace(
-                trace_id="t2", agent_id="a1", timestamp=base_time + timedelta(seconds=1)
-            ),
+            make_trace(trace_id="t2", agent_id="a1", timestamp=base_time + timedelta(seconds=1)),
             make_trace(
                 trace_id="t3", agent_id="a2", timestamp=base_time + timedelta(seconds=2)
             ),  # New agent
-            make_trace(
-                trace_id="t4", agent_id="a2", timestamp=base_time + timedelta(seconds=3)
-            ),
+            make_trace(trace_id="t4", agent_id="a2", timestamp=base_time + timedelta(seconds=3)),
         ]
 
         chapters = bard._identify_chapters(traces)
@@ -659,9 +643,7 @@ class TestBard:
         base_time = datetime.now()
 
         traces = [
-            make_trace(
-                trace_id="t1", agent_id="a1", action="INVOKE", timestamp=base_time
-            ),
+            make_trace(trace_id="t1", agent_id="a1", action="INVOKE", timestamp=base_time),
             make_trace(
                 trace_id="t2",
                 agent_id="a1",
@@ -763,9 +745,7 @@ class TestForensicBard:
 
         assert isinstance(diagnosis, Diagnosis)
         assert diagnosis.failure_trace == error_trace
-        assert (
-            "Root cause" in diagnosis.probable_cause or "Invalid" in diagnosis.narrative
-        )
+        assert "Root cause" in diagnosis.probable_cause or "Invalid" in diagnosis.narrative
 
     @pytest.mark.asyncio
     async def test_diagnose_with_context(
@@ -787,9 +767,7 @@ class TestForensicBard:
         assert "parser" in prompt.lower() or "CONTEXT" in prompt
 
     @pytest.mark.asyncio
-    async def test_diagnose_with_similar_failures(
-        self, error_trace: SemanticTrace
-    ) -> None:
+    async def test_diagnose_with_similar_failures(self, error_trace: SemanticTrace) -> None:
         """ForensicBard includes similar failures."""
         similar = [
             make_trace(

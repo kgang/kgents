@@ -47,18 +47,14 @@ from .bus import (
     PassthroughInterceptor,
     create_bus,
 )
-from .cortex_dashboard import (
-    CortexDashboard,
-    CortexDashboardConfig,
-    SparklineData,
-    create_cortex_dashboard,
-)
 
 # Cortex Dashboard (Instance DB Phase 6)
 from .cortex_dashboard import (
+    CortexDashboard,
+    CortexDashboardConfig,
     DashboardPanel as CortexDashboardPanel,
-)
-from .cortex_dashboard import (
+    SparklineData,
+    create_cortex_dashboard,
     create_minimal_dashboard as create_minimal_cortex_dashboard,
 )
 from .fidelity import (

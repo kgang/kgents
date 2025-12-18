@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+
 from agents.gestalt.polynomial import (
     GESTALT_POLYNOMIAL,
     AnalyzeInput,
@@ -263,9 +264,7 @@ class TestGestaltPolynomialInvoke:
     def test_invoke_full_scan_cycle(self):
         """Can run a full scan cycle: IDLE -> SCANNING -> IDLE."""
         # Start scan
-        state, _ = GESTALT_POLYNOMIAL.invoke(
-            GestaltPhase.IDLE, ScanInput(language="python")
-        )
+        state, _ = GESTALT_POLYNOMIAL.invoke(GestaltPhase.IDLE, ScanInput(language="python"))
         assert state == GestaltPhase.SCANNING
 
         # Return to idle
@@ -275,17 +274,13 @@ class TestGestaltPolynomialInvoke:
     def test_invoke_full_watch_cycle(self):
         """Can run a full watch cycle: IDLE -> WATCHING -> IDLE."""
         # Start watching
-        state, output = GESTALT_POLYNOMIAL.invoke(
-            GestaltPhase.IDLE, WatchInput(enable=True)
-        )
+        state, output = GESTALT_POLYNOMIAL.invoke(GestaltPhase.IDLE, WatchInput(enable=True))
         assert state == GestaltPhase.WATCHING
         assert isinstance(output, WatchOutput)
         assert output.watching is True
 
         # Analyze while watching
-        state, output = GESTALT_POLYNOMIAL.invoke(
-            state, AnalyzeInput(module_name="test")
-        )
+        state, output = GESTALT_POLYNOMIAL.invoke(state, AnalyzeInput(module_name="test"))
         assert state == GestaltPhase.WATCHING  # Still watching
         assert isinstance(output, AnalyzeOutput)
 

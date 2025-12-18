@@ -17,12 +17,11 @@ from typing import AsyncIterator
 
 import pytest
 
-from ..datum import Datum
-from ..backends.memory import MemoryBackend
 from ..backends.jsonl import JSONLBackend
+from ..backends.memory import MemoryBackend
 from ..backends.sqlite import SQLiteBackend
+from ..datum import Datum
 from ..protocol import DgentProtocol
-
 
 # --- Fixtures ---
 

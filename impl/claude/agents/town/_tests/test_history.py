@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
+
 from agents.town.history import (
     BuilderStats,
     DayMetric,
@@ -356,9 +357,7 @@ class TestWorkshopHistoryStore:
         assert store.get_task("task-1") is None
         assert store.get_task("task-4") is not None
 
-    def test_get_aggregate_metrics_empty(
-        self, history_store: WorkshopHistoryStore
-    ) -> None:
+    def test_get_aggregate_metrics_empty(self, history_store: WorkshopHistoryStore) -> None:
         """Test aggregate metrics with no tasks."""
         metrics = history_store.get_aggregate_metrics()
         assert metrics["total_tasks"] == 0

@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import pytest
+
 from agents.b.egent_integration import (
     # Prediction Market
     BetOutcome,

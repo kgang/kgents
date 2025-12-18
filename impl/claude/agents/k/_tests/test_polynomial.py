@@ -12,6 +12,7 @@ Tests verify:
 from typing import Any
 
 import pytest
+
 from agents.k.polynomial import (
     EIGENVECTOR_JUDGMENTS,
     EIGENVECTOR_QUESTIONS,
@@ -144,9 +145,7 @@ class TestEigenvectorTransition:
     def test_synthesizing_produces_full_response(self) -> None:
         """SYNTHESIZING produces response with all judgments."""
         query = SoulQuery(message="What should I do?", depth=6)
-        new_state, output = eigenvector_transition(
-            EigenvectorContext.SYNTHESIZING, query
-        )
+        new_state, output = eigenvector_transition(EigenvectorContext.SYNTHESIZING, query)
 
         assert isinstance(output, SoulResponse)
         assert len(output.judgments) == 6  # All core contexts
@@ -154,9 +153,7 @@ class TestEigenvectorTransition:
 
     def test_string_input_wraps_in_query(self) -> None:
         """String input is wrapped in SoulQuery."""
-        new_state, output = eigenvector_transition(
-            EigenvectorContext.JOY, "Is this fun?"
-        )
+        new_state, output = eigenvector_transition(EigenvectorContext.JOY, "Is this fun?")
 
         assert isinstance(output, SoulResponse)
         assert output.query.message == "Is this fun?"

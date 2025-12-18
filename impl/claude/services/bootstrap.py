@@ -37,17 +37,17 @@ from threading import Lock
 from typing import TYPE_CHECKING, Any, Callable, TypeVar
 
 if TYPE_CHECKING:
-    from agents.d import DgentProtocol, TableAdapter
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-    from services.brain import BrainPersistence
-    from services.gardener import GardenerPersistence
-    from services.town import TownPersistence
-    from services.gestalt import GestaltPersistence
+    from agents.d import DgentProtocol, TableAdapter
     from services.atelier import AtelierPersistence
+    from services.brain import BrainPersistence
     from services.coalition import CoalitionPersistence
-    from services.park import ParkPersistence
+    from services.gardener import GardenerPersistence
+    from services.gestalt import GestaltPersistence
     from services.morpheus import MorpheusPersistence
+    from services.park import ParkPersistence
+    from services.town import TownPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -295,7 +295,7 @@ class ServiceRegistry:
 
         # Gestalt persistence
         if name == "gestalt_persistence":
-            from models.gestalt import Topology, CodeBlock
+            from models.gestalt import CodeBlock, Topology
             from services.gestalt import GestaltPersistence
 
             topology_adapter = TableAdapter(
@@ -314,7 +314,7 @@ class ServiceRegistry:
 
         # Atelier persistence
         if name == "atelier_persistence":
-            from models.atelier import Workshop, Artisan
+            from models.atelier import Artisan, Workshop
             from services.atelier import AtelierPersistence
 
             workshop_adapter = TableAdapter(
@@ -352,7 +352,7 @@ class ServiceRegistry:
 
         # Park persistence
         if name == "park_persistence":
-            from models.park import Host, Episode
+            from models.park import Episode, Host
             from services.park import ParkPersistence
 
             host_adapter = TableAdapter(
@@ -371,7 +371,7 @@ class ServiceRegistry:
 
         # Morpheus persistence (no database - wraps LLM gateway)
         if name == "morpheus_persistence":
-            from services.morpheus import MorpheusPersistence, MorpheusGateway
+            from services.morpheus import MorpheusGateway, MorpheusPersistence
             from services.morpheus.adapters import ClaudeCLIAdapter
 
             gateway = MorpheusGateway()

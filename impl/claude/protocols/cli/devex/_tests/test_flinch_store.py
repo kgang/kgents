@@ -11,6 +11,7 @@ from typing import Any, Generator
 from unittest.mock import MagicMock
 
 import pytest
+
 from protocols.cli.devex.flinch_store import (
     Flinch,
     FlinchStore,
@@ -173,9 +174,7 @@ class TestFlinchStoreAsync:
     """Tests for async FlinchStore operations."""
 
     @pytest.mark.asyncio
-    async def test_emit_to_telemetry(
-        self, flinch_store: Any, telemetry_store: Any
-    ) -> None:
+    async def test_emit_to_telemetry(self, flinch_store: Any, telemetry_store: Any) -> None:
         """Emit flinch writes to telemetry store."""
         flinch = Flinch(
             test_id="test_foo.py::test_bar",
@@ -319,9 +318,7 @@ class TestFlinchStoreSync:
         assert "test_foo.py::test_bar" in content
 
     @pytest.mark.slow
-    def test_emit_sync_queues_for_telemetry(
-        self, telemetry_store: Any, temp_dir: Path
-    ) -> None:
+    def test_emit_sync_queues_for_telemetry(self, telemetry_store: Any, temp_dir: Path) -> None:
         """emit_sync queues flinch for async telemetry processing."""
         store = FlinchStore(
             telemetry=telemetry_store,
@@ -411,20 +408,14 @@ class TestGetFlinchStore:
 
     def test_get_flinch_store_creates_singleton(self, temp_dir: Path) -> None:
         """get_flinch_store returns same instance."""
-        store1 = get_flinch_store(
-            jsonl_fallback=temp_dir / "flinches.jsonl", reinit=True
-        )
+        store1 = get_flinch_store(jsonl_fallback=temp_dir / "flinches.jsonl", reinit=True)
         store2 = get_flinch_store()
 
         assert store1 is store2
 
     def test_get_flinch_store_reinit(self, temp_dir: Path) -> None:
         """reinit=True creates new instance."""
-        store1 = get_flinch_store(
-            jsonl_fallback=temp_dir / "flinches1.jsonl", reinit=True
-        )
-        store2 = get_flinch_store(
-            jsonl_fallback=temp_dir / "flinches2.jsonl", reinit=True
-        )
+        store1 = get_flinch_store(jsonl_fallback=temp_dir / "flinches1.jsonl", reinit=True)
+        store2 = get_flinch_store(jsonl_fallback=temp_dir / "flinches2.jsonl", reinit=True)
 
         assert store1 is not store2

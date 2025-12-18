@@ -9,6 +9,7 @@ Tests the core G-gent synthesis capabilities:
 """
 
 import pytest
+
 from agents.g.synthesis import (
     _apply_constraints,
     _extract_entities,
@@ -282,9 +283,7 @@ async def test_full_synthesis_pipeline_command() -> None:
     grammar = await synthesize_grammar(analysis, GrammarLevel.COMMAND)
 
     # Generate configs
-    parser_config = generate_parser_config(
-        grammar, GrammarLevel.COMMAND, GrammarFormat.BNF
-    )
+    parser_config = generate_parser_config(grammar, GrammarLevel.COMMAND, GrammarFormat.BNF)
     interpreter_config = generate_interpreter_config(GrammarLevel.COMMAND)
 
     # Verify
@@ -308,9 +307,7 @@ async def test_full_synthesis_pipeline_schema() -> None:
     grammar = await synthesize_grammar(analysis, GrammarLevel.SCHEMA)
 
     # Generate configs
-    parser_config = generate_parser_config(
-        grammar, GrammarLevel.SCHEMA, GrammarFormat.PYDANTIC
-    )
+    parser_config = generate_parser_config(grammar, GrammarLevel.SCHEMA, GrammarFormat.PYDANTIC)
     interpreter_config = generate_interpreter_config(GrammarLevel.SCHEMA)
 
     # Verify

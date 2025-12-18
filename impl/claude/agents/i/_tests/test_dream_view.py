@@ -5,6 +5,7 @@ Tests dream report rendering, morning briefing, and neurogenesis visualization.
 """
 
 import pytest
+
 from agents.i.dream_view import (
     DreamPhase,
     MaintenanceChunk,

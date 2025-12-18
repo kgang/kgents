@@ -29,14 +29,14 @@ if TYPE_CHECKING:
 
 BUS_AFFORDANCES: tuple[str, ...] = (
     # Subscription
-    "subscribe",     # Subscribe to event types
-    "unsubscribe",   # Unsubscribe from events
+    "subscribe",  # Subscribe to event types
+    "unsubscribe",  # Unsubscribe from events
     # Replay
-    "replay",        # Replay buffered events
+    "replay",  # Replay buffered events
     # Inspection
-    "latest",        # Get most recent event
-    "stats",         # Get bus statistics
-    "history",       # Get recent event history
+    "latest",  # Get most recent event
+    "stats",  # Get bus statistics
+    "history",  # Get recent event history
 )
 
 
@@ -174,18 +174,21 @@ class BusNode(BaseLogosNode):
 
         if not handler_id:
             import uuid
+
             handler_id = f"sub_{uuid.uuid4().hex[:8]}"
 
         # Create a simple collecting handler
         collected_events: list[dict[str, Any]] = []
 
         async def handler(event: Any) -> None:
-            collected_events.append({
-                "event_id": event.event_id,
-                "event_type": event.event_type.name,
-                "datum_id": event.datum_id,
-                "timestamp": event.timestamp,
-            })
+            collected_events.append(
+                {
+                    "event_id": event.event_id,
+                    "event_type": event.event_type.name,
+                    "datum_id": event.datum_id,
+                    "timestamp": event.timestamp,
+                }
+            )
 
         # Subscribe based on event type
         if event_type_str == "ALL":
@@ -295,13 +298,15 @@ class BusNode(BaseLogosNode):
         collected: list[dict[str, Any]] = []
 
         async def collector(event: Any) -> None:
-            collected.append({
-                "event_id": event.event_id,
-                "event_type": event.event_type.name,
-                "datum_id": event.datum_id,
-                "timestamp": event.timestamp,
-                "source": event.source,
-            })
+            collected.append(
+                {
+                    "event_id": event.event_id,
+                    "event_type": event.event_type.name,
+                    "datum_id": event.datum_id,
+                    "timestamp": event.timestamp,
+                    "source": event.source,
+                }
+            )
 
         count = await self._bus.replay(
             handler=collector,
@@ -488,10 +493,10 @@ def wire_data_to_synergy(
     from agents.d.bus import DataEventType, get_data_bus
     from protocols.synergy.bus import get_synergy_bus
     from protocols.synergy.events import (
-        create_data_stored_event,
-        create_data_deleted_event,
-        create_data_upgraded_event,
         create_data_degraded_event,
+        create_data_deleted_event,
+        create_data_stored_event,
+        create_data_upgraded_event,
     )
 
     data_bus = data_bus or get_data_bus()

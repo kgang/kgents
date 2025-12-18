@@ -5,6 +5,8 @@ Verifies hint-to-widget mapping, factory registration, and rendering.
 """
 
 import pytest
+from textual.widgets import Static
+
 from agents.i.data.hint_registry import (
     HintRegistry,
     get_hint_registry,
@@ -12,7 +14,6 @@ from agents.i.data.hint_registry import (
 )
 from agents.i.data.hints import VisualHint
 from agents.i.widgets.density_field import DensityField
-from textual.widgets import Static
 
 
 class TestHintRegistryBasics:

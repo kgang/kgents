@@ -12,6 +12,7 @@ Tests verify:
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.composable import (
     ComposableMixin,
     ComposableWidget,
@@ -598,8 +599,9 @@ class TestToTextual:
 
     def test_adapter_to_textual_function(self) -> None:
         """to_textual() function from adapters works on composed widgets."""
-        from agents.i.reactive.adapters import to_textual
         from textual.containers import Vertical
+
+        from agents.i.reactive.adapters import to_textual
 
         a = GlyphWidget(GlyphState(char="A"))
         b = GlyphWidget(GlyphState(char="B"))
@@ -621,8 +623,9 @@ class TestToTextual:
 
     def test_adapter_to_textual_passthrough_textual_widget(self) -> None:
         """to_textual() returns Textual widgets unchanged."""
-        from agents.i.reactive.adapters import to_textual
         from textual.widgets import Static
+
+        from agents.i.reactive.adapters import to_textual
 
         static = Static("Hello")
 

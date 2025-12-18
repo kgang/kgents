@@ -16,11 +16,7 @@ from typing import Any, Iterator, Optional
 
 from agents.p.core import (
     Parser,
-)
-from agents.p.core import (
     ParserConfig as PParserConfig,
-)
-from agents.p.core import (
     ParseResult as PParseResult,
 )
 
@@ -75,9 +71,7 @@ class BgentHypothesisParser:
                     "num_hypotheses": len(parsed.hypotheses),
                     "num_reasoning_steps": len(parsed.reasoning_chain),
                     "num_tests": len(parsed.suggested_tests),
-                    "avg_hypothesis_confidence": sum(
-                        h.confidence for h in parsed.hypotheses
-                    )
+                    "avg_hypothesis_confidence": sum(h.confidence for h in parsed.hypotheses)
                     / len(parsed.hypotheses),
                 },
             )

@@ -31,6 +31,9 @@ from .cli_types import (
     PersonaMode,
 )
 from .dimensions import (
+    # Constants
+    DEFAULT_DIMENSIONS,
+    PROTECTED_RESOURCES,
     # Dimension enums
     Backend,
     CommandDimensions,
@@ -39,9 +42,6 @@ from .dimensions import (
     Interactivity,
     Seriousness,
     Statefulness,
-    # Constants
-    DEFAULT_DIMENSIONS,
-    PROTECTED_RESOURCES,
     # Derivation functions
     derive_backend,
     derive_dimensions,

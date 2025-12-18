@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
+
 from protocols.agentese.contexts.self_ import (
     SelfContextResolver,
     create_self_resolver,
@@ -88,9 +89,7 @@ class TestFlowNode:
         assert "stop" in affordances
 
     @pytest.mark.asyncio
-    async def test_flow_manifest(
-        self, flow_node: FlowNode, observer: MockUmwelt
-    ) -> None:
+    async def test_flow_manifest(self, flow_node: FlowNode, observer: MockUmwelt) -> None:
         """FlowNode manifest shows current state."""
         result = await flow_node.manifest(observer)  # type: ignore[arg-type]
         assert result is not None
@@ -99,35 +98,27 @@ class TestFlowNode:
         assert "active_modality" in result.metadata  # type: ignore[attr-defined]
 
     @pytest.mark.asyncio
-    async def test_flow_state_dormant(
-        self, flow_node: FlowNode, observer: MockUmwelt
-    ) -> None:
+    async def test_flow_state_dormant(self, flow_node: FlowNode, observer: MockUmwelt) -> None:
         """Flow state is dormant when no flow active."""
         result = await flow_node._invoke_aspect("state", observer)  # type: ignore[arg-type]
         assert result is not None
         assert "state" in result
 
     @pytest.mark.asyncio
-    async def test_flow_modality_none(
-        self, flow_node: FlowNode, observer: MockUmwelt
-    ) -> None:
+    async def test_flow_modality_none(self, flow_node: FlowNode, observer: MockUmwelt) -> None:
         """Flow modality is none when no flow active."""
         result = await flow_node._invoke_aspect("modality", observer)  # type: ignore[arg-type]
         assert result == "none"
 
     @pytest.mark.asyncio
-    async def test_flow_entropy(
-        self, flow_node: FlowNode, observer: MockUmwelt
-    ) -> None:
+    async def test_flow_entropy(self, flow_node: FlowNode, observer: MockUmwelt) -> None:
         """Flow entropy returns default when no flow active."""
         result = await flow_node._invoke_aspect("entropy", observer)  # type: ignore[arg-type]
         assert result is not None
         assert "entropy" in result
 
     @pytest.mark.asyncio
-    async def test_flow_start_chat(
-        self, flow_node: FlowNode, observer: MockUmwelt
-    ) -> None:
+    async def test_flow_start_chat(self, flow_node: FlowNode, observer: MockUmwelt) -> None:
         """Can start a chat flow."""
         result = await flow_node._invoke_aspect("start", observer, modality="chat")  # type: ignore[arg-type]
         # May fail if agents.f not fully configured, but should handle gracefully
@@ -243,9 +234,7 @@ class TestSelfContextResolverFlowIntegration:
         assert node is not None
         assert isinstance(node, ResearchFlowNode)
 
-    def test_resolve_flow_collaboration(
-        self, self_resolver: SelfContextResolver
-    ) -> None:
+    def test_resolve_flow_collaboration(self, self_resolver: SelfContextResolver) -> None:
         """Can resolve self.flow.collaboration path."""
         node = self_resolver.resolve("flow", ["collaboration"])
         assert node is not None

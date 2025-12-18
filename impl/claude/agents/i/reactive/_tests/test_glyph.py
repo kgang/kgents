@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
 from agents.i.reactive.widget import RenderTarget
 
@@ -249,9 +250,7 @@ class TestGlyphDeterminism:
 
         assert widget1.project(RenderTarget.CLI) == widget2.project(RenderTarget.CLI)
         assert widget1.project(RenderTarget.JSON) == widget2.project(RenderTarget.JSON)
-        assert widget1.project(RenderTarget.MARIMO) == widget2.project(
-            RenderTarget.MARIMO
-        )
+        assert widget1.project(RenderTarget.MARIMO) == widget2.project(RenderTarget.MARIMO)
 
     def test_different_time_different_distortion(self) -> None:
         """Different time produces different distortion."""
@@ -324,8 +323,14 @@ class TestGlyphProjectionLaws:
 
         def change_phase(s: GlyphState) -> GlyphState:
             return GlyphState(
-                char=s.char, fg=s.fg, bg=s.bg, phase="error",
-                entropy=s.entropy, seed=s.seed, t=s.t, animate=s.animate,
+                char=s.char,
+                fg=s.fg,
+                bg=s.bg,
+                phase="error",
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                animate=s.animate,
             )
 
         def identity(s: GlyphState) -> GlyphState:
@@ -340,14 +345,26 @@ class TestGlyphProjectionLaws:
 
         def double_entropy(s: GlyphState) -> GlyphState:
             return GlyphState(
-                char=s.char, fg=s.fg, bg=s.bg, phase=s.phase,
-                entropy=min(1.0, s.entropy * 2), seed=s.seed, t=s.t, animate=s.animate,
+                char=s.char,
+                fg=s.fg,
+                bg=s.bg,
+                phase=s.phase,
+                entropy=min(1.0, s.entropy * 2),
+                seed=s.seed,
+                t=s.t,
+                animate=s.animate,
             )
 
         def add_time(s: GlyphState) -> GlyphState:
             return GlyphState(
-                char=s.char, fg=s.fg, bg=s.bg, phase=s.phase,
-                entropy=s.entropy, seed=s.seed, t=s.t + 100.0, animate=s.animate,
+                char=s.char,
+                fg=s.fg,
+                bg=s.bg,
+                phase=s.phase,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t + 100.0,
+                animate=s.animate,
             )
 
         widget = GlyphWidget(GlyphState(char="X", entropy=0.2, seed=42))
@@ -373,8 +390,14 @@ class TestGlyphProjectionLaws:
 
         def change_char(s: GlyphState) -> GlyphState:
             return GlyphState(
-                char="Z", fg=s.fg, bg=s.bg, phase=s.phase,
-                entropy=s.entropy, seed=s.seed, t=s.t, animate=s.animate,
+                char="Z",
+                fg=s.fg,
+                bg=s.bg,
+                phase=s.phase,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                animate=s.animate,
             )
 
         def identity(s: GlyphState) -> GlyphState:

@@ -15,7 +15,6 @@ def fix_file(path: Path) -> int:
         print(f"Error reading {path}: {e}")
         return 0
 
-    original = content
     lines = content.split("\n")
     fixes = 0
     i = 0
@@ -58,9 +57,7 @@ def fix_file(path: Path) -> int:
         content = "\n".join(lines)
         # Ensure Any is imported
         if "from typing import" in content and "Any" not in content:
-            content = re.sub(
-                r"(from typing import )([^)]+)", r"\1Any, \2", content, count=1
-            )
+            content = re.sub(r"(from typing import )([^)]+)", r"\1Any, \2", content, count=1)
         elif "from typing import" not in content:
             # Add typing import at top after other imports
             lines = content.split("\n")

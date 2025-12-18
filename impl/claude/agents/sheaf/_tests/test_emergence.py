@@ -12,6 +12,7 @@ These tests verify:
 from typing import Any
 
 import pytest
+
 from agents.poly import PolyAgent, from_function
 from agents.sheaf import (
     AESTHETIC,

@@ -20,8 +20,7 @@ See: docs/agent-cross-pollination-final-proposal.md (Phase 2)
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from dataclasses import field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field
 from datetime import datetime
 from enum import Enum
 from math import exp
@@ -154,9 +153,7 @@ class FieldCoordinate:
             # Euclidean distance in embedding space
             if len(self.embedding) != len(other.embedding):
                 return float("inf")
-            sum_sq: float = sum(
-                (a - b) ** 2 for a, b in zip(self.embedding, other.embedding)
-            )
+            sum_sq: float = sum((a - b) ** 2 for a, b in zip(self.embedding, other.embedding))
             return float(sum_sq**0.5)
 
         if self.domain and other.domain:
@@ -489,9 +486,7 @@ class SemanticField:
         """Register a callback for pheromone deposits."""
         self._on_deposit.append(callback)
 
-    def on_sense(
-        self, callback: Callable[[str, list[SemanticPheromone[Any]]], None]
-    ) -> None:
+    def on_sense(self, callback: Callable[[str, list[SemanticPheromone[Any]]], None]) -> None:
         """Register a callback for sense operations."""
         self._on_sense.append(callback)
 
@@ -840,8 +835,7 @@ class MemoryFieldSensor:
         return [
             p.payload
             for p in pheromones
-            if isinstance(p.payload, MemoryPayload)
-            and p.payload.importance >= min_importance
+            if isinstance(p.payload, MemoryPayload) and p.payload.importance >= min_importance
         ]
 
 
@@ -944,9 +938,7 @@ class NarrativeFieldSensor:
             kind=SemanticPheromoneKind.NARRATIVE,
         )
 
-        results = [
-            p.payload for p in pheromones if isinstance(p.payload, NarrativePayload)
-        ]
+        results = [p.payload for p in pheromones if isinstance(p.payload, NarrativePayload)]
 
         if thread_id:
             results = [n for n in results if n.thread_id == thread_id]
@@ -1018,9 +1010,7 @@ class ObserverFieldSensor:
         """
         Get a summary of field activity by pheromone type.
         """
-        return {
-            kind.value: len(self._field.get_all(kind)) for kind in SemanticPheromoneKind
-        }
+        return {kind.value: len(self._field.get_all(kind)) for kind in SemanticPheromoneKind}
 
 
 # =============================================================================
@@ -1214,9 +1204,7 @@ class CatalogFieldSensor:
             kind=SemanticPheromoneKind.CAPABILITY,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, CapabilityPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, CapabilityPayload)]
 
     def sense_by_tags(
         self,
@@ -1249,9 +1237,7 @@ class CatalogFieldSensor:
         )
 
         return [
-            p.payload
-            for p in pheromones
-            if isinstance(p.payload, CapabilityDeprecationPayload)
+            p.payload for p in pheromones if isinstance(p.payload, CapabilityDeprecationPayload)
         ]
 
     def sense_capability_requests(
@@ -1268,11 +1254,7 @@ class CatalogFieldSensor:
             kind=SemanticPheromoneKind.CAPABILITY,
         )
 
-        return [
-            p.payload
-            for p in pheromones
-            if isinstance(p.payload, CapabilityRequestPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, CapabilityRequestPayload)]
 
     def find_capability(
         self,
@@ -1317,9 +1299,7 @@ class CatalogFieldSensor:
         Get total number of registered capabilities.
         """
         all_capabilities = self._field.get_all(SemanticPheromoneKind.CAPABILITY)
-        return len(
-            [p for p in all_capabilities if isinstance(p.payload, CapabilityPayload)]
-        )
+        return len([p for p in all_capabilities if isinstance(p.payload, CapabilityPayload)])
 
 
 # =============================================================================
@@ -1981,9 +1961,7 @@ class EvolutionFieldSensor:
             kind=SemanticPheromoneKind.REFINEMENT,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, RefinementPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, RefinementPayload)]
 
     def sense_opportunities(
         self,
@@ -2002,9 +1980,7 @@ class EvolutionFieldSensor:
         )
 
         return [
-            p.payload
-            for p in pheromones
-            if isinstance(p.payload, RefinementOpportunityPayload)
+            p.payload for p in pheromones if isinstance(p.payload, RefinementOpportunityPayload)
         ]
 
     def sense_by_target(
@@ -2034,9 +2010,7 @@ class EvolutionFieldSensor:
         """
         refinements = self.sense_refinements(position, radius)
         if improvement_type:
-            refinements = [
-                r for r in refinements if r.improvement_type == improvement_type
-            ]
+            refinements = [r for r in refinements if r.improvement_type == improvement_type]
         if not refinements:
             return None
         return max(refinements, key=lambda r: r.improvement_ratio)
@@ -2088,9 +2062,7 @@ class RefineryFieldSensor:
             kind=SemanticPheromoneKind.MUTATION,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, FitnessChangePayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, FitnessChangePayload)]
 
     def sense_cycle_completions(
         self,
@@ -2108,9 +2080,7 @@ class RefineryFieldSensor:
             kind=SemanticPheromoneKind.MUTATION,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, CycleCompletePayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, CycleCompletePayload)]
 
     def sense_positive_mutations(
         self,
@@ -2168,9 +2138,7 @@ class PersonaFieldSensor:
             kind=SemanticPheromoneKind.SYNTHESIS,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, SynthesisPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, SynthesisPayload)]
 
     def sense_contradictions(
         self,
@@ -2188,9 +2156,7 @@ class PersonaFieldSensor:
             kind=SemanticPheromoneKind.SYNTHESIS,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, ContradictionPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, ContradictionPayload)]
 
     def sense_by_domain(
         self,
@@ -2280,9 +2246,7 @@ class HegelFieldSensor:
             kind=SemanticPheromoneKind.PRIOR,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, PersonaShiftPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, PersonaShiftPayload)]
 
     def sense_by_prior_type(
         self,
@@ -2361,30 +2325,22 @@ def create_psi_emitter(field: SemanticField, agent_id: str = "psi") -> PsiFieldE
     return PsiFieldEmitter(field, agent_id)
 
 
-def create_forge_sensor(
-    field: SemanticField, agent_id: str = "forge"
-) -> ForgeFieldSensor:
+def create_forge_sensor(field: SemanticField, agent_id: str = "forge") -> ForgeFieldSensor:
     """Create an F-gent field sensor."""
     return ForgeFieldSensor(field, agent_id)
 
 
-def create_safety_emitter(
-    field: SemanticField, agent_id: str = "judge"
-) -> SafetyFieldEmitter:
+def create_safety_emitter(field: SemanticField, agent_id: str = "judge") -> SafetyFieldEmitter:
     """Create a J-gent safety emitter."""
     return SafetyFieldEmitter(field, agent_id)
 
 
-def create_economic_emitter(
-    field: SemanticField, agent_id: str = "banker"
-) -> EconomicFieldEmitter:
+def create_economic_emitter(field: SemanticField, agent_id: str = "banker") -> EconomicFieldEmitter:
     """Create a B-gent economic emitter."""
     return EconomicFieldEmitter(field, agent_id)
 
 
-def create_memory_emitter(
-    field: SemanticField, agent_id: str = "memory"
-) -> MemoryFieldEmitter:
+def create_memory_emitter(field: SemanticField, agent_id: str = "memory") -> MemoryFieldEmitter:
     """Create an M-gent memory emitter."""
     return MemoryFieldEmitter(field, agent_id)
 
@@ -2410,16 +2366,12 @@ def create_narrative_sensor(
     return NarrativeFieldSensor(field, agent_id)
 
 
-def create_observer_sensor(
-    field: SemanticField, agent_id: str = "observer"
-) -> ObserverFieldSensor:
+def create_observer_sensor(field: SemanticField, agent_id: str = "observer") -> ObserverFieldSensor:
     """Create an O-gent observer sensor."""
     return ObserverFieldSensor(field, agent_id)
 
 
-def create_catalog_emitter(
-    field: SemanticField, agent_id: str = "catalog"
-) -> CatalogFieldEmitter:
+def create_catalog_emitter(field: SemanticField, agent_id: str = "catalog") -> CatalogFieldEmitter:
     """Create an L-gent catalog emitter."""
     return CatalogFieldEmitter(field, agent_id)
 
@@ -2441,16 +2393,12 @@ def create_evolution_emitter(
     return EvolutionFieldEmitter(field, agent_id)
 
 
-def create_hegel_emitter(
-    field: SemanticField, agent_id: str = "hegel"
-) -> HegelFieldEmitter:
+def create_hegel_emitter(field: SemanticField, agent_id: str = "hegel") -> HegelFieldEmitter:
     """Create an H-gent Hegel emitter."""
     return HegelFieldEmitter(field, agent_id)
 
 
-def create_persona_emitter(
-    field: SemanticField, agent_id: str = "persona"
-) -> PersonaFieldEmitter:
+def create_persona_emitter(field: SemanticField, agent_id: str = "persona") -> PersonaFieldEmitter:
     """Create a K-gent persona emitter."""
     return PersonaFieldEmitter(field, agent_id)
 
@@ -2486,9 +2434,7 @@ def create_persona_sensor(
     return PersonaFieldSensor(field, agent_id)
 
 
-def create_hegel_sensor(
-    field: SemanticField, agent_id: str = "hegel_sensor"
-) -> HegelFieldSensor:
+def create_hegel_sensor(field: SemanticField, agent_id: str = "hegel_sensor") -> HegelFieldSensor:
     """Create an H-gent Hegel sensor (senses PRIOR)."""
     return HegelFieldSensor(field, agent_id)
 
@@ -2754,8 +2700,7 @@ class DataFieldSensor:
         return [
             p.payload
             for p in pheromones
-            if isinstance(p.payload, StalePayload)
-            and p.payload.staleness_score >= min_staleness
+            if isinstance(p.payload, StalePayload) and p.payload.staleness_score >= min_staleness
         ]
 
     def get_deletions(
@@ -2967,9 +2912,7 @@ class TestFieldSensor:
             kind=SemanticPheromoneKind.TEST,
         )
 
-        return [
-            p.payload for p in pheromones if isinstance(p.payload, TestResultPayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, TestResultPayload)]
 
     def sense_failures(
         self,
@@ -3010,11 +2953,7 @@ class TestFieldSensor:
             kind=SemanticPheromoneKind.TEST,
         )
 
-        return [
-            p.payload
-            for p in pheromones
-            if isinstance(p.payload, CoverageChangePayload)
-        ]
+        return [p.payload for p in pheromones if isinstance(p.payload, CoverageChangePayload)]
 
     def get_coverage_regressions(
         self,
@@ -3314,43 +3253,31 @@ class WireFieldSensor:
 # Phase 3 Factory Functions
 
 
-def create_data_emitter(
-    field: SemanticField, agent_id: str = "data"
-) -> DataFieldEmitter:
+def create_data_emitter(field: SemanticField, agent_id: str = "data") -> DataFieldEmitter:
     """Create a D-gent data emitter."""
     return DataFieldEmitter(field, agent_id)
 
 
-def create_data_sensor(
-    field: SemanticField, agent_id: str = "data_sensor"
-) -> DataFieldSensor:
+def create_data_sensor(field: SemanticField, agent_id: str = "data_sensor") -> DataFieldSensor:
     """Create a D-gent data sensor."""
     return DataFieldSensor(field, agent_id)
 
 
-def create_test_emitter(
-    field: SemanticField, agent_id: str = "test"
-) -> TestFieldEmitter:
+def create_test_emitter(field: SemanticField, agent_id: str = "test") -> TestFieldEmitter:
     """Create a T-gent test emitter."""
     return TestFieldEmitter(field, agent_id)
 
 
-def create_test_sensor(
-    field: SemanticField, agent_id: str = "test_sensor"
-) -> TestFieldSensor:
+def create_test_sensor(field: SemanticField, agent_id: str = "test_sensor") -> TestFieldSensor:
     """Create a T-gent test sensor."""
     return TestFieldSensor(field, agent_id)
 
 
-def create_wire_emitter(
-    field: SemanticField, agent_id: str = "wire"
-) -> WireFieldEmitter:
+def create_wire_emitter(field: SemanticField, agent_id: str = "wire") -> WireFieldEmitter:
     """Create a W-gent wire emitter."""
     return WireFieldEmitter(field, agent_id)
 
 
-def create_wire_sensor(
-    field: SemanticField, agent_id: str = "wire_sensor"
-) -> WireFieldSensor:
+def create_wire_sensor(field: SemanticField, agent_id: str = "wire_sensor") -> WireFieldSensor:
     """Create a W-gent wire sensor."""
     return WireFieldSensor(field, agent_id)

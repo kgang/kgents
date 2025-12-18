@@ -3,6 +3,7 @@
 import time
 
 import pytest
+
 from agents.i.reactive._metrics import (
     RenderTimer,
     get_error_count,

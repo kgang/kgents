@@ -7,6 +7,7 @@ Tests k-hop retrieval, decay, reinforcement, and serialization.
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.town.memory import (
     ConnectionKind,
     GraphMemory,

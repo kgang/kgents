@@ -7,6 +7,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
+
 from protocols.streaming.nats_bridge import (
     NATSBridge,
     NATSBridgeConfig,

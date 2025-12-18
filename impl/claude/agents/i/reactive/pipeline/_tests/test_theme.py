@@ -1,6 +1,7 @@
 """Tests for Theme System."""
 
 import pytest
+
 from agents.i.reactive.pipeline.theme import (
     ANSI_BOLD,
     ANSI_RESET,

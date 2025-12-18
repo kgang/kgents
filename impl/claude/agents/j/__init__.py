@@ -105,13 +105,11 @@ from .t_integration import (
     JSON_FIELD_EXTRACTOR,
     TEXT_TRANSFORMER,
     JITToolMeta,
+    JITToolWrapper as JITTool,
     ToolTemplate,
     compile_tool_from_intent,
     compile_tool_from_template,
     create_tool_from_source,
-)
-from .t_integration import (
-    JITToolWrapper as JITTool,
 )
 
 __all__ = [

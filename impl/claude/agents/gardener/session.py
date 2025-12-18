@@ -26,9 +26,10 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Callable, FrozenSet
 
-from agents.poly.protocol import PolyAgent
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+
+from agents.poly.protocol import PolyAgent
 
 if TYPE_CHECKING:
     from .persistence import SessionStore
@@ -366,9 +367,7 @@ def _handle_sense(
     match cmd:
         case "gather":
             # Gather context (in production, would call AGENTESE paths)
-            context_type = (
-                input.get("type", "all") if isinstance(input, dict) else "all"
-            )
+            context_type = input.get("type", "all") if isinstance(input, dict) else "all"
             gathered = {
                 "type": context_type,
                 "timestamp": datetime.now().isoformat(),
@@ -442,9 +441,7 @@ def _handle_act(
     match cmd:
         case "execute":
             # Execute an action (in production, would invoke tools)
-            action = (
-                input.get("action", "unknown") if isinstance(input, dict) else "unknown"
-            )
+            action = input.get("action", "unknown") if isinstance(input, dict) else "unknown"
             return SessionPhase.ACT, {
                 "status": "executed",
                 "action": action,
@@ -753,9 +750,7 @@ class GardenerSession:
             span.set_status(Status(StatusCode.OK))
             return result
 
-    async def set_intent(
-        self, intent: SessionIntent | dict[str, Any]
-    ) -> dict[str, Any]:
+    async def set_intent(self, intent: SessionIntent | dict[str, Any]) -> dict[str, Any]:
         """Set the session intent."""
         tracer = _get_session_tracer()
         with tracer.start_as_current_span("session.set_intent") as span:
@@ -785,9 +780,7 @@ class GardenerSession:
             self._phase, result = self._poly.invoke(self._phase, "advance")
 
             span.set_attribute("session.new_phase", self._phase.name)
-            span.set_attribute(
-                ATTR_DURATION_MS, (time.perf_counter() - start_time) * 1000
-            )
+            span.set_attribute(ATTR_DURATION_MS, (time.perf_counter() - start_time) * 1000)
 
             # Persist if configured
             if self._config.persist_on_advance and self._store:
@@ -801,9 +794,7 @@ class GardenerSession:
             span.set_status(Status(StatusCode.OK))
             return result
 
-    async def record_artifact(
-        self, artifact: SessionArtifact | dict[str, Any]
-    ) -> dict[str, Any]:
+    async def record_artifact(self, artifact: SessionArtifact | dict[str, Any]) -> dict[str, Any]:
         """Record an artifact in ACT phase."""
         tracer = _get_session_tracer()
         with tracer.start_as_current_span("session.record_artifact") as span:
@@ -868,9 +859,7 @@ class GardenerSession:
             span.set_attribute(ATTR_SESSION_PHASE, self._phase.name)
 
             if self._phase != SessionPhase.REFLECT:
-                span.set_status(
-                    Status(StatusCode.ERROR, "Must be in REFLECT phase to complete")
-                )
+                span.set_status(Status(StatusCode.ERROR, "Must be in REFLECT phase to complete"))
                 return {
                     "status": "error",
                     "message": "Must be in REFLECT phase to complete",
@@ -905,9 +894,7 @@ class GardenerSession:
             span.set_attribute(ATTR_SESSION_ID, self.session_id)
 
             if self._phase != SessionPhase.ACT:
-                span.set_status(
-                    Status(StatusCode.ERROR, "Can only rollback from ACT phase")
-                )
+                span.set_status(Status(StatusCode.ERROR, "Can only rollback from ACT phase"))
                 return {
                     "status": "error",
                     "message": "Can only rollback from ACT phase",

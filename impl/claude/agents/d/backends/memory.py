@@ -9,6 +9,8 @@ This is the NEW simplified D-gent architecture (data-architecture-rewrite).
 
 from __future__ import annotations
 
+from typing import List
+
 from ..datum import Datum
 from ..protocol import BaseDgent
 
@@ -49,9 +51,9 @@ class MemoryBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data with filters, sorted by created_at descending."""
-        results: list[Datum] = []
+        results: List[Datum] = []
 
         for datum in self._store.values():
             # Apply prefix filter
@@ -70,7 +72,7 @@ class MemoryBackend(BaseDgent):
         # Apply limit
         return results[:limit]
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """
         Get causal ancestors of a datum.
 

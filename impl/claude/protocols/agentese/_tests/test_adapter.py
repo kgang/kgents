@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 from typing import Any, cast
 
 import pytest
+
 from bootstrap.umwelt import Umwelt
 
 from ..adapter import (
@@ -319,9 +320,7 @@ class TestPatternTranslator:
         assert result is not None
         assert result.path == "concept.freedom.refine"
 
-    def test_define_concept_pattern(
-        self, pattern_translator: PatternTranslator
-    ) -> None:
+    def test_define_concept_pattern(self, pattern_translator: PatternTranslator) -> None:
         """Test 'define X' pattern."""
         result = pattern_translator.translate("define love")
         assert result is not None
@@ -508,9 +507,7 @@ class TestAgentesAdapter:
         assert result.path == "world.house.manifest"
 
     @pytest.mark.asyncio
-    async def test_llm_fallback(
-        self, adapter: AgentesAdapter, mock_llm: MockLLM
-    ) -> None:
+    async def test_llm_fallback(self, adapter: AgentesAdapter, mock_llm: MockLLM) -> None:
         """Test that LLM is used when patterns fail."""
         mock_llm._responses["complex query"] = "world.complex.manifest"
         result = await adapter.translate("complex query that doesn't match patterns")
@@ -526,9 +523,7 @@ class TestAgentesAdapter:
         assert result.confidence == 1.0
 
     @pytest.mark.asyncio
-    async def test_translation_error_on_failure(
-        self, adapter_no_llm: AgentesAdapter
-    ) -> None:
+    async def test_translation_error_on_failure(self, adapter_no_llm: AgentesAdapter) -> None:
         """Test that TranslationError is raised when all translators fail."""
         with pytest.raises(TranslationError) as exc_info:
             await adapter_no_llm.translate("blorp the florp completely")
@@ -547,9 +542,7 @@ class TestAgentesAdapter:
         self, adapter: AgentesAdapter, mock_logos: MockLogos, mock_umwelt: MockUmwelt
     ) -> None:
         """Test that execute translates and invokes."""
-        result = await adapter.execute(
-            "show me the house", cast(Umwelt[Any, Any], mock_umwelt)
-        )
+        result = await adapter.execute("show me the house", cast(Umwelt[Any, Any], mock_umwelt))
         assert len(mock_logos._invocations) == 1
         path, observer, kwargs = mock_logos._invocations[0]
         assert path == "world.house.manifest"
@@ -716,9 +709,7 @@ class TestConstants:
             contexts_found.add(context)
 
         expected = {"world", "self", "concept", "void", "time"}
-        assert contexts_found == expected, (
-            f"Missing contexts: {expected - contexts_found}"
-        )
+        assert contexts_found == expected, f"Missing contexts: {expected - contexts_found}"
 
 
 # =============================================================================
@@ -760,9 +751,7 @@ class TestIntegrationScenarios:
         assert result.path == "concept.beauty.define"
 
     @pytest.mark.asyncio
-    async def test_entropy_workflow(
-        self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_entropy_workflow(self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt) -> None:
         """Test entropy/accursed share queries."""
         # Get randomness
         result = await adapter.translate("give me something random")
@@ -777,9 +766,7 @@ class TestIntegrationScenarios:
         assert result.path == "void.gratitude.tithe"
 
     @pytest.mark.asyncio
-    async def test_memory_workflow(
-        self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt
-    ) -> None:
+    async def test_memory_workflow(self, adapter: AgentesAdapter, mock_umwelt: MockUmwelt) -> None:
         """Test memory-related queries."""
         # View memory
         result = await adapter.translate("show my memory")

@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+
 from protocols.agentese.contexts.void import (
     HypnagogiaNode,
     VoidContextResolver,
@@ -116,9 +117,7 @@ class TestHypnagogiaNode:
         self, hypnagogia_node: HypnagogiaNode, mock_observer: MockUmwelt
     ) -> None:
         """Test patterns aspect."""
-        result = await hypnagogia_node._invoke_aspect(
-            "patterns", _umwelt(mock_observer)
-        )
+        result = await hypnagogia_node._invoke_aspect("patterns", _umwelt(mock_observer))
         assert "patterns" in result
         assert "count" in result
         assert isinstance(result["patterns"], list)

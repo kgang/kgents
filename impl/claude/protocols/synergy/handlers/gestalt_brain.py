@@ -22,7 +22,6 @@ from typing import Any
 from ..events import SynergyEvent, SynergyEventType, SynergyResult
 from .base import BaseSynergyHandler
 
-
 # Severity weights for drift scoring
 SEVERITY_WEIGHTS = {
     "error": 3,
@@ -193,7 +192,6 @@ Use this for:
         # Return the concept ID
         returned_id: str = str(result.get("concept_id", concept_id))
         return returned_id
-
 
     # =========================================================================
     # Sprint 2: Drift Detection Handler

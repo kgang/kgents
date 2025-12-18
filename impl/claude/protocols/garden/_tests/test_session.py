@@ -17,6 +17,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from protocols.garden.session import (
     SESSION_AFFORDANCES,
     ActiveSession,
@@ -290,9 +291,7 @@ class TestSessionPersistence:
         )
 
         # Patch to use temp directory
-        with patch(
-            "protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir
-        ):
+        with patch("protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir):
             with patch(
                 "protocols.garden.session._ensure_sessions_dir",
                 return_value=temp_sessions_dir,
@@ -317,9 +316,7 @@ class TestSessionPersistence:
     @pytest.mark.asyncio
     async def test_load_nonexistent_session(self, temp_sessions_dir: Path):
         """Test loading a session that doesn't exist."""
-        with patch(
-            "protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir
-        ):
+        with patch("protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir):
             loaded = await load_session(date(2025, 1, 1), "morning")
             assert loaded is None
 
@@ -340,9 +337,7 @@ gestures:
 ---
 """)
 
-        with patch(
-            "protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir
-        ):
+        with patch("protocols.garden.session._get_sessions_dir", return_value=temp_sessions_dir):
             sessions = await list_recent_sessions(10)
             assert len(sessions) == 3
             # Should be sorted by date, most recent first
@@ -481,9 +476,7 @@ class TestGestureAspect:
         assert result.metadata["error"] == "no_session"
 
     @pytest.mark.asyncio
-    async def test_gesture_records(
-        self, observer: MockObserver, active_session: ActiveSession
-    ):
+    async def test_gesture_records(self, observer: MockObserver, active_session: ActiveSession):
         """Test recording a gesture."""
         node = SessionNode()
         result = await node._gesture(
@@ -659,9 +652,7 @@ class TestPlanPropagation:
     """Tests for session to plan propagation."""
 
     @pytest.mark.asyncio
-    async def test_propagation_updates_last_gardened(
-        self, active_session: ActiveSession
-    ):
+    async def test_propagation_updates_last_gardened(self, active_session: ActiveSession):
         """Test that propagation updates plan's last_gardened."""
         active_session.add_gesture(
             Gesture(
@@ -691,18 +682,12 @@ class TestPlanPropagation:
             letter="",
         )
 
-        with patch(
-            "protocols.garden.session.load_plan", new_callable=AsyncMock
-        ) as mock_load:
-            with patch(
-                "protocols.garden.session.save_plan", new_callable=AsyncMock
-            ) as mock_save:
+        with patch("protocols.garden.session.load_plan", new_callable=AsyncMock) as mock_load:
+            with patch("protocols.garden.session.save_plan", new_callable=AsyncMock) as mock_save:
                 mock_load.return_value = mock_plan
                 mock_save.return_value = True
 
-                updated = await propagate_session_to_plans(
-                    active_session, "Test letter"
-                )
+                updated = await propagate_session_to_plans(active_session, "Test letter")
 
                 assert "test-plan" in updated
                 assert mock_plan.last_gardened == date.today()

@@ -18,6 +18,7 @@ pytest.importorskip("hypothesis")
 
 
 from hypothesis import given, settings
+
 from testing.strategies import (
     agent_chains,
     invalid_dna,

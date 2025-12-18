@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+
 from agents.k.garden import (
     EntryType,
     GardenEntry,
@@ -150,9 +151,7 @@ class TestGardenNurturing:
     """Tests for nurturing entries."""
 
     @pytest.mark.asyncio
-    async def test_nurture_increases_confidence(
-        self, empty_garden: PersonaGarden
-    ) -> None:
+    async def test_nurture_increases_confidence(self, empty_garden: PersonaGarden) -> None:
         """Test that nurturing increases confidence."""
         entry = await empty_garden.plant_preference("Test", confidence=0.3)
         original_confidence = entry.confidence
@@ -164,17 +163,13 @@ class TestGardenNurturing:
         assert "Evidence 1" in updated.evidence
 
     @pytest.mark.asyncio
-    async def test_nurture_promotes_lifecycle(
-        self, empty_garden: PersonaGarden
-    ) -> None:
+    async def test_nurture_promotes_lifecycle(self, empty_garden: PersonaGarden) -> None:
         """Test that nurturing can promote lifecycle."""
         entry = await empty_garden.plant_preference("Test", confidence=0.38)
         assert entry.lifecycle == GardenLifecycle.SEED
 
         # Nurture with enough boost to cross threshold
-        updated = await empty_garden.nurture(
-            entry.id, "Strong evidence", confidence_boost=0.1
-        )
+        updated = await empty_garden.nurture(entry.id, "Strong evidence", confidence_boost=0.1)
 
         assert updated is not None
         assert updated.lifecycle == GardenLifecycle.SAPLING
@@ -317,9 +312,7 @@ class TestGardenFormatting:
         assert "Empty" in summary
 
     @pytest.mark.asyncio
-    async def test_format_summary_with_entries(
-        self, empty_garden: PersonaGarden
-    ) -> None:
+    async def test_format_summary_with_entries(self, empty_garden: PersonaGarden) -> None:
         """Test formatting garden with entries."""
         await empty_garden.plant_preference("Test pref", confidence=0.75)
         await empty_garden.plant_pattern("Test pattern", confidence=0.3)
@@ -548,14 +541,10 @@ class TestStalenessDecay:
         # Plant entries with same staleness (3 days stale)
         stale_time = datetime(2024, 12, 1, tzinfo=timezone.utc)
 
-        summer_entry = await summer_garden.plant_preference(
-            "Summer test", confidence=0.8
-        )
+        summer_entry = await summer_garden.plant_preference("Summer test", confidence=0.8)
         summer_entry.last_nurtured = stale_time
 
-        winter_entry = await winter_garden.plant_preference(
-            "Winter test", confidence=0.8
-        )
+        winter_entry = await winter_garden.plant_preference("Winter test", confidence=0.8)
         winter_entry.last_nurtured = stale_time
 
         # Apply decay
@@ -616,9 +605,7 @@ class TestCrossPollinate:
             auto_save=False,
         )
 
-        entry = await garden1.plant_preference(
-            "Prefer concise communication", confidence=0.4
-        )
+        entry = await garden1.plant_preference("Prefer concise communication", confidence=0.4)
         await garden2.plant_preference("Prefer concise communication", confidence=0.6)
 
         imported = await garden1.cross_pollinate(garden2)
@@ -690,9 +677,7 @@ class TestAutoPlantFromDialogue:
         assert updated.confidence > 0.4  # Nurtured
 
     @pytest.mark.asyncio
-    async def test_implicit_pattern_detection(
-        self, empty_garden: PersonaGarden
-    ) -> None:
+    async def test_implicit_pattern_detection(self, empty_garden: PersonaGarden) -> None:
         """Test detecting implicit patterns from dialogue."""
         affected = await empty_garden.auto_plant_from_dialogue(
             message="I always check the documentation first",

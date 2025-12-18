@@ -19,6 +19,8 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from hypothesis import given, settings, strategies as st
+
 from agents.i.reactive.primitives.bar import BarState, BarWidget
 from agents.i.reactive.primitives.glyph import GlyphState, GlyphWidget
 from agents.i.reactive.primitives.sparkline import SparklineState, SparklineWidget
@@ -28,9 +30,6 @@ from agents.i.reactive.projection import (
     verify_determinism,
     verify_identity_law,
 )
-from hypothesis import given, settings
-from hypothesis import strategies as st
-
 
 # =============================================================================
 # Hypothesis Strategies for Widget States
@@ -40,10 +39,15 @@ from hypothesis import strategies as st
 @st.composite
 def glyph_state_strategy(draw: st.DrawFn) -> GlyphState:
     """Generate arbitrary GlyphState instances."""
-    char = draw(st.text(min_size=1, max_size=1, alphabet=st.characters(
-        whitelist_categories=('L', 'N', 'S', 'P'),
-        whitelist_characters="◉○●◐◑▣▢▤▥▦▧▨▩"
-    )))
+    char = draw(
+        st.text(
+            min_size=1,
+            max_size=1,
+            alphabet=st.characters(
+                whitelist_categories=("L", "N", "S", "P"), whitelist_characters="◉○●◐◑▣▢▤▥▦▧▨▩"
+            ),
+        )
+    )
     phase = draw(st.sampled_from(["idle", "active", "error", "success", None]))
     entropy = draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
     seed = draw(st.integers(min_value=0, max_value=2**16 - 1))
@@ -98,8 +102,9 @@ def sparkline_state_strategy(draw: st.DrawFn) -> SparklineState:
     # Generate values tuple - 0 to max_length values, each in [0, 1]
     max_length = draw(st.integers(min_value=1, max_value=50))
     num_values = draw(st.integers(min_value=0, max_value=max_length))
-    values = tuple(draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
-                   for _ in range(num_values))
+    values = tuple(
+        draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False)) for _ in range(num_values)
+    )
 
     entropy = draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
     seed = draw(st.integers(min_value=0, max_value=2**16 - 1))
@@ -156,6 +161,7 @@ class TestGlyphProjectionProperties:
     @settings(max_examples=50)
     def test_composition_law_identity_transforms(self, state: GlyphState) -> None:
         """Composition law holds with identity transforms."""
+
         def identity(s: GlyphState) -> GlyphState:
             return s
 
@@ -197,11 +203,19 @@ class TestBarProjectionProperties:
     @settings(max_examples=50)
     def test_composition_law_value_transform(self, state: BarState) -> None:
         """Composition law holds with value transform."""
+
         def scale_value(s: BarState) -> BarState:
             return BarState(
                 value=min(1.0, s.value * 1.2),
-                width=s.width, orientation=s.orientation, style=s.style,
-                fg=s.fg, bg=s.bg, entropy=s.entropy, seed=s.seed, t=s.t, label=s.label,
+                width=s.width,
+                orientation=s.orientation,
+                style=s.style,
+                fg=s.fg,
+                bg=s.bg,
+                entropy=s.entropy,
+                seed=s.seed,
+                t=s.t,
+                label=s.label,
             )
 
         def identity(s: BarState) -> BarState:
@@ -245,6 +259,7 @@ class TestSparklineProjectionProperties:
     @settings(max_examples=50)
     def test_composition_law_identity_transforms(self, state: SparklineState) -> None:
         """Composition law holds with identity transforms."""
+
         def identity(s: SparklineState) -> SparklineState:
             return s
 

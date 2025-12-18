@@ -20,12 +20,12 @@ See: docs/skills/metaphysical-fullstack.md
 
 from .persistence import (
     CoalitionPersistence,
+    CoalitionStatus,
     CoalitionView,
     MemberView,
+    OutputView,
     ProposalView,
     VoteView,
-    OutputView,
-    CoalitionStatus,
 )
 
 __all__ = [

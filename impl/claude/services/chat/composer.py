@@ -23,16 +23,17 @@ from typing import TYPE_CHECKING, AsyncIterator, Callable
 
 from .model_selector import MorpheusConfig, default_model_selector
 from .transformer import (
-    to_morpheus_request,
-    from_morpheus_response,
     extract_usage,
+    from_morpheus_response,
+    to_morpheus_request,
     to_streaming_request,
 )
 
 if TYPE_CHECKING:
-    from .session import ChatSession, Message
-    from services.morpheus.persistence import MorpheusPersistence
     from bootstrap.umwelt import Umwelt
+    from services.morpheus.persistence import MorpheusPersistence
+
+    from .session import ChatSession, Message
 
 logger = logging.getLogger(__name__)
 

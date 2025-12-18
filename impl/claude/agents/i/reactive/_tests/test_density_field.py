@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.density_field import (
     DensityFieldState,
     DensityFieldWidget,
@@ -142,9 +143,7 @@ class TestDensityFieldEntities:
 
     def test_add_entity_replaces_existing(self) -> None:
         """add_entity() replaces entity with same id."""
-        widget = DensityFieldWidget(
-            DensityFieldState(entities=(Entity(id="test", x=10, y=5),))
-        )
+        widget = DensityFieldWidget(DensityFieldState(entities=(Entity(id="test", x=10, y=5),)))
         updated = widget.add_entity(Entity(id="test", x=20, y=10))
 
         assert len(updated.state.value.entities) == 1
@@ -259,9 +258,7 @@ class TestDensityFieldProjectJSON:
 
     def test_project_json_basic_fields(self) -> None:
         """JSON projection includes basic fields."""
-        widget = DensityFieldWidget(
-            DensityFieldState(width=20, height=10, base_entropy=0.2)
-        )
+        widget = DensityFieldWidget(DensityFieldState(width=20, height=10, base_entropy=0.2))
         result = widget.project(RenderTarget.JSON)
 
         assert result["type"] == "density_field"
@@ -295,9 +292,7 @@ class TestDensityFieldProjectJSON:
 
     def test_project_json_includes_wind_when_active(self) -> None:
         """JSON projection includes wind when strength > 0."""
-        widget = DensityFieldWidget(
-            DensityFieldState(wind=Wind(dx=0.5, dy=-0.2, strength=0.3))
-        )
+        widget = DensityFieldWidget(DensityFieldState(wind=Wind(dx=0.5, dy=-0.2, strength=0.3)))
         result = widget.project(RenderTarget.JSON)
 
         assert "wind" in result
@@ -374,9 +369,7 @@ class TestDensityFieldDeterminism:
     def test_different_time_different_distortion(self) -> None:
         """Different time produces different visual distortion."""
         state1 = DensityFieldState(width=5, height=3, base_entropy=0.5, seed=42, t=0.0)
-        state2 = DensityFieldState(
-            width=5, height=3, base_entropy=0.5, seed=42, t=3141.59
-        )
+        state2 = DensityFieldState(width=5, height=3, base_entropy=0.5, seed=42, t=3141.59)
 
         widget1 = DensityFieldWidget(state1)
         widget2 = DensityFieldWidget(state2)

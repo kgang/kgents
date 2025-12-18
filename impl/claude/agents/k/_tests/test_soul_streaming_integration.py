@@ -19,6 +19,7 @@ and matches the documented usage patterns.
 from typing import Any, Callable
 
 import pytest
+
 from agents.k.flux import FluxEvent, FluxStream
 from agents.k.llm import MockLLMClient, StreamingLLMResponse
 from agents.k.persona import DialogueMode
@@ -42,9 +43,7 @@ class TestFluxStreamPipe:
         filter_data = lambda s: s.filter(lambda e: e.is_data)
 
         result = await (
-            soul.dialogue_flux("test", mode=DialogueMode.REFLECT)
-            .pipe(filter_data)
-            .collect()
+            soul.dialogue_flux("test", mode=DialogueMode.REFLECT).pipe(filter_data).collect()
         )
 
         assert len(result) > 0
@@ -75,14 +74,10 @@ class TestFluxStreamPipe:
         soul = KgentSoul(llm=mock_llm)
 
         # Define operator to uppercase
-        to_upper = lambda s: s.map(
-            lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e
-        )
+        to_upper = lambda s: s.map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
 
         result = await (
-            soul.dialogue_flux("test", mode=DialogueMode.REFLECT)
-            .pipe(to_upper)
-            .collect()
+            soul.dialogue_flux("test", mode=DialogueMode.REFLECT).pipe(to_upper).collect()
         )
 
         assert len(result) > 0
@@ -95,9 +90,7 @@ class TestFluxStreamPipe:
         soul = KgentSoul(llm=mock_llm)
 
         # pipe() with no operators should be identity
-        result = await (
-            soul.dialogue_flux("test", mode=DialogueMode.REFLECT).pipe().collect()
-        )
+        result = await soul.dialogue_flux("test", mode=DialogueMode.REFLECT).pipe().collect()
 
         assert len(result) > 0
 
@@ -129,9 +122,7 @@ class TestPipeAssociativity:
                 FluxEvent.data("c"),
                 FluxEvent.data("d"),
                 FluxEvent.data("e"),
-                FluxEvent.metadata(
-                    StreamingLLMResponse(text="abcde", tokens_used=5, model="test")
-                ),
+                FluxEvent.metadata(StreamingLLMResponse(text="abcde", tokens_used=5, model="test")),
             ]
 
             async def gen():
@@ -154,9 +145,7 @@ class TestPipeAssociativity:
     async def test_pipe_associativity_map_filter(self) -> None:
         """Test associativity with map and filter."""
         # Define operators
-        f = lambda s: s.map(
-            lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e
-        )
+        f = lambda s: s.map(lambda e: FluxEvent.data(e.value.upper()) if e.is_data else e)
         g = lambda s: s.filter(lambda e: e.is_data)
 
         async def create_stream() -> FluxStream[str]:
@@ -195,9 +184,7 @@ class TestPipeAssociativity:
                 FluxEvent.data("a"),
                 FluxEvent.data("b"),
                 FluxEvent.data("c"),
-                FluxEvent.metadata(
-                    StreamingLLMResponse(text="abc", tokens_used=3, model="test")
-                ),
+                FluxEvent.metadata(StreamingLLMResponse(text="abc", tokens_used=3, model="test")),
             ]
 
             async def gen():
@@ -244,9 +231,7 @@ class TestErrorPropagation:
 
         async def source():
             yield FluxEvent.data("test")
-            yield FluxEvent.metadata(
-                StreamingLLMResponse(text="test", tokens_used=1, model="test")
-            )
+            yield FluxEvent.metadata(StreamingLLMResponse(text="test", tokens_used=1, model="test"))
 
         def failing_map(stream: FluxStream[Any]) -> FluxStream[Any]:
             def transform(e: FluxEvent[Any]) -> FluxEvent[Any]:
@@ -321,9 +306,7 @@ class TestFullPipelineIntegration:
 
         stream = soul.dialogue_flux("test", mode=DialogueMode.REFLECT).pipe(
             lambda s: s.filter(lambda e: e.is_data or e.is_metadata),
-            lambda s: s.tap(
-                lambda e: metadata_received.append(e.value) if e.is_metadata else None
-            ),
+            lambda s: s.tap(lambda e: metadata_received.append(e.value) if e.is_metadata else None),
         )
 
         async for event in stream:
@@ -351,9 +334,7 @@ class TestFullPipelineIntegration:
             DialogueMode.CHALLENGE,
             DialogueMode.EXPLORE,
         ]:
-            result = await (
-                soul.dialogue_flux("test", mode=mode).pipe(*filter_and_take).collect()
-            )
+            result = await soul.dialogue_flux("test", mode=mode).pipe(*filter_and_take).collect()
             assert len(result) <= 3
 
 
@@ -395,16 +376,12 @@ class TestOperatorFactories:
             min_length: int,
         ) -> Callable[[FluxStream[Any]], FluxStream[Any]]:
             """Factory that creates a filter for minimum string length."""
-            return lambda s: s.filter(
-                lambda e: e.is_data and len(e.value.strip()) >= min_length
-            )
+            return lambda s: s.filter(lambda e: e.is_data and len(e.value.strip()) >= min_length)
 
         async def source():
             for text in ["a", "abc", "ab", "abcd"]:
                 yield FluxEvent.data(text)
-            yield FluxEvent.metadata(
-                StreamingLLMResponse(text="", tokens_used=4, model="test")
-            )
+            yield FluxEvent.metadata(StreamingLLMResponse(text="", tokens_used=4, model="test"))
 
         stream = FluxStream(source())
         result = await stream.pipe(filter_by_length(3)).collect()
@@ -503,9 +480,7 @@ class TestCP8Checkpoint:
             events = [FluxEvent.data(str(i)) for i in range(10)]
             events.append(
                 FluxEvent.metadata(
-                    StreamingLLMResponse(
-                        text="0123456789", tokens_used=10, model="test"
-                    )
+                    StreamingLLMResponse(text="0123456789", tokens_used=10, model="test")
                 )
             )
 

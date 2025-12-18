@@ -3,6 +3,7 @@ Tests for P-gents core types (ParseResult, Parser, ParserConfig, IdentityParser)
 """
 
 import pytest
+
 from agents.p.core import IdentityParser, ParserConfig, ParseResult
 
 
@@ -21,9 +22,7 @@ class TestParseResult:
 
     def test_failure_requires_error(self) -> None:
         """success=False requires error is not None."""
-        with pytest.raises(
-            ValueError, match="success=False requires error is not None"
-        ):
+        with pytest.raises(ValueError, match="success=False requires error is not None"):
             ParseResult(success=False, error=None)
 
     def test_partial_requires_low_confidence(self) -> None:
@@ -152,9 +151,7 @@ class TestIdentityParser:
         assert len(results) == 3
         assert all(r.success for r in results)
         assert [r.value for r in results] == ["hello", " ", "world"]
-        assert all(
-            r.confidence == 0.99 for r in results
-        )  # Slightly < 1.0 for streaming
+        assert all(r.confidence == 0.99 for r in results)  # Slightly < 1.0 for streaming
         assert all(r.partial for r in results)
 
     def test_identity_configure(self) -> None:

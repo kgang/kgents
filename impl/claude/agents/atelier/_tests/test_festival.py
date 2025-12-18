@@ -12,6 +12,7 @@ Tests cover:
 from datetime import datetime, timedelta, timezone
 
 import pytest
+
 from agents.atelier.festival import (
     Festival,
     FestivalEntry,

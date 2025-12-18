@@ -37,11 +37,8 @@ from protocols.nphase.operad import (
     NPhase,
     NPhaseState,
     is_valid_transition,
-)
-from protocols.nphase.operad import (
     next_phase as nphase_next,
 )
-
 
 # =============================================================================
 # CitizenMemory (Simple In-Memory Store)
@@ -481,9 +478,7 @@ class Citizen:
             to_phase = NPhase[target.upper()]
 
         if not is_valid_transition(from_phase, to_phase):
-            raise ValueError(
-                f"Invalid N-Phase transition: {from_phase.name} -> {to_phase.name}"
-            )
+            raise ValueError(f"Invalid N-Phase transition: {from_phase.name} -> {to_phase.name}")
 
         # Track cycles when closing REFLECT → SENSE
         if from_phase == NPhase.REFLECT and to_phase == NPhase.SENSE:
@@ -695,9 +690,7 @@ class Citizen:
         if "nphase" in data:
             nphase_data = data.get("nphase", {})
             outputs = nphase_data.get("phase_outputs", {})
-            phase_outputs = {
-                phase: list(outputs.get(phase.name, [])) for phase in NPhase
-            }
+            phase_outputs = {phase: list(outputs.get(phase.name, [])) for phase in NPhase}
             citizen.nphase_state = NPhaseState(
                 current_phase=NPhase[nphase_data.get("current", "SENSE")],
                 cycle_count=int(nphase_data.get("cycle_count", 0)),
@@ -708,9 +701,7 @@ class Citizen:
         return citizen
 
     def __repr__(self) -> str:
-        return (
-            f"Citizen({self.name}, {self.archetype}, {self.region}, {self._phase.name})"
-        )
+        return f"Citizen({self.name}, {self.archetype}, {self.region}, {self._phase.name})"
 
 
 # =============================================================================

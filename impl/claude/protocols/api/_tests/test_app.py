@@ -16,6 +16,7 @@ import pytest
 pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
+
 from protocols.api.app import create_app
 
 

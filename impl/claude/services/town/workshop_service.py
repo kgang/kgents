@@ -30,25 +30,25 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, AsyncIterator
 
 from agents.town.workshop import (
-    # Enums
-    WorkshopEventType,
-    WorkshopPhase,
-    # Data classes
-    WorkshopArtifact,
-    WorkshopDialogueContext,
-    WorkshopEvent,
-    WorkshopMetrics,
-    WorkshopPlan,
-    WorkshopState,
-    WorkshopTask,
-    # Classes
-    WorkshopEnvironment,
-    WorkshopFlux,
     # Constants
     ARCHETYPE_TO_PHASE,
     BUILDER_DIALOGUE_TEMPLATES,
     KEYWORD_ROUTING,
     PHASE_TO_ARCHETYPE,
+    # Data classes
+    WorkshopArtifact,
+    WorkshopDialogueContext,
+    # Classes
+    WorkshopEnvironment,
+    WorkshopEvent,
+    # Enums
+    WorkshopEventType,
+    WorkshopFlux,
+    WorkshopMetrics,
+    WorkshopPhase,
+    WorkshopPlan,
+    WorkshopState,
+    WorkshopTask,
     # Functions
     create_workshop,
     create_workshop_with_builders,
@@ -153,7 +153,7 @@ class WorkshopPlanView:
 
     def to_text(self) -> str:
         lines = [
-            f"Workshop Plan",
+            "Workshop Plan",
             "=" * 40,
             f"Task: {self.task.description}",
             f"Lead: {self.lead_builder}",
@@ -299,7 +299,7 @@ class WorkshopService:
             WorkshopView with current status
         """
         state = self._workshop.state
-        manifest = self._workshop.manifest(lod=lod)
+        self._workshop.manifest(lod=lod)
 
         return WorkshopView(
             phase=state.phase.name,

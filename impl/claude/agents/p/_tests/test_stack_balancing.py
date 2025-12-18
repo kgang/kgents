@@ -7,6 +7,7 @@ Tests both HTML and JSON modes, streaming and non-streaming.
 from __future__ import annotations
 
 import pytest
+
 from agents.p.strategies.stack_balancing import (
     StackBalancingParser,
     html_stream_parser,

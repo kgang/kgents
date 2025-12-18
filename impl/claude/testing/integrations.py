@@ -59,8 +59,9 @@ except ImportError:
 
 # D-gent: Persistence
 try:
-    from agents.d.persistent import PersistentAgent
     from agents.d.stream import StreamAgent
+
+    from agents.d.persistent import PersistentAgent
 
     DGENT_AVAILABLE = True
 except ImportError:
@@ -109,9 +110,7 @@ class IntegrationStatus:
     """Report on available integrations."""
 
     lgent_embeddings: bool = LGENT_AVAILABLE
-    lgent_lattice: bool = (
-        LGENT_LATTICE_AVAILABLE if "LGENT_LATTICE_AVAILABLE" in dir() else False
-    )
+    lgent_lattice: bool = LGENT_LATTICE_AVAILABLE if "LGENT_LATTICE_AVAILABLE" in dir() else False
     dgent_persistence: bool = DGENT_AVAILABLE
     ngent_narrative: bool = NGENT_AVAILABLE
     bgent_economics: bool = BGENT_AVAILABLE
@@ -161,10 +160,7 @@ def create_enhanced_oracle(
     if LGENT_AVAILABLE:
         if embedder_backend == "auto":
             embedder = create_best_available_embedder()
-        elif (
-            embedder_backend == "sentence-transformer"
-            and SENTENCE_TRANSFORMERS_AVAILABLE
-        ):
+        elif embedder_backend == "sentence-transformer" and SENTENCE_TRANSFORMERS_AVAILABLE:
             embedder = SentenceTransformerEmbedder()
         elif embedder_backend == "openai" and OPENAI_AVAILABLE:
             embedder = OpenAIEmbedder()
@@ -226,14 +222,10 @@ class PersistentWitnessStore:
         if outcome:
             witnesses = [w for w in witnesses if getattr(w, "outcome", None) == outcome]
         if since:
-            witnesses = [
-                w for w in witnesses if getattr(w, "timestamp", datetime.min) >= since
-            ]
+            witnesses = [w for w in witnesses if getattr(w, "timestamp", datetime.min) >= since]
 
         # Sort and limit
-        witnesses.sort(
-            key=lambda w: getattr(w, "timestamp", datetime.min), reverse=True
-        )
+        witnesses.sort(key=lambda w: getattr(w, "timestamp", datetime.min), reverse=True)
         return witnesses[:limit]
 
     def __len__(self) -> int:
@@ -418,9 +410,7 @@ class BudgetedMarket:
             Allocation map
         """
         budget = total_budget if total_budget is not None else self._budget
-        return cast(
-            dict[str, float], await self.base.calculate_kelly_allocation(assets, budget)
-        )
+        return cast(dict[str, float], await self.base.calculate_kelly_allocation(assets, budget))
 
     async def charge_test(self, test_id: str, cost: EnhancedTestCost) -> bool:
         """Charge for a test run.

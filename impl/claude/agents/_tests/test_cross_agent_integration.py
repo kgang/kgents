@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from agents.j import (
     AgentSource,
     JITAgentWrapper,
@@ -93,9 +94,7 @@ class AnchorProducer:
         # Parse with anchor-based parser
         result_parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###RESULT:")
         status_parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###STATUS:")
-        confidence_parser: AnchorBasedParser[str] = AnchorBasedParser(
-            anchor="###CONFIDENCE:"
-        )
+        confidence_parser: AnchorBasedParser[str] = AnchorBasedParser(anchor="###CONFIDENCE:")
 
         result_parsed = result_parser.parse(result)
         status_parsed = status_parser.parse(result)
@@ -203,9 +202,7 @@ class TestToolsWithParserIntegration:
     def test_tool_output_validation_with_parser(self) -> None:
         """Test validating tool outputs against schema."""
         # Tool output
-        tool_output = json.dumps(
-            {"data": [1, 2, 3], "metadata": {"count": 3, "source": "api"}}
-        )
+        tool_output = json.dumps({"data": [1, 2, 3], "metadata": {"count": 3, "source": "api"}})
 
         # Parse and validate
         parser = create_tgent_output_parser()
@@ -280,9 +277,7 @@ class ErrorHandlingTool:
         assert success_result["result"] == "success"
 
         # Error scenario
-        error_result = await tool_agent.invoke(
-            {"should_error": True, "error_code": 404}
-        )
+        error_result = await tool_agent.invoke({"should_error": True, "error_code": 404})
 
         # Parse error with T-gent error parser
         error_parser = create_tgent_error_parser()

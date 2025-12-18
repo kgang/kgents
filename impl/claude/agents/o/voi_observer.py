@@ -54,8 +54,6 @@ try:
     from ..b.value_ledger import ValueLedger
     from ..b.voi_economics import (
         AdaptiveObserver as BgentAdaptiveObserver,
-    )
-    from ..b.voi_economics import (
         EpistemicCapital,
         FindingType,
         ObservationDepth,
@@ -599,14 +597,10 @@ class Panopticon:
         )
 
         if status.alerts:
-            lines.append(
-                "  ┌─ ALERTS ─────────────────────────────────────────────────────────┐"
-            )
+            lines.append("  ┌─ ALERTS ─────────────────────────────────────────────────────────┐")
             for alert in status.alerts[-5:]:
                 lines.append(f"  │ {alert[:60]}│")
-            lines.append(
-                "  └─────────────────────────────────────────────────────────────────┘"
-            )
+            lines.append("  └─────────────────────────────────────────────────────────────────┘")
 
         lines.append("=" * 70)
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.town.flux import TownEvent, TownPhase
 from agents.town.trace_bridge import (
     ReplayState,

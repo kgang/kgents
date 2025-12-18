@@ -5,6 +5,7 @@ Tests the main reify() capability and convenience functions.
 """
 
 import pytest
+
 from agents.g import (
     Grammarian,
     GrammarLevel,

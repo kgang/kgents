@@ -22,6 +22,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from agents.poly.types import Err
 from agents.u.core import ToolError, ToolErrorType
 from agents.u.mcp import (
@@ -146,9 +147,7 @@ async def test_stdio_transport_send_receive() -> None:
     mock_process.stdout = AsyncMock()
 
     # Mock stdout to return a response
-    mock_response = (
-        json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"status": "ok"}}) + "\n"
-    )
+    mock_response = json.dumps({"jsonrpc": "2.0", "id": 1, "result": {"status": "ok"}}) + "\n"
     mock_process.stdout.readline = AsyncMock(return_value=mock_response.encode())
 
     transport.process = mock_process
@@ -195,9 +194,7 @@ async def test_stdio_transport_close() -> None:
 
 def test_http_sse_transport_initialization() -> None:
     """Test HTTP/SSE transport initialization."""
-    transport = HttpSseTransport(
-        base_url="https://api.example.com/mcp", auth_token="token123"
-    )
+    transport = HttpSseTransport(base_url="https://api.example.com/mcp", auth_token="token123")
 
     assert transport.base_url == "https://api.example.com/mcp"
     assert transport.auth_token == "token123"
@@ -554,9 +551,7 @@ async def test_mcp_tool_initialization() -> None:
 
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)
-    client.server_info = MCPServerInfo(
-        name="test-server", version="1.0", capabilities={}
-    )
+    client.server_info = MCPServerInfo(name="test-server", version="1.0", capabilities={})
 
     tool = MCPTool.from_schema(schema, client)
 
@@ -674,9 +669,7 @@ async def test_mcp_full_lifecycle() -> None:
     assert len(tools) == 1
 
     # 3. Call tool
-    call_response = JsonRpcResponse(
-        id=3, result={"content": [{"type": "text", "text": "42"}]}
-    )
+    call_response = JsonRpcResponse(id=3, result={"content": [{"type": "text", "text": "42"}]})
     transport.receive = AsyncMock(return_value=call_response)
 
     call_result = await client.call_tool("calculator", {"expression": "6 * 7"})
@@ -692,9 +685,7 @@ async def test_mcp_full_lifecycle() -> None:
 async def test_mcp_tool_composition() -> None:
     """Test MCPTool composition with other agents."""
     # Create mock schema and client
-    schema = MCPToolSchema(
-        name="uppercase", description="Convert to uppercase", input_schema={}
-    )
+    schema = MCPToolSchema(name="uppercase", description="Convert to uppercase", input_schema={})
 
     transport = AsyncMock(spec=StdioTransport)
     client = MCPClient(transport)

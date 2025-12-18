@@ -34,6 +34,8 @@ from typing import TYPE_CHECKING, Any, Callable
 from protocols.cli.reflector.protocol import BaseReflector, PromptInfo
 
 if TYPE_CHECKING:
+    from textual.app import App
+
     from protocols.cli.reflector.events import (
         AgentHealthEvent,
         CommandEndEvent,
@@ -43,7 +45,6 @@ if TYPE_CHECKING:
         ProposalAddedEvent,
         RuntimeEvent,
     )
-    from textual.app import App
 
     from ..app import FluxApp
     from ..screens.flux import FluxScreen
@@ -72,9 +73,7 @@ class FluxReflector(BaseReflector):
     """
 
     app: "FluxApp | None" = None
-    _event_queue: asyncio.Queue["RuntimeEvent"] = field(
-        default_factory=asyncio.Queue, repr=False
-    )
+    _event_queue: asyncio.Queue["RuntimeEvent"] = field(default_factory=asyncio.Queue, repr=False)
     _human_buffer: list[str] = field(default_factory=list, repr=False)
     _semantic_buffer: dict[str, Any] = field(default_factory=dict, repr=False)
 
@@ -215,9 +214,7 @@ class FluxReflector(BaseReflector):
         try:
             from ..widgets.density_field import DensityField
 
-            density_field = flux_screen.query_one(
-                f"DensityField#{event.agent_id}", DensityField
-            )
+            density_field = flux_screen.query_one(f"DensityField#{event.agent_id}", DensityField)
             density_field.set_activity(event.activity)
         except Exception:
             pass  # Widget not found, ignore

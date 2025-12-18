@@ -11,14 +11,16 @@ from __future__ import annotations
 
 import asyncio
 import os
-import pytest
 import time
+
+import pytest
 
 from ..datum import Datum
 
 # Check for asyncpg availability
 try:
     import asyncpg
+
     ASYNCPG_AVAILABLE = True
 except ImportError:
     ASYNCPG_AVAILABLE = False
@@ -301,6 +303,7 @@ class TestPostgresSpecific:
 
     async def test_connection_pool(self, postgres_backend) -> None:
         """Connection pool handles concurrent requests."""
+
         # Run multiple concurrent operations
         async def put_item(i: int) -> str:
             d = Datum.create(f"concurrent-{i}".encode())
@@ -348,6 +351,7 @@ class TestPostgresBackendUnit:
 
         with pytest.raises(ImportError) as exc_info:
             from ..backends.postgres import PostgresBackend
+
             PostgresBackend("postgresql://localhost/test")
 
         assert "asyncpg" in str(exc_info.value)

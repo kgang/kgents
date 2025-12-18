@@ -335,7 +335,7 @@ class AgentesRouter:
         - world.town.citizen.elara.chat
         - self.soul.chat.send (with message kwarg for one-shot)
         """
-        from protocols.cli.chat_projection import run_chat_repl, run_chat_one_shot
+        from protocols.cli.chat_projection import run_chat_one_shot, run_chat_repl
 
         # Extract parent path (remove .chat.* suffix)
         parent_path = path
@@ -386,6 +386,7 @@ class AgentesRouter:
         # Show help if no pattern
         if not pattern:
             from protocols.cli.query_help import show_query_help
+
             show_query_help()
             return None
 
@@ -410,6 +411,7 @@ class AgentesRouter:
         # Format output (unless JSON requested)
         if not json_output:
             from protocols.cli.query_help import format_query_result
+
             formatted = format_query_result(result)
             print(formatted)
             return None

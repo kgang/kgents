@@ -7,6 +7,7 @@ Verifies temporal visualization with activity bars and cursor navigation.
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.i.widgets.timeline import Timeline
 
 

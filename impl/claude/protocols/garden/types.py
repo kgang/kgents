@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Callable, FrozenSet
 
 import yaml
+
 from agents.poly.protocol import PolyAgent
 
 # =============================================================================
@@ -493,26 +494,18 @@ def _garden_directions(season: Season) -> FrozenSet[GardenInput]:
     """
     match season:
         case Season.SPROUTING:
-            return frozenset(
-                [GardenInput.EXPLORE, GardenInput.DEFINE, GardenInput.CONNECT]
-            )
+            return frozenset([GardenInput.EXPLORE, GardenInput.DEFINE, GardenInput.CONNECT])
         case Season.BLOOMING:
             return frozenset([GardenInput.BUILD, GardenInput.TEST, GardenInput.REFINE])
         case Season.FRUITING:
-            return frozenset(
-                [GardenInput.DOCUMENT, GardenInput.SHIP, GardenInput.CELEBRATE]
-            )
+            return frozenset([GardenInput.DOCUMENT, GardenInput.SHIP, GardenInput.CELEBRATE])
         case Season.COMPOSTING:
-            return frozenset(
-                [GardenInput.EXTRACT, GardenInput.ARCHIVE, GardenInput.TITHE]
-            )
+            return frozenset([GardenInput.EXTRACT, GardenInput.ARCHIVE, GardenInput.TITHE])
         case Season.DORMANT:
             return frozenset([GardenInput.DREAM, GardenInput.WAKE])
 
 
-def _garden_transition(
-    season: Season, input: GardenInput
-) -> tuple[Season, GardenInput]:
+def _garden_transition(season: Season, input: GardenInput) -> tuple[Season, GardenInput]:
     """
     State transition function for garden polynomial.
 
@@ -699,8 +692,7 @@ def migrate_forest_to_garden(forest_header: dict[str, Any]) -> GardenPlanHeader:
     old_entropy = forest_header.get("entropy", {})
     if old_entropy:
         entropy = EntropyBudget(
-            available=old_entropy.get("planned", 0.05)
-            + old_entropy.get("returned", 0.0),
+            available=old_entropy.get("planned", 0.05) + old_entropy.get("returned", 0.0),
             spent=old_entropy.get("spent", 0.0),
             sips=[],
         )

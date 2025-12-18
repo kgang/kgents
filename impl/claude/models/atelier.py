@@ -12,10 +12,20 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Integer, Float, Text, DateTime, JSON, ForeignKey, Index, Boolean
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from .base import Base, TimestampMixin, CausalMixin
+from .base import Base, CausalMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from typing import Optional
@@ -84,7 +94,9 @@ class Artisan(TimestampMixin, Base):
     )
 
     name: Mapped[str] = mapped_column(String(128), nullable=False)
-    specialty: Mapped[str] = mapped_column(String(64), nullable=False)  # "poet", "painter", "composer", "sculptor"
+    specialty: Mapped[str] = mapped_column(
+        String(64), nullable=False
+    )  # "poet", "painter", "composer", "sculptor"
     style: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # State
@@ -92,7 +104,9 @@ class Artisan(TimestampMixin, Base):
     contribution_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Agent link
-    agent_id: Mapped[str | None] = mapped_column(String(64), nullable=True)  # Link to Town citizen or external agent
+    agent_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # Link to Town citizen or external agent
 
     # Relationships
     workshop: Mapped["Workshop"] = relationship("Workshop", back_populates="artisans")
@@ -171,7 +185,9 @@ class GalleryItem(TimestampMixin, Base):
     )
 
     # The artifact being displayed
-    artifact_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "text", "image", "audio", "code"
+    artifact_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # "text", "image", "audio", "code"
     artifact_content: Mapped[str] = mapped_column(Text, nullable=False)
     artifact_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
 
@@ -181,7 +197,9 @@ class GalleryItem(TimestampMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Attribution
-    artisan_ids: Mapped[list[str]] = mapped_column(JSON, default=list)  # Multiple artisans can contribute
+    artisan_ids: Mapped[list[str]] = mapped_column(
+        JSON, default=list
+    )  # Multiple artisans can contribute
 
     # Relationships
     exhibition: Mapped["Exhibition"] = relationship("Exhibition", back_populates="gallery_items")
@@ -212,8 +230,12 @@ class ArtifactContribution(TimestampMixin, CausalMixin, Base):
     )
 
     # The contribution
-    contribution_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "draft", "revision", "final"
-    content_type: Mapped[str] = mapped_column(String(32), nullable=False)  # "text", "image", "audio", "code"
+    contribution_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # "draft", "revision", "final"
+    content_type: Mapped[str] = mapped_column(
+        String(32), nullable=False
+    )  # "text", "image", "audio", "code"
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Context

@@ -11,6 +11,7 @@ Tests verify:
 from __future__ import annotations
 
 import pytest
+
 from shared.budget import (
     ResourceBudget,
     issue_budget,

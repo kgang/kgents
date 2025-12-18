@@ -12,6 +12,7 @@ Target: 15+ tests for sheaf alone.
 """
 
 import pytest
+
 from agents.emergence import (
     EMERGENCE_SHEAF,
     FAMILY_QUALIA,

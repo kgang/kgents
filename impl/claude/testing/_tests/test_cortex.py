@@ -16,6 +16,7 @@ from datetime import datetime
 from typing import Any
 
 import pytest
+
 from testing.analyst import (
     CausalAnalyst,
     TestWitness,
@@ -152,17 +153,13 @@ class TestOracle:
         # With fallback: may vary based on hash collisions
         assert sim >= 0.0  # At minimum, should be non-negative
         # Test equivalence
-        result = await oracle.semantically_equivalent(
-            "hello world", "hello world", threshold=0.0
-        )
+        result = await oracle.semantically_equivalent("hello world", "hello world", threshold=0.0)
         assert result is True  # With threshold 0, identical should pass
 
     @pytest.mark.asyncio
     async def test_semantic_equivalence_different(self, oracle: Oracle) -> None:
         """Very different outputs should not be equivalent."""
-        result = await oracle.semantically_equivalent(
-            "hello world", "goodbye moon universe stars"
-        )
+        result = await oracle.semantically_equivalent("hello world", "goodbye moon universe stars")
         # May or may not be equivalent depending on embedder
         assert isinstance(result, bool)
 
@@ -358,12 +355,8 @@ class TestWitnessStore:
     @pytest.mark.asyncio
     async def test_query_by_test_id(self, store: WitnessStore) -> None:
         """Should filter by test_id."""
-        store.record(
-            TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
-        )
-        store.record(
-            TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail")
-        )
+        store.record(TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass"))
+        store.record(TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail"))
 
         results = await store.query(test_id="test_1")
         assert len(results) == 1
@@ -372,12 +365,8 @@ class TestWitnessStore:
     @pytest.mark.asyncio
     async def test_query_by_outcome(self, store: WitnessStore) -> None:
         """Should filter by outcome."""
-        store.record(
-            TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
-        )
-        store.record(
-            TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail")
-        )
+        store.record(TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass"))
+        store.record(TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail"))
 
         results = await store.query(outcome="fail")
         assert len(results) == 1
@@ -413,9 +402,7 @@ class TestCausalAnalyst:
         assert len(result.failing_variations) >= 1
 
     @pytest.mark.asyncio
-    async def test_flakiness_diagnosis_insufficient(
-        self, analyst: CausalAnalyst
-    ) -> None:
+    async def test_flakiness_diagnosis_insufficient(self, analyst: CausalAnalyst) -> None:
         """Should detect insufficient data."""
         diagnosis = await analyst.flakiness_diagnosis("nonexistent_test")
         assert diagnosis.diagnosis == "Insufficient data"

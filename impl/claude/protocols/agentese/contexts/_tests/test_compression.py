@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from protocols.agentese.contexts.compression import (
     CompressionQuality,
     CompressionValidator,

@@ -15,6 +15,7 @@ import io
 from typing import TYPE_CHECKING
 
 import pytest
+
 from agents.i.reactive.terminal.adapter import (
     DegradedRenderer,
     LayoutConstraints,
@@ -485,9 +486,7 @@ class TestDegradedRenderer:
 
         styled = renderer.styled_text("Text", "primary")
         # No escape sequences when color is disabled
-        assert (
-            styled == "Text" or "\x1b[" not in styled or styled.endswith("Text\x1b[0m")
-        )
+        assert styled == "Text" or "\x1b[" not in styled or styled.endswith("Text\x1b[0m")
 
     def test_degrade_lines_unicode(self) -> None:
         """Lines unchanged with Unicode support."""

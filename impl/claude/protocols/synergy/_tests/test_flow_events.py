@@ -5,6 +5,7 @@ Phase 1 Foundation: Cross-jewel communication events for Flow modalities.
 """
 
 import pytest
+
 from protocols.synergy.events import (
     Jewel,
     SynergyEventType,

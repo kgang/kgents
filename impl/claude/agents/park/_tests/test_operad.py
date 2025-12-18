@@ -13,6 +13,7 @@ See: agents/park/operad.py
 from __future__ import annotations
 
 import pytest
+
 from agents.operad.core import LawStatus, OperadRegistry
 from agents.park.operad import (
     DIRECTOR_OPERAD,
@@ -169,9 +170,7 @@ class TestDirectorLaws:
 
     def test_intervention_isolation_law_verifies(self) -> None:
         """Intervention isolation law passes verification."""
-        law = next(
-            l for l in DIRECTOR_OPERAD.laws if l.name == "intervention_isolation"
-        )
+        law = next(l for l in DIRECTOR_OPERAD.laws if l.name == "intervention_isolation")
 
         verification = law.verify()
         assert verification.status == LawStatus.PASSED
@@ -336,18 +335,18 @@ class TestRegistryCIGate:
 
     def test_canonical_types_used(self) -> None:
         """Verify canonical types from operad/core.py are used."""
-        from agents.operad.core import Law as CanonicalLaw
-        from agents.operad.core import Operad as CanonicalOperad
-        from agents.operad.core import Operation as CanonicalOperation
+        from agents.operad.core import (
+            Law as CanonicalLaw,
+            Operad as CanonicalOperad,
+            Operation as CanonicalOperation,
+        )
 
         # Check type of operad
         assert isinstance(DIRECTOR_OPERAD, CanonicalOperad)
 
         # Check type of operations
         for op in DIRECTOR_OPERAD.operations.values():
-            assert isinstance(op, CanonicalOperation), (
-                f"{op.name} not canonical Operation"
-            )
+            assert isinstance(op, CanonicalOperation), f"{op.name} not canonical Operation"
 
         # Check type of laws
         for law in DIRECTOR_OPERAD.laws:

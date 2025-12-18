@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.b.compression_economy import (
     # Types
     AdoptionStatus,
@@ -579,9 +580,7 @@ class TestSemanticZipperBudget:
         return CompressionEconomyMonitor(bank=bank)
 
     @pytest.fixture
-    def budget(
-        self, bank: CentralBank, monitor: CompressionEconomyMonitor
-    ) -> SemanticZipperBudget:
+    def budget(self, bank: CentralBank, monitor: CompressionEconomyMonitor) -> SemanticZipperBudget:
         """Create a SemanticZipperBudget for testing."""
         return SemanticZipperBudget(
             bank=bank,
@@ -709,9 +708,7 @@ class TestSemanticZipperBudget:
         assert receipt.gas.tokens > 0
 
     @pytest.mark.asyncio
-    async def test_metered_communication_rejected(
-        self, budget: SemanticZipperBudget
-    ) -> None:
+    async def test_metered_communication_rejected(self, budget: SemanticZipperBudget) -> None:
         """Test metered communication rejection."""
         budget.bank.bucket.balance = 50  # Low balance
 
@@ -892,10 +889,7 @@ class TestEdgeCases:
     def test_zero_token_messages(self) -> None:
         """Test handling of zero-token messages."""
         calc = CompressionROICalculator()
-        logs = [
-            CommunicationLog(sender="a", receiver="b", message="", tokens=0)
-            for _ in range(10)
-        ]
+        logs = [CommunicationLog(sender="a", receiver="b", message="", tokens=0) for _ in range(10)]
         roi = calc.calculate_roi(logs)
         assert roi.avg_tokens_per_message == 0.0
 

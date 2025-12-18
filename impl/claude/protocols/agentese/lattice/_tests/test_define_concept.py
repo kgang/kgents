@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
 
 import pytest
+
 from protocols.agentese.lattice.checker import (
     get_lattice_checker,
     reset_lattice_checker,

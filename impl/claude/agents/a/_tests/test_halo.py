@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+
 from agents.poly.types import Agent
 
 from ..halo import (
@@ -538,9 +539,7 @@ class TestMergeHalos:
     def test_merge_overlapping_halos(self) -> None:
         """Later halo's capability overrides earlier for same type."""
         halo1: set[CapabilityBase] = {StatefulCapability(schema=dict, backend="sqlite")}
-        halo2: set[CapabilityBase] = {
-            StatefulCapability(schema=MockState, backend="postgres")
-        }
+        halo2: set[CapabilityBase] = {StatefulCapability(schema=MockState, backend="postgres")}
 
         result = merge_halos(halo1, halo2)
 

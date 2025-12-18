@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from shared.capital import EventSourcedLedger, InsufficientCapitalError
 from testing.fixtures import as_umwelt
 
@@ -106,9 +107,7 @@ class TestWorldNode:
         """Node has correct handle."""
         assert world_node.handle == "world.house"
 
-    def test_base_affordances(
-        self, world_node: WorldNode, observer: MockUmwelt
-    ) -> None:
+    def test_base_affordances(self, world_node: WorldNode, observer: MockUmwelt) -> None:
         """All nodes have base affordances."""
         meta = AgentMeta(name="test", archetype="default")
         affordances = world_node.affordances(meta)
@@ -134,9 +133,7 @@ class TestWorldNode:
         assert "renovate" not in affordances  # Not an architect
 
     @pytest.mark.asyncio
-    async def test_manifest_default(
-        self, world_node: WorldNode, observer: MockUmwelt
-    ) -> None:
+    async def test_manifest_default(self, world_node: WorldNode, observer: MockUmwelt) -> None:
         """Default manifest returns BasicRendering."""
         result = await world_node.manifest(as_umwelt(observer))
         assert isinstance(result, BasicRendering)
@@ -151,9 +148,7 @@ class TestWorldNode:
         assert hasattr(result, "dimensions") or "blueprint" in str(type(result)).lower()
 
     @pytest.mark.asyncio
-    async def test_invoke_witness(
-        self, world_node: WorldNode, observer: MockUmwelt
-    ) -> None:
+    async def test_invoke_witness(self, world_node: WorldNode, observer: MockUmwelt) -> None:
         """Witness aspect returns history."""
         result = await world_node.invoke("witness", as_umwelt(observer))
         assert "handle" in result or "history" in result
@@ -230,9 +225,7 @@ class TestMemoryNode:
         assert "timestamp" in result
 
     @pytest.mark.asyncio
-    async def test_consolidate(
-        self, memory_node: MemoryNode, observer: MockUmwelt
-    ) -> None:
+    async def test_consolidate(self, memory_node: MemoryNode, observer: MockUmwelt) -> None:
         """Consolidate processes temporary memories."""
         memory_node._memories["test"] = {"temporary": True, "data": "value"}
         result = await memory_node.invoke("consolidate", as_umwelt(observer))
@@ -351,9 +344,7 @@ class TestConceptNode:
         assert "validate" in affordances
 
     @pytest.mark.asyncio
-    async def test_refine(
-        self, concept_node: ConceptNode, observer: MockUmwelt
-    ) -> None:
+    async def test_refine(self, concept_node: ConceptNode, observer: MockUmwelt) -> None:
         """Refine challenges the concept definition."""
         result = await concept_node.invoke(
             "refine",
@@ -364,9 +355,7 @@ class TestConceptNode:
         assert "challenge" in result
 
     @pytest.mark.asyncio
-    async def test_dialectic(
-        self, concept_node: ConceptNode, observer: MockUmwelt
-    ) -> None:
+    async def test_dialectic(self, concept_node: ConceptNode, observer: MockUmwelt) -> None:
         """Dialectic generates thesis/antithesis/synthesis."""
         result = await concept_node.invoke("dialectic", as_umwelt(observer))
         assert "thesis" in result
@@ -374,13 +363,9 @@ class TestConceptNode:
         assert "synthesis" in result
 
     @pytest.mark.asyncio
-    async def test_relate(
-        self, concept_node: ConceptNode, observer: MockUmwelt
-    ) -> None:
+    async def test_relate(self, concept_node: ConceptNode, observer: MockUmwelt) -> None:
         """Relate finds concept connections."""
-        result = await concept_node.invoke(
-            "relate", as_umwelt(observer), target="fairness"
-        )
+        result = await concept_node.invoke("relate", as_umwelt(observer), target="fairness")
         assert result["target"] == "fairness"
         assert "fairness" in result["all_relations"]
 
@@ -633,9 +618,7 @@ class TestCapitalNode:
         """Tithe (potlatch) burns capital."""
         initial = ledger.balance("test-agent")
 
-        result = await capital_node.invoke(
-            "tithe", as_umwelt(named_observer), amount=0.1
-        )
+        result = await capital_node.invoke("tithe", as_umwelt(named_observer), amount=0.1)
 
         assert result["ritual"] == "potlatch"
         assert result["amount"] == 0.1
@@ -742,9 +725,7 @@ class TestCapitalLogosIntegration:
         self, logos_with_capital: Logos, named_observer: MockUmwelt
     ) -> None:
         """Invoke void.capital.balance through Logos."""
-        result = await logos_with_capital.invoke(
-            "void.capital.balance", as_umwelt(named_observer)
-        )
+        result = await logos_with_capital.invoke("void.capital.balance", as_umwelt(named_observer))
         assert "balance" in result
         assert result["agent"] == "test-agent"
 
@@ -823,9 +804,7 @@ class TestScheduleNode:
         assert result["path"] == "world.task.execute"
 
     @pytest.mark.asyncio
-    async def test_defer_with_at(
-        self, schedule_node: ScheduleNode, observer: MockUmwelt
-    ) -> None:
+    async def test_defer_with_at(self, schedule_node: ScheduleNode, observer: MockUmwelt) -> None:
         """Defer schedules action at specific time."""
         future_time = datetime.now() + timedelta(hours=1)
         result = await schedule_node.invoke(
@@ -838,9 +817,7 @@ class TestScheduleNode:
         assert result["status"] == "scheduled"
 
     @pytest.mark.asyncio
-    async def test_cancel(
-        self, schedule_node: ScheduleNode, observer: MockUmwelt
-    ) -> None:
+    async def test_cancel(self, schedule_node: ScheduleNode, observer: MockUmwelt) -> None:
         """Cancel removes scheduled action."""
         # First schedule
         defer_result = await schedule_node.invoke(
@@ -860,15 +837,11 @@ class TestScheduleNode:
         assert cancel_result["status"] == "cancelled"
 
     @pytest.mark.asyncio
-    async def test_list(
-        self, schedule_node: ScheduleNode, observer: MockUmwelt
-    ) -> None:
+    async def test_list(self, schedule_node: ScheduleNode, observer: MockUmwelt) -> None:
         """List returns scheduled actions."""
         # Schedule some actions
         await schedule_node.invoke("defer", as_umwelt(observer), path="task1", delay=60)
-        await schedule_node.invoke(
-            "defer", as_umwelt(observer), path="task2", delay=120
-        )
+        await schedule_node.invoke("defer", as_umwelt(observer), path="task2", delay=120)
 
         result = await schedule_node.invoke("list", as_umwelt(observer))
         assert result["count"] == 2
@@ -886,9 +859,7 @@ class TestFutureNode:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_forecast(
-        self, future_node: FutureNode, observer: MockUmwelt
-    ) -> None:
+    async def test_forecast(self, future_node: FutureNode, observer: MockUmwelt) -> None:
         """Forecast returns probabilistic prediction."""
         result = await future_node.invoke(
             "forecast",
@@ -900,9 +871,7 @@ class TestFutureNode:
         assert "scenarios" in result["forecast"]
 
     @pytest.mark.asyncio
-    async def test_simulate(
-        self, future_node: FutureNode, observer: MockUmwelt
-    ) -> None:
+    async def test_simulate(self, future_node: FutureNode, observer: MockUmwelt) -> None:
         """Simulate returns simulation steps."""
         result = await future_node.invoke(
             "simulate",
@@ -995,9 +964,7 @@ class TestLogosContextIntegration:
         assert node.handle == "time.trace"
 
     @pytest.mark.asyncio
-    async def test_invoke_world_manifest(
-        self, logos: Logos, observer: MockUmwelt
-    ) -> None:
+    async def test_invoke_world_manifest(self, logos: Logos, observer: MockUmwelt) -> None:
         """Invoke world.*.manifest through Logos."""
         result = await logos.invoke("world.house.manifest", as_umwelt(observer))
         assert result is not None

@@ -3,6 +3,7 @@ Tests for feature flag registry and management.
 """
 
 import pytest
+
 from protocols.licensing.features import (
     FeatureFlag,
     FeatureInfo,
@@ -52,18 +53,12 @@ class TestFeatureRegistry:
 
     def test_get_tier_teams_features(self) -> None:
         """Test getting tier for TEAMS features."""
-        assert (
-            FeatureRegistry.get_tier(FeatureFlag.TEAM_COLLABORATION)
-            == LicenseTier.TEAMS
-        )
+        assert FeatureRegistry.get_tier(FeatureFlag.TEAM_COLLABORATION) == LicenseTier.TEAMS
         assert FeatureRegistry.get_tier(FeatureFlag.SHARED_GARDENS) == LicenseTier.TEAMS
 
     def test_get_tier_enterprise_features(self) -> None:
         """Test getting tier for ENTERPRISE features."""
-        assert (
-            FeatureRegistry.get_tier(FeatureFlag.CUSTOM_DEPLOYMENT)
-            == LicenseTier.ENTERPRISE
-        )
+        assert FeatureRegistry.get_tier(FeatureFlag.CUSTOM_DEPLOYMENT) == LicenseTier.ENTERPRISE
         assert FeatureRegistry.get_tier(FeatureFlag.SSO) == LicenseTier.ENTERPRISE
 
     def test_get_description(self) -> None:
@@ -76,10 +71,7 @@ class TestFeatureRegistry:
         """Test getting feature categories."""
         assert FeatureRegistry.get_category(FeatureFlag.SOUL_REFLECT) == "soul"
         assert FeatureRegistry.get_category(FeatureFlag.STATUS) == "cli"
-        assert (
-            FeatureRegistry.get_category(FeatureFlag.TEAM_COLLABORATION)
-            == "collaboration"
-        )
+        assert FeatureRegistry.get_category(FeatureFlag.TEAM_COLLABORATION) == "collaboration"
 
     def test_get_info(self) -> None:
         """Test getting full feature info."""
@@ -147,19 +139,13 @@ class TestFeatureRegistry:
         assert FeatureRegistry.is_enabled(FeatureFlag.SOUL_REFLECT, LicenseTier.FREE)
         assert FeatureRegistry.is_enabled(FeatureFlag.SOUL_REFLECT, LicenseTier.PRO)
         assert FeatureRegistry.is_enabled(FeatureFlag.SOUL_ADVISE, LicenseTier.PRO)
-        assert FeatureRegistry.is_enabled(
-            FeatureFlag.SOUL_ADVISE, LicenseTier.ENTERPRISE
-        )
+        assert FeatureRegistry.is_enabled(FeatureFlag.SOUL_ADVISE, LicenseTier.ENTERPRISE)
 
     def test_is_enabled_insufficient_tier(self) -> None:
         """Test is_enabled returns False for insufficient tier."""
         assert not FeatureRegistry.is_enabled(FeatureFlag.SOUL_ADVISE, LicenseTier.FREE)
-        assert not FeatureRegistry.is_enabled(
-            FeatureFlag.TEAM_COLLABORATION, LicenseTier.PRO
-        )
-        assert not FeatureRegistry.is_enabled(
-            FeatureFlag.CUSTOM_DEPLOYMENT, LicenseTier.TEAMS
-        )
+        assert not FeatureRegistry.is_enabled(FeatureFlag.TEAM_COLLABORATION, LicenseTier.PRO)
+        assert not FeatureRegistry.is_enabled(FeatureFlag.CUSTOM_DEPLOYMENT, LicenseTier.TEAMS)
 
 
 class TestFeatureInfo:

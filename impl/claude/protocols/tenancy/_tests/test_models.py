@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+
 from protocols.tenancy.models import (
     ApiKey,
     Session,

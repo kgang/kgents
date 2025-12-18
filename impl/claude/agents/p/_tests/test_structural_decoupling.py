@@ -13,6 +13,7 @@ Tests:
 from __future__ import annotations
 
 import pytest
+
 from agents.p.strategies.structural_decoupling import (
     StructuralDecouplingParser,
     StructuredField,

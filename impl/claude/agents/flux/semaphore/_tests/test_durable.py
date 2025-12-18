@@ -12,6 +12,7 @@ from datetime import datetime, timedelta
 from typing import Any
 
 import pytest
+
 from agents.d.volatile import VolatileAgent
 from agents.flux.semaphore.durable import (
     DEFAULT_STATE,
@@ -30,9 +31,7 @@ class TestDurablePurgatoryPersistence:
     @pytest.mark.asyncio
     async def test_save_persists_to_memory(self) -> None:
         """save() persists token to D-gent."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory = DurablePurgatory(memory=memory)
 
         token: SemaphoreToken[str] = SemaphoreToken(
@@ -50,9 +49,7 @@ class TestDurablePurgatoryPersistence:
     @pytest.mark.asyncio
     async def test_recover_loads_tokens_from_memory(self) -> None:
         """recover() loads persisted tokens."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
 
         # First purgatory saves token
         purgatory1 = DurablePurgatory(memory=memory)
@@ -75,9 +72,7 @@ class TestDurablePurgatoryPersistence:
         """Full roundtrip preserves all token fields."""
         import pickle
 
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         state = {"step": 5, "partial": "result"}
@@ -113,9 +108,7 @@ class TestDurablePurgatoryPersistence:
     @pytest.mark.asyncio
     async def test_resolve_persists_state(self) -> None:
         """resolve() persists the resolved state."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         token: SemaphoreToken[str] = SemaphoreToken(
@@ -140,9 +133,7 @@ class TestDurablePurgatoryPersistence:
     @pytest.mark.asyncio
     async def test_cancel_persists_state(self) -> None:
         """cancel() persists the cancelled state."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         token: SemaphoreToken[str] = SemaphoreToken(
@@ -171,9 +162,7 @@ class TestDurablePurgatoryVoidExpired:
     @pytest.mark.asyncio
     async def test_void_expired_persists_voided_tokens(self) -> None:
         """void_expired() persists voided state."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         # Create token with past deadline
@@ -202,9 +191,7 @@ class TestDurablePurgatoryVoidExpired:
     @pytest.mark.asyncio
     async def test_recover_voids_expired_on_startup(self) -> None:
         """recover() automatically voids expired tokens."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
 
         # First purgatory saves token with deadline
         purgatory1 = DurablePurgatory(memory=memory)
@@ -234,9 +221,7 @@ class TestDurablePurgatorySchemaVersion:
     @pytest.mark.asyncio
     async def test_persists_schema_version(self) -> None:
         """Persisted state includes schema version."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory = DurablePurgatory(memory=memory)
 
         token: SemaphoreToken[str] = SemaphoreToken(
@@ -289,17 +274,13 @@ class TestDurablePurgatoryPheromones:
     @pytest.mark.asyncio
     async def test_save_emits_pheromone(self) -> None:
         """save() emits purgatory.ejected pheromone."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         signals: list[tuple[str, dict[str, Any]]] = []
 
         async def capture_signal(name: str, data: dict[str, Any]) -> None:
             signals.append((name, data))
 
-        purgatory = create_durable_purgatory(
-            memory=memory, emit_pheromone=capture_signal
-        )
+        purgatory = create_durable_purgatory(memory=memory, emit_pheromone=capture_signal)
 
         token: SemaphoreToken[str] = SemaphoreToken(
             reason=SemaphoreReason.APPROVAL_NEEDED,
@@ -314,17 +295,13 @@ class TestDurablePurgatoryPheromones:
     @pytest.mark.asyncio
     async def test_resolve_emits_pheromone(self) -> None:
         """resolve() emits purgatory.resolved pheromone."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         signals: list[tuple[str, dict[str, Any]]] = []
 
         async def capture_signal(name: str, data: dict[str, Any]) -> None:
             signals.append((name, data))
 
-        purgatory = create_durable_purgatory(
-            memory=memory, emit_pheromone=capture_signal
-        )
+        purgatory = create_durable_purgatory(memory=memory, emit_pheromone=capture_signal)
 
         token: SemaphoreToken[str] = SemaphoreToken(
             reason=SemaphoreReason.APPROVAL_NEEDED,
@@ -341,17 +318,13 @@ class TestDurablePurgatoryPheromones:
     @pytest.mark.asyncio
     async def test_void_expired_emits_pheromone(self) -> None:
         """void_expired() emits purgatory.voided pheromone."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         signals: list[tuple[str, dict[str, Any]]] = []
 
         async def capture_signal(name: str, data: dict[str, Any]) -> None:
             signals.append((name, data))
 
-        purgatory = create_durable_purgatory(
-            memory=memory, emit_pheromone=capture_signal
-        )
+        purgatory = create_durable_purgatory(memory=memory, emit_pheromone=capture_signal)
 
         token: SemaphoreToken[str] = SemaphoreToken(
             reason=SemaphoreReason.APPROVAL_NEEDED,
@@ -386,9 +359,7 @@ class TestDurablePurgatoryFactories:
     @pytest.mark.asyncio
     async def test_create_and_recover_purgatory_recovers(self) -> None:
         """create_and_recover_purgatory() recovers state."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
 
         # First purgatory saves token
         purgatory1 = create_durable_purgatory(memory=memory)
@@ -407,9 +378,7 @@ class TestDurablePurgatoryFactories:
     async def test_attach_memory_enables_persistence(self) -> None:
         """attach_memory() enables persistence after creation."""
         purgatory = DurablePurgatory()
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
 
         # Initially no persistence
         token: SemaphoreToken[str] = SemaphoreToken(
@@ -468,9 +437,7 @@ class TestDurablePurgatoryIntegration:
     @pytest.mark.asyncio
     async def test_multiple_tokens_roundtrip(self) -> None:
         """Multiple tokens survive restart."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         tokens = [
@@ -501,9 +468,7 @@ class TestDurablePurgatoryIntegration:
     @pytest.mark.asyncio
     async def test_mixed_states_persist_correctly(self) -> None:
         """All terminal states persist correctly."""
-        memory: VolatileAgent[PurgatoryState] = VolatileAgent(
-            _state=DEFAULT_STATE.copy()
-        )
+        memory: VolatileAgent[PurgatoryState] = VolatileAgent(_state=DEFAULT_STATE.copy())
         purgatory1 = DurablePurgatory(memory=memory)
 
         pending_token: SemaphoreToken[str] = SemaphoreToken(

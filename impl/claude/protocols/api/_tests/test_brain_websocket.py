@@ -31,7 +31,6 @@ from protocols.api.brain_websocket import (
     unregister_session,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -97,10 +96,12 @@ class TestBrainWebSocketSession:
         # Initial subscription
         initial_events = session.subscribed_events.copy()
 
-        await session.handle_command({
-            "type": "subscribe",
-            "events": ["custom_event"],
-        })
+        await session.handle_command(
+            {
+                "type": "subscribe",
+                "events": ["custom_event"],
+            }
+        )
 
         # Check custom event was added
         assert "custom_event" in session.subscribed_events
@@ -120,10 +121,12 @@ class TestBrainWebSocketSession:
         # Ensure we have the event first
         session.subscribed_events.add("crystal_formed")
 
-        await session.handle_command({
-            "type": "unsubscribe",
-            "events": ["crystal_formed"],
-        })
+        await session.handle_command(
+            {
+                "type": "unsubscribe",
+                "events": ["crystal_formed"],
+            }
+        )
 
         assert "crystal_formed" not in session.subscribed_events
 
@@ -221,9 +224,7 @@ class TestBrainWebSocketRouter:
     def test_create_router_returns_router(self):
         """Test that router creation returns a valid router."""
         # Patch synergy subscription to avoid import issues
-        with patch(
-            "protocols.api.brain_websocket._setup_synergy_subscription"
-        ):
+        with patch("protocols.api.brain_websocket._setup_synergy_subscription"):
             router = create_brain_websocket_router()
             assert router is not None
             assert hasattr(router, "routes")

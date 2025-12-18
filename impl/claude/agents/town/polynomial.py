@@ -177,9 +177,7 @@ def citizen_directions(phase: CitizenPhase) -> FrozenSet[Any]:
     """
     match phase:
         case CitizenPhase.IDLE:
-            return frozenset(
-                {SocializeInput, WorkInput, ReflectInput, RestInput, type, Any}
-            )
+            return frozenset({SocializeInput, WorkInput, ReflectInput, RestInput, type, Any})
         case CitizenPhase.SOCIALIZING:
             return frozenset({SocializeInput, RestInput, type, Any})
         case CitizenPhase.WORKING:
@@ -198,9 +196,7 @@ def citizen_directions(phase: CitizenPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def citizen_transition(
-    phase: CitizenPhase, input: Any
-) -> tuple[CitizenPhase, CitizenOutput]:
+def citizen_transition(phase: CitizenPhase, input: Any) -> tuple[CitizenPhase, CitizenOutput]:
     """
     Citizen state transition function.
 
@@ -382,14 +378,175 @@ Key Property:
 
 
 # =============================================================================
+# Town Phase (Town-Level State Machine)
+# =============================================================================
+
+
+class TownPhase(Enum):
+    """
+    Positions in the town polynomial.
+
+    These phases govern town-level behavior:
+    - MORNING: High activity, socializing encouraged
+    - AFTERNOON: Working phase, solo activities
+    - EVENING: Reflection time
+    - NIGHT: Resting (Right to Rest for entire town)
+
+    From Crown Jewels Genesis Moodboard: Circadian Modulation.
+    """
+
+    MORNING = auto()
+    AFTERNOON = auto()
+    EVENING = auto()
+    NIGHT = auto()
+
+    @property
+    def activity_multiplier(self) -> float:
+        """How much this phase amplifies activity."""
+        return {
+            TownPhase.MORNING: 1.2,
+            TownPhase.AFTERNOON: 1.0,
+            TownPhase.EVENING: 0.8,
+            TownPhase.NIGHT: 0.3,
+        }[self]
+
+    @property
+    def social_bias(self) -> float:
+        """Bias toward social (positive) vs solo (negative) activities."""
+        return {
+            TownPhase.MORNING: 0.6,  # Socializing encouraged
+            TownPhase.AFTERNOON: -0.2,  # Solo work
+            TownPhase.EVENING: 0.3,  # Reflection with others
+            TownPhase.NIGHT: 0.0,  # Resting
+        }[self]
+
+    @property
+    def emoji(self) -> str:
+        """Visual representation of phase."""
+        return {
+            TownPhase.MORNING: "🌅",
+            TownPhase.AFTERNOON: "☀️",
+            TownPhase.EVENING: "🌆",
+            TownPhase.NIGHT: "🌙",
+        }[self]
+
+
+# =============================================================================
+# Town Input Types
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class AdvancePhaseInput:
+    """Input to advance to next phase."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class StayPhaseInput:
+    """Input to stay in current phase (extend duration)."""
+
+    reason: str = ""
+
+
+# =============================================================================
+# Town Direction Function
+# =============================================================================
+
+
+def town_directions(phase: TownPhase) -> FrozenSet[Any]:
+    """
+    Valid inputs for each town phase.
+
+    This encodes the town-level circadian pattern:
+    - All phases can advance to next
+    - All phases can stay (extend duration)
+    """
+    # Town follows directed cycle pattern (Pattern 9)
+    return frozenset({AdvancePhaseInput, StayPhaseInput, type, Any})
+
+
+# =============================================================================
+# Town Transition Function
+# =============================================================================
+
+
+TOWN_PHASE_CYCLE = [TownPhase.MORNING, TownPhase.AFTERNOON, TownPhase.EVENING, TownPhase.NIGHT]
+
+
+def town_transition(phase: TownPhase, input: Any) -> tuple[TownPhase, CitizenOutput]:
+    """
+    Town state transition function.
+
+    Implements the directed cycle (Pattern 9):
+    MORNING → AFTERNOON → EVENING → NIGHT → MORNING
+    """
+    if isinstance(input, AdvancePhaseInput):
+        # Find next phase in cycle
+        current_idx = TOWN_PHASE_CYCLE.index(phase)
+        next_idx = (current_idx + 1) % len(TOWN_PHASE_CYCLE)
+        next_phase = TOWN_PHASE_CYCLE[next_idx]
+
+        return next_phase, CitizenOutput(
+            phase=CitizenPhase.IDLE,  # Use citizen phase for output type
+            success=True,
+            message=f"Town advanced from {phase.emoji} {phase.name} to {next_phase.emoji} {next_phase.name}",
+            metadata={
+                "from_phase": phase.name,
+                "to_phase": next_phase.name,
+                "activity_multiplier": next_phase.activity_multiplier,
+            },
+        )
+    elif isinstance(input, StayPhaseInput):
+        return phase, CitizenOutput(
+            phase=CitizenPhase.IDLE,
+            success=True,
+            message=f"Town staying in {phase.emoji} {phase.name}: {input.reason or 'extending duration'}",
+            metadata={"phase": phase.name, "reason": input.reason},
+        )
+    else:
+        return phase, CitizenOutput(
+            phase=CitizenPhase.IDLE,
+            success=False,
+            message=f"Unknown input type: {type(input).__name__}",
+        )
+
+
+# =============================================================================
+# Town Polynomial Agent
+# =============================================================================
+
+
+TOWN_POLYNOMIAL: PolyAgent[TownPhase, Any, CitizenOutput] = PolyAgent(
+    name="TownPolynomial",
+    positions=frozenset(TownPhase),
+    _directions=town_directions,
+    _transition=town_transition,
+)
+"""
+The Town polynomial agent (circadian state machine).
+
+Models town-level behavior:
+- positions: 4 phases (MORNING, AFTERNOON, EVENING, NIGHT)
+- directions: advance or stay
+- transition: directed cycle
+
+Key Property:
+    Circadian Modulation: Town phase affects all citizen activity.
+    NIGHT phase applies Right to Rest pattern to entire town.
+"""
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
 
 __all__ = [
-    # Phase
+    # Citizen Phase
     "CitizenPhase",
-    # Inputs
+    # Citizen Inputs
     "SocializeInput",
     "WorkInput",
     "ReflectInput",
@@ -398,9 +555,20 @@ __all__ = [
     "CitizenInput",
     # Output
     "CitizenOutput",
-    # Functions
+    # Citizen Functions
     "citizen_directions",
     "citizen_transition",
-    # Polynomial
+    # Citizen Polynomial
     "CITIZEN_POLYNOMIAL",
+    # Town Phase
+    "TownPhase",
+    # Town Inputs
+    "AdvancePhaseInput",
+    "StayPhaseInput",
+    # Town Functions
+    "town_directions",
+    "town_transition",
+    "TOWN_PHASE_CYCLE",
+    # Town Polynomial
+    "TOWN_POLYNOMIAL",
 ]

@@ -15,8 +15,8 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
+
 from shared.capital import (
     BypassToken,
     EventSourcedLedger,

@@ -5,6 +5,7 @@ Tests layer rules, ring rules, and violation detection.
 """
 
 import pytest
+
 from protocols.gestalt.analysis import (
     ArchitectureGraph,
     DependencyEdge,
@@ -317,9 +318,7 @@ class TestPresetConfigs:
 
     def test_layered_config(self) -> None:
         """Layered config creates proper rules."""
-        config = create_layered_config(
-            ["presentation", "application", "domain", "infrastructure"]
-        )
+        config = create_layered_config(["presentation", "application", "domain", "infrastructure"])
         assert len(config.layer_rules) == 4
         # Presentation can depend on all layers below
         pres_rule = next(r for r in config.layer_rules if r.layer == "presentation")
@@ -362,12 +361,8 @@ class TestRingPatternMatching:
         # Note: protocols.agentese.types matches BOTH "*.types" (core) AND
         # "protocols.agentese.*" (domain). The first matching pattern wins
         # in iteration order. Use modules that unambiguously match one ring.
-        graph.modules["protocols.billing.types"] = Module(
-            name="protocols.billing.types"
-        )
-        graph.modules["protocols.cli.handlers.brain"] = Module(
-            name="protocols.cli.handlers.brain"
-        )
+        graph.modules["protocols.billing.types"] = Module(name="protocols.billing.types")
+        graph.modules["protocols.cli.handlers.brain"] = Module(name="protocols.cli.handlers.brain")
         graph.modules["agents.m.cartographer"] = Module(name="agents.m.cartographer")
 
         config.assign_rings(graph)
@@ -400,13 +395,9 @@ class TestRingPatternMatching:
 
         graph = ArchitectureGraph()
         # Core module (inner ring)
-        graph.modules["protocols.agentese.types"] = Module(
-            name="protocols.agentese.types"
-        )
+        graph.modules["protocols.agentese.types"] = Module(name="protocols.agentese.types")
         # Infrastructure module (outer ring)
-        graph.modules["protocols.terrarium.client"] = Module(
-            name="protocols.terrarium.client"
-        )
+        graph.modules["protocols.terrarium.client"] = Module(name="protocols.terrarium.client")
         # VIOLATION: core (inner) imports infrastructure (outer)
         graph.edges = [
             DependencyEdge(

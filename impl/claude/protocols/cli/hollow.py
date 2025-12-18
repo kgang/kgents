@@ -175,6 +175,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     "garden": "protocols.cli.handlers.garden:cmd_garden",
     "tend": "protocols.cli.handlers.tend:cmd_tend",
     "plot": "protocols.cli.handlers.plot:cmd_plot",
+    # ==========================================================================
+    # Garden Protocol: Session Management (self.forest.session.*)
+    # Sessions are the primary unit of planning. Plans emerge from sessions.
+    # ==========================================================================
+    "session": "protocols.cli.handlers.session:cmd_session",
     # Tending verb aliases (shortcuts)
     "observe": "protocols.cli.handlers.tend:cmd_observe",
     "prune": "protocols.cli.handlers.tend:cmd_prune",
@@ -190,11 +195,6 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Completions: Shell completions generator (Wave 3)
     # ==========================================================================
     "completions": "protocols.cli.completions:cmd_completions",
-    # ==========================================================================
-    # Query: Alias for ?pattern (avoids shell glob issues with ?)
-    # Usage: kg query self.* OR kg q self.*
-    # ==========================================================================
-    "query": "protocols.cli.handlers.query:cmd_query",
     "q": "protocols.cli.handlers.query:cmd_query",
 }
 
@@ -694,6 +694,7 @@ def _show_global_help() -> int:
     """
     try:
         from protocols.cli.help_global import show_global_help
+
         return show_global_help()
     except ImportError:
         # Fallback to static help text
@@ -708,11 +709,9 @@ def _show_command_help(command: str) -> int:
     Falls back to handler-provided help if projection fails.
     """
     try:
-        from protocols.cli.help_projector import create_help_projector
-        from protocols.cli.help_renderer import render_help
-
         # Get the AGENTESE path for this command
-        from protocols.cli.help_projector import PATH_TO_COMMAND
+        from protocols.cli.help_projector import PATH_TO_COMMAND, create_help_projector
+        from protocols.cli.help_renderer import render_help
 
         # Reverse lookup: command -> path
         path = None

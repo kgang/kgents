@@ -5,6 +5,7 @@ Tests event translation and idempotency handling.
 """
 
 import pytest
+
 from protocols.billing.stripe_to_openmeter import (
     IdempotencyStore,
     StripeToOpenMeterBridge,
@@ -267,9 +268,7 @@ class TestStripeToOpenMeterBridge:
         assert bridge._events_skipped == 1
 
     @pytest.mark.anyio
-    async def test_unhandled_event_type_skipped(
-        self, bridge: StripeToOpenMeterBridge
-    ) -> None:
+    async def test_unhandled_event_type_skipped(self, bridge: StripeToOpenMeterBridge) -> None:
         """Unhandled event types should be skipped."""
         event = WebhookEvent(
             id="evt_unknown",
@@ -284,9 +283,7 @@ class TestStripeToOpenMeterBridge:
         assert bridge._events_skipped == 1
 
     @pytest.mark.anyio
-    async def test_event_without_customer_id_skipped(
-        self, bridge: StripeToOpenMeterBridge
-    ) -> None:
+    async def test_event_without_customer_id_skipped(self, bridge: StripeToOpenMeterBridge) -> None:
         """Events without customer ID should be skipped."""
         event = WebhookEvent(
             id="evt_no_customer",

@@ -12,8 +12,9 @@ See: plans/crown-jewels-enlightened.md (Wave 3)
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from agents.domain.drills import (
     CrisisPhase,
@@ -33,18 +34,17 @@ from agents.park import (
     WARRIOR_MASK,
     DialogueMask,
     EigenvectorTransform,
-    MaskArchetype,
-    MaskedSessionState,
-    create_masked_state,
-    get_mask,
-    list_masks,
     # Domain Bridge
     IntegratedScenarioType,
+    MaskArchetype,
+    MaskedSessionState,
     ParkDomainBridge,
     create_data_breach_practice,
+    create_masked_state,
     create_service_outage_practice,
+    get_mask,
+    list_masks,
 )
-
 
 # =============================================================================
 # Dialogue Mask Tests
@@ -465,12 +465,8 @@ class TestDomainToBrainHandler:
                 "outcome": "success",
                 "score": 85,
                 "grade": "B+",
-                "timer_outcomes": {
-                    "GDPR 72h": {"status": "COMPLETED", "elapsed_seconds": 2400}
-                },
-                "decisions": [
-                    {"time": "00:05", "actor": "Alice", "action": "Contained breach"}
-                ],
+                "timer_outcomes": {"GDPR 72h": {"status": "COMPLETED", "elapsed_seconds": 2400}},
+                "decisions": [{"time": "00:05", "actor": "Alice", "action": "Contained breach"}],
                 "recommendations": ["Improve escalation speed"],
             },
         )
@@ -523,9 +519,7 @@ class TestParkToBrainHandler:
                 "duration_seconds": 1800,
                 "consent_debt_final": 0.4,
                 "forces_used": 1,
-                "key_moments": [
-                    {"time": "00:12:34", "description": "Force used", "marker": "⚠️"}
-                ],
+                "key_moments": [{"time": "00:12:34", "description": "Force used", "marker": "⚠️"}],
                 "feedback": {
                     "strengths": ["Good adaptability"],
                     "growth_areas": ["Escalation speed"],

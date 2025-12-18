@@ -267,12 +267,8 @@ def record_completion(
         _state.total_cost_usd += estimated_cost_usd
 
         _state.requests_by_model[model] = _state.requests_by_model.get(model, 0) + 1
-        _state.requests_by_archetype[archetype] = (
-            _state.requests_by_archetype.get(archetype, 0) + 1
-        )
-        _state.requests_by_provider[provider] = (
-            _state.requests_by_provider.get(provider, 0) + 1
-        )
+        _state.requests_by_archetype[archetype] = _state.requests_by_archetype.get(archetype, 0) + 1
+        _state.requests_by_provider[provider] = _state.requests_by_provider.get(provider, 0) + 1
 
         current_tokens = _state.tokens_by_model.get(model, (0, 0))
         _state.tokens_by_model[model] = (
@@ -410,7 +406,6 @@ class MorpheusTelemetry:
             attributes=attributes,
         ) as span:
             start_time = time.perf_counter()
-            first_token_time: float | None = None
 
             try:
                 yield span
@@ -440,9 +435,7 @@ def get_morpheus_metrics_summary() -> dict[str, Any]:
     """
     with _state._lock:
         avg_duration = (
-            _state.total_duration_s / _state.total_requests
-            if _state.total_requests > 0
-            else 0.0
+            _state.total_duration_s / _state.total_requests if _state.total_requests > 0 else 0.0
         )
 
         avg_tokens_per_request = (

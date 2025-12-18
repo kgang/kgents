@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 import pytest
+
 from agents.g import GrammarLevel, create_command_tongue, create_schema_tongue
 from agents.g.catalog_integration import (
     check_compatibility,
@@ -146,9 +147,7 @@ async def test_find_tongue_by_constraints() -> None:
     # Find by constraints
     safe_results = await find_tongue(registry, constraints=["No deletes"])
     assert len(safe_results) > 0
-    assert all(
-        "no deletes" in [c.lower() for c in e.tongue_constraints] for e in safe_results
-    )
+    assert all("no deletes" in [c.lower() for c in e.tongue_constraints] for e in safe_results)
 
 
 @pytest.mark.asyncio

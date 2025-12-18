@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.poly import PolyAgent, from_function
 from agents.town.operad import (
     CELEBRATE_METABOLICS,
@@ -62,9 +63,7 @@ class TestOperationMetabolics:
 
     def test_estimate_tokens_scaling(self) -> None:
         """Scaling works for variable arity."""
-        m = OperationMetabolics(
-            token_cost=100, drama_potential=0.5, scales_with_arity=True
-        )
+        m = OperationMetabolics(token_cost=100, drama_potential=0.5, scales_with_arity=True)
         assert m.estimate_tokens(1) == 100
         assert m.estimate_tokens(3) == 300
 

@@ -19,8 +19,8 @@ from typing import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from hypothesis import HealthCheck, given, settings
-from hypothesis import strategies as st
+from hypothesis import HealthCheck, given, settings, strategies as st
+
 from protocols.gestalt.handler import (
     _get_store,
     _reset_store,
@@ -239,17 +239,13 @@ class TestModuleUsesStore:
         graph = mock_store.graph.value
         if graph.modules:
             module_name = list(graph.modules.keys())[0]
-            result = handle_module_manifest(
-                module_name, [], json_output=True, store=mock_store
-            )
+            result = handle_module_manifest(module_name, [], json_output=True, store=mock_store)
 
             assert result["name"] == module_name
 
     def test_module_not_found(self, mock_store: MagicMock) -> None:
         """Module returns error for unknown module."""
-        result = handle_module_manifest(
-            "nonexistent_xyz", [], json_output=False, store=mock_store
-        )
+        result = handle_module_manifest("nonexistent_xyz", [], json_output=False, store=mock_store)
 
         assert "not found" in result
 
@@ -375,11 +371,7 @@ class TestOutputFormat:
 
         assert isinstance(result, str)
         # Either "No drift violations" or "Drift Violations:"
-        assert (
-            "drift" in result.lower()
-            or "violation" in result.lower()
-            or "no" in result.lower()
-        )
+        assert "drift" in result.lower() or "violation" in result.lower() or "no" in result.lower()
 
     def test_json_output_is_dict(self, mock_store: MagicMock) -> None:
         """JSON output returns a dictionary."""
@@ -469,9 +461,7 @@ class TestEdgeCases:
             # Try partial match
             partial = full_name.split(".")[-1] if "." in full_name else full_name
 
-            result = handle_module_manifest(
-                partial, [], json_output=True, store=mock_store
-            )
+            result = handle_module_manifest(partial, [], json_output=True, store=mock_store)
 
             # Should either find it or list matches
             if isinstance(result, dict):
@@ -490,9 +480,7 @@ class TestPropertyBased:
 
     @given(
         cmd_args=st.lists(
-            st.sampled_from(
-                ["manifest", "health", "drift", "--json", "--help", "unknown"]
-            ),
+            st.sampled_from(["manifest", "health", "drift", "--json", "--help", "unknown"]),
             min_size=0,
             max_size=5,
         )
@@ -502,9 +490,7 @@ class TestPropertyBased:
         deadline=5000,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_cmd_codebase_doesnt_crash(
-        self, cmd_args: list[str], tmp_path: Path
-    ) -> None:
+    def test_cmd_codebase_doesnt_crash(self, cmd_args: list[str], tmp_path: Path) -> None:
         """cmd_codebase handles arbitrary args without crashing."""
         from protocols.gestalt.reactive import GestaltStore
 
@@ -542,9 +528,7 @@ class TestPropertyBased:
 
         try:
             # Should not raise exceptions
-            result = handle_module_manifest(
-                module_name_input, [], json_output=True, store=store
-            )
+            result = handle_module_manifest(module_name_input, [], json_output=True, store=store)
             # Should return dict or string
             assert isinstance(result, (dict, str))
         finally:

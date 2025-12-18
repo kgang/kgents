@@ -8,6 +8,7 @@ Philosophy verification:
 """
 
 import pytest
+
 from agents.i.screens.transitions import (
     GentleNavigator,
     ScreenTransition,

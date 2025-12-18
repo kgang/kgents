@@ -18,7 +18,7 @@ Uses the NEW D-gent architecture:
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -54,9 +54,7 @@ class HypothesisMemory:
     """
 
     hypotheses: list[Hypothesis] = field(default_factory=list)
-    domains: dict[str, list[int]] = field(
-        default_factory=dict
-    )  # domain -> hypothesis indices
+    domains: dict[str, list[int]] = field(default_factory=dict)  # domain -> hypothesis indices
     total_generated: int = 0  # Total count across all sessions
 
     # Lineage tracking (D-gent integration)
@@ -72,8 +70,7 @@ class HypothesisMemory:
         # Convert them back to ints when loading
         if self.catalog_ids:
             self.catalog_ids = {
-                int(k) if isinstance(k, str) else k: v
-                for k, v in self.catalog_ids.items()
+                int(k) if isinstance(k, str) else k: v for k, v in self.catalog_ids.items()
             }
 
     # Research session tracking
@@ -281,12 +278,8 @@ class HypothesisMemory:
             hypotheses=[Hypothesis(**h) for h in data.get("hypotheses", [])],
             domains=data.get("domains", {}),
             total_generated=data.get("total_generated", 0),
-            lineage_edges=[
-                HypothesisLineageEdge(**e) for e in data.get("lineage_edges", [])
-            ],
-            catalog_ids={
-                int(k): v for k, v in data.get("catalog_ids", {}).items()
-            },
+            lineage_edges=[HypothesisLineageEdge(**e) for e in data.get("lineage_edges", [])],
+            catalog_ids={int(k): v for k, v in data.get("catalog_ids", {}).items()},
             sessions=data.get("sessions", []),
         )
 

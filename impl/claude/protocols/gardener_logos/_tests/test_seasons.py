@@ -12,27 +12,28 @@ Phase 8: Auto-Inducer
 See: plans/gardener-logos-enactment.md
 """
 
-import pytest
 from datetime import datetime, timedelta
 
-from ..garden import create_garden, GardenSeason, GardenMetrics
-from ..tending import (
-    TendingVerb,
-    TendingGesture,
-    apply_gesture,
-    observe,
-    graft,
-    water,
-)
+import pytest
+
+from ..garden import GardenMetrics, GardenSeason, create_garden
 from ..seasons import (
-    TransitionSignals,
-    SeasonTransition,
-    evaluate_season_transition,
-    suggest_season_transition,
-    dismiss_transition,
-    is_transition_dismissed,
-    clear_dismissals,
     TRANSITION_RULES,
+    SeasonTransition,
+    TransitionSignals,
+    clear_dismissals,
+    dismiss_transition,
+    evaluate_season_transition,
+    is_transition_dismissed,
+    suggest_season_transition,
+)
+from ..tending import (
+    TendingGesture,
+    TendingVerb,
+    apply_gesture,
+    graft,
+    observe,
+    water,
 )
 
 
@@ -218,6 +219,7 @@ class TestTransitionRules:
 
         # Add plots with progress
         from ..plots import PlotState
+
         garden.plots["test-plot"] = PlotState(
             name="test-plot",
             path="concept.test",
@@ -304,11 +306,14 @@ class TestDismissalMemory:
         )
 
         # Should be dismissed now
-        assert is_transition_dismissed(
-            garden_id,
-            GardenSeason.DORMANT,
-            GardenSeason.SPROUTING,
-        ) is True
+        assert (
+            is_transition_dismissed(
+                garden_id,
+                GardenSeason.DORMANT,
+                GardenSeason.SPROUTING,
+            )
+            is True
+        )
 
     def test_undismissed_transition_not_blocked(self):
         """Non-dismissed transitions should not be blocked."""
@@ -316,11 +321,14 @@ class TestDismissalMemory:
         clear_dismissals(garden_id)
 
         # Should not be dismissed
-        assert is_transition_dismissed(
-            garden_id,
-            GardenSeason.SPROUTING,
-            GardenSeason.BLOOMING,
-        ) is False
+        assert (
+            is_transition_dismissed(
+                garden_id,
+                GardenSeason.SPROUTING,
+                GardenSeason.BLOOMING,
+            )
+            is False
+        )
 
     def test_clear_dismissals(self):
         """clear_dismissals should remove all dismissals for garden."""
@@ -334,11 +342,14 @@ class TestDismissalMemory:
         clear_dismissals(garden_id)
 
         # Should no longer be dismissed
-        assert is_transition_dismissed(
-            garden_id,
-            GardenSeason.DORMANT,
-            GardenSeason.SPROUTING,
-        ) is False
+        assert (
+            is_transition_dismissed(
+                garden_id,
+                GardenSeason.DORMANT,
+                GardenSeason.SPROUTING,
+            )
+            is False
+        )
 
     def test_suggest_respects_dismissal(self):
         """suggest_season_transition should respect dismissals."""

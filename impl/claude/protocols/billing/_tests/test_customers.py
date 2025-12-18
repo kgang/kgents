@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
 from protocols.billing.customers import (
     Customer,
     CustomerManager,
@@ -147,9 +148,7 @@ class TestCustomerManager:
 
     def test_get_customer(self, customer_manager: CustomerManager) -> None:
         """Test retrieving a customer by ID."""
-        mock_stripe.Customer.retrieve.return_value = make_stripe_customer(
-            customer_id="cus_get123"
-        )
+        mock_stripe.Customer.retrieve.return_value = make_stripe_customer(customer_id="cus_get123")
 
         customer = customer_manager.get_customer("cus_get123")
 
@@ -160,8 +159,8 @@ class TestCustomerManager:
     def test_get_customer_not_found(self, customer_manager: CustomerManager) -> None:
         """Test retrieving non-existent customer returns None."""
         mock_stripe.error.InvalidRequestError = Exception
-        mock_stripe.Customer.retrieve.side_effect = (
-            mock_stripe.error.InvalidRequestError("Not found")
+        mock_stripe.Customer.retrieve.side_effect = mock_stripe.error.InvalidRequestError(
+            "Not found"
         )
 
         customer = customer_manager.get_customer("cus_nonexistent")
@@ -181,13 +180,9 @@ class TestCustomerManager:
         assert customer is not None
         assert customer.id == "cus_email123"
         assert customer.email == "search@example.com"
-        mock_stripe.Customer.list.assert_called_once_with(
-            email="search@example.com", limit=1
-        )
+        mock_stripe.Customer.list.assert_called_once_with(email="search@example.com", limit=1)
 
-    def test_get_customer_by_email_not_found(
-        self, customer_manager: CustomerManager
-    ) -> None:
+    def test_get_customer_by_email_not_found(self, customer_manager: CustomerManager) -> None:
         """Test email search with no results returns None."""
         mock_list = MagicMock()
         mock_list.data = []
@@ -205,14 +200,10 @@ class TestCustomerManager:
             name="Updated Name",
         )
 
-        customer = customer_manager.update_customer(
-            "cus_update123", name="Updated Name"
-        )
+        customer = customer_manager.update_customer("cus_update123", name="Updated Name")
 
         assert customer.name == "Updated Name"
-        mock_stripe.Customer.modify.assert_called_once_with(
-            "cus_update123", name="Updated Name"
-        )
+        mock_stripe.Customer.modify.assert_called_once_with("cus_update123", name="Updated Name")
 
     def test_update_customer_metadata(self, customer_manager: CustomerManager) -> None:
         """Test updating customer metadata."""
@@ -221,9 +212,7 @@ class TestCustomerManager:
             metadata={"updated": "true"},
         )
 
-        customer = customer_manager.update_customer(
-            "cus_meta123", metadata={"updated": "true"}
-        )
+        customer = customer_manager.update_customer("cus_meta123", metadata={"updated": "true"})
 
         assert customer.metadata == {"updated": "true"}
         mock_stripe.Customer.modify.assert_called_once_with(

@@ -7,6 +7,7 @@ Session 5: Crown Jewel Brain UI Layer
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.brain_cards import (
     BrainCartographyCard,
     CartographyState,

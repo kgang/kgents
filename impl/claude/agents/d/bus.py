@@ -13,7 +13,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import Awaitable, Callable, Final
+from typing import Awaitable, Callable, Final, List
 from uuid import uuid4
 
 from .datum import Datum
@@ -23,8 +23,8 @@ from .protocol import BaseDgent, DgentProtocol
 class DataEventType(Enum):
     """Types of data events."""
 
-    PUT = auto()      # New datum stored
-    DELETE = auto()   # Datum removed
+    PUT = auto()  # New datum stored
+    DELETE = auto()  # Datum removed
     UPGRADE = auto()  # Datum promoted to higher tier
     DEGRADE = auto()  # Datum demoted (graceful degradation)
 
@@ -129,7 +129,7 @@ class DataBus:
         """Safely notify a subscriber, catching exceptions."""
         try:
             await subscriber.handler(event)
-        except Exception as e:
+        except Exception:
             self._error_count += 1
             # Log but don't propagate (non-blocking)
             # TODO: Integrate with logging/tracing
@@ -227,9 +227,7 @@ class DataBus:
             "buffer_size": len(self._buffer),
             "total_emitted": self._emit_count,
             "total_errors": self._error_count,
-            "subscriber_count": sum(
-                len(subs) for subs in self._subscribers.values()
-            )
+            "subscriber_count": sum(len(subs) for subs in self._subscribers.values())
             + len(self._all_subscribers),
         }
 
@@ -309,11 +307,11 @@ class BusEnabledDgent(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data (no event emitted for reads)."""
         return await self.backend.list(prefix=prefix, after=after, limit=limit)
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal chain (no event emitted for reads)."""
         return await self.backend.causal_chain(id)
 

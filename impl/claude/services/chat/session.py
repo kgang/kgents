@@ -23,6 +23,7 @@ from .config import ChatConfig, ContextStrategy
 if TYPE_CHECKING:
     from agents.f.modalities.chat import ChatFlow, Turn as FgentTurn
     from bootstrap.umwelt import Umwelt
+
     from .composer import ChatMorpheusComposer, TurnResult as ComposerTurnResult
 
 
@@ -296,9 +297,7 @@ class ChatSession:
         }
 
         if to_state not in legal_transitions.get(self._state, set()):
-            raise ValueError(
-                f"Invalid state transition: {self._state.value} -> {to_state.value}"
-            )
+            raise ValueError(f"Invalid state transition: {self._state.value} -> {to_state.value}")
 
         self._state = to_state
         self._updated_at = datetime.now()

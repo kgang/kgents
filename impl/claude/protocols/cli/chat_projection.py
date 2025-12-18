@@ -31,8 +31,8 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
-    from services.chat import ChatSession
     from protocols.agentese.node import Observer
+    from services.chat import ChatSession
 
 # Rich imports for beautiful output (graceful degradation)
 try:
@@ -55,17 +55,29 @@ except ImportError:
 # =============================================================================
 
 # Chat commands (in-REPL)
-CHAT_COMMANDS = frozenset({
-    "/exit", "/quit", "/q",
-    "/history", "/h",
-    "/context", "/c",
-    "/metrics", "/m",
-    "/reset", "/r",
-    "/save", "/s",
-    "/load", "/l",
-    "/persona", "/p",
-    "/help", "/?",
-})
+CHAT_COMMANDS = frozenset(
+    {
+        "/exit",
+        "/quit",
+        "/q",
+        "/history",
+        "/h",
+        "/context",
+        "/c",
+        "/metrics",
+        "/m",
+        "/reset",
+        "/r",
+        "/save",
+        "/s",
+        "/load",
+        "/l",
+        "/persona",
+        "/p",
+        "/help",
+        "/?",
+    }
+)
 
 # Visual indicators
 INDICATORS = {
@@ -299,9 +311,7 @@ class ChatProjection:
             try:
                 # Check if session is collapsed
                 if self.session.is_collapsed:
-                    print(self.renderer.render_info(
-                        f"Session ended: {self.session.state.value}"
-                    ))
+                    print(self.renderer.render_info(f"Session ended: {self.session.state.value}"))
                     break
 
                 # Get user input
@@ -460,7 +470,7 @@ class ChatProjection:
                 self.session.set_name(name)
 
             # Save
-            datum_id = await persistence.save_session(self.session, name=name)
+            await persistence.save_session(self.session, name=name)
 
             # Feedback
             display_name = name or self.session.session_id[:12]
@@ -475,8 +485,9 @@ class ChatProjection:
     async def _load_session(self, identifier: str) -> None:
         """Load a saved session from D-gent storage."""
         try:
-            from services.chat import get_persistence, Turn, Message
             from datetime import datetime
+
+            from services.chat import Message, Turn, get_persistence
 
             persistence = get_persistence()
 
@@ -609,9 +620,10 @@ def run_chat_repl(
     # Handle case where we're already inside an event loop
     # (e.g., called from async cmd_soul handler)
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # Already in an event loop - run in a new thread to avoid nested asyncio.run
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(asyncio.run, _run())
             return future.result()
@@ -668,8 +680,9 @@ def run_chat_one_shot(
 
     # Handle case where we're already inside an event loop
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(asyncio.run, _run())
             return future.result()

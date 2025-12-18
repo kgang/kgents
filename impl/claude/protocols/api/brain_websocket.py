@@ -205,7 +205,11 @@ def _setup_synergy_subscription() -> None:
 
     try:
         from protocols.synergy.bus import get_synergy_bus
-        from protocols.synergy.events import SynergyEvent, SynergyEventType, SynergyResult
+        from protocols.synergy.events import (
+            SynergyEvent,
+            SynergyEventType,
+            SynergyResult,
+        )
 
         bus = get_synergy_bus()
 

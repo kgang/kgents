@@ -10,8 +10,7 @@ import time
 
 import pytest
 
-from agents.m.memory import Memory, Lifecycle, simple_embedding
-
+from agents.m.memory import Lifecycle, Memory, simple_embedding
 
 # === Creation Tests ===
 

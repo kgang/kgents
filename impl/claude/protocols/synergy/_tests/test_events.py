@@ -7,6 +7,7 @@ Foundation 4 - Wave 0: Cross-jewel communication events.
 from datetime import datetime
 
 import pytest
+
 from protocols.synergy.events import (
     Jewel,
     SynergyEvent,

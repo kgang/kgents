@@ -5,6 +5,7 @@ Tests for FeverOverlay and related components.
 from __future__ import annotations
 
 import pytest
+
 from agents.i.overlays.fever import (
     EntropyGauge,
     EntropyState,

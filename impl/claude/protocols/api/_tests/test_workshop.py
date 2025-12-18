@@ -8,6 +8,7 @@ import pytest
 pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
+
 from protocols.api.workshop import (
     AssignTaskRequest,
     BuilderSummaryResponse,
@@ -122,9 +123,7 @@ class TestWorkshopAssignTask:
         data = response.json()
         assert data["lead_builder"] == "Sage"
 
-    def test_assign_task_routes_to_spark_for_prototype(
-        self, client: TestClient
-    ) -> None:
+    def test_assign_task_routes_to_spark_for_prototype(self, client: TestClient) -> None:
         """POST /v1/workshop/task with 'prototype' should route to Spark."""
         response = client.post(
             "/v1/workshop/task",

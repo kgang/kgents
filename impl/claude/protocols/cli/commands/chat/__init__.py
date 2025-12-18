@@ -13,7 +13,6 @@ These complement the interactive chat available via:
 
 from __future__ import annotations
 
-
 SESSION_COMMANDS = {"sessions", "list", "resume", "search", "delete"}
 
 

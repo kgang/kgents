@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from infra.ghost.cache import GlassCacheManager
 from infra.ghost.collectors import MemoryCollector
 
@@ -31,9 +32,7 @@ class TestMemoryCollector:
         result = await collector.collect()
 
         # Should always succeed (graceful degradation)
-        assert (
-            result.success or result.data.get("health_line") == "memory:not_available"
-        )
+        assert result.success or result.data.get("health_line") == "memory:not_available"
 
     @pytest.mark.asyncio
     async def test_collect_includes_four_pillars(self) -> None:

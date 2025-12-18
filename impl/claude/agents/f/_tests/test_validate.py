@@ -5,6 +5,7 @@ Focused tests covering core validation functionality.
 """
 
 import pytest
+
 from agents.f.contract import Contract, Invariant
 from agents.f.intent import Example, Intent
 from agents.f.prototype import SourceCode, StaticAnalysisReport
@@ -205,9 +206,7 @@ class Agent:
     intent = Intent("double", ["multiply by 2"], [], examples=[Example(5, 10)])
     contract = Contract("Agent", "int", "int", [], [], "double")
 
-    report = await validate_with_self_healing(
-        intent, contract, buggy, regenerate_fn=regenerate
-    )
+    report = await validate_with_self_healing(intent, contract, buggy, regenerate_fn=regenerate)
     assert report.verdict == VerdictStatus.PASS
 
 

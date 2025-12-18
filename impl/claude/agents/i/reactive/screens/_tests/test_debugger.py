@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.agent_card import AgentCardState
 from agents.i.reactive.primitives.yield_card import YieldCardState
 from agents.i.reactive.screens.debugger import DebuggerScreen, DebuggerScreenState
@@ -254,9 +255,7 @@ class TestDebuggerScreenProjectCLI:
         """CLI projection includes activity timeline."""
         activity = (0.1, 0.5, 0.9)
         agent = AgentCardState(agent_id="a1")
-        screen = DebuggerScreen(
-            DebuggerScreenState(agent=agent, activity_history=activity)
-        )
+        screen = DebuggerScreen(DebuggerScreenState(agent=agent, activity_history=activity))
         result = screen.project(RenderTarget.CLI)
         assert "ACTIVITY" in result or "TIMELINE" in result
         assert "3 points" in result
@@ -476,9 +475,7 @@ class TestDebuggerScreenDeterminism:
 
         assert screen1.project(RenderTarget.CLI) == screen2.project(RenderTarget.CLI)
         assert screen1.project(RenderTarget.JSON) == screen2.project(RenderTarget.JSON)
-        assert screen1.project(RenderTarget.MARIMO) == screen2.project(
-            RenderTarget.MARIMO
-        )
+        assert screen1.project(RenderTarget.MARIMO) == screen2.project(RenderTarget.MARIMO)
 
 
 class TestDebuggerScreenEntropyControl:

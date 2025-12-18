@@ -5,6 +5,7 @@ Tests for AnchorBasedParser (Strategy 4.2 - Islands of Stability).
 from __future__ import annotations
 
 import pytest
+
 from agents.p.strategies.anchor import (
     AnchorBasedParser,
     behavior_parser,
@@ -111,9 +112,7 @@ class TestAnchorBasedParser:
         def extract_int(text: str) -> int:
             return int(text.strip())
 
-        parser: AnchorBasedParser[int] = AnchorBasedParser(
-            anchor="###NUM:", extractor=extract_int
-        )
+        parser: AnchorBasedParser[int] = AnchorBasedParser(anchor="###NUM:", extractor=extract_int)
         text = """
         ###NUM: 42
         ###NUM: 100
@@ -131,9 +130,7 @@ class TestAnchorBasedParser:
         def extract_int(text: str) -> int:
             return int(text.strip())
 
-        parser: AnchorBasedParser[int] = AnchorBasedParser(
-            anchor="###NUM:", extractor=extract_int
-        )
+        parser: AnchorBasedParser[int] = AnchorBasedParser(anchor="###NUM:", extractor=extract_int)
         text = """
         ###NUM: not a number
         """

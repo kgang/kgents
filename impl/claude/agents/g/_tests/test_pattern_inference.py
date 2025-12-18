@@ -12,6 +12,7 @@ Tests cover:
 """
 
 import pytest
+
 from agents.g.pattern_inference import (
     GrammarHypothesis,
     GrammarRule,
@@ -253,9 +254,7 @@ class TestPatternAnalyzer:
 
         assert len(patterns) > 0
         # Should detect function pattern
-        has_func_pattern = any(
-            p.pattern_type == PatternType.STRUCTURE for p in patterns
-        )
+        has_func_pattern = any(p.pattern_type == PatternType.STRUCTURE for p in patterns)
         assert has_func_pattern
 
     def test_analyze_mixed_patterns(self) -> None:

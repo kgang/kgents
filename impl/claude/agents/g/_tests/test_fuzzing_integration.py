@@ -9,6 +9,7 @@ Tests:
 """
 
 import pytest
+
 from agents.g.fuzzing_integration import (
     FuzzInputType,
     FuzzReport,
@@ -107,9 +108,7 @@ class Item(BaseModel):
         ),
         domain="Testing",
         constraints=(),
-        examples=(
-            Example(text='{"name": "test", "value": 42}', description="Simple item"),
-        ),
+        examples=(Example(text='{"name": "test", "value": 42}', description="Simple item"),),
     )
 
 
@@ -166,9 +165,7 @@ class TestTongueInputGenerator:
         assert len(invalid) == 10
         # Should include empty, malformed, wrong verbs
         assert (
-            "" in invalid
-            or "   " in invalid
-            or any("BLARG" in i or "ZZZZ" in i for i in invalid)
+            "" in invalid or "   " in invalid or any("BLARG" in i or "ZZZZ" in i for i in invalid)
         )
 
     def test_generate_boundary(self, command_tongue: Tongue) -> None:
@@ -525,9 +522,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_property_test_tongue(self, command_tongue: Tongue) -> None:
         """Test property_test_tongue convenience function."""
-        report = await property_test_tongue(
-            command_tongue, seed=42, cases_per_property=10
-        )
+        report = await property_test_tongue(command_tongue, seed=42, cases_per_property=10)
 
         assert isinstance(report, PropertyTestReport)
         assert report.total_properties == 5
@@ -535,9 +530,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_validate_tongue_with_t_gent(self, command_tongue: Tongue) -> None:
         """Test full T-gent validation."""
-        fuzz_report, prop_report = await validate_tongue_with_t_gent(
-            command_tongue, seed=42
-        )
+        fuzz_report, prop_report = await validate_tongue_with_t_gent(command_tongue, seed=42)
 
         assert isinstance(fuzz_report, FuzzReport)
         assert isinstance(prop_report, PropertyTestReport)
@@ -573,9 +566,7 @@ class TestIntegration:
         assert fuzz_report.total_tests == 25
 
         # Step 2: Property test
-        prop_report = await property_test_tongue(
-            command_tongue, seed=42, cases_per_property=5
-        )
+        prop_report = await property_test_tongue(command_tongue, seed=42, cases_per_property=5)
         assert prop_report.total_properties == 5
 
         # Both should complete without errors

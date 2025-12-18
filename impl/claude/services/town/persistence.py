@@ -227,7 +227,7 @@ class TownPersistence:
             stmt = select(Citizen)
 
             if active_only:
-                stmt = stmt.where(Citizen.is_active == True)
+                stmt = stmt.where(Citizen.is_active)
             if archetype:
                 stmt = stmt.where(Citizen.archetype == archetype)
 
@@ -574,13 +574,11 @@ class TownPersistence:
         """
         async with self.citizens.session_factory() as session:
             # Count citizens
-            total_citizens_result = await session.execute(
-                select(func.count()).select_from(Citizen)
-            )
+            total_citizens_result = await session.execute(select(func.count()).select_from(Citizen))
             total_citizens = total_citizens_result.scalar() or 0
 
             active_citizens_result = await session.execute(
-                select(func.count()).select_from(Citizen).where(Citizen.is_active == True)
+                select(func.count()).select_from(Citizen).where(Citizen.is_active)
             )
             active_citizens = active_citizens_result.scalar() or 0
 
@@ -591,9 +589,7 @@ class TownPersistence:
             total_conversations = total_conv_result.scalar() or 0
 
             active_conv_result = await session.execute(
-                select(func.count())
-                .select_from(Conversation)
-                .where(Conversation.is_active == True)
+                select(func.count()).select_from(Conversation).where(Conversation.is_active)
             )
             active_conversations = active_conv_result.scalar() or 0
 

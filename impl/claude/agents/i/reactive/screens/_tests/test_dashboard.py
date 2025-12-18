@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.agent_card import AgentCardState
 from agents.i.reactive.primitives.yield_card import YieldCardState
 from agents.i.reactive.screens.dashboard import DashboardScreen, DashboardScreenState
@@ -379,6 +380,4 @@ class TestDashboardScreenDeterminism:
 
         assert screen1.project(RenderTarget.CLI) == screen2.project(RenderTarget.CLI)
         assert screen1.project(RenderTarget.JSON) == screen2.project(RenderTarget.JSON)
-        assert screen1.project(RenderTarget.MARIMO) == screen2.project(
-            RenderTarget.MARIMO
-        )
+        assert screen1.project(RenderTarget.MARIMO) == screen2.project(RenderTarget.MARIMO)

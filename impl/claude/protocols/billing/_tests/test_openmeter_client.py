@@ -6,6 +6,7 @@ import asyncio
 from uuid import uuid4
 
 import pytest
+
 from protocols.billing.openmeter_client import (
     OpenMeterClient,
     OpenMeterConfig,

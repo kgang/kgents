@@ -7,6 +7,7 @@ Tests for the L-gent catalog registry implementation.
 from __future__ import annotations
 
 import pytest
+
 from agents.l import CatalogEntry, EntityType, Registry, Status
 
 # ============================================================================

@@ -6,15 +6,16 @@ Per spec/protocols/chat-morpheus-synergy.md Part III:
 - Model selection is a functor: Observer → MorpheusConfig
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
 from services.chat.model_selector import (
-    MorpheusConfig,
-    default_model_selector,
-    budget_aware_selector,
-    TokenBudget,
     TIER_BUDGETS,
+    MorpheusConfig,
+    TokenBudget,
+    budget_aware_selector,
+    default_model_selector,
 )
 
 

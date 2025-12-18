@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from protocols.nphase.schema import (
     Blocker,
     Classification,
@@ -107,9 +108,7 @@ class TestNPhaseStateUpdater:
                 allocation={"PLAN": 0.10, "RESEARCH": 0.15},
                 spent={},
             ),
-            blockers=(
-                Blocker(id="B1", description="Issue", evidence="file:1", status="open"),
-            ),
+            blockers=(Blocker(id="B1", description="Issue", evidence="file:1", status="open"),),
         )
 
     def test_update_adds_handles(self, project: ProjectDefinition) -> None:

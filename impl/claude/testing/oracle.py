@@ -23,8 +23,10 @@ from typing import TYPE_CHECKING, Any, Callable, Protocol
 if TYPE_CHECKING:
     # For type checking, use the real types if available
     try:
-        from agents.l.semantic import Embedder as _EmbedderType
-        from agents.l.semantic import SimpleEmbedder as _SimpleEmbedderType
+        from agents.l.semantic import (
+            Embedder as _EmbedderType,
+            SimpleEmbedder as _SimpleEmbedderType,
+        )
     except ImportError:
         _EmbedderType = None  # type: ignore[misc, assignment]
         _SimpleEmbedderType = None  # type: ignore[misc, assignment]
@@ -487,9 +489,7 @@ class Oracle:
 
         # Subset test (for string inputs)
         if isinstance(seed_input, str):
-            extended_input = (
-                seed_input + "\n\nAdditional context: This is extra information."
-            )
+            extended_input = seed_input + "\n\nAdditional context: This is extra information."
             output_extended = await agent.invoke(extended_input)
 
             tests.append(

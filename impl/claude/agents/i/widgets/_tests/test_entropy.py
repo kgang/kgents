@@ -5,6 +5,7 @@ Verifies that entropy levels map deterministically to visual distortion paramete
 """
 
 import pytest
+
 from agents.i.widgets.entropy import (
     EntropyParams,
     entropy_to_border_style,

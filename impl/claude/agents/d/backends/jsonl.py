@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 import os
 from pathlib import Path
-from typing import Final
+from typing import Final, List
 
 from ..datum import Datum
 from ..protocol import BaseDgent
@@ -166,7 +166,7 @@ class JSONLBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data with filters, sorted by created_at descending."""
         async with self._lock:
             await self._load_index()
@@ -191,7 +191,7 @@ class JSONLBackend(BaseDgent):
             # Apply limit
             return results[:limit]
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal ancestors of a datum."""
         async with self._lock:
             await self._load_index()

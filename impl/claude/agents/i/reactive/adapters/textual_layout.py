@@ -27,6 +27,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from textual.containers import Container, Horizontal, Vertical
+from textual.widget import Widget
+
 from agents.i.reactive.pipeline.layout import (
     Constraints,
     FlexAlign,
@@ -36,8 +39,6 @@ from agents.i.reactive.pipeline.layout import (
     LayoutNode,
     LayoutRect,
 )
-from textual.containers import Container, Horizontal, Vertical
-from textual.widget import Widget
 
 if TYPE_CHECKING:
     from textual.app import ComposeResult

@@ -5,6 +5,7 @@ Tests for the Gallery API endpoints.
 from __future__ import annotations
 
 import pytest
+
 from protocols.api._tests.conftest import skip_if_no_fastapi
 
 # Conditional import for TestClient

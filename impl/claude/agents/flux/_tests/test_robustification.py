@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import pytest
+
 from agents.flux.circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,
@@ -306,9 +307,7 @@ class TestDeadLetterQueue:
         """stats() returns useful information."""
         dlq = DeadLetterQueue()
 
-        for i, reason in enumerate(
-            [DLQReason.MAX_RETRIES_EXCEEDED, DLQReason.CIRCUIT_OPEN]
-        ):
+        for i, reason in enumerate([DLQReason.MAX_RETRIES_EXCEEDED, DLQReason.CIRCUIT_OPEN]):
             event = DeadLetterEvent(
                 original_event_table="t",
                 original_event_operation="INSERT",

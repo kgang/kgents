@@ -7,6 +7,7 @@ Tests the central streaming core of Tiny Atelier.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from agents.atelier.artisan import (
     AtelierEvent,
     AtelierEventType,
@@ -78,9 +79,7 @@ class TestWorkshopFlux:
     async def test_collaborate_unknown_artisan(self, flux):
         """Collaborate with unknown artisan yields error."""
         events = []
-        async for event in flux.collaborate(
-            ["calligrapher", "nonexistent"], "test", "duet"
-        ):
+        async for event in flux.collaborate(["calligrapher", "nonexistent"], "test", "duet"):
             events.append(event)
 
         assert any(e.event_type == AtelierEventType.ERROR for e in events)

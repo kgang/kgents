@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
 
 from ..hdc_ops import (
     DIMENSIONS,
@@ -193,9 +192,7 @@ class TestHDCBundle:
                 positive_count += 1
 
         # Most should have positive similarity
-        assert positive_count >= 7, (
-            f"Too few positive similarities: {positive_count}/10"
-        )
+        assert positive_count >= 7, f"Too few positive similarities: {positive_count}/10"
 
 
 class TestHDCPermute:
@@ -402,9 +399,7 @@ class TestHDCHighDimensionalBehavior:
         """HDC can distinguish many bundled items."""
         # Create many random patterns
         n_patterns = 50
-        patterns = [
-            random_hd_vector(TEST_DIMENSIONS, seed=i) for i in range(n_patterns)
-        ]
+        patterns = [random_hd_vector(TEST_DIMENSIONS, seed=i) for i in range(n_patterns)]
 
         # Bundle them all
         memory = hdc_bundle(patterns)

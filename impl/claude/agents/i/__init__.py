@@ -156,8 +156,10 @@ from .screens.flux import FluxScreen
 from .theme.earth import EARTH_PALETTE, EarthTheme
 
 # Widgets
-from .widgets.density_field import DensityField
-from .widgets.density_field import Phase as FluxPhase  # Alias to avoid collision
+from .widgets.density_field import (
+    DensityField,
+    Phase as FluxPhase,  # Alias to avoid collision
+)
 from .widgets.flow_arrow import ConnectionType, Direction, FlowArrow
 from .widgets.health_bar import CompactHealthBar, MiniHealthBar, XYZHealthBar
 

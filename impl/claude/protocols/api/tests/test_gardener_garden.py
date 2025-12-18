@@ -8,8 +8,9 @@ Tests the garden state and tending endpoints:
 - POST /v1/gardener/garden/plot/{name}/focus
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 # Skip tests if FastAPI not available
 pytest.importorskip("fastapi")
@@ -19,9 +20,9 @@ from fastapi.testclient import TestClient
 from protocols.api.app import create_app
 from protocols.api.models import (
     GardenSeason,
+    SeasonTransitionRequest,
     TendingVerb,
     TendRequest,
-    SeasonTransitionRequest,
 )
 
 

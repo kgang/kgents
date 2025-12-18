@@ -4,6 +4,7 @@ import math
 from typing import Callable
 
 import pytest
+
 from agents.i.reactive.animation.easing import (
     EASE_BOUNCE_OUT,
     EASE_CUBIC_IN,

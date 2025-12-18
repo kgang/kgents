@@ -13,13 +13,13 @@ import os
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from pathlib import Path
-from typing import Final
+from typing import Final, List
 
+from .backends.jsonl import JSONLBackend
+from .backends.memory import MemoryBackend
+from .backends.sqlite import SQLiteBackend
 from .datum import Datum
 from .protocol import BaseDgent, DgentProtocol
-from .backends.memory import MemoryBackend
-from .backends.jsonl import JSONLBackend
-from .backends.sqlite import SQLiteBackend
 
 # Environment variable for backend override
 ENV_BACKEND: Final[str] = "KGENTS_DGENT_BACKEND"
@@ -29,9 +29,9 @@ ENV_POSTGRES_URL: Final[str] = "KGENTS_POSTGRES_URL"
 class Backend(Enum):
     """Available backends in the projection lattice."""
 
-    MEMORY = auto()    # Tier 0: Ephemeral
-    JSONL = auto()     # Tier 1: Simple file
-    SQLITE = auto()    # Tier 2: Local database
+    MEMORY = auto()  # Tier 0: Ephemeral
+    JSONL = auto()  # Tier 1: Simple file
+    SQLITE = auto()  # Tier 2: Local database
     POSTGRES = auto()  # Tier 3-4: Production database
 
 
@@ -200,12 +200,12 @@ class DgentRouter(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data via selected backend."""
         backend = await self._get_backend()
         return await backend.list(prefix=prefix, after=after, limit=limit)
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal chain via selected backend."""
         backend = await self._get_backend()
         return await backend.causal_chain(id)
@@ -227,7 +227,7 @@ class DgentRouter(BaseDgent):
         """Get the currently selected backend (None if not yet selected)."""
         return self._selected
 
-    async def status(self) -> list[BackendStatus]:
+    async def status(self) -> List[BackendStatus]:
         """Get availability status of all backends."""
         statuses = []
         for backend in Backend:
@@ -240,9 +240,7 @@ class DgentRouter(BaseDgent):
         async with self._lock:
             status = await self._check_available(backend)
             if not status.available:
-                raise RuntimeError(
-                    f"Backend {backend.name} not available: {status.reason}"
-                )
+                raise RuntimeError(f"Backend {backend.name} not available: {status.reason}")
             self._selected = backend
             self._backend = self._create_backend(backend)
 

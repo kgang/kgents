@@ -1,6 +1,7 @@
 """Tests for AnimatedFocus."""
 
 import pytest
+
 from agents.i.reactive.pipeline.focus import (
     AnimatedFocus,
     FocusTransition,

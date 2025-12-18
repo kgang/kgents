@@ -17,8 +17,7 @@ See: spec/i-gents/README.md
 from __future__ import annotations
 
 import random
-from dataclasses import dataclass
-from dataclasses import field as dataclass_field
+from dataclasses import dataclass, field as dataclass_field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Optional
@@ -223,11 +222,7 @@ class FieldState:
 
     def get_pheromones_at(self, x: int, y: int) -> list[Pheromone]:
         """Get all active pheromones at a location."""
-        return [
-            p
-            for p in self.pheromones
-            if p.x == x and p.y == y and p.decay(self.tick) > 0
-        ]
+        return [p for p in self.pheromones if p.x == x and p.y == y and p.decay(self.tick) > 0]
 
     def decay_pheromones(self) -> int:
         """Remove fully decayed pheromones. Returns count removed."""
@@ -405,16 +400,12 @@ class FieldSimulator:
 
         # Check for contradictions
         has_contradiction = any(
-            e.entity_type == EntityType.CONTRADICT and e.phase == Phase.ACTIVE
-            for e in agents
+            e.entity_type == EntityType.CONTRADICT and e.phase == Phase.ACTIVE for e in agents
         )
         has_synthesis = any(
-            e.entity_type == EntityType.SUBLATE and e.phase == Phase.ACTIVE
-            for e in agents
+            e.entity_type == EntityType.SUBLATE and e.phase == Phase.ACTIVE for e in agents
         )
-        has_fix = any(
-            e.entity_type == EntityType.FIX and e.phase == Phase.ACTIVE for e in agents
-        )
+        has_fix = any(e.entity_type == EntityType.FIX and e.phase == Phase.ACTIVE for e in agents)
 
         if has_synthesis:
             self.state.dialectic_phase = DialecticPhase.SUBLATE
@@ -507,9 +498,7 @@ def create_default_field(width: int = 60, height: int = 20) -> FieldState:
         )
         state.add_entity(entity)
 
-    state.log_event(
-        "init", "field", f"Created field with {len(agents)} bootstrap agents"
-    )
+    state.log_event("init", "field", f"Created field with {len(agents)} bootstrap agents")
     state.dialectic_phase = DialecticPhase.FLUX
 
     return state

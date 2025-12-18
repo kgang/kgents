@@ -1,6 +1,7 @@
 """Tests for FluxConfig dataclass."""
 
 import pytest
+
 from agents.flux.config import FluxConfig
 
 

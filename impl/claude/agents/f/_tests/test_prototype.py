@@ -7,6 +7,7 @@ Tests the (Intent, Contract) → SourceCode morphism.
 import ast
 
 import pytest
+
 from agents.f.contract import CompositionRule, Contract, Invariant, synthesize_contract
 from agents.f.intent import Dependency, DependencyType, Example, Intent, parse_intent
 from agents.f.prototype import (
@@ -262,10 +263,7 @@ class Agent:
         result = validate_imports(code)
         # Note: Current implementation checks module.name, so "subprocess.run"
         # This might need refinement based on desired security model
-        assert (
-            result.status == ValidationStatus.FAIL
-            or result.status == ValidationStatus.PASS
-        )
+        assert result.status == ValidationStatus.FAIL or result.status == ValidationStatus.PASS
         # For now we expect FAIL because subprocess is in forbidden list
 
 
@@ -742,8 +740,7 @@ class TestStubGeneration:
         if contract.invariants:
             # Stub includes invariants in class docstring
             assert "Invariant" in source.code or any(
-                inv.description.lower() in source.code.lower()
-                for inv in contract.invariants
+                inv.description.lower() in source.code.lower() for inv in contract.invariants
             )
         # Otherwise, just verify code is valid
         assert source.is_valid is True

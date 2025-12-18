@@ -11,6 +11,7 @@ Tests:
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.atelier.artisan import Piece, Provenance
 from agents.atelier.exhibition import Exhibition, ExhibitionCurator
 
@@ -152,9 +153,7 @@ class TestExhibitionCurator:
     """Tests for ExhibitionCurator."""
 
     @pytest.mark.asyncio
-    async def test_curate_finds_matching_pieces(
-        self, curator: ExhibitionCurator
-    ) -> None:
+    async def test_curate_finds_matching_pieces(self, curator: ExhibitionCurator) -> None:
         """Curator finds pieces matching theme."""
         exhibition = await curator.curate(theme="ephemeral")
 
@@ -235,9 +234,7 @@ class TestExhibitionCurator:
         assert len(exhibition.title) > 0
 
     @pytest.mark.asyncio
-    async def test_auto_generated_curator_note(
-        self, curator: ExhibitionCurator
-    ) -> None:
+    async def test_auto_generated_curator_note(self, curator: ExhibitionCurator) -> None:
         """Curator note is auto-generated."""
         exhibition = await curator.curate(theme="ephemeral")
 
@@ -245,9 +242,7 @@ class TestExhibitionCurator:
         assert "ephemeral" in exhibition.curator_note.lower()
 
     @pytest.mark.asyncio
-    async def test_no_matches_empty_exhibition(
-        self, curator: ExhibitionCurator
-    ) -> None:
+    async def test_no_matches_empty_exhibition(self, curator: ExhibitionCurator) -> None:
         """Theme with no matches creates empty exhibition."""
         exhibition = await curator.curate(theme="xyznonexistent")
 
@@ -289,9 +284,7 @@ class TestExhibitionIntegration:
         assert len(curator.list_exhibitions()) == 0
 
     @pytest.mark.asyncio
-    async def test_multiple_exhibitions_same_theme(
-        self, curator: ExhibitionCurator
-    ) -> None:
+    async def test_multiple_exhibitions_same_theme(self, curator: ExhibitionCurator) -> None:
         """Multiple exhibitions can have same theme."""
         ex1 = await curator.curate(theme="ephemeral", title="Ephemeral I")
         ex2 = await curator.curate(theme="ephemeral", title="Ephemeral II")

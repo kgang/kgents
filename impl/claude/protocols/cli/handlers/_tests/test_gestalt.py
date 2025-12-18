@@ -14,6 +14,7 @@ from __future__ import annotations
 from typing import Generator
 
 import pytest
+
 from protocols.cli.handlers.gestalt import (
     Hypothesis,
     ResearchState,

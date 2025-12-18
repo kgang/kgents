@@ -16,6 +16,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.town.isometric import (
     DEFAULT_PERTURBATION_PADS,
     IsometricCell,
@@ -449,9 +450,7 @@ class TestIsometricWidgetContract:
         """isometric.map(id) ≡ isometric"""
         # Create widget with some state
         cells = (
-            IsometricCell(
-                grid_x=5, grid_y=5, content_type="citizen", citizen_id="c1", glyph="T"
-            ),
+            IsometricCell(grid_x=5, grid_y=5, content_type="citizen", citizen_id="c1", glyph="T"),
         )
         state = IsometricState(cells=cells, current_tick=10)
         widget = IsometricWidget(state)
@@ -465,10 +464,7 @@ class TestIsometricWidgetContract:
         # Verify state is preserved
         assert mapped.state.value.current_tick == widget.state.value.current_tick
         assert len(mapped.state.value.cells) == len(widget.state.value.cells)
-        assert (
-            mapped.state.value.cells[0].citizen_id
-            == widget.state.value.cells[0].citizen_id
-        )
+        assert mapped.state.value.cells[0].citizen_id == widget.state.value.cells[0].citizen_id
 
     def test_functor_law_composition(self) -> None:
         """isometric.map(f).map(g) ≡ isometric.map(f . g)"""
@@ -503,10 +499,7 @@ class TestIsometricWidgetContract:
         result_composed = widget.map(fg)
 
         # Verify equivalence
-        assert (
-            result_two_steps.state.value.current_tick
-            == result_composed.state.value.current_tick
-        )
+        assert result_two_steps.state.value.current_tick == result_composed.state.value.current_tick
         # (1 + 1) * 2 = 4
         assert result_two_steps.state.value.current_tick == 4
 
@@ -514,12 +507,8 @@ class TestIsometricWidgetContract:
         """CLI projection returns ASCII grid."""
         # Create widget with some cells
         cells = (
-            IsometricCell(
-                grid_x=5, grid_y=5, content_type="citizen", citizen_id="c1", glyph="S"
-            ),
-            IsometricCell(
-                grid_x=10, grid_y=10, content_type="citizen", citizen_id="c2", glyph="T"
-            ),
+            IsometricCell(grid_x=5, grid_y=5, content_type="citizen", citizen_id="c1", glyph="S"),
+            IsometricCell(grid_x=10, grid_y=10, content_type="citizen", citizen_id="c2", glyph="T"),
         )
         state = IsometricState(
             cells=cells,
@@ -546,9 +535,7 @@ class TestIsometricWidgetContract:
 
     def test_project_json(self) -> None:
         """JSON projection returns IsometricState.to_dict()."""
-        cells = (
-            IsometricCell(grid_x=1, grid_y=2, content_type="citizen", citizen_id="c1"),
-        )
+        cells = (IsometricCell(grid_x=1, grid_y=2, content_type="citizen", citizen_id="c1"),)
         state = IsometricState(cells=cells, current_tick=3)
         widget = IsometricWidget(state)
 

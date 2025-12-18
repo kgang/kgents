@@ -10,6 +10,7 @@ Tests verify:
 """
 
 import pytest
+
 from agents.a.alethic import (
     ALETHIC_AGENT,
     AlethicAgent,
@@ -101,9 +102,7 @@ class TestAlethicTransition:
             supporting=["fact1", "fact2"],
             contradicting=["counter1"],
         )
-        new_state, output = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence)
-        )
+        new_state, output = alethic_transition(AlethicState.DELIBERATING, (query, evidence))
 
         assert new_state == AlethicState.JUDGING
         assert isinstance(output, DeliberationResult)
@@ -142,9 +141,7 @@ class TestAlethicTransition:
             weighted_confidence=0.8,
             reasoning="Test",
         )
-        new_state, output = alethic_transition(
-            AlethicState.SYNTHESIZING, (result, verdict)
-        )
+        new_state, output = alethic_transition(AlethicState.SYNTHESIZING, (result, verdict))
 
         assert new_state == AlethicState.GROUNDING
         assert isinstance(output, AlethicResponse)
@@ -303,9 +300,7 @@ class TestEdgeCases:
         query = Query(claim="test")
         evidence = Evidence(supporting=[], contradicting=[])
 
-        new_state, output = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence)
-        )
+        new_state, output = alethic_transition(AlethicState.DELIBERATING, (query, evidence))
 
         assert new_state == AlethicState.JUDGING
         # 0/0 case should default to 0.5 confidence
@@ -432,30 +427,22 @@ class TestRobustness:
         # No evidence
         query = Query(claim="test")
         evidence_empty = Evidence(supporting=[], contradicting=[])
-        _, result = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence_empty)
-        )
+        _, result = alethic_transition(AlethicState.DELIBERATING, (query, evidence_empty))
         assert "No evidence" in result.reasoning or "prior" in result.reasoning
 
         # All supporting
         evidence_support = Evidence(supporting=["a", "b"], contradicting=[])
-        _, result = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence_support)
-        )
+        _, result = alethic_transition(AlethicState.DELIBERATING, (query, evidence_support))
         assert "supporting" in result.reasoning
 
         # All contradicting
         evidence_contra = Evidence(supporting=[], contradicting=["x", "y"])
-        _, result = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence_contra)
-        )
+        _, result = alethic_transition(AlethicState.DELIBERATING, (query, evidence_contra))
         assert "contradicting" in result.reasoning
 
         # Mixed
         evidence_mixed = Evidence(supporting=["a"], contradicting=["x"])
-        _, result = alethic_transition(
-            AlethicState.DELIBERATING, (query, evidence_mixed)
-        )
+        _, result = alethic_transition(AlethicState.DELIBERATING, (query, evidence_mixed))
         assert "vs" in result.reasoning
 
 

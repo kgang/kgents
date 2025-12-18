@@ -14,6 +14,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from testing.optimization import RefinementTracker
 from testing.optimization.redundancy import (
     CoverageOverlap,
@@ -269,8 +270,7 @@ class TestDetectRedundancy:
     def test_summary(self) -> None:
         """Summary includes correct counts."""
         coverages = [
-            TestCoverage(test_id=f"test_{i}", lines_covered={"a.py": {i}})
-            for i in range(5)
+            TestCoverage(test_id=f"test_{i}", lines_covered={"a.py": {i}}) for i in range(5)
         ]
 
         report = detect_redundancy(coverages, threshold=0.9)

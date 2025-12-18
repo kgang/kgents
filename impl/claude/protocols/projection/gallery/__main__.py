@@ -73,12 +73,13 @@ def run_interactive(gallery: Gallery) -> NoReturn:
     Requires textual to be installed.
     """
     try:
-        from agents.i.reactive.adapters import TextualAdapter
         from textual.app import App, ComposeResult
         from textual.binding import Binding
         from textual.containers import Horizontal, ScrollableContainer, Vertical
         from textual.widgets import Footer, Header, Static, Tree
         from textual.widgets.tree import TreeNode
+
+        from agents.i.reactive.adapters import TextualAdapter
     except ImportError:
         print("Interactive mode requires textual: pip install textual")
         sys.exit(1)
@@ -151,9 +152,7 @@ def run_interactive(gallery: Gallery) -> NoReturn:
                     tree.root.expand()
 
                     for category in PilotCategory:
-                        pilots = [
-                            p for p in PILOT_REGISTRY.values() if p.category == category
-                        ]
+                        pilots = [p for p in PILOT_REGISTRY.values() if p.category == category]
                         if pilots:
                             cat_node = tree.root.add(category.name, expand=True)
                             for pilot in pilots:
@@ -299,23 +298,15 @@ Environment Variables:
     # Mode flags
     mode_group = parser.add_mutually_exclusive_group()
     mode_group.add_argument("--all", "-a", action="store_true", help="Show all pilots")
-    mode_group.add_argument(
-        "--list", "-l", action="store_true", help="List available pilots"
-    )
+    mode_group.add_argument("--list", "-l", action="store_true", help="List available pilots")
     mode_group.add_argument(
         "--benchmark", "-b", action="store_true", help="Run performance benchmarks"
     )
-    mode_group.add_argument(
-        "--compare", action="store_true", help="Compare across all targets"
-    )
-    mode_group.add_argument(
-        "--interactive", "-i", action="store_true", help="Interactive TUI mode"
-    )
+    mode_group.add_argument("--compare", action="store_true", help="Compare across all targets")
+    mode_group.add_argument("--interactive", "-i", action="store_true", help="Interactive TUI mode")
 
     # Selection
-    parser.add_argument(
-        "--widget", "-w", metavar="NAME", help="Specific pilot/widget to show"
-    )
+    parser.add_argument("--widget", "-w", metavar="NAME", help="Specific pilot/widget to show")
     parser.add_argument(
         "--category",
         "-c",
@@ -345,12 +336,8 @@ Environment Variables:
     parser.add_argument(
         "--entropy", "-e", type=float, metavar="F", help="Override entropy (0.0-1.0)"
     )
-    parser.add_argument(
-        "--seed", "-s", type=int, metavar="N", help="Deterministic seed"
-    )
-    parser.add_argument(
-        "--time", type=float, metavar="MS", help="Fixed time in milliseconds"
-    )
+    parser.add_argument("--seed", "-s", type=int, metavar="N", help="Deterministic seed")
+    parser.add_argument("--time", type=float, metavar="MS", help="Fixed time in milliseconds")
     parser.add_argument(
         "--phase",
         choices=[
@@ -367,12 +354,8 @@ Environment Variables:
     parser.add_argument(
         "--style", choices=["compact", "full", "minimal"], help="Override card style"
     )
-    parser.add_argument(
-        "--breathing", action="store_true", help="Enable breathing animation"
-    )
-    parser.add_argument(
-        "--no-breathing", action="store_true", help="Disable breathing animation"
-    )
+    parser.add_argument("--breathing", action="store_true", help="Enable breathing animation")
+    parser.add_argument("--no-breathing", action="store_true", help="Disable breathing animation")
 
     # Output
     parser.add_argument(

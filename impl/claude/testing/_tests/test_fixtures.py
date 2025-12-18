@@ -7,6 +7,7 @@ Validates that as_umwelt and helpers work correctly with mypy.
 from typing import Any
 
 import pytest
+
 from bootstrap.umwelt import Umwelt
 from protocols.agentese._tests.conftest import MockUmwelt
 from testing.fixtures import as_umwelt

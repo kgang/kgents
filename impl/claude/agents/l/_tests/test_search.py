@@ -7,6 +7,7 @@ import tempfile
 from collections.abc import Generator
 
 import pytest
+
 from agents.l.registry import Registry
 from agents.l.search import Search, SearchStrategy
 from agents.l.types import CatalogEntry, EntityType

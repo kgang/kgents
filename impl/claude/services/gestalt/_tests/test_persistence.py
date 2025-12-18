@@ -9,9 +9,10 @@ Verifies:
 - Health manifest
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 @pytest.fixture
@@ -62,9 +63,7 @@ def mock_block_adapter(mock_session_factory):
 class TestGestaltPersistenceInit:
     """Test GestaltPersistence initialization."""
 
-    def test_init_stores_dependencies(
-        self, mock_topology_adapter, mock_block_adapter, mock_dgent
-    ):
+    def test_init_stores_dependencies(self, mock_topology_adapter, mock_block_adapter, mock_dgent):
         """Should store adapters and dgent."""
         from services.gestalt import GestaltPersistence
 

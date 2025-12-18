@@ -5,6 +5,7 @@ CP7 Checkpoint: End-to-end streaming from soul to CLI and WebSocket clients.
 """
 
 import pytest
+
 from agents.k.flux import FluxEvent, FluxStream
 from agents.k.llm import MockLLMClient, StreamingLLMResponse
 from agents.k.persona import DialogueMode
@@ -37,9 +38,7 @@ class TestDialogueFluxReturnsFluxStream:
         """
         soul = KgentSoul(llm=MockLLMClient())
 
-        stream = soul.dialogue_flux(
-            "What should I focus on?", mode=DialogueMode.REFLECT
-        )
+        stream = soul.dialogue_flux("What should I focus on?", mode=DialogueMode.REFLECT)
 
         chunks: list[str] = []
         async for event in stream:
@@ -282,9 +281,7 @@ class TestDialogueFluxBudgetTiers:
         soul = KgentSoul(auto_llm=False)
 
         chunks: list[str] = []
-        async for event in soul.dialogue_flux(
-            "Test message", mode=DialogueMode.REFLECT
-        ):
+        async for event in soul.dialogue_flux("Test message", mode=DialogueMode.REFLECT):
             if event.is_data:
                 chunks.append(event.value)
 

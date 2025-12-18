@@ -9,6 +9,7 @@ Provides shared fixtures for L-gent tests including:
 from __future__ import annotations
 
 import pytest
+
 from agents.l.lattice import TypeLattice, create_lattice
 from agents.l.registry import Registry
 

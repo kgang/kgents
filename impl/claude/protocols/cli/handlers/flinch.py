@@ -178,9 +178,7 @@ def _show_patterns(flinch_path: Path) -> int:
     print("[FLINCH] Recurring Failure Patterns")
     print("=" * 40)
     print(f"Total flinches: {patterns_data.get('total_flinches', 0)}")
-    print(
-        f"Modules with failures: {patterns_data.get('total_modules_with_failures', 0)}"
-    )
+    print(f"Modules with failures: {patterns_data.get('total_modules_with_failures', 0)}")
     print()
 
     patterns = patterns_data.get("patterns", [])
@@ -422,9 +420,7 @@ def _show_traces(flinch_path: Path, project_root: Path) -> int:
         if "::" in test_name:
             module = test_name.split("::")[0]
             related = [
-                t
-                for t in test_failures.keys()
-                if t != test_name and t.startswith(module + "::")
+                t for t in test_failures.keys() if t != test_name and t.startswith(module + "::")
             ]
             if related:
                 print(f"└─ Related failures: {len(related)} in same module")
@@ -443,9 +439,7 @@ def _show_traces(flinch_path: Path, project_root: Path) -> int:
     return 0
 
 
-def _print_caller_tree(
-    graph: Any, target: str, prefix: str = "", depth: int = 0
-) -> None:
+def _print_caller_tree(graph: Any, target: str, prefix: str = "", depth: int = 0) -> None:
     """
     Print a caller tree from dependency graph.
 
@@ -505,8 +499,9 @@ def _show_turns_panel() -> int:
     console = Console()
 
     try:
-        from agents.i.screens.turn_dag import TurnDAGConfig, TurnDAGRenderer
         from protocols.cli.handlers.turns import _get_global_weave
+
+        from agents.i.screens.turn_dag import TurnDAGConfig, TurnDAGRenderer
 
         weave = _get_global_weave()
 
@@ -556,8 +551,7 @@ def _show_turns_panel() -> int:
             ratio = cone.compression_ratio(agent)
             cone_size = cone.cone_size(agent)
             console.print(
-                f"  {agent}: {ratio:.1%} compression "
-                f"({cone_size}/{len(weave)} events in cone)"
+                f"  {agent}: {ratio:.1%} compression ({cone_size}/{len(weave)} events in cone)"
             )
 
         console.print()

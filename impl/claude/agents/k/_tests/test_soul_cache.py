@@ -10,6 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.k.soul_cache import (
     CachedActiveMode,
     CachedEigenvectors,

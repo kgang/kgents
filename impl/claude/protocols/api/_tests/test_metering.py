@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.api.metering import (
     UsageStats,
     check_rate_limit,
@@ -224,9 +225,7 @@ class TestTokenQuota:
         """Test token quota when under limit."""
         record_request("user_1", "/test", tokens_used=5000)
 
-        allowed, error = check_token_quota(
-            "user_1", monthly_limit=10000, tokens_needed=1000
-        )
+        allowed, error = check_token_quota("user_1", monthly_limit=10000, tokens_needed=1000)
 
         assert allowed is True
         assert error is None
@@ -235,9 +234,7 @@ class TestTokenQuota:
         """Test token quota when request would exceed."""
         record_request("user_1", "/test", tokens_used=9500)
 
-        allowed, error = check_token_quota(
-            "user_1", monthly_limit=10000, tokens_needed=1000
-        )
+        allowed, error = check_token_quota("user_1", monthly_limit=10000, tokens_needed=1000)
 
         assert allowed is False
         assert error is not None

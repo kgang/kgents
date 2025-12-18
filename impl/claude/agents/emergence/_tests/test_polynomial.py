@@ -14,6 +14,7 @@ Target: 20+ tests for polynomial alone.
 from datetime import datetime
 
 import pytest
+
 from agents.emergence import (
     # Polynomial
     EMERGENCE_POLYNOMIAL,
@@ -263,9 +264,7 @@ class TestFamilySelection:
     def test_select_family_updates_state(self):
         """SelectFamily changes selected_family."""
         state = EmergenceState(phase=EmergencePhase.GALLERY)
-        new_state, output = emergence_transition(
-            state, SelectFamily(PatternFamily.MANDALA)
-        )
+        new_state, output = emergence_transition(state, SelectFamily(PatternFamily.MANDALA))
 
         assert new_state.selected_family == PatternFamily.MANDALA
         assert isinstance(output, FamilyChanged)
@@ -287,9 +286,7 @@ class TestFamilySelection:
             phase=EmergencePhase.GALLERY,
             selected_family=PatternFamily.CHLADNI,
         )
-        new_state, output = emergence_transition(
-            state, SelectFamily(PatternFamily.CHLADNI)
-        )
+        new_state, output = emergence_transition(state, SelectFamily(PatternFamily.CHLADNI))
 
         assert isinstance(output, NoChange)
 
@@ -336,18 +333,14 @@ class TestParameterTuning:
 
     def test_tune_param1(self, exploring_state):
         """Can tune param1."""
-        new_state, output = emergence_transition(
-            exploring_state, TuneParam("param1", 6.0)
-        )
+        new_state, output = emergence_transition(exploring_state, TuneParam("param1", 6.0))
 
         assert new_state.pattern_config.param1 == 6.0
         assert isinstance(output, ConfigChanged)
 
     def test_tune_param2(self, exploring_state):
         """Can tune param2."""
-        new_state, output = emergence_transition(
-            exploring_state, TuneParam("param2", 8.0)
-        )
+        new_state, output = emergence_transition(exploring_state, TuneParam("param2", 8.0))
 
         assert new_state.pattern_config.param2 == 8.0
         assert isinstance(output, ConfigChanged)
@@ -361,27 +354,21 @@ class TestParameterTuning:
 
     def test_tune_saturation(self, exploring_state):
         """Can tune saturation."""
-        new_state, output = emergence_transition(
-            exploring_state, TuneParam("saturation", 0.9)
-        )
+        new_state, output = emergence_transition(exploring_state, TuneParam("saturation", 0.9))
 
         assert new_state.pattern_config.saturation == 0.9
         assert isinstance(output, ConfigChanged)
 
     def test_tune_speed(self, exploring_state):
         """Can tune speed."""
-        new_state, output = emergence_transition(
-            exploring_state, TuneParam("speed", 1.0)
-        )
+        new_state, output = emergence_transition(exploring_state, TuneParam("speed", 1.0))
 
         assert new_state.pattern_config.speed == 1.0
         assert isinstance(output, ConfigChanged)
 
     def test_tune_unknown_param_no_change(self, exploring_state):
         """Tuning unknown param returns NoChange."""
-        new_state, output = emergence_transition(
-            exploring_state, TuneParam("unknown", 5.0)
-        )
+        new_state, output = emergence_transition(exploring_state, TuneParam("unknown", 5.0))
 
         assert isinstance(output, NoChange)
 
@@ -437,9 +424,7 @@ class TestCircadianModulation:
     def test_update_circadian_to_dawn(self):
         """Can update circadian to DAWN."""
         state = EmergenceState(phase=EmergencePhase.GALLERY)
-        new_state, output = emergence_transition(
-            state, UpdateCircadian(CircadianPhase.DAWN)
-        )
+        new_state, output = emergence_transition(state, UpdateCircadian(CircadianPhase.DAWN))
 
         assert new_state.circadian == CircadianPhase.DAWN
         assert isinstance(output, CircadianChanged)
@@ -448,9 +433,7 @@ class TestCircadianModulation:
     def test_update_circadian_to_dusk(self):
         """Can update circadian to DUSK."""
         state = EmergenceState(phase=EmergencePhase.GALLERY)
-        new_state, output = emergence_transition(
-            state, UpdateCircadian(CircadianPhase.DUSK)
-        )
+        new_state, output = emergence_transition(state, UpdateCircadian(CircadianPhase.DUSK))
 
         assert new_state.circadian == CircadianPhase.DUSK
         assert isinstance(output, CircadianChanged)
@@ -461,9 +444,7 @@ class TestCircadianModulation:
             phase=EmergencePhase.GALLERY,
             selected_family=PatternFamily.CHLADNI,
         )
-        new_state, output = emergence_transition(
-            state, UpdateCircadian(CircadianPhase.DUSK)
-        )
+        new_state, output = emergence_transition(state, UpdateCircadian(CircadianPhase.DUSK))
 
         # DUSK has warmth +0.4, so qualia.warmth should increase
         assert isinstance(output, CircadianChanged)
@@ -475,9 +456,7 @@ class TestCircadianModulation:
             phase=EmergencePhase.GALLERY,
             circadian=CircadianPhase.NOON,
         )
-        new_state, output = emergence_transition(
-            state, UpdateCircadian(CircadianPhase.NOON)
-        )
+        new_state, output = emergence_transition(state, UpdateCircadian(CircadianPhase.NOON))
 
         assert isinstance(output, NoChange)
 

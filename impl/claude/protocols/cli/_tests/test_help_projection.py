@@ -163,9 +163,10 @@ class TestGlobalHelp:
 
     def test_show_global_help_returns_zero(self) -> None:
         """show_global_help returns exit code 0."""
-        from protocols.cli.help_global import show_global_help
         import io
         import sys
+
+        from protocols.cli.help_global import show_global_help
 
         # Capture stdout
         captured = io.StringIO()

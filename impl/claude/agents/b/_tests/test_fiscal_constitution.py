@@ -17,6 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.b.fiscal_constitution import (
     Account,
     AccountBalance,
@@ -275,9 +276,7 @@ class TestParserSyntax:
 
     def test_parse_transfer_with_memo(self, parser: LedgerTongueParser) -> None:
         """Test parsing transfer with memo."""
-        result = parser.parse(
-            'TRANSFER 50 USD FROM alice TO bob MEMO "payment for services"'
-        )
+        result = parser.parse('TRANSFER 50 USD FROM alice TO bob MEMO "payment for services"')
         assert isinstance(result, ParseSuccess)
         assert result.ast.memo == "payment for services"
 
@@ -585,9 +584,7 @@ class TestConstitutionalBanker:
         assert invariants["no_negative_balances"] is True
         assert invariants["double_entry"] is True
 
-    def test_verify_constitution_after_operations(
-        self, banker: ConstitutionalBanker
-    ) -> None:
+    def test_verify_constitution_after_operations(self, banker: ConstitutionalBanker) -> None:
         """Test constitution verification after operations."""
         banker.execute_sync("TRANSFER 100 USD FROM alice TO bob")
         banker.execute_sync("TRANSFER 50 USD FROM bob TO charlie")
@@ -629,9 +626,7 @@ class TestConstitutionalBankerAsync:
         assert result.gas_consumed is not None
 
     @pytest.mark.asyncio
-    async def test_execute_async_grammar_rejection(
-        self, banker: ConstitutionalBanker
-    ) -> None:
+    async def test_execute_async_grammar_rejection(self, banker: ConstitutionalBanker) -> None:
         """Test async execution grammar rejection."""
         result = await banker.execute_financial_operation(
             "agent1", "TRANSFER 5000 USD FROM alice TO bob"
@@ -643,9 +638,7 @@ class TestConstitutionalBankerAsync:
     @pytest.mark.asyncio
     async def test_execute_async_query(self, banker: ConstitutionalBanker) -> None:
         """Test async query execution."""
-        result = await banker.execute_financial_operation(
-            "agent1", "QUERY BALANCE OF alice IN USD"
-        )
+        result = await banker.execute_financial_operation("agent1", "QUERY BALANCE OF alice IN USD")
 
         assert result.success is True
         assert result.result["balance"] == 1000.0
@@ -681,9 +674,7 @@ class TestConvenienceFunctions:
 
     def test_create_constitutional_banker(self) -> None:
         """Test creating constitutional banker."""
-        banker = create_constitutional_banker(
-            initial_accounts={"alice": {"USD": 1000.0}}
-        )
+        banker = create_constitutional_banker(initial_accounts={"alice": {"USD": 1000.0}})
 
         assert isinstance(banker, ConstitutionalBanker)
         assert banker.get_ledger_state().get_balance("alice", "USD") == 1000.0
@@ -734,9 +725,7 @@ class TestEdgeCases:
     def test_special_chars_in_memo(self) -> None:
         """Test special characters in memo."""
         tongue = create_ledger_tongue({"alice": {"USD": 100.0}})
-        result = tongue.run(
-            'TRANSFER 50 USD FROM alice TO bob MEMO "Payment for item #123!"'
-        )
+        result = tongue.run('TRANSFER 50 USD FROM alice TO bob MEMO "Payment for item #123!"')
         assert isinstance(result, ExecutionResult)
         assert result.success is True
 
@@ -794,9 +783,7 @@ class TestEdgeCases:
         for currency in currencies:
             tongue = create_ledger_tongue({"alice": {currency: 100.0}})
             result = tongue.run(f"TRANSFER 50 {currency} FROM alice TO bob")
-            assert isinstance(result, ExecutionResult), (
-                f"Failed for currency {currency}: {result}"
-            )
+            assert isinstance(result, ExecutionResult), f"Failed for currency {currency}: {result}"
             assert result.success is True, f"Failed for currency {currency}"
 
 

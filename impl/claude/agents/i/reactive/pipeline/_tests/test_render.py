@@ -1,6 +1,7 @@
 """Tests for RenderPipeline."""
 
 import pytest
+
 from agents.i.reactive.pipeline.render import (
     RenderNode,
     RenderPipeline,

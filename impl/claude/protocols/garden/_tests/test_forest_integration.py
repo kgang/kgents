@@ -12,6 +12,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+
 from protocols.agentese.contexts.forest import (
     PlanFromHeader,
     parse_plan_yaml_header,

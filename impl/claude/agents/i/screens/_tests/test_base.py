@@ -7,10 +7,11 @@ navigation keys to bubble up from nested screens to the parent DashboardApp.
 from unittest.mock import Mock, patch
 
 import pytest
-from agents.i.screens.base import KgentsModalScreen, KgentsScreen
 from textual.app import App, ComposeResult
 from textual.events import Key
 from textual.widgets import Label
+
+from agents.i.screens.base import KgentsModalScreen, KgentsScreen
 
 
 class TestKgentsScreen:
@@ -90,9 +91,7 @@ class TestKgentsScreen:
 
             # Verify the event was allowed to bubble
             assert not stop_called, f"Key '{key_name}' should not call event.stop()"
-            assert not prevent_called, (
-                f"Key '{key_name}' should not call event.prevent_default()"
-            )
+            assert not prevent_called, f"Key '{key_name}' should not call event.prevent_default()"
 
     def test_on_key_allows_normal_handling_for_non_passthrough_keys(self):
         """Test that non-passthrough keys are not in PASSTHROUGH_KEYS set."""

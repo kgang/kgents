@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
+
 from agents.atelier.economy import (
     MIN_WATCH_SECONDS,
     TIER_MULTIPLIERS,
@@ -224,9 +225,7 @@ class TestWatchSessions:
         balance = pool.get_balance("user1")
         assert balance.current_session_id == "session-123"
 
-    def test_start_watching_returns_false_if_already_watching(
-        self, pool: TokenPool
-    ) -> None:
+    def test_start_watching_returns_false_if_already_watching(self, pool: TokenPool) -> None:
         """Can't start watching if already watching."""
         pool.start_watching("user1")
         assert not pool.start_watching("user1")
@@ -287,9 +286,7 @@ class TestWatchSessions:
         assert "started_at" in info
         assert "elapsed_seconds" in info
 
-    def test_get_watch_session_info_returns_none_if_not_watching(
-        self, pool: TokenPool
-    ) -> None:
+    def test_get_watch_session_info_returns_none_if_not_watching(self, pool: TokenPool) -> None:
         """get_watch_session_info returns None if not watching."""
         pool.get_balance("user1")  # Create user
         assert pool.get_watch_session_info("user1") is None
@@ -822,9 +819,7 @@ class TestEdgeCases:
         balance = pool.get_balance(user_id)
         assert balance.user_id == user_id
 
-    def test_accrual_result_includes_session_id(
-        self, pool_no_min_watch: TokenPool
-    ) -> None:
+    def test_accrual_result_includes_session_id(self, pool_no_min_watch: TokenPool) -> None:
         """AccrualResult should include session_id."""
         start = datetime.now() - timedelta(minutes=1)
         pool_no_min_watch.start_watching("user1", timestamp=start, session_id="sess-1")

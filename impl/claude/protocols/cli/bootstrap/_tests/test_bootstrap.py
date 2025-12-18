@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from protocols.cli.bootstrap.laws import (
     CATEGORY_LAWS,
     LawName,
@@ -26,13 +27,11 @@ from protocols.cli.bootstrap.principles import (
     EvaluationReport,
     PrincipleEvaluation,
     PrincipleName,
+    Verdict as PrincipleVerdict,
     cmd_principles,
     evaluate_against_principles,
     format_principles_json,
     format_principles_rich,
-)
-from protocols.cli.bootstrap.principles import (
-    Verdict as PrincipleVerdict,
 )
 
 # ─────────────────────────────────────────────────────────────────
@@ -316,12 +315,8 @@ class TestPrincipleEvaluation:
     @pytest.mark.asyncio
     async def test_evaluate_detects_monolithic_antipattern(self) -> None:
         """Verify evaluation detects 'monolithic' anti-pattern."""
-        report = await evaluate_against_principles(
-            "A monolithic agent that does everything"
-        )
-        composable = next(
-            e for e in report.evaluations if e.principle == PrincipleName.COMPOSABLE
-        )
+        report = await evaluate_against_principles("A monolithic agent that does everything")
+        composable = next(e for e in report.evaluations if e.principle == PrincipleName.COMPOSABLE)
         assert composable.verdict == PrincipleVerdict.REJECT
 
     @pytest.mark.asyncio
@@ -330,20 +325,14 @@ class TestPrincipleEvaluation:
         report = await evaluate_against_principles(
             "A modular agent with clear interface for composition"
         )
-        composable = next(
-            e for e in report.evaluations if e.principle == PrincipleName.COMPOSABLE
-        )
+        composable = next(e for e in report.evaluations if e.principle == PrincipleName.COMPOSABLE)
         assert composable.verdict == PrincipleVerdict.ACCEPT
 
     @pytest.mark.asyncio
     async def test_evaluate_detects_ethical_concerns(self) -> None:
         """Verify evaluation detects ethical concerns."""
-        report = await evaluate_against_principles(
-            "Trust me, I know what I'm doing with your data"
-        )
-        ethical = next(
-            e for e in report.evaluations if e.principle == PrincipleName.ETHICAL
-        )
+        report = await evaluate_against_principles("Trust me, I know what I'm doing with your data")
+        ethical = next(e for e in report.evaluations if e.principle == PrincipleName.ETHICAL)
         assert ethical.verdict == PrincipleVerdict.REJECT
 
     @pytest.mark.asyncio
@@ -352,9 +341,7 @@ class TestPrincipleEvaluation:
         report = await evaluate_against_principles(
             "A focused agent with clear purpose that does one thing well"
         )
-        tasteful = next(
-            e for e in report.evaluations if e.principle == PrincipleName.TASTEFUL
-        )
+        tasteful = next(e for e in report.evaluations if e.principle == PrincipleName.TASTEFUL)
         assert tasteful.verdict == PrincipleVerdict.ACCEPT
 
     @pytest.mark.asyncio
@@ -362,9 +349,7 @@ class TestPrincipleEvaluation:
         """Verify evaluation returns unclear for vague input."""
         report = await evaluate_against_principles("something")
         # Most evaluations should be unclear
-        unclear_count = sum(
-            1 for e in report.evaluations if e.verdict == PrincipleVerdict.UNCLEAR
-        )
+        unclear_count = sum(1 for e in report.evaluations if e.verdict == PrincipleVerdict.UNCLEAR)
         assert unclear_count >= 4  # At least 4 of 7 should be unclear
 
     def test_evaluation_report_counts(self) -> None:
@@ -372,18 +357,10 @@ class TestPrincipleEvaluation:
         from datetime import datetime
 
         evaluations = [
-            PrincipleEvaluation(
-                PrincipleName.TASTEFUL, PrincipleVerdict.ACCEPT, "", 0.8
-            ),
-            PrincipleEvaluation(
-                PrincipleName.CURATED, PrincipleVerdict.ACCEPT, "", 0.7
-            ),
-            PrincipleEvaluation(
-                PrincipleName.ETHICAL, PrincipleVerdict.REJECT, "", 0.9
-            ),
-            PrincipleEvaluation(
-                PrincipleName.JOY_INDUCING, PrincipleVerdict.UNCLEAR, "", 0.3
-            ),
+            PrincipleEvaluation(PrincipleName.TASTEFUL, PrincipleVerdict.ACCEPT, "", 0.8),
+            PrincipleEvaluation(PrincipleName.CURATED, PrincipleVerdict.ACCEPT, "", 0.7),
+            PrincipleEvaluation(PrincipleName.ETHICAL, PrincipleVerdict.REJECT, "", 0.9),
+            PrincipleEvaluation(PrincipleName.JOY_INDUCING, PrincipleVerdict.UNCLEAR, "", 0.3),
         ]
         report = EvaluationReport(
             input_description="test",
@@ -446,14 +423,9 @@ class TestBootstrapIntegration:
 
     def test_composable_principle_references_laws(self) -> None:
         """Verify Composable principle references category laws."""
-        composable = next(
-            p for p in DESIGN_PRINCIPLES if p.name == PrincipleName.COMPOSABLE
-        )
+        composable = next(p for p in DESIGN_PRINCIPLES if p.name == PrincipleName.COMPOSABLE)
         # Should reference composition/category
-        assert (
-            "morphism" in composable.essence.lower()
-            or "category" in composable.essence.lower()
-        )
+        assert "morphism" in composable.essence.lower() or "category" in composable.essence.lower()
 
     def test_all_json_outputs_valid(self) -> None:
         """Verify all JSON outputs are valid."""

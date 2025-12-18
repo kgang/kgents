@@ -9,9 +9,10 @@ Verifies:
 - Health manifest
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 from dataclasses import dataclass
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 @pytest.fixture

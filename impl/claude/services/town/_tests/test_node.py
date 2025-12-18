@@ -19,7 +19,6 @@ import pytest
 from protocols.agentese.node import AgentMeta, Observer
 from protocols.agentese.registry import get_registry, reset_registry
 
-
 # === Fixtures ===
 
 
@@ -134,8 +133,8 @@ class TestTownNodeRegistration:
 
     def test_node_has_metadata_marker(self):
         """TownNode has @node metadata marker."""
-        from services.town.node import TownNode
         from protocols.agentese.registry import NODE_MARKER, get_node_metadata
+        from services.town.node import TownNode
 
         assert hasattr(TownNode, NODE_MARKER)
 
@@ -146,8 +145,8 @@ class TestTownNodeRegistration:
 
     def test_node_class_can_be_registered(self):
         """TownNode can be manually registered with registry."""
-        from services.town.node import TownNode
         from protocols.agentese.registry import get_node_metadata
+        from services.town.node import TownNode
 
         registry = get_registry()
         meta = get_node_metadata(TownNode)
@@ -161,8 +160,8 @@ class TestTownNodeRegistration:
 
     def test_node_handle_matches_path(self, mock_persistence):
         """TownNode.handle matches @node path."""
-        from services.town.node import TownNode
         from protocols.agentese.registry import get_node_metadata
+        from services.town.node import TownNode
 
         node = TownNode(town_persistence=mock_persistence)
         meta = get_node_metadata(TownNode)
@@ -603,8 +602,8 @@ class TestTownRenderings:
 
     def test_citizen_rendering_to_dict(self, mock_persistence):
         """CitizenRendering.to_dict() produces correct structure."""
-        from services.town.node import CitizenRendering
         from services.town import CitizenView
+        from services.town.node import CitizenRendering
 
         citizen = CitizenView(
             id="test-id",
@@ -627,8 +626,8 @@ class TestTownRenderings:
 
     def test_citizen_rendering_to_text(self):
         """CitizenRendering.to_text() produces readable output."""
-        from services.town.node import CitizenRendering
         from services.town import CitizenView
+        from services.town.node import CitizenRendering
 
         citizen = CitizenView(
             id="test-id",
@@ -651,8 +650,8 @@ class TestTownRenderings:
 
     def test_citizen_list_rendering_to_dict(self):
         """CitizenListRendering.to_dict() produces correct structure."""
-        from services.town.node import CitizenListRendering
         from services.town import CitizenView
+        from services.town.node import CitizenListRendering
 
         citizens = [
             CitizenView(
@@ -678,8 +677,8 @@ class TestTownRenderings:
 
     def test_conversation_rendering_to_dict(self):
         """ConversationRendering.to_dict() produces correct structure."""
-        from services.town.node import ConversationRendering
         from services.town import ConversationView, TurnView
+        from services.town.node import ConversationRendering
 
         turns = [
             TurnView(

@@ -1,6 +1,7 @@
 """Tests for BrainPolynomial state machine."""
 
 import pytest
+
 from agents.brain.polynomial import (
     BRAIN_POLYNOMIAL,
     BrainInput,
@@ -179,9 +180,7 @@ class TestBrainPolynomialInvoke:
     def test_invoke_full_cycle(self):
         """Can run a full operation cycle: IDLE -> CAPTURING -> IDLE."""
         # Start capture
-        state, _ = BRAIN_POLYNOMIAL.invoke(
-            BrainPhase.IDLE, CaptureInput(content="test")
-        )
+        state, _ = BRAIN_POLYNOMIAL.invoke(BrainPhase.IDLE, CaptureInput(content="test"))
         assert state == BrainPhase.CAPTURING
 
         # Return to idle

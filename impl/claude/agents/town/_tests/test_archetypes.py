@@ -1,6 +1,7 @@
 """Tests for Phase 4 archetypes."""
 
 import pytest
+
 from agents.town.archetypes import (
     ARCHETYPE_FACTORIES,
     ARCHETYPE_SPECS,

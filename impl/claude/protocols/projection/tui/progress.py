@@ -9,13 +9,14 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from protocols.projection.schema import WidgetMeta
-from protocols.projection.tui.base import TUIWidget
 from rich.console import RenderableType
 from rich.progress_bar import ProgressBar
 from rich.table import Table
 from rich.text import Text
 from textual.widgets import Static
+
+from protocols.projection.schema import WidgetMeta
+from protocols.projection.tui.base import TUIWidget
 
 
 @dataclass(frozen=True)

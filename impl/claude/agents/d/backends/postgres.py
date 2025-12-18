@@ -15,17 +15,17 @@ import asyncio
 import base64
 import json
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, List
 
 try:
     import asyncpg
-    from asyncpg import Pool, Connection
+    from asyncpg import Connection, Pool
 
     ASYNCPG_AVAILABLE = True
 except ImportError:
-    asyncpg = None  # type: ignore
-    Pool = Any  # type: ignore
-    Connection = Any  # type: ignore
+    asyncpg = None
+    Pool = Any
+    Connection = Any
     ASYNCPG_AVAILABLE = False
 
 from ..datum import Datum
@@ -85,8 +85,7 @@ class PostgresBackend(BaseDgent):
         """
         if not ASYNCPG_AVAILABLE:
             raise ImportError(
-                "asyncpg is required for PostgresBackend. "
-                "Install with: pip install asyncpg"
+                "asyncpg is required for PostgresBackend. Install with: pip install asyncpg"
             )
 
         self.url = url
@@ -205,7 +204,7 @@ class PostgresBackend(BaseDgent):
         prefix: str | None = None,
         after: float | None = None,
         limit: int = 100,
-    ) -> list[Datum]:
+    ) -> List[Datum]:
         """List data with filters, sorted by created_at descending."""
         async with self._connection() as conn:
             query = "SELECT * FROM data WHERE 1=1"
@@ -228,7 +227,7 @@ class PostgresBackend(BaseDgent):
             rows = await conn.fetch(query, *params)
             return [self._row_to_datum(row) for row in rows]
 
-    async def causal_chain(self, id: str) -> list[Datum]:
+    async def causal_chain(self, id: str) -> List[Datum]:
         """Get causal ancestors of a datum using recursive CTE."""
         async with self._connection() as conn:
             # Use recursive CTE to get full chain
@@ -291,9 +290,7 @@ class PostgresBackend(BaseDgent):
         async with self._connection() as conn:
             # Get basic stats
             count = await conn.fetchval("SELECT COUNT(*) FROM data")
-            size = await conn.fetchval(
-                "SELECT pg_total_relation_size('data')"
-            )
+            size = await conn.fetchval("SELECT pg_total_relation_size('data')")
 
             return {
                 "connected": True,

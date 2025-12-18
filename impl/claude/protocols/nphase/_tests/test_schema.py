@@ -5,6 +5,7 @@ Law tests verify structural invariants that must always hold.
 """
 
 import pytest
+
 from protocols.nphase.schema import (
     Blocker,
     Classification,
@@ -240,15 +241,9 @@ class TestProjectDefinition:
             ),
             decisions=(Decision(id="D1", choice="Python", rationale="Best"),),
             file_map=(FileRef(path="main.py", lines="1-10", purpose="Entry"),),
-            invariants=(
-                Invariant(name="I1", requirement="Must work", verification="Run tests"),
-            ),
-            blockers=(
-                Blocker(id="B1", description="Issue", evidence="file:1", status="open"),
-            ),
-            components=(
-                Component(id="C1", name="Comp", location="comp.py", effort=Effort.L),
-            ),
+            invariants=(Invariant(name="I1", requirement="Must work", verification="Run tests"),),
+            blockers=(Blocker(id="B1", description="Issue", evidence="file:1", status="open"),),
+            components=(Component(id="C1", name="Comp", location="comp.py", effort=Effort.L),),
             waves=(Wave(name="W1", components=("C1",), strategy="Do it"),),
             entropy=EntropyBudget(total=0.75, allocation={}, spent={}),
             n_phases=11,

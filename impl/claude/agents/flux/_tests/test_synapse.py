@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
+
 from agents.flux.synapse import (
     CDCLagTracker,
     ChangeEvent,
@@ -59,9 +60,7 @@ class MockEmbeddingProvider:
 class MockVectorStore:
     """Mock vector store for tests."""
 
-    upserts: list[tuple[str, str, list[float], dict[str, Any]]] = field(
-        default_factory=list
-    )
+    upserts: list[tuple[str, str, list[float], dict[str, Any]]] = field(default_factory=list)
     deletes: list[tuple[str, str]] = field(default_factory=list)
 
     async def upsert(
@@ -684,9 +683,7 @@ class TestOutboxSource:
         ]
 
     @pytest.mark.asyncio
-    async def test_outbox_source_yields_events(
-        self, mock_events: list[dict[str, Any]]
-    ) -> None:
+    async def test_outbox_source_yields_events(self, mock_events: list[dict[str, Any]]) -> None:
         """OutboxSource yields ChangeEvents from outbox rows."""
         mock_conn = MockConnection(pending_events=mock_events.copy())
         pool = MockConnectionPool(mock_conn)
@@ -724,9 +721,7 @@ class TestOutboxSource:
         assert event.sequence_id == 1
 
     @pytest.mark.asyncio
-    async def test_outbox_source_acknowledge(
-        self, mock_events: list[dict[str, Any]]
-    ) -> None:
+    async def test_outbox_source_acknowledge(self, mock_events: list[dict[str, Any]]) -> None:
         """acknowledge() marks event as processed."""
         mock_conn = MockConnection(pending_events=[mock_events[0]])
         pool = MockConnectionPool(mock_conn)
@@ -741,9 +736,7 @@ class TestOutboxSource:
         assert mock_conn.processed_ids == [1]
 
     @pytest.mark.asyncio
-    async def test_outbox_source_acknowledge_batch(
-        self, mock_events: list[dict[str, Any]]
-    ) -> None:
+    async def test_outbox_source_acknowledge_batch(self, mock_events: list[dict[str, Any]]) -> None:
         """acknowledge_batch() marks multiple events as processed."""
         mock_conn = MockConnection(pending_events=mock_events.copy())
         pool = MockConnectionPool(mock_conn)
@@ -846,9 +839,7 @@ class TestOutboxSource:
         assert event.data == {"key": "value"}
 
     @pytest.mark.asyncio
-    async def test_outbox_source_context_manager(
-        self, mock_events: list[dict[str, Any]]
-    ) -> None:
+    async def test_outbox_source_context_manager(self, mock_events: list[dict[str, Any]]) -> None:
         """OutboxSource works as async context manager."""
         mock_conn = MockConnection(pending_events=[mock_events[0]])
         pool = MockConnectionPool(mock_conn)

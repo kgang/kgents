@@ -233,9 +233,7 @@ class CoalitionPersistence:
                 output_count=0,
                 consensus_threshold=consensus_threshold,
                 formed_at=None,
-                created_at=coalition.created_at.isoformat()
-                if coalition.created_at
-                else "",
+                created_at=coalition.created_at.isoformat() if coalition.created_at else "",
             )
 
     async def get_coalition(self, coalition_id: str) -> CoalitionView | None:
@@ -250,7 +248,7 @@ class CoalitionPersistence:
                 select(func.count())
                 .select_from(CoalitionMember)
                 .where(CoalitionMember.coalition_id == coalition_id)
-                .where(CoalitionMember.is_active == True)
+                .where(CoalitionMember.is_active)
             )
 
             # Count outputs
@@ -270,12 +268,8 @@ class CoalitionPersistence:
                 proposal_count=coalition.proposal_count,
                 output_count=output_count.scalar() or 0,
                 consensus_threshold=coalition.consensus_threshold,
-                formed_at=coalition.formed_at.isoformat()
-                if coalition.formed_at
-                else None,
-                created_at=coalition.created_at.isoformat()
-                if coalition.created_at
-                else "",
+                formed_at=coalition.formed_at.isoformat() if coalition.formed_at else None,
+                created_at=coalition.created_at.isoformat() if coalition.created_at else "",
             )
 
     async def list_coalitions(
@@ -300,7 +294,7 @@ class CoalitionPersistence:
                     select(func.count())
                     .select_from(CoalitionMember)
                     .where(CoalitionMember.coalition_id == c.id)
-                    .where(CoalitionMember.is_active == True)
+                    .where(CoalitionMember.is_active)
                 )
                 views.append(
                     CoalitionView(
@@ -391,7 +385,7 @@ class CoalitionPersistence:
                     select(func.count())
                     .select_from(CoalitionMember)
                     .where(CoalitionMember.coalition_id == coalition_id)
-                    .where(CoalitionMember.is_active == True)
+                    .where(CoalitionMember.is_active)
                 )
                 if (member_count.scalar() or 0) >= coalition.max_members:
                     return None
@@ -419,7 +413,7 @@ class CoalitionPersistence:
                 select(func.count())
                 .select_from(CoalitionMember)
                 .where(CoalitionMember.coalition_id == coalition_id)
-                .where(CoalitionMember.is_active == True)
+                .where(CoalitionMember.is_active)
             )
             current_members = (member_count.scalar() or 0) + 1  # Include new member
 
@@ -462,14 +456,12 @@ class CoalitionPersistence:
     ) -> list[MemberView]:
         """List members of a coalition."""
         async with self.members.session_factory() as session:
-            stmt = select(CoalitionMember).where(
-                CoalitionMember.coalition_id == coalition_id
-            )
+            stmt = select(CoalitionMember).where(CoalitionMember.coalition_id == coalition_id)
 
             if role:
                 stmt = stmt.where(CoalitionMember.role == role)
             if active_only:
-                stmt = stmt.where(CoalitionMember.is_active == True)
+                stmt = stmt.where(CoalitionMember.is_active)
 
             stmt = stmt.order_by(CoalitionMember.joined_at)
             result = await session.execute(stmt)
@@ -564,9 +556,7 @@ class CoalitionPersistence:
                 votes_against=0,
                 votes_abstain=0,
                 approval_score=None,
-                created_at=proposal.created_at.isoformat()
-                if proposal.created_at
-                else "",
+                created_at=proposal.created_at.isoformat() if proposal.created_at else "",
             )
 
     async def start_voting(self, proposal_id: str) -> bool:
@@ -656,9 +646,7 @@ class CoalitionPersistence:
                 vote=vote,
                 weight=member.voting_power,
                 rationale=rationale,
-                created_at=vote_record.created_at.isoformat()
-                if vote_record.created_at
-                else "",
+                created_at=vote_record.created_at.isoformat() if vote_record.created_at else "",
             )
 
     async def conclude_voting(self, proposal_id: str) -> str | None:
@@ -701,9 +689,7 @@ class CoalitionPersistence:
         async with self.members.session_factory() as session:
             stmt = (
                 select(CoalitionProposal, CoalitionMember.agent_name)
-                .outerjoin(
-                    CoalitionMember, CoalitionProposal.proposer_id == CoalitionMember.id
-                )
+                .outerjoin(CoalitionMember, CoalitionProposal.proposer_id == CoalitionMember.id)
                 .where(CoalitionProposal.coalition_id == coalition_id)
             )
 
@@ -814,9 +800,7 @@ class CoalitionPersistence:
     ) -> list[OutputView]:
         """List outputs from a coalition."""
         async with self.coalitions.session_factory() as session:
-            stmt = select(CoalitionOutput).where(
-                CoalitionOutput.coalition_id == coalition_id
-            )
+            stmt = select(CoalitionOutput).where(CoalitionOutput.coalition_id == coalition_id)
 
             if output_type:
                 stmt = stmt.where(CoalitionOutput.output_type == output_type)
@@ -856,17 +840,13 @@ class CoalitionPersistence:
             total_coalitions = total_coalitions_result.scalar() or 0
 
             active_coalitions_result = await session.execute(
-                select(func.count())
-                .select_from(Coalition)
-                .where(Coalition.status == "active")
+                select(func.count()).select_from(Coalition).where(Coalition.status == "active")
             )
             active_coalitions = active_coalitions_result.scalar() or 0
 
             # Count members
             total_members_result = await session.execute(
-                select(func.count())
-                .select_from(CoalitionMember)
-                .where(CoalitionMember.is_active == True)
+                select(func.count()).select_from(CoalitionMember).where(CoalitionMember.is_active)
             )
             total_members = total_members_result.scalar() or 0
 

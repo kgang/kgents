@@ -36,7 +36,10 @@ except ImportError:
     Query = None  # type: ignore[assignment]
     StreamingResponse = None  # type: ignore[assignment]
     BaseModel = object  # type: ignore[assignment]
-    Field = lambda *a, **k: None  # type: ignore[assignment]
+
+    def Field(*a, **k):
+        return None
+
 
 logger = logging.getLogger(__name__)
 
@@ -165,9 +168,7 @@ class InfraEntityResponse(BaseModel):
     cpu_percent: float = Field(0.0, description="CPU utilization percentage")
     memory_bytes: int = Field(0, description="Memory usage in bytes")
     memory_limit: int | None = Field(None, description="Memory limit in bytes")
-    memory_percent: float | None = Field(
-        None, description="Memory utilization percentage"
-    )
+    memory_percent: float | None = Field(None, description="Memory utilization percentage")
 
     # Custom metrics
     custom_metrics: dict[str, float] = Field(default_factory=dict)
@@ -393,15 +394,9 @@ def create_infrastructure_router() -> "APIRouter | None":
 
     @router.get("/topology", response_model=InfraTopologyResponse)
     async def get_topology(
-        namespaces: str | None = Query(
-            None, description="Comma-separated namespaces to filter"
-        ),
-        kinds: str | None = Query(
-            None, description="Comma-separated entity kinds to filter"
-        ),
-        min_health: float = Query(
-            0.0, ge=0.0, le=1.0, description="Minimum health filter"
-        ),
+        namespaces: str | None = Query(None, description="Comma-separated namespaces to filter"),
+        kinds: str | None = Query(None, description="Comma-separated entity kinds to filter"),
+        min_health: float = Query(0.0, ge=0.0, le=1.0, description="Minimum health filter"),
     ) -> InfraTopologyResponse:
         """
         Get current infrastructure topology.
@@ -422,15 +417,11 @@ def create_infrastructure_router() -> "APIRouter | None":
         # Apply filters
         if namespaces:
             ns_filter = set(namespaces.split(","))
-            topology.entities = [
-                e for e in topology.entities if e.namespace in ns_filter
-            ]
+            topology.entities = [e for e in topology.entities if e.namespace in ns_filter]
 
         if kinds:
             kind_filter = set(kinds.split(","))
-            topology.entities = [
-                e for e in topology.entities if e.kind.value in kind_filter
-            ]
+            topology.entities = [e for e in topology.entities if e.kind.value in kind_filter]
 
         if min_health > 0:
             topology.entities = [e for e in topology.entities if e.health >= min_health]
@@ -465,21 +456,15 @@ def create_infrastructure_router() -> "APIRouter | None":
                         "kind": update.kind.value
                         if hasattr(update.kind, "value")
                         else str(update.kind),
-                        "timestamp": update.timestamp.isoformat()
-                        if update.timestamp
-                        else None,
+                        "timestamp": update.timestamp.isoformat() if update.timestamp else None,
                     }
 
                     if update.entity:
                         data["entity"] = _entity_to_response(update.entity).model_dump()
                     if update.connection:
-                        data["connection"] = _connection_to_response(
-                            update.connection
-                        ).model_dump()
+                        data["connection"] = _connection_to_response(update.connection).model_dump()
                     if update.topology:
-                        data["topology"] = _topology_to_response(
-                            update.topology
-                        ).model_dump()
+                        data["topology"] = _topology_to_response(update.topology).model_dump()
 
                     yield f"data: {json.dumps(data)}\n\n"
 

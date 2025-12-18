@@ -8,6 +8,7 @@ functions that form the vocabulary of K-gent streaming.
 from datetime import datetime, timezone
 
 import pytest
+
 from agents.k.events import (
     SoulEvent,
     SoulEventType,
@@ -552,9 +553,7 @@ class TestSelfChallengeEventFactory:
 
         assert event.event_type == SoulEventType.SELF_CHALLENGE
         assert event.payload["thesis"] == "Composability is paramount"
-        assert (
-            event.payload["antithesis"] == "But sometimes direct solutions are clearer"
-        )
+        assert event.payload["antithesis"] == "But sometimes direct solutions are clearer"
         assert "synthesis" not in event.payload
 
     def test_self_challenge_with_synthesis(self) -> None:

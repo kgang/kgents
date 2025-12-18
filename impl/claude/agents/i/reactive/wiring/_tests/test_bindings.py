@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.wiring.bindings import (
     AGENTESEBinding,
     BindingConfig,
@@ -219,9 +220,7 @@ class TestAGENTESEBinding:
         received_events: list[Any] = []
 
         binding = AGENTESEBinding(logos=logos, observer=observer, event_bus=event_bus)  # type: ignore[arg-type]
-        event_bus.subscribe(
-            EventType.YIELD_CREATED, lambda e: received_events.append(e)
-        )
+        event_bus.subscribe(EventType.YIELD_CREATED, lambda e: received_events.append(e))
 
         binding.push_yield({"content": "test yield"})
 

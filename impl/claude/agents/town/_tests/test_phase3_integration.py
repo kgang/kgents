@@ -9,6 +9,7 @@ Tests for:
 """
 
 import pytest
+
 from agents.operad.core import LawStatus
 from agents.town.citizen import Eigenvectors
 from agents.town.environment import (
@@ -183,9 +184,7 @@ class TestGraphMemoryIntegration:
         return create_phase3_environment()
 
     @pytest.mark.asyncio
-    async def test_evolving_citizen_uses_graph_memory(
-        self, env: TownEnvironment
-    ) -> None:
+    async def test_evolving_citizen_uses_graph_memory(self, env: TownEnvironment) -> None:
         """Test evolving citizens use graph memory."""
         hana = env.get_citizen_by_name("Hana")
         assert isinstance(hana, EvolvingCitizen)
@@ -316,9 +315,7 @@ class TestEigenvectorDriftBounds:
         return create_phase3_environment()
 
     @pytest.mark.asyncio
-    async def test_drift_bounded_after_many_evolutions(
-        self, env: TownEnvironment
-    ) -> None:
+    async def test_drift_bounded_after_many_evolutions(self, env: TownEnvironment) -> None:
         """Test eigenvector drift stays bounded after many evolutions."""
         juno = env.get_citizen_by_name("Juno")
         assert isinstance(juno, EvolvingCitizen)

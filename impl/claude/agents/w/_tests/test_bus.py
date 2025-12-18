@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.w.bus import (
     AgentRegistry,
     BaseInterceptor,
@@ -88,9 +89,7 @@ class CountingInterceptor(BaseInterceptor):
         self.before_count += 1
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         self.after_count += 1
         return InterceptorResult(value=result)
 
@@ -98,9 +97,7 @@ class CountingInterceptor(BaseInterceptor):
 class TransformInterceptor(BaseInterceptor):
     """Transforms payload in before hook."""
 
-    def __init__(
-        self, transform_fn: Any, name: str = "transform", order: int = 100
-    ) -> None:
+    def __init__(self, transform_fn: Any, name: str = "transform", order: int = 100) -> None:
         super().__init__(name, order)
         self._transform = transform_fn
 
@@ -112,15 +109,11 @@ class TransformInterceptor(BaseInterceptor):
 class ResultTransformInterceptor(BaseInterceptor):
     """Transforms result in after hook."""
 
-    def __init__(
-        self, transform_fn: Any, name: str = "result_transform", order: int = 100
-    ) -> None:
+    def __init__(self, transform_fn: Any, name: str = "result_transform", order: int = 100) -> None:
         super().__init__(name, order)
         self._transform = transform_fn
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         return InterceptorResult(
             value=self._transform(result),
             modified=True,
@@ -130,15 +123,11 @@ class ResultTransformInterceptor(BaseInterceptor):
 class MetadataInterceptor(BaseInterceptor):
     """Adds metadata to results."""
 
-    def __init__(
-        self, metadata: dict[str, Any], name: str = "metadata", order: int = 200
-    ) -> None:
+    def __init__(self, metadata: dict[str, Any], name: str = "metadata", order: int = 200) -> None:
         super().__init__(name, order)
         self._metadata = metadata
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         return InterceptorResult(
             value=result,
             metadata=self._metadata.copy(),
@@ -153,9 +142,7 @@ class TestBusMessage:
 
     def test_create_basic_message(self) -> None:
         """Test basic message creation."""
-        msg: BusMessage[str, str] = BusMessage(
-            source="cli", target="psi", payload="hello"
-        )
+        msg: BusMessage[str, str] = BusMessage(source="cli", target="psi", payload="hello")
 
         assert msg.source == "cli"
         assert msg.target == "psi"
@@ -166,9 +153,7 @@ class TestBusMessage:
 
     def test_message_blocking(self) -> None:
         """Test message blocking mechanism."""
-        msg: BusMessage[str, str] = BusMessage(
-            source="cli", target="psi", payload="data"
-        )
+        msg: BusMessage[str, str] = BusMessage(source="cli", target="psi", payload="data")
 
         msg.block("Rate limited")
 
@@ -347,9 +332,7 @@ class TestMiddlewareBus:
                 order_log.append(f"{self.name}:before")
                 return msg
 
-            async def after(
-                self, msg: BusMessage[Any, Any], result: Any
-            ) -> InterceptorResult[Any]:
+            async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
                 order_log.append(f"{self.name}:after")
                 return InterceptorResult(value=result)
 

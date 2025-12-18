@@ -10,6 +10,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from agents.operad import LawStatus, OperadRegistry
 
 from ..operad import (
@@ -166,9 +167,7 @@ class TestWaterOperation:
 class TestCrossPollination:
     """Tests for cross-pollination."""
 
-    def test_cross_adds_resonance(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_cross_adds_resonance(self, sample_plan: PlanState, partner_plan: PlanState):
         """Cross-pollination adds partner to resonances."""
         result = _cross_pollinate_compose(sample_plan, partner_plan)
         assert partner_plan.name in result.resonances
@@ -197,32 +196,24 @@ class TestCrossPollination:
 class TestGraftOperation:
     """Tests for grafting."""
 
-    def test_graft_merges_resonances(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_graft_merges_resonances(self, sample_plan: PlanState, partner_plan: PlanState):
         """Grafting combines resonances from both plans."""
         result = _graft_compose(sample_plan, partner_plan)
         assert result.resonances == sample_plan.resonances | partner_plan.resonances
 
-    def test_graft_averages_momentum(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_graft_averages_momentum(self, sample_plan: PlanState, partner_plan: PlanState):
         """Grafting averages momentum."""
         result = _graft_compose(sample_plan, partner_plan)
         expected = (sample_plan.momentum + partner_plan.momentum) / 2
         assert result.momentum == expected
 
-    def test_graft_merges_letters(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_graft_merges_letters(self, sample_plan: PlanState, partner_plan: PlanState):
         """Grafting includes context from both letters."""
         result = _graft_compose(sample_plan, partner_plan)
         assert sample_plan.letter in result.letter
         assert partner_plan.name in result.letter
 
-    def test_graft_costs_more_than_cross(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_graft_costs_more_than_cross(self, sample_plan: PlanState, partner_plan: PlanState):
         """Grafting is more expensive than cross-pollination."""
         crossed = _cross_pollinate_compose(sample_plan, partner_plan)
         grafted = _graft_compose(sample_plan, partner_plan)
@@ -329,9 +320,7 @@ class TestOpeadComposition:
         result = GARDEN_OPERAD.compose("tend", sample_plan)
         assert isinstance(result, PlanState)
 
-    def test_compose_cross_via_operad(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_compose_cross_via_operad(self, sample_plan: PlanState, partner_plan: PlanState):
         """Can compose cross_pollinate via operad interface."""
         result = GARDEN_OPERAD.compose("cross_pollinate", sample_plan, partner_plan)
         assert partner_plan.name in result.resonances
@@ -385,9 +374,7 @@ class TestProperties:
             result = GARDEN_OPERAD.compose(op_name, sample_plan)
             assert result.name == sample_plan.name
 
-    def test_cross_always_adds_resonance(
-        self, sample_plan: PlanState, partner_plan: PlanState
-    ):
+    def test_cross_always_adds_resonance(self, sample_plan: PlanState, partner_plan: PlanState):
         """Cross-pollination always adds exactly one resonance."""
         result = _cross_pollinate_compose(sample_plan, partner_plan)
         assert len(result.resonances) == len(sample_plan.resonances) + 1

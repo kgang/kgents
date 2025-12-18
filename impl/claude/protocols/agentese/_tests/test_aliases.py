@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from protocols.agentese import (
     AliasError,
     AliasNotFoundError,

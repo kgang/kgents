@@ -9,9 +9,8 @@ from __future__ import annotations
 import pytest
 
 from agents.d.backends.memory import MemoryBackend
-from agents.m.memory import Memory, Lifecycle
 from agents.m.associative import AssociativeMemory
-
+from agents.m.memory import Lifecycle, Memory
 
 # === Remember Tests ===
 
@@ -35,7 +34,9 @@ class TestRemember:
         assert datum is not None
         assert datum.content == "test content"
 
-    async def test_remember_creates_memory_entry(self, associative_memory: AssociativeMemory) -> None:
+    async def test_remember_creates_memory_entry(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Remember creates Memory entry in index."""
         memory_id = await associative_memory.remember(b"test content")
 
@@ -56,7 +57,9 @@ class TestRemember:
         assert memory is not None
         assert memory.metadata == {"topic": "testing"}
 
-    async def test_remember_with_custom_embedding(self, associative_memory: AssociativeMemory) -> None:
+    async def test_remember_with_custom_embedding(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Remember uses custom embedding if provided."""
         custom_embedding = [0.1, 0.2, 0.3]
         memory_id = await associative_memory.remember(
@@ -131,7 +134,9 @@ class TestRecall:
 class TestForget:
     """Test forget() method."""
 
-    async def test_forget_transitions_to_composting(self, associative_memory: AssociativeMemory) -> None:
+    async def test_forget_transitions_to_composting(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Forget transitions memory to COMPOSTING."""
         memory_id = await associative_memory.remember(b"test content")
 
@@ -144,12 +149,16 @@ class TestForget:
         assert memory is not None
         assert memory.lifecycle == Lifecycle.COMPOSTING
 
-    async def test_forget_nonexistent_returns_false(self, associative_memory: AssociativeMemory) -> None:
+    async def test_forget_nonexistent_returns_false(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Forget nonexistent memory returns False."""
         result = await associative_memory.forget("nonexistent_id")
         assert result is False
 
-    async def test_forget_cherished_returns_false(self, associative_memory: AssociativeMemory) -> None:
+    async def test_forget_cherished_returns_false(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Cannot forget cherished memories."""
         memory_id = await associative_memory.remember(b"important content")
 
@@ -184,7 +193,9 @@ class TestCherish:
         assert memory.is_cherished
         assert memory.relevance == 1.0
 
-    async def test_cherish_nonexistent_returns_false(self, associative_memory: AssociativeMemory) -> None:
+    async def test_cherish_nonexistent_returns_false(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Cherish nonexistent memory returns False."""
         result = await associative_memory.cherish("nonexistent_id")
         assert result is False
@@ -196,7 +207,9 @@ class TestCherish:
 class TestConsolidate:
     """Test consolidate() method (sleep cycle)."""
 
-    async def test_consolidate_demotes_low_relevance(self, associative_memory: AssociativeMemory) -> None:
+    async def test_consolidate_demotes_low_relevance(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Consolidate demotes low-relevance memories."""
         # Create memory
         memory_id = await associative_memory.remember(b"test content")
@@ -227,7 +240,9 @@ class TestConsolidate:
         assert updated is not None
         assert updated.lifecycle == Lifecycle.COMPOSTING
 
-    async def test_consolidate_protects_cherished(self, associative_memory: AssociativeMemory) -> None:
+    async def test_consolidate_protects_cherished(
+        self, associative_memory: AssociativeMemory
+    ) -> None:
         """Consolidate doesn't demote cherished memories."""
         # Create and cherish
         memory_id = await associative_memory.remember(b"important content")

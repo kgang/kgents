@@ -8,11 +8,12 @@ Validates:
 - Gesture accumulation
 """
 
-import pytest
 from datetime import datetime, timedelta
 
-from ..garden import GardenState, GardenSeason, GardenMetrics, create_garden
-from ..tending import TendingVerb, TendingGesture
+import pytest
+
+from ..garden import GardenMetrics, GardenSeason, GardenState, create_garden
+from ..tending import TendingGesture, TendingVerb
 
 
 class TestGardenSeason:
@@ -31,15 +32,11 @@ class TestGardenSeason:
 
     def test_sprouting_is_most_plastic(self):
         """SPROUTING season should have highest plasticity."""
-        assert GardenSeason.SPROUTING.plasticity == max(
-            s.plasticity for s in GardenSeason
-        )
+        assert GardenSeason.SPROUTING.plasticity == max(s.plasticity for s in GardenSeason)
 
     def test_dormant_is_least_plastic(self):
         """DORMANT season should have lowest plasticity."""
-        assert GardenSeason.DORMANT.plasticity == min(
-            s.plasticity for s in GardenSeason
-        )
+        assert GardenSeason.DORMANT.plasticity == min(s.plasticity for s in GardenSeason)
 
     def test_entropy_multiplier_range(self):
         """Entropy multiplier should be positive."""

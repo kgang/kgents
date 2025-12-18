@@ -1,6 +1,7 @@
 """Tests for WorkshopPolynomial state machine."""
 
 import pytest
+
 from agents.atelier.polynomial import (
     ATELIER_POLYNOMIAL,
     WORKSHOP_POLYNOMIAL,
@@ -119,9 +120,7 @@ class TestWorkshopTransitions:
 
     def test_creating_refine_moves_to_reviewing(self):
         """Refinement moves from CREATING to REVIEWING."""
-        inp = RefineInput(
-            contribution_id="c1", refined_content="better", refiner_id="a1"
-        )
+        inp = RefineInput(contribution_id="c1", refined_content="better", refiner_id="a1")
         new_phase, output = workshop_transition(WorkshopPhase.CREATING, inp)
 
         assert new_phase == WorkshopPhase.REVIEWING

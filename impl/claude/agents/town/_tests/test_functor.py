@@ -5,6 +5,7 @@ Verifies functor laws (identity, composition preservation).
 """
 
 import pytest
+
 from agents.operad.core import LawStatus
 from agents.town.functor import (
     TOWN_TO_NPHASE_MAP,
@@ -228,9 +229,5 @@ class TestSummarizeFunctor:
     def test_total_matches_sum(self) -> None:
         """Test total equals sum of phases."""
         summary = summarize_functor()
-        total = (
-            summary["SENSE"]["count"]
-            + summary["ACT"]["count"]
-            + summary["REFLECT"]["count"]
-        )
+        total = summary["SENSE"]["count"] + summary["ACT"]["count"] + summary["REFLECT"]["count"]
         assert summary["total_mapped"] == total

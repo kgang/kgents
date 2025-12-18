@@ -57,6 +57,7 @@ from protocols.synergy.events import (
 )
 
 if TYPE_CHECKING:
+    from agents.park import DialogueMask
     from protocols.cli.reflector import InvocationContext
 
 
@@ -389,6 +390,7 @@ def _complete_scenario(args: list[str], ctx: "InvocationContext | None") -> int:
     # Emit synergy event for Brain capture
     try:
         import asyncio
+
         bus = get_synergy_bus()
         event = create_scenario_complete_event(
             session_id=scenario.scenario_id,
@@ -726,6 +728,7 @@ def _force_action(ctx: "InvocationContext | None") -> int:
         # Emit synergy event
         try:
             import asyncio
+
             bus = get_synergy_bus()
             event = create_force_used_event(
                 force_id=str(uuid.uuid4()),
@@ -860,7 +863,7 @@ def _render_mask_panel(mask: "DialogueMask") -> str:
 
     lines.append(border)
     lines.append(f"  {mask.name.upper()}")
-    lines.append(f"  \"{mask.description}\"")
+    lines.append(f'  "{mask.description}"')
     lines.append(border)
 
     # Flavor text

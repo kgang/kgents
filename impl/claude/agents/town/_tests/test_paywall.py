@@ -13,6 +13,7 @@ Covers:
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.town.budget_store import ConsentState, UserBudgetInfo
 from agents.town.paywall import (
     ACTION_COSTS,
@@ -239,10 +240,7 @@ def test_paywall_tourist_inhabit_blocked():
     result = check_paywall(check)
 
     assert not result.allowed
-    assert (
-        result.reason is not None
-        and "INHABIT mode requires Resident tier" in result.reason
-    )
+    assert result.reason is not None and "INHABIT mode requires Resident tier" in result.reason
     assert len(result.upgrade_options) > 0
 
 
@@ -286,10 +284,7 @@ def test_paywall_resident_force_blocked():
     result = check_paywall(check)
 
     assert not result.allowed
-    assert (
-        result.reason is not None
-        and "Force mechanic requires Citizen tier" in result.reason
-    )
+    assert result.reason is not None and "Force mechanic requires Citizen tier" in result.reason
 
 
 def test_paywall_citizen_force_allowed():
@@ -378,9 +373,7 @@ def test_paywall_tourist_branching_blocked():
     result = check_paywall(check)
 
     assert not result.allowed
-    assert (
-        result.reason is not None and "Branching requires Citizen tier" in result.reason
-    )
+    assert result.reason is not None and "Branching requires Citizen tier" in result.reason
 
 
 def test_paywall_resident_branching_blocked():
@@ -395,9 +388,7 @@ def test_paywall_resident_branching_blocked():
     result = check_paywall(check)
 
     assert not result.allowed
-    assert (
-        result.reason is not None and "Branching requires Citizen tier" in result.reason
-    )
+    assert result.reason is not None and "Branching requires Citizen tier" in result.reason
 
 
 def test_paywall_citizen_branching_allowed():
@@ -541,6 +532,4 @@ def test_paywall_branch_switch_cheap():
 
     assert result.allowed
     assert result.cost_credits == 10  # Cheap switch
-    assert (
-        ACTION_COSTS[ActionType.BRANCH_SWITCH] < ACTION_COSTS[ActionType.BRANCH_CREATE]
-    )
+    assert ACTION_COSTS[ActionType.BRANCH_SWITCH] < ACTION_COSTS[ActionType.BRANCH_CREATE]

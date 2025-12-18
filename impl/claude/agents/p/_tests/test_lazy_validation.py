@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.p.strategies.lazy_validation import (
     LazyValidatedDict,
     LazyValidationParser,

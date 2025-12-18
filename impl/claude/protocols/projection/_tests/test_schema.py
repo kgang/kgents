@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.projection.schema import (
     CacheMeta,
     ErrorInfo,

@@ -10,10 +10,10 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # =============================================================================
 # Test ChatRenderer
@@ -111,17 +111,19 @@ class TestChatRenderer:
         from protocols.cli.chat_projection import ChatRenderer
 
         renderer = ChatRenderer()
-        metrics = renderer.render_metrics({
-            "session_id": "abc123",
-            "state": "READY",
-            "turns_completed": 5,
-            "tokens_in": 1000,
-            "tokens_out": 500,
-            "average_turn_latency": 1.5,
-            "context_utilization": 0.3,
-            "entropy": 0.9,
-            "estimated_cost_usd": 0.01,
-        })
+        metrics = renderer.render_metrics(
+            {
+                "session_id": "abc123",
+                "state": "READY",
+                "turns_completed": 5,
+                "tokens_in": 1000,
+                "tokens_out": 500,
+                "average_turn_latency": 1.5,
+                "context_utilization": 0.3,
+                "entropy": 0.9,
+                "estimated_cost_usd": 0.01,
+            }
+        )
 
         assert "Metrics" in metrics
         assert "READY" in metrics
@@ -154,10 +156,12 @@ class TestChatRenderer:
         from protocols.cli.chat_projection import ChatRenderer
 
         renderer = ChatRenderer()
-        goodbye = renderer.render_goodbye({
-            "turns_completed": 10,
-            "estimated_cost_usd": 0.05,
-        })
+        goodbye = renderer.render_goodbye(
+            {
+                "turns_completed": 10,
+                "estimated_cost_usd": 0.05,
+            }
+        )
 
         assert "10" in goodbye
         assert "$0.05" in goodbye
@@ -257,10 +261,12 @@ class TestChatProjection:
 
         mock_session = MagicMock()
         mock_session.session_id = "test-123"
-        mock_session.get_metrics = MagicMock(return_value={
-            "turns_completed": 5,
-            "estimated_cost_usd": 0.01,
-        })
+        mock_session.get_metrics = MagicMock(
+            return_value={
+                "turns_completed": 5,
+                "estimated_cost_usd": 0.01,
+            }
+        )
 
         renderer = ChatRenderer()
         projection = ChatProjection(
@@ -466,11 +472,13 @@ class TestContextPanel:
         from protocols.cli.chat_projection import ChatRenderer
 
         renderer = ChatRenderer()
-        context = renderer.render_context({
-            "utilization": 0.5,
-            "window_size": 200000,
-            "strategy": "sliding_window",
-        })
+        context = renderer.render_context(
+            {
+                "utilization": 0.5,
+                "window_size": 200000,
+                "strategy": "sliding_window",
+            }
+        )
 
         assert "Context Window" in context
         assert "50%" in context or "50.0%" in context

@@ -12,6 +12,7 @@ Tests:
 from __future__ import annotations
 
 import pytest
+
 from agents.p.strategies.incremental import (
     IncrementalNode,
     IncrementalParser,
@@ -202,9 +203,7 @@ class TestIncrementalNode:
         child1 = IncrementalNode(
             type="string", value="Alice", complete=True, confidence=1.0, key="name"
         )
-        child2 = IncrementalNode(
-            type="number", value=30, complete=True, confidence=1.0, key="age"
-        )
+        child2 = IncrementalNode(type="number", value=30, complete=True, confidence=1.0, key="age")
 
         parent = IncrementalNode(
             type="object",

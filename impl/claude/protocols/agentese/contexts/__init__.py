@@ -104,16 +104,14 @@ from .gardener import (
     resolve_command_to_path,
 )
 
-# Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
+# Prompt context (concept.prompt.* - partially archived 2025-12-18)
 from .prompt import (
     PROMPT_ROLE_AFFORDANCES,
     CheckpointSummaryDTO,
-    DiffResult,
     EvolutionResult,
     PromptContextResolver,
     PromptNode,
     ValidationResult,
-    create_prompt_node,
     create_prompt_resolver,
 )
 from .self_ import (
@@ -186,6 +184,27 @@ from .self_judgment import (
     Critique,
     CritiqueWeights,
     RefinedArtifact,
+)
+
+# 3D Projection Context (concept.projection.three.*)
+from .three import (
+    EDGE_DEFAULTS,
+    NODE_DEFAULTS,
+    QUALITY_CONFIGS,
+    THEME_REGISTRY,
+    THREE_AFFORDANCES,
+    Quality,
+    ThemeName,
+    ThreeContextResolver,
+    ThreeEdgeNode,
+    ThreeNodeNode,
+    ThreeQualityNode,
+    ThreeThemeNode,
+    create_three_edge_node,
+    create_three_node_node,
+    create_three_quality_node,
+    create_three_resolver,
+    create_three_theme_node,
 )
 from .time import (
     TIME_AFFORDANCES,
@@ -345,9 +364,7 @@ def create_context_resolvers(
         Dictionary mapping context names to resolvers
     """
     return {
-        "world": create_world_resolver(
-            registry=registry, narrator=narrator, purgatory=purgatory
-        ),
+        "world": create_world_resolver(registry=registry, narrator=narrator, purgatory=purgatory),
         "self": create_self_resolver(
             d_gent=d_gent,
             n_gent=narrator,
@@ -367,9 +384,7 @@ def create_context_resolvers(
             vgent=vgent,
         ),
         "concept": create_concept_resolver(registry=registry, grammarian=grammarian),
-        "void": create_void_resolver(
-            initial_budget=entropy_budget, ledger=capital_ledger
-        ),
+        "void": create_void_resolver(initial_budget=entropy_budget, ledger=capital_ledger),
         "time": create_time_resolver(narrator=narrator, d_gent=d_gent, b_gent=b_gent),
     }
 
@@ -537,15 +552,13 @@ __all__ = [
     "create_brain_flow_node",
     "create_gardener_flow_node",
     "create_gestalt_flow_node",
-    # Prompt context (concept.prompt.* - Evergreen Prompt System Wave 6)
+    # Prompt context (concept.prompt.* - partially archived 2025-12-18)
     "PROMPT_ROLE_AFFORDANCES",
     "CheckpointSummaryDTO",
-    "DiffResult",
     "EvolutionResult",
     "PromptContextResolver",
     "PromptNode",
     "ValidationResult",
-    "create_prompt_node",
     "create_prompt_resolver",
     # Town Citizen integration (Chat Protocol - Phase 2.5)
     "ARCHETYPE_PROMPTS",
@@ -601,6 +614,24 @@ __all__ = [
     "create_gallery_node",
     "get_gallery_node",
     "set_gallery_node",
+    # 3D Projection Context (concept.projection.three.*)
+    "THREE_AFFORDANCES",
+    "THEME_REGISTRY",
+    "QUALITY_CONFIGS",
+    "NODE_DEFAULTS",
+    "EDGE_DEFAULTS",
+    "Quality",
+    "ThemeName",
+    "ThreeNodeNode",
+    "ThreeEdgeNode",
+    "ThreeThemeNode",
+    "ThreeQualityNode",
+    "ThreeContextResolver",
+    "create_three_resolver",
+    "create_three_node_node",
+    "create_three_edge_node",
+    "create_three_theme_node",
+    "create_three_quality_node",
     # Unified factory
     "create_context_resolvers",
 ]

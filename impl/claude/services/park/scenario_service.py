@@ -38,24 +38,24 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from agents.park.scenario import (
-    # Enums
-    ScenarioPhase,
-    ScenarioType,
     # Data classes
     CitizenSpec,
-    SuccessCriteria,
-    SuccessCriterion,
-    TriggerCondition,
+    # Validation
+    ScenarioError,
+    # Enums
+    ScenarioPhase,
     # Template and Session
     ScenarioRegistry,
     ScenarioSession,
+    ScenarioStateError,
     ScenarioTemplate,
+    ScenarioType,
+    ScenarioValidationError,
+    SuccessCriteria,
+    SuccessCriterion,
+    TriggerCondition,
     # Polynomial
     create_scenario_polynomial,
-    # Validation
-    ScenarioError,
-    ScenarioStateError,
-    ScenarioValidationError,
     validate_citizen_spec,
     validate_scenario_template,
 )
@@ -98,16 +98,18 @@ class ScenarioView:
         }
 
     def to_text(self) -> str:
-        return "\n".join([
-            f"{self.name} [{self.scenario_type}]",
-            "=" * 40,
-            f"Difficulty: {self.difficulty}",
-            f"Duration: ~{self.estimated_duration_minutes} min",
-            f"Citizens: {self.citizen_count}",
-            f"Regions: {self.region_count}",
-            "",
-            self.description,
-        ])
+        return "\n".join(
+            [
+                f"{self.name} [{self.scenario_type}]",
+                "=" * 40,
+                f"Difficulty: {self.difficulty}",
+                f"Duration: ~{self.estimated_duration_minutes} min",
+                f"Citizens: {self.citizen_count}",
+                f"Regions: {self.region_count}",
+                "",
+                self.description,
+            ]
+        )
 
 
 @dataclass(frozen=True)

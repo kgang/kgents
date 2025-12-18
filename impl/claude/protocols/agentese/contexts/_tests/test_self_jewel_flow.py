@@ -10,6 +10,7 @@ Tests the integration of F-gent Flow modalities with Crown Jewels:
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese.contexts.self_jewel_flow import (
     ALL_JEWEL_FLOW_PATHS,
     # Affordances

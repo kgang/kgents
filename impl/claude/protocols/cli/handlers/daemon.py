@@ -356,6 +356,7 @@ def _check_health() -> dict[str, Any]:
         import asyncio
 
         import grpc
+
         from protocols.proto.generated import LogosStub, StatusRequest
 
         async def check() -> dict[str, Any]:

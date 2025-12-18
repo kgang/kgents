@@ -23,12 +23,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 from .memory import Lifecycle, Memory, simple_embedding
 
 if TYPE_CHECKING:
     from agents.d.bus import DataBus, DataEvent, DataEventType
+
     from .associative import AssociativeMemory
 
 
@@ -75,7 +76,11 @@ class BusEventHandler:
             return
 
         # Compute embedding
-        content = datum.content if isinstance(datum.content, str) else datum.content.decode("utf-8", errors="ignore")
+        content = (
+            datum.content
+            if isinstance(datum.content, str)
+            else datum.content.decode("utf-8", errors="ignore")
+        )
         if self.embedder is not None:
             embedding = await self.embedder(content)
         else:

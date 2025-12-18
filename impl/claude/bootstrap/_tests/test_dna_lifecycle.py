@@ -20,8 +20,6 @@ import pytest
 from agents.f.gravity import (
     GravityContract,
     Grounded,
-)
-from agents.f.gravity import (
     GroundingError as GravityGroundingError,
 )
 

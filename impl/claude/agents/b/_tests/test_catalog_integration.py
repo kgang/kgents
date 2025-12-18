@@ -8,6 +8,7 @@ with the L-gent catalog system.
 from __future__ import annotations
 
 import pytest
+
 from agents.b.catalog_integration import (
     _extract_keywords,
     _generate_hypothesis_name,
@@ -85,9 +86,7 @@ def lineage_graph() -> LineageGraph:
 
 
 @pytest.mark.asyncio
-async def test_register_hypothesis_basic(
-    sample_hypothesis: Hypothesis, registry: Registry
-) -> None:
+async def test_register_hypothesis_basic(sample_hypothesis: Hypothesis, registry: Registry) -> None:
     """Test basic hypothesis registration."""
     entry = await register_hypothesis(
         hypothesis=sample_hypothesis,
@@ -251,9 +250,7 @@ async def test_find_hypotheses_by_min_confidence(registry: Registry) -> None:
 
 
 @pytest.mark.asyncio
-async def test_find_related_hypotheses(
-    sample_hypothesis: Hypothesis, registry: Registry
-) -> None:
+async def test_find_related_hypotheses(sample_hypothesis: Hypothesis, registry: Registry) -> None:
     """Test finding related hypotheses."""
     # Register similar hypotheses
     related = Hypothesis(
@@ -265,9 +262,7 @@ async def test_find_related_hypotheses(
         assumptions=["Histidine pKa matters", "pH affects structure"],
     )
 
-    entry1 = await register_hypothesis(
-        sample_hypothesis, registry, domain="biochemistry"
-    )
+    entry1 = await register_hypothesis(sample_hypothesis, registry, domain="biochemistry")
     await register_hypothesis(related, registry, domain="biochemistry")
 
     # Find related
@@ -287,9 +282,7 @@ async def test_record_hypothesis_evolution(
 ) -> None:
     """Test recording hypothesis evolution."""
     # Register original
-    original = await register_hypothesis(
-        sample_hypothesis, registry, domain="biochemistry"
-    )
+    original = await register_hypothesis(sample_hypothesis, registry, domain="biochemistry")
 
     # Create refined version
     refined = Hypothesis(
@@ -328,9 +321,7 @@ async def test_record_hypothesis_fork(
     sample_hypothesis: Hypothesis, registry: Registry, lineage_graph: LineageGraph
 ) -> None:
     """Test recording hypothesis fork."""
-    original = await register_hypothesis(
-        sample_hypothesis, registry, domain="biochemistry"
-    )
+    original = await register_hypothesis(sample_hypothesis, registry, domain="biochemistry")
 
     # Fork to alternative hypothesis
     alternative = Hypothesis(
@@ -404,9 +395,7 @@ async def test_get_hypothesis_lineage(
 
 
 @pytest.mark.asyncio
-async def test_update_hypothesis_metrics(
-    sample_hypothesis: Hypothesis, registry: Registry
-) -> None:
+async def test_update_hypothesis_metrics(sample_hypothesis: Hypothesis, registry: Registry) -> None:
     """Test updating hypothesis metrics after testing."""
     entry = await register_hypothesis(sample_hypothesis, registry, domain="test")
 
@@ -420,9 +409,7 @@ async def test_update_hypothesis_metrics(
 
 
 @pytest.mark.asyncio
-async def test_mark_hypothesis_falsified(
-    sample_hypothesis: Hypothesis, registry: Registry
-) -> None:
+async def test_mark_hypothesis_falsified(sample_hypothesis: Hypothesis, registry: Registry) -> None:
     """Test marking hypothesis as falsified."""
     entry = await register_hypothesis(sample_hypothesis, registry, domain="test")
 

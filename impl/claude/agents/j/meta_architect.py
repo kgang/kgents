@@ -30,8 +30,7 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
 from agents.poly.types import Agent, JudgeInput, PartialVerdict, Verdict
-from bootstrap.judge import MINI_JUDGES
-from bootstrap.judge import Judge as BootstrapJudge
+from bootstrap.judge import MINI_JUDGES, Judge as BootstrapJudge
 
 # Template generation (Phase D - H12)
 from .templates import TemplateContext, generate_template
@@ -43,9 +42,7 @@ class ArchitectInput:
 
     intent: str  # Natural language description of agent purpose
     context: dict[str, Any] = field(default_factory=dict)  # Available data/examples
-    constraints: ArchitectConstraints = field(
-        default_factory=lambda: ArchitectConstraints()
-    )
+    constraints: ArchitectConstraints = field(default_factory=lambda: ArchitectConstraints())
 
 
 @dataclass(frozen=True)
@@ -201,9 +198,7 @@ class MetaArchitect(Agent[ArchitectInput, AgentSource]):
         """
         try:
             tree = ast.parse(source)
-            classes = [
-                node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
-            ]
+            classes = [node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)]
 
             if not classes:
                 return "JITAgent"
@@ -321,9 +316,7 @@ def validate_source_safety(
     - No forbidden patterns
     """
     # Check complexity
-    max_complexity = int(
-        constraints.entropy_budget * constraints.max_cyclomatic_complexity
-    )
+    max_complexity = int(constraints.entropy_budget * constraints.max_cyclomatic_complexity)
     if source.complexity > max_complexity:
         return (
             False,
@@ -356,9 +349,7 @@ def check_jit_safe(
     """
     source_code = context.get("source_code", "") if context else ""
     constraints = (
-        context.get("constraints", ArchitectConstraints())
-        if context
-        else ArchitectConstraints()
+        context.get("constraints", ArchitectConstraints()) if context else ArchitectConstraints()
     )
 
     for pattern in constraints.forbidden_patterns:
@@ -396,9 +387,7 @@ def check_entropy_bounded(
     return PartialVerdict(
         principle="entropy_bounded",
         passed=passed,
-        reasons=(f"Complexity {complexity} vs budget {max_allowed}",)
-        if not passed
-        else (),
+        reasons=(f"Complexity {complexity} vs budget {max_allowed}",) if not passed else (),
         confidence=0.9,
     )
 

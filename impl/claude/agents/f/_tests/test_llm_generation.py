@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.f.contract import Contract, Invariant
 from agents.f.intent import Example, Intent
 from agents.f.llm_generation import (
@@ -41,9 +42,7 @@ class MockRuntime(Runtime):
     response: str = ""
     call_count: int = 0
 
-    async def execute(
-        self, agent: LLMAgent[Any, Any], input_val: Any
-    ) -> AgentResult[Any]:
+    async def execute(self, agent: LLMAgent[Any, Any], input_val: Any) -> AgentResult[Any]:
         """Mock execute that returns pre-configured response."""
         self.call_count += 1
         output = agent.parse_response(self.response)
@@ -146,9 +145,7 @@ def test_code_generator_includes_previous_failures() -> None:
     ]
 
     generator = CodeGeneratorAgent()
-    request = GenerationRequest(
-        intent=intent, contract=contract, previous_failures=failures
-    )
+    request = GenerationRequest(intent=intent, contract=contract, previous_failures=failures)
     context = generator.build_prompt(request)
 
     user_message = context.messages[0]["content"]
@@ -281,9 +278,7 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
                 "class TestAgent:\n    def invoke(self, x: str) -> str:\n        return x",
             ]
 
-        async def execute(
-            self, agent: LLMAgent[Any, Any], input_val: Any
-        ) -> AgentResult[Any]:
+        async def execute(self, agent: LLMAgent[Any, Any], input_val: Any) -> AgentResult[Any]:
             response = self.responses[self.call_count]
             self.call_count += 1
             output = agent.parse_response(response)
@@ -294,9 +289,7 @@ async def test_generate_prototype_async_iterates_on_failure() -> None:
                 usage={},
             )
 
-        async def raw_completion(
-            self, context: AgentContext
-        ) -> tuple[str, dict[str, Any]]:
+        async def raw_completion(self, context: AgentContext) -> tuple[str, dict[str, Any]]:
             """Low-level completion call (not used in these tests)."""
             response = (
                 self.responses[self.call_count]
@@ -368,16 +361,12 @@ async def test_generate_code_with_llm_with_failures() -> None:
     intent = Intent(purpose="Test", behavior=["Test"])
     contract = Contract(agent_name="TestAgent", input_type="str", output_type="str")
 
-    mock_response = (
-        "class TestAgent:\n    def invoke(self, x: str) -> str:\n        return x"
-    )
+    mock_response = "class TestAgent:\n    def invoke(self, x: str) -> str:\n        return x"
     runtime = MockRuntime(response=mock_response)
 
     failures = ["Attempt 1:", "[parse] Syntax error"]
 
-    code = await generate_code_with_llm(
-        intent, contract, runtime, previous_failures=failures
-    )
+    code = await generate_code_with_llm(intent, contract, runtime, previous_failures=failures)
 
     # Verify code was generated
     assert "class TestAgent:" in code

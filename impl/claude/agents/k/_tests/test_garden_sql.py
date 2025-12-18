@@ -20,6 +20,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from agents.k.garden import (
     EntryType,
     GardenEntry,
@@ -85,24 +86,14 @@ class MockConnection:
         if "SELECT" in query and "COUNT" in query:
             # Stats query
             total = len(self._data)
-            preferences = sum(
-                1 for r in self._data.values() if r["entry_type"] == "preference"
-            )
-            patterns = sum(
-                1 for r in self._data.values() if r["entry_type"] == "pattern"
-            )
+            preferences = sum(1 for r in self._data.values() if r["entry_type"] == "preference")
+            patterns = sum(1 for r in self._data.values() if r["entry_type"] == "pattern")
             seeds = sum(1 for r in self._data.values() if r["lifecycle"] == "seed")
-            saplings = sum(
-                1 for r in self._data.values() if r["lifecycle"] == "sapling"
-            )
+            saplings = sum(1 for r in self._data.values() if r["lifecycle"] == "sapling")
             trees = sum(1 for r in self._data.values() if r["lifecycle"] == "tree")
             flowers = sum(1 for r in self._data.values() if r["lifecycle"] == "flower")
             compost = sum(1 for r in self._data.values() if r["lifecycle"] == "compost")
-            avg_conf = (
-                sum(r["confidence"] for r in self._data.values()) / total
-                if total > 0
-                else 0
-            )
+            avg_conf = sum(r["confidence"] for r in self._data.values()) / total if total > 0 else 0
 
             return {
                 "total": total,
@@ -255,9 +246,7 @@ class TestSQLPersonaGardenPlanting:
         assert entry.eigenvector_affinities == affinities
 
     @pytest.mark.asyncio
-    async def test_plant_lifecycle_by_confidence(
-        self, sql_garden: SQLPersonaGarden
-    ) -> None:
+    async def test_plant_lifecycle_by_confidence(self, sql_garden: SQLPersonaGarden) -> None:
         """Test lifecycle is set based on confidence."""
         seed = await sql_garden.plant(
             content="Low confidence",
@@ -482,9 +471,7 @@ class TestSQLPersonaGardenAPICompatibility:
         assert hasattr(sql_garden, "format_entry")
 
     @pytest.mark.asyncio
-    async def test_has_hypnagogia_integration(
-        self, sql_garden: SQLPersonaGarden
-    ) -> None:
+    async def test_has_hypnagogia_integration(self, sql_garden: SQLPersonaGarden) -> None:
         """Test that hypnagogia integration exists."""
         assert hasattr(sql_garden, "sync_from_hypnagogia")
         assert hasattr(sql_garden, "auto_plant_from_dialogue")
@@ -514,9 +501,7 @@ class TestSQLPersonaGardenCDC:
     """Tests for CDC/outbox integration conceptually."""
 
     @pytest.mark.asyncio
-    async def test_plant_would_trigger_outbox(
-        self, sql_garden: SQLPersonaGarden
-    ) -> None:
+    async def test_plant_would_trigger_outbox(self, sql_garden: SQLPersonaGarden) -> None:
         """
         Test that planting would trigger outbox in real DB.
 
@@ -533,9 +518,7 @@ class TestSQLPersonaGardenCDC:
         assert entry.content == "Concise style"
 
     @pytest.mark.asyncio
-    async def test_entry_has_required_fields_for_cdc(
-        self, sql_garden: SQLPersonaGarden
-    ) -> None:
+    async def test_entry_has_required_fields_for_cdc(self, sql_garden: SQLPersonaGarden) -> None:
         """Test entry has fields needed for CDC sync."""
         entry = await sql_garden.plant_pattern("Test pattern")
 

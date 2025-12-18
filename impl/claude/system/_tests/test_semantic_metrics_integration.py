@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import pytest
 
-from agents.flux.synapse import CDCLagTracker
 from agents.flux.semantic_metrics import (
     DurabilitySignal,
     HealthLevel,
@@ -26,9 +25,9 @@ from agents.flux.semantic_metrics import (
     SemanticMetricsCollector,
     TriadHealth,
 )
+from agents.flux.synapse import CDCLagTracker
 
 from .conftest import TriadFixture
-
 
 # ===========================================================================
 # DurabilitySignal Integration
@@ -111,9 +110,7 @@ class TestResonanceCoherencyIntegration:
         assert signal.coherency_with_truth > 0.9
 
     @pytest.mark.asyncio
-    async def test_coherency_degrades_with_pending_events(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_coherency_degrades_with_pending_events(self, triad: TriadFixture) -> None:
         """Pending events indicate coherency lag."""
         # Insert but don't process
         await triad.postgres.insert("memories", {"content": "Pending data"})
@@ -163,9 +160,9 @@ class TestResonanceCoherencyIntegration:
             tracker = CDCLagTracker()
             tracker.record(float(lag_ms))
             signal = ResonanceSignal.from_synapse_lag(tracker, pulse)
-            assert signal.coherency_with_truth == pytest.approx(
-                expected_coherency, abs=0.01
-            ), f"Failed for lag={lag_ms}"
+            assert signal.coherency_with_truth == pytest.approx(expected_coherency, abs=0.01), (
+                f"Failed for lag={lag_ms}"
+            )
 
 
 # ===========================================================================
@@ -284,9 +281,7 @@ class TestCollectorIntegration:
     """Validate SemanticMetricsCollector integration with CDC."""
 
     @pytest.mark.asyncio
-    async def test_collector_with_cdc_lag_tracker(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_collector_with_cdc_lag_tracker(self, triad: TriadFixture) -> None:
         """Collector integrates with CDCLagTracker from Synapse."""
         collector = SemanticMetricsCollector(cdc_lag_tracker=triad.lag_tracker)
 
@@ -393,9 +388,7 @@ class TestStressScenarios:
     """Tests for stress scenarios and recovery."""
 
     @pytest.mark.asyncio
-    async def test_health_recovery_after_processing_backlog(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_health_recovery_after_processing_backlog(self, triad: TriadFixture) -> None:
         """Health improves after processing pending events."""
         # Simulate backlog with high lag
         for _ in range(10):

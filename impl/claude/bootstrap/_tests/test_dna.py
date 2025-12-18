@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from protocols.config.dna import (
     BOUNDED_DEPTH,
     # Standard constraints

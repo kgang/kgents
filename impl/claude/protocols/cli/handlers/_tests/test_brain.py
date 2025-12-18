@@ -22,6 +22,7 @@ import sys
 from typing import Generator
 
 import pytest
+
 from protocols.cli.handlers.brain import (
     _reset_brain,
     cmd_brain,
@@ -169,9 +170,7 @@ class TestBrainImport:
 
     def test_import_nonexistent_path(self) -> None:
         """Import with nonexistent path shows error."""
-        result = cmd_brain(
-            ["import", "--source", "obsidian", "--path", "/nonexistent/path"]
-        )
+        result = cmd_brain(["import", "--source", "obsidian", "--path", "/nonexistent/path"])
         assert result == 1
 
     def test_import_empty_vault(self, tmp_path: str) -> None:
@@ -191,9 +190,7 @@ class TestBrainImport:
         # Create a test file
         (path / "test.md").write_text("# Test\n\nContent")
 
-        result = cmd_brain(
-            ["import", "--source", "obsidian", "--path", str(path), "--dry-run"]
-        )
+        result = cmd_brain(["import", "--source", "obsidian", "--path", str(path), "--dry-run"])
         assert result == 0
 
     def test_import_with_files(self, tmp_path: str) -> None:
@@ -215,9 +212,7 @@ class TestBrainImport:
         path = Path(tmp_path)
         (path / "test.md").write_text("# Test\n\nContent")
 
-        result = cmd_brain(
-            ["import", "--source", "obsidian", "--path", str(path), "--json"]
-        )
+        result = cmd_brain(["import", "--source", "obsidian", "--path", str(path), "--json"])
         assert result == 0
 
     def test_import_dry_run_json(self, tmp_path: str) -> None:

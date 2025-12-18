@@ -9,9 +9,9 @@ from __future__ import annotations
 import pytest
 
 from agents.infra.layout import (
+    SEMANTIC_LAYERS,
     LayoutConfig,
     LayoutStrategy,
-    SEMANTIC_LAYERS,
     apply_layout,
     calculate_semantic_layout,
     get_layer,
@@ -22,7 +22,6 @@ from agents.infra.models import (
     InfraEntity,
     InfraEntityKind,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -203,15 +202,14 @@ class TestVerticalHierarchy:
         calculate_semantic_layout(sample_entities, sample_connections)
 
         service = next(
-            e for e in sample_entities
+            e
+            for e in sample_entities
             if e.kind == InfraEntityKind.SERVICE and e.namespace == "kgents-triad"
         )
-        deployment = next(
-            e for e in sample_entities
-            if e.kind == InfraEntityKind.DEPLOYMENT
-        )
+        deployment = next(e for e in sample_entities if e.kind == InfraEntityKind.DEPLOYMENT)
         pod = next(
-            e for e in sample_entities
+            e
+            for e in sample_entities
             if e.kind == InfraEntityKind.POD and e.namespace == "kgents-triad"
         )
 

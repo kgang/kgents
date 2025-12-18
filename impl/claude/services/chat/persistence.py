@@ -19,7 +19,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from agents.d import Datum, DgentRouter, Backend
+from agents.d import Backend, Datum, DgentRouter
 
 if TYPE_CHECKING:
     from .session import ChatSession, Turn
@@ -563,9 +563,7 @@ class MemoryInjector:
             content_score = 0.0
             for turn in session.turns:
                 turn_text = (
-                    turn.get("user_message", "")
-                    + " "
-                    + turn.get("assistant_response", "")
+                    turn.get("user_message", "") + " " + turn.get("assistant_response", "")
                 ).lower()
 
                 # Word overlap

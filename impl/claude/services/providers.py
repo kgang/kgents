@@ -31,6 +31,8 @@ from typing import TYPE_CHECKING
 from protocols.agentese.container import get_container
 
 if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
     from agents.d import DgentProtocol, TableAdapter
     from models.brain import Crystal
     from services.atelier import AtelierPersistence
@@ -41,7 +43,7 @@ if TYPE_CHECKING:
     from services.gestalt import GestaltPersistence
     from services.park import ParkPersistence
     from services.town import TownPersistence
-    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from services.town.coalition_service import CoalitionService
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +143,18 @@ async def get_park_persistence() -> "ParkPersistence":
     return await get_service("park_persistence")
 
 
+async def get_coalition_service() -> "CoalitionService":
+    """
+    Get the CoalitionService for coalition detection and reputation.
+
+    This is separate from CoalitionPersistence - it's the in-memory
+    service used by CoalitionNode for detection algorithms.
+    """
+    from services.town.coalition_service import CoalitionService
+
+    return CoalitionService()
+
+
 async def get_chat_persistence() -> "ChatPersistence":
     """Get the ChatPersistence service."""
     from services.chat import get_persistence
@@ -181,12 +195,13 @@ async def setup_providers() -> None:
     container.register("gardener_persistence", get_gardener_persistence, singleton=True)
     container.register("gestalt_persistence", get_gestalt_persistence, singleton=True)
     container.register("atelier_persistence", get_atelier_persistence, singleton=True)
-    container.register(
-        "coalition_persistence", get_coalition_persistence, singleton=True
-    )
+    container.register("coalition_persistence", get_coalition_persistence, singleton=True)
     container.register("park_persistence", get_park_persistence, singleton=True)
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     container.register("chat_factory", get_chat_factory, singleton=True)
+
+    # Town sub-services (for CoalitionNode, WorkshopNode, etc.)
+    container.register("coalition_service", get_coalition_service, singleton=True)
 
     logger.info("All 8 Crown Jewel persistence services registered")
 
@@ -283,4 +298,6 @@ __all__ = [
     # Chat Crown Jewel
     "get_chat_persistence",
     "get_chat_factory",
+    # Town sub-services
+    "get_coalition_service",
 ]

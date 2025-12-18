@@ -3,6 +3,7 @@ Tests for license tier definitions and configurations.
 """
 
 import pytest
+
 from protocols.licensing.tiers import (
     TIER_CONFIGS,
     LicenseTier,

@@ -14,6 +14,7 @@ from collections.abc import AsyncGenerator, Generator
 from pathlib import Path
 
 import pytest
+
 from agents.f.contract import Contract
 from agents.f.forge_with_search import (
     ForgeDecision,
@@ -114,10 +115,7 @@ async def test_search_before_forge_exact_match(populated_registry: Registry) -> 
     assert len(result.similar_artifacts) > 0
     assert any(r.entry.name == "PaperSummarizer" for r in result.similar_artifacts)
     assert "PaperSummarizer" in result.recommendation
-    assert (
-        "reusing" in result.recommendation.lower()
-        or "similar" in result.recommendation.lower()
-    )
+    assert "reusing" in result.recommendation.lower() or "similar" in result.recommendation.lower()
 
 
 # ============================================================================
@@ -158,10 +156,7 @@ async def test_forge_with_registration_new_artifact(temp_registry: Registry) -> 
 
     # Check forge result
     assert contract.agent_name == "JSONValidator"
-    assert (
-        "JSON" in contract.semantic_intent
-        or "validate" in contract.semantic_intent.lower()
-    )
+    assert "JSON" in contract.semantic_intent or "validate" in contract.semantic_intent.lower()
 
     # Check search result (should be FORGE_NEW since catalog was empty)
     assert search_result.decision == ForgeDecision.FORGE_NEW
@@ -193,9 +188,7 @@ async def test_forge_with_registration_duplicate_detection(
 
     # Should detect similarity to PaperSummarizer (score ~0.4 from keywords + description)
     assert len(search_result.similar_artifacts) > 0
-    assert any(
-        r.entry.name == "PaperSummarizer" for r in search_result.similar_artifacts
-    )
+    assert any(r.entry.name == "PaperSummarizer" for r in search_result.similar_artifacts)
 
     # Contract should still be created (decision is a recommendation, not blocker)
     assert contract.agent_name == "ResearchSummarizer"
@@ -344,16 +337,11 @@ async def test_curated_principle_duplicate_prevention(
 
     # Should find existing WeatherAgent (score ~0.2 from description)
     assert len(result.similar_artifacts) > 0
-    weather_matches = [
-        r for r in result.similar_artifacts if r.entry.name == "WeatherAgent"
-    ]
+    weather_matches = [r for r in result.similar_artifacts if r.entry.name == "WeatherAgent"]
     assert len(weather_matches) > 0
 
     # Recommendation should encourage reuse (Curated)
-    assert (
-        "reuse" in result.recommendation.lower()
-        or "similar" in result.recommendation.lower()
-    )
+    assert "reuse" in result.recommendation.lower() or "similar" in result.recommendation.lower()
 
 
 # ============================================================================
@@ -407,9 +395,7 @@ async def test_integration_with_intent_parser(temp_registry: Registry) -> None:
     # Check that intent parsing worked
     assert contract.raw_intent is not None
     assert len(contract.raw_intent.dependencies) > 0
-    assert any(
-        dep.type == DependencyType.REST_API for dep in contract.raw_intent.dependencies
-    )
+    assert any(dep.type == DependencyType.REST_API for dep in contract.raw_intent.dependencies)
 
     # Check that invariants were extracted
     assert len(contract.invariants) > 0

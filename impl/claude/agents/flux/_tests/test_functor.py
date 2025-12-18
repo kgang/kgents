@@ -1,6 +1,7 @@
 """Tests for the Flux Functor."""
 
 import pytest
+
 from agents.flux import Flux, FluxAgent, FluxConfig, FluxLifter, is_flux
 from agents.poly.types import Agent
 

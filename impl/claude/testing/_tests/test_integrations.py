@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
 from testing.analyst import CausalAnalyst, TestWitness
 from testing.cortex import Cortex
 from testing.integrations import (
@@ -141,12 +142,8 @@ class TestPersistentWitnessStore:
         store = PersistentWitnessStore(str(tmp_path / "witnesses.json"))
 
         # Record some witnesses
-        store.record(
-            TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass")
-        )
-        store.record(
-            TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail")
-        )
+        store.record(TestWitness(test_id="test_1", agent_path=[], input_data="a", outcome="pass"))
+        store.record(TestWitness(test_id="test_2", agent_path=[], input_data="b", outcome="fail"))
 
         # Query
         results = await store.query(test_id="test_1")

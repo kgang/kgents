@@ -16,6 +16,7 @@ pytest.importorskip("fastapi")
 from uuid import UUID
 
 from fastapi.testclient import TestClient
+
 from protocols.api.app import create_app
 from protocols.api.auth import ApiKeyData, clear_api_keys, register_api_key
 from protocols.api.metering import clear_usage_stats

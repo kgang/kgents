@@ -36,7 +36,6 @@ from typing import Callable
 
 from .memory import Lifecycle, Memory
 
-
 # === Transition Events ===
 
 

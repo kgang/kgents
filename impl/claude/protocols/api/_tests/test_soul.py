@@ -15,6 +15,7 @@ import pytest
 pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
+
 from protocols.api.app import create_app
 from protocols.api.auth import ApiKeyData, clear_api_keys, register_api_key
 from protocols.api.metering import clear_usage_stats
@@ -121,9 +122,7 @@ class TestGovernanceEndpoint:
 
         assert response.status_code == 401  # Auth middleware returns 401 for missing API key
 
-    def test_governance_invalid_api_key(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_governance_invalid_api_key(self, client: TestClient, setup_test_keys: None) -> None:
         """Test governance with invalid API key."""
         response = client.post(
             "/v1/soul/governance",
@@ -153,9 +152,7 @@ class TestGovernanceEndpoint:
         assert response.status_code == 403
         assert "not available" in response.json()["detail"].lower()
 
-    def test_governance_with_context(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_governance_with_context(self, client: TestClient, setup_test_keys: None) -> None:
         """Test governance with rich context."""
         response = client.post(
             "/v1/soul/governance",
@@ -202,9 +199,7 @@ class TestDialogueEndpoint:
         assert data["mode"] == "reflect"
         assert len(data["response"]) > 0
 
-    def test_dialogue_all_modes(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_dialogue_all_modes(self, client: TestClient, setup_test_keys: None) -> None:
         """Test dialogue with all modes."""
         modes = ["reflect", "advise", "challenge", "explore"]
 
@@ -222,9 +217,7 @@ class TestDialogueEndpoint:
             data = response.json()
             assert data["mode"] == mode
 
-    def test_dialogue_invalid_mode(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_dialogue_invalid_mode(self, client: TestClient, setup_test_keys: None) -> None:
         """Test dialogue with invalid mode."""
         response = client.post(
             "/v1/soul/dialogue",
@@ -238,9 +231,7 @@ class TestDialogueEndpoint:
         assert response.status_code == 400
         assert "mode" in response.json()["detail"].lower()
 
-    def test_dialogue_budget_tiers(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_dialogue_budget_tiers(self, client: TestClient, setup_test_keys: None) -> None:
         """Test dialogue with different budget tiers."""
         budgets = ["dormant", "whisper", "dialogue"]
 
@@ -256,9 +247,7 @@ class TestDialogueEndpoint:
 
             assert response.status_code == 200
 
-    def test_dialogue_invalid_budget(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_dialogue_invalid_budget(self, client: TestClient, setup_test_keys: None) -> None:
         """Test dialogue with invalid budget."""
         response = client.post(
             "/v1/soul/dialogue",
@@ -283,9 +272,7 @@ class TestDialogueEndpoint:
 
         assert response.status_code == 401  # Auth middleware returns 401 for missing API key
 
-    def test_dialogue_tier_restrictions(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_dialogue_tier_restrictions(self, client: TestClient, setup_test_keys: None) -> None:
         """Test tier-based budget restrictions."""
         # FREE tier cannot use dialogue
         response = client.post(
@@ -334,9 +321,7 @@ class TestDialogueEndpoint:
 class TestRateLimiting:
     """Tests for rate limiting."""
 
-    def test_rate_limit_enforcement(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_rate_limit_enforcement(self, client: TestClient, setup_test_keys: None) -> None:
         """Test rate limit is enforced."""
         # FREE tier has limit of 10 requests/day
         # Make 10 successful requests
@@ -364,9 +349,7 @@ class TestRateLimiting:
         assert response.status_code == 429
         assert "rate limit" in response.json()["detail"].lower()
 
-    def test_rate_limit_per_user(
-        self, client: TestClient, setup_test_keys: None
-    ) -> None:
+    def test_rate_limit_per_user(self, client: TestClient, setup_test_keys: None) -> None:
         """Test rate limits are per-user."""
         # User 1 hits limit
         for _ in range(10):

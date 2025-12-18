@@ -13,6 +13,7 @@ Tests cover:
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese.metabolism import MetabolicEngine, create_metabolic_engine
 
 

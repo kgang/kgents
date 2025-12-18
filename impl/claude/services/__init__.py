@@ -37,16 +37,6 @@ from .brain import (
     SearchResult,
 )
 
-# Town Crown Jewel
-from .town import (
-    CitizenView,
-    ConversationView,
-    RelationshipView,
-    TownPersistence,
-    TownStatus,
-    TurnView,
-)
-
 # Gardener Crown Jewel
 from .gardener import (
     ConnectionView,
@@ -55,6 +45,16 @@ from .gardener import (
     IdeaView,
     PlotView,
     SessionView,
+)
+
+# Town Crown Jewel
+from .town import (
+    CitizenView,
+    ConversationView,
+    RelationshipView,
+    TownPersistence,
+    TownStatus,
+    TurnView,
 )
 
 __all__ = [

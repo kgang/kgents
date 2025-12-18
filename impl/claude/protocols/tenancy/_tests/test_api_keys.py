@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
+
 from protocols.tenancy.api_keys import (
     ApiKeyService,
     extract_key_prefix,

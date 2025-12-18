@@ -225,8 +225,7 @@ class ComposedPath:
         Returns:
             Final result after all paths executed
         """
-        from .laws import emit_law_check_event
-        from .laws import enforce_minimal_output as check_output
+        from .laws import emit_law_check_event, enforce_minimal_output as check_output
 
         # Track B: Emit law_check event for the composition
         if self._emit_law_check and len(self.paths) >= 2:
@@ -528,9 +527,7 @@ class Logos:
         """
         return await self.invoke(path, observer, **kwargs)
 
-    def resolve(
-        self, path: str, observer: "Umwelt[Any, Any] | None" = None
-    ) -> LogosNode:
+    def resolve(self, path: str, observer: "Umwelt[Any, Any] | None" = None) -> LogosNode:
         """
         Resolve an AGENTESE path to a LogosNode.
 
@@ -682,9 +679,7 @@ class Logos:
 
         # Apply telemetry if enabled (Phase 6: OpenTelemetry integration)
         if self._telemetry_enabled:
-            result = await self._invoke_with_telemetry(
-                node, aspect, observer, path, **kwargs
-            )
+            result = await self._invoke_with_telemetry(node, aspect, observer, path, **kwargs)
         else:
             result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
 
@@ -810,30 +805,46 @@ class Logos:
 
         Resolution order (AD-009 Metaphysical Fullstack):
         1. Check NodeRegistry for @node decorated classes (services/)
+           - Check most specific path first (e.g., self.forest.session)
+           - Fall back to parent path (e.g., self.forest)
         2. Use context-specific resolvers (agents/)
         3. Check SimpleRegistry (legacy)
         4. JIT generate from spec files
         """
-        handle = f"{context}.{holon}"
+        from .registry import get_registry
+
+        node_registry = get_registry()
 
         # AD-009: Check NodeRegistry first (@node decorated service nodes)
         # This enables the Metaphysical Fullstack pattern where services
         # auto-register their AGENTESE nodes
-        from .registry import get_registry
+        #
+        # IMPORTANT: Check most specific path first to support nested nodes
+        # e.g., self.forest.session should match before self.forest
+        handles_to_check = []
 
-        node_registry = get_registry()
-        if node_registry.has(handle):
-            # Get class and instantiate (sync - will be cached by registry)
-            # Note: For async resolution with DI, use gateway._invoke_path()
-            node_cls = node_registry.get(handle)
-            if node_cls is not None:
-                try:
-                    # Try to instantiate without dependencies
-                    # For full DI, use ServiceContainer
-                    return cast(LogosNode, node_cls())
-                except TypeError:
-                    # Node requires dependencies - will be handled by gateway
-                    pass
+        # Build list of handles from most specific to least specific
+        # For rest=["session"], we check: self.forest.session, then self.forest
+        parts = [context, holon] + rest
+        for i in range(len(parts), 1, -1):
+            handles_to_check.append(".".join(parts[:i]))
+
+        for handle in handles_to_check:
+            if node_registry.has(handle):
+                # Get class and instantiate (sync - will be cached by registry)
+                # Note: For async resolution with DI, use gateway._invoke_path()
+                node_cls = node_registry.get(handle)
+                if node_cls is not None:
+                    try:
+                        # Try to instantiate without dependencies
+                        # For full DI, use ServiceContainer
+                        return cast(LogosNode, node_cls())
+                    except TypeError:
+                        # Node requires dependencies - will be handled by gateway
+                        pass
+
+        # Use the base handle for remaining resolution
+        handle = f"{context}.{holon}"
 
         # Phase 2: Use context-specific resolvers
         if context in self._context_resolvers:
@@ -960,8 +971,7 @@ class Logos:
 
         # 'define' requires special permission (architect, developer, or explicit capability)
         can_define = (
-            meta.archetype in ("architect", "developer", "admin")
-            or "define" in meta.capabilities
+            meta.archetype in ("architect", "developer", "admin") or "define" in meta.capabilities
         )
         if not can_define:
             raise AffordanceError(

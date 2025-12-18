@@ -7,6 +7,7 @@ Verifies the SENSE → ACT → REFLECT evolution cycle and bounded eigenvector d
 from datetime import datetime
 
 import pytest
+
 from agents.town.citizen import Eigenvectors
 from agents.town.evolving import (
     ADAPTATION,
@@ -131,9 +132,7 @@ class TestSensePhase:
         assert 0.0 <= sensed.relevance <= 1.0
 
     @pytest.mark.asyncio
-    async def test_sense_interprets_through_cosmotechnics(
-        self, citizen: EvolvingCitizen
-    ) -> None:
+    async def test_sense_interprets_through_cosmotechnics(self, citizen: EvolvingCitizen) -> None:
         """Test sense interprets through cosmotechnics."""
         obs = Observation(content="New flower bloomed", source="Garden")
         sensed = await citizen.sense(obs)
@@ -223,9 +222,7 @@ class TestReflectPhase:
         reflection = await citizen.integrate_reflection(result)
         # Successful action should propose some deltas
         if result.success:
-            assert (
-                len(reflection.eigenvector_deltas) > 0 or True
-            )  # May be 0 for observe
+            assert len(reflection.eigenvector_deltas) > 0 or True  # May be 0 for observe
 
 
 class TestBoundedDrift:
@@ -282,9 +279,7 @@ class TestFullEvolutionCycle:
         assert result is citizen
 
     @pytest.mark.asyncio
-    async def test_evolve_updates_last_evolution(
-        self, citizen: EvolvingCitizen
-    ) -> None:
+    async def test_evolve_updates_last_evolution(self, citizen: EvolvingCitizen) -> None:
         """Test evolve updates last_evolution timestamp."""
         before = citizen.growth_state.last_evolution
         obs = Observation(content="Hello", source="World")
@@ -361,9 +356,7 @@ class TestGraphMemoryIntegration:
         assert citizen.graph_memory.size == 1
 
     @pytest.mark.asyncio
-    async def test_reflect_stores_in_graph_memory(
-        self, citizen: EvolvingCitizen
-    ) -> None:
+    async def test_reflect_stores_in_graph_memory(self, citizen: EvolvingCitizen) -> None:
         """Test reflect stores insight in graph memory."""
         obs = Observation(content="Hello", source="World")
         await citizen.evolve(obs)

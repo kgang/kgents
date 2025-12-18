@@ -21,8 +21,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from hypothesis import given, settings
-from hypothesis import strategies as st
+from hypothesis import given, settings, strategies as st
+
 from protocols.agentese.contexts.gardener import (
     COMMAND_TO_PATH,
     GARDENER_ROLE_AFFORDANCES,
@@ -291,21 +291,15 @@ class TestGardenerNodeRouting:
     """Tests for GardenerNode routing functionality."""
 
     @pytest.mark.asyncio
-    async def test_exact_match_command(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_exact_match_command(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Exact command match returns high confidence."""
-        result = await gardener_node._invoke_aspect(
-            "route", mock_umwelt, input="forest"
-        )
+        result = await gardener_node._invoke_aspect("route", mock_umwelt, input="forest")
         assert result.metadata["resolved_path"] == "self.forest.manifest"
         assert result.metadata["confidence"] == 1.0
         assert result.metadata["method"] == "exact"
 
     @pytest.mark.asyncio
-    async def test_exact_match_agentese_path(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_exact_match_agentese_path(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Direct AGENTESE path is recognized."""
         result = await gardener_node._invoke_aspect(
             "route", mock_umwelt, input="self.soul.dialogue"
@@ -325,9 +319,7 @@ class TestGardenerNodeRouting:
         assert result.metadata["confidence"] > 0.5
 
     @pytest.mark.asyncio
-    async def test_fallback_to_propose(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_fallback_to_propose(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Unknown input falls back to propose."""
         result = await gardener_node._invoke_aspect(
             "route", mock_umwelt, input="xyzzy quantum flux capacitor"
@@ -337,9 +329,7 @@ class TestGardenerNodeRouting:
         assert result.metadata["confidence"] < 0.5
 
     @pytest.mark.asyncio
-    async def test_empty_input_returns_usage(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_empty_input_returns_usage(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Empty input returns usage instructions."""
         result = await gardener_node._invoke_aspect("route", mock_umwelt, input="")
         assert "error" in result.metadata
@@ -374,9 +364,7 @@ class TestGardenerNodeSessions:
     ):
         """Sessions list shows all sessions."""
         # Use sessions.manifest to list all sessions (returns dict)
-        result = await gardener_with_sessions._invoke_aspect(
-            "sessions.manifest", mock_umwelt
-        )
+        result = await gardener_with_sessions._invoke_aspect("sessions.manifest", mock_umwelt)
         # Result is a dict with session info
         assert isinstance(result, dict)
 
@@ -386,17 +374,13 @@ class TestGardenerNodeSessions:
     ):
         """Session manifest returns dict with session info."""
         # session.manifest returns dict (poly version), not BasicRendering
-        result = await gardener_with_sessions._invoke_aspect(
-            "session.manifest", mock_umwelt
-        )
+        result = await gardener_with_sessions._invoke_aspect("session.manifest", mock_umwelt)
         # Result is a dict with status, may or may not have active session
         assert isinstance(result, dict)
         assert "status" in result
 
     @pytest.mark.asyncio
-    async def test_session_resume(
-        self, gardener_with_sessions: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_session_resume(self, gardener_with_sessions: GardenerNode, mock_umwelt: Any):
         """Session resume works."""
         result = await gardener_with_sessions._invoke_aspect(
             "session.resume", mock_umwelt, id="test-001"
@@ -405,35 +389,25 @@ class TestGardenerNodeSessions:
         assert "Resumed" in result.summary
 
     @pytest.mark.asyncio
-    async def test_session_advance(
-        self, gardener_with_sessions: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_session_advance(self, gardener_with_sessions: GardenerNode, mock_umwelt: Any):
         """Session advance returns dict with phase info."""
         # session.advance returns dict (poly version), not BasicRendering
-        result = await gardener_with_sessions._invoke_aspect(
-            "session.advance", mock_umwelt
-        )
+        result = await gardener_with_sessions._invoke_aspect("session.advance", mock_umwelt)
         # Result is a dict with status and phase info
         assert isinstance(result, dict)
         # May be error if no active session, or success with phase info
         assert "status" in result
 
     @pytest.mark.asyncio
-    async def test_session_resume_missing_id(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_session_resume_missing_id(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Session resume without ID returns error."""
         result = await gardener_node._invoke_aspect("session.resume", mock_umwelt)
         assert "error" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_session_not_found(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_session_not_found(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Session not found returns error."""
-        result = await gardener_node._invoke_aspect(
-            "session.resume", mock_umwelt, id="nonexistent"
-        )
+        result = await gardener_node._invoke_aspect("session.resume", mock_umwelt, id="nonexistent")
         assert "error" in result.metadata
 
 
@@ -446,9 +420,7 @@ class TestGardenerNodePropose:
     """Tests for GardenerNode propose functionality."""
 
     @pytest.mark.asyncio
-    async def test_propose_without_sessions(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_propose_without_sessions(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Propose without sessions returns default suggestions."""
         result = await gardener_node._invoke_aspect("propose", mock_umwelt)
         assert result.metadata["suggestion_count"] > 0
@@ -476,9 +448,7 @@ class TestGardenerNodeManifest:
     """Tests for GardenerNode manifest."""
 
     @pytest.mark.asyncio
-    async def test_manifest_shows_status(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_manifest_shows_status(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Manifest shows gardener status."""
         result = await gardener_node.manifest(mock_umwelt)
         assert "GARDENER STATUS" in result.content
@@ -525,9 +495,7 @@ class TestGardenerIntegration:
     """Integration-style tests for complete workflows."""
 
     @pytest.mark.asyncio
-    async def test_full_session_workflow(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_full_session_workflow(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Test session creation returns proper metadata."""
         # Create session (returns BasicRendering with metadata)
         create_result = await gardener_node._invoke_aspect(
@@ -540,17 +508,13 @@ class TestGardenerIntegration:
         assert create_result.metadata["current_phase"] == "PLAN"
 
         # session.advance returns dict (poly version), test it separately
-        advance_result = await gardener_node._invoke_aspect(
-            "session.advance", mock_umwelt
-        )
+        advance_result = await gardener_node._invoke_aspect("session.advance", mock_umwelt)
         # Advance returns dict with status
         assert isinstance(advance_result, dict)
         assert "status" in advance_result
 
     @pytest.mark.asyncio
-    async def test_route_then_propose_workflow(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_route_then_propose_workflow(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Test route fallback leading to propose."""
         # Try to route gibberish
         route_result = await gardener_node._invoke_aspect(
@@ -627,13 +591,9 @@ class TestEdgeCases:
     """Tests for edge cases and boundary conditions."""
 
     @pytest.mark.asyncio
-    async def test_whitespace_only_input(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_whitespace_only_input(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Whitespace-only input returns appropriate error."""
-        result = await gardener_node._invoke_aspect(
-            "route", mock_umwelt, input="   \t\n  "
-        )
+        result = await gardener_node._invoke_aspect("route", mock_umwelt, input="   \t\n  ")
         assert "error" in result.metadata
         assert result.metadata["error"] == "empty_input"
 
@@ -641,9 +601,7 @@ class TestEdgeCases:
     async def test_very_long_input(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Very long input is handled gracefully."""
         long_input = "forest " * 1000  # 7000 chars
-        result = await gardener_node._invoke_aspect(
-            "route", mock_umwelt, input=long_input
-        )
+        result = await gardener_node._invoke_aspect("route", mock_umwelt, input=long_input)
         # Should not crash, may fallback
         assert "resolved_path" in result.metadata or "error" in result.metadata
 
@@ -657,9 +615,7 @@ class TestEdgeCases:
         assert result is not None
 
     @pytest.mark.asyncio
-    async def test_special_characters_input(
-        self, gardener_node: GardenerNode, mock_umwelt: Any
-    ):
+    async def test_special_characters_input(self, gardener_node: GardenerNode, mock_umwelt: Any):
         """Special characters are handled gracefully."""
         result = await gardener_node._invoke_aspect(
             "route", mock_umwelt, input="<script>alert('xss')</script>"
@@ -675,9 +631,7 @@ class TestEdgeCases:
 
     def test_command_with_leading_trailing_spaces(self):
         """Commands with leading/trailing spaces are trimmed."""
-        assert resolve_command_to_path("  forest  ") == resolve_command_to_path(
-            "forest"
-        )
+        assert resolve_command_to_path("  forest  ") == resolve_command_to_path("forest")
         assert resolve_command_to_path("\ttown\n") == resolve_command_to_path("town")
 
 

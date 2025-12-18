@@ -14,6 +14,7 @@ import json
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+
 from protocols.cli.handlers.a_gent import (
     DIALOGUE_AGENTS,
     _handle_dialogue,
@@ -295,9 +296,7 @@ class TestRunCommand:
     async def test_run_abstract_archetype_fails(self) -> None:
         """Running abstract archetype returns helpful error."""
         ctx = MockContext()
-        result = await _handle_run(
-            "Kappa", input_data=None, json_mode=False, ctx=_ctx(ctx)
-        )
+        result = await _handle_run("Kappa", input_data=None, json_mode=False, ctx=_ctx(ctx))
         # Abstract archetypes can't be run directly
         assert result == 1
         output = ctx.outputs[0][0]
@@ -309,9 +308,7 @@ class TestRunCommand:
     async def test_run_nonexistent_returns_error(self) -> None:
         """Run non-existent agent returns error."""
         ctx = MockContext()
-        result = await _handle_run(
-            "NonExistent", input_data=None, json_mode=False, ctx=_ctx(ctx)
-        )
+        result = await _handle_run("NonExistent", input_data=None, json_mode=False, ctx=_ctx(ctx))
         assert result == 1
 
 
@@ -391,9 +388,7 @@ class TestIntegration:
     def test_a_manifest_custom_namespace(self) -> None:
         """'a manifest Kappa --namespace prod' uses custom namespace."""
         ctx = MockContext()
-        result = cmd_a(
-            ["manifest", "Kappa", "--namespace", "prod", "--json"], _ctx(ctx)
-        )
+        result = cmd_a(["manifest", "Kappa", "--namespace", "prod", "--json"], _ctx(ctx))
         assert result == 0
 
         data = json.loads(ctx.outputs[0][0])

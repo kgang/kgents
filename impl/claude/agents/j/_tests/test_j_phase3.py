@@ -14,6 +14,7 @@ from production agents.
 """
 
 import pytest
+
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
@@ -63,9 +64,7 @@ async def test_meta_architect_parser_pattern() -> None:
 
     input_data = ArchitectInput(
         intent="Parse NGINX access logs",
-        context={
-            "sample": '127.0.0.1 - - [01/Jan/2025:12:00:00] "GET /api HTTP/1.1" 200 512'
-        },
+        context={"sample": '127.0.0.1 - - [01/Jan/2025:12:00:00] "GET /api HTTP/1.1" 200 512'},
     )
 
     result = await architect.invoke(input_data)
@@ -139,9 +138,7 @@ async def test_meta_architect_respects_constraints() -> None:
     constraints = ArchitectConstraints(
         entropy_budget=0.5,  # Reduced budget
         max_cyclomatic_complexity=10,
-        allowed_imports=frozenset(
-            {"re", "dataclasses", "typing"}
-        ),  # typing is always added
+        allowed_imports=frozenset({"re", "dataclasses", "typing"}),  # typing is always added
     )
 
     input_data = ArchitectInput(
@@ -519,9 +516,7 @@ async def test_compile_agent_with_constraints() -> None:
     constraints = ArchitectConstraints(
         entropy_budget=0.3,
         max_cyclomatic_complexity=5,
-        allowed_imports=frozenset(
-            {"re", "typing"}
-        ),  # typing is always added for type hints
+        allowed_imports=frozenset({"re", "typing"}),  # typing is always added for type hints
     )
 
     source = await compile_agent(

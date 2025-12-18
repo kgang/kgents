@@ -93,8 +93,9 @@ async def _cmd_start(
 ) -> int:
     """Start agent in dev mode."""
     try:
-        from infra.k8s import ClusterStatus, KindCluster
         from infra.k8s.dev_mode import create_dev_mode
+
+        from infra.k8s import ClusterStatus, KindCluster
     except ImportError as e:
         print(f"Import error: {e}")
         print("Make sure infra.k8s is properly installed")

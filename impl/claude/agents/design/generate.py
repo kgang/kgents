@@ -81,9 +81,7 @@ class ComponentSpec:
         child_strs = [child.to_jsx(depth + 1) for child in self.children]
         children_str = "\n".join(child_strs)
 
-        return (
-            f"{indent}<{self.type}{props_str}>\n{children_str}\n{indent}</{self.type}>"
-        )
+        return f"{indent}<{self.type}{props_str}>\n{children_str}\n{indent}</{self.type}>"
 
 
 def _format_prop(key: str, value: Any) -> str:
@@ -252,12 +250,7 @@ def _generate_layout_compact_split(
 
     This implements the law: split(a, b) ≅ drawer(a, b) at compact
     """
-    return (
-        f"<BottomDrawer\n"
-        f"  main={{<{primary.type} />}}\n"
-        f"  drawer={{<{secondary.type} />}}\n"
-        f"/>"
-    )
+    return f"<BottomDrawer\n  main={{<{primary.type} />}}\n  drawer={{<{secondary.type} />}}\n/>"
 
 
 def _generate_content(
@@ -271,9 +264,7 @@ def _generate_content(
                 raise ValueError("degrade requires 2 children (full, level)")
             full, level = children[0], children[1]
             # The level child is interpreted as content level indicator
-            return (
-                f'<ContentWrapper level="{level.name}"><{full.type} /></ContentWrapper>'
-            )
+            return f'<ContentWrapper level="{level.name}"><{full.type} /></ContentWrapper>'
 
         case "compose":
             child_elements = " ".join(f"<{c.type} />" for c in children)
@@ -292,7 +283,7 @@ def _generate_motion(
     if not children:
         raise ValueError(f"Motion operation '{operation}' requires at least 1 child")
 
-    wrapper = MOTION_COMPONENT_MAP.get(operation, "")
+    MOTION_COMPONENT_MAP.get(operation, "")
 
     match operation:
         case "identity":
@@ -390,9 +381,7 @@ def _generate_generic(
     child_strs = [c.to_jsx(1) for c in children]
     children_str = "\n".join(child_strs)
 
-    return (
-        f'<ComposedElement operation="{operation}">\n{children_str}\n</ComposedElement>'
-    )
+    return f'<ComposedElement operation="{operation}">\n{children_str}\n</ComposedElement>'
 
 
 # =============================================================================
@@ -412,9 +401,7 @@ def generate_split(
 
     At compact density, automatically degrades to drawer.
     """
-    return generate_component(
-        LAYOUT_OPERAD, "split", primary, secondary, density=density
-    )
+    return generate_component(LAYOUT_OPERAD, "split", primary, secondary, density=density)
 
 
 def generate_stack(*children: ComponentSpec) -> str:

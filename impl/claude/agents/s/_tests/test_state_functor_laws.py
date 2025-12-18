@@ -18,6 +18,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import pytest
+
 from agents.poly.types import Agent
 from agents.s import MemoryStateBackend, StateFunctor
 
@@ -240,13 +241,20 @@ class TestCompositionLaw:
         functor = StateFunctor.create(backend=backend)
 
         # (f >> g) >> h
-        fg = lambda x, s: g(*f(x, s))
-        fgh_left = lambda x, s: h(*fg(x, s))
+        def fg(x, s):
+            return g(*f(x, s))
+
+        def fgh_left(x, s):
+            return h(*fg(x, s))
+
         agent_left = functor.lift_logic(fgh_left)
 
         # f >> (g >> h)
-        gh = lambda x, s: h(*g(x, s))
-        fgh_right = lambda x, s: gh(*f(x, s))
+        def gh(x, s):
+            return h(*g(x, s))
+
+        def fgh_right(x, s):
+            return gh(*f(x, s))
 
         backend2 = MemoryStateBackend(initial=0)
         functor2 = StateFunctor.create(backend=backend2)
@@ -346,8 +354,7 @@ class TestStateThreadingInvariants:
 # =============================================================================
 
 try:
-    from hypothesis import given
-    from hypothesis import strategies as st
+    from hypothesis import given, strategies as st
 
     class TestPropertyBasedLaws:
         """Property-based tests for functor laws."""

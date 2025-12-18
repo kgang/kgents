@@ -17,6 +17,7 @@ from tempfile import TemporaryDirectory
 from typing import Any, Callable
 
 import pytest
+
 from testing.accursed_share import (
     Discovery,
     DiscoveryLog,

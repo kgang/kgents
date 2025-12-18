@@ -12,9 +12,9 @@ import time
 from typing import Any
 
 import pytest
+from hypothesis import given, settings, strategies as st
+
 from agents.i.reactive.signal import Computed, Effect, Signal, Snapshot
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 # =============================================================================
 # PROPERTY-BASED TESTS (Hypothesis)
@@ -33,9 +33,7 @@ class TestSignalProperties:
         sig.restore(snap)
         assert sig.value == value
 
-    @given(
-        st.lists(st.integers(min_value=-1000, max_value=1000), min_size=1, max_size=50)
-    )
+    @given(st.lists(st.integers(min_value=-1000, max_value=1000), min_size=1, max_size=50))
     def test_generation_monotonic(self, values: list[int]) -> None:
         """Generation always increases on distinct value changes."""
         sig = Signal.of(values[0])

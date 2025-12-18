@@ -35,12 +35,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Optional
 
 from .types import CatalogEntry
-from .vector_backend import VectorBackend as LgentVectorBackend
-from .vector_backend import VectorSearchResult
+from .vector_backend import VectorBackend as LgentVectorBackend, VectorSearchResult
 
 if TYPE_CHECKING:
-    from agents.v import SearchResult as VgentSearchResult
-    from agents.v import VgentProtocol
+    from agents.v import SearchResult as VgentSearchResult, VgentProtocol
 
 
 @dataclass

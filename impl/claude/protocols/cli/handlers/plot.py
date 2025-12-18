@@ -174,9 +174,7 @@ async def _async_plot(
                         ctx,
                     )
                     return 1
-                return await _handle_link(
-                    subcommand_args[0], subcommand_args[1], json_mode, ctx
-                )
+                return await _handle_link(subcommand_args[0], subcommand_args[1], json_mode, ctx)
             case "discover":
                 return await _handle_discover(json_mode, ctx)
             case _:
@@ -205,23 +203,25 @@ async def _handle_list(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle list subcommand - list all plots."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
 
     plots_data = []
     for name, plot in garden.plots.items():
-        plots_data.append({
-            "name": name,
-            "display_name": plot.display_name,
-            "path": plot.path,
-            "crown_jewel": plot.crown_jewel,
-            "progress": plot.progress,
-            "rigidity": plot.rigidity,
-            "is_active": name == garden.active_plot,
-            "tags": plot.tags,
-        })
+        plots_data.append(
+            {
+                "name": name,
+                "display_name": plot.display_name,
+                "path": plot.path,
+                "crown_jewel": plot.crown_jewel,
+                "progress": plot.progress,
+                "rigidity": plot.rigidity,
+                "is_active": name == garden.active_plot,
+                "tags": plot.tags,
+            }
+        )
 
     result = {
         "plots": plots_data,
@@ -235,9 +235,9 @@ async def _handle_list(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  PLOTS ({len(garden.plots)})",
-            f"",
+            "",
         ]
         for name, plot in garden.plots.items():
             active_marker = " <active>" if name == garden.active_plot else ""
@@ -253,7 +253,7 @@ async def _handle_list(
                 lines.append(f"    Tags: {', '.join(plot.tags)}")
             lines.append("")
 
-        lines.append(f"  Use 'kg plot <name>' for details, 'kg plot focus <name>' to activate.")
+        lines.append("  Use 'kg plot <name>' for details, 'kg plot focus <name>' to activate.")
         lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)
@@ -267,7 +267,7 @@ async def _handle_show(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle show - display specific plot details."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.projections.ascii import project_plot_to_ascii
 
     garden = create_garden(name="kgents")
@@ -331,7 +331,7 @@ async def _handle_create(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle create subcommand - create new plot."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
     from protocols.gardener_logos.plots import create_plot
 
     if not path:
@@ -376,9 +376,9 @@ async def _handle_create(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  PLOT CREATED: {plot.display_name}",
-            f"",
+            "",
             f"  Name:        {normalized}",
             f"  Path:        {path}",
             f"  Rigidity:    {rigidity:.0%}",
@@ -387,9 +387,9 @@ async def _handle_create(
             lines.append(f"  Description: {description}")
         if crown_jewel:
             lines.append(f"  Crown Jewel: {crown_jewel}")
-        lines.append(f"")
+        lines.append("")
         lines.append(f"  Use 'kg plot focus {normalized}' to make it active.")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)
 
@@ -402,7 +402,7 @@ async def _handle_focus(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle focus subcommand - set active plot."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -446,17 +446,17 @@ async def _handle_focus(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  FOCUS: {plot.display_name}",
-            f"",
+            "",
             f"  Path:      {plot.path}",
             f"  Progress:  {_progress_bar(plot.progress, 10)} {plot.progress:.0%}",
         ]
         if old_active:
             lines.append(f"  Previous:  {old_active}")
-        lines.append(f"")
-        lines.append(f"  Subsequent tending operations will target this plot.")
-        lines.append(f"")
+        lines.append("")
+        lines.append("  Subsequent tending operations will target this plot.")
+        lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)
 
@@ -470,7 +470,7 @@ async def _handle_link(
     ctx: "InvocationContext | None",
 ) -> int:
     """Handle link subcommand - link plot to Forest plan."""
-    from protocols.gardener_logos import create_garden, create_crown_jewel_plots
+    from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
     garden = create_garden(name="kgents")
     garden.plots = create_crown_jewel_plots()
@@ -504,13 +504,13 @@ async def _handle_link(
         _emit_output(json.dumps(result, indent=2), result, ctx)
     else:
         lines = [
-            f"",
+            "",
             f"  LINKED: {plot.display_name} -> {plan_path}",
-            f"",
+            "",
         ]
         if old_plan:
             lines.append(f"  Previous plan: {old_plan}")
-        lines.append(f"")
+        lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)
 
@@ -546,17 +546,17 @@ async def _handle_discover(
     else:
         if not discovered:
             lines = [
-                f"",
-                f"  No plots discovered from plans/",
-                f"",
-                f"  Make sure plans/ directory exists and contains .md files.",
-                f"",
+                "",
+                "  No plots discovered from plans/",
+                "",
+                "  Make sure plans/ directory exists and contains .md files.",
+                "",
             ]
         else:
             lines = [
-                f"",
+                "",
                 f"  DISCOVERED PLOTS ({len(discovered)})",
-                f"",
+                "",
             ]
             for plot in discovered:
                 lines.append(f"  {plot.display_name}")
@@ -564,7 +564,7 @@ async def _handle_discover(
                 lines.append(f"    Plan: {plot.plan_path}")
                 lines.append("")
 
-            lines.append(f"  Use 'kg plot create <name>' to add plots to your garden.")
+            lines.append("  Use 'kg plot create <name>' to add plots to your garden.")
             lines.append("")
 
         _emit_output("\n".join(lines), result, ctx)

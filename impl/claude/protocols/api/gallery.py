@@ -23,9 +23,9 @@ try:
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
-    APIRouter = None  # type: ignore[misc, assignment]
-    HTTPException = None  # type: ignore[misc, assignment]
-    Query = None  # type: ignore[misc, assignment]
+    APIRouter = None
+    HTTPException = None
+    Query = None
 
 from pydantic import BaseModel, Field
 
@@ -41,9 +41,7 @@ class PilotProjections(BaseModel):
 
     cli: str = Field(description="CLI rendering (plain text)")
     html: str = Field(description="HTML rendering (marimo projection)")
-    json_data: dict[str, Any] = Field(
-        description="JSON representation", serialization_alias="json"
-    )
+    json_data: dict[str, Any] = Field(description="JSON representation", serialization_alias="json")
 
 
 class PilotResponse(BaseModel):
@@ -112,12 +110,8 @@ def _render_pilot_to_projections(
     marimo_result = gallery.render(pilot_name, RenderTarget.MARIMO)
 
     # Format outputs
-    cli_output = (
-        str(cli_result.output) if cli_result.success else f"[ERROR] {cli_result.error}"
-    )
-    json_output = (
-        json_result.output if json_result.success else {"error": json_result.error}
-    )
+    cli_output = str(cli_result.output) if cli_result.success else f"[ERROR] {cli_result.error}"
+    json_output = json_result.output if json_result.success else {"error": json_result.error}
     html_output = (
         str(marimo_result.output)
         if marimo_result.success
@@ -127,9 +121,7 @@ def _render_pilot_to_projections(
     return PilotProjections(
         cli=cli_output,
         html=html_output,
-        json_data=json_output
-        if isinstance(json_output, dict)
-        else {"value": json_output},
+        json_data=json_output if isinstance(json_output, dict) else {"value": json_output},
     )
 
 
@@ -176,9 +168,7 @@ def create_gallery_router() -> "APIRouter | None":
 
     @router.get("", response_model=GalleryResponse)
     async def get_gallery(
-        entropy: float | None = Query(
-            None, ge=0.0, le=1.0, description="Global entropy (0-1)"
-        ),
+        entropy: float | None = Query(None, ge=0.0, le=1.0, description="Global entropy (0-1)"),
         seed: int | None = Query(None, description="Deterministic seed"),
         phase: str | None = Query(None, description="Override phase"),
         time_ms: float | None = Query(None, description="Fixed time in ms"),
@@ -262,9 +252,7 @@ def create_gallery_router() -> "APIRouter | None":
     @router.get("/{pilot_name}", response_model=PilotResponse)
     async def get_pilot(
         pilot_name: str,
-        entropy: float | None = Query(
-            None, ge=0.0, le=1.0, description="Entropy override (0-1)"
-        ),
+        entropy: float | None = Query(None, ge=0.0, le=1.0, description="Entropy override (0-1)"),
         seed: int | None = Query(None, description="Deterministic seed"),
         phase: str | None = Query(None, description="Phase override"),
         time_ms: float | None = Query(None, description="Fixed time in ms"),
@@ -280,9 +268,7 @@ def create_gallery_router() -> "APIRouter | None":
         from protocols.projection.gallery import PILOT_REGISTRY
 
         if pilot_name not in PILOT_REGISTRY:
-            raise HTTPException(
-                status_code=404, detail=f"Pilot not found: {pilot_name}"
-            )
+            raise HTTPException(status_code=404, detail=f"Pilot not found: {pilot_name}")
 
         try:
             return _get_pilot_response(

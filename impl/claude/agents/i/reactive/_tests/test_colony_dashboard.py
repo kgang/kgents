@@ -19,6 +19,7 @@ import time
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.colony_dashboard import (
     ColonyDashboard,
     ColonyState,
@@ -236,8 +237,7 @@ class TestColonyDashboardGrid:
     def test_multiple_rows_grid(self) -> None:
         """Test dashboard with multiple rows."""
         citizens = tuple(
-            CitizenState(citizen_id=f"citizen-{i}", name=f"Citizen {i}")
-            for i in range(8)
+            CitizenState(citizen_id=f"citizen-{i}", name=f"Citizen {i}") for i in range(8)
         )
         state = ColonyState(citizens=citizens, grid_cols=4)
         dashboard = ColonyDashboard(state)
@@ -410,9 +410,7 @@ class TestColonyDashboardJSON:
 class TestColonyDashboardSignal:
     """Tests for Signal binding."""
 
-    def test_bind_signal_updates_state(
-        self, sample_citizens: tuple[CitizenState, ...]
-    ) -> None:
+    def test_bind_signal_updates_state(self, sample_citizens: tuple[CitizenState, ...]) -> None:
         """Test that bound signal updates dashboard state."""
         initial = ColonyState(colony_id="initial")
         updated = ColonyState(colony_id="updated", citizens=sample_citizens)
@@ -463,9 +461,7 @@ class TestColonyDashboardPerformance:
 
     def test_composition_50_citizens(self) -> None:
         """Test grid composition with 50 citizens."""
-        citizens = tuple(
-            CitizenState(citizen_id=f"c-{i}", name=f"C{i}") for i in range(50)
-        )
+        citizens = tuple(CitizenState(citizen_id=f"c-{i}", name=f"C{i}") for i in range(50))
         state = ColonyState(citizens=citizens, grid_cols=5)
         dashboard = ColonyDashboard(state)
 

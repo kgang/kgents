@@ -18,6 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+
 from agents.k import (
     ADVISE_STARTERS,
     CHALLENGE_STARTERS,
@@ -70,9 +71,7 @@ class TestEigenvectors:
         eigens = KENT_EIGENVECTORS
         for eigen in eigens.all_eigenvectors():
             assert 0.0 <= eigen.value <= 1.0, f"{eigen.name} value out of range"
-            assert 0.0 <= eigen.confidence <= 1.0, (
-                f"{eigen.name} confidence out of range"
-            )
+            assert 0.0 <= eigen.confidence <= 1.0, f"{eigen.name} confidence out of range"
 
     def test_aesthetic_is_minimalist(self) -> None:
         """Kent's aesthetic should lean minimalist (low value)."""
@@ -839,9 +838,7 @@ class TestSoulAuditIntegration:
 class TestMorpheusIntegration:
     """Test Morpheus Gateway integration for cluster-native runtime."""
 
-    def test_morpheus_available_without_env(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_morpheus_available_without_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """morpheus_available should return False without env vars."""
         monkeypatch.delenv("MORPHEUS_URL", raising=False)
         monkeypatch.delenv("LLM_ENDPOINT", raising=False)
@@ -852,17 +849,13 @@ class TestMorpheusIntegration:
         monkeypatch.setenv("MORPHEUS_URL", "http://morpheus-gateway:8080/v1")
         assert morpheus_available() is True
 
-    def test_morpheus_available_with_llm_endpoint(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_morpheus_available_with_llm_endpoint(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """morpheus_available should return True with LLM_ENDPOINT."""
         monkeypatch.delenv("MORPHEUS_URL", raising=False)
         monkeypatch.setenv("LLM_ENDPOINT", "http://localhost:30808/v1")
         assert morpheus_available() is True
 
-    def test_create_llm_client_prefers_morpheus(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_llm_client_prefers_morpheus(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """create_llm_client should prefer Morpheus when available."""
         monkeypatch.setenv("MORPHEUS_URL", "http://morpheus-gateway:8080/v1")
 
@@ -871,9 +864,7 @@ class TestMorpheusIntegration:
         client = create_llm_client()
         assert isinstance(client, MorpheusLLMClient)
 
-    def test_create_llm_client_fallback_to_cli(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_create_llm_client_fallback_to_cli(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """create_llm_client should fallback to CLI without Morpheus."""
         monkeypatch.delenv("MORPHEUS_URL", raising=False)
         monkeypatch.delenv("LLM_ENDPOINT", raising=False)
@@ -892,17 +883,13 @@ class TestMorpheusIntegration:
         client = create_llm_client(prefer_morpheus=False)
         assert isinstance(client, ClaudeLLMClient)
 
-    def test_has_llm_credentials_with_morpheus(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_has_llm_credentials_with_morpheus(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """has_llm_credentials should return True with Morpheus URL."""
         monkeypatch.setenv("MORPHEUS_URL", "http://morpheus-gateway:8080/v1")
         assert has_llm_credentials() is True
 
     @pytest.mark.asyncio
-    async def test_soul_with_morpheus_client(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_soul_with_morpheus_client(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Soul should work with MorpheusLLMClient interface.
 
         This test uses a mock that follows the MorpheusLLMClient interface
@@ -979,9 +966,7 @@ class TestDialecticalChallenge:
             "best day",
         ]
         found_terms = sum(
-            1
-            for term in kent_terms
-            if any(term in p.lower() for p in CHALLENGE_PROMPTS)
+            1 for term in kent_terms if any(term in p.lower() for p in CHALLENGE_PROMPTS)
         )
         # At least 3 Kent-specific terms should appear
         assert found_terms >= 3, f"Only found {found_terms} Kent-specific terms"
@@ -1001,9 +986,7 @@ class TestDialecticalChallenge:
         """get_dialectical_prompt should create dialectical framework."""
         from agents.k.eigenvectors import KENT_EIGENVECTORS, get_dialectical_prompt
 
-        prompt = get_dialectical_prompt(
-            KENT_EIGENVECTORS, "I'm stuck on the architecture"
-        )
+        prompt = get_dialectical_prompt(KENT_EIGENVECTORS, "I'm stuck on the architecture")
 
         # Should have dialectical structure
         assert "THESIS" in prompt
@@ -1050,8 +1033,7 @@ class TestDialecticalChallenge:
         """CHALLENGE mode should be influenced by eigenvectors."""
         mock_llm = MockLLMClient(
             responses=[
-                "You value minimalism (0.15 on the baroque scale). "
-                "Why are you adding complexity?"
+                "You value minimalism (0.15 on the baroque scale). Why are you adding complexity?"
             ]
         )
         s = KgentSoul(llm=mock_llm, auto_llm=False)
@@ -1126,16 +1108,10 @@ class TestDialecticalChallenge:
 
         # Key markers of "Kent on his best day":
         # 1. Reframes the problem (not "stuck" but "avoiding decision")
-        assert (
-            "avoiding" in output.response.lower()
-            or "decision" in output.response.lower()
-        )
+        assert "avoiding" in output.response.lower() or "decision" in output.response.lower()
 
         # 2. References past achievements to counter the "stuck" narrative
-        assert (
-            "composable" in output.response.lower()
-            or "built" in output.response.lower()
-        )
+        assert "composable" in output.response.lower() or "built" in output.response.lower()
 
         # 3. Includes the key challenge question
         assert (
@@ -1144,9 +1120,7 @@ class TestDialecticalChallenge:
         )
 
         # 4. Offers actionable insight, not just questions
-        assert (
-            "iterate" in output.response.lower() or "teaches" in output.response.lower()
-        )
+        assert "iterate" in output.response.lower() or "teaches" in output.response.lower()
 
 
 class TestChallengeStarters:
@@ -1174,6 +1148,5 @@ class TestChallengeStarters:
             if any(term in starter.lower() for term in dialectical_terms)
         )
         assert dialectical_count >= len(CHALLENGE_STARTERS) // 2, (
-            f"Only {dialectical_count}/{len(CHALLENGE_STARTERS)} starters "
-            "have dialectical flavor"
+            f"Only {dialectical_count}/{len(CHALLENGE_STARTERS)} starters have dialectical flavor"
         )

@@ -18,6 +18,7 @@ from typing import AsyncIterator
 from unittest.mock import patch
 
 import pytest
+
 from agents.d import MemoryBackend as DgentMemoryBackend
 
 from ..router import (
@@ -62,9 +63,7 @@ def dgent_memory() -> DgentMemoryBackend:
 
 
 @pytest.fixture
-def router_with_dgent(
-    dgent_memory: DgentMemoryBackend, unique_namespace: str
-) -> VgentRouter:
+def router_with_dgent(dgent_memory: DgentMemoryBackend, unique_namespace: str) -> VgentRouter:
     """Router with injected D-gent backend."""
     return VgentRouter(
         dimension_=TEST_DIMENSION,
@@ -159,9 +158,7 @@ class TestBackendSelection:
         assert router.selected_backend == VectorBackend.MEMORY
 
     @pytest.mark.asyncio
-    async def test_dgent_preferred_with_injected(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_dgent_preferred_with_injected(self, dgent_memory: DgentMemoryBackend) -> None:
         """Injected D-gent is used when D-gent backend is selected."""
         router = VgentRouter(
             dimension_=TEST_DIMENSION,
@@ -210,9 +207,7 @@ class TestBackendStatus:
             os.environ.pop(ENV_QDRANT_URL, None)
 
             statuses = await router.status()
-            qdrant_status = next(
-                s for s in statuses if s.backend == VectorBackend.QDRANT
-            )
+            qdrant_status = next(s for s in statuses if s.backend == VectorBackend.QDRANT)
 
             assert qdrant_status.available is False
             assert "KGENTS_QDRANT_URL" in qdrant_status.reason
@@ -418,9 +413,7 @@ class TestProperties:
         assert "cosine" in repr_str
 
     @pytest.mark.asyncio
-    async def test_repr_shows_selected_backend(
-        self, populated_router: VgentRouter
-    ) -> None:
+    async def test_repr_shows_selected_backend(self, populated_router: VgentRouter) -> None:
         """Repr shows selected backend after selection."""
         repr_str = repr(populated_router)
         # After operations, backend should be selected and shown
@@ -436,9 +429,7 @@ class TestDgentIntegration:
     """Test D-gent backend integration."""
 
     @pytest.mark.asyncio
-    async def test_dgent_backend_persists(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_dgent_backend_persists(self, dgent_memory: DgentMemoryBackend) -> None:
         """D-gent backend persists vectors."""
         router = VgentRouter(
             dimension_=TEST_DIMENSION,
@@ -479,9 +470,7 @@ class TestDgentIntegration:
         assert count == 2
 
     @pytest.mark.asyncio
-    async def test_dgent_search_works_after_load(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_dgent_search_works_after_load(self, dgent_memory: DgentMemoryBackend) -> None:
         """Search works correctly with D-gent after index load."""
         router1 = VgentRouter(
             dimension_=TEST_DIMENSION,
@@ -536,9 +525,7 @@ class TestFactory:
         assert router.preferred == VectorBackend.MEMORY
 
     @pytest.mark.asyncio
-    async def test_create_vgent_with_dgent(
-        self, dgent_memory: DgentMemoryBackend
-    ) -> None:
+    async def test_create_vgent_with_dgent(self, dgent_memory: DgentMemoryBackend) -> None:
         """Factory accepts D-gent injection."""
         router = create_vgent(
             dimension=TEST_DIMENSION,

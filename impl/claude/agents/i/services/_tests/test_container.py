@@ -11,6 +11,7 @@ Verifies that the service container correctly:
 from unittest.mock import Mock
 
 import pytest
+
 from agents.i.services.container import DashboardServices
 from agents.i.services.events import EventBus, ScreenNavigationEvent
 

@@ -291,7 +291,7 @@ class ParkPersistence:
             if location:
                 stmt = stmt.where(Host.current_location == location)
             if active_only:
-                stmt = stmt.where(Host.is_active == True)
+                stmt = stmt.where(Host.is_active)
 
             stmt = stmt.order_by(Host.name).limit(limit)
             result = await session.execute(stmt)
@@ -534,9 +534,7 @@ class ParkPersistence:
                 interaction_count=0,
                 hosts_met=[],
                 locations_visited=[],
-                started_at=episode.started_at.isoformat()
-                if episode.started_at
-                else "",
+                started_at=episode.started_at.isoformat() if episode.started_at else "",
                 ended_at=None,
                 duration_seconds=None,
             )
@@ -722,9 +720,7 @@ class ParkPersistence:
                 consent_reason=consent_reason,
                 location=location or host.current_location,
                 host_emotion=host_emotion,
-                created_at=interaction.created_at.isoformat()
-                if interaction.created_at
-                else "",
+                created_at=interaction.created_at.isoformat() if interaction.created_at else "",
             )
 
     async def list_interactions(
@@ -813,7 +809,7 @@ class ParkPersistence:
         async with self.hosts.session_factory() as session:
             stmt = select(ParkLocation)
             if open_only:
-                stmt = stmt.where(ParkLocation.is_open == True)
+                stmt = stmt.where(ParkLocation.is_open)
             stmt = stmt.order_by(ParkLocation.name)
             result = await session.execute(stmt)
             locations = result.scalars().all()
@@ -844,26 +840,20 @@ class ParkPersistence:
         """
         async with self.hosts.session_factory() as session:
             # Count hosts
-            total_hosts_result = await session.execute(
-                select(func.count()).select_from(Host)
-            )
+            total_hosts_result = await session.execute(select(func.count()).select_from(Host))
             total_hosts = total_hosts_result.scalar() or 0
 
             active_hosts_result = await session.execute(
-                select(func.count()).select_from(Host).where(Host.is_active == True)
+                select(func.count()).select_from(Host).where(Host.is_active)
             )
             active_hosts = active_hosts_result.scalar() or 0
 
             # Count episodes
-            total_episodes_result = await session.execute(
-                select(func.count()).select_from(Episode)
-            )
+            total_episodes_result = await session.execute(select(func.count()).select_from(Episode))
             total_episodes = total_episodes_result.scalar() or 0
 
             active_episodes_result = await session.execute(
-                select(func.count())
-                .select_from(Episode)
-                .where(Episode.status == "active")
+                select(func.count()).select_from(Episode).where(Episode.status == "active")
             )
             active_episodes = active_episodes_result.scalar() or 0
 
@@ -886,15 +876,11 @@ class ParkPersistence:
             total_interactions = total_interactions_result.scalar() or 0
 
             refusals_result = await session.execute(
-                select(func.count())
-                .select_from(Interaction)
-                .where(Interaction.consent_given == False)
+                select(func.count()).select_from(Interaction).where(not Interaction.consent_given)
             )
             refusals = refusals_result.scalar() or 0
 
-            consent_refusal_rate = (
-                refusals / total_interactions if total_interactions > 0 else 0.0
-            )
+            consent_refusal_rate = refusals / total_interactions if total_interactions > 0 else 0.0
 
         return ParkStatus(
             total_hosts=total_hosts,

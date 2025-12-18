@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from protocols.cli.repl_guide import (
     BEGINNER_PATH,
     SKILL_TREE,
@@ -204,9 +205,7 @@ class TestFluencyTracker:
         # That's ~16%, which is NOVICE. Let's add more to reach BEGINNER.
         tracker.record_command("/", [])  # nav_root
         tracker.record_command("self.status", ["self"])  # invoke_basic partial
-        tracker.record_command(
-            "self.status", ["self"]
-        )  # invoke_basic complete (threshold 2)
+        tracker.record_command("self.status", ["self"])  # invoke_basic complete (threshold 2)
         # Now 5 skills mastered = ~28% -> BEGINNER
         assert tracker.level in (
             FluencyLevel.NOVICE,
@@ -294,9 +293,7 @@ class TestMicroLesson:
         """for_invocation generates invocation lesson."""
         lesson = MicroLesson.for_invocation()
         assert lesson.topic == "invocation"
-        assert (
-            "self.status" in lesson.explanation or "self status" in lesson.explanation
-        )
+        assert "self.status" in lesson.explanation or "self status" in lesson.explanation
 
     def test_for_composition(self) -> None:
         """for_composition generates composition lesson."""
@@ -606,9 +603,7 @@ class TestSkillTree:
     def test_beginner_path_skills_exist(self) -> None:
         """All skills in BEGINNER_PATH exist in SKILL_TREE."""
         for skill_id in BEGINNER_PATH:
-            assert skill_id in SKILL_TREE, (
-                f"BEGINNER_PATH has invalid skill: {skill_id}"
-            )
+            assert skill_id in SKILL_TREE, f"BEGINNER_PATH has invalid skill: {skill_id}"
 
     def test_beginner_path_order_respects_prereqs(self) -> None:
         """BEGINNER_PATH respects prerequisite order."""

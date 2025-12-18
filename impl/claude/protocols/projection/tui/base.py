@@ -9,10 +9,11 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import Any, Generic, TypeVar
 
-from protocols.projection.schema import WidgetMeta, WidgetStatus
 from rich.console import RenderableType
 from textual.reactive import reactive
 from textual.widget import Widget
+
+from protocols.projection.schema import WidgetMeta, WidgetStatus
 
 T = TypeVar("T")
 
@@ -69,9 +70,7 @@ class TUIWidget(Widget, Generic[T]):
     @property
     def has_refusal(self) -> bool:
         """Check if widget has a refusal."""
-        return (
-            self.meta.status == WidgetStatus.REFUSAL and self.meta.refusal is not None
-        )
+        return self.meta.status == WidgetStatus.REFUSAL and self.meta.refusal is not None
 
     @property
     def is_cached(self) -> bool:
@@ -134,4 +133,4 @@ class TUIProjector:
         if widget_class is None:
             raise ValueError(f"Unknown widget type: {widget_type}")
 
-        return widget_class(state=state, meta=meta)  # type: ignore[return-value]
+        return widget_class(state=state, meta=meta)

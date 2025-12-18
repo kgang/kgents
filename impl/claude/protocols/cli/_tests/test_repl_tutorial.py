@@ -11,6 +11,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from protocols.cli.repl_tutorial import (
     CONTEXT_DESCRIPTIONS,
     TutorialLesson,

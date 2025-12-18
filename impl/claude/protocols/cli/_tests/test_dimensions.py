@@ -16,6 +16,8 @@ from protocols.agentese.affordances import (
     Effect,
 )
 from protocols.cli.dimensions import (
+    DEFAULT_DIMENSIONS,
+    PROTECTED_RESOURCES,
     Backend,
     CommandDimensions,
     Execution,
@@ -29,10 +31,7 @@ from protocols.cli.dimensions import (
     derive_intent,
     derive_interactivity,
     derive_seriousness,
-    DEFAULT_DIMENSIONS,
-    PROTECTED_RESOURCES,
 )
-
 
 # === Dimension Type Tests ===
 

@@ -18,6 +18,7 @@ import pytest
 pytest.importorskip("fastapi")
 
 from fastapi.testclient import TestClient
+
 from protocols.api.app import create_app
 from protocols.api.auth import ApiKeyData, clear_api_keys, register_api_key
 from protocols.api.metering import clear_usage_stats
@@ -330,9 +331,7 @@ class TestCrossTenantIsolation:
                 user_id="user_tenant2",
                 tier="PRO",
                 rate_limit=1000,
-                tenant_id=UUID(
-                    "00000000-0000-0000-0000-000000000002"
-                ),  # Different tenant
+                tenant_id=UUID("00000000-0000-0000-0000-000000000002"),  # Different tenant
                 scopes=("read", "write"),
             )
         )

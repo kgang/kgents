@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+
 from agents.poly.types import Agent
 from bootstrap import ID, compose
 
@@ -66,16 +67,13 @@ class TestAgentLawTemplate:
         have no effect on the result.
         """
         for input_val in test_inputs:
-            composed: Any = compose(
-                cast(Agent[Any, Any], ID), cast(Agent[Any, Any], sample_agent)
-            )
+            composed: Any = compose(cast(Agent[Any, Any], ID), cast(Agent[Any, Any], sample_agent))
 
             direct = await sample_agent.invoke(input_val)
             via_id = await composed.invoke(input_val)
 
             assert direct == via_id, (
-                f"Left identity violated for input {input_val}: "
-                f"direct={direct}, via_id={via_id}"
+                f"Left identity violated for input {input_val}: direct={direct}, via_id={via_id}"
             )
 
     @pytest.mark.law("identity")
@@ -91,16 +89,13 @@ class TestAgentLawTemplate:
         have no effect on the result.
         """
         for input_val in test_inputs:
-            composed: Any = compose(
-                cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], ID)
-            )
+            composed: Any = compose(cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], ID))
 
             direct = await sample_agent.invoke(input_val)
             via_id = await composed.invoke(input_val)
 
             assert direct == via_id, (
-                f"Right identity violated for input {input_val}: "
-                f"direct={direct}, via_id={via_id}"
+                f"Right identity violated for input {input_val}: direct={direct}, via_id={via_id}"
             )
 
     # =========================================================================
@@ -153,9 +148,7 @@ class TestAgentLawTemplate:
 
     @pytest.mark.law("closure")
     @pytest.mark.asyncio
-    async def test_composition_closure(
-        self, sample_agent: "TestAgent[Any, Any]"
-    ) -> None:
+    async def test_composition_closure(self, sample_agent: "TestAgent[Any, Any]") -> None:
         """
         Test that composition produces a valid agent.
 
@@ -166,9 +159,7 @@ class TestAgentLawTemplate:
 
         g: TestAgent[Any, Any] = TestAgent(name="g", transform=lambda x: x + 1)
 
-        composed: Any = compose(
-            cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], g)
-        )
+        composed: Any = compose(cast(Agent[Any, Any], sample_agent), cast(Agent[Any, Any], g))
 
         # Should have invoke method
         assert hasattr(composed, "invoke"), "Composed agent missing invoke method"

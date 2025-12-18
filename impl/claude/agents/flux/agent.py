@@ -35,8 +35,8 @@ from .perturbation import (
 from .state import FluxState
 
 if TYPE_CHECKING:
-    from .mirror import HolographicBuffer
     from .metabolism import FluxMetabolism
+    from .mirror import HolographicBuffer
     from .pipeline import FluxPipeline
     from .semaphore.purgatory import Purgatory
 
@@ -152,9 +152,7 @@ class FluxAgent(Generic[A, B]):
     # Metabolism Integration
     # ─────────────────────────────────────────────────────────────
 
-    def attach_metabolism(
-        self, metabolism: "FluxMetabolism[A, B]"
-    ) -> "FluxAgent[A, B]":
+    def attach_metabolism(self, metabolism: "FluxMetabolism[A, B]") -> "FluxAgent[A, B]":
         """
         Attach a metabolism adapter to this flux.
 
@@ -321,9 +319,7 @@ class FluxAgent(Generic[A, B]):
             # Create fresh queues (more reliable than clearing)
             self._perturbation_queue = asyncio.PriorityQueue()
             self._output_queue = asyncio.Queue(maxsize=self.config.buffer_size)
-            self._feedback_queue = asyncio.Queue(
-                maxsize=self.config.feedback_queue_size
-            )
+            self._feedback_queue = asyncio.Queue(maxsize=self.config.feedback_queue_size)
             # Create fresh sentinel
             self._SENTINEL = object()
             # Reset state to DORMANT so we can properly transition
@@ -544,9 +540,7 @@ class FluxAgent(Generic[A, B]):
 
                 # Phase 5: Check for ReentryContext (semaphore resolution)
                 # ReentryContext is injected as Perturbation when human resolves
-                is_reentry, reentry_result = await self._handle_reentry_if_needed(
-                    input_data
-                )
+                is_reentry, reentry_result = await self._handle_reentry_if_needed(input_data)
                 if is_reentry:
                     # Reentry handled - emit result and continue
                     if result_future and not result_future.done():
@@ -781,9 +775,7 @@ class FluxAgent(Generic[A, B]):
     # Phase 5: Semaphore Integration (Purgatory + Mirror)
     # ─────────────────────────────────────────────────────────────
 
-    async def _handle_semaphore_if_needed(
-        self, result: Any, original_event: Any
-    ) -> bool:
+    async def _handle_semaphore_if_needed(self, result: Any, original_event: Any) -> bool:
         """
         Check if result is SemaphoreToken and handle if so.
 
@@ -867,9 +859,7 @@ class FluxAgent(Generic[A, B]):
             context: dict[str, Any] = {}
             if hasattr(token, "reason") and token.reason is not None:
                 context["reason"] = (
-                    token.reason.value
-                    if hasattr(token.reason, "value")
-                    else str(token.reason)
+                    token.reason.value if hasattr(token.reason, "value") else str(token.reason)
                 )
             if hasattr(token, "deadline") and token.deadline is not None:
                 context["deadline"] = (

@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 
 import pytest
+
 from agents.atelier.artisan import (
     Artisan,
     ArtisanState,
@@ -75,9 +76,7 @@ class TestProvenance:
             interpretation="test",
             considerations=[],
             choices=[
-                Choice(
-                    decision="chose haiku", reason="felt right", alternatives=["sonnet"]
-                ),
+                Choice(decision="chose haiku", reason="felt right", alternatives=["sonnet"]),
             ],
         )
         assert len(prov.choices) == 1

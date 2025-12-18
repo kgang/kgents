@@ -5,6 +5,7 @@ Verifies pressure/flow/temperature gauge rendering and reactive updates.
 """
 
 import pytest
+
 from agents.i.widgets.metrics_panel import (
     MetricsPanel,
     MetricState,

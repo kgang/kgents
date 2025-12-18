@@ -27,6 +27,7 @@ from .session import ChatSession
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
     from services.morpheus.persistence import MorpheusPersistence
+
     from .composer import ChatMorpheusComposer
     from .model_selector import MorpheusConfig
 
@@ -474,9 +475,7 @@ class ChatServiceFactory:
             ChatSession with composer if Morpheus available
         """
         # Delegate to base factory
-        session = await self._base_factory.create_session(
-            node_path, observer, config, force_new
-        )
+        session = await self._base_factory.create_session(node_path, observer, config, force_new)
 
         # Inject composer if Morpheus available
         composer = self._get_or_create_composer()
@@ -487,9 +486,7 @@ class ChatServiceFactory:
 
     # === Delegate methods to base factory ===
 
-    def get_session(
-        self, node_path: str, observer: "Umwelt[Any, Any]"
-    ) -> ChatSession | None:
+    def get_session(self, node_path: str, observer: "Umwelt[Any, Any]") -> ChatSession | None:
         """Get existing session."""
         return self._base_factory.get_session(node_path, observer)
 

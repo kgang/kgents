@@ -60,22 +60,14 @@ class TestExecuteRequest:
         from agents.u.server import ExecuteRequest
 
         # Valid bounds
-        ExecuteRequest(
-            prompt="test", tool_name=None, require_approval=True, severity=0.0
-        )
-        ExecuteRequest(
-            prompt="test", tool_name=None, require_approval=True, severity=1.0
-        )
+        ExecuteRequest(prompt="test", tool_name=None, require_approval=True, severity=0.0)
+        ExecuteRequest(prompt="test", tool_name=None, require_approval=True, severity=1.0)
 
         # Invalid bounds should raise
         with pytest.raises(ValueError):
-            ExecuteRequest(
-                prompt="test", tool_name=None, require_approval=True, severity=-0.1
-            )
+            ExecuteRequest(prompt="test", tool_name=None, require_approval=True, severity=-0.1)
         with pytest.raises(ValueError):
-            ExecuteRequest(
-                prompt="test", tool_name=None, require_approval=True, severity=1.1
-            )
+            ExecuteRequest(prompt="test", tool_name=None, require_approval=True, severity=1.1)
 
 
 class TestExecuteResponse:
@@ -293,8 +285,9 @@ class TestExecuteEndpoint:
     @pytest.mark.asyncio
     async def test_execute_escalates_without_soul(self) -> None:
         """Test execute escalates when Soul not available."""
-        from agents.u.server import create_app, get_state
         from fastapi.testclient import TestClient
+
+        from agents.u.server import create_app, get_state
 
         app = create_app()
         state = get_state()
@@ -311,9 +304,7 @@ class TestExecuteEndpoint:
         assert "Soul not available" in data["annotation"]
 
     @pytest.mark.asyncio
-    async def test_execute_escalates_on_rejection(
-        self, app_with_mock_soul: Any
-    ) -> None:
+    async def test_execute_escalates_on_rejection(self, app_with_mock_soul: Any) -> None:
         """Test execute escalates when Soul rejects."""
         from fastapi.testclient import TestClient
 
@@ -328,9 +319,7 @@ class TestExecuteEndpoint:
         assert data["annotation"] is not None
 
     @pytest.mark.asyncio
-    async def test_execute_approves_when_soul_approves(
-        self, app_with_approving_soul: Any
-    ) -> None:
+    async def test_execute_approves_when_soul_approves(self, app_with_approving_soul: Any) -> None:
         """Test execute proceeds when Soul approves."""
         from fastapi.testclient import TestClient
 
@@ -347,8 +336,9 @@ class TestExecuteEndpoint:
     @pytest.mark.asyncio
     async def test_execute_skips_approval_when_not_required(self) -> None:
         """Test execute skips Soul check when not required."""
-        from agents.u.server import create_app, get_state
         from fastapi.testclient import TestClient
+
+        from agents.u.server import create_app, get_state
 
         app = create_app()
         state = get_state()
@@ -375,8 +365,9 @@ class TestSoulIntegration:
     @pytest.mark.asyncio
     async def test_soul_uses_shallow_intercept_without_llm(self) -> None:
         """Test Soul uses shallow intercept when LLM not available."""
-        from agents.u.server import create_app, get_state
         from fastapi.testclient import TestClient
+
+        from agents.u.server import create_app, get_state
 
         app = create_app()
         state = get_state()
@@ -392,8 +383,9 @@ class TestSoulIntegration:
     @pytest.mark.asyncio
     async def test_soul_uses_deep_intercept_with_llm(self) -> None:
         """Test Soul uses deep intercept when LLM available."""
-        from agents.u.server import create_app, get_state
         from fastapi.testclient import TestClient
+
+        from agents.u.server import create_app, get_state
 
         app = create_app()
         state = get_state()

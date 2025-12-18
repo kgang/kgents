@@ -12,6 +12,7 @@ requires collecting stream outputs. The laws hold element-wise across streams.
 from typing import Any, AsyncIterator, TypeVar
 
 import pytest
+
 from agents.a.functor import FunctorRegistry
 from agents.flux import Flux, FluxAgent, FluxFunctor
 from agents.poly.types import Agent

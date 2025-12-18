@@ -1,6 +1,7 @@
 """Tests for Flux error types."""
 
 import pytest
+
 from agents.flux.errors import (
     FluxBackpressureError,
     FluxEntropyError,

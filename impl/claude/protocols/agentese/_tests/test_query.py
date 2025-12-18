@@ -13,6 +13,7 @@ Tests for the query system:
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese import (
     Logos,
     Observer,

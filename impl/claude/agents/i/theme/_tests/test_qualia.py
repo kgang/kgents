@@ -10,6 +10,7 @@ Philosophy verification:
 import math
 
 import pytest
+
 from agents.i.theme.qualia import (
     CIRCADIAN_MODIFIERS,
     CircadianPhase,

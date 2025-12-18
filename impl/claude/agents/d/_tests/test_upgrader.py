@@ -18,21 +18,20 @@ from typing import Generator
 
 import pytest
 
-from ..datum import Datum
-from ..backends.memory import MemoryBackend
 from ..backends.jsonl import JSONLBackend
+from ..backends.memory import MemoryBackend
 from ..backends.sqlite import SQLiteBackend
-from ..bus import DataBus, DataEventType, DataEvent
+from ..bus import DataBus, DataEvent, DataEventType
+from ..datum import Datum
 from ..router import Backend
 from ..upgrader import (
     AutoUpgrader,
+    DatumStats,
     UpgradePolicy,
     UpgradeReason,
-    DatumStats,
     migrate_data,
     verify_migration,
 )
-
 
 # --- Fixtures ---
 

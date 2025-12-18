@@ -7,6 +7,7 @@ See: spec/f-gents/research.md
 """
 
 import pytest
+
 from agents.f.config import FlowConfig
 from agents.f.modalities.hypothesis import (
     Evidence,

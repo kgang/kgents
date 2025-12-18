@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.adapters.textual_layout import (
     FlexContainer,
     ResponsiveFlexContainer,

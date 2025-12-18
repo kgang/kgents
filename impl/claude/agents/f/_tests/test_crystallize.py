@@ -20,6 +20,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from agents.f.contract import CompositionRule, Contract, Invariant
 from agents.f.crystallize import (
     ArtifactMetadata,
@@ -221,9 +222,7 @@ def test_artifact_metadata_to_yaml() -> None:
 
 def test_artifact_metadata_yaml_parent_version() -> None:
     """Metadata includes parent_version for re-forged artifacts."""
-    meta = ArtifactMetadata(
-        id="agent_v2", version=Version(2, 0, 0), parent_version="1.0.0"
-    )
+    meta = ArtifactMetadata(id="agent_v2", version=Version(2, 0, 0), parent_version="1.0.0")
 
     yaml = meta.to_yaml()
     assert 'parent_version: "1.0.0"' in yaml
@@ -344,9 +343,7 @@ def test_determine_version_bump_added_invariants() -> None:
         agent_name="Agent",
         input_type="str",
         output_type="int",
-        invariants=[
-            Invariant(description="New check", property="x > 0", category="correctness")
-        ],
+        invariants=[Invariant(description="New check", property="x > 0", category="correctness")],
         composition_rules=[],
     )
 
@@ -401,10 +398,7 @@ def test_assemble_artifact_extracts_tags(
 
     assert len(artifact.metadata.tags) > 0
     # Should extract some keywords from purpose
-    assert any(
-        tag in artifact.metadata.tags
-        for tag in ["fetch", "weather", "data", "location"]
-    )
+    assert any(tag in artifact.metadata.tags for tag in ["fetch", "weather", "data", "location"])
 
 
 def test_assemble_artifact_extracts_dependencies(

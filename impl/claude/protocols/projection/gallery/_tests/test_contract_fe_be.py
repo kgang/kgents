@@ -23,12 +23,11 @@ import re
 from pathlib import Path
 
 import pytest
+
 from protocols.projection.gallery.pilots import PilotCategory
 
 # Path to TypeScript types file (relative to impl/claude)
-TS_TYPES_PATH = (
-    Path(__file__).parent.parent.parent.parent.parent / "web/src/api/types.ts"
-)
+TS_TYPES_PATH = Path(__file__).parent.parent.parent.parent.parent / "web/src/api/types.ts"
 
 
 def extract_typescript_union(ts_content: str, type_name: str) -> set[str]:

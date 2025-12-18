@@ -5,6 +5,7 @@ Phase 3 Crown Jewels: Living Town with persistent citizen memory.
 """
 
 import pytest
+
 from protocols.agentese.contexts.self_citizen import (
     CITIZEN_AFFORDANCES,
     CITIZEN_MEMORY_AFFORDANCES,

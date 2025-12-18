@@ -1,6 +1,7 @@
 """Tests for agents.a.quick - One-liner agent creation."""
 
 import pytest
+
 from agents.a.quick import FunctionAgent, agent, pipeline
 from agents.poly.types import Agent
 

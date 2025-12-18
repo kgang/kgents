@@ -194,9 +194,7 @@ class TurnBasedAdapter(Agent[A, B], Generic[A, B]):
     entropy_budget: float = 1.0
     surplus_fraction: float = 0.1
     yield_threshold: float = 0.3
-    yield_approvers: frozenset[str] = field(
-        default_factory=lambda: frozenset({"human"})
-    )
+    yield_approvers: frozenset[str] = field(default_factory=lambda: frozenset({"human"}))
 
     # Runtime state (not part of configuration)
     _weave: Any = field(default=None, init=False, repr=False)
@@ -337,8 +335,7 @@ class TurnBasedAdapter(Agent[A, B], Generic[A, B]):
         Returns:
             The turn ID
         """
-        from weave import Turn
-        from weave import TurnType as TT
+        from weave import Turn, TurnType as TT
 
         # Parse turn type
         tt = getattr(TT, turn_type, TT.SPEECH)
@@ -715,9 +712,7 @@ class LocalProjector(Projector[Agent[Any, Any]]):
             yield_threshold=cap.yield_threshold,
         )
 
-    def _apply_observable_only(
-        self, agent: Agent[Any, Any], cap: Any
-    ) -> Agent[Any, Any]:
+    def _apply_observable_only(self, agent: Agent[Any, Any], cap: Any) -> Agent[Any, Any]:
         """
         Mark agent as observable when not wrapped with Flux.
 

@@ -18,6 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from agents.j import (
     AgentSource,
     ArchitectConstraints,
@@ -250,9 +251,7 @@ def test_get_jit_meta_returns_meta() -> None:
     )
     mock_meta = AgentMeta.minimal("Test", "j", "Test agent")
 
-    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(
-        meta=mock_meta, jit_meta=mock_jit_meta
-    )
+    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(meta=mock_meta, jit_meta=mock_jit_meta)
 
     # Test get_jit_meta
     result = get_jit_meta(wrapper)
@@ -293,9 +292,7 @@ def test_is_jit_agent_true() -> None:
     )
     mock_meta = AgentMeta.minimal("Test", "j", "Test agent")
 
-    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(
-        meta=mock_meta, jit_meta=mock_jit_meta
-    )
+    wrapper: JITAgentWrapper[Any, Any] = JITAgentWrapper(meta=mock_meta, jit_meta=mock_jit_meta)
 
     assert is_jit_agent(wrapper) is True
 
@@ -344,10 +341,7 @@ async def test_compile_and_instantiate_with_context() -> None:
     # Agent should be able to parse the sample format
     jit_meta = get_jit_meta(agent)
     assert jit_meta is not None
-    assert (
-        "Parse" in jit_meta.source.description
-        or "parse" in jit_meta.source.description.lower()
-    )
+    assert "Parse" in jit_meta.source.description or "parse" in jit_meta.source.description.lower()
 
 
 @pytest.mark.asyncio

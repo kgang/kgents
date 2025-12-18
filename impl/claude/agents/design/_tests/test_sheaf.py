@@ -9,6 +9,7 @@ These tests verify the four sheaf operations:
 """
 
 import pytest
+
 from agents.design import (
     ContentLevel,
     Density,
@@ -118,9 +119,7 @@ class TestOverlap:
         overlap = simple_sheaf.overlap(ctx, ctx)
         assert overlap == ctx
 
-    def test_hierarchical_overlap_returns_descendant(
-        self, simple_sheaf: DesignSheaf
-    ) -> None:
+    def test_hierarchical_overlap_returns_descendant(self, simple_sheaf: DesignSheaf) -> None:
         """Hierarchical overlap returns the more specific context."""
         sidebar = simple_sheaf.get_context("sidebar")
         nav = simple_sheaf.get_context("nav")
@@ -148,9 +147,7 @@ class TestOverlap:
         overlap = simple_sheaf.overlap(nav, actions)
         assert overlap == sidebar
 
-    def test_no_overlap_between_different_branches(
-        self, simple_sheaf: DesignSheaf
-    ) -> None:
+    def test_no_overlap_between_different_branches(self, simple_sheaf: DesignSheaf) -> None:
         """Contexts in different container branches don't overlap."""
         nav = simple_sheaf.get_context("nav")  # under sidebar
         content = simple_sheaf.get_context("content")  # under main
@@ -186,9 +183,7 @@ class TestRestrict:
         assert restricted.content_level == viewport_state.content_level
         assert restricted.motion == viewport_state.motion
 
-    def test_restrict_applies_density_override(
-        self, viewport_state: DesignState
-    ) -> None:
+    def test_restrict_applies_density_override(self, viewport_state: DesignState) -> None:
         """Restriction applies container's density override."""
         sheaf = create_design_sheaf()
         compact_sidebar = create_container_context(
@@ -285,9 +280,7 @@ class TestCompatible:
 class TestGlue:
     """Tests for sheaf gluing operation."""
 
-    def test_glue_with_viewport_preserves_viewport_state(
-        self, simple_sheaf: DesignSheaf
-    ) -> None:
+    def test_glue_with_viewport_preserves_viewport_state(self, simple_sheaf: DesignSheaf) -> None:
         """Gluing with viewport context preserves viewport state."""
         viewport_state = DesignState(
             density=Density.SPACIOUS,
@@ -345,9 +338,7 @@ class TestGlue:
         sheaf.compatible = lambda _: False  # type: ignore
 
         with pytest.raises(GluingError):
-            sheaf.glue(
-                {VIEWPORT_CONTEXT: DesignState(Density.SPACIOUS, ContentLevel.FULL)}
-            )
+            sheaf.glue({VIEWPORT_CONTEXT: DesignState(Density.SPACIOUS, ContentLevel.FULL)})
 
         # Restore
         sheaf.compatible = original_compatible  # type: ignore

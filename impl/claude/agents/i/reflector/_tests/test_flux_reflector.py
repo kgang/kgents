@@ -17,6 +17,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from agents.i.reflector import FluxReflector, create_flux_reflector
 from agents.i.widgets.waveform import OperationType, ProcessingWaveform
 from protocols.cli.reflector.events import (

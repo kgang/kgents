@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+
 from protocols.cli.handlers.wipe import (
     _collect_targets,
     _get_global_path,
@@ -51,9 +52,7 @@ class TestGetGlobalPath:
         assert path.name == "kgents"
         assert ".local/share" in str(path)
 
-    def test_custom_xdg_data_home(
-        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-    ) -> None:
+    def test_custom_xdg_data_home(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """Should respect XDG_DATA_HOME."""
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
         path = _get_global_path()
@@ -63,25 +62,19 @@ class TestGetGlobalPath:
 class TestCollectTargets:
     """Tests for _collect_targets helper."""
 
-    def test_local_scope_no_db(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_local_scope_no_db(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return empty for local scope when no .kgents exists."""
         monkeypatch.chdir(tmp_path)
         targets = _collect_targets("local")
         assert targets == []
 
-    def test_global_scope_no_db(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_global_scope_no_db(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return empty for global scope when no DB exists."""
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
         targets = _collect_targets("global")
         assert targets == []
 
-    def test_global_scope_with_db(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_global_scope_with_db(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return global target when DB exists."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)

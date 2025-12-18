@@ -18,6 +18,7 @@ Heritage papers realized:
 """
 
 import pytest
+
 from agents.town.archetypes import (
     ARCHETYPE_SPECS,
     ArchetypeKind,

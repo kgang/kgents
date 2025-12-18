@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import pytest
+
 from agents.i.reactive.projection import (
     ExtendedTarget,
     FidelityLevel,

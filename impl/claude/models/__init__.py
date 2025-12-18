@@ -19,48 +19,47 @@ Crown Jewel Tables:
 - park.py: Host, Memory, Episode, Interaction
 """
 
+# Atelier Crown Jewel
+from .atelier import ArtifactContribution, Artisan, Exhibition, GalleryItem, Workshop
 from .base import (
     Base,
     CausalMixin,
     TimestampMixin,
+    close_db,
     get_async_session,
     get_engine,
     init_db,
-    close_db,
 )
 
 # Brain Crown Jewel
-from .brain import Crystal, CrystalTag, BrainSettings
-
-# Town Crown Jewel
-from .town import Citizen, Conversation, ConversationTurn, CitizenRelationship
-
-# Gardener Crown Jewel
-from .gardener import (
-    IdeaLifecycle,
-    GardenSession,
-    GardenIdea,
-    GardenPlot,
-    IdeaConnection,
-)
-
-# Gestalt Crown Jewel
-from .gestalt import Topology, CodeBlock, CodeLink, TopologySnapshot
-
-# Atelier Crown Jewel
-from .atelier import Workshop, Artisan, Exhibition, GalleryItem, ArtifactContribution
+from .brain import BrainSettings, Crystal, CrystalTag
 
 # Coalition Crown Jewel
 from .coalition import (
     Coalition,
     CoalitionMember,
+    CoalitionOutput,
     CoalitionProposal,
     ProposalVote,
-    CoalitionOutput,
 )
 
+# Gardener Crown Jewel
+from .gardener import (
+    GardenIdea,
+    GardenPlot,
+    GardenSession,
+    IdeaConnection,
+    IdeaLifecycle,
+)
+
+# Gestalt Crown Jewel
+from .gestalt import CodeBlock, CodeLink, Topology, TopologySnapshot
+
 # Park Crown Jewel
-from .park import Host, HostMemory, Episode, Interaction, ParkLocation
+from .park import Episode, Host, HostMemory, Interaction, ParkLocation
+
+# Town Crown Jewel
+from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
 __all__ = [
     # Base infrastructure

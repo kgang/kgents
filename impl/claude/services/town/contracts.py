@@ -244,6 +244,181 @@ class RelationshipsResponse:
     relationships: list[RelationshipSummary]
 
 
+# === Coalition Types ===
+
+
+@dataclass(frozen=True)
+class CoalitionManifestResponse:
+    """Coalition system health manifest response."""
+
+    total_coalitions: int
+    alive_coalitions: int
+    total_members: int
+    bridge_citizens: int
+    avg_strength: float
+
+
+@dataclass(frozen=True)
+class CoalitionSummary:
+    """Summary of a coalition for list views."""
+
+    id: str
+    name: str
+    member_count: int
+    strength: float  # 0.0-1.0
+    purpose: str
+
+
+@dataclass(frozen=True)
+class CoalitionDetail:
+    """Full coalition details."""
+
+    id: str
+    name: str
+    members: list[str]  # citizen IDs
+    strength: float
+    purpose: str
+    formed_at: str
+    centroid: dict[str, float] | None  # eigenvector centroid
+
+
+@dataclass(frozen=True)
+class CoalitionListResponse:
+    """Response for coalition list aspect."""
+
+    coalitions: list[CoalitionSummary]
+    total: int
+    bridge_citizens: list[str]  # citizens in multiple coalitions
+
+
+@dataclass(frozen=True)
+class CoalitionDetectRequest:
+    """Request to detect coalitions in citizen graph."""
+
+    similarity_threshold: float = 0.8
+    k: int = 3  # clique size
+
+
+@dataclass(frozen=True)
+class CoalitionDetectResponse:
+    """Response after coalition detection."""
+
+    coalitions: list[CoalitionDetail]
+    detected_count: int
+
+
+@dataclass(frozen=True)
+class BridgeCitizensResponse:
+    """Response for bridge citizens aspect."""
+
+    bridge_citizens: list[str]
+    count: int
+
+
+@dataclass(frozen=True)
+class CoalitionDecayResponse:
+    """Response after applying coalition decay."""
+
+    pruned_count: int
+    remaining_count: int
+    decay_rate: float
+
+
+# === Workshop Types ===
+
+
+@dataclass(frozen=True)
+class WorkshopStatusResponse:
+    """Response for workshop status aspect."""
+
+    phase: str  # EXPLORING, DESIGNING, etc.
+    is_idle: bool
+    is_complete: bool
+    active_task: str | None
+    active_builder: str | None
+    builders: list[str]
+    artifacts_count: int
+
+
+@dataclass(frozen=True)
+class WorkshopAssignRequest:
+    """Request to assign task to workshop builders."""
+
+    task: str
+    priority: int = 1  # 1-3
+
+
+@dataclass(frozen=True)
+class WorkshopAssignResponse:
+    """Response after workshop task assignment."""
+
+    task_id: str
+    task_description: str
+    lead_builder: str
+    estimated_phases: list[str]
+    assignments: dict[str, list[str]]  # archetype -> subtasks
+
+
+@dataclass(frozen=True)
+class WorkshopEventResponse:
+    """Response for workshop event (advance, complete)."""
+
+    type: str
+    timestamp: str
+    builder: str | None
+    phase: str
+    message: str
+    artifact: Any
+    metadata: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class WorkshopBuildersResponse:
+    """Response listing available builders."""
+
+    builders: list[str]
+    count: int
+
+
+# === Scenario/Operation Types ===
+
+
+@dataclass(frozen=True)
+class OperationSummary:
+    """Summary of a town operation."""
+
+    id: str
+    type: str  # dialogue, coalition_action, scenario_step
+    participants: list[str]
+    status: str  # pending, running, complete, failed
+    created_at: str
+
+
+@dataclass(frozen=True)
+class ScenarioConfig:
+    """Configuration for a town scenario."""
+
+    id: str
+    name: str
+    description: str
+    citizen_count: int
+    duration_days: int
+    seed: int | None
+
+
+@dataclass(frozen=True)
+class ScenarioStatusResponse:
+    """Response for scenario status aspect."""
+
+    config: ScenarioConfig
+    current_day: int
+    phase: str
+    tension_index: float
+    cooperation_level: float
+    total_tokens: int
+    operations_count: int
+
+
 # === Exports ===
 
 __all__ = [
@@ -272,4 +447,23 @@ __all__ = [
     "RelationshipSummary",
     "RelationshipsRequest",
     "RelationshipsResponse",
+    # Coalition
+    "CoalitionManifestResponse",
+    "CoalitionSummary",
+    "CoalitionDetail",
+    "CoalitionListResponse",
+    "CoalitionDetectRequest",
+    "CoalitionDetectResponse",
+    "BridgeCitizensResponse",
+    "CoalitionDecayResponse",
+    # Workshop
+    "WorkshopStatusResponse",
+    "WorkshopAssignRequest",
+    "WorkshopAssignResponse",
+    "WorkshopEventResponse",
+    "WorkshopBuildersResponse",
+    # Scenario/Operation
+    "OperationSummary",
+    "ScenarioConfig",
+    "ScenarioStatusResponse",
 ]

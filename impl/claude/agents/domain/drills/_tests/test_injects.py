@@ -11,6 +11,7 @@ Verifies:
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.domain.drills.injects import (
     CUSTOMER_ESCALATION_INJECT,
     EXECUTIVE_CALL_INJECT,

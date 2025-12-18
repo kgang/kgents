@@ -24,19 +24,18 @@ from datetime import datetime, timezone
 
 import pytest
 
+from agents.flux.semantic_metrics import (
+    QdrantPulse,
+    ResonanceSignal,
+)
 from agents.flux.synapse import (
     ChangeEvent,
     ChangeOperation,
     SyncOperation,
     SyncTarget,
 )
-from agents.flux.semantic_metrics import (
-    QdrantPulse,
-    ResonanceSignal,
-)
 
 from .conftest import TriadFixture
-
 
 # ===========================================================================
 # Basic CDC Flow Tests
@@ -159,9 +158,7 @@ class TestCDCLagTracking:
         assert triad.lag_tracker.avg_lag_ms >= 0
 
     @pytest.mark.asyncio
-    async def test_lag_tracker_coherency_integration(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_lag_tracker_coherency_integration(self, triad: TriadFixture) -> None:
         """
         CDC lag feeds into ResonanceSignal.coherency_with_truth.
 
@@ -188,9 +185,7 @@ class TestCDCLagTracking:
         assert signal.coherency_with_truth > 0.9
 
     @pytest.mark.asyncio
-    async def test_coherency_degrades_with_simulated_lag(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_coherency_degrades_with_simulated_lag(self, triad: TriadFixture) -> None:
         """Coherency degrades when CDC lag is simulated."""
         # Manually record high lag samples
         for _ in range(10):
@@ -275,9 +270,7 @@ class TestConcurrentWrites:
     """Tests for concurrent write consistency."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_inserts_maintain_consistency(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_concurrent_inserts_maintain_consistency(self, triad: TriadFixture) -> None:
         """
         Concurrent inserts don't cause data loss.
 
@@ -356,9 +349,7 @@ class TestPartialFailureRecovery:
     """Tests for partial failure recovery."""
 
     @pytest.mark.asyncio
-    async def test_unprocessed_events_remain_on_failure(
-        self, triad: TriadFixture
-    ) -> None:
+    async def test_unprocessed_events_remain_on_failure(self, triad: TriadFixture) -> None:
         """
         If Synapse fails mid-batch, unprocessed events remain.
 

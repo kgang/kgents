@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.i.reactive.projection import (
     ExtendedTarget,
     ProjectionLawError,

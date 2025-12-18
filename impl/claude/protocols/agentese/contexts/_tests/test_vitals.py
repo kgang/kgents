@@ -13,6 +13,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese._tests.conftest import MockUmwelt
 from protocols.agentese.contexts.self_ import SelfContextResolver, create_self_resolver
 from protocols.agentese.contexts.vitals import (
@@ -106,9 +107,7 @@ class TestTriadHealthNode:
         )
 
     @pytest.mark.asyncio
-    async def test_invoke_is_coherent(
-        self, node: TriadHealthNode, observer: MockUmwelt
-    ) -> None:
+    async def test_invoke_is_coherent(self, node: TriadHealthNode, observer: MockUmwelt) -> None:
         """is_coherent aspect returns False without collector."""
         set_semantic_collector(None)
         result = await node._invoke_aspect("is_coherent", observer)  # type: ignore[arg-type]

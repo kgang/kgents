@@ -1,6 +1,7 @@
 """Integration tests for Widget Integration Pipeline (Wave 9)."""
 
 import pytest
+
 from agents.i.reactive.pipeline.focus import (
     AnimatedFocus,
     FocusTransitionStyle,
@@ -300,9 +301,7 @@ class TestFullIntegration:
         clock.tick(override_delta=16.67)
 
         # All widgets should have been re-rendered
-        assert all(
-            not node.dirty for node in [pipeline.get_node(n) for n in widgets] if node
-        )
+        assert all(not node.dirty for node in [pipeline.get_node(n) for n in widgets] if node)
 
     def test_animated_focus_with_clock(self) -> None:
         """AnimatedFocus integrates with Clock for automatic updates."""

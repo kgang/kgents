@@ -7,6 +7,7 @@ Tests hypothesis outcome indexing and pattern learning.
 from dataclasses import dataclass
 
 import pytest
+
 from agents.l.hypothesis_indexing import (
     HypothesisIndex,
     HypothesisOutcome,
@@ -314,9 +315,7 @@ def test_search_combined_filters() -> None:
                 confidence=0.6 + i * 0.03,
                 novelty="incremental" if i % 2 == 0 else "exploratory",
                 falsifiable_by=[],
-                outcome=HypothesisOutcome.CONFIRMED
-                if i < 3
-                else HypothesisOutcome.PENDING,
+                outcome=HypothesisOutcome.CONFIRMED if i < 3 else HypothesisOutcome.PENDING,
             )
         )
 
@@ -481,8 +480,7 @@ def test_analyze_confidence_patterns() -> None:
     assert (
         analysis.avg_confidence_when_confirmed is not None
         and analysis.avg_confidence_when_refuted is not None
-        and analysis.avg_confidence_when_confirmed
-        > analysis.avg_confidence_when_refuted
+        and analysis.avg_confidence_when_confirmed > analysis.avg_confidence_when_refuted
     )
 
 
@@ -528,9 +526,7 @@ def test_get_statistics() -> None:
                 confidence=0.7,
                 novelty="incremental",
                 falsifiable_by=[],
-                outcome=HypothesisOutcome.CONFIRMED
-                if i < 2
-                else HypothesisOutcome.REFUTED,
+                outcome=HypothesisOutcome.CONFIRMED if i < 2 else HypothesisOutcome.REFUTED,
             )
         )
 

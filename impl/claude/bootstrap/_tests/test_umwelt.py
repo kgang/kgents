@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from agents.d.lens import identity_lens, key_lens
 from agents.d.volatile import VolatileAgent
 from bootstrap.umwelt import (
@@ -279,9 +280,7 @@ class TestProjector:
     @pytest.mark.asyncio
     async def test_projector_with_gravity(self) -> None:
         """Projector attaches gravity contracts."""
-        root: VolatileAgent[dict[str, Any]] = VolatileAgent(
-            _state={"agents": {"test": {}}}
-        )
+        root: VolatileAgent[dict[str, Any]] = VolatileAgent(_state={"agents": {"test": {}}})
         projector = Projector(root)
 
         contract = NoNumbersContract()

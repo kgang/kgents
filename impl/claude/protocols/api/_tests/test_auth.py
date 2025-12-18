@@ -270,6 +270,7 @@ class TestFastAPIIntegration:
     async def test_get_api_key_dependency_invalid_format(self) -> None:
         """Test get_api_key dependency with invalid format."""
         from fastapi import HTTPException
+
         from protocols.api.auth import get_api_key
 
         with pytest.raises(HTTPException) as exc_info:
@@ -282,6 +283,7 @@ class TestFastAPIIntegration:
     async def test_get_api_key_dependency_nonexistent(self) -> None:
         """Test get_api_key dependency with nonexistent key."""
         from fastapi import HTTPException
+
         from protocols.api.auth import get_api_key
 
         with pytest.raises(HTTPException) as exc_info:

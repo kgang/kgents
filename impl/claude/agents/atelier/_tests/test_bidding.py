@@ -17,6 +17,7 @@ import time
 from datetime import datetime
 
 import pytest
+
 from agents.atelier.bidding import (
     BID_COSTS,
     BID_PRIORITIES,
@@ -59,9 +60,7 @@ class TestBidTypesAndCosts:
     def test_inject_constraint_is_most_expensive(self) -> None:
         """Inject constraint should cost the most (10 tokens per plan)."""
         assert BID_COSTS[BidType.INJECT_CONSTRAINT] == 10
-        assert (
-            BID_COSTS[BidType.INJECT_CONSTRAINT] > BID_COSTS[BidType.REQUEST_DIRECTION]
-        )
+        assert BID_COSTS[BidType.INJECT_CONSTRAINT] > BID_COSTS[BidType.REQUEST_DIRECTION]
         assert BID_COSTS[BidType.INJECT_CONSTRAINT] > BID_COSTS[BidType.BOOST_BUILDER]
 
     def test_direction_costs_five_tokens(self) -> None:
@@ -74,14 +73,8 @@ class TestBidTypesAndCosts:
 
     def test_inject_has_highest_priority(self) -> None:
         """Inject constraint should have highest priority."""
-        assert (
-            BID_PRIORITIES[BidType.INJECT_CONSTRAINT]
-            > BID_PRIORITIES[BidType.REQUEST_DIRECTION]
-        )
-        assert (
-            BID_PRIORITIES[BidType.INJECT_CONSTRAINT]
-            > BID_PRIORITIES[BidType.BOOST_BUILDER]
-        )
+        assert BID_PRIORITIES[BidType.INJECT_CONSTRAINT] > BID_PRIORITIES[BidType.REQUEST_DIRECTION]
+        assert BID_PRIORITIES[BidType.INJECT_CONSTRAINT] > BID_PRIORITIES[BidType.BOOST_BUILDER]
 
 
 # =============================================================================
@@ -266,9 +259,7 @@ class TestBidQueueBasics:
     @pytest.fixture
     def queue(self) -> BidQueue:
         """Create a fresh queue for testing (validation disabled for basic tests)."""
-        return BidQueue(
-            session_id="test-session", validate_content=False, rate_limit=False
-        )
+        return BidQueue(session_id="test-session", validate_content=False, rate_limit=False)
 
     @pytest.mark.asyncio
     async def test_submit_bid_success(self, queue: BidQueue) -> None:
@@ -323,9 +314,7 @@ class TestBidQueueBasics:
     @pytest.mark.asyncio
     async def test_queue_max_size(self) -> None:
         """Queue should reject bids when full."""
-        queue = BidQueue(
-            session_id="s", max_queue_size=2, validate_content=False, rate_limit=False
-        )
+        queue = BidQueue(session_id="s", max_queue_size=2, validate_content=False, rate_limit=False)
 
         await queue.submit("a", BidType.BOOST_BUILDER, "test bid one")
         await queue.submit("b", BidType.BOOST_BUILDER, "test bid two")
@@ -358,9 +347,7 @@ class TestBidQueueOutcomes:
 
     @pytest.fixture
     def queue(self) -> BidQueue:
-        return BidQueue(
-            session_id="test-session", validate_content=False, rate_limit=False
-        )
+        return BidQueue(session_id="test-session", validate_content=False, rate_limit=False)
 
     @pytest.mark.asyncio
     async def test_record_accepted_no_refund(self, queue: BidQueue) -> None:
@@ -414,9 +401,7 @@ class TestBidQueueLeaderboard:
 
     @pytest.fixture
     def queue(self) -> BidQueue:
-        return BidQueue(
-            session_id="test-session", validate_content=False, rate_limit=False
-        )
+        return BidQueue(session_id="test-session", validate_content=False, rate_limit=False)
 
     @pytest.mark.asyncio
     async def test_leaderboard_empty_initially(self, queue: BidQueue) -> None:
@@ -478,9 +463,7 @@ class TestBidQueueFluxIntegration:
 
     @pytest.fixture
     def queue(self) -> BidQueue:
-        return BidQueue(
-            session_id="test-session", validate_content=False, rate_limit=False
-        )
+        return BidQueue(session_id="test-session", validate_content=False, rate_limit=False)
 
     def test_to_perturbation_creates_valid_perturbation(self, queue: BidQueue) -> None:
         """Converting bid to perturbation should create valid Perturbation object."""
@@ -572,9 +555,7 @@ class TestAtelierBidManager:
         await queue1.submit(
             "alice", BidType.INJECT_CONSTRAINT, "add more blue", skip_validation=True
         )
-        await queue2.submit(
-            "bob", BidType.BOOST_BUILDER, "keep going", skip_validation=True
-        )
+        await queue2.submit("bob", BidType.BOOST_BUILDER, "keep going", skip_validation=True)
 
         stats = manager.global_stats()
 
@@ -599,9 +580,7 @@ class TestAtelierBidManager:
         )
 
         # Bob bids in one
-        await queue1.submit(
-            "bob", BidType.BOOST_BUILDER, "keep going", skip_validation=True
-        )
+        await queue1.submit("bob", BidType.BOOST_BUILDER, "keep going", skip_validation=True)
 
         leaderboard = manager.global_leaderboard()
 
@@ -764,9 +743,7 @@ class TestConcurrentBidding:
         async def submit_bids(spectator: str, count: int) -> list[bool]:
             results = []
             for i in range(count):
-                result = await queue.submit(
-                    spectator, BidType.BOOST_BUILDER, f"bid-{i}"
-                )
+                result = await queue.submit(spectator, BidType.BOOST_BUILDER, f"bid-{i}")
                 results.append(result.success)
             return results
 
@@ -1142,9 +1119,7 @@ class TestPropertyBased:
     @pytest.mark.asyncio
     async def test_bid_ordering_is_stable(self) -> None:
         """Bids with same priority should maintain FIFO order."""
-        queue = BidQueue(
-            session_id="order-test", validate_content=False, rate_limit=False
-        )
+        queue = BidQueue(session_id="order-test", validate_content=False, rate_limit=False)
 
         # Submit several same-type bids
         bids = []
@@ -1205,14 +1180,8 @@ class TestPropertyBased:
 
     def test_bid_priorities_are_ordered(self) -> None:
         """Inject > Direction > Boost in priority."""
-        assert (
-            BID_PRIORITIES[BidType.INJECT_CONSTRAINT]
-            > BID_PRIORITIES[BidType.REQUEST_DIRECTION]
-        )
-        assert (
-            BID_PRIORITIES[BidType.REQUEST_DIRECTION]
-            > BID_PRIORITIES[BidType.BOOST_BUILDER]
-        )
+        assert BID_PRIORITIES[BidType.INJECT_CONSTRAINT] > BID_PRIORITIES[BidType.REQUEST_DIRECTION]
+        assert BID_PRIORITIES[BidType.REQUEST_DIRECTION] > BID_PRIORITIES[BidType.BOOST_BUILDER]
 
 
 # =============================================================================

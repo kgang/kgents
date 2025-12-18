@@ -1,6 +1,7 @@
 """Tests for GestaltOperad composition grammar."""
 
 import pytest
+
 from agents.gestalt.operad import (
     ANALYZE_METABOLICS,
     COMPARE_METABOLICS,

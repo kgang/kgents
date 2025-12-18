@@ -33,14 +33,13 @@ if TYPE_CHECKING:
     from protocols.agentese.logos import Logos
 
 from .dimensions import (
+    DEFAULT_DIMENSIONS,
     Backend,
     CommandDimensions,
     Interactivity,
     Seriousness,
     derive_dimensions,
-    DEFAULT_DIMENSIONS,
 )
-
 
 # === Help Data Types ===
 
@@ -427,18 +426,12 @@ class HelpProjector:
         hints: list[str] = []
 
         # Check for streaming aspects
-        has_streaming = any(
-            meta and getattr(meta, "streaming", False)
-            for _, meta in aspects
-        )
+        has_streaming = any(meta and getattr(meta, "streaming", False) for _, meta in aspects)
         if has_streaming:
             hints.append("🌊 Some commands support streaming output")
 
         # Check for interactive aspects
-        has_interactive = any(
-            meta and getattr(meta, "interactive", False)
-            for _, meta in aspects
-        )
+        has_interactive = any(meta and getattr(meta, "interactive", False) for _, meta in aspects)
         if has_interactive:
             hints.append("💬 Some commands support interactive mode")
 
@@ -526,6 +519,7 @@ def create_help_projector(logos: "Logos | None" = None) -> HelpProjector:
     """
     if logos is None:
         from protocols.agentese.logos import create_logos
+
         logos = create_logos()
     return HelpProjector(logos)
 

@@ -16,6 +16,7 @@ from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING
 
 import pytest
+
 from agents.k.eigenvectors import KentEigenvectors
 from agents.k.events import (
     SoulEventType,
@@ -500,9 +501,7 @@ class TestPatternExtraction:
 
         # Should find question pattern
         question_patterns = [
-            p
-            for p in patterns
-            if "question" in p.content.lower() or "inquiry" in p.content.lower()
+            p for p in patterns if "question" in p.content.lower() or "inquiry" in p.content.lower()
         ]
         assert len(question_patterns) > 0
 

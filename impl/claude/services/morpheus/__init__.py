@@ -29,18 +29,6 @@ Services (Metaphysical Fullstack AD-009):
 - adapters/        - LLM backend implementations
 """
 
-from .node import (
-    CompletionRendering,
-    MorpheusManifestRendering,
-    MorpheusNode,
-    ProvidersRendering,
-)
-from .persistence import (
-    CompletionResult,
-    MorpheusPersistence,
-    MorpheusStatus,
-    ProviderStatus,
-)
 from .gateway import (
     GatewayConfig,
     MorpheusGateway,
@@ -48,22 +36,34 @@ from .gateway import (
     RateLimitError,
     RateLimitState,
 )
-from .types import (
-    ChatChoice,
-    ChatMessage,
-    ChatRequest,
-    ChatResponse,
-    MorpheusError,
-    StreamChunk,
-    StreamChoice,
-    StreamDelta,
-    Usage,
+from .node import (
+    CompletionRendering,
+    MorpheusManifestRendering,
+    MorpheusNode,
+    ProvidersRendering,
 )
 from .observability import (
     MorpheusTelemetry,
     get_morpheus_metrics_summary,
     record_completion,
     reset_morpheus_metrics,
+)
+from .persistence import (
+    CompletionResult,
+    MorpheusPersistence,
+    MorpheusStatus,
+    ProviderStatus,
+)
+from .types import (
+    ChatChoice,
+    ChatMessage,
+    ChatRequest,
+    ChatResponse,
+    MorpheusError,
+    StreamChoice,
+    StreamChunk,
+    StreamDelta,
+    Usage,
 )
 
 __all__ = [

@@ -11,6 +11,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from agents.town.environment import create_mpp_environment
 from agents.town.flux import TownEvent, TownFlux, TownPhase
 
@@ -655,9 +656,7 @@ class TestTownFluxPerturbation:
         env = create_mpp_environment()
         flux = TownFlux(env, seed=42)
 
-        event = await flux.perturb(
-            "greet", participant_ids=["invalid_id_1", "invalid_id_2"]
-        )
+        event = await flux.perturb("greet", participant_ids=["invalid_id_1", "invalid_id_2"])
 
         # Should return None because participants don't exist
         assert event is None

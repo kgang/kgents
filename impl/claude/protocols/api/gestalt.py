@@ -15,6 +15,7 @@ Endpoints:
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 try:
@@ -30,7 +31,10 @@ except ImportError:
     Query = None  # type: ignore[assignment]
     StreamingResponse = None  # type: ignore[assignment]
     BaseModel = object  # type: ignore[assignment]
-    Field = lambda *a, **k: None  # type: ignore[assignment]
+
+    def Field(*a, **k):
+        return None
+
 
 from protocols.gestalt.analysis import ArchitectureGraph, build_architecture_graph
 from protocols.gestalt.governance import (
@@ -47,12 +51,12 @@ from protocols.gestalt.handler import (
     handle_module_manifest,
 )
 from protocols.gestalt.umwelt import (
-    GestaltUmwelt,
     OBSERVER_TO_UMWELT,
+    GestaltUmwelt,
     UmweltConfig,
-    get_umwelt_config,
     compute_node_score,
     filter_node_for_umwelt,
+    get_umwelt_config,
 )
 
 # =============================================================================
@@ -63,7 +67,7 @@ _api_cached_graph: ArchitectureGraph | None = None
 _api_cached_violations: list["DriftViolation"] | None = None
 
 
-def _get_project_root() -> "Path":
+def _get_project_root() -> Path:
     """Get the project root for API scans."""
     from pathlib import Path
 
@@ -77,9 +81,7 @@ def _get_project_root() -> "Path":
     return Path.cwd()
 
 
-def sync_scan_codebase(
-    root: "Path | None" = None, language: str = "python"
-) -> ArchitectureGraph:
+def sync_scan_codebase(root: Path | None = None, language: str = "python") -> ArchitectureGraph:
     """
     Synchronously scan codebase for API use.
 
@@ -97,9 +99,7 @@ def sync_scan_codebase(
     # Update health with drift scores
     for module in graph.modules.values():
         if module.health:
-            module_violations = [
-                v for v in violations if v.source_module == module.name
-            ]
+            module_violations = [v for v in violations if v.source_module == module.name]
             module.health.drift = min(1.0, len(module_violations) * 0.2)
 
     _api_cached_graph = graph
@@ -322,7 +322,10 @@ def create_gestalt_router() -> "APIRouter | None":
     async def get_topology(
         max_nodes: int = Query(200, ge=10, le=1000, description="Max nodes to return"),
         min_health: float = Query(0.0, ge=0.0, le=1.0, description="Min health filter"),
-        role: str | None = Query(None, description="Observer role (Sprint 2): tech_lead, developer, reviewer, product, security, performance"),
+        role: str | None = Query(
+            None,
+            description="Observer role (Sprint 2): tech_lead, developer, reviewer, product, security, performance",
+        ),
     ) -> TopologyResponse:
         """
         Get graph topology for visualization.
@@ -459,9 +462,7 @@ def create_gestalt_router() -> "APIRouter | None":
                 "link_count": len(links),
                 "layer_count": len(layers_set),
                 "violation_count": violation_count,
-                "avg_health": sum(health_scores) / len(health_scores)
-                if health_scores
-                else 0,
+                "avg_health": sum(health_scores) / len(health_scores) if health_scores else 0,
                 "overall_grade": graph.overall_grade,
             },
             # Sprint 2: Include applied umwelt config
@@ -469,7 +470,9 @@ def create_gestalt_router() -> "APIRouter | None":
                 "role": role or "developer",
                 "config": umwelt_config.to_dict(),
                 "emphasized_layers": umwelt_config.emphasized_layers,
-            } if role else None,
+            }
+            if role
+            else None,
         )
 
     @router.get("/stream")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.yield_card import (
     YIELD_GLYPHS,
     YIELD_GLYPHS_ASCII,
@@ -137,9 +138,7 @@ class TestYieldCardContentTruncation:
     def test_long_content_truncated(self) -> None:
         """Long content is truncated with ellipsis."""
         long_content = "A" * 100
-        widget = YieldCardWidget(
-            YieldCardState(content=long_content, max_content_length=50)
-        )
+        widget = YieldCardWidget(YieldCardState(content=long_content, max_content_length=50))
         result = widget.project(RenderTarget.CLI)
         assert "..." in result
         # Should be max_content_length chars total (including ...)
@@ -171,18 +170,14 @@ class TestYieldCardProjectCLI:
     def test_project_cli_type_glyphs_emoji(self) -> None:
         """CLI projection uses correct type glyphs with emoji."""
         for yield_type, glyph in YIELD_GLYPHS.items():
-            widget = YieldCardWidget(
-                YieldCardState(yield_type=yield_type, use_emoji=True)
-            )
+            widget = YieldCardWidget(YieldCardState(yield_type=yield_type, use_emoji=True))
             result = widget.project(RenderTarget.CLI)
             assert glyph in result
 
     def test_project_cli_type_glyphs_ascii(self) -> None:
         """CLI projection uses correct type glyphs in ASCII mode."""
         for yield_type, glyph in YIELD_GLYPHS_ASCII.items():
-            widget = YieldCardWidget(
-                YieldCardState(yield_type=yield_type, use_emoji=False)
-            )
+            widget = YieldCardWidget(YieldCardState(yield_type=yield_type, use_emoji=False))
             result = widget.project(RenderTarget.CLI)
             assert glyph in result
 
@@ -238,9 +233,7 @@ class TestYieldCardProjectJSON:
     def test_project_json_includes_content_preview(self) -> None:
         """JSON projection includes truncated content preview."""
         long_content = "A" * 100
-        widget = YieldCardWidget(
-            YieldCardState(content=long_content, max_content_length=50)
-        )
+        widget = YieldCardWidget(YieldCardState(content=long_content, max_content_length=50))
         result = widget.project(RenderTarget.JSON)
 
         assert "content" in result
@@ -405,9 +398,7 @@ class TestYieldCardDeterminism:
 
         assert widget1.project(RenderTarget.CLI) == widget2.project(RenderTarget.CLI)
         assert widget1.project(RenderTarget.JSON) == widget2.project(RenderTarget.JSON)
-        assert widget1.project(RenderTarget.MARIMO) == widget2.project(
-            RenderTarget.MARIMO
-        )
+        assert widget1.project(RenderTarget.MARIMO) == widget2.project(RenderTarget.MARIMO)
 
 
 class TestYieldTypes:

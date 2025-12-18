@@ -14,6 +14,7 @@ Tests cover:
 from datetime import date
 
 import pytest
+
 from protocols.garden.types import (
     # Dataclasses
     EntropyBudget,
@@ -671,8 +672,7 @@ class TestSessionHeader:
 
 
 try:
-    from hypothesis import given
-    from hypothesis import strategies as st
+    from hypothesis import given, strategies as st
 
     class TestPropertyBased:
         """Property-based tests for Garden types."""

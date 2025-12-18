@@ -427,8 +427,7 @@ class GlassClient:
 
         # Both failed - let caller handle Ghost fallback
         raise ConnectionError(
-            f"Cortex daemon unavailable at {self.address}. "
-            "Local servicer also unavailable."
+            f"Cortex daemon unavailable at {self.address}. Local servicer also unavailable."
         )
 
     async def _try_grpc(self, method: str, request: Any) -> Any:
@@ -439,6 +438,7 @@ class GlassClient:
         """
         try:
             import grpc
+
             from protocols.proto.generated import LogosStub
         except ImportError as e:
             raise ConnectionError(f"gRPC not available: {e}")
@@ -482,13 +482,12 @@ class GlassClient:
         if self._local_servicer is None:
             try:
                 from infra.cortex import create_cortex_servicer
+
                 from protocols.cli.hollow import get_lifecycle_state
 
                 # Create servicer with lifecycle state if available
                 lifecycle_state = get_lifecycle_state()
-                self._local_servicer = create_cortex_servicer(
-                    lifecycle_state=lifecycle_state
-                )
+                self._local_servicer = create_cortex_servicer(lifecycle_state=lifecycle_state)
             except ImportError as e:
                 raise ConnectionError(f"Local servicer not available: {e}")
 

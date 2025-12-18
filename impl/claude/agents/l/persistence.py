@@ -42,15 +42,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from .registry import Registry
-from .types import (
-    Catalog,
-    CatalogEntry,
-    EntityType,
-    SearchResult,
-    Status,
-)
-
 # New D-gent imports
 from agents.d import (
     Datum,
@@ -59,6 +50,14 @@ from agents.d import (
 )
 from agents.d.router import Backend
 
+from .registry import Registry
+from .types import (
+    Catalog,
+    CatalogEntry,
+    EntityType,
+    SearchResult,
+    Status,
+)
 
 # Well-known ID for the catalog datum
 CATALOG_DATUM_ID = "lgent_catalog_current"
@@ -371,9 +370,7 @@ class PersistentRegistry:
         relationship_type: str,
     ) -> bool:
         """Add a relationship between entries. See Registry.add_relationship()."""
-        result = await self._registry.add_relationship(
-            source_id, target_id, relationship_type
-        )
+        result = await self._registry.add_relationship(source_id, target_id, relationship_type)
         if result:
             await self._maybe_save()
         return result

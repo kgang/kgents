@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from agents.l.embedders import (
     OPENAI_AVAILABLE,
     SENTENCE_TRANSFORMERS_AVAILABLE,
@@ -76,9 +77,7 @@ class TestSentenceTransformerEmbedder:
     @pytest.mark.asyncio
     async def test_normalization(self) -> None:
         """Test that embeddings are normalized."""
-        embedder = SentenceTransformerEmbedder(
-            model_name="all-MiniLM-L6-v2", normalize=True
-        )
+        embedder = SentenceTransformerEmbedder(model_name="all-MiniLM-L6-v2", normalize=True)
         vector = await embedder.embed("test")
 
         # Check L2 norm is ~1.0 (normalized)
@@ -135,9 +134,7 @@ class TestOpenAIEmbedder:
     Skip if running in CI without API key.
     """
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
     @pytest.mark.asyncio
     async def test_embed_simple(self) -> None:
         """Test basic embedding."""
@@ -148,9 +145,7 @@ class TestOpenAIEmbedder:
         assert len(vector) == embedder.dimension
         assert all(isinstance(x, float) for x in vector)
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
     @pytest.mark.asyncio
     async def test_dimension(self) -> None:
         """Test dimension property."""
@@ -159,9 +154,7 @@ class TestOpenAIEmbedder:
         await embedder.embed("test")
         assert embedder.dimension == 1536  # text-embedding-3-small is 1536-dim
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
     @pytest.mark.asyncio
     async def test_metadata(self) -> None:
         """Test metadata property."""
@@ -173,9 +166,7 @@ class TestOpenAIEmbedder:
         assert metadata.provider == "openai"
         assert metadata.supports_batch is True
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
     @pytest.mark.asyncio
     async def test_embed_batch(self) -> None:
         """Test batch embedding."""
@@ -300,9 +291,7 @@ class TestCreateBestAvailableEmbedder:
             embedder = create_best_available_embedder(prefer="sentence-transformers")
             assert isinstance(embedder, SimpleEmbedder)
 
-    @pytest.mark.skipif(
-        not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set"
-    )
+    @pytest.mark.skipif(not os.getenv("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
     def test_prefer_openai(self) -> None:
         """Test preference for OpenAI."""
         if OPENAI_AVAILABLE:

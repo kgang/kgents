@@ -3,6 +3,7 @@ Tests for license gate decorator and utilities.
 """
 
 import pytest
+
 from protocols.licensing.gate import (
     LicenseError,
     check_tier,

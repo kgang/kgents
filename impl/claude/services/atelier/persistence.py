@@ -31,8 +31,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol, TableAdapter
 from models.atelier import (
-    Artisan,
     ArtifactContribution,
+    Artisan,
     Exhibition,
     GalleryItem,
     Workshop,
@@ -232,9 +232,7 @@ class AtelierPersistence:
 
             # Count artisans
             artisan_count = await session.execute(
-                select(func.count())
-                .select_from(Artisan)
-                .where(Artisan.workshop_id == workshop_id)
+                select(func.count()).select_from(Artisan).where(Artisan.workshop_id == workshop_id)
             )
 
             # Count contributions
@@ -268,7 +266,7 @@ class AtelierPersistence:
             stmt = select(Workshop)
 
             if active_only:
-                stmt = stmt.where(Workshop.is_active == True)
+                stmt = stmt.where(Workshop.is_active)
             if theme:
                 stmt = stmt.where(Workshop.theme == theme)
 
@@ -280,9 +278,7 @@ class AtelierPersistence:
             for w in workshops:
                 # Count artisans for each
                 artisan_count = await session.execute(
-                    select(func.count())
-                    .select_from(Artisan)
-                    .where(Artisan.workshop_id == w.id)
+                    select(func.count()).select_from(Artisan).where(Artisan.workshop_id == w.id)
                 )
                 views.append(
                     WorkshopView(
@@ -392,7 +388,7 @@ class AtelierPersistence:
             if specialty:
                 stmt = stmt.where(Artisan.specialty == specialty)
             if active_only:
-                stmt = stmt.where(Artisan.is_active == True)
+                stmt = stmt.where(Artisan.is_active)
 
             stmt = stmt.order_by(Artisan.created_at)
             result = await session.execute(stmt)
@@ -483,9 +479,7 @@ class AtelierPersistence:
                 content=content,
                 prompt=prompt,
                 inspiration=inspiration,
-                created_at=contribution.created_at.isoformat()
-                if contribution.created_at
-                else "",
+                created_at=contribution.created_at.isoformat() if contribution.created_at else "",
             )
 
     async def list_contributions(
@@ -504,9 +498,7 @@ class AtelierPersistence:
             if workshop_id:
                 stmt = stmt.where(Artisan.workshop_id == workshop_id)
             if contribution_type:
-                stmt = stmt.where(
-                    ArtifactContribution.contribution_type == contribution_type
-                )
+                stmt = stmt.where(ArtifactContribution.contribution_type == contribution_type)
 
             stmt = stmt.order_by(ArtifactContribution.created_at.desc()).limit(limit)
             result = await session.execute(stmt)
@@ -583,9 +575,7 @@ class AtelierPersistence:
                 view_count=0,
                 item_count=0,
                 opened_at=None,
-                created_at=exhibition.created_at.isoformat()
-                if exhibition.created_at
-                else "",
+                created_at=exhibition.created_at.isoformat() if exhibition.created_at else "",
             )
 
     async def open_exhibition(self, exhibition_id: str) -> bool:
@@ -701,12 +691,8 @@ class AtelierPersistence:
                 is_open=exhibition.is_open,
                 view_count=exhibition.view_count,
                 item_count=item_count_result.scalar() or 0,
-                opened_at=exhibition.opened_at.isoformat()
-                if exhibition.opened_at
-                else None,
-                created_at=exhibition.created_at.isoformat()
-                if exhibition.created_at
-                else "",
+                opened_at=exhibition.opened_at.isoformat() if exhibition.opened_at else None,
+                created_at=exhibition.created_at.isoformat() if exhibition.created_at else "",
             )
 
     async def list_gallery_items(
@@ -755,16 +741,12 @@ class AtelierPersistence:
             total_workshops = total_workshops_result.scalar() or 0
 
             active_workshops_result = await session.execute(
-                select(func.count())
-                .select_from(Workshop)
-                .where(Workshop.is_active == True)
+                select(func.count()).select_from(Workshop).where(Workshop.is_active)
             )
             active_workshops = active_workshops_result.scalar() or 0
 
             # Count artisans
-            total_artisans_result = await session.execute(
-                select(func.count()).select_from(Artisan)
-            )
+            total_artisans_result = await session.execute(select(func.count()).select_from(Artisan))
             total_artisans = total_artisans_result.scalar() or 0
 
             # Count contributions
@@ -780,9 +762,7 @@ class AtelierPersistence:
             total_exhibitions = total_exhibitions_result.scalar() or 0
 
             open_exhibitions_result = await session.execute(
-                select(func.count())
-                .select_from(Exhibition)
-                .where(Exhibition.is_open == True)
+                select(func.count()).select_from(Exhibition).where(Exhibition.is_open)
             )
             open_exhibitions = open_exhibitions_result.scalar() or 0
 

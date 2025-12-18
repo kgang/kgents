@@ -4,6 +4,7 @@ import asyncio
 from typing import AsyncIterator
 
 import pytest
+
 from agents.flux import Flux, FluxAgent, FluxConfig, FluxPipeline, FluxState
 from agents.flux.sources import filtered, from_iterable, mapped, take
 from agents.poly.types import Agent
@@ -155,11 +156,7 @@ class TestLivingPipelines:
     @pytest.mark.asyncio
     async def test_three_stage_pipeline(self):
         """Pipeline of three flux agents."""
-        p = (
-            Flux.lift(DoubleAgent())
-            | Flux.lift(AddAgent(10))
-            | Flux.lift(DoubleAgent())
-        )
+        p = Flux.lift(DoubleAgent()) | Flux.lift(AddAgent(10)) | Flux.lift(DoubleAgent())
 
         # Input: 5
         # After Double: 10

@@ -16,6 +16,7 @@ import time
 from typing import Any
 
 import pytest
+
 from agents.town.citizen import Citizen, Eigenvectors
 from agents.town.inhabit_session import (
     ConsentState,
@@ -632,9 +633,7 @@ class TestInhabitIntegration:
         assert not resident.can_force()  # Still blocked (max_forces = 0)
 
         # Citizen tier: 3 forces
-        citizen_session = InhabitSession(
-            citizen=bob, user_tier=SubscriptionTier.CITIZEN
-        )
+        citizen_session = InhabitSession(citizen=bob, user_tier=SubscriptionTier.CITIZEN)
         citizen_session.force_enabled = True
         assert citizen_session.max_forces == 3
 
@@ -834,9 +833,7 @@ class TestHeuristicAlignment:
         """Warm action aligns with warm citizen."""
         from agents.town.inhabit_session import _heuristic_alignment
 
-        result = _heuristic_alignment(
-            warm_alice, "help a neighbor with kindness", "test"
-        )
+        result = _heuristic_alignment(warm_alice, "help a neighbor with kindness", "test")
         assert result.score > 0.5  # Should align
 
     def test_heuristic_cold_action_for_warm_citizen(self, warm_alice: Citizen) -> None:
@@ -851,9 +848,7 @@ class TestHeuristicAlignment:
         """Betrayal violates trust."""
         from agents.town.inhabit_session import _heuristic_alignment
 
-        result = _heuristic_alignment(
-            warm_alice, "betray their secret to the enemy", "test"
-        )
+        result = _heuristic_alignment(warm_alice, "betray their secret to the enemy", "test")
         assert result.violated_value in ["trust", "warmth"]
 
     def test_heuristic_neutral_action(self, warm_alice: Citizen) -> None:
@@ -947,22 +942,16 @@ class TestAsyncAlignment:
         return MockLLM()
 
     @pytest.mark.asyncio
-    async def test_calculate_alignment_aligned(
-        self, alice: Citizen, mock_llm: Any
-    ) -> None:
+    async def test_calculate_alignment_aligned(self, alice: Citizen, mock_llm: Any) -> None:
         """Calculate alignment for aligned action."""
         from agents.town.inhabit_session import calculate_alignment
 
-        result = await calculate_alignment(
-            alice, "help the neighbor with kindness", mock_llm
-        )
+        result = await calculate_alignment(alice, "help the neighbor with kindness", mock_llm)
         assert result.score > 0.5
         assert result.violated_value is None
 
     @pytest.mark.asyncio
-    async def test_calculate_alignment_misaligned(
-        self, alice: Citizen, mock_llm: Any
-    ) -> None:
+    async def test_calculate_alignment_misaligned(self, alice: Citizen, mock_llm: Any) -> None:
         """Calculate alignment for misaligned action."""
         from agents.town.inhabit_session import calculate_alignment
 
@@ -989,9 +978,7 @@ class TestAsyncAlignment:
 
         mock_llm.generate = mock_generate
 
-        text, cost = await generate_inner_voice(
-            alice, "consider helping a friend", mock_llm
-        )
+        text, cost = await generate_inner_voice(alice, "consider helping a friend", mock_llm)
         assert len(text) > 0
         assert cost == 30
 
@@ -1092,9 +1079,7 @@ class TestAsyncProcessInput:
         assert "hesitates" in response.message
 
     @pytest.mark.asyncio
-    async def test_process_input_at_rupture(
-        self, alice: Citizen, mock_llm: Any
-    ) -> None:
+    async def test_process_input_at_rupture(self, alice: Citizen, mock_llm: Any) -> None:
         """Process input at rupture results in exit."""
         session = InhabitSession(citizen=alice, user_tier=SubscriptionTier.CITIZEN)
         session.consent.debt = 1.0  # Rupture
@@ -1120,9 +1105,7 @@ class TestAsyncProcessInput:
         assert session.consent.debt > 0
 
     @pytest.mark.asyncio
-    async def test_force_action_async_blocked(
-        self, alice: Citizen, mock_llm: Any
-    ) -> None:
+    async def test_force_action_async_blocked(self, alice: Citizen, mock_llm: Any) -> None:
         """Force action blocked when not allowed."""
         session = InhabitSession(citizen=alice, user_tier=SubscriptionTier.CITIZEN)
         # Force not enabled
@@ -1179,9 +1162,7 @@ class TestInhabitEventEmission:
         from agents.town.inhabit_session import AlignmentScore, InhabitResponse
 
         session = InhabitSession(citizen=alice, user_tier=SubscriptionTier.CITIZEN)
-        alignment = AlignmentScore(
-            score=0.2, violated_value="trust", reasoning="Violates trust"
-        )
+        alignment = AlignmentScore(score=0.2, violated_value="trust", reasoning="Violates trust")
         response = InhabitResponse(
             type="resist",
             message="Alice doesn't want to",
@@ -1201,9 +1182,7 @@ class TestInhabitEventEmission:
         from agents.town.inhabit_session import AlignmentScore, InhabitResponse
 
         session = InhabitSession(citizen=alice, user_tier=SubscriptionTier.CITIZEN)
-        alignment = AlignmentScore(
-            score=0.4, violated_value=None, reasoning="Ambiguous"
-        )
+        alignment = AlignmentScore(score=0.4, violated_value=None, reasoning="Ambiguous")
         response = InhabitResponse(
             type="negotiate",
             message="Alice hesitates",

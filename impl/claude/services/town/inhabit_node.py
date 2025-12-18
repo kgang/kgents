@@ -43,8 +43,8 @@ from .inhabit_service import (
 )
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
     from agents.town.citizen import Citizen
+    from bootstrap.umwelt import Umwelt
 
 
 # =============================================================================
@@ -79,12 +79,14 @@ class InhabitSessionRendering:
 
         force = self.status.get("force", {})
         if force.get("enabled"):
-            lines.extend([
-                "",
-                "Force:",
-                f"  Used: {force.get('used', 0)} / {force.get('limit', 0)}",
-                f"  Remaining: {force.get('remaining', 0)}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "Force:",
+                    f"  Used: {force.get('used', 0)} / {force.get('limit', 0)}",
+                    f"  Remaining: {force.get('remaining', 0)}",
+                ]
+            )
 
         if self.status.get("expired"):
             lines.append("\n⚠️ Session Expired")

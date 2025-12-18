@@ -16,6 +16,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import pytest
+
 from protocols.hypnagogic_refinery import (
     HypnagogicRefinery,
     MemoryTemperature,
@@ -145,9 +146,7 @@ class TestOptimizationEngine:
         return create_optimization_engine(min_improvement=0.1)
 
     @pytest.mark.asyncio
-    async def test_compress_code_with_comments(
-        self, engine: OptimizationEngine
-    ) -> None:
+    async def test_compress_code_with_comments(self, engine: OptimizationEngine) -> None:
         """Test compressing code with many comments."""
         code = """# This is a header comment
 # It has multiple lines
@@ -217,18 +216,14 @@ class Bar:
 class Bar:
     pass"""
 
-        preserved, notes = await engine.verify_semantics(
-            original, good_optimized, "code"
-        )
+        preserved, notes = await engine.verify_semantics(original, good_optimized, "code")
         assert preserved
 
         # Bad optimization (removes definition)
         bad_optimized = """class Bar:
     pass"""
 
-        preserved, notes = await engine.verify_semantics(
-            original, bad_optimized, "code"
-        )
+        preserved, notes = await engine.verify_semantics(original, bad_optimized, "code")
         assert not preserved
 
 
@@ -254,9 +249,7 @@ class TestHypnagogicRefinery:
         assert report.candidates_found == 0
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_with_cold_memory(
-        self, refinery: HypnagogicRefinery
-    ) -> None:
+    async def test_dream_cycle_with_cold_memory(self, refinery: HypnagogicRefinery) -> None:
         """Test dream cycle finds and optimizes cold memory."""
         # Add a cold memory with comments
         code_with_comments = """# Header comment
@@ -285,9 +278,7 @@ def test() -> None:
         # Should attempt optimization
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_skips_hot_memory(
-        self, refinery: HypnagogicRefinery
-    ) -> None:
+    async def test_dream_cycle_skips_hot_memory(self, refinery: HypnagogicRefinery) -> None:
         """Test dream cycle skips hot memories."""
         memory = create_memory(
             content="# lots of comments\n" * 10,
@@ -304,9 +295,7 @@ def test() -> None:
         assert report.memories_examined == 0
 
     @pytest.mark.asyncio
-    async def test_dream_cycle_respects_limit(
-        self, refinery: HypnagogicRefinery
-    ) -> None:
+    async def test_dream_cycle_respects_limit(self, refinery: HypnagogicRefinery) -> None:
         """Test dream cycle respects max candidates."""
         # Add many cold memories
         for i in range(20):
@@ -431,9 +420,7 @@ class TestIntegration:
         # Add memories
         for i in range(10):
             memory = create_memory(
-                content=f"# Header for item {i}\n"
-                + "# comment\n" * 5
-                + f"def func_{i}(): pass",
+                content=f"# Header for item {i}\n" + "# comment\n" * 5 + f"def func_{i}(): pass",
                 kind="code",
                 id=f"item-{i}",
             )
@@ -512,9 +499,7 @@ class Calculator:
         report = await refinery.dream_cycle()
 
         # Find the result for our cache
-        cache_results = [
-            r for r in report.results if r.candidate.memory.id == "old-cache"
-        ]
+        cache_results = [r for r in report.results if r.candidate.memory.id == "old-cache"]
 
         assert len(cache_results) == 1
         assert cache_results[0].improvement == 1.0  # Full removal

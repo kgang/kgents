@@ -14,6 +14,7 @@ See: spec/f-gents/chat.md
 import asyncio
 
 import pytest
+
 from agents.f.config import ChatConfig
 from agents.f.modalities.chat import ChatFlow, Turn
 from agents.f.modalities.context import Message, SlidingContext, SummarizingContext
@@ -224,9 +225,7 @@ class TestTurn:
         turn = Turn(
             turn_number=1,
             user_message=Message(role="user", content="Hello", tokens=5),
-            assistant_response=Message(
-                role="assistant", content="Hi there!", tokens=10
-            ),
+            assistant_response=Message(role="assistant", content="Hi there!", tokens=10),
             started_at=started,
             completed_at=completed,
             tokens_in=5,

@@ -10,6 +10,7 @@ See: plans/gardener-logos-enactment.md Phase 4
 from __future__ import annotations
 
 import pytest
+
 from agents.gardener.session import (
     GardenerSession,
     SessionArtifact,
@@ -135,9 +136,7 @@ class TestPhaseSeasonSynergy:
         # Reset to DORMANT for test
         garden.season = GardenSeason.DORMANT
 
-        new_season = await garden.on_session_phase_advance(
-            SessionPhase.SENSE, SessionPhase.ACT
-        )
+        new_season = await garden.on_session_phase_advance(SessionPhase.SENSE, SessionPhase.ACT)
 
         assert new_season == GardenSeason.SPROUTING
         assert garden.season == GardenSeason.SPROUTING
@@ -152,9 +151,7 @@ class TestPhaseSeasonSynergy:
         garden._session = session
         garden.session_id = session.session_id
 
-        new_season = await garden.on_session_phase_advance(
-            SessionPhase.ACT, SessionPhase.REFLECT
-        )
+        new_season = await garden.on_session_phase_advance(SessionPhase.ACT, SessionPhase.REFLECT)
 
         assert new_season == GardenSeason.BLOOMING
         assert garden.season == GardenSeason.BLOOMING
@@ -169,9 +166,7 @@ class TestPhaseSeasonSynergy:
         garden._session = session
         garden.session_id = session.session_id
 
-        new_season = await garden.on_session_phase_advance(
-            SessionPhase.SENSE, SessionPhase.ACT
-        )
+        new_season = await garden.on_session_phase_advance(SessionPhase.SENSE, SessionPhase.ACT)
 
         assert new_season == GardenSeason.SPROUTING
         assert garden.season == GardenSeason.SPROUTING
@@ -187,9 +182,7 @@ class TestPhaseSeasonSynergy:
         garden.session_id = session.session_id
 
         # HARVEST doesn't transition on SENSE → ACT
-        new_season = await garden.on_session_phase_advance(
-            SessionPhase.SENSE, SessionPhase.ACT
-        )
+        new_season = await garden.on_session_phase_advance(SessionPhase.SENSE, SessionPhase.ACT)
 
         assert new_season is None
         assert garden.season == GardenSeason.HARVEST
@@ -223,9 +216,7 @@ class TestPhaseSeasonSynergy:
         # Simulate 3 reflect cycles
         session._state.reflect_count = 3
 
-        new_season = await garden.on_session_phase_advance(
-            SessionPhase.REFLECT, SessionPhase.SENSE
-        )
+        new_season = await garden.on_session_phase_advance(SessionPhase.REFLECT, SessionPhase.SENSE)
 
         assert new_season == GardenSeason.HARVEST
 
@@ -249,9 +240,7 @@ class TestSessionAgentese:
         return {"archetype": "developer", "name": "Test Observer"}
 
     @pytest.mark.asyncio
-    async def test_session_create(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_create(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.create should create embedded session."""
         result = await node._invoke_aspect(
             "session.create",
@@ -295,9 +284,7 @@ class TestSessionAgentese:
         assert "SENSE" in result.content  # Initial phase
 
     @pytest.mark.asyncio
-    async def test_session_advance(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_advance(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.advance should advance phase and trigger synergy."""
         # Create session (starts in SENSE)
         await node._invoke_aspect(
@@ -316,9 +303,7 @@ class TestSessionAgentese:
         assert node._garden.season == GardenSeason.SPROUTING
 
     @pytest.mark.asyncio
-    async def test_session_sense(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_sense(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.sense should gather context."""
         await node._invoke_aspect(
             "session.create",
@@ -335,9 +320,7 @@ class TestSessionAgentese:
         assert "SENSE COMPLETE" in result.content
 
     @pytest.mark.asyncio
-    async def test_session_artifact(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_artifact(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.artifact should record artifacts."""
         await node._invoke_aspect(
             "session.create",
@@ -358,9 +341,7 @@ class TestSessionAgentese:
         assert "code" in result.summary.lower() or "artifact" in result.summary.lower()
 
     @pytest.mark.asyncio
-    async def test_session_learn(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_learn(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.learn should record learnings."""
         await node._invoke_aspect(
             "session.create",
@@ -381,9 +362,7 @@ class TestSessionAgentese:
         assert "Learned" in result.summary or "learning" in result.summary.lower()
 
     @pytest.mark.asyncio
-    async def test_session_complete(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_complete(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.complete should complete session and transition to HARVEST."""
         await node._invoke_aspect(
             "session.create",
@@ -402,9 +381,7 @@ class TestSessionAgentese:
         assert node._garden.session is None
 
     @pytest.mark.asyncio
-    async def test_session_abort(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_abort(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.abort should abort session."""
         await node._invoke_aspect(
             "session.create",
@@ -418,9 +395,7 @@ class TestSessionAgentese:
         assert node._garden.session is None
 
     @pytest.mark.asyncio
-    async def test_session_rollback(
-        self, node: GardenerLogosNode, mock_observer: dict
-    ) -> None:
+    async def test_session_rollback(self, node: GardenerLogosNode, mock_observer: dict) -> None:
         """session.rollback should rollback from ACT to SENSE."""
         await node._invoke_aspect(
             "session.create",
@@ -466,9 +441,7 @@ class TestSessionIntegration:
         # Season should still be SPROUTING
 
         # 4. Record artifacts
-        await session.record_artifact(
-            SessionArtifact(artifact_type="code", path="feature.py")
-        )
+        await session.record_artifact(SessionArtifact(artifact_type="code", path="feature.py"))
 
         # 5. Advance to REFLECT (triggers SPROUTING → BLOOMING)
         old_phase = session.phase

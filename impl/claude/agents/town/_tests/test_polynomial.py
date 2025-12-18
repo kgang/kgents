@@ -11,6 +11,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from agents.town.polynomial import (
     CITIZEN_POLYNOMIAL,
     CitizenInput,

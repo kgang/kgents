@@ -9,6 +9,7 @@ from __future__ import annotations
 import time
 
 import pytest
+
 from agents.i.reactive.signal import Signal
 from agents.i.reactive.wiring.subscriptions import (
     BatchedUpdates,
@@ -47,9 +48,7 @@ class TestThrottledSignal:
     def test_throttled_signal_subscribe(self) -> None:
         """subscribe() should receive throttled updates."""
         source: Signal[int] = Signal.of(0)
-        throttled = ThrottledSignal.from_signal(
-            source, interval_ms=0.1
-        )  # Very short for testing
+        throttled = ThrottledSignal.from_signal(source, interval_ms=0.1)  # Very short for testing
         received: list[int] = []
 
         throttled.subscribe(lambda v: received.append(v))
@@ -67,9 +66,7 @@ class TestThrottledSignal:
     def test_throttled_signal_flush(self) -> None:
         """flush() should emit pending value."""
         source: Signal[int] = Signal.of(0)
-        throttled = ThrottledSignal.from_signal(
-            source, interval_ms=10000.0
-        )  # Long interval
+        throttled = ThrottledSignal.from_signal(source, interval_ms=10000.0)  # Long interval
         received: list[int] = []
 
         throttled.subscribe(lambda v: received.append(v))
@@ -343,9 +340,7 @@ class TestBatchedUpdates:
 
     def test_batched_updates_queue(self) -> None:
         """queue() should store pending updates."""
-        batch: BatchedUpdates[int] = BatchedUpdates(
-            interval_ms=10000.0
-        )  # Long interval
+        batch: BatchedUpdates[int] = BatchedUpdates(interval_ms=10000.0)  # Long interval
 
         batch.queue("key1", 1)
         batch.queue("key2", 2)

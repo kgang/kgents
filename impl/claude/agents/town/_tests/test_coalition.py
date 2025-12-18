@@ -1,6 +1,7 @@
 """Tests for Phase 4 coalition detection and reputation."""
 
 import pytest
+
 from agents.town.citizen import Citizen, Eigenvectors
 from agents.town.coalition import (
     Coalition,

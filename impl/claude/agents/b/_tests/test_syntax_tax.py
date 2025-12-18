@@ -7,6 +7,7 @@ B×G Phase 3 - Structural Economics integration.
 from __future__ import annotations
 
 import pytest
+
 from agents.b.syntax_tax import (
     ChomskyLevel,
     DowngradeNegotiator,
@@ -359,9 +360,7 @@ class TestSyntaxTaxBudget:
         assert decision.approved is False
         assert "Insufficient" in decision.reason
 
-    def test_downgrade_available_when_insufficient(
-        self, budget: SyntaxTaxBudget
-    ) -> None:
+    def test_downgrade_available_when_insufficient(self, budget: SyntaxTaxBudget) -> None:
         """Downgrade is suggested when budget insufficient for Turing but can afford cheaper."""
         grammar = "eval(code)"
         # agent3 has 5000 tokens - can afford regular (1000) or context-free (3000) but not Turing (90000)
@@ -512,9 +511,7 @@ class TestDowngradeNegotiator:
         # In Chomsky hierarchy, higher value = simpler = cheaper
         assert proposal.proposed_level.value > proposal.original_level.value
 
-    def test_no_downgrade_when_same_level(
-        self, negotiator: DowngradeNegotiator
-    ) -> None:
+    def test_no_downgrade_when_same_level(self, negotiator: DowngradeNegotiator) -> None:
         """No proposal when target is same as current."""
         proposal = negotiator.propose_downgrade(
             "agent1",
@@ -640,9 +637,7 @@ class TestIntegration:
             decision = budget.evaluate_grammar("rich_agent", grammar, 1000)
             assert decision.approved is True, f"Failed for: {grammar}"
 
-    def test_poor_agent_gets_downgrade_suggestions(
-        self, budget: SyntaxTaxBudget
-    ) -> None:
+    def test_poor_agent_gets_downgrade_suggestions(self, budget: SyntaxTaxBudget) -> None:
         """Poor agent gets downgrade suggestions for expensive grammars."""
         # medium_agent can afford cheaper grammars, so will get downgrade suggestion
         decision = budget.evaluate_grammar("medium_agent", "eval(code)", 1000)

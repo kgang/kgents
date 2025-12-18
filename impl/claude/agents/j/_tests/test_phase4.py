@@ -12,6 +12,7 @@ Tests for:
 from typing import Any
 
 import pytest
+
 from agents.j import (
     # Phase 1: Promise & Reality
     Reality,

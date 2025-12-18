@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from agents.i.reactive.demo.unified_app import (
     UnifiedDashboard,
     benchmark_renders,

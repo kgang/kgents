@@ -7,6 +7,7 @@ Tests focus system, keyboard navigation, selection state, and interaction events
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.wiring.interactions import (
     FocusableItem,
     FocusDirection,
@@ -806,12 +807,8 @@ class TestInteractionHandler:
 
         handler.on_any(lambda i: received.append(str(i.type)))
 
-        handler.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="a", payload={})
-        )
-        handler.emit(
-            Interaction(type=InteractionType.EXPANDED, source_id="b", payload={})
-        )
+        handler.emit(Interaction(type=InteractionType.ACTIVATED, source_id="a", payload={}))
+        handler.emit(Interaction(type=InteractionType.EXPANDED, source_id="b", payload={}))
 
         assert len(received) == 2
 
@@ -820,17 +817,11 @@ class TestInteractionHandler:
         handler = InteractionHandler()
         received: list[str] = []
 
-        unsub = handler.on(
-            InteractionType.ACTIVATED, lambda i: received.append(i.source_id)
-        )
+        unsub = handler.on(InteractionType.ACTIVATED, lambda i: received.append(i.source_id))
 
-        handler.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="a", payload={})
-        )
+        handler.emit(Interaction(type=InteractionType.ACTIVATED, source_id="a", payload={}))
         unsub()
-        handler.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="b", payload={})
-        )
+        handler.emit(Interaction(type=InteractionType.ACTIVATED, source_id="b", payload={}))
 
         assert received == ["a"]
 
@@ -841,9 +832,7 @@ class TestInteractionHandler:
         child.set_parent(parent)
 
         parent_received: list[str] = []
-        parent.on(
-            InteractionType.ACTIVATED, lambda i: parent_received.append(i.source_id)
-        )
+        parent.on(InteractionType.ACTIVATED, lambda i: parent_received.append(i.source_id))
 
         child.emit(
             Interaction(
@@ -863,9 +852,7 @@ class TestInteractionHandler:
         child.set_parent(parent)
 
         parent_received: list[str] = []
-        parent.on(
-            InteractionType.VALUE_CHANGED, lambda i: parent_received.append(i.source_id)
-        )
+        parent.on(InteractionType.VALUE_CHANGED, lambda i: parent_received.append(i.source_id))
 
         child.emit(
             Interaction(
@@ -1131,12 +1118,8 @@ class TestInteractionIntegration:
         parent_count = [0]
         parent.on_any(lambda _: parent_count.__setitem__(0, parent_count[0] + 1))
 
-        child1.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="c1", payload={})
-        )
-        child2.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="c2", payload={})
-        )
+        child1.emit(Interaction(type=InteractionType.ACTIVATED, source_id="c1", payload={}))
+        child2.emit(Interaction(type=InteractionType.ACTIVATED, source_id="c2", payload={}))
 
         assert parent_count[0] == 2
 
@@ -1195,8 +1178,6 @@ class TestEdgeCases:
         received: list[str] = []
 
         handler.on(InteractionType.ACTIVATED, lambda i: received.append(i.source_id))
-        handler.emit(
-            Interaction(type=InteractionType.ACTIVATED, source_id="btn", payload={})
-        )
+        handler.emit(Interaction(type=InteractionType.ACTIVATED, source_id="btn", payload={}))
 
         assert received == ["btn"]

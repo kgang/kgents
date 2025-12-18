@@ -29,9 +29,10 @@ from enum import Enum, auto
 from typing import Any
 from uuid import uuid4
 
-from agents.town.citizen import Citizen
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode
+
+from agents.town.citizen import Citizen
 
 # =============================================================================
 # OTEL Telemetry Constants
@@ -71,9 +72,7 @@ ATTR_DURATION_MS = "drill.duration_ms"
 class DrillError(Exception):
     """Base exception for drill-related errors."""
 
-    def __init__(
-        self, message: str, drill_id: str | None = None, phase: str | None = None
-    ):
+    def __init__(self, message: str, drill_id: str | None = None, phase: str | None = None):
         self.drill_id = drill_id
         self.phase = phase
         super().__init__(message)
@@ -517,12 +516,8 @@ class DrillInstance:
                 )
                 self.phase = new_phase
 
-                self._log(
-                    "start", f"Drill started. Scenario: {self.spec.scenario_trigger}"
-                )
-                self._log(
-                    "phase_transition", f"NORMAL -> {new_phase.name}", output.metadata
-                )
+                self._log("start", f"Drill started. Scenario: {self.spec.scenario_trigger}")
+                self._log("phase_transition", f"NORMAL -> {new_phase.name}", output.metadata)
 
                 span.set_attribute(ATTR_DRILL_PHASE, new_phase.name)
                 span.set_attribute(ATTR_DRILL_STATUS, self.status.name)
@@ -594,9 +589,7 @@ class DrillInstance:
                     self._log("inject_escalated", f"{inject.spec.name} auto-escalated")
 
                 span.set_attribute("drill.tick.triggered_injects", len(triggered))
-                span.set_attribute(
-                    "drill.tick.timer_updates", len(changes["timer_updates"])
-                )
+                span.set_attribute("drill.tick.timer_updates", len(changes["timer_updates"]))
                 span.set_attribute("drill.tick.escalations", len(escalated))
                 span.set_status(Status(StatusCode.OK))
 
@@ -778,9 +771,7 @@ class DrillInstance:
 
                 # Determine success
                 if success is None:
-                    required_met = all(
-                        e.met for e in self.evaluations if e.criterion.required
-                    )
+                    required_met = all(e.met for e in self.evaluations if e.criterion.required)
                     success = required_met and score >= 0.6
 
                 report = self._generate_report(success, score)
@@ -790,9 +781,7 @@ class DrillInstance:
                 span.set_attribute(ATTR_DRILL_SUCCESS, success)
                 span.set_attribute(ATTR_DRILL_STATUS, self.status.name)
                 span.set_attribute("drill.final_phase", self.phase.name)
-                span.set_attribute(
-                    "drill.criteria_met", sum(1 for e in self.evaluations if e.met)
-                )
+                span.set_attribute("drill.criteria_met", sum(1 for e in self.evaluations if e.met))
                 span.set_attribute("drill.criteria_total", len(self.evaluations))
                 span.set_status(Status(StatusCode.OK))
 
@@ -853,9 +842,7 @@ class DrillInstance:
             "audit_log_entries": len(self.audit_log),
         }
 
-    def _log(
-        self, event_type: str, message: str, metadata: dict[str, Any] | None = None
-    ) -> None:
+    def _log(self, event_type: str, message: str, metadata: dict[str, Any] | None = None) -> None:
         """Add entry to audit log."""
         self.audit_log.append(
             {

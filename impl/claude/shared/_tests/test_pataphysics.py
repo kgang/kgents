@@ -19,6 +19,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from shared.melting import MeltingContext
 from shared.pataphysics import (
     SYSTEM_PROMPT,
@@ -164,9 +165,7 @@ class TestPataphysicsAgent:
         assert "PataphysicsAgent" in agent.name
         assert "anomaly" in agent.name.lower()
 
-        agent2 = PataphysicsAgent(
-            config=PataphysicsSolverConfig(mode=PataphysicsMode.CLINAMEN)
-        )
+        agent2 = PataphysicsAgent(config=PataphysicsSolverConfig(mode=PataphysicsMode.CLINAMEN))
         assert "clinamen" in agent2.name.lower()
 
     def test_agent_build_prompt_returns_context(self) -> None:

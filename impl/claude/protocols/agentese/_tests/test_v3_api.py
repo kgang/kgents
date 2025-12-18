@@ -13,6 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from protocols.agentese import (
     AgentesePath,
     AspectCategory,
@@ -225,11 +226,7 @@ class TestPathComposition:
 
     def test_chained_composition(self) -> None:
         """Multiple >> creates longer composition."""
-        pipeline = (
-            path("world.doc.manifest")
-            >> "concept.summary.refine"
-            >> "self.memory.engram"
-        )
+        pipeline = path("world.doc.manifest") >> "concept.summary.refine" >> "self.memory.engram"
         assert isinstance(pipeline, UnboundComposedPath)
         assert len(pipeline.paths) == 3
         assert pipeline.paths[0] == "world.doc.manifest"

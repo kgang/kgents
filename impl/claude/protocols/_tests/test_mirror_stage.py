@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
 from protocols.mirror_stage import (
     EgoIdeal,
     HealingAction,
@@ -228,9 +229,7 @@ class TestInterpretation:
         assert interpretation.severity > 0
 
     @pytest.mark.asyncio
-    async def test_interpret_conflict_dialectic_impasse(
-        self, mirror: MirrorStage
-    ) -> None:
+    async def test_interpret_conflict_dialectic_impasse(self, mirror: MirrorStage) -> None:
         """Test interpretation selects dialectic impasse for blocked messages."""
         telemetry = create_telemetry(
             agent_count=10,
@@ -301,9 +300,7 @@ class TestSynthesis:
         assert ideal.description
 
     @pytest.mark.asyncio
-    async def test_synthesize_has_preserve_negate_elevate(
-        self, mirror: MirrorStage
-    ) -> None:
+    async def test_synthesize_has_preserve_negate_elevate(self, mirror: MirrorStage) -> None:
         """Test synthesis includes Hegelian sublation components for fragmented system."""
         telemetry = create_telemetry(
             agent_count=10,

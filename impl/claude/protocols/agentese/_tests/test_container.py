@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pytest
+
 from protocols.agentese.container import (
     ProviderEntry,
     ServiceContainer,

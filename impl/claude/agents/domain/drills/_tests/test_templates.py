@@ -12,6 +12,7 @@ Verifies:
 from datetime import datetime, timedelta
 
 import pytest
+
 from agents.domain.drills.archetypes import CrisisArchetype
 from agents.domain.drills.polynomial import CrisisInput, CrisisPhase
 from agents.domain.drills.templates import (
@@ -151,9 +152,7 @@ class TestDataBreachSpec:
 
         assert spec.drill_type == DrillType.DATA_BREACH
         assert spec.name == "Data Breach Response"
-        assert (
-            "data" in spec.scenario_trigger.lower()
-        )  # "data transfer" or "exfiltration"
+        assert "data" in spec.scenario_trigger.lower()  # "data transfer" or "exfiltration"
         assert spec.target_duration_minutes == 60
         # Higher stress for breach
         assert spec.default_stress_level > SERVICE_OUTAGE_SPEC.default_stress_level
@@ -343,13 +342,9 @@ class TestDrillInstanceCriteria:
         drill = create_service_outage_drill()
         # Factory already calls setup(), so drill is READY
 
-        drill.evaluate_criterion(
-            "service_restored", met=True, evidence="Health check passed"
-        )
+        drill.evaluate_criterion("service_restored", met=True, evidence="Health check passed")
 
-        evaluation = next(
-            e for e in drill.evaluations if e.criterion.name == "service_restored"
-        )
+        evaluation = next(e for e in drill.evaluations if e.criterion.name == "service_restored")
         assert evaluation.met is True
         assert evaluation.evidence == "Health check passed"
         assert evaluation.evaluated_at is not None
@@ -403,9 +398,7 @@ class TestDrillInstanceAudit:
 
         drill.advance(CrisisInput.escalate("commander", "Need help", "high"))
 
-        assert any(
-            "auditable_action" in e.get("event_type", "") for e in drill.audit_log
-        )
+        assert any("auditable_action" in e.get("event_type", "") for e in drill.audit_log)
 
 
 class TestDrillInstanceManifest:
@@ -527,38 +520,26 @@ class TestFullDrillLifecycle:
         drill.tick()
 
         # Transition to RESPONSE
-        drill.advance(
-            CrisisInput.recover(containment_confirmed=True, systems_stable=False)
-        )
+        drill.advance(CrisisInput.recover(containment_confirmed=True, systems_stable=False))
         assert drill.phase == CrisisPhase.RESPONSE
 
         # Resolve
         drill.advance(CrisisInput.resolve("restore", "DB-PROD-03", "verified"))
 
         # Transition to RECOVERY
-        drill.advance(
-            CrisisInput.recover(containment_confirmed=True, systems_stable=True)
-        )
+        drill.advance(CrisisInput.recover(containment_confirmed=True, systems_stable=True))
         assert drill.phase == CrisisPhase.RECOVERY
 
         # Evaluate criteria
-        drill.evaluate_criterion(
-            "service_restored", met=True, evidence="All systems operational"
-        )
-        drill.evaluate_criterion(
-            "commander_notified", met=True, evidence="Within 5 minutes"
-        )
-        drill.evaluate_criterion(
-            "customer_communication", met=True, evidence="Email sent"
-        )
+        drill.evaluate_criterion("service_restored", met=True, evidence="All systems operational")
+        drill.evaluate_criterion("commander_notified", met=True, evidence="Within 5 minutes")
+        drill.evaluate_criterion("customer_communication", met=True, evidence="Email sent")
         drill.evaluate_criterion(
             "postmortem_scheduled", met=True, evidence="Scheduled for tomorrow"
         )
 
         # Close
-        drill.advance(
-            CrisisInput.close(postmortem_scheduled=True, documentation_complete=True)
-        )
+        drill.advance(CrisisInput.close(postmortem_scheduled=True, documentation_complete=True))
         assert drill.phase == CrisisPhase.NORMAL
 
         # End

@@ -5,6 +5,7 @@ Verifies hint validation, type checking, and edge cases.
 """
 
 import pytest
+
 from agents.i.data.hints import VisualHint, validate_hint
 
 

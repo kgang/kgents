@@ -14,6 +14,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+
 from agents.i.screens.mixins.navigation import DashboardNavigationMixin
 from agents.i.services.events import EventBus, ScreenNavigationEvent
 

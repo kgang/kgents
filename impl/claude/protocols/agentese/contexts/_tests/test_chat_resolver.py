@@ -5,6 +5,7 @@ Tests the @chatty decorator, ChatNode, and ChatResolver.
 """
 
 import pytest
+
 from protocols.agentese.affordances import (
     CHAT_AFFORDANCES,
     CHATTY_MARKER,

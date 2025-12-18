@@ -26,6 +26,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from hypothesis import given, settings, strategies as st
+
 from agents.m.importers.markdown import (
     FrontmatterData,
     ImportProgress,
@@ -42,14 +44,10 @@ from agents.m.importers.markdown import (
     parse_markdown,
     strip_markdown_formatting,
 )
-from hypothesis import given, settings
-from hypothesis import strategies as st
 
 # Hypothesis strategies for common test patterns
 markdown_text = st.text(min_size=0, max_size=500)
-safe_identifiers = st.text(
-    alphabet=string.ascii_lowercase + "_", min_size=1, max_size=30
-)
+safe_identifiers = st.text(alphabet=string.ascii_lowercase + "_", min_size=1, max_size=30)
 
 
 # =============================================================================
@@ -455,9 +453,7 @@ Learn [[JavaScript]] too. #coding
 """
         )
         (tmp_path / "notes" / "javascript.md").write_text("# JavaScript\n\nJS notes")
-        (tmp_path / "projects" / "project-a.md").write_text(
-            "# Project A\n\nSee [[notes/python]]"
-        )
+        (tmp_path / "projects" / "project-a.md").write_text("# Project A\n\nSee [[notes/python]]")
         (tmp_path / ".obsidian" / "config.json").write_text("{}")  # Should be skipped
 
         return tmp_path
@@ -548,9 +544,7 @@ class TestMarkdownImporter:
             def __init__(self) -> None:
                 self.stored: list[tuple[str, Any, list[float]]] = []
 
-            def store(
-                self, concept_id: str, content: Any, embedding: list[float]
-            ) -> None:
+            def store(self, concept_id: str, content: Any, embedding: list[float]) -> None:
                 self.stored.append((concept_id, content, embedding))
 
         return MockCrystal()
@@ -572,9 +566,7 @@ class TestMarkdownImporter:
         assert progress.failed == 0
         assert len(mock_crystal.stored) == 2
 
-    def test_import_with_progress_callback(
-        self, mock_crystal: Any, temp_vault: Path
-    ) -> None:
+    def test_import_with_progress_callback(self, mock_crystal: Any, temp_vault: Path) -> None:
         """Progress callback is called during import."""
         progress_updates: list[ImportProgress] = []
 
@@ -912,9 +904,7 @@ class TestPerformance:
         elapsed = time.perf_counter() - start
 
         # 10 parses should complete in under 1 second
-        assert elapsed < 1.0, (
-            f"parse_markdown too slow: {elapsed:.3f}s for 10 iterations"
-        )
+        assert elapsed < 1.0, f"parse_markdown too slow: {elapsed:.3f}s for 10 iterations"
         assert engram.link_count >= 500
 
     def test_extract_wikilinks_performance(self) -> None:
@@ -964,9 +954,7 @@ class TestLgentIntegration:
             def __init__(self) -> None:
                 self.stored: list[tuple[str, Any, list[float]]] = []
 
-            def store(
-                self, concept_id: str, content: Any, embedding: list[float]
-            ) -> None:
+            def store(self, concept_id: str, content: Any, embedding: list[float]) -> None:
                 self.stored.append((concept_id, content, embedding))
 
         return MockCrystal()
@@ -987,9 +975,7 @@ class TestLgentIntegration:
         magnitude = sum(x * x for x in embedding) ** 0.5
         assert 0.99 < magnitude < 1.01
 
-    def test_batch_embedder_integration(
-        self, mock_crystal: Any, tmp_path: Path
-    ) -> None:
+    def test_batch_embedder_integration(self, mock_crystal: Any, tmp_path: Path) -> None:
         """Importer can use batch embedder for efficiency."""
         # Create multiple files
         for i in range(5):

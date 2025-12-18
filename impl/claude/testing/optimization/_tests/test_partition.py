@@ -11,6 +11,7 @@ Verifies:
 from __future__ import annotations
 
 import pytest
+
 from testing.optimization import RefinementTracker, TestProfile, TestTier
 from testing.optimization.partition import (
     ExecutionStrategy,
@@ -108,9 +109,7 @@ class TestPartitionByTier:
 
         partitions = partition_by_tier(profiles)
 
-        assert (
-            partitions[TestTier.INSTANT].priority > partitions[TestTier.SLOW].priority
-        )
+        assert partitions[TestTier.INSTANT].priority > partitions[TestTier.SLOW].priority
 
 
 class TestSequencePartitions:

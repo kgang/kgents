@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import pytest
+
 from agents.i.data.dashboard_collectors import (
     DashboardMetrics,
     FluxMetrics,

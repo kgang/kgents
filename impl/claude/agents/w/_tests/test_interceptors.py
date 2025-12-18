@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 import pytest
+
 from agents.w.bus import (
     BusMessage,
     DispatchResult,
@@ -137,9 +138,7 @@ class TestMeteringInterceptor:
     @pytest.mark.asyncio
     async def test_debit_on_dispatch(self, metering: MeteringInterceptor) -> None:
         """Test tokens debited on successful dispatch."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
 
         assert not msg.blocked
@@ -149,9 +148,7 @@ class TestMeteringInterceptor:
     async def test_block_on_insufficient(self, metering: MeteringInterceptor) -> None:
         """Test message blocked when insufficient tokens."""
         metering.treasury.balances["cli"] = 50  # type: ignore[attr-defined]
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
 
         assert msg.blocked
@@ -161,9 +158,7 @@ class TestMeteringInterceptor:
     @pytest.mark.asyncio
     async def test_context_contains_cost(self, metering: MeteringInterceptor) -> None:
         """Test cost added to message context."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
 
         cost = msg.get_context("token_cost")
@@ -179,9 +174,7 @@ class TestMeteringInterceptor:
             scarcity_policy="latency",
         )
 
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await metering.before(msg)
 
         assert not msg.blocked
@@ -218,9 +211,7 @@ class TestSafetyInterceptor:
     @pytest.mark.asyncio
     async def test_low_entropy_passes(self, safety: SafetyInterceptor) -> None:
         """Test low entropy message passes."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg)
 
         assert not msg.blocked
@@ -229,9 +220,7 @@ class TestSafetyInterceptor:
     async def test_high_entropy_blocked(self, safety: SafetyInterceptor) -> None:
         """Test high entropy message blocked."""
         # "psi" target has entropy 0.7 in SimpleEntropyChecker
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="psi", payload="creative task"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="psi", payload="creative task")
         await safety.before(msg)
 
         assert msg.blocked
@@ -250,9 +239,7 @@ class TestSafetyInterceptor:
                 return 0.8
 
         safety = SafetyInterceptor(checker=AlwaysHighEntropy())
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg)
 
         assert msg.blocked
@@ -264,29 +251,21 @@ class TestSafetyInterceptor:
 
         # First two calls should pass
         for _ in range(2):
-            msg1: BusMessage[str, Any] = BusMessage(
-                source="cli", target="echo", payload="test"
-            )
+            msg1: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
             await safety.before(msg1)
             assert not msg1.blocked
 
         # Third call should be blocked
-        msg2: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg2: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg2)
         assert msg2.blocked
         assert msg2.block_reason is not None
         assert "Recursion depth exceeded" in msg2.block_reason
 
     @pytest.mark.asyncio
-    async def test_recursion_depth_decremented_after(
-        self, safety: SafetyInterceptor
-    ) -> None:
+    async def test_recursion_depth_decremented_after(self, safety: SafetyInterceptor) -> None:
         """Test recursion depth decremented in after hook."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await safety.before(msg)
         await safety.after(msg, "result")
 
@@ -314,9 +293,7 @@ class TestTelemetryInterceptor:
         self, telemetry: TelemetryInterceptor, sink: InMemoryObservationSink
     ) -> None:
         """Test observation emitted in before hook."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
 
         assert len(sink.observations) == 1
@@ -330,9 +307,7 @@ class TestTelemetryInterceptor:
         self, telemetry: TelemetryInterceptor, sink: InMemoryObservationSink
     ) -> None:
         """Test observation emitted in after hook."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
         await telemetry.after(msg, "result")
 
@@ -346,9 +321,7 @@ class TestTelemetryInterceptor:
         self, telemetry: TelemetryInterceptor, sink: InMemoryObservationSink
     ) -> None:
         """Test duration is calculated."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await telemetry.before(msg)
 
         # Small delay to get measurable duration
@@ -422,9 +395,7 @@ class TestPersonaInterceptor:
     @pytest.mark.asyncio
     async def test_injects_priors(self, persona: PersonaInterceptor) -> None:
         """Test priors injected into message context."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
 
         priors = msg.get_context("persona_priors")
@@ -434,9 +405,7 @@ class TestPersonaInterceptor:
     @pytest.mark.asyncio
     async def test_sets_entropy_threshold(self, persona: PersonaInterceptor) -> None:
         """Test entropy threshold set from persona."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
 
         threshold = msg.get_context("entropy_threshold")
@@ -445,9 +414,7 @@ class TestPersonaInterceptor:
     @pytest.mark.asyncio
     async def test_risk_profile_injected(self, persona: PersonaInterceptor) -> None:
         """Test risk profile injected."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
 
         profile = msg.get_context("risk_profile")
@@ -457,9 +424,7 @@ class TestPersonaInterceptor:
     @pytest.mark.asyncio
     async def test_after_adds_metadata(self, persona: PersonaInterceptor) -> None:
         """Test after hook adds persona metadata."""
-        msg: BusMessage[str, Any] = BusMessage(
-            source="cli", target="echo", payload="test"
-        )
+        msg: BusMessage[str, Any] = BusMessage(source="cli", target="echo", payload="test")
         await persona.before(msg)
         result = await persona.after(msg, "output")
 

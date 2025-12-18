@@ -10,6 +10,7 @@ from datetime import timedelta
 from typing import AsyncIterator
 
 import pytest
+
 from agents.k.events import (
     SoulEvent,
     SoulEventType,
@@ -73,9 +74,7 @@ async def empty_source() -> AsyncIterator[SoulEvent]:
         yield
 
 
-async def slow_source(
-    events: list[SoulEvent], delay: float = 0.1
-) -> AsyncIterator[SoulEvent]:
+async def slow_source(events: list[SoulEvent], delay: float = 0.1) -> AsyncIterator[SoulEvent]:
     """Event source with delays between events."""
     for event in events:
         await asyncio.sleep(delay)
@@ -154,9 +153,7 @@ class TestKgentFluxLifecycle:
     """Test KgentFlux lifecycle state transitions."""
 
     @pytest.mark.asyncio
-    async def test_start_changes_state_to_flowing(
-        self, flux_no_pulse: KgentFlux
-    ) -> None:
+    async def test_start_changes_state_to_flowing(self, flux_no_pulse: KgentFlux) -> None:
         """Starting flux should change state to FLOWING."""
         events = [ping_event()]
 
@@ -501,9 +498,7 @@ class TestKgentFluxIntercept:
         assert results[0].payload.get("handled") is False
 
     @pytest.mark.asyncio
-    async def test_intercept_preserves_correlation_id(
-        self, flux_no_pulse: KgentFlux
-    ) -> None:
+    async def test_intercept_preserves_correlation_id(self, flux_no_pulse: KgentFlux) -> None:
         """Intercept result should preserve correlation ID."""
         events = [
             intercept_request_event(
@@ -656,9 +651,7 @@ class TestKgentFluxAmbientEvents:
         assert "categorical" in results[0].payload["for_what"]
 
     @pytest.mark.asyncio
-    async def test_ambient_events_include_eigenvectors(
-        self, flux_no_pulse: KgentFlux
-    ) -> None:
+    async def test_ambient_events_include_eigenvectors(self, flux_no_pulse: KgentFlux) -> None:
         """Ambient events should include eigenvector state."""
         events = [thought_event(content="Testing eigenvectors")]
 
@@ -754,9 +747,7 @@ class TestKgentFluxMixedEvents:
         assert results[4].event_type == SoulEventType.GRATITUDE
 
     @pytest.mark.asyncio
-    async def test_ambient_events_count_toward_processed(
-        self, flux_no_pulse: KgentFlux
-    ) -> None:
+    async def test_ambient_events_count_toward_processed(self, flux_no_pulse: KgentFlux) -> None:
         """Ambient events should count toward events_processed."""
         events = [
             thought_event(content="One"),
@@ -877,8 +868,7 @@ class TestKgentFluxStreaming:
 
         # Load fixture for expected format
         fixture_path = (
-            "/Users/kentgang/git/kgents/impl/claude/fixtures/"
-            "soul_dialogue/streaming_chunks.json"
+            "/Users/kentgang/git/kgents/impl/claude/fixtures/soul_dialogue/streaming_chunks.json"
         )
         with open(fixture_path) as f:
             fixture = json.load(f)
@@ -962,9 +952,7 @@ class TestKgentFluxStreaming:
 
         # Verify temporal spread: some gaps between chunks should be > 0
         if len(timestamps) > 2:
-            gaps = [
-                timestamps[i + 1] - timestamps[i] for i in range(len(timestamps) - 1)
-            ]
+            gaps = [timestamps[i + 1] - timestamps[i] for i in range(len(timestamps) - 1)]
             # At least some gaps should be measurable (MockLLMClient uses 0.005s delay)
             assert any(gap > 0.001 for gap in gaps), (
                 f"Expected temporal spread, but gaps were: {gaps}"

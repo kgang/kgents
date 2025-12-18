@@ -6,6 +6,7 @@ magic visible to users.
 """
 
 import pytest
+
 from protocols.cli.path_display import (
     CLI_TO_PATH_MAP,
     PathDisplayConfig,
@@ -146,22 +147,14 @@ class TestPathMapping:
         """Brain commands should map to self.memory paths."""
         assert get_path_for_command("brain", "capture") == "self.memory.capture"
         assert get_path_for_command("brain", "ghost") == "self.memory.ghost.surface"
-        assert (
-            get_path_for_command("brain", "map") == "self.memory.cartography.manifest"
-        )
+        assert get_path_for_command("brain", "map") == "self.memory.cartography.manifest"
         assert get_path_for_command("brain", "status") == "self.memory.manifest"
 
     def test_gestalt_commands_mapped(self) -> None:
         """Gestalt commands should map to world.codebase paths."""
         assert get_path_for_command("world codebase") == "world.codebase.manifest"
-        assert (
-            get_path_for_command("world codebase", "health")
-            == "world.codebase.health.manifest"
-        )
-        assert (
-            get_path_for_command("world codebase", "drift")
-            == "world.codebase.drift.witness"
-        )
+        assert get_path_for_command("world codebase", "health") == "world.codebase.health.manifest"
+        assert get_path_for_command("world codebase", "drift") == "world.codebase.drift.witness"
 
     def test_unknown_command_returns_none(self) -> None:
         """Unknown commands should return None."""

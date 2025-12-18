@@ -7,6 +7,7 @@ Wave 5 - Reality Wiring: Adapter tests
 from __future__ import annotations
 
 import pytest
+
 from agents.i.reactive.primitives.agent_card import AgentCardState
 from agents.i.reactive.primitives.yield_card import YieldCardState
 from agents.i.reactive.screens.dashboard import DashboardScreenState

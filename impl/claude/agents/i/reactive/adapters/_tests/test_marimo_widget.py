@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from agents.i.reactive.adapters.marimo_widget import (
     MarimoAdapter,
     create_marimo_adapter,

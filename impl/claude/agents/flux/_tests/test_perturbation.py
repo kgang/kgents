@@ -4,6 +4,7 @@ import asyncio
 import time
 
 import pytest
+
 from agents.flux.perturbation import (
     Perturbation,
     await_perturbation,
@@ -59,9 +60,7 @@ class TestPerturbationOrdering:
         loop = asyncio.get_event_loop()
         p1 = Perturbation(data="first", result_future=loop.create_future(), priority=10)
         await asyncio.sleep(0.01)  # Ensure different timestamps
-        p2 = Perturbation(
-            data="second", result_future=loop.create_future(), priority=10
-        )
+        p2 = Perturbation(data="second", result_future=loop.create_future(), priority=10)
 
         # Earlier timestamp should be "less than"
         assert p1 < p2
@@ -72,15 +71,9 @@ class TestPerturbationOrdering:
         loop = asyncio.get_event_loop()
 
         # Add in random order
-        p_low = Perturbation(
-            data="low", result_future=loop.create_future(), priority=10
-        )
-        p_high = Perturbation(
-            data="high", result_future=loop.create_future(), priority=100
-        )
-        p_med = Perturbation(
-            data="med", result_future=loop.create_future(), priority=50
-        )
+        p_low = Perturbation(data="low", result_future=loop.create_future(), priority=10)
+        p_high = Perturbation(data="high", result_future=loop.create_future(), priority=100)
+        p_med = Perturbation(data="med", result_future=loop.create_future(), priority=50)
 
         await queue.put(p_low)
         await queue.put(p_high)

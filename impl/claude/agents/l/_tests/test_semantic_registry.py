@@ -10,6 +10,7 @@ Test Coverage:
 """
 
 import pytest
+
 from agents.l.registry import Registry
 from agents.l.semantic_registry import SemanticRegistry, create_semantic_registry
 from agents.l.types import CatalogEntry, EntityType, Status
@@ -127,14 +128,10 @@ class TestSemanticRegistry:
         )
 
         # High threshold - fewer results
-        results_high = await registry.find_semantic(
-            "pattern recognition", threshold=0.8, limit=10
-        )
+        results_high = await registry.find_semantic("pattern recognition", threshold=0.8, limit=10)
 
         # Low threshold - more results
-        results_low = await registry.find_semantic(
-            "pattern recognition", threshold=0.1, limit=10
-        )
+        results_low = await registry.find_semantic("pattern recognition", threshold=0.1, limit=10)
 
         assert len(results_high) <= len(results_low)
 
@@ -201,9 +198,7 @@ class TestSemanticRegistry:
         )
 
         # Keyword-heavy search (favor exact name match)
-        keyword_heavy = await registry.find_hybrid(
-            "ExactMatch", semantic_weight=0.2, limit=5
-        )
+        keyword_heavy = await registry.find_hybrid("ExactMatch", semantic_weight=0.2, limit=5)
 
         # Semantic-heavy search (favor description match)
         await registry.find_hybrid("exact matching", semantic_weight=0.8, limit=5)
@@ -359,9 +354,7 @@ class TestSemanticRegistryConvenience:
         catalog_dict = registry1.to_dict()
 
         # Create new registry from catalog
-        registry2 = await create_semantic_registry(
-            catalog=Registry.from_dict(catalog_dict).catalog
-        )
+        registry2 = await create_semantic_registry(catalog=Registry.from_dict(catalog_dict).catalog)
 
         # Should be fitted and searchable
         results = await registry2.find_semantic("existing", threshold=0.0, limit=5)

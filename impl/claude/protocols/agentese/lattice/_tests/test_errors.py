@@ -7,6 +7,7 @@ Sympathetic errors that explain WHY and suggest WHAT TO DO.
 from __future__ import annotations
 
 import pytest
+
 from protocols.agentese.lattice.errors import (
     LatticeError,
     LineageError,

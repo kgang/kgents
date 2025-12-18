@@ -10,6 +10,7 @@ Philosophy verification:
 import math
 
 import pytest
+
 from agents.i.reactive.animation.growth import (
     GrowthEdge,
     GrowthEngine,

@@ -97,9 +97,7 @@ def _container_state_to_status(state: dict) -> InfraEntityStatus:
         return InfraEntityStatus.PENDING
     elif state.get("terminated"):
         exit_code = state["terminated"].get("exitCode", -1)
-        return (
-            InfraEntityStatus.SUCCEEDED if exit_code == 0 else InfraEntityStatus.FAILED
-        )
+        return InfraEntityStatus.SUCCEEDED if exit_code == 0 else InfraEntityStatus.FAILED
     return InfraEntityStatus.UNKNOWN
 
 
@@ -144,7 +142,7 @@ class KubernetesCollector(BaseCollector):
 
     def __init__(self, config: KubernetesConfig | None = None):
         super().__init__(config or KubernetesConfig())
-        self.config: KubernetesConfig = self.config  # type: ignore
+        self.config: KubernetesConfig = self.config
         self._api_client: ApiClient | None = None
         self._core_v1: k8s_client.CoreV1Api | None = None
         self._apps_v1: k8s_client.AppsV1Api | None = None
@@ -157,8 +155,7 @@ class KubernetesCollector(BaseCollector):
     async def connect(self) -> None:
         """Connect to Kubernetes API."""
         try:
-            from kubernetes import client as k8s_client
-            from kubernetes import config as k8s_config
+            from kubernetes import client as k8s_client, config as k8s_config
         except ImportError as e:
             raise ImportError(
                 "kubernetes package not installed. Install with: uv add kubernetes"
@@ -283,18 +280,13 @@ class KubernetesCollector(BaseCollector):
             status = pod.status
 
             # Skip pods not in configured namespaces
-            if (
-                self.config.namespaces
-                and metadata.namespace not in self.config.namespaces
-            ):
+            if self.config.namespaces and metadata.namespace not in self.config.namespaces:
                 continue
 
             # Calculate restart count
             restart_count = 0
             if status.container_statuses:
-                restart_count = sum(
-                    cs.restart_count for cs in status.container_statuses
-                )
+                restart_count = sum(cs.restart_count for cs in status.container_statuses)
 
             # Get owner references from metadata (not spec)
             owner_refs = metadata.owner_references or []
@@ -349,10 +341,7 @@ class KubernetesCollector(BaseCollector):
             spec = svc.spec
 
             # Skip services not in configured namespaces
-            if (
-                self.config.namespaces
-                and metadata.namespace not in self.config.namespaces
-            ):
+            if self.config.namespaces and metadata.namespace not in self.config.namespaces:
                 continue
 
             entity = InfraEntity(
@@ -399,10 +388,7 @@ class KubernetesCollector(BaseCollector):
             status = deploy.status
 
             # Skip deployments not in configured namespaces
-            if (
-                self.config.namespaces
-                and metadata.namespace not in self.config.namespaces
-            ):
+            if self.config.namespaces and metadata.namespace not in self.config.namespaces:
                 continue
 
             # Determine status based on replica counts
@@ -435,9 +421,7 @@ class KubernetesCollector(BaseCollector):
                 source="kubernetes",
                 source_data={
                     "strategy": spec.strategy.type if spec.strategy else None,
-                    "selector": dict(spec.selector.match_labels or {})
-                    if spec.selector
-                    else {},
+                    "selector": dict(spec.selector.match_labels or {}) if spec.selector else {},
                 },
             )
 
@@ -445,16 +429,12 @@ class KubernetesCollector(BaseCollector):
 
         return entities, connections
 
-    def _build_selector_connections(
-        self, entities: list[InfraEntity]
-    ) -> list[InfraConnection]:
+    def _build_selector_connections(self, entities: list[InfraEntity]) -> list[InfraConnection]:
         """Build connections from services/deployments to pods via label selectors."""
         connections: list[InfraConnection] = []
 
         # Index pods by their labels for efficient matching
-        pods_by_label: dict[
-            tuple[str, str, str], list[InfraEntity]
-        ] = {}  # (ns, key, val) -> pods
+        pods_by_label: dict[tuple[str, str, str], list[InfraEntity]] = {}  # (ns, key, val) -> pods
         for entity in entities:
             if entity.kind == InfraEntityKind.POD:
                 for key, val in entity.labels.items():
@@ -586,9 +566,7 @@ class KubernetesCollector(BaseCollector):
             k8s_event = event["object"]
             yield self._convert_k8s_event(k8s_event)
 
-    async def _watch_namespace_events(
-        self, w: Any, namespace: str
-    ) -> AsyncIterator[InfraEvent]:
+    async def _watch_namespace_events(self, w: Any, namespace: str) -> AsyncIterator[InfraEvent]:
         """Watch events in a specific namespace."""
 
         def _watch():
@@ -626,9 +604,7 @@ class KubernetesCollector(BaseCollector):
             type=k8s_event.type or "Normal",
             reason=k8s_event.reason or "Unknown",
             message=k8s_event.message or "",
-            severity=_k8s_event_severity(
-                k8s_event.type or "Normal", k8s_event.reason or ""
-            ),
+            severity=_k8s_event_severity(k8s_event.type or "Normal", k8s_event.reason or ""),
             entity_id=f"{involved.kind.lower()}/{involved.namespace}/{involved.name}",
             entity_kind=entity_kind,
             entity_name=involved.name,
@@ -652,9 +628,7 @@ class KubernetesCollector(BaseCollector):
             # Collect from specific namespaces
             all_pods = type("obj", (object,), {"items": []})()
             for ns in self.config.namespaces:
-                ns_pods = await asyncio.to_thread(
-                    self._core_v1.list_namespaced_pod, namespace=ns
-                )
+                ns_pods = await asyncio.to_thread(self._core_v1.list_namespaced_pod, namespace=ns)
                 all_pods.items.extend(ns_pods.items)
             return all_pods
         else:
@@ -671,9 +645,7 @@ class KubernetesCollector(BaseCollector):
                 all_services.items.extend(ns_services.items)
             return all_services
         else:
-            return await asyncio.to_thread(
-                self._core_v1.list_service_for_all_namespaces
-            )
+            return await asyncio.to_thread(self._core_v1.list_service_for_all_namespaces)
 
     async def _list_deployments(self) -> Any:
         """List deployments (possibly filtered by namespace)."""
@@ -686,9 +658,7 @@ class KubernetesCollector(BaseCollector):
                 all_deployments.items.extend(ns_deployments.items)
             return all_deployments
         else:
-            return await asyncio.to_thread(
-                self._apps_v1.list_deployment_for_all_namespaces
-            )
+            return await asyncio.to_thread(self._apps_v1.list_deployment_for_all_namespaces)
 
 
 # =============================================================================

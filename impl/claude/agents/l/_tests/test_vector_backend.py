@@ -13,6 +13,7 @@ Tests are written to gracefully handle missing dependencies.
 from pathlib import Path
 
 import pytest
+
 from agents.l.vector_backend import (
     CHROMADB_AVAILABLE,
     FAISS_AVAILABLE,

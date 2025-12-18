@@ -10,8 +10,8 @@ from typing import Generator
 
 import pytest
 
-from ..backends.memory import MemoryBackend
 from ..backends.jsonl import JSONLBackend
+from ..backends.memory import MemoryBackend
 from ..backends.sqlite import SQLiteBackend
 from ..bus import DataBus
 

@@ -13,6 +13,8 @@ Laws verified:
 """
 
 import pytest
+from hypothesis import assume, given, settings, strategies as st
+
 from agents.design import (
     DESIGN_POLYNOMIAL,
     AnimationToggle,
@@ -25,8 +27,6 @@ from agents.design import (
     ViewportResize,
     design_transition,
 )
-from hypothesis import assume, given, settings
-from hypothesis import strategies as st
 
 # =============================================================================
 # Strategies for generating design states and inputs
@@ -161,9 +161,7 @@ class TestContentLattice:
     """
 
     @given(level1=content_level_strategy, level2=content_level_strategy)
-    def test_lattice_transitivity(
-        self, level1: ContentLevel, level2: ContentLevel
-    ) -> None:
+    def test_lattice_transitivity(self, level1: ContentLevel, level2: ContentLevel) -> None:
         """
         If A includes B and B includes C, then A includes C.
         """
@@ -370,9 +368,7 @@ class TestStressSequences:
         initial=design_state_strategy,
         operations=st.lists(
             st.one_of(
-                st.builds(
-                    ViewportResize, width=viewport_width_strategy, height=st.just(800)
-                ),
+                st.builds(ViewportResize, width=viewport_width_strategy, height=st.just(800)),
                 st.builds(ContainerResize, width=container_width_strategy),
                 st.builds(AnimationToggle, enabled=bool_strategy),
                 st.builds(MotionRequest, motion=motion_type_strategy),

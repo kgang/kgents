@@ -29,7 +29,6 @@ from system.projector.k8s_database import (
     to_yaml,
 )
 
-
 # ===========================================================================
 # CloudNativePG Cluster Tests
 # ===========================================================================
@@ -473,7 +472,6 @@ class TestCategoricalGuarantees:
         projection = project_database_triad("test")
 
         components = {
-            m["metadata"]["labels"]["kgents.io/component"]
-            for m in projection.to_manifests()
+            m["metadata"]["labels"]["kgents.io/component"] for m in projection.to_manifests()
         }
         assert components == {"database", "cache", "vector"}

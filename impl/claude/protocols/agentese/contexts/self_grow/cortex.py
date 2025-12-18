@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from agents.d.bicameral import BicameralMemory
+
     from protocols.cli.instance_db.interfaces import IRelationalStore
 
 
@@ -46,9 +47,7 @@ def _serialize_proposal(proposal: HolonProposal) -> dict[str, Any]:
         "version": proposal.version,
         "why_exists": proposal.why_exists,
         "proposed_by": proposal.proposed_by,
-        "proposed_at": proposal.proposed_at.isoformat()
-        if proposal.proposed_at
-        else None,
+        "proposed_at": proposal.proposed_at.isoformat() if proposal.proposed_at else None,
         "affordances": proposal.affordances,
         "manifest": proposal.manifest,
         "relations": proposal.relations,
@@ -306,9 +305,7 @@ class GrowthCortex:
         Uses Left Hemisphere (relational) for direct lookup.
         """
         if self._bicameral:
-            result = await self._bicameral.fetch(
-                proposal_id, table=self._proposals_table
-            )
+            result = await self._bicameral.fetch(proposal_id, table=self._proposals_table)
             if result:
                 return _deserialize_proposal(result)
         elif self._relational:
@@ -406,9 +403,7 @@ class GrowthCortex:
 
         proposals = []
         for row in rows:
-            data = (
-                json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
-            )
+            data = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
             proposals.append(_deserialize_proposal(data))
 
         return proposals
@@ -433,9 +428,7 @@ class GrowthCortex:
     async def delete_proposal(self, proposal_id: str) -> bool:
         """Delete a proposal."""
         if self._bicameral:
-            return await self._bicameral.delete(
-                proposal_id, table=self._proposals_table
-            )
+            return await self._bicameral.delete(proposal_id, table=self._proposals_table)
         elif self._relational:
             affected = await self._relational.execute(
                 f"DELETE FROM {self._proposals_table} WHERE id = :id",
@@ -483,9 +476,7 @@ class GrowthCortex:
                 "failure_patterns": json.dumps(holon.failure_patterns),
                 "germinated_by": holon.germinated_by,
                 "germinated_at": holon.germinated_at.isoformat(),
-                "promoted_at": holon.promoted_at.isoformat()
-                if holon.promoted_at
-                else None,
+                "promoted_at": holon.promoted_at.isoformat() if holon.promoted_at else None,
                 "pruned_at": holon.pruned_at.isoformat() if holon.pruned_at else None,
                 "rollback_token": holon.rollback_token,
                 "created_at": now,
@@ -514,9 +505,7 @@ class GrowthCortex:
         if not row:
             return None
 
-        holon_data = (
-            json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
-        )
+        holon_data = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
         proposal_data = (
             json.loads(row["proposal_data"])
             if isinstance(row["proposal_data"], str)
@@ -545,9 +534,7 @@ class GrowthCortex:
         if not row:
             return None
 
-        holon_data = (
-            json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
-        )
+        holon_data = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
         proposal_data = (
             json.loads(row["proposal_data"])
             if isinstance(row["proposal_data"], str)
@@ -567,9 +554,7 @@ class GrowthCortex:
         if not store:
             return []
 
-        where = (
-            "n.promoted_at IS NULL AND n.pruned_at IS NULL" if active_only else "1=1"
-        )
+        where = "n.promoted_at IS NULL AND n.pruned_at IS NULL" if active_only else "1=1"
 
         rows = await store.fetch_all(
             f"""
@@ -585,9 +570,7 @@ class GrowthCortex:
 
         holons = []
         for row in rows:
-            holon_data = (
-                json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
-            )
+            holon_data = json.loads(row["data"]) if isinstance(row["data"], str) else row["data"]
             proposal_data = (
                 json.loads(row["proposal_data"])
                 if isinstance(row["proposal_data"], str)
@@ -796,11 +779,7 @@ class GrowthCortex:
             return GrowthBudget()
 
         config_data = json.loads(row["config"]) if row.get("config") else {}
-        spent_by_op = (
-            json.loads(row["spent_by_operation"])
-            if row.get("spent_by_operation")
-            else {}
-        )
+        spent_by_op = json.loads(row["spent_by_operation"]) if row.get("spent_by_operation") else {}
 
         last_regen = row.get("last_regeneration")
         if isinstance(last_regen, str):
@@ -809,9 +788,7 @@ class GrowthCortex:
             last_regen = datetime.now()
 
         budget = GrowthBudget(
-            config=GrowthBudgetConfig(**config_data)
-            if config_data
-            else GrowthBudgetConfig(),
+            config=GrowthBudgetConfig(**config_data) if config_data else GrowthBudgetConfig(),
             remaining=row.get("remaining", 1.0),
             spent_this_run=row.get("spent_this_run", 0.0),
             last_regeneration=last_regen,

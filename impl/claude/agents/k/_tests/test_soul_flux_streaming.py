@@ -5,6 +5,7 @@ CP5 Checkpoint: End-to-end streaming from CLI to LLM with token display.
 """
 
 import pytest
+
 from agents.k.flux import (
     DEFAULT_STREAM_BUFFER_SIZE,
     FluxEvent,
@@ -318,9 +319,7 @@ class TestCP5EndToEndStreaming:
 
         # Some temporal spread should exist
         if len(timestamps) > 2:
-            gaps = [
-                timestamps[i + 1] - timestamps[i] for i in range(len(timestamps) - 1)
-            ]
+            gaps = [timestamps[i + 1] - timestamps[i] for i in range(len(timestamps) - 1)]
             # At least some gaps should be measurable (MockLLMClient uses 0.005s delay)
             assert any(gap > 0.001 for gap in gaps), f"Expected temporal spread: {gaps}"
 
