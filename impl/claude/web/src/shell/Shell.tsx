@@ -64,6 +64,7 @@ function CrownContext() {
     if (path.startsWith('/town') || path.startsWith('/inhabit')) return 'coalition';
     if (path.startsWith('/park')) return 'park';
     if (path.startsWith('/workshop')) return 'domain';
+    if (path.startsWith('/emergence')) return 'gestalt'; // Emergence is related to visualization
     return null;
   };
 

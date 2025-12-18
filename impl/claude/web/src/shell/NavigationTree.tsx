@@ -555,11 +555,13 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     const routeToPath: Record<string, string> = {
       '/brain': 'self.memory',
       '/gestalt': 'world.codebase',
+      '/gestalt/live': 'world.gestalt.live',
       '/gardener': 'concept.gardener',
       '/atelier': 'world.atelier',
       '/town': 'world.town',
       '/park': 'world.park',
       '/workshop': 'world.domain',
+      '/emergence': 'world.emergence',
     };
     return routeToPath[location.pathname] || '';
   }, [location.pathname]);
@@ -583,11 +585,13 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     const pathToRoute: Record<string, string> = {
       'self.memory': '/brain',
       'world.codebase': '/gestalt',
+      'world.gestalt.live': '/gestalt/live',
       'concept.gardener': '/gardener',
       'world.atelier': '/atelier',
       'world.town': '/town',
       'world.park': '/park',
       'world.domain': '/workshop',
+      'world.emergence': '/emergence',
     };
     const route = pathToRoute[path];
     if (route) {
