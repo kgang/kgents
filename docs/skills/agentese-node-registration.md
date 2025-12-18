@@ -1,0 +1,359 @@
+# AGENTESE Node Registration
+
+**Status:** Canonical Pattern
+**Last Updated:** 2025-12-17
+
+---
+
+## Overview
+
+This skill documents how to register AGENTESE nodes so they appear in:
+1. `/agentese/discover` endpoint
+2. NavigationTree in the UI
+3. CLI tab completion
+
+## The Problem
+
+AGENTESE has two disconnected mechanisms for defining paths:
+
+```
+crown_jewels.py (PATHS dicts) ────→ Documentation only (NOT discoverable)
+
+@node decorator ──→ NodeRegistry ──→ /discover ──→ NavigationTree
+```
+
+**Solution:** Use `@node` decorator on node classes for automatic registration.
+
+---
+
+## Quick Reference
+
+### 1. Add `@node` Decorator to Your Node
+
+```python
+# In your node file (e.g., world_emergence.py)
+from protocols.agentese.registry import node
+from protocols.agentese.node import BaseLogosNode
+
+@node("world.emergence", description="Cymatics Design Sampler")
+@dataclass
+class EmergenceNode(BaseLogosNode):
+    """world.emergence - Your node description."""
+
+    _handle: str = "world.emergence"
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+```
+
+### 2. Ensure Module Is Imported at Startup
+
+The `@node` decorator runs at **import time**. Modules must be imported for registration.
+
+Add your module to `gateway.py`:
+
+```python
+# In protocols/agentese/gateway.py
+
+def _import_node_modules() -> None:
+    """Import all AGENTESE node modules to trigger @node registration."""
+    try:
+        from . import contexts
+        from .contexts import world_emergence      # ADD YOUR MODULE HERE
+        from .contexts import world_gestalt_live
+        from .contexts import world_park
+        logger.debug("AGENTESE node modules imported for registration")
+    except ImportError as e:
+        logger.warning(f"Could not import some node modules: {e}")
+```
+
+### 3. Add Route Mapping to NavigationTree (Frontend)
+
+```typescript
+// In web/src/shell/NavigationTree.tsx
+
+// Route → AGENTESE path mapping
+const routeToPath: Record<string, string> = {
+  '/brain': 'self.memory',
+  '/gestalt': 'world.codebase',
+  '/emergence': 'world.emergence',     // ADD YOUR MAPPING
+  // ...
+};
+
+// AGENTESE path → Route mapping (reverse)
+const pathToRoute: Record<string, string> = {
+  'self.memory': '/brain',
+  'world.codebase': '/gestalt',
+  'world.emergence': '/emergence',     // ADD YOUR MAPPING
+  // ...
+};
+```
+
+---
+
+## Architecture
+
+```
+                    Import Time                    Runtime
+                    ───────────                    ───────
+                         │
+Module with @node ───────┤
+        │                │
+        ▼                │
+@node decorator ─────────┼───→ NodeRegistry
+                         │            │
+_import_node_modules() ──┘            │
+        │                             ▼
+        ▼                      /agentese/discover
+gateway.mount_on()                    │
+                                      ▼
+                              NavigationTree
+                              (builds tree from paths)
+```
+
+### Key Insight
+
+The `@node` decorator is a **side effect at import time**. If a module isn't imported, its nodes won't be registered, and they won't appear in discovery.
+
+---
+
+## Complete Example
+
+### Step 1: Create the Node File
+
+```python
+# protocols/agentese/contexts/world_myfeature.py
+"""
+AGENTESE MyFeature Context.
+
+world.myfeature.* paths for the MyFeature Crown Jewel.
+"""
+
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
+
+from ..affordances import AspectCategory, aspect
+from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
+
+if TYPE_CHECKING:
+    from bootstrap.umwelt import Umwelt
+
+
+MYFEATURE_AFFORDANCES: tuple[str, ...] = (
+    "manifest",
+    "configure",
+)
+
+
+@node("world.myfeature", description="My awesome feature")
+@dataclass
+class MyFeatureNode(BaseLogosNode):
+    """world.myfeature - Interface for MyFeature."""
+
+    _handle: str = "world.myfeature"
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        return MYFEATURE_AFFORDANCES
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[],
+        help="View MyFeature status",
+    )
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        return BasicRendering(
+            summary="MyFeature Status",
+            content="Everything is working!",
+            metadata={"status": "ok", "route": "/myfeature"},
+        )
+
+
+# Factory functions
+_node: MyFeatureNode | None = None
+
+def get_myfeature_node() -> MyFeatureNode:
+    global _node
+    if _node is None:
+        _node = MyFeatureNode()
+    return _node
+
+
+__all__ = [
+    "MYFEATURE_AFFORDANCES",
+    "MyFeatureNode",
+    "get_myfeature_node",
+]
+```
+
+### Step 2: Export from `__init__.py`
+
+```python
+# In protocols/agentese/contexts/__init__.py
+
+from .world_myfeature import (
+    MYFEATURE_AFFORDANCES,
+    MyFeatureNode,
+    get_myfeature_node,
+)
+
+# Add to __all__
+__all__ = [
+    # ... existing exports ...
+    "MYFEATURE_AFFORDANCES",
+    "MyFeatureNode",
+    "get_myfeature_node",
+]
+```
+
+### Step 3: Import in Gateway
+
+```python
+# In protocols/agentese/gateway.py
+
+def _import_node_modules() -> None:
+    try:
+        from . import contexts
+        from .contexts import world_myfeature  # ADD THIS LINE
+        # ...
+    except ImportError as e:
+        logger.warning(f"Could not import some node modules: {e}")
+```
+
+### Step 4: Add Frontend Route Mapping
+
+```typescript
+// In NavigationTree.tsx
+
+const routeToPath: Record<string, string> = {
+  // ... existing ...
+  '/myfeature': 'world.myfeature',
+};
+
+const pathToRoute: Record<string, string> = {
+  // ... existing ...
+  'world.myfeature': '/myfeature',
+};
+```
+
+### Step 5: Verify Registration
+
+```bash
+cd impl/claude
+uv run python -c "
+from protocols.agentese.gateway import _import_node_modules
+from protocols.agentese.registry import get_registry
+
+_import_node_modules()
+registry = get_registry()
+paths = registry.list_paths()
+
+print('Registered paths:')
+for p in sorted(paths):
+    print(f'  {p}')
+
+print(f'world.myfeature registered: {\"world.myfeature\" in paths}')
+"
+```
+
+---
+
+## Common Issues
+
+### Node Not Appearing in Discovery
+
+**Symptom:** Path doesn't show in `/agentese/discover` or NavigationTree.
+
+**Causes:**
+1. Missing `@node` decorator on class
+2. Module not imported in `_import_node_modules()`
+3. Import error (check logs for warnings)
+
+**Debug:**
+```python
+from protocols.agentese.registry import get_registry
+registry = get_registry()
+print(registry.list_paths())
+```
+
+### Node Appears in Discovery but Not Clickable
+
+**Symptom:** Path shows in tree but clicking doesn't navigate.
+
+**Cause:** Missing route mapping in NavigationTree.tsx.
+
+**Fix:** Add both `routeToPath` and `pathToRoute` mappings.
+
+### Decorator Order Matters
+
+```python
+# CORRECT: @node before @dataclass
+@node("world.myfeature")
+@dataclass
+class MyNode: ...
+
+# WRONG: @dataclass before @node
+@dataclass
+@node("world.myfeature")  # May not work correctly
+class MyNode: ...
+```
+
+---
+
+## Anti-Patterns
+
+### Don't: Hardcode paths without @node
+
+```python
+# BAD: This won't be discoverable
+MYFEATURE_PATHS = {
+    "world.myfeature.manifest": {"aspect": "manifest", ...}
+}
+```
+
+### Don't: Forget to import the module
+
+```python
+# BAD: Module exists but @node never runs
+# (no import in _import_node_modules)
+```
+
+### Don't: Create circular imports
+
+```python
+# BAD: Importing heavy dependencies at module level
+from services.myfeature import HeavyService  # Avoid if causes circular import
+
+# GOOD: Import inside methods or use TYPE_CHECKING
+if TYPE_CHECKING:
+    from services.myfeature import HeavyService
+```
+
+---
+
+## Related Patterns
+
+- **agentese-path.md** - Adding new AGENTESE paths
+- **crown-jewel-patterns.md** - Crown Jewel architecture
+- **metaphysical-fullstack.md** - The protocol IS the API
+
+---
+
+## Critical Learnings
+
+```
+@node runs at import time: If not imported, not registered
+_import_node_modules(): Gateway calls this to ensure all nodes load
+Two-way mapping needed: AGENTESE path ↔ React route
+Discovery is pull-based: Frontend fetches /agentese/discover
+```
+
+---
+
+*Last updated: 2025-12-17*

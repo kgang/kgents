@@ -743,6 +743,66 @@ class GardenNode:
         ...
 ```
 
+### 13.4 Node Auto-Registration (Discovery)
+
+**Key Insight:** The `@node` decorator runs at **import time**. Nodes must be imported for discovery.
+
+```
+                    Import Time                    Runtime
+                    ───────────                    ───────
+                         │
+Module with @node ───────┤
+        │                │
+        ▼                │
+@node decorator ─────────┼───→ NodeRegistry
+                         │            │
+_import_node_modules() ──┘            │
+        │                             ▼
+        ▼                      /agentese/discover
+gateway.mount_on()                    │
+                                      ▼
+                              NavigationTree (UI)
+```
+
+**The Problem (Disconnected Systems):**
+```
+crown_jewels.py (PATHS dicts) ────→ Documentation only (NOT discoverable)
+@node decorator ──→ NodeRegistry ──→ /discover ──→ NavigationTree
+```
+
+**The Solution:**
+1. Add `@node("path")` decorator to node classes
+2. Import modules in gateway's `_import_node_modules()`
+3. Add route mappings to frontend NavigationTree
+
+```python
+# gateway.py - Ensures all nodes are imported before discovery
+def _import_node_modules() -> None:
+    """Import all AGENTESE node modules to trigger @node registration."""
+    try:
+        from . import contexts
+        from .contexts import world_emergence
+        from .contexts import world_gestalt_live
+        from .contexts import world_park
+        logger.debug("AGENTESE node modules imported for registration")
+    except ImportError as e:
+        logger.warning(f"Could not import some node modules: {e}")
+
+def mount_on(self, app: "FastAPI") -> None:
+    # Import node modules to populate registry
+    _import_node_modules()
+    # ... rest of mount logic
+```
+
+**Verification:**
+```python
+from protocols.agentese.registry import get_registry
+registry = get_registry()
+print(registry.list_paths())  # Should include your new path
+```
+
+**See:** `docs/skills/agentese-node-registration.md` for complete pattern.
+
 ---
 
 ## Part XIV: Error Model (Enriched)

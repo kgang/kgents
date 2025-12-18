@@ -93,6 +93,8 @@ Error empathy: "Lost in the Ether" > "Network Error"—friendly titles reduce fr
 Three.js NaN silent death: geometry with NaN radius renders invisible—validate API data before passing to sphereGeometry
 StrictMode + WebSocket = double-mount: use refs (hasConnected, isDisconnecting) to guard connect/disconnect
 Stable callbacks for WS: store config in refs, keep useCallback deps empty—prevents effect re-trigger loops
+Stable body refs: JSON.stringify(body) in useMemo + ref update effect prevents object identity thrashing
+Fetch debounce defense: lastFetchRef + isFetchingRef guard against rapid-fire requests even with proper deps
 ```
 
 ### Testing & DevEx
@@ -251,6 +253,15 @@ Dual-API mismatch kills SSE: AGENTESE singleton + AUP multi-tenant don't share s
 EventSource auth: can't send headers; add query param support (?api_key=...) for SSE endpoints
 ```
 
+### OS Shell Architecture (2025-12-17)
+```
+PathProjection = render-props pattern: child receives (data, context) → flexible composition
+Shell layers persist: ObserverDrawer + NavigationTree + Terminal always visible (OS metaphor)
+Discovery auto-populates nav: /agentese/discover → tree; no hardcoded routes
+TracedInvoke pattern: wrap API calls to auto-collect traces for devex visibility
+Error boundaries per layer: ShellErrorBoundary isolates failures; shell stays functional
+```
+
 ## Anti-Patterns
 
 ```
@@ -260,6 +271,7 @@ Timer-driven loops create zombies
 Bypassing running loops causes state schizophrenia
 Context dumping: large payloads tax every turn
 Full ouroboros (feedback=1.0) → solipsism
+Inline object props in useEffect: body={{ x }} creates new ref every render → infinite loop
 ```
 
 ## Unanswered
@@ -270,4 +282,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~165/200 | Last pruned: 2025-12-16 | Creative Direction closure added*
+*Lines: ~180/200 | Last pruned: 2025-12-17 | OS Shell architecture added*

@@ -174,32 +174,81 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | gardener-logos | 100% | **complete** |
 
 
-## Skills Directory
+## The Metaphysical Agent Stack (AD-009)
 
-`docs/skills/` contains 42 documented patterns for common tasks:
+> *"Every agent is a vertical slice from persistence to projection."*
 
-| Skill | Description |
-|-------|-------------|
-| `agentese-path.md` | Adding AGENTESE paths (e.g., `self.soul.*`) |
-| `building-agent.md` | Creating `Agent[A, B]` with functors |
-| `cli-command.md` | Adding CLI commands to kgents |
-| `crown-jewel-patterns.md` | Reusable patterns for all Crown Jewels |
-| `data-bus-integration.md` | **NEW** DataBus, SynergyBus, EventBus patterns |
-| `flux-agent.md` | Lifting agents to stream processing |
-| `gardener-logos.md` | Tending Calculus, Seasons, Auto-Inducer |
-| `handler-patterns.md` | CLI handler patterns |
-| `plan-file.md` | Forest Protocol plan files |
-| `polynomial-agent.md` | Creating `PolyAgent[S, A, B]` with state machines |
-| `spec-hygiene.md` | Bloat patterns, compression patterns, distillation checklist |
-| `spec-template.md` | Structure for writing spec files (200-400 lines) |
-| `test-patterns.md` | Testing conventions and fixtures |
-| `ux-reference-patterns.md` | Cross-cutting UX patterns from research |
-| `user-flow-documentation.md` | Documenting precise user flows with ASCII wireframes |
-| `3d-lighting-patterns.md` | 3D Lighting and Visual Clarity Patterns |
-| `agent-observability.md` | Agent Observability |
-| `agent-town-archetypes.md` | Agent Town Archetypes |
-| `agent-town-coalitions.md` | Agent Town Coalitions |
-| `agent-town-inhabit.md` | Agent Town INHABIT Mode |
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  7. PROJECTION SURFACES   CLI │ TUI │ Web │ marimo │ JSON │ SSE            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  6. AGENTESE PROTOCOL     logos.invoke(path, observer, **kwargs)           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  5. AGENTESE NODE         @node decorator, aspects, effects, affordances   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  4. SERVICE MODULE        services/<name>/ — Crown Jewel business logic    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  3. OPERAD GRAMMAR        Composition laws, valid operations               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  2. POLYNOMIAL AGENT      PolyAgent[S, A, B]: state × input → output       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  1. SHEAF COHERENCE       Local views → global consistency                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Insight**: Understanding ONE layer teaches you ALL layers.
+
+**Full Spec**: `plans/autopoietic-architecture.md`
+
+## Minimal Skills (Full-Resolution Agent)
+
+> *"12 skills are necessary and sufficient to build any kgents component."*
+
+These skills compose: `Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection`
+
+### Foundation (Categorical Ground)
+| Skill | Purpose |
+|-------|---------|
+| `polynomial-agent.md` | State machines with mode-dependent inputs |
+| `building-agent.md` | Agent[A,B] with functors |
+
+### Protocol (AGENTESE)
+| Skill | Purpose |
+|-------|---------|
+| `agentese-path.md` | Adding AGENTESE paths |
+| `agentese-node-registration.md` | @node decorator, discovery |
+
+### Architecture (Vertical Slice)
+| Skill | Purpose |
+|-------|---------|
+| `crown-jewel-patterns.md` | Service module structure |
+| `metaphysical-fullstack.md` | AD-009 stack |
+| `data-bus-integration.md` | Event-driven communication |
+
+### Process (N-Phase)
+| Skill | Purpose |
+|-------|---------|
+| `plan-file.md` | Forest Protocol plans |
+| `spec-template.md` | Writing specs (200-400 lines) |
+| `spec-hygiene.md` | Bloat patterns, distillation |
+
+### Projection (Multi-Target)
+| Skill | Purpose |
+|-------|---------|
+| `projection-target.md` | CLI/TUI/JSON/marimo |
+| `test-patterns.md` | Testing conventions |
+
+## Extended Skills Directory
+
+`docs/skills/` contains 50+ documented patterns. The 12 minimal skills above are sufficient for most work. Extended skills for specific domains:
+
+| Domain | Skills |
+|--------|--------|
+| **Agent Town** | `agent-town-archetypes.md`, `agent-town-coalitions.md`, `agent-town-inhabit.md` |
+| **Streaming** | `flux-agent.md`, `reactive-primitives.md` |
+| **Frontend** | `elastic-ui-patterns.md`, `ui-isomorphism-detection.md`, `3d-lighting-patterns.md` |
+| **UX Research** | `ux-reference-patterns.md`, `user-flow-documentation.md` |
+| **DevEx** | `gardener-logos.md`, `agent-observability.md` |
 
 ## Working With This Repo
 
@@ -255,6 +304,15 @@ Generator Trap: pickle can't serialize stack frames—use Purgatory pattern
 Timer-driven loops create zombies—use event-driven Flux
 Bypassing running loops causes state schizophrenia
 Context dumping: large payloads tax every turn
+```
+
+### AGENTESE Discovery
+```
+@node runs at import time: If module not imported, node not registered
+_import_node_modules() in gateway.py: Ensures all nodes load before discovery
+Two-way mapping needed: AGENTESE path ↔ React route in NavigationTree
+Discovery is pull-based: Frontend fetches /agentese/discover to build tree
+crown_jewels.py PATHS are docs only: Use @node decorator for discoverability
 ```
 
 ### Event-Driven Architecture
