@@ -27,6 +27,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
+
 from weave import (
     ApprovalStrategy,
     CausalCone,

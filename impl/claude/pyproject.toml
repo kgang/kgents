@@ -108,4 +108,37 @@ markers = [
 [dependency-groups]
 dev = []
 
+# =============================================================================
+# RUFF CONFIGURATION
+# =============================================================================
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "_archived",
+    "*-archived",
+    ".git",
+    "__pycache__",
+    ".venv",
+    "venv",
+]
+
+[tool.ruff.lint]
+# Start conservative - only check what was being checked before
+# Can add more rules incrementally (E501, E402, etc.)
+select = [
+    "F",   # Pyflakes (errors, unused imports)
+    "I",   # isort (import sorting)
+    "W",   # Warnings
+]
+ignore = [
+    "F401",  # Unused imports (enable later after cleanup)
+    "F841",  # Unused variables (enable later after cleanup)
+]
+
+[tool.ruff.lint.isort]
+force-single-line = false
+combine-as-imports = true
+
 # Note: mypy configuration is in mypy.ini - it provides more granular control
