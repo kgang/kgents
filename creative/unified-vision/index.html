@@ -12,7 +12,7 @@
         <meta name="author" content="Kent Gang">
       
       
-        <link rel="canonical" href="https://kentgang.github.io/kgents/saas/architecture-current/">
+        <link rel="canonical" href="https://kentgang.github.io/kgents/creative/unified-vision/">
       
       
       
@@ -25,7 +25,7 @@
     
     
       
-        <title>Current Architecture: Single-Region Deployment - kgents Examples</title>
+        <title>Unified Creative Vision - kgents Examples</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#current-architecture-single-region-deployment" class="md-skip">
+        <a href="#unified-creative-vision" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Current Architecture: Single-Region Deployment
+              Unified Creative Vision
             
           </span>
         </div>
@@ -584,44 +584,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#overview" class="md-nav__link">
+  <a href="#part-i-the-creative-ground" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview
+        Part I: The Creative Ground
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#namespaces" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Namespaces
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#component-inventory" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Component Inventory
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Component Inventory">
+    <nav class="md-nav" aria-label="Part I: The Creative Ground">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-api-service-kgent-api" class="md-nav__link">
+  <a href="#philosophy-in-one-breath" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. API Service (kgent-api)
+        Philosophy in One Breath
       
     </span>
   </a>
@@ -629,43 +607,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-nats-cluster" class="md-nav__link">
+  <a href="#the-three-operads" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. NATS Cluster
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-redis-cache" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        3. Redis Cache
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-observability-stack" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        4. Observability Stack
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-network-policies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        5. Network Policies
+        The Three Operads
       
     </span>
   </a>
@@ -678,33 +623,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#external-dependencies" class="md-nav__link">
+  <a href="#part-ii-the-design-polynomial" class="md-nav__link">
     <span class="md-ellipsis">
       
-        External Dependencies
+        Part II: The Design Polynomial
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#current-backuprecovery-state" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Current Backup/Recovery State
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Current Backup/Recovery State">
+    <nav class="md-nav" aria-label="Part II: The Design Polynomial">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#whats-backed-up" class="md-nav__link">
+  <a href="#content-states-design_polynomial" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's Backed Up
+        Content States (DESIGN_POLYNOMIAL)
       
     </span>
   </a>
@@ -712,21 +646,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#whats-not-backed-up" class="md-nav__link">
+  <a href="#density-dimension" class="md-nav__link">
     <span class="md-ellipsis">
       
-        What's NOT Backed Up
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#recovery-targets-current-state" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Recovery Targets (Current State)
+        Density Dimension
       
     </span>
   </a>
@@ -739,10 +662,221 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#single-points-of-failure" class="md-nav__link">
+  <a href="#part-iii-visual-identity" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Single Points of Failure
+        Part III: Visual Identity
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part III: Visual Identity">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#color-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Color Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-jewel-palette" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Jewel Palette
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typography" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typography
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iconography" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Iconography
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-iv-motion-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part IV: Motion Language
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part IV: Motion Language">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-six-primitives-motion_operad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Six Primitives (MOTION_OPERAD)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timing-2025-speed-mandate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing (2025 Speed Mandate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motion-preferences" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motion Preferences
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-v-voice-and-tone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part V: Voice and Tone
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part V: Voice and Tone">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-voice-constant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Voice (Constant)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-tone-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Tone (Variable)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-formula" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Formula
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-vi-emergence-generative-aesthetics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part VI: Emergence (Generative Aesthetics)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part VI: Emergence (Generative Aesthetics)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-qualia-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Qualia Space
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#circadian-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Circadian Modulation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-accursed-share" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Accursed Share
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#part-vii-integration-with-agentese" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Part VII: Integration with AGENTESE
       
     </span>
   </a>
@@ -750,10 +884,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#network-topology" class="md-nav__link">
+  <a href="#part-viii-anti-patterns" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Network Topology
+        Part VIII: Anti-Patterns
       
     </span>
   </a>
@@ -761,21 +895,60 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#resource-summary" class="md-nav__link">
+  <a href="#part-ix-quick-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Summary
+        Part IX: Quick Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Part IX: Quick Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#color-quick-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Color Quick Reference
       
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-references" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#spacing-quick-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Configuration References
+        Spacing Quick Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#motion-quick-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motion Quick Reference
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sources-and-references" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources and References
       
     </span>
   </a>
@@ -802,508 +975,570 @@
   
 
 
-<h1 id="current-architecture-single-region-deployment">Current Architecture: Single-Region Deployment</h1>
+<h1 id="unified-creative-vision">Unified Creative Vision</h1>
 <blockquote>
-<p>Phase 10 Documentation: Baseline for multi-region evaluation.</p>
+<p><em>"The aesthetic is not decoration—it is the categorical structure made perceivable."</em></p>
 </blockquote>
-<h2 id="overview">Overview</h2>
-<p>kgents SaaS operates in a <strong>single-region Kubernetes cluster</strong> with the following topology:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>                            Internet
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                               │
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>                               ▼
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                      ┌────────────────┐
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>                      │   Kong/Ingress │
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>                      │   (Gateway)    │
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>                      └───────┬────────┘
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>                              │
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>              ┌───────────────┴───────────────┐
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>              ▼                               ▼
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>     ┌─────────────────┐             ┌─────────────────┐
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>     │   kgent-api     │             │   kgent-api     │
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>     │   (Replica 1)   │             │   (Replica 2)   │
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>     │   :8000         │             │   :8000         │
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>     └───────┬─────────┘             └────────┬────────┘
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>             │                                │
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>     ┌───────┴────────────────────────────────┴───────┐
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>     │                                                │
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>     ▼                                                ▼
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│    NATS      │  │    Redis     │  │  Prometheus  │  │    Loki      │
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│   Cluster    │  │   (Cache)    │  │   (Metrics)  │  │   (Logs)     │
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│  (3 nodes)   │  │  (1 node)    │  │              │  │              │
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>└──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
+<p><strong>Status</strong>: Primary Creative Reference (supersedes mood-board.md)
+<strong>Aligned With</strong>: <code>plans/design-language-consolidation.md</code>, AD-006, AD-009
+<strong>Last Updated</strong>: 2025-12-17</p>
+<hr />
+<h2 id="part-i-the-creative-ground">Part I: The Creative Ground</h2>
+<h3 id="philosophy-in-one-breath">Philosophy in One Breath</h3>
+<p>kgents aesthetics emerge from the same categorical structure as the agents themselves. There is no separate "design layer"—the visual, motion, and voice systems ARE projections of the underlying mathematics.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌─────────────────────────────────────────────────────────────────────────────┐
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│                        THE CREATIVE EQUATION                                 │
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│                                                                              │
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   Aesthetics = Project(PolyAgent × Operad × Sheaf)                          │
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│                                                                              │
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   • PolyAgent → States (what can be shown)                                  │
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   • Operad → Composition (how elements combine)                             │
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   • Sheaf → Coherence (why it feels unified)                                │
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>└─────────────────────────────────────────────────────────────────────────────┘
 </span></code></pre></div>
-<h2 id="namespaces">Namespaces</h2>
+<h3 id="the-three-operads">The Three Operads</h3>
+<p>All UI composition flows through three orthogonal operads (see <code>plans/design-language-consolidation.md</code>):</p>
 <table>
 <thead>
 <tr>
-<th>Namespace</th>
-<th>Purpose</th>
-<th>Components</th>
+<th>Operad</th>
+<th>Domain</th>
+<th>Operations</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>kgents-triad</code></td>
-<td>Core data services</td>
-<td>API, Redis, Postgres, Kong</td>
+<td><strong>LAYOUT_OPERAD</strong></td>
+<td>Spatial arrangement</td>
+<td>stack, split, grid, float</td>
 </tr>
 <tr>
-<td><code>kgents-agents</code></td>
-<td>Agent runtime</td>
-<td>NATS cluster</td>
+<td><strong>CONTENT_OPERAD</strong></td>
+<td>Information density</td>
+<td>degrade, enrich, summarize</td>
 </tr>
 <tr>
-<td><code>kgents-observability</code></td>
-<td>Monitoring</td>
-<td>Prometheus, Grafana, Loki, Tempo, OTEL</td>
+<td><strong>MOTION_OPERAD</strong></td>
+<td>Temporal behavior</td>
+<td>breathe, pop, shake, fade</td>
 </tr>
 </tbody>
 </table>
-<h2 id="component-inventory">Component Inventory</h2>
-<h3 id="1-api-service-kgent-api">1. API Service (<code>kgent-api</code>)</h3>
-<p><strong>Location:</strong> <code>kgents-triad</code> namespace</p>
+<p><strong>The Composition Theorem</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>UI = Layout[Density] ∘ Content[Density] ∘ Motion[ReducedMotion]
+</span></code></pre></div></p>
+<p>Each operad respects associativity. Composition order doesn't matter—the result is the same.</p>
+<hr />
+<h2 id="part-ii-the-design-polynomial">Part II: The Design Polynomial</h2>
+<h3 id="content-states-design_polynomial">Content States (DESIGN_POLYNOMIAL)</h3>
+<p>Every UI element exists in one of five states:</p>
 <table>
 <thead>
 <tr>
-<th>Property</th>
-<th>Value</th>
+<th>State</th>
+<th>Visual Treatment</th>
+<th>When</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Replicas</td>
-<td>2</td>
+<td><strong>SKELETON</strong></td>
+<td>Shimmer placeholders</td>
+<td>No data yet</td>
 </tr>
 <tr>
-<td>Image</td>
-<td><code>kgents/api:latest</code></td>
+<td><strong>LOADING</strong></td>
+<td>Personality messages</td>
+<td>Data fetching</td>
 </tr>
 <tr>
-<td>Port</td>
-<td>8000</td>
+<td><strong>PARTIAL</strong></td>
+<td>Core content only</td>
+<td>Fast initial paint</td>
 </tr>
 <tr>
-<td>CPU Request/Limit</td>
-<td>100m / 500m</td>
+<td><strong>FULL</strong></td>
+<td>Complete content</td>
+<td>All data available</td>
 </tr>
 <tr>
-<td>Memory Request/Limit</td>
-<td>256Mi / 512Mi</td>
-</tr>
-<tr>
-<td>HPA</td>
-<td>2-10 replicas, CPU target 70%</td>
-</tr>
-<tr>
-<td>PDB</td>
-<td>minAvailable: 1</td>
+<td><strong>INTERACTIVE</strong></td>
+<td>Affordances active</td>
+<td>User can act</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Dependencies:</strong>
-- NATS (<code>nats.kgents-agents.svc:4222</code>)
-- Redis (<code>triad-redis.kgents-triad.svc:6379</code>)
-- OpenMeter (external SaaS)
-- Stripe (external SaaS)</p>
-<p><strong>Endpoints:</strong>
-- <code>/health</code> - Basic health check
-- <code>/health/saas</code> - SaaS infrastructure status (NATS, OpenMeter)
-- <code>/metrics</code> - Prometheus metrics
-- <code>/webhooks/stripe</code> - Stripe webhook receiver</p>
-<h3 id="2-nats-cluster">2. NATS Cluster</h3>
-<p><strong>Location:</strong> <code>kgents-agents</code> namespace</p>
+<p><strong>Transition Grammar</strong>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>SKELETON → LOADING → PARTIAL → FULL → INTERACTIVE
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    ↑                    ↓
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    └─── (error) ────────┘
+</span></code></pre></div></p>
+<h3 id="density-dimension">Density Dimension</h3>
+<p>The simplifying isomorphism (AD-008) that governs all responsive behavior:</p>
 <table>
 <thead>
 <tr>
-<th>Property</th>
-<th>Value</th>
+<th>Density</th>
+<th>Breakpoint</th>
+<th>Characteristics</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Replicas</td>
-<td>3 (StatefulSet)</td>
+<td><strong>compact</strong></td>
+<td>&lt; 768px</td>
+<td>Mobile-first, minimal chrome</td>
 </tr>
 <tr>
-<td>Image</td>
-<td><code>nats:2.10-alpine</code></td>
+<td><strong>comfortable</strong></td>
+<td>768-1024px</td>
+<td>Balanced panels</td>
 </tr>
 <tr>
-<td>Ports</td>
-<td>4222 (client), 6222 (cluster), 8222 (monitor)</td>
-</tr>
-<tr>
-<td>CPU Request/Limit</td>
-<td>100m / 500m</td>
-</tr>
-<tr>
-<td>Memory Request/Limit</td>
-<td>256Mi / 1Gi</td>
-</tr>
-<tr>
-<td>Storage</td>
-<td>10Gi per node (PVC)</td>
-</tr>
-<tr>
-<td>PDB</td>
-<td>minAvailable: 2</td>
+<td><strong>spacious</strong></td>
+<td>&gt; 1024px</td>
+<td>Full affordances</td>
 </tr>
 </tbody>
 </table>
-<p><strong>JetStream Streams:</strong>
-- <code>AGENTESE</code> - Agent-world interaction events
-- <code>EVENTS</code> - System event bus</p>
-<p><strong>Backup:</strong>
-- Daily CronJob at 02:00 UTC
-- Retention: 7 days
-- Storage: <code>nats-backup-pvc</code></p>
-<h3 id="3-redis-cache">3. Redis Cache</h3>
-<p><strong>Location:</strong> <code>kgents-triad</code> namespace</p>
+<p><strong>Principle</strong>: Components receive density, adapt internally. No scattered <code>isMobile</code> checks.</p>
+<hr />
+<h2 id="part-iii-visual-identity">Part III: Visual Identity</h2>
+<h3 id="color-philosophy">Color Philosophy</h3>
+<p><strong>Semantic, not decorative.</strong> Every color traces to meaning:</p>
 <table>
 <thead>
 <tr>
-<th>Property</th>
-<th>Value</th>
+<th>Semantic</th>
+<th>Primary Hue</th>
+<th>Usage</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Replicas</td>
-<td>1</td>
+<td><strong>Anchor</strong></td>
+<td>Cyan (#06B6D4)</td>
+<td>Primary actions, focus</td>
 </tr>
 <tr>
-<td>Image</td>
-<td><code>redis:7-alpine</code></td>
+<td><strong>Surface</strong></td>
+<td>Gray scale (800-900)</td>
+<td>Backgrounds</td>
 </tr>
 <tr>
-<td>Port</td>
-<td>6379</td>
+<td><strong>Text</strong></td>
+<td>Gray scale (100-400)</td>
+<td>Content</td>
 </tr>
 <tr>
-<td>Memory</td>
-<td>128MB max (allkeys-lru)</td>
-</tr>
-<tr>
-<td>CPU Request/Limit</td>
-<td>50m / 200m</td>
-</tr>
-<tr>
-<td>Memory Request/Limit</td>
-<td>64Mi / 256Mi</td>
+<td><strong>Jewel</strong></td>
+<td>Per Crown Jewel</td>
+<td>Domain identity</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Purpose:</strong>
-- Idempotency key store (Stripe webhooks)
-- Rate limiting counters
-- Session cache</p>
-<p><strong>Note:</strong> No persistence configured. Data loss acceptable (short TTL keys).</p>
-<h3 id="4-observability-stack">4. Observability Stack</h3>
-<p><strong>Location:</strong> <code>kgents-observability</code> namespace</p>
+<h3 id="the-jewel-palette">The Jewel Palette</h3>
+<p>Each Crown Jewel has a color signature derived from its personality:</p>
 <table>
 <thead>
 <tr>
-<th>Component</th>
-<th>Purpose</th>
-<th>Retention</th>
+<th>Jewel</th>
+<th>Hue</th>
+<th>Character</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Prometheus</td>
-<td>Metrics collection</td>
-<td>15 days</td>
+<td>Brain</td>
+<td>Cyan</td>
+<td>Contemplative, neural</td>
 </tr>
 <tr>
-<td>Grafana</td>
-<td>Dashboards</td>
-<td>N/A</td>
+<td>Gestalt</td>
+<td>Green</td>
+<td>Analytical, systematic</td>
 </tr>
 <tr>
-<td>Loki</td>
-<td>Log aggregation</td>
-<td>7 days</td>
+<td>Gardener</td>
+<td>Lime</td>
+<td>Nurturing, organic</td>
 </tr>
 <tr>
-<td>Tempo</td>
-<td>Distributed tracing</td>
-<td>7 days</td>
+<td>Atelier</td>
+<td>Amber</td>
+<td>Creative, warm</td>
 </tr>
 <tr>
-<td>OTEL Collector</td>
-<td>Telemetry gateway</td>
-<td>N/A</td>
+<td>Coalition</td>
+<td>Violet</td>
+<td>Collaborative, social</td>
+</tr>
+<tr>
+<td>Park</td>
+<td>Pink</td>
+<td>Theatrical, immersive</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>Red</td>
+<td>Urgent, authoritative</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Alert Rules:</strong> 8 configured (see <code>production-checklist.md</code>)</p>
-<h3 id="5-network-policies">5. Network Policies</h3>
+<h3 id="typography">Typography</h3>
+<p>Berkeley Mono everywhere. One font, multiple weights:</p>
 <table>
 <thead>
 <tr>
-<th>Policy</th>
-<th>Effect</th>
+<th>Element</th>
+<th>Weight</th>
+<th>Size</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>default-deny</code></td>
-<td>Block all inter-namespace traffic by default</td>
+<td>Body</td>
+<td>400</td>
+<td>base (16px)</td>
 </tr>
 <tr>
-<td><code>nats-policy</code></td>
-<td>Allow API → NATS on port 4222</td>
+<td>Headings</td>
+<td>700</td>
+<td>lg-4xl</td>
 </tr>
 <tr>
-<td><code>redis-policy</code></td>
-<td>Allow API → Redis on port 6379</td>
+<td>Code</td>
+<td>400</td>
+<td>sm-base</td>
+</tr>
+<tr>
+<td>Labels</td>
+<td>500</td>
+<td>xs-sm</td>
 </tr>
 </tbody>
 </table>
-<h2 id="external-dependencies">External Dependencies</h2>
-<table>
-<thead>
-<tr>
-<th>Service</th>
-<th>Purpose</th>
-<th>Recovery</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>OpenMeter</td>
-<td>Usage metering</td>
-<td>Buffer locally, retry with backoff</td>
-</tr>
-<tr>
-<td>Stripe</td>
-<td>Billing webhooks</td>
-<td>Stripe retries for 72h</td>
-</tr>
-<tr>
-<td>CloudFlare/Route53</td>
-<td>DNS</td>
-<td>Manual failover</td>
-</tr>
-</tbody>
-</table>
-<h2 id="current-backuprecovery-state">Current Backup/Recovery State</h2>
-<h3 id="whats-backed-up">What's Backed Up</h3>
-<table>
-<thead>
-<tr>
-<th>Component</th>
-<th>Method</th>
-<th>Frequency</th>
-<th>Location</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>NATS streams</td>
-<td>CronJob</td>
-<td>Daily</td>
-<td>Local PVC</td>
-</tr>
-<tr>
-<td>K8s manifests</td>
-<td>GitOps</td>
-<td>On commit</td>
-<td>GitHub</td>
-</tr>
-<tr>
-<td>Secrets</td>
-<td>External Secrets Operator</td>
-<td>5min sync</td>
-<td>Cloud Secret Manager</td>
-</tr>
-</tbody>
-</table>
-<h3 id="whats-not-backed-up">What's NOT Backed Up</h3>
-<table>
-<thead>
-<tr>
-<th>Component</th>
-<th>Risk</th>
-<th>Mitigation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Redis data</td>
-<td>Short-TTL keys</td>
-<td>Acceptable loss</td>
-</tr>
-<tr>
-<td>In-flight NATS messages</td>
-<td>Up to 5 min</td>
-<td>Circuit breaker fallback</td>
-</tr>
-<tr>
-<td>Grafana dashboards</td>
-<td>Manual recreation</td>
-<td>JSON in git repo</td>
-</tr>
-</tbody>
-</table>
-<h3 id="recovery-targets-current-state">Recovery Targets (Current State)</h3>
-<table>
-<thead>
-<tr>
-<th>Component</th>
-<th>RTO</th>
-<th>RPO</th>
-<th>Achievable?</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>API</td>
-<td>&lt; 5 min</td>
-<td>N/A</td>
-<td>Yes (HPA + PDB)</td>
-</tr>
-<tr>
-<td>NATS</td>
-<td>&lt; 15 min</td>
-<td>&lt; 5 min</td>
-<td>Partial (no DR region)</td>
-</tr>
-<tr>
-<td>Secrets</td>
-<td>&lt; 30 min</td>
-<td>&lt; 1 hour</td>
-<td>Yes (ESO sync)</td>
-</tr>
-</tbody>
-</table>
-<h2 id="single-points-of-failure">Single Points of Failure</h2>
-<table>
-<thead>
-<tr>
-<th>SPOF</th>
-<th>Impact</th>
-<th>Phase 11+ Mitigation</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Single region</td>
-<td>Total outage</td>
-<td>DR region</td>
-</tr>
-<tr>
-<td>Redis (1 replica)</td>
-<td>Cache miss</td>
-<td>Redis Cluster or Sentinel</td>
-</tr>
-<tr>
-<td>NATS backup PVC</td>
-<td>Backup loss</td>
-<td>Cross-region S3/GCS</td>
-</tr>
-</tbody>
-</table>
-<h2 id="network-topology">Network Topology</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>┌─────────────────────────────────────────────────────────────────┐
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>│                     Kubernetes Cluster                          │
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>│                                                                 │
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>│  ┌─────────────────────────────────────────────────────────┐   │
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>│  │ kgents-triad                                             │   │
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>│  │  │  API x2  │──│  Redis   │  │ Postgres │              │   │
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>│  │  └────┬─────┘  └──────────┘  └──────────┘              │   │
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>│  └───────┼──────────────────────────────────────────────────┘   │
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>│          │ NetworkPolicy: nats-policy                           │
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>│  ┌───────┼──────────────────────────────────────────────────┐   │
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>│  │ kgents-agents                                            │   │
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>│  │       ▼                                                  │   │
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐              │   │
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>│  │  │  NATS-0  │──│  NATS-1  │──│  NATS-2  │              │   │
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>│  │  └──────────┘  └──────────┘  └──────────┘              │   │
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>│  └──────────────────────────────────────────────────────────┘   │
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>│                                                                 │
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>│  ┌──────────────────────────────────────────────────────────┐   │
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>│  │ kgents-observability                                     │   │
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │   │
-</span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>│  │  │Prometheus│ │ Grafana  │ │   Loki   │ │  Tempo   │   │   │
-</span><span id="__span-1-23"><a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │   │
-</span><span id="__span-1-24"><a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>│  └──────────────────────────────────────────────────────────┘   │
-</span><span id="__span-1-25"><a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>│                                                                 │
-</span><span id="__span-1-26"><a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a>└─────────────────────────────────────────────────────────────────┘
+<h3 id="iconography">Iconography</h3>
+<p><strong>Lucide icons only.</strong> No emojis in production UI.</p>
+<div class="language-tsx highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Correct</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Brain</span><span class="p">,</span><span class="w"> </span><span class="nx">Leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">Users</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;lucide-react&#39;</span><span class="p">;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Incorrect</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">icon</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;🧠&quot;</span><span class="p">;</span><span class="w">  </span><span class="c1">// NO</span>
 </span></code></pre></div>
-<h2 id="resource-summary">Resource Summary</h2>
+<hr />
+<h2 id="part-iv-motion-language">Part IV: Motion Language</h2>
+<h3 id="the-six-primitives-motion_operad">The Six Primitives (MOTION_OPERAD)</h3>
 <table>
 <thead>
 <tr>
-<th>Component</th>
-<th>vCPU (request)</th>
-<th>Memory (request)</th>
-<th>Storage</th>
+<th>Primitive</th>
+<th>Purpose</th>
+<th>When</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>API x2</td>
-<td>200m</td>
-<td>512Mi</td>
-<td>-</td>
+<td><strong>Breathe</strong></td>
+<td>Living presence</td>
+<td>Idle, active</td>
 </tr>
 <tr>
-<td>NATS x3</td>
-<td>300m</td>
-<td>768Mi</td>
-<td>30Gi</td>
+<td><strong>Pulse</strong></td>
+<td>Attention</td>
+<td>Waiting, processing</td>
 </tr>
 <tr>
-<td>Redis x1</td>
-<td>50m</td>
-<td>64Mi</td>
-<td>-</td>
+<td><strong>Shake</strong></td>
+<td>Error</td>
+<td>Validation failure</td>
 </tr>
 <tr>
-<td>Prometheus</td>
-<td>100m</td>
-<td>512Mi</td>
-<td>50Gi</td>
+<td><strong>Pop</strong></td>
+<td>Success</td>
+<td>Completion</td>
 </tr>
 <tr>
-<td>Grafana</td>
-<td>100m</td>
-<td>256Mi</td>
-<td>1Gi</td>
+<td><strong>Shimmer</strong></td>
+<td>Loading</td>
+<td>Placeholder</td>
 </tr>
 <tr>
-<td>Loki</td>
-<td>100m</td>
-<td>256Mi</td>
-<td>10Gi</td>
-</tr>
-<tr>
-<td>Tempo</td>
-<td>100m</td>
-<td>256Mi</td>
-<td>10Gi</td>
-</tr>
-<tr>
-<td><strong>Total</strong></td>
-<td><strong>~1 vCPU</strong></td>
-<td><strong>~2.5Gi</strong></td>
-<td><strong>~100Gi</strong></td>
+<td><strong>Fade</strong></td>
+<td>Transition</td>
+<td>Enter/exit</td>
 </tr>
 </tbody>
 </table>
-<h2 id="configuration-references">Configuration References</h2>
+<h3 id="timing-2025-speed-mandate">Timing (2025 Speed Mandate)</h3>
+<blockquote>
+<p><em>"Speed is king. Users crave instant feedback."</em></p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Duration</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-100ms</td>
+<td>Instant (hover, focus)</td>
+</tr>
+<tr>
+<td>100-200ms</td>
+<td>Quick (tabs, toggles)</td>
+</tr>
+<tr>
+<td>200-400ms</td>
+<td>Standard (cards, modals)</td>
+</tr>
+<tr>
+<td>400-700ms</td>
+<td>Elaborate (celebrations)</td>
+</tr>
+<tr>
+<td>1000ms+</td>
+<td>Ambient only (breathe)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="motion-preferences">Motion Preferences</h3>
+<p><strong>Always respect <code>prefers-reduced-motion</code>:</strong></p>
+<div class="language-tsx highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">shouldAnimate</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useMotionPreferences</span><span class="p">();</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">shouldAnimate</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="p">&lt;</span><span class="nt">StaticVersion</span><span class="w"> </span><span class="p">/&gt;;</span>
+</span></code></pre></div>
+<hr />
+<h2 id="part-v-voice-and-tone">Part V: Voice and Tone</h2>
+<h3 id="the-voice-constant">The Voice (Constant)</h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Thoughtful</strong></td>
+<td>We consider before speaking</td>
+</tr>
+<tr>
+<td><strong>Warm</strong></td>
+<td>We care about the human</td>
+</tr>
+<tr>
+<td><strong>Direct</strong></td>
+<td>We don't waste words</td>
+</tr>
+<tr>
+<td><strong>Witty</strong></td>
+<td>We find lightness naturally</td>
+</tr>
+<tr>
+<td><strong>Honest</strong></td>
+<td>We admit limitations</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-tone-variable">The Tone (Variable)</h3>
+<p>Same voice, different temperatures:</p>
+<table>
+<thead>
+<tr>
+<th>Context</th>
+<th>Tone</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Success</td>
+<td>Celebratory</td>
+<td>"Done! Your changes are safe."</td>
+</tr>
+<tr>
+<td>Loading</td>
+<td>Patient</td>
+<td>"Crystallizing memories..."</td>
+</tr>
+<tr>
+<td>Error</td>
+<td>Empathetic</td>
+<td>"Something went wrong. Let's fix it together."</td>
+</tr>
+<tr>
+<td>Empty</td>
+<td>Inviting</td>
+<td>"Nothing here yet. Ready when you are."</td>
+</tr>
+</tbody>
+</table>
+<h3 id="error-formula">Error Formula</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[What happened] + [Why/Context] + [What to do next]
+</span></code></pre></div>
+<p><strong>Never</strong>: "Error 500"
+<strong>Always</strong>: "Something unexpected... Even the wisest agents encounter mysteries."</p>
+<hr />
+<h2 id="part-vi-emergence-generative-aesthetics">Part VI: Emergence (Generative Aesthetics)</h2>
+<blockquote>
+<p><em>"We do not design the flower—we design the soil and the season."</em></p>
+</blockquote>
+<h3 id="the-qualia-space">The Qualia Space</h3>
+<p>All sensory modalities project from unified coordinates:</p>
+<table>
+<thead>
+<tr>
+<th>Dimension</th>
+<th>Range</th>
+<th>Affects</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>warmth</td>
+<td>-1 to +1</td>
+<td>Hue, motion speed</td>
+</tr>
+<tr>
+<td>weight</td>
+<td>-1 to +1</td>
+<td>Saturation, dampening</td>
+</tr>
+<tr>
+<td>tempo</td>
+<td>-1 to +1</td>
+<td>Duration, stagger</td>
+</tr>
+<tr>
+<td>brightness</td>
+<td>-1 to +1</td>
+<td>Luminance, amplitude</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cross-Modal Consistency</strong>: Warm color → slow motion → low pitch.</p>
+<h3 id="circadian-modulation">Circadian Modulation</h3>
+<p>UI breathes differently at different times:</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Hours</th>
+<th>Modifier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dawn</td>
+<td>6-10</td>
+<td>Cooler, brightening</td>
+</tr>
+<tr>
+<td>Noon</td>
+<td>10-16</td>
+<td>Neutral, active</td>
+</tr>
+<tr>
+<td>Dusk</td>
+<td>16-20</td>
+<td>Warming, slowing</td>
+</tr>
+<tr>
+<td>Midnight</td>
+<td>20-6</td>
+<td>Cool, dim, slow</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-accursed-share">The Accursed Share</h3>
+<blockquote>
+<p><em>"10% of emergence is chaos. This is sacred."</em></p>
+</blockquote>
 <ul>
-<li>API Deployment: <code>impl/claude/infra/k8s/manifests/api/deployment.yaml</code></li>
-<li>NATS StatefulSet: <code>impl/claude/infra/k8s/manifests/nats/statefulset.yaml</code></li>
-<li>Redis: <code>impl/claude/infra/k8s/manifests/triad/03-redis.yaml</code></li>
-<li>Network Policies: <code>impl/claude/infra/k8s/manifests/network-policies/</code></li>
-<li>Observability: <code>impl/claude/infra/k8s/manifests/observability/</code></li>
+<li>Timing: ±5% variation on animations</li>
+<li>Position: Subtle jitter on particles</li>
+<li>Color: Minor hue drift over time</li>
 </ul>
 <hr />
-<p><em>Last Updated: 2025-12-14 | Phase 10: STRATEGIZE</em></p>
+<h2 id="part-vii-integration-with-agentese">Part VII: Integration with AGENTESE</h2>
+<p>The creative system projects through AGENTESE:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>concept.design.layout.manifest     → Current layout state
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>concept.design.content.degrade     → Apply degradation
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>concept.design.motion.apply        → Apply motion primitive
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>concept.design.operad.verify       → Verify composition laws
+</span></code></pre></div>
+<p><strong>Observer-Dependent Rendering</strong>: Different observers perceive different aesthetics. The architect sees blueprints; the poet sees metaphor.</p>
+<hr />
+<h2 id="part-viii-anti-patterns">Part VIII: Anti-Patterns</h2>
+<table>
+<thead>
+<tr>
+<th>Anti-Pattern</th>
+<th>Why Wrong</th>
+<th>Instead</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Hard-coded colors</td>
+<td>Not semantic</td>
+<td>Use palette tokens</td>
+</tr>
+<tr>
+<td>Fixed timing</td>
+<td>Mechanical feel</td>
+<td>Use qualia + noise</td>
+</tr>
+<tr>
+<td>Scattered <code>isMobile</code></td>
+<td>Violates AD-008</td>
+<td>Pass density context</td>
+</tr>
+<tr>
+<td>Emojis in UI</td>
+<td>Inconsistent rendering</td>
+<td>Use Lucide icons</td>
+</tr>
+<tr>
+<td>Silent errors</td>
+<td>UX failure</td>
+<td>Use EmpathyError</td>
+</tr>
+<tr>
+<td>Raw "Loading..."</td>
+<td>Generic</td>
+<td>Use jewel personality</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="part-ix-quick-reference">Part IX: Quick Reference</h2>
+<h3 id="color-quick-reference">Color Quick Reference</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>Gray:   50 → 100 → 200 → 300 → 400 → 500 → 600 → 700 → 800 → 900 → 950
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>Jewels: brain(cyan) | gestalt(green) | gardener(lime) | atelier(amber)
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>        coalition(violet) | park(pink) | domain(red)
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>States: success(green) | warning(amber) | error(red) | info(cyan)
+</span></code></pre></div>
+<h3 id="spacing-quick-reference">Spacing Quick Reference</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>1=4px | 2=8px | 3=12px | 4=16px | 5=20px | 6=24px | 8=32px | 10=40px
+</span></code></pre></div>
+<h3 id="motion-quick-reference">Motion Quick Reference</h3>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>breathe: 2-4s cycle | pulse: 0.5-2s | shake: 400ms | pop: 300ms | fade: 150-200ms
+</span></code></pre></div>
+<hr />
+<h2 id="sources-and-references">Sources and References</h2>
+<ul>
+<li><code>spec/principles.md</code> — Core design principles</li>
+<li><code>spec/protocols/projection.md</code> — Projection Protocol</li>
+<li><code>plans/design-language-consolidation.md</code> — DESIGN_OPERAD specification</li>
+<li><code>plans/autopoietic-architecture.md</code> — AD-006, AD-008, AD-009</li>
+<li><code>docs/skills/elastic-ui-patterns.md</code> — Implementation patterns</li>
+<li><code>docs/skills/ux-reference-patterns.md</code> — Cross-cutting UX patterns</li>
+</ul>
+<hr />
+<p><em>"The aesthetic is the structure perceiving itself. Beauty is not added—it is revealed."</em></p>
 
 
 

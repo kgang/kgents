@@ -223,7 +223,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../gallery/" class="md-tabs__link">
+      <a href="../../gallery/index.md" class="md-tabs__link">
         
   
   
@@ -308,7 +308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gallery/" class="md-nav__link">
+      <a href="../../gallery/index.md" class="md-nav__link">
         
   
   
@@ -687,6 +687,39 @@
     <span class="md-ellipsis">
       
         Pattern 9: Directed State Cycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-10-operad-inheritance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 10: Operad Inheritance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-11-circadian-modulation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 11: Circadian Modulation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-12-law-honesty-structural-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 12: Law Honesty (STRUCTURAL Status)
       
     </span>
   </a>
@@ -1105,6 +1138,148 @@
 | Coalition | FORMING→ASSIGNED→EXECUTING→REVIEWING→DISBANDED |
 | Park | SETUP→RUNNING→PAUSED→COMPLETE |</p>
 <hr />
+<h2 id="pattern-10-operad-inheritance">Pattern 10: Operad Inheritance</h2>
+<p><strong>Problem</strong>: New domains need composition grammar that builds on existing operads.</p>
+<p><strong>Wrong</strong>: Copy-paste operations
+<div class="language-python highlight"><pre><span></span><code><span id="__span-15-1"><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Duplicated operations across operads</span>
+</span><span id="__span-15-2"><a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="n">JEWEL_OPERAD</span> <span class="o">=</span> <span class="n">Operad</span><span class="p">(</span>
+</span><span id="__span-15-3"><a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>    <span class="n">operations</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-15-4"><a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>        <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="n">Operation</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>  <span class="c1"># Copied from DESIGN_OPERAD</span>
+</span><span id="__span-15-5"><a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>        <span class="s2">&quot;stack&quot;</span><span class="p">:</span> <span class="n">Operation</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>  <span class="c1"># Copied again</span>
+</span><span id="__span-15-6"><a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>        <span class="c1"># ... all duplicated</span>
+</span><span id="__span-15-7"><a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>    <span class="p">}</span>
+</span><span id="__span-15-8"><a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Right</strong>: Spread inheritance
+<div class="language-python highlight"><pre><span></span><code><span id="__span-16-1"><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_emergence_operad</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Operad</span><span class="p">:</span>
+</span><span id="__span-16-2"><a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">agents.design</span><span class="w"> </span><span class="kn">import</span> <span class="n">DESIGN_OPERAD</span>
+</span><span id="__span-16-3"><a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
+</span><span id="__span-16-4"><a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    <span class="k">return</span> <span class="n">Operad</span><span class="p">(</span>
+</span><span id="__span-16-5"><a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;EMERGENCE&quot;</span><span class="p">,</span>
+</span><span id="__span-16-6"><a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>        <span class="n">operations</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-16-7"><a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>            <span class="c1"># Domain-specific operations</span>
+</span><span id="__span-16-8"><a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>            <span class="s2">&quot;select_family&quot;</span><span class="p">:</span> <span class="n">Operation</span><span class="p">(</span><span class="n">arity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">),</span>
+</span><span id="__span-16-9"><a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>            <span class="s2">&quot;modulate_qualia&quot;</span><span class="p">:</span> <span class="n">Operation</span><span class="p">(</span><span class="n">arity</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">...</span><span class="p">),</span>
+</span><span id="__span-16-10"><a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>            <span class="c1"># Inherit all DESIGN_OPERAD operations</span>
+</span><span id="__span-16-11"><a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>            <span class="o">**</span><span class="n">DESIGN_OPERAD</span><span class="o">.</span><span class="n">operations</span><span class="p">,</span>
+</span><span id="__span-16-12"><a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>        <span class="p">},</span>
+</span><span id="__span-16-13"><a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>        <span class="n">laws</span><span class="o">=</span><span class="p">[</span>
+</span><span id="__span-16-14"><a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>            <span class="n">Law</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;pattern_commutativity&quot;</span><span class="p">,</span> <span class="o">...</span><span class="p">),</span>
+</span><span id="__span-16-15"><a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>            <span class="c1"># Inherit all DESIGN_OPERAD laws</span>
+</span><span id="__span-16-16"><a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>            <span class="o">*</span><span class="n">DESIGN_OPERAD</span><span class="o">.</span><span class="n">laws</span><span class="p">,</span>
+</span><span id="__span-16-17"><a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>        <span class="p">],</span>
+</span><span id="__span-16-18"><a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a>    <span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Benefits</strong>:
+- Single source of truth for base operations
+- Domain-specific operations compose with inherited ones
+- Law inheritance ensures consistency</p>
+<p><strong>Apply to</strong>:
+| Child Operad | Parent | Domain-Specific Ops |
+|--------------|--------|---------------------|
+| EMERGENCE_OPERAD | DESIGN_OPERAD | select_family, tune_param, modulate_qualia |
+| TOWN_OPERAD | AGENT_OPERAD | greet, gossip, trade, solo |
+| WORKSHOP_OPERAD | DESIGN_OPERAD | create_piece, curate, exhibit |</p>
+<hr />
+<h2 id="pattern-11-circadian-modulation">Pattern 11: Circadian Modulation</h2>
+<p><strong>Problem</strong>: UI should feel different at different times of day without being disruptive.</p>
+<p><strong>Implementation (Backend)</strong>:
+<div class="language-python highlight"><pre><span></span><code><span id="__span-17-1"><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CircadianPhase</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+</span><span id="__span-17-2"><a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">DAWN</span> <span class="o">=</span> <span class="s2">&quot;dawn&quot;</span>      <span class="c1"># 6-10</span>
+</span><span id="__span-17-3"><a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="n">NOON</span> <span class="o">=</span> <span class="s2">&quot;noon&quot;</span>      <span class="c1"># 10-16</span>
+</span><span id="__span-17-4"><a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="n">DUSK</span> <span class="o">=</span> <span class="s2">&quot;dusk&quot;</span>      <span class="c1"># 16-20</span>
+</span><span id="__span-17-5"><a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>    <span class="n">MIDNIGHT</span> <span class="o">=</span> <span class="s2">&quot;midnight&quot;</span>  <span class="c1"># 20-6</span>
+</span><span id="__span-17-6"><a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>
+</span><span id="__span-17-7"><a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="nd">@classmethod</span>
+</span><span id="__span-17-8"><a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">from_hour</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">hour</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CircadianPhase&quot;</span><span class="p">:</span>
+</span><span id="__span-17-9"><a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>        <span class="k">if</span> <span class="mi">6</span> <span class="o">&lt;=</span> <span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">DAWN</span>
+</span><span id="__span-17-10"><a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>        <span class="k">if</span> <span class="mi">10</span> <span class="o">&lt;=</span> <span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">16</span><span class="p">:</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">NOON</span>
+</span><span id="__span-17-11"><a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>        <span class="k">if</span> <span class="mi">16</span> <span class="o">&lt;=</span> <span class="n">hour</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span> <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">DUSK</span>
+</span><span id="__span-17-12"><a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">MIDNIGHT</span>
+</span><span id="__span-17-13"><a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>
+</span><span id="__span-17-14"><a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="__span-17-15"><a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="k">class</span><span class="w"> </span><span class="nc">QualiaModifier</span><span class="p">:</span>
+</span><span id="__span-17-16"><a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a>    <span class="n">warmth</span><span class="p">:</span> <span class="nb">float</span>    <span class="c1"># -1 to 1 (additive)</span>
+</span><span id="__span-17-17"><a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a>    <span class="n">brightness</span><span class="p">:</span> <span class="nb">float</span>  <span class="c1"># 0 to 1 (multiplicative)</span>
+</span><span id="__span-17-18"><a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a>    <span class="n">tempo</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># -1 to 1 (additive to animation speed)</span>
+</span><span id="__span-17-19"><a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a>
+</span><span id="__span-17-20"><a id="__codelineno-17-20" name="__codelineno-17-20" href="#__codelineno-17-20"></a><span class="n">CIRCADIAN_MODIFIERS</span> <span class="o">=</span> <span class="p">{</span>
+</span><span id="__span-17-21"><a id="__codelineno-17-21" name="__codelineno-17-21" href="#__codelineno-17-21"></a>    <span class="n">CircadianPhase</span><span class="o">.</span><span class="n">DAWN</span><span class="p">:</span> <span class="n">QualiaModifier</span><span class="p">(</span><span class="n">warmth</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="n">tempo</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
+</span><span id="__span-17-22"><a id="__codelineno-17-22" name="__codelineno-17-22" href="#__codelineno-17-22"></a>    <span class="n">CircadianPhase</span><span class="o">.</span><span class="n">NOON</span><span class="p">:</span> <span class="n">QualiaModifier</span><span class="p">(</span><span class="n">warmth</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">tempo</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+</span><span id="__span-17-23"><a id="__codelineno-17-23" name="__codelineno-17-23" href="#__codelineno-17-23"></a>    <span class="n">CircadianPhase</span><span class="o">.</span><span class="n">DUSK</span><span class="p">:</span> <span class="n">QualiaModifier</span><span class="p">(</span><span class="n">warmth</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">tempo</span><span class="o">=-</span><span class="mf">0.2</span><span class="p">),</span>
+</span><span id="__span-17-24"><a id="__codelineno-17-24" name="__codelineno-17-24" href="#__codelineno-17-24"></a>    <span class="n">CircadianPhase</span><span class="o">.</span><span class="n">MIDNIGHT</span><span class="p">:</span> <span class="n">QualiaModifier</span><span class="p">(</span><span class="n">warmth</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">brightness</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">tempo</span><span class="o">=-</span><span class="mf">0.4</span><span class="p">),</span>
+</span><span id="__span-17-25"><a id="__codelineno-17-25" name="__codelineno-17-25" href="#__codelineno-17-25"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p><strong>Implementation (Frontend)</strong>:
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-18-1"><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kd">function</span><span class="w"> </span><span class="nx">useCircadian</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-2"><a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">phase</span><span class="p">,</span><span class="w"> </span><span class="nx">setPhase</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="o">&lt;</span><span class="nx">CircadianPhase</span><span class="o">&gt;</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span>
+</span><span id="__span-18-3"><a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">    </span><span class="nx">getCircadianPhase</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">getHours</span><span class="p">())</span>
+</span><span id="__span-18-4"><a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="p">);</span>
+</span><span id="__span-18-5"><a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="kd">override</span><span class="p">,</span><span class="w"> </span><span class="nx">setOverride</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="o">&lt;</span><span class="nx">CircadianPhase</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="o">&gt;</span><span class="p">(</span><span class="kc">null</span><span class="p">);</span>
+</span><span id="__span-18-6"><a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
+</span><span id="__span-18-7"><a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nx">useEffect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-8"><a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">setInterval</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-9"><a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">      </span><span class="nx">setPhase</span><span class="p">(</span><span class="nx">getCircadianPhase</span><span class="p">(</span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">().</span><span class="nx">getHours</span><span class="p">()));</span>
+</span><span id="__span-18-10"><a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="p">},</span><span class="w"> </span><span class="mf">60000</span><span class="p">);</span><span class="w">  </span><span class="c1">// Update every minute</span>
+</span><span id="__span-18-11"><a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">clearInterval</span><span class="p">(</span><span class="nx">interval</span><span class="p">);</span>
+</span><span id="__span-18-12"><a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="p">[]);</span>
+</span><span id="__span-18-13"><a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>
+</span><span id="__span-18-14"><a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-18-15"><a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="w">    </span><span class="nx">phase</span><span class="o">:</span><span class="w"> </span><span class="kt">override</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">phase</span><span class="p">,</span>
+</span><span id="__span-18-16"><a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">    </span><span class="nx">modifier</span><span class="o">:</span><span class="w"> </span><span class="kt">CIRCADIAN_MODIFIERS</span><span class="p">[</span><span class="kd">override</span><span class="w"> </span><span class="o">??</span><span class="w"> </span><span class="nx">phase</span><span class="p">],</span>
+</span><span id="__span-18-17"><a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">    </span><span class="nx">setOverride</span><span class="p">,</span>
+</span><span id="__span-18-18"><a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">    </span><span class="nx">clearOverride</span><span class="o">:</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">setOverride</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
+</span><span id="__span-18-19"><a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">    </span><span class="nx">isOverridden</span><span class="o">:</span><span class="w"> </span><span class="kt">override</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+</span><span id="__span-18-20"><a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">  </span><span class="p">};</span>
+</span><span id="__span-18-21"><a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p><strong>Benefits</strong>:
+- Subtle mood shifts (dusk = warmer, slower)
+- Manual override for demos
+- Backend + frontend alignment</p>
+<p><strong>Apply to</strong>:
+| Jewel | What Changes | Effect |
+|-------|-------------|--------|
+| Emergence | Pattern hue, animation speed | Warmer at dusk, slower at midnight |
+| Gestalt | Dashboard accent color | Cooler in morning, warmer evening |
+| Town | Citizen activity patterns | More active at noon, reflective at midnight |</p>
+<hr />
+<h2 id="pattern-12-law-honesty-structural-status">Pattern 12: Law Honesty (STRUCTURAL Status)</h2>
+<p><strong>Problem</strong>: Some operad laws express design constraints, not runtime-verifiable invariants.</p>
+<p><strong>Wrong</strong>: Pretend laws always pass
+<div class="language-python highlight"><pre><span></span><code><span id="__span-19-1"><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_verify_commutativity</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LawVerification</span><span class="p">:</span>
+</span><span id="__span-19-2"><a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>    <span class="c1"># This doesn&#39;t actually verify anything!</span>
+</span><span id="__span-19-3"><a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>    <span class="k">return</span> <span class="n">LawVerification</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">LawStatus</span><span class="o">.</span><span class="n">PASSED</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Right</strong>: Honest STRUCTURAL status
+<div class="language-python highlight"><pre><span></span><code><span id="__span-20-1"><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="k">def</span><span class="w"> </span><span class="nf">_verify_pattern_commutativity</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LawVerification</span><span class="p">:</span>
+</span><span id="__span-20-2"><a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="__span-20-3"><a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="sd">    HONESTY: This law is STRUCTURAL, not runtime-verified.</span>
+</span><span id="__span-20-4"><a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+</span><span id="__span-20-5"><a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="sd">    Pattern selection and parameter tuning DON&#39;T fully commute because</span>
+</span><span id="__span-20-6"><a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="sd">    select_family resets config while tune_param modifies existing.</span>
+</span><span id="__span-20-7"><a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="sd">    Order matters for final values, but operations don&#39;t interfere.</span>
+</span><span id="__span-20-8"><a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>
+</span><span id="__span-20-9"><a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="sd">    We mark as STRUCTURAL to indicate this is a design choice.</span>
+</span><span id="__span-20-10"><a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="__span-20-11"><a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a>    <span class="k">return</span> <span class="n">LawVerification</span><span class="p">(</span>
+</span><span id="__span-20-12"><a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>        <span class="n">law_name</span><span class="o">=</span><span class="s2">&quot;pattern_commutativity&quot;</span><span class="p">,</span>
+</span><span id="__span-20-13"><a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>        <span class="n">status</span><span class="o">=</span><span class="n">LawStatus</span><span class="o">.</span><span class="n">STRUCTURAL</span><span class="p">,</span>
+</span><span id="__span-20-14"><a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a>        <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Design choice: select_family resets, tune_param modifies&quot;</span><span class="p">,</span>
+</span><span id="__span-20-15"><a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>    <span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>When to use each status</strong>:
+| Status | When | Example |
+|--------|------|---------|
+| PASSED | Runtime verification succeeds | <code>qualia.blend(a,b,0.5) = qualia.blend(b,a,0.5)</code> |
+| FAILED | Runtime verification fails | Composition produces wrong result |
+| STRUCTURAL | Design constraint, not runtime | Commutativity is intentionally broken |
+| SKIPPED | Cannot verify (missing deps) | External service unavailable |</p>
+<p><strong>Benefits</strong>:
+- Honest documentation of law behavior
+- Tests can expect STRUCTURAL (not fake PASSED)
+- Design intent is clear</p>
+<hr />
 <h2 id="quick-reference">Quick Reference</h2>
 <table>
 <thead>
@@ -1160,6 +1335,21 @@
 <td>State machine design</td>
 <td>One forward per state</td>
 </tr>
+<tr>
+<td><strong>Operad Inheritance</strong></td>
+<td>Building on base operads</td>
+<td><code>**PARENT.operations</code> spread</td>
+</tr>
+<tr>
+<td><strong>Circadian Modulation</strong></td>
+<td>Time-of-day UI shifts</td>
+<td>Phase → modifier → apply</td>
+</tr>
+<tr>
+<td><strong>Law Honesty</strong></td>
+<td>Laws that aren't runtime</td>
+<td>STRUCTURAL status for design constraints</td>
+</tr>
 </tbody>
 </table>
 <hr />
@@ -1173,6 +1363,7 @@
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel</li>
 <li>2025-12-16: Initial version from Gardener-Logos reflection</li>
 </ul>
 

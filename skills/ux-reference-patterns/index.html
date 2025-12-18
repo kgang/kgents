@@ -223,7 +223,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../gallery/" class="md-tabs__link">
+      <a href="../../gallery/index.md" class="md-tabs__link">
         
   
   
@@ -308,7 +308,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../gallery/" class="md-nav__link">
+      <a href="../../gallery/index.md" class="md-nav__link">
         
   
   
@@ -983,6 +983,56 @@
     <span class="md-ellipsis">
       
         8.3 Session Persistence
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9-shellpanel-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Shell/Panel Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="9. Shell/Panel Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#91-floating-overlay-navigation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.1 Floating Overlay Navigation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#92-fixed-bottom-panels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.2 Fixed Bottom Panels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#93-z-index-layering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9.3 Z-Index Layering
       
     </span>
   </a>
@@ -1737,6 +1787,103 @@
 </tbody>
 </table>
 <hr />
+<h2 id="9-shellpanel-patterns">9. Shell/Panel Patterns</h2>
+<p><em>Source: OS Shell implementation (2025-12-17)</em></p>
+<h3 id="91-floating-overlay-navigation">9.1 Floating Overlay Navigation</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Implementation</th>
+<th>Why It Works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Overlay &gt; Push</strong></td>
+<td>Sidebar floats over content</td>
+<td>Full content width when collapsed</td>
+</tr>
+<tr>
+<td><strong>Transform &gt; Reflow</strong></td>
+<td><code>translate-x</code> not <code>margin-left</code></td>
+<td>Smoother animation, no layout thrashing</td>
+</tr>
+<tr>
+<td><strong>Toggle follows panel</strong></td>
+<td>Button slides with sidebar</td>
+<td>Spatial consistency, always accessible</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Principle</strong>: "Users rarely need nav and content simultaneously."</p>
+<h3 id="92-fixed-bottom-panels">9.2 Fixed Bottom Panels</h3>
+<table>
+<thead>
+<tr>
+<th>Pattern</th>
+<th>Implementation</th>
+<th>Why It Works</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fixed position</strong></td>
+<td><code>fixed bottom-0 left-0 right-0</code></td>
+<td>Stays anchored during scroll</td>
+</tr>
+<tr>
+<td><strong>Padding compensation</strong></td>
+<td>Main content gets bottom padding</td>
+<td>No content occlusion</td>
+</tr>
+<tr>
+<td><strong>Collapse to input line</strong></td>
+<td>48px collapsed, 200px+ expanded</td>
+<td>Always accessible, expandable on demand</td>
+</tr>
+<tr>
+<td><strong>Desktop-only resize</strong></td>
+<td>Drag handle on spacious density</td>
+<td>Appropriate for input method</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Principle</strong>: "Fixed &gt; Relative for persistent UI that must survive scroll."</p>
+<h3 id="93-z-index-layering">9.3 Z-Index Layering</h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Z-Index</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Content</strong></td>
+<td>Base</td>
+<td>Page content</td>
+</tr>
+<tr>
+<td><strong>Panel</strong></td>
+<td>z-30</td>
+<td>Sidebar, bottom drawer</td>
+</tr>
+<tr>
+<td><strong>Toggle</strong></td>
+<td>z-40</td>
+<td>Panel controls, FABs</td>
+</tr>
+<tr>
+<td><strong>Modal/Overlay</strong></td>
+<td>z-50</td>
+<td>Full-screen drawers, dialogs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Principle</strong>: "Explicit layering prevents occlusion bugs."</p>
+<hr />
 <h2 id="application-checklist">Application Checklist</h2>
 <p>When designing a new feature, check against these patterns:</p>
 <ul class="task-list">
@@ -1761,6 +1908,7 @@
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-17: Added Shell/Panel Patterns (floating overlay, fixed bottom, z-index layering)</li>
 <li>2025-12-15: Initial extraction from core-apps UX research</li>
 </ul>
 
