@@ -840,10 +840,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-emoji-system" class="md-nav__link">
+  <a href="#the-icon-system-no-emojis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Emoji System
+        The Icon System (No Emojis)
       
     </span>
   </a>
@@ -890,10 +890,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#the-dashboard-pattern" class="md-nav__link">
+  <a href="#the-os-shell-pattern" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Dashboard Pattern
+        The OS Shell Pattern
       
     </span>
   </a>
@@ -1414,23 +1414,36 @@
 </tbody>
 </table>
 <p><strong>Icon Library:</strong> Lucide (open source, consistent style)</p>
-<h3 id="the-emoji-system">The Emoji System</h3>
-<p>Emojis are <strong>first-class citizens</strong> in kgents, not decorative:</p>
-<div class="language-typescript highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">JEWEL_EMOJI</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nx">brain</span><span class="o">:</span><span class="w">     </span><span class="s1">&#39;🧠&#39;</span><span class="p">,</span>
-</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nx">gestalt</span><span class="o">:</span><span class="w">   </span><span class="s1">&#39;🏗️&#39;</span><span class="p">,</span>
-</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nx">gardener</span><span class="o">:</span><span class="w">  </span><span class="s1">&#39;🌱&#39;</span><span class="p">,</span>
-</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nx">atelier</span><span class="o">:</span><span class="w">   </span><span class="s1">&#39;🎨&#39;</span><span class="p">,</span>
-</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nx">coalition</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;🤝&#39;</span><span class="p">,</span>
-</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nx">park</span><span class="o">:</span><span class="w">      </span><span class="s1">&#39;🎭&#39;</span><span class="p">,</span>
-</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w">    </span><span class="s1">&#39;🏛️&#39;</span><span class="p">,</span>
-</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="p">}</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span><span class="p">;</span>
+<h3 id="the-icon-system-no-emojis">The Icon System (No Emojis)</h3>
+<blockquote>
+<p><em>"Emojis in copy are garnish. kgents is the main course."</em></p>
+</blockquote>
+<p>kgents uses <strong>Lucide icons</strong> exclusively for semantic iconography. Emojis are NOT used in kgents-authored copy.</p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Brain</span><span class="p">,</span><span class="w"> </span><span class="nx">Network</span><span class="p">,</span><span class="w"> </span><span class="nx">Leaf</span><span class="p">,</span><span class="w"> </span><span class="nx">Palette</span><span class="p">,</span><span class="w"> </span><span class="nx">Users</span><span class="p">,</span><span class="w"> </span><span class="nx">Theater</span><span class="p">,</span><span class="w"> </span><span class="nx">Building</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;lucide-react&#39;</span><span class="p">;</span>
+</span><span id="__span-11-2"><a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+</span><span id="__span-11-3"><a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">JEWEL_ICONS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-11-4"><a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nx">brain</span><span class="o">:</span><span class="w">     </span><span class="kt">Brain</span><span class="p">,</span><span class="w">      </span><span class="c1">// Cyan family</span>
+</span><span id="__span-11-5"><a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="w">  </span><span class="nx">gestalt</span><span class="o">:</span><span class="w">   </span><span class="kt">Network</span><span class="p">,</span><span class="w">    </span><span class="c1">// Green family</span>
+</span><span id="__span-11-6"><a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nx">gardener</span><span class="o">:</span><span class="w">  </span><span class="kt">Leaf</span><span class="p">,</span><span class="w">       </span><span class="c1">// Lime family</span>
+</span><span id="__span-11-7"><a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="w">  </span><span class="nx">atelier</span><span class="o">:</span><span class="w">   </span><span class="kt">Palette</span><span class="p">,</span><span class="w">    </span><span class="c1">// Amber family</span>
+</span><span id="__span-11-8"><a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a><span class="w">  </span><span class="nx">coalition</span><span class="o">:</span><span class="w"> </span><span class="kt">Users</span><span class="p">,</span><span class="w">      </span><span class="c1">// Violet family</span>
+</span><span id="__span-11-9"><a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="w">  </span><span class="nx">park</span><span class="o">:</span><span class="w">      </span><span class="kt">Theater</span><span class="p">,</span><span class="w">    </span><span class="c1">// Pink family</span>
+</span><span id="__span-11-10"><a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="w">  </span><span class="nx">domain</span><span class="o">:</span><span class="w">    </span><span class="kt">Building</span><span class="p">,</span><span class="w">   </span><span class="c1">// Red family</span>
+</span><span id="__span-11-11"><a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="p">}</span><span class="w"> </span><span class="kr">as</span><span class="w"> </span><span class="kd">const</span><span class="p">;</span>
 </span></code></pre></div>
-<p><strong>Usage:</strong>
-- Loading states (with personality)
-- Empty states (with character)
-- Celebrations (earned, not gratuitous)
-- Error states (empathy, not panic)</p>
+<p><strong>Icon Guidelines:</strong>
+- Use semantic icons from Lucide library
+- Match icon color to jewel color
+- 24px base size, 20px for compact density
+- Outline style default, filled for selected/active states</p>
+<p><strong>Exceptions (emojis allowed):</strong>
+- User-generated content (users may use emojis)
+- Explicit personality moments in loading states (sparingly)
+- Data display where emojis are part of the data</p>
+<p><strong>Anti-patterns:</strong>
+- Emojis in navigation labels
+- Emojis in buttons or actions
+- Emojis as primary visual identifiers</p>
 <hr />
 <h2 id="part-vi-layout-patterns">Part VI: Layout Patterns</h2>
 <h3 id="the-three-densities">The Three Densities</h3>
@@ -1474,25 +1487,32 @@
 </span><span id="__span-12-10"><a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="c1">// Card container</span>
 </span><span id="__span-12-11"><a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="p">&lt;</span><span class="nt">ElasticCard</span><span class="w"> </span><span class="na">density</span><span class="o">=</span><span class="p">{</span><span class="nx">density</span><span class="p">}&gt;{</span><span class="nx">children</span><span class="p">}&lt;/</span><span class="nt">ElasticCard</span><span class="p">&gt;</span>
 </span></code></pre></div>
-<h3 id="the-dashboard-pattern">The Dashboard Pattern</h3>
-<p>Standard dashboard layout:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>┌─────────────────────────────────────────────┐
-</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>│  Header (h-16)                              │
-</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>├────────┬────────────────────────────────────┤
-</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>│        │                                    │
-</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>│  Nav   │           Canvas                   │
-</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>│  (w-64)│           (flex-1)                 │
-</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>│        │                                    │
-</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>│        │                                    │
-</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>├────────┴────────────────────────────────────┤
-</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>│  Status bar (h-8, optional)                 │
-</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>└─────────────────────────────────────────────┘
+<h3 id="the-os-shell-pattern">The OS Shell Pattern</h3>
+<p>kgents uses the <strong>OS Shell</strong> layout pattern for the unified web interface. See <code>spec/protocols/os-shell.md</code> for full specification.</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-13-1"><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a>┌─────────────────────────────────────────────────────────┐
+</span><span id="__span-13-2"><a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>│  Observer Drawer (top-fixed, collapsible, 40px)         │
+</span><span id="__span-13-3"><a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>├─────────────┬───────────────────────────────────────────┤
+</span><span id="__span-13-4"><a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>│  Navigation │                                           │
+</span><span id="__span-13-5"><a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>│  Tree       │         Content Canvas                    │
+</span><span id="__span-13-6"><a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>│  (sidebar)  │         (route-determined)                │
+</span><span id="__span-13-7"><a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>│             │                                           │
+</span><span id="__span-13-8"><a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>│  - world.*  │                                           │
+</span><span id="__span-13-9"><a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>│  - self.*   │                                           │
+</span><span id="__span-13-10"><a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>│  - concept.*│                                           │
+</span><span id="__span-13-11"><a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>│  - void.*   │                                           │
+</span><span id="__span-13-12"><a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>│  - time.*   │                                           │
+</span><span id="__span-13-13"><a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>├─────────────┴───────────────────────────────────────────┤
+</span><span id="__span-13-14"><a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a>│  Terminal (bottom, collapsible)                         │
+</span><span id="__span-13-15"><a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>└─────────────────────────────────────────────────────────┘
 </span></code></pre></div>
-<p>Adapts in compact mode:
-- Nav collapses to hamburger + drawer
-- Header slim or hidden
-- Canvas fills viewport
-- Floating actions provide navigation</p>
+<p><strong>Three Persistent Layers:</strong>
+1. <strong>Observer Drawer</strong> (top) - Shows observer umwelt, expands for devex
+2. <strong>Navigation Tree</strong> (sidebar) - AGENTESE ontology navigation
+3. <strong>Terminal</strong> (bottom) - Direct gateway interaction with persistence</p>
+<p><strong>Density Adaptation:</strong>
+- <code>spacious</code>: All three layers visible, resizable
+- <code>comfortable</code>: Collapsible sidebar, minimal terminal
+- <code>compact</code>: Hamburger nav, floating terminal trigger</p>
 <hr />
 <h2 id="part-vii-component-visual-patterns">Part VII: Component Visual Patterns</h2>
 <h3 id="the-card-pattern">The Card Pattern</h3>

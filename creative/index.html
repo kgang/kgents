@@ -645,6 +645,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#related-specifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related Specifications
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-seven-principles-aesthetically" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -663,6 +674,45 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-design-policies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key Design Policies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Key Design Policies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#no-emojis-in-kgents-copy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        No Emojis in kgents Copy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#os-shell-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OS Shell Pattern
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -843,12 +893,31 @@
 <td>Visual inspiration, reference imagery, aesthetic touchstones</td>
 </tr>
 <tr>
-<td><a href="projection-aesthetics.md">projection-aesthetics.md</a></td>
-<td>How density/target affects visual expression</td>
-</tr>
-<tr>
 <td><a href="implementation-guide/">implementation-guide.md</a></td>
 <td>Practical application for developers</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related-specifications">Related Specifications</h2>
+<table>
+<thead>
+<tr>
+<th>Spec</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../spec/protocols/os-shell.md">spec/protocols/os-shell.md</a></td>
+<td>Unified layout wrapper and router</td>
+</tr>
+<tr>
+<td><a href="../../spec/protocols/projection.md">spec/protocols/projection.md</a></td>
+<td>Projection Protocol (density, targets)</td>
+</tr>
+<tr>
+<td><a href="../../spec/protocols/agentese.md">spec/protocols/agentese.md</a></td>
+<td>AGENTESE verb-first ontology</td>
 </tr>
 </tbody>
 </table>
@@ -911,6 +980,26 @@
 <li>Alienated by cold technical language</li>
 <li>Anxious about making mistakes</li>
 </ul>
+<hr />
+<h2 id="key-design-policies">Key Design Policies</h2>
+<h3 id="no-emojis-in-kgents-copy">No Emojis in kgents Copy</h3>
+<blockquote>
+<p><em>"Emojis in copy are garnish. kgents is the main course."</em></p>
+</blockquote>
+<p>All kgents-authored text content uses <strong>Lucide icons</strong>, not emojis:
+- Navigation labels use icons
+- Buttons and actions use icons
+- Empty states use icons
+- Loading states use glyphs or icons</p>
+<p><strong>Exceptions:</strong> User-generated content, explicit personality moments (sparingly).</p>
+<p>See <code>visual-system.md</code> for the JEWEL_ICONS mapping.</p>
+<h3 id="os-shell-pattern">OS Shell Pattern</h3>
+<p>The web interface is an <strong>operating system interface</strong> for autopoiesis, not a collection of pages:
+- <strong>Observer Drawer</strong> (top) — Always shows who is observing
+- <strong>Navigation Tree</strong> (sidebar) — AGENTESE ontology, not arbitrary routes
+- <strong>Terminal</strong> (bottom) — Direct gateway interaction with persistence
+- <strong>Content Canvas</strong> — Projection-first, minimal page logic</p>
+<p>See <code>spec/protocols/os-shell.md</code> for full specification.</p>
 <hr />
 <h2 id="the-accursed-share-in-aesthetics">The Accursed Share in Aesthetics</h2>
 <blockquote>
