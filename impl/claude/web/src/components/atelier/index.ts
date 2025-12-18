@@ -31,3 +31,17 @@ export { FishbowlCanvas } from './FishbowlCanvas';
 export type { FishbowlCanvasProps, SpectatorCursor as FishbowlSpectatorCursor } from './FishbowlCanvas';
 export { SpectatorOverlay, eigenvectorToColor, getColorForId } from './SpectatorOverlay';
 export type { SpectatorOverlayProps, SpectatorCursor } from './SpectatorOverlay';
+
+// Phase 2: BidQueue (Crown Jewels Genesis - Chunk 2)
+export { BidQueuePanel } from './BidQueuePanel';
+export type { BidQueuePanelProps, Bid, BidType, BidStatus } from './BidQueuePanel';
+export { BidSubmitModal } from './BidSubmitModal';
+export type { BidSubmitModalProps, NewBid } from './BidSubmitModal';
+
+// Phase 2: Token Visualization (Crown Jewels Genesis - Chunk 3)
+export { TokenBalanceWidget } from './TokenBalanceWidget';
+export type { TokenBalanceWidgetProps } from './TokenBalanceWidget';
+export { TokenFlowIndicator } from './TokenFlowIndicator';
+export type { TokenFlowIndicatorProps, TokenFlowEvent } from './TokenFlowIndicator';
+export { SpendHistoryPanel } from './SpendHistoryPanel';
+export type { SpendHistoryPanelProps } from './SpendHistoryPanel';
