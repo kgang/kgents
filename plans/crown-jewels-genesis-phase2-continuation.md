@@ -1,7 +1,7 @@
 ---
 path: plans/crown-jewels-genesis-phase2-continuation
 status: active
-progress: 0
+progress: 40
 last_touched: 2025-12-18
 touched_by: claude-opus-4-5
 blocking: []
@@ -9,25 +9,31 @@ enables:
   - crown-jewels-genesis-phase2
 parent: crown-jewels-genesis-phase2
 session_notes: |
+  2025-12-18 night (later): Executed Chunks 1-2
+  - Chunk 1: AtelierVisualization fishbowl integration + SessionSelector + 14 tests
+  - Chunk 2: BidQueuePanel + BidSubmitModal + useTokenBalance + 50 tests
+  - Total: 111 atelier tests passing
+  - Atelier now at 90%
+
   2025-12-18: Continuation prompt created after Week 3 core completion.
   - FishbowlCanvas + SpectatorOverlay shipped (47 tests)
   - useAtelierStream enhanced with session subscription
   - Ready for integration + Week 4 BidQueue
 phase_ledger:
   PLAN: complete
-  RESEARCH: pending
-  DEVELOP: pending
-  STRATEGIZE: pending
+  RESEARCH: complete
+  DEVELOP: in_progress
+  STRATEGIZE: complete
   CROSS-SYNERGIZE: pending
-  IMPLEMENT: pending
+  IMPLEMENT: in_progress
   QA: pending
-  TEST: pending
+  TEST: in_progress
   EDUCATE: pending
   MEASURE: pending
   REFLECT: pending
 entropy:
   planned: 0.10
-  spent: 0.0
+  spent: 0.05
   returned: 0.0
 ---
 

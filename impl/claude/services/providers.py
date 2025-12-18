@@ -67,7 +67,7 @@ from services.bootstrap import (
 # =============================================================================
 
 
-async def get_session_factory() -> "async_sessionmaker":
+async def get_session_factory() -> "async_sessionmaker[AsyncSession]":
     """
     Get the SQLAlchemy async session factory.
 
@@ -103,7 +103,7 @@ async def get_brain_table_adapter() -> "TableAdapter[Crystal]":
     session_factory = await get_session_factory()
 
     return TableAdapter(
-        model_class=Crystal,
+        model=Crystal,
         session_factory=session_factory,
     )
 

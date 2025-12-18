@@ -421,11 +421,11 @@ Environment Variables:
         return
 
     if args.tag:
-        pilots = get_pilots_by_tag(args.tag)
-        if not pilots:
+        tagged_pilots = get_pilots_by_tag(args.tag)
+        if not tagged_pilots:
             print(f"No pilots with tag: {args.tag}")
             sys.exit(1)
-        for pilot in pilots:
+        for pilot in tagged_pilots:
             print(gallery.show(pilot.name, target))
             print()
         return

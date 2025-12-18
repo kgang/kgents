@@ -122,7 +122,7 @@ def _parse_subcommand(args: list[str]) -> str:
     return "status"  # default
 
 
-def _parse_park_kwargs(args: list[str], subcommand: str) -> dict:
+def _parse_park_kwargs(args: list[str], subcommand: str) -> dict[str, str | int | bool]:
     """Parse command-specific kwargs."""
     kwargs = {}
 

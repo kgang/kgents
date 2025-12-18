@@ -302,14 +302,14 @@ def cmd_query(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
         @dataclass
         class SimpleResult:
-            matches: list
+            matches: list["SimpleMatch"]
             total_count: int
             has_more: bool
 
         @dataclass
         class SimpleMatch:
             path: str
-            affordances: tuple = ()
+            affordances: tuple[str, ...] = ()
 
         result = SimpleResult(
             matches=[SimpleMatch(path=p) for p in matches],

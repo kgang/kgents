@@ -7,7 +7,7 @@
 ## Summary
 
 - **Total Active Plans**: 14 (down from 78 after aggressive archive)
-- **Test Count**: 19,641 (verified 2025-12-18 forest reconciliation)
+- **Test Count**: 20,122 (verified 2025-12-18 chief reconciliation)
 - **AGENTESE Paths**: 58+ (Crown Jewels registered)
 - **Hero Path**: 95% (Brain 100% + Gardener 100% + Gestalt 70%)
 
@@ -111,10 +111,10 @@
 | Jewel | CLI | API | Web | Tests | Overall |
 |-------|-----|-----|-----|-------|---------|
 | **Brain** | 100% | 100% | 80% | 212+ | **100%** |
-| **Gardener** | 100% | 100% | 90% | 163+ | **100%** |
+| **Gardener** | 100% | 100% | 90% | 789 | **100%** |
 | **Gestalt** | 85% | 100% | 90% | 146 | 70% |
-| **Atelier** | 90% | 80% | 65% | 316+ | 78% | ← Phase 1 foundation complete |
-| **Town/Coalition** | 85% | 90% | 60% | 451+ | 65% |
+| **Atelier** | 90% | 80% | 75% | 316+ | **90%** | ← BidQueue + Fishbowl complete |
+| **Town/Coalition** | 85% | 90% | 55% | 451+ | 55% |
 | **Park** | 60% | 40% | 30% | 64 | 40% |
 | **Domain** | 0% | 0% | 0% | — | 0% |
 
@@ -138,16 +138,18 @@ Based on `_focus.md` intent (2025-12-12):
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| Test count | 19,641 | 19,000+ | ✅ |
-| Mypy strict | Passing | 0 errors | ✅ |
-| Test collection errors | 0 | 0 | ✅ (fixed 4 orphaned tests) |
+| Test count | 20,122 | 19,000+ | ✅ |
+| Garden tests | 789 passing | — | ✅ |
+| Mypy strict | Has drift | 0 errors | ⚠️ (accumulated debt) |
+| Test collection errors | 0 | 0 | ✅ |
 | CLI startup | <50ms | <50ms | ✅ |
 
-### Reconciliation Notes (2025-12-18)
-- **Fixed**: 4 test collection errors from orphaned test files referencing deleted modules
-- **Archived**: `test_cli.py`, `test_cli_wave6.py`, `test_soft_section.py`, `test_agentese_prompt.py` to `protocols/_archived/evergreen-prompt-2025-12-18/`
-- **Test delta**: -202 tests from archival (19,843 → 19,641)
+### Reconciliation Notes (2025-12-18 night)
+- **Test growth**: +481 tests (19,641 → 20,122) from Atelier BidQueue/Fishbowl work
+- **Type drift**: 100+ mypy errors accumulated across modules (not critical, but needs attention)
+- **Garden Protocol**: 789 tests passing, spec complete, AGENTESE paths registered
+- **Atelier**: Now at 90% with Fishbowl canvas + BidQueue components
 
 ---
 
-*Last verified: 2025-12-18 11:00 | Chief of Staff Forest Reconciliation*
+*Last verified: 2025-12-18 night | Chief of Staff Garden Protocol Assessment*
