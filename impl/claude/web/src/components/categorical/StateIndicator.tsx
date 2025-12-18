@@ -4,7 +4,10 @@
  * A reusable component for displaying polynomial agent state across
  * Town citizens, Park crisis phases, timers, and consent debt levels.
  *
+ * Uses centralized PHASE_GLOW design tokens for visual consistency.
+ *
  * @see plans/park-town-design-overhaul.md
+ * @see constants/colors.ts - PHASE_GLOW tokens
  */
 
 import { cn } from '@/lib/utils';
@@ -27,6 +30,7 @@ import {
   Snowflake,
   Target,
 } from 'lucide-react';
+import { PHASE_GLOW } from '@/constants';
 
 // =============================================================================
 // Types
@@ -60,22 +64,19 @@ export interface StateIndicatorProps {
 // =============================================================================
 
 const CATEGORY_COLORS: Record<StateCategory, string> = {
-  idle: '#64748b',     // slate
-  active: '#22c55e',   // green
-  warning: '#f59e0b',  // amber
+  idle: '#64748b', // slate
+  active: '#22c55e', // green
+  warning: '#f59e0b', // amber
   critical: '#ef4444', // red
-  success: '#22c55e',  // green
-  neutral: '#64748b',  // slate
+  success: '#22c55e', // green
+  neutral: '#64748b', // slate
 };
 
-const GLOW_SHADOWS: Record<StateCategory, string> = {
-  idle: '0 0 12px rgba(100, 116, 139, 0.5)',
-  active: '0 0 12px rgba(34, 197, 94, 0.5)',
-  warning: '0 0 12px rgba(245, 158, 11, 0.5)',
-  critical: '0 0 12px rgba(239, 68, 68, 0.5)',
-  success: '0 0 12px rgba(34, 197, 94, 0.5)',
-  neutral: '0 0 12px rgba(100, 116, 139, 0.3)',
-};
+/**
+ * Map state categories to centralized PHASE_GLOW tokens.
+ * This ensures visual consistency across all state indicators.
+ */
+const GLOW_SHADOWS: Record<StateCategory, string> = PHASE_GLOW;
 
 const SIZE_CONFIG = {
   sm: {
@@ -210,15 +211,30 @@ export function StateIndicator({
 
   const isClickable = !!onClick;
 
+  // Handle keyboard navigation for clickable indicators
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!onClick) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  // Generate descriptive aria-label for screen readers
+  const ariaLabel = `${label} state${effectiveCategory !== 'neutral' ? `, ${effectiveCategory}` : ''}${isClickable ? ', clickable' : ''}`;
+
   return (
     <div
       className={cn(
         'inline-flex items-center rounded-full font-medium transition-all duration-200',
+        // Reduced motion support: disable transitions and hover effects
+        'motion-reduce:transition-none',
         sizeConfig.padding,
         sizeConfig.text,
         sizeConfig.gap,
-        isClickable && 'cursor-pointer hover:scale-105',
-        animate && 'animate-pulse',
+        isClickable &&
+          'cursor-pointer hover:scale-105 motion-reduce:hover:scale-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500',
+        animate && 'animate-pulse motion-reduce:animate-none',
         className
       )}
       style={{
@@ -228,10 +244,13 @@ export function StateIndicator({
         border: `1px solid ${effectiveColor}40`,
       }}
       onClick={onClick}
-      role={isClickable ? 'button' : undefined}
+      onKeyDown={handleKeyDown}
+      role={isClickable ? 'button' : 'status'}
       tabIndex={isClickable ? 0 : undefined}
+      aria-label={ariaLabel}
+      aria-live={animate ? 'polite' : undefined}
     >
-      {Icon && <Icon className={sizeConfig.icon} />}
+      {Icon && <Icon className={sizeConfig.icon} aria-hidden="true" />}
       <span>{label}</span>
     </div>
   );

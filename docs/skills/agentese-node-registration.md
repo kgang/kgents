@@ -1,7 +1,7 @@
 # AGENTESE Node Registration
 
 **Status:** Canonical Pattern
-**Last Updated:** 2025-12-17
+**Last Updated:** 2025-12-18
 
 ---
 
@@ -11,6 +11,7 @@ This skill documents how to register AGENTESE nodes so they appear in:
 1. `/agentese/discover` endpoint
 2. NavigationTree in the UI
 3. CLI tab completion
+4. **Contract-based type generation** (see `agentese-contract-protocol.md`)
 
 ## The Problem
 
@@ -23,6 +24,8 @@ crown_jewels.py (PATHS dicts) ────→ Documentation only (NOT discoverab
 ```
 
 **Solution:** Use `@node` decorator on node classes for automatic registration.
+
+**Phase 7 Enhancement:** Add `contracts={}` parameter for BE/FE type sync. See `agentese-contract-protocol.md` for full details.
 
 ---
 
@@ -46,6 +49,45 @@ class EmergenceNode(BaseLogosNode):
     def handle(self) -> str:
         return self._handle
 ```
+
+### 1b. Add Contracts for BE/FE Type Sync (Recommended)
+
+```python
+from dataclasses import dataclass
+from protocols.agentese.contract import Contract, Response
+from protocols.agentese.registry import node
+
+# Define contract types as dataclasses
+@dataclass
+class ManifestResponse:
+    name: str
+    status: str
+    count: int
+
+@dataclass
+class ConfigureRequest:
+    setting: str
+    value: str | None = None
+
+@dataclass
+class ConfigureResponse:
+    success: bool
+
+# Add contracts={} to @node
+@node(
+    "world.emergence",
+    description="Cymatics Design Sampler",
+    contracts={
+        "manifest": Response(ManifestResponse),
+        "configure": Contract(ConfigureRequest, ConfigureResponse),
+    }
+)
+@dataclass
+class EmergenceNode(BaseLogosNode):
+    ...
+```
+
+**See:** `agentese-contract-protocol.md` for complete contract documentation.
 
 ### 2. Ensure Module Is Imported at Startup
 
@@ -340,6 +382,7 @@ if TYPE_CHECKING:
 ## Related Patterns
 
 - **agentese-path.md** - Adding new AGENTESE paths
+- **agentese-contract-protocol.md** - BE/FE type sync via contracts (Phase 7)
 - **crown-jewel-patterns.md** - Crown Jewel architecture
 - **metaphysical-fullstack.md** - The protocol IS the API
 
@@ -352,8 +395,9 @@ if TYPE_CHECKING:
 _import_node_modules(): Gateway calls this to ensure all nodes load
 Two-way mapping needed: AGENTESE path ↔ React route
 Discovery is pull-based: Frontend fetches /agentese/discover
+contracts={} enables BE/FE type sync: JSON Schema generation at build time
 ```
 
 ---
 
-*Last updated: 2025-12-17*
+*Last updated: 2025-12-18*

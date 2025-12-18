@@ -1106,6 +1106,49 @@ time.*               # Temporal operations
 
 ---
 
+## Appendix D: Contract Protocol (Phase 7)
+
+The **Contract Protocol** enables BE/FE type synchronization via the `@node` decorator.
+
+### The Pattern
+
+```python
+@node(
+    "world.town",
+    description="Agent Town",
+    contracts={
+        "manifest": Response(ManifestResponse),
+        "citizen.create": Contract(CreateRequest, CreateResponse),
+    }
+)
+```
+
+### Key Insights
+
+| Insight | Implication |
+|---------|-------------|
+| `@node(contracts={})` is the authority | BE defines, FE discovers |
+| JSON Schema bridges Python ↔ TypeScript | No manual type duplication |
+| Discovery at build time | `npm run sync-types` generates FE types |
+| Three modes | Advisory (default), Gatekeeping (CI), Aspirational |
+
+### Contract Types
+
+| Type | Use Case |
+|------|----------|
+| `Response(T)` | Perception aspects (no request) |
+| `Request(T)` | Fire-and-forget (rare) |
+| `Contract(Req, Resp)` | Mutation aspects |
+
+### Implementation Reference
+
+- **Skill**: `docs/skills/agentese-contract-protocol.md`
+- **Types**: `protocols/agentese/contract.py`
+- **Schema**: `protocols/agentese/schema_gen.py`
+- **Gateway**: `/discover?include_schemas=true`
+
+---
+
 *"The noun is a lie. There is only the rate of change. But the rate of change toward simplicity is the most profound change of all."*
 
-*Last updated: 2025-12-15*
+*Last updated: 2025-12-18*

@@ -24,14 +24,18 @@ This creates a **flywheel of knowledge accumulation**:
 ```
 docs/skills/
 ├── README.md                    # This file
+├── agentese-contract-protocol.md   # Phase 7: BE/FE type sync via contracts
+├── agentese-node-registration.md   # Register nodes with @node decorator
 ├── agentese-path.md             # How to add an AGENTESE path
 ├── agentese-repl.md             # Interactive REPL guide (Wave 2)
 ├── agent-observability.md       # Adding observability to agents
 ├── agent-town-visualization.md  # Scatter plots, SSE, NATS for Agent Town
 ├── building-agent.md            # Create Agent[A, B] with functors
+├── crown-jewel-patterns.md      # Crown Jewel implementation patterns
 ├── defensive-component-lifecycle.md  # Error boundaries, toasts, async state
 ├── cli-command.md               # How to add a CLI command
 ├── flux-agent.md                # How to create a Flux agent
+├── frontend-contracts.md        # Manual contract testing approach
 ├── handler-patterns.md          # Common handler patterns
 ├── hotdata-pattern.md           # Pre-computed data for demos/tests
 ├── plan-file.md                 # Writing plan files (Forest Protocol)
@@ -153,6 +157,8 @@ How to confirm the skill was applied correctly.
 
 | Skill | Description | Difficulty |
 |-------|-------------|------------|
+| [agentese-contract-protocol](agentese-contract-protocol.md) | **Phase 7**: BE/FE type sync via `@node(contracts={})` | Medium |
+| [agentese-node-registration](agentese-node-registration.md) | Register nodes with `@node` decorator | Easy-Medium |
 | [agentese-path](agentese-path.md) | Add a new AGENTESE path (e.g., `self.soul.*`) | Medium |
 | [agentese-repl](agentese-repl.md) | Interactive REPL for AGENTESE navigation and composition | Easy-Medium |
 | [agent-observability](agent-observability.md) | Adding observability to agents | Medium |

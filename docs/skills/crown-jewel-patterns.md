@@ -622,6 +622,195 @@ def _verify_pattern_commutativity(*args) -> LawVerification:
 
 ---
 
+## Pattern 13: Contract-First Types (Phase 7)
+
+**Problem**: BE (Python) and FE (TypeScript) type definitions drift because they're defined separately.
+
+**Wrong**: Duplicate type definitions
+```python
+# Python backend
+@dataclass
+class TownManifest:
+    name: str
+    citizen_count: int  # Might rename to "count"
+```
+
+```typescript
+// TypeScript frontend (may drift!)
+interface TownManifest {
+  name: string;
+  citizenCount: number;  // Already drifted!
+}
+```
+
+**Right**: `@node(contracts={})` is the authority
+```python
+from dataclasses import dataclass
+from protocols.agentese.contract import Contract, Response
+from protocols.agentese.registry import node
+
+@dataclass
+class TownManifestResponse:
+    """Response for manifest aspect."""
+    name: str
+    citizen_count: int
+
+@dataclass
+class CitizenCreateRequest:
+    name: str
+    archetype: str
+
+@dataclass
+class CitizenCreateResponse:
+    citizen_id: str
+    success: bool
+
+@node(
+    "world.town",
+    description="Agent Town Crown Jewel",
+    contracts={
+        # Perception aspects (no request needed)
+        "manifest": Response(TownManifestResponse),
+        # Mutation aspects (request + response)
+        "citizen.create": Contract(CitizenCreateRequest, CitizenCreateResponse),
+    }
+)
+@dataclass
+class TownNode(BaseLogosNode):
+    ...
+```
+
+**Frontend discovers at build time**:
+```bash
+# Generate TypeScript from BE contracts
+npm run sync-types
+
+# Verify types are in sync (CI)
+npm run sync-types:check
+```
+
+**Benefits**:
+- Single source of truth (Python dataclass)
+- Type drift caught in CI before merge
+- JSON Schema bridges Python → TypeScript
+- Contract coverage tracked as metric
+
+**Type Separation**:
+| Category | Location | Source |
+|----------|----------|--------|
+| Contract Types | `_generated/` | BE discovery |
+| Local Types | `_local.ts` | FE-only (colors, icons) |
+
+**Apply to**: All Crown Jewel `@node` registrations.
+
+**See**: `agentese-contract-protocol.md` for complete documentation.
+
+---
+
+## Pattern 14: Teaching Mode Toggle
+
+**Problem**: Users need to toggle between "power user" and "learner" modes across the application.
+
+**Wrong**: Component-level teaching flags scattered everywhere
+```typescript
+// Scattered boolean props that don't sync
+<TracePanel showExplanation={showExplanation} />
+<StateIndicator showTooltip={showTooltip} />
+<OperadBadge showArity={showArity} />
+// No centralized control, inconsistent behavior
+```
+
+**Right**: Global teaching mode via React context + localStorage
+```typescript
+// hooks/useTeachingMode.tsx
+export function TeachingModeProvider({ children }: { children: ReactNode }) {
+  const [enabled, setEnabled] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('kgents_teaching_mode');
+    if (stored !== null) setEnabled(stored === 'true');
+    setIsLoaded(true);
+  }, []);
+
+  const toggle = useCallback(() => {
+    const next = !enabled;
+    setEnabled(next);
+    localStorage.setItem('kgents_teaching_mode', String(next));
+  }, [enabled]);
+
+  return (
+    <TeachingModeContext.Provider value={{ enabled, toggle, isLoaded }}>
+      {children}
+    </TeachingModeContext.Provider>
+  );
+}
+
+// Usage in components
+function TracePanel({ events, maxEvents }: TracePanelProps) {
+  const { enabled: teachingEnabled } = useTeachingModeSafe();
+
+  return (
+    <div>
+      {/* Content always shown */}
+      <Timeline events={events} maxEvents={maxEvents} />
+
+      {/* Teaching callouts only when enabled */}
+      {teachingEnabled && (
+        <TeachingCallout category="conceptual">
+          Every state change is recorded via the N-gent witness pattern.
+        </TeachingCallout>
+      )}
+    </div>
+  );
+}
+```
+
+**Accessibility additions**:
+```typescript
+// StateIndicator with keyboard and screen reader support
+<div
+  role={isClickable ? 'button' : 'status'}
+  tabIndex={isClickable ? 0 : undefined}
+  aria-label={`${label} state, ${category}`}
+  aria-live={animate ? 'polite' : undefined}
+  onKeyDown={(e) => {
+    if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick();
+    }
+  }}
+  className={cn(
+    'transition-all duration-200',
+    'motion-reduce:transition-none',
+    animate && 'animate-pulse motion-reduce:animate-none',
+    isClickable && 'focus-visible:outline focus-visible:outline-2'
+  )}
+>
+```
+
+**Benefits**:
+- Centralized control via context
+- Persists across sessions (localStorage)
+- Graceful degradation (`useTeachingModeSafe`)
+- Respects `prefers-reduced-motion`
+- Full keyboard navigation
+- Screen reader support via ARIA
+
+**Components**:
+| Component | Purpose |
+|-----------|---------|
+| `TeachingModeProvider` | Context provider wrapping app |
+| `useTeachingMode()` | Hook for components inside provider |
+| `useTeachingModeSafe()` | Hook with fallback for any component |
+| `TeachingToggle` | Pre-built toggle button (compact or full) |
+| `WhenTeaching` | Conditional render wrapper |
+| `TeachingCallout` | Gradient callout with category styling |
+
+**Apply to**: Park (crisis phases, consent debt), Town (citizen polynomial, trace).
+
+---
+
 ## Quick Reference
 
 | Pattern | Use When | Key Insight |
@@ -635,9 +824,11 @@ def _verify_pattern_commutativity(*args) -> LawVerification:
 | Dual-Channel Output | CLI for humans + agents | `emit(human, semantic)` |
 | Bounded History | Trajectory analysis | Immutable + trim to MAX |
 | Directed Cycle | State machine design | One forward per state |
-| **Operad Inheritance** | Building on base operads | `**PARENT.operations` spread |
-| **Circadian Modulation** | Time-of-day UI shifts | Phase → modifier → apply |
-| **Law Honesty** | Laws that aren't runtime | STRUCTURAL status for design constraints |
+| Operad Inheritance | Building on base operads | `**PARENT.operations` spread |
+| Circadian Modulation | Time-of-day UI shifts | Phase → modifier → apply |
+| Law Honesty | Laws that aren't runtime | STRUCTURAL status for design constraints |
+| Contract-First Types | BE/FE type sync | `@node(contracts={})` is authority |
+| **Teaching Mode Toggle** | Learner vs. power user UX | Context + localStorage + accessibility |
 
 ---
 
@@ -652,5 +843,7 @@ def _verify_pattern_commutativity(*args) -> LawVerification:
 
 ## Changelog
 
+- 2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from Park-Town Design Overhaul Phase 5
+- 2025-12-18: Added Pattern 13 (Contract-First Types) from Phase 7 Autopoietic Architecture
 - 2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel
 - 2025-12-16: Initial version from Gardener-Logos reflection

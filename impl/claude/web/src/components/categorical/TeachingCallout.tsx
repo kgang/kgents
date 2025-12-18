@@ -4,11 +4,15 @@
  * Displays teaching content with gradient backgrounds categorized by type.
  * Used throughout Town and Park to explain the underlying categorical model.
  *
+ * Uses centralized TEACHING_GRADIENT design tokens for visual consistency.
+ *
  * @see plans/park-town-design-overhaul.md
+ * @see constants/colors.ts - TEACHING_GRADIENT tokens
  */
 
 import { Lightbulb, BookOpen, Sparkles, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { TEACHING_GRADIENT as GRADIENT_TOKENS } from '@/constants';
 
 // =============================================================================
 // Types
@@ -48,27 +52,28 @@ const CATEGORY_CONFIG: Record<
   }
 > = {
   categorical: {
-    gradient: 'from-blue-500/20 to-purple-500/20',
+    gradient: GRADIENT_TOKENS.categorical,
     borderColor: 'border-purple-500',
     iconColor: 'text-purple-400',
     icon: Sparkles,
     defaultTitle: 'Categorical',
   },
   operational: {
-    gradient: 'from-amber-500/20 to-pink-500/20',
+    gradient: GRADIENT_TOKENS.operational,
     borderColor: 'border-amber-500',
     iconColor: 'text-amber-400',
     icon: Zap,
     defaultTitle: 'Operation',
   },
   conceptual: {
-    gradient: 'from-green-500/20 to-blue-500/20',
+    gradient: GRADIENT_TOKENS.conceptual,
     borderColor: 'border-green-500',
     iconColor: 'text-green-400',
     icon: BookOpen,
     defaultTitle: 'Concept',
   },
   insight: {
+    // insight uses cyan-indigo gradient (not in base TEACHING_GRADIENT but still matches design system)
     gradient: 'from-cyan-500/20 to-indigo-500/20',
     borderColor: 'border-cyan-500',
     iconColor: 'text-cyan-400',
@@ -97,13 +102,11 @@ export function TeachingCallout({
   if (compact) {
     return (
       <div
-        className={cn(
-          'flex items-start gap-2 text-sm',
-          config.iconColor,
-          className
-        )}
+        className={cn('flex items-start gap-2 text-sm', config.iconColor, className)}
+        role="note"
+        aria-label={`${config.defaultTitle} teaching tip`}
       >
-        <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" aria-hidden="true" />
         <span className="text-gray-300">{children}</span>
       </div>
     );
@@ -117,20 +120,34 @@ export function TeachingCallout({
         config.borderColor,
         className
       )}
+      role="note"
+      aria-label={`${displayTitle} teaching callout`}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
-        <div className={cn('flex items-center gap-2 text-xs uppercase tracking-wider', config.iconColor)}>
-          <Icon className="w-3 h-3" />
+        <div
+          className={cn(
+            'flex items-center gap-2 text-xs uppercase tracking-wider',
+            config.iconColor
+          )}
+        >
+          <Icon className="w-3 h-3" aria-hidden="true" />
           {displayTitle}
         </div>
         {dismissible && onDismiss && (
           <button
             onClick={onDismiss}
-            className="text-gray-500 hover:text-gray-300 transition-colors"
-            aria-label="Dismiss"
+            className="text-gray-500 hover:text-gray-300 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 rounded"
+            aria-label="Dismiss teaching callout"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="w-4 h-4"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -149,21 +166,32 @@ export function TeachingCallout({
 
 export const TEACHING_MESSAGES = {
   // Town
-  right_to_rest: "RESTING only accepts 'wake' - the Right to Rest enforced by directions. Citizens cannot be disturbed while resting.",
-  operad_arity: 'Operad operations have arity - greet takes 2 citizens, solo takes 1. TOWN_OPERAD defines which compositions are valid.',
-  citizen_polynomial: 'Each citizen follows a state machine with 5 phases. The polynomial functor maps each phase to valid inputs.',
+  right_to_rest:
+    "RESTING only accepts 'wake' - the Right to Rest enforced by directions. Citizens cannot be disturbed while resting.",
+  operad_arity:
+    'Operad operations have arity - greet takes 2 citizens, solo takes 1. TOWN_OPERAD defines which compositions are valid.',
+  citizen_polynomial:
+    'Each citizen follows a state machine with 5 phases. The polynomial functor maps each phase to valid inputs.',
 
   // Park
-  consent_debt: 'Consent debt constrains the director. High debt blocks injection until the guest has time to process.',
-  invisible_director: 'The director is invisible - guests never feel directed. Serendipity appears as lucky coincidence, not orchestration.',
-  timer_polynomial: 'Timers are polynomial agents - their phase determines valid operations. At CRITICAL, force becomes more expensive.',
-  crisis_polynomial: 'The crisis polynomial defines when transitions are valid. Force spending affects consent debt.',
+  consent_debt:
+    'Consent debt constrains the director. High debt blocks injection until the guest has time to process.',
+  invisible_director:
+    'The director is invisible - guests never feel directed. Serendipity appears as lucky coincidence, not orchestration.',
+  timer_polynomial:
+    'Timers are polynomial agents - their phase determines valid operations. At CRITICAL, force becomes more expensive.',
+  crisis_polynomial:
+    'The crisis polynomial defines when transitions are valid. Force spending affects consent debt.',
 
   // General
-  polynomial_intro: 'PolyAgent[S, A, B] captures mode-dependent behavior. Each state determines what inputs are valid.',
-  operad_intro: 'Operads define the grammar of valid operations. Laws ensure compositions preserve meaning.',
-  witness_trace: 'Every state change is recorded. time.*.witness reveals the narrative arc of your session.',
-  observer_dependent: 'Different observers see different affordances. This is AGENTESE in action - the handle yields based on who is grasping.',
+  polynomial_intro:
+    'PolyAgent[S, A, B] captures mode-dependent behavior. Each state determines what inputs are valid.',
+  operad_intro:
+    'Operads define the grammar of valid operations. Laws ensure compositions preserve meaning.',
+  witness_trace:
+    'Every state change is recorded. time.*.witness reveals the narrative arc of your session.',
+  observer_dependent:
+    'Different observers see different affordances. This is AGENTESE in action - the handle yields based on who is grasping.',
 } as const;
 
 export type TeachingMessageKey = keyof typeof TEACHING_MESSAGES;

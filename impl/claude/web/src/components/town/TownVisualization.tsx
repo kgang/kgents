@@ -28,8 +28,19 @@ import { ElasticSplit, ElasticContainer } from '../elastic';
 import { BottomDrawer } from '../elastic/BottomDrawer';
 import { FloatingActions, type FloatingAction } from '../elastic/FloatingActions';
 import { FirstVisitOverlay } from '../categorical/FirstVisitOverlay';
+import { useTeachingModeSafe } from '../../hooks';
 import { getEmptyState } from '../../constants';
-import { Users, Play, Pause, Settings, User, ChevronUp, ChevronDown, Clock } from 'lucide-react';
+import {
+  Users,
+  Play,
+  Pause,
+  Settings,
+  User,
+  ChevronUp,
+  ChevronDown,
+  Clock,
+  Lightbulb,
+} from 'lucide-react';
 
 // =============================================================================
 // Constants
@@ -87,11 +98,16 @@ export interface TownVisualizationProps {
 
 function getPhaseColor(phase: string): string {
   switch (phase) {
-    case 'MORNING': return 'text-amber-400';
-    case 'AFTERNOON': return 'text-orange-400';
-    case 'EVENING': return 'text-purple-400';
-    case 'NIGHT': return 'text-indigo-400';
-    default: return 'text-gray-400';
+    case 'MORNING':
+      return 'text-amber-400';
+    case 'AFTERNOON':
+      return 'text-orange-400';
+    case 'EVENING':
+      return 'text-purple-400';
+    case 'NIGHT':
+      return 'text-indigo-400';
+    default:
+      return 'text-gray-400';
   }
 }
 
@@ -120,6 +136,10 @@ interface TownHeaderProps {
   density: Density;
   observer: ObserverUmwelt;
   onObserverChange: (observer: ObserverUmwelt) => void;
+  /** Whether teaching mode is enabled */
+  teachingEnabled: boolean;
+  /** Toggle teaching mode */
+  onToggleTeaching: () => void;
 }
 
 function TownHeader({
@@ -135,18 +155,24 @@ function TownHeader({
   density,
   observer,
   onObserverChange,
+  teachingEnabled,
+  onToggleTeaching,
 }: TownHeaderProps) {
   const isCompact = density === 'compact';
 
   return (
-    <div className={`bg-violet-950/50 border-b border-violet-500/30 ${isCompact ? 'px-3 py-1.5' : 'px-4 py-2'}`}>
+    <div
+      className={`bg-violet-950/50 border-b border-violet-500/30 ${isCompact ? 'px-3 py-1.5' : 'px-4 py-2'}`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-violet-400" />
             <h1 className={`font-semibold ${isCompact ? 'text-sm' : ''}`}>Town: {townId}</h1>
           </div>
-          <div className={`flex items-center gap-2 text-gray-400 ${isCompact ? 'text-xs' : 'text-sm'}`}>
+          <div
+            className={`flex items-center gap-2 text-gray-400 ${isCompact ? 'text-xs' : 'text-sm'}`}
+          >
             <span>Day {day}</span>
             <span className="text-gray-600">|</span>
             <span className={`font-medium ${getPhaseColor(phase)}`}>{phase}</span>
@@ -162,12 +188,20 @@ function TownHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Teaching Mode Toggle (Phase 4) */}
+          <button
+            onClick={onToggleTeaching}
+            className={`p-1.5 rounded transition-colors ${
+              teachingEnabled
+                ? 'bg-blue-500/30 text-blue-400'
+                : 'bg-violet-950/50 text-gray-500 hover:text-gray-300'
+            }`}
+            title={`Teaching Mode: ${teachingEnabled ? 'ON' : 'OFF'}`}
+          >
+            <Lightbulb className={isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+          </button>
           {/* Observer selector (Phase 2) */}
-          <ObserverSelector
-            value={observer}
-            onChange={onObserverChange}
-            compact
-          />
+          <ObserverSelector value={observer} onChange={onObserverChange} compact />
           <button
             onClick={onTogglePlay}
             className={`flex items-center gap-1.5 bg-violet-500/30 rounded hover:bg-violet-500/50 transition-colors ${
@@ -185,7 +219,9 @@ function TownHeader({
             }`}
           >
             {SPEED_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </div>
@@ -303,6 +339,9 @@ export function TownVisualization({
   // Trace panel state (Phase 2)
   const [showTracePanel, setShowTracePanel] = useState(false);
 
+  // Teaching mode (Phase 4)
+  const { enabled: teachingEnabled, toggle: toggleTeaching } = useTeachingModeSafe();
+
   // Mobile drawer state
   const [controlsDrawerOpen, setControlsDrawerOpen] = useState(false);
   const [citizenDrawerOpen, setCitizenDrawerOpen] = useState(false);
@@ -355,20 +394,28 @@ export function TownVisualization({
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-violet-400" />
                 <span className="font-semibold text-sm">{townId}</span>
-                <span className={`text-xs font-medium ${getPhaseColor(dashboard?.phase || 'MORNING')}`}>
+                <span
+                  className={`text-xs font-medium ${getPhaseColor(dashboard?.phase || 'MORNING')}`}
+                >
                   {dashboard?.phase || 'MORNING'}
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                {/* Teaching toggle (Phase 4) */}
+                <button
+                  onClick={toggleTeaching}
+                  className={`p-1 rounded transition-colors ${
+                    teachingEnabled
+                      ? 'bg-blue-500/30 text-blue-400'
+                      : 'bg-violet-950/50 text-gray-500'
+                  }`}
+                  title={`Teaching: ${teachingEnabled ? 'ON' : 'OFF'}`}
+                >
+                  <Lightbulb className="w-3.5 h-3.5" />
+                </button>
                 {/* Observer selector (compact) */}
-                <ObserverSelector
-                  value={observer}
-                  onChange={setObserver}
-                  compact
-                />
-                {!isConnected && (
-                  <span className="text-xs text-yellow-500">Disconnected</span>
-                )}
+                <ObserverSelector value={observer} onChange={setObserver} compact />
+                {!isConnected && <span className="text-xs text-yellow-500">Disconnected</span>}
               </div>
             </div>
           </header>
@@ -415,12 +462,16 @@ export function TownVisualization({
                   label: 'Controls',
                   onClick: () => setControlsDrawerOpen(true),
                 },
-                ...(selectedCitizenId ? [{
-                  id: 'citizen',
-                  icon: <User className="w-5 h-5" />,
-                  label: 'View Citizen',
-                  onClick: () => setCitizenDrawerOpen(true),
-                } as FloatingAction] : []),
+                ...(selectedCitizenId
+                  ? [
+                      {
+                        id: 'citizen',
+                        icon: <User className="w-5 h-5" />,
+                        label: 'View Citizen',
+                        onClick: () => setCitizenDrawerOpen(true),
+                      } as FloatingAction,
+                    ]
+                  : []),
               ]}
               position="bottom-right"
             />
@@ -471,7 +522,7 @@ export function TownVisualization({
               <TownTracePanel
                 events={events}
                 maxEvents={20}
-                showTeaching
+                showTeaching={teachingEnabled}
                 compact={false}
               />
             </div>
@@ -489,140 +540,148 @@ export function TownVisualization({
     <FirstVisitOverlay jewel="town">
       <div className="h-full flex flex-col">
         <TownHeader
-        townId={townId}
-        phase={dashboard?.phase || 'MORNING'}
-        day={dashboard?.day || 1}
-        citizenCount={dashboard?.citizens.length || 0}
-        isPlaying={isPlaying}
-        isConnected={isConnected}
-        speed={speed}
-        onTogglePlay={handleTogglePlay}
-        onSpeedChange={onSpeedChange}
-        density={density}
-        observer={observer}
-        onObserverChange={setObserver}
-      />
+          townId={townId}
+          phase={dashboard?.phase || 'MORNING'}
+          day={dashboard?.day || 1}
+          citizenCount={dashboard?.citizens.length || 0}
+          isPlaying={isPlaying}
+          isConnected={isConnected}
+          speed={speed}
+          onTogglePlay={handleTogglePlay}
+          onSpeedChange={onSpeedChange}
+          density={density}
+          observer={observer}
+          onObserverChange={setObserver}
+          teachingEnabled={teachingEnabled}
+          onToggleTeaching={toggleTeaching}
+        />
 
-      <div className="flex-1 overflow-hidden">
-        <ElasticSplit
-          direction="horizontal"
-          defaultRatio={0.75}
-          collapseAt={768}
-          collapsePriority="secondary"
-          minPaneSize={280}
-          resizable={isDesktop}
-          primary={
-            <ElasticContainer
-              layout="stack"
-              overflow="scroll"
-              className="h-full bg-violet-950"
-            >
-              <div className="flex-1 relative" ref={mesaContainerRef}>
-                <div className="absolute inset-0">
-                  <Mesa
-                    width={mesaSize.width}
-                    height={mesaSize.height}
-                    citizens={dashboard?.citizens || []}
-                    events={events}
-                    selectedCitizenId={selectedCitizenId}
-                    onSelectCitizen={setSelectedCitizenId}
-                  />
-                </div>
-              </div>
-            </ElasticContainer>
-          }
-          secondary={
-            <div className="h-full flex flex-col bg-violet-950/30 border-l border-violet-500/30">
-              <div className="flex-1 overflow-y-auto">
-                {selectedCitizen ? (
-                  <CitizenPanel
-                    citizen={selectedCitizen}
-                    townId={townId}
-                    onClose={() => setSelectedCitizenId(null)}
-                  />
-                ) : (
-                  <div className="p-4">
-                    <p className="text-gray-500 text-center mb-4">Click a citizen on the map</p>
-                    {dashboard && (
-                      <ColonyDashboard
-                        {...dashboard}
-                        onSelectCitizen={setSelectedCitizenId}
-                        className="text-sm"
-                      />
-                    )}
+        <div className="flex-1 overflow-hidden">
+          <ElasticSplit
+            direction="horizontal"
+            defaultRatio={0.75}
+            collapseAt={768}
+            collapsePriority="secondary"
+            minPaneSize={280}
+            resizable={isDesktop}
+            primary={
+              <ElasticContainer layout="stack" overflow="scroll" className="h-full bg-violet-950">
+                <div className="flex-1 relative" ref={mesaContainerRef}>
+                  <div className="absolute inset-0">
+                    <Mesa
+                      width={mesaSize.width}
+                      height={mesaSize.height}
+                      citizens={dashboard?.citizens || []}
+                      events={events}
+                      selectedCitizenId={selectedCitizenId}
+                      onSelectCitizen={setSelectedCitizenId}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Feed/Trace Toggle (Phase 2) */}
-              <div className="border-t border-violet-500/30">
-                <div className="flex">
-                  <button
-                    onClick={() => setShowTracePanel(false)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
-                      !showTracePanel
-                        ? 'bg-violet-500/30 text-violet-300'
-                        : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
-                    }`}
-                  >
-                    <ChevronUp className="w-3.5 h-3.5" />
-                    Events ({events.length})
-                  </button>
-                  <button
-                    onClick={() => setShowTracePanel(true)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
-                      showTracePanel
-                        ? 'bg-violet-500/30 text-violet-300'
-                        : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
-                    }`}
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    Trace
-                  </button>
                 </div>
-
-                {/* Event Feed or Trace Panel */}
-                <div className={`overflow-hidden transition-all ${isEventFeedOpen ? 'h-64' : 'h-0'}`}>
-                  {showTracePanel ? (
-                    <div className="p-3 max-h-64 overflow-y-auto">
-                      <TownTracePanel
-                        events={events}
-                        maxEvents={15}
-                        compact
-                        showTeaching={false}
-                      />
-                    </div>
+              </ElasticContainer>
+            }
+            secondary={
+              <div className="h-full flex flex-col bg-violet-950/30 border-l border-violet-500/30">
+                <div className="flex-1 overflow-y-auto">
+                  {selectedCitizen ? (
+                    <CitizenPanel
+                      citizen={selectedCitizen}
+                      townId={townId}
+                      onClose={() => setSelectedCitizenId(null)}
+                    />
                   ) : (
-                    <div className="px-4 pb-4 max-h-60 overflow-y-auto">
-                      {events.length > 0 ? (
-                        <ul className="space-y-1 text-sm">
-                          {events.slice(0, MAX_EVENTS[density]).map((event, i) => (
-                            <li key={i} className="text-gray-400">
-                              <span className="text-gray-500 font-mono text-xs">{event.tick}:</span>{' '}
-                              <span className={getEventColor(event.operation)}>
-                                {event.message || event.operation}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-600 text-sm">{getEmptyState('noData').description} Press Play to start.</p>
+                    <div className="p-4">
+                      <p className="text-gray-500 text-center mb-4">Click a citizen on the map</p>
+                      {dashboard && (
+                        <ColonyDashboard
+                          {...dashboard}
+                          onSelectCitizen={setSelectedCitizenId}
+                          className="text-sm"
+                        />
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Toggle button */}
-                <button
-                  onClick={() => setIsEventFeedOpen(!isEventFeedOpen)}
-                  className="w-full py-1 text-gray-500 hover:text-white hover:bg-violet-950/50 transition-colors"
-                >
-                  {isEventFeedOpen ? <ChevronDown className="w-4 h-4 mx-auto" /> : <ChevronUp className="w-4 h-4 mx-auto" />}
-                </button>
+                {/* Feed/Trace Toggle (Phase 2) */}
+                <div className="border-t border-violet-500/30">
+                  <div className="flex">
+                    <button
+                      onClick={() => setShowTracePanel(false)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+                        !showTracePanel
+                          ? 'bg-violet-500/30 text-violet-300'
+                          : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
+                      }`}
+                    >
+                      <ChevronUp className="w-3.5 h-3.5" />
+                      Events ({events.length})
+                    </button>
+                    <button
+                      onClick={() => setShowTracePanel(true)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+                        showTracePanel
+                          ? 'bg-violet-500/30 text-violet-300'
+                          : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
+                      }`}
+                    >
+                      <Clock className="w-3.5 h-3.5" />
+                      Trace
+                    </button>
+                  </div>
+
+                  {/* Event Feed or Trace Panel */}
+                  <div
+                    className={`overflow-hidden transition-all ${isEventFeedOpen ? 'h-64' : 'h-0'}`}
+                  >
+                    {showTracePanel ? (
+                      <div className="p-3 max-h-64 overflow-y-auto">
+                        <TownTracePanel
+                          events={events}
+                          maxEvents={15}
+                          compact
+                          showTeaching={teachingEnabled}
+                        />
+                      </div>
+                    ) : (
+                      <div className="px-4 pb-4 max-h-60 overflow-y-auto">
+                        {events.length > 0 ? (
+                          <ul className="space-y-1 text-sm">
+                            {events.slice(0, MAX_EVENTS[density]).map((event, i) => (
+                              <li key={i} className="text-gray-400">
+                                <span className="text-gray-500 font-mono text-xs">
+                                  {event.tick}:
+                                </span>{' '}
+                                <span className={getEventColor(event.operation)}>
+                                  {event.message || event.operation}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-600 text-sm">
+                            {getEmptyState('noData').description} Press Play to start.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Toggle button */}
+                  <button
+                    onClick={() => setIsEventFeedOpen(!isEventFeedOpen)}
+                    className="w-full py-1 text-gray-500 hover:text-white hover:bg-violet-950/50 transition-colors"
+                  >
+                    {isEventFeedOpen ? (
+                      <ChevronDown className="w-4 h-4 mx-auto" />
+                    ) : (
+                      <ChevronUp className="w-4 h-4 mx-auto" />
+                    )}
+                  </button>
+                </div>
               </div>
-            </div>
-          }
-        />
+            }
+          />
         </div>
       </div>
     </FirstVisitOverlay>

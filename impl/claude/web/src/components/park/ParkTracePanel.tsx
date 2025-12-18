@@ -23,16 +23,15 @@ import {
   createMaskEvent,
 } from '@/components/categorical/TracePanel';
 import { TeachingCallout, TEACHING_MESSAGES } from '@/components/categorical/TeachingCallout';
-import type { ParkScenarioState, ParkCrisisPhase, ParkTimerInfo, ParkMaskInfo } from '@/api/types';
-import { PARK_PHASE_CONFIG } from '@/api/types';
+import type { ParkScenarioState, ParkTimerInfo, ParkMaskInfo } from '@/api/types';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface ParkTracePanelProps {
-  /** Phase transitions from scenario */
-  phaseTransitions: ParkScenarioState['phase_transitions'];
+  /** Phase transitions from scenario (defaults to empty array) */
+  phaseTransitions?: ParkScenarioState['phase_transitions'];
   /** Current timers for event context */
   timers?: ParkTimerInfo[];
   /** Current mask for event context */
@@ -59,16 +58,13 @@ export interface ParkTracePanelProps {
  * Convert phase transitions to trace events.
  */
 function buildPhaseTransitionEvents(
-  transitions: ParkScenarioState['phase_transitions']
+  transitions: ParkScenarioState['phase_transitions'] | undefined
 ): TraceEvent[] {
+  if (!transitions || transitions.length === 0) return [];
   return transitions.map((t) => {
-    return createPhaseTransitionEvent(
-      t.from,
-      t.to,
-      {
-        consent_debt: `${Math.round(t.consent_debt * 100)}%`,
-      }
-    );
+    return createPhaseTransitionEvent(t.from, t.to, {
+      consent_debt: `${Math.round(t.consent_debt * 100)}%`,
+    });
   });
 }
 
@@ -108,9 +104,7 @@ function buildForceEvents(forcesUsed: number): TraceEvent[] {
 function buildMaskEvent(mask: ParkMaskInfo | null | undefined): TraceEvent[] {
   if (!mask) return [];
 
-  return [
-    createMaskEvent(mask.name, 'don', mask.special_abilities),
-  ];
+  return [createMaskEvent(mask.name, 'don', mask.special_abilities)];
 }
 
 // =============================================================================
@@ -142,7 +136,7 @@ export function ParkTracePanel({
 
   // Calculate summary stats
   const stats = useMemo(() => {
-    const phaseCount = phaseTransitions.length;
+    const phaseCount = phaseTransitions?.length ?? 0;
     const timerWarnings = timers.filter((t) => t.status === 'WARNING').length;
     const timerCritical = timers.filter((t) => t.status === 'CRITICAL').length;
     const timerExpired = timers.filter((t) => t.status === 'EXPIRED').length;
@@ -212,8 +206,8 @@ export function ParkTracePanel({
                 stats.timerCritical > 0
                   ? 'text-red-400'
                   : stats.timerWarnings > 0
-                  ? 'text-amber-400'
-                  : 'text-gray-200'
+                    ? 'text-amber-400'
+                    : 'text-gray-200'
               )}
             >
               {stats.timerWarnings + stats.timerCritical}
@@ -221,7 +215,12 @@ export function ParkTracePanel({
             <p className="text-xs text-gray-500">Alerts</p>
           </div>
           <div>
-            <p className={cn('text-lg font-bold', stats.hasMask ? 'text-purple-400' : 'text-gray-500')}>
+            <p
+              className={cn(
+                'text-lg font-bold',
+                stats.hasMask ? 'text-purple-400' : 'text-gray-500'
+              )}
+            >
               {stats.hasMask ? '1' : '0'}
             </p>
             <p className="text-xs text-gray-500">Mask</p>

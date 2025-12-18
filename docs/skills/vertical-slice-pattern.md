@@ -316,6 +316,7 @@ Use this checklist to verify a Crown Jewel implements the full vertical slice:
 | **3. Operad** | Grammar registered | `OperadRegistry.has(NAME_OPERAD)` |
 | **4. Service** | Module structure | `services/<name>/` with persistence |
 | **5. Node** | AGENTESE registered | `@node` decorator present |
+| **5b. Contracts** | BE/FE types sync'd | `contracts={}` on `@node` (Phase 7) |
 | **6. Protocol** | Gateway discovery | Path in `/agentese/discover` |
 | **7. Projection** | Multi-target render | CLI + Web + JSON all work |
 | **API** | Gateway exposed | `POST /agentese/{path}` returns 200 |
@@ -603,7 +604,20 @@ services/<jewel>/
 
 ```python
 # services/<jewel>/node.py
-@node("<context>.<jewel>", dependencies=("<jewel>_persistence",))
+from protocols.agentese.contract import Contract, Response
+
+@dataclass
+class ManifestResponse:
+    name: str
+    count: int
+
+@node(
+    "<context>.<jewel>",
+    dependencies=("<jewel>_persistence",),
+    contracts={
+        "manifest": Response(ManifestResponse),  # Phase 7: BE/FE type sync
+    }
+)
 class JewelNode(BaseLogosNode):
     @property
     def handle(self) -> str:
@@ -612,6 +626,8 @@ class JewelNode(BaseLogosNode):
     async def manifest(self, observer: Observer) -> Renderable:
         ...
 ```
+
+**Phase 7 Enhancement**: Add `contracts={}` parameter for automatic BE/FE type sync. See `agentese-contract-protocol.md` for full details.
 
 ### Step 5: Ensure Gateway Import (Layer 6)
 
@@ -782,6 +798,7 @@ SPECGRAPH_SKIP_CI_GATE=1 uv run pytest ...
 - `crown-jewel-patterns.md` — Implementation patterns
 - `polynomial-agent.md` — Layer 2 details
 - `agentese-node-registration.md` — Layer 5 details
+- `agentese-contract-protocol.md` — Phase 7 BE/FE type sync
 
 ---
 
@@ -829,6 +846,7 @@ Ask yourself: "Is SpecGraph helping me right now, or blocking me?"
 
 ## Changelog
 
+- 2025-12-18: Added Phase 7 Contract Protocol to Layer 5 (BE/FE type sync via `contracts={}`)
 - 2025-12-18: **Emergence Crown Jewel** added (EMERGENCE_POLYNOMIAL + EMERGENCE_OPERAD + EmergenceSheaf, 113 tests)
 - 2025-12-18: Added Three Modes philosophy (Advisory/Gatekeeping/Aspirational)
 - 2025-12-18: Added bidirectional flow emphasis (Compile ⊣ Reflect)

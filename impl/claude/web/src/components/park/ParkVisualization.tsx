@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Trophy, AlertTriangle, Flag } from 'lucide-react';
+import { Trophy, AlertTriangle, Flag, Lightbulb } from 'lucide-react';
 import { parkApi } from '../../api/client';
 import type {
   ParkScenarioState,
@@ -32,13 +32,9 @@ import { MaskGridEnhanced } from './MaskCardEnhanced';
 import { CurrentMaskBadge } from './MaskSelector';
 import { ConsentDebtMachine } from './ConsentDebtMachine';
 import { ParkTracePanel } from './ParkTracePanel';
-import {
-  InlineError,
-  Shake,
-  PopOnMount,
-  celebrate,
-} from '../joy';
+import { InlineError, Shake, PopOnMount, celebrate } from '../joy';
 import { useSynergyToast } from '../synergy';
+import { useTeachingModeSafe } from '../../hooks';
 import { JEWEL_ICONS, JEWEL_COLORS } from '../../constants/jewels';
 import { BottomDrawer } from '../elastic';
 import type { Density } from '../../shell/types';
@@ -93,13 +89,14 @@ function StartScreen({ masks, onStart, loading }: StartScreenProps) {
                 onClick={() => setSelectedTemplate(t)}
                 className={`
                   px-3 py-2 text-sm rounded transition-colors
-                  ${selectedTemplate === t
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                  ${
+                    selectedTemplate === t
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                   }
                 `}
               >
-                {t.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                {t.replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
               </button>
             ))}
           </div>
@@ -116,9 +113,10 @@ function StartScreen({ masks, onStart, loading }: StartScreenProps) {
                   onClick={() => setSelectedTimer(t)}
                   className={`
                     px-3 py-2 text-xs rounded transition-colors uppercase
-                    ${selectedTimer === t
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                    ${
+                      selectedTimer === t
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                     }
                   `}
                 >
@@ -157,10 +155,7 @@ function StartScreen({ masks, onStart, loading }: StartScreenProps) {
         <h2 className="text-lg font-semibold mb-4">Available Masks</h2>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {masks.map((mask) => (
-            <div
-              key={mask.name}
-              className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg"
-            >
+            <div key={mask.name} className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg">
               <ParkIcon className="w-6 h-6" style={{ color: JEWEL_COLORS.park.primary }} />
               <div>
                 <p className="text-sm font-medium">{mask.name}</p>
@@ -195,6 +190,10 @@ interface RunningScenarioProps {
   onUseForce: () => void;
   onComplete: (outcome: 'success' | 'failure' | 'abandon') => void;
   isMobile: boolean;
+  /** Whether teaching mode is enabled (Phase 4) */
+  teachingEnabled: boolean;
+  /** Toggle teaching mode */
+  onToggleTeaching: () => void;
 }
 
 function RunningScenario({
@@ -209,6 +208,8 @@ function RunningScenario({
   onUseForce,
   onComplete,
   isMobile,
+  teachingEnabled,
+  onToggleTeaching,
 }: RunningScenarioProps) {
   // Mobile drawer states
   const [masksDrawerOpen, setMasksDrawerOpen] = useState(false);
@@ -272,7 +273,7 @@ function RunningScenario({
             onForce={onUseForce}
             forceDisabled={scenario.forces_remaining === 0}
             showStateMachine
-            showTeaching
+            showTeaching={teachingEnabled}
           />
         </div>
 
@@ -286,7 +287,7 @@ function RunningScenario({
               phaseTransitions={scenario.phase_transitions}
               consentDebt={scenario.consent_debt}
               onTransition={onTransition}
-              showTeaching
+              showTeaching={teachingEnabled}
             />
           </div>
 
@@ -307,7 +308,7 @@ function RunningScenario({
               currentMask={scenario.mask}
               forcesUsed={scenario.forces_used}
               maxEvents={8}
-              showTeaching
+              showTeaching={teachingEnabled}
             />
           </div>
 
@@ -339,14 +340,28 @@ function RunningScenario({
 
         {/* Right Column - Masks (Phase 3 Enhanced) */}
         <div className="bg-gray-800/50 rounded-xl p-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">Dialogue Masks</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-300">Dialogue Masks</h3>
+            {/* Teaching toggle (Phase 4) */}
+            <button
+              onClick={onToggleTeaching}
+              className={`p-1.5 rounded transition-colors ${
+                teachingEnabled
+                  ? 'bg-blue-500/30 text-blue-400'
+                  : 'bg-gray-700/50 text-gray-500 hover:text-gray-300'
+              }`}
+              title={`Teaching: ${teachingEnabled ? 'ON' : 'OFF'}`}
+            >
+              <Lightbulb className="w-4 h-4" />
+            </button>
+          </div>
           <MaskGridEnhanced
             masks={masks}
             currentMask={scenario.mask}
             onDon={onDonMask}
             onDoff={onDoffMask}
             showAffordances
-            showTeaching
+            showTeaching={teachingEnabled}
             compact
           />
         </div>
@@ -405,10 +420,7 @@ function RunningScenario({
 
       {/* Current Mask */}
       <div className="bg-gray-800/50 rounded-xl p-3">
-        <CurrentMaskBadge
-          mask={scenario.mask}
-          onDoff={scenario.mask ? onDoffMask : undefined}
-        />
+        <CurrentMaskBadge mask={scenario.mask} onDoff={scenario.mask ? onDoffMask : undefined} />
       </div>
 
       {/* Mobile action buttons */}
@@ -466,7 +478,7 @@ function RunningScenario({
             currentMask={scenario.mask}
             forcesUsed={scenario.forces_used}
             maxEvents={15}
-            showTeaching
+            showTeaching={teachingEnabled}
           />
         </div>
       </BottomDrawer>
@@ -476,13 +488,15 @@ function RunningScenario({
 
 function SummaryScreen({ summary, onReset }: SummaryScreenProps) {
   // Get outcome icon
-  const OutcomeIcon = summary.outcome === 'success' ? Trophy
-    : summary.outcome === 'failure' ? AlertTriangle
-    : Flag;
+  const OutcomeIcon =
+    summary.outcome === 'success' ? Trophy : summary.outcome === 'failure' ? AlertTriangle : Flag;
 
-  const outcomeColor = summary.outcome === 'success' ? JEWEL_COLORS.gardener.primary
-    : summary.outcome === 'failure' ? JEWEL_COLORS.domain.primary
-    : JEWEL_COLORS.coalition.primary;
+  const outcomeColor =
+    summary.outcome === 'success'
+      ? JEWEL_COLORS.gardener.primary
+      : summary.outcome === 'failure'
+        ? JEWEL_COLORS.domain.primary
+        : JEWEL_COLORS.coalition.primary;
 
   return (
     <PopOnMount scale={1.1} duration={300}>
@@ -490,10 +504,7 @@ function SummaryScreen({ summary, onReset }: SummaryScreenProps) {
         <div className="bg-gray-800/50 rounded-xl p-8">
           {/* Header */}
           <div className="text-center mb-6">
-            <OutcomeIcon
-              className="w-16 h-16 mx-auto mb-4"
-              style={{ color: outcomeColor }}
-            />
+            <OutcomeIcon className="w-16 h-16 mx-auto mb-4" style={{ color: outcomeColor }} />
             <h2 className="text-2xl font-bold mb-2">
               Scenario {summary.outcome.charAt(0).toUpperCase() + summary.outcome.slice(1)}
             </h2>
@@ -588,6 +599,9 @@ export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisu
   const [tickInterval, setTickInterval] = useState<ReturnType<typeof setInterval> | null>(null);
   const [autoTick, setAutoTick] = useState(true);
 
+  // Teaching mode (Phase 4)
+  const { enabled: teachingEnabled, toggle: toggleTeaching } = useTeachingModeSafe();
+
   // Synergy toasts
   const { scenarioComplete: showScenarioCompleteToast } = useSynergyToast();
 
@@ -633,62 +647,70 @@ export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisu
   }, [viewState, autoTick, scenario?.is_active]);
 
   // Actions
-  const startScenario = useCallback(async (
-    template: Template,
-    timerType: TimerType,
-    accelerated: boolean
-  ) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await parkApi.startScenario({
-        template: template !== 'custom' ? template : undefined,
-        timer_type: template === 'custom' ? timerType : undefined,
-        accelerated,
-      });
-      setScenario(res);
-      setViewState('running');
-    } catch (err) {
-      console.error('Failed to start scenario:', err);
-      setError('Failed to start scenario');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const startScenario = useCallback(
+    async (template: Template, timerType: TimerType, accelerated: boolean) => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await parkApi.startScenario({
+          template: template !== 'custom' ? template : undefined,
+          timer_type: template === 'custom' ? timerType : undefined,
+          accelerated,
+        });
+        setScenario(res);
+        setViewState('running');
+      } catch (err) {
+        console.error('Failed to start scenario:', err);
+        setError('Failed to start scenario');
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
-  const tickScenario = useCallback(async (count: number = 1) => {
-    if (!scenario) return;
-    try {
-      const res = await parkApi.tick({ count });
-      setScenario(res);
-    } catch (err) {
-      console.error('Tick failed:', err);
-    }
-  }, [scenario]);
+  const tickScenario = useCallback(
+    async (count: number = 1) => {
+      if (!scenario) return;
+      try {
+        const res = await parkApi.tick({ count });
+        setScenario(res);
+      } catch (err) {
+        console.error('Tick failed:', err);
+      }
+    },
+    [scenario]
+  );
 
-  const transitionPhase = useCallback(async (phase: ParkCrisisPhase) => {
-    if (!scenario) return;
-    try {
-      const res = await parkApi.transitionPhase({
-        phase: phase.toLowerCase() as 'normal' | 'incident' | 'response' | 'recovery',
-      });
-      setScenario(res);
-    } catch (err) {
-      console.error('Transition failed:', err);
-      setError('Invalid phase transition');
-    }
-  }, [scenario]);
+  const transitionPhase = useCallback(
+    async (phase: ParkCrisisPhase) => {
+      if (!scenario) return;
+      try {
+        const res = await parkApi.transitionPhase({
+          phase: phase.toLowerCase() as 'normal' | 'incident' | 'response' | 'recovery',
+        });
+        setScenario(res);
+      } catch (err) {
+        console.error('Transition failed:', err);
+        setError('Invalid phase transition');
+      }
+    },
+    [scenario]
+  );
 
-  const donMask = useCallback(async (maskName: string) => {
-    if (!scenario) return;
-    try {
-      const res = await parkApi.maskAction({ action: 'don', mask_name: maskName });
-      setScenario(res);
-    } catch (err) {
-      console.error('Don mask failed:', err);
-      setError('Cannot don mask');
-    }
-  }, [scenario]);
+  const donMask = useCallback(
+    async (maskName: string) => {
+      if (!scenario) return;
+      try {
+        const res = await parkApi.maskAction({ action: 'don', mask_name: maskName });
+        setScenario(res);
+      } catch (err) {
+        console.error('Don mask failed:', err);
+        setError('Cannot don mask');
+      }
+    },
+    [scenario]
+  );
 
   const doffMask = useCallback(async () => {
     if (!scenario) return;
@@ -711,30 +733,33 @@ export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisu
     }
   }, [scenario]);
 
-  const completeScenario = useCallback(async (outcome: 'success' | 'failure' | 'abandon') => {
-    if (!scenario) return;
-    try {
-      setLoading(true);
-      if (tickInterval) {
-        clearInterval(tickInterval);
-        setTickInterval(null);
-      }
-      const res = await parkApi.completeScenario({ outcome });
-      setSummary(res);
-      setScenario(null);
-      setViewState('summary');
+  const completeScenario = useCallback(
+    async (outcome: 'success' | 'failure' | 'abandon') => {
+      if (!scenario) return;
+      try {
+        setLoading(true);
+        if (tickInterval) {
+          clearInterval(tickInterval);
+          setTickInterval(null);
+        }
+        const res = await parkApi.completeScenario({ outcome });
+        setSummary(res);
+        setScenario(null);
+        setViewState('summary');
 
-      if (outcome === 'success') {
-        celebrate({ intensity: 'epic' });
+        if (outcome === 'success') {
+          celebrate({ intensity: 'epic' });
+        }
+        showScenarioCompleteToast(res.name, res.forces_used);
+      } catch (err) {
+        console.error('Complete failed:', err);
+        setError('Failed to complete scenario');
+      } finally {
+        setLoading(false);
       }
-      showScenarioCompleteToast(res.name, res.forces_used);
-    } catch (err) {
-      console.error('Complete failed:', err);
-      setError('Failed to complete scenario');
-    } finally {
-      setLoading(false);
-    }
-  }, [scenario, tickInterval, showScenarioCompleteToast]);
+    },
+    [scenario, tickInterval, showScenarioCompleteToast]
+  );
 
   const resetToIdle = useCallback(() => {
     setSummary(null);
@@ -756,9 +781,7 @@ export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisu
                 <ParkIcon className="w-8 h-8" style={{ color: JEWEL_COLORS.park.primary }} />
                 Punchdrunk Park
               </h1>
-              <p className="text-gray-400 text-sm mt-1">
-                Crisis practice with dialogue masks
-              </p>
+              <p className="text-gray-400 text-sm mt-1">Crisis practice with dialogue masks</p>
             </div>
             {viewState === 'running' && scenario && (
               <PhaseIndicator currentPhase={scenario.crisis_phase} />
@@ -797,6 +820,8 @@ export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisu
             onUseForce={useForce}
             onComplete={completeScenario}
             isMobile={isMobile}
+            teachingEnabled={teachingEnabled}
+            onToggleTeaching={toggleTeaching}
           />
         )}
 

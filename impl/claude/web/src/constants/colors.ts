@@ -231,6 +231,74 @@ export function getConnectionStatusColor(status: string): string {
 }
 
 /**
+ * Phase Glow Effects
+ *
+ * Box-shadow glows for polynomial agent states across Town and Park.
+ * Used by StateIndicator and phase visualization components.
+ *
+ * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
+ */
+export const PHASE_GLOW = {
+  idle: '0 0 12px rgba(100, 116, 139, 0.5)', // slate
+  active: '0 0 12px rgba(34, 197, 94, 0.5)', // green
+  warning: '0 0 12px rgba(245, 158, 11, 0.5)', // amber
+  critical: '0 0 12px rgba(239, 68, 68, 0.5)', // red
+  success: '0 0 12px rgba(34, 197, 94, 0.5)', // green
+  neutral: '0 0 12px rgba(100, 116, 139, 0.3)', // slate (dimmer)
+} as const;
+
+export type PhaseGlowType = keyof typeof PHASE_GLOW;
+
+/**
+ * Get phase glow for a given state category
+ */
+export function getPhaseGlow(category: string): string {
+  const key = category.toLowerCase() as PhaseGlowType;
+  return PHASE_GLOW[key] ?? PHASE_GLOW.neutral;
+}
+
+/**
+ * Teaching Gradient Backgrounds
+ *
+ * Gradient backgrounds for teaching callouts, categorized by type.
+ * Used with TeachingCallout component across Park and Town.
+ *
+ * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
+ */
+export const TEACHING_GRADIENT = {
+  /** Blue-purple for categorical explanations (polynomial, operad, sheaf) */
+  categorical: 'from-blue-500/20 to-purple-500/20',
+  /** Amber-pink for operational explanations (actions, transitions) */
+  operational: 'from-amber-500/20 to-pink-500/20',
+  /** Green-blue for conceptual explanations (AGENTESE, N-gent) */
+  conceptual: 'from-green-500/20 to-blue-500/20',
+} as const;
+
+export type TeachingCategory = keyof typeof TEACHING_GRADIENT;
+
+/**
+ * Get teaching gradient for a given category
+ */
+export function getTeachingGradient(category: string): string {
+  const key = category.toLowerCase() as TeachingCategory;
+  return TEACHING_GRADIENT[key] ?? TEACHING_GRADIENT.conceptual;
+}
+
+/**
+ * Edge Animation Configuration
+ *
+ * Consistent animation timing for state transitions and operations.
+ *
+ * @see plans/park-town-design-overhaul.md - Part III: Design System Additions
+ */
+export const EDGE_ANIMATION = {
+  duration: '300ms',
+  easing: 'cubic-bezier(0.4, 0, 0.2, 1)', // Tailwind default ease-in-out
+  /** Full CSS transition string */
+  transition: 'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+} as const;
+
+/**
  * Get state color with fallback
  */
 export function getStateColor(state: string): string {

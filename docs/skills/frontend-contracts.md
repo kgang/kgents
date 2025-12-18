@@ -38,6 +38,12 @@ entropy:
 
 ---
 
+> **⚠️ Phase 7 Update (2025-12-18)**: This skill documents the **manual testing approach** for contract validation. For the **automated approach** using `@node(contracts={})` and build-time type generation, see `agentese-contract-protocol.md`. Both approaches are valid:
+> - **Manual testing** (this skill): Runtime validation via pytest, useful for widget JSON output
+> - **Automated generation** (Phase 7): Build-time type sync via discovery, ideal for AGENTESE aspects
+
+---
+
 ## Overview
 
 When Python backends serve JSON to TypeScript frontends, type mismatches can cause runtime crashes that are hard to debug. This skill documents how to write **contract tests** that validate backend JSON output matches frontend TypeScript expectations.
@@ -387,6 +393,7 @@ Don't use contract tests for:
 
 ## Related Skills
 
+- [agentese-contract-protocol](agentese-contract-protocol.md) - **Phase 7 automated approach** (recommended for AGENTESE aspects)
 - [test-patterns](test-patterns.md) - General testing patterns (T-gent Types I-V)
 - [reactive-primitives](reactive-primitives.md) - Signal/Computed/Effect system
 - [agent-town-visualization](agent-town-visualization.md) - Widget rendering patterns
@@ -395,4 +402,5 @@ Don't use contract tests for:
 
 ## Changelog
 
+- 2025-12-18: Added Phase 7 reference to automated contract protocol
 - 2025-12-15: Initial version after debugging blank screen bug

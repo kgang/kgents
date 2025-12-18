@@ -65,6 +65,16 @@ export {
   CONNECTION_STATUS_COLORS,
   getConnectionStatusColor,
   type ConnectionStatus,
+  // Phase glow effects (park-town-design-overhaul)
+  PHASE_GLOW,
+  getPhaseGlow,
+  type PhaseGlowType,
+  // Teaching gradient backgrounds (park-town-design-overhaul)
+  TEACHING_GRADIENT,
+  getTeachingGradient,
+  type TeachingCategory,
+  // Edge animation configuration
+  EDGE_ANIMATION,
   // Tailwind extensions
   COLOR_TAILWIND_EXTENSIONS,
 } from './colors';

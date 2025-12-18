@@ -1,7 +1,7 @@
 ---
 path: plans/park-town-design-overhaul
 status: active
-progress: 30
+progress: 90
 last_touched: 2025-12-18
 touched_by: claude-opus-4-5
 blocking: []
@@ -22,6 +22,34 @@ session_notes: |
     - Mobile: BottomDrawer for trace panel, observer in header
     - FirstVisitOverlay: Welcome modal for first-time visitors
     - EventFeed: Toggle between Events and Trace views
+  2025-12-18: Phase 3 Park Enhancement COMPLETE:
+    - PhaseVisualization: Crisis phase with embedded polynomial state machine
+    - TimerMachine: Timer countdown with polynomial state visualization
+    - ConsentDebtMachine: Debt levels as HEALTHY->ELEVATED->HIGH->CRITICAL phases
+    - MaskCardEnhanced: Masks with affordances preview and debt cost indicator
+    - ParkTracePanel: N-gent witness for park events (phase, timer, force, mask)
+    - RunningScenario: Integrated all Phase 3 components into desktop & mobile layouts
+    - Mobile: BottomDrawer for masks and trace, fixed action bar at bottom
+  2025-12-18: Phase 4 Teaching Layer COMPLETE:
+    - useTeachingMode hook with localStorage persistence (hooks/useTeachingMode.tsx)
+    - TeachingToggle component (compact lightbulb button) in both Town and Park headers
+    - Wired teachingEnabled to TownVisualization: TownTracePanel showTeaching prop
+    - Wired teachingEnabled to ParkVisualization: ConsentDebtMachine, PhaseVisualization,
+      ParkTracePanel, MaskGridEnhanced all respect teaching toggle
+    - Mobile teaching toggle in Town header and Park masks panel
+    - Global toggle persists across sessions via localStorage
+  2025-12-18: Phase 5 Polish & Integration NEAR COMPLETE:
+    - Added PHASE_GLOW design tokens (constants/colors.ts)
+    - Added TEACHING_GRADIENT design tokens (constants/colors.ts)
+    - Added EDGE_ANIMATION config for consistent transitions
+    - Updated StateIndicator to use centralized PHASE_GLOW tokens
+    - Updated TeachingCallout to use centralized TEACHING_GRADIENT tokens
+    - Added keyboard navigation (Enter/Space) to StateIndicator
+    - Added aria-labels and screen reader support (role="status/button")
+    - Added focus-visible outline styling for accessibility
+    - Added motion-reduce: support for prefers-reduced-motion
+    - Updated crown-jewel-patterns.md with Pattern 14 (Teaching Mode Toggle)
+    - TypeScript validation passes
 phase_ledger:
   PLAN: complete
   RESEARCH: complete

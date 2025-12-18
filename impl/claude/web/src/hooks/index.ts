@@ -121,14 +121,24 @@ export {
 } from './useTouchGestures';
 
 // Emergence visualization hooks
-export {
-  useCymatics,
-  type UseCymaticsOptions,
-  type UseCymaticsReturn,
-} from './useCymatics';
+export { useCymatics, type UseCymaticsOptions, type UseCymaticsReturn } from './useCymatics';
 
 export {
   useGrowthAnimation,
   type GrowthAnimationOptions,
   type UseGrowthAnimationReturn,
 } from './useGrowthAnimation';
+
+// Teaching mode (Phase 4: Teaching Layer)
+export {
+  useTeachingMode,
+  useTeachingModeContext,
+  useTeachingModeSafe,
+  TeachingModeProvider,
+  TeachingToggle,
+  WhenTeaching,
+  WhenNotTeaching,
+  type TeachingModeState,
+  type TeachingModeProviderProps,
+  type TeachingToggleProps,
+} from './useTeachingMode';
