@@ -1453,6 +1453,11 @@
 <td><code>@node</code> decorator present</td>
 </tr>
 <tr>
+<td><strong>5b. Contracts</strong></td>
+<td>BE/FE types sync'd</td>
+<td><code>contracts={}</code> on <code>@node</code> (Phase 7)</td>
+</tr>
+<tr>
 <td><strong>6. Protocol</strong></td>
 <td>Gateway discovery</td>
 <td>Path in <code>/agentese/discover</code></td>
@@ -1790,15 +1795,29 @@
 </span></code></pre></div>
 <h3 id="step-4-implement-agentese-node-layer-5">Step 4: Implement AGENTESE Node (Layer 5)</h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1"># services/&lt;jewel&gt;/node.py</span>
-</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="nd">@node</span><span class="p">(</span><span class="s2">&quot;&lt;context&gt;.&lt;jewel&gt;&quot;</span><span class="p">,</span> <span class="n">dependencies</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&lt;jewel&gt;_persistence&quot;</span><span class="p">,))</span>
-</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">JewelNode</span><span class="p">(</span><span class="n">BaseLogosNode</span><span class="p">):</span>
-</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>    <span class="nd">@property</span>
-</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>        <span class="k">return</span> <span class="s2">&quot;&lt;context&gt;.&lt;jewel&gt;&quot;</span>
-</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>
-</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderable</span><span class="p">:</span>
-</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a>        <span class="o">...</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese.contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span><span class="p">,</span> <span class="n">Response</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="nd">@dataclass</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="k">class</span><span class="w"> </span><span class="nc">ManifestResponse</span><span class="p">:</span>
+</span><span id="__span-22-6"><a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-22-7"><a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>    <span class="n">count</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-22-8"><a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>
+</span><span id="__span-22-9"><a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="nd">@node</span><span class="p">(</span>
+</span><span id="__span-22-10"><a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a>    <span class="s2">&quot;&lt;context&gt;.&lt;jewel&gt;&quot;</span><span class="p">,</span>
+</span><span id="__span-22-11"><a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>    <span class="n">dependencies</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&lt;jewel&gt;_persistence&quot;</span><span class="p">,),</span>
+</span><span id="__span-22-12"><a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a>    <span class="n">contracts</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-22-13"><a id="__codelineno-22-13" name="__codelineno-22-13" href="#__codelineno-22-13"></a>        <span class="s2">&quot;manifest&quot;</span><span class="p">:</span> <span class="n">Response</span><span class="p">(</span><span class="n">ManifestResponse</span><span class="p">),</span>  <span class="c1"># Phase 7: BE/FE type sync</span>
+</span><span id="__span-22-14"><a id="__codelineno-22-14" name="__codelineno-22-14" href="#__codelineno-22-14"></a>    <span class="p">}</span>
+</span><span id="__span-22-15"><a id="__codelineno-22-15" name="__codelineno-22-15" href="#__codelineno-22-15"></a><span class="p">)</span>
+</span><span id="__span-22-16"><a id="__codelineno-22-16" name="__codelineno-22-16" href="#__codelineno-22-16"></a><span class="k">class</span><span class="w"> </span><span class="nc">JewelNode</span><span class="p">(</span><span class="n">BaseLogosNode</span><span class="p">):</span>
+</span><span id="__span-22-17"><a id="__codelineno-22-17" name="__codelineno-22-17" href="#__codelineno-22-17"></a>    <span class="nd">@property</span>
+</span><span id="__span-22-18"><a id="__codelineno-22-18" name="__codelineno-22-18" href="#__codelineno-22-18"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="__span-22-19"><a id="__codelineno-22-19" name="__codelineno-22-19" href="#__codelineno-22-19"></a>        <span class="k">return</span> <span class="s2">&quot;&lt;context&gt;.&lt;jewel&gt;&quot;</span>
+</span><span id="__span-22-20"><a id="__codelineno-22-20" name="__codelineno-22-20" href="#__codelineno-22-20"></a>
+</span><span id="__span-22-21"><a id="__codelineno-22-21" name="__codelineno-22-21" href="#__codelineno-22-21"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">manifest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">Observer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Renderable</span><span class="p">:</span>
+</span><span id="__span-22-22"><a id="__codelineno-22-22" name="__codelineno-22-22" href="#__codelineno-22-22"></a>        <span class="o">...</span>
 </span></code></pre></div>
+<p><strong>Phase 7 Enhancement</strong>: Add <code>contracts={}</code> parameter for automatic BE/FE type sync. See <code>agentese-contract-protocol.md</code> for full details.</p>
 <h3 id="step-5-ensure-gateway-import-layer-6">Step 5: Ensure Gateway Import (Layer 6)</h3>
 <div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># protocols/agentese/gateway.py - Add to _import_node_modules()</span>
 </span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="k">def</span><span class="w"> </span><span class="nf">_import_node_modules</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1991,6 +2010,7 @@
 <li><code>crown-jewel-patterns.md</code> — Implementation patterns</li>
 <li><code>polynomial-agent.md</code> — Layer 2 details</li>
 <li><code>agentese-node-registration.md</code> — Layer 5 details</li>
+<li><code>agentese-contract-protocol.md</code> — Phase 7 BE/FE type sync</li>
 </ul>
 <hr />
 <h2 id="the-enlightened-path-summary">The Enlightened Path: Summary</h2>
@@ -2046,6 +2066,7 @@
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-18: Added Phase 7 Contract Protocol to Layer 5 (BE/FE type sync via <code>contracts={}</code>)</li>
 <li>2025-12-18: <strong>Emergence Crown Jewel</strong> added (EMERGENCE_POLYNOMIAL + EMERGENCE_OPERAD + EmergenceSheaf, 113 tests)</li>
 <li>2025-12-18: Added Three Modes philosophy (Advisory/Gatekeeping/Aspirational)</li>
 <li>2025-12-18: Added bidirectional flow emphasis (Compile ⊣ Reflect)</li>

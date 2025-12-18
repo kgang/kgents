@@ -727,6 +727,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pattern-13-contract-first-types-phase-7" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 13: Contract-First Types (Phase 7)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pattern-14-teaching-mode-toggle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 14: Teaching Mode Toggle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1280,6 +1302,168 @@
 - Tests can expect STRUCTURAL (not fake PASSED)
 - Design intent is clear</p>
 <hr />
+<h2 id="pattern-13-contract-first-types-phase-7">Pattern 13: Contract-First Types (Phase 7)</h2>
+<p><strong>Problem</strong>: BE (Python) and FE (TypeScript) type definitions drift because they're defined separately.</p>
+<p><strong>Wrong</strong>: Duplicate type definitions
+<div class="language-python highlight"><pre><span></span><code><span id="__span-21-1"><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Python backend</span>
+</span><span id="__span-21-2"><a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="nd">@dataclass</span>
+</span><span id="__span-21-3"><a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">TownManifest</span><span class="p">:</span>
+</span><span id="__span-21-4"><a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-21-5"><a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>    <span class="n">citizen_count</span><span class="p">:</span> <span class="nb">int</span>  <span class="c1"># Might rename to &quot;count&quot;</span>
+</span></code></pre></div></p>
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-22-1"><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1">// TypeScript frontend (may drift!)</span>
+</span><span id="__span-22-2"><a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">TownManifest</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-22-3"><a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
+</span><span id="__span-22-4"><a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span><span class="nx">citizenCount</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">  </span><span class="c1">// Already drifted!</span>
+</span><span id="__span-22-5"><a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong>Right</strong>: <code>@node(contracts={})</code> is the authority
+<div class="language-python highlight"><pre><span></span><code><span id="__span-23-1"><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span id="__span-23-2"><a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese.contract</span><span class="w"> </span><span class="kn">import</span> <span class="n">Contract</span><span class="p">,</span> <span class="n">Response</span>
+</span><span id="__span-23-3"><a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">protocols.agentese.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">node</span>
+</span><span id="__span-23-4"><a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a>
+</span><span id="__span-23-5"><a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="nd">@dataclass</span>
+</span><span id="__span-23-6"><a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="k">class</span><span class="w"> </span><span class="nc">TownManifestResponse</span><span class="p">:</span>
+</span><span id="__span-23-7"><a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Response for manifest aspect.&quot;&quot;&quot;</span>
+</span><span id="__span-23-8"><a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-23-9"><a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>    <span class="n">citizen_count</span><span class="p">:</span> <span class="nb">int</span>
+</span><span id="__span-23-10"><a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a>
+</span><span id="__span-23-11"><a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="nd">@dataclass</span>
+</span><span id="__span-23-12"><a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="k">class</span><span class="w"> </span><span class="nc">CitizenCreateRequest</span><span class="p">:</span>
+</span><span id="__span-23-13"><a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a>    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-23-14"><a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>    <span class="n">archetype</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-23-15"><a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a>
+</span><span id="__span-23-16"><a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="nd">@dataclass</span>
+</span><span id="__span-23-17"><a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="k">class</span><span class="w"> </span><span class="nc">CitizenCreateResponse</span><span class="p">:</span>
+</span><span id="__span-23-18"><a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a>    <span class="n">citizen_id</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="__span-23-19"><a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a>    <span class="n">success</span><span class="p">:</span> <span class="nb">bool</span>
+</span><span id="__span-23-20"><a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a>
+</span><span id="__span-23-21"><a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="nd">@node</span><span class="p">(</span>
+</span><span id="__span-23-22"><a id="__codelineno-23-22" name="__codelineno-23-22" href="#__codelineno-23-22"></a>    <span class="s2">&quot;world.town&quot;</span><span class="p">,</span>
+</span><span id="__span-23-23"><a id="__codelineno-23-23" name="__codelineno-23-23" href="#__codelineno-23-23"></a>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Agent Town Crown Jewel&quot;</span><span class="p">,</span>
+</span><span id="__span-23-24"><a id="__codelineno-23-24" name="__codelineno-23-24" href="#__codelineno-23-24"></a>    <span class="n">contracts</span><span class="o">=</span><span class="p">{</span>
+</span><span id="__span-23-25"><a id="__codelineno-23-25" name="__codelineno-23-25" href="#__codelineno-23-25"></a>        <span class="c1"># Perception aspects (no request needed)</span>
+</span><span id="__span-23-26"><a id="__codelineno-23-26" name="__codelineno-23-26" href="#__codelineno-23-26"></a>        <span class="s2">&quot;manifest&quot;</span><span class="p">:</span> <span class="n">Response</span><span class="p">(</span><span class="n">TownManifestResponse</span><span class="p">),</span>
+</span><span id="__span-23-27"><a id="__codelineno-23-27" name="__codelineno-23-27" href="#__codelineno-23-27"></a>        <span class="c1"># Mutation aspects (request + response)</span>
+</span><span id="__span-23-28"><a id="__codelineno-23-28" name="__codelineno-23-28" href="#__codelineno-23-28"></a>        <span class="s2">&quot;citizen.create&quot;</span><span class="p">:</span> <span class="n">Contract</span><span class="p">(</span><span class="n">CitizenCreateRequest</span><span class="p">,</span> <span class="n">CitizenCreateResponse</span><span class="p">),</span>
+</span><span id="__span-23-29"><a id="__codelineno-23-29" name="__codelineno-23-29" href="#__codelineno-23-29"></a>    <span class="p">}</span>
+</span><span id="__span-23-30"><a id="__codelineno-23-30" name="__codelineno-23-30" href="#__codelineno-23-30"></a><span class="p">)</span>
+</span><span id="__span-23-31"><a id="__codelineno-23-31" name="__codelineno-23-31" href="#__codelineno-23-31"></a><span class="nd">@dataclass</span>
+</span><span id="__span-23-32"><a id="__codelineno-23-32" name="__codelineno-23-32" href="#__codelineno-23-32"></a><span class="k">class</span><span class="w"> </span><span class="nc">TownNode</span><span class="p">(</span><span class="n">BaseLogosNode</span><span class="p">):</span>
+</span><span id="__span-23-33"><a id="__codelineno-23-33" name="__codelineno-23-33" href="#__codelineno-23-33"></a>    <span class="o">...</span>
+</span></code></pre></div></p>
+<p><strong>Frontend discovers at build time</strong>:
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-24-1"><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1"># Generate TypeScript from BE contracts</span>
+</span><span id="__span-24-2"><a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a>npm<span class="w"> </span>run<span class="w"> </span>sync-types
+</span><span id="__span-24-3"><a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+</span><span id="__span-24-4"><a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1"># Verify types are in sync (CI)</span>
+</span><span id="__span-24-5"><a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>npm<span class="w"> </span>run<span class="w"> </span>sync-types:check
+</span></code></pre></div></p>
+<p><strong>Benefits</strong>:
+- Single source of truth (Python dataclass)
+- Type drift caught in CI before merge
+- JSON Schema bridges Python → TypeScript
+- Contract coverage tracked as metric</p>
+<p><strong>Type Separation</strong>:
+| Category | Location | Source |
+|----------|----------|--------|
+| Contract Types | <code>_generated/</code> | BE discovery |
+| Local Types | <code>_local.ts</code> | FE-only (colors, icons) |</p>
+<p><strong>Apply to</strong>: All Crown Jewel <code>@node</code> registrations.</p>
+<p><strong>See</strong>: <code>agentese-contract-protocol.md</code> for complete documentation.</p>
+<hr />
+<h2 id="pattern-14-teaching-mode-toggle">Pattern 14: Teaching Mode Toggle</h2>
+<p><strong>Problem</strong>: Users need to toggle between "power user" and "learner" modes across the application.</p>
+<p><strong>Wrong</strong>: Component-level teaching flags scattered everywhere
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-25-1"><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="c1">// Scattered boolean props that don&#39;t sync</span>
+</span><span id="__span-25-2"><a id="__codelineno-25-2" name="__codelineno-25-2" href="#__codelineno-25-2"></a><span class="o">&lt;</span><span class="nx">TracePanel</span><span class="w"> </span><span class="nx">showExplanation</span><span class="o">=</span><span class="p">{</span><span class="nx">showExplanation</span><span class="p">}</span><span class="w"> </span><span class="o">/&gt;</span>
+</span><span id="__span-25-3"><a id="__codelineno-25-3" name="__codelineno-25-3" href="#__codelineno-25-3"></a><span class="o">&lt;</span><span class="nx">StateIndicator</span><span class="w"> </span><span class="nx">showTooltip</span><span class="o">=</span><span class="p">{</span><span class="nx">showTooltip</span><span class="p">}</span><span class="w"> </span><span class="o">/&gt;</span>
+</span><span id="__span-25-4"><a id="__codelineno-25-4" name="__codelineno-25-4" href="#__codelineno-25-4"></a><span class="o">&lt;</span><span class="nx">OperadBadge</span><span class="w"> </span><span class="nx">showArity</span><span class="o">=</span><span class="p">{</span><span class="nx">showArity</span><span class="p">}</span><span class="w"> </span><span class="o">/&gt;</span>
+</span><span id="__span-25-5"><a id="__codelineno-25-5" name="__codelineno-25-5" href="#__codelineno-25-5"></a><span class="c1">// No centralized control, inconsistent behavior</span>
+</span></code></pre></div></p>
+<p><strong>Right</strong>: Global teaching mode via React context + localStorage
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-26-1"><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="c1">// hooks/useTeachingMode.tsx</span>
+</span><span id="__span-26-2"><a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a><span class="k">export</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">TeachingModeProvider</span><span class="p">({</span><span class="w"> </span><span class="nx">children</span><span class="w"> </span><span class="p">}</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">children</span><span class="o">:</span><span class="w"> </span><span class="kt">ReactNode</span><span class="w"> </span><span class="p">})</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-26-3"><a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">setEnabled</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span id="__span-26-4"><a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">isLoaded</span><span class="p">,</span><span class="w"> </span><span class="nx">setIsLoaded</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useState</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
+</span><span id="__span-26-5"><a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a>
+</span><span id="__span-26-6"><a id="__codelineno-26-6" name="__codelineno-26-6" href="#__codelineno-26-6"></a><span class="w">  </span><span class="nx">useEffect</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-26-7"><a id="__codelineno-26-7" name="__codelineno-26-7" href="#__codelineno-26-7"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">stored</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">getItem</span><span class="p">(</span><span class="s1">&#39;kgents_teaching_mode&#39;</span><span class="p">);</span>
+</span><span id="__span-26-8"><a id="__codelineno-26-8" name="__codelineno-26-8" href="#__codelineno-26-8"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">stored</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="nx">setEnabled</span><span class="p">(</span><span class="nx">stored</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;true&#39;</span><span class="p">);</span>
+</span><span id="__span-26-9"><a id="__codelineno-26-9" name="__codelineno-26-9" href="#__codelineno-26-9"></a><span class="w">    </span><span class="nx">setIsLoaded</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</span><span id="__span-26-10"><a id="__codelineno-26-10" name="__codelineno-26-10" href="#__codelineno-26-10"></a><span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="p">[]);</span>
+</span><span id="__span-26-11"><a id="__codelineno-26-11" name="__codelineno-26-11" href="#__codelineno-26-11"></a>
+</span><span id="__span-26-12"><a id="__codelineno-26-12" name="__codelineno-26-12" href="#__codelineno-26-12"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">toggle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useCallback</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-26-13"><a id="__codelineno-26-13" name="__codelineno-26-13" href="#__codelineno-26-13"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">!</span><span class="nx">enabled</span><span class="p">;</span>
+</span><span id="__span-26-14"><a id="__codelineno-26-14" name="__codelineno-26-14" href="#__codelineno-26-14"></a><span class="w">    </span><span class="nx">setEnabled</span><span class="p">(</span><span class="nx">next</span><span class="p">);</span>
+</span><span id="__span-26-15"><a id="__codelineno-26-15" name="__codelineno-26-15" href="#__codelineno-26-15"></a><span class="w">    </span><span class="nx">localStorage</span><span class="p">.</span><span class="nx">setItem</span><span class="p">(</span><span class="s1">&#39;kgents_teaching_mode&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">String</span><span class="p">(</span><span class="nx">next</span><span class="p">));</span>
+</span><span id="__span-26-16"><a id="__codelineno-26-16" name="__codelineno-26-16" href="#__codelineno-26-16"></a><span class="w">  </span><span class="p">},</span><span class="w"> </span><span class="p">[</span><span class="nx">enabled</span><span class="p">]);</span>
+</span><span id="__span-26-17"><a id="__codelineno-26-17" name="__codelineno-26-17" href="#__codelineno-26-17"></a>
+</span><span id="__span-26-18"><a id="__codelineno-26-18" name="__codelineno-26-18" href="#__codelineno-26-18"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-26-19"><a id="__codelineno-26-19" name="__codelineno-26-19" href="#__codelineno-26-19"></a><span class="w">    </span><span class="o">&lt;</span><span class="nx">TeachingModeContext</span><span class="p">.</span><span class="nx">Provider</span><span class="w"> </span><span class="nx">value</span><span class="o">=</span><span class="p">{{</span><span class="w"> </span><span class="nx">enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">toggle</span><span class="p">,</span><span class="w"> </span><span class="nx">isLoaded</span><span class="w"> </span><span class="p">}}</span><span class="o">&gt;</span>
+</span><span id="__span-26-20"><a id="__codelineno-26-20" name="__codelineno-26-20" href="#__codelineno-26-20"></a><span class="w">      </span><span class="p">{</span><span class="nx">children</span><span class="p">}</span>
+</span><span id="__span-26-21"><a id="__codelineno-26-21" name="__codelineno-26-21" href="#__codelineno-26-21"></a><span class="w">    </span><span class="o">&lt;</span><span class="err">/TeachingModeContext.Provider&gt;</span>
+</span><span id="__span-26-22"><a id="__codelineno-26-22" name="__codelineno-26-22" href="#__codelineno-26-22"></a><span class="w">  </span><span class="p">);</span>
+</span><span id="__span-26-23"><a id="__codelineno-26-23" name="__codelineno-26-23" href="#__codelineno-26-23"></a><span class="p">}</span>
+</span><span id="__span-26-24"><a id="__codelineno-26-24" name="__codelineno-26-24" href="#__codelineno-26-24"></a>
+</span><span id="__span-26-25"><a id="__codelineno-26-25" name="__codelineno-26-25" href="#__codelineno-26-25"></a><span class="c1">// Usage in components</span>
+</span><span id="__span-26-26"><a id="__codelineno-26-26" name="__codelineno-26-26" href="#__codelineno-26-26"></a><span class="kd">function</span><span class="w"> </span><span class="nx">TracePanel</span><span class="p">({</span><span class="w"> </span><span class="nx">events</span><span class="p">,</span><span class="w"> </span><span class="nx">maxEvents</span><span class="w"> </span><span class="p">}</span><span class="o">:</span><span class="w"> </span><span class="nx">TracePanelProps</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-26-27"><a id="__codelineno-26-27" name="__codelineno-26-27" href="#__codelineno-26-27"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">enabled</span><span class="o">:</span><span class="w"> </span><span class="kt">teachingEnabled</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">useTeachingModeSafe</span><span class="p">();</span>
+</span><span id="__span-26-28"><a id="__codelineno-26-28" name="__codelineno-26-28" href="#__codelineno-26-28"></a>
+</span><span id="__span-26-29"><a id="__codelineno-26-29" name="__codelineno-26-29" href="#__codelineno-26-29"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-26-30"><a id="__codelineno-26-30" name="__codelineno-26-30" href="#__codelineno-26-30"></a><span class="w">    </span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span id="__span-26-31"><a id="__codelineno-26-31" name="__codelineno-26-31" href="#__codelineno-26-31"></a><span class="w">      </span><span class="p">{</span><span class="cm">/* Content always shown */</span><span class="p">}</span>
+</span><span id="__span-26-32"><a id="__codelineno-26-32" name="__codelineno-26-32" href="#__codelineno-26-32"></a><span class="w">      </span><span class="o">&lt;</span><span class="nx">Timeline</span><span class="w"> </span><span class="nx">events</span><span class="o">=</span><span class="p">{</span><span class="nx">events</span><span class="p">}</span><span class="w"> </span><span class="nx">maxEvents</span><span class="o">=</span><span class="p">{</span><span class="nx">maxEvents</span><span class="p">}</span><span class="w"> </span><span class="o">/&gt;</span>
+</span><span id="__span-26-33"><a id="__codelineno-26-33" name="__codelineno-26-33" href="#__codelineno-26-33"></a>
+</span><span id="__span-26-34"><a id="__codelineno-26-34" name="__codelineno-26-34" href="#__codelineno-26-34"></a><span class="w">      </span><span class="p">{</span><span class="cm">/* Teaching callouts only when enabled */</span><span class="p">}</span>
+</span><span id="__span-26-35"><a id="__codelineno-26-35" name="__codelineno-26-35" href="#__codelineno-26-35"></a><span class="w">      </span><span class="p">{</span><span class="nx">teachingEnabled</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span>
+</span><span id="__span-26-36"><a id="__codelineno-26-36" name="__codelineno-26-36" href="#__codelineno-26-36"></a><span class="w">        </span><span class="o">&lt;</span><span class="nx">TeachingCallout</span><span class="w"> </span><span class="nx">category</span><span class="o">=</span><span class="s2">&quot;conceptual&quot;</span><span class="o">&gt;</span>
+</span><span id="__span-26-37"><a id="__codelineno-26-37" name="__codelineno-26-37" href="#__codelineno-26-37"></a><span class="w">          </span><span class="nx">Every</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="nx">change</span><span class="w"> </span><span class="nx">is</span><span class="w"> </span><span class="nx">recorded</span><span class="w"> </span><span class="nx">via</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">N</span><span class="o">-</span><span class="nx">gent</span><span class="w"> </span><span class="nx">witness</span><span class="w"> </span><span class="nx">pattern</span><span class="p">.</span>
+</span><span id="__span-26-38"><a id="__codelineno-26-38" name="__codelineno-26-38" href="#__codelineno-26-38"></a><span class="w">        </span><span class="o">&lt;</span><span class="err">/TeachingCallout&gt;</span>
+</span><span id="__span-26-39"><a id="__codelineno-26-39" name="__codelineno-26-39" href="#__codelineno-26-39"></a><span class="w">      </span><span class="p">)}</span>
+</span><span id="__span-26-40"><a id="__codelineno-26-40" name="__codelineno-26-40" href="#__codelineno-26-40"></a><span class="w">    </span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span><span id="__span-26-41"><a id="__codelineno-26-41" name="__codelineno-26-41" href="#__codelineno-26-41"></a><span class="w">  </span><span class="p">);</span>
+</span><span id="__span-26-42"><a id="__codelineno-26-42" name="__codelineno-26-42" href="#__codelineno-26-42"></a><span class="p">}</span>
+</span></code></pre></div></p>
+<p><strong>Accessibility additions</strong>:
+<div class="language-typescript highlight"><pre><span></span><code><span id="__span-27-1"><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1">// StateIndicator with keyboard and screen reader support</span>
+</span><span id="__span-27-2"><a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="o">&lt;</span><span class="nx">div</span>
+</span><span id="__span-27-3"><a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a><span class="w">  </span><span class="nx">role</span><span class="o">=</span><span class="p">{</span><span class="nx">isClickable</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;button&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;status&#39;</span><span class="p">}</span>
+</span><span id="__span-27-4"><a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="w">  </span><span class="nx">tabIndex</span><span class="o">=</span><span class="p">{</span><span class="nx">isClickable</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">0</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kt">undefined</span><span class="p">}</span>
+</span><span id="__span-27-5"><a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a><span class="w">  </span><span class="nx">aria</span><span class="o">-</span><span class="nx">label</span><span class="o">=</span><span class="p">{</span><span class="sb">`</span><span class="si">${</span><span class="nx">label</span><span class="si">}</span><span class="sb"> state, </span><span class="si">${</span><span class="nx">category</span><span class="si">}</span><span class="sb">`</span><span class="p">}</span>
+</span><span id="__span-27-6"><a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a><span class="w">  </span><span class="nx">aria</span><span class="o">-</span><span class="nx">live</span><span class="o">=</span><span class="p">{</span><span class="nx">animate</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;polite&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">undefined</span><span class="p">}</span>
+</span><span id="__span-27-7"><a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a><span class="w">  </span><span class="nx">onKeyDown</span><span class="o">=</span><span class="p">{(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-27-8"><a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">onClick</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39;Enter&#39;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-27-9"><a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a><span class="w">      </span><span class="nx">e</span><span class="p">.</span><span class="nx">preventDefault</span><span class="p">();</span>
+</span><span id="__span-27-10"><a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a><span class="w">      </span><span class="nx">onClick</span><span class="p">();</span>
+</span><span id="__span-27-11"><a id="__codelineno-27-11" name="__codelineno-27-11" href="#__codelineno-27-11"></a><span class="w">    </span><span class="p">}</span>
+</span><span id="__span-27-12"><a id="__codelineno-27-12" name="__codelineno-27-12" href="#__codelineno-27-12"></a><span class="w">  </span><span class="p">}}</span>
+</span><span id="__span-27-13"><a id="__codelineno-27-13" name="__codelineno-27-13" href="#__codelineno-27-13"></a><span class="w">  </span><span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">cn</span><span class="p">(</span>
+</span><span id="__span-27-14"><a id="__codelineno-27-14" name="__codelineno-27-14" href="#__codelineno-27-14"></a><span class="w">    </span><span class="s1">&#39;transition-all duration-200&#39;</span><span class="p">,</span>
+</span><span id="__span-27-15"><a id="__codelineno-27-15" name="__codelineno-27-15" href="#__codelineno-27-15"></a><span class="w">    </span><span class="s1">&#39;motion-reduce:transition-none&#39;</span><span class="p">,</span>
+</span><span id="__span-27-16"><a id="__codelineno-27-16" name="__codelineno-27-16" href="#__codelineno-27-16"></a><span class="w">    </span><span class="nx">animate</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s1">&#39;animate-pulse motion-reduce:animate-none&#39;</span><span class="p">,</span>
+</span><span id="__span-27-17"><a id="__codelineno-27-17" name="__codelineno-27-17" href="#__codelineno-27-17"></a><span class="w">    </span><span class="nx">isClickable</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s1">&#39;focus-visible:outline focus-visible:outline-2&#39;</span>
+</span><span id="__span-27-18"><a id="__codelineno-27-18" name="__codelineno-27-18" href="#__codelineno-27-18"></a><span class="w">  </span><span class="p">)}</span>
+</span><span id="__span-27-19"><a id="__codelineno-27-19" name="__codelineno-27-19" href="#__codelineno-27-19"></a><span class="o">&gt;</span>
+</span></code></pre></div></p>
+<p><strong>Benefits</strong>:
+- Centralized control via context
+- Persists across sessions (localStorage)
+- Graceful degradation (<code>useTeachingModeSafe</code>)
+- Respects <code>prefers-reduced-motion</code>
+- Full keyboard navigation
+- Screen reader support via ARIA</p>
+<p><strong>Components</strong>:
+| Component | Purpose |
+|-----------|---------|
+| <code>TeachingModeProvider</code> | Context provider wrapping app |
+| <code>useTeachingMode()</code> | Hook for components inside provider |
+| <code>useTeachingModeSafe()</code> | Hook with fallback for any component |
+| <code>TeachingToggle</code> | Pre-built toggle button (compact or full) |
+| <code>WhenTeaching</code> | Conditional render wrapper |
+| <code>TeachingCallout</code> | Gradient callout with category styling |</p>
+<p><strong>Apply to</strong>: Park (crisis phases, consent debt), Town (citizen polynomial, trace).</p>
+<hr />
 <h2 id="quick-reference">Quick Reference</h2>
 <table>
 <thead>
@@ -1336,19 +1520,29 @@
 <td>One forward per state</td>
 </tr>
 <tr>
-<td><strong>Operad Inheritance</strong></td>
+<td>Operad Inheritance</td>
 <td>Building on base operads</td>
 <td><code>**PARENT.operations</code> spread</td>
 </tr>
 <tr>
-<td><strong>Circadian Modulation</strong></td>
+<td>Circadian Modulation</td>
 <td>Time-of-day UI shifts</td>
 <td>Phase → modifier → apply</td>
 </tr>
 <tr>
-<td><strong>Law Honesty</strong></td>
+<td>Law Honesty</td>
 <td>Laws that aren't runtime</td>
 <td>STRUCTURAL status for design constraints</td>
+</tr>
+<tr>
+<td>Contract-First Types</td>
+<td>BE/FE type sync</td>
+<td><code>@node(contracts={})</code> is authority</td>
+</tr>
+<tr>
+<td><strong>Teaching Mode Toggle</strong></td>
+<td>Learner vs. power user UX</td>
+<td>Context + localStorage + accessibility</td>
 </tr>
 </tbody>
 </table>
@@ -1363,6 +1557,8 @@
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from Park-Town Design Overhaul Phase 5</li>
+<li>2025-12-18: Added Pattern 13 (Contract-First Types) from Phase 7 Autopoietic Architecture</li>
 <li>2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel</li>
 <li>2025-12-16: Initial version from Gardener-Logos reflection</li>
 </ul>

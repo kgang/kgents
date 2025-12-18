@@ -956,6 +956,12 @@
 <strong>Files Touched</strong>: <code>protocols/api/_tests/test_frontend_contracts.py</code>, <code>web/src/reactive/types.ts</code>
 <strong>References</strong>: <code>web/src/reactive/types.ts</code> (source of truth)</p>
 <hr />
+<blockquote>
+<p><strong>⚠️ Phase 7 Update (2025-12-18)</strong>: This skill documents the <strong>manual testing approach</strong> for contract validation. For the <strong>automated approach</strong> using <code>@node(contracts={})</code> and build-time type generation, see <code>agentese-contract-protocol.md</code>. Both approaches are valid:
+- <strong>Manual testing</strong> (this skill): Runtime validation via pytest, useful for widget JSON output
+- <strong>Automated generation</strong> (Phase 7): Build-time type sync via discovery, ideal for AGENTESE aspects</p>
+</blockquote>
+<hr />
 <h2 id="overview">Overview</h2>
 <p>When Python backends serve JSON to TypeScript frontends, type mismatches can cause runtime crashes that are hard to debug. This skill documents how to write <strong>contract tests</strong> that validate backend JSON output matches frontend TypeScript expectations.</p>
 <h3 id="the-bug-that-inspired-this">The Bug That Inspired This</h3>
@@ -1226,13 +1232,15 @@
 <hr />
 <h2 id="related-skills">Related Skills</h2>
 <ul>
+<li><a href="../agentese-contract-protocol/">agentese-contract-protocol</a> - <strong>Phase 7 automated approach</strong> (recommended for AGENTESE aspects)</li>
 <li><a href="../test-patterns/">test-patterns</a> - General testing patterns (T-gent Types I-V)</li>
 <li><a href="../reactive-primitives/">reactive-primitives</a> - Signal/Computed/Effect system</li>
-<li><a href="../agent-town-visualization/">agent-town-visualization</a> - Widget rendering patterns</li>
+<li><a href="agent-town-visualization.md">agent-town-visualization</a> - Widget rendering patterns</li>
 </ul>
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-18: Added Phase 7 reference to automated contract protocol</li>
 <li>2025-12-15: Initial version after debugging blank screen bug</li>
 </ul>
 

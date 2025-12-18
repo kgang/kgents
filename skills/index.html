@@ -584,44 +584,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#purpose" class="md-nav__link">
+  <a href="#minimal-skills-from-autopoietic-architecturemd" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Purpose
+        Minimal Skills (from autopoietic-architecture.md)
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#directory-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Directory Structure
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#how-agents-should-use-this" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        How Agents Should Use This
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="How Agents Should Use This">
+    <nav class="md-nav" aria-label="Minimal Skills (from autopoietic-architecture.md)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#discovery-pull-pattern" class="md-nav__link">
+  <a href="#foundation-categorical-ground" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Discovery (Pull Pattern)
+        Foundation (Categorical Ground)
       
     </span>
   </a>
@@ -629,10 +607,43 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#contribution-push-pattern" class="md-nav__link">
+  <a href="#protocol-agentese" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Contribution (Push Pattern)
+        Protocol (AGENTESE)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-vertical-slice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture (Vertical Slice)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#process-n-phase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Process (N-Phase)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#projection-multi-target" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Projection (Multi-Target)
       
     </span>
   </a>
@@ -645,10 +656,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#skill-document-template" class="md-nav__link">
+  <a href="#extended-skills-active" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skill Document Template
+        Extended Skills (Active)
       
     </span>
   </a>
@@ -656,21 +667,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#index-of-skills" class="md-nav__link">
+  <a href="#archived-skills" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Index of Skills
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#future-skills-to-document" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Future Skills (To Document)
+        Archived Skills
       
     </span>
   </a>
@@ -699,326 +699,182 @@
 
 <h1 id="agent-skills-directory">Agent Skills Directory</h1>
 <blockquote>
-<p><em>"Skills are crystallized knowledge. Agents pull what they need, when they need it."</em></p>
+<p><em>"13 skills are necessary and sufficient to build any kgents component."</em></p>
 </blockquote>
-<p>This directory contains <strong>skill documents</strong>—detailed how-to guides for common development tasks in the kgents codebase. Unlike ephemeral session knowledge, skills are <strong>persistent, versioned, and discoverable</strong>.</p>
+<p>This directory contains <strong>skill documents</strong>—detailed how-to guides for common development tasks.</p>
 <hr />
-<h2 id="purpose">Purpose</h2>
-<p>When an agent (Claude or otherwise) needs to perform a specific task, they can:</p>
-<ol>
-<li><strong>Pull</strong>: Read a skill document to learn the canonical way to do something</li>
-<li><strong>Apply</strong>: Follow the documented pattern to complete the task</li>
-<li><strong>Contribute</strong>: Add new skills when they learn something novel</li>
-</ol>
-<p>This creates a <strong>flywheel of knowledge accumulation</strong>:
-- Agent completes task → Documents pattern → Future agents benefit</p>
-<hr />
-<h2 id="directory-structure">Directory Structure</h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docs/skills/
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── README.md                    # This file
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── agentese-path.md             # How to add an AGENTESE path
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── agentese-repl.md             # Interactive REPL guide (Wave 2)
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├── agent-observability.md       # Adding observability to agents
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>├── agent-town-visualization.md  # Scatter plots, SSE, NATS for Agent Town
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├── building-agent.md            # Create Agent[A, B] with functors
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>├── defensive-component-lifecycle.md  # Error boundaries, toasts, async state
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>├── cli-command.md               # How to add a CLI command
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>├── flux-agent.md                # How to create a Flux agent
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>├── handler-patterns.md          # Common handler patterns
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>├── hotdata-pattern.md           # Pre-computed data for demos/tests
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>├── plan-file.md                 # Writing plan files (Forest Protocol)
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>├── polynomial-agent.md          # Create PolyAgent[S, A, B] with modes
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>├── reconciliation-session.md    # Audit and sync forest state
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>├── test-patterns.md             # Testing patterns and conventions
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>└── n-phase-cycle/               # Implementation lifecycle skills
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ├── README.md                # Index and usage guide
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    ├── plan.md                  # PLAN phase skill
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    ├── research.md              # RESEARCH phase skill
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ├── develop.md               # DEVELOP phase skill
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>    ├── strategize.md            # STRATEGIZE phase skill
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    ├── cross-synergize.md       # CROSS-SYNERGIZE phase skill
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ├── implement.md             # IMPLEMENT phase skill
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>    ├── qa.md                    # QA phase skill
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    ├── test.md                  # TEST phase skill
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    ├── educate.md               # EDUCATE phase skill
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>    ├── measure.md               # MEASURE phase skill
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>    ├── reflect.md               # REFLECT phase skill
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>    ├── meta-skill-operad.md     # Category-theoretic skill mutation
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>    ├── meta-re-metabolize.md    # Lifecycle refresh protocol
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>    ├── lookback-revision.md     # Oblique retrospection cycle
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>    ├── process-metrics.md       # Lifecycle instrumentation
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>    └── re-metabolize-slash-command.md  # /re-metabolize design
-</span></code></pre></div>
-<hr />
-<h2 id="how-agents-should-use-this">How Agents Should Use This</h2>
-<h3 id="discovery-pull-pattern">Discovery (Pull Pattern)</h3>
-<p>When starting a task that might have a documented skill:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>1. Check if docs/skills/ has a relevant document
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>2. Read the skill document
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>3. Follow the documented pattern
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>4. Note any deviations or improvements
-</span></code></pre></div>
-<h3 id="contribution-push-pattern">Contribution (Push Pattern)</h3>
-<p>After completing a novel task:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>1. Check if the pattern is general enough to document
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>2. Create a new skill document following the template below
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>3. Reference related skills and cross-link
-</span></code></pre></div>
-<hr />
-<h2 id="skill-document-template">Skill Document Template</h2>
-<div class="language-markdown highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="gh"># Skill: [Name]</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">&gt; </span><span class="ge">One-line description of what this skill enables</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="gs">**Difficulty**</span>: Easy | Medium | Hard
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="gs">**Prerequisites**</span>: [List of required knowledge]
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="gs">**Files Touched**</span>: [Typical files modified]
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>---
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="gu">## Overview</span>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>Brief explanation of when and why you&#39;d use this skill.
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>---
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="gu">## Step-by-Step</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="gu">### Step 1: [Action]</span>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>
-</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>What to do and why.
-</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
-</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="gs">**File**</span>: <span class="sb">`path/to/file.py`</span>
-</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a><span class="gs">**Pattern**</span>:
-</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>\`\`\`python
-</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="gh"># Code example</span>
-</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>\`\`\`
-</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>
-</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a><span class="gu">### Step 2: [Action]</span>
-</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>
-</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>...
-</span><span id="__span-3-32"><a id="__codelineno-3-32" name="__codelineno-3-32" href="#__codelineno-3-32"></a>
-</span><span id="__span-3-33"><a id="__codelineno-3-33" name="__codelineno-3-33" href="#__codelineno-3-33"></a>---
-</span><span id="__span-3-34"><a id="__codelineno-3-34" name="__codelineno-3-34" href="#__codelineno-3-34"></a>
-</span><span id="__span-3-35"><a id="__codelineno-3-35" name="__codelineno-3-35" href="#__codelineno-3-35"></a><span class="gu">## Verification</span>
-</span><span id="__span-3-36"><a id="__codelineno-3-36" name="__codelineno-3-36" href="#__codelineno-3-36"></a>
-</span><span id="__span-3-37"><a id="__codelineno-3-37" name="__codelineno-3-37" href="#__codelineno-3-37"></a>How to confirm the skill was applied correctly.
-</span><span id="__span-3-38"><a id="__codelineno-3-38" name="__codelineno-3-38" href="#__codelineno-3-38"></a>
-</span><span id="__span-3-39"><a id="__codelineno-3-39" name="__codelineno-3-39" href="#__codelineno-3-39"></a>---
-</span><span id="__span-3-40"><a id="__codelineno-3-40" name="__codelineno-3-40" href="#__codelineno-3-40"></a>
-</span><span id="__span-3-41"><a id="__codelineno-3-41" name="__codelineno-3-41" href="#__codelineno-3-41"></a><span class="gu">## Common Pitfalls</span>
-</span><span id="__span-3-42"><a id="__codelineno-3-42" name="__codelineno-3-42" href="#__codelineno-3-42"></a>
-</span><span id="__span-3-43"><a id="__codelineno-3-43" name="__codelineno-3-43" href="#__codelineno-3-43"></a><span class="k">-</span><span class="w"> </span>Pitfall 1: Description and how to avoid
-</span><span id="__span-3-44"><a id="__codelineno-3-44" name="__codelineno-3-44" href="#__codelineno-3-44"></a><span class="k">-</span><span class="w"> </span>Pitfall 2: ...
-</span><span id="__span-3-45"><a id="__codelineno-3-45" name="__codelineno-3-45" href="#__codelineno-3-45"></a>
-</span><span id="__span-3-46"><a id="__codelineno-3-46" name="__codelineno-3-46" href="#__codelineno-3-46"></a>---
-</span><span id="__span-3-47"><a id="__codelineno-3-47" name="__codelineno-3-47" href="#__codelineno-3-47"></a>
-</span><span id="__span-3-48"><a id="__codelineno-3-48" name="__codelineno-3-48" href="#__codelineno-3-48"></a><span class="gu">## Related Skills</span>
-</span><span id="__span-3-49"><a id="__codelineno-3-49" name="__codelineno-3-49" href="#__codelineno-3-49"></a>
-</span><span id="__span-3-50"><a id="__codelineno-3-50" name="__codelineno-3-50" href="#__codelineno-3-50"></a><span class="k">-</span><span class="w"> </span>[<span class="nt">Related Skill 1</span>](<span class="na">related-skill-1.md</span>)
-</span><span id="__span-3-51"><a id="__codelineno-3-51" name="__codelineno-3-51" href="#__codelineno-3-51"></a><span class="k">-</span><span class="w"> </span>[<span class="nt">Related Skill 2</span>](<span class="na">related-skill-2.md</span>)
-</span><span id="__span-3-52"><a id="__codelineno-3-52" name="__codelineno-3-52" href="#__codelineno-3-52"></a>
-</span><span id="__span-3-53"><a id="__codelineno-3-53" name="__codelineno-3-53" href="#__codelineno-3-53"></a>---
-</span><span id="__span-3-54"><a id="__codelineno-3-54" name="__codelineno-3-54" href="#__codelineno-3-54"></a>
-</span><span id="__span-3-55"><a id="__codelineno-3-55" name="__codelineno-3-55" href="#__codelineno-3-55"></a><span class="gu">## Changelog</span>
-</span><span id="__span-3-56"><a id="__codelineno-3-56" name="__codelineno-3-56" href="#__codelineno-3-56"></a>
-</span><span id="__span-3-57"><a id="__codelineno-3-57" name="__codelineno-3-57" href="#__codelineno-3-57"></a><span class="k">-</span><span class="w"> </span>YYYY-MM-DD: Initial version
-</span></code></pre></div>
-<hr />
-<h2 id="index-of-skills">Index of Skills</h2>
+<h2 id="minimal-skills-from-autopoietic-architecturemd">Minimal Skills (from autopoietic-architecture.md)</h2>
+<p>These 13 skills compose: <code>Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection</code></p>
+<h3 id="foundation-categorical-ground">Foundation (Categorical Ground)</h3>
 <table>
 <thead>
 <tr>
 <th>Skill</th>
-<th>Description</th>
-<th>Difficulty</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="polynomial-agent/">polynomial-agent</a></td>
+<td>State machines with mode-dependent inputs</td>
+</tr>
+<tr>
+<td><a href="building-agent/">building-agent</a></td>
+<td>Agent[A,B] with functors</td>
+</tr>
+</tbody>
+</table>
+<h3 id="protocol-agentese">Protocol (AGENTESE)</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td><a href="agentese-path/">agentese-path</a></td>
-<td>Add a new AGENTESE path (e.g., <code>self.soul.*</code>)</td>
-<td>Medium</td>
+<td>Adding AGENTESE paths</td>
 </tr>
 <tr>
-<td><a href="agentese-repl/">agentese-repl</a></td>
-<td>Interactive REPL for AGENTESE navigation and composition</td>
-<td>Easy-Medium</td>
+<td><a href="agentese-node-registration/">agentese-node-registration</a></td>
+<td>@node decorator, discovery, contracts</td>
+</tr>
+</tbody>
+</table>
+<h3 id="architecture-vertical-slice">Architecture (Vertical Slice)</h3>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="crown-jewel-patterns/">crown-jewel-patterns</a></td>
+<td>Service module structure</td>
 </tr>
 <tr>
-<td><a href="agent-observability/">agent-observability</a></td>
-<td>Adding observability to agents</td>
-<td>Medium</td>
+<td><a href="metaphysical-fullstack/">metaphysical-fullstack</a></td>
+<td>AD-009 stack</td>
 </tr>
 <tr>
-<td><a href="agent-town-visualization/">agent-town-visualization</a></td>
-<td>Eigenvector scatter, SSE streaming, NATS bridge</td>
-<td>Medium</td>
+<td><a href="data-bus-integration/">data-bus-integration</a></td>
+<td>Event-driven communication</td>
 </tr>
+</tbody>
+</table>
+<h3 id="process-n-phase">Process (N-Phase)</h3>
+<table>
+<thead>
 <tr>
-<td><a href="defensive-component-lifecycle/">defensive-component-lifecycle</a></td>
-<td>Error boundaries, async state, toasts, offline detection</td>
-<td>Easy-Medium</td>
+<th>Skill</th>
+<th>Purpose</th>
 </tr>
-<tr>
-<td><a href="building-agent/">building-agent</a></td>
-<td>Create a well-formed <code>Agent[A, B]</code> with functors</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="cli-command/">cli-command</a></td>
-<td>Add a new CLI command to kgents</td>
-<td>Easy</td>
-</tr>
-<tr>
-<td><a href="flux-agent/">flux-agent</a></td>
-<td>Lift an agent to continuous stream processing</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="frontend-contracts/">frontend-contracts</a></td>
-<td>Validate backend JSON matches frontend TypeScript types</td>
-<td>Easy-Medium</td>
-</tr>
-<tr>
-<td><a href="handler-patterns/">handler-patterns</a></td>
-<td>Common patterns for CLI handlers</td>
-<td>Easy-Medium</td>
-</tr>
-<tr>
-<td><a href="hotdata-pattern/">hotdata-pattern</a></td>
-<td>Pre-computed LLM data for demos/tests (AD-004)</td>
-<td>Easy</td>
-</tr>
+</thead>
+<tbody>
 <tr>
 <td><a href="plan-file/">plan-file</a></td>
-<td>Write plan files following the Forest Protocol</td>
-<td>Easy</td>
+<td>Forest Protocol plans</td>
 </tr>
 <tr>
-<td><a href="polynomial-agent/">polynomial-agent</a></td>
-<td>Create <code>PolyAgent[S, A, B]</code> with state-dependent behavior</td>
-<td>Medium-Advanced</td>
+<td><a href="spec-template/">spec-template</a></td>
+<td>Writing specs (200-400 lines)</td>
 </tr>
 <tr>
-<td><a href="reconciliation-session/">reconciliation-session</a></td>
-<td>Audit, surface, and sync forest state</td>
-<td>Medium</td>
+<td><a href="spec-hygiene/">spec-hygiene</a></td>
+<td>Bloat patterns, distillation</td>
 </tr>
+</tbody>
+</table>
+<h3 id="projection-multi-target">Projection (Multi-Target)</h3>
+<table>
+<thead>
 <tr>
-<td><a href="saas-patterns/">saas-patterns</a></td>
-<td>SaaS infrastructure patterns (webhooks, NATS, NetworkPolicy, Kind)</td>
-<td>Medium</td>
+<th>Skill</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="projection-target/">projection-target</a></td>
+<td>CLI/TUI/JSON/marimo</td>
 </tr>
 <tr>
 <td><a href="test-patterns/">test-patterns</a></td>
-<td>Testing patterns and conventions</td>
-<td>Easy-Medium</td>
+<td>Testing conventions</td>
 </tr>
 <tr>
-<td><strong>Lifecycle</strong></td>
-<td></td>
-<td></td>
-</tr>
-<tr>
-<td><a href="three-phase/">three-phase</a></td>
-<td><strong>Default</strong>: SENSE→ACT→REFLECT (compresses 11 phases)</td>
-<td>Easy</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/">n-phase-cycle/</a></td>
-<td>Full 11-phase lifecycle (Crown Jewels only)</td>
-<td>Varies</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/plan/">n-phase-cycle/plan</a></td>
-<td>Frame intent, scope, and constraints</td>
-<td>Easy</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/research/">n-phase-cycle/research</a></td>
-<td>Map terrain, surface blockers</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/develop/">n-phase-cycle/develop</a></td>
-<td>Shape specs/APIs, sharpen edges</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/strategize/">n-phase-cycle/strategize</a></td>
-<td>Sequence moves for leverage</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/cross-synergize/">n-phase-cycle/cross-synergize</a></td>
-<td>Find combinatorial lifts</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/implement/">n-phase-cycle/implement</a></td>
-<td>Ship code with compositional fidelity</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/qa/">n-phase-cycle/qa</a></td>
-<td>Quality gates, checklists, hygiene</td>
-<td>Easy-Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/test/">n-phase-cycle/test</a></td>
-<td>Verification depth and coverage</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/educate/">n-phase-cycle/educate</a></td>
-<td>Teach users how to wield the work</td>
-<td>Easy</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/measure/">n-phase-cycle/measure</a></td>
-<td>Instrumentation and effect tracking</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/reflect/">n-phase-cycle/reflect</a></td>
-<td>Distill learnings, seed next loop</td>
-<td>Easy</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/meta-skill-operad/">n-phase-cycle/meta-skill-operad</a></td>
-<td>Category-theoretic mutation protocol</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/meta-re-metabolize/">n-phase-cycle/meta-re-metabolize</a></td>
-<td>Lifecycle refresh endofunctor</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/lookback-revision.md">n-phase-cycle/lookback-revision</a></td>
-<td>Oblique retrospection (double-loop)</td>
-<td>Medium</td>
-</tr>
-<tr>
-<td><a href="n-phase-cycle/process-metrics.md">n-phase-cycle/process-metrics</a></td>
-<td>Lifecycle instrumentation/tracing</td>
-<td>Medium</td>
+<td><a href="elastic-ui-patterns/">elastic-ui-patterns</a></td>
+<td>Layout[D] ∘ Content[D] ∘ Motion[M]</td>
 </tr>
 </tbody>
 </table>
 <hr />
-<h2 id="future-skills-to-document">Future Skills (To Document)</h2>
-<ul class="task-list">
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Writing Type I-V tests (T-gent patterns)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Creating a Tongue (DSL)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Implementing a protocol handler</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Adding metrics and observability (Terrarium integration)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Implementing the Rodizio pattern (human-in-the-loop semaphores)</li>
-<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Sheaf emergence patterns (SOUL_SHEAF gluing)</li>
-</ul>
+<h2 id="extended-skills-active">Extended Skills (Active)</h2>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>Domain</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="vertical-slice-pattern/">vertical-slice-pattern</a></td>
+<td>Architecture</td>
+<td>7-layer reference (Town as gold standard)</td>
+</tr>
+<tr>
+<td><a href="specgraph-workflow/">specgraph-workflow</a></td>
+<td>Process</td>
+<td>Spec ⇄ Impl bidirectional flow</td>
+</tr>
+<tr>
+<td><a href="agentese-contract-protocol/">agentese-contract-protocol</a></td>
+<td>Protocol</td>
+<td>Phase 7 BE/FE type sync</td>
+</tr>
+<tr>
+<td><a href="frontend-contracts/">frontend-contracts</a></td>
+<td>Projection</td>
+<td>TypeScript contract validation</td>
+</tr>
+<tr>
+<td><a href="flux-agent/">flux-agent</a></td>
+<td>Streaming</td>
+<td>Lift agents to continuous streams</td>
+</tr>
+<tr>
+<td><a href="reactive-primitives/">reactive-primitives</a></td>
+<td>UI</td>
+<td>Signal/Computed/Effect patterns</td>
+</tr>
+<tr>
+<td><a href="gardener-logos/">gardener-logos</a></td>
+<td>DevEx</td>
+<td>Cultivation practice for ideas</td>
+</tr>
+<tr>
+<td><a href="agent-town-archetypes/">agent-town-archetypes</a></td>
+<td>Simulation</td>
+<td>Citizen role patterns</td>
+</tr>
+<tr>
+<td><a href="turn-projectors/">turn-projectors</a></td>
+<td>Projection</td>
+<td>Turn → CLI/TUI/JSON/marimo</td>
+</tr>
+</tbody>
+</table>
 <hr />
-<p><em>"The best documentation is the one that exists when you need it."</em></p>
+<h2 id="archived-skills">Archived Skills</h2>
+<p>Skills not in the minimal or extended sets are in <code>_archived/</code> (30-day retention).</p>
+<hr />
+<p><em>Consolidated: 2025-12-18 | Skills: 22 active, 31 archived</em></p>
 
 
 
