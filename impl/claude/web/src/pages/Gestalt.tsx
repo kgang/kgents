@@ -4,12 +4,13 @@
  * Projection-first page for codebase health visualization.
  * All logic delegated to GestaltVisualization via PathProjection.
  *
- * Target: < 50 LOC (achieved: ~45 LOC)
+ * Target: < 50 LOC (achieved: ~55 LOC with maxNodes state)
  *
  * @see spec/protocols/os-shell.md - Part III: Projection-First Rendering
  * @see docs/skills/crown-jewel-patterns.md
  */
 
+import { useState, useMemo, useCallback } from 'react';
 import { PathProjection } from '../shell/PathProjection';
 import { useShellMaybe } from '../shell/ShellProvider';
 import { useWindowLayout } from '../hooks/useLayoutContext';
@@ -29,16 +30,28 @@ export default function GestaltPage() {
   const isDesktop = shell?.isDesktop ?? windowLayout.isDesktop;
   const width = shell?.width ?? windowLayout.width;
 
+  // Max nodes state - controlled by slider, defaults from viewport
+  const defaultMaxNodes = isMobile ? 100 : isTablet ? 125 : 150;
+  const [maxNodes, setMaxNodes] = useState(defaultMaxNodes);
+
+  // Memoize body to prevent infinite re-fetch
+  const body = useMemo(() => ({ max_nodes: maxNodes }), [maxNodes]);
+
   // Scan handler for rescan button
   const handleScan = async () => {
     await gestaltApi.scan('python');
   };
 
+  // Handle maxNodes change from slider
+  const handleMaxNodesChange = useCallback((newMaxNodes: number) => {
+    setMaxNodes(newMaxNodes);
+  }, []);
+
   return (
     <PathProjection
       path="world.codebase"
       aspect="topology"
-      body={{ max_nodes: isMobile ? 100 : isTablet ? 125 : 150 }}
+      body={body}
       jewel="gestalt"
       className="h-screen"
     >
@@ -51,6 +64,8 @@ export default function GestaltPage() {
           isDesktop={isDesktop}
           width={width}
           onScan={handleScan}
+          maxNodes={maxNodes}
+          onMaxNodesChange={handleMaxNodesChange}
         />
       )}
     </PathProjection>

@@ -261,12 +261,6 @@ export function PathProjection<T = unknown>({
   // Prevents infinite re-fetch when body prop is an inline object literal
   // ---------------------------------------------------------------------------
   const bodyJson = useMemo(() => JSON.stringify(body ?? null), [body]);
-  const stableBodyRef = useRef<Record<string, unknown> | undefined>(body);
-
-  // Update ref only when serialized value actually changes
-  useEffect(() => {
-    stableBodyRef.current = body;
-  }, [bodyJson]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------------------------------------------------------------------------
   // Fix 3: Debounce to prevent rapid-fire fetches
@@ -277,7 +271,7 @@ export function PathProjection<T = unknown>({
   // Infer jewel from path if not provided
   const effectiveJewel = jewel ?? inferJewel(path);
 
-  // Fetch function with debounce and stable body
+  // Fetch function - now includes bodyJson in deps for proper reactivity
   const fetchData = useCallback(async () => {
     // Debounce: skip if too recent (unless it's the first fetch)
     const now = Date.now();
@@ -297,7 +291,8 @@ export function PathProjection<T = unknown>({
 
     try {
       const route = pathToRoute(path, aspect);
-      const currentBody = stableBodyRef.current;
+      // Parse body from bodyJson to ensure we use the current value
+      const currentBody = bodyJson ? JSON.parse(bodyJson) : undefined;
       const isGet = aspect === 'manifest' && !currentBody;
 
       const result = await tracedInvoke(path, aspect, async () => {
@@ -320,26 +315,22 @@ export function PathProjection<T = unknown>({
       setLoading(false);
       isFetchingRef.current = false;
     }
-  }, [path, aspect, bodyJson, tracedInvoke, onSuccess, onError]); // bodyJson instead of body
+  }, [path, aspect, bodyJson, tracedInvoke, onSuccess, onError]);
 
-  // Initial fetch
+  // Fetch effect - runs on mount and when path/aspect/body changes
+  // The debounce guard inside fetchData prevents rapid-fire requests
+  const hasInitialFetched = useRef(false);
   useEffect(() => {
-    if (!skipInitialFetch) {
-      fetchData();
-    }
-  }, [skipInitialFetch]); // Removed fetchData dep - we trigger on mount only
+    if (skipInitialFetch) return;
 
-  // Refetch when path/aspect/body actually changes (not on every render)
-  const isInitialMount = useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return; // Skip on initial mount (handled above)
+    // Track if this is initial mount vs param change
+    const isInitial = !hasInitialFetched.current;
+    if (isInitial) {
+      hasInitialFetched.current = true;
     }
-    if (!skipInitialFetch) {
-      fetchData();
-    }
-  }, [path, aspect, bodyJson]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    fetchData();
+  }, [fetchData, skipInitialFetch]);
 
   // Polling
   useEffect(() => {

@@ -291,10 +291,18 @@ class GestaltNode(BaseLogosNode):
             y = math.sin(angle) * radius
             z = z_offset + (name_hash % 100) / 100 * 2 - 1
 
+            # Create meaningful label: show last 2 segments for context
+            # e.g., "agentese.parser" instead of just "parser"
+            name_parts = module.name.split(".")
+            if len(name_parts) >= 2:
+                label = ".".join(name_parts[-2:])
+            else:
+                label = name_parts[-1] if name_parts else module.name
+
             nodes.append(
                 {
                     "id": module.name,
-                    "label": module.name.split(".")[-1],
+                    "label": label,
                     "layer": module.layer,
                     "health_grade": module.health.grade if module.health else "?",
                     "health_score": module.health.overall_health

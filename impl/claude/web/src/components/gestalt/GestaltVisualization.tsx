@@ -103,6 +103,10 @@ export interface GestaltVisualizationProps {
   width: number;
   /** Callback when scan requested */
   onScan?: () => Promise<void>;
+  /** Current max nodes value (controlled by parent for API refetch) */
+  maxNodes?: number;
+  /** Callback when max nodes slider changes */
+  onMaxNodesChange?: (maxNodes: number) => void;
 }
 
 interface ModuleNodeProps {
@@ -667,6 +671,8 @@ export function GestaltVisualization({
   isDesktop,
   width,
   onScan,
+  maxNodes: controlledMaxNodes,
+  onMaxNodesChange,
 }: GestaltVisualizationProps) {
   // Illumination quality
   const { quality: illuminationQuality, isAutoDetected, override: overrideQuality } = useIlluminationQuality();
@@ -679,16 +685,28 @@ export function GestaltVisualization({
   const [loading, setLoading] = useState(false);
   const [topologyKey, setTopologyKey] = useState(0);
 
-  // Filter state
+  // Filter state - maxNodes is controlled by parent when onMaxNodesChange is provided
+  const defaultMaxNodes = isMobile ? 100 : isTablet ? 125 : 150;
   const [filters, setFilters] = useState<FilterState>(() => ({
     ...DEFAULT_FILTER_STATE,
     showLabels: !isMobile,
-    maxNodes: isMobile ? 100 : isTablet ? 125 : 150,
+    maxNodes: controlledMaxNodes ?? defaultMaxNodes,
   }));
 
+  // Sync controlled maxNodes to local filter state
+  useEffect(() => {
+    if (controlledMaxNodes !== undefined && controlledMaxNodes !== filters.maxNodes) {
+      setFilters((prev) => ({ ...prev, maxNodes: controlledMaxNodes }));
+    }
+  }, [controlledMaxNodes]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleFiltersChange = useCallback((updates: Partial<FilterState>) => {
+    // If maxNodes is being updated and we have a controlled callback, call it
+    if ('maxNodes' in updates && updates.maxNodes !== undefined && onMaxNodesChange) {
+      onMaxNodesChange(updates.maxNodes);
+    }
     setFilters((prev) => ({ ...prev, ...updates }));
-  }, []);
+  }, [onMaxNodesChange]);
 
   // Panel state (mobile drawers)
   const [panelState, setPanelState] = useState<PanelState>({
