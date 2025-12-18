@@ -40,6 +40,7 @@ from opentelemetry.trace import Status, StatusCode
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -567,6 +568,10 @@ class GardenerSession:
 # =============================================================================
 
 
+@node(
+    "concept.gardener",
+    description="The 7th Crown Jewel - Development session orchestrator",
+)
 @dataclass
 class GardenerNode(BaseLogosNode):
     """

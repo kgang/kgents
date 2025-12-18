@@ -6,7 +6,7 @@
  *
  * States:
  * - Collapsed (40px): Summary view with archetype, capabilities, tier
- * - Expanded (200-400px): Full umwelt, recent traces, controls
+ * - Expanded (280px): Full umwelt, recent traces, controls
  *
  * Per os-shell.md:
  * - Always present, never hidden
@@ -14,12 +14,16 @@
  * - Changes to observer immediately affect all projections
  * - Shows recent traces for devex visibility
  *
+ * Sheaf condition: nav.top = observer.bottom
+ * NavigationTree reads observerDrawerExpanded via context to set topOffset.
+ *
  * @see spec/protocols/os-shell.md
  * @see docs/creative/visual-system.md
+ * @see docs/skills/elastic-ui-patterns.md (Fixed Top Panel Pattern)
  */
 
 import { useCallback, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   ChevronDown,
   ChevronUp,
@@ -36,6 +40,11 @@ import {
 import { useShell } from './ShellProvider';
 import type { Trace, ObserverArchetype, Capability } from './types';
 import { useMotionPreferences } from '../components/joy/useMotionPreferences';
+import {
+  GLASS_EFFECT,
+  Z_INDEX_LAYERS,
+  TOP_PANEL_HEIGHTS,
+} from '../components/elastic';
 
 // =============================================================================
 // Types
@@ -55,12 +64,6 @@ export interface ObserverDrawerProps {
 // =============================================================================
 // Constants
 // =============================================================================
-
-/** Height of collapsed drawer */
-const COLLAPSED_HEIGHT = 40;
-
-/** Height of expanded drawer */
-const EXPANDED_HEIGHT = 280;
 
 /** Archetype display names and descriptions */
 const ARCHETYPE_INFO: Record<ObserverArchetype, { label: string; description: string }> = {
@@ -92,47 +95,37 @@ const CAPABILITY_INFO: Record<Capability, { label: string; color: string }> = {
 // Subcomponents
 // =============================================================================
 
-/** Collapsed summary view */
-function CollapsedView({
+/** Collapsed summary content - rendered inside the clickable button area */
+function CollapsedContent({
   archetype,
   capabilities,
-  onExpand,
 }: {
   archetype: ObserverArchetype;
   capabilities: Set<Capability>;
-  onExpand: () => void;
 }) {
   const archetypeInfo = ARCHETYPE_INFO[archetype];
   const capArray = Array.from(capabilities);
 
   return (
-    <button
-      onClick={onExpand}
-      className="w-full h-10 px-4 flex items-center justify-between bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 hover:bg-gray-700/80 transition-colors"
-      aria-label="Expand observer drawer"
-    >
-      <div className="flex items-center gap-4">
-        {/* Observer icon and archetype */}
-        <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-gray-400" />
-          <span className="text-sm font-medium text-white">{archetypeInfo.label}</span>
-        </div>
-
-        {/* Capabilities badges */}
-        <div className="flex items-center gap-1">
-          {capArray.map((cap) => (
-            <span
-              key={cap}
-              className={`text-xs px-1.5 py-0.5 rounded bg-gray-700/50 ${CAPABILITY_INFO[cap].color}`}
-            >
-              {CAPABILITY_INFO[cap].label}
-            </span>
-          ))}
-        </div>
+    <div className="flex items-center gap-4 px-4">
+      {/* Observer icon and archetype */}
+      <div className="flex items-center gap-2">
+        <User className="w-4 h-4 text-gray-400" />
+        <span className="text-sm font-medium text-white">{archetypeInfo.label}</span>
       </div>
 
-      <ChevronDown className="w-4 h-4 text-gray-400" />
-    </button>
+      {/* Capabilities badges */}
+      <div className="flex items-center gap-1">
+        {capArray.map((cap) => (
+          <span
+            key={cap}
+            className={`text-xs px-1.5 py-0.5 rounded bg-gray-700/50 ${CAPABILITY_INFO[cap].color}`}
+          >
+            {CAPABILITY_INFO[cap].label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -237,8 +230,8 @@ function ArchetypeSelector({
   );
 }
 
-/** Expanded view */
-function ExpandedView({
+/** Expanded view content */
+function ExpandedContent({
   observer,
   traces,
   traceLimit,
@@ -264,9 +257,9 @@ function ExpandedView({
   const capArray = Array.from(observer.capabilities);
 
   return (
-    <div className="bg-gray-800/95 backdrop-blur-sm border-b border-gray-700/50">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 shrink-0">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-cyan-400" />
           <span className="text-sm font-semibold text-white">Observer Umwelt</span>
@@ -281,7 +274,7 @@ function ExpandedView({
       </div>
 
       {/* Content grid */}
-      <div className="px-4 py-3 grid grid-cols-2 gap-4">
+      <div className="px-4 py-3 grid grid-cols-2 gap-4 flex-1 overflow-auto">
         {/* Left column: Observer info */}
         <div className="space-y-3">
           {/* Archetype */}
@@ -350,7 +343,7 @@ function ExpandedView({
       </div>
 
       {/* Footer actions */}
-      <div className="px-4 py-2 border-t border-gray-700/50 flex items-center gap-2">
+      <div className="px-4 py-2 border-t border-gray-700/50 flex items-center gap-2 shrink-0">
         <button className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 flex items-center gap-1 transition-colors">
           <Settings className="w-3 h-3" />
           Edit Observer
@@ -370,6 +363,10 @@ function ExpandedView({
 
 /**
  * Observer Drawer - Top-fixed collapsible panel showing observer context.
+ *
+ * Uses a single animated container to prevent double-collapse jank.
+ * The height transition is controlled by framer-motion while content
+ * fades in/out without waiting for exit animations.
  *
  * @example
  * ```tsx
@@ -398,10 +395,13 @@ export function ObserverDrawer({
     observerDrawerExpanded,
     setObserverDrawerExpanded,
     density,
+    // Use animated height from shell context (temporal coherence)
+    observerHeight,
+    isAnimating,
   } = useShell();
   const { shouldAnimate } = useMotionPreferences();
 
-  // Use shell state if available, otherwise local state
+  // Use shell state
   const isExpanded = observerDrawerExpanded;
   const setExpanded = setObserverDrawerExpanded;
 
@@ -419,26 +419,58 @@ export function ObserverDrawer({
   const handleExpand = useCallback(() => setExpanded(true), [setExpanded]);
   const handleCollapse = useCallback(() => setExpanded(false), [setExpanded]);
 
-  // Compact density: Always collapsed, shows minimal info
+  // Use animated height from context (coordinated with other shell elements)
+  const currentHeight = observerHeight;
+
+  // Glass effect from elastic primitives
+  const glassStyles = GLASS_EFFECT.standard;
+
+  // Compact density: Mobile layout with modal expansion
   if (density === 'compact') {
     return (
-      <div className={`fixed top-0 left-0 right-0 z-50 ${className}`}>
-        <CollapsedView
-          archetype={observer.archetype}
-          capabilities={observer.capabilities}
-          onExpand={handleExpand}
-        />
-        {/* Expanded as modal/drawer on mobile */}
-        <AnimatePresence>
-          {isExpanded && (
+      <div className={`fixed top-0 left-0 right-0 ${className}`} style={{ zIndex: Z_INDEX_LAYERS.modal }}>
+        {/* Always-visible collapsed bar */}
+        <button
+          onClick={handleExpand}
+          className={`
+            w-full h-10 flex items-center justify-between
+            ${glassStyles.background} ${glassStyles.blur}
+            border-b border-gray-700/50
+            hover:bg-gray-700/30 transition-colors
+          `}
+          aria-label="Expand observer drawer"
+        >
+          <CollapsedContent
+            archetype={observer.archetype}
+            capabilities={observer.capabilities}
+          />
+          <div className="px-3">
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </div>
+        </button>
+
+        {/* Expanded modal overlay */}
+        {isExpanded && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-black/50 -z-10"
+              onClick={handleCollapse}
+            />
+            {/* Expanded content */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: shouldAnimate ? 0.2 : 0 }}
-              className="absolute top-10 left-0 right-0 shadow-xl"
+              className={`
+                absolute top-10 left-0 right-0
+                ${glassStyles.background} ${glassStyles.blur}
+                border-b border-gray-700/50 shadow-xl
+              `}
+              style={{ height: TOP_PANEL_HEIGHTS.expanded - TOP_PANEL_HEIGHTS.collapsed }}
             >
-              <ExpandedView
+              <ExpandedContent
                 observer={observer}
                 traces={showTraces ? traces : []}
                 traceLimit={traceLimit}
@@ -447,57 +479,55 @@ export function ObserverDrawer({
                 onCollapse={handleCollapse}
               />
             </motion.div>
-          )}
-        </AnimatePresence>
-        {/* Backdrop for mobile */}
-        {isExpanded && (
-          <div
-            className="fixed inset-0 bg-black/50 -z-10"
-            onClick={handleCollapse}
-          />
+          </>
         )}
       </div>
     );
   }
 
-  // Desktop/tablet: Inline drawer
+  // Desktop/tablet: Use coordinated height from shell context
+  // Animation is now controlled by useShellAnimation hook for temporal coherence
+  // with NavigationTree and Terminal
   return (
-    <div className={`relative z-50 ${className}`}>
-      <AnimatePresence mode="wait" initial={false}>
-        {isExpanded ? (
-          <motion.div
-            key="expanded"
-            initial={{ height: COLLAPSED_HEIGHT, opacity: 0.8 }}
-            animate={{ height: EXPANDED_HEIGHT, opacity: 1 }}
-            exit={{ height: COLLAPSED_HEIGHT, opacity: 0.8 }}
-            transition={{ duration: shouldAnimate ? 0.25 : 0, ease: [0.4, 0, 0.2, 1] }}
-            style={{ overflow: 'hidden' }}
-          >
-            <ExpandedView
-              observer={observer}
-              traces={showTraces ? traces : []}
-              traceLimit={traceLimit}
-              onArchetypeChange={setArchetype}
-              onClearTraces={clearTraces}
-              onCollapse={handleCollapse}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="collapsed"
-            initial={{ height: EXPANDED_HEIGHT, opacity: 0.8 }}
-            animate={{ height: COLLAPSED_HEIGHT, opacity: 1 }}
-            exit={{ height: EXPANDED_HEIGHT, opacity: 0.8 }}
-            transition={{ duration: shouldAnimate ? 0.25 : 0, ease: [0.4, 0, 0.2, 1] }}
-          >
-            <CollapsedView
-              archetype={observer.archetype}
-              capabilities={observer.capabilities}
-              onExpand={handleExpand}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div
+      className={`
+        fixed top-0 left-0 right-0
+        ${glassStyles.background} ${glassStyles.blur}
+        border-b border-gray-700/50
+        overflow-hidden
+        ${className}
+      `}
+      style={{
+        zIndex: Z_INDEX_LAYERS.panel,
+        height: currentHeight,
+        // Disable CSS transition when JS is animating
+        transition: isAnimating ? 'none' : 'height 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
+    >
+      {isExpanded ? (
+        <ExpandedContent
+          observer={observer}
+          traces={showTraces ? traces : []}
+          traceLimit={traceLimit}
+          onArchetypeChange={setArchetype}
+          onClearTraces={clearTraces}
+          onCollapse={handleCollapse}
+        />
+      ) : (
+        <button
+          onClick={handleExpand}
+          className="w-full h-full flex items-center justify-between hover:bg-gray-700/30 transition-colors"
+          aria-label="Expand observer drawer"
+        >
+          <CollapsedContent
+            archetype={observer.archetype}
+            capabilities={observer.capabilities}
+          />
+          <div className="px-3 h-10 flex items-center">
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </div>
+        </button>
+      )}
     </div>
   );
 }

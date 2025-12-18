@@ -154,18 +154,35 @@ function QuickNav() {
 // =============================================================================
 
 function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
-  const { density, navigationTreeExpanded } = useShell();
+  const {
+    density,
+    observerHeight,
+    terminalHeight,
+    navigationWidth,
+    navigationTreeExpanded,
+    isAnimating,
+  } = useShell();
 
-  // Calculate main content area based on density and nav state
-  const getMainClass = () => {
-    if (density === 'spacious' && navigationTreeExpanded) {
-      return 'ml-[280px]'; // Fixed sidebar width
-    }
-    return '';
-  };
+  // Main content positioning uses animated offsets for smooth coordination
+  // When observer collapses: main slides up
+  // When terminal expands: main shrinks from bottom
+  // When navigation expands: main slides right
+  const mainStyle: React.CSSProperties = density === 'compact'
+    ? {
+        // Mobile: simple padding
+        paddingBottom: '5rem', // Space for FAB
+      }
+    : {
+        // Desktop: use animated offsets
+        marginTop: `${observerHeight}px`,
+        marginBottom: `${terminalHeight}px`,
+        marginLeft: navigationTreeExpanded ? `${navigationWidth}px` : 0,
+        // Disable CSS transitions when JS is animating to avoid double-animation
+        transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+      };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gray-900 flex flex-col relative">
       {/* Observer Drawer - Always present at top */}
       <ObserverErrorBoundary>
         <ObserverDrawer />
@@ -173,7 +190,10 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
 
       {/* Header with logo (compact/comfortable) */}
       {density !== 'spacious' && (
-        <header className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 px-4 py-2 flex items-center justify-between">
+        <header
+          className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 px-4 py-2 flex items-center justify-between fixed left-0 right-0 z-20"
+          style={{ top: `${observerHeight}px` }}
+        >
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <span className="font-semibold text-lg text-white">kgents</span>
           </Link>
@@ -184,22 +204,25 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
       {/* Quick nav for compact/comfortable */}
       <QuickNav />
 
-      {/* Main layout area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Navigation Tree - Sidebar */}
+      {/* Main layout area - Navigation floats over this */}
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Navigation Tree - Floating overlay sidebar */}
         <NavigationErrorBoundary>
           <NavigationTree />
         </NavigationErrorBoundary>
 
-        {/* Content Canvas */}
-        <main className={`flex-1 overflow-auto ${getMainClass()}`}>
+        {/* Content Canvas - uses coordinated offsets */}
+        <main
+          className="flex-1 overflow-auto absolute inset-0"
+          style={mainStyle}
+        >
           <ProjectionErrorBoundary>
             <Outlet />
           </ProjectionErrorBoundary>
         </main>
       </div>
 
-      {/* Terminal Layer - Bottom */}
+      {/* Terminal Layer - Fixed at bottom */}
       <TerminalErrorBoundary>
         <Terminal />
       </TerminalErrorBoundary>

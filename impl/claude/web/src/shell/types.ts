@@ -120,6 +120,29 @@ export type CrownJewel =
 // =============================================================================
 
 /**
+ * Shell element identifiers for animation coordination.
+ */
+export type ShellElementId = 'observer' | 'navigation' | 'terminal';
+
+/**
+ * Computed offsets for shell layout (from animation coordination).
+ */
+export interface ShellOffsets {
+  /** Top offset for elements below observer (NavigationTree, main content) */
+  topOffset: number;
+  /** Bottom offset for elements above terminal (NavigationTree, main content) */
+  bottomOffset: number;
+  /** Left offset for main content when nav is expanded */
+  leftOffset: number;
+  /** Whether observer is animating */
+  observerAnimating: boolean;
+  /** Whether terminal is animating */
+  terminalAnimating: boolean;
+  /** Whether navigation is animating */
+  navigationAnimating: boolean;
+}
+
+/**
  * Complete shell context available to all children.
  */
 export interface ShellContext {
@@ -152,6 +175,18 @@ export interface ShellContext {
   setNavigationTreeExpanded: (expanded: boolean) => void;
   terminalExpanded: boolean;
   setTerminalExpanded: (expanded: boolean) => void;
+
+  // Animation coordination (temporal coherence)
+  /** Computed offsets from animation progress */
+  offsets: ShellOffsets;
+  /** Current observer height (animated) */
+  observerHeight: number;
+  /** Current terminal height (animated) */
+  terminalHeight: number;
+  /** Current navigation width (animated) */
+  navigationWidth: number;
+  /** Whether any shell element is animating */
+  isAnimating: boolean;
 }
 
 // =============================================================================

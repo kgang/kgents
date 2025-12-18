@@ -24,12 +24,14 @@ import {
   ElasticSplit,
   BottomDrawer,
   FloatingActions,
+  CoordinatedDrawers,
   useWindowLayout,
   PHYSICAL_CONSTRAINTS,
   LAYOUT_PRIMITIVES,
   type Density,
   type FloatingAction,
 } from '@/components/elastic';
+import { useDesignGateway, type OperadInfo } from '@/hooks';
 
 // =============================================================================
 // Sample Data - Same content, different projections
@@ -357,6 +359,44 @@ function TouchTargetsPilot() {
   );
 }
 
+/**
+ * Pilot 9: Temporal Coherence - Coordinated Drawer Animations
+ *
+ * Demonstrates how sibling elements can animate in coordination using
+ * the DesignSheaf's temporal coherence framework. When the top drawer
+ * collapses, the left drawer slides up to fill the space.
+ *
+ * Key insight: Element positions are morphisms from animation progress
+ * to pixel coordinates. The sheaf ensures these morphisms compose
+ * coherently at boundaries.
+ *
+ * @see impl/claude/agents/design/sheaf.py (temporal coherence)
+ */
+function TemporalCoherencePilot() {
+  return (
+    <PilotContainer
+      title="Temporal Coherence"
+      subtitle="Coordinated animations via DesignSheaf"
+      fullWidth
+    >
+      <div className="h-[400px] rounded overflow-hidden">
+        <CoordinatedDrawers />
+      </div>
+      <div className="mt-4 text-xs text-gray-500 space-y-2">
+        <p>
+          <strong>How it works:</strong> The top drawer registers its animation phase.
+          The left drawer reads this progress and computes its <code>top</code> offset
+          as a function of the top drawer's collapse progress.
+        </p>
+        <p>
+          <strong>Categorical insight:</strong> This is a <code>LEADER_FOLLOWER</code>{' '}
+          sync strategy where left_drawer.top = f(top_drawer.progress).
+        </p>
+      </div>
+    </PilotContainer>
+  );
+}
+
 // =============================================================================
 // Helper Components
 // =============================================================================
@@ -426,6 +466,223 @@ function PrimitiveBehaviorTable() {
 }
 
 // =============================================================================
+// Live AGENTESE Panels
+// =============================================================================
+
+/**
+ * DesignStatePanel: Shows live local design state.
+ * Updates in real-time as viewport/container changes.
+ */
+function DesignStatePanel() {
+  const { localState } = useDesignGateway({ autoFetch: false });
+
+  return (
+    <div className="rounded-lg border border-gray-700 bg-gray-900/30 overflow-hidden">
+      <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700">
+        <h3 className="font-medium text-sm">Live Design State</h3>
+        <p className="text-xs text-gray-500">Local polynomial state (responsive)</p>
+      </div>
+      <div className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StateChip label="Density" value={localState.density} color="blue" />
+          <StateChip label="Content" value={localState.contentLevel} color="purple" />
+          <StateChip label="Motion" value={localState.motion} color="green" />
+          <StateChip
+            label="Animate"
+            value={localState.shouldAnimate ? 'yes' : 'no'}
+            color={localState.shouldAnimate ? 'green' : 'gray'}
+          />
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          <strong>State space:</strong> 3 densities × 4 content levels × 5 motions × 2 animate = 120 states
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function StateChip({ label, value, color }: { label: string; value: string; color: string }) {
+  const colorClasses: Record<string, string> = {
+    blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    green: 'bg-green-500/20 text-green-400 border-green-500/30',
+    gray: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+  };
+  return (
+    <div className="text-center">
+      <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">{label}</div>
+      <div className={`px-3 py-1 rounded border text-sm font-mono ${colorClasses[color]}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * LawVerificationPanel: Verifies design laws via AGENTESE gateway.
+ * Calls concept.design.operad.verify and displays results.
+ */
+function LawVerificationPanel() {
+  const { verification, isVerifying, verifyLaws, error } = useDesignGateway({
+    autoFetch: false,
+    autoVerify: false,
+  });
+
+  return (
+    <div className="rounded-lg border border-gray-700 bg-gray-900/30 overflow-hidden">
+      <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700 flex items-center justify-between">
+        <div>
+          <h3 className="font-medium text-sm">Law Verification</h3>
+          <p className="text-xs text-gray-500">AGENTESE: concept.design.operad.verify</p>
+        </div>
+        <button
+          onClick={() => verifyLaws()}
+          disabled={isVerifying}
+          className="px-3 py-1 rounded bg-town-highlight/20 text-town-highlight text-xs hover:bg-town-highlight/30 disabled:opacity-50"
+        >
+          {isVerifying ? 'Verifying...' : 'Verify Laws'}
+        </button>
+      </div>
+      <div className="p-4">
+        {error && (
+          <div className="text-red-400 text-xs mb-3 p-2 bg-red-500/10 rounded border border-red-500/30">
+            {error}
+          </div>
+        )}
+        {verification ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className={`px-2 py-0.5 rounded text-xs ${verification.all_passed ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}
+              >
+                {verification.all_passed ? '✓ All Passed' : '✗ Some Failed'}
+              </span>
+              <span className="text-xs text-gray-500">
+                {verification.results.length} laws checked
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+              {verification.results.map((result, i) => (
+                <div
+                  key={i}
+                  className={`text-xs p-2 rounded border ${result.passed ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}
+                >
+                  <div className="flex items-center gap-1">
+                    <span>{result.passed ? '✓' : '✗'}</span>
+                    <span className="font-mono">{result.law}</span>
+                  </div>
+                  <div className="text-gray-500 mt-1">{result.message}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-gray-500 text-sm text-center py-4">
+            Click "Verify Laws" to check design operad laws via AGENTESE gateway
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * OperadExplorerPanel: Shows the three sub-operads and their operations.
+ */
+function OperadExplorerPanel() {
+  const { layoutOperad, contentOperad, motionOperad, isLoadingOperads, refreshOperads, error } =
+    useDesignGateway({ autoFetch: true });
+
+  return (
+    <div className="rounded-lg border border-gray-700 bg-gray-900/30 overflow-hidden">
+      <div className="px-4 py-2 bg-gray-800/50 border-b border-gray-700 flex items-center justify-between">
+        <div>
+          <h3 className="font-medium text-sm">Design Operads</h3>
+          <p className="text-xs text-gray-500">
+            UI = Layout[D] ∘ Content[D] ∘ Motion[M]
+          </p>
+        </div>
+        <button
+          onClick={() => refreshOperads()}
+          disabled={isLoadingOperads}
+          className="px-3 py-1 rounded bg-gray-700 text-gray-300 text-xs hover:bg-gray-600 disabled:opacity-50"
+        >
+          {isLoadingOperads ? 'Loading...' : 'Refresh'}
+        </button>
+      </div>
+      <div className="p-4">
+        {error && (
+          <div className="text-red-400 text-xs mb-3 p-2 bg-red-500/10 rounded border border-red-500/30">
+            {error}
+          </div>
+        )}
+        {isLoadingOperads ? (
+          <div className="text-gray-500 text-sm text-center py-4">Loading operads...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <OperadCard operad={layoutOperad} label="Layout" color="blue" />
+            <OperadCard operad={contentOperad} label="Content" color="purple" />
+            <OperadCard operad={motionOperad} label="Motion" color="green" />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function OperadCard({
+  operad,
+  label,
+  color,
+}: {
+  operad: OperadInfo | null;
+  label: string;
+  color: string;
+}) {
+  const colorClasses: Record<string, string> = {
+    blue: 'border-blue-500/30 bg-blue-500/5',
+    purple: 'border-purple-500/30 bg-purple-500/5',
+    green: 'border-green-500/30 bg-green-500/5',
+  };
+  const textClasses: Record<string, string> = {
+    blue: 'text-blue-400',
+    purple: 'text-purple-400',
+    green: 'text-green-400',
+  };
+
+  if (!operad) {
+    return (
+      <div className={`p-3 rounded border ${colorClasses[color]}`}>
+        <div className={`font-semibold text-sm ${textClasses[color]}`}>{label}</div>
+        <div className="text-gray-500 text-xs mt-1">Not loaded</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`p-3 rounded border ${colorClasses[color]}`}>
+      <div className={`font-semibold text-sm ${textClasses[color]}`}>{operad.name}</div>
+      <div className="text-gray-400 text-xs mt-2">
+        <div>Operations: {operad.operations.length}</div>
+        <div>Laws: {operad.lawCount}</div>
+      </div>
+      <div className="flex flex-wrap gap-1 mt-2">
+        {operad.operations.slice(0, 4).map((op) => (
+          <span key={op} className="px-1.5 py-0.5 bg-gray-800 rounded text-[10px] font-mono">
+            {op}
+          </span>
+        ))}
+        {operad.operations.length > 4 && (
+          <span className="px-1.5 py-0.5 text-gray-500 text-[10px]">
+            +{operad.operations.length - 4}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // Main Page Component
 // =============================================================================
 
@@ -455,6 +712,20 @@ export default function LayoutGallery() {
       {/* Gallery content */}
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-6xl mx-auto space-y-8">
+          {/* Live AGENTESE section - NEW */}
+          <section>
+            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
+              Live AGENTESE Integration
+            </h2>
+            <div className="space-y-6">
+              <DesignStatePanel />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <OperadExplorerPanel />
+                <LawVerificationPanel />
+              </div>
+            </div>
+          </section>
+
           {/* Isomorphism section */}
           <section>
             <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
@@ -505,6 +776,16 @@ export default function LayoutGallery() {
             </h2>
             <div className="space-y-6">
               <TouchTargetsPilot />
+            </div>
+          </section>
+
+          {/* Temporal Coherence */}
+          <section>
+            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-4">
+              Temporal Coherence
+            </h2>
+            <div className="space-y-6">
+              <TemporalCoherencePilot />
             </div>
           </section>
 

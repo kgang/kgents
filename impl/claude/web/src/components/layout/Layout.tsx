@@ -77,7 +77,7 @@ export function Layout() {
                 currentPath={location.pathname}
               />
               <NavLink
-                to="/town/default"
+                to="/town/demo"
                 jewel="coalition"
                 label="Coalition"
                 currentPath={location.pathname}

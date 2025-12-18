@@ -171,6 +171,7 @@ See `docs/local-development.md` for detailed setup and troubleshooting.
 | domain-simulation | 35% | active |
 | punchdrunk-park | 50% | active |
 | atelier-experience | 60% | active |
+| design-language-consolidation | 5% | active |
 | gardener-logos | 100% | **complete** |
 
 

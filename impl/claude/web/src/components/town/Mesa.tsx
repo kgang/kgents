@@ -9,6 +9,7 @@ import { useCallback, useMemo, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { gridToScreen, REGION_GRID_POSITIONS } from '@/lib/regionGrid';
 import type { CitizenCardJSON } from '@/reactive/types';
+import type { TownEvent } from '@/api/types';
 
 // =============================================================================
 // Constants
@@ -40,6 +41,19 @@ const PHASE_ALPHA: Record<string, number> = {
   RESTING: 0.5,
 };
 
+const EVENT_LINE_COLORS: Record<string, number> = {
+  greet: 0x22c55e,    // green
+  gossip: 0xeab308,   // yellow
+  trade: 0x3b82f6,    // blue
+  solo: 0x8b5cf6,     // purple
+  work: 0x06b6d4,     // cyan
+  reflect: 0xa855f7,  // violet
+  default: 0x6b7280,  // gray
+};
+
+/** Max number of recent events to show lines for */
+const MAX_EVENT_LINES = 5;
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -48,6 +62,7 @@ interface MesaProps {
   width?: number;
   height?: number;
   citizens: CitizenCardJSON[];
+  events?: TownEvent[];
   selectedCitizenId: string | null;
   onSelectCitizen?: (id: string) => void;
   onHoverCitizen?: (id: string | null) => void;
@@ -67,6 +82,7 @@ export function Mesa({
   width = 800,
   height = 600,
   citizens,
+  events = [],
   selectedCitizenId,
   onSelectCitizen,
   onHoverCitizen,
@@ -111,6 +127,79 @@ export function Mesa({
 
     return positions;
   }, [citizens, offsetX, offsetY]);
+
+  // Build a map of citizen name -> position for event line lookup
+  const citizenPositionByName = useMemo(() => {
+    const map = new Map<string, CitizenPosition>();
+    citizenPositions.forEach((cp) => {
+      map.set(cp.citizen.name, cp);
+    });
+    return map;
+  }, [citizenPositions]);
+
+  // Calculate event lines (recent events with 2+ participants)
+  const eventLines = useMemo(() => {
+    const lines: Array<{
+      from: { x: number; y: number };
+      to: { x: number; y: number };
+      color: number;
+      alpha: number;
+      operation: string;
+    }> = [];
+
+    // Take only the most recent events
+    const recentEvents = events.slice(0, MAX_EVENT_LINES);
+
+    recentEvents.forEach((event, index) => {
+      if (event.participants.length < 2) return;
+
+      // Get positions for first two participants
+      const fromPos = citizenPositionByName.get(event.participants[0]);
+      const toPos = citizenPositionByName.get(event.participants[1]);
+
+      if (fromPos && toPos) {
+        // Fade older events (most recent = full opacity)
+        const alpha = 1.0 - (index / MAX_EVENT_LINES) * 0.6;
+        const color = EVENT_LINE_COLORS[event.operation] || EVENT_LINE_COLORS.default;
+
+        lines.push({
+          from: { x: fromPos.screenX, y: fromPos.screenY },
+          to: { x: toPos.screenX, y: toPos.screenY },
+          color,
+          alpha,
+          operation: event.operation,
+        });
+      }
+    });
+
+    return lines;
+  }, [events, citizenPositionByName]);
+
+  // Draw event lines
+  const drawEventLines = useCallback(
+    (g: PIXI.Graphics) => {
+      g.clear();
+
+      eventLines.forEach((line) => {
+        // Draw glow effect (thicker, more transparent)
+        g.lineStyle(6, line.color, line.alpha * 0.3);
+        g.moveTo(line.from.x, line.from.y);
+        g.lineTo(line.to.x, line.to.y);
+
+        // Draw main line
+        g.lineStyle(2, line.color, line.alpha);
+        g.moveTo(line.from.x, line.from.y);
+        g.lineTo(line.to.x, line.to.y);
+
+        // Draw small circles at endpoints
+        g.beginFill(line.color, line.alpha);
+        g.drawCircle(line.from.x, line.from.y, 4);
+        g.drawCircle(line.to.x, line.to.y, 4);
+        g.endFill();
+      });
+    },
+    [eventLines]
+  );
 
   // Handle hover
   const handleHover = useCallback(
@@ -200,6 +289,9 @@ export function Mesa({
 
         {/* Region Layer */}
         <Graphics draw={drawRegions} />
+
+        {/* Event Lines Layer - shows recent interactions between citizens */}
+        <Graphics draw={drawEventLines} />
 
         {/* Region labels */}
         {Object.entries(REGION_GRID_POSITIONS).map(([region, pos]) => {

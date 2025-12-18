@@ -56,6 +56,41 @@ export {
   DEFAULT_LAYOUT_CONTEXT,
 } from './useLayoutContext';
 
+// Design polynomial state machine (mirrors Python DESIGN_POLYNOMIAL)
+export {
+  useDesignPolynomial,
+  useAnimationCoordination,
+  densityFromWidth,
+  contentLevelFromWidth,
+  designTransition,
+  inferSyncStrategy,
+  computeTemporalOverlap,
+  DEFAULT_STATE as DEFAULT_DESIGN_STATE,
+  type Density,
+  type ContentLevel,
+  type MotionType,
+  type AnimationPhaseName,
+  type AnimationPhase,
+  type SyncStrategy,
+  type AnimationConstraint,
+  type DesignState,
+  type DesignInput,
+  type DesignOutput,
+  type UseDesignPolynomialOptions,
+  type UseDesignPolynomialResult,
+  type UseAnimationCoordinationOptions,
+  type UseAnimationCoordinationResult,
+} from './useDesignPolynomial';
+
+// Design gateway (bridges local state with AGENTESE backend)
+export {
+  useDesignGateway,
+  type OperadInfo,
+  type OperadOperationsInfo,
+  type UseDesignGatewayOptions,
+  type UseDesignGatewayResult,
+} from './useDesignGateway';
+
 // Connectivity
 export { useOnlineStatus } from './useOnlineStatus';
 

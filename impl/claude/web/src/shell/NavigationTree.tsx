@@ -534,7 +534,23 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     density,
     navigationTreeExpanded,
     setNavigationTreeExpanded,
+    // Use animated offsets for smooth coordination
+    observerHeight,
+    terminalHeight,
   } = useShell();
+
+  // Use animated offsets from shell context (temporal coherence)
+  // When observer collapses: nav.top slides up smoothly
+  // When terminal expands: nav.bottom slides up smoothly
+  const getTopOffset = () => {
+    if (density === 'compact') return '0'; // Mobile uses drawer, no conflict
+    return `${observerHeight}px`;
+  };
+
+  const getBottomOffset = () => {
+    if (density === 'compact') return '0'; // Mobile uses drawer, no conflict
+    return `${terminalHeight}px`;
+  };
   const navigate = useNavigate();
   const location = useLocation();
   const { shouldAnimate } = useMotionPreferences();
@@ -738,10 +754,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -(width || 240), opacity: 0 }}
               transition={{ duration: shouldAnimate ? 0.2 : 0, ease: 'easeOut' }}
-              style={{ width: width || 240 }}
+              style={{ width: width || 240, top: getTopOffset(), bottom: getBottomOffset() }}
               className={`
-                fixed left-0 top-10 bottom-0 z-30
-                bg-gray-800/95 backdrop-blur-sm
+                fixed left-0 z-30
+                bg-gray-800/[0.825] backdrop-blur-md
                 border-r border-gray-700/50
                 overflow-y-auto
                 ${className}
@@ -798,53 +814,98 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     );
   }
 
-  // Spacious: Fixed sidebar
+  // Spacious: Floating collapsible sidebar (same behavior as comfortable but always visible toggle)
   return (
-    <aside
-      style={{ width: width || 280 }}
-      className={`
-        flex-shrink-0 h-full
-        bg-gray-800/50
-        border-r border-gray-700/50
-        overflow-y-auto
-        ${className}
-      `}
-    >
-      <div className="p-3 space-y-4">
-        <h2 className="px-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-          AGENTESE Paths
-        </h2>
-        {loading ? (
-          <div className="py-4 text-center text-gray-500 text-sm">
-            Loading paths...
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {Array.from(tree.values()).map((node) => (
-              <TreeNodeItem
-                key={node.path}
-                node={node}
-                level={0}
-                expandedPaths={expandedPaths}
-                currentPath={currentPath}
-                onToggle={handleToggle}
-                onNavigate={handleNavigateToPath}
+    <>
+      {/* Toggle button - always visible */}
+      <button
+        onClick={() => setNavigationTreeExpanded(!navigationTreeExpanded)}
+        className={`
+          fixed left-0 top-1/2 -translate-y-1/2 z-40
+          p-2 bg-gray-800/90 backdrop-blur-sm rounded-r-lg
+          border border-l-0 border-gray-700/50
+          hover:bg-gray-700 transition-all duration-200
+          ${navigationTreeExpanded ? 'translate-x-[280px]' : 'translate-x-0'}
+        `}
+        aria-label={navigationTreeExpanded ? 'Close navigation sidebar' : 'Open navigation sidebar'}
+      >
+        <motion.span
+          animate={{ rotate: navigationTreeExpanded ? 180 : 0 }}
+          transition={{ duration: shouldAnimate ? 0.2 : 0 }}
+          className="block"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-400" />
+        </motion.span>
+      </button>
+
+      {/* Floating sidebar */}
+      <AnimatePresence>
+        {navigationTreeExpanded && (
+          <motion.aside
+            initial={{ x: -(width || 280), opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -(width || 280), opacity: 0 }}
+            transition={{ duration: shouldAnimate ? 0.25 : 0, ease: [0.4, 0, 0.2, 1] }}
+            style={{ width: width || 280, top: getTopOffset(), bottom: getBottomOffset() }}
+            className={`
+              fixed left-0 z-30
+              bg-gray-800/[0.825] backdrop-blur-md
+              border-r border-gray-700/50
+              overflow-y-auto
+              shadow-xl
+              ${className}
+            `}
+          >
+            {/* Close button in header */}
+            <div className="sticky top-0 bg-gray-800/[0.825] backdrop-blur-md border-b border-gray-700/50 px-3 py-2 flex items-center justify-between">
+              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                AGENTESE Paths
+              </h2>
+              <button
+                onClick={() => setNavigationTreeExpanded(false)}
+                className="p-1 hover:bg-gray-700 rounded transition-colors"
+                aria-label="Close navigation sidebar"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-3 space-y-4">
+              {loading ? (
+                <div className="py-4 text-center text-gray-500 text-sm">
+                  Loading paths...
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {Array.from(tree.values()).map((node) => (
+                    <TreeNodeItem
+                      key={node.path}
+                      node={node}
+                      level={0}
+                      expandedPaths={expandedPaths}
+                      currentPath={currentPath}
+                      onToggle={handleToggle}
+                      onNavigate={handleNavigateToPath}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <CrownJewelsSection
+                currentRoute={location.pathname}
+                onNavigate={handleNavigateToRoute}
               />
-            ))}
-          </div>
+
+              <GallerySection
+                currentRoute={location.pathname}
+                onNavigate={handleNavigateToRoute}
+              />
+            </div>
+          </motion.aside>
         )}
-
-        <CrownJewelsSection
-          currentRoute={location.pathname}
-          onNavigate={handleNavigateToRoute}
-        />
-
-        <GallerySection
-          currentRoute={location.pathname}
-          onNavigate={handleNavigateToRoute}
-        />
-      </div>
-    </aside>
+      </AnimatePresence>
+    </>
   );
 }
 

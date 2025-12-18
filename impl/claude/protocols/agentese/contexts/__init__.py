@@ -44,12 +44,13 @@ from .concept_blend import (
     forge_blend,
 )
 
-# Crown Jewels path registry (Seven Crown Jewel apps + Emergence + Gestalt Live)
+# Crown Jewels path registry (Seven Crown Jewel apps + Emergence + Gestalt Live + Design)
 from .crown_jewels import (
     ALL_CROWN_JEWEL_PATHS,
     ATELIER_PATHS,
     BRAIN_PATHS,
     COALITION_PATHS,
+    DESIGN_PATHS,
     EMERGENCE_PATHS,
     GARDENER_PATHS,
     GESTALT_LIVE_PATHS,
@@ -60,6 +61,19 @@ from .crown_jewels import (
     get_crown_jewel_registry,
     list_self_time_paths,
     register_crown_jewel_paths,
+)
+
+# Design context (concept.design.* - Design Language System)
+from .design import (
+    DESIGN_AFFORDANCES,
+    ContentDesignNode,
+    DesignContextNode,
+    DesignContextResolver,
+    DesignOperadNode,
+    LayoutDesignNode,
+    MotionDesignNode,
+    create_design_node,
+    create_design_resolver,
 )
 from .forest import (
     FOREST_ROLE_AFFORDANCES,
@@ -227,6 +241,36 @@ from .world_atelier import (
     set_atelier_node,
 )
 
+# Emergence Node integration (Cymatics Design Sampler)
+from .world_emergence import (
+    EMERGENCE_AFFORDANCES,
+    PATTERN_FAMILIES,
+    EmergenceNode,
+    create_emergence_node,
+    get_emergence_node,
+    set_emergence_node,
+)
+
+# Gallery Node integration (Living Autopoietic Showcase)
+from .world_gallery import (
+    GALLERY_AFFORDANCES,
+    GALLERY_CATEGORIES,
+    GalleryNode,
+    create_gallery_node,
+    get_gallery_node,
+    set_gallery_node,
+)
+
+# Gestalt Live Node integration (Real-time Infrastructure Visualizer)
+from .world_gestalt_live import (
+    ENTITY_KINDS,
+    GESTALT_LIVE_AFFORDANCES,
+    GestaltLiveNode,
+    create_gestalt_live_node,
+    get_gestalt_live_node,
+    set_gestalt_live_node,
+)
+
 # Park Node integration (Crisis Practice Scenarios)
 from .world_park import (
     PARK_AFFORDANCES,
@@ -247,26 +291,6 @@ from .world_town import (
     create_town_node,
     get_town_node,
     set_town_node,
-)
-
-# Emergence Node integration (Cymatics Design Sampler)
-from .world_emergence import (
-    EMERGENCE_AFFORDANCES,
-    PATTERN_FAMILIES,
-    EmergenceNode,
-    create_emergence_node,
-    get_emergence_node,
-    set_emergence_node,
-)
-
-# Gestalt Live Node integration (Real-time Infrastructure Visualizer)
-from .world_gestalt_live import (
-    ENTITY_KINDS,
-    GESTALT_LIVE_AFFORDANCES,
-    GestaltLiveNode,
-    create_gestalt_live_node,
-    get_gestalt_live_node,
-    set_gestalt_live_node,
 )
 
 # === Unified Resolver Factory ===
@@ -471,12 +495,13 @@ __all__ = [
     "create_gardener_resolver",
     "get_all_command_mappings",
     "resolve_command_to_path",
-    # Crown Jewels (Seven Crown Jewel applications + Emergence + Gestalt Live)
+    # Crown Jewels (Seven Crown Jewel applications + Emergence + Gestalt Live + Design)
     "ALL_CROWN_JEWEL_PATHS",
     "ATELIER_PATHS",
     "BRAIN_PATHS",
     "COALITION_PATHS",
     "CrownJewelRegistry",
+    "DESIGN_PATHS",
     "EMERGENCE_PATHS",
     "GARDENER_PATHS",
     "GESTALT_LIVE_PATHS",
@@ -486,6 +511,16 @@ __all__ = [
     "get_crown_jewel_registry",
     "list_self_time_paths",
     "register_crown_jewel_paths",
+    # Design context (concept.design.* - Design Language System)
+    "DESIGN_AFFORDANCES",
+    "LayoutDesignNode",
+    "ContentDesignNode",
+    "MotionDesignNode",
+    "DesignOperadNode",
+    "DesignContextNode",
+    "DesignContextResolver",
+    "create_design_resolver",
+    "create_design_node",
     # Jewel-Flow integration (F-gent Flow + Crown Jewels)
     "BRAIN_FLOW_PATHS",
     "GARDENER_FLOW_PATHS",
@@ -559,6 +594,13 @@ __all__ = [
     "create_gestalt_live_node",
     "get_gestalt_live_node",
     "set_gestalt_live_node",
+    # Gallery Node integration (Living Autopoietic Showcase)
+    "GALLERY_AFFORDANCES",
+    "GALLERY_CATEGORIES",
+    "GalleryNode",
+    "create_gallery_node",
+    "get_gallery_node",
+    "set_gallery_node",
     # Unified factory
     "create_context_resolvers",
 ]

@@ -229,7 +229,7 @@ function EmptyInhabit({ citizenId, density }: EmptyInhabitProps) {
           : emptyState.description}
       </p>
       <Link
-        to="/town/default"
+        to="/town/demo"
         className={`bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors ${
           isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
         }`}

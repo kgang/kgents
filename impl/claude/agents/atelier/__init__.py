@@ -20,6 +20,7 @@ Streaming Philosophy:
 See: docs/systems-reference.md for infrastructure details.
 """
 
+# Polynomial and Operad (Layers 2 & 3 of Vertical Slice)
 from agents.atelier.artisan import (
     Artisan,
     ArtisanState,
@@ -66,6 +67,25 @@ from agents.atelier.gestalt_integration import (
     create_health_badge_props,
     emit_artifact_analysis_complete,
 )
+from agents.atelier.polynomial import (
+    ATELIER_POLYNOMIAL,
+    WORKSHOP_POLYNOMIAL,
+    CloseInput,
+    ContributeInput,
+    ContributeOutput,
+    ExhibitOutput,
+    JoinInput,
+    JoinOutput,
+    OpenExhibitionInput,
+    RefineInput,
+    StartExhibitionInput,
+    ViewInput,
+    WorkshopInput,
+    WorkshopOutput,
+    WorkshopPhase,
+    workshop_directions,
+    workshop_transition,
+)
 from agents.atelier.synergy import (
     SynergyAwareWorkshop,
     emit_bid_accepted,
@@ -73,8 +93,35 @@ from agents.atelier.synergy import (
     wrap_stream_with_synergy,
 )
 from agents.atelier.workshop import Workshop, WorkshopFlux
+from agents.atelier.workshop.operad import (
+    ATELIER_OPERAD,
+    CompositionLaw,
+    create_atelier_operad,
+)
 
 __all__ = [
+    # Polynomial (Layer 2)
+    "ATELIER_POLYNOMIAL",
+    "WORKSHOP_POLYNOMIAL",
+    "WorkshopPhase",
+    "WorkshopInput",
+    "WorkshopOutput",
+    "JoinInput",
+    "JoinOutput",
+    "ContributeInput",
+    "ContributeOutput",
+    "RefineInput",
+    "StartExhibitionInput",
+    "OpenExhibitionInput",
+    "ViewInput",
+    "CloseInput",
+    "ExhibitOutput",
+    "workshop_directions",
+    "workshop_transition",
+    # Operad (Layer 3)
+    "ATELIER_OPERAD",
+    "create_atelier_operad",
+    "CompositionLaw",
     # Core types
     "Artisan",
     "ArtisanState",

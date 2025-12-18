@@ -493,11 +493,13 @@ GESTALT_LIVE_PATHS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Emergence: Cymatics Design Sampler (world.emergence.*)
+# Emergence: Cymatics Design Experience Crown Jewel (world.emergence.*)
+# Full vertical slice with EMERGENCE_POLYNOMIAL, EMERGENCE_OPERAD, EmergenceSheaf
+# See: plans/structured-greeting-boot.md
 EMERGENCE_PATHS: dict[str, dict[str, Any]] = {
     "world.emergence.manifest": {
         "aspect": "manifest",
-        "description": "Cymatics design sampler - visual exploration of pattern families",
+        "description": "Cymatics design experience - visual exploration of pattern families",
         "effects": [],
     },
     "world.emergence.pattern.manifest": {
@@ -505,14 +507,150 @@ EMERGENCE_PATHS: dict[str, dict[str, Any]] = {
         "description": "View pattern family variations (chladni, interference, mandala, etc.)",
         "effects": [],
     },
+    "world.emergence.pattern.tune": {
+        "aspect": "define",
+        "description": "Adjust pattern parameters (param1, param2, hue, saturation, speed)",
+        "effects": ["CONFIG_CHANGED"],
+    },
     "world.emergence.preset.manifest": {
         "aspect": "manifest",
         "description": "Browse curated pattern presets",
         "effects": [],
     },
+    "world.emergence.qualia.manifest": {
+        "aspect": "manifest",
+        "description": "View current qualia coordinates (warmth, weight, tempo, texture, brightness)",
+        "effects": [],
+    },
+    "world.emergence.qualia.modulate": {
+        "aspect": "define",
+        "description": "Apply qualia adjustment to current pattern",
+        "effects": ["QUALIA_CHANGED"],
+    },
+    "world.emergence.circadian.phase": {
+        "aspect": "manifest",
+        "description": "View current circadian phase (dawn/noon/dusk/midnight)",
+        "effects": [],
+    },
+    "world.emergence.circadian.modulate": {
+        "aspect": "define",
+        "description": "Override circadian phase for demonstration",
+        "effects": ["CIRCADIAN_CHANGED"],
+    },
     "world.emergence.configure": {
         "aspect": "define",
         "description": "Configure custom pattern parameters",
+        "effects": [],
+    },
+}
+
+# Design Language System (concept.design.*)
+# Exposes the three orthogonal design operads: Layout, Content, Motion
+# See: agents/design/ and plans/design-language-consolidation.md
+DESIGN_PATHS: dict[str, dict[str, Any]] = {
+    "concept.design.manifest": {
+        "aspect": "manifest",
+        "description": "Design Language System overview",
+        "effects": [],
+    },
+    "concept.design.layout.manifest": {
+        "aspect": "manifest",
+        "description": "Layout operad state",
+        "effects": [],
+    },
+    "concept.design.layout.operations": {
+        "aspect": "manifest",
+        "description": "Layout operations (split, stack, drawer, float)",
+        "effects": [],
+    },
+    "concept.design.layout.laws": {
+        "aspect": "manifest",
+        "description": "Layout composition laws",
+        "effects": [],
+    },
+    "concept.design.layout.verify": {
+        "aspect": "manifest",
+        "description": "Verify layout laws pass",
+        "effects": [],
+    },
+    "concept.design.layout.compose": {
+        "aspect": "define",
+        "description": "Apply layout operation",
+        "effects": [],
+    },
+    "concept.design.content.manifest": {
+        "aspect": "manifest",
+        "description": "Content operad state",
+        "effects": [],
+    },
+    "concept.design.content.operations": {
+        "aspect": "manifest",
+        "description": "Content operations (degrade, compose)",
+        "effects": [],
+    },
+    "concept.design.content.laws": {
+        "aspect": "manifest",
+        "description": "Content degradation laws",
+        "effects": [],
+    },
+    "concept.design.content.verify": {
+        "aspect": "manifest",
+        "description": "Verify content laws pass",
+        "effects": [],
+    },
+    "concept.design.content.degrade": {
+        "aspect": "define",
+        "description": "Apply content degradation",
+        "effects": [],
+    },
+    "concept.design.motion.manifest": {
+        "aspect": "manifest",
+        "description": "Motion operad state",
+        "effects": [],
+    },
+    "concept.design.motion.operations": {
+        "aspect": "manifest",
+        "description": "Motion operations (breathe, pop, shake, shimmer, chain, parallel)",
+        "effects": [],
+    },
+    "concept.design.motion.laws": {
+        "aspect": "manifest",
+        "description": "Motion composition laws",
+        "effects": [],
+    },
+    "concept.design.motion.verify": {
+        "aspect": "manifest",
+        "description": "Verify motion laws pass",
+        "effects": [],
+    },
+    "concept.design.motion.apply": {
+        "aspect": "define",
+        "description": "Apply motion primitive",
+        "effects": [],
+    },
+    "concept.design.operad.manifest": {
+        "aspect": "manifest",
+        "description": "Unified design operad",
+        "effects": [],
+    },
+    "concept.design.operad.operations": {
+        "aspect": "manifest",
+        "description": "All design operations",
+        "effects": [],
+    },
+    "concept.design.operad.laws": {
+        "aspect": "manifest",
+        "description": "All design laws (including naturality)",
+        "effects": [],
+    },
+    "concept.design.operad.verify": {
+        "aspect": "manifest",
+        "description": "Verify all design laws pass",
+        "effects": [],
+    },
+    "concept.design.operad.naturality": {
+        "aspect": "manifest",
+        "description": "Check Layout ∘ Content ∘ Motion naturality",
         "effects": [],
     },
 }
@@ -571,6 +709,47 @@ GARDENER_PATHS: dict[str, dict[str, Any]] = {
     },
 }
 
+# Morpheus: LLM Gateway (world.morpheus.*)
+# Note: Morpheus is infrastructure, not a "Crown Jewel" application,
+# but has @node registration so we document its paths here for completeness.
+MORPHEUS_PATHS: dict[str, dict[str, Any]] = {
+    "world.morpheus.manifest": {
+        "aspect": "manifest",
+        "description": "Gateway health status and configuration",
+        "effects": [],
+    },
+    "world.morpheus.complete": {
+        "aspect": "define",
+        "description": "Chat completion (non-streaming)",
+        "effects": ["API_CALL"],
+    },
+    "world.morpheus.stream": {
+        "aspect": "define",
+        "description": "Chat completion (streaming via SSE)",
+        "effects": ["API_CALL"],
+    },
+    "world.morpheus.providers": {
+        "aspect": "manifest",
+        "description": "List available LLM providers",
+        "effects": [],
+    },
+    "world.morpheus.metrics": {
+        "aspect": "manifest",
+        "description": "Request/error counts and latency stats",
+        "effects": [],
+    },
+    "world.morpheus.health": {
+        "aspect": "manifest",
+        "description": "Provider health checks",
+        "effects": [],
+    },
+    "world.morpheus.route": {
+        "aspect": "manifest",
+        "description": "Model routing information",
+        "effects": [],
+    },
+}
+
 # =============================================================================
 # Unified Registry
 # =============================================================================
@@ -585,6 +764,8 @@ ALL_CROWN_JEWEL_PATHS: dict[str, dict[str, Any]] = {
     **GESTALT_LIVE_PATHS,
     **EMERGENCE_PATHS,
     **GARDENER_PATHS,
+    **DESIGN_PATHS,
+    **MORPHEUS_PATHS,
 }
 
 
@@ -607,7 +788,7 @@ class CrownJewelRegistry:
 
         Args:
             jewel: One of "atelier", "coalition", "brain", "park",
-                   "simulation", "gestalt", "gardener", or None for all
+                   "simulation", "gestalt", "gardener", "morpheus", or None for all
         """
         jewel_prefixes = {
             "atelier": ("world.atelier.", "self.tokens."),
@@ -631,6 +812,7 @@ class CrownJewelRegistry:
             "gestalt_live": ("world.gestalt.live.",),
             "emergence": ("world.emergence.",),
             "gardener": ("concept.gardener.", "self.forest.", "self.meta."),
+            "morpheus": ("world.morpheus.",),
         }
 
         if jewel is None:
@@ -725,6 +907,8 @@ __all__ = [
     "GESTALT_LIVE_PATHS",
     "EMERGENCE_PATHS",
     "GARDENER_PATHS",
+    "DESIGN_PATHS",
+    "MORPHEUS_PATHS",
     # Unified registry
     "ALL_CROWN_JEWEL_PATHS",
     "CrownJewelRegistry",

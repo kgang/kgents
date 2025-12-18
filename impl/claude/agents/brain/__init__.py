@@ -574,7 +574,8 @@ class BrainCrystal:
         if all(x == 0.0 for x in result):
             return self._simple_embedding(text)
 
-        return result
+        # Cast to list[float] for type safety (embedder returns Any)
+        return list(result)
 
     def _simple_embedding(self, text: str, dimension: int = 128) -> list[float]:
         """Simple n-gram hash embedding with some semantic locality.
@@ -721,3 +722,73 @@ def reset_brain_crystal() -> None:
     """Reset the singleton (for testing)."""
     global _brain_crystal
     _brain_crystal = None
+
+
+# =============================================================================
+# Polynomial and Operad (Layer 2 & 3 of Vertical Slice)
+# =============================================================================
+
+# Re-export polynomial and operad for vertical slice compliance
+from agents.brain.operad import (
+    ASSOCIATE_METABOLICS,
+    BRAIN_OPERAD,
+    CAPTURE_METABOLICS,
+    HEAL_METABOLICS,
+    SEARCH_METABOLICS,
+    SURFACE_METABOLICS,
+    MemoryMetabolics,
+    create_brain_operad,
+)
+from agents.brain.polynomial import (
+    BRAIN_POLYNOMIAL,
+    BrainInput,
+    BrainOutput,
+    BrainPhase,
+    CaptureInput,
+    CaptureOutput,
+    HealInput,
+    HealOutput,
+    IdleInput,
+    SearchInput,
+    SearchOutput,
+    SurfaceInput,
+    SurfaceOutput,
+    brain_directions,
+    brain_transition,
+)
+
+__all__ = [
+    # Core
+    "BrainCrystal",
+    "get_brain_crystal",
+    "reset_brain_crystal",
+    # Results
+    "CaptureResult",
+    "SearchResult",
+    "BrainStatus",
+    # Polynomial (Layer 2)
+    "BRAIN_POLYNOMIAL",
+    "BrainPhase",
+    "BrainInput",
+    "BrainOutput",
+    "CaptureInput",
+    "CaptureOutput",
+    "SearchInput",
+    "SearchOutput",
+    "SurfaceInput",
+    "SurfaceOutput",
+    "HealInput",
+    "HealOutput",
+    "IdleInput",
+    "brain_directions",
+    "brain_transition",
+    # Operad (Layer 3)
+    "BRAIN_OPERAD",
+    "create_brain_operad",
+    "MemoryMetabolics",
+    "CAPTURE_METABOLICS",
+    "SEARCH_METABOLICS",
+    "SURFACE_METABOLICS",
+    "HEAL_METABOLICS",
+    "ASSOCIATE_METABOLICS",
+]

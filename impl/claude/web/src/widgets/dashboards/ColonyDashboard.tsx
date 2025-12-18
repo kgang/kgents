@@ -52,7 +52,7 @@ export const ColonyDashboard = memo(function ColonyDashboard({
       </div>
 
       {/* Status bar */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 bg-gray-100 text-sm border-b">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 bg-gray-100 text-sm border-b text-gray-900">
         <span>
           <strong>Colony:</strong> {colony_id?.slice(0, 12) ?? 'unknown'}
         </span>
@@ -91,7 +91,7 @@ export const ColonyDashboard = memo(function ColonyDashboard({
       </ElasticContainer>
 
       {/* Footer */}
-      <div className="flex justify-between flex-wrap gap-x-4 px-4 py-2 bg-gray-100 text-sm border-t">
+      <div className="flex justify-between flex-wrap gap-x-4 px-4 py-2 bg-gray-100 text-sm border-t text-gray-900">
         <span>Entropy: {safeMetrics.entropy_budget.toFixed(2)}</span>
         <span>Tokens: {safeMetrics.total_tokens}</span>
       </div>

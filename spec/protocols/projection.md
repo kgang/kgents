@@ -276,6 +276,28 @@ These primitives form the **basis** of the layout functor. All responsive layout
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+### Canonical Density Breakpoints
+
+These breakpoints are the **single source of truth** for all implementations:
+
+| Density | Range | Device Class |
+|---------|-------|--------------|
+| **compact** | < 768px | Mobile phones |
+| **comfortable** | 768px – 1023px | Tablets |
+| **spacious** | ≥ 1024px | Desktop/laptop |
+
+```typescript
+// CANONICAL VALUES - all implementations must align
+BREAKPOINT_COMPACT_MAX = 767    // < 768 is compact
+BREAKPOINT_COMFORTABLE_MAX = 1023  // 768-1023 is comfortable
+// ≥ 1024 is spacious
+```
+
+**Implementations that must align**:
+- Python: `agents/design/types.py` → `Density.from_width()`
+- TypeScript: `useDesignPolynomial.ts` → `densityFromWidth()`
+- CSS: `elastic/types.ts` → `DENSITY_BREAKPOINTS`
+
 ### Physical Constraints
 
 Layout projection respects constraints from the physical world that do not scale:
@@ -332,6 +354,64 @@ Layout[compact](SidePanel >> MainContent)
 
 The >> composition transforms to overlay composition in compact mode.
 ```
+
+## AD-008 Applied: Isomorphism Detection
+
+> *"When the same conditional appears three times, you've found a dimension hiding in plain sight."*
+
+### The Core Insight
+
+**AD-008** (Simplifying Isomorphisms): When you see the same concept expressed in multiple forms, recognize the isomorphism and factor it out.
+
+Applied to UI: scattered boolean conditionals (`isMobile`, `isCompact`, `isAdmin`) are **dimensions in disguise**. The extraction algorithm:
+
+1. **Name the dimension** — Give the hidden axis an explicit name
+2. **Define values** — Exhaustive, mutually exclusive enum values
+3. **Create context** — Provide the dimension at appropriate level
+4. **Parameterize constants** — Replace scattered values with lookup tables
+5. **Internal adaptation** — Components adapt internally, not externally
+
+### Common Isomorphisms
+
+| Hidden in... | Revealed as... | Context |
+|--------------|----------------|---------|
+| `isMobile`, `isTablet`, `isDesktop` | `density: 'compact' \| 'comfortable' \| 'spacious'` | `useWindowLayout()` |
+| `isViewer`, `isEditor`, `isAdmin` | `role: Role` | `RoleContext` |
+| `isLoading`, `hasError` | `loadState: LoadState` | Component state |
+| Observer-specific rendering | `umwelt: Umwelt` | AGENTESE |
+
+### The Categorical Perspective
+
+Isomorphism detection is **functor discovery**:
+
+```
+Functor F: Condition → Behavior
+
+Before: Many scattered F₁, F₂, F₃ (each conditional)
+After:  One F (parameterized by dimension)
+```
+
+When you name the dimension, you're naming the functor's **domain**. When you create parameterized constants, you're defining the functor's **action**.
+
+### Signs You've Found an Isomorphism
+
+1. **Repeated Conditionals** — Same `if` condition in 3+ places
+2. **Parallel Structures** — Same structure, different values per case
+3. **Configuration Explosion** — Too many boolean/enum props
+4. **Cross-Cutting Concerns** — Same logic at multiple component levels
+
+### Anti-Patterns
+
+| Anti-Pattern | Why Bad | Correct Pattern |
+|--------------|---------|-----------------|
+| Premature extraction | Single use doesn't warrant dimension | Wait for 3+ occurrences |
+| Over-abstraction | Not every boolean is a dimension | Simple toggles stay boolean |
+| Leaky abstractions | Components still check original condition | Components only know dimension |
+| Scattered conditionals | Unmaintainable | Density-parameterized constants |
+
+**Skill Reference**: `docs/skills/ui-isomorphism-detection.md` for audit workflow and templates.
+
+---
 
 ## 3D Target Projection (WebGL/WebXR)
 

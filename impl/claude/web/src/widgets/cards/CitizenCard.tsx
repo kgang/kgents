@@ -42,9 +42,9 @@ export const CitizenCard = memo(function CitizenCard({
   archetype,
   phase,
   nphase,
-  activity,
-  capability,
-  mood,
+  activity = [],
+  capability = 0.5,
+  mood = '',
   layout,
   onSelect,
   isSelected,
@@ -100,7 +100,7 @@ export const CitizenCard = memo(function CitizenCard({
         onClick={() => onSelect?.(citizen_id)}
         title={`${name} - ${archetype}`}
       >
-        <span className="text-xl">{glyph}</span>
+        <span className="text-xl text-gray-700">{glyph}</span>
       </div>
     );
   }
@@ -116,7 +116,7 @@ export const CitizenCard = memo(function CitizenCard({
         onClick={() => onSelect?.(citizen_id)}
       >
         <div className="flex items-center gap-2">
-          <span className="text-lg">{glyph}</span>
+          <span className="text-lg text-gray-700">{glyph}</span>
           <span className="font-bold text-gray-900 truncate">{name}</span>
           <span className={`text-xs ${nphaseColor}`}>[{nphase[0]}]</span>
         </div>
@@ -135,7 +135,7 @@ export const CitizenCard = memo(function CitizenCard({
         onClick={() => onSelect?.(citizen_id)}
       >
         <div className="flex items-center gap-2 mb-1">
-          <span className="text-xl">{glyph}</span>
+          <span className="text-xl text-gray-700">{glyph}</span>
           <span className="font-bold text-gray-900">{name}</span>
           <span className={`text-sm ${nphaseColor}`}>[{nphase[0]}]</span>
         </div>
@@ -158,7 +158,7 @@ export const CitizenCard = memo(function CitizenCard({
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-2">
-        <span className="text-xl">{glyph}</span>
+        <span className="text-xl text-gray-700">{glyph}</span>
         <span className="font-bold text-gray-900">{name}</span>
         <span className={`text-sm ${nphaseColor}`}>[{nphase[0]}]</span>
       </div>

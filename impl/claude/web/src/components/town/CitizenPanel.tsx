@@ -1,14 +1,19 @@
 /**
- * CitizenPanel: Props-based citizen detail panel.
+ * CitizenPanel: Props-based citizen detail panel with polynomial visualization.
  *
  * Receives citizen as props for displaying detailed citizen information.
- * Simplified: LODGate removed pending reactive primitive rebuild.
+ * Enhanced with embedded state machine visualization (Phase 2 of park-town-design-overhaul).
+ *
+ * @see plans/park-town-design-overhaul.md
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { townApi } from '@/api/client';
 import { cn, getArchetypeColor, getPhaseColor } from '@/lib/utils';
 import { InlineError, PersonalityLoading } from '@/components/joy';
+import { TeachingCallout, TEACHING_MESSAGES } from '@/components/categorical/TeachingCallout';
+import { CitizenPhaseIndicator } from '@/components/categorical/StateIndicator';
+import { CITIZEN as CITIZEN_PRESET } from '@/components/categorical/presets';
 import type { CitizenCardJSON } from '@/reactive/types';
 import type { CitizenManifest } from '@/api/types';
 
@@ -73,6 +78,16 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           ✕
         </button>
+      </div>
+
+      {/* State Machine Visualization (new in Phase 2) */}
+      <div className="bg-gradient-to-br from-town-surface/50 to-town-accent/20 rounded-lg p-4 border border-town-accent/30">
+        <div className="flex items-center gap-2 mb-3">
+          <span>🔄</span>
+          <h3 className="font-medium text-sm">Polynomial State</h3>
+          <CitizenPhaseIndicator state={citizen.phase} size="sm" className="ml-auto" />
+        </div>
+        <CitizenStateMachine currentPhase={citizen.phase} />
       </div>
 
       {/* LOD 0: Silhouette */}
@@ -213,6 +228,145 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
 // =============================================================================
 // Sub-components
 // =============================================================================
+
+// =============================================================================
+// Citizen State Machine Visualization
+// =============================================================================
+
+interface CitizenStateMachineProps {
+  currentPhase: string;
+  compact?: boolean;
+}
+
+/**
+ * Compact state machine visualization showing citizen polynomial phases.
+ * Shows valid transitions from current state.
+ */
+function CitizenStateMachine({ currentPhase, compact = false }: CitizenStateMachineProps) {
+  // Map the citizen's phase to the preset position ID (uppercase)
+  const normalizedPhase = currentPhase.toUpperCase();
+
+  // Calculate valid inputs from current state
+  const validInputs = useMemo(() => {
+    const inputs: string[] = [];
+    for (const edge of CITIZEN_PRESET.edges) {
+      if (edge.source === normalizedPhase) {
+        inputs.push(edge.label);
+      }
+    }
+    return [...new Set(inputs)];
+  }, [normalizedPhase]);
+
+  if (compact) {
+    // Mini visualization for inline display
+    return (
+      <div className="space-y-2">
+        {/* Phase dots */}
+        <div className="flex gap-1.5 justify-center flex-wrap">
+          {CITIZEN_PRESET.positions.map((pos) => {
+            const isCurrent = pos.id === normalizedPhase;
+            return (
+              <div
+                key={pos.id}
+                className="relative group"
+                title={`${pos.label}: ${pos.description}`}
+              >
+                <div
+                  className={cn(
+                    'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-all',
+                    isCurrent && 'ring-2 ring-offset-1 ring-offset-town-surface'
+                  )}
+                  style={{
+                    backgroundColor: `${pos.color}30`,
+                    borderColor: pos.color,
+                    border: `2px solid ${isCurrent ? pos.color : pos.color + '40'}`,
+                    boxShadow: isCurrent ? `0 0 10px ${pos.color}50` : 'none',
+                  }}
+                >
+                  {pos.label[0]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Current state */}
+        <div className="text-center text-xs text-gray-400">
+          <span
+            className="font-medium"
+            style={{
+              color: CITIZEN_PRESET.positions.find((p) => p.id === normalizedPhase)?.color || '#fff',
+            }}
+          >
+            {currentPhase}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Full visualization with valid inputs
+  return (
+    <div className="space-y-3">
+      {/* State diagram */}
+      <div className="bg-town-surface/50 rounded-lg p-3">
+        <div className="flex gap-2 flex-wrap justify-center">
+          {CITIZEN_PRESET.positions.map((pos) => {
+            const isCurrent = pos.id === normalizedPhase;
+            return (
+              <div
+                key={pos.id}
+                className="text-center transition-all duration-300"
+                style={{
+                  opacity: isCurrent ? 1 : 0.6,
+                  transform: isCurrent ? 'scale(1.1)' : 'scale(1)',
+                }}
+              >
+                <div
+                  className={cn(
+                    'w-12 h-12 rounded-xl flex flex-col items-center justify-center text-[10px] font-medium transition-all'
+                  )}
+                  style={{
+                    background: `linear-gradient(135deg, ${pos.color}20, ${pos.color}10)`,
+                    border: `2px solid ${isCurrent ? pos.color : pos.color + '40'}`,
+                    boxShadow: isCurrent ? `0 0 16px ${pos.color}50` : 'none',
+                  }}
+                >
+                  <span className="font-bold" style={{ color: pos.color }}>
+                    {pos.label.slice(0, 3)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Valid inputs */}
+      <div className="flex flex-wrap gap-1.5 items-center">
+        <span className="text-xs text-gray-500 mr-1">Valid:</span>
+        {validInputs.length > 0 ? (
+          validInputs.map((input) => (
+            <span
+              key={input}
+              className="px-2 py-0.5 text-xs rounded-full bg-town-highlight/30 text-town-highlight border border-town-highlight/50"
+            >
+              {input}
+            </span>
+          ))
+        ) : (
+          <span className="text-xs text-gray-500 italic">No valid transitions</span>
+        )}
+      </div>
+
+      {/* Right to Rest teaching callout */}
+      {normalizedPhase === 'RESTING' && (
+        <TeachingCallout category="categorical" compact>
+          {TEACHING_MESSAGES.right_to_rest}
+        </TeachingCallout>
+      )}
+    </div>
+  );
+}
 
 interface LODSectionProps {
   level: number;

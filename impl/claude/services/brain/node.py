@@ -27,6 +27,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -35,6 +36,24 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    BrainManifestResponse,
+    ByTagRequest,
+    CaptureRequest,
+    CaptureResponse,
+    DeleteRequest,
+    DeleteResponse,
+    GetRequest,
+    GetResponse,
+    HealResponse,
+    RecentRequest,
+    SearchRequest,
+    SearchResponse,
+    SurfaceRequest,
+    SurfaceResponse,
+    TopologyRequest,
+    TopologyResponse,
+)
 from .persistence import BrainPersistence, BrainStatus, CaptureResult, SearchResult
 
 if TYPE_CHECKING:
@@ -88,7 +107,8 @@ class CaptureRendering:
         return {
             "type": "capture_result",
             "crystal_id": self.result.crystal_id,
-            "content": self.result.content[:200] + ("..." if len(self.result.content) > 200 else ""),
+            "content": self.result.content[:200]
+            + ("..." if len(self.result.content) > 200 else ""),
             "summary": self.result.summary,
             "captured_at": self.result.captured_at,
             "has_embedding": self.result.has_embedding,
@@ -144,6 +164,20 @@ class SearchRendering:
     "self.memory",
     description="Holographic Brain - spatial cathedral of memory",
     dependencies=("brain_persistence",),
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(BrainManifestResponse),
+        # Mutation aspects (Contract with request + response)
+        "capture": Contract(CaptureRequest, CaptureResponse),
+        "search": Contract(SearchRequest, SearchResponse),
+        "surface": Contract(SurfaceRequest, SurfaceResponse),
+        "get": Contract(GetRequest, GetResponse),
+        "recent": Contract(RecentRequest, SearchResponse),
+        "bytag": Contract(ByTagRequest, SearchResponse),
+        "delete": Contract(DeleteRequest, DeleteResponse),
+        "heal": Response(HealResponse),
+        "topology": Contract(TopologyRequest, TopologyResponse),
+    },
 )
 class BrainNode(BaseLogosNode):
     """
@@ -336,7 +370,9 @@ class BrainNode(BaseLogosNode):
             # Return brain topology for 3D visualization
             # Format matches BrainTopologyResponse expected by frontend
             status = await self._persistence.manifest()
-            similarity_threshold = kwargs.get("similarity_threshold", 0.3)
+            _similarity_threshold = kwargs.get(
+                "similarity_threshold", 0.3
+            )  # TODO: use for edge filtering
 
             # Get recent crystals for node generation
             crystals = await self._persistence.list_recent(limit=200)
@@ -352,7 +388,9 @@ class BrainNode(BaseLogosNode):
                 nodes.append(
                     {
                         "id": crystal.crystal_id,
-                        "label": crystal.summary[:50] if crystal.summary else crystal.crystal_id[:8],
+                        "label": crystal.summary[:50]
+                        if crystal.summary
+                        else crystal.crystal_id[:8],
                         "x": radius * math.cos(angle),
                         "y": (i % 5) * 0.5 - 1,  # Layer by recency
                         "z": radius * math.sin(angle),

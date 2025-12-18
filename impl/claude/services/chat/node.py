@@ -31,6 +31,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -39,6 +40,29 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    ChatManifestResponse,
+    CreateSessionRequest,
+    CreateSessionResponse,
+    DeleteSessionRequest,
+    DeleteSessionResponse,
+    GetSessionRequest,
+    HistoryRequest,
+    HistoryResponse,
+    MetricsRequest,
+    MetricsResponse,
+    ResetSessionRequest,
+    ResetSessionResponse,
+    ResumeSessionRequest,
+    ResumeSessionResponse,
+    SaveSessionRequest,
+    SaveSessionResponse,
+    SearchSessionsRequest,
+    SendMessageRequest,
+    SendMessageResponse,
+    SessionDetailResponse,
+    SessionsResponse,
+)
 from .factory import ChatSessionFactory, get_chat_factory
 from .persistence import (
     ChatPersistence,
@@ -185,6 +209,22 @@ class ChatResponseRendering:
     "self.chat",
     description="Chat Service - conversational affordances for any AGENTESE node",
     dependencies=("chat_persistence", "chat_factory"),
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(ChatManifestResponse),
+        "sessions": Response(SessionsResponse),
+        # Mutation aspects (Contract with request + response)
+        "session": Contract(GetSessionRequest, SessionDetailResponse),
+        "create": Contract(CreateSessionRequest, CreateSessionResponse),
+        "send": Contract(SendMessageRequest, SendMessageResponse),
+        "history": Contract(HistoryRequest, HistoryResponse),
+        "save": Contract(SaveSessionRequest, SaveSessionResponse),
+        "resume": Contract(ResumeSessionRequest, ResumeSessionResponse),
+        "search": Contract(SearchSessionsRequest, SessionsResponse),
+        "metrics": Contract(MetricsRequest, MetricsResponse),
+        "delete": Contract(DeleteSessionRequest, DeleteSessionResponse),
+        "reset": Contract(ResetSessionRequest, ResetSessionResponse),
+    },
 )
 class ChatNode(BaseLogosNode):
     """
@@ -458,14 +498,16 @@ class ChatNode(BaseLogosNode):
         # Active sessions
         active = self._factory.list_sessions(node_path=node_path)
         for session in active:
-            sessions_list.append({
-                "session_id": session.session_id,
-                "node_path": session.node_path,
-                "name": session._name,
-                "turn_count": session.turn_count,
-                "state": session.state.value,
-                "active": True,
-            })
+            sessions_list.append(
+                {
+                    "session_id": session.session_id,
+                    "node_path": session.node_path,
+                    "name": session._name,
+                    "turn_count": session.turn_count,
+                    "state": session.state.value,
+                    "active": True,
+                }
+            )
 
         # Persisted sessions
         if include_persisted:
@@ -477,14 +519,16 @@ class ChatNode(BaseLogosNode):
             active_ids = {s["session_id"] for s in sessions_list}
             for p in persisted:
                 if p.session_id not in active_ids:
-                    sessions_list.append({
-                        "session_id": p.session_id,
-                        "node_path": p.node_path,
-                        "name": p.name,
-                        "turn_count": p.turn_count,
-                        "state": p.state,
-                        "active": False,
-                    })
+                    sessions_list.append(
+                        {
+                            "session_id": p.session_id,
+                            "node_path": p.node_path,
+                            "name": p.name,
+                            "turn_count": p.turn_count,
+                            "state": p.state,
+                            "active": False,
+                        }
+                    )
 
         return SessionListRendering(
             sessions=sessions_list[:limit],

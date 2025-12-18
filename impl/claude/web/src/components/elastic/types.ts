@@ -309,3 +309,82 @@ export const COMPOSITION_LAWS: CompositionLaw[] = [
     compactTransformation: 'MainContent + FloatingAction(Secondary)',
   },
 ];
+
+// =============================================================================
+// Fixed Layout Constants - For floating/fixed overlays
+// =============================================================================
+
+/**
+ * Z-index layering for fixed elements.
+ * The sheaf condition: fixed siblings must not occlude each other unintentionally.
+ *
+ * Panel (z-30) < Toggle (z-40) < Modal (z-50)
+ */
+export const Z_INDEX_LAYERS = {
+  /** Floating panels (sidebars, bottom panels) */
+  panel: 30,
+  /** Toggle buttons, FABs */
+  toggle: 40,
+  /** Modals, dialogs, fullscreen drawers */
+  modal: 50,
+  /** Toast notifications */
+  toast: 60,
+} as const;
+
+/**
+ * Glass effect styles for floating overlays.
+ * 17.5% transparency = 82.5% opacity = 0.825
+ */
+export const GLASS_EFFECT = {
+  /** Standard glass: 82.5% opacity with medium blur */
+  standard: {
+    background: 'bg-gray-800/[0.825]',
+    blur: 'backdrop-blur-md',
+  },
+  /** Solid glass: 95% opacity with light blur */
+  solid: {
+    background: 'bg-gray-800/95',
+    blur: 'backdrop-blur-sm',
+  },
+  /** Light glass: 70% opacity with heavy blur */
+  light: {
+    background: 'bg-gray-800/70',
+    blur: 'backdrop-blur-lg',
+  },
+} as const;
+
+export type GlassVariant = keyof typeof GLASS_EFFECT;
+
+/**
+ * Standard heights for collapsible bottom panels.
+ */
+export const BOTTOM_PANEL_HEIGHTS = {
+  /** Collapsed height (header only) */
+  collapsed: 48,
+  /** Default expanded height */
+  expanded: 200,
+  /** Maximum expanded height */
+  max: 400,
+} as const;
+
+/**
+ * Standard widths for floating sidebars.
+ */
+export const SIDEBAR_WIDTHS = {
+  /** Compact sidebar for comfortable density */
+  compact: 240,
+  /** Full sidebar for spacious density */
+  full: 280,
+} as const;
+
+/**
+ * Standard heights for collapsible top panels (e.g., ObserverDrawer).
+ */
+export const TOP_PANEL_HEIGHTS = {
+  /** Collapsed height (summary bar only) */
+  collapsed: 40,
+  /** Default expanded height */
+  expanded: 280,
+  /** Maximum expanded height */
+  max: 400,
+} as const;

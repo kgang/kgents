@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -42,6 +43,18 @@ from protocols.gestalt.handler import (
     handle_health_manifest,
     handle_module_manifest,
     scan_codebase,
+)
+
+from .contracts import (
+    DriftResponse,
+    GestaltManifestResponse,
+    HealthResponse,
+    ModuleRequest,
+    ModuleResponse,
+    ScanRequest,
+    ScanResponse,
+    TopologyRequest,
+    TopologyResponse,
 )
 
 if TYPE_CHECKING:
@@ -112,6 +125,16 @@ class TopologyRendering:
     "world.codebase",
     description="Gestalt Architecture Visualizer - living garden where code breathes",
     dependencies=(),  # No DI required - uses module-level GestaltStore
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(GestaltManifestResponse),
+        "health": Response(HealthResponse),
+        "drift": Response(DriftResponse),
+        # Mutation aspects (Contract with request + response)
+        "topology": Contract(TopologyRequest, TopologyResponse),
+        "module": Contract(ModuleRequest, ModuleResponse),
+        "scan": Contract(ScanRequest, ScanResponse),
+    },
 )
 class GestaltNode(BaseLogosNode):
     """

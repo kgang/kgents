@@ -583,10 +583,10 @@ export const gestaltApi = {
     return unwrapAgentese(response);
   },
 
-  /** Get module details via AGENTESE: world.codebase.module.get */
+  /** Get module details via AGENTESE: world.codebase (aspect: module) */
   getModule: async (moduleName: string): Promise<CodebaseModuleResponse> => {
     const response = await apiClient.post<AgenteseResponse<CodebaseModuleResponse>>(
-      '/agentese/world/codebase/module/get',
+      '/agentese/world/codebase/module',
       { module_name: moduleName }
     );
     return unwrapAgentese(response);
@@ -958,6 +958,142 @@ export interface TransitionActionResponse {
   garden_state: GardenStateResponse | null;
   message: string;
 }
+
+// =============================================================================
+// Design API (Design Language System) - AGENTESE Universal Protocol
+// Routes:
+//   concept.design.manifest - Design system overview
+//   concept.design.layout.* - Layout operad operations
+//   concept.design.content.* - Content operad operations
+//   concept.design.motion.* - Motion operad operations
+//   concept.design.operad.* - Unified design operad
+// =============================================================================
+
+/**
+ * Response from operad verification.
+ */
+export interface OperadVerifyResult {
+  law: string;
+  status: string;
+  passed: boolean;
+  message: string;
+}
+
+export interface OperadVerifyResponse {
+  all_passed: boolean;
+  results: OperadVerifyResult[];
+}
+
+export interface OperadOperation {
+  arity: number;
+  signature: string;
+  description: string;
+}
+
+export interface OperadLaw {
+  name: string;
+  equation: string;
+  description: string;
+}
+
+export interface DesignManifestResponse {
+  dimensions: string[];
+  operad: string;
+}
+
+export interface OperadManifestResponse {
+  name: string;
+  operations: string[];
+  law_count: number;
+}
+
+export const designApi = {
+  /** Get design system overview via AGENTESE: concept.design.manifest */
+  manifest: async (): Promise<DesignManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<DesignManifestResponse>>(
+      '/agentese/concept/design/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get layout operad state via AGENTESE: concept.design.layout.manifest */
+  layoutManifest: async (): Promise<OperadManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<OperadManifestResponse>>(
+      '/agentese/concept/design/layout/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get layout operations via AGENTESE: concept.design.layout.operations */
+  layoutOperations: async (): Promise<Record<string, OperadOperation>> => {
+    const response = await apiClient.post<AgenteseResponse<Record<string, OperadOperation>>>(
+      '/agentese/concept/design/layout/operations',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Verify layout laws via AGENTESE: concept.design.layout.verify */
+  layoutVerify: async (): Promise<OperadVerifyResult[]> => {
+    const response = await apiClient.post<AgenteseResponse<OperadVerifyResult[]>>(
+      '/agentese/concept/design/layout/verify',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get content operad state via AGENTESE: concept.design.content.manifest */
+  contentManifest: async (): Promise<OperadManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<OperadManifestResponse>>(
+      '/agentese/concept/design/content/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get content operations via AGENTESE: concept.design.content.operations */
+  contentOperations: async (): Promise<Record<string, OperadOperation>> => {
+    const response = await apiClient.post<AgenteseResponse<Record<string, OperadOperation>>>(
+      '/agentese/concept/design/content/operations',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get motion operad state via AGENTESE: concept.design.motion.manifest */
+  motionManifest: async (): Promise<OperadManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<OperadManifestResponse>>(
+      '/agentese/concept/design/motion/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get motion operations via AGENTESE: concept.design.motion.operations */
+  motionOperations: async (): Promise<Record<string, OperadOperation>> => {
+    const response = await apiClient.post<AgenteseResponse<Record<string, OperadOperation>>>(
+      '/agentese/concept/design/motion/operations',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Verify all design laws via AGENTESE: concept.design.operad.verify */
+  operadVerify: async (): Promise<OperadVerifyResponse> => {
+    const response = await apiClient.post<AgenteseResponse<OperadVerifyResponse>>(
+      '/agentese/concept/design/operad/verify',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Check naturality law via AGENTESE: concept.design.operad.naturality */
+  operadNaturality: async (): Promise<OperadVerifyResult> => {
+    const response = await apiClient.post<AgenteseResponse<OperadVerifyResult>>(
+      '/agentese/concept/design/operad/naturality',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+};
 
 // =============================================================================
 // Park API (Wave 3: Punchdrunk Park)

@@ -13,6 +13,7 @@ Key Components:
 - SerendipityInjection: Events injected via void.entropy
 - DialogueMask: Character masks with eigenvector transforms (Wave 3)
 - ParkDomainBridge: Integration with Domain simulation (Wave 3)
+- DIRECTOR_OPERAD: Composition grammar for director operations
 
 Philosophy:
     "Collaboration > control. Citizen refusal is core feature, not bug."
@@ -63,6 +64,7 @@ from agents.park.masks import (
     get_mask,
     list_masks,
 )
+from agents.park.operad import DIRECTOR_OPERAD
 
 __all__ = [
     # Core Director
@@ -75,8 +77,9 @@ __all__ = [
     "TensionEscalation",
     "DifficultyAdjustment",
     "InjectionDecision",
-    # Polynomial
+    # Polynomial + Operad
     "DIRECTOR_POLYNOMIAL",
+    "DIRECTOR_OPERAD",
     # Factory
     "create_director",
     # Wave 3: Domain Bridge

@@ -6,15 +6,70 @@ using Spivak's polynomial functor formalism.
 
 P(y) = Σ_{s ∈ positions} y^{directions(s)}
 
+Positions (phases):
+- DORMANT: Created, not started
+- STREAMING: Processing continuous input (main operational state)
+- BRANCHING: Exploring alternatives (research mode)
+- CONVERGING: Merging branches or building consensus
+- DRAINING: Source exhausted, flushing remaining output
+- COLLAPSED: Terminal state (entropy depleted, error, or completed)
+
 See: spec/f-gents/README.md
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum, auto
 from typing import Any, Callable, FrozenSet, Generic, TypeVar
 
+# Import FlowState for backward compatibility
 from agents.f.state import FlowState
+
+# =============================================================================
+# FlowPhase: Canonical phase enum for SpecGraph reflection
+# =============================================================================
+
+
+class FlowPhase(Enum):
+    """
+    Flow lifecycle phases (canonical naming for SpecGraph).
+
+    This enum mirrors FlowState but follows the *Phase naming convention
+    required by SpecGraph reflection. Use FlowState for runtime logic,
+    FlowPhase for spec alignment.
+    """
+
+    DORMANT = auto()  # Created, not started
+    STREAMING = auto()  # Processing continuous input
+    BRANCHING = auto()  # Exploring alternatives
+    CONVERGING = auto()  # Merging branches/consensus
+    DRAINING = auto()  # Flushing remaining output
+    COLLAPSED = auto()  # Terminal state
+
+    @classmethod
+    def from_flow_state(cls, state: FlowState) -> "FlowPhase":
+        """Convert FlowState to FlowPhase."""
+        return {
+            FlowState.DORMANT: cls.DORMANT,
+            FlowState.STREAMING: cls.STREAMING,
+            FlowState.BRANCHING: cls.BRANCHING,
+            FlowState.CONVERGING: cls.CONVERGING,
+            FlowState.DRAINING: cls.DRAINING,
+            FlowState.COLLAPSED: cls.COLLAPSED,
+        }[state]
+
+    def to_flow_state(self) -> FlowState:
+        """Convert FlowPhase to FlowState."""
+        return {
+            FlowPhase.DORMANT: FlowState.DORMANT,
+            FlowPhase.STREAMING: FlowState.STREAMING,
+            FlowPhase.BRANCHING: FlowState.BRANCHING,
+            FlowPhase.CONVERGING: FlowState.CONVERGING,
+            FlowPhase.DRAINING: FlowState.DRAINING,
+            FlowPhase.COLLAPSED: FlowState.COLLAPSED,
+        }[self]
+
 
 # Type variables
 S = TypeVar("S")  # State type
@@ -232,6 +287,9 @@ def get_polynomial(modality: str) -> FlowPolynomial[FlowState, str, dict[str, An
 
 
 __all__ = [
+    # Phase enum (for SpecGraph reflection)
+    "FlowPhase",
+    # Polynomial class and instances
     "FlowPolynomial",
     "FLOW_POLYNOMIAL",
     "CHAT_POLYNOMIAL",

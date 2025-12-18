@@ -5,8 +5,13 @@
  * This component handles all business logic and visualization while
  * the page component delegates to PathProjection.
  *
+ * Phase 3 Enhancement: Integrates categorical polynomial visualizations
+ * for crisis phases, timers, consent debt, and masks. Adds trace panel
+ * for N-gent witness pattern and mobile optimization.
+ *
  * @see spec/protocols/os-shell.md - Part III: Projection-First Rendering
  * @see docs/creative/visual-system.md - NO EMOJIS policy
+ * @see plans/park-town-design-overhaul.md - Phase 3: Park Enhancement
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,10 +24,14 @@ import type {
   ParkCrisisPhase,
   ParkStatusResponse,
 } from '../../api/types';
-import { TimerGrid } from './TimerDisplay';
-import { PhaseTransition, PhaseIndicator } from './PhaseTransition';
-import { MaskSelector, CurrentMaskBadge } from './MaskSelector';
-import { ConsentMeter } from './ConsentMeter';
+// Phase 3: Use enhanced components instead of legacy ones
+import { TimerMachineGrid } from './TimerMachine';
+import { PhaseVisualization } from './PhaseVisualization';
+import { PhaseIndicator } from './PhaseTransition';
+import { MaskGridEnhanced } from './MaskCardEnhanced';
+import { CurrentMaskBadge } from './MaskSelector';
+import { ConsentDebtMachine } from './ConsentDebtMachine';
+import { ParkTracePanel } from './ParkTracePanel';
 import {
   InlineError,
   Shake,
@@ -31,6 +40,7 @@ import {
 } from '../joy';
 import { useSynergyToast } from '../synergy';
 import { JEWEL_ICONS, JEWEL_COLORS } from '../../constants/jewels';
+import { BottomDrawer } from '../elastic';
 import type { Density } from '../../shell/types';
 
 // =============================================================================
@@ -169,6 +179,301 @@ interface SummaryScreenProps {
   onReset: () => void;
 }
 
+// =============================================================================
+// Running Scenario Component (Phase 3 Enhanced)
+// =============================================================================
+
+interface RunningScenarioProps {
+  scenario: ParkScenarioState;
+  masks: ParkMaskInfo[];
+  autoTick: boolean;
+  setAutoTick: (v: boolean) => void;
+  onTick: (count?: number) => void;
+  onTransition: (phase: ParkCrisisPhase) => void;
+  onDonMask: (name: string) => void;
+  onDoffMask: () => void;
+  onUseForce: () => void;
+  onComplete: (outcome: 'success' | 'failure' | 'abandon') => void;
+  isMobile: boolean;
+}
+
+function RunningScenario({
+  scenario,
+  masks,
+  autoTick,
+  setAutoTick,
+  onTick,
+  onTransition,
+  onDonMask,
+  onDoffMask,
+  onUseForce,
+  onComplete,
+  isMobile,
+}: RunningScenarioProps) {
+  // Mobile drawer states
+  const [masksDrawerOpen, setMasksDrawerOpen] = useState(false);
+  const [traceDrawerOpen, setTraceDrawerOpen] = useState(false);
+
+  // Desktop layout
+  if (!isMobile) {
+    return (
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Left Column - State Machines */}
+        <div className="space-y-6">
+          {/* Scenario Info */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <h2 className="text-lg font-semibold mb-2">{scenario.name}</h2>
+            <p className="text-xs text-gray-400 mb-4">{scenario.scenario_type}</p>
+
+            {/* Auto-tick toggle */}
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoTick}
+                onChange={(e) => setAutoTick(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-600"
+              />
+              <span className="text-gray-400">Auto-advance timers</span>
+            </label>
+
+            {/* Manual tick */}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={() => onTick(1)}
+                className="flex-1 py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded"
+              >
+                +1 tick
+              </button>
+              <button
+                onClick={() => onTick(10)}
+                className="flex-1 py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded"
+              >
+                +10 ticks
+              </button>
+            </div>
+          </div>
+
+          {/* Timers with State Machine (Phase 3) */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Timer Machines</h3>
+            <TimerMachineGrid
+              timers={scenario.timers}
+              accelerated={scenario.accelerated}
+              showStateMachine
+              compact
+            />
+          </div>
+
+          {/* Consent Debt Machine (Phase 3) */}
+          <ConsentDebtMachine
+            consentDebt={scenario.consent_debt}
+            forcesUsed={scenario.forces_used}
+            forcesRemaining={scenario.forces_remaining}
+            onForce={onUseForce}
+            forceDisabled={scenario.forces_remaining === 0}
+            showStateMachine
+            showTeaching
+          />
+        </div>
+
+        {/* Center Column - Phase & Actions */}
+        <div className="space-y-6">
+          {/* Phase Visualization (Phase 3) */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <PhaseVisualization
+              currentPhase={scenario.crisis_phase}
+              availableTransitions={scenario.available_transitions}
+              phaseTransitions={scenario.phase_transitions}
+              consentDebt={scenario.consent_debt}
+              onTransition={onTransition}
+              showTeaching
+            />
+          </div>
+
+          {/* Current Mask */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Current Mask</h3>
+            <CurrentMaskBadge
+              mask={scenario.mask}
+              onDoff={scenario.mask ? onDoffMask : undefined}
+            />
+          </div>
+
+          {/* Trace Panel (Phase 3 - N-gent Witness) */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <ParkTracePanel
+              phaseTransitions={scenario.phase_transitions}
+              timers={scenario.timers}
+              currentMask={scenario.mask}
+              forcesUsed={scenario.forces_used}
+              maxEvents={8}
+              showTeaching
+            />
+          </div>
+
+          {/* Complete Controls */}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Complete Scenario</h3>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => onComplete('success')}
+                className="py-2 text-xs bg-green-700 hover:bg-green-600 rounded"
+              >
+                Success
+              </button>
+              <button
+                onClick={() => onComplete('failure')}
+                className="py-2 text-xs bg-red-700 hover:bg-red-600 rounded"
+              >
+                Failure
+              </button>
+              <button
+                onClick={() => onComplete('abandon')}
+                className="py-2 text-xs bg-gray-600 hover:bg-gray-500 rounded"
+              >
+                Abandon
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Masks (Phase 3 Enhanced) */}
+        <div className="bg-gray-800/50 rounded-xl p-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+          <h3 className="text-sm font-medium text-gray-300 mb-3">Dialogue Masks</h3>
+          <MaskGridEnhanced
+            masks={masks}
+            currentMask={scenario.mask}
+            onDon={onDonMask}
+            onDoff={onDoffMask}
+            showAffordances
+            showTeaching
+            compact
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile layout with BottomDrawers
+  return (
+    <div className="space-y-4">
+      {/* Header with phase and consent */}
+      <div className="bg-gray-800/50 rounded-xl p-3">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h2 className="text-sm font-semibold">{scenario.name}</h2>
+            <p className="text-xs text-gray-500">{scenario.scenario_type}</p>
+          </div>
+          <PhaseIndicator currentPhase={scenario.crisis_phase} />
+        </div>
+
+        {/* Compact consent debt */}
+        <ConsentDebtMachine
+          consentDebt={scenario.consent_debt}
+          forcesUsed={scenario.forces_used}
+          forcesRemaining={scenario.forces_remaining}
+          onForce={onUseForce}
+          forceDisabled={scenario.forces_remaining === 0}
+          showStateMachine={false}
+          showTeaching={false}
+          compact
+        />
+      </div>
+
+      {/* Timers - compact */}
+      <div className="bg-gray-800/50 rounded-xl p-3">
+        <TimerMachineGrid
+          timers={scenario.timers}
+          accelerated={scenario.accelerated}
+          showStateMachine={false}
+          compact
+        />
+      </div>
+
+      {/* Phase Visualization - compact */}
+      <div className="bg-gray-800/50 rounded-xl p-3">
+        <PhaseVisualization
+          currentPhase={scenario.crisis_phase}
+          availableTransitions={scenario.available_transitions}
+          phaseTransitions={scenario.phase_transitions}
+          consentDebt={scenario.consent_debt}
+          onTransition={onTransition}
+          compact
+          showTeaching={false}
+        />
+      </div>
+
+      {/* Current Mask */}
+      <div className="bg-gray-800/50 rounded-xl p-3">
+        <CurrentMaskBadge
+          mask={scenario.mask}
+          onDoff={scenario.mask ? onDoffMask : undefined}
+        />
+      </div>
+
+      {/* Mobile action buttons */}
+      <div className="fixed bottom-4 left-4 right-4 flex gap-2 z-40">
+        <button
+          onClick={() => setMasksDrawerOpen(true)}
+          className="flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg"
+        >
+          Masks
+        </button>
+        <button
+          onClick={() => setTraceDrawerOpen(true)}
+          className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white text-sm font-medium rounded-lg"
+        >
+          Trace
+        </button>
+        <button
+          onClick={() => onComplete('success')}
+          className="flex-1 py-3 bg-green-700 hover:bg-green-600 text-white text-sm font-medium rounded-lg"
+        >
+          Done
+        </button>
+      </div>
+
+      {/* Masks BottomDrawer */}
+      <BottomDrawer
+        isOpen={masksDrawerOpen}
+        onClose={() => setMasksDrawerOpen(false)}
+        title="Dialogue Masks"
+        maxHeightPercent={80}
+      >
+        <div className="p-4">
+          <MaskGridEnhanced
+            masks={masks}
+            currentMask={scenario.mask}
+            onDon={onDonMask}
+            onDoff={onDoffMask}
+            showAffordances
+            compact
+          />
+        </div>
+      </BottomDrawer>
+
+      {/* Trace BottomDrawer */}
+      <BottomDrawer
+        isOpen={traceDrawerOpen}
+        onClose={() => setTraceDrawerOpen(false)}
+        title="Scenario Trace"
+        maxHeightPercent={70}
+      >
+        <div className="p-4">
+          <ParkTracePanel
+            phaseTransitions={scenario.phase_transitions}
+            timers={scenario.timers}
+            currentMask={scenario.mask}
+            forcesUsed={scenario.forces_used}
+            maxEvents={15}
+            showTeaching
+          />
+        </div>
+      </BottomDrawer>
+    </div>
+  );
+}
+
 function SummaryScreen({ summary, onReset }: SummaryScreenProps) {
   // Get outcome icon
   const OutcomeIcon = summary.outcome === 'success' ? Trophy
@@ -264,12 +569,12 @@ function SummaryScreen({ summary, onReset }: SummaryScreenProps) {
 // Main Component
 // =============================================================================
 
-export function ParkVisualization({ data, density: _density, refetch: _refetch }: ParkVisualizationProps) {
-  // Note: density and refetch available for future density-adaptive rendering
-  // Currently using fixed layout; TODO: add compact/comfortable/spacious adaptation
-
+export function ParkVisualization({ data, density, refetch: _refetch }: ParkVisualizationProps) {
   // Determine initial state from data
   const initialViewState: ViewState = data.running ? 'running' : 'idle';
+
+  // Mobile detection for bottom drawer usage
+  const isMobile = density === 'compact';
 
   // State
   const [viewState, setViewState] = useState<ViewState>(initialViewState);
@@ -478,124 +783,21 @@ export function ParkVisualization({ data, density: _density, refetch: _refetch }
           <StartScreen masks={masks} onStart={startScenario} loading={loading} />
         )}
 
-        {/* Running State */}
+        {/* Running State - Phase 3 Enhanced */}
         {viewState === 'running' && scenario && (
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Left Column - Timers & Controls */}
-            <div className="space-y-6">
-              {/* Scenario Info */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h2 className="text-lg font-semibold mb-2">{scenario.name}</h2>
-                <p className="text-xs text-gray-400 mb-4">{scenario.scenario_type}</p>
-
-                {/* Auto-tick toggle */}
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={autoTick}
-                    onChange={(e) => setAutoTick(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-600"
-                  />
-                  <span className="text-gray-400">Auto-advance timers</span>
-                </label>
-
-                {/* Manual tick */}
-                <div className="flex gap-2 mt-3">
-                  <button
-                    onClick={() => tickScenario(1)}
-                    className="flex-1 py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded"
-                  >
-                    +1 tick
-                  </button>
-                  <button
-                    onClick={() => tickScenario(10)}
-                    className="flex-1 py-2 text-xs bg-gray-700 hover:bg-gray-600 rounded"
-                  >
-                    +10 ticks
-                  </button>
-                </div>
-              </div>
-
-              {/* Timers */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Timers</h3>
-                <TimerGrid
-                  timers={scenario.timers}
-                  accelerated={scenario.accelerated}
-                />
-              </div>
-
-              {/* Consent Meter */}
-              <ConsentMeter
-                consentDebt={scenario.consent_debt}
-                forcesUsed={scenario.forces_used}
-                forcesRemaining={scenario.forces_remaining}
-                onForce={useForce}
-                forceDisabled={scenario.forces_remaining === 0}
-              />
-            </div>
-
-            {/* Center Column - Phase & Actions */}
-            <div className="space-y-6">
-              {/* Phase Transition */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-300 mb-4">Crisis Phase</h3>
-                <PhaseTransition
-                  currentPhase={scenario.crisis_phase}
-                  availableTransitions={scenario.available_transitions}
-                  phaseTransitions={scenario.phase_transitions}
-                  onTransition={transitionPhase}
-                  compact
-                />
-              </div>
-
-              {/* Current Mask */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Current Mask</h3>
-                <CurrentMaskBadge
-                  mask={scenario.mask}
-                  onDoff={scenario.mask ? doffMask : undefined}
-                />
-              </div>
-
-              {/* Complete Controls */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <h3 className="text-sm font-medium text-gray-300 mb-3">Complete Scenario</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    onClick={() => completeScenario('success')}
-                    className="py-2 text-xs bg-green-700 hover:bg-green-600 rounded"
-                  >
-                    Success
-                  </button>
-                  <button
-                    onClick={() => completeScenario('failure')}
-                    className="py-2 text-xs bg-red-700 hover:bg-red-600 rounded"
-                  >
-                    Failure
-                  </button>
-                  <button
-                    onClick={() => completeScenario('abandon')}
-                    className="py-2 text-xs bg-gray-600 hover:bg-gray-500 rounded"
-                  >
-                    Abandon
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column - Masks */}
-            <div className="bg-gray-800/50 rounded-xl p-4">
-              <h3 className="text-sm font-medium text-gray-300 mb-3">Dialogue Masks</h3>
-              <MaskSelector
-                masks={masks}
-                currentMask={scenario.mask}
-                onDon={donMask}
-                onDoff={doffMask}
-                compact
-              />
-            </div>
-          </div>
+          <RunningScenario
+            scenario={scenario}
+            masks={masks}
+            autoTick={autoTick}
+            setAutoTick={setAutoTick}
+            onTick={tickScenario}
+            onTransition={transitionPhase}
+            onDonMask={donMask}
+            onDoffMask={doffMask}
+            onUseForce={useForce}
+            onComplete={completeScenario}
+            isMobile={isMobile}
+          />
         )}
 
         {/* Summary State */}

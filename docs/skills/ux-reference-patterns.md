@@ -315,6 +315,44 @@ Minimal ────────────────────────
 
 ---
 
+## 9. Shell/Panel Patterns
+
+*Source: OS Shell implementation (2025-12-17)*
+
+### 9.1 Floating Overlay Navigation
+
+| Pattern | Implementation | Why It Works |
+|---------|----------------|--------------|
+| **Overlay > Push** | Sidebar floats over content | Full content width when collapsed |
+| **Transform > Reflow** | `translate-x` not `margin-left` | Smoother animation, no layout thrashing |
+| **Toggle follows panel** | Button slides with sidebar | Spatial consistency, always accessible |
+
+**Principle**: "Users rarely need nav and content simultaneously."
+
+### 9.2 Fixed Bottom Panels
+
+| Pattern | Implementation | Why It Works |
+|---------|----------------|--------------|
+| **Fixed position** | `fixed bottom-0 left-0 right-0` | Stays anchored during scroll |
+| **Padding compensation** | Main content gets bottom padding | No content occlusion |
+| **Collapse to input line** | 48px collapsed, 200px+ expanded | Always accessible, expandable on demand |
+| **Desktop-only resize** | Drag handle on spacious density | Appropriate for input method |
+
+**Principle**: "Fixed > Relative for persistent UI that must survive scroll."
+
+### 9.3 Z-Index Layering
+
+| Layer | Z-Index | Purpose |
+|-------|---------|---------|
+| **Content** | Base | Page content |
+| **Panel** | z-30 | Sidebar, bottom drawer |
+| **Toggle** | z-40 | Panel controls, FABs |
+| **Modal/Overlay** | z-50 | Full-screen drawers, dialogs |
+
+**Principle**: "Explicit layering prevents occlusion bugs."
+
+---
+
 ## Application Checklist
 
 When designing a new feature, check against these patterns:
@@ -342,4 +380,5 @@ When designing a new feature, check against these patterns:
 
 ## Changelog
 
+- 2025-12-17: Added Shell/Panel Patterns (floating overlay, fixed bottom, z-index layering)
 - 2025-12-15: Initial extraction from core-apps UX research

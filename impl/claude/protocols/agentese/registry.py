@@ -49,6 +49,7 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    from .contract import ContractsDict
     from .node import BaseLogosNode, LogosNode
 
 logger = logging.getLogger(__name__)
@@ -70,6 +71,7 @@ class NodeMetadata:
         dependencies: Required dependencies for instantiation
         singleton: Whether to cache a single instance
         lazy: Whether to defer instantiation until first use
+        contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
     """
 
     path: str
@@ -77,6 +79,7 @@ class NodeMetadata:
     dependencies: tuple[str, ...] = ()
     singleton: bool = True  # Default: cache single instance
     lazy: bool = True  # Default: defer instantiation
+    contracts: "ContractsDict | None" = None  # Phase 7: Contract declarations
 
 
 # Marker attribute name for registered nodes
@@ -93,6 +96,7 @@ def node(
     dependencies: tuple[str, ...] = (),
     singleton: bool = True,
     lazy: bool = True,
+    contracts: "ContractsDict | None" = None,
 ) -> Callable[[type[T]], type[T]]:
     """
     Decorator to register a LogosNode class with the AGENTESE registry.
@@ -106,12 +110,23 @@ def node(
         dependencies: Dependency names for DI container
         singleton: Cache single instance (default: True)
         lazy: Defer instantiation until first use (default: True)
+        contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
+            Use Contract(), Response(), Request() from protocols.agentese.contract
 
     Returns:
         Decorated class with node metadata
 
     Example:
-        @node("self.memory", dependencies=("brain_crystal",))
+        from protocols.agentese.contract import Contract, Response
+
+        @node(
+            "self.memory",
+            dependencies=("brain_crystal",),
+            contracts={
+                "manifest": Response(BrainManifestResponse),
+                "capture": Contract(CaptureRequest, CaptureResponse),
+            }
+        )
         class BrainNode(BaseLogosNode):
             '''Holographic Brain AGENTESE node.'''
 
@@ -130,6 +145,7 @@ def node(
         - The path should match the node's `handle` property
         - Dependencies are resolved by ServiceContainer at instantiation
         - Singleton nodes are cached after first instantiation
+        - Contracts enable FE type generation via /discover?include_schemas=true
     """
 
     def decorator(cls: type[T]) -> type[T]:
@@ -143,6 +159,7 @@ def node(
             dependencies=dependencies,
             singleton=singleton,
             lazy=lazy,
+            contracts=contracts,
         )
 
         # Attach metadata to class
@@ -150,6 +167,15 @@ def node(
 
         # Auto-register with global registry
         _get_registry()._register_class(path, cls, meta)
+
+        # Register contracts if provided (Phase 7)
+        if contracts is not None:
+            try:
+                from .contract import get_contract_registry
+
+                get_contract_registry().register(path, contracts)
+            except ImportError:
+                logger.debug("Contract registry not available")
 
         logger.debug(f"Registered AGENTESE node: {path} -> {cls.__name__}")
 
@@ -343,6 +369,9 @@ class NodeRegistry:
     def stats(self) -> dict[str, Any]:
         """Get registry statistics."""
         with self._lock:
+            paths_with_contracts = sum(
+                1 for meta in self._metadata.values() if meta.contracts is not None
+            )
             return {
                 "registered_nodes": len(self._nodes),
                 "cached_instances": len(self._instances),
@@ -350,6 +379,45 @@ class NodeRegistry:
                 "contexts": list(
                     set(p.split(".")[0] for p in self._nodes.keys() if "." in p)
                 ),
+                "paths_with_contracts": paths_with_contracts,
+            }
+
+    def get_contracts(self, path: str) -> "ContractsDict | None":
+        """
+        Get contracts for a path.
+
+        Args:
+            path: AGENTESE path
+
+        Returns:
+            Contracts dict or None if no contracts defined
+        """
+        meta = self.get_metadata(path)
+        if meta is None:
+            return None
+        return meta.contracts
+
+    def list_paths_with_contracts(self) -> list[str]:
+        """List all paths that have contract declarations."""
+        with self._lock:
+            return [
+                path
+                for path, meta in self._metadata.items()
+                if meta.contracts is not None
+            ]
+
+    def get_all_contracts(self) -> dict[str, "ContractsDict"]:
+        """
+        Get all contracts for all paths.
+
+        Returns:
+            Dictionary of path -> contracts dict (only paths with contracts)
+        """
+        with self._lock:
+            return {
+                path: meta.contracts
+                for path, meta in self._metadata.items()
+                if meta.contracts is not None
             }
 
 

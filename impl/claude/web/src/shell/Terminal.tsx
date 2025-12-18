@@ -508,12 +508,12 @@ export function Terminal({
   }
 
   // ===========================================================================
-  // Render - Comfortable (tablet)
+  // Render - Comfortable (tablet) - Fixed at bottom
   // ===========================================================================
 
   if (density === 'comfortable') {
     return (
-      <div className={`bg-gray-800/80 backdrop-blur-sm border-t border-gray-700/50 ${className}`}>
+      <div className={`fixed bottom-0 left-0 right-0 z-40 bg-gray-800/[0.825] backdrop-blur-md border-t border-gray-700/50 ${className}`}>
         <AnimatePresence mode="wait" initial={false}>
           {terminalExpanded ? (
             <motion.div
@@ -629,7 +629,7 @@ export function Terminal({
   }
 
   // ===========================================================================
-  // Render - Spacious (desktop)
+  // Render - Spacious (desktop) - Fixed at bottom
   // ===========================================================================
 
   const isExpanded = terminalExpanded;
@@ -637,7 +637,7 @@ export function Terminal({
 
   return (
     <div
-      className={`bg-gray-800/95 backdrop-blur-sm border-t border-gray-700/50 flex flex-col ${className}`}
+      className={`fixed bottom-0 left-0 right-0 z-40 bg-gray-800/[0.825] backdrop-blur-md border-t border-gray-700/50 flex flex-col ${className}`}
       style={{ height: currentHeight }}
     >
       {/* Resize handle */}

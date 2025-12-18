@@ -453,6 +453,175 @@ def can_transition(from_state: State, to_state: State) -> bool:
 
 ---
 
+## Pattern 10: Operad Inheritance
+
+**Problem**: New domains need composition grammar that builds on existing operads.
+
+**Wrong**: Copy-paste operations
+```python
+# Duplicated operations across operads
+JEWEL_OPERAD = Operad(
+    operations={
+        "split": Operation(...),  # Copied from DESIGN_OPERAD
+        "stack": Operation(...),  # Copied again
+        # ... all duplicated
+    }
+)
+```
+
+**Right**: Spread inheritance
+```python
+def create_emergence_operad() -> Operad:
+    from agents.design import DESIGN_OPERAD
+
+    return Operad(
+        name="EMERGENCE",
+        operations={
+            # Domain-specific operations
+            "select_family": Operation(arity=1, ...),
+            "modulate_qualia": Operation(arity=2, ...),
+            # Inherit all DESIGN_OPERAD operations
+            **DESIGN_OPERAD.operations,
+        },
+        laws=[
+            Law(name="pattern_commutativity", ...),
+            # Inherit all DESIGN_OPERAD laws
+            *DESIGN_OPERAD.laws,
+        ],
+    )
+```
+
+**Benefits**:
+- Single source of truth for base operations
+- Domain-specific operations compose with inherited ones
+- Law inheritance ensures consistency
+
+**Apply to**:
+| Child Operad | Parent | Domain-Specific Ops |
+|--------------|--------|---------------------|
+| EMERGENCE_OPERAD | DESIGN_OPERAD | select_family, tune_param, modulate_qualia |
+| TOWN_OPERAD | AGENT_OPERAD | greet, gossip, trade, solo |
+| WORKSHOP_OPERAD | DESIGN_OPERAD | create_piece, curate, exhibit |
+
+---
+
+## Pattern 11: Circadian Modulation
+
+**Problem**: UI should feel different at different times of day without being disruptive.
+
+**Implementation (Backend)**:
+```python
+class CircadianPhase(Enum):
+    DAWN = "dawn"      # 6-10
+    NOON = "noon"      # 10-16
+    DUSK = "dusk"      # 16-20
+    MIDNIGHT = "midnight"  # 20-6
+
+    @classmethod
+    def from_hour(cls, hour: int) -> "CircadianPhase":
+        if 6 <= hour < 10: return cls.DAWN
+        if 10 <= hour < 16: return cls.NOON
+        if 16 <= hour < 20: return cls.DUSK
+        return cls.MIDNIGHT
+
+@dataclass(frozen=True)
+class QualiaModifier:
+    warmth: float    # -1 to 1 (additive)
+    brightness: float  # 0 to 1 (multiplicative)
+    tempo: float     # -1 to 1 (additive to animation speed)
+
+CIRCADIAN_MODIFIERS = {
+    CircadianPhase.DAWN: QualiaModifier(warmth=-0.2, brightness=0.8, tempo=0.2),
+    CircadianPhase.NOON: QualiaModifier(warmth=0.0, brightness=1.0, tempo=0.0),
+    CircadianPhase.DUSK: QualiaModifier(warmth=0.3, brightness=0.6, tempo=-0.2),
+    CircadianPhase.MIDNIGHT: QualiaModifier(warmth=-0.1, brightness=0.3, tempo=-0.4),
+}
+```
+
+**Implementation (Frontend)**:
+```typescript
+function useCircadian() {
+  const [phase, setPhase] = useState<CircadianPhase>(() =>
+    getCircadianPhase(new Date().getHours())
+  );
+  const [override, setOverride] = useState<CircadianPhase | null>(null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPhase(getCircadianPhase(new Date().getHours()));
+    }, 60000);  // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  return {
+    phase: override ?? phase,
+    modifier: CIRCADIAN_MODIFIERS[override ?? phase],
+    setOverride,
+    clearOverride: () => setOverride(null),
+    isOverridden: override !== null,
+  };
+}
+```
+
+**Benefits**:
+- Subtle mood shifts (dusk = warmer, slower)
+- Manual override for demos
+- Backend + frontend alignment
+
+**Apply to**:
+| Jewel | What Changes | Effect |
+|-------|-------------|--------|
+| Emergence | Pattern hue, animation speed | Warmer at dusk, slower at midnight |
+| Gestalt | Dashboard accent color | Cooler in morning, warmer evening |
+| Town | Citizen activity patterns | More active at noon, reflective at midnight |
+
+---
+
+## Pattern 12: Law Honesty (STRUCTURAL Status)
+
+**Problem**: Some operad laws express design constraints, not runtime-verifiable invariants.
+
+**Wrong**: Pretend laws always pass
+```python
+def _verify_commutativity(*args) -> LawVerification:
+    # This doesn't actually verify anything!
+    return LawVerification(status=LawStatus.PASSED, ...)
+```
+
+**Right**: Honest STRUCTURAL status
+```python
+def _verify_pattern_commutativity(*args) -> LawVerification:
+    """
+    HONESTY: This law is STRUCTURAL, not runtime-verified.
+
+    Pattern selection and parameter tuning DON'T fully commute because
+    select_family resets config while tune_param modifies existing.
+    Order matters for final values, but operations don't interfere.
+
+    We mark as STRUCTURAL to indicate this is a design choice.
+    """
+    return LawVerification(
+        law_name="pattern_commutativity",
+        status=LawStatus.STRUCTURAL,
+        message="Design choice: select_family resets, tune_param modifies",
+    )
+```
+
+**When to use each status**:
+| Status | When | Example |
+|--------|------|---------|
+| PASSED | Runtime verification succeeds | `qualia.blend(a,b,0.5) = qualia.blend(b,a,0.5)` |
+| FAILED | Runtime verification fails | Composition produces wrong result |
+| STRUCTURAL | Design constraint, not runtime | Commutativity is intentionally broken |
+| SKIPPED | Cannot verify (missing deps) | External service unavailable |
+
+**Benefits**:
+- Honest documentation of law behavior
+- Tests can expect STRUCTURAL (not fake PASSED)
+- Design intent is clear
+
+---
+
 ## Quick Reference
 
 | Pattern | Use When | Key Insight |
@@ -466,6 +635,9 @@ def can_transition(from_state: State, to_state: State) -> bool:
 | Dual-Channel Output | CLI for humans + agents | `emit(human, semantic)` |
 | Bounded History | Trajectory analysis | Immutable + trim to MAX |
 | Directed Cycle | State machine design | One forward per state |
+| **Operad Inheritance** | Building on base operads | `**PARENT.operations` spread |
+| **Circadian Modulation** | Time-of-day UI shifts | Phase → modifier → apply |
+| **Law Honesty** | Laws that aren't runtime | STRUCTURAL status for design constraints |
 
 ---
 
@@ -480,4 +652,5 @@ def can_transition(from_state: State, to_state: State) -> bool:
 
 ## Changelog
 
+- 2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel
 - 2025-12-16: Initial version from Gardener-Logos reflection

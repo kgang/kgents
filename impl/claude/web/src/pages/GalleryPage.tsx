@@ -13,7 +13,14 @@ import type {
   GalleryResponse,
   PilotResponse,
 } from '@/api/types';
-import { PilotCard, CategoryFilter, OverrideControls } from '@/components/gallery';
+import {
+  PilotCard,
+  CategoryFilter,
+  OverrideControls,
+  PolynomialPlayground,
+  OperadWiring,
+  TownLive,
+} from '@/components/projection/gallery';
 import { EmpathyError, PersonalityLoading } from '@/components/joy';
 
 type FilterCategory = GalleryCategory | 'ALL';
@@ -164,13 +171,32 @@ interface PilotDetailModalProps {
 }
 
 function PilotDetailModal({ pilot, onClose }: PilotDetailModalProps) {
+  // Check if this is an interactive pilot that should render React components
+  const isInteractive = pilot.category === 'INTERACTIVE';
+
+  // Render the appropriate interactive component
+  const renderInteractiveComponent = () => {
+    switch (pilot.name) {
+      case 'polynomial_playground':
+        return <PolynomialPlayground />;
+      case 'operad_wiring_diagram':
+        return <OperadWiring />;
+      case 'town_live':
+        return <TownLive />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <div
-        className="bg-town-surface border border-town-accent/30 rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden"
+        className={`bg-town-surface border border-town-accent/30 rounded-lg w-full max-h-[90vh] overflow-hidden ${
+          isInteractive ? 'max-w-4xl' : 'max-w-3xl'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal header */}
@@ -188,10 +214,14 @@ function PilotDetailModal({ pilot, onClose }: PilotDetailModalProps) {
         </div>
 
         {/* Modal content */}
-        <div className="p-4 overflow-auto max-h-[calc(80vh-120px)]">
+        <div className="p-4 overflow-auto max-h-[calc(90vh-120px)]">
           {/* Tags */}
           <div className="flex gap-2 mb-4">
-            <span className="text-xs px-2 py-1 rounded bg-town-highlight/30 text-town-highlight">
+            <span className={`text-xs px-2 py-1 rounded ${
+              isInteractive
+                ? 'bg-emerald-500/30 text-emerald-400'
+                : 'bg-town-highlight/30 text-town-highlight'
+            }`}>
               {pilot.category}
             </span>
             {pilot.tags.map((tag) => (
@@ -204,33 +234,52 @@ function PilotDetailModal({ pilot, onClose }: PilotDetailModalProps) {
             ))}
           </div>
 
-          {/* Projections in full */}
-          <div className="space-y-4">
-            {/* CLI */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">CLI Projection</h3>
-              <pre className="font-mono text-sm bg-gray-900/80 rounded p-3 text-green-400 whitespace-pre-wrap overflow-x-auto">
-                {pilot.projections.cli}
-              </pre>
+          {/* Interactive React Component */}
+          {isInteractive && (
+            <div className="mb-6">
+              <h3 className="text-sm font-medium text-emerald-400 mb-3 flex items-center gap-2">
+                <span>⚡</span> Interactive Demo
+              </h3>
+              <div className="bg-slate-900/50 rounded-lg p-2">
+                {renderInteractiveComponent()}
+              </div>
             </div>
+          )}
 
-            {/* HTML */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">HTML Projection</h3>
-              <div
-                className="bg-gray-800/50 rounded p-3 kgents-projection"
-                dangerouslySetInnerHTML={{ __html: pilot.projections.html }}
-              />
-            </div>
+          {/* Projections (collapsed for interactive, full for others) */}
+          <details open={!isInteractive}>
+            <summary className="text-sm font-medium text-gray-300 mb-2 cursor-pointer hover:text-white">
+              {isInteractive ? 'View Backend Projections' : 'Projections'}
+            </summary>
+            <div className="space-y-4 mt-3">
+              {/* CLI */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">CLI Projection</h3>
+                <pre className="font-mono text-sm bg-gray-900/80 rounded p-3 text-green-400 whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto">
+                  {pilot.projections.cli}
+                </pre>
+              </div>
 
-            {/* JSON */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-300 mb-2">JSON Projection</h3>
-              <pre className="font-mono text-xs bg-gray-900/80 rounded p-3 text-blue-300 whitespace-pre-wrap overflow-x-auto">
-                {JSON.stringify(pilot.projections.json, null, 2)}
-              </pre>
+              {/* HTML */}
+              {!isInteractive && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">HTML Projection</h3>
+                  <div
+                    className="bg-gray-800/50 rounded p-3 kgents-projection"
+                    dangerouslySetInnerHTML={{ __html: pilot.projections.html }}
+                  />
+                </div>
+              )}
+
+              {/* JSON */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">JSON Projection</h3>
+                <pre className="font-mono text-xs bg-gray-900/80 rounded p-3 text-blue-300 whitespace-pre-wrap overflow-x-auto max-h-48 overflow-y-auto">
+                  {JSON.stringify(pilot.projections.json, null, 2)}
+                </pre>
+              </div>
             </div>
-          </div>
+          </details>
         </div>
       </div>
     </div>

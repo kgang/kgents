@@ -176,16 +176,24 @@ export function useTownStreamWidget({
         grid_cols: 3,
         selected_citizen_id: null,
         citizens: (widget.citizens || []).map((c: any) => ({
+          type: 'citizen_card' as const,
           citizen_id: c.id || c.citizen_id,
-          name: c.name,
-          archetype: c.archetype,
-          region: c.region,
-          phase: c.phase,
-          position: c.position || { x: 0, y: 0 },
-          energy: c.energy ?? 1.0,
-          mood: c.mood ?? 0.5,
+          name: c.name || 'Unknown',
+          archetype: c.archetype || 'explorer',
+          region: c.region || 'town_square',
+          phase: c.phase || 'IDLE',
+          nphase: c.nphase || 'SENSE',
+          activity: c.activity || [],
+          capability: c.capability ?? 0.5,
+          entropy: c.entropy ?? 0,
+          mood: typeof c.mood === 'string' ? c.mood : '',
+          eigenvectors: c.eigenvectors || { warmth: 0.5, curiosity: 0.5, trust: 0.5 },
         })),
-        metrics: widget.metrics || { tension: 0, cooperation: 0, accursed_surplus: 0 },
+        metrics: {
+          total_events: widget.metrics?.total_events ?? 0,
+          total_tokens: widget.metrics?.total_tokens ?? 0,
+          entropy_budget: widget.metrics?.entropy_budget ?? widget.metrics?.accursed_surplus ?? 0,
+        },
       };
       setDashboard(dashboardState);
       callbacksRef.current.onDashboard?.(dashboardState);

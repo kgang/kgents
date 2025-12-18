@@ -54,7 +54,7 @@ function App() {
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
                 <Route path="/atelier" element={<Atelier />} />
-                <Route path="/town" element={<Navigate to="/town/default" replace />} />
+                <Route path="/town" element={<Navigate to="/town/demo" replace />} />
                 <Route path="/town/:townId" element={<Town />} />
                 <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
                 <Route path="/park" element={<ParkScenario />} />

@@ -8,12 +8,22 @@
  * - Handle touch target: 48px x 48px (visual can be smaller)
  * - Drawer handle visual: 40px x 4px centered in 48px touch area
  *
+ * TEMPORAL COHERENCE:
+ * - Supports animation coordination via useAnimationCoordination hook
+ * - When sibling drawers animate simultaneously, constraints ensure smooth transitions
+ * - Uses AnimationConstraint to determine sync strategy with neighbors
+ *
  * @see spec/protocols/projection.md (Layout Projection section)
  * @see plans/web-refactor/layout-projection-functor.md
+ * @see impl/claude/agents/design/sheaf.py (temporal coherence)
  */
 
-import { type ReactNode, type CSSProperties, useCallback, useEffect } from 'react';
+import { type ReactNode, type CSSProperties, useCallback, useEffect, useRef } from 'react';
 import { PHYSICAL_CONSTRAINTS } from './types';
+import {
+  type AnimationConstraint,
+  type AnimationPhase,
+} from '../../hooks/useDesignPolynomial';
 
 export interface BottomDrawerProps {
   /** Whether the drawer is open */
@@ -48,6 +58,57 @@ export interface BottomDrawerProps {
 
   /** Accessible label for the drawer */
   ariaLabel?: string;
+
+  // ===== TEMPORAL COHERENCE PROPS =====
+
+  /** Context ID for animation coordination (required for coordination) */
+  contextId?: string;
+
+  /** Animation constraints from useAnimationCoordination hook */
+  animationConstraints?: AnimationConstraint[];
+
+  /** Neighbor's animation progress for lock_step sync (0-1) */
+  neighborProgress?: number | null;
+
+  /** Callback when animation phase changes */
+  onAnimationPhaseChange?: (phase: AnimationPhase) => void;
+
+  /** Animation duration in seconds (default: 0.3) */
+  animationDuration?: number;
+}
+
+/**
+ * Compute effective animation duration based on constraints.
+ * When lock_step is required, we may need to slow down to sync with neighbor.
+ */
+function computeEffectiveDuration(
+  baseDuration: number,
+  constraints: AnimationConstraint[],
+  contextId?: string
+): number {
+  if (!contextId || constraints.length === 0) {
+    return baseDuration;
+  }
+
+  // Find constraints involving this context
+  const myConstraints = constraints.filter(
+    (c) => c.source === contextId || c.target === contextId
+  );
+
+  // If any constraint is lock_step, use slightly slower animation for smoother sync
+  const hasLockStep = myConstraints.some((c) => c.strategy === 'lock_step');
+  if (hasLockStep) {
+    return baseDuration * 1.2; // 20% slower for smoother coordination
+  }
+
+  // If stagger, use base duration but consider delay
+  const hasStagger = myConstraints.some((c) => c.strategy === 'stagger');
+  if (hasStagger) {
+    // Stagger strategy: slightly faster to leave room for sequencing
+    return baseDuration * 0.9;
+  }
+
+  return baseDuration;
 }
 
 /**
@@ -55,12 +116,28 @@ export interface BottomDrawerProps {
  *
  * Usage:
  * ```tsx
+ * // Basic usage
  * <BottomDrawer
  *   isOpen={panelState.details}
  *   onClose={() => setPanelState(s => ({ ...s, details: false }))}
  *   title="Details"
  * >
  *   <DetailPanel />
+ * </BottomDrawer>
+ *
+ * // With animation coordination
+ * const { constraints, registerAnimation, getConstraintsFor, getNeighborProgress } = useAnimationCoordination();
+ *
+ * <BottomDrawer
+ *   isOpen={isOpen}
+ *   onClose={onClose}
+ *   title="Sidebar"
+ *   contextId="sidebar"
+ *   animationConstraints={getConstraintsFor('sidebar')}
+ *   neighborProgress={getNeighborProgress('sidebar')}
+ *   onAnimationPhaseChange={(phase) => registerAnimation('sidebar', phase)}
+ * >
+ *   {content}
  * </BottomDrawer>
  * ```
  */
@@ -75,7 +152,51 @@ export function BottomDrawer({
   contentClassName = '',
   zIndex = 50,
   ariaLabel,
+  // Temporal coherence props
+  contextId,
+  animationConstraints = [],
+  neighborProgress,
+  onAnimationPhaseChange,
+  animationDuration = 0.3,
 }: BottomDrawerProps) {
+  // Track previous isOpen state to detect transitions
+  const wasOpen = useRef(isOpen);
+
+  // Compute effective duration based on constraints
+  const effectiveDuration = computeEffectiveDuration(
+    animationDuration,
+    animationConstraints,
+    contextId
+  );
+
+  // Notify about animation phase changes
+  useEffect(() => {
+    if (!onAnimationPhaseChange || !contextId) return;
+
+    // Detect state change
+    if (wasOpen.current !== isOpen) {
+      const phase: AnimationPhase = {
+        phase: isOpen ? 'entering' : 'exiting',
+        progress: 0,
+        startedAt: Date.now() / 1000,
+        duration: effectiveDuration,
+      };
+      onAnimationPhaseChange(phase);
+
+      // After animation completes, update to active/idle
+      const timerId = setTimeout(() => {
+        onAnimationPhaseChange({
+          ...phase,
+          phase: isOpen ? 'active' : 'idle',
+          progress: 1,
+        });
+      }, effectiveDuration * 1000);
+
+      wasOpen.current = isOpen;
+      return () => clearTimeout(timerId);
+    }
+  }, [isOpen, contextId, effectiveDuration, onAnimationPhaseChange]);
+
   // Handle escape key to close
   useEffect(() => {
     if (!isOpen) return;
@@ -109,10 +230,29 @@ export function BottomDrawer({
 
   if (!isOpen) return null;
 
+  // Determine if we should adjust animation based on neighbor
+  const hasLockStepConstraint = animationConstraints.some(
+    (c) =>
+      c.strategy === 'lock_step' &&
+      (c.source === contextId || c.target === contextId)
+  );
+
+  // If lock_step and we have neighbor progress, sync our animation
+  // This is a simplified implementation - in practice, you'd use a more
+  // sophisticated animation library like Framer Motion or GSAP
+  const syncedTransform =
+    hasLockStepConstraint && neighborProgress != null
+      ? `translateY(${(1 - neighborProgress) * 100}%)`
+      : isOpen
+      ? 'translateY(0)'
+      : 'translateY(100%)';
+
   const drawerStyle: CSSProperties = {
-    transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+    transform: syncedTransform,
     maxHeight: `${maxHeightPercent}vh`,
     zIndex,
+    // Adjust transition duration based on constraints
+    transitionDuration: `${effectiveDuration}s`,
   };
 
   return (

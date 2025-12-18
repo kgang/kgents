@@ -2,11 +2,12 @@
 path: plans/meta
 status: active
 progress: 0
-last_touched: 2025-12-15
+last_touched: 2025-12-17
 touched_by: claude-opus-4-5
 blocking: []
 enables: []
 session_notes: |
+  2025-12-17: Added Design Language System learnings from creative/UI audit.
   Header added for forest compliance (STRATEGIZE).
 phase_ledger:
   PLAN: touched
@@ -163,6 +164,20 @@ UI building algorithm: name dimension → define values → provide context → 
 Categorical stack for UI: Functor (layout), Natural Transformation (responsive), Sheaf (component coherence)
 ```
 
+### Design Language System (2025-12-17)
+```
+Three functors compose all UI: Layout[D] ∘ Content[D] ∘ Motion[M]—necessary and sufficient
+Layout[D]: WidgetTree → Structure[D]; D ∈ {compact, comfortable, spacious}
+Content[D]: State → ContentDetail[D]; D ∈ {icon, title, summary, full}
+Motion[M]: Component → AnimatedComponent[M]; M ∈ {breathe, pop, shake, shimmer}
+Operads generate patterns: define grammar, derive valid compositions—don't document exhaustively
+Doc redundancy signal: same concept in 3+ files → extract to single spec, reference elsewhere
+Component fragmentation signal: gallery/ + projection/ + three/ ≅ projection/—merge when isomorphic
+Three-rule refactor: if repeated 3+ times, extract dimension; if in 3+ docs, consolidate
+D-gent = WHERE state lives; Layout[D] = WHERE components arrange—analogous placement patterns
+Creative vision = categorical projection: docs/creative/ ≅ spec/principles.md projected through DESIGN_OPERAD
+```
+
 ### UX Patterns (from Core-Apps Research)
 ```
 Dual-currency economy: earned (watching) + purchased (premium)—never 1:1 ratio
@@ -243,6 +258,19 @@ Design token ceiling: 150+ exports is enough; resist urge to tokenize everything
 Accursed Share in design: intentional gaps enable emergence; over-specification kills joy
 ```
 
+### Emergence Crown Jewel Patterns (2025-12-18)
+```
+Operad inheritance: EMERGENCE_OPERAD extends DESIGN_OPERAD via **DESIGN_OPERAD.operations spread
+Law honesty: STRUCTURAL status for laws that express design constraints, not runtime invariants
+Qualia space: cross-modal coordinates (warmth, weight, tempo, texture, brightness, saturation, complexity)
+Circadian modulation: dawn/noon/dusk/midnight phases shift hue/brightness/tempo per time of day
+Circadian frontend: useCircadian() hook with manual override slider for demos
+EmergenceSheaf.overlap(): shared context between tiles = circadian (always) + qualia (same family)
+Density-parameterized constants: GRID_COLUMNS[density], TILE_SIZE[density] for responsive layouts
+FloatingActions + BottomDrawer: mobile controls projection pattern (compact density)
+Content degradation: family.name.split(' ')[0] for compact; full name for spacious
+```
+
 ### AGENTESE Frontend Migration (2025-12-17)
 ```
 unwrapAgentese() is the key helper: gateway envelope { path, aspect, result } must be unwrapped
@@ -260,6 +288,37 @@ Shell layers persist: ObserverDrawer + NavigationTree + Terminal always visible 
 Discovery auto-populates nav: /agentese/discover → tree; no hardcoded routes
 TracedInvoke pattern: wrap API calls to auto-collect traces for devex visibility
 Error boundaries per layer: ShellErrorBoundary isolates failures; shell stays functional
+Floating overlay > push layout: nav floats over content preserving full width; transform > layout reflow
+Fixed bottom panels: terminal/REPL stays anchored during scroll; content compensates with padding
+Toggle button follows panel: expand/collapse slides with sidebar via translate-x for spatial consistency
+Z-index layering: Panel (z-30) < Toggle (z-40) < Modal (z-50) prevents occlusion bugs
+Sheaf condition for fixed layouts: nav.bottom = terminal.top; siblings read each other's size via shared context
+```
+
+### Elastic + AGENTESE Vertical Slice (2025-12-18)
+```
+Breakpoint alignment: spec is canonical; Python + TypeScript must mirror exactly (768/1024 not 640/1024)
+Local + Gateway pattern: browser polynomial for instant UX; gateway for authoritative verification
+useDesignGateway bridges both: localState (responsive) + gatewayData (authoritative) in single hook
+Test update discipline: changing canonical values (breakpoints) requires updating test assertions
+Live demo > static: gallery panels that call real AGENTESE endpoints prove integration works
+Container height % not vh: components inside constrained containers must use 100% not 100vh
+Operad manifest pattern: { name, operations[], lawCount } is sufficient summary for UI display
+Law verification UX: button + loading state + pass/fail badges + result list = complete feedback loop
+Design vertical slice complete: types → polynomial → operad → sheaf → node → gateway → hook → UI
+```
+
+### AGENTESE Contract Protocol (2025-12-18)
+```
+@node(contracts={}) makes node the contract authority—BE defines, FE discovers, both stay sync'd
+BE running during FE build is acceptable; alternative is cached discovery JSON (more complexity)
+Split types: _generated/ for contracts from BE, _local.ts for FE-only (colors, icons, UI config)
+Contract = Request + Response; Response() shorthand for perception aspects (no request needed)
+/discover?include_schemas=true returns JSON Schema for each aspect's contracts
+Three modes for drift: Advisory (warn), Gatekeeping (fail CI), Aspirational (track coverage)
+TypeScript "bundler" moduleResolution: requires explicit file paths, not bare directory imports
+Re-export pattern: types.ts exports from _generated/*.ts + provides type aliases for migration
+CI contract sync: separate job with BE server—test contract drift before main test suite
 ```
 
 ## Anti-Patterns
@@ -282,4 +341,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~180/200 | Last pruned: 2025-12-17 | OS Shell architecture added*
+*Lines: ~290/200 | Last pruned: 2025-12-17 | Floating overlay patterns added | NEEDS PRUNING*

@@ -21,12 +21,15 @@ import type { TownEvent } from '../../api/types';
 import type { Density } from '../../shell/types';
 import { Mesa } from './Mesa';
 import { CitizenPanel } from './CitizenPanel';
+import { TownTracePanel } from './TownTracePanel';
+import { ObserverSelector, type ObserverUmwelt } from './ObserverSelector';
 import { ColonyDashboard } from '../../widgets/dashboards';
 import { ElasticSplit, ElasticContainer } from '../elastic';
 import { BottomDrawer } from '../elastic/BottomDrawer';
 import { FloatingActions, type FloatingAction } from '../elastic/FloatingActions';
+import { FirstVisitOverlay } from '../categorical/FirstVisitOverlay';
 import { getEmptyState } from '../../constants';
-import { Users, Play, Pause, Settings, User, ChevronUp, ChevronDown } from 'lucide-react';
+import { Users, Play, Pause, Settings, User, ChevronUp, ChevronDown, Clock } from 'lucide-react';
 
 // =============================================================================
 // Constants
@@ -115,6 +118,8 @@ interface TownHeaderProps {
   onTogglePlay: () => void;
   onSpeedChange: (speed: number) => void;
   density: Density;
+  observer: ObserverUmwelt;
+  onObserverChange: (observer: ObserverUmwelt) => void;
 }
 
 function TownHeader({
@@ -128,6 +133,8 @@ function TownHeader({
   onTogglePlay,
   onSpeedChange,
   density,
+  observer,
+  onObserverChange,
 }: TownHeaderProps) {
   const isCompact = density === 'compact';
 
@@ -155,6 +162,12 @@ function TownHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Observer selector (Phase 2) */}
+          <ObserverSelector
+            value={observer}
+            onChange={onObserverChange}
+            compact
+          />
           <button
             onClick={onTogglePlay}
             className={`flex items-center gap-1.5 bg-violet-500/30 rounded hover:bg-violet-500/50 transition-colors ${
@@ -259,50 +272,6 @@ function ControlsPanel({
   );
 }
 
-interface EventFeedProps {
-  events: TownEvent[];
-  isOpen: boolean;
-  onToggle: () => void;
-  density: Density;
-}
-
-function EventFeed({ events, isOpen, onToggle, density }: EventFeedProps) {
-  const maxEvents = MAX_EVENTS[density];
-  const isCompact = density === 'compact';
-
-  return (
-    <div className={`border-t border-violet-500/30 transition-all ${isOpen ? 'h-64' : isCompact ? 'h-8' : 'h-10'}`}>
-      <button
-        onClick={onToggle}
-        className={`w-full flex items-center justify-between font-semibold hover:bg-violet-950/50 ${
-          isCompact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
-        }`}
-      >
-        <span>Event Feed ({events.length})</span>
-        {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-      </button>
-      {isOpen && (
-        <div className={`overflow-y-auto ${isCompact ? 'px-3 pb-3 h-[calc(100%-32px)]' : 'px-4 pb-4 h-[calc(100%-40px)]'}`}>
-          {events.length > 0 ? (
-            <ul className={`space-y-1 ${isCompact ? 'text-xs' : 'text-sm'}`}>
-              {events.slice(0, maxEvents).map((event, i) => (
-                <li key={i} className="text-gray-400">
-                  <span className={`text-gray-500 font-mono ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{event.tick}:</span>{' '}
-                  <span className={getEventColor(event.operation)}>
-                    {event.message || event.operation}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className={`text-gray-600 ${isCompact ? 'text-xs' : 'text-sm'}`}>{getEmptyState('noData').description} Press Play to start.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -328,9 +297,16 @@ export function TownVisualization({
   const [selectedCitizenId, setSelectedCitizenId] = useState<string | null>(null);
   const [isEventFeedOpen, setIsEventFeedOpen] = useState(false);
 
+  // Observer umwelt state (Phase 2)
+  const [observer, setObserver] = useState<ObserverUmwelt>('default');
+
+  // Trace panel state (Phase 2)
+  const [showTracePanel, setShowTracePanel] = useState(false);
+
   // Mobile drawer state
   const [controlsDrawerOpen, setControlsDrawerOpen] = useState(false);
   const [citizenDrawerOpen, setCitizenDrawerOpen] = useState(false);
+  const [tracePanelDrawerOpen, setTracePanelDrawerOpen] = useState(false);
 
   // Mesa sizing
   const mesaContainerRef = useRef<HTMLDivElement>(null);
@@ -372,103 +348,136 @@ export function TownVisualization({
 
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-violet-950">
-        <header className="flex-shrink-0 bg-violet-950/50 border-b border-violet-500/30 px-3 py-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-violet-400" />
-              <span className="font-semibold text-sm">{townId}</span>
-              <span className={`text-xs font-medium ${getPhaseColor(dashboard?.phase || 'MORNING')}`}>
-                {dashboard?.phase || 'MORNING'}
-              </span>
+      <FirstVisitOverlay jewel="town">
+        <div className="h-full flex flex-col bg-violet-950">
+          <header className="flex-shrink-0 bg-violet-950/50 border-b border-violet-500/30 px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-violet-400" />
+                <span className="font-semibold text-sm">{townId}</span>
+                <span className={`text-xs font-medium ${getPhaseColor(dashboard?.phase || 'MORNING')}`}>
+                  {dashboard?.phase || 'MORNING'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {/* Observer selector (compact) */}
+                <ObserverSelector
+                  value={observer}
+                  onChange={setObserver}
+                  compact
+                />
+                {!isConnected && (
+                  <span className="text-xs text-yellow-500">Disconnected</span>
+                )}
+              </div>
             </div>
-            {!isConnected && (
-              <span className="text-xs text-yellow-500">Disconnected</span>
+          </header>
+
+          <div className="flex-1 relative" ref={mesaContainerRef}>
+            <div className="absolute inset-0">
+              <Mesa
+                width={mesaSize.width}
+                height={mesaSize.height}
+                citizens={dashboard?.citizens || []}
+                events={events}
+                selectedCitizenId={selectedCitizenId}
+                onSelectCitizen={(id) => {
+                  setSelectedCitizenId(id);
+                  if (id) setCitizenDrawerOpen(true);
+                }}
+              />
+            </div>
+
+            <div className="absolute top-2 left-2 bg-violet-950/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] text-gray-300">
+              <span>Day {dashboard?.day || 1}</span>
+              {' | '}
+              <span className="text-violet-400">{dashboard?.citizens.length || 0}</span> citizens
+            </div>
+
+            <FloatingActions
+              actions={[
+                {
+                  id: 'play',
+                  icon: isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />,
+                  label: isPlaying ? 'Pause' : 'Play',
+                  onClick: handleTogglePlay,
+                  variant: 'primary',
+                },
+                {
+                  id: 'trace',
+                  icon: <Clock className="w-5 h-5" />,
+                  label: 'Trace',
+                  onClick: () => setTracePanelDrawerOpen(true),
+                },
+                {
+                  id: 'controls',
+                  icon: <Settings className="w-5 h-5" />,
+                  label: 'Controls',
+                  onClick: () => setControlsDrawerOpen(true),
+                },
+                ...(selectedCitizenId ? [{
+                  id: 'citizen',
+                  icon: <User className="w-5 h-5" />,
+                  label: 'View Citizen',
+                  onClick: () => setCitizenDrawerOpen(true),
+                } as FloatingAction] : []),
+              ]}
+              position="bottom-right"
+            />
+          </div>
+
+          <BottomDrawer
+            isOpen={controlsDrawerOpen}
+            onClose={() => setControlsDrawerOpen(false)}
+            title="Controls"
+          >
+            <ControlsPanel
+              speed={speed}
+              onSpeedChange={onSpeedChange}
+              isPlaying={isPlaying}
+              onTogglePlay={handleTogglePlay}
+              events={events}
+              density={density}
+            />
+          </BottomDrawer>
+
+          <BottomDrawer
+            isOpen={citizenDrawerOpen && !!selectedCitizen}
+            onClose={() => {
+              setCitizenDrawerOpen(false);
+              setSelectedCitizenId(null);
+            }}
+            title={selectedCitizen?.name || 'Citizen'}
+          >
+            {selectedCitizen && (
+              <CitizenPanel
+                citizen={selectedCitizen}
+                townId={townId}
+                onClose={() => {
+                  setCitizenDrawerOpen(false);
+                  setSelectedCitizenId(null);
+                }}
+              />
             )}
-          </div>
-        </header>
+          </BottomDrawer>
 
-        <div className="flex-1 relative" ref={mesaContainerRef}>
-          <div className="absolute inset-0">
-            <Mesa
-              width={mesaSize.width}
-              height={mesaSize.height}
-              citizens={dashboard?.citizens || []}
-              selectedCitizenId={selectedCitizenId}
-              onSelectCitizen={(id) => {
-                setSelectedCitizenId(id);
-                if (id) setCitizenDrawerOpen(true);
-              }}
-            />
-          </div>
-
-          <div className="absolute top-2 left-2 bg-violet-950/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] text-gray-300">
-            <span>Day {dashboard?.day || 1}</span>
-            {' | '}
-            <span className="text-violet-400">{dashboard?.citizens.length || 0}</span> citizens
-          </div>
-
-          <FloatingActions
-            actions={[
-              {
-                id: 'play',
-                icon: isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />,
-                label: isPlaying ? 'Pause' : 'Play',
-                onClick: handleTogglePlay,
-                variant: 'primary',
-              },
-              {
-                id: 'controls',
-                icon: <Settings className="w-5 h-5" />,
-                label: 'Controls',
-                onClick: () => setControlsDrawerOpen(true),
-              },
-              ...(selectedCitizenId ? [{
-                id: 'citizen',
-                icon: <User className="w-5 h-5" />,
-                label: 'View Citizen',
-                onClick: () => setCitizenDrawerOpen(true),
-              } as FloatingAction] : []),
-            ]}
-            position="bottom-right"
-          />
+          {/* Trace Panel Drawer (Phase 2) */}
+          <BottomDrawer
+            isOpen={tracePanelDrawerOpen}
+            onClose={() => setTracePanelDrawerOpen(false)}
+            title="Town Witness"
+          >
+            <div className="p-4">
+              <TownTracePanel
+                events={events}
+                maxEvents={20}
+                showTeaching
+                compact={false}
+              />
+            </div>
+          </BottomDrawer>
         </div>
-
-        <BottomDrawer
-          isOpen={controlsDrawerOpen}
-          onClose={() => setControlsDrawerOpen(false)}
-          title="Controls"
-        >
-          <ControlsPanel
-            speed={speed}
-            onSpeedChange={onSpeedChange}
-            isPlaying={isPlaying}
-            onTogglePlay={handleTogglePlay}
-            events={events}
-            density={density}
-          />
-        </BottomDrawer>
-
-        <BottomDrawer
-          isOpen={citizenDrawerOpen && !!selectedCitizen}
-          onClose={() => {
-            setCitizenDrawerOpen(false);
-            setSelectedCitizenId(null);
-          }}
-          title={selectedCitizen?.name || 'Citizen'}
-        >
-          {selectedCitizen && (
-            <CitizenPanel
-              citizen={selectedCitizen}
-              townId={townId}
-              onClose={() => {
-                setCitizenDrawerOpen(false);
-                setSelectedCitizenId(null);
-              }}
-            />
-          )}
-        </BottomDrawer>
-      </div>
+      </FirstVisitOverlay>
     );
   }
 
@@ -477,8 +486,9 @@ export function TownVisualization({
   // ==========================================================================
 
   return (
-    <div className="h-full flex flex-col">
-      <TownHeader
+    <FirstVisitOverlay jewel="town">
+      <div className="h-full flex flex-col">
+        <TownHeader
         townId={townId}
         phase={dashboard?.phase || 'MORNING'}
         day={dashboard?.day || 1}
@@ -489,6 +499,8 @@ export function TownVisualization({
         onTogglePlay={handleTogglePlay}
         onSpeedChange={onSpeedChange}
         density={density}
+        observer={observer}
+        onObserverChange={setObserver}
       />
 
       <div className="flex-1 overflow-hidden">
@@ -511,6 +523,7 @@ export function TownVisualization({
                     width={mesaSize.width}
                     height={mesaSize.height}
                     citizens={dashboard?.citizens || []}
+                    events={events}
                     selectedCitizenId={selectedCitizenId}
                     onSelectCitizen={setSelectedCitizenId}
                   />
@@ -541,17 +554,78 @@ export function TownVisualization({
                 )}
               </div>
 
-              <EventFeed
-                events={events}
-                isOpen={isEventFeedOpen}
-                onToggle={() => setIsEventFeedOpen(!isEventFeedOpen)}
-                density={density}
-              />
+              {/* Feed/Trace Toggle (Phase 2) */}
+              <div className="border-t border-violet-500/30">
+                <div className="flex">
+                  <button
+                    onClick={() => setShowTracePanel(false)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+                      !showTracePanel
+                        ? 'bg-violet-500/30 text-violet-300'
+                        : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
+                    }`}
+                  >
+                    <ChevronUp className="w-3.5 h-3.5" />
+                    Events ({events.length})
+                  </button>
+                  <button
+                    onClick={() => setShowTracePanel(true)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium transition-colors ${
+                      showTracePanel
+                        ? 'bg-violet-500/30 text-violet-300'
+                        : 'text-gray-400 hover:text-white hover:bg-violet-950/50'
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    Trace
+                  </button>
+                </div>
+
+                {/* Event Feed or Trace Panel */}
+                <div className={`overflow-hidden transition-all ${isEventFeedOpen ? 'h-64' : 'h-0'}`}>
+                  {showTracePanel ? (
+                    <div className="p-3 max-h-64 overflow-y-auto">
+                      <TownTracePanel
+                        events={events}
+                        maxEvents={15}
+                        compact
+                        showTeaching={false}
+                      />
+                    </div>
+                  ) : (
+                    <div className="px-4 pb-4 max-h-60 overflow-y-auto">
+                      {events.length > 0 ? (
+                        <ul className="space-y-1 text-sm">
+                          {events.slice(0, MAX_EVENTS[density]).map((event, i) => (
+                            <li key={i} className="text-gray-400">
+                              <span className="text-gray-500 font-mono text-xs">{event.tick}:</span>{' '}
+                              <span className={getEventColor(event.operation)}>
+                                {event.message || event.operation}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-600 text-sm">{getEmptyState('noData').description} Press Play to start.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Toggle button */}
+                <button
+                  onClick={() => setIsEventFeedOpen(!isEventFeedOpen)}
+                  className="w-full py-1 text-gray-500 hover:text-white hover:bg-violet-950/50 transition-colors"
+                >
+                  {isEventFeedOpen ? <ChevronDown className="w-4 h-4 mx-auto" /> : <ChevronUp className="w-4 h-4 mx-auto" />}
+                </button>
+              </div>
             </div>
           }
         />
+        </div>
       </div>
-    </div>
+    </FirstVisitOverlay>
   );
 }
 

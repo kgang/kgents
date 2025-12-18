@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -36,6 +37,23 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    CitizenCreateRequest,
+    CitizenCreateResponse,
+    CitizenGetResponse,
+    CitizenListResponse,
+    CitizenUpdateRequest,
+    CitizenUpdateResponse,
+    ConverseRequest,
+    ConverseResponse,
+    HistoryRequest,
+    HistoryResponse,
+    RelationshipsRequest,
+    RelationshipsResponse,
+    TownManifestResponse,
+    TurnRequest,
+    TurnResponse,
+)
 from .persistence import (
     CitizenView,
     ConversationView,
@@ -145,7 +163,9 @@ class CitizenListRendering:
         lines = [f"Citizens ({self.total}):", ""]
         for c in self.citizens[:20]:  # Limit display
             status = "●" if c.is_active else "○"
-            lines.append(f"  {status} {c.name} ({c.archetype}) - {c.interaction_count} interactions")
+            lines.append(
+                f"  {status} {c.name} ({c.archetype}) - {c.interaction_count} interactions"
+            )
         if self.total > 20:
             lines.append(f"  ... and {self.total - 20} more")
         return "\n".join(lines)
@@ -227,9 +247,13 @@ class RelationshipListRendering:
             return f"No relationships for citizen {self.citizen_id}"
         lines = [f"Relationships ({len(self.relationships)}):", ""]
         for r in self.relationships:
-            other = r.citizen_b_id if r.citizen_a_id == self.citizen_id else r.citizen_a_id
+            other = (
+                r.citizen_b_id if r.citizen_a_id == self.citizen_id else r.citizen_a_id
+            )
             strength_bar = "█" * int(r.strength * 10)
-            lines.append(f"  {r.relationship_type}: {other} [{strength_bar}] ({r.interaction_count} interactions)")
+            lines.append(
+                f"  {r.relationship_type}: {other} [{strength_bar}] ({r.interaction_count} interactions)"
+            )
         return "\n".join(lines)
 
 
@@ -240,6 +264,19 @@ class RelationshipListRendering:
     "world.town",
     description="Agent Town - Westworld simulation with polynomial citizens",
     dependencies=("town_persistence",),
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(TownManifestResponse),
+        "citizen.list": Response(CitizenListResponse),
+        "citizen.get": Response(CitizenGetResponse),
+        "relationships": Contract(RelationshipsRequest, RelationshipsResponse),
+        "history": Contract(HistoryRequest, HistoryResponse),
+        # Mutation aspects (Contract with request + response)
+        "citizen.create": Contract(CitizenCreateRequest, CitizenCreateResponse),
+        "citizen.update": Contract(CitizenUpdateRequest, CitizenUpdateResponse),
+        "converse": Contract(ConverseRequest, ConverseResponse),
+        "turn": Contract(TurnRequest, TurnResponse),
+    },
 )
 class TownNode(BaseLogosNode):
     """
@@ -292,7 +329,14 @@ class TownNode(BaseLogosNode):
 
         if archetype in ("developer", "admin", "system"):
             # Full access including mutations and gossip
-            return base + ("citizen.create", "citizen.update", "converse", "turn", "gossip", "step")
+            return base + (
+                "citizen.create",
+                "citizen.update",
+                "converse",
+                "turn",
+                "gossip",
+                "step",
+            )
         elif archetype in ("researcher", "analyst"):
             # Read access with conversation capabilities
             return base + ("converse", "turn")
@@ -345,7 +389,9 @@ class TownNode(BaseLogosNode):
                 archetype=archetype_filter,
                 limit=limit,
             )
-            return CitizenListRendering(citizens=citizens, total=len(citizens)).to_dict()
+            return CitizenListRendering(
+                citizens=citizens, total=len(citizens)
+            ).to_dict()
 
         elif aspect == "citizen.get":
             citizen_id = kwargs.get("citizen_id") or kwargs.get("id")
@@ -509,11 +555,17 @@ class TownNode(BaseLogosNode):
 
         elif aspect == "gossip":
             # Future: Stream inter-citizen dialogue
-            return {"message": "Gossip stream not yet implemented", "hint": "Use SSE endpoint"}
+            return {
+                "message": "Gossip stream not yet implemented",
+                "hint": "Use SSE endpoint",
+            }
 
         elif aspect == "step":
             # Future: Advance simulation
-            return {"message": "Simulation step not yet implemented", "hint": "Use world.town.step"}
+            return {
+                "message": "Simulation step not yet implemented",
+                "hint": "Use world.town.step",
+            }
 
         else:
             return {"error": f"Unknown aspect: {aspect}"}

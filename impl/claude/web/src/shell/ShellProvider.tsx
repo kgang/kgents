@@ -62,6 +62,8 @@ function debounce<T extends (...args: Parameters<T>) => void>(
     }, delay);
   };
 }
+import { useMotionPreferences } from '../components/joy/useMotionPreferences';
+import { useShellAnimation } from './useShellAnimation';
 import type {
   Density,
   Observer,
@@ -332,6 +334,25 @@ export function ShellProvider({
   }, [isMobile, navigationTreeExpanded]);
 
   // ---------------------------------------------------------------------------
+  // Animation Coordination (Temporal Coherence)
+  // ---------------------------------------------------------------------------
+
+  const { shouldAnimate } = useMotionPreferences();
+
+  const {
+    offsets,
+    isAnyAnimating,
+    observerHeight,
+    terminalHeight,
+    navigationWidth,
+  } = useShellAnimation({
+    observerExpanded: observerDrawerExpanded,
+    navigationExpanded: navigationTreeExpanded,
+    terminalExpanded,
+    shouldAnimate,
+  });
+
+  // ---------------------------------------------------------------------------
   // Context Value
   // ---------------------------------------------------------------------------
 
@@ -366,6 +387,13 @@ export function ShellProvider({
       setNavigationTreeExpanded,
       terminalExpanded,
       setTerminalExpanded,
+
+      // Animation coordination (temporal coherence)
+      offsets,
+      observerHeight,
+      terminalHeight,
+      navigationWidth,
+      isAnimating: isAnyAnimating,
     }),
     [
       density,
@@ -384,6 +412,11 @@ export function ShellProvider({
       observerDrawerExpanded,
       navigationTreeExpanded,
       terminalExpanded,
+      offsets,
+      observerHeight,
+      terminalHeight,
+      navigationWidth,
+      isAnyAnimating,
     ]
   );
 

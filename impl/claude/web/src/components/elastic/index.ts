@@ -32,6 +32,7 @@ export type {
   ActionsBehavior,
   FullLayoutContext,
   CompositionLaw,
+  GlassVariant,
 } from './types';
 
 export {
@@ -42,6 +43,11 @@ export {
   DEFAULT_LAYOUT_HINTS,
   VERTICAL_COMPOSITION,
   HORIZONTAL_COMPOSITION,
+  Z_INDEX_LAYERS,
+  GLASS_EFFECT,
+  BOTTOM_PANEL_HEIGHTS,
+  TOP_PANEL_HEIGHTS,
+  SIDEBAR_WIDTHS,
   getDensityFromWidth,
   fromDensity,
   createDensityMap,
@@ -90,9 +96,25 @@ export type { BottomDrawerProps } from './BottomDrawer';
 export { FloatingActions } from './FloatingActions';
 export type { FloatingActionsProps, FloatingAction } from './FloatingActions';
 
+// Floating sidebar (Panel primitive - overlay pattern)
+export { FloatingSidebar } from './FloatingSidebar';
+export type { FloatingSidebarProps } from './FloatingSidebar';
+
+// Fixed bottom panel (Terminal/REPL - fixed pattern)
+export { FixedBottomPanel, useBottomPanelPadding } from './FixedBottomPanel';
+export type { FixedBottomPanelProps } from './FixedBottomPanel';
+
+// Fixed top panel (Observer drawer - fixed pattern)
+export { FixedTopPanel, useTopPanelOffset, getTopPanelHeight } from './FixedTopPanel';
+export type { FixedTopPanelProps } from './FixedTopPanel';
+
 // 3D page HOC/wrapper for crown jewels
 export { Elastic3DPage, useElastic3DPage } from './Elastic3DPage';
 export type { Elastic3DPageProps, Elastic3DPageContext } from './Elastic3DPage';
+
+// Coordinated drawers demo (temporal coherence)
+export { CoordinatedDrawers } from './CoordinatedDrawers';
+export type { CoordinatedDrawersProps } from './CoordinatedDrawers';
 
 // =============================================================================
 // Hooks

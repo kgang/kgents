@@ -43,6 +43,7 @@ from ..node import (
     BaseLogosNode,
     BasicRendering,
 )
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -925,6 +926,10 @@ def scan_epilogues(
 # === Forest Node ===
 
 
+@node(
+    "self.forest",
+    description="Forest Protocol - Plans as handles, epilogues as witnesses",
+)
 @dataclass
 class ForestNode(BaseLogosNode):
     """

@@ -4,10 +4,14 @@
  * Features:
  * - Horizontal or vertical split
  * - Draggable divider for ratio adjustment
- * - Responsive collapse below threshold
+ * - Responsive collapse based on DESIGN_POLYNOMIAL density
  * - Priority-based collapse (primary or secondary first)
  *
+ * Uses useDesignPolynomial for density-aware collapse behavior.
+ * At 'compact' density, the split collapses to a stacked layout.
+ *
  * @see plans/web-refactor/elastic-primitives.md
+ * @see plans/design-language-consolidation.md
  */
 
 import {
@@ -19,7 +23,7 @@ import {
   type CSSProperties,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
-import { useWindowLayout } from '@/hooks/useLayoutContext';
+import { useDesignPolynomial, type Density } from '@/hooks/useDesignPolynomial';
 
 export interface ElasticSplitProps {
   /** Split direction */
@@ -28,7 +32,19 @@ export interface ElasticSplitProps {
   /** Initial split ratio (0-1, where 0.5 = 50/50) */
   defaultRatio?: number;
 
-  /** Below this width (px), stack instead of split */
+  /**
+   * Density at which to collapse to stacked layout.
+   * - 'compact': Collapse only at mobile widths (default)
+   * - 'comfortable': Collapse at tablet and mobile
+   * - 'spacious': Never collapse (always split)
+   * @default 'compact'
+   */
+  collapseAtDensity?: Density;
+
+  /**
+   * @deprecated Use collapseAtDensity instead. Kept for backward compatibility.
+   * Below this width (px), stack instead of split.
+   */
   collapseAt?: number;
 
   /** Which pane collapses first */
@@ -59,7 +75,8 @@ export interface ElasticSplitProps {
 export function ElasticSplit({
   direction = 'horizontal',
   defaultRatio = 0.5,
-  collapseAt = 768,
+  collapseAtDensity = 'compact',
+  collapseAt: _collapseAt, // Deprecated, kept for backward compatibility
   collapsePriority = 'secondary',
   primary,
   secondary,
@@ -69,13 +86,22 @@ export function ElasticSplit({
   style,
   onRatioChange,
 }: ElasticSplitProps) {
-  const { width } = useWindowLayout();
+  // Use the design polynomial for density-aware behavior
+  const { state: designState } = useDesignPolynomial();
   const containerRef = useRef<HTMLDivElement>(null);
   const [ratio, setRatio] = useState(defaultRatio);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Determine if we should collapse
-  const isCollapsed = width < collapseAt;
+  // Determine if we should collapse based on density
+  // Density order: compact < comfortable < spacious
+  const densityOrder: Density[] = ['compact', 'comfortable', 'spacious'];
+  const currentDensityIndex = densityOrder.indexOf(designState.density);
+  const collapseDensityIndex = densityOrder.indexOf(collapseAtDensity);
+
+  // Collapse if current density is at or below the collapse threshold
+  // E.g., collapseAtDensity='compact' means only collapse at compact
+  //       collapseAtDensity='comfortable' means collapse at compact AND comfortable
+  const isCollapsed = currentDensityIndex <= collapseDensityIndex;
 
   // Handle drag start
   const handleDragStart = useCallback((e: ReactMouseEvent) => {
@@ -135,6 +161,8 @@ export function ElasticSplit({
         className={`flex flex-col gap-4 ${className}`}
         style={style}
         data-collapsed="true"
+        data-density={designState.density}
+        data-collapse-reason={`density=${designState.density} <= ${collapseAtDensity}`}
       >
         <div className="flex-1">{first}</div>
         <div className="flex-1">{second}</div>
@@ -178,6 +206,8 @@ export function ElasticSplit({
       style={containerStyles}
       data-direction={direction}
       data-dragging={isDragging}
+      data-density={designState.density}
+      data-collapsed="false"
     >
       {/* Primary pane */}
       <div

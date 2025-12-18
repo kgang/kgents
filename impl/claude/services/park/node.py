@@ -39,6 +39,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -47,6 +48,27 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    EpisodeEndRequest,
+    EpisodeEndResponse,
+    EpisodeListResponse,
+    EpisodeStartRequest,
+    EpisodeStartResponse,
+    HostCreateRequest,
+    HostCreateResponse,
+    HostGetResponse,
+    HostInteractRequest,
+    HostInteractResponse,
+    HostListResponse,
+    HostUpdateRequest,
+    HostUpdateResponse,
+    HostWitnessRequest,
+    HostWitnessResponse,
+    LocationCreateRequest,
+    LocationCreateResponse,
+    LocationListResponse,
+    ParkManifestResponse,
+)
 from .persistence import (
     EpisodeView,
     HostView,
@@ -87,18 +109,22 @@ class ParkManifestRendering:
 
     def to_text(self) -> str:
         s = self.status
-        refusal_pct = f"{s.consent_refusal_rate * 100:.1f}%" if s.consent_refusal_rate else "0%"
-        return "\n".join([
-            "Punchdrunk Park",
-            "=" * 40,
-            f"Hosts: {s.active_hosts}/{s.total_hosts} active",
-            f"Episodes: {s.active_episodes}/{s.total_episodes} active",
-            f"Memories: {s.total_memories}",
-            f"Locations: {s.total_locations}",
-            f"Consent Refusal Rate: {refusal_pct}",
-            "",
-            f"Storage: {s.storage_backend}",
-        ])
+        refusal_pct = (
+            f"{s.consent_refusal_rate * 100:.1f}%" if s.consent_refusal_rate else "0%"
+        )
+        return "\n".join(
+            [
+                "Punchdrunk Park",
+                "=" * 40,
+                f"Hosts: {s.active_hosts}/{s.total_hosts} active",
+                f"Episodes: {s.active_episodes}/{s.total_episodes} active",
+                f"Memories: {s.total_memories}",
+                f"Locations: {s.total_locations}",
+                f"Consent Refusal Rate: {refusal_pct}",
+                "",
+                f"Storage: {s.storage_backend}",
+            ]
+        )
 
 
 @dataclass(frozen=True)
@@ -128,7 +154,9 @@ class HostRendering:
     def to_text(self) -> str:
         h = self.host
         status = "active" if h.is_active else "inactive"
-        energy_bar = "█" * int(h.energy_level * 10) + "░" * (10 - int(h.energy_level * 10))
+        energy_bar = "█" * int(h.energy_level * 10) + "░" * (
+            10 - int(h.energy_level * 10)
+        )
         lines = [
             f"{h.name} [{h.character}] ({status})",
             "=" * 40,
@@ -140,7 +168,9 @@ class HostRendering:
             lines.append(f"Backstory: {h.backstory[:100]}...")
         if h.boundaries:
             lines.append(f"Boundaries: {', '.join(h.boundaries[:3])}")
-        lines.append(f"Interactions: {h.interaction_count} (refusals: {h.consent_refusal_count})")
+        lines.append(
+            f"Interactions: {h.interaction_count} (refusals: {h.consent_refusal_count})"
+        )
         return "\n".join(lines)
 
 
@@ -242,7 +272,9 @@ class InteractionRendering:
 
     def to_text(self) -> str:
         i = self.interaction
-        consent_icon = "✓" if i.consent_given else "✗" if i.consent_given is False else " "
+        consent_icon = (
+            "✓" if i.consent_given else "✗" if i.consent_given is False else " "
+        )
         lines = [
             f"[{consent_icon}] {i.host_name} [{i.interaction_type}]",
             f"Visitor: {i.visitor_input}",
@@ -283,8 +315,16 @@ class MemoryListRendering:
         lines = [f"Host Memories ({len(self.memories)})", ""]
         for m in self.memories:
             salience_bar = "█" * int(m.salience * 5)
-            valence = "+" if m.emotional_valence > 0 else "-" if m.emotional_valence < 0 else "○"
-            lines.append(f"  [{m.memory_type}] {salience_bar} {valence} {m.summary or m.content[:40]}")
+            valence = (
+                "+"
+                if m.emotional_valence > 0
+                else "-"
+                if m.emotional_valence < 0
+                else "○"
+            )
+            lines.append(
+                f"  [{m.memory_type}] {salience_bar} {valence} {m.summary or m.content[:40]}"
+            )
         return "\n".join(lines)
 
 
@@ -332,6 +372,22 @@ class LocationListRendering:
     "world.park",
     description="Punchdrunk Park - Immersive agent simulation with consent",
     dependencies=("park_persistence",),
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(ParkManifestResponse),
+        "host.list": Response(HostListResponse),
+        "host.get": Response(HostGetResponse),
+        "episode.list": Response(EpisodeListResponse),
+        "location.list": Response(LocationListResponse),
+        # Mutation aspects (Contract with request + response)
+        "host.create": Contract(HostCreateRequest, HostCreateResponse),
+        "host.update": Contract(HostUpdateRequest, HostUpdateResponse),
+        "host.interact": Contract(HostInteractRequest, HostInteractResponse),
+        "host.witness": Contract(HostWitnessRequest, HostWitnessResponse),
+        "episode.start": Contract(EpisodeStartRequest, EpisodeStartResponse),
+        "episode.end": Contract(EpisodeEndRequest, EpisodeEndResponse),
+        "location.create": Contract(LocationCreateRequest, LocationCreateResponse),
+    },
 )
 class ParkNode(BaseLogosNode):
     """

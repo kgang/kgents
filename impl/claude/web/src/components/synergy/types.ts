@@ -159,7 +159,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
-    path: '/town/default',
+    path: '/town/demo',
   },
   park: {
     name: 'Park',

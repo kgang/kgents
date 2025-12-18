@@ -36,6 +36,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -44,6 +45,42 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    ArtisanJoinRequest,
+    ArtisanJoinResponse,
+    ArtisanListRequest,
+    ArtisanListResponse,
+    AtelierManifestResponse,
+    BidSubmitRequest,
+    BidSubmitResponse,
+    ContributeRequest,
+    ContributeResponse,
+    ContributionListRequest,
+    ContributionListResponse,
+    ExhibitionCreateRequest,
+    ExhibitionCreateResponse,
+    ExhibitionOpenRequest,
+    ExhibitionOpenResponse,
+    ExhibitionViewRequest,
+    ExhibitionViewResponse,
+    FestivalCreateRequest,
+    FestivalCreateResponse,
+    FestivalEnterRequest,
+    FestivalEnterResponse,
+    FestivalListResponse,
+    GalleryAddRequest,
+    GalleryAddResponse,
+    GalleryListRequest,
+    GalleryListResponse,
+    TokenManifestResponse,
+    WorkshopCreateRequest,
+    WorkshopCreateResponse,
+    WorkshopEndRequest,
+    WorkshopEndResponse,
+    WorkshopGetRequest,
+    WorkshopGetResponse,
+    WorkshopListResponse,
+)
 from .persistence import (
     ArtisanView,
     AtelierPersistence,
@@ -358,7 +395,35 @@ class GalleryListRendering:
 # === AtelierNode ===
 
 
-@node("world.atelier", description="Creative workshop fishbowl")
+@node(
+    "world.atelier",
+    description="Creative workshop fishbowl",
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(AtelierManifestResponse),
+        "workshop.list": Response(WorkshopListResponse),
+        "contribution.list": Response(ContributionListResponse),
+        "festival.list": Response(FestivalListResponse),
+        # Mutation aspects (Contract with request + response)
+        "workshop.get": Contract(WorkshopGetRequest, WorkshopGetResponse),
+        "workshop.create": Contract(WorkshopCreateRequest, WorkshopCreateResponse),
+        "workshop.end": Contract(WorkshopEndRequest, WorkshopEndResponse),
+        "artisan.list": Contract(ArtisanListRequest, ArtisanListResponse),
+        "artisan.join": Contract(ArtisanJoinRequest, ArtisanJoinResponse),
+        "contribute": Contract(ContributeRequest, ContributeResponse),
+        "exhibition.create": Contract(
+            ExhibitionCreateRequest, ExhibitionCreateResponse
+        ),
+        "exhibition.open": Contract(ExhibitionOpenRequest, ExhibitionOpenResponse),
+        "exhibition.view": Contract(ExhibitionViewRequest, ExhibitionViewResponse),
+        "gallery.list": Contract(GalleryListRequest, GalleryListResponse),
+        "gallery.add": Contract(GalleryAddRequest, GalleryAddResponse),
+        "tokens.manifest": Response(TokenManifestResponse),
+        "bid.submit": Contract(BidSubmitRequest, BidSubmitResponse),
+        "festival.create": Contract(FestivalCreateRequest, FestivalCreateResponse),
+        "festival.enter": Contract(FestivalEnterRequest, FestivalEnterResponse),
+    },
+)
 class AtelierNode(BaseLogosNode):
     """
     AGENTESE node for Atelier Crown Jewel.
@@ -485,7 +550,12 @@ class AtelierNode(BaseLogosNode):
             if self.token_pool:
                 full_access += ("tokens.manifest", "bid.submit")
             if self.festival_manager:
-                full_access += ("festival.list", "festival.create", "festival.enter", "festival.vote")
+                full_access += (
+                    "festival.list",
+                    "festival.create",
+                    "festival.enter",
+                    "festival.vote",
+                )
             return full_access
 
         # Default: read-only
@@ -1074,7 +1144,10 @@ class AtelierNode(BaseLogosNode):
             if not workshop_id or not name or not specialty:
                 return BasicRendering(
                     "workshop_id, name, and specialty are required",
-                    {"error": "missing_param", "required": ["workshop_id", "name", "specialty"]},
+                    {
+                        "error": "missing_param",
+                        "required": ["workshop_id", "name", "specialty"],
+                    },
                 )
             return await self._artisan_join(
                 observer,
@@ -1165,7 +1238,10 @@ class AtelierNode(BaseLogosNode):
             if not exhibition_id or not artifact_content:
                 return BasicRendering(
                     "exhibition_id and artifact_content are required",
-                    {"error": "missing_param", "required": ["exhibition_id", "artifact_content"]},
+                    {
+                        "error": "missing_param",
+                        "required": ["exhibition_id", "artifact_content"],
+                    },
                 )
             return await self._gallery_add(
                 observer,
@@ -1188,7 +1264,10 @@ class AtelierNode(BaseLogosNode):
             if not session_id or not bid_type or not content:
                 return BasicRendering(
                     "session_id, bid_type, and content are required",
-                    {"error": "missing_param", "required": ["session_id", "bid_type", "content"]},
+                    {
+                        "error": "missing_param",
+                        "required": ["session_id", "bid_type", "content"],
+                    },
                 )
             return await self._bid_submit(
                 observer,
@@ -1230,7 +1309,10 @@ class AtelierNode(BaseLogosNode):
             if not festival_id or not artisan or not prompt or not content:
                 return BasicRendering(
                     "festival_id, artisan, prompt, and content are required",
-                    {"error": "missing_param", "required": ["festival_id", "artisan", "prompt", "content"]},
+                    {
+                        "error": "missing_param",
+                        "required": ["festival_id", "artisan", "prompt", "content"],
+                    },
                 )
             return await self._festival_enter(
                 observer,

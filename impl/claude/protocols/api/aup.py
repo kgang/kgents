@@ -449,11 +449,34 @@ def create_aup_router() -> "APIRouter | None":
         async def event_generator() -> Any:
             from agents.town.isometric import IsometricWidget
 
+            def build_isometric_payload() -> dict[str, Any]:
+                """Build isometric payload with citizen data from flux."""
+                widget_json = widget.to_json()
+                # Inject citizens from flux (frontend expects this shape)
+                widget_json["citizens"] = [
+                    {
+                        "id": c.id,
+                        "name": c.name,
+                        "archetype": c.archetype,
+                        "region": c.region,
+                        "phase": c.phase.name
+                        if hasattr(c.phase, "name")
+                        else str(c.phase),
+                        "position": {"x": hash(c.id) % 10, "y": hash(c.name) % 10},
+                        "energy": getattr(c, "energy", 1.0),
+                        "mood": getattr(c, "mood", 0.5),
+                    }
+                    for c in flux.citizens
+                ]
+                widget_json["phase"] = flux.current_phase.name
+                widget_json["day"] = flux.day
+                return widget_json
+
             widget = IsometricWidget()
             status = flux.get_status()
             status["town_id"] = town_id
             yield f"event: town.status\ndata: {json.dumps(status)}\n\n"
-            yield f"event: town.isometric\ndata: {json.dumps(widget.to_json())}\n\n"
+            yield f"event: town.isometric\ndata: {json.dumps(build_isometric_payload())}\n\n"
 
             tick = 0
             while True:
@@ -461,7 +484,7 @@ def create_aup_router() -> "APIRouter | None":
                     async for event in flux.step():
                         yield f"event: town.event\ndata: {json.dumps(event.to_dict())}\n\n"
                         widget.update_from_event(event)
-                        yield f"event: town.isometric\ndata: {json.dumps(widget.to_json())}\n\n"
+                        yield f"event: town.isometric\ndata: {json.dumps(build_isometric_payload())}\n\n"
                         tick += 1
                     await asyncio.sleep(0.5)
                 except asyncio.CancelledError:

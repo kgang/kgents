@@ -1,7 +1,79 @@
 /**
  * TypeScript types for Agent Town API.
- * Generated from backend Pydantic models.
+ *
+ * PHASE 7.5: Contract Type Migration (autopoietic-architecture.md)
+ *
+ * This file contains two categories of types:
+ * 1. GENERATED TYPES (re-exported from _generated/) - Contract types from AGENTESE
+ * 2. LOCAL TYPES - FE-only types, constants, and UI configurations
+ *
+ * Migration Guide:
+ * - Contract types (responses from /agentese/* endpoints) use generated types
+ * - Local types (UI state, constants, configs) stay in this file
+ * - New AGENTESE contracts should be added to services/<name>/contracts.py
+ *   then run `npm run sync-types` to regenerate
+ *
+ * @see plans/autopoietic-architecture.md - Phase 7: AGENTESE Contract Protocol
  */
+
+// =============================================================================
+// Generated Contract Types (from _generated/)
+// Run `npm run sync-types` to regenerate from backend contracts
+// =============================================================================
+
+// Export all generated types directly from their source files
+export * from './types/_generated/world-town';
+export * from './types/_generated/self-memory';
+export * from './types/_generated/self-chat';
+export * from './types/_generated/world-atelier';
+export * from './types/_generated/world-codebase';
+export * from './types/_generated/world-park';
+
+// Type aliases for backwards compatibility during migration
+// These map legacy names to the new generated types
+export type {
+  WorldTownManifestResponse as TownManifestContract,
+  WorldTownCitizenListResponse as TownCitizenListContract,
+  WorldTownCitizenGetResponse as TownCitizenGetContract,
+} from './types/_generated/world-town';
+
+export type {
+  SelfMemoryManifestResponse as BrainManifestContract,
+  SelfMemoryTopologyResponse as BrainTopologyContract,
+  SelfMemoryCaptureRequest as BrainCaptureRequestContract,
+  SelfMemoryCaptureResponse as BrainCaptureResponseContract,
+  SelfMemorySearchRequest as BrainSearchRequestContract,
+  SelfMemorySearchResponse as BrainSearchResponseContract,
+} from './types/_generated/self-memory';
+
+export type {
+  SelfChatManifestResponse as ChatManifestContract,
+  SelfChatSessionsResponse as ChatSessionsContract,
+  SelfChatSendRequest as ChatSendRequestContract,
+  SelfChatSendResponse as ChatSendResponseContract,
+} from './types/_generated/self-chat';
+
+export type {
+  WorldCodebaseManifestResponse as GestaltManifestContract,
+  WorldCodebaseTopologyResponse as GestaltTopologyContract,
+  WorldCodebaseHealthResponse as GestaltHealthContract,
+  WorldCodebaseModuleResponse as GestaltModuleContract,
+} from './types/_generated/world-codebase';
+
+export type {
+  WorldAtelierManifestResponse as AtelierManifestContract,
+  WorldAtelierWorkshopListResponse as AtelierWorkshopListContract,
+} from './types/_generated/world-atelier';
+
+export type {
+  WorldParkManifestResponse as ParkManifestContract,
+  WorldParkHostListResponse as ParkHostListContract,
+  WorldParkEpisodeListResponse as ParkEpisodeListContract,
+} from './types/_generated/world-park';
+
+// =============================================================================
+// Local Types (FE-only)
+// =============================================================================
 
 // =============================================================================
 // Subscription & Tiers
@@ -605,7 +677,13 @@ export type GalleryCategory =
   | 'STREAMING'
   | 'COMPOSITION'
   | 'ADAPTERS'
-  | 'SPECIALIZED';
+  | 'SPECIALIZED'
+  // Gallery V2 categories (AD-009 Vertical Slice)
+  | 'POLYNOMIAL'
+  | 'OPERAD'
+  | 'CROWN_JEWELS'
+  | 'LAYOUT'
+  | 'INTERACTIVE';  // Flagship interactive pilots
 
 /**
  * Projections for a single pilot across targets.
@@ -666,6 +744,12 @@ export const GALLERY_CATEGORY_CONFIG: Record<GalleryCategory, { icon: string; co
   COMPOSITION: { icon: '⊞', color: '#ec4899' },
   ADAPTERS: { icon: '⇄', color: '#06b6d4' },
   SPECIALIZED: { icon: '◈', color: '#ef4444' },
+  // Gallery V2 categories (AD-009 Vertical Slice)
+  POLYNOMIAL: { icon: '◉', color: '#14b8a6' },  // teal - state machines
+  OPERAD: { icon: '⊛', color: '#a855f7' },      // purple - composition grammar
+  CROWN_JEWELS: { icon: '♦', color: '#eab308' }, // yellow - vertical slices
+  LAYOUT: { icon: '▣', color: '#64748b' },      // slate - design system
+  INTERACTIVE: { icon: '⚡', color: '#10b981' }, // emerald - flagship interactive
 };
 
 // =============================================================================

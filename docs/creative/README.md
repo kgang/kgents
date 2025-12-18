@@ -3,8 +3,9 @@
 > *"The aesthetic is not decoration—it is the projection of principles into perception."*
 
 **Status**: Foundation Document
-**Last Updated**: 2025-12-16
+**Last Updated**: 2025-12-17
 **Authors**: Kent + Claude (collaborative authorship)
+**Aligned With**: AD-006 (Unified Categorical Foundation), AD-009 (Metaphysical Fullstack)
 
 ---
 
@@ -44,22 +45,60 @@ kgents is a **garden**, not a factory. Gardens require:
 
 ## Document Index
 
+### Primary Reference
+
+| Document | Purpose |
+|----------|---------|
+| [**unified-vision.md**](unified-vision.md) | **START HERE** — Distilled creative direction aligned with categorical foundation |
+
+### Foundation Documents
+
 | Document | Purpose |
 |----------|---------|
 | [philosophy.md](philosophy.md) | The deep why—translating principles to aesthetics |
 | [visual-system.md](visual-system.md) | Colors, typography, iconography, spatial rhythm |
 | [motion-language.md](motion-language.md) | Animation principles, timing, personality in movement |
 | [voice-and-tone.md](voice-and-tone.md) | Writing style, error messages, personality in words |
-| [mood-board.md](mood-board.md) | Visual inspiration, reference imagery, aesthetic touchstones |
+| [emergence-principles.md](emergence-principles.md) | Generative algorithms, qualia space, cymatics |
 | [implementation-guide.md](implementation-guide.md) | Practical application for developers |
+
+### Archived
+
+| Document | Status |
+|----------|--------|
+| [mood-board.md](mood-board.md) | **Superseded** by unified-vision.md (kept for reference links) |
 
 ## Related Specifications
 
 | Spec | Purpose |
 |------|---------|
-| [spec/protocols/os-shell.md](../../spec/protocols/os-shell.md) | Unified layout wrapper and router |
+| [plans/design-language-consolidation.md](../../plans/design-language-consolidation.md) | **DESIGN_OPERAD** — Three-operad composition system |
+| [plans/autopoietic-architecture.md](../../plans/autopoietic-architecture.md) | AD-006 (Unified Categorical), AD-008 (Isomorphisms), AD-009 (Fullstack) |
 | [spec/protocols/projection.md](../../spec/protocols/projection.md) | Projection Protocol (density, targets) |
 | [spec/protocols/agentese.md](../../spec/protocols/agentese.md) | AGENTESE verb-first ontology |
+| [docs/skills/elastic-ui-patterns.md](../skills/elastic-ui-patterns.md) | Layout composition patterns |
+| [docs/skills/ux-reference-patterns.md](../skills/ux-reference-patterns.md) | Cross-cutting UX patterns |
+
+---
+
+## The Categorical Foundation (AD-006)
+
+> *"The same categorical structure underlies everything. This is not coincidence—it is the ground."*
+
+Creative direction follows the same three-layer pattern as all kgents domains:
+
+| Layer | Creative Application |
+|-------|---------------------|
+| **PolyAgent** | DESIGN_POLYNOMIAL — States: SKELETON → LOADING → PARTIAL → FULL → INTERACTIVE |
+| **Operad** | DESIGN_OPERAD — Three sub-operads: LAYOUT, CONTENT, MOTION |
+| **Sheaf** | ViewportCoherence, ContentConsistency, MotionHarmony |
+
+**The Design Composition Theorem**:
+```
+UI = Layout[Density] ∘ Content[Density] ∘ Motion[ReducedMotion]
+```
+
+See `unified-vision.md` for the full articulation.
 
 ---
 

@@ -45,3 +45,11 @@ export type {
 } from '../../reactive/schema';
 
 export { WidgetMetaFactory } from '../../reactive/schema';
+
+// Gallery components (moved from components/gallery/)
+export {
+  PilotCard,
+  CategoryFilter,
+  OverrideControls,
+  ProjectionView,
+} from './gallery';

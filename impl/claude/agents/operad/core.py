@@ -36,9 +36,12 @@ C = TypeVar("C")
 class LawStatus(Enum):
     """Status of a law verification."""
 
-    PASSED = auto()
-    FAILED = auto()
-    SKIPPED = auto()
+    PASSED = auto()  # Law verified with concrete test cases
+    FAILED = auto()  # Law violation detected
+    SKIPPED = auto()  # Law not tested (e.g., law not found)
+    STRUCTURAL = (
+        auto()
+    )  # Law verified by type structure, not runtime (honest about limits)
 
 
 @dataclass(frozen=True)
@@ -53,7 +56,8 @@ class LawVerification:
 
     @property
     def passed(self) -> bool:
-        return self.status == LawStatus.PASSED
+        """True if law was verified (either runtime or structurally)."""
+        return self.status in (LawStatus.PASSED, LawStatus.STRUCTURAL)
 
 
 @dataclass

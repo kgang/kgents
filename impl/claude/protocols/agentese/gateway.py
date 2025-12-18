@@ -57,19 +57,73 @@ def _import_node_modules() -> None:
 
     This is called lazily when the gateway is mounted, ensuring
     all nodes are discoverable via /agentese/discover.
+
+    Node Discovery Architecture (Phase 2: AGENTESE Path Authority):
+    - Service-level nodes (services/*/node.py) are authoritative
+    - Context-level nodes (contexts/world_*.py) provide fallback/legacy paths
+    - All @node decorated classes auto-register to NodeRegistry
     """
     try:
         # Import contexts to register world.*, self.*, etc. nodes
         from . import contexts  # noqa: F401
 
-        # Import specific node modules that use @node decorator
-        # Autopoietic kernel interface (self.system.*)
+        # Import specific context node modules (legacy/fallback)
         from .contexts import (
-            self_system,  # noqa: F401
-            world_emergence,  # noqa: F401
-            world_gestalt_live,  # noqa: F401
-            world_park,  # noqa: F401
+            design,  # noqa: F401 - Design Language System (concept.design.*)
+            forest,  # noqa: F401 - Forest Protocol (self.forest.*)
+            gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
+            self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
+            world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
+            world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
+            world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
+            world_park,  # noqa: F401 - Park scenarios (world.park.scenario/mask/force.*)
         )
+
+        # === Service-level nodes (AD-009 Metaphysical Fullstack) ===
+        # These are the authoritative implementations with persistence layers
+        try:
+            from services.town import (
+                inhabit_node,  # noqa: F401  # world.town.inhabit.*
+            )
+            from services.town import node as town_node  # noqa: F401  # world.town.*
+        except ImportError as e:
+            logger.debug(f"Could not import town nodes: {e}")
+
+        try:
+            from services.brain import node as brain_node  # noqa: F401  # self.memory.*
+        except ImportError as e:
+            logger.debug(f"Could not import brain node: {e}")
+
+        try:
+            from services.chat import node as chat_node  # noqa: F401  # self.chat.*
+        except ImportError as e:
+            logger.debug(f"Could not import chat node: {e}")
+
+        try:
+            from services.morpheus import (
+                node as morpheus_node,  # noqa: F401  # world.morpheus.*
+            )
+        except ImportError as e:
+            logger.debug(f"Could not import morpheus node: {e}")
+
+        try:
+            from services.atelier import (
+                node as atelier_node,  # noqa: F401  # world.atelier.*
+            )
+        except ImportError as e:
+            logger.debug(f"Could not import atelier node: {e}")
+
+        try:
+            from services.gestalt import (
+                node as gestalt_node,  # noqa: F401  # world.codebase.*
+            )
+        except ImportError as e:
+            logger.debug(f"Could not import gestalt node: {e}")
+
+        try:
+            from services.park import node as park_node  # noqa: F401  # world.park.*
+        except ImportError as e:
+            logger.debug(f"Could not import park node: {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
@@ -414,15 +468,49 @@ class AgenteseGateway:
 
         # === Discovery Endpoints ===
         @router.get("/discover")
-        async def discover() -> JSONResponse:
-            """List all registered AGENTESE paths."""
+        async def discover(include_schemas: bool = False) -> JSONResponse:
+            """
+            List all registered AGENTESE paths.
+
+            Query params:
+                include_schemas: If true, include JSON Schema for contracts (Phase 7)
+
+            Returns:
+                paths: List of registered paths
+                stats: Registry statistics
+                schemas: (if include_schemas=true) JSON Schema for each path's contracts
+            """
             registry = get_registry()
-            return JSONResponse(
-                content={
-                    "paths": registry.list_paths(),
-                    "stats": registry.stats(),
+            content: dict[str, Any] = {
+                "paths": registry.list_paths(),
+                "stats": registry.stats(),
+            }
+
+            if include_schemas:
+                from .schema_gen import node_contracts_to_schema
+
+                schemas: dict[str, Any] = {}
+                all_contracts = registry.get_all_contracts()
+
+                for path, contracts in all_contracts.items():
+                    try:
+                        schemas[path] = node_contracts_to_schema(contracts)
+                    except Exception as e:
+                        logger.warning(f"Failed to generate schema for {path}: {e}")
+                        schemas[path] = {"error": str(e)}
+
+                content["schemas"] = schemas
+                content["contract_coverage"] = {
+                    "paths_with_contracts": len(all_contracts),
+                    "total_paths": len(registry.list_paths()),
+                    "coverage_pct": (
+                        round(len(all_contracts) / len(registry.list_paths()) * 100, 1)
+                        if registry.list_paths()
+                        else 0
+                    ),
                 }
-            )
+
+            return JSONResponse(content=content)
 
         @router.get("/discover/{context}")
         async def discover_context(context: str) -> JSONResponse:
