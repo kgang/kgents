@@ -72,6 +72,18 @@ def import_all_operads() -> None:
     except ImportError:
         pass  # Optional
 
+    # Emergence operad (domain-specific, extends DESIGN not AGENT)
+    try:
+        from agents.emergence.operad import EMERGENCE_OPERAD
+    except ImportError:
+        pass  # Optional
+
+    # Design operads (LAYOUT, CONTENT, MOTION, DESIGN)
+    try:
+        from agents.design.operad import DESIGN_OPERAD
+    except ImportError:
+        pass  # Optional
+
 
 # Import on module load
 import_all_operads()
@@ -117,6 +129,7 @@ DOMAIN_OPERADS = [
     "CONTENT",  # Design system - content degradation
     "MOTION",  # Design system - animation composition
     "DESIGN",  # Design system - unified
+    "EMERGENCE",  # Cymatics pattern composition (extends DESIGN, not AGENT)
 ]
 
 # Legacy operads (not yet migrated to canonical pattern)

@@ -3,9 +3,12 @@
  *
  * Displays all pilots with their projections across CLI, HTML, and JSON targets.
  * Supports category filtering and real-time override controls.
+ *
+ * Performance: Interactive components are lazy-loaded to reduce initial bundle size.
+ * @see plans/park-town-design-overhaul.md - Phase 5.2 Performance
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { galleryApi } from '@/api/client';
 import type {
   GalleryCategory,
@@ -17,9 +20,9 @@ import {
   PilotCard,
   CategoryFilter,
   OverrideControls,
-  PolynomialPlayground,
-  OperadWiring,
-  TownLive,
+  LazyPolynomialPlayground,
+  LazyOperadWiring,
+  LazyTownLive,
 } from '@/components/projection/gallery';
 import { EmpathyError, PersonalityLoading } from '@/components/joy';
 
@@ -174,15 +177,36 @@ function PilotDetailModal({ pilot, onClose }: PilotDetailModalProps) {
   // Check if this is an interactive pilot that should render React components
   const isInteractive = pilot.category === 'INTERACTIVE';
 
-  // Render the appropriate interactive component
+  // Render the appropriate interactive component with lazy loading
   const renderInteractiveComponent = () => {
+    const fallback = (
+      <div className="flex items-center justify-center h-32 text-gray-500">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 border-2 border-emerald-500/40 border-t-emerald-500 rounded-full animate-spin" />
+          <span className="text-sm">Loading component...</span>
+        </div>
+      </div>
+    );
+
     switch (pilot.name) {
       case 'polynomial_playground':
-        return <PolynomialPlayground />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyPolynomialPlayground />
+          </Suspense>
+        );
       case 'operad_wiring_diagram':
-        return <OperadWiring />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyOperadWiring />
+          </Suspense>
+        );
       case 'town_live':
-        return <TownLive />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyTownLive />
+          </Suspense>
+        );
       default:
         return null;
     }

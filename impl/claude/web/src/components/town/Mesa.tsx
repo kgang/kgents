@@ -2,6 +2,14 @@
  * Mesa: Props-based Mesa canvas for Agent Town visualization.
  *
  * Receives citizens as props for rendering with PixiJS.
+ *
+ * Performance Optimizations (Phase 5.2):
+ * - Mobile mode reduces draw calls and complexity
+ * - Conditional grid rendering based on density
+ * - Reduced event lines on mobile
+ * - Device pixel ratio awareness for crisp rendering without overdraw
+ *
+ * @see plans/park-town-design-overhaul.md - Phase 5.2 Performance
  */
 
 import { Stage, Container, Graphics, Text } from '@pixi/react';
@@ -16,7 +24,12 @@ import type { TownEvent } from '@/api/types';
 // =============================================================================
 
 const GRID_SIZE = 20;
-const CELL_SIZE = 24;
+
+/** Cell size varies by density for better mobile rendering */
+const CELL_SIZE_BY_DENSITY = {
+  default: 24,
+  mobile: 18, // Smaller cells on mobile for better fit
+} as const;
 
 const ARCHETYPE_COLORS: Record<string, number> = {
   // Lowercase (from widget JSON)
@@ -51,8 +64,11 @@ const EVENT_LINE_COLORS: Record<string, number> = {
   default: 0x6b7280,  // gray
 };
 
-/** Max number of recent events to show lines for */
-const MAX_EVENT_LINES = 5;
+/** Max event lines varies by density - fewer on mobile for performance */
+const MAX_EVENT_LINES_BY_DENSITY = {
+  default: 5,
+  mobile: 3, // Fewer event lines on mobile
+} as const;
 
 // =============================================================================
 // Types
@@ -66,6 +82,18 @@ interface MesaProps {
   selectedCitizenId: string | null;
   onSelectCitizen?: (id: string) => void;
   onHoverCitizen?: (id: string | null) => void;
+  /**
+   * Enable mobile optimizations:
+   * - Smaller cell size
+   * - Fewer event lines
+   * - Simplified grid (skip every other line)
+   * - Lower resolution text
+   */
+  mobile?: boolean;
+  /**
+   * Skip grid rendering entirely (extreme mobile perf mode)
+   */
+  hideGrid?: boolean;
 }
 
 interface CitizenPosition {
@@ -86,8 +114,17 @@ export function Mesa({
   selectedCitizenId,
   onSelectCitizen,
   onHoverCitizen,
+  mobile = false,
+  hideGrid = false,
 }: MesaProps) {
   const [hoveredCitizenId, setHoveredCitizenId] = useState<string | null>(null);
+
+  // Mobile-aware constants
+  const cellSize = mobile ? CELL_SIZE_BY_DENSITY.mobile : CELL_SIZE_BY_DENSITY.default;
+  const maxEventLines = mobile ? MAX_EVENT_LINES_BY_DENSITY.mobile : MAX_EVENT_LINES_BY_DENSITY.default;
+  const citizenRadius = mobile ? 9 : 12;
+  const fontSize = mobile ? 10 : 14;
+
   const offsetX = width / 2;
   const offsetY = height / 4;
 
@@ -116,7 +153,7 @@ export function Mesa({
           gridY += Math.sin(angle) * radius;
         }
 
-        const screen = gridToScreen(gridX, gridY, CELL_SIZE, offsetX, offsetY);
+        const screen = gridToScreen(gridX, gridY, cellSize, offsetX, offsetY);
         positions.push({
           citizen,
           screenX: screen.x,
@@ -126,7 +163,7 @@ export function Mesa({
     });
 
     return positions;
-  }, [citizens, offsetX, offsetY]);
+  }, [citizens, cellSize, offsetX, offsetY]);
 
   // Build a map of citizen name -> position for event line lookup
   const citizenPositionByName = useMemo(() => {
@@ -147,8 +184,8 @@ export function Mesa({
       operation: string;
     }> = [];
 
-    // Take only the most recent events
-    const recentEvents = events.slice(0, MAX_EVENT_LINES);
+    // Take only the most recent events (fewer on mobile for perf)
+    const recentEvents = events.slice(0, maxEventLines);
 
     recentEvents.forEach((event, index) => {
       if (event.participants.length < 2) return;
@@ -159,7 +196,7 @@ export function Mesa({
 
       if (fromPos && toPos) {
         // Fade older events (most recent = full opacity)
-        const alpha = 1.0 - (index / MAX_EVENT_LINES) * 0.6;
+        const alpha = 1.0 - (index / maxEventLines) * 0.6;
         const color = EVENT_LINE_COLORS[event.operation] || EVENT_LINE_COLORS.default;
 
         lines.push({
@@ -173,7 +210,7 @@ export function Mesa({
     });
 
     return lines;
-  }, [events, citizenPositionByName]);
+  }, [events, citizenPositionByName, maxEventLines]);
 
   // Draw event lines
   const drawEventLines = useCallback(
@@ -210,25 +247,28 @@ export function Mesa({
     [onHoverCitizen]
   );
 
-  // Draw grid
+  // Draw grid (simplified on mobile - skip every other line)
   const drawGrid = useCallback(
     (g: PIXI.Graphics) => {
       g.clear();
-      g.lineStyle(1, 0x16213e, 0.3);
+      g.lineStyle(1, 0x16213e, mobile ? 0.2 : 0.3);
 
-      for (let i = 0; i <= GRID_SIZE; i++) {
-        const startH = gridToScreen(i, 0, CELL_SIZE, offsetX, offsetY);
-        const endH = gridToScreen(i, GRID_SIZE, CELL_SIZE, offsetX, offsetY);
+      // On mobile, skip every other grid line for performance
+      const step = mobile ? 2 : 1;
+
+      for (let i = 0; i <= GRID_SIZE; i += step) {
+        const startH = gridToScreen(i, 0, cellSize, offsetX, offsetY);
+        const endH = gridToScreen(i, GRID_SIZE, cellSize, offsetX, offsetY);
         g.moveTo(startH.x, startH.y);
         g.lineTo(endH.x, endH.y);
 
-        const startV = gridToScreen(0, i, CELL_SIZE, offsetX, offsetY);
-        const endV = gridToScreen(GRID_SIZE, i, CELL_SIZE, offsetX, offsetY);
+        const startV = gridToScreen(0, i, cellSize, offsetX, offsetY);
+        const endV = gridToScreen(GRID_SIZE, i, cellSize, offsetX, offsetY);
         g.moveTo(startV.x, startV.y);
         g.lineTo(endV.x, endV.y);
       }
     },
-    [offsetX, offsetY]
+    [cellSize, offsetX, offsetY, mobile]
   );
 
   // Draw region highlights
@@ -236,16 +276,16 @@ export function Mesa({
     (g: PIXI.Graphics) => {
       g.clear();
       Object.entries(REGION_GRID_POSITIONS).forEach(([, pos]) => {
-        const screen = gridToScreen(pos.x, pos.y, CELL_SIZE, offsetX, offsetY);
-        g.beginFill(0x0f3460, 0.1);
-        g.drawCircle(screen.x, screen.y, CELL_SIZE * 2);
+        const screen = gridToScreen(pos.x, pos.y, cellSize, offsetX, offsetY);
+        g.beginFill(0x0f3460, mobile ? 0.08 : 0.1);
+        g.drawCircle(screen.x, screen.y, cellSize * 2);
         g.endFill();
       });
     },
-    [offsetX, offsetY]
+    [cellSize, offsetX, offsetY, mobile]
   );
 
-  // Draw citizen sprite
+  // Draw citizen sprite (scaled for mobile)
   const drawCitizen = useCallback(
     (g: PIXI.Graphics, cp: CitizenPosition, isSelected: boolean, isHovered: boolean) => {
       const { citizen, screenX, screenY } = cp;
@@ -254,24 +294,24 @@ export function Mesa({
 
       g.clear();
 
-      // Selection ring
+      // Selection ring (scaled for mobile)
       if (isSelected) {
-        g.lineStyle(3, 0xffffff, 1);
-        g.drawCircle(screenX, screenY, 18);
+        g.lineStyle(mobile ? 2 : 3, 0xffffff, 1);
+        g.drawCircle(screenX, screenY, citizenRadius + 6);
       }
 
       // Hover ring
       if (isHovered && !isSelected) {
         g.lineStyle(2, 0xffffff, 0.5);
-        g.drawCircle(screenX, screenY, 16);
+        g.drawCircle(screenX, screenY, citizenRadius + 4);
       }
 
       // Main circle
       g.beginFill(color, alpha);
-      g.drawCircle(screenX, screenY, 12);
+      g.drawCircle(screenX, screenY, citizenRadius);
       g.endFill();
     },
-    []
+    [mobile, citizenRadius]
   );
 
   return (
@@ -280,12 +320,16 @@ export function Mesa({
       height={height}
       options={{
         backgroundColor: 0x1a1a2e,
-        antialias: true,
+        // Disable antialias on mobile for performance
+        antialias: !mobile,
+        // Use lower resolution on mobile (1 instead of devicePixelRatio)
+        resolution: mobile ? 1 : window.devicePixelRatio || 1,
+        autoDensity: true,
       }}
     >
       <Container>
-        {/* Grid Layer */}
-        <Graphics draw={drawGrid} />
+        {/* Grid Layer - conditionally rendered for mobile perf */}
+        {!hideGrid && <Graphics draw={drawGrid} />}
 
         {/* Region Layer */}
         <Graphics draw={drawRegions} />
@@ -293,9 +337,9 @@ export function Mesa({
         {/* Event Lines Layer - shows recent interactions between citizens */}
         <Graphics draw={drawEventLines} />
 
-        {/* Region labels */}
+        {/* Region labels - smaller font on mobile */}
         {Object.entries(REGION_GRID_POSITIONS).map(([region, pos]) => {
-          const screen = gridToScreen(pos.x, pos.y - 1.5, CELL_SIZE, offsetX, offsetY);
+          const screen = gridToScreen(pos.x, pos.y - 1.5, cellSize, offsetX, offsetY);
           return (
             <Text
               key={region}
@@ -305,7 +349,7 @@ export function Mesa({
               anchor={0.5}
               style={
                 new PIXI.TextStyle({
-                  fontSize: 10,
+                  fontSize: mobile ? 8 : 10,
                   fill: 0x666666,
                   fontFamily: 'monospace',
                 })
@@ -337,25 +381,26 @@ export function Mesa({
                 anchor={0.5}
                 style={
                   new PIXI.TextStyle({
-                    fontSize: 14,
+                    fontSize: fontSize,
                     fontWeight: 'bold',
                     fill: 0xffffff,
                   })
                 }
               />
-              {/* Name label on hover/select */}
+              {/* Name label on hover/select - simplified on mobile */}
               {(isHovered || isSelected) && (
                 <Text
                   text={pos.citizen.name}
                   x={pos.screenX}
-                  y={pos.screenY - 22}
+                  y={pos.screenY - (citizenRadius + 10)}
                   anchor={0.5}
                   style={
                     new PIXI.TextStyle({
-                      fontSize: 10,
+                      fontSize: mobile ? 8 : 10,
                       fill: 0xffffff,
-                      dropShadow: true,
-                      dropShadowDistance: 1,
+                      // Skip drop shadow on mobile for perf
+                      dropShadow: !mobile,
+                      dropShadowDistance: mobile ? 0 : 1,
                     })
                   }
                 />

@@ -1,13 +1,15 @@
 /**
  * PilotCard: Single pilot display with projections.
+ *
+ * Performance: Interactive previews use lazy-loaded components.
+ * @see plans/park-town-design-overhaul.md - Phase 5.2 Performance
  */
 
+import { Suspense } from 'react';
 import type { PilotResponse, GalleryCategory } from '@/api/types';
 import { GALLERY_CATEGORY_CONFIG } from '@/api/types';
 import { ProjectionView } from './ProjectionView';
-import { PolynomialPlayground } from './PolynomialPlayground';
-import { OperadWiring } from './OperadWiring';
-import { TownLive } from './TownLive';
+import { LazyPolynomialPlayground, LazyOperadWiring, LazyTownLive } from './index';
 
 interface PilotCardProps {
   pilot: PilotResponse;
@@ -22,15 +24,33 @@ export function PilotCard({ pilot, onClick }: PilotCardProps) {
 
   const isInteractive = pilot.category === 'INTERACTIVE';
 
-  // Render compact interactive preview
+  // Render compact interactive preview with lazy loading
   const renderInteractivePreview = () => {
+    const fallback = (
+      <div className="flex items-center justify-center h-16">
+        <div className="w-3 h-3 border-2 border-emerald-500/40 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    );
+
     switch (pilot.name) {
       case 'polynomial_playground':
-        return <PolynomialPlayground compact />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyPolynomialPlayground compact />
+          </Suspense>
+        );
       case 'operad_wiring_diagram':
-        return <OperadWiring compact />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyOperadWiring compact />
+          </Suspense>
+        );
       case 'town_live':
-        return <TownLive compact />;
+        return (
+          <Suspense fallback={fallback}>
+            <LazyTownLive compact />
+          </Suspense>
+        );
       default:
         return null;
     }

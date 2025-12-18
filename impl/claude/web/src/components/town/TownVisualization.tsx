@@ -26,7 +26,7 @@ import { ObserverSelector, type ObserverUmwelt } from './ObserverSelector';
 import { ColonyDashboard } from '../../widgets/dashboards';
 import { ElasticSplit, ElasticContainer } from '../elastic';
 import { BottomDrawer } from '../elastic/BottomDrawer';
-import { FloatingActions, type FloatingAction } from '../elastic/FloatingActions';
+// FloatingActions removed for mobile - using fixed bottom toolbar instead
 import { FirstVisitOverlay } from '../categorical/FirstVisitOverlay';
 import { useTeachingModeSafe } from '../../hooks';
 import { getEmptyState } from '../../constants';
@@ -432,6 +432,7 @@ export function TownVisualization({
                   setSelectedCitizenId(id);
                   if (id) setCitizenDrawerOpen(true);
                 }}
+                mobile // Enable mobile optimizations
               />
             </div>
 
@@ -441,40 +442,44 @@ export function TownVisualization({
               <span className="text-violet-400">{dashboard?.citizens.length || 0}</span> citizens
             </div>
 
-            <FloatingActions
-              actions={[
-                {
-                  id: 'play',
-                  icon: isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />,
-                  label: isPlaying ? 'Pause' : 'Play',
-                  onClick: handleTogglePlay,
-                  variant: 'primary',
-                },
-                {
-                  id: 'trace',
-                  icon: <Clock className="w-5 h-5" />,
-                  label: 'Trace',
-                  onClick: () => setTracePanelDrawerOpen(true),
-                },
-                {
-                  id: 'controls',
-                  icon: <Settings className="w-5 h-5" />,
-                  label: 'Controls',
-                  onClick: () => setControlsDrawerOpen(true),
-                },
-                ...(selectedCitizenId
-                  ? [
-                      {
-                        id: 'citizen',
-                        icon: <User className="w-5 h-5" />,
-                        label: 'View Citizen',
-                        onClick: () => setCitizenDrawerOpen(true),
-                      } as FloatingAction,
-                    ]
-                  : []),
-              ]}
-              position="bottom-right"
-            />
+          </div>
+
+          {/* Fixed bottom toolbar - doesn't float over content */}
+          <div className="flex-shrink-0 bg-violet-950/90 border-t border-violet-500/30 px-2 py-2">
+            <div className="flex items-center justify-around gap-1">
+              <button
+                onClick={handleTogglePlay}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors ${
+                  isPlaying ? 'bg-green-600/30 text-green-400' : 'bg-violet-800/50 text-gray-300'
+                }`}
+              >
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                <span className="text-[10px]">{isPlaying ? 'Pause' : 'Play'}</span>
+              </button>
+              <button
+                onClick={() => setTracePanelDrawerOpen(true)}
+                className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg bg-violet-800/50 text-gray-300 transition-colors hover:bg-violet-700/50"
+              >
+                <Clock className="w-5 h-5" />
+                <span className="text-[10px]">Trace</span>
+              </button>
+              <button
+                onClick={() => setControlsDrawerOpen(true)}
+                className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg bg-violet-800/50 text-gray-300 transition-colors hover:bg-violet-700/50"
+              >
+                <Settings className="w-5 h-5" />
+                <span className="text-[10px]">Controls</span>
+              </button>
+              {selectedCitizenId && (
+                <button
+                  onClick={() => setCitizenDrawerOpen(true)}
+                  className="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg bg-violet-600/50 text-violet-200 transition-colors hover:bg-violet-500/50"
+                >
+                  <User className="w-5 h-5" />
+                  <span className="text-[10px]">Citizen</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <BottomDrawer
