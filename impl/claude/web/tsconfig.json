@@ -35,5 +35,6 @@
       "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests"],
+  "exclude": ["src/components/_mothballed"]
 }

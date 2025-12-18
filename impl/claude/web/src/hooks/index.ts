@@ -26,9 +26,6 @@ export {
 // Town loading hook (projection-first extraction)
 export { useTownLoader } from './useTownLoader';
 
-// Atelier streaming
-export { useAtelierStream, type UseAtelierStreamResult } from './useAtelierStream';
-
 // Brain WebSocket streaming (Phase 1 Crown Jewels completion)
 export {
   useBrainStream,
@@ -251,12 +248,12 @@ export {
   type WorldParkLocationCreateResponse,
 } from './useParkQuery';
 
-// Atelier AGENTESE queries (Contract-Driven)
+// Forge AGENTESE queries (Contract-Driven)
 export {
   // Query keys
-  atelierQueryKeys,
+  forgeQueryKeys,
   // Atelier manifest
-  useAtelierManifest,
+  useForgeManifest,
   // Workshops
   useWorkshops,
   useWorkshop,
@@ -279,17 +276,14 @@ export {
   useFestivals,
   useCreateFestival,
   useEnterFestival,
-  // Tokens/Bids
-  useTokenBalance,
-  useSubmitBid,
   // Type re-exports
-  type WorldAtelierManifestResponse,
-  type WorldAtelierWorkshopListResponse,
-  type WorldAtelierWorkshopGetResponse,
-  type WorldAtelierArtisanListResponse,
-  type WorldAtelierContributionListResponse,
-  type WorldAtelierFestivalListResponse,
-} from './useAtelierQuery';
+  type WorldForgeManifestResponse,
+  type WorldForgeWorkshopListResponse,
+  type WorldForgeWorkshopGetResponse,
+  type WorldForgeArtisanListResponse,
+  type WorldForgeContributionListResponse,
+  type WorldForgeFestivalListResponse,
+} from './useForgeQuery';
 
 // Brain AGENTESE queries (Contract-Driven)
 export {
@@ -387,3 +381,51 @@ export {
   type ConceptGardenerRouteResponse,
   type ConceptGardenerProposeResponse,
 } from './useGardenerQuery';
+
+// Differance AGENTESE queries (Contract-Driven) - Phase 5: FRUITING
+export {
+  // Query keys
+  differanceQueryKeys,
+  branchQueryKeys,
+  // Differance manifest
+  useDifferanceManifest,
+  // Heritage DAG (the crown jewel)
+  useHeritageDAG,
+  // "Why did this happen?" (explainability)
+  useWhyExplain,
+  // Ghosts (unexplored alternatives)
+  useGhosts,
+  // Navigation
+  useTraceAt,
+  useReplay,
+  // Branch operations
+  useBranchManifest,
+  useCreateBranch,
+  useExploreBranch,
+  useCompareBranches,
+  // Type re-exports
+  type DifferanceManifestResponse,
+  type BranchManifestResponse,
+  type HeritageRequest,
+  type HeritageNodeResponse,
+  type HeritageEdgeResponse,
+  type HeritageResponse,
+  type WhyRequest,
+  type WhyChosenStep,
+  type WhyResponse,
+  type GhostsRequest,
+  type GhostItem,
+  type GhostsResponse,
+  type AtRequest,
+  type AtAlternative,
+  type AtResponse,
+  type ReplayRequest,
+  type ReplayStep,
+  type ReplayResponse,
+  type BranchCreateRequest,
+  type BranchCreateResponse,
+  type BranchExploreRequest,
+  type BranchExploreResponse,
+  type BranchCompareRequest,
+  type BranchCompareResponse,
+} from './useDifferanceQuery';
