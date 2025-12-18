@@ -25,6 +25,32 @@ export * from './types';
 export { Gestalt2D } from './Gestalt2D';
 export type { Gestalt2DProps } from './Gestalt2D';
 
+// =============================================================================
+// GestaltTree Components (Phase 4 - Living Architecture Navigator)
+// =============================================================================
+
+export {
+  GestaltTree,
+  GestaltTreeNode,
+  HealthBadge,
+  HealthBadgeLarge,
+  buildGestaltTree,
+  buildLayerTree,
+  buildPathTree,
+  getViolationMap,
+  GRADE_ORDER,
+  gradeToNumber,
+  numberToGrade,
+  getWorstGrade,
+} from './GestaltTree';
+export type {
+  GestaltNode,
+  GestaltTreeProps,
+  GestaltTreeNodeProps,
+  HealthBadgeProps,
+  TreeMode,
+} from './GestaltTree';
+
 export { LayerCard } from './LayerCard';
 export type { LayerCardProps } from './LayerCard';
 

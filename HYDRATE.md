@@ -100,8 +100,9 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 
 ## Status
 
-**Tests**: 19,285 | **AGENTESE v3.1**: Self-doc, WiredLogos, aliases
+**Tests**: 20,122 | **AGENTESE v3.1**: Self-doc, WiredLogos, aliases
 **Archived**: E-gent, H-gent, Q-gent, R-gent, Psi-gent → `agents/_archived/`; Terrarium → `protocols/_archived/` (superseded by AUP)
+**Differance**: 192 tests, Phase 5 complete → Phase 6 (Crown Jewel wiring) ready
 
 ---
 

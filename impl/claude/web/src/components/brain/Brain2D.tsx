@@ -451,10 +451,7 @@ function SidePanel({ onCapture, onGhostSelect, density }: SidePanelProps) {
 // Helpers
 // =============================================================================
 
-function getDrawerTitle(
-  content: DrawerContent,
-  crystal: SelfMemoryTopologyResponse['nodes'][number] | null
-): string {
+function getDrawerTitle(content: DrawerContent, crystal: TopologyNode | null): string {
   switch (content) {
     case 'detail':
       return crystal?.label || 'Crystal Detail';
