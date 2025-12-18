@@ -1,7 +1,7 @@
 """
-Tests for AtelierNode AGENTESE wrapper.
+Tests for ForgeNode AGENTESE wrapper.
 
-Tests the @node("world.atelier") integration:
+Tests the @node("world.forge") integration:
 - Handle and affordances based on observer
 - Workshop CRUD operations
 - Artisan management
@@ -22,12 +22,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from protocols.agentese.node import BasicRendering, Observer
-from services.atelier import AtelierPersistence
-from services.atelier.node import (
+from services.forge import ForgePersistence
+from services.forge.node import (
     ArtisanListRendering,
     ArtisanRendering,
-    AtelierManifestRendering,
-    AtelierNode,
+    ForgeManifestRendering,
+    ForgeNode,
     ContributionListRendering,
     ContributionRendering,
     ExhibitionRendering,
@@ -36,9 +36,9 @@ from services.atelier.node import (
     WorkshopListRendering,
     WorkshopRendering,
 )
-from services.atelier.persistence import (
+from services.forge.persistence import (
     ArtisanView,
-    AtelierStatus,
+    ForgeStatus,
     ContributionView,
     ExhibitionView,
     GalleryItemView,
@@ -50,11 +50,11 @@ from services.atelier.persistence import (
 
 @pytest.fixture
 def mock_persistence() -> AsyncMock:
-    """Create a mock AtelierPersistence."""
-    persistence = AsyncMock(spec=AtelierPersistence)
+    """Create a mock ForgePersistence."""
+    persistence = AsyncMock(spec=ForgePersistence)
 
     # Default manifest response
-    persistence.manifest.return_value = AtelierStatus(
+    persistence.manifest.return_value = ForgeStatus(
         total_workshops=5,
         active_workshops=2,
         total_artisans=10,
@@ -92,41 +92,41 @@ def developer_observer() -> Observer:
 
 
 @pytest.fixture
-def node(mock_persistence: AsyncMock) -> AtelierNode:
-    """Create an AtelierNode with mock persistence."""
-    return AtelierNode(atelier_persistence=mock_persistence)
+def node(mock_persistence: AsyncMock) -> ForgeNode:
+    """Create an ForgeNode with mock persistence."""
+    return ForgeNode(forge_persistence=mock_persistence)
 
 
 # === Handle Tests ===
 
 
 class TestHandle:
-    """Tests for AtelierNode.handle property and get_handle_info()."""
+    """Tests for ForgeNode.handle property and get_handle_info()."""
 
     def test_handle_returns_path(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
     ):
         """Handle property returns correct path."""
-        assert node.handle == "world.atelier"
+        assert node.handle == "world.forge"
 
     @pytest.mark.asyncio
     async def test_get_handle_info_returns_description(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """get_handle_info returns correct info including description."""
         result = await node.get_handle_info(spectator_observer)
 
-        assert result["path"] == "world.atelier"
+        assert result["path"] == "world.forge"
         assert "creative workshop" in result["description"].lower()
         assert result["observer"]["archetype"] == "spectator"
 
     @pytest.mark.asyncio
     async def test_get_handle_info_shows_feature_availability(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """get_handle_info shows which features are available."""
@@ -146,7 +146,7 @@ class TestAffordances:
 
     def test_spectator_has_read_affordances(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
     ):
         """Spectators have read-only affordances."""
         affordances = node._get_affordances_for_archetype("spectator")
@@ -160,7 +160,7 @@ class TestAffordances:
 
     def test_artisan_has_create_affordances(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
     ):
         """Artisans can join and contribute."""
         affordances = node._get_affordances_for_archetype("artisan")
@@ -172,7 +172,7 @@ class TestAffordances:
 
     def test_curator_has_management_affordances(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
     ):
         """Curators can manage workshops and exhibitions."""
         affordances = node._get_affordances_for_archetype("curator")
@@ -185,7 +185,7 @@ class TestAffordances:
 
     def test_developer_has_all_affordances(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
     ):
         """Developers have full access."""
         affordances = node._get_affordances_for_archetype("developer")
@@ -201,32 +201,32 @@ class TestAffordances:
 
 
 class TestManifest:
-    """Tests for AtelierNode.manifest()."""
+    """Tests for ForgeNode.manifest()."""
 
     @pytest.mark.asyncio
     async def test_manifest_returns_status(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
-        """Manifest returns atelier status."""
+        """Manifest returns forge status."""
         result = await node.manifest(spectator_observer)
 
-        assert isinstance(result, AtelierManifestRendering)
+        assert isinstance(result, ForgeManifestRendering)
         assert result.status.total_workshops == 5
         assert result.status.active_workshops == 2
 
     @pytest.mark.asyncio
     async def test_manifest_rendering_to_dict(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """Manifest rendering produces correct dict."""
         result = await node.manifest(spectator_observer)
         data = result.to_dict()
 
-        assert data["type"] == "atelier_manifest"
+        assert data["type"] == "forge_manifest"
         assert data["total_workshops"] == 5
         assert data["active_workshops"] == 2
         assert data["total_artisans"] == 10
@@ -234,14 +234,14 @@ class TestManifest:
     @pytest.mark.asyncio
     async def test_manifest_rendering_to_text(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """Manifest rendering produces readable text."""
         result = await node.manifest(spectator_observer)
         text = result.to_text()
 
-        assert "Atelier Status" in text
+        assert "Forge Status" in text
         assert "Workshops:" in text
         assert "2/5 active" in text
 
@@ -255,7 +255,7 @@ class TestWorkshopOperations:
     @pytest.mark.asyncio
     async def test_workshop_list(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -283,7 +283,7 @@ class TestWorkshopOperations:
     @pytest.mark.asyncio
     async def test_workshop_get_found(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -308,7 +308,7 @@ class TestWorkshopOperations:
     @pytest.mark.asyncio
     async def test_workshop_get_not_found(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -323,7 +323,7 @@ class TestWorkshopOperations:
     @pytest.mark.asyncio
     async def test_workshop_create(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         curator_observer: Observer,
     ):
@@ -352,7 +352,7 @@ class TestWorkshopOperations:
     @pytest.mark.asyncio
     async def test_workshop_end(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         curator_observer: Observer,
     ):
@@ -374,7 +374,7 @@ class TestArtisanOperations:
     @pytest.mark.asyncio
     async def test_artisan_list(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -401,7 +401,7 @@ class TestArtisanOperations:
     @pytest.mark.asyncio
     async def test_artisan_join(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         artisan_observer: Observer,
     ):
@@ -437,7 +437,7 @@ class TestContributionOperations:
     @pytest.mark.asyncio
     async def test_contribute(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         artisan_observer: Observer,
     ):
@@ -467,7 +467,7 @@ class TestContributionOperations:
     @pytest.mark.asyncio
     async def test_contribution_list(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -501,7 +501,7 @@ class TestExhibitionOperations:
     @pytest.mark.asyncio
     async def test_exhibition_create(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         curator_observer: Observer,
     ):
@@ -531,7 +531,7 @@ class TestExhibitionOperations:
     @pytest.mark.asyncio
     async def test_exhibition_open(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         curator_observer: Observer,
     ):
@@ -546,7 +546,7 @@ class TestExhibitionOperations:
     @pytest.mark.asyncio
     async def test_exhibition_view(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -579,7 +579,7 @@ class TestGalleryOperations:
     @pytest.mark.asyncio
     async def test_gallery_list(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         spectator_observer: Observer,
     ):
@@ -606,7 +606,7 @@ class TestGalleryOperations:
     @pytest.mark.asyncio
     async def test_gallery_add(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         mock_persistence: AsyncMock,
         curator_observer: Observer,
     ):
@@ -706,16 +706,16 @@ class TestTokenEconomy:
         self,
         mock_persistence: AsyncMock,
         token_pool: MagicMock,
-    ) -> AtelierNode:
+    ) -> ForgeNode:
         """Create node with token pool enabled."""
-        return AtelierNode(
-            atelier_persistence=mock_persistence,
+        return ForgeNode(
+            forge_persistence=mock_persistence,
             token_pool=token_pool,
         )
 
     def test_spectator_gets_token_affordances(
         self,
-        node_with_tokens: AtelierNode,
+        node_with_tokens: ForgeNode,
     ):
         """Spectators get token affordances when pool is enabled."""
         affordances = node_with_tokens._get_affordances_for_archetype("spectator")
@@ -726,7 +726,7 @@ class TestTokenEconomy:
     @pytest.mark.asyncio
     async def test_handle_shows_economy_enabled(
         self,
-        node_with_tokens: AtelierNode,
+        node_with_tokens: ForgeNode,
         spectator_observer: Observer,
     ):
         """get_handle_info shows spectator economy as enabled."""
@@ -737,7 +737,7 @@ class TestTokenEconomy:
     @pytest.mark.asyncio
     async def test_tokens_manifest_without_pool(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """Token manifest returns error when pool not enabled."""
@@ -763,17 +763,17 @@ class TestFestivals:
         self,
         mock_persistence: AsyncMock,
         festival_manager: MagicMock,
-    ) -> AtelierNode:
+    ) -> ForgeNode:
         """Create node with festivals enabled."""
-        return AtelierNode(
-            atelier_persistence=mock_persistence,
+        return ForgeNode(
+            forge_persistence=mock_persistence,
             festival_manager=festival_manager,
         )
 
     @pytest.mark.asyncio
     async def test_handle_shows_festivals_enabled(
         self,
-        node_with_festivals: AtelierNode,
+        node_with_festivals: ForgeNode,
         spectator_observer: Observer,
     ):
         """get_handle_info shows festivals as enabled."""
@@ -784,7 +784,7 @@ class TestFestivals:
     @pytest.mark.asyncio
     async def test_festival_list_without_manager(
         self,
-        node: AtelierNode,
+        node: ForgeNode,
         spectator_observer: Observer,
     ):
         """Festival list returns error when not enabled."""

@@ -123,7 +123,7 @@ const CROWN_JEWELS: Array<{
   { name: 'brain', label: 'Brain', path: 'self.memory', route: '/brain', icon: Brain },
   { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', route: '/gestalt', icon: Network },
   { name: 'gardener', label: 'Gardener', path: 'concept.gardener', route: '/gardener', icon: Leaf },
-  { name: 'atelier', label: 'Atelier', path: 'world.atelier', route: '/atelier', icon: Palette },
+  { name: 'forge', label: 'Forge', path: 'world.forge', route: '/forge', icon: Palette },
   {
     name: 'coalition',
     label: 'Coalition',
@@ -207,69 +207,73 @@ function useDiscovery() {
     return Date.now() - discoveryCache.timestamp < DISCOVERY_CACHE_TTL;
   }, []);
 
-  const fetchPaths = useCallback(async (attempt = 0): Promise<void> => {
-    // Use cache if valid
-    if (attempt === 0 && isCacheValid() && discoveryCache) {
-      setPaths(discoveryCache.paths);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await apiClient.get<{
-        paths: string[];
-        stats: {
-          registered_nodes: number;
-          contexts: string[];
-        };
-      }>('/agentese/discover');
-
-      // Transform flat paths to PathInfo
-      const pathInfos: PathInfo[] = response.data.paths.map((p) => ({
-        path: p,
-        context: p.split('.')[0] as PathInfo['context'],
-        aspects: ['manifest'], // Default - actual aspects come from individual path queries
-      }));
-
-      // Update cache
-      discoveryCache = {
-        paths: pathInfos,
-        timestamp: Date.now(),
-      };
-
-      setPaths(pathInfos);
-      setError(null);
-      setRetryCount(0);
-    } catch (e) {
-      const err = e as Error;
-      setError(err);
-
-      // Retry with exponential backoff if we haven't exceeded max retries
-      if (attempt < MAX_DISCOVERY_RETRIES) {
-        const delay = getBackoffDelay(attempt);
-        console.warn(
-          `[NavigationTree] Discovery failed, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${MAX_DISCOVERY_RETRIES})`
-        );
-
-        retryTimeoutRef.current = setTimeout(() => {
-          setRetryCount(attempt + 1);
-          fetchPaths(attempt + 1);
-        }, delay);
-      } else {
-        // Use fallback paths after all retries exhausted
-        console.warn('[NavigationTree] Discovery failed after max retries, using fallback paths');
-        const fallbackPaths = CROWN_JEWELS.map((j) => ({
-          path: j.path,
-          context: j.path.split('.')[0] as PathInfo['context'],
-          aspects: ['manifest'],
-        }));
-        setPaths(fallbackPaths);
+  const fetchPaths = useCallback(
+    async (attempt = 0): Promise<void> => {
+      // Use cache if valid
+      if (attempt === 0 && isCacheValid() && discoveryCache) {
+        setPaths(discoveryCache.paths);
+        setLoading(false);
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [isCacheValid]);
+
+      setLoading(true);
+      try {
+        const response = await apiClient.get<{
+          paths: string[];
+          stats: {
+            registered_nodes: number;
+            contexts: string[];
+          };
+        }>('/agentese/discover');
+
+        // Transform flat paths to PathInfo
+        const pathInfos: PathInfo[] = response.data.paths.map((p) => ({
+          path: p,
+          context: p.split('.')[0] as PathInfo['context'],
+          aspects: ['manifest'], // Default - actual aspects come from individual path queries
+        }));
+
+        // Update cache (intentional module-level cache pattern)
+        // eslint-disable-next-line require-atomic-updates
+        discoveryCache = {
+          paths: pathInfos,
+          timestamp: Date.now(),
+        };
+
+        setPaths(pathInfos);
+        setError(null);
+        setRetryCount(0);
+      } catch (e) {
+        const err = e as Error;
+        setError(err);
+
+        // Retry with exponential backoff if we haven't exceeded max retries
+        if (attempt < MAX_DISCOVERY_RETRIES) {
+          const delay = getBackoffDelay(attempt);
+          console.warn(
+            `[NavigationTree] Discovery failed, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${MAX_DISCOVERY_RETRIES})`
+          );
+
+          retryTimeoutRef.current = setTimeout(() => {
+            setRetryCount(attempt + 1);
+            fetchPaths(attempt + 1);
+          }, delay);
+        } else {
+          // Use fallback paths after all retries exhausted
+          console.warn('[NavigationTree] Discovery failed after max retries, using fallback paths');
+          const fallbackPaths = CROWN_JEWELS.map((j) => ({
+            path: j.path,
+            context: j.path.split('.')[0] as PathInfo['context'],
+            aspects: ['manifest'],
+          }));
+          setPaths(fallbackPaths);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isCacheValid]
+  );
 
   // Cleanup retry timeout on unmount
   useEffect(() => {
@@ -391,18 +395,14 @@ const TreeNodeItem = memo(function TreeNodeItem({
         )}
 
         {/* Icon for contexts */}
-        {contextInfo && (
-          <Icon className={`w-4 h-4 ${contextInfo.color}`} />
-        )}
+        {contextInfo && <Icon className={`w-4 h-4 ${contextInfo.color}`} />}
 
         {/* Label */}
         <span className="truncate">{node.segment}</span>
 
         {/* Leaf indicator */}
         {node.isLeaf && !hasChildren && (
-          <span className="ml-auto text-xs text-gray-500">
-            {node.aspects?.length || 0}
-          </span>
+          <span className="ml-auto text-xs text-gray-500">{node.aspects?.length || 0}</span>
         )}
       </button>
 
@@ -463,8 +463,8 @@ function CrownJewelsSection({
       </h3>
       <div className="space-y-0.5">
         {CROWN_JEWELS.map((jewel) => {
-          const isActive = currentRoute === jewel.route ||
-            currentRoute.startsWith(`${jewel.route}/`);
+          const isActive =
+            currentRoute === jewel.route || currentRoute.startsWith(`${jewel.route}/`);
           const isExpanded = expandedJewels.has(jewel.name);
           const hasChildren = jewel.children && jewel.children.length > 0;
           const color = JEWEL_COLORS[jewel.name];
@@ -495,16 +495,9 @@ function CrownJewelsSection({
                     <ChevronRight className="w-3 h-3 text-gray-500" />
                   </motion.span>
                 )}
-                <Icon
-                  className="w-4 h-4"
-                  style={{ color: color.primary }}
-                />
-                <span className={isActive ? 'text-white' : 'text-gray-300'}>
-                  {jewel.label}
-                </span>
-                <span className="ml-auto text-xs text-gray-500 font-mono">
-                  {jewel.path}
-                </span>
+                <Icon className="w-4 h-4" style={{ color: color.primary }} />
+                <span className={isActive ? 'text-white' : 'text-gray-300'}>{jewel.label}</span>
+                <span className="ml-auto text-xs text-gray-500 font-mono">{jewel.path}</span>
               </button>
 
               {/* Children */}
@@ -518,7 +511,8 @@ function CrownJewelsSection({
                     className="overflow-hidden"
                   >
                     {jewel.children!.map((child) => {
-                      const childActive = currentRoute === child.route ||
+                      const childActive =
+                        currentRoute === child.route ||
                         (child.route !== '/town' && currentRoute.startsWith(child.route));
 
                       return (
@@ -652,7 +646,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
       '/gestalt': 'world.codebase',
       '/gestalt/live': 'world.gestalt.live',
       '/gardener': 'concept.gardener',
-      '/atelier': 'world.atelier',
+      '/forge': 'world.forge',
       '/town': 'world.town',
       '/town/overview': 'world.town.manifest',
       '/town/citizens': 'world.town.citizen',
@@ -689,43 +683,49 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
   }, []);
 
   // Navigate to AGENTESE path
-  const handleNavigateToPath = useCallback((path: string) => {
-    // Map AGENTESE paths to routes
-    const pathToRoute: Record<string, string> = {
-      'self.memory': '/brain',
-      'world.codebase': '/gestalt',
-      'world.gestalt.live': '/gestalt/live',
-      'concept.gardener': '/gardener',
-      'world.atelier': '/atelier',
-      'world.town': '/town',
-      'world.town.manifest': '/town',
-      'world.town.citizen': '/town/citizens',
-      'world.town.citizen.list': '/town/citizens',
-      'world.town.coalition': '/town/coalitions',
-      'world.town.coalition.list': '/town/coalitions',
-      'world.town.simulation': '/town/simulation',
-      'world.park': '/park',
-      'world.domain': '/workshop',
-      'world.emergence': '/emergence',
-    };
-    const route = pathToRoute[path];
-    if (route) {
+  const handleNavigateToPath = useCallback(
+    (path: string) => {
+      // Map AGENTESE paths to routes
+      const pathToRoute: Record<string, string> = {
+        'self.memory': '/brain',
+        'world.codebase': '/gestalt',
+        'world.gestalt.live': '/gestalt/live',
+        'concept.gardener': '/gardener',
+        'world.forge': '/forge',
+        'world.town': '/town',
+        'world.town.manifest': '/town',
+        'world.town.citizen': '/town/citizens',
+        'world.town.citizen.list': '/town/citizens',
+        'world.town.coalition': '/town/coalitions',
+        'world.town.coalition.list': '/town/coalitions',
+        'world.town.simulation': '/town/simulation',
+        'world.park': '/park',
+        'world.domain': '/workshop',
+        'world.emergence': '/emergence',
+      };
+      const route = pathToRoute[path];
+      if (route) {
+        navigate(route);
+        // Close on mobile after navigation
+        if (density === 'compact') {
+          setNavigationTreeExpanded(false);
+        }
+      }
+    },
+    [navigate, density, setNavigationTreeExpanded]
+  );
+
+  // Navigate to route directly
+  const handleNavigateToRoute = useCallback(
+    (route: string) => {
       navigate(route);
       // Close on mobile after navigation
       if (density === 'compact') {
         setNavigationTreeExpanded(false);
       }
-    }
-  }, [navigate, density, setNavigationTreeExpanded]);
-
-  // Navigate to route directly
-  const handleNavigateToRoute = useCallback((route: string) => {
-    navigate(route);
-    // Close on mobile after navigation
-    if (density === 'compact') {
-      setNavigationTreeExpanded(false);
-    }
-  }, [navigate, density, setNavigationTreeExpanded]);
+    },
+    [navigate, density, setNavigationTreeExpanded]
+  );
 
   // Sidebar width
   const width = SIDEBAR_WIDTH[density];
@@ -784,9 +784,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 <div className="p-4 space-y-4">
                   <h2 className="text-sm font-semibold text-white">AGENTESE Paths</h2>
                   {loading ? (
-                    <div className="py-4 text-center text-gray-500 text-sm">
-                      Loading paths...
-                    </div>
+                    <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
                   ) : (
                     <div className="space-y-1">
                       {Array.from(tree.values()).map((node) => (
@@ -868,9 +866,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   AGENTESE Paths
                 </h2>
                 {loading ? (
-                  <div className="py-4 text-center text-gray-500 text-sm">
-                    Loading...
-                  </div>
+                  <div className="py-4 text-center text-gray-500 text-sm">Loading...</div>
                 ) : (
                   <div className="space-y-1">
                     {Array.from(tree.values()).map((node) => (
@@ -963,9 +959,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
             {/* Content */}
             <div className="p-3 space-y-4">
               {loading ? (
-                <div className="py-4 text-center text-gray-500 text-sm">
-                  Loading paths...
-                </div>
+                <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
               ) : (
                 <div className="space-y-1">
                   {Array.from(tree.values()).map((node) => (
@@ -987,10 +981,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 onNavigate={handleNavigateToRoute}
               />
 
-              <GallerySection
-                currentRoute={location.pathname}
-                onNavigate={handleNavigateToRoute}
-              />
+              <GallerySection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
             </div>
           </motion.aside>
         )}

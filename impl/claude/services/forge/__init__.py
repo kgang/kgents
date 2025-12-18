@@ -1,19 +1,19 @@
 """
-Atelier Crown Jewel: Creative Workshop Fishbowl.
+Forge Crown Jewel: Creative Workshop Fishbowl.
 
-The Atelier is a collaborative creative workshop where spectators can
+The Forge is a collaborative creative workshop where spectators can
 observe and participate in the creative process.
 
 AGENTESE Paths:
-- world.atelier.manifest - Show workshop status
-- world.atelier.workshop.* - Workshop management
-- world.atelier.artisan.* - Artisan participation
-- world.atelier.contribute - Submit creative work
-- world.atelier.exhibition.* - Exhibition curation
-- world.atelier.gallery.* - Gallery viewing
-- world.atelier.tokens.* - Spectator economy
-- world.atelier.bid.* - Constraint injection
-- world.atelier.festival.* - Seasonal events
+- world.forge.manifest - Show workshop status
+- world.forge.workshop.* - Workshop management
+- world.forge.artisan.* - Artisan participation
+- world.forge.contribute - Submit creative work
+- world.forge.exhibition.* - Exhibition curation
+- world.forge.gallery.* - Gallery viewing
+- world.forge.tokens.* - Spectator economy
+- world.forge.bid.* - Constraint injection
+- world.forge.festival.* - Seasonal events
 
 Design DNA:
 - Fishbowl transparency: Process is visible
@@ -22,17 +22,17 @@ Design DNA:
 - Spectator economy: Watch to earn, bid to influence
 
 Service Architecture:
-- AtelierNode: AGENTESE universal gateway
-- AtelierPersistence: Workshop/exhibition storage
-- AtelierEconomyService: Token pool management
-- AtelierBiddingService: Constraint injection queue
-- AtelierFestivalService: Seasonal creative events
+- ForgeNode: AGENTESE universal gateway
+- ForgePersistence: Workshop/exhibition storage
+- ForgeEconomyService: Token pool management
+- ForgeBiddingService: Constraint injection queue
+- ForgeFestivalService: Seasonal creative events
 
 See: docs/skills/metaphysical-fullstack.md
 """
 
 from .bidding_service import (
-    AtelierBiddingService,
+    ForgeBiddingService,
     BidView,
     QueueStatusView,
     SpectatorStatsView,
@@ -40,12 +40,12 @@ from .bidding_service import (
     get_bid_priority,
 )
 from .economy_service import (
-    AtelierEconomyService,
+    ForgeEconomyService,
     EconomyStatusView,
     TokenBalanceView,
 )
 from .festival_service import (
-    AtelierFestivalService,
+    ForgeFestivalService,
     FestivalEntryView,
     FestivalSummaryView,
     FestivalView,
@@ -53,8 +53,8 @@ from .festival_service import (
 from .node import (
     ArtisanListRendering,
     ArtisanRendering,
-    AtelierManifestRendering,
-    AtelierNode,
+    ForgeManifestRendering,
+    ForgeNode,
     ContributionListRendering,
     ContributionRendering,
     ExhibitionRendering,
@@ -65,8 +65,8 @@ from .node import (
 )
 from .persistence import (
     ArtisanView,
-    AtelierPersistence,
-    AtelierStatus,
+    ForgePersistence,
+    ForgeStatus,
     ContributionView,
     ExhibitionView,
     GalleryItemView,
@@ -75,16 +75,16 @@ from .persistence import (
 
 __all__ = [
     # Persistence
-    "AtelierPersistence",
-    "AtelierStatus",
+    "ForgePersistence",
+    "ForgeStatus",
     "WorkshopView",
     "ArtisanView",
     "ContributionView",
     "ExhibitionView",
     "GalleryItemView",
     # Node
-    "AtelierNode",
-    "AtelierManifestRendering",
+    "ForgeNode",
+    "ForgeManifestRendering",
     "WorkshopRendering",
     "WorkshopListRendering",
     "ArtisanRendering",
@@ -95,18 +95,18 @@ __all__ = [
     "GalleryItemRendering",
     "GalleryListRendering",
     # Economy Service
-    "AtelierEconomyService",
+    "ForgeEconomyService",
     "TokenBalanceView",
     "EconomyStatusView",
     # Bidding Service
-    "AtelierBiddingService",
+    "ForgeBiddingService",
     "BidView",
     "SpectatorStatsView",
     "QueueStatusView",
     "get_bid_cost",
     "get_bid_priority",
     # Festival Service
-    "AtelierFestivalService",
+    "ForgeFestivalService",
     "FestivalView",
     "FestivalEntryView",
     "FestivalSummaryView",

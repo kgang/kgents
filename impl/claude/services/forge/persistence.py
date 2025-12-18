@@ -1,13 +1,13 @@
 """
-Atelier Persistence: TableAdapter + D-gent integration for Atelier Crown Jewel.
+Forge Persistence: TableAdapter + D-gent integration for Forge Crown Jewel.
 
-Owns domain semantics for Atelier storage:
+Owns domain semantics for Forge storage:
 - WHEN to persist (workshop creation, artisan joins, contributions, exhibitions)
 - WHY to persist (creative process visibility + artifact curation + collaboration tracking)
 - HOW to compose (TableAdapter for structure, D-gent for creative content)
 
 AGENTESE aspects exposed:
-- manifest: Show atelier status
+- manifest: Show forge status
 - workshop.create: Start a new workshop
 - workshop.join: Add an artisan
 - artifact.contribute: Submit creative work
@@ -30,7 +30,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol, TableAdapter
-from models.atelier import (
+from models.forge import (
     ArtifactContribution,
     Artisan,
     Exhibition,
@@ -117,8 +117,8 @@ class GalleryItemView:
 
 
 @dataclass
-class AtelierStatus:
-    """Atelier health status."""
+class ForgeStatus:
+    """Forge health status."""
 
     total_workshops: int
     active_workshops: int
@@ -129,9 +129,9 @@ class AtelierStatus:
     storage_backend: str
 
 
-class AtelierPersistence:
+class ForgePersistence:
     """
-    Persistence layer for Atelier Crown Jewel.
+    Persistence layer for Forge Crown Jewel.
 
     Composes:
     - TableAdapter[Workshop]: Workshop state and configuration
@@ -150,7 +150,7 @@ class AtelierPersistence:
     - Works can be exhibited
 
     Example:
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=TableAdapter(Workshop, session_factory),
             artisan_adapter=TableAdapter(Artisan, session_factory),
             dgent=dgent_router,
@@ -184,7 +184,7 @@ class AtelierPersistence:
         """
         Create a new creative workshop.
 
-        AGENTESE: world.atelier.workshop.create
+        AGENTESE: world.forge.workshop.create
 
         Args:
             name: Workshop name
@@ -323,7 +323,7 @@ class AtelierPersistence:
         """
         Add an artisan to a workshop.
 
-        AGENTESE: world.atelier.workshop.join
+        AGENTESE: world.forge.workshop.join
 
         Args:
             workshop_id: Workshop to join
@@ -413,7 +413,7 @@ class AtelierPersistence:
         """
         Submit a creative contribution.
 
-        AGENTESE: world.atelier.artifact.contribute
+        AGENTESE: world.forge.artifact.contribute
 
         Stores both queryable metadata and semantic content.
 
@@ -438,12 +438,12 @@ class AtelierPersistence:
 
             # Store semantic content in D-gent
             datum = Datum(
-                id=f"atelier-{contribution_id}",
+                id=f"forge-{contribution_id}",
                 content=content.encode("utf-8"),
                 created_at=time.time(),
                 causal_parent=None,
                 metadata={
-                    "type": "atelier_contribution",
+                    "type": "forge_contribution",
                     "artisan_id": artisan_id,
                     "content_type": content_type,
                     "contribution_type": contribution_type,
@@ -533,7 +533,7 @@ class AtelierPersistence:
         """
         Create an exhibition for a workshop.
 
-        AGENTESE: world.atelier.exhibition.create
+        AGENTESE: world.forge.exhibition.create
 
         Args:
             workshop_id: Source workshop
@@ -582,7 +582,7 @@ class AtelierPersistence:
         """
         Open an exhibition for viewing.
 
-        AGENTESE: world.atelier.exhibition.open
+        AGENTESE: world.forge.exhibition.open
         """
         async with self.workshops.session_factory() as session:
             exhibition = await session.get(Exhibition, exhibition_id)
@@ -606,7 +606,7 @@ class AtelierPersistence:
         """
         Add an item to an exhibition gallery.
 
-        AGENTESE: world.atelier.gallery.add
+        AGENTESE: world.forge.gallery.add
 
         Args:
             exhibition_id: Target exhibition
@@ -663,7 +663,7 @@ class AtelierPersistence:
         """
         View an exhibition (increments view count).
 
-        AGENTESE: world.atelier.gallery.view
+        AGENTESE: world.forge.gallery.view
         """
         async with self.workshops.session_factory() as session:
             exhibition = await session.get(Exhibition, exhibition_id)
@@ -727,11 +727,11 @@ class AtelierPersistence:
     # Health Status
     # =========================================================================
 
-    async def manifest(self) -> AtelierStatus:
+    async def manifest(self) -> ForgeStatus:
         """
-        Get atelier health status.
+        Get forge health status.
 
-        AGENTESE: world.atelier.manifest
+        AGENTESE: world.forge.manifest
         """
         async with self.workshops.session_factory() as session:
             # Count workshops
@@ -766,7 +766,7 @@ class AtelierPersistence:
             )
             open_exhibitions = open_exhibitions_result.scalar() or 0
 
-        return AtelierStatus(
+        return ForgeStatus(
             total_workshops=total_workshops,
             active_workshops=active_workshops,
             total_artisans=total_artisans,
@@ -797,11 +797,11 @@ class AtelierPersistence:
 
 
 __all__ = [
-    "AtelierPersistence",
+    "ForgePersistence",
     "WorkshopView",
     "ArtisanView",
     "ContributionView",
     "ExhibitionView",
     "GalleryItemView",
-    "AtelierStatus",
+    "ForgeStatus",
 ]

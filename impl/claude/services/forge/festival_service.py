@@ -1,18 +1,18 @@
 """
-Atelier Festival Service: FestivalManager wrapper for seasonal creative events.
+Forge Festival Service: FestivalManager wrapper for seasonal creative events.
 
-Wraps agents/atelier/festival.py FestivalManager with service-level interface.
-Owns domain semantics for Atelier festivals:
+Wraps agents/forge/festival.py FestivalManager with service-level interface.
+Owns domain semantics for Forge festivals:
 - WHEN to hold festivals (seasonal, time-bounded)
 - WHY to participate (community, recognition, creative prompts)
 - HOW to curate (voting, exhibitions)
 
 AGENTESE aspects exposed:
-- world.atelier.festival.list - List festivals
-- world.atelier.festival.create - Create festival
-- world.atelier.festival.enter - Enter festival
-- world.atelier.festival.vote - Vote for entry
-- world.atelier.festival.conclude - End festival
+- world.forge.festival.list - List festivals
+- world.forge.festival.create - Create festival
+- world.forge.festival.enter - Enter festival
+- world.forge.festival.vote - Vote for entry
+- world.forge.festival.conclude - End festival
 
 The Categorical View:
     Festival : Theme x Duration -> Collection[Piece]
@@ -27,7 +27,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from agents.atelier.festival import (
+from agents.forge.festival import (
     Festival,
     FestivalEntry,
     FestivalManager,
@@ -212,9 +212,9 @@ def _festival_to_view(festival: Festival) -> FestivalView:
     )
 
 
-class AtelierFestivalService:
+class ForgeFestivalService:
     """
-    Service layer for Atelier festivals.
+    Service layer for Forge festivals.
 
     Wraps FestivalManager with service-level methods for:
     - Festival creation and lifecycle
@@ -223,7 +223,7 @@ class AtelierFestivalService:
     - Leaderboard and conclusion
 
     Usage:
-        service = AtelierFestivalService.create()
+        service = ForgeFestivalService.create()
 
         # Create a festival
         festival = service.create_festival(
@@ -253,23 +253,23 @@ class AtelierFestivalService:
         self._manager = manager
 
     @classmethod
-    def create(cls) -> "AtelierFestivalService":
+    def create(cls) -> "ForgeFestivalService":
         """
         Factory method to create a new festival service.
 
         Returns:
-            New AtelierFestivalService instance
+            New ForgeFestivalService instance
         """
         manager = FestivalManager()
         return cls(manager)
 
     @classmethod
-    def from_global(cls) -> "AtelierFestivalService":
+    def from_global(cls) -> "ForgeFestivalService":
         """
         Create service using the global festival manager singleton.
 
         Returns:
-            AtelierFestivalService using global manager
+            ForgeFestivalService using global manager
         """
         return cls(get_festival_manager())
 
@@ -578,7 +578,7 @@ class AtelierFestivalService:
 
 
 __all__ = [
-    "AtelierFestivalService",
+    "ForgeFestivalService",
     "FestivalView",
     "FestivalEntryView",
     "FestivalSummaryView",

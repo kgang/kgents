@@ -1,20 +1,34 @@
 /**
- * Brain Components - Holographic Memory UI
+ * Brain Components - Living Memory Cartography
  *
  * Components for the Holographic Brain Crown Jewel.
  *
  * Design Philosophy:
- *   "Memories are not data points—they are living crystallizations of thought."
+ *   "Memory isn't a starfield. It's a living library where crystals
+ *   form, connect, and surface when needed."
  *
  * 2D Renaissance (2025-12-18): Three.js components mothballed.
  * See _mothballed/three-visualizers/brain/ for preserved components.
  *
- * What remains: CrystalDetail - reusable in Brain2D.
- *
- * @see spec/protocols/2d-renaissance.md
+ * @see spec/protocols/2d-renaissance.md - Phase 4: Brain2D
  */
 
-// KEEP: CrystalDetail (no Three.js dependency)
+// =============================================================================
+// Brain2D Components (2D Renaissance)
+// =============================================================================
+
+export { Brain2D } from './Brain2D';
+export type { Brain2DProps } from './Brain2D';
+
+export { CrystalTree, groupByCategory } from './CrystalTree';
+export type { CrystalTreeProps, CategoryCardProps } from './CrystalTree';
+
+export { CaptureForm } from './CaptureForm';
+export type { CaptureFormProps } from './CaptureForm';
+
+export { GhostSurface } from './GhostSurface';
+export type { GhostSurfaceProps } from './GhostSurface';
+
 export { CrystalDetail } from './CrystalDetail';
 export type { CrystalDetailProps } from './CrystalDetail';
 

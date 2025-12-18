@@ -1,27 +1,27 @@
 """
-Atelier AGENTESE Node: @node("world.atelier")
+Forge AGENTESE Node: @node("world.forge")
 
-Wraps AtelierPersistence as an AGENTESE node for universal gateway access.
+Wraps ForgePersistence as an AGENTESE node for universal gateway access.
 
 AGENTESE Paths:
-- world.atelier.manifest          - Atelier health status
-- world.atelier.workshop.list     - List all workshops
-- world.atelier.workshop.get      - Get workshop by ID
-- world.atelier.workshop.create   - Create new workshop
-- world.atelier.workshop.end      - End a workshop
-- world.atelier.artisan.list      - List artisans in workshop
-- world.atelier.artisan.join      - Join a workshop
-- world.atelier.contribute        - Submit creative contribution
-- world.atelier.exhibition.create - Create exhibition from workshop
-- world.atelier.exhibition.open   - Open exhibition for viewing
-- world.atelier.gallery.list      - List gallery items
-- world.atelier.gallery.add       - Add item to exhibition
-- world.atelier.gallery.view      - View exhibition (increments view count)
-- world.atelier.tokens.manifest   - Token balance for spectator
-- world.atelier.bid.submit        - Submit a spectator bid
-- world.atelier.festival.list     - List festivals
-- world.atelier.festival.create   - Create festival
-- world.atelier.festival.enter    - Enter festival
+- world.forge.manifest          - Forge health status
+- world.forge.workshop.list     - List all workshops
+- world.forge.workshop.get      - Get workshop by ID
+- world.forge.workshop.create   - Create new workshop
+- world.forge.workshop.end      - End a workshop
+- world.forge.artisan.list      - List artisans in workshop
+- world.forge.artisan.join      - Join a workshop
+- world.forge.contribute        - Submit creative contribution
+- world.forge.exhibition.create - Create exhibition from workshop
+- world.forge.exhibition.open   - Open exhibition for viewing
+- world.forge.gallery.list      - List gallery items
+- world.forge.gallery.add       - Add item to exhibition
+- world.forge.gallery.view      - View exhibition (increments view count)
+- world.forge.tokens.manifest   - Token balance for spectator
+- world.forge.bid.submit        - Submit a spectator bid
+- world.forge.festival.list     - List festivals
+- world.forge.festival.create   - Create festival
+- world.forge.festival.enter    - Enter festival
 
 The Metaphysical Fullstack Pattern (AD-009):
 - The protocol IS the API
@@ -50,7 +50,7 @@ from .contracts import (
     ArtisanJoinResponse,
     ArtisanListRequest,
     ArtisanListResponse,
-    AtelierManifestResponse,
+    ForgeManifestResponse,
     BidSubmitRequest,
     BidSubmitResponse,
     ContributeRequest,
@@ -83,8 +83,8 @@ from .contracts import (
 )
 from .persistence import (
     ArtisanView,
-    AtelierPersistence,
-    AtelierStatus,
+    ForgePersistence,
+    ForgeStatus,
     ContributionView,
     ExhibitionView,
     GalleryItemView,
@@ -92,23 +92,23 @@ from .persistence import (
 )
 
 if TYPE_CHECKING:
-    from agents.atelier.bidding import BidQueue, BidResult, BidType
-    from agents.atelier.economy import AsyncTokenPool
-    from agents.atelier.festival import Festival, FestivalManager
+    from agents.forge.bidding import BidQueue, BidResult, BidType
+    from agents.forge.economy import AsyncTokenPool
+    from agents.forge.festival import Festival, FestivalManager
 
 
 # === Rendering Types ===
 
 
 @dataclass(frozen=True)
-class AtelierManifestRendering:
-    """Rendering for atelier status manifest."""
+class ForgeManifestRendering:
+    """Rendering for forge status manifest."""
 
-    status: AtelierStatus
+    status: ForgeStatus
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "type": "atelier_manifest",
+            "type": "forge_manifest",
             "total_workshops": self.status.total_workshops,
             "active_workshops": self.status.active_workshops,
             "total_artisans": self.status.total_artisans,
@@ -120,7 +120,7 @@ class AtelierManifestRendering:
 
     def to_text(self) -> str:
         lines = [
-            "Atelier Status",
+            "Forge Status",
             "==============",
             f"Workshops: {self.status.active_workshops}/{self.status.total_workshops} active",
             f"Artisans: {self.status.total_artisans}",
@@ -392,15 +392,15 @@ class GalleryListRendering:
         return "\n".join(lines)
 
 
-# === AtelierNode ===
+# === ForgeNode ===
 
 
 @node(
-    "world.atelier",
+    "world.forge",
     description="Creative workshop fishbowl",
     contracts={
         # Perception aspects (Response only - no request needed)
-        "manifest": Response(AtelierManifestResponse),
+        "manifest": Response(ForgeManifestResponse),
         "workshop.list": Response(WorkshopListResponse),
         "contribution.list": Response(ContributionListResponse),
         "festival.list": Response(FestivalListResponse),
@@ -424,15 +424,15 @@ class GalleryListRendering:
         "festival.enter": Contract(FestivalEnterRequest, FestivalEnterResponse),
     },
 )
-class AtelierNode(BaseLogosNode):
+class ForgeNode(BaseLogosNode):
     """
-    AGENTESE node for Atelier Crown Jewel.
+    AGENTESE node for Forge Crown Jewel.
 
-    Wraps AtelierPersistence, TokenPool, BidQueue, and FestivalManager
+    Wraps ForgePersistence, TokenPool, BidQueue, and FestivalManager
     for universal gateway access.
 
     DI Requirements:
-    - atelier_persistence: AtelierPersistence (required)
+    - forge_persistence: ForgePersistence (required)
     - token_pool: AsyncTokenPool (optional, for spectator economy)
     - bid_queue: BidQueue (optional, for constraint injection)
     - festival_manager: FestivalManager (optional, for seasonal events)
@@ -440,19 +440,19 @@ class AtelierNode(BaseLogosNode):
 
     def __init__(
         self,
-        atelier_persistence: AtelierPersistence,
+        forge_persistence: ForgePersistence,
         token_pool: "AsyncTokenPool | None" = None,
         festival_manager: "FestivalManager | None" = None,
     ) -> None:
         """
-        Initialize AtelierNode with dependencies.
+        Initialize ForgeNode with dependencies.
 
         Args:
-            atelier_persistence: AtelierPersistence for workshop/exhibition data
+            forge_persistence: ForgePersistence for workshop/exhibition data
             token_pool: Optional AsyncTokenPool for spectator economy
             festival_manager: Optional FestivalManager for seasonal events
         """
-        self.persistence = atelier_persistence
+        self.persistence = forge_persistence
         self.token_pool = token_pool
         self.festival_manager = festival_manager
 
@@ -461,13 +461,13 @@ class AtelierNode(BaseLogosNode):
     @property
     def handle(self) -> str:
         """The AGENTESE path for this node."""
-        return "world.atelier"
+        return "world.forge"
 
     async def get_handle_info(self, observer: Observer) -> dict[str, Any]:
-        """Return handle description for world.atelier."""
+        """Return handle description for world.forge."""
         meta = self._umwelt_to_meta(observer)
         return {
-            "path": "world.atelier",
+            "path": "world.forge",
             "description": "Creative workshop fishbowl for collaborative creation",
             "observer": {
                 "archetype": observer.archetype,
@@ -563,12 +563,12 @@ class AtelierNode(BaseLogosNode):
 
     async def manifest(self, observer: Observer) -> Renderable:
         """
-        AGENTESE: world.atelier.manifest
+        AGENTESE: world.forge.manifest
 
-        Returns atelier health status.
+        Returns forge health status.
         """
         status = await self.persistence.manifest()
-        return AtelierManifestRendering(status)
+        return ForgeManifestRendering(status)
 
     # === Workshop Operations ===
 
@@ -580,7 +580,7 @@ class AtelierNode(BaseLogosNode):
         limit: int = 20,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.workshop.list
+        AGENTESE: world.forge.workshop.list
 
         List workshops with optional filters.
         """
@@ -597,7 +597,7 @@ class AtelierNode(BaseLogosNode):
         workshop_id: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.workshop.get
+        AGENTESE: world.forge.workshop.get
 
         Get workshop by ID.
         """
@@ -618,7 +618,7 @@ class AtelierNode(BaseLogosNode):
         config: dict[str, Any] | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.workshop.create
+        AGENTESE: world.forge.workshop.create
 
         Create a new workshop.
         """
@@ -636,7 +636,7 @@ class AtelierNode(BaseLogosNode):
         workshop_id: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.workshop.end
+        AGENTESE: world.forge.workshop.end
 
         End an active workshop.
         """
@@ -661,7 +661,7 @@ class AtelierNode(BaseLogosNode):
         active_only: bool = True,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.artisan.list
+        AGENTESE: world.forge.artisan.list
 
         List artisans in a workshop.
         """
@@ -682,7 +682,7 @@ class AtelierNode(BaseLogosNode):
         agent_id: str | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.artisan.join
+        AGENTESE: world.forge.artisan.join
 
         Join a workshop as an artisan.
         """
@@ -714,7 +714,7 @@ class AtelierNode(BaseLogosNode):
         notes: str | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.contribute
+        AGENTESE: world.forge.contribute
 
         Submit a creative contribution.
         """
@@ -743,7 +743,7 @@ class AtelierNode(BaseLogosNode):
         limit: int = 50,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.contribution.list
+        AGENTESE: world.forge.contribution.list
 
         List contributions with optional filters.
         """
@@ -766,7 +766,7 @@ class AtelierNode(BaseLogosNode):
         curator_notes: str | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.exhibition.create
+        AGENTESE: world.forge.exhibition.create
 
         Create an exhibition from a workshop.
         """
@@ -789,7 +789,7 @@ class AtelierNode(BaseLogosNode):
         exhibition_id: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.exhibition.open
+        AGENTESE: world.forge.exhibition.open
 
         Open an exhibition for viewing.
         """
@@ -810,7 +810,7 @@ class AtelierNode(BaseLogosNode):
         exhibition_id: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.gallery.view
+        AGENTESE: world.forge.gallery.view
 
         View an exhibition (increments view count).
         """
@@ -830,7 +830,7 @@ class AtelierNode(BaseLogosNode):
         exhibition_id: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.gallery.list
+        AGENTESE: world.forge.gallery.list
 
         List items in an exhibition gallery.
         """
@@ -848,7 +848,7 @@ class AtelierNode(BaseLogosNode):
         artisan_ids: list[str] | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.gallery.add
+        AGENTESE: world.forge.gallery.add
 
         Add an item to an exhibition gallery.
         """
@@ -874,7 +874,7 @@ class AtelierNode(BaseLogosNode):
         observer: Observer,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.tokens.manifest
+        AGENTESE: world.forge.tokens.manifest
 
         Get token balance for spectator.
         """
@@ -901,7 +901,7 @@ class AtelierNode(BaseLogosNode):
         content: str,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.bid.submit
+        AGENTESE: world.forge.bid.submit
 
         Submit a spectator bid for constraint injection.
         """
@@ -911,7 +911,7 @@ class AtelierNode(BaseLogosNode):
                 {"error": "not_enabled", "feature": "token_pool"},
             )
 
-        from agents.atelier.bidding import BidType as BT
+        from agents.forge.bidding import BidType as BT
 
         user_id = getattr(observer, "identity", None) or "anonymous"
 
@@ -960,7 +960,7 @@ class AtelierNode(BaseLogosNode):
         season: str | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.festival.list
+        AGENTESE: world.forge.festival.list
 
         List festivals with optional filters.
         """
@@ -970,7 +970,7 @@ class AtelierNode(BaseLogosNode):
                 {"error": "not_enabled", "feature": "festivals"},
             )
 
-        from agents.atelier.festival import FestivalStatus, Season
+        from agents.forge.festival import FestivalStatus, Season
 
         # Parse filters
         status_filter = FestivalStatus(status) if status else None
@@ -999,7 +999,7 @@ class AtelierNode(BaseLogosNode):
         voting_hours: int = 24,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.festival.create
+        AGENTESE: world.forge.festival.create
 
         Create a new festival.
         """
@@ -1032,7 +1032,7 @@ class AtelierNode(BaseLogosNode):
         piece_id: str | None = None,
     ) -> Renderable:
         """
-        AGENTESE: world.atelier.festival.enter
+        AGENTESE: world.forge.festival.enter
 
         Enter a festival with a submission.
         """
@@ -1331,8 +1331,8 @@ class AtelierNode(BaseLogosNode):
 
 
 __all__ = [
-    "AtelierNode",
-    "AtelierManifestRendering",
+    "ForgeNode",
+    "ForgeManifestRendering",
     "WorkshopRendering",
     "WorkshopListRendering",
     "ArtisanRendering",

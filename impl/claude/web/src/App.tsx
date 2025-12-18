@@ -9,7 +9,7 @@ import { PageTransition, PersonalityLoading } from './components/joy';
 // Essential pages only
 const Crown = lazy(() => import('./pages/Crown'));
 const Town = lazy(() => import('./pages/Town'));
-const Atelier = lazy(() => import('./pages/Atelier'));
+const Forge = lazy(() => import('./pages/Forge'));
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const Brain = lazy(() => import('./pages/Brain'));
@@ -58,7 +58,7 @@ function App() {
                 <Route path="/gestalt/live" element={<GestaltLive />} />
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
-                <Route path="/atelier" element={<Atelier />} />
+                <Route path="/forge" element={<Forge />} />
                 {/* Town - Coalition Crown Jewel */}
                 <Route path="/town" element={<TownOverviewPage />} />
                 <Route path="/town/overview" element={<TownOverviewPage />} />
@@ -66,7 +66,10 @@ function App() {
                 <Route path="/town/citizens/:citizenId" element={<TownCitizensPage />} />
                 <Route path="/town/coalitions" element={<TownCoalitionsPage />} />
                 <Route path="/town/coalitions/:coalitionId" element={<TownCoalitionsPage />} />
-                <Route path="/town/simulation" element={<Navigate to="/town/simulation/demo" replace />} />
+                <Route
+                  path="/town/simulation"
+                  element={<Navigate to="/town/simulation/demo" replace />}
+                />
                 <Route path="/town/simulation/:townId" element={<Town />} />
                 <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
                 <Route path="/park" element={<ParkScenario />} />

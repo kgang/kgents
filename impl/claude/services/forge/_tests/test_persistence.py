@@ -1,5 +1,5 @@
 """
-Tests for AtelierPersistence - Creative workshop fishbowl persistence.
+Tests for ForgePersistence - Creative workshop fishbowl persistence.
 
 Verifies:
 - Workshop CRUD operations
@@ -60,16 +60,16 @@ def mock_artisan_adapter(mock_session_factory):
     return adapter
 
 
-class TestAtelierPersistenceInit:
-    """Test AtelierPersistence initialization."""
+class TestForgePersistenceInit:
+    """Test ForgePersistence initialization."""
 
     def test_init_stores_dependencies(
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent
     ):
         """Should store adapters and dgent."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -88,9 +88,9 @@ class TestWorkshopManagement:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should create workshop with generated ID."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -112,7 +112,7 @@ class TestWorkshopManagement:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should mark workshop as inactive."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
         @dataclass
         class MockWorkshop:
@@ -122,7 +122,7 @@ class TestWorkshopManagement:
 
         mock_session.get = AsyncMock(return_value=MockWorkshop())
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -141,7 +141,7 @@ class TestArtisanManagement:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should add artisan to active workshop."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
         @dataclass
         class MockWorkshop:
@@ -150,7 +150,7 @@ class TestArtisanManagement:
 
         mock_session.get = AsyncMock(return_value=MockWorkshop())
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -173,7 +173,7 @@ class TestArtisanManagement:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should reject artisan to inactive workshop."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
         @dataclass
         class MockWorkshop:
@@ -182,7 +182,7 @@ class TestArtisanManagement:
 
         mock_session.get = AsyncMock(return_value=MockWorkshop())
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -205,7 +205,7 @@ class TestContributions:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should store contribution content in D-gent."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
         @dataclass
         class MockArtisan:
@@ -216,7 +216,7 @@ class TestContributions:
 
         mock_session.get = AsyncMock(return_value=MockArtisan())
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -242,7 +242,7 @@ class TestExhibitions:
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
         """Should create exhibition for workshop."""
-        from services.atelier import AtelierPersistence
+        from services.forge import ForgePersistence
 
         @dataclass
         class MockWorkshop:
@@ -250,7 +250,7 @@ class TestExhibitions:
 
         mock_session.get = AsyncMock(return_value=MockWorkshop())
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -267,21 +267,21 @@ class TestExhibitions:
         assert result.is_open is False
 
 
-class TestAtelierManifest:
+class TestForgeManifest:
     """Test manifest (health status) operation."""
 
     @pytest.mark.asyncio
     async def test_manifest_returns_status(
         self, mock_workshop_adapter, mock_artisan_adapter, mock_dgent, mock_session
     ):
-        """Should return atelier health status."""
-        from services.atelier import AtelierPersistence
+        """Should return forge health status."""
+        from services.forge import ForgePersistence
 
         mock_result = MagicMock()
         mock_result.scalar.return_value = 0
         mock_session.execute = AsyncMock(return_value=mock_result)
 
-        persistence = AtelierPersistence(
+        persistence = ForgePersistence(
             workshop_adapter=mock_workshop_adapter,
             artisan_adapter=mock_artisan_adapter,
             dgent=mock_dgent,
@@ -300,7 +300,7 @@ class TestViewDataclasses:
 
     def test_workshop_view_fields(self):
         """WorkshopView should have expected fields."""
-        from services.atelier import WorkshopView
+        from services.forge import WorkshopView
 
         view = WorkshopView(
             id="test",
@@ -318,7 +318,7 @@ class TestViewDataclasses:
 
     def test_artisan_view_fields(self):
         """ArtisanView should have expected fields."""
-        from services.atelier import ArtisanView
+        from services.forge import ArtisanView
 
         view = ArtisanView(
             id="test",

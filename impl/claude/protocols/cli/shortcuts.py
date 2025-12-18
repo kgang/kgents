@@ -51,14 +51,11 @@ STANDARD_SHORTCUTS: dict[str, str] = {
     "challenge": "self.soul.challenge",
     "advise": "self.soul.advise",
     # ==========================================================================
-    # CROWN JEWEL 1: Atelier Experience Platform (Flux)
-    # "Live creation mode where builders work in a fishbowl visible to spectators"
+    # CROWN JEWEL 1: Metaphysical Forge
+    # "Where agents are built. No spectators, just the work."
     # ==========================================================================
-    "atelier": "world.atelier.manifest",
-    "watch": "world.atelier.session.manifest",
-    "bid": "world.atelier.session.bid",
-    "gallery": "world.atelier.gallery.manifest",
-    "tokens": "self.tokens.manifest",
+    "mforge": "world.forge.manifest",
+    "gallery": "world.forge.gallery.manifest",
     # ==========================================================================
     # CROWN JEWEL 2: Coalition Forge (Operad)
     # "A no-code tool for assembling agent coalitions that accomplish real tasks"

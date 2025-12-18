@@ -1,7 +1,7 @@
 """
-Atelier AGENTESE Contract Definitions.
+Forge AGENTESE Contract Definitions.
 
-Defines request and response types for Atelier @node contracts.
+Defines request and response types for Forge @node contracts.
 These enable BE/FE contract synchronization via AGENTESE discovery.
 
 Contract Protocol (Phase 7: Autopoietic Architecture):
@@ -25,8 +25,8 @@ from typing import Any
 
 
 @dataclass(frozen=True)
-class AtelierManifestResponse:
-    """Atelier health status manifest response."""
+class ForgeManifestResponse:
+    """Forge health status manifest response."""
 
     total_workshops: int
     active_workshops: int
@@ -519,7 +519,7 @@ class SessionStreamEvent:
 
 __all__ = [
     # Manifest
-    "AtelierManifestResponse",
+    "ForgeManifestResponse",
     # Workshop
     "WorkshopSummary",
     "WorkshopListResponse",
