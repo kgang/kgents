@@ -23,6 +23,11 @@ const ParkScenario = lazy(() => import('./pages/ParkScenario'));
 const EmergenceDemo = lazy(() => import('./pages/EmergenceDemo'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
+// Town sub-pages (Contract-Driven)
+const TownOverviewPage = lazy(() => import('./pages/TownOverviewPage'));
+const TownCitizensPage = lazy(() => import('./pages/TownCitizensPage'));
+const TownCoalitionsPage = lazy(() => import('./pages/TownCoalitionsPage'));
+
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface-canvas">
@@ -54,8 +59,15 @@ function App() {
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
                 <Route path="/atelier" element={<Atelier />} />
-                <Route path="/town" element={<Navigate to="/town/demo" replace />} />
-                <Route path="/town/:townId" element={<Town />} />
+                {/* Town - Coalition Crown Jewel */}
+                <Route path="/town" element={<TownOverviewPage />} />
+                <Route path="/town/overview" element={<TownOverviewPage />} />
+                <Route path="/town/citizens" element={<TownCitizensPage />} />
+                <Route path="/town/citizens/:citizenId" element={<TownCitizensPage />} />
+                <Route path="/town/coalitions" element={<TownCoalitionsPage />} />
+                <Route path="/town/coalitions/:coalitionId" element={<TownCoalitionsPage />} />
+                <Route path="/town/simulation" element={<Navigate to="/town/simulation/demo" replace />} />
+                <Route path="/town/simulation/:townId" element={<Town />} />
                 <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
                 <Route path="/park" element={<ParkScenario />} />
                 <Route path="/workshop" element={<Workshop />} />

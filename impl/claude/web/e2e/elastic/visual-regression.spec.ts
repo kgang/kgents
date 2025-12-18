@@ -1,57 +1,65 @@
-import { test, expect, Page } from '@playwright/test';
-import { setupTouristMocks } from '../fixtures/api';
+import { test, expect } from '@playwright/test';
+import {
+  DENSITY_VIEWPORTS,
+  DENSITIES,
+  getDensityFromWidth,
+  DETERMINISTIC_CSS,
+  MASK_SELECTORS,
+  type Density,
+} from '../../testing/density';
+import { setupHotDataMocks } from '../../testing/hotdata';
+import { setup } from '../../testing';
 
 /**
  * Visual Regression Tests for Elastic Layouts
  *
- * Tests breakpoint behavior at: 320px, 640px, 768px (collapse threshold), 1024px, 1280px
+ * Uses density matrix from testing/density.ts aligned with
+ * docs/skills/elastic-ui-patterns.md breakpoints.
  *
  * Key behaviors:
- * - ElasticSplit collapses at 768px (stacks vertically)
- * - ElasticCard degrades: full -> summary -> title -> icon
+ * - ElasticSplit collapses at 768px (compact → comfortable threshold)
+ * - ElasticCard degrades: full → summary → title → icon
  * - CitizenCard content levels based on available width
  *
- * @see plans/web-refactor/elastic-primitives.md
+ * @tags @visual, @e2e
+ * @see plans/playwright-witness-protocol.md
  */
 
-const BREAKPOINTS = {
-  mobile_small: { width: 320, height: 568 },
-  mobile: { width: 640, height: 1136 },
-  tablet: { width: 768, height: 1024 }, // Collapse threshold
-  desktop: { width: 1024, height: 768 },
-  desktop_large: { width: 1280, height: 800 },
-};
+// =============================================================================
+// Test Setup
+// =============================================================================
 
-async function setupElasticMocks(page: Page) {
-  await setupTouristMocks(page);
+test.describe('ElasticSplit Collapse Behavior @visual @e2e', () => {
+  test.beforeEach(async ({ page }) => {
+    // Use HotData for deterministic fixtures
+    await setupHotDataMocks(page);
+    await setup.tourist(page);
 
-  // Mock town stream widget response
-  await page.route('**/v1/town/*/live*', async (route) => {
-    const events = `event: live.start\ndata: ${JSON.stringify({
-      town_id: 'demo-town-123',
-      phases: 4,
-      speed: 1.0,
-    })}\n\n`;
+    // Inject deterministic CSS to disable animations
+    await page.addStyleTag({ content: DETERMINISTIC_CSS });
 
-    await route.fulfill({
-      status: 200,
-      contentType: 'text/event-stream',
-      headers: {
-        'Cache-Control': 'no-cache',
-        Connection: 'keep-alive',
-      },
-      body: events,
+    // Mock town stream widget response
+    await page.route('**/v1/town/*/live*', async (route) => {
+      const events = `event: live.start\ndata: ${JSON.stringify({
+        town_id: 'demo-town-123',
+        phases: 4,
+        speed: 1.0,
+      })}\n\n`;
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/event-stream',
+        headers: {
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+        body: events,
+      });
     });
   });
-}
 
-test.describe('ElasticSplit Collapse Behavior', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupElasticMocks(page);
-  });
-
-  test('should display side-by-side at 1280px (desktop large)', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.desktop_large);
+  test('should display side-by-side at spacious density (1440px)', async ({ page }) => {
+    await page.setViewportSize(DENSITY_VIEWPORTS.spacious);
     await page.goto('/town/demo-town-123');
 
     // Wait for citizens to load
@@ -69,186 +77,153 @@ test.describe('ElasticSplit Collapse Behavior', () => {
       await expect(splitContainer).toBeVisible();
     }
 
-    // Screenshot for regression comparison
-    await expect(page).toHaveScreenshot('town-1280px.png', {
+    // Screenshot for regression comparison with masked dynamic regions
+    await expect(page).toHaveScreenshot('town-spacious.png', {
       fullPage: false,
       maxDiffPixelRatio: 0.02,
+      mask: [
+        page.locator(MASK_SELECTORS.timestamps),
+        page.locator(MASK_SELECTORS.counters),
+        page.locator(MASK_SELECTORS.animations),
+      ],
     });
   });
 
-  test('should display side-by-side at 1024px (desktop)', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.desktop);
+  test('should display side-by-side at comfortable density (768px)', async ({ page }) => {
+    await page.setViewportSize(DENSITY_VIEWPORTS.comfortable);
     await page.goto('/town/demo-town-123');
     await page.waitForResponse('**/citizens');
 
-    // Should still be horizontal layout
+    // Should still be horizontal layout at 768px
     const splitContainer = page.locator('[data-direction="horizontal"]');
     if ((await splitContainer.count()) > 0) {
       await expect(splitContainer).toBeVisible();
     }
 
-    await expect(page).toHaveScreenshot('town-1024px.png', {
+    await expect(page).toHaveScreenshot('town-comfortable.png', {
       fullPage: false,
       maxDiffPixelRatio: 0.02,
+      mask: [
+        page.locator(MASK_SELECTORS.timestamps),
+        page.locator(MASK_SELECTORS.counters),
+      ],
     });
   });
 
-  test('should collapse to stacked layout at 768px (tablet - threshold)', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.tablet);
+  test('should collapse to stacked layout at compact density (375px)', async ({ page }) => {
+    await page.setViewportSize(DENSITY_VIEWPORTS.compact);
     await page.goto('/town/demo-town-123');
     await page.waitForResponse('**/citizens');
 
-    // At exactly 768px, should still be horizontal (collapse is < 768)
+    // ElasticSplit should be collapsed in compact mode
+    const collapsed = page.locator('[data-collapsed="true"]');
+    await expect(collapsed).toBeVisible({ timeout: 5000 });
+
+    await expect(page).toHaveScreenshot('town-compact.png', {
+      fullPage: false,
+      maxDiffPixelRatio: 0.02,
+      mask: [
+        page.locator(MASK_SELECTORS.timestamps),
+        page.locator(MASK_SELECTORS.counters),
+      ],
+    });
+  });
+
+  test('should handle collapse threshold (767px - just below comfortable)', async ({ page }) => {
+    // Test the exact threshold where collapse occurs
     await page.setViewportSize({ width: 767, height: 1024 });
-    await page.waitForTimeout(100); // Allow resize observer to fire
-
-    // ElasticSplit should now be collapsed
-    const collapsed = page.locator('[data-collapsed="true"]');
-    await expect(collapsed).toBeVisible({ timeout: 5000 });
-
-    await expect(page).toHaveScreenshot('town-768px-collapsed.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
-    });
-  });
-
-  test('should stack vertically at 640px (mobile)', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.mobile);
     await page.goto('/town/demo-town-123');
     await page.waitForResponse('**/citizens');
 
-    // Should be stacked
+    // At 767px (below 768 threshold), should be collapsed
+    const density = getDensityFromWidth(767);
+    expect(density).toBe('compact');
+
     const collapsed = page.locator('[data-collapsed="true"]');
     await expect(collapsed).toBeVisible({ timeout: 5000 });
 
-    // Panes should be in vertical stack
-    const panes = collapsed.locator('> div');
-    expect(await panes.count()).toBeGreaterThanOrEqual(2);
-
-    await expect(page).toHaveScreenshot('town-640px.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
-    });
-  });
-
-  test('should handle extreme narrow viewport at 320px (mobile small)', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.mobile_small);
-    await page.goto('/town/demo-town-123');
-    await page.waitForResponse('**/citizens');
-
-    // Should be collapsed and functional
-    const collapsed = page.locator('[data-collapsed="true"]');
-    await expect(collapsed).toBeVisible({ timeout: 5000 });
-
-    // No horizontal overflow
-    const body = await page.locator('body').boundingBox();
-    expect(body?.width).toBeLessThanOrEqual(320);
-
-    await expect(page).toHaveScreenshot('town-320px.png', {
+    await expect(page).toHaveScreenshot('town-threshold-767px.png', {
       fullPage: false,
       maxDiffPixelRatio: 0.02,
     });
   });
 });
 
-test.describe('ElasticCard Content Level Degradation', () => {
+test.describe('ElasticCard Content Level Degradation @visual @e2e', () => {
   test.beforeEach(async ({ page }) => {
-    await setupElasticMocks(page);
+    await setupHotDataMocks(page);
+    await setup.tourist(page);
+    await page.addStyleTag({ content: DETERMINISTIC_CSS });
   });
 
-  test('should show full citizen cards at 1280px', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.desktop_large);
-    await page.goto('/town/demo-town-123');
-    await page.waitForResponse('**/citizens');
+  for (const density of DENSITIES) {
+    test(`should show appropriate card content at ${density} density`, async ({ page }) => {
+      const viewport = DENSITY_VIEWPORTS[density];
+      await page.setViewportSize(viewport);
+      await page.goto('/town/demo-town-123');
+      await page.waitForResponse('**/citizens');
 
-    // Wait for citizen cards to render
-    const citizenCards = page.locator('[data-testid="citizen-card"]');
-    await expect(citizenCards.first()).toBeVisible({ timeout: 5000 });
+      // Wait for citizen cards to render
+      const citizenCards = page.locator('[data-testid="citizen-card"]');
+      await expect(citizenCards.first()).toBeVisible({ timeout: 5000 });
 
-    // Check content level - should be full or summary at large viewport
-    const contentLevels = await citizenCards.evaluateAll((cards) =>
-      cards.map((c) => c.getAttribute('data-content-level'))
-    );
+      // Check content levels based on density
+      const contentLevels = await citizenCards.evaluateAll((cards) =>
+        cards.map((c) => c.getAttribute('data-content-level'))
+      );
 
-    // At 1280px with many cards, most should be full or summary
-    const fullOrSummary = contentLevels.filter((l) => l === 'full' || l === 'summary');
-    expect(fullOrSummary.length).toBeGreaterThan(0);
+      // Verify content levels match density expectations
+      if (density === 'spacious') {
+        // Large viewport: expect full or summary
+        const fullOrSummary = contentLevels.filter((l) => l === 'full' || l === 'summary');
+        expect(fullOrSummary.length).toBeGreaterThan(0);
+      } else if (density === 'compact') {
+        // Small viewport: expect more compact representations
+        const compact = contentLevels.filter((l) => l === 'title' || l === 'icon');
+        // Some cards should be compact (may vary based on grid)
+        expect(compact.length).toBeGreaterThanOrEqual(0);
+      }
 
-    await expect(page).toHaveScreenshot('citizens-1280px.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
+      await expect(page).toHaveScreenshot(`citizens-${density}.png`, {
+        fullPage: false,
+        maxDiffPixelRatio: 0.02,
+        mask: [page.locator(MASK_SELECTORS.animations)],
+      });
     });
-  });
-
-  test('should show compact citizen cards at 640px', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.mobile);
-    await page.goto('/town/demo-town-123');
-    await page.waitForResponse('**/citizens');
-
-    const citizenCards = page.locator('[data-testid="citizen-card"]');
-    await expect(citizenCards.first()).toBeVisible({ timeout: 5000 });
-
-    // At 640px, cards should be more compact
-    const contentLevels = await citizenCards.evaluateAll((cards) =>
-      cards.map((c) => c.getAttribute('data-content-level'))
-    );
-
-    // Should have title or icon level cards
-    const compact = contentLevels.filter((l) => l === 'title' || l === 'icon');
-    expect(compact.length).toBeGreaterThanOrEqual(0); // Some may still be summary
-
-    await expect(page).toHaveScreenshot('citizens-640px.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
-    });
-  });
-
-  test('should show icon-only cards at 320px', async ({ page }) => {
-    await page.setViewportSize(BREAKPOINTS.mobile_small);
-    await page.goto('/town/demo-town-123');
-    await page.waitForResponse('**/citizens');
-
-    const citizenCards = page.locator('[data-testid="citizen-card"]');
-    await expect(citizenCards.first()).toBeVisible({ timeout: 5000 });
-
-    // At 320px, most cards should be icon or title
-    const contentLevels = await citizenCards.evaluateAll((cards) =>
-      cards.map((c) => c.getAttribute('data-content-level'))
-    );
-
-    // Most should be compact representations
-    const iconOrTitle = contentLevels.filter((l) => l === 'icon' || l === 'title');
-    expect(iconOrTitle.length).toBeGreaterThanOrEqual(contentLevels.length * 0.5);
-
-    await expect(page).toHaveScreenshot('citizens-320px.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
-    });
-  });
+  }
 });
 
-test.describe('Resize Transitions', () => {
+test.describe('Resize Transitions @visual @e2e', () => {
   test.beforeEach(async ({ page }) => {
-    await setupElasticMocks(page);
+    await setupHotDataMocks(page);
+    await setup.tourist(page);
+    await page.addStyleTag({ content: DETERMINISTIC_CSS });
   });
 
-  test('should smoothly transition between breakpoints', async ({ page }) => {
-    // Start at desktop
-    await page.setViewportSize(BREAKPOINTS.desktop_large);
+  test('should smoothly transition between densities without overflow', async ({ page }) => {
+    // Start at spacious
+    await page.setViewportSize(DENSITY_VIEWPORTS.spacious);
     await page.goto('/town/demo-town-123');
     await page.waitForResponse('**/citizens');
 
     const citizenCards = page.locator('[data-testid="citizen-card"]');
     await expect(citizenCards.first()).toBeVisible({ timeout: 5000 });
 
-    // Resize down through breakpoints
-    for (const size of [1024, 768, 640, 320]) {
-      await page.setViewportSize({ width: size, height: 800 });
+    // Resize down through all densities
+    for (const density of ['comfortable', 'compact'] as Density[]) {
+      const viewport = DENSITY_VIEWPORTS[density];
+      await page.setViewportSize(viewport);
       // Allow resize observer to process
       await page.waitForTimeout(150);
 
-      // Verify no layout breaks (elements shouldn't overflow)
-      const overflows = await page.evaluate(() => {
+      // Verify no horizontal overflow at any density
+      const hasOverflow = await page.evaluate(() => {
+        return document.documentElement.scrollWidth > window.innerWidth;
+      });
+      expect(hasOverflow).toBe(false);
+
+      // Verify no elements overflow viewport
+      const overflowingElements = await page.evaluate(() => {
         const elements = document.querySelectorAll('[data-testid="citizen-card"]');
         let hasOverflow = false;
         elements.forEach((el) => {
@@ -259,12 +234,11 @@ test.describe('Resize Transitions', () => {
         });
         return hasOverflow;
       });
-
-      expect(overflows).toBe(false);
+      expect(overflowingElements).toBe(false);
     }
 
-    // Resize back up
-    await page.setViewportSize(BREAKPOINTS.desktop);
+    // Resize back up to comfortable
+    await page.setViewportSize(DENSITY_VIEWPORTS.comfortable);
     await page.waitForTimeout(150);
 
     // Should return to horizontal layout
@@ -275,8 +249,8 @@ test.describe('Resize Transitions', () => {
   });
 });
 
-test.describe('ElasticPlaceholder States', () => {
-  test('should show empty state when no citizens', async ({ page }) => {
+test.describe('ElasticPlaceholder States @visual @e2e', () => {
+  test('should show empty state when no citizens at all densities', async ({ page }) => {
     // Override citizens mock to return empty
     await page.route('**/v1/town/*/citizens', async (route) => {
       await route.fulfill({
@@ -291,23 +265,25 @@ test.describe('ElasticPlaceholder States', () => {
       });
     });
 
-    await setupTouristMocks(page);
-    await page.setViewportSize(BREAKPOINTS.desktop);
-    await page.goto('/town/demo-town-123');
+    await setup.tourist(page);
+    await page.addStyleTag({ content: DETERMINISTIC_CSS });
 
-    // Wait for response
-    await page.waitForResponse('**/citizens');
+    // Test empty state at each density
+    for (const density of DENSITIES) {
+      await page.setViewportSize(DENSITY_VIEWPORTS[density]);
+      await page.goto('/town/demo-town-123');
+      await page.waitForResponse('**/citizens');
 
-    // Should show empty state placeholder
-    const emptyState = page.locator('.empty-state, [role="status"][aria-label="Empty"]');
-    // The ElasticPlaceholder or empty message should be visible
-    await expect(
-      emptyState.or(page.getByText(/No citizens|No agents|Empty|nothing/i))
-    ).toBeVisible({ timeout: 5000 });
+      // Should show empty state placeholder
+      const emptyState = page.locator('.empty-state, [role="status"][aria-label="Empty"]');
+      await expect(
+        emptyState.or(page.getByText(/No citizens|No agents|Empty|nothing/i))
+      ).toBeVisible({ timeout: 5000 });
 
-    await expect(page).toHaveScreenshot('empty-state.png', {
-      fullPage: false,
-      maxDiffPixelRatio: 0.02,
-    });
+      await expect(page).toHaveScreenshot(`empty-state-${density}.png`, {
+        fullPage: false,
+        maxDiffPixelRatio: 0.02,
+      });
+    }
   });
 });

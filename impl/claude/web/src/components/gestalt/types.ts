@@ -9,10 +9,11 @@
 import type { CodebaseModule } from '../../api/types';
 
 // =============================================================================
-// Density (shared with main Gestalt page)
+// Density (shared with main Gestalt page and primitives)
 // =============================================================================
 
-export type Density = 'compact' | 'comfortable' | 'spacious';
+// Re-export Density from primitives for backward compatibility
+export type { Density } from '../three/primitives/themes/types';
 
 // =============================================================================
 // Filter State

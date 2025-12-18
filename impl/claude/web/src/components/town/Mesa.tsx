@@ -94,6 +94,14 @@ interface MesaProps {
    * Skip grid rendering entirely (extreme mobile perf mode)
    */
   hideGrid?: boolean;
+  /**
+   * Observer-dependent overlay rendering (Phase 3)
+   */
+  overlay?: 'none' | 'relationships' | 'coalitions' | 'economy';
+  /**
+   * Observer umwelt (for future extensions)
+   */
+  observer?: string;
 }
 
 interface CitizenPosition {
@@ -116,7 +124,11 @@ export function Mesa({
   onHoverCitizen,
   mobile = false,
   hideGrid = false,
+  overlay = 'none',
+  observer,
 }: MesaProps) {
+  // Note: observer reserved for future extensions
+  void observer;
   const [hoveredCitizenId, setHoveredCitizenId] = useState<string | null>(null);
 
   // Mobile-aware constants
@@ -238,6 +250,112 @@ export function Mesa({
     [eventLines]
   );
 
+  // Draw overlays (observer-dependent rendering - Phase 3)
+  const drawRelationshipsOverlay = useCallback(
+    (g: PIXI.Graphics) => {
+      g.clear();
+
+      // Draw blue lines between citizens (relationship web)
+      // Uses a simple algorithm: connect citizens in the same region
+      const byRegion = new Map<string, CitizenPosition[]>();
+      citizenPositions.forEach((cp) => {
+        const list = byRegion.get(cp.citizen.region) || [];
+        list.push(cp);
+        byRegion.set(cp.citizen.region, list);
+      });
+
+      byRegion.forEach((regionCitizens) => {
+        if (regionCitizens.length < 2) return;
+
+        // Connect each citizen to every other in the region
+        for (let i = 0; i < regionCitizens.length; i++) {
+          for (let j = i + 1; j < regionCitizens.length; j++) {
+            const from = regionCitizens[i];
+            const to = regionCitizens[j];
+
+            // Draw relationship line (blue, subtle)
+            g.lineStyle(1, 0x3b82f6, 0.3);
+            g.moveTo(from.screenX, from.screenY);
+            g.lineTo(to.screenX, to.screenY);
+          }
+        }
+      });
+    },
+    [citizenPositions]
+  );
+
+  const drawEconomyOverlay = useCallback(
+    (g: PIXI.Graphics) => {
+      g.clear();
+
+      // Draw green particles representing trade/value flows
+      // For now, show trade potential as pulsing rings around traders
+      citizenPositions.forEach((cp) => {
+        if (cp.citizen.archetype.toLowerCase() === 'trader') {
+          // Pulsing ring effect (green)
+          g.lineStyle(2, 0x22c55e, 0.4);
+          g.drawCircle(cp.screenX, cp.screenY, 30);
+          g.lineStyle(1, 0x22c55e, 0.2);
+          g.drawCircle(cp.screenX, cp.screenY, 45);
+        }
+      });
+
+      // Draw trade lines between traders
+      const traders = citizenPositions.filter((cp) =>
+        cp.citizen.archetype.toLowerCase() === 'trader'
+      );
+      for (let i = 0; i < traders.length; i++) {
+        for (let j = i + 1; j < traders.length; j++) {
+          const from = traders[i];
+          const to = traders[j];
+
+          // Draw trade flow line (green, animated appearance)
+          g.lineStyle(2, 0x22c55e, 0.2);
+          g.moveTo(from.screenX, from.screenY);
+          g.lineTo(to.screenX, to.screenY);
+        }
+      }
+    },
+    [citizenPositions]
+  );
+
+  const drawCoalitionsOverlay = useCallback(
+    (g: PIXI.Graphics) => {
+      g.clear();
+
+      // Draw coalition boundaries (purple/violet)
+      // Group citizens by region and draw convex hull-like boundaries
+      const byRegion = new Map<string, CitizenPosition[]>();
+      citizenPositions.forEach((cp) => {
+        const list = byRegion.get(cp.citizen.region) || [];
+        list.push(cp);
+        byRegion.set(cp.citizen.region, list);
+      });
+
+      byRegion.forEach((regionCitizens) => {
+        if (regionCitizens.length < 2) return;
+
+        // Find bounding circle for coalition
+        const xs = regionCitizens.map((c) => c.screenX);
+        const ys = regionCitizens.map((c) => c.screenY);
+        const centerX = xs.reduce((a, b) => a + b, 0) / xs.length;
+        const centerY = ys.reduce((a, b) => a + b, 0) / ys.length;
+        const maxDist = Math.max(
+          ...regionCitizens.map((c) =>
+            Math.sqrt((c.screenX - centerX) ** 2 + (c.screenY - centerY) ** 2)
+          )
+        );
+
+        // Draw coalition boundary (purple glow)
+        g.lineStyle(2, 0x8b5cf6, 0.3);
+        g.beginFill(0x8b5cf6, 0.05);
+        g.drawCircle(centerX, centerY, maxDist + 20);
+        g.endFill();
+      });
+    },
+    [citizenPositions]
+  );
+
   // Handle hover
   const handleHover = useCallback(
     (id: string | null) => {
@@ -336,6 +454,11 @@ export function Mesa({
 
         {/* Event Lines Layer - shows recent interactions between citizens */}
         <Graphics draw={drawEventLines} />
+
+        {/* Observer Overlay Layer (Phase 3) - drawn after events, before citizens */}
+        {overlay === 'relationships' && <Graphics draw={drawRelationshipsOverlay} />}
+        {overlay === 'economy' && <Graphics draw={drawEconomyOverlay} />}
+        {overlay === 'coalitions' && <Graphics draw={drawCoalitionsOverlay} />}
 
         {/* Region labels - smaller font on mobile */}
         {Object.entries(REGION_GRID_POSITIONS).map(([region, pos]) => {

@@ -142,3 +142,248 @@ export {
   type TeachingModeProviderProps,
   type TeachingToggleProps,
 } from './useTeachingMode';
+
+// Breathing animation (Town Renaissance: Everything Breathes)
+export {
+  useBreathing,
+  getStaggeredPhaseOffset,
+  getBreathingKeyframes,
+  type BreathingOptions,
+  type BreathingState,
+} from './useBreathing';
+
+// Crown Jewels Genesis Animation Primitives
+export {
+  useGrowing,
+  getStaggeredGrowthDelay,
+  triggerWithDelay,
+  getGrowingKeyframes,
+  getGrowingAnimation,
+  type GrowthStage,
+  type GrowingOptions,
+  type GrowingState,
+} from './useGrowing';
+
+export {
+  useUnfurling,
+  getUnfurlingKeyframes,
+  getUnfurlingAnimation,
+  type UnfurlDirection,
+  type UnfurlingOptions,
+  type UnfurlingState,
+} from './useUnfurling';
+
+export {
+  useFlowing,
+  createCurvedPath,
+  createSCurvePath,
+  type Point,
+  type FlowParticle,
+  type FlowingOptions,
+  type FlowingState,
+} from './useFlowing';
+
+// Town AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  townQueryKeys,
+  // Town manifest
+  useTownManifest,
+  // Citizens
+  useCitizens,
+  useCitizen,
+  useCreateCitizen,
+  useUpdateCitizen,
+  // Relationships
+  useCitizenRelationships,
+  // Conversations
+  useConversationHistory,
+  useStartConversation,
+  useAddTurn,
+  // Coalitions
+  useCoalitionManifest,
+  useCoalitions,
+  useCoalition,
+  useCoalitionBridges,
+  useDetectCoalitions,
+  useCoalitionDecay,
+  // Type re-exports
+  type WorldTownManifestResponse,
+  type WorldTownCitizenListResponse,
+  type WorldTownCitizenGetResponse,
+  type WorldTownCoalitionListResponse,
+  type WorldTownCoalitionManifestResponse,
+} from './useTownQuery';
+
+// Park AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  parkQueryKeys,
+  // Park manifest
+  useParkManifest,
+  // Hosts
+  useHosts,
+  useHost,
+  useCreateHost,
+  useUpdateHost,
+  useInteractWithHost,
+  useHostMemories,
+  // Episodes
+  useEpisodes,
+  useStartEpisode,
+  useEndEpisode,
+  // Locations
+  useLocations,
+  useCreateLocation,
+  // Type re-exports
+  type WorldParkManifestResponse,
+  type WorldParkHostListResponse,
+  type WorldParkHostGetResponse,
+  type WorldParkHostCreateRequest,
+  type WorldParkHostCreateResponse,
+  type WorldParkHostInteractRequest,
+  type WorldParkHostInteractResponse,
+  type WorldParkEpisodeListResponse,
+  type WorldParkEpisodeStartRequest,
+  type WorldParkEpisodeStartResponse,
+  type WorldParkLocationListResponse,
+  type WorldParkLocationCreateRequest,
+  type WorldParkLocationCreateResponse,
+} from './useParkQuery';
+
+// Atelier AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  atelierQueryKeys,
+  // Atelier manifest
+  useAtelierManifest,
+  // Workshops
+  useWorkshops,
+  useWorkshop,
+  useCreateWorkshop,
+  useEndWorkshop,
+  // Artisans
+  useArtisans,
+  useJoinWorkshop,
+  // Contributions
+  useContribute,
+  useContributions,
+  // Exhibitions
+  useCreateExhibition,
+  useOpenExhibition,
+  useViewExhibition,
+  // Gallery
+  useGalleryItems,
+  useAddToGallery,
+  // Festivals
+  useFestivals,
+  useCreateFestival,
+  useEnterFestival,
+  // Tokens/Bids
+  useTokenBalance,
+  useSubmitBid,
+  // Type re-exports
+  type WorldAtelierManifestResponse,
+  type WorldAtelierWorkshopListResponse,
+  type WorldAtelierWorkshopGetResponse,
+  type WorldAtelierArtisanListResponse,
+  type WorldAtelierContributionListResponse,
+  type WorldAtelierFestivalListResponse,
+} from './useAtelierQuery';
+
+// Brain AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  brainQueryKeys,
+  // Brain manifest
+  useBrainManifest,
+  // Memory queries
+  useMemorySearch,
+  useMemorySurface,
+  useMemoryCrystal,
+  useMemoryRecent,
+  useMemoryByTag,
+  useMemoryTopology,
+  // Memory mutations
+  useCaptureMemory,
+  useDeleteMemory,
+  useHealMemory,
+  // Type re-exports
+  type SelfMemoryManifestResponse,
+  type SelfMemorySearchRequest,
+  type SelfMemorySearchResponse,
+  type SelfMemoryCaptureRequest,
+  type SelfMemoryCaptureResponse,
+  type SelfMemoryTopologyResponse,
+} from './useBrainQuery';
+
+// Gestalt AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  gestaltQueryKeys,
+  // Gestalt manifest
+  useGestaltManifest,
+  // Codebase queries
+  useCodebaseHealth,
+  useCodebaseDrift,
+  useCodebaseTopology,
+  useCodebaseModule,
+  // Codebase mutations
+  useScanCodebase,
+  // Type re-exports
+  type WorldCodebaseManifestResponse,
+  type WorldCodebaseHealthResponse,
+  type WorldCodebaseDriftResponse,
+  type WorldCodebaseTopologyResponse,
+  type WorldCodebaseModuleResponse,
+  type WorldCodebaseScanResponse,
+} from './useGestaltQuery';
+
+// Workshop AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  workshopQueryKeys,
+  // Workshop manifest
+  useWorkshopManifest,
+  useWorkshopBuilders,
+  // Workshop mutations
+  useAssignWorkshopTask,
+  useAdvanceWorkshop,
+  useCompleteWorkshop,
+  // Type re-exports
+  type WorldTownWorkshopManifestResponse,
+  type WorldTownWorkshopBuildersResponse,
+  type WorldTownWorkshopAssignRequest,
+  type WorldTownWorkshopAssignResponse,
+  type WorldTownWorkshopAdvanceResponse,
+  type WorldTownWorkshopCompleteResponse,
+} from './useWorkshopQuery';
+
+// Gardener AGENTESE queries (Contract-Driven)
+export {
+  // Query keys
+  gardenerQueryKeys,
+  // Gardener manifest
+  useGardenerManifest,
+  // Session queries
+  useGardenerSession,
+  useGardenerPolynomial,
+  useGardenerSessions,
+  useGardenerPropose,
+  // Session mutations
+  useDefineSession,
+  useAdvanceSession,
+  useRouteInput,
+  // Type re-exports
+  type ConceptGardenerManifestResponse,
+  type ConceptGardenerSessionManifestResponse,
+  type ConceptGardenerSessionDefineRequest,
+  type ConceptGardenerSessionDefineResponse,
+  type ConceptGardenerSessionAdvanceRequest,
+  type ConceptGardenerSessionAdvanceResponse,
+  type ConceptGardenerPolynomialResponse,
+  type ConceptGardenerSessionsListResponse,
+  type ConceptGardenerRouteRequest,
+  type ConceptGardenerRouteResponse,
+  type ConceptGardenerProposeResponse,
+} from './useGardenerQuery';

@@ -22,6 +22,7 @@
  */
 
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import { ShellProvider, useShell } from './ShellProvider';
 import { ObserverDrawer } from './ObserverDrawer';
 import { NavigationTree } from './NavigationTree';
@@ -160,6 +161,7 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
     terminalHeight,
     navigationWidth,
     navigationTreeExpanded,
+    setNavigationTreeExpanded,
     isAnimating,
   } = useShell();
 
@@ -167,10 +169,17 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
   // When observer collapses: main slides up
   // When terminal expands: main shrinks from bottom
   // When navigation expands: main slides right
+  //
+  // Mobile layout fixed elements:
+  // - ObserverDrawer: 40px (collapsed)
+  // - Header: ~44px (py-2 + content)
+  // Total: ~84px top offset needed
+  const MOBILE_HEADER_HEIGHT = 44;
   const mainStyle: React.CSSProperties = density === 'compact'
     ? {
-        // Mobile: simple padding
-        paddingBottom: '5rem', // Space for FAB
+        // Mobile: account for fixed ObserverDrawer + Header at top
+        paddingTop: `${observerHeight + MOBILE_HEADER_HEIGHT}px`,
+        paddingBottom: '5rem', // Space for FAB/bottom toolbar
       }
     : {
         // Desktop: use animated offsets
@@ -194,9 +203,22 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
           className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 px-4 py-2 flex items-center justify-between fixed left-0 right-0 z-20"
           style={{ top: `${observerHeight}px` }}
         >
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="font-semibold text-lg text-white">kgents</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Hamburger menu for compact density */}
+            {density === 'compact' && (
+              <button
+                type="button"
+                onClick={() => setNavigationTreeExpanded(true)}
+                className="p-2 hover:bg-gray-700/50 rounded transition-colors"
+                aria-label="Open navigation"
+              >
+                <Menu className="w-6 h-6 text-gray-300" />
+              </button>
+            )}
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <span className="font-semibold text-lg text-white">kgents</span>
+            </Link>
+          </div>
           <CrownContext />
         </header>
       )}

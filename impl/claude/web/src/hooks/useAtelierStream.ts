@@ -1,10 +1,10 @@
 /**
- * useAtelierStream: SSE streaming hook for Atelier commissions.
+ * useAtelierStream: SSE streaming hook for Atelier sessions.
  *
- * Handles streaming events from commission and collaboration endpoints.
+ * Handles streaming events from commission, collaboration, and live session endpoints.
  * Uses fetch with ReadableStream since EventSource only supports GET.
  *
- * Events:
+ * Events (Commission/Collaboration):
  * - commission_received: Commission accepted
  * - contemplating: Artisan thinking
  * - working: Creation in progress
@@ -12,17 +12,48 @@
  * - piece_complete: Final piece
  * - error: Error occurred
  *
+ * Events (Live Session - Phase 2):
+ * - spectator_joined: New spectator joined
+ * - spectator_left: Spectator left
+ * - cursor_update: Spectator cursor moved
+ * - bid_submitted: New bid in queue
+ * - bid_accepted: Bid accepted by builder
+ * - content_update: Live content changed
+ *
  * Example:
  *   const { commission, isStreaming, events, piece, error } = useAtelierStream();
  *   await commission('calligrapher', 'a haiku about APIs');
+ *
+ * @see plans/crown-jewels-genesis-phase2.md - Week 3: useAtelierStream enhancement
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { AtelierEvent, Piece } from '@/api/atelier';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+/** Spectator cursor for overlay display */
+export interface SpectatorCursor {
+  id: string;
+  position: { x: number; y: number };
+  citizenId?: string;
+  eigenvector?: number[];
+  lastUpdate: number;
+  name?: string;
+}
+
+/** Session state for live FishbowlCanvas */
+export interface SessionState {
+  sessionId: string;
+  isLive: boolean;
+  spectatorCount: number;
+  content: string;
+  contentType: 'image' | 'text' | 'code';
+  artisanId?: string;
+  artisanName?: string;
+}
 
 interface UseAtelierStreamResult {
   /** All received events */
@@ -52,6 +83,21 @@ interface UseAtelierStreamResult {
   cancel: () => void;
   /** Reset state */
   reset: () => void;
+
+  // === Phase 2: Live Session Support ===
+
+  /** Current session state (for FishbowlCanvas) */
+  sessionState: SessionState | null;
+  /** Active spectator cursors */
+  spectatorCursors: SpectatorCursor[];
+  /** Subscribe to a live session */
+  subscribeToSession: (sessionId: string) => void;
+  /** Unsubscribe from live session */
+  unsubscribeFromSession: () => void;
+  /** Update own cursor position */
+  updateCursor: (position: { x: number; y: number }) => void;
+  /** Whether connected to a live session */
+  isSessionLive: boolean;
 }
 
 // =============================================================================
@@ -59,7 +105,7 @@ interface UseAtelierStreamResult {
 // =============================================================================
 
 export function useAtelierStream(): UseAtelierStreamResult {
-  // State
+  // State - Commission/Collaboration
   const [events, setEvents] = useState<AtelierEvent[]>([]);
   const [piece, setPiece] = useState<Piece | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -70,8 +116,15 @@ export function useAtelierStream(): UseAtelierStreamResult {
   const [progress, setProgress] = useState(0);
   const [currentFragment, setCurrentFragment] = useState('');
 
-  // Ref for abort controller
+  // State - Live Session (Phase 2)
+  const [sessionState, setSessionState] = useState<SessionState | null>(null);
+  const [spectatorCursors, setSpectatorCursors] = useState<SpectatorCursor[]>([]);
+  const [isSessionLive, setIsSessionLive] = useState(false);
+
+  // Refs for abort controllers
   const abortRef = useRef<AbortController | null>(null);
+  const sessionAbortRef = useRef<AbortController | null>(null);
+  const spectatorIdRef = useRef<string | null>(null);
 
   // Parse SSE event from text
   const parseSSEEvent = useCallback((text: string): AtelierEvent | null => {
@@ -269,7 +322,206 @@ export function useAtelierStream(): UseAtelierStreamResult {
     setCurrentFragment('');
   }, [cancel]);
 
+  // ==========================================================================
+  // Phase 2: Live Session Support
+  // ==========================================================================
+
+  // Process session event
+  const processSessionEvent = useCallback((event: AtelierEvent) => {
+    switch (event.event_type) {
+      case 'spectator_joined':
+        setSessionState((prev) =>
+          prev
+            ? { ...prev, spectatorCount: prev.spectatorCount + 1 }
+            : null
+        );
+        break;
+
+      case 'spectator_left':
+        setSessionState((prev) =>
+          prev
+            ? { ...prev, spectatorCount: Math.max(0, prev.spectatorCount - 1) }
+            : null
+        );
+        // Remove cursor for departed spectator
+        if (event.data?.spectator_id) {
+          setSpectatorCursors((prev) =>
+            prev.filter((c) => c.id !== event.data?.spectator_id)
+          );
+        }
+        break;
+
+      case 'cursor_update':
+        if (event.data?.spectator_id && event.data?.position) {
+          const { spectator_id, position, citizen_id, eigenvector, name } = event.data as {
+            spectator_id: string;
+            position: { x: number; y: number };
+            citizen_id?: string;
+            eigenvector?: number[];
+            name?: string;
+          };
+          setSpectatorCursors((prev) => {
+            const existing = prev.findIndex((c) => c.id === spectator_id);
+            const newCursor: SpectatorCursor = {
+              id: spectator_id,
+              position,
+              citizenId: citizen_id,
+              eigenvector,
+              lastUpdate: Date.now(),
+              name,
+            };
+            if (existing >= 0) {
+              const updated = [...prev];
+              updated[existing] = newCursor;
+              return updated;
+            }
+            return [...prev, newCursor];
+          });
+        }
+        break;
+
+      case 'content_update':
+        if (event.data?.content !== undefined) {
+          setSessionState((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  content: event.data?.content as string,
+                  contentType: (event.data?.content_type as 'image' | 'text' | 'code') || prev.contentType,
+                }
+              : null
+          );
+        }
+        break;
+
+      case 'session_ended':
+        setIsSessionLive(false);
+        setSessionState((prev) => (prev ? { ...prev, isLive: false } : null));
+        break;
+    }
+  }, []);
+
+  // Subscribe to live session
+  const subscribeToSession = useCallback(
+    async (sessionId: string) => {
+      // Cancel any existing subscription
+      if (sessionAbortRef.current) {
+        sessionAbortRef.current.abort();
+      }
+
+      sessionAbortRef.current = new AbortController();
+      setIsSessionLive(true);
+      setSessionState({
+        sessionId,
+        isLive: true,
+        spectatorCount: 0,
+        content: '',
+        contentType: 'text',
+      });
+      setSpectatorCursors([]);
+
+      try {
+        const response = await fetch(`/api/atelier/session/${sessionId}/stream`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'text/event-stream',
+            'X-API-Key': localStorage.getItem('api_key') || '',
+          },
+          signal: sessionAbortRef.current.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+
+          const messages = buffer.split('\n\n');
+          buffer = messages.pop() || '';
+
+          for (const message of messages) {
+            if (message.trim()) {
+              const event = parseSSEEvent(message);
+              if (event) {
+                processSessionEvent(event);
+              }
+            }
+          }
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          console.error('[Atelier Session] Error:', err);
+          setError((err as Error).message);
+        }
+      } finally {
+        setIsSessionLive(false);
+        sessionAbortRef.current = null;
+      }
+    },
+    [parseSSEEvent, processSessionEvent]
+  );
+
+  // Unsubscribe from live session
+  const unsubscribeFromSession = useCallback(() => {
+    if (sessionAbortRef.current) {
+      sessionAbortRef.current.abort();
+      sessionAbortRef.current = null;
+    }
+    setIsSessionLive(false);
+    setSessionState(null);
+    setSpectatorCursors([]);
+    spectatorIdRef.current = null;
+  }, []);
+
+  // Update own cursor position
+  const updateCursor = useCallback(
+    async (position: { x: number; y: number }) => {
+      if (!sessionState?.sessionId || !spectatorIdRef.current) return;
+
+      try {
+        await fetch('/api/atelier/session/cursor', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': localStorage.getItem('api_key') || '',
+          },
+          body: JSON.stringify({
+            session_id: sessionState.sessionId,
+            spectator_id: spectatorIdRef.current,
+            position_x: position.x,
+            position_y: position.y,
+          }),
+        });
+      } catch (err) {
+        console.warn('[Atelier Cursor] Failed to update cursor:', err);
+      }
+    },
+    [sessionState?.sessionId]
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (sessionAbortRef.current) {
+        sessionAbortRef.current.abort();
+      }
+    };
+  }, []);
+
   return {
+    // Commission/Collaboration
     events,
     piece,
     isStreaming,
@@ -281,6 +533,14 @@ export function useAtelierStream(): UseAtelierStreamResult {
     collaborate,
     cancel,
     reset,
+
+    // Phase 2: Live Session
+    sessionState,
+    spectatorCursors,
+    subscribeToSession,
+    unsubscribeFromSession,
+    updateCursor,
+    isSessionLive,
   };
 }
 
@@ -288,4 +548,4 @@ export function useAtelierStream(): UseAtelierStreamResult {
 // Exports
 // =============================================================================
 
-export type { UseAtelierStreamResult };
+export type { UseAtelierStreamResult, SpectatorCursor, SessionState };

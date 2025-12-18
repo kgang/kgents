@@ -18,7 +18,8 @@ import { Leaf } from 'lucide-react';
 import { useShell } from '@/shell';
 import { GardenerVisualization } from '@/components/gardener';
 import { Breathe } from '@/components/joy';
-import type { GardenerSessionState, GardenerPhase } from '@/api/types';
+import type { GardenerPhase } from '@/api/types/_generated/concept-gardener';
+import type { GardenerSessionState } from '@/api/types';
 
 // =============================================================================
 // Mock Data (REMOVE when API is ready - will use PathProjection instead)

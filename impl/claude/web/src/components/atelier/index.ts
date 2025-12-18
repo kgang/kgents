@@ -25,3 +25,9 @@ export { LineageTree } from './LineageTree';
 export { CollaborationBuilder } from './CollaborationBuilder';
 export { ErrorPanel } from './ErrorPanel';
 export { LoadingPanel } from './LoadingPanel';
+
+// Phase 2: FishbowlCanvas (Crown Jewels Genesis)
+export { FishbowlCanvas } from './FishbowlCanvas';
+export type { FishbowlCanvasProps, SpectatorCursor as FishbowlSpectatorCursor } from './FishbowlCanvas';
+export { SpectatorOverlay, eigenvectorToColor, getColorForId } from './SpectatorOverlay';
+export type { SpectatorOverlayProps, SpectatorCursor } from './SpectatorOverlay';

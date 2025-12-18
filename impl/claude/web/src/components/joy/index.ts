@@ -82,3 +82,32 @@ export {
   PageScale,
   type PageTransitionProps,
 } from './PageTransition';
+
+// =============================================================================
+// Crown Jewels Genesis Primitives
+// =============================================================================
+
+export {
+  OrganicToast,
+  ToastContainer,
+  type OrganicToastProps,
+  type ToastType,
+  type ToastContainerProps,
+} from './OrganicToast';
+
+export {
+  BreathingContainer,
+  BreathingCard,
+  BreathingButton,
+  BreathingIndicator,
+  type BreathingContainerProps,
+} from './BreathingContainer';
+
+export {
+  UnfurlPanel,
+  UnfurlDrawer,
+  UnfurlAccordion,
+  UnfurlModal,
+  type UnfurlPanelProps,
+  type UnfurlPanelRef,
+} from './UnfurlPanel';

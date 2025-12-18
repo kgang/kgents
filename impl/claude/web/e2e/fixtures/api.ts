@@ -240,6 +240,9 @@ export async function setupResidentMocks(page: Page) {
   // Start with tourist mocks, then override
   await setupTouristMocks(page);
 
+  // Setup AGENTESE mocks for Town
+  await setupAgentesesMocks(page);
+
   // Override user budget to be RESIDENT
   await page.route('**/v1/user/budget', async (route) => {
     await route.fulfill({
@@ -278,6 +281,168 @@ export async function setupResidentMocks(page: Page) {
         lod,
         citizen: lod >= 3 ? mockManifestLOD3 : mockManifestLOD0,
         cost_credits: lod >= 3 ? 10 : 0,
+      }),
+    });
+  });
+}
+
+/**
+ * Setup AGENTESE gateway mocks for Town operations.
+ *
+ * AGENTESE endpoints:
+ * - GET /agentese/world/town/manifest
+ * - POST /agentese/world/town/citizen.list
+ * - POST /agentese/world/town/citizen.get
+ * - GET /agentese/world/town/coalition/manifest
+ * - POST /agentese/world/town/coalition/list
+ * - POST /agentese/world/town/coalition/bridges
+ */
+export async function setupAgentesesMocks(page: Page) {
+  // World.town manifest (GET)
+  await page.route('**/agentese/world/town/manifest', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town',
+        aspect: 'manifest',
+        result: {
+          total_citizens: mockCitizens.length,
+          active_citizens: mockCitizens.filter(c => c.phase !== 'RESTING').length,
+          total_conversations: 12,
+          active_conversations: 2,
+          total_relationships: 15,
+          storage_backend: 'memory',
+        },
+      }),
+    });
+  });
+
+  // Citizen list (POST)
+  await page.route('**/agentese/world/town/citizen.list', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town',
+        aspect: 'citizen.list',
+        result: {
+          citizens: mockCitizens.map(c => ({
+            ...c,
+            is_active: c.phase !== 'RESTING',
+            interaction_count: Math.floor(Math.random() * 10),
+            created_at: new Date().toISOString(),
+          })),
+          total: mockCitizens.length,
+        },
+      }),
+    });
+  });
+
+  // Citizen get (POST)
+  await page.route('**/agentese/world/town/citizen.get', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town',
+        aspect: 'citizen.get',
+        result: {
+          citizen: {
+            id: 'c1',
+            name: 'Alice',
+            archetype: 'Builder',
+            region: 'workshop',
+            phase: 'WORKING',
+            is_active: true,
+            interaction_count: 8,
+            description: 'A skilled builder who loves creating things.',
+            traits: { creativity: 0.9, patience: 0.7 },
+            created_at: new Date().toISOString(),
+          },
+        },
+      }),
+    });
+  });
+
+  // Conversation history (POST)
+  await page.route('**/agentese/world/town/conversation.history', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town',
+        aspect: 'conversation.history',
+        result: {
+          conversations: [
+            { id: 'conv-1', topic: 'Building tips', turn_count: 5, summary: 'Discussed building techniques' },
+            { id: 'conv-2', topic: 'Town plans', turn_count: 3, summary: 'Talked about future projects' },
+          ],
+        },
+      }),
+    });
+  });
+
+  // Coalition manifest (GET)
+  await page.route('**/agentese/world/town/coalition/manifest', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town.coalition',
+        aspect: 'manifest',
+        result: {
+          total_coalitions: 0,
+          bridge_citizens: 0,
+          avg_strength: 0,
+        },
+      }),
+    });
+  });
+
+  // Coalition list (POST)
+  await page.route('**/agentese/world/town/coalition/list', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town.coalition',
+        aspect: 'list',
+        result: {
+          coalitions: [],
+        },
+      }),
+    });
+  });
+
+  // Coalition bridges (POST)
+  await page.route('**/agentese/world/town/coalition/bridges', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town.coalition',
+        aspect: 'bridges',
+        result: {
+          bridge_citizens: [],
+          count: 0,
+        },
+      }),
+    });
+  });
+
+  // Coalition detect (POST)
+  await page.route('**/agentese/world/town/coalition/detect', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        path: 'world.town.coalition',
+        aspect: 'detect',
+        result: {
+          coalitions_found: 0,
+          coalitions: [],
+        },
       }),
     });
   });

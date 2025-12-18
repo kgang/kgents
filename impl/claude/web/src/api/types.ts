@@ -71,6 +71,17 @@ export type {
   WorldParkEpisodeListResponse as ParkEpisodeListContract,
 } from './types/_generated/world-park';
 
+export type {
+  ConceptGardenerManifestResponse as GardenerManifestContract,
+  ConceptGardenerSessionManifestResponse as GardenerSessionContract,
+  ConceptGardenerSessionDefineRequest as GardenerDefineRequestContract,
+  ConceptGardenerSessionDefineResponse as GardenerDefineResponseContract,
+  ConceptGardenerSessionAdvanceRequest as GardenerAdvanceRequestContract,
+  ConceptGardenerSessionAdvanceResponse as GardenerAdvanceResponseContract,
+  ConceptGardenerPolynomialResponse as GardenerPolynomialContract,
+  ConceptGardenerSessionsListResponse as GardenerSessionsListContract,
+} from './types/_generated/concept-gardener';
+
 // =============================================================================
 // Local Types (FE-only)
 // =============================================================================

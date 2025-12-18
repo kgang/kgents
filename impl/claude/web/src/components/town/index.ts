@@ -21,3 +21,12 @@ export { TownTracePanel } from './TownTracePanel';
 export type { TownTracePanelProps } from './TownTracePanel';
 export { ObserverSelector, OBSERVERS } from './ObserverSelector';
 export type { ObserverSelectorProps, ObserverUmwelt, ObserverConfig } from './ObserverSelector';
+
+// Contract-driven components (Phase: Town Frontend Implementation)
+export { TownOverview, default as TownOverviewDefault } from './TownOverview';
+export { CitizenBrowser, default as CitizenBrowserDefault } from './CitizenBrowser';
+export { CoalitionGraph, default as CoalitionGraphDefault } from './CoalitionGraph';
+
+// 3D Projection (Town Renaissance)
+export { TownCanvas3D, default as TownCanvas3DDefault } from './TownCanvas3D';
+export type { TownCanvas3DProps } from './TownCanvas3D';

@@ -358,3 +358,73 @@ export const COLOR_TAILWIND_EXTENSIONS = {
   'builder-steady': BUILDER_PERSONALITY_COLORS.steady,
   'builder-sync': BUILDER_PERSONALITY_COLORS.sync,
 } as const;
+
+// =============================================================================
+// Living Earth Palette (Crown Jewels Genesis)
+// =============================================================================
+
+/**
+ * Living Earth Palette
+ *
+ * Ground-up color system from Crown Jewels Genesis Moodboard.
+ * Three families: Warm Earth (primary), Living Green (secondary), Ghibli Glow (accent).
+ *
+ * @see plans/crown-jewels-genesis.md - Phase 1: Foundation
+ * @see docs/creative/crown-jewels-genesis-moodboard.md
+ */
+export const LIVING_EARTH = {
+  // Primary: Warm Earth (soil to sand)
+  soil: '#2D1B14', // Deepest background
+  bark: '#4A3728', // Card surfaces
+  wood: '#6B4E3D', // Elevated surfaces
+  clay: '#8B6F5C', // Borders, muted elements
+  sand: '#AB9080', // Secondary text
+
+  // Secondary: Living Green (moss to sprout)
+  moss: '#1A2E1A', // Deep forest
+  fern: '#2E4A2E', // Forest mid-tone
+  sage: '#4A6B4A', // Nature accent
+  mint: '#6B8B6B', // Available/ready state
+  sprout: '#8BAB8B', // Fresh growth
+
+  // Accent: Ghibli Glow (lantern to bronze)
+  lantern: '#F5E6D3', // Warm white, highlights
+  honey: '#E8C4A0', // Soft glow
+  amber: '#D4A574', // Primary accent (collaboration)
+  copper: '#C08552', // Warm mid-accent
+  bronze: '#8B5A2B', // Deep accent
+} as const;
+
+export type LivingEarthColor = keyof typeof LIVING_EARTH;
+
+/**
+ * Get Living Earth color with fallback
+ */
+export function getLivingEarthColor(name: string): string {
+  const key = name.toLowerCase() as LivingEarthColor;
+  return LIVING_EARTH[key] ?? LIVING_EARTH.bark;
+}
+
+/**
+ * Crown Jewel Identity Colors
+ *
+ * Each jewel has a primary identity color derived from Living Earth.
+ */
+export const JEWEL_IDENTITY_COLORS = {
+  town: LIVING_EARTH.amber, // Collaboration, warmth
+  atelier: LIVING_EARTH.honey, // Creation, artisan craft
+  park: LIVING_EARTH.copper, // Drama, performance
+  domain: LIVING_EARTH.bronze, // Integration, grounding
+  brain: SEMANTIC_COLORS.knowledge, // Cyan - knowledge
+  garden: LIVING_EARTH.sage, // Growth, cultivation
+} as const;
+
+export type JewelName = keyof typeof JEWEL_IDENTITY_COLORS;
+
+/**
+ * Get jewel identity color with fallback
+ */
+export function getJewelColor(jewel: string): string {
+  const key = jewel.toLowerCase() as JewelName;
+  return JEWEL_IDENTITY_COLORS[key] ?? LIVING_EARTH.bark;
+}

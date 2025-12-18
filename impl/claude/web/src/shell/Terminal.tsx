@@ -14,7 +14,9 @@
  * Density adaptation:
  * - spacious: Docked at bottom, resizable height
  * - comfortable: Collapsed to input line, expand on focus
- * - compact: Floating action button, full-screen modal on tap
+ * - compact: Floating action button (bottom-left), full-screen modal on tap
+ *            Bottom-left positioning avoids collision with context-specific
+ *            mobile buttons (FloatingActions) that appear on the right side.
  *
  * @see spec/protocols/os-shell.md Part VI: Terminal Service
  */
@@ -425,10 +427,10 @@ export function Terminal({
   if (density === 'compact') {
     return (
       <>
-        {/* Floating Action Button */}
+        {/* Floating Action Button - Bottom-left to avoid collision with context-specific mobile buttons on right */}
         <button
           onClick={handleExpand}
-          className={`fixed bottom-4 right-4 w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center z-40 transition-colors ${className}`}
+          className={`fixed bottom-4 left-4 w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center z-40 transition-colors ${className}`}
           aria-label="Open terminal"
         >
           <TerminalIcon className="w-6 h-6 text-cyan-400" />

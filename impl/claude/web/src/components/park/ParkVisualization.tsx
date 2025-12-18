@@ -32,6 +32,7 @@ import { MaskGridEnhanced } from './MaskCardEnhanced';
 import { CurrentMaskBadge } from './MaskSelector';
 import { ConsentDebtMachine } from './ConsentDebtMachine';
 import { ParkTracePanel } from './ParkTracePanel';
+import { DirectorOperadExplorer } from './DirectorOperadExplorer';
 import { InlineError, Shake, PopOnMount, celebrate } from '../joy';
 import { useSynergyToast } from '../synergy';
 import { useTeachingModeSafe } from '../../hooks';
@@ -214,10 +215,12 @@ function RunningScenario({
   // Mobile drawer states
   const [masksDrawerOpen, setMasksDrawerOpen] = useState(false);
   const [traceDrawerOpen, setTraceDrawerOpen] = useState(false);
+  const [showOperadExplorer, setShowOperadExplorer] = useState(false);
 
   // Desktop layout
   if (!isMobile) {
     return (
+      <>
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left Column - State Machines */}
         <div className="space-y-6">
@@ -275,6 +278,15 @@ function RunningScenario({
             showStateMachine
             showTeaching={teachingEnabled}
           />
+
+          {/* Learn Director Operad Button */}
+          <button
+            onClick={() => setShowOperadExplorer(true)}
+            className="w-full py-2 text-sm bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center justify-center gap-2 transition-colors"
+          >
+            <Lightbulb className="w-4 h-4" />
+            Learn Director Operad
+          </button>
         </div>
 
         {/* Center Column - Phase & Actions */}
@@ -366,6 +378,17 @@ function RunningScenario({
           />
         </div>
       </div>
+
+      {/* Director Operad Explorer Modal */}
+      {showOperadExplorer && (
+        <DirectorOperadExplorer
+          variant="modal"
+          currentPhase={scenario.crisis_phase as any}
+          showTeaching={teachingEnabled}
+          onClose={() => setShowOperadExplorer(false)}
+        />
+      )}
+      </>
     );
   }
 
@@ -482,6 +505,16 @@ function RunningScenario({
           />
         </div>
       </BottomDrawer>
+
+      {/* Director Operad Explorer Modal - also available on mobile */}
+      {showOperadExplorer && (
+        <DirectorOperadExplorer
+          variant="modal"
+          currentPhase={scenario.crisis_phase as any}
+          showTeaching={teachingEnabled}
+          onClose={() => setShowOperadExplorer(false)}
+        />
+      )}
     </div>
   );
 }

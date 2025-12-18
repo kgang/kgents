@@ -20,7 +20,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronRight,
-  Menu,
   X,
   Globe,
   User,
@@ -119,12 +118,25 @@ const CROWN_JEWELS: Array<{
   path: string;
   route: string;
   icon: LucideIcon;
+  children?: Array<{ label: string; route: string; path: string }>;
 }> = [
   { name: 'brain', label: 'Brain', path: 'self.memory', route: '/brain', icon: Brain },
   { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', route: '/gestalt', icon: Network },
   { name: 'gardener', label: 'Gardener', path: 'concept.gardener', route: '/gardener', icon: Leaf },
   { name: 'atelier', label: 'Atelier', path: 'world.atelier', route: '/atelier', icon: Palette },
-  { name: 'coalition', label: 'Coalition', path: 'world.town', route: '/town', icon: Users },
+  {
+    name: 'coalition',
+    label: 'Coalition',
+    path: 'world.town',
+    route: '/town',
+    icon: Users,
+    children: [
+      { label: 'Overview', route: '/town', path: 'world.town.manifest' },
+      { label: 'Citizens', route: '/town/citizens', path: 'world.town.citizen' },
+      { label: 'Coalitions', route: '/town/coalitions', path: 'world.town.coalition' },
+      { label: 'Simulation', route: '/town/simulation', path: 'world.town.simulation' },
+    ],
+  },
   { name: 'park', label: 'Park', path: 'world.park', route: '/park', icon: Theater },
   { name: 'domain', label: 'Domain', path: 'world.domain', route: '/workshop', icon: Building },
 ];
@@ -430,6 +442,20 @@ function CrownJewelsSection({
   currentRoute: string;
   onNavigate: (route: string) => void;
 }) {
+  const [expandedJewels, setExpandedJewels] = useState<Set<string>>(new Set(['coalition']));
+
+  const toggleJewel = (name: string) => {
+    setExpandedJewels((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="border-t border-gray-700/50 pt-3">
       <h3 className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -439,30 +465,83 @@ function CrownJewelsSection({
         {CROWN_JEWELS.map((jewel) => {
           const isActive = currentRoute === jewel.route ||
             currentRoute.startsWith(`${jewel.route}/`);
+          const isExpanded = expandedJewels.has(jewel.name);
+          const hasChildren = jewel.children && jewel.children.length > 0;
           const color = JEWEL_COLORS[jewel.name];
           const Icon = jewel.icon;
 
           return (
-            <button
-              key={jewel.name}
-              onClick={() => onNavigate(jewel.route)}
-              className={`
-                w-full flex items-center gap-2 px-3 py-1.5 text-sm
-                hover:bg-gray-700/50 transition-colors rounded-md
-                ${isActive ? 'bg-gray-700/70' : ''}
-              `}
-            >
-              <Icon
-                className="w-4 h-4"
-                style={{ color: color.primary }}
-              />
-              <span className={isActive ? 'text-white' : 'text-gray-300'}>
-                {jewel.label}
-              </span>
-              <span className="ml-auto text-xs text-gray-500 font-mono">
-                {jewel.path}
-              </span>
-            </button>
+            <div key={jewel.name}>
+              <button
+                onClick={() => {
+                  if (hasChildren) {
+                    toggleJewel(jewel.name);
+                  } else {
+                    onNavigate(jewel.route);
+                  }
+                }}
+                className={`
+                  w-full flex items-center gap-2 px-3 py-1.5 text-sm
+                  hover:bg-gray-700/50 transition-colors rounded-md
+                  ${isActive ? 'bg-gray-700/70' : ''}
+                `}
+              >
+                {hasChildren && (
+                  <motion.span
+                    animate={{ rotate: isExpanded ? 90 : 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-shrink-0"
+                  >
+                    <ChevronRight className="w-3 h-3 text-gray-500" />
+                  </motion.span>
+                )}
+                <Icon
+                  className="w-4 h-4"
+                  style={{ color: color.primary }}
+                />
+                <span className={isActive ? 'text-white' : 'text-gray-300'}>
+                  {jewel.label}
+                </span>
+                <span className="ml-auto text-xs text-gray-500 font-mono">
+                  {jewel.path}
+                </span>
+              </button>
+
+              {/* Children */}
+              <AnimatePresence>
+                {hasChildren && isExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className="overflow-hidden"
+                  >
+                    {jewel.children!.map((child) => {
+                      const childActive = currentRoute === child.route ||
+                        (child.route !== '/town' && currentRoute.startsWith(child.route));
+
+                      return (
+                        <button
+                          key={child.route}
+                          onClick={() => onNavigate(child.route)}
+                          className={`
+                            w-full flex items-center gap-2 pl-10 pr-3 py-1 text-sm
+                            hover:bg-gray-700/30 transition-colors rounded-md
+                            ${childActive ? 'bg-gray-700/50 text-white' : 'text-gray-400'}
+                          `}
+                        >
+                          <span>{child.label}</span>
+                          <span className="ml-auto text-xs text-gray-600 font-mono">
+                            {child.path.split('.').pop()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           );
         })}
       </div>
@@ -575,11 +654,25 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
       '/gardener': 'concept.gardener',
       '/atelier': 'world.atelier',
       '/town': 'world.town',
+      '/town/overview': 'world.town.manifest',
+      '/town/citizens': 'world.town.citizen',
+      '/town/coalitions': 'world.town.coalition',
+      '/town/simulation': 'world.town.simulation',
       '/park': 'world.park',
       '/workshop': 'world.domain',
       '/emergence': 'world.emergence',
     };
-    return routeToPath[location.pathname] || '';
+    // Check for exact match first, then prefix match for dynamic routes
+    if (routeToPath[location.pathname]) {
+      return routeToPath[location.pathname];
+    }
+    // Handle dynamic routes like /town/citizens/:citizenId
+    for (const [route, path] of Object.entries(routeToPath)) {
+      if (location.pathname.startsWith(route + '/') || location.pathname === route) {
+        return path;
+      }
+    }
+    return '';
   }, [location.pathname]);
 
   // Toggle tree node expansion
@@ -605,6 +698,12 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
       'concept.gardener': '/gardener',
       'world.atelier': '/atelier',
       'world.town': '/town',
+      'world.town.manifest': '/town',
+      'world.town.citizen': '/town/citizens',
+      'world.town.citizen.list': '/town/citizens',
+      'world.town.coalition': '/town/coalitions',
+      'world.town.coalition.list': '/town/coalitions',
+      'world.town.simulation': '/town/simulation',
       'world.park': '/park',
       'world.domain': '/workshop',
       'world.emergence': '/emergence',
@@ -631,19 +730,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
   // Sidebar width
   const width = SIDEBAR_WIDTH[density];
 
-  // Compact: Hamburger button + bottom drawer
+  // Compact: Bottom drawer only (hamburger button is rendered in Shell header)
   if (density === 'compact') {
     return (
       <>
-        {/* Hamburger button - rendered in header */}
-        <button
-          onClick={() => setNavigationTreeExpanded(true)}
-          className="fixed top-0 left-0 z-50 p-3 bg-gray-800/80 backdrop-blur-sm"
-          aria-label="Open navigation"
-        >
-          <Menu className="w-5 h-5 text-gray-400" />
-        </button>
-
         {/* Bottom drawer */}
         <AnimatePresence>
           {navigationTreeExpanded && (

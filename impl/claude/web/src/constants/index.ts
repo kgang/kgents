@@ -77,7 +77,51 @@ export {
   EDGE_ANIMATION,
   // Tailwind extensions
   COLOR_TAILWIND_EXTENSIONS,
+  // Living Earth palette (Crown Jewels Genesis) - legacy exports from colors.ts
+  LIVING_EARTH,
+  getLivingEarthColor,
+  type LivingEarthColor,
+  JEWEL_IDENTITY_COLORS,
 } from './colors';
+
+// =============================================================================
+// Living Earth Palette (Crown Jewels Genesis) - Full Implementation
+// =============================================================================
+
+export {
+  // Earth tones
+  EARTH,
+  type EarthShade,
+  getEarthColor,
+  getEarthColorByMode,
+  // Living greens
+  GREEN,
+  type GreenShade,
+  getGreenColor,
+  getGreenColorByMode,
+  // Ghibli glow
+  GLOW,
+  type GlowShade,
+  getGlowColor,
+  // Dark mode variants
+  DARK_EARTH,
+  type DarkEarthShade,
+  getDarkEarthColor,
+  DARK_GREEN,
+  type DarkGreenShade,
+  getDarkGreenColor,
+  // Jewel identity colors
+  JEWEL_IDENTITY,
+  type JewelName as LivingEarthJewelName,
+  getJewelIdentityColor,
+  // Semantic mappings
+  SEMANTIC_MAPPINGS,
+  type SemanticMapping,
+  getSemanticMapping,
+  // Full palette exports
+  LIVING_EARTH_PALETTE,
+  LIVING_EARTH_FLAT,
+} from './livingEarth';
 
 // =============================================================================
 // Motion & Timing
@@ -235,3 +279,41 @@ export {
   // Full theme object
   FOREST_THEME,
 } from './forest';
+
+// =============================================================================
+// Town Theme (Agent Town Visualization)
+// =============================================================================
+
+export {
+  // Colors
+  TOWN_COLORS,
+  CITIZEN_PHASE_COLORS,
+  TOWN_PHASE_COLORS,
+  REGION_COLORS,
+  type CitizenPhaseName,
+  type TownPhaseName,
+  type RegionName,
+  // Animation
+  BREATHING_ANIMATION,
+  GROWING_ANIMATION,
+  FLOWING_ANIMATION,
+  UNFURLING_ANIMATION,
+  // Density-aware
+  NODE_RADIUS,
+  LABEL_SIZE,
+  MAX_CITIZENS_VISIBLE,
+  EDGE_THICKNESS,
+  // 3D theme
+  TOWN_THEME_3D,
+  // Archetype config
+  ARCHETYPE_CONFIG,
+  type ArchetypeKey,
+  // Full theme
+  TOWN_THEME,
+  // Helper functions
+  getCitizenPhaseColor,
+  getTownPhaseColor,
+  getRegionColor,
+  getArchetypeConfig,
+  getBreathingScale,
+} from './town';

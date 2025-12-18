@@ -22,7 +22,7 @@ import type { Density } from '../../shell/types';
 import { Mesa } from './Mesa';
 import { CitizenPanel } from './CitizenPanel';
 import { TownTracePanel } from './TownTracePanel';
-import { ObserverSelector, type ObserverUmwelt } from './ObserverSelector';
+import { ObserverSelector, type ObserverUmwelt, OBSERVERS } from './ObserverSelector';
 import { ColonyDashboard } from '../../widgets/dashboards';
 import { ElasticSplit } from '../elastic';
 import { BottomDrawer } from '../elastic/BottomDrawer';
@@ -433,6 +433,8 @@ export function TownVisualization({
                 if (id) setCitizenDrawerOpen(true);
               }}
               mobile // Enable mobile optimizations
+              overlay={OBSERVERS[observer].mesaOverlay} // Phase 3: Observer-dependent overlay
+              observer={observer}
             />
 
             <div className="absolute top-2 left-2 bg-violet-950/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[10px] text-gray-300">
@@ -608,6 +610,8 @@ export function TownVisualization({
                   events={events}
                   selectedCitizenId={selectedCitizenId}
                   onSelectCitizen={setSelectedCitizenId}
+                  overlay={OBSERVERS[observer].mesaOverlay} // Phase 3: Observer-dependent overlay
+                  observer={observer}
                 />
               </div>
             }

@@ -21,19 +21,18 @@
  * @see docs/skills/crown-jewel-patterns.md
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { Palette } from 'lucide-react';
-import { atelierApi } from '@/api/atelier';
-import type { Artisan, PieceSummary, Piece, LineageResponse } from '@/api/atelier';
-import { useAtelierStream } from '@/hooks/useAtelierStream';
+import { useState, useCallback } from 'react';
+import { Palette, Users, Brush, Image } from 'lucide-react';
 import {
-  ArtisanGrid,
-  CommissionForm,
-  StreamingProgress,
-  GalleryGrid,
-  PieceDetail,
-  LineageTree,
-  CollaborationBuilder,
+  useAtelierManifest,
+  useWorkshops,
+  useArtisans,
+  useContributions,
+  type WorldAtelierWorkshopListResponse,
+  type WorldAtelierArtisanListResponse,
+  type WorldAtelierContributionListResponse,
+} from '@/hooks/useAtelierQuery';
+import {
   ErrorPanel,
   LoadingPanel,
 } from '@/components/atelier';
@@ -67,7 +66,7 @@ export interface AtelierStatusData {
   status?: string;
 }
 
-type View = 'commission' | 'collaborate' | 'gallery' | 'piece' | 'lineage';
+type View = 'overview' | 'workshops' | 'artisans' | 'contributions';
 
 // =============================================================================
 // Component
@@ -82,135 +81,41 @@ export function AtelierVisualization({
   refetch: _refetch, // Available for manual refresh
 }: AtelierVisualizationProps) {
   // Navigation state
-  const [view, setView] = useState<View>('gallery');
-  const [selectedArtisan, setSelectedArtisan] = useState<string | null>(null);
-  const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
+  const [view, setView] = useState<View>('overview');
+  const [selectedWorkshopId, setSelectedWorkshopId] = useState<string | null>(null);
 
-  // Data state
-  const [artisans, setArtisans] = useState<Artisan[]>([]);
-  const [pieces, setPieces] = useState<PieceSummary[]>([]);
-  const [currentPiece, setCurrentPiece] = useState<Piece | null>(null);
-  const [lineage, setLineage] = useState<LineageResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // AGENTESE hooks - contract-driven data fetching
+  const manifest = useAtelierManifest();
+  const workshops = useWorkshops();
+  const artisans = useArtisans(selectedWorkshopId || '', { enabled: !!selectedWorkshopId });
+  const contributions = useContributions({ workshopId: selectedWorkshopId ?? undefined });
 
-  // Streaming hook
-  const stream = useAtelierStream();
-
-  // Load initial data
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const [artisansRes, galleryRes] = await Promise.all([
-          atelierApi.getArtisans(),
-          atelierApi.getGallery({ limit: 50 }),
-        ]);
-        setArtisans(artisansRes.data.artisans);
-        setPieces(galleryRes.data.pieces);
-      } catch (err) {
-        setError('Failed to load atelier data');
-        console.error('[AtelierVisualization] Load error:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  // Load piece detail
-  const loadPiece = useCallback(async (pieceId: string) => {
-    setSelectedPieceId(pieceId);
-    setView('piece');
-    try {
-      const res = await atelierApi.getPiece(pieceId);
-      setCurrentPiece(res.data);
-    } catch (err) {
-      console.error('[AtelierVisualization] Failed to load piece:', err);
-    }
-  }, []);
-
-  // Load lineage
-  const loadLineage = useCallback(async (pieceId: string) => {
-    setSelectedPieceId(pieceId);
-    setView('lineage');
-    try {
-      const res = await atelierApi.getLineage(pieceId);
-      setLineage(res.data);
-    } catch (err) {
-      console.error('[AtelierVisualization] Failed to load lineage:', err);
-    }
-  }, []);
-
-  // Delete piece
-  const deletePiece = useCallback(async () => {
-    if (!selectedPieceId) return;
-    try {
-      await atelierApi.deletePiece(selectedPieceId);
-      setPieces((prev) => prev.filter((p) => p.id !== selectedPieceId));
-      setCurrentPiece(null);
-      setSelectedPieceId(null);
-      setView('gallery');
-    } catch (err) {
-      console.error('[AtelierVisualization] Failed to delete piece:', err);
-    }
-  }, [selectedPieceId]);
-
-  // Commission handler
-  const handleCommission = async (request: string) => {
-    if (!selectedArtisan) return;
-    const piece = await stream.commission(selectedArtisan, request);
-    if (piece) {
-      // Refresh gallery
-      const galleryRes = await atelierApi.getGallery({ limit: 50 });
-      setPieces(galleryRes.data.pieces);
-    }
-  };
-
-  // Collaboration handler
-  const handleCollaborate = async (artisanNames: string[], request: string, mode: string) => {
-    const piece = await stream.collaborate(artisanNames, request, mode);
-    if (piece) {
-      const galleryRes = await atelierApi.getGallery({ limit: 50 });
-      setPieces(galleryRes.data.pieces);
-    }
-    return piece;
-  };
-
-  // Select artisan for commission
-  const selectArtisan = (names: string[]) => {
-    if (names.length > 0) {
-      setSelectedArtisan(names[0]);
-      setView('commission');
-      stream.reset();
-    }
-  };
+  // Combined loading/error state
+  const isLoading = manifest.isLoading || workshops.isLoading;
+  const error = manifest.error?.message || workshops.error?.message || null;
 
   // Retry handler for error state
-  const handleRetry = useCallback(async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const [artisansRes, galleryRes] = await Promise.all([
-        atelierApi.getArtisans(),
-        atelierApi.getGallery({ limit: 50 }),
-      ]);
-      setArtisans(artisansRes.data.artisans);
-      setPieces(galleryRes.data.pieces);
-    } catch (err) {
-      setError('Failed to load atelier data');
-      console.error('[AtelierVisualization] Retry error:', err);
-    } finally {
-      setIsLoading(false);
+  const handleRetry = useCallback(() => {
+    manifest.refetch();
+    workshops.refetch();
+    if (selectedWorkshopId) {
+      artisans.refetch();
+      contributions.refetch();
     }
+  }, [manifest, workshops, artisans, contributions, selectedWorkshopId]);
+
+  // Select a workshop to view its artisans
+  const selectWorkshop = useCallback((workshopId: string) => {
+    setSelectedWorkshopId(workshopId);
+    setView('artisans');
   }, []);
 
   // Navigation tabs
-  const tabs: Array<{ key: View; label: string }> = [
-    { key: 'gallery', label: 'Gallery' },
-    { key: 'commission', label: 'Commission' },
-    { key: 'collaborate', label: 'Collaborate' },
+  const tabs: Array<{ key: View; label: string; icon: typeof Palette }> = [
+    { key: 'overview', label: 'Overview', icon: Palette },
+    { key: 'workshops', label: 'Workshops', icon: Users },
+    { key: 'artisans', label: 'Artisans', icon: Brush },
+    { key: 'contributions', label: 'Works', icon: Image },
   ];
 
   // Density-adaptive styles
@@ -236,30 +141,27 @@ export function AtelierVisualization({
       <nav className="bg-white border-b border-stone-100 sticky top-0 z-10">
         <div className={`${maxWidth} mx-auto ${isMobile ? 'px-4' : 'px-6'}`}>
           <div className="flex items-center gap-1 overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => {
-                  setView(tab.key);
-                  if (tab.key !== 'commission') {
-                    setSelectedArtisan(null);
-                  }
-                }}
-                className={`
-                  px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap
-                  border-b-2 -mb-px
-                  ${
-                    view === tab.key ||
-                    (view === 'piece' && tab.key === 'gallery') ||
-                    (view === 'lineage' && tab.key === 'gallery')
-                      ? 'border-amber-400 text-amber-700'
-                      : 'border-transparent text-stone-500 hover:text-stone-700'
-                  }
-                `}
-              >
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setView(tab.key)}
+                  className={`
+                    px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap
+                    border-b-2 -mb-px flex items-center gap-2
+                    ${
+                      view === tab.key
+                        ? 'border-amber-400 text-amber-700'
+                        : 'border-transparent text-stone-500 hover:text-stone-700'
+                    }
+                  `}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       </nav>
@@ -278,192 +180,117 @@ export function AtelierVisualization({
         {/* Global Loading State */}
         {isLoading && !error && <LoadingPanel message="Preparing the workshop..." />}
 
-        {/* Gallery View */}
-        {!isLoading && !error && view === 'gallery' && (
+        {/* Overview View - Manifest Stats */}
+        {!isLoading && !error && view === 'overview' && manifest.data && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-medium text-stone-700">Workshop Overview</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <StatCard
+                label="Workshops"
+                value={manifest.data.total_workshops}
+                subValue={`${manifest.data.active_workshops} active`}
+              />
+              <StatCard
+                label="Artisans"
+                value={manifest.data.total_artisans}
+              />
+              <StatCard
+                label="Contributions"
+                value={manifest.data.total_contributions}
+              />
+              <StatCard
+                label="Exhibitions"
+                value={manifest.data.total_exhibitions}
+                subValue={`${manifest.data.open_exhibitions} open`}
+              />
+              <StatCard
+                label="Storage"
+                value={manifest.data.storage_backend}
+                isText
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Workshops View */}
+        {!isLoading && !error && view === 'workshops' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-stone-700">Gallery</h2>
+              <h2 className="text-lg font-medium text-stone-700">Workshops</h2>
               <span className="text-sm text-stone-400">
-                {pieces.length} {pieces.length === 1 ? 'piece' : 'pieces'}
+                {workshops.data?.count ?? 0} total
               </span>
             </div>
-            <GalleryGrid pieces={pieces} isLoading={isLoading} onPieceClick={loadPiece} />
-          </div>
-        )}
-
-        {/* Commission View */}
-        {!isLoading && !error && view === 'commission' && (
-          <div className="space-y-8">
-            {/* Artisan Selection */}
-            {!selectedArtisan && (
-              <div className="space-y-4">
-                <h2 className="text-lg font-medium text-stone-700">Choose an Artisan</h2>
-                <ArtisanGrid onSelect={selectArtisan} />
-              </div>
+            {workshops.data?.workshops.length === 0 && (
+              <EmptyState message="No workshops yet. Create one to get started." />
             )}
-
-            {/* Commission Form */}
-            {selectedArtisan && (
-              <div className={`${formMaxWidth} mx-auto space-y-6`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-medium text-stone-700">
-                      Commission {selectedArtisan}
-                    </h2>
-                    <p className="text-sm text-stone-400">
-                      {artisans.find((a) => a.name === selectedArtisan)?.specialty}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedArtisan(null)}
-                    className="text-sm text-stone-400 hover:text-stone-600"
-                  >
-                    Choose another
-                  </button>
-                </div>
-
-                {/* Form or Progress */}
-                {!stream.isStreaming && stream.status === 'idle' && (
-                  <CommissionForm onSubmit={(data) => handleCommission(data.request)} />
-                )}
-
-                {/* Streaming Progress */}
-                {(stream.isStreaming || stream.status !== 'idle') && (
-                  <div className="space-y-6">
-                    <StreamingProgress
-                      status={stream.status}
-                      progress={stream.progress}
-                      currentFragment={stream.currentFragment}
-                      error={stream.error}
-                      events={stream.events}
-                      showEvents={true}
-                    />
-
-                    {/* Completed Piece Preview */}
-                    {stream.piece && (
-                      <div className="p-6 rounded-lg bg-white border border-stone-200 shadow-sm">
-                        <p className="text-stone-700 whitespace-pre-wrap">
-                          {typeof stream.piece.content === 'string'
-                            ? stream.piece.content
-                            : JSON.stringify(stream.piece.content, null, 2)}
-                        </p>
-                        <div className="mt-4 flex items-center justify-between">
-                          <button
-                            onClick={() => loadPiece(stream.piece!.id)}
-                            className="text-sm text-amber-600 hover:text-amber-700"
-                          >
-                            View in gallery
-                          </button>
-                          <button
-                            onClick={() => stream.reset()}
-                            className="text-sm text-stone-400 hover:text-stone-600"
-                          >
-                            Commission another
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Collaborate View */}
-        {!isLoading && !error && view === 'collaborate' && (
-          <div className={`${formMaxWidth} mx-auto space-y-6`}>
-            <h2 className="text-lg font-medium text-stone-700">Collaboration</h2>
-
-            {!stream.isStreaming && stream.status === 'idle' && (
-              <CollaborationBuilder
-                artisans={artisans}
-                onCollaborate={handleCollaborate}
-                isLoading={stream.isStreaming}
-              />
-            )}
-
-            {/* Streaming Progress */}
-            {(stream.isStreaming || stream.status !== 'idle') && (
-              <div className="space-y-6">
-                <StreamingProgress
-                  status={stream.status}
-                  progress={stream.progress}
-                  currentFragment={stream.currentFragment}
-                  error={stream.error}
-                  events={stream.events}
-                  showEvents={true}
+            <div className="grid gap-4 md:grid-cols-2">
+              {workshops.data?.workshops.map((workshop) => (
+                <WorkshopCard
+                  key={workshop.id}
+                  workshop={workshop}
+                  onClick={() => selectWorkshop(workshop.id)}
                 />
-
-                {stream.piece && (
-                  <div className="p-6 rounded-lg bg-white border border-stone-200 shadow-sm">
-                    <p className="text-stone-700 whitespace-pre-wrap">
-                      {typeof stream.piece.content === 'string'
-                        ? stream.piece.content
-                        : JSON.stringify(stream.piece.content, null, 2)}
-                    </p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <button
-                        onClick={() => loadPiece(stream.piece!.id)}
-                        className="text-sm text-amber-600 hover:text-amber-700"
-                      >
-                        View in gallery
-                      </button>
-                      <button
-                        onClick={() => stream.reset()}
-                        className="text-sm text-stone-400 hover:text-stone-600"
-                      >
-                        Start new collaboration
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Piece Detail View */}
-        {!isLoading && !error && view === 'piece' && currentPiece && (
-          <div className={`${isMobile ? 'max-w-full' : 'max-w-2xl'} mx-auto`}>
-            <button
-              onClick={() => setView('gallery')}
-              className="mb-6 text-sm text-stone-400 hover:text-stone-600 flex items-center gap-1"
-            >
-              <span>&larr;</span> Back to gallery
-            </button>
-            <div className="bg-white rounded-lg border border-stone-200 p-6">
-              <PieceDetail piece={currentPiece} onDelete={deletePiece} onInspiration={loadPiece} />
-              <div className="mt-4 pt-4 border-t border-stone-100">
-                <button
-                  onClick={() => loadLineage(currentPiece.id)}
-                  className="text-sm text-amber-600 hover:text-amber-700"
-                >
-                  View lineage
-                </button>
-              </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Lineage View */}
-        {!isLoading && !error && view === 'lineage' && lineage && (
-          <div className={`${isMobile ? 'max-w-full' : 'max-w-2xl'} mx-auto`}>
-            <button
-              onClick={() => {
-                if (selectedPieceId && currentPiece?.id === selectedPieceId) {
-                  setView('piece');
-                } else {
-                  setView('gallery');
-                }
-              }}
-              className="mb-6 text-sm text-stone-400 hover:text-stone-600 flex items-center gap-1"
-            >
-              <span>&larr;</span> Back
-            </button>
-            <div className="bg-white rounded-lg border border-stone-200 p-6">
-              <h2 className="text-lg font-medium text-stone-700 mb-4">Inspiration Lineage</h2>
-              <LineageTree lineage={lineage} onNodeClick={loadPiece} />
+        {/* Artisans View */}
+        {!isLoading && !error && view === 'artisans' && (
+          <div className="space-y-6">
+            {selectedWorkshopId ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <button
+                      onClick={() => {
+                        setSelectedWorkshopId(null);
+                        setView('workshops');
+                      }}
+                      className="text-sm text-stone-400 hover:text-stone-600 flex items-center gap-1 mb-2"
+                    >
+                      <span>&larr;</span> Back to workshops
+                    </button>
+                    <h2 className="text-lg font-medium text-stone-700">Artisans</h2>
+                  </div>
+                  <span className="text-sm text-stone-400">
+                    {artisans.data?.count ?? 0} in workshop
+                  </span>
+                </div>
+                {artisans.isLoading && <LoadingPanel message="Loading artisans..." />}
+                {!artisans.isLoading && artisans.data?.artisans.length === 0 && (
+                  <EmptyState message="No artisans in this workshop yet." />
+                )}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {artisans.data?.artisans.map((artisan) => (
+                    <ArtisanCard key={artisan.id} artisan={artisan} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <EmptyState message="Select a workshop first to view its artisans." />
+            )}
+          </div>
+        )}
+
+        {/* Contributions View */}
+        {!isLoading && !error && view === 'contributions' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium text-stone-700">Recent Works</h2>
+              <span className="text-sm text-stone-400">
+                {contributions.data?.count ?? 0} contributions
+              </span>
+            </div>
+            {contributions.isLoading && <LoadingPanel message="Loading works..." />}
+            {!contributions.isLoading && contributions.data?.contributions.length === 0 && (
+              <EmptyState message="No contributions yet. Artisans are waiting for inspiration." />
+            )}
+            <div className="grid gap-4">
+              {contributions.data?.contributions.map((contribution) => (
+                <ContributionCard key={contribution.id} contribution={contribution} />
+              ))}
             </div>
           </div>
         )}
@@ -475,6 +302,116 @@ export function AtelierVisualization({
           <p className="text-xs text-stone-300">Tiny Atelier - A kgents demo</p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// =============================================================================
+// Helper Components
+// =============================================================================
+
+interface StatCardProps {
+  label: string;
+  value: number | string;
+  subValue?: string;
+  isText?: boolean;
+}
+
+function StatCard({ label, value, subValue, isText }: StatCardProps) {
+  return (
+    <div className="bg-white rounded-lg border border-stone-200 p-4">
+      <div className="text-sm text-stone-500">{label}</div>
+      <div className={`mt-1 ${isText ? 'text-lg' : 'text-2xl'} font-medium text-stone-800`}>
+        {value}
+      </div>
+      {subValue && <div className="text-xs text-stone-400 mt-1">{subValue}</div>}
+    </div>
+  );
+}
+
+interface EmptyStateProps {
+  message: string;
+}
+
+function EmptyState({ message }: EmptyStateProps) {
+  return (
+    <div className="text-center py-12">
+      <p className="text-stone-400">{message}</p>
+    </div>
+  );
+}
+
+interface WorkshopCardProps {
+  workshop: WorldAtelierWorkshopListResponse['workshops'][0];
+  onClick: () => void;
+}
+
+function WorkshopCard({ workshop, onClick }: WorkshopCardProps) {
+  return (
+    <button
+      onClick={onClick}
+      className="text-left bg-white rounded-lg border border-stone-200 p-4 hover:border-amber-300 transition-colors"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-stone-800">{workshop.name}</h3>
+        {workshop.is_active && (
+          <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full">
+            Active
+          </span>
+        )}
+      </div>
+      {workshop.description && (
+        <p className="mt-1 text-sm text-stone-500 line-clamp-2">{workshop.description}</p>
+      )}
+      <div className="mt-3 flex items-center gap-4 text-xs text-stone-400">
+        <span>{workshop.artisan_count} artisans</span>
+        <span>{workshop.contribution_count} works</span>
+      </div>
+    </button>
+  );
+}
+
+interface ArtisanCardProps {
+  artisan: WorldAtelierArtisanListResponse['artisans'][0];
+}
+
+function ArtisanCard({ artisan }: ArtisanCardProps) {
+  return (
+    <div className="bg-white rounded-lg border border-stone-200 p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-stone-800">{artisan.name}</h3>
+        {artisan.is_active && (
+          <span className="w-2 h-2 bg-green-400 rounded-full" title="Active" />
+        )}
+      </div>
+      <p className="mt-1 text-sm text-amber-600">{artisan.specialty}</p>
+      {artisan.style && (
+        <p className="mt-1 text-xs text-stone-400">{artisan.style}</p>
+      )}
+      <div className="mt-3 text-xs text-stone-400">
+        {artisan.contribution_count} contributions
+      </div>
+    </div>
+  );
+}
+
+interface ContributionCardProps {
+  contribution: WorldAtelierContributionListResponse['contributions'][0];
+}
+
+function ContributionCard({ contribution }: ContributionCardProps) {
+  return (
+    <div className="bg-white rounded-lg border border-stone-200 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm font-medium text-stone-700">{contribution.artisan_name}</span>
+        <span className="text-xs text-stone-400">{contribution.contribution_type}</span>
+      </div>
+      <p className="text-stone-600 text-sm line-clamp-3">{contribution.content}</p>
+      {contribution.prompt && (
+        <p className="mt-2 text-xs text-stone-400 italic">
+          Prompt: {contribution.prompt}
+        </p>
+      )}
     </div>
   );
 }

@@ -326,11 +326,14 @@ export function ShellProvider({
     }
   }, [terminalExpanded]);
 
-  // Auto-collapse navigation on mobile
+  // Auto-collapse navigation when TRANSITIONING to mobile (not when already on mobile)
+  const wasMobileRef = useRef(isMobile);
   useEffect(() => {
-    if (isMobile && navigationTreeExpanded) {
+    // Only collapse if we just transitioned FROM desktop TO mobile
+    if (isMobile && !wasMobileRef.current && navigationTreeExpanded) {
       setNavigationTreeExpanded(false);
     }
+    wasMobileRef.current = isMobile;
   }, [isMobile, navigationTreeExpanded]);
 
   // ---------------------------------------------------------------------------

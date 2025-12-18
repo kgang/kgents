@@ -3,6 +3,7 @@
  *
  * Wave 3: Web UI for crisis scenarios.
  * Phase 3: Enhanced with categorical polynomial visualizations.
+ * Phase 5: DirectorOperadExplorer for teaching DIRECTOR_OPERAD composition laws.
  *
  * Architecture:
  * - ParkVisualization: Main visualization (projection-first target)
@@ -15,8 +16,10 @@
  * - ConsentMeter: Consent debt and force mechanics (legacy)
  * - ConsentDebtMachine: Debt as polynomial phases (Phase 3)
  * - ParkTracePanel: N-gent witness for park events (Phase 3)
+ * - DirectorOperadExplorer: Interactive operad explorer (Phase 5)
  *
  * @see plans/park-town-design-overhaul.md (Phase 3: Park Enhancement)
+ * @see plans/phase3-5-parallel-execution.md (Phase 5: Director Operad Explorer)
  */
 
 // Main visualization (for projection-first pages)
@@ -48,3 +51,7 @@ export { ConsentDebtMachine } from './ConsentDebtMachine';
 
 // Trace panel (Phase 3 - N-gent witness)
 export { ParkTracePanel } from './ParkTracePanel';
+
+// Categorical teaching (Phase 5)
+export { DirectorOperadExplorer } from './DirectorOperadExplorer';
+export type { DirectorOperadExplorerProps } from './DirectorOperadExplorer';
