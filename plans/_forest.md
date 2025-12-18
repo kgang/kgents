@@ -24,6 +24,7 @@
 | plans/cli-isomorphic-migration | 85% | **active** | Waves 0-3 + Chat COMPLETE. 581 CLI tests. Wave 4-5 pending. |
 | plans/cli/wave4-observability | 0% | **pending** | OTEL spans for handlers |
 | plans/crown-jewels-metaphysical-upgrade | 0% | **active** | Architecture upgrade strategy |
+| plans/os-shell-implementation | **100%** | **complete** | ARCHIVED. All Track A complete. |
 
 ### Core Apps
 
