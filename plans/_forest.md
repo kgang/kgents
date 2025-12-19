@@ -6,14 +6,14 @@
 
 ## Summary
 
-- **Total Active Plans**: 14 (+1 AGENTESE Node Overhaul)
+- **Total Active Plans**: 10 (down from 14—many completed!)
 - **Test Count**: 20,213+ (20,122 + 91 from 2D Renaissance)
 - **AGENTESE Paths**: 58+ (Crown Jewels registered)
 - **Hero Path**: 100% (Brain 100% + Gardener 100% + Gestalt 100%)
 
-### 🔧 AGENTESE Node Overhaul Started (2025-12-19)
-**Session 1 Complete**: 4 new projections, Morpheus contracts, gallery path documentation
-**Coverage**: 13/24 paths (54%) now have dedicated projections
+### 🔧 AGENTESE Node Overhaul (80% Complete)
+**Sessions 1-8 Complete**: SSE streaming, neutral errors, observer audit, contracts
+**Remaining**: Session 9 (CI Contract Gates) + Session 10 (E2E + Performance)
 
 ### 🎉 2D Renaissance Complete (2025-12-18)
 **Spec closed**: `spec/protocols/2d-renaissance.md` — 24 components, ~4,300 lines, 91 tests
@@ -37,7 +37,11 @@
 
 | Plan | Progress | Status | Notes |
 |------|----------|--------|-------|
-| **plans/agentese-node-overhaul-strategy** | 10% | **active** | NEW. Session 1/10 complete. 4 projections + Morpheus contracts. |
+| **plans/kgentsd-crown-jewel** | 0% | **PRIORITY** | NEW. Ghost→8th Crown Jewel. Event-driven, Trust L0-L3, cross-jewel. |
+| **plans/kgentsd-event-architecture** | 0% | **planning** | Sub-plan: Flux, watchers (FS/Git/Test/AGENTESE/CI), no timers. |
+| **plans/kgentsd-trust-system** | 0% | **planning** | Sub-plan: Trust escalation L0→L3, action gating, confirmations. |
+| **plans/kgentsd-cross-jewel** | 0% | **planning** | Sub-plan: Invoke any jewel, pipelines, scheduling. |
+| **plans/agentese-node-overhaul-strategy** | 80% | **active** | Sessions 1-8 complete. Remaining: CI gates + E2E. |
 | **plans/crown-jewels-genesis-phase2** | 0% | **active** | NEW. Atelier rebuild (Weeks 3-5). Phase 1 foundation complete. |
 | **plans/crown-jewels-enlightened** | 88% | **active** | Master plan. Phase 1-4 complete. |
 | **plans/differance-cultivation** | 100% | **complete** | Phase 5 FRUITING complete. 192 tests. Contracts + hooks + component ready. |
@@ -49,7 +53,11 @@
 | plans/town-frontend-implementation | 45% | superseded | Superseded by town-visualizer-renaissance. Core components done. |
 | plans/agentese-v3-crown-synergy-audit | 10% | **active** | v3 synergies audit |
 | **plans/agentese-router-consolidation** | 5% | **active** | NEW. 87 routes → @node. Phase 0 done (legacy /v1/agentese removed). |
-| **plans/openapi-projection-surface** | 80% | **blooming** | NEW. OpenAPI 3.1 from registry. 181 paths, 19 tests. Phase 1+2 complete. |
+| plans/openapi-projection-surface | 100% | **complete** | OpenAPI 3.1 from registry. 183 paths, 42 tests. All criteria met ✅ |
+| plans/fail-fast-crown-jewel-audit | 100% | **complete** | DI→WARNING, silent catch fixes, CI tests. Phase 1 shipped. |
+| plans/umwelt-visualization | 100% | **complete** | All 5 phases done. Observer reality shift animations. |
+| plans/aspect-projection-protocol | 100% | **complete** | AD-012 codified. Aspects are ACTIONS, not LOCATIONS. |
+| plans/agentese-repl-renaissance | 100% | **complete** | All 5 phases done. 39/39 paths pass audit. |
 | **plans/umwelt-v2-expansion** | 0% | **planning** | NEW. Observer reality expansion: registry-backed caps, ghost interaction, history. |
 | plans/3d-projection-consolidation | — | **active** | NEW. 3D substrate work. |
 | plans/gallery-pilots-top3 | — | **active** | Gallery pilots. |
@@ -127,10 +135,11 @@
 | **Brain** | 100% | 100% | 80% | 212+ | **100%** |
 | **Gardener** | 100% | 100% | 90% | 789 | **100%** |
 | **Gestalt** | 100% | 100% | 100% | 174 | **100%** | ← Gestalt2D complete
-| **Atelier** | 90% | 80% | 75% | 316+ | **90%** | ← BidQueue + Fishbowl complete |
+| **Atelier/Forge** | 90% | 80% | 75% | 316+ | **85%** | ← Phase 4 complete |
 | **Town/Coalition** | 85% | 90% | 55% | 451+ | 55% |
-| **Park** | 60% | 40% | 30% | 64 | 40% |
+| **Park** | 60% | 60% | 30% | 165 | **60%** | ← Consent Debt complete |
 | **Domain** | 0% | 0% | 0% | — | 0% |
+| **kgentsd** | 0% | 0% | 0% | — | **0%** | ← NEW. 8th Crown Jewel |
 
 ---
 

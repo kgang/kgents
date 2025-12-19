@@ -7,6 +7,25 @@
 
 ## Current Work
 
+**🔮 KGENTSD: THE 8TH CROWN JEWEL** — Ghost→kgentsd transformation. Event-driven daemon with Trust Level 3 (full Kent autonomy). See `plans/kgentsd-crown-jewel.md`.
+
+| Plan | Status | Key Focus |
+|------|--------|-----------|
+| `plans/kgentsd-crown-jewel.md` | **PLANNING** | Master vision: Ghost → Crown Jewel |
+| `plans/kgentsd-event-architecture.md` | planning | Event sources, Flux, no timers |
+| `plans/kgentsd-trust-system.md` | planning | L0→L3 escalation, action gating |
+| `plans/kgentsd-cross-jewel.md` | planning | Invoke any jewel, pipelines |
+
+**Vision**: kgentsd is Kent's developer agency, crystallized into code. At Trust Level 3, it can do everything Kent does—run tests, fix code, commit, create PRs, invoke any Crown Jewel.
+
+**Key Transformations**:
+- Timer-driven (3 min) → **Event-driven** (Flux lifting)
+- Separate from AGENTESE → **Native AGENTESE citizen**
+- Read-only observation → **Full autonomous capability**
+- Infrastructure utility → **8th Crown Jewel**
+
+---
+
 **🔍 AGENTESE NODE OVERHAUL** — Sessions 1-6 + Phases 4-5 COMPLETE. See `plans/agentese-node-overhaul-strategy.md`.
 
 | Session | Status | Key Deliverables |
@@ -109,12 +128,52 @@
 | Town/Coalition | 70 | Workshop where agents collaborate visibly. Dialogue COMPLETE. |
 | **Park** | 60 | Westworld where hosts can say no. **Scenarios + Consent Debt COMPLETE.** |
 | Domain | 0 | Enterprise. Dormant. |
+| **kgentsd** | 0 | **NEW 8TH JEWEL**. Kent's developer agency crystallized. |
 
 **Forge Assessment (2025-12-18)**: Phase 4 COMPLETE. All four creative artisans (Architect, Smith, Herald, Projector) now do real work. **165 backend tests**. Next: Phase 5 (Sentinel, Witness) + SSE streaming + cross-jewel wiring.
 
 ---
 
 ## Session Notes
+
+### 2025-12-19 — kgentsd: The 8th Crown Jewel (Deep Audit + Planning)
+
+Conducted **deep architectural audit** of Ghost infrastructure and planned the transformation to **kgentsd**—the 8th Crown Jewel.
+
+**Research Conducted**:
+- Daemon patterns (Erlang supervision, Apple launchd, observer pattern)
+- Living filesystem / ambient awareness (inotify, Watchman, FSEvents)
+- Categorical infrastructure (Sheaf theory for data coherence)
+- Spectral computing aesthetics (Ghostscript, PhantomJS metaphors)
+- Trust loop design (HITL patterns, progressive automation)
+- Joy-inducing infrastructure (personality in monitoring)
+
+**Plans Created** (4 documents, ~3,500 lines):
+
+| Plan | Purpose | Key Contents |
+|------|---------|--------------|
+| `kgentsd-crown-jewel.md` | Master vision | 8th jewel, 6 phases, success criteria |
+| `kgentsd-event-architecture.md` | No more timers | Flux lifting, 5 watchers, debouncing |
+| `kgentsd-trust-system.md` | Trust L0-L3 | Escalation triggers, action gating, boundaries |
+| `kgentsd-cross-jewel.md` | Invoke all jewels | Pipelines, scheduling, workflows |
+
+**Kent's Key Decisions**:
+1. **Trust Level 3 = Kent's full capability** — Tests, commits, PRs, any jewel invocation
+2. **Event-driven, not timer-driven** — Total reinvention, Flux lifting
+3. **Progressive disclosure of daemon** — Intermediate users learn; beginners don't need to
+4. **Crown Jewel status** — Not just infrastructure; transformative service
+5. **Naming: `kgentsd`** — Standard daemon convention (like systemd, dockerd)
+
+**Categorical Insights**:
+- `GhostSheaf`: Local collector observations glue into global coherent state
+- `DAEMON_POLYNOMIAL`: Trust levels as modes with different input/output sets
+- `DAEMON_OPERAD`: sense → aggregate → analyze → suggest → act composition
+
+**Next**: Implementation Phase 1 (Foundation Refactor) — see `kgentsd-crown-jewel.md`
+
+*"The daemon is Kent's will, made manifest in the machine."*
+
+---
 
 ### 2025-12-19 — AGENTESE Node Overhaul Phase 5 (Park Scenarios)
 
