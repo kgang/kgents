@@ -38,7 +38,7 @@ class TimelineWidget(KgentsWidget):
     _esm = _JS_DIR / "timeline.js"
 
     # Events: list of dicts with {tick, type, source, message, level}
-    events: list[dict[str, Any]] = traitlets.List([]).tag(sync=True)  # type: ignore[assignment]
+    events: Any = traitlets.List([]).tag(sync=True)
 
     # Playback state
     current_tick = traitlets.Int(0).tag(sync=True)
