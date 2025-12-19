@@ -74,7 +74,7 @@ try:
     import anywidget
     import traitlets
 
-    class MarimoAdapter(anywidget.AnyWidget, Generic[S]):
+    class MarimoAdapter(anywidget.AnyWidget, Generic[S]):  # type: ignore[misc]
         """
         Wraps any KgentsWidget for marimo/Jupyter rendering via anywidget.
 

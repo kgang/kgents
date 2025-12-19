@@ -179,7 +179,7 @@ class TelegramNotifier:
         try:
             # Use aiohttp if available, fall back to httpx
             try:
-                import aiohttp
+                import aiohttp  # type: ignore[import-not-found]
 
                 timeout = aiohttp.ClientTimeout(total=10)
                 async with aiohttp.ClientSession(timeout=timeout) as session:

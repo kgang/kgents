@@ -50,7 +50,7 @@ class DialecticWidget(KgentsWidget):
     phase = traitlets.Unicode("dormant").tag(sync=True)  # dormant, thesis, antithesis, synthesis
 
     # History (compost heap)
-    history: list[dict[str, Any]] = traitlets.List([]).tag(sync=True)  # type: ignore[assignment]
+    history: Any = traitlets.List([]).tag(sync=True)
 
     def set_thesis(self, content: str, source: str = "") -> None:
         """Set the thesis proposition."""
