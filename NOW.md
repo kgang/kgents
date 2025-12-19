@@ -73,6 +73,26 @@
 
 ---
 
+**MULTI-AGENT CI SAFETY** — Sentinel patterns for safe multi-agent development.
+
+| Phase | Status | Key Focus |
+|-------|--------|-----------|
+| Phase 2 | ✅ **COMPLETE** | Blocking hooks, validation scripts, ci-parity-check |
+| Phase 3 | ✅ **COMPLETE** | Sentinel testing infrastructure (76 tests) |
+
+**Phase 2 Deliverables** (commit `d86b5b08`):
+- ✅ Make lint/mypy BLOCKING in pre-push hook
+- ✅ `scripts/validate.sh` — unified developer validation (Tier 2)
+- ✅ `scripts/ci-parity-check.sh` — environment functor checking
+- ✅ Gated contract sync (only when API files change)
+
+**Phase 3 Deliverables** (commit `42f97f40`):
+- ✅ `testing/sentinel/` module with signal aggregation, degradation tiers, isolation morphism
+- ✅ 76 tests: `evaluate_push_readiness()`, tier fallback, registry isolation
+- ✅ `@pytest.mark.sentinel` marker registered
+
+---
+
 ## What I'm Stuck On
 
 **Voice dilution** — The project is losing its edge through LLM processing. Each Claude session smooths a little. Added Anti-Sausage Protocol to CLAUDE.md to address this.
@@ -99,7 +119,8 @@ These are DONE and documented elsewhere:
 | Metaphysical Forge Phase 1-4 | 2025-12-18 | `spec/protocols/metaphysical-forge.md` |
 | Habitat 2.0 (Ghost/Examples/Polynomial) | 2025-12-18 | `spec/principles.md` AD-010 |
 | AD-012 Aspect Projection Protocol | 2025-12-19 | `spec/principles.md` AD-012 |
+| Multi-Agent CI Safety Phase 2-3 | 2025-12-19 | `testing/sentinel/` |
 
 ---
 
-*Last: 2025-12-19 (Witness Phase 2: Cross-jewel handlers + bus wiring, 90 tests)*
+*Last: 2025-12-19 (Witness Phase 3: CLI Handler - logs and status commands)*

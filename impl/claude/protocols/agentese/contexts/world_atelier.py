@@ -33,9 +33,9 @@ from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt  # noqa: I001 - Umwelt needed first for type annotations
-
     from services.atelier import AtelierPersistence, AtelierStatus
+
+    from bootstrap.umwelt import Umwelt
 
 
 # Atelier affordances available at world.atelier.*

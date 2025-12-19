@@ -12,10 +12,13 @@
 #   - Reduced collection overhead
 #   - Worker cap at 5 (was auto=all CPUs, caused system thrashing)
 #
-# Checks:
-#   1. Ruff lint (strict, blocking)
-#   2. Mypy (strict, blocking)
-#   3. All tests in single parallel run (blocking)
+# Checks (ALL BLOCKING):
+#   1. Ruff lint (strict, BLOCKING)
+#   2. Mypy (strict, BLOCKING)
+#   3. All tests in single parallel run (BLOCKING)
+#
+# Gated checks (only if relevant files changed):
+#   - Contract sync (if API/node files changed, requires backend)
 #
 # Optional (can skip with KGENTS_SKIP_HEAVY=1):
 #   - Chaos tests (accursed share)
@@ -69,9 +72,9 @@ else
 fi
 
 # =============================================================================
-# Step 1: Lint (strict - non-blocking until codebase is clean)
+# Step 1: Lint (strict - BLOCKING)
 # =============================================================================
-section "Ruff lint (strict)" 1 $TOTAL_STEPS
+section "Ruff lint (strict, BLOCKING)" 1 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
 LINT_OUTPUT=$(uv run ruff check agents/ bootstrap/ runtime/ protocols/ testing/ 2>&1)
@@ -79,17 +82,22 @@ LINT_EXIT=$?
 if [ $LINT_EXIT -eq 0 ]; then
     success "Lint passed"
 else
-    # Count issues instead of showing all output
+    # Count issues and show summary
     LINT_COUNT=$(echo "$LINT_OUTPUT" | grep -c "^[A-Z][0-9]" || echo "0")
-    warn "Lint: $LINT_COUNT issues (non-blocking, run 'ruff check' for details)"
+    error "Lint: $LINT_COUNT issues (BLOCKING)"
+    echo "$LINT_OUTPUT" | head -20
+    if [ $LINT_COUNT -gt 20 ]; then
+        info "... and $((LINT_COUNT - 20)) more (run 'ruff check' for all)"
+    fi
+    FAILED=1
 fi
 cd "$REPO_ROOT"
 echo ""
 
 # =============================================================================
-# Step 2: Type check (strict)
+# Step 2: Type check (strict - BLOCKING)
 # =============================================================================
-section "Mypy (strict)" 2 $TOTAL_STEPS
+section "Mypy (strict, BLOCKING)" 2 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
 MYPY_OUTPUT=$(uv run mypy --strict --explicit-package-bases --parallel-workers 4 agents/ bootstrap/ runtime/ 2>&1)
@@ -97,9 +105,14 @@ MYPY_EXIT=$?
 if [ $MYPY_EXIT -eq 0 ]; then
     success "Type check passed"
 else
-    # Count errors instead of showing all output
+    # Count errors and show summary
     MYPY_COUNT=$(echo "$MYPY_OUTPUT" | grep -c ": error:" || echo "0")
-    warn "Mypy: $MYPY_COUNT errors (non-blocking, run 'mypy' for details)"
+    error "Mypy: $MYPY_COUNT errors (BLOCKING)"
+    echo "$MYPY_OUTPUT" | grep ": error:" | head -20
+    if [ $MYPY_COUNT -gt 20 ]; then
+        info "... and $((MYPY_COUNT - 20)) more (run 'mypy' for all)"
+    fi
+    FAILED=1
 fi
 cd "$REPO_ROOT"
 echo ""
@@ -142,6 +155,50 @@ else
 fi
 cd "$REPO_ROOT"
 echo ""
+
+# =============================================================================
+# Gated: Contract sync (only if API/node files changed)
+# =============================================================================
+# This check verifies BE/FE contract alignment.
+# It's gated to only run when files that affect contracts are modified.
+#
+# Gate condition: Changes to protocols/api/, protocols/agentese/, or nodes.py files
+
+# Get files that changed compared to remote
+CHANGED_FILES=$(git diff --name-only "origin/${REMOTE:-origin}/$(git symbolic-ref --short HEAD 2>/dev/null || echo 'main')" 2>/dev/null || echo "")
+
+# Check if any API-affecting files changed
+API_FILES_CHANGED=0
+if echo "$CHANGED_FILES" | grep -qE "(protocols/api/|protocols/agentese/|nodes\.py|/api\.py)"; then
+    API_FILES_CHANGED=1
+fi
+
+if [ $API_FILES_CHANGED -eq 1 ] && [ "${KGENTS_SKIP_CONTRACT:-0}" != "1" ]; then
+    info "API files changed - checking contract sync..."
+
+    # Check if backend is available
+    if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+        cd "$REPO_ROOT/impl/claude/web"
+        CONTRACT_OUTPUT=$(npm run sync-types:check 2>&1) || true
+        CONTRACT_EXIT=$?
+
+        if [ $CONTRACT_EXIT -eq 0 ]; then
+            success "Contracts in sync"
+        else
+            warn "Contract drift detected (non-blocking)"
+            info "Run 'npm run sync-types' in impl/claude/web to update"
+            # Note: Non-blocking because backend may not be running
+        fi
+        cd "$REPO_ROOT"
+    else
+        info "Backend not running - skipping contract sync"
+        info "To run: cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --port 8000"
+    fi
+    echo ""
+elif [ $API_FILES_CHANGED -eq 0 ]; then
+    info "No API files changed - skipping contract sync"
+    echo ""
+fi
 
 # =============================================================================
 # Optional: Chaos tests (accursed share) - skip with KGENTS_SKIP_CHAOS=1
