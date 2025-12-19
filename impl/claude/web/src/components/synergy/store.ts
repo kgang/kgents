@@ -136,7 +136,7 @@ function getToastTitle(eventType: SynergyEventType): string {
     season_changed: 'Season Changed',
     gesture_applied: 'Gesture Applied',
     plot_progress_updated: 'Progress Updated',
-    // Atelier
+    // Forge
     piece_created: 'Piece Created',
     bid_accepted: 'Bid Accepted',
     // Coalition
@@ -171,7 +171,7 @@ export function showSynergyToast(
   targetJewel: Jewel | '*',
   eventType: SynergyEventType,
   description?: string,
-  action?: { label: string; href: string },
+  action?: { label: string; href: string }
 ): void {
   useSynergyToastStore.getState().addToast({
     type: getToastType(eventType),
@@ -195,7 +195,7 @@ export const synergyToast = {
       'brain',
       'analysis_complete',
       `${modulePath} health: ${healthGrade}`,
-      { label: 'View Crystal', href: '/brain' },
+      { label: 'View Crystal', href: '/brain' }
     );
   },
 
@@ -214,11 +214,11 @@ export const synergyToast = {
       'brain',
       'session_complete',
       `${sessionName}: ${artifactCount} artifacts`,
-      { label: 'View Learnings', href: '/brain' },
+      { label: 'View Learnings', href: '/brain' }
     );
   },
 
-  /** Atelier → Brain: Piece created */
+  /** Forge → Brain: Piece created */
   pieceCreated: (title: string) => {
     showSynergyToast('forge', 'brain', 'piece_created', `"${title}"`, {
       label: 'View Crystal',
@@ -233,7 +233,7 @@ export const synergyToast = {
       'brain',
       'task_assigned',
       `${coalitionSize} agents, ${duration}`,
-      { label: 'View Crystal', href: '/brain' },
+      { label: 'View Crystal', href: '/brain' }
     );
   },
 
@@ -244,7 +244,7 @@ export const synergyToast = {
       'brain',
       'scenario_complete',
       `${scenarioName} (${forcesUsed} forces used)`,
-      { label: 'View Crystal', href: '/brain' },
+      { label: 'View Crystal', href: '/brain' }
     );
   },
 
@@ -271,7 +271,7 @@ export const synergyToast = {
       '*',
       'drift_detected',
       `${modulePath}: ${violationCount} violations`,
-      { label: 'View Details', href: '/gestalt' },
+      { label: 'View Details', href: '/gestalt' }
     );
   },
 

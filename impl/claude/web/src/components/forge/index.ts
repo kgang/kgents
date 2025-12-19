@@ -25,3 +25,9 @@ export { LineageTree } from './LineageTree';
 export { CollaborationBuilder } from './CollaborationBuilder';
 export { ErrorPanel } from './ErrorPanel';
 export { LoadingPanel } from './LoadingPanel';
+
+// K-gent Soul Presence (Phase 2: K-gent Integration)
+export { SoulPresence, SoulIndicator } from './SoulPresence';
+
+// Commission Workflow (Phase 2.5: Commission Workflow)
+export { CommissionPanel } from './CommissionPanel';

@@ -29,8 +29,36 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, './src/shared'),
     },
   },
+  // Optimize heavy deps - pre-bundle to avoid transform time
+  optimizeDeps: {
+    include: [
+      'lucide-react',
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'framer-motion',
+      'zustand',
+      'axios',
+      'immer',
+      'nanoid',
+    ],
+    // Exclude pixi.js (lazy-loaded for Town visualization)
+    // three.js ecosystem removed entirely for performance
+    exclude: ['pixi.js', '@pixi/react'],
+  },
   server: {
     port: 3000,
+    // Warmup critical files on server start
+    warmup: {
+      clientFiles: [
+        './src/main.tsx',
+        './src/App.tsx',
+        './src/shell/Shell.tsx',
+        './src/shell/ShellProvider.tsx',
+        './src/constants/jewels.ts',
+        './src/constants/icons.ts',
+      ],
+    },
     proxy: {
       '/v1': {
         target: 'http://localhost:8000',
@@ -59,8 +87,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'pixi': ['pixi.js', '@pixi/react'],
-          'vendor': ['react', 'react-dom', 'react-router-dom', 'zustand'],
+          pixi: ['pixi.js', '@pixi/react'],
+          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
         },
       },
     },

@@ -3,7 +3,7 @@
  *
  * Plots correspond to:
  * - Plan files (e.g., plans/coalition-forge.md)
- * - Crown jewels (e.g., Atelier, Brain)
+ * - Crown jewels (e.g., Forge, Brain)
  * - Custom focus areas (e.g., "refactoring auth")
  *
  * Uses JEWEL_ICONS (Lucide) instead of emojis per visual-system.md.
@@ -33,7 +33,10 @@ const JEWEL_NAME_MAP: Record<string, JewelName> = {
 };
 
 /** Get icon for a crown jewel (Lucide icon) */
-function getJewelIconForPlot(crownJewel: string | null | undefined): { icon: LucideIcon; color: string } {
+function getJewelIconForPlot(crownJewel: string | null | undefined): {
+  icon: LucideIcon;
+  color: string;
+} {
   if (!crownJewel) {
     return { icon: FolderOpen, color: '#64748B' }; // Slate for generic folders
   }

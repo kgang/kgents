@@ -18,10 +18,10 @@ import type { GardenJSON, PlotJSON, GestureJSON } from '@/reactive/types';
 
 const mockPlot: PlotJSON = {
   name: 'forge',
-  path: 'world.atelier',
+  path: 'world.forge',
   description: 'Creative workshop for artifact creation',
   plan_path: null,
-  crown_jewel: 'Atelier',
+  crown_jewel: 'Forge',
   prompts: [],
   season_override: null,
   rigidity: 0.4,
@@ -51,7 +51,7 @@ const mockGarden: GardenJSON = {
   created_at: '2024-12-10T08:00:00Z',
   season: 'SPROUTING',
   season_since: '2024-12-15T12:00:00Z',
-  plots: { atelier: mockPlot },
+  plots: { forge: mockPlot },
   active_plot: null,
   session_id: null,
   memory_crystals: [],
@@ -83,38 +83,20 @@ const mockGarden: GardenJSON = {
 
 describe('SeasonIndicator', () => {
   it('renders season name and emoji', () => {
-    render(
-      <SeasonIndicator
-        season="SPROUTING"
-        plasticity={0.9}
-        entropyMultiplier={1.5}
-      />
-    );
+    render(<SeasonIndicator season="SPROUTING" plasticity={0.9} entropyMultiplier={1.5} />);
 
     expect(screen.getByText('SPROUTING')).toBeInTheDocument();
     expect(screen.getByText('New ideas emerging')).toBeInTheDocument();
   });
 
   it('displays plasticity percentage', () => {
-    render(
-      <SeasonIndicator
-        season="DORMANT"
-        plasticity={0.1}
-        entropyMultiplier={0.5}
-      />
-    );
+    render(<SeasonIndicator season="DORMANT" plasticity={0.1} entropyMultiplier={0.5} />);
 
     expect(screen.getByText('10%')).toBeInTheDocument();
   });
 
   it('displays entropy multiplier', () => {
-    render(
-      <SeasonIndicator
-        season="BLOOMING"
-        plasticity={0.3}
-        entropyMultiplier={1.0}
-      />
-    );
+    render(<SeasonIndicator season="BLOOMING" plasticity={0.3} entropyMultiplier={1.0} />);
 
     expect(screen.getByText('1.0x')).toBeInTheDocument();
   });
@@ -150,49 +132,27 @@ describe('SeasonBadge', () => {
 
 describe('PlotCard', () => {
   it('renders plot information', () => {
-    render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={false}
-        gardenSeason="SPROUTING"
-      />
-    );
+    render(<PlotCard plot={mockPlot} isActive={false} gardenSeason="SPROUTING" />);
 
-    expect(screen.getByText('Atelier')).toBeInTheDocument();
+    expect(screen.getByText('Forge')).toBeInTheDocument();
     expect(screen.getByText('Creative workshop for artifact creation')).toBeInTheDocument();
   });
 
   it('shows crown jewel indicator', () => {
-    render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={false}
-        gardenSeason="SPROUTING"
-      />
-    );
+    render(<PlotCard plot={mockPlot} isActive={false} gardenSeason="SPROUTING" />);
 
-    expect(screen.getByText(/Crown Jewel: Atelier/)).toBeInTheDocument();
+    expect(screen.getByText(/Crown Jewel: Forge/)).toBeInTheDocument();
   });
 
   it('displays progress percentage', () => {
-    render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={false}
-        gardenSeason="SPROUTING"
-      />
-    );
+    render(<PlotCard plot={mockPlot} isActive={false} gardenSeason="SPROUTING" />);
 
     expect(screen.getByText('65%')).toBeInTheDocument();
   });
 
   it('highlights active plot', () => {
     const { container } = render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={true}
-        gardenSeason="SPROUTING"
-      />
+      <PlotCard plot={mockPlot} isActive={true} gardenSeason="SPROUTING" />
     );
 
     const button = container.querySelector('button');
@@ -203,12 +163,7 @@ describe('PlotCard', () => {
     const onSelect = vi.fn();
 
     render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={false}
-        gardenSeason="SPROUTING"
-        onSelect={onSelect}
-      />
+      <PlotCard plot={mockPlot} isActive={false} gardenSeason="SPROUTING" onSelect={onSelect} />
     );
 
     fireEvent.click(screen.getByRole('button'));
@@ -216,13 +171,7 @@ describe('PlotCard', () => {
   });
 
   it('shows tags', () => {
-    render(
-      <PlotCard
-        plot={mockPlot}
-        isActive={false}
-        gardenSeason="SPROUTING"
-      />
-    );
+    render(<PlotCard plot={mockPlot} isActive={false} gardenSeason="SPROUTING" />);
 
     expect(screen.getByText('creation')).toBeInTheDocument();
     expect(screen.getByText('artifacts')).toBeInTheDocument();
@@ -231,14 +180,9 @@ describe('PlotCard', () => {
 
 describe('PlotListItem', () => {
   it('renders compact plot info', () => {
-    render(
-      <PlotListItem
-        plot={mockPlot}
-        isActive={false}
-      />
-    );
+    render(<PlotListItem plot={mockPlot} isActive={false} />);
 
-    expect(screen.getByText('Atelier')).toBeInTheDocument();
+    expect(screen.getByText('Forge')).toBeInTheDocument();
     expect(screen.getByText('65%')).toBeInTheDocument();
   });
 });
@@ -372,7 +316,7 @@ describe('GardenVisualization', () => {
     render(<GardenVisualization garden={mockGarden} onPlotSelect={onPlotSelect} />);
 
     // Click on the plot card
-    fireEvent.click(screen.getByText('Atelier'));
+    fireEvent.click(screen.getByText('Forge'));
 
     expect(onPlotSelect).toHaveBeenCalledWith('forge');
   });
@@ -390,7 +334,7 @@ describe('GardenCompact', () => {
   it('shows plot list', () => {
     render(<GardenCompact garden={mockGarden} />);
 
-    expect(screen.getByText('Atelier')).toBeInTheDocument();
+    expect(screen.getByText('Forge')).toBeInTheDocument();
   });
 
   it('shows recent gestures section', () => {

@@ -25,7 +25,7 @@
 export * from './types/_generated/world-town';
 export * from './types/_generated/self-memory';
 export * from './types/_generated/self-chat';
-export * from './types/_generated/world-atelier';
+export * from './types/_generated/world-forge';
 export * from './types/_generated/world-codebase';
 export * from './types/_generated/world-park';
 
@@ -61,9 +61,9 @@ export type {
 } from './types/_generated/world-codebase';
 
 export type {
-  WorldAtelierManifestResponse as AtelierManifestContract,
-  WorldAtelierWorkshopListResponse as AtelierWorkshopListContract,
-} from './types/_generated/world-atelier';
+  WorldForgeManifestResponse as ForgeManifestContract,
+  WorldForgeWorkshopListResponse as ForgeWorkshopListContract,
+} from './types/_generated/world-forge';
 
 export type {
   WorldParkManifestResponse as ParkManifestContract,
@@ -224,6 +224,50 @@ export interface Coalition {
 export interface CoalitionsResponse {
   coalitions: Coalition[];
   bridge_citizens: string[];
+}
+
+// =============================================================================
+// Dialogue (Phase 5: Town End-to-End)
+// =============================================================================
+
+/**
+ * Summary of a conversation turn.
+ */
+export interface TurnSummary {
+  id: string;
+  turn_number: number;
+  role: 'user' | 'citizen';
+  content: string;
+  sentiment: string | null;
+  emotion: string | null;
+  created_at: string;
+}
+
+/**
+ * Full conversation details with turns.
+ */
+export interface ConversationDetail {
+  id: string;
+  citizen_id: string;
+  citizen_name: string;
+  topic: string | null;
+  summary: string | null;
+  turn_count: number;
+  is_active: boolean;
+  created_at: string;
+  turns: TurnSummary[];
+}
+
+/**
+ * Summary of a conversation for history views.
+ */
+export interface ConversationSummary {
+  id: string;
+  topic: string | null;
+  summary: string | null;
+  turn_count: number;
+  is_active: boolean;
+  created_at: string;
 }
 
 // =============================================================================
@@ -694,7 +738,7 @@ export type GalleryCategory =
   | 'OPERAD'
   | 'CROWN_JEWELS'
   | 'LAYOUT'
-  | 'INTERACTIVE';  // Flagship interactive pilots
+  | 'INTERACTIVE'; // Flagship interactive pilots
 
 /**
  * Projections for a single pilot across targets.
@@ -756,10 +800,10 @@ export const GALLERY_CATEGORY_CONFIG: Record<GalleryCategory, { icon: string; co
   ADAPTERS: { icon: '⇄', color: '#06b6d4' },
   SPECIALIZED: { icon: '◈', color: '#ef4444' },
   // Gallery V2 categories (AD-009 Vertical Slice)
-  POLYNOMIAL: { icon: '◉', color: '#14b8a6' },  // teal - state machines
-  OPERAD: { icon: '⊛', color: '#a855f7' },      // purple - composition grammar
+  POLYNOMIAL: { icon: '◉', color: '#14b8a6' }, // teal - state machines
+  OPERAD: { icon: '⊛', color: '#a855f7' }, // purple - composition grammar
   CROWN_JEWELS: { icon: '♦', color: '#eab308' }, // yellow - vertical slices
-  LAYOUT: { icon: '▣', color: '#64748b' },      // slate - design system
+  LAYOUT: { icon: '▣', color: '#64748b' }, // slate - design system
   INTERACTIVE: { icon: '⚡', color: '#10b981' }, // emerald - flagship interactive
 };
 
@@ -1072,13 +1116,13 @@ export type GestaltStreamStatus =
  */
 export const HEALTH_GRADE_CONFIG: Record<string, { color: string; bgColor: string }> = {
   'A+': { color: '#22c55e', bgColor: 'bg-green-500/20' },
-  'A': { color: '#4ade80', bgColor: 'bg-green-400/20' },
+  A: { color: '#4ade80', bgColor: 'bg-green-400/20' },
   'B+': { color: '#a3e635', bgColor: 'bg-lime-400/20' },
-  'B': { color: '#facc15', bgColor: 'bg-yellow-400/20' },
+  B: { color: '#facc15', bgColor: 'bg-yellow-400/20' },
   'C+': { color: '#fb923c', bgColor: 'bg-orange-400/20' },
-  'C': { color: '#f97316', bgColor: 'bg-orange-500/20' },
-  'D': { color: '#ef4444', bgColor: 'bg-red-500/20' },
-  'F': { color: '#dc2626', bgColor: 'bg-red-600/20' },
+  C: { color: '#f97316', bgColor: 'bg-orange-500/20' },
+  D: { color: '#ef4444', bgColor: 'bg-red-500/20' },
+  F: { color: '#dc2626', bgColor: 'bg-red-600/20' },
   '?': { color: '#6b7280', bgColor: 'bg-gray-500/20' },
 };
 
@@ -1395,18 +1439,23 @@ export interface TopologyUpdate {
 /**
  * Connection status for SSE streams.
  */
-export type StreamConnectionStatus = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'error';
+export type StreamConnectionStatus =
+  | 'connecting'
+  | 'connected'
+  | 'reconnecting'
+  | 'disconnected'
+  | 'error';
 
 /**
  * Entity animation state for smooth transitions.
  */
 export interface EntityAnimationState {
-  opacity: number;       // 0-1, for fade in/out
-  scale: number;         // base scale multiplier
+  opacity: number; // 0-1, for fade in/out
+  scale: number; // base scale multiplier
   pulseIntensity: number; // 0-1, for update flash
-  isNew: boolean;        // just added (fade in)
-  isRemoving: boolean;   // marked for removal (fade out)
-  lastUpdated: number;   // timestamp for pulse decay
+  isNew: boolean; // just added (fade in)
+  isRemoving: boolean; // marked for removal (fade out)
+  lastUpdated: number; // timestamp for pulse decay
 }
 
 /**
@@ -1415,11 +1464,14 @@ export interface EntityAnimationState {
  * NOTE: For icons, import INFRA_ENTITY_ICONS from '@/constants'.
  * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const INFRA_ENTITY_CONFIG: Record<InfraEntityKind, {
-  icon: string;
-  color: string;
-  shape: 'sphere' | 'octahedron' | 'dodecahedron' | 'box' | 'cone' | 'cylinder' | 'torus';
-}> = {
+export const INFRA_ENTITY_CONFIG: Record<
+  InfraEntityKind,
+  {
+    icon: string;
+    color: string;
+    shape: 'sphere' | 'octahedron' | 'dodecahedron' | 'box' | 'cone' | 'cylinder' | 'torus';
+  }
+> = {
   namespace: { icon: 'box', color: '#6366f1', shape: 'torus' },
   node: { icon: 'monitor', color: '#8b5cf6', shape: 'box' },
   pod: { icon: 'server', color: '#22c55e', shape: 'sphere' },
@@ -1439,7 +1491,10 @@ export const INFRA_ENTITY_CONFIG: Record<InfraEntityKind, {
  * NOTE: For icons, import SEVERITY_ICONS from '@/constants'.
  * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const INFRA_SEVERITY_CONFIG: Record<InfraEvent['severity'], { icon: string; color: string }> = {
+export const INFRA_SEVERITY_CONFIG: Record<
+  InfraEvent['severity'],
+  { icon: string; color: string }
+> = {
   info: { icon: 'info', color: '#3b82f6' },
   warning: { icon: 'alert-triangle', color: '#f59e0b' },
   error: { icon: 'x-circle', color: '#ef4444' },
@@ -1458,7 +1513,14 @@ export type ParkCrisisPhase = 'NORMAL' | 'INCIDENT' | 'RESPONSE' | 'RECOVERY';
 /**
  * Timer status values.
  */
-export type ParkTimerStatus = 'PENDING' | 'ACTIVE' | 'WARNING' | 'CRITICAL' | 'EXPIRED' | 'COMPLETED' | 'PAUSED';
+export type ParkTimerStatus =
+  | 'PENDING'
+  | 'ACTIVE'
+  | 'WARNING'
+  | 'CRITICAL'
+  | 'EXPIRED'
+  | 'COMPLETED'
+  | 'PAUSED';
 
 /**
  * Mask archetype categories.
@@ -1623,11 +1685,14 @@ export interface ParkScenarioSummary {
   duration_seconds: number;
   consent_debt_final: number;
   forces_used: number;
-  timer_outcomes: Record<string, {
-    status: ParkTimerStatus;
-    elapsed_seconds: number;
-    expired: boolean;
-  }>;
+  timer_outcomes: Record<
+    string,
+    {
+      status: ParkTimerStatus;
+      elapsed_seconds: number;
+      expired: boolean;
+    }
+  >;
   phase_transitions: Array<{
     timestamp: string;
     from: ParkCrisisPhase;
@@ -1654,7 +1719,10 @@ export interface ParkStatusResponse {
  * NOTE: For icons, import CRISIS_PHASE_ICONS from '@/constants'.
  * Per visual-system.md, kgents uses Lucide icons exclusively.
  */
-export const PARK_PHASE_CONFIG: Record<ParkCrisisPhase, { color: string; icon: string; label: string }> = {
+export const PARK_PHASE_CONFIG: Record<
+  ParkCrisisPhase,
+  { color: string; icon: string; label: string }
+> = {
   NORMAL: { color: '#22c55e', icon: 'check-circle', label: 'Normal' },
   INCIDENT: { color: '#f59e0b', icon: 'alert-triangle', label: 'Incident' },
   RESPONSE: { color: '#ef4444', icon: 'zap', label: 'Response' },

@@ -2,14 +2,16 @@
  * ForgeVisualization - The Metaphysical Forge visualization canvas
  *
  * PHASE 1: Stripped of spectator economy, renamed from Atelier to Forge.
+ * PHASE 2: K-gent Integration - SoulPresence in header, governance gate in backend.
  *
  * This component handles:
  * - Multi-view navigation (Overview, Workshops, Artisans, Contributions)
  * - Artisan selection and workshop browsing
  * - Contribution viewing
  * - Mobile/tablet/desktop layouts
+ * - K-gent soul presence indicator (Phase 2)
  *
- * The Forge is where Kent builds. No spectators, no tokens, no bids.
+ * "The Forge is where Kent builds with Kent."
  *
  * @see spec/protocols/metaphysical-forge.md
  * @see docs/skills/crown-jewel-patterns.md
@@ -26,7 +28,7 @@ import {
   type WorldForgeArtisanListResponse,
   type WorldForgeContributionListResponse,
 } from '@/hooks/useForgeQuery';
-import { ErrorPanel, LoadingPanel } from '@/components/forge';
+import { ErrorPanel, LoadingPanel, SoulPresence } from '@/components/forge';
 import { cn } from '@/lib/utils';
 import type { Density } from '@/shell/types';
 
@@ -121,12 +123,16 @@ export function ForgeVisualization({
       <header className="bg-white border-b border-stone-100">
         <div className={`${maxWidth} mx-auto ${containerPadding}`}>
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className={`${titleSize} font-serif text-stone-800 flex items-center gap-2`}>
-                <Hammer className="w-5 h-5 text-amber-500" />
-                Forge
-              </h1>
-              <p className="mt-1 text-sm text-stone-400">Where agents are built</p>
+            <div className="flex items-center gap-4">
+              {/* K-gent Soul Presence (Phase 2) */}
+              <SoulPresence compact={isMobile} showEigenvectors={!isMobile} />
+              <div>
+                <h1 className={`${titleSize} font-serif text-stone-800 flex items-center gap-2`}>
+                  <Hammer className="w-5 h-5 text-amber-500" />
+                  Forge
+                </h1>
+                <p className="mt-1 text-sm text-stone-400">Where agents are built</p>
+              </div>
             </div>
           </div>
         </div>

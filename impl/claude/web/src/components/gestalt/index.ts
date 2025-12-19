@@ -70,13 +70,15 @@ export { ModuleSearch } from './ModuleSearch';
 export { ViewPresets } from './ViewPresets';
 
 // =============================================================================
-// Legend & Tooltip Components (KEEP - reusable)
+// Legend Components (KEEP - reusable)
 // =============================================================================
 
 export { Legend } from './Legend';
 export type { LegendProps, NodeKindConfig, EdgeKindConfig } from './Legend';
-export { NodeTooltip, StandaloneTooltip } from './NodeTooltip';
-export type { NodeTooltipProps, StandaloneTooltipProps } from './NodeTooltip';
+
+// NodeTooltip mothballed - uses @react-three/drei (three.js eliminated)
+// export { NodeTooltip, StandaloneTooltip } from './NodeTooltip';
+// export type { NodeTooltipProps, StandaloneTooltipProps } from './NodeTooltip';
 
 // Edge Styles (KEEP - types and utilities, no Three.js)
 export {

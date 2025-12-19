@@ -33,6 +33,30 @@ import { useAsyncState } from './useAsyncState';
 // Type Definitions (Mirror Python contracts)
 // =============================================================================
 
+// --- Recent Traces Types ---
+
+export interface RecentTracesRequest {
+  limit?: number;
+  jewel_filter?: string;
+}
+
+export interface TracePreview {
+  id: string;
+  operation: string;
+  context: string;
+  timestamp: string;
+  ghost_count: number;
+  output_preview?: string;
+  jewel?: string;
+}
+
+export interface RecentTracesResponse {
+  traces: TracePreview[];
+  total: number;
+  buffer_size: number;
+  store_connected: boolean;
+}
+
 // --- Manifest Types ---
 
 export interface DifferanceManifestResponse {
@@ -331,6 +355,45 @@ export function useDifferanceManifest(): QueryResult<DifferanceManifestResponse>
   useEffect(() => {
     refetch();
   }, [refetch]);
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    error: state.error ? new Error(state.error) : null,
+    refetch,
+  };
+}
+
+/**
+ * Fetch recent traces from buffer/store.
+ * AGENTESE: time.differance.recent
+ *
+ * Powers the RecentTracesPanel in the Cockpit with real trace data.
+ */
+export function useRecentTraces(options?: {
+  enabled?: boolean;
+  limit?: number;
+  jewelFilter?: string;
+}): QueryResult<RecentTracesResponse> {
+  const { state, execute, reset } = useAsyncState<RecentTracesResponse>();
+  const enabled = options?.enabled !== false;
+
+  const refetch = useCallback(() => {
+    if (!enabled) return;
+    const request: RecentTracesRequest = {
+      limit: options?.limit ?? 10,
+      jewel_filter: options?.jewelFilter,
+    };
+    execute(fetchAgentese<RecentTracesResponse>('time.differance.recent', request));
+  }, [execute, enabled, options?.limit, options?.jewelFilter]);
+
+  useEffect(() => {
+    if (enabled) {
+      refetch();
+    } else {
+      reset();
+    }
+  }, [enabled, refetch, reset]);
 
   return {
     data: state.data,
@@ -683,6 +746,8 @@ export function useCompareBranches(): MutationResult<BranchCompareResponse, Bran
 export const differanceQueryKeys = {
   all: ['differance'] as const,
   manifest: () => [...differanceQueryKeys.all, 'manifest'] as const,
+  recent: (limit?: number, jewelFilter?: string) =>
+    [...differanceQueryKeys.all, 'recent', limit, jewelFilter] as const,
   heritage: (outputId: string) => [...differanceQueryKeys.all, 'heritage', outputId] as const,
   why: (outputId: string) => [...differanceQueryKeys.all, 'why', outputId] as const,
   ghosts: () => [...differanceQueryKeys.all, 'ghosts'] as const,

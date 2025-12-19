@@ -24,7 +24,9 @@ import { motion } from 'framer-motion';
 import { Compass, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Breathe } from '@/components/joy';
 import { VoiceAnchor } from '@/components/cockpit/VoiceAnchor';
+import { RecentTracesPanel, GhostBadge } from '@/components/differance';
 import { brainApi, gestaltApi, gardenerApi } from '@/api/client';
+import { useGhosts } from '@/hooks/useDifferanceQuery';
 import { JEWEL_COLORS, JEWEL_ICONS, type JewelName } from '@/constants/jewels';
 import { SESSION_RITUAL_ITEMS, ANTI_SAUSAGE_QUESTIONS } from '@/constants/voiceAnchors';
 import { useShell } from '@/shell/ShellProvider';
@@ -167,10 +169,7 @@ function ChecklistPanel({
           className="px-4 py-3 space-y-2"
         >
           {items.map((item) => (
-            <label
-              key={item.id}
-              className="flex items-start gap-3 cursor-pointer group"
-            >
+            <label key={item.id} className="flex items-start gap-3 cursor-pointer group">
               <input
                 type="checkbox"
                 checked={checked[item.id] ?? false}
@@ -185,9 +184,7 @@ function ChecklistPanel({
                 >
                   {item.label || item.question}
                 </span>
-                {item.detail && (
-                  <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>
-                )}
+                {item.detail && <p className="text-xs text-gray-500 mt-0.5">{item.detail}</p>}
               </div>
             </label>
           ))}
@@ -198,7 +195,7 @@ function ChecklistPanel({
 }
 
 /**
- * Crown Jewel status card.
+ * Crown Jewel status card with integrated GhostBadge.
  */
 function JewelCard({ status }: { status: JewelStatus }) {
   const navigate = useNavigate();
@@ -215,19 +212,12 @@ function JewelCard({ status }: { status: JewelStatus }) {
       <div className="flex items-center justify-between w-full mb-2">
         <Icon className="w-5 h-5" style={{ color: colors.primary }} />
         {status.ghostCount !== undefined && status.ghostCount > 0 && (
-          <span
-            className="text-xs px-1.5 py-0.5 rounded-full bg-gray-700/50 text-gray-400"
-            title={`${status.ghostCount} traces with ghosts`}
-          >
-            ⑂ {status.ghostCount}
-          </span>
+          <GhostBadge count={status.ghostCount} size="sm" />
         )}
       </div>
       <span className="text-sm font-medium text-gray-300">{status.label}</span>
       <span className="text-lg font-bold text-white">{status.value}</span>
-      {status.subtext && (
-        <span className="text-xs text-gray-500 mt-1">{status.subtext}</span>
-      )}
+      {status.subtext && <span className="text-xs text-gray-500 mt-1">{status.subtext}</span>}
     </motion.button>
   );
 }
@@ -276,6 +266,7 @@ function QuickLaunchButton({ jewel, label }: { jewel: JewelName; label: string }
  * that manifests the Anti-Sausage Protocol.
  */
 export default function Cockpit() {
+  const navigate = useNavigate();
   const { density } = useShell();
   const [state, setState] = useState<CockpitState>({
     loading: true,
@@ -283,6 +274,34 @@ export default function Cockpit() {
     gestalt: null,
     gardener: null,
   });
+
+  // Fetch ghost counts from Différance Engine
+  const { data: ghostsData } = useGhosts({
+    enabled: true,
+    explorableOnly: false,
+    limit: 100,
+  });
+
+  // Calculate ghost counts per jewel (based on operation prefixes in context)
+  const ghostCounts = useMemo(() => {
+    if (!ghostsData) return { brain: 0, gestalt: 0, gardener: 0, forge: 0 };
+
+    const counts = { brain: 0, gestalt: 0, gardener: 0, forge: 0 };
+    for (const ghost of ghostsData.ghosts) {
+      // Infer jewel from operation name patterns
+      const op = ghost.operation.toLowerCase();
+      if (op.includes('capture') || op.includes('surface') || op.includes('crystal')) {
+        counts.brain++;
+      } else if (op.includes('gesture') || op.includes('plant') || op.includes('nurture')) {
+        counts.gardener++;
+      } else if (op.includes('scan') || op.includes('health') || op.includes('drift')) {
+        counts.gestalt++;
+      } else if (op.includes('commission') || op.includes('bid') || op.includes('exhibit')) {
+        counts.forge++;
+      }
+    }
+    return counts;
+  }, [ghostsData]);
 
   // Fetch status from all jewels
   const fetchStatus = useCallback(async () => {
@@ -303,7 +322,8 @@ export default function Cockpit() {
           gestaltRes.status === 'fulfilled' && gestaltRes.value
             ? {
                 grade: gestaltRes.value.overall_grade,
-                healthy: gestaltRes.value.overall_grade === 'A' || gestaltRes.value.overall_grade === 'A+',
+                healthy:
+                  gestaltRes.value.overall_grade === 'A' || gestaltRes.value.overall_grade === 'A+',
               }
             : null,
         gardener:
@@ -324,7 +344,21 @@ export default function Cockpit() {
     fetchStatus();
   }, [fetchStatus]);
 
-  // Build jewel status cards
+  // Navigate to heritage exploration
+  const handleExploreHeritage = useCallback(
+    (traceId: string) => {
+      // Navigate to Différance page with trace selected
+      navigate(`/differance?trace=${traceId}`);
+    },
+    [navigate]
+  );
+
+  // Navigate to full Différance view
+  const handleViewAllTraces = useCallback(() => {
+    navigate('/differance');
+  }, [navigate]);
+
+  // Build jewel status cards with real ghost counts
   const jewelStatuses: JewelStatus[] = useMemo(() => {
     const statuses: JewelStatus[] = [
       {
@@ -333,7 +367,7 @@ export default function Cockpit() {
         value: state.brain?.crystals ?? '—',
         subtext: 'crystals',
         route: '/brain',
-        ghostCount: 0, // TODO: Wire to Différance
+        ghostCount: ghostCounts.brain,
       },
       {
         jewel: 'gestalt',
@@ -341,7 +375,7 @@ export default function Cockpit() {
         value: state.gestalt?.grade ?? '—',
         subtext: state.gestalt?.healthy ? 'healthy' : 'needs attention',
         route: '/gestalt',
-        ghostCount: 0,
+        ghostCount: ghostCounts.gestalt,
       },
       {
         jewel: 'gardener',
@@ -349,7 +383,7 @@ export default function Cockpit() {
         value: state.gardener?.season ?? '—',
         subtext: state.gardener ? `${state.gardener.plots} plots` : undefined,
         route: '/gardener',
-        ghostCount: 0,
+        ghostCount: ghostCounts.gardener,
       },
       {
         jewel: 'forge',
@@ -357,10 +391,11 @@ export default function Cockpit() {
         value: 'Ready',
         subtext: 'awaiting commission',
         route: '/forge',
+        ghostCount: ghostCounts.forge,
       },
     ];
     return statuses;
-  }, [state]);
+  }, [state, ghostCounts]);
 
   const isMobile = density === 'compact';
 
@@ -422,11 +457,7 @@ export default function Cockpit() {
           <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
             Crown Jewels
           </h2>
-          <div
-            className={`grid gap-3 ${
-              isMobile ? 'grid-cols-2' : 'grid-cols-4'
-            }`}
-          >
+          <div className={`grid gap-3 ${isMobile ? 'grid-cols-2' : 'grid-cols-4'}`}>
             {jewelStatuses.map((status) => (
               <JewelCard key={status.jewel} status={status} />
             ))}
@@ -453,24 +484,19 @@ export default function Cockpit() {
           </div>
         </motion.section>
 
-        {/* Recent Traces — PRIMARY FEATURE (Placeholder for now) */}
+        {/* Recent Traces — Différance Engine Integration */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           className="mb-8"
         >
-          <h2 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
-            Recent Traces
-          </h2>
-          <div className="rounded-xl bg-gray-800/40 border border-gray-700/50 p-6 text-center">
-            <p className="text-gray-500 text-sm">
-              Heritage traces will appear here once Différance Engine is wired.
-            </p>
-            <p className="text-gray-600 text-xs mt-2">
-              See: plans/differance-crown-jewel-wiring.md
-            </p>
-          </div>
+          <RecentTracesPanel
+            limit={10}
+            onViewAll={handleViewAllTraces}
+            onExploreHeritage={handleExploreHeritage}
+            compact={isMobile}
+          />
         </motion.section>
 
         {/* Anti-Sausage Check — End of session */}

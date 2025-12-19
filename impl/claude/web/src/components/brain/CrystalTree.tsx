@@ -93,7 +93,7 @@ const CATEGORY_COLOR_MAP: Record<string, string> = {
   service: BRAIN_COLORS.service,
   brain: BRAIN_COLORS.service,
   gestalt: BRAIN_COLORS.service,
-  atelier: BRAIN_COLORS.service,
+  forge: BRAIN_COLORS.service,
   park: BRAIN_COLORS.service,
 };
 

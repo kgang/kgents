@@ -32,17 +32,20 @@ export interface TimeDifferanceHeritageResponse {
   node_count: number;
   edge_count: number;
   max_depth: number;
-  nodes: Record<string, {
-    id: string;
-    type: unknown;
-    operation: string;
-    timestamp: string;
-    depth: number;
-    output?: unknown;
-    reason?: string | null;
-    explorable?: boolean;
-    inputs?: string[];
-  }>;
+  nodes: Record<
+    string,
+    {
+      id: string;
+      type: unknown;
+      operation: string;
+      timestamp: string;
+      depth: number;
+      output?: unknown;
+      reason?: string | null;
+      explorable?: boolean;
+      inputs?: string[];
+    }
+  >;
   edges: {
     source: string;
     target: string;
@@ -68,13 +71,15 @@ export interface TimeDifferanceWhyResponse {
   alternatives_considered: number;
   summary?: string | null;
   cli_output?: string | null;
-  chosen_path?: {
-    id: string;
-    operation: string;
-    inputs: string[];
-    output: unknown;
-    ghosts: Record<string, unknown>[];
-  }[] | null;
+  chosen_path?:
+    | {
+        id: string;
+        operation: string;
+        inputs: string[];
+        output: unknown;
+        ghosts: Record<string, unknown>[];
+      }[]
+    | null;
   error?: string | null;
 }
 
@@ -150,4 +155,30 @@ export interface TimeDifferanceReplayResponse {
     alternatives?: Record<string, unknown>[] | null;
   }[];
   step_count: number;
+}
+
+/**
+ * Request for recent traces from buffer/store.
+ */
+export interface TimeDifferanceRecentRequest {
+  limit?: number;
+  jewel_filter?: string | null;
+}
+
+/**
+ * Response with recent traces.
+ */
+export interface TimeDifferanceRecentResponse {
+  traces: {
+    id: string;
+    operation: string;
+    context: string;
+    timestamp: string;
+    ghost_count: number;
+    output_preview?: string | null;
+    jewel?: string | null;
+  }[];
+  total: number;
+  buffer_size: number;
+  store_connected: boolean;
 }

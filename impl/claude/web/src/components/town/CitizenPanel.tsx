@@ -14,6 +14,8 @@ import { InlineError, PersonalityLoading } from '@/components/joy';
 import { TeachingCallout, TEACHING_MESSAGES } from '@/components/categorical/TeachingCallout';
 import { CitizenPhaseIndicator } from '@/components/categorical/StateIndicator';
 import { CITIZEN as CITIZEN_PRESET } from '@/components/categorical/presets';
+import { DialogueModal } from './DialogueModal';
+import { GREEN } from '@/constants/livingEarth';
 import type { CitizenCardJSON } from '@/reactive/types';
 import type { CitizenManifest } from '@/api/types';
 
@@ -28,6 +30,7 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
   const [currentLOD, setCurrentLOD] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDialogue, setShowDialogue] = useState(false);
 
   // Fetch citizen manifest when citizen or LOD changes
   useEffect(() => {
@@ -113,8 +116,17 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
 
       {/* LOD 2: Dialogue */}
       <LODSection level={2} title="Dialogue" icon="💬">
+        {/* Start Conversation button */}
+        <button
+          onClick={() => setShowDialogue(true)}
+          className="w-full px-4 py-2 rounded-lg text-white font-medium transition-colors hover:opacity-90"
+          style={{ backgroundColor: GREEN.sage }}
+        >
+          Start Conversation
+        </button>
+
         {manifest?.cosmotechnics && (
-          <div className="space-y-2 text-sm">
+          <div className="mt-4 space-y-2 text-sm">
             <InfoRow label="Cosmotechnics" value={manifest.cosmotechnics} />
             {manifest?.metaphor && (
               <p className="italic text-gray-300 mt-2">"{manifest.metaphor}"</p>
@@ -122,6 +134,17 @@ export function CitizenPanel({ citizen, townId, onClose }: CitizenPanelProps) {
           </div>
         )}
       </LODSection>
+
+      {/* Dialogue Modal */}
+      {showDialogue && (
+        <DialogueModal
+          townId={townId}
+          citizenId={manifest?.id || citizen.name}
+          citizenName={citizen.name}
+          archetype={citizen.archetype}
+          onClose={() => setShowDialogue(false)}
+        />
+      )}
 
       {/* LOD 3: Memory */}
       <LODSection level={3} title="Memory" icon="🧠">
@@ -294,7 +317,8 @@ function CitizenStateMachine({ currentPhase, compact = false }: CitizenStateMach
           <span
             className="font-medium"
             style={{
-              color: CITIZEN_PRESET.positions.find((p) => p.id === normalizedPhase)?.color || '#fff',
+              color:
+                CITIZEN_PRESET.positions.find((p) => p.id === normalizedPhase)?.color || '#fff',
             }}
           >
             {currentPhase}

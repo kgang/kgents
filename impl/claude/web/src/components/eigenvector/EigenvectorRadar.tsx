@@ -1,7 +1,7 @@
 /**
  * EigenvectorRadar: Visualize 7D personality eigenvectors.
  *
- * Wave 2: Atelier eigenvector personality in bidding UI.
+ * Wave 2: Forge eigenvector personality in bidding UI.
  *
  * The 7 dimensions capture builder personality:
  * - Warmth: Friendliness and approachability
@@ -78,19 +78,13 @@ function getRadarPoint(
 /**
  * Generate SVG path for radar polygon.
  */
-function getRadarPath(
-  dimensions: EigenvectorDimensions,
-  radius: number,
-  center: number
-): string {
+function getRadarPath(dimensions: EigenvectorDimensions, radius: number, center: number): string {
   const points = DIMENSION_LABELS.map((key, index) => {
     const value = dimensions[key];
     return getRadarPoint(index, DIMENSION_LABELS.length, value, radius, center);
   });
 
-  return (
-    points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ') + ' Z'
-  );
+  return points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ') + ' Z';
 }
 
 export function EigenvectorRadar({
@@ -134,12 +128,7 @@ export function EigenvectorRadar({
 
   return (
     <div className={`relative ${className}`}>
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="overflow-visible"
-      >
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
         {/* Grid rings */}
         {gridRings.map((ringValue) => {
           const ringDimensions: EigenvectorDimensions = {
@@ -232,9 +221,7 @@ export function EigenvectorRadar({
               style={{ left: x, top: y }}
             >
               <span className="text-xs">{icon}</span>
-              <span className="block text-[10px] text-stone-500 capitalize">
-                {key}
-              </span>
+              <span className="block text-[10px] text-stone-500 capitalize">{key}</span>
             </div>
           ))}
         </div>
@@ -286,9 +273,7 @@ export function EigenvectorBars({
               />
             </div>
             {!compact && (
-              <span className="text-xs text-stone-400 w-8 text-right">
-                {percentage}%
-              </span>
+              <span className="text-xs text-stone-400 w-8 text-right">{percentage}%</span>
             )}
           </div>
         );
@@ -357,20 +342,14 @@ export function CompatibilityScore({
           <span className="text-stone-400 mx-1">&</span>
           <span className="font-medium">{builderB}</span>
         </div>
-        <div className={`text-lg font-bold ${getCompatColor(overall)}`}>
-          {overallPercent}%
-        </div>
+        <div className={`text-lg font-bold ${getCompatColor(overall)}`}>{overallPercent}%</div>
       </div>
 
       {/* Compatibility bar */}
       <div className="h-2 bg-stone-200 rounded-full overflow-hidden mb-2">
         <div
           className={`h-full rounded-full transition-all duration-500 ${
-            overall >= 0.8
-              ? 'bg-emerald-400'
-              : overall >= 0.6
-                ? 'bg-amber-400'
-                : 'bg-stone-300'
+            overall >= 0.8 ? 'bg-emerald-400' : overall >= 0.6 ? 'bg-amber-400' : 'bg-stone-300'
           }`}
           style={{ width: `${overallPercent}%` }}
         />

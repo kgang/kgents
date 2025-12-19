@@ -144,11 +144,7 @@ export const ERROR_SUGGESTIONS: Record<string, string[]> = {
     'Reduce the frequency of requests',
     'Consider batching operations',
   ],
-  serverError: [
-    'This is not your fault',
-    'We are looking into it',
-    'Try again in a few minutes',
-  ],
+  serverError: ['This is not your fault', 'We are looking into it', 'Try again in a few minutes'],
   unknown: [
     'Refresh the page and try again',
     'Clear your browser cache',
@@ -174,7 +170,10 @@ export function getErrorMessage(category: string): { title: string; suggestions:
  * Empty state invitations by context.
  * These replace "No data" with actionable invitations.
  */
-export const EMPTY_STATE_MESSAGES: Record<string, { title: string; description: string; action?: string }> = {
+export const EMPTY_STATE_MESSAGES: Record<
+  string,
+  { title: string; description: string; action?: string }
+> = {
   // Gardener
   noSessions: {
     title: 'No garden plots yet',
@@ -212,7 +211,7 @@ export const EMPTY_STATE_MESSAGES: Record<string, { title: string; description: 
     description: 'Connect nodes to reveal the structure of your system.',
   },
 
-  // Atelier
+  // Forge
   noArtisans: {
     title: 'Workshop awaits',
     description: 'Invite artisans to begin collaborative creation.',
@@ -267,7 +266,11 @@ export const EMPTY_STATE_MESSAGES: Record<string, { title: string; description: 
 /**
  * Get empty state content.
  */
-export function getEmptyState(context: string): { title: string; description: string; action?: string } {
+export function getEmptyState(context: string): {
+  title: string;
+  description: string;
+  action?: string;
+} {
   return EMPTY_STATE_MESSAGES[context] || EMPTY_STATE_MESSAGES.noItems;
 }
 
@@ -320,12 +323,12 @@ export const BUTTON_LABELS = {
   dismiss: 'Dismiss',
 
   // Jewel-specific
-  tend: 'Tend',           // Gardener
-  query: 'Query',         // Brain
+  tend: 'Tend', // Gardener
+  query: 'Query', // Brain
   visualize: 'Visualize', // Gestalt
-  create_art: 'Create',   // Atelier (verb)
-  convene: 'Convene',     // Coalition
-  simulate: 'Simulate',   // Park/Domain
+  create_art: 'Create', // Forge (verb)
+  convene: 'Convene', // Coalition
+  simulate: 'Simulate', // Park/Domain
 } as const;
 
 // =============================================================================

@@ -7,94 +7,96 @@
  * AGENTESE Path: world.forge
  * Theme: Orisinal.com aesthetic - whimsical, minimal, melancholic but hopeful.
  *
- * @see services/atelier/contracts.py - Python contract definitions
- * @see api/types/_generated/world-atelier.ts - Generated TypeScript types
+ * @see services/forge/contracts.py - Python contract definitions
+ * @see api/types/_generated/world-forge.ts - Generated TypeScript types
  * @see docs/skills/crown-jewel-patterns.md - Pattern 13: Contract-First Types
  */
 
 import { useEffect, useCallback, useState } from 'react';
 import { apiClient } from '../api/client';
 import { useAsyncState } from './useAsyncState';
-// Import the generated types (still named WorldAtelier*)
-// Re-export as WorldForge* aliases for forward compatibility
-import type {
-  // Manifest
-  WorldAtelierManifestResponse,
-  // Workshop types
-  WorldAtelierWorkshopListResponse,
-  WorldAtelierWorkshopGetRequest,
-  WorldAtelierWorkshopGetResponse,
-  WorldAtelierWorkshopCreateRequest,
-  WorldAtelierWorkshopCreateResponse,
-  WorldAtelierWorkshopEndRequest,
-  WorldAtelierWorkshopEndResponse,
-  // Artisan types
-  WorldAtelierArtisanListRequest,
-  WorldAtelierArtisanListResponse,
-  WorldAtelierArtisanJoinRequest,
-  WorldAtelierArtisanJoinResponse,
-  // Contribution types
-  WorldAtelierContributeRequest,
-  WorldAtelierContributeResponse,
-  WorldAtelierContributionListResponse,
-  // Exhibition types
-  WorldAtelierExhibitionCreateRequest,
-  WorldAtelierExhibitionCreateResponse,
-  WorldAtelierExhibitionOpenRequest,
-  WorldAtelierExhibitionOpenResponse,
-  WorldAtelierExhibitionViewRequest,
-  WorldAtelierExhibitionViewResponse,
-  // Gallery types
-  WorldAtelierGalleryListRequest,
-  WorldAtelierGalleryListResponse,
-  WorldAtelierGalleryAddRequest,
-  WorldAtelierGalleryAddResponse,
-  // Festival types
-  WorldAtelierFestivalListResponse,
-  WorldAtelierFestivalCreateRequest,
-  WorldAtelierFestivalCreateResponse,
-  WorldAtelierFestivalEnterRequest,
-  WorldAtelierFestivalEnterResponse,
-  // Token/Bid types
-  WorldAtelierTokensManifestResponse,
-  WorldAtelierBidSubmitRequest,
-  WorldAtelierBidSubmitResponse,
-} from '../api/types/_generated/world-atelier';
 
-// Type aliases for Forge naming (forward compatibility)
-export type WorldForgeManifestResponse = WorldAtelierManifestResponse;
-export type WorldForgeWorkshopListResponse = WorldAtelierWorkshopListResponse;
-export type WorldForgeWorkshopGetRequest = WorldAtelierWorkshopGetRequest;
-export type WorldForgeWorkshopGetResponse = WorldAtelierWorkshopGetResponse;
-export type WorldForgeWorkshopCreateRequest = WorldAtelierWorkshopCreateRequest;
-export type WorldForgeWorkshopCreateResponse = WorldAtelierWorkshopCreateResponse;
-export type WorldForgeWorkshopEndRequest = WorldAtelierWorkshopEndRequest;
-export type WorldForgeWorkshopEndResponse = WorldAtelierWorkshopEndResponse;
-export type WorldForgeArtisanListRequest = WorldAtelierArtisanListRequest;
-export type WorldForgeArtisanListResponse = WorldAtelierArtisanListResponse;
-export type WorldForgeArtisanJoinRequest = WorldAtelierArtisanJoinRequest;
-export type WorldForgeArtisanJoinResponse = WorldAtelierArtisanJoinResponse;
-export type WorldForgeContributeRequest = WorldAtelierContributeRequest;
-export type WorldForgeContributeResponse = WorldAtelierContributeResponse;
-export type WorldForgeContributionListResponse = WorldAtelierContributionListResponse;
-export type WorldForgeExhibitionCreateRequest = WorldAtelierExhibitionCreateRequest;
-export type WorldForgeExhibitionCreateResponse = WorldAtelierExhibitionCreateResponse;
-export type WorldForgeExhibitionOpenRequest = WorldAtelierExhibitionOpenRequest;
-export type WorldForgeExhibitionOpenResponse = WorldAtelierExhibitionOpenResponse;
-export type WorldForgeExhibitionViewRequest = WorldAtelierExhibitionViewRequest;
-export type WorldForgeExhibitionViewResponse = WorldAtelierExhibitionViewResponse;
-export type WorldForgeGalleryListRequest = WorldAtelierGalleryListRequest;
-export type WorldForgeGalleryListResponse = WorldAtelierGalleryListResponse;
-export type WorldForgeGalleryAddRequest = WorldAtelierGalleryAddRequest;
-export type WorldForgeGalleryAddResponse = WorldAtelierGalleryAddResponse;
-export type WorldForgeFestivalListResponse = WorldAtelierFestivalListResponse;
-export type WorldForgeFestivalCreateRequest = WorldAtelierFestivalCreateRequest;
-export type WorldForgeFestivalCreateResponse = WorldAtelierFestivalCreateResponse;
-export type WorldForgeFestivalEnterRequest = WorldAtelierFestivalEnterRequest;
-export type WorldForgeFestivalEnterResponse = WorldAtelierFestivalEnterResponse;
-export type WorldForgeTokensManifestResponse = WorldAtelierTokensManifestResponse;
-export type WorldForgeBidSubmitRequest = WorldAtelierBidSubmitRequest;
-export type WorldForgeBidSubmitResponse = WorldAtelierBidSubmitResponse;
+// Re-export generated types for external consumers
+export type {
+  // Manifest
+  WorldForgeManifestResponse,
+  // Workshop types
+  WorldForgeWorkshopListResponse,
+  WorldForgeWorkshopGetRequest,
+  WorldForgeWorkshopGetResponse,
+  WorldForgeWorkshopCreateRequest,
+  WorldForgeWorkshopCreateResponse,
+  WorldForgeWorkshopEndRequest,
+  WorldForgeWorkshopEndResponse,
+  // Artisan types
+  WorldForgeArtisanListRequest,
+  WorldForgeArtisanListResponse,
+  WorldForgeArtisanJoinRequest,
+  WorldForgeArtisanJoinResponse,
+  // Contribution types
+  WorldForgeContributeRequest,
+  WorldForgeContributeResponse,
+  WorldForgeContributionListResponse,
+  // Exhibition types
+  WorldForgeExhibitionCreateRequest,
+  WorldForgeExhibitionCreateResponse,
+  WorldForgeExhibitionOpenRequest,
+  WorldForgeExhibitionOpenResponse,
+  WorldForgeExhibitionViewRequest,
+  WorldForgeExhibitionViewResponse,
+  // Gallery types
+  WorldForgeGalleryListRequest,
+  WorldForgeGalleryListResponse,
+  WorldForgeGalleryAddRequest,
+  WorldForgeGalleryAddResponse,
+  // Festival types
+  WorldForgeFestivalListResponse,
+  WorldForgeFestivalCreateRequest,
+  WorldForgeFestivalCreateResponse,
+  WorldForgeFestivalEnterRequest,
+  WorldForgeFestivalEnterResponse,
+  // Token/Bid types
+  WorldForgeTokensManifestResponse,
+  WorldForgeBidSubmitRequest,
+  WorldForgeBidSubmitResponse,
+} from '../api/types/_generated/world-forge';
+
+// Import types for internal use
+import type {
+  WorldForgeManifestResponse,
+  WorldForgeWorkshopListResponse,
+  WorldForgeWorkshopGetRequest,
+  WorldForgeWorkshopGetResponse,
+  WorldForgeWorkshopCreateRequest,
+  WorldForgeWorkshopCreateResponse,
+  WorldForgeWorkshopEndRequest,
+  WorldForgeWorkshopEndResponse,
+  WorldForgeArtisanListRequest,
+  WorldForgeArtisanListResponse,
+  WorldForgeArtisanJoinRequest,
+  WorldForgeArtisanJoinResponse,
+  WorldForgeContributeRequest,
+  WorldForgeContributeResponse,
+  WorldForgeContributionListResponse,
+  WorldForgeExhibitionCreateRequest,
+  WorldForgeExhibitionCreateResponse,
+  WorldForgeExhibitionOpenRequest,
+  WorldForgeExhibitionOpenResponse,
+  WorldForgeExhibitionViewRequest,
+  WorldForgeExhibitionViewResponse,
+  WorldForgeGalleryListRequest,
+  WorldForgeGalleryListResponse,
+  WorldForgeGalleryAddRequest,
+  WorldForgeGalleryAddResponse,
+  WorldForgeFestivalListResponse,
+  WorldForgeFestivalCreateRequest,
+  WorldForgeFestivalCreateResponse,
+  WorldForgeFestivalEnterRequest,
+  WorldForgeFestivalEnterResponse,
+  WorldForgeTokensManifestResponse,
+  WorldForgeBidSubmitRequest,
+  WorldForgeBidSubmitResponse,
+} from '../api/types/_generated/world-forge';
 
 // =============================================================================
 // AGENTESE Response Wrapper
@@ -118,7 +120,7 @@ interface AgenteseResponse<T> {
  * Aspects: workshop.list, artisan.list, contribute, exhibition.*, gallery.*, festival.*
  */
 async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
-  // Known node paths for Atelier
+  // Known node paths for Forge
   const NODE_PATHS = ['world.forge.tokens', 'world.forge'];
 
   // Find the matching node path
@@ -922,6 +924,407 @@ export function useSubmitBid(): MutationResult<
 }
 
 // =============================================================================
+// Commission Types (Phase 2.5: Commission Workflow)
+// =============================================================================
+
+/** Commission status - matches CommissionStatus enum in Python */
+export type CommissionStatus =
+  | 'pending'
+  | 'designing'
+  | 'implementing'
+  | 'exposing'
+  | 'projecting'
+  | 'securing'
+  | 'verifying'
+  | 'reviewing'
+  | 'complete'
+  | 'rejected'
+  | 'failed';
+
+/** Artisan output in commission workflow */
+export interface ArtisanOutput {
+  artisan: string;
+  status: string;
+  output: Record<string, unknown> | null;
+  annotation: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  error: string | null;
+}
+
+/** Commission summary */
+export interface Commission {
+  id: string;
+  intent: string;
+  name: string | null;
+  status: CommissionStatus;
+  created_at: string;
+  updated_at: string;
+  soul_approved: boolean;
+  soul_annotation: string | null;
+  artisan_outputs: Record<string, ArtisanOutput>;
+  artifact_path: string | null;
+  artifact_summary: string | null;
+  paused: boolean;
+}
+
+/** Commission list response */
+export interface CommissionListResponse {
+  count: number;
+  commissions: Commission[];
+}
+
+/** Commission create request */
+export interface CommissionCreateRequest {
+  intent: string;
+  name?: string;
+}
+
+/** Commission response (single commission) */
+export interface CommissionResponse {
+  type: 'commission';
+  id: string;
+  intent: string;
+  name: string | null;
+  status: CommissionStatus;
+  created_at: string;
+  updated_at: string;
+  soul_approved: boolean;
+  soul_annotation: string | null;
+  artisan_outputs: Record<string, ArtisanOutput>;
+  artifact_path: string | null;
+  artifact_summary: string | null;
+  paused: boolean;
+}
+
+// =============================================================================
+// Commission Hooks
+// =============================================================================
+
+/**
+ * Fetch list of commissions.
+ * AGENTESE: world.forge.commission.manifest
+ */
+export function useCommissions(): QueryResult<CommissionListResponse> {
+  const { state, execute } = useAsyncState<CommissionListResponse>();
+
+  const refetch = useCallback(() => {
+    execute(fetchAgentese<CommissionListResponse>('world.forge.commission.manifest'));
+  }, [execute]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    error: state.error ? new Error(state.error) : null,
+    refetch,
+  };
+}
+
+/**
+ * Fetch single commission by ID.
+ * AGENTESE: world.forge.commission.get
+ */
+export function useCommission(
+  commissionId: string,
+  options?: { enabled?: boolean }
+): QueryResult<CommissionResponse> {
+  const { state, execute, reset } = useAsyncState<CommissionResponse>();
+  const enabled = options?.enabled !== false && !!commissionId;
+
+  const refetch = useCallback(() => {
+    if (!enabled) return;
+    execute(
+      fetchAgentese<CommissionResponse>('world.forge.commission.get', {
+        commission_id: commissionId,
+      })
+    );
+  }, [execute, commissionId, enabled]);
+
+  useEffect(() => {
+    if (enabled) {
+      refetch();
+    } else {
+      reset();
+    }
+  }, [enabled, refetch, reset]);
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    error: state.error ? new Error(state.error) : null,
+    refetch,
+  };
+}
+
+/**
+ * Create a new commission.
+ * AGENTESE: world.forge.commission.create
+ */
+export function useCreateCommission(): MutationResult<CommissionResponse, CommissionCreateRequest> {
+  const { state, execute } = useAsyncState<CommissionResponse>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: CommissionCreateRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<CommissionResponse>('world.forge.commission.create', data)
+        );
+        if (!result) throw new Error('Failed to create commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: CommissionCreateRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+/**
+ * Start K-gent review of a commission.
+ * AGENTESE: world.forge.commission.start
+ */
+export function useStartCommission(): MutationResult<
+  CommissionResponse,
+  { commission_id: string }
+> {
+  const { state, execute } = useAsyncState<CommissionResponse>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: { commission_id: string }) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<CommissionResponse>('world.forge.commission.start', data)
+        );
+        if (!result) throw new Error('Failed to start commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: { commission_id: string }) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+/**
+ * Advance commission to next artisan stage.
+ * AGENTESE: world.forge.commission.advance
+ */
+export function useAdvanceCommission(): MutationResult<
+  CommissionResponse,
+  { commission_id: string }
+> {
+  const { state, execute } = useAsyncState<CommissionResponse>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: { commission_id: string }) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<CommissionResponse>('world.forge.commission.advance', data)
+        );
+        if (!result) throw new Error('Failed to advance commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: { commission_id: string }) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+/**
+ * Pause a commission.
+ * AGENTESE: world.forge.commission.pause
+ */
+export function usePauseCommission(): MutationResult<
+  CommissionResponse,
+  { commission_id: string }
+> {
+  const { state, execute } = useAsyncState<CommissionResponse>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: { commission_id: string }) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<CommissionResponse>('world.forge.commission.pause', data)
+        );
+        if (!result) throw new Error('Failed to pause commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: { commission_id: string }) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+/**
+ * Resume a paused commission.
+ * AGENTESE: world.forge.commission.resume
+ */
+export function useResumeCommission(): MutationResult<
+  CommissionResponse,
+  { commission_id: string }
+> {
+  const { state, execute } = useAsyncState<CommissionResponse>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: { commission_id: string }) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<CommissionResponse>('world.forge.commission.resume', data)
+        );
+        if (!result) throw new Error('Failed to resume commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: { commission_id: string }) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+/**
+ * Cancel a commission.
+ * AGENTESE: world.forge.commission.cancel
+ */
+export function useCancelCommission(): MutationResult<
+  { success: boolean; commission_id: string },
+  { commission_id: string; reason?: string }
+> {
+  const { state, execute } = useAsyncState<{ success: boolean; commission_id: string }>();
+  const [isPending, setIsPending] = useState(false);
+
+  const mutateAsync = useCallback(
+    async (data: { commission_id: string; reason?: string }) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<{ success: boolean; commission_id: string }>(
+            'world.forge.commission.cancel',
+            data
+          )
+        );
+        if (!result) throw new Error('Failed to cancel commission');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
+
+  const mutate = useCallback(
+    (data: { commission_id: string; reason?: string }) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
+
+  return {
+    data: state.data,
+    isLoading: state.isLoading,
+    isPending,
+    error: state.error ? new Error(state.error) : null,
+    mutate,
+    mutateAsync,
+  };
+}
+
+// =============================================================================
 // Query Keys (for cache invalidation patterns if needed later)
 // =============================================================================
 
@@ -938,6 +1341,8 @@ export const forgeQueryKeys = {
   gallery: (exhibitionId: string) => [...forgeQueryKeys.all, 'gallery', exhibitionId] as const,
   festivals: () => [...forgeQueryKeys.all, 'festivals'] as const,
   tokens: () => [...forgeQueryKeys.all, 'tokens'] as const,
+  commissions: () => [...forgeQueryKeys.all, 'commissions'] as const,
+  commissionDetail: (id: string) => [...forgeQueryKeys.commissions(), 'detail', id] as const,
 };
 
 // Types are already exported via type aliases at the top of this file

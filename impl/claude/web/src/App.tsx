@@ -16,11 +16,12 @@ const Brain = lazy(() => import('./pages/Brain'));
 const Workshop = lazy(() => import('./pages/Workshop'));
 const Inhabit = lazy(() => import('./pages/Inhabit'));
 const Gestalt = lazy(() => import('./pages/Gestalt'));
-const GestaltLive = lazy(() => import('./pages/GestaltLive'));
+// GestaltLive mothballed - three.js eliminated for performance
 const Gardener = lazy(() => import('./pages/Gardener'));
 const Garden = lazy(() => import('./pages/Garden'));
 const ParkScenario = lazy(() => import('./pages/ParkScenario'));
-const EmergenceDemo = lazy(() => import('./pages/EmergenceDemo'));
+// EmergenceDemo mothballed - three.js eliminated for performance
+const Differance = lazy(() => import('./pages/Differance'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Town sub-pages (Contract-Driven)
@@ -54,7 +55,7 @@ function App() {
                 {/* Crown Jewels */}
                 <Route path="/brain" element={<Brain />} />
                 <Route path="/gestalt" element={<Gestalt />} />
-                <Route path="/gestalt/live" element={<GestaltLive />} />
+                {/* /gestalt/live mothballed - three.js eliminated */}
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
                 <Route path="/forge" element={<Forge />} />
@@ -78,8 +79,10 @@ function App() {
                 <Route path="/gallery" element={<GalleryPage />} />
                 <Route path="/gallery/layout" element={<LayoutGallery />} />
 
-                {/* Other */}
-                <Route path="/emergence" element={<EmergenceDemo />} />
+                {/* Différance Engine — Ghost Heritage Graph Explorer */}
+                <Route path="/differance" element={<Differance />} />
+
+                {/* /emergence mothballed - three.js eliminated */}
               </Route>
 
               {/* 404 catch-all */}

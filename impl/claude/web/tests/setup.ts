@@ -6,6 +6,47 @@ import { enableMapSet } from 'immer';
 // Enable Immer's MapSet plugin for Map/Set support
 enableMapSet();
 
+// =============================================================================
+// Heavy Dependency Mocks (Prevent 4GB per worker)
+// =============================================================================
+
+// Mock pixi.js - prevents loading 29MB dep for canvas tests
+vi.mock('pixi.js', () => ({
+  Application: vi.fn(),
+  Container: vi.fn(),
+  Graphics: vi.fn(),
+  Text: vi.fn(),
+  TextStyle: vi.fn(),
+  Sprite: vi.fn(),
+  Texture: vi.fn(),
+}));
+
+vi.mock('@pixi/react', () => ({
+  Stage: ({ children }: { children?: React.ReactNode }) => children,
+  Container: ({ children }: { children?: React.ReactNode }) => children,
+  Graphics: () => null,
+  Text: () => null,
+  Sprite: () => null,
+}));
+
+// Mock three.js ecosystem - prevents loading 66MB for 3D tests
+vi.mock('three', () => ({}));
+vi.mock('@react-three/fiber', () => ({
+  Canvas: ({ children }: { children?: React.ReactNode }) => children,
+  useFrame: vi.fn(),
+  useThree: vi.fn(() => ({ camera: {}, scene: {}, gl: {} })),
+}));
+vi.mock('@react-three/drei', () => ({
+  OrbitControls: () => null,
+  Environment: () => null,
+  Text: () => null,
+  Html: ({ children }: { children?: React.ReactNode }) => children,
+}));
+vi.mock('@react-three/postprocessing', () => ({
+  EffectComposer: ({ children }: { children?: React.ReactNode }) => children,
+  Bloom: () => null,
+}));
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();
@@ -49,8 +90,9 @@ window.IntersectionObserver = MockIntersectionObserver as unknown as typeof Inte
 
 // Mock crypto.randomUUID
 if (!crypto.randomUUID) {
-  crypto.randomUUID = vi.fn(() =>
-    `${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`
+  crypto.randomUUID = vi.fn(
+    () =>
+      `${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}-${Math.random().toString(36).substring(2)}`
   ) as unknown as () => `${string}-${string}-${string}-${string}-${string}`;
 }
 

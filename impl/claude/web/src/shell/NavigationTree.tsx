@@ -34,6 +34,7 @@ import {
   Theater,
   Building,
   Layers,
+  GitBranch,
   type LucideIcon,
 } from 'lucide-react';
 import { useShell } from './ShellProvider';
@@ -584,6 +585,48 @@ function GallerySection({
   );
 }
 
+/** Tools section (Differance, etc.) */
+function ToolsSection({
+  currentRoute,
+  onNavigate,
+}: {
+  currentRoute: string;
+  onNavigate: (route: string) => void;
+}) {
+  const tools = [
+    { route: '/differance', label: 'Différance', icon: GitBranch, path: 'time.differance' },
+  ];
+
+  return (
+    <div className="border-t border-gray-700/50 pt-3">
+      <h3 className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+        Tools
+      </h3>
+      <div className="space-y-0.5">
+        {tools.map((tool) => {
+          const isActive = currentRoute === tool.route || currentRoute.startsWith(`${tool.route}/`);
+          const Icon = tool.icon;
+          return (
+            <button
+              key={tool.route}
+              onClick={() => onNavigate(tool.route)}
+              className={`
+                w-full flex items-center gap-2 px-3 py-1.5 text-sm
+                hover:bg-gray-700/50 transition-colors rounded-md
+                ${isActive ? 'bg-gray-700/70 text-white' : 'text-gray-300'}
+              `}
+            >
+              <Icon className="w-4 h-4 text-amber-400" />
+              <span>{tool.label}</span>
+              <span className="ml-auto text-xs text-gray-500 font-mono">{tool.path}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // =============================================================================
 // Main Component
 // =============================================================================
@@ -655,6 +698,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
       '/park': 'world.park',
       '/workshop': 'world.domain',
       '/emergence': 'world.emergence',
+      '/differance': 'time.differance',
     };
     // Check for exact match first, then prefix match for dynamic routes
     if (routeToPath[location.pathname]) {
@@ -702,6 +746,11 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
         'world.park': '/park',
         'world.domain': '/workshop',
         'world.emergence': '/emergence',
+        'time.differance': '/differance',
+        'time.differance.recent': '/differance',
+        'time.differance.at': '/differance',
+        'time.differance.why': '/differance',
+        'time.differance.heritage': '/differance',
       };
       const route = pathToRoute[path];
       if (route) {
@@ -806,6 +855,11 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                     onNavigate={handleNavigateToRoute}
                   />
 
+                  <ToolsSection
+                    currentRoute={location.pathname}
+                    onNavigate={handleNavigateToRoute}
+                  />
+
                   <GallerySection
                     currentRoute={location.pathname}
                     onNavigate={handleNavigateToRoute}
@@ -887,6 +941,8 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   currentRoute={location.pathname}
                   onNavigate={handleNavigateToRoute}
                 />
+
+                <ToolsSection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
 
                 <GallerySection
                   currentRoute={location.pathname}
@@ -980,6 +1036,8 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 currentRoute={location.pathname}
                 onNavigate={handleNavigateToRoute}
               />
+
+              <ToolsSection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
 
               <GallerySection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
             </div>

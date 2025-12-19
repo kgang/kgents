@@ -12,8 +12,9 @@ import type { CodebaseModule } from '../../api/types';
 // Density (shared with main Gestalt page and primitives)
 // =============================================================================
 
-// Re-export Density from primitives for backward compatibility
-export type { Density } from '../three/primitives/themes/types';
+// Density type - originally from three.js primitives, now defined locally
+// three.js eliminated for performance
+export type Density = 'compact' | 'comfortable' | 'spacious';
 
 // =============================================================================
 // Filter State

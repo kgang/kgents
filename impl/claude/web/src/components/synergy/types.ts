@@ -9,7 +9,15 @@
  * Crown Jewel identifiers.
  * Must match the Python Jewel enum in protocols/synergy/events.py
  */
-export type Jewel = 'brain' | 'gestalt' | 'gardener' | 'forge' | 'coalition' | 'park' | 'domain' | 'dgent';
+export type Jewel =
+  | 'brain'
+  | 'gestalt'
+  | 'gardener'
+  | 'forge'
+  | 'coalition'
+  | 'park'
+  | 'domain'
+  | 'dgent';
 
 /**
  * Known synergy event types.
@@ -33,7 +41,7 @@ export type SynergyEventType =
   | 'season_changed'
   | 'gesture_applied'
   | 'plot_progress_updated'
-  // Atelier events
+  // Forge events
   | 'piece_created'
   | 'bid_accepted'
   // Coalition events

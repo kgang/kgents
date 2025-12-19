@@ -52,6 +52,27 @@ export default defineConfig({
     // Execution Optimizations (AI Agent Friendly)
     // ==========================================================================
 
+    // CRITICAL: Limit workers to prevent memory explosion
+    // Default spawns workers = CPU cores, each loading ~4GB with heavy deps
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        maxForks: 2, // Max 2 parallel workers (~8GB max)
+        minForks: 1,
+        isolate: false, // Reuse worker processes between test files
+      },
+    },
+
+    // Dependency optimization - don't transform heavy deps
+    deps: {
+      optimizer: {
+        web: {
+          // Pre-bundle these so they're not re-transformed per worker
+          include: ['pixi.js', '@pixi/react', 'framer-motion', 'lucide-react'],
+        },
+      },
+    },
+
     // Sequential execution for stability (React Testing Library needs this)
     // Enable parallel with `npm run test:run -- --pool=threads` if needed
     sequence: {

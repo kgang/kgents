@@ -52,7 +52,7 @@ export const SEMANTIC_COLORS = {
   knowledge: '#06B6D4', // Cyan - brain, memory, understanding
   growth: '#22C55E', // Green - gestalt, health, progress
   cultivation: '#84CC16', // Lime - gardener, nurturing, emergence
-  creation: '#F59E0B', // Amber - atelier, creativity, warmth
+  creation: '#F59E0B', // Amber - forge, creativity, warmth
   collaboration: '#8B5CF6', // Violet - coalition, synthesis, harmony
   drama: '#EC4899', // Pink - park, narrative, performance
   urgency: '#EF4444', // Red - domain, crisis, alert

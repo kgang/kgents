@@ -125,7 +125,7 @@ function inferJewel(path: string): CrownJewel | undefined {
     { pattern: /^self\.memory/, jewel: 'brain' },
     { pattern: /^world\.codebase/, jewel: 'gestalt' },
     { pattern: /^concept\.gardener|^self\.garden/, jewel: 'gardener' },
-    { pattern: /^world\.atelier/, jewel: 'forge' },
+    { pattern: /^world\.forge/, jewel: 'forge' },
     { pattern: /^world\.town/, jewel: 'coalition' },
     { pattern: /^world\.park/, jewel: 'park' },
     { pattern: /^world\.domain/, jewel: 'domain' },
@@ -156,7 +156,8 @@ function getErrorType(error: Error): 'network' | 'notfound' | 'permission' | 'ti
   if (error instanceof AgenteseError) {
     const msg = error.message.toLowerCase();
     if (msg.includes('not found') || msg.includes('404')) return 'notfound';
-    if (msg.includes('permission') || msg.includes('403') || msg.includes('unauthorized')) return 'permission';
+    if (msg.includes('permission') || msg.includes('403') || msg.includes('unauthorized'))
+      return 'permission';
     if (msg.includes('timeout')) return 'timeout';
   }
 
@@ -201,7 +202,11 @@ function unwrapResponse<T>(response: { data: AgenteseResponse<T> }): T {
     'content' in result
   ) {
     const metadata = (result as { metadata: unknown }).metadata;
-    if (metadata && typeof metadata === 'object' && !('error' in metadata && Object.keys(metadata as object).length === 1)) {
+    if (
+      metadata &&
+      typeof metadata === 'object' &&
+      !('error' in metadata && Object.keys(metadata as object).length === 1)
+    ) {
       return metadata as T;
     }
   }
@@ -299,10 +304,9 @@ export function PathProjection<T = unknown>({
         if (isGet) {
           const response = await apiClient.get<AgenteseResponse<unknown>>(route);
           return unwrapResponse(response);
-        } else {
-          const response = await apiClient.post<AgenteseResponse<unknown>>(route, currentBody ?? {});
-          return unwrapResponse(response);
         }
+        const response = await apiClient.post<AgenteseResponse<unknown>>(route, currentBody ?? {});
+        return unwrapResponse(response);
       });
 
       setData(result as T);
@@ -313,6 +317,7 @@ export function PathProjection<T = unknown>({
       onError?.(error);
     } finally {
       setLoading(false);
+      // eslint-disable-next-line require-atomic-updates -- Safe: ref reset in finally block
       isFetchingRef.current = false;
     }
   }, [path, aspect, bodyJson, tracedInvoke, onSuccess, onError]);
@@ -355,7 +360,19 @@ export function PathProjection<T = unknown>({
       isTablet,
       isDesktop,
     }),
-    [density, observer, loading, error, fetchData, streaming, path, aspect, isMobile, isTablet, isDesktop]
+    [
+      density,
+      observer,
+      loading,
+      error,
+      fetchData,
+      streaming,
+      path,
+      aspect,
+      isMobile,
+      isTablet,
+      isDesktop,
+    ]
   );
 
   // Loading state
@@ -365,12 +382,11 @@ export function PathProjection<T = unknown>({
     }
 
     return (
-      <div className={`flex items-center justify-center min-h-[200px] ${className ?? ''}`} style={style}>
-        <PersonalityLoading
-          jewel={effectiveJewel ?? 'brain'}
-          action={loadingAction}
-          size="md"
-        />
+      <div
+        className={`flex items-center justify-center min-h-[200px] ${className ?? ''}`}
+        style={style}
+      >
+        <PersonalityLoading jewel={effectiveJewel ?? 'brain'} action={loadingAction} size="md" />
       </div>
     );
   }
@@ -384,7 +400,10 @@ export function PathProjection<T = unknown>({
     const errorType = getErrorType(error);
 
     return (
-      <div className={`flex items-center justify-center min-h-[200px] ${className ?? ''}`} style={style}>
+      <div
+        className={`flex items-center justify-center min-h-[200px] ${className ?? ''}`}
+        style={style}
+      >
         <EmpathyError
           type={errorType}
           details={error.message}

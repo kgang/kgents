@@ -252,7 +252,7 @@ export {
 export {
   // Query keys
   forgeQueryKeys,
-  // Atelier manifest
+  // Forge manifest
   useForgeManifest,
   // Workshops
   useWorkshops,
@@ -429,3 +429,17 @@ export {
   type BranchCompareRequest,
   type BranchCompareResponse,
 } from './useDifferanceQuery';
+
+// Soul AGENTESE queries (K-gent governance)
+export {
+  // Soul manifest
+  useSoulManifest,
+  useSoulVibe,
+  // Utilities
+  isSoulActive,
+  getSoulModeIcon,
+  getSoulModeLabel,
+  // Type re-exports
+  type SoulManifestResponse,
+  type SoulVibeResponse,
+} from './useSoulQuery';

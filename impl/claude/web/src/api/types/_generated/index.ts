@@ -11,5 +11,8 @@ export * from './concept-gardener';
 export * from './self-chat';
 export * from './time-differance';
 export * from './time-branch';
+export * from './world-forge';
+export * from './world-forge-soul';
+export * from './world-forge-commission';
 export * from './world-codebase';
 export * from './world-park';

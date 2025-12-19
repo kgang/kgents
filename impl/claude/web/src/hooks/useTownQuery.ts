@@ -87,7 +87,7 @@ async function fetchAgentese<T>(path: string, body?: unknown, observer?: string)
     'world.town',
     'self.memory',
     'world.codebase',
-    'world.atelier',
+    'world.forge',
     'world.park',
     'concept.gardener',
   ];
@@ -127,27 +127,25 @@ async function fetchAgentese<T>(path: string, body?: unknown, observer?: string)
 
   // Only manifest and affordances are GET, everything else is POST
   if (aspect === 'manifest' || aspect === 'affordances') {
-    const response = await apiClient.get<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`,
-      { headers }
-    );
-    if (response.data.error) {
-      throw new Error(response.data.error);
-    }
-    return response.data.result;
-  } else {
-    // All other aspects require POST (even without body)
-    // Compound aspects like "citizen.list" stay as-is in the URL
-    const response = await apiClient.post<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`,
-      body ?? {},
-      { headers }
-    );
+    const response = await apiClient.get<AgenteseResponse<T>>(`/agentese/${urlPath}/${aspect}`, {
+      headers,
+    });
     if (response.data.error) {
       throw new Error(response.data.error);
     }
     return response.data.result;
   }
+  // All other aspects require POST (even without body)
+  // Compound aspects like "citizen.list" stay as-is in the URL
+  const response = await apiClient.post<AgenteseResponse<T>>(
+    `/agentese/${urlPath}/${aspect}`,
+    body ?? {},
+    { headers }
+  );
+  if (response.data.error) {
+    throw new Error(response.data.error);
+  }
+  return response.data.result;
 }
 
 // =============================================================================
@@ -237,7 +235,11 @@ export function useCitizen(
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<WorldTownCitizenGetResponse>('world.town.citizen.get', { citizen_id: citizenId }));
+    execute(
+      fetchAgentese<WorldTownCitizenGetResponse>('world.town.citizen.get', {
+        citizen_id: citizenId,
+      })
+    );
   }, [execute, citizenId, enabled]);
 
   useEffect(() => {
@@ -260,24 +262,35 @@ export function useCitizen(
  * Create a new citizen.
  * AGENTESE: world.town.citizen.create
  */
-export function useCreateCitizen(): MutationResult<WorldTownCitizenCreateResponse, WorldTownCitizenCreateRequest> {
+export function useCreateCitizen(): MutationResult<
+  WorldTownCitizenCreateResponse,
+  WorldTownCitizenCreateRequest
+> {
   const { state, execute } = useAsyncState<WorldTownCitizenCreateResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownCitizenCreateRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownCitizenCreateResponse>('world.town.citizen.create', data));
-      if (!result) throw new Error('Failed to create citizen');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownCitizenCreateRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownCitizenCreateResponse>('world.town.citizen.create', data)
+        );
+        if (!result) throw new Error('Failed to create citizen');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownCitizenCreateRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownCitizenCreateRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -293,24 +306,35 @@ export function useCreateCitizen(): MutationResult<WorldTownCitizenCreateRespons
  * Update an existing citizen.
  * AGENTESE: world.town.citizen.update
  */
-export function useUpdateCitizen(): MutationResult<WorldTownCitizenUpdateResponse, WorldTownCitizenUpdateRequest> {
+export function useUpdateCitizen(): MutationResult<
+  WorldTownCitizenUpdateResponse,
+  WorldTownCitizenUpdateRequest
+> {
   const { state, execute } = useAsyncState<WorldTownCitizenUpdateResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownCitizenUpdateRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownCitizenUpdateResponse>('world.town.citizen.update', data));
-      if (!result) throw new Error('Failed to update citizen');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownCitizenUpdateRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownCitizenUpdateResponse>('world.town.citizen.update', data)
+        );
+        if (!result) throw new Error('Failed to update citizen');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownCitizenUpdateRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownCitizenUpdateRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -403,24 +427,35 @@ export function useConversationHistory(
  * Start a conversation with a citizen.
  * AGENTESE: world.town.conversation.converse
  */
-export function useStartConversation(): MutationResult<WorldTownConverseResponse, WorldTownConverseRequest> {
+export function useStartConversation(): MutationResult<
+  WorldTownConverseResponse,
+  WorldTownConverseRequest
+> {
   const { state, execute } = useAsyncState<WorldTownConverseResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownConverseRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownConverseResponse>('world.town.conversation.converse', data));
-      if (!result) throw new Error('Failed to start conversation');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownConverseRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownConverseResponse>('world.town.conversation.converse', data)
+        );
+        if (!result) throw new Error('Failed to start conversation');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownConverseRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownConverseRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -440,20 +475,28 @@ export function useAddTurn(): MutationResult<WorldTownTurnResponse, WorldTownTur
   const { state, execute } = useAsyncState<WorldTownTurnResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownTurnRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownTurnResponse>('world.town.conversation.turn', data));
-      if (!result) throw new Error('Failed to add turn');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownTurnRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownTurnResponse>('world.town.conversation.turn', data)
+        );
+        if (!result) throw new Error('Failed to add turn');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownTurnRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownTurnRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -528,7 +571,11 @@ export function useCoalition(
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<WorldTownCoalitionGetResponse>('world.town.coalition.get', { coalition_id: coalitionId }));
+    execute(
+      fetchAgentese<WorldTownCoalitionGetResponse>('world.town.coalition.get', {
+        coalition_id: coalitionId,
+      })
+    );
   }, [execute, coalitionId, enabled]);
 
   useEffect(() => {
@@ -574,24 +621,35 @@ export function useCoalitionBridges(): QueryResult<WorldTownCoalitionBridgesResp
  * Detect coalitions in the citizen graph.
  * AGENTESE: world.town.coalition.detect
  */
-export function useDetectCoalitions(): MutationResult<WorldTownCoalitionDetectResponse, WorldTownCoalitionDetectRequest> {
+export function useDetectCoalitions(): MutationResult<
+  WorldTownCoalitionDetectResponse,
+  WorldTownCoalitionDetectRequest
+> {
   const { state, execute } = useAsyncState<WorldTownCoalitionDetectResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownCoalitionDetectRequest = {}) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownCoalitionDetectResponse>('world.town.coalition.detect', data));
-      if (!result) throw new Error('Failed to detect coalitions');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownCoalitionDetectRequest = {}) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownCoalitionDetectResponse>('world.town.coalition.detect', data)
+        );
+        if (!result) throw new Error('Failed to detect coalitions');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownCoalitionDetectRequest = {}) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownCoalitionDetectRequest = {}) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -614,7 +672,9 @@ export function useCoalitionDecay(): MutationResult<WorldTownCoalitionDecayRespo
   const mutateAsync = useCallback(async () => {
     setIsPending(true);
     try {
-      const result = await execute(fetchAgentese<WorldTownCoalitionDecayResponse>('world.town.coalition.decay', {}));
+      const result = await execute(
+        fetchAgentese<WorldTownCoalitionDecayResponse>('world.town.coalition.decay', {})
+      );
       if (!result) throw new Error('Failed to apply decay');
       return result;
     } finally {
@@ -648,7 +708,8 @@ export const townQueryKeys = {
   citizenDetail: (id: string) => [...townQueryKeys.citizens(), 'detail', id] as const,
   relationships: (citizenId: string) => [...townQueryKeys.all, 'relationships', citizenId] as const,
   conversations: () => [...townQueryKeys.all, 'conversations'] as const,
-  conversationHistory: (citizenId: string) => [...townQueryKeys.conversations(), 'history', citizenId] as const,
+  conversationHistory: (citizenId: string) =>
+    [...townQueryKeys.conversations(), 'history', citizenId] as const,
   coalitions: () => [...townQueryKeys.all, 'coalitions'] as const,
   coalitionsList: () => [...townQueryKeys.coalitions(), 'list'] as const,
   coalitionDetail: (id: string) => [...townQueryKeys.coalitions(), 'detail', id] as const,

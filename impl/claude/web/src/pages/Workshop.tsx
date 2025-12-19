@@ -20,12 +20,7 @@ import {
 } from '@/components/elastic';
 import { PersonalityLoading } from '@/components/joy';
 import { getBuilderColor, getEmptyState } from '@/constants';
-import type {
-  WorkshopStatus,
-  WorkshopPhase,
-  BuilderSummary,
-  WorkshopArtifact,
-} from '@/api/types';
+import type { WorkshopStatus, WorkshopPhase, BuilderSummary, WorkshopArtifact } from '@/api/types';
 
 type Density = 'compact' | 'comfortable' | 'spacious';
 
@@ -95,7 +90,10 @@ export default function Workshop() {
               className="h-full bg-town-bg"
             >
               {isLoading && (
-                <div className="h-full flex items-center justify-center" style={{ minHeight: isMobile ? '200px' : '300px' }}>
+                <div
+                  className="h-full flex items-center justify-center"
+                  style={{ minHeight: isMobile ? '200px' : '300px' }}
+                >
                   <PersonalityLoading jewel="forge" action="create" />
                 </div>
               )}
@@ -111,12 +109,14 @@ export default function Workshop() {
                 />
               )}
 
-              {!isLoading && !error && !hasData && (
-                <EmptyWorkshop density={density} />
-              )}
+              {!isLoading && !error && !hasData && <EmptyWorkshop density={density} />}
 
               {!isLoading && !error && hasData && status && (
-                <BuilderCanvas builders={status.builders} artifacts={status.artifacts} density={density} />
+                <BuilderCanvas
+                  builders={status.builders}
+                  artifacts={status.artifacts}
+                  density={density}
+                />
               )}
             </ElasticContainer>
           }
@@ -193,21 +193,27 @@ function WorkshopHeader({ phase, taskDescription, isRunning }: WorkshopHeaderPro
 
 function EmptyWorkshop({ density }: { density: Density }) {
   const isCompact = density === 'compact';
-  // Use semantic empty state - Workshop maps to Atelier's artisan vocabulary
+  // Use semantic empty state - Workshop maps to Forge's artisan vocabulary
   const emptyState = getEmptyState('noArtisans');
 
   return (
-    <div className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}>
+    <div
+      className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}
+    >
       <span className={`${isCompact ? 'text-4xl mb-2' : 'text-6xl mb-4'}`}>🏗️</span>
-      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>{emptyState.title}</h2>
+      <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>
+        {emptyState.title}
+      </h2>
       <p className={`text-gray-400 max-w-md ${isCompact ? 'text-xs mb-4' : 'mb-6'}`}>
         {isCompact
           ? emptyState.description
           : `${emptyState.description} They'll collaborate through phases: Exploring, Designing, Prototyping, Refining, and Integrating.`}
       </p>
-      <button className={`bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors ${
-        isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
-      }`}>
+      <button
+        className={`bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors ${
+          isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
+        }`}
+      >
         {emptyState.action || 'Create Task'}
       </button>
     </div>
@@ -226,14 +232,22 @@ function BuilderCanvas({ builders, density }: BuilderCanvasProps) {
 
   return (
     <div className="h-full">
-      <ElasticContainer layout="grid" gap={isCompact ? 'var(--elastic-gap-sm)' : 'var(--elastic-gap-md)'} minItemWidth={minItemWidth}>
+      <ElasticContainer
+        layout="grid"
+        gap={isCompact ? 'var(--elastic-gap-sm)' : 'var(--elastic-gap-md)'}
+        minItemWidth={minItemWidth}
+      >
         {builders.map((builder) => (
           <ElasticCard
             key={builder.archetype}
             priority={builder.is_active ? 10 : 5}
             minContent="title"
             shrinkBehavior="collapse"
-            icon={<span className={isCompact ? 'text-lg' : 'text-2xl'}>{BUILDER_ICONS_MAP[builder.archetype]}</span>}
+            icon={
+              <span className={isCompact ? 'text-lg' : 'text-2xl'}>
+                {BUILDER_ICONS_MAP[builder.archetype]}
+              </span>
+            }
             title={builder.name}
             summary={`${builder.archetype} · ${builder.phase}`}
             isSelected={builder.is_active}
@@ -270,16 +284,26 @@ function BuilderRosterPanel({ builders, density }: BuilderRosterPanelProps) {
   if (builders.length === 0) {
     const emptyState = getEmptyState('noArtisans');
     return (
-      <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-        <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>Builders</h3>
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{emptyState.description}</p>
+      <div
+        className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+      >
+        <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+          Builders
+        </h3>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+          {emptyState.description}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>Builders</h3>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
+      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
+        Builders
+      </h3>
       <div className={isCompact ? 'space-y-1' : 'space-y-2'}>
         {builders.map((b) => (
           <div
@@ -289,7 +313,9 @@ function BuilderRosterPanel({ builders, density }: BuilderRosterPanelProps) {
           >
             <span className={isCompact ? 'text-sm' : ''}>{BUILDER_ICONS_MAP[b.archetype]}</span>
             <span className={b.is_active ? 'font-medium' : 'text-gray-400'}>{b.name}</span>
-            {b.is_in_specialty && <span className={`text-yellow-400 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>★</span>}
+            {b.is_in_specialty && (
+              <span className={`text-yellow-400 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>★</span>
+            )}
           </div>
         ))}
       </div>
@@ -307,16 +333,23 @@ function ArtifactsPanel({ artifacts, density }: ArtifactsPanelProps) {
   const isCompact = density === 'compact';
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
       <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
         Artifacts ({artifacts.length})
       </h3>
       {artifacts.length === 0 ? (
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{getEmptyState('noCreations').description}</p>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+          {getEmptyState('noCreations').description}
+        </p>
       ) : (
         <div className={`space-y-1 overflow-y-auto ${isCompact ? 'max-h-32' : 'max-h-48'}`}>
           {artifacts.slice(0, maxArtifacts).map((artifact) => (
-            <div key={artifact.id} className={`rounded bg-town-bg/50 ${isCompact ? 'p-1.5 text-[10px]' : 'text-xs p-2'}`}>
+            <div
+              key={artifact.id}
+              className={`rounded bg-town-bg/50 ${isCompact ? 'p-1.5 text-[10px]' : 'text-xs p-2'}`}
+            >
               <div className="flex items-center justify-between">
                 <span className="text-gray-300 font-mono">{artifact.phase}</span>
                 <span className="text-gray-500">{artifact.builder}</span>
@@ -345,12 +378,20 @@ function MetricsPanel({ metrics, density }: MetricsPanelProps) {
   const isCompact = density === 'compact';
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>Metrics</h3>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
+      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
+        Metrics
+      </h3>
       <div className={`grid grid-cols-2 ${isCompact ? 'gap-1 text-[10px]' : 'gap-2 text-xs'}`}>
         <MetricItem label="Steps" value={metrics.total_steps} isCompact={isCompact} />
         <MetricItem label="Events" value={metrics.total_events} isCompact={isCompact} />
-        <MetricItem label="Tokens" value={metrics.total_tokens.toLocaleString()} isCompact={isCompact} />
+        <MetricItem
+          label="Tokens"
+          value={metrics.total_tokens.toLocaleString()}
+          isCompact={isCompact}
+        />
         <MetricItem label="Artifacts" value={metrics.artifacts_produced} isCompact={isCompact} />
         <MetricItem label="Phases" value={metrics.phases_completed} isCompact={isCompact} />
         <MetricItem label="Handoffs" value={metrics.handoffs} isCompact={isCompact} />
@@ -359,7 +400,15 @@ function MetricsPanel({ metrics, density }: MetricsPanelProps) {
   );
 }
 
-function MetricItem({ label, value, isCompact }: { label: string; value: string | number; isCompact?: boolean }) {
+function MetricItem({
+  label,
+  value,
+  isCompact,
+}: {
+  label: string;
+  value: string | number;
+  isCompact?: boolean;
+}) {
   return (
     <div className={`rounded bg-town-bg/50 ${isCompact ? 'p-1.5' : 'p-2'}`}>
       <div className="text-gray-500">{label}</div>

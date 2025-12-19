@@ -116,7 +116,11 @@ function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
   ) {
     // Check if metadata has the actual data (not just an error)
     const metadata = (result as { metadata: unknown }).metadata;
-    if (metadata && typeof metadata === 'object' && !('error' in metadata && Object.keys(metadata as object).length === 1)) {
+    if (
+      metadata &&
+      typeof metadata === 'object' &&
+      !('error' in metadata && Object.keys(metadata as object).length === 1)
+    ) {
       return metadata as T;
     }
   }
@@ -135,10 +139,7 @@ function unwrapAgentese<T>(response: { data: AgenteseResponse<T> }): T {
  * );
  * ```
  */
-export async function withAgenteseLogging<T>(
-  path: string,
-  call: () => Promise<T>
-): Promise<T> {
+export async function withAgenteseLogging<T>(path: string, call: () => Promise<T>): Promise<T> {
   if (import.meta.env.DEV) {
     console.debug(`[AGENTESE] Calling: ${path}`);
   }
@@ -309,6 +310,76 @@ export const townApi = {
   getMetrics: async (townId: string, _since_hours?: number): Promise<unknown> => {
     const response = await apiClient.get(`/api/v1/town/${townId}/status`);
     return response.data;
+  },
+
+  // =========================================================================
+  // Dialogue API (Phase 5: Town End-to-End)
+  // =========================================================================
+
+  /**
+   * Start a conversation with a citizen via AGENTESE: world.town.converse
+   *
+   * @param citizenId - The citizen's ID or name
+   * @param topic - Optional conversation topic
+   * @returns The created conversation with empty turns
+   */
+  converse: async (
+    citizenId: string,
+    topic?: string
+  ): Promise<import('./types').ConversationDetail> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{ conversation: import('./types').ConversationDetail }>
+    >('/agentese/world/town/converse', {
+      citizen_id: citizenId,
+      topic,
+    });
+    return unwrapAgentese(response).conversation;
+  },
+
+  /**
+   * Add a turn to a conversation via AGENTESE: world.town.turn
+   *
+   * The backend will:
+   * 1. Store the user's message
+   * 2. Generate a citizen response via LLM (DialogueService)
+   * 3. Return both turns
+   *
+   * @param conversationId - The conversation ID
+   * @param content - The user's message content
+   * @returns The citizen's response turn
+   */
+  turn: async (conversationId: string, content: string): Promise<import('./types').TurnSummary> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{ turn: import('./types').TurnSummary }>
+    >('/agentese/world/town/turn', {
+      conversation_id: conversationId,
+      content,
+      role: 'user',
+    });
+    return unwrapAgentese(response).turn;
+  },
+
+  /**
+   * Get dialogue history for a citizen via AGENTESE: world.town.history
+   *
+   * @param citizenId - The citizen's ID or name
+   * @param limit - Maximum number of conversations to return (default: 10)
+   * @returns List of conversation summaries (without turns)
+   */
+  getHistory: async (
+    citizenId: string,
+    limit: number = 10
+  ): Promise<import('./types').ConversationSummary[]> => {
+    const response = await apiClient.post<
+      AgenteseResponse<{
+        citizen_id: string;
+        conversations: import('./types').ConversationSummary[];
+      }>
+    >('/agentese/world/town/history', {
+      citizen_id: citizenId,
+      limit,
+    });
+    return unwrapAgentese(response).conversations;
   },
 };
 
@@ -631,7 +702,9 @@ export const gestaltApi = {
     if (options?.pollInterval) params.set('poll_interval', options.pollInterval.toString());
     const queryString = params.toString();
     // SSE endpoint uses AGENTESE gateway path
-    return new EventSource(`${baseUrl}/agentese/world/codebase/topology/stream${queryString ? `?${queryString}` : ''}`);
+    return new EventSource(
+      `${baseUrl}/agentese/world/codebase/topology/stream${queryString ? `?${queryString}` : ''}`
+    );
   },
 };
 
@@ -657,11 +730,7 @@ export const infraApi = {
   disconnect: () => apiClient.post<{ status: string }>('/api/infra/disconnect'),
 
   /** Get current infrastructure topology */
-  getTopology: (params?: {
-    namespaces?: string;
-    kinds?: string;
-    min_health?: number;
-  }) =>
+  getTopology: (params?: { namespaces?: string; kinds?: string; min_health?: number }) =>
     apiClient.get<InfraTopologyResponse>('/api/infra/topology', { params }),
 
   /** Get aggregate infrastructure health */
@@ -692,10 +761,7 @@ export const infraApi = {
 //   void.garden.* - Serendipity
 // =============================================================================
 
-import type {
-  GardenerSessionState,
-  PolynomialVisualization,
-} from './types';
+import type { GardenerSessionState, PolynomialVisualization } from './types';
 
 interface GardenerCreateRequest {
   name?: string;
@@ -855,10 +921,7 @@ export const gardenerApi = {
 };
 
 // Garden API types
-import type {
-  GardenSeason,
-  TendingVerb,
-} from '@/reactive/types';
+import type { GardenSeason, TendingVerb } from '@/reactive/types';
 
 export interface GardenStateResponse {
   garden_id: string;
