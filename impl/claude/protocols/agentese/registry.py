@@ -558,9 +558,20 @@ def repopulate_registry() -> None:
     registry = _get_registry()
     registered_count = 0
 
+    # Modules to skip during scan (to avoid deprecation warnings)
+    # - typing.io deprecated in Python 3.12+, triggers warning on getattr
+    # - starlette.status deprecated HTTP constants (HTTP_413_REQUEST_ENTITY_TOO_LARGE etc.)
+    skip_prefixes = ("typing.", "starlette.")
+    skip_exact = {"typing", "starlette.status"}
+
     # Scan all loaded modules
     for module in list(sys.modules.values()):
         if module is None:
+            continue
+
+        # Skip modules that trigger deprecation warnings
+        module_name = getattr(module, "__name__", "")
+        if module_name in skip_exact or any(module_name.startswith(p) for p in skip_prefixes):
             continue
 
         # Check all attributes in the module

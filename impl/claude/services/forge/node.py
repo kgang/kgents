@@ -397,6 +397,7 @@ class GalleryListRendering:
 @node(
     "world.forge",
     description="Creative workshop fishbowl",
+    dependencies=("forge_persistence",),  # Required DI dependency
     contracts={
         # Perception aspects (Response only - no request needed)
         "manifest": Response(ForgeManifestResponse),

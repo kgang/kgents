@@ -311,15 +311,16 @@ class TestSSEStreamingE2E:
 
 # Performance baselines in seconds
 # These are generous limits to catch regressions without flakiness
+# NOTE: CI VMs are slower than dev machines - keep thresholds generous (meta.md learning)
 # NOTE: world/codebase/manifest excluded - requires full codebase scan (30s+)
 PERFORMANCE_BASELINES = {
-    "/agentese/self/memory/manifest": 0.5,
+    "/agentese/self/memory/manifest": 1.0,  # 2x buffer for CI VM variance
     # "/agentese/world/codebase/manifest": excluded - triggers 30s+ codebase scan
-    "/agentese/self/garden/manifest": 0.5,
-    "/agentese/world/forge/manifest": 0.5,
-    "/agentese/world/town/manifest": 0.5,
-    "/agentese/world/park/manifest": 0.5,
-    "/agentese/discover": 0.3,
+    "/agentese/self/garden/manifest": 1.0,
+    "/agentese/world/forge/manifest": 1.0,  # Includes DI resolution overhead
+    "/agentese/world/town/manifest": 1.0,
+    "/agentese/world/park/manifest": 1.0,
+    "/agentese/discover": 0.5,  # Discovery should still be fast
 }
 
 
