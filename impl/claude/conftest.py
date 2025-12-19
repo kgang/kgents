@@ -383,6 +383,9 @@ def pytest_configure(config: Any) -> None:
     config.addinivalue_line(
         "markers", "needs_llm: mark test as requiring real LLM (auto_llm enabled)"
     )
+    config.addinivalue_line(
+        "markers", "sentinel: mark test as CI safety/sentinel infrastructure (Phase 3)"
+    )
 
     # Register WitnessPlugin if --witness flag is used
     if config.getoption("--witness", default=False):
