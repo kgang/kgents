@@ -477,9 +477,7 @@ class FlowNode(BaseLogosNode):
             synthesis = self._research_flow.synthesize()
             return {
                 "status": "synthesized",
-                "insights": synthesis.insights
-                if hasattr(synthesis, "insights")
-                else [],
+                "insights": synthesis.insights if hasattr(synthesis, "insights") else [],
                 "confidence": synthesis.confidence
                 if hasattr(synthesis, "confidence")
                 else "unknown",
@@ -504,9 +502,7 @@ class FlowNode(BaseLogosNode):
         try:
             board = self._collaboration_flow.blackboard
             return {
-                "contributions": len(board.contributions)
-                if hasattr(board, "contributions")
-                else 0,
+                "contributions": len(board.contributions) if hasattr(board, "contributions") else 0,
                 "proposals": len(board.proposals) if hasattr(board, "proposals") else 0,
                 "decisions": len(board.decisions) if hasattr(board, "decisions") else 0,
                 "current_round": board.current_round
@@ -539,9 +535,7 @@ class FlowNode(BaseLogosNode):
             )
             return {
                 "status": "posted",
-                "contribution_id": posted_result.id
-                if hasattr(posted_result, "id")
-                else "unknown",
+                "contribution_id": posted_result.id if hasattr(posted_result, "id") else "unknown",
                 "type": contribution_type,
             }
         except Exception as e:
@@ -595,12 +589,8 @@ class FlowNode(BaseLogosNode):
             return {
                 "status": "decided",
                 "proposal_id": proposal_id,
-                "outcome": decision.outcome
-                if hasattr(decision, "outcome")
-                else "unknown",
-                "votes": decision.vote_summary
-                if hasattr(decision, "vote_summary")
-                else {},
+                "outcome": decision.outcome if hasattr(decision, "outcome") else "unknown",
+                "votes": decision.vote_summary if hasattr(decision, "vote_summary") else {},
             }
         except Exception as e:
             return {"error": str(e)}
@@ -671,9 +661,7 @@ class ChatFlowNode(BaseLogosNode):
             case "send":
                 return await self._send_message(observer, **kwargs)
             case "reset":
-                return await self._parent_flow._reset_flow(
-                    observer, modality="chat", **kwargs
-                )
+                return await self._parent_flow._reset_flow(observer, modality="chat", **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 

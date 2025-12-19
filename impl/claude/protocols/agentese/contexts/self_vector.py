@@ -84,9 +84,7 @@ class VectorNode(BaseLogosNode):
     _vgent: Any = None  # VgentProtocol from agents.v
 
     # Fallback: in-memory vectors (for graceful degradation)
-    _fallback_vectors: dict[str, tuple[list[float], dict[str, str]]] = field(
-        default_factory=dict
-    )
+    _fallback_vectors: dict[str, tuple[list[float], dict[str, str]]] = field(default_factory=dict)
     _fallback_dimension: int = 384  # Default dimension
 
     @property

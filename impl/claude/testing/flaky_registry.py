@@ -67,9 +67,7 @@ class FlakyRegistry:
         self.store = store
         self._memory: dict[str, FlakyPattern] = {}
 
-    async def record_outcome(
-        self, test_id: str, passed: bool, reason: str = ""
-    ) -> FlakyPattern:
+    async def record_outcome(self, test_id: str, passed: bool, reason: str = "") -> FlakyPattern:
         """
         Record a test outcome.
 

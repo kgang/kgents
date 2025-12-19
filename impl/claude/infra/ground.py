@@ -135,18 +135,12 @@ class InfrastructureConfig:
     profile: str = "local-canonical"
 
     # The Four Stores
-    relational: ProviderConfig = field(
-        default_factory=lambda: ProviderConfig(type="sqlite")
-    )
+    relational: ProviderConfig = field(default_factory=lambda: ProviderConfig(type="sqlite"))
     vector: ProviderConfig = field(
         default_factory=lambda: ProviderConfig(type="numpy", dimensions=384)
     )
-    blob: ProviderConfig = field(
-        default_factory=lambda: ProviderConfig(type="filesystem")
-    )
-    telemetry: ProviderConfig = field(
-        default_factory=lambda: ProviderConfig(type="sqlite")
-    )
+    blob: ProviderConfig = field(default_factory=lambda: ProviderConfig(type="filesystem"))
+    telemetry: ProviderConfig = field(default_factory=lambda: ProviderConfig(type="sqlite"))
 
     # Synapse configuration
     synapse_buffer_size: int = 1000
@@ -167,26 +161,16 @@ class InfrastructureConfig:
 
         return cls(
             profile=d.get("profile", "local-canonical"),
-            relational=ProviderConfig.from_dict(
-                providers.get("relational", {"type": "sqlite"})
-            ),
+            relational=ProviderConfig.from_dict(providers.get("relational", {"type": "sqlite"})),
             vector=ProviderConfig.from_dict(providers.get("vector", {"type": "numpy"})),
-            blob=ProviderConfig.from_dict(
-                providers.get("blob", {"type": "filesystem"})
-            ),
-            telemetry=ProviderConfig.from_dict(
-                providers.get("telemetry", {"type": "sqlite"})
-            ),
+            blob=ProviderConfig.from_dict(providers.get("blob", {"type": "filesystem"})),
+            telemetry=ProviderConfig.from_dict(providers.get("telemetry", {"type": "sqlite"})),
             synapse_buffer_size=d.get("synapse", {}).get("buffer_size", 1000),
-            synapse_batch_interval_ms=d.get("synapse", {}).get(
-                "batch_interval_ms", 100
-            ),
+            synapse_batch_interval_ms=d.get("synapse", {}).get("batch_interval_ms", 100),
             dream_interval_hours=d.get("dreaming", {}).get("interval_hours", 24),
             dream_time_utc=d.get("dreaming", {}).get("time_utc", "03:00"),
             surprise_threshold=d.get("inference", {}).get("surprise_threshold", 0.5),
-            prediction_model=d.get("inference", {}).get(
-                "model", "exponential_smoothing"
-            ),
+            prediction_model=d.get("inference", {}).get("model", "exponential_smoothing"),
         )
 
     @classmethod

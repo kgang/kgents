@@ -265,18 +265,14 @@ class TimelineWidget:
 
     # State
     _state: TimelineState = field(default_factory=TimelineState)
-    _snapshot_manager: WidgetSnapshotManager = field(
-        default_factory=WidgetSnapshotManager
-    )
+    _snapshot_manager: WidgetSnapshotManager = field(default_factory=WidgetSnapshotManager)
 
     # Checkpoint ticks (from log)
     _checkpoint_ticks: set[int] = field(default_factory=set)
 
     # Callbacks
     _on_seek: list[Callable[[int], None]] = field(default_factory=list)
-    _on_state_change: list[Callable[[TimelineState], None]] = field(
-        default_factory=list
-    )
+    _on_state_change: list[Callable[[TimelineState], None]] = field(default_factory=list)
 
     # --- Initialization ---
 
@@ -463,9 +459,7 @@ class TimelineWidget:
 
     # --- Event Retrieval ---
 
-    def get_events_in_range(
-        self, start_tick: int, end_tick: int
-    ) -> list[TimelineEvent]:
+    def get_events_in_range(self, start_tick: int, end_tick: int) -> list[TimelineEvent]:
         """
         Get events in a tick range with rendering metadata.
 
@@ -515,9 +509,7 @@ class TimelineWidget:
 
     def get_current_event(self) -> TimelineEvent | None:
         """Get the event at the current tick."""
-        events = self.get_events_in_range(
-            self._state.current_tick, self._state.current_tick + 1
-        )
+        events = self.get_events_in_range(self._state.current_tick, self._state.current_tick + 1)
         return events[0] if events else None
 
     def get_visible_events(self, window_size: int = 20) -> list[TimelineEvent]:
@@ -538,9 +530,7 @@ class TimelineWidget:
         self._on_seek.append(callback)
         return lambda: self._on_seek.remove(callback)
 
-    def on_state_change(
-        self, callback: Callable[[TimelineState], None]
-    ) -> Callable[[], None]:
+    def on_state_change(self, callback: Callable[[TimelineState], None]) -> Callable[[], None]:
         """
         Register callback for state changes.
 

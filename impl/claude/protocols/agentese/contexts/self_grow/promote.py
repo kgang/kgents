@@ -309,9 +309,7 @@ class PromoteNode(BaseLogosNode):
                 impl_path=impl_path,
             )
             self._rollback_tokens[handle] = rollback_token
-            span.set_attribute(
-                "growth.promotion.rollback_token", rollback_token.token_id
-            )
+            span.set_attribute("growth.promotion.rollback_token", rollback_token.token_id)
 
             # Generate spec content
             spec_content = holon.proposal.to_markdown()

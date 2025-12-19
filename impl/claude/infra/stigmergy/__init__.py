@@ -159,8 +159,7 @@ class StigmergyStore:
         Returns the key under which it was stored.
         """
         key = (
-            f"stigmergy:{pheromone.type}:{pheromone.source}:"
-            f"{pheromone.emitted_at.timestamp():.6f}"
+            f"stigmergy:{pheromone.type}:{pheromone.source}:{pheromone.emitted_at.timestamp():.6f}"
         )
         value = json.dumps(pheromone.to_dict())
 
@@ -173,9 +172,7 @@ class StigmergyStore:
             # Note: In-memory doesn't have automatic TTL cleanup
             # Call cleanup() periodically in fallback mode
 
-        logger.debug(
-            f"Emitted ephemeral pheromone: {key} (TTL={pheromone.ttl_seconds}s)"
-        )
+        logger.debug(f"Emitted ephemeral pheromone: {key} (TTL={pheromone.ttl_seconds}s)")
         return key
 
     async def sense(

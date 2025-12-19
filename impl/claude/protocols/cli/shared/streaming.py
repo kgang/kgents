@@ -184,9 +184,7 @@ async def invoke_with_retry(
                 timeout=timeout_seconds,
             )
         except asyncio.TimeoutError:
-            last_error = asyncio.TimeoutError(
-                f"LLM response timeout after {timeout_seconds}s"
-            )
+            last_error = asyncio.TimeoutError(f"LLM response timeout after {timeout_seconds}s")
             if attempt == max_retries:
                 raise last_error
             await asyncio.sleep(0.5 * (attempt + 1))

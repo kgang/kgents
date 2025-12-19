@@ -434,9 +434,7 @@ class TestPhase8Required:
         node = PataphysicsNode()
         observer = MockUmwelt()
 
-        result = await node._invoke_aspect(
-            "melt", observer, error_type="ContractViolation"
-        )
+        result = await node._invoke_aspect("melt", observer, error_type="ContractViolation")
 
         assert "instruction" in result
         assert "meltable" in result["instruction"].lower()
@@ -547,10 +545,7 @@ class TestPataphysicsLLMIntegration:
 
         assert result["method"] == "pataphysics_oblique"
         # Should contain templated solution
-        assert (
-            "problem" in result["solution"].lower()
-            or "test problem" in result["solution"]
-        )
+        assert "problem" in result["solution"].lower() or "test problem" in result["solution"]
 
     @pytest.mark.asyncio
     async def test_solve_llm_with_postcondition_retries(self) -> None:

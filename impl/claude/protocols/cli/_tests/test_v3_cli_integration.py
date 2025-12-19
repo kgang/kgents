@@ -238,9 +238,7 @@ class TestInputClassification:
         """Should classify compositions."""
         from protocols.cli.agentese_router import InputType, classify_input
 
-        result = classify_input(
-            ["self.forest.manifest", ">>", "concept.summary.refine"]
-        )
+        result = classify_input(["self.forest.manifest", ">>", "concept.summary.refine"])
 
         assert result.input_type == InputType.COMPOSITION
         assert len(result.composition_parts) == 2

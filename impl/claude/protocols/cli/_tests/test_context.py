@@ -80,9 +80,7 @@ registry:
 class TestWorkspaceDetection:
     """Test find_workspace_root."""
 
-    def test_find_workspace_in_cwd(
-        self, workspace: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_find_workspace_in_cwd(self, workspace: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Find workspace when in root directory."""
         monkeypatch.chdir(workspace)
 

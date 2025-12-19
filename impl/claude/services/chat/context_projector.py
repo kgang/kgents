@@ -115,10 +115,12 @@ class WorkingContextProjector:
 
         # Inject memories into system prompt area
         if injected_memories:
-            memory_content = "\n\n".join([
-                "[Relevant Memory]",
-                *injected_memories,
-            ])
+            memory_content = "\n\n".join(
+                [
+                    "[Relevant Memory]",
+                    *injected_memories,
+                ]
+            )
             mem_msg = Message(role="system", content=memory_content)
             window.messages.append(mem_msg)
             window.total_tokens += mem_msg.tokens
@@ -158,10 +160,12 @@ class WorkingContextProjector:
 
         # Inject memories
         if injected_memories:
-            memory_content = "\n\n".join([
-                "[Relevant Memory]",
-                *injected_memories,
-            ])
+            memory_content = "\n\n".join(
+                [
+                    "[Relevant Memory]",
+                    *injected_memories,
+                ]
+            )
             mem_msg = Message(role="system", content=memory_content)
             window.messages.append(mem_msg)
             window.total_tokens += mem_msg.tokens
@@ -238,7 +242,7 @@ class WorkingContextProjector:
             window.summary = self._cached_summary
 
             # Add recent turns after summary
-            recent_turns = turns[self._summarized_through_turn:]
+            recent_turns = turns[self._summarized_through_turn :]
             self._apply_sliding(window, recent_turns)
         else:
             # Fall back to sliding if no summarizer

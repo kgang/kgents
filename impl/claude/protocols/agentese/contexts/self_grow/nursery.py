@@ -74,11 +74,7 @@ class NurseryNode(BaseLogosNode):
     @property
     def active(self) -> list[GerminatingHolon]:
         """Get list of active (not promoted/pruned) holons."""
-        return [
-            h
-            for h in self._holons.values()
-            if h.promoted_at is None and h.pruned_at is None
-        ]
+        return [h for h in self._holons.values() if h.promoted_at is None and h.pruned_at is None]
 
     @property
     def capacity_pct(self) -> float:
@@ -164,9 +160,7 @@ class NurseryNode(BaseLogosNode):
 
         # Check per-context limit
         context = proposal.context
-        context_count = sum(
-            1 for h in self._holons.values() if h.proposal.context == context
-        )
+        context_count = sum(1 for h in self._holons.values() if h.proposal.context == context)
         if context_count >= self._config.max_per_context:
             raise NurseryCapacityError(
                 f"Nursery at capacity for context '{context}'",

@@ -102,9 +102,7 @@ class CognitiveTree:
         """
         return self._find_node(self.root, node_id)
 
-    def _find_node(
-        self, node: CognitiveBranch, target_id: str
-    ) -> Optional[CognitiveBranch]:
+    def _find_node(self, node: CognitiveBranch, target_id: str) -> Optional[CognitiveBranch]:
         """Recursively search for a node."""
         if node.id == target_id:
             return node
@@ -148,9 +146,7 @@ class CognitiveTree:
         self._collect_ghosts(self.root, ghosts)
         return ghosts
 
-    def _collect_ghosts(
-        self, node: CognitiveBranch, ghosts: list[CognitiveBranch]
-    ) -> None:
+    def _collect_ghosts(self, node: CognitiveBranch, ghosts: list[CognitiveBranch]) -> None:
         """Recursively collect all ghost branches."""
         if not node.selected:
             ghosts.append(node)
@@ -186,9 +182,7 @@ class CognitiveTree:
         """
         return self._depth_of_node(self.root, node_id, 0)
 
-    def _depth_of_node(
-        self, node: CognitiveBranch, target_id: str, current_depth: int
-    ) -> int:
+    def _depth_of_node(self, node: CognitiveBranch, target_id: str, current_depth: int) -> int:
         """Recursively calculate depth."""
         if node.id == target_id:
             return current_depth
@@ -280,9 +274,7 @@ class CognitiveTree:
             return False
 
         # Find current index
-        current_idx = next(
-            (i for i, s in enumerate(siblings) if s.id == self.current_id), -1
-        )
+        current_idx = next((i for i, s in enumerate(siblings) if s.id == self.current_id), -1)
         if current_idx > 0:
             self.current_id = siblings[current_idx - 1].id
             return True
@@ -300,9 +292,7 @@ class CognitiveTree:
             return False
 
         # Find current index
-        current_idx = next(
-            (i for i, s in enumerate(siblings) if s.id == self.current_id), -1
-        )
+        current_idx = next((i for i, s in enumerate(siblings) if s.id == self.current_id), -1)
         if current_idx < len(siblings) - 1:
             self.current_id = siblings[current_idx + 1].id
             return True

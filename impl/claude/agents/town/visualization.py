@@ -839,9 +839,7 @@ def _get_axis_labels(projection: ProjectionMethod) -> tuple[str, str]:
             return ("X", "Y")
 
 
-def _project_point_2d(
-    point: ScatterPoint, projection: ProjectionMethod
-) -> tuple[float, float]:
+def _project_point_2d(point: ScatterPoint, projection: ProjectionMethod) -> tuple[float, float]:
     """
     Project a point to 2D coordinates.
 
@@ -963,9 +961,7 @@ class EigenvectorScatterWidgetImpl:
         """Create new widget with transformed state (functor law)."""
         return EigenvectorScatterWidgetImpl(initial_state=new_state)
 
-    def map(
-        self, f: "Callable[[ScatterState], ScatterState]"
-    ) -> "EigenvectorScatterWidgetImpl":
+    def map(self, f: "Callable[[ScatterState], ScatterState]") -> "EigenvectorScatterWidgetImpl":
         """
         Functor map: transform the widget via a state transformation.
 
@@ -1144,14 +1140,10 @@ def _generate_coalition_colors(coalitions: dict[str, "Coalition"]) -> dict[str, 
         "#06b6d4",  # cyan
         "#f97316",  # orange
     ]
-    return {
-        coal_id: colors[i % len(colors)] for i, coal_id in enumerate(coalitions.keys())
-    }
+    return {coal_id: colors[i % len(colors)] for i, coal_id in enumerate(coalitions.keys())}
 
 
-def _get_citizen_coalitions(
-    citizen_id: str, coalitions: dict[str, "Coalition"]
-) -> list[str]:
+def _get_citizen_coalitions(citizen_id: str, coalitions: dict[str, "Coalition"]) -> list[str]:
     """Get all coalition IDs that a citizen belongs to."""
     result = []
     for coal_id, coal in coalitions.items():
@@ -1198,9 +1190,7 @@ class TownSSEEndpoint:
         import asyncio
 
         self._town_id = town_id
-        self._queue: asyncio.Queue[SSEEvent | None] = asyncio.Queue(
-            maxsize=max_queue_size
-        )
+        self._queue: asyncio.Queue[SSEEvent | None] = asyncio.Queue(maxsize=max_queue_size)
         self._closed = False
 
     @property
@@ -1489,9 +1479,7 @@ class TownNATSBridge:
 
                     self._memory_queues[town_id] = asyncio.Queue(maxsize=1000)
                 try:
-                    self._memory_queues[town_id].put_nowait(
-                        {"subject": subject, "data": data}
-                    )
+                    self._memory_queues[town_id].put_nowait({"subject": subject, "data": data})
                 except Exception:
                     pass  # Queue full, drop message
 

@@ -332,9 +332,7 @@ class SpectatorStats:
         if self.bids_submitted == 0:
             return 0.0
 
-        acceptance_rate = (
-            self.bids_accepted + 0.5 * self.bids_acknowledged
-        ) / self.bids_submitted
+        acceptance_rate = (self.bids_accepted + 0.5 * self.bids_acknowledged) / self.bids_submitted
         bid_factor = 1 + math.log1p(self.bids_submitted)
 
         return self.tokens_spent * acceptance_rate * bid_factor
@@ -651,9 +649,7 @@ class BidQueue:
                 success, error = self._deduct_tokens(spectator_id, cost)
                 if not success:
                     return BidResult(
-                        bid=Bid.create(
-                            spectator_id, self.session_id, bid_type, content
-                        ),
+                        bid=Bid.create(spectator_id, self.session_id, bid_type, content),
                         success=False,
                         outcome=BidOutcome.REJECTED,
                         message=error or "Insufficient tokens",
@@ -806,23 +802,17 @@ class BidQueue:
             case BidOutcome.ACKNOWLEDGED:
                 # Half refund for acknowledged
                 refund_amount = bid.tokens_spent // 2
-                self._refund_tokens(
-                    bid.spectator_id, refund_amount, f"acknowledged:{bid_id}"
-                )
+                self._refund_tokens(bid.spectator_id, refund_amount, f"acknowledged:{bid_id}")
 
             case BidOutcome.IGNORED:
                 # Full refund for ignored
                 refund_amount = bid.tokens_spent
-                self._refund_tokens(
-                    bid.spectator_id, refund_amount, f"ignored:{bid_id}"
-                )
+                self._refund_tokens(bid.spectator_id, refund_amount, f"ignored:{bid_id}")
 
             case BidOutcome.REJECTED:
                 # Full refund for rejected
                 refund_amount = bid.tokens_spent
-                self._refund_tokens(
-                    bid.spectator_id, refund_amount, f"rejected:{bid_id}"
-                )
+                self._refund_tokens(bid.spectator_id, refund_amount, f"rejected:{bid_id}")
 
             case _:
                 pass
@@ -937,9 +927,7 @@ class BidQueue:
             "total_bids_received": self.total_bids_received,
             "total_tokens_collected": self.total_tokens_collected,
             "spectator_count": len(self._spectator_stats),
-            "pending_bids": sum(
-                1 for o in self._outcomes.values() if o == BidOutcome.PENDING
-            ),
+            "pending_bids": sum(1 for o in self._outcomes.values() if o == BidOutcome.PENDING),
         }
 
 

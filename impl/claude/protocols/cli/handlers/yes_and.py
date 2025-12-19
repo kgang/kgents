@@ -111,9 +111,7 @@ def _generate_expansion(idea: str) -> str:
     return expansion
 
 
-def _select_expansions(
-    idea: str, rounds: int = 3, persona: str | None = None
-) -> list[str]:
+def _select_expansions(idea: str, rounds: int = 3, persona: str | None = None) -> list[str]:
     """Generate multiple expansions using templates."""
     expansions = []
     for _ in range(rounds):
@@ -124,9 +122,7 @@ def _select_expansions(
     return expansions
 
 
-async def _generate_with_llm(
-    idea: str, rounds: int, persona: str | None
-) -> YesAndResponse | None:
+async def _generate_with_llm(idea: str, rounds: int, persona: str | None) -> YesAndResponse | None:
     """
     Generate expansions using LLM (if available).
 
@@ -177,9 +173,7 @@ def _print_help() -> None:
     print()
     print("OPTIONS:")
     print("  --rounds <n>        Number of expansions (default: 3)")
-    print(
-        "  --persona <type>    Style: playful, philosophical, practical, provocative, warm"
-    )
+    print("  --persona <type>    Style: playful, philosophical, practical, provocative, warm")
     print("  --llm               Use LLM for generation (costs tokens)")
     print("  --json              Output as JSON")
     print("  --help, -h          Show this help")

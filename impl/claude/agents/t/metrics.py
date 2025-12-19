@@ -34,11 +34,7 @@ class PerformanceMetrics:
         Returns:
             Average time in seconds (0.0 if no invocations)
         """
-        return (
-            self.total_time / self.invocation_count
-            if self.invocation_count > 0
-            else 0.0
-        )
+        return self.total_time / self.invocation_count if self.invocation_count > 0 else 0.0
 
     def __repr__(self) -> str:
         """Human-readable representation."""

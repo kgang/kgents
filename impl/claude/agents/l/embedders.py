@@ -256,9 +256,7 @@ class CachedEmbedder:
         vector = await embedder.embed("same query")  # Hits cache on second call
     """
 
-    def __init__(
-        self, base_embedder: Embedder, cache_path: str = ".kgents/embeddings_cache.json"
-    ):
+    def __init__(self, base_embedder: Embedder, cache_path: str = ".kgents/embeddings_cache.json"):
         """Initialize cached embedder.
 
         Args:
@@ -319,9 +317,7 @@ class CachedEmbedder:
         if uncached_texts:
             # Check if base embedder supports batching
             if hasattr(self.base_embedder, "embed_batch"):
-                uncached_embeddings = await self.base_embedder.embed_batch(
-                    uncached_texts
-                )
+                uncached_embeddings = await self.base_embedder.embed_batch(uncached_texts)
             else:
                 # Fallback: embed one by one
                 uncached_embeddings = [
@@ -329,9 +325,7 @@ class CachedEmbedder:
                 ]
 
             # Cache and collect results
-            for idx, text, embedding in zip(
-                uncached_indices, uncached_texts, uncached_embeddings
-            ):
+            for idx, text, embedding in zip(uncached_indices, uncached_texts, uncached_embeddings):
                 self._cache[text] = embedding
                 results.append((idx, embedding))
 

@@ -139,9 +139,7 @@ class TestNodeMethods:
 
     def test_node_to_dict(self) -> None:
         """Test node serialization to dict."""
-        node = ProbabilisticASTNode(
-            type="string", value="test", confidence=0.9, path="root.name"
-        )
+        node = ProbabilisticASTNode(type="string", value="test", confidence=0.9, path="root.name")
         d = node.to_dict()
 
         assert d["type"] == "string"
@@ -151,18 +149,14 @@ class TestNodeMethods:
 
     def test_get_confident_value_above_threshold(self) -> None:
         """Test extracting value above confidence threshold."""
-        node = ProbabilisticASTNode(
-            type="string", value="test", confidence=0.9, path="root.name"
-        )
+        node = ProbabilisticASTNode(type="string", value="test", confidence=0.9, path="root.name")
 
         val = node.get_confident_value(min_confidence=0.8)
         assert val == "test"
 
     def test_get_confident_value_below_threshold(self) -> None:
         """Test value below threshold returns None."""
-        node = ProbabilisticASTNode(
-            type="string", value="test", confidence=0.5, path="root.name"
-        )
+        node = ProbabilisticASTNode(type="string", value="test", confidence=0.5, path="root.name")
 
         val = node.get_confident_value(min_confidence=0.8)
         assert val is None

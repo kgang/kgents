@@ -57,9 +57,7 @@ class QueuedCommission:
             "piece_id": self.piece_id,
             "error": self.error,
             "queued_at": self.queued_at.isoformat(),
-            "completed_at": self.completed_at.isoformat()
-            if self.completed_at
-            else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
     @classmethod
@@ -72,9 +70,7 @@ class QueuedCommission:
             error=data.get("error"),
             queued_at=datetime.fromisoformat(data["queued_at"]),
             completed_at=(
-                datetime.fromisoformat(data["completed_at"])
-                if data.get("completed_at")
-                else None
+                datetime.fromisoformat(data["completed_at"]) if data.get("completed_at") else None
             ),
         )
 
@@ -87,9 +83,7 @@ class CommissionQueue:
     """
 
     def __init__(self, storage_path: Path | None = None) -> None:
-        self.storage_path = (
-            storage_path or Path.home() / ".kgents" / "atelier" / "queue"
-        )
+        self.storage_path = storage_path or Path.home() / ".kgents" / "atelier" / "queue"
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
     def _queue_path(self, commission_id: str) -> Path:

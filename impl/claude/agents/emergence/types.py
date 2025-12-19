@@ -194,18 +194,10 @@ class QualiaModifier:
 
 # Circadian modifiers from unified-vision.md
 CIRCADIAN_MODIFIERS: dict[CircadianPhase, QualiaModifier] = {
-    CircadianPhase.DAWN: QualiaModifier(
-        warmth=-0.3, brightness=0.8, tempo=0.3, texture=-0.2
-    ),
-    CircadianPhase.NOON: QualiaModifier(
-        warmth=0.0, brightness=1.0, tempo=0.5, texture=0.0
-    ),
-    CircadianPhase.DUSK: QualiaModifier(
-        warmth=0.4, brightness=0.6, tempo=-0.2, texture=0.2
-    ),
-    CircadianPhase.MIDNIGHT: QualiaModifier(
-        warmth=-0.1, brightness=0.3, tempo=-0.5, texture=-0.3
-    ),
+    CircadianPhase.DAWN: QualiaModifier(warmth=-0.3, brightness=0.8, tempo=0.3, texture=-0.2),
+    CircadianPhase.NOON: QualiaModifier(warmth=0.0, brightness=1.0, tempo=0.5, texture=0.0),
+    CircadianPhase.DUSK: QualiaModifier(warmth=0.4, brightness=0.6, tempo=-0.2, texture=0.2),
+    CircadianPhase.MIDNIGHT: QualiaModifier(warmth=-0.1, brightness=0.3, tempo=-0.5, texture=-0.3),
 }
 
 
@@ -238,33 +230,15 @@ class PatternConfig:
 
 # Qualia mappings for each pattern family (from emergence-principles.md)
 FAMILY_QUALIA: dict[PatternFamily, QualiaCoords] = {
-    PatternFamily.CHLADNI: QualiaCoords(
-        warmth=-0.3, weight=0.2, tempo=0.3, complexity=0.4
-    ),
-    PatternFamily.INTERFERENCE: QualiaCoords(
-        warmth=-0.2, weight=-0.1, tempo=0.4, complexity=0.3
-    ),
-    PatternFamily.MANDALA: QualiaCoords(
-        warmth=0.2, weight=0.5, tempo=-0.3, complexity=0.6
-    ),
-    PatternFamily.FLOW: QualiaCoords(
-        warmth=0.4, weight=-0.2, tempo=-0.1, complexity=0.2
-    ),
-    PatternFamily.REACTION: QualiaCoords(
-        warmth=0.1, weight=0.3, tempo=0.5, complexity=0.7
-    ),
-    PatternFamily.SPIRAL: QualiaCoords(
-        warmth=0.0, weight=0.0, tempo=0.2, complexity=0.4
-    ),
-    PatternFamily.VORONOI: QualiaCoords(
-        warmth=-0.1, weight=0.4, tempo=-0.2, complexity=0.5
-    ),
-    PatternFamily.MOIRE: QualiaCoords(
-        warmth=-0.4, weight=-0.3, tempo=0.1, complexity=0.3
-    ),
-    PatternFamily.FRACTAL: QualiaCoords(
-        warmth=0.0, weight=0.1, tempo=-0.4, complexity=0.9
-    ),
+    PatternFamily.CHLADNI: QualiaCoords(warmth=-0.3, weight=0.2, tempo=0.3, complexity=0.4),
+    PatternFamily.INTERFERENCE: QualiaCoords(warmth=-0.2, weight=-0.1, tempo=0.4, complexity=0.3),
+    PatternFamily.MANDALA: QualiaCoords(warmth=0.2, weight=0.5, tempo=-0.3, complexity=0.6),
+    PatternFamily.FLOW: QualiaCoords(warmth=0.4, weight=-0.2, tempo=-0.1, complexity=0.2),
+    PatternFamily.REACTION: QualiaCoords(warmth=0.1, weight=0.3, tempo=0.5, complexity=0.7),
+    PatternFamily.SPIRAL: QualiaCoords(warmth=0.0, weight=0.0, tempo=0.2, complexity=0.4),
+    PatternFamily.VORONOI: QualiaCoords(warmth=-0.1, weight=0.4, tempo=-0.2, complexity=0.5),
+    PatternFamily.MOIRE: QualiaCoords(warmth=-0.4, weight=-0.3, tempo=0.1, complexity=0.3),
+    PatternFamily.FRACTAL: QualiaCoords(warmth=0.0, weight=0.1, tempo=-0.4, complexity=0.9),
 }
 
 
@@ -320,9 +294,7 @@ class EmergenceState:
     def with_circadian(self, circadian: CircadianPhase) -> EmergenceState:
         """Return new state with updated circadian phase."""
         base_qualia = (
-            FAMILY_QUALIA[self.selected_family]
-            if self.selected_family
-            else QualiaCoords()
+            FAMILY_QUALIA[self.selected_family] if self.selected_family else QualiaCoords()
         )
         modified_qualia = base_qualia.apply_modifier(CIRCADIAN_MODIFIERS[circadian])
         return EmergenceState(

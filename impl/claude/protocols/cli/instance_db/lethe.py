@@ -173,9 +173,7 @@ class LetheRecord:
             "operation": self.operation,
             "timestamp": self.timestamp,
             "proof": self.proof.to_dict() if self.proof else None,
-            "nutrient_block": self.nutrient_block.to_dict()
-            if self.nutrient_block
-            else None,
+            "nutrient_block": self.nutrient_block.to_dict() if self.nutrient_block else None,
             "metadata": self.metadata,
         }
 
@@ -363,9 +361,7 @@ class LetheStore:
 
         # Create signature
         message = f"{epoch.epoch_id}:{content_hash}:{now}"
-        signature = hmac.new(
-            self._secret_key, message.encode(), hashlib.sha256
-        ).hexdigest()
+        signature = hmac.new(self._secret_key, message.encode(), hashlib.sha256).hexdigest()
 
         # Create proof
         proof = ForgetProof(
@@ -586,9 +582,7 @@ class LetheStore:
 
         return [r for r in records if r is not None]
 
-    def _log_audit(
-        self, operation: str, epoch_id: str, details: dict[str, Any]
-    ) -> None:
+    def _log_audit(self, operation: str, epoch_id: str, details: dict[str, Any]) -> None:
         """Add entry to audit log."""
         self._audit_log.append(
             {
@@ -767,9 +761,7 @@ def create_lethe_store(
     Returns:
         Configured LetheStore
     """
-    ret_config = (
-        RetentionConfig.from_dict(retention_config) if retention_config else None
-    )
+    ret_config = RetentionConfig.from_dict(retention_config) if retention_config else None
     comp_config = CompostConfig.from_dict(compost_config) if compost_config else None
 
     return LetheStore(

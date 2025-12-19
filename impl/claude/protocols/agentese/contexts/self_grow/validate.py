@@ -164,9 +164,7 @@ async def validate_proposal(
     """
     async with tracer.start_span_async("growth.validate") as span:
         span.set_attribute("growth.phase", "validate")
-        span.set_attribute(
-            "growth.proposal.handle", f"{proposal.context}.{proposal.entity}"
-        )
+        span.set_attribute("growth.proposal.handle", f"{proposal.context}.{proposal.entity}")
         span.set_attribute("growth.proposal.hash", proposal.content_hash)
 
         # === Gate 1: Seven Principles ===
@@ -179,9 +177,7 @@ async def validate_proposal(
 
         # === Gate 2: Law Checks ===
         law_checks = await check_laws(proposal, logos)
-        span.set_attribute(
-            "growth.validation.law_check.identity", law_checks.identity_holds
-        )
+        span.set_attribute("growth.validation.law_check.identity", law_checks.identity_holds)
         span.set_attribute(
             "growth.validation.law_check.associativity", law_checks.associativity_holds
         )
@@ -234,9 +230,7 @@ async def validate_proposal(
             if score < 0.4:
                 suggestions.append(f"Improve {principle} score (currently {score:.2f})")
             elif score < 0.7:
-                suggestions.append(
-                    f"Consider improving {principle} score (currently {score:.2f})"
-                )
+                suggestions.append(f"Consider improving {principle} score (currently {score:.2f})")
 
         # Overall pass/fail
         passed = (
@@ -245,8 +239,7 @@ async def validate_proposal(
             and law_checks.associativity_holds
             and abuse_check.passed
             and not (
-                duplication_check.is_duplicate
-                and duplication_check.recommendation == "reject"
+                duplication_check.is_duplicate and duplication_check.recommendation == "reject"
             )
         )
 
@@ -290,16 +283,12 @@ def validate_proposal_sync(
             with concurrent.futures.ThreadPoolExecutor() as pool:
                 future = pool.submit(
                     asyncio.run,
-                    validate_proposal(
-                        proposal, logos=None, existing_handles=existing_handles
-                    ),
+                    validate_proposal(proposal, logos=None, existing_handles=existing_handles),
                 )
                 return future.result()
         else:
             return loop.run_until_complete(
-                validate_proposal(
-                    proposal, logos=None, existing_handles=existing_handles
-                )
+                validate_proposal(proposal, logos=None, existing_handles=existing_handles)
             )
     except RuntimeError:
         return asyncio.run(

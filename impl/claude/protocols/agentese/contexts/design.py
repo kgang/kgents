@@ -263,9 +263,7 @@ class ContentDesignNode(BaseLogosNode):
                     level = ContentLevel[level_name.upper()]
                     return {
                         "level": level.value,
-                        "includes": [
-                            l.value for l in ContentLevel if level.includes(l)
-                        ],
+                        "includes": [l.value for l in ContentLevel if level.includes(l)],
                     }
                 except KeyError:
                     return {
@@ -499,11 +497,7 @@ class DesignOperadNode(BaseLogosNode):
             case "naturality":
                 # Check the naturality law specifically
                 naturality_law = next(
-                    (
-                        law
-                        for law in DESIGN_OPERAD.laws
-                        if law.name == "composition_natural"
-                    ),
+                    (law for law in DESIGN_OPERAD.laws if law.name == "composition_natural"),
                     None,
                 )
                 if naturality_law:

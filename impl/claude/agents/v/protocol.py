@@ -277,9 +277,7 @@ class BaseVgent:
                 )
             return Embedding.from_list(embedding)
 
-    def _matches_filters(
-        self, metadata: dict[str, str], filters: dict[str, str]
-    ) -> bool:
+    def _matches_filters(self, metadata: dict[str, str], filters: dict[str, str]) -> bool:
         """Check if metadata matches all filters (exact match)."""
         for key, value in filters.items():
             if metadata.get(key) != value:

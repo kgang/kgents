@@ -136,6 +136,7 @@ def _parse_gardener_kwargs(args: list[str], subcommand: str) -> dict[str, str | 
 def _print_help() -> None:
     """Print gardener command help (projected from AGENTESE affordances)."""
     from protocols.cli.handlers._help import show_projected_help
+
     show_projected_help("self.forest.gardener", _print_help_fallback)
 
 

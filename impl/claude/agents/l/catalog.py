@@ -56,9 +56,7 @@ class CatalogEntry:
     # Type information (for lattice)
     input_type: str | None = None  # For agents: input type signature
     output_type: str | None = None  # For agents: output type signature
-    contracts_implemented: list[str] = field(
-        default_factory=list
-    )  # Contracts this satisfies
+    contracts_implemented: list[str] = field(default_factory=list)  # Contracts this satisfies
     contracts_required: list[str] = field(default_factory=list)  # Contracts this needs
 
     # Graph relationships (for lineage)
@@ -135,9 +133,7 @@ class CatalogEntry:
             status=Status(data.get("status", "active")),
             usage_count=data.get("usage_count", 0),
             success_rate=data.get("success_rate", 1.0),
-            last_used=datetime.fromisoformat(data["last_used"])
-            if data.get("last_used")
-            else None,
+            last_used=datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None,
             last_error=data.get("last_error"),
             deprecation_reason=data.get("deprecation_reason"),
             deprecated_in_favor_of=data.get("deprecated_in_favor_of"),
@@ -251,11 +247,7 @@ class Registry:
     async def list_by_type(self, entity_type: EntityType) -> list[CatalogEntry]:
         """Get all entries of a specific type."""
         await self._ensure_loaded()
-        return [
-            entry
-            for entry in self._entries.values()
-            if entry.entity_type == entity_type
-        ]
+        return [entry for entry in self._entries.values() if entry.entity_type == entity_type]
 
     async def list_by_author(self, author: str) -> list[CatalogEntry]:
         """Get all entries by a specific author."""
@@ -277,9 +269,7 @@ class Registry:
             if keyword_lower in [kw.lower() for kw in entry.keywords]
         ]
 
-    async def find_by_name_version(
-        self, name: str, version: str
-    ) -> CatalogEntry | None:
+    async def find_by_name_version(self, name: str, version: str) -> CatalogEntry | None:
         """Find entry by name and version."""
         await self._ensure_loaded()
         for entry in self._entries.values():

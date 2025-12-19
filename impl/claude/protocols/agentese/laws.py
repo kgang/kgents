@@ -164,9 +164,7 @@ class CategoryLawVerifier:
     """
 
     # Optional comparator for result equality
-    comparator: Callable[[Any, Any], bool] = field(
-        default_factory=lambda: lambda a, b: a == b
-    )
+    comparator: Callable[[Any, Any], bool] = field(default_factory=lambda: lambda a, b: a == b)
 
     async def verify_left_identity(
         self,

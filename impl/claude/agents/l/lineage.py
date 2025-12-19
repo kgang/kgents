@@ -65,9 +65,7 @@ class Relationship:
             "created_by": self.created_by,
             "context": self.context,
             "deprecated": self.deprecated,
-            "deprecated_at": self.deprecated_at.isoformat()
-            if self.deprecated_at
-            else None,
+            "deprecated_at": self.deprecated_at.isoformat() if self.deprecated_at else None,
             "deprecation_reason": self.deprecation_reason,
         }
 
@@ -148,9 +146,7 @@ class LineageGraph:
 
         # Check for cycles (would violate DAG)
         if await self._would_create_cycle(source_id, target_id):
-            raise LineageError(
-                f"Relationship would create cycle: {source_id} -> {target_id}"
-            )
+            raise LineageError(f"Relationship would create cycle: {source_id} -> {target_id}")
 
         rel = Relationship(
             source_id=source_id,

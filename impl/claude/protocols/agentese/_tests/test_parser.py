@@ -372,9 +372,7 @@ class TestAnnotationParsing:
         assert result.error is not None
         assert "unknown" in result.error.message.lower()
 
-    def test_unknown_annotation_modifier_lenient(
-        self, lenient_parser: PathParser
-    ) -> None:
+    def test_unknown_annotation_modifier_lenient(self, lenient_parser: PathParser) -> None:
         """Unknown annotation modifier allowed in lenient mode."""
         result = lenient_parser.parse("world.test.manifest@custom=value")
         assert result.success
@@ -481,9 +479,7 @@ class TestErrorHandling:
         assert not result.success
         assert result.error is not None
         # Error message indicates invalid aspect (! makes it invalid identifier)
-        assert (
-            "Invalid aspect" in result.error.message or "invalid" in result.error.locus
-        )
+        assert "Invalid aspect" in result.error.message or "invalid" in result.error.locus
 
 
 # === Factory Function Tests ===
@@ -617,9 +613,7 @@ class TestEdgeCases:
 
     def test_many_clauses(self, parser: PathParser) -> None:
         """Many clauses parse correctly."""
-        path = (
-            "self.liturgy.simulate[rollback=true][law_check=true][minimal_output=true]"
-        )
+        path = "self.liturgy.simulate[rollback=true][law_check=true][minimal_output=true]"
         result = parser.parse(path)
         assert result.success
         assert result.parsed is not None
@@ -705,9 +699,7 @@ class TestSpecCompliance:
 
     def test_spec_example_4(self, parser: PathParser) -> None:
         """Spec example: world.code.manifest[minimal_output=true]@phase=IMPLEMENT"""
-        result = parser.parse(
-            "world.code.manifest[minimal_output=true]@phase=IMPLEMENT"
-        )
+        result = parser.parse("world.code.manifest[minimal_output=true]@phase=IMPLEMENT")
         assert result.success
         assert result.parsed is not None
         assert result.parsed.minimal_output_enabled is True

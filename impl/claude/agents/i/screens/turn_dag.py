@@ -183,9 +183,7 @@ class TurnDAGRenderer:
         if not self.config.show_thoughts:
             thought_count = type_counts.get("THOUGHT", 0)
             if thought_count > 0:
-                stats.append(
-                    f"\n[{thought_count} thoughts collapsed]", style="dim italic"
-                )
+                stats.append(f"\n[{thought_count} thoughts collapsed]", style="dim italic")
 
         return stats
 
@@ -355,11 +353,7 @@ class TurnDAGRenderer:
         # Confidence (if enabled)
         if self.config.show_confidence and node.confidence < 1.0:
             conf_color = (
-                "green"
-                if node.confidence > 0.7
-                else "yellow"
-                if node.confidence > 0.3
-                else "red"
+                "green" if node.confidence > 0.7 else "yellow" if node.confidence > 0.3 else "red"
             )
             label.append(f" ({node.confidence:.0%})", style=conf_color)
 

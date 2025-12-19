@@ -384,9 +384,7 @@ class PanelNode(BaseLogosNode):
                 msg = f"Unknown aspect: {aspect}"
                 raise ValueError(msg)
 
-    def _get_capacity_from_observer(
-        self, observer: Umwelt[Any, Any]
-    ) -> PhysicalCapacity:
+    def _get_capacity_from_observer(self, observer: Umwelt[Any, Any]) -> PhysicalCapacity:
         """Extract PhysicalCapacity from observer umwelt."""
         # Try to get capacity from observer metadata
         meta = self._umwelt_to_meta(observer)
@@ -452,9 +450,7 @@ class ActionsNode(BaseLogosNode):
                 msg = f"Unknown aspect: {aspect}"
                 raise ValueError(msg)
 
-    def _get_capacity_from_observer(
-        self, observer: Umwelt[Any, Any]
-    ) -> PhysicalCapacity:
+    def _get_capacity_from_observer(self, observer: Umwelt[Any, Any]) -> PhysicalCapacity:
         """Extract PhysicalCapacity from observer umwelt."""
         meta = self._umwelt_to_meta(observer)
         if hasattr(meta, "capacity") and isinstance(meta.capacity, PhysicalCapacity):
@@ -518,9 +514,7 @@ class SplitNode(BaseLogosNode):
                 msg = f"Unknown aspect: {aspect}"
                 raise ValueError(msg)
 
-    def _get_capacity_from_observer(
-        self, observer: Umwelt[Any, Any]
-    ) -> PhysicalCapacity:
+    def _get_capacity_from_observer(self, observer: Umwelt[Any, Any]) -> PhysicalCapacity:
         """Extract PhysicalCapacity from observer umwelt."""
         meta = self._umwelt_to_meta(observer)
         if hasattr(meta, "capacity") and isinstance(meta.capacity, PhysicalCapacity):

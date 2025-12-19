@@ -261,8 +261,7 @@ class StripeToOpenMeterBridge:
                 "checkout_session_id": session.get("id"),
                 "subscription_id": session.get("subscription"),
                 "mode": session.get("mode"),
-                "amount_total": session.get("amount_total", 0)
-                / 100,  # cents to dollars
+                "amount_total": session.get("amount_total", 0) / 100,  # cents to dollars
                 "currency": session.get("currency", "usd"),
             },
         )
@@ -319,9 +318,7 @@ class StripeToOpenMeterBridge:
             },
         )
 
-    def _translate_invoice_paid(
-        self, event: WebhookEvent, customer_id: str
-    ) -> SubscriptionEvent:
+    def _translate_invoice_paid(self, event: WebhookEvent, customer_id: str) -> SubscriptionEvent:
         """Translate invoice.paid to payment.success."""
         invoice = event.data
         return SubscriptionEvent.create(
@@ -337,9 +334,7 @@ class StripeToOpenMeterBridge:
             },
         )
 
-    def _translate_invoice_failed(
-        self, event: WebhookEvent, customer_id: str
-    ) -> SubscriptionEvent:
+    def _translate_invoice_failed(self, event: WebhookEvent, customer_id: str) -> SubscriptionEvent:
         """Translate invoice.payment_failed to payment.failed."""
         invoice = event.data
         return SubscriptionEvent.create(

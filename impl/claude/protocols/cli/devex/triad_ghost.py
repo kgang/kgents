@@ -329,18 +329,10 @@ def format_triad_status_cli(projection: TriadProjection) -> str:
     f_status = "CONNECTED" if projection.redis_connected else "DISCONNECTED"
 
     d_health = (
-        f"{int(projection.durability * 100):3d}%"
-        if projection.postgres_connected
-        else " N/A"
+        f"{int(projection.durability * 100):3d}%" if projection.postgres_connected else " N/A"
     )
-    r_health = (
-        f"{int(projection.resonance * 100):3d}%"
-        if projection.qdrant_connected
-        else " N/A"
-    )
-    f_health = (
-        f"{int(projection.reflex * 100):3d}%" if projection.redis_connected else " N/A"
-    )
+    r_health = f"{int(projection.resonance * 100):3d}%" if projection.qdrant_connected else " N/A"
+    f_health = f"{int(projection.reflex * 100):3d}%" if projection.redis_connected else " N/A"
 
     lines.append(f"Durability (PostgreSQL):  {d_status:<12} {d_health}")
     lines.append(f"Resonance (Qdrant):       {r_status:<12} {r_health}")

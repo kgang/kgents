@@ -237,9 +237,7 @@ class CodePatternAnalyzer:
         private_ratio = private_count / total if total else 0
 
         # Check dunder usage
-        dunder_count = sum(
-            1 for n in function_names if n.startswith("__") and n.endswith("__")
-        )
+        dunder_count = sum(1 for n in function_names if n.startswith("__") and n.endswith("__"))
         dunder_ratio = dunder_count / total if total else 0
 
         details = {
@@ -309,9 +307,7 @@ class CodePatternAnalyzer:
             return None
 
         arg_annotation_ratio = annotated_args / total_args if total_args else 0
-        return_annotation_ratio = (
-            annotated_returns / total_functions if total_functions else 0
-        )
+        return_annotation_ratio = annotated_returns / total_functions if total_functions else 0
         overall_ratio = (arg_annotation_ratio + return_annotation_ratio) / 2
 
         details = {
@@ -469,12 +465,8 @@ class CodePatternAnalyzer:
         if total_classes + total_functions < 10:
             return None
 
-        avg_methods = (
-            sum(methods_per_class) / len(methods_per_class) if methods_per_class else 0
-        )
-        inheritance_ratio = (
-            classes_with_inheritance / total_classes if total_classes else 0
-        )
+        avg_methods = sum(methods_per_class) / len(methods_per_class) if methods_per_class else 0
+        inheritance_ratio = classes_with_inheritance / total_classes if total_classes else 0
 
         # Determine structure style
         total_items = total_classes + total_functions
@@ -489,13 +481,17 @@ class CodePatternAnalyzer:
         }
 
         if class_ratio > 0.5:
-            description = f"Class-heavy structure ({class_ratio:.0%} classes, avg {avg_methods:.1f} methods)"
+            description = (
+                f"Class-heavy structure ({class_ratio:.0%} classes, avg {avg_methods:.1f} methods)"
+            )
             confidence = class_ratio
         elif class_ratio < 0.2:
             description = f"Function-heavy structure ({total_functions} functions)"
             confidence = 1 - class_ratio
         else:
-            description = f"Balanced structure ({total_classes} classes, {total_functions} functions)"
+            description = (
+                f"Balanced structure ({total_classes} classes, {total_functions} functions)"
+            )
             confidence = 0.5
 
         return CodePattern(

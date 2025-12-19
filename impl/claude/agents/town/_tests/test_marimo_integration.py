@@ -131,9 +131,7 @@ class TestWidgetRendersScatterPoints:
         esm = EigenvectorScatterWidgetMarimo._esm
 
         # anywidget wraps Path in FileContents, but we can check the original
-        esm_path = (
-            Path(__file__).parent.parent.parent / "i/marimo/widgets/js/scatter.js"
-        )
+        esm_path = Path(__file__).parent.parent.parent / "i/marimo/widgets/js/scatter.js"
         assert esm_path.exists(), f"ESM file should exist at {esm_path}"
 
 

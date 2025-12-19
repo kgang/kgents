@@ -195,23 +195,17 @@ class FluxConfig:
             errors.append(f"buffer_size must be > 0, got {self.buffer_size}")
         if self.drop_policy not in ("block", "drop_oldest", "drop_newest"):
             errors.append(
-                f"drop_policy must be block|drop_oldest|drop_newest, "
-                f"got {self.drop_policy}"
+                f"drop_policy must be block|drop_oldest|drop_newest, got {self.drop_policy}"
             )
         if not 0.0 <= self.feedback_fraction <= 1.0:
-            errors.append(
-                f"feedback_fraction must be in [0.0, 1.0], got {self.feedback_fraction}"
-            )
+            errors.append(f"feedback_fraction must be in [0.0, 1.0], got {self.feedback_fraction}")
         if self.feedback_queue_size <= 0:
-            errors.append(
-                f"feedback_queue_size must be > 0, got {self.feedback_queue_size}"
-            )
+            errors.append(f"feedback_queue_size must be > 0, got {self.feedback_queue_size}")
         if self.max_events is not None and self.max_events <= 0:
             errors.append(f"max_events must be > 0 or None, got {self.max_events}")
         if self.perturbation_timeout is not None and self.perturbation_timeout <= 0:
             errors.append(
-                f"perturbation_timeout must be > 0 or None, "
-                f"got {self.perturbation_timeout}"
+                f"perturbation_timeout must be > 0 or None, got {self.perturbation_timeout}"
             )
 
         if errors:
@@ -275,15 +269,9 @@ class FluxConfig:
             max_events=self.max_events,
             buffer_size=self.buffer_size,
             drop_policy=self.drop_policy,
-            feedback_fraction=fraction
-            if fraction is not None
-            else self.feedback_fraction,
-            feedback_transform=transform
-            if transform is not None
-            else self.feedback_transform,
-            feedback_queue_size=queue_size
-            if queue_size is not None
-            else self.feedback_queue_size,
+            feedback_fraction=fraction if fraction is not None else self.feedback_fraction,
+            feedback_transform=transform if transform is not None else self.feedback_transform,
+            feedback_queue_size=queue_size if queue_size is not None else self.feedback_queue_size,
             emit_pheromones=self.emit_pheromones,
             trace_enabled=self.trace_enabled,
             agent_id=self.agent_id,
@@ -299,9 +287,7 @@ class FluxConfig:
     @classmethod
     def bounded(cls, max_events: int) -> "FluxConfig":
         """Create a config that processes exactly max_events events."""
-        return cls(
-            max_events=max_events, entropy_budget=float("inf"), entropy_decay=0.0
-        )
+        return cls(max_events=max_events, entropy_budget=float("inf"), entropy_decay=0.0)
 
     @classmethod
     def ouroboric(cls, feedback_fraction: float = 0.5) -> "FluxConfig":

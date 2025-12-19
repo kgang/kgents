@@ -286,12 +286,8 @@ class AtelierWidget(KgentsWidget[AtelierState]):
                 total_commissions=total_commissions
                 if total_commissions is not None
                 else current.total_commissions,
-                total_pieces=total_pieces
-                if total_pieces is not None
-                else current.total_pieces,
-                pending_queue=pending_queue
-                if pending_queue is not None
-                else current.pending_queue,
+                total_pieces=total_pieces if total_pieces is not None else current.total_pieces,
+                pending_queue=pending_queue if pending_queue is not None else current.pending_queue,
                 artisans=current.artisans,
                 status=status if status is not None else current.status,
             )

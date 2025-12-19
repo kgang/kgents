@@ -247,9 +247,7 @@ class RelationshipListRendering:
             return f"No relationships for citizen {self.citizen_id}"
         lines = [f"Relationships ({len(self.relationships)}):", ""]
         for r in self.relationships:
-            other = (
-                r.citizen_b_id if r.citizen_a_id == self.citizen_id else r.citizen_a_id
-            )
+            other = r.citizen_b_id if r.citizen_a_id == self.citizen_id else r.citizen_a_id
             strength_bar = "█" * int(r.strength * 10)
             lines.append(
                 f"  {r.relationship_type}: {other} [{strength_bar}] ({r.interaction_count} interactions)"
@@ -389,9 +387,7 @@ class TownNode(BaseLogosNode):
                 archetype=archetype_filter,
                 limit=limit,
             )
-            return CitizenListRendering(
-                citizens=citizens, total=len(citizens)
-            ).to_dict()
+            return CitizenListRendering(citizens=citizens, total=len(citizens)).to_dict()
 
         elif aspect == "citizen.get":
             citizen_id = kwargs.get("citizen_id") or kwargs.get("id")

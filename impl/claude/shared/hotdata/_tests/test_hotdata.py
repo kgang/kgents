@@ -216,9 +216,7 @@ class TestHotDataTTL:
         hd = HotData(path=path, schema=MockSnapshot, ttl=None)
         assert hd._is_fresh()
 
-    def test_is_fresh_within_ttl(
-        self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot
-    ) -> None:
+    def test_is_fresh_within_ttl(self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot) -> None:
         """Files within TTL are fresh."""
         path = tmp_fixtures_dir / "snapshot.json"
         path.write_text(json.dumps(mock_snapshot.to_dict()))
@@ -250,9 +248,7 @@ class TestHotDataTTL:
         )
         assert not hd._is_fresh()
 
-    def test_age_seconds(
-        self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot
-    ) -> None:
+    def test_age_seconds(self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot) -> None:
         """age_seconds() returns correct age."""
         path = tmp_fixtures_dir / "snapshot.json"
         path.write_text(json.dumps(mock_snapshot.to_dict()))
@@ -406,9 +402,7 @@ class TestHotDataRegistry:
         names = registry.list_all()
         assert set(names) == {"fixture_a", "fixture_b"}
 
-    def test_list_missing(
-        self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot
-    ) -> None:
+    def test_list_missing(self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot) -> None:
         """list_missing() returns fixtures without files."""
         registry = HotDataRegistry()
 
@@ -428,9 +422,7 @@ class TestHotDataRegistry:
         missing = registry.list_missing()
         assert missing == ["missing"]
 
-    def test_list_stale(
-        self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot
-    ) -> None:
+    def test_list_stale(self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot) -> None:
         """list_stale() returns stale fixtures."""
         registry = HotDataRegistry()
 
@@ -458,9 +450,7 @@ class TestHotDataRegistry:
         stale = registry.list_stale()
         assert stale == ["stale"]
 
-    def test_get_status(
-        self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot
-    ) -> None:
+    def test_get_status(self, tmp_fixtures_dir: Path, mock_snapshot: MockSnapshot) -> None:
         """get_status() returns detailed fixture info."""
         registry = HotDataRegistry()
 
@@ -498,9 +488,7 @@ class TestHotDataRegistry:
         assert result.id == expected.id
 
     @pytest.mark.asyncio
-    async def test_refresh_without_generator_raises(
-        self, tmp_fixtures_dir: Path
-    ) -> None:
+    async def test_refresh_without_generator_raises(self, tmp_fixtures_dir: Path) -> None:
         """refresh() raises ValueError without generator."""
         registry = HotDataRegistry()
 

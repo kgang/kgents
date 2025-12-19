@@ -166,9 +166,7 @@ class GraphMemory:
                 continue
 
             # Sort connections by weight (strongest first) for deterministic traversal
-            sorted_connections = sorted(
-                current_node.connections.items(), key=lambda x: -x[1]
-            )
+            sorted_connections = sorted(current_node.connections.items(), key=lambda x: -x[1])
 
             for conn_id, _weight in sorted_connections:
                 if conn_id not in visited and conn_id in self._nodes:

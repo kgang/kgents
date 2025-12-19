@@ -107,11 +107,7 @@ async def _async_balance(agent: str | None, json_mode: bool) -> int:
         agents = ledger.agents()
         if not agents:
             if json_mode:
-                print(
-                    json.dumps(
-                        {"agents": [], "message": "No agents in ledger"}, indent=2
-                    )
-                )
+                print(json.dumps({"agents": [], "message": "No agents in ledger"}, indent=2))
             else:
                 print("[CAPITAL] No agents in ledger")
                 print("         Agents appear when they interact with TrustGate")
@@ -136,9 +132,7 @@ async def _async_history(agent: str | None, limit: int, json_mode: bool) -> int:
 
     if not events:
         if json_mode:
-            print(
-                json.dumps({"events": [], "message": "No events in ledger"}, indent=2)
-            )
+            print(json.dumps({"events": [], "message": "No events in ledger"}, indent=2))
         else:
             agent_str = f" for {agent}" if agent else ""
             print(f"[CAPITAL] No events{agent_str}")

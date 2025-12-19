@@ -87,9 +87,7 @@ class SoulChange:
             "felt_sense": self.felt_sense,
             "status": self.status,
             "created_at": self.created_at.isoformat(),
-            "committed_at": self.committed_at.isoformat()
-            if self.committed_at
-            else None,
+            "committed_at": self.committed_at.isoformat() if self.committed_at else None,
         }
 
     @classmethod
@@ -264,9 +262,7 @@ class DriftReport:
             lines.append(f"~ {len(self.changed)} items changed")
         if self.integration_delta != 0:
             direction = "improved" if self.integration_delta > 0 else "decreased"
-            lines.append(
-                f"Integration {direction} by {abs(self.integration_delta):.2f}"
-            )
+            lines.append(f"Integration {direction} by {abs(self.integration_delta):.2f}")
         if not lines:
             lines.append("No changes detected")
         return "\n".join(lines)
@@ -341,9 +337,7 @@ class PersistedSoulState:
             "total_interactions": self.total_interactions,
             "total_tokens": self.total_tokens,
             "created_at": self.created_at.isoformat(),
-            "last_session": self.last_session.isoformat()
-            if self.last_session
-            else None,
+            "last_session": self.last_session.isoformat() if self.last_session else None,
         }
 
     @classmethod
@@ -509,10 +503,7 @@ class SoulSession:
     @property
     def is_first_session(self) -> bool:
         """Check if this is the first session."""
-        return (
-            self._persisted_state is None
-            or self._persisted_state.total_interactions == 0
-        )
+        return self._persisted_state is None or self._persisted_state.total_interactions == 0
 
     @property
     def pending_changes(self) -> list[SoulChange]:
@@ -578,9 +569,8 @@ class SoulSession:
             return False
 
         # Only advance if different and allowed
-        if (
-            phase != self._nphase_session.current_phase
-            and self._nphase_session.can_advance_to(phase)
+        if phase != self._nphase_session.current_phase and self._nphase_session.can_advance_to(
+            phase
         ):
             final_payload = payload or {}
             final_payload["source"] = "soul_session"
@@ -717,9 +707,7 @@ class SoulSession:
 
         return change
 
-    async def commit_change(
-        self, change_id: str, felt_sense: Optional[str] = None
-    ) -> bool:
+    async def commit_change(self, change_id: str, felt_sense: Optional[str] = None) -> bool:
         """
         User approves and commits a change.
 
@@ -787,14 +775,10 @@ class SoulSession:
             garden = get_garden()
             if isinstance(change.proposed_value, dict):
                 content = change.proposed_value.get("content", change.description)
-                eigenvector_affinities = change.proposed_value.get(
-                    "eigenvector_affinities", {}
-                )
+                eigenvector_affinities = change.proposed_value.get("eigenvector_affinities", {})
             else:
                 content = (
-                    str(change.proposed_value)
-                    if change.proposed_value
-                    else change.description
+                    str(change.proposed_value) if change.proposed_value else change.description
                 )
                 eigenvector_affinities = {}
 
@@ -858,9 +842,7 @@ class SoulSession:
         if topic:
             prompt = f"Reflect on: {topic}\n\nRecent changes:\n{changes_summary}"
         else:
-            prompt = (
-                f"Reflect on these recent changes and how they feel:\n{changes_summary}"
-            )
+            prompt = f"Reflect on these recent changes and how they feel:\n{changes_summary}"
 
         return await self._soul.dialogue(prompt, DialogueMode.REFLECT)
 
@@ -1026,12 +1008,8 @@ class SoulSession:
 
         if introspection_type == "shadow":
             # Compare shadow inventories
-            prev_shadows = {
-                s["content"] for s in previous_data.get("shadow_inventory", [])
-            }
-            curr_shadows = {
-                s["content"] for s in current_data.get("shadow_inventory", [])
-            }
+            prev_shadows = {s["content"] for s in previous_data.get("shadow_inventory", [])}
+            curr_shadows = {s["content"] for s in current_data.get("shadow_inventory", [])}
             added = list(curr_shadows - prev_shadows)
             removed = list(prev_shadows - curr_shadows)
 
@@ -1042,22 +1020,14 @@ class SoulSession:
 
         elif introspection_type == "archetype":
             # Compare active archetypes
-            prev_active = {
-                a["archetype"] for a in previous_data.get("active_archetypes", [])
-            }
-            curr_active = {
-                a["archetype"] for a in current_data.get("active_archetypes", [])
-            }
+            prev_active = {a["archetype"] for a in previous_data.get("active_archetypes", [])}
+            curr_active = {a["archetype"] for a in current_data.get("active_archetypes", [])}
             added = list(curr_active - prev_active)
             removed = list(prev_active - curr_active)
 
             # Compare shadow archetypes
-            prev_shadow = {
-                a["archetype"] for a in previous_data.get("shadow_archetypes", [])
-            }
-            curr_shadow = {
-                a["archetype"] for a in current_data.get("shadow_archetypes", [])
-            }
+            prev_shadow = {a["archetype"] for a in previous_data.get("shadow_archetypes", [])}
+            curr_shadow = {a["archetype"] for a in current_data.get("shadow_archetypes", [])}
             if prev_shadow != curr_shadow:
                 for arch in curr_shadow - prev_shadow:
                     changed.append((arch, "active", "shadow"))
@@ -1182,9 +1152,7 @@ class SoulSession:
                 self._persisted_state.total_interactions if self._persisted_state else 0
             )
             + state.interactions_count,
-            total_tokens=(
-                self._persisted_state.total_tokens if self._persisted_state else 0
-            )
+            total_tokens=(self._persisted_state.total_tokens if self._persisted_state else 0)
             + state.tokens_used_session,
             created_at=self._persisted_state.created_at
             if self._persisted_state

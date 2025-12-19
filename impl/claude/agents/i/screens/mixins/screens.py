@@ -123,9 +123,9 @@ class DashboardScreensMixin:
 
         # Get focused agent from state manager if not provided
         if agent_id is None:
-            focus = self._state_manager.get_focus(
-                "observatory"
-            ) or self._state_manager.get_focus("terrarium")
+            focus = self._state_manager.get_focus("observatory") or self._state_manager.get_focus(
+                "terrarium"
+            )
             agent_id = focus or ""
 
         self.push_screen(

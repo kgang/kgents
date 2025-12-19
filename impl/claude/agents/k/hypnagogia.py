@@ -115,9 +115,7 @@ class HypnagogicCalibration:
 
     # Calibration history
     dreams_since_calibration: int = 0
-    calibration_epoch: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    calibration_epoch: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def record_quality(self, pattern_rate: float, promotion_rate: float) -> None:
         """Record dream quality metrics."""
@@ -146,15 +144,11 @@ class HypnagogicCalibration:
         # Adjust threshold based on quality
         if avg_quality < 0.1:
             # Low quality = need more interactions
-            self.optimal_interaction_threshold = min(
-                50, self.optimal_interaction_threshold + 5
-            )
+            self.optimal_interaction_threshold = min(50, self.optimal_interaction_threshold + 5)
             adjusted = True
         elif avg_quality > 0.3:
             # High quality = can dream more frequently
-            self.optimal_interaction_threshold = max(
-                5, self.optimal_interaction_threshold - 2
-            )
+            self.optimal_interaction_threshold = max(5, self.optimal_interaction_threshold - 2)
             adjusted = True
 
         if adjusted:
@@ -494,9 +488,7 @@ class DreamPersistence:
         try:
             data = json.loads(self.calibration_file.read_text())
             return HypnagogicCalibration(
-                optimal_interaction_threshold=data.get(
-                    "optimal_interaction_threshold", 10
-                ),
+                optimal_interaction_threshold=data.get("optimal_interaction_threshold", 10),
                 optimal_dream_hour=data.get("optimal_dream_hour", 3),
                 quality_scores=[],  # Don't persist scores, recalculate
                 dreams_since_calibration=0,
@@ -549,11 +541,7 @@ class HypnagogicCycle:
         # Persistence (110% Domain 3)
         self._persistence = persistence
         if self._config.persist_patterns and not self._persistence:
-            path = (
-                Path(self._config.persistence_path)
-                if self._config.persistence_path
-                else None
-            )
+            path = Path(self._config.persistence_path) if self._config.persistence_path else None
             self._persistence = DreamPersistence(path)
 
         # Pattern store - load from persistence if available
@@ -576,18 +564,14 @@ class HypnagogicCycle:
 
         # Schedule tracking (110% Domain 3)
         self._schedule = DreamSchedule(
-            last_dream=self._dream_history[-1].timestamp
-            if self._dream_history
-            else None
+            last_dream=self._dream_history[-1].timestamp if self._dream_history else None
         )
         self._update_next_dream()
 
         # Event callback for Flux integration (110% Domain 3)
         self._event_callback: Optional[Callable[[str, dict[str, Any]], None]] = None
 
-    def set_event_callback(
-        self, callback: Callable[[str, dict[str, Any]], None]
-    ) -> None:
+    def set_event_callback(self, callback: Callable[[str, dict[str, Any]], None]) -> None:
         """Set callback for Flux event emission (110% Domain 3)."""
         self._event_callback = callback
 
@@ -678,9 +662,7 @@ class HypnagogicCycle:
 
         # Cap buffer size
         if len(self._interactions) > self._config.max_interactions_per_dream * 2:
-            self._interactions = self._interactions[
-                -self._config.max_interactions_per_dream :
-            ]
+            self._interactions = self._interactions[-self._config.max_interactions_per_dream :]
 
     def clear_interactions(self) -> int:
         """Clear interaction buffer, return count cleared."""
@@ -745,10 +727,7 @@ class HypnagogicCycle:
                 existing.evidence.extend(pattern.evidence)
 
                 # Check for promotion
-                if (
-                    existing.maturity == PatternMaturity.SEED
-                    and existing.occurrences >= 2
-                ):
+                if existing.maturity == PatternMaturity.SEED and existing.occurrences >= 2:
                     promoted = existing.promote()
                     if not dry_run:
                         self._patterns[pattern.id] = promoted
@@ -825,8 +804,7 @@ class HypnagogicCycle:
                     else 0
                 )
                 promotion_rate = (
-                    len(report.patterns_promoted)
-                    / max(1, len(report.patterns_discovered))
+                    len(report.patterns_promoted) / max(1, len(report.patterns_discovered))
                     if report.patterns_discovered
                     else 0
                 )
@@ -956,9 +934,7 @@ class HypnagogicCycle:
             patterns.append(
                 Pattern(
                     content="High inquiry rate (many questions)",
-                    evidence=[
-                        f"{question_count} of {len(interactions)} were questions"
-                    ],
+                    evidence=[f"{question_count} of {len(interactions)} were questions"],
                     eigenvector_affinities={"categorical": 0.6},
                 )
             )
@@ -1151,8 +1127,7 @@ What patterns do you notice?"""
         if report.patterns_promoted:
             for pattern in report.patterns_promoted:
                 insights.append(
-                    f"Pattern strengthened: '{pattern.content}' "
-                    f"(now {pattern.maturity.value})"
+                    f"Pattern strengthened: '{pattern.content}' (now {pattern.maturity.value})"
                 )
 
         # Insight: Eigenvector changes
@@ -1198,9 +1173,7 @@ What patterns do you notice?"""
                 for m in PatternMaturity
             },
             "dreams_completed": len(self._dream_history),
-            "last_dream": self.last_dream.timestamp.isoformat()
-            if self.last_dream
-            else None,
+            "last_dream": self.last_dream.timestamp.isoformat() if self.last_dream else None,
             "config": {
                 "min_interactions": self._config.min_interactions_for_dream,
                 "max_interactions": self._config.max_interactions_per_dream,
@@ -1216,10 +1189,7 @@ What patterns do you notice?"""
 
         # Check scheduled time
         now = datetime.now()
-        if (
-            now.hour == self._config.dream_hour
-            and now.minute >= self._config.dream_minute
-        ):
+        if now.hour == self._config.dream_hour and now.minute >= self._config.dream_minute:
             # Only dream once per hour
             if self.last_dream:
                 since_last = datetime.now(timezone.utc) - self.last_dream.timestamp

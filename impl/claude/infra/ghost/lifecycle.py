@@ -373,9 +373,7 @@ class LifecycleAwareCache:
             List of expiration events for removed entries
         """
         events: list[ExpirationEvent] = []
-        expired_keys = [
-            key for key, entry in self._entries.items() if entry.is_expired()
-        ]
+        expired_keys = [key for key, entry in self._entries.items() if entry.is_expired()]
 
         for key in expired_keys:
             event = self.delete(key, reason="ttl")

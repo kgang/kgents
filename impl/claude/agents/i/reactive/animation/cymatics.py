@@ -86,8 +86,10 @@ class VibrationSource:
         distance_factor = math.exp(-self.decay * r)
 
         # Wave equation
-        wave = self.amplitude * distance_factor * math.sin(
-            2 * math.pi * self.frequency * time - k * r + self.phase
+        wave = (
+            self.amplitude
+            * distance_factor
+            * math.sin(2 * math.pi * self.frequency * time - k * r + self.phase)
         )
 
         return wave

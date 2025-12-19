@@ -197,9 +197,7 @@ def cmd_new(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _create_entity(
-    entity_type: EntityType, name: str, opts: dict[str, str | bool]
-) -> IntentResult:
+def _create_entity(entity_type: EntityType, name: str, opts: dict[str, str | bool]) -> IntentResult:
     """Create entity of given type."""
     template = str(opts.get("template", "default"))
     path = Path(str(opts.get("path", ".")))
@@ -218,9 +216,7 @@ def _create_entity(
     return IntentResult(False, error=f"Unknown type: {entity_type}")
 
 
-def _create_agent(
-    name: str, genus: str | None, template: str, path: Path
-) -> IntentResult:
+def _create_agent(name: str, genus: str | None, template: str, path: Path) -> IntentResult:
     """Create agent scaffold using Jinja2 templates."""
     try:
         from jinja2 import Environment, FileSystemLoader
@@ -553,12 +549,8 @@ def _generate_plan(intent: str, classification: str) -> list[dict[str, Any]]:
         steps.append({"agent": "Bootstrap", "operation": "judge", "args": {}})
 
     if "deploy" in intent_lower:
-        steps.append(
-            {"agent": "J-gent", "operation": "verify", "args": {"target": "staging"}}
-        )
-        steps.append(
-            {"agent": "J-gent", "operation": "execute", "args": {"operation": "deploy"}}
-        )
+        steps.append({"agent": "J-gent", "operation": "verify", "args": {"target": "staging"}})
+        steps.append({"agent": "J-gent", "operation": "execute", "args": {"operation": "deploy"}})
 
     if not steps:
         # Default: parse and analyze
@@ -650,9 +642,7 @@ def cmd_check(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _check_target(
-    target: str, against: str, strict: bool, verbose: bool
-) -> IntentResult:
+def _check_target(target: str, against: str, strict: bool, verbose: bool) -> IntentResult:
     """Check target against specified criteria."""
     path = Path(target)
 
@@ -748,11 +738,7 @@ def cmd_think(args: list[str]) -> int:
     depth_val = opts.get("depth", "medium")
     depth = str(depth_val) if depth_val is not True else "medium"
     limit_val = opts.get("limit", "5")
-    limit = (
-        int(limit_val)
-        if isinstance(limit_val, str) or isinstance(limit_val, int)
-        else 5
-    )
+    limit = int(limit_val) if isinstance(limit_val, str) or isinstance(limit_val, int) else 5
     falsify_val = opts.get("falsify", False)
     falsify = bool(falsify_val) if falsify_val is not False else False
 
@@ -774,9 +760,7 @@ def cmd_think(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _generate_hypotheses(
-    topic: str, depth: str, limit: int, falsify: bool
-) -> IntentResult:
+def _generate_hypotheses(topic: str, depth: str, limit: int, falsify: bool) -> IntentResult:
     """Generate hypotheses about a topic."""
     # Simulated B-gent hypothesis generation
     hypotheses = [
@@ -936,11 +920,7 @@ def cmd_find(args: list[str]) -> int:
     entity_type_val = opts.get("type", "all")
     entity_type = str(entity_type_val) if entity_type_val is not True else "all"
     limit_val = opts.get("limit", "10")
-    limit = (
-        int(limit_val)
-        if isinstance(limit_val, str) or isinstance(limit_val, int)
-        else 10
-    )
+    limit = int(limit_val) if isinstance(limit_val, str) or isinstance(limit_val, int) else 10
     exact_val = opts.get("exact", False)
     exact = bool(exact_val) if exact_val is not False else False
 
@@ -962,9 +942,7 @@ def cmd_find(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _search_catalog(
-    query: str, entity_type: str, limit: int, exact: bool
-) -> IntentResult:
+def _search_catalog(query: str, entity_type: str, limit: int, exact: bool) -> IntentResult:
     """Search catalog for matching entities."""
     # Simulated L-gent search
     results = [
@@ -1079,9 +1057,7 @@ def cmd_fix(args: list[str]) -> int:
     return 0 if result.success else 1
 
 
-def _fix_target(
-    target: str, strategy: str, preview: bool, backup: bool
-) -> IntentResult:
+def _fix_target(target: str, strategy: str, preview: bool, backup: bool) -> IntentResult:
     """Attempt to fix malformed target."""
     path = Path(target)
 
@@ -1169,9 +1145,7 @@ def cmd_speak(args: list[str]) -> int:
     )
     constraints = constraints_str.split(",") if constraints_str else []
     for_agent_val = opts.get("for")
-    for_agent = (
-        str(for_agent_val) if for_agent_val and for_agent_val is not True else None
-    )
+    for_agent = str(for_agent_val) if for_agent_val and for_agent_val is not True else None
     examples_val = opts.get("examples")
     examples = str(examples_val) if examples_val and examples_val is not True else None
 
@@ -1205,9 +1179,7 @@ def _speak_create_tongue(
 
     # Simulated G-gent tongue creation
     verbs = ["CREATE", "READ", "UPDATE", "DELETE"] if level == "command" else []
-    nouns = (
-        ["file", "folder", "path"] if "file" in domain.lower() else ["item", "entity"]
-    )
+    nouns = ["file", "folder", "path"] if "file" in domain.lower() else ["item", "entity"]
 
     return IntentResult(
         success=True,
@@ -1280,9 +1252,7 @@ def cmd_judge(args: list[str]) -> int:
     strict_val = opts.get("strict", False)
     strict = bool(strict_val) if strict_val is not False else False
     principle_val = opts.get("principle")
-    principle = (
-        str(principle_val) if principle_val and principle_val is not True else None
-    )
+    principle = str(principle_val) if principle_val and principle_val is not True else None
     verbose_val = opts.get("verbose", False)
     verbose = bool(verbose_val) if verbose_val is not False else False
 

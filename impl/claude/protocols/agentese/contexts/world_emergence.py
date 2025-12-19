@@ -341,9 +341,7 @@ class EmergenceNode(BaseLogosNode):
 
         for family in PatternFamily:
             base = FAMILY_QUALIA[family]
-            lines.append(
-                f"  {family.value}: warmth={base.warmth:+.1f}, weight={base.weight:+.1f}"
-            )
+            lines.append(f"  {family.value}: warmth={base.warmth:+.1f}, weight={base.weight:+.1f}")
 
         lines.append("=" * 50)
 
@@ -352,9 +350,7 @@ class EmergenceNode(BaseLogosNode):
             content="\n".join(lines),
             metadata={
                 "circadian": state.circadian.value,
-                "family": state.selected_family.value
-                if state.selected_family
-                else None,
+                "family": state.selected_family.value if state.selected_family else None,
                 "qualia": {
                     "warmth": qualia.warmth,
                     "weight": qualia.weight,

@@ -63,7 +63,9 @@ class ContractValidationReport:
     def __str__(self) -> str:
         status = "✅ PASSED" if self.passed else "❌ FAILED"
         summary = f"\nContract Validation: {self.contract_name}\n"
-        summary += f"{status} ({self.total_laws - self.error_count}/{self.total_laws} laws satisfied)\n"
+        summary += (
+            f"{status} ({self.total_laws - self.error_count}/{self.total_laws} laws satisfied)\n"
+        )
 
         if self.violations:
             summary += f"\nErrors ({self.error_count}):\n"
@@ -239,9 +241,7 @@ class ContractValidator:
         self.laws_checked.append("Functor Pattern")
 
         # Look for "map" in composition rules or invariants
-        has_map = any(
-            "map" in rule.description.lower() for rule in contract.composition_rules
-        )
+        has_map = any("map" in rule.description.lower() for rule in contract.composition_rules)
 
         if has_map:
             logger.debug(f"Contract {contract.agent_name} exhibits functor pattern")
@@ -252,8 +252,7 @@ class ContractValidator:
 
             # Check if contract has identity preservation
             has_identity_preservation = any(
-                "preserves identity" in inv.description.lower()
-                or "F(id) = id" in inv.property
+                "preserves identity" in inv.description.lower() or "F(id) = id" in inv.property
                 for inv in contract.invariants
             )
 
@@ -291,10 +290,7 @@ class ContractValidator:
 
         # Look for "bind", "flatMap", or "chain" in composition rules
         has_bind = any(
-            any(
-                keyword in rule.description.lower()
-                for keyword in ["bind", "flatmap", "chain"]
-            )
+            any(keyword in rule.description.lower() for keyword in ["bind", "flatmap", "chain"])
             for rule in contract.composition_rules
         )
 
@@ -310,9 +306,7 @@ class ContractValidator:
             found_laws = []
 
             for law in monad_laws:
-                has_law = any(
-                    law in inv.description.lower() for inv in contract.invariants
-                )
+                has_law = any(law in inv.description.lower() for inv in contract.invariants)
                 if has_law:
                     found_laws.append(law)
 
@@ -409,14 +403,10 @@ def validate_composition_compatibility(
             )
 
     # Check composition rules allow sequential composition
-    has_sequential_rule = any(
-        rule.mode == "sequential" for rule in contract1.composition_rules
-    )
+    has_sequential_rule = any(rule.mode == "sequential" for rule in contract1.composition_rules)
 
     if contract1.composition_rules and not has_sequential_rule:
-        return False, (
-            f"{contract1.agent_name} does not support sequential composition"
-        )
+        return False, (f"{contract1.agent_name} does not support sequential composition")
 
     return True, "Compatible"
 

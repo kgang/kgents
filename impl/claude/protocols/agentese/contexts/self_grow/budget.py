@@ -48,9 +48,7 @@ class BudgetNode(BaseLogosNode):
         """View budget status."""
         self._budget.regenerate()  # Apply pending regeneration
 
-        pct = int(
-            self._budget.remaining / self._budget.config.max_entropy_per_run * 100
-        )
+        pct = int(self._budget.remaining / self._budget.config.max_entropy_per_run * 100)
 
         return BasicRendering(
             summary=f"Growth Budget: {pct}%",

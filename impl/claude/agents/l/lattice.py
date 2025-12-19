@@ -184,9 +184,7 @@ class TypeLattice:
     def _init_builtin_types(self) -> None:
         """Initialize built-in types (Any, Never, primitives)."""
         # Top type
-        self.types["Any"] = TypeNode(
-            id="Any", kind=TypeKind.ANY, name="Any", defined_at="builtin"
-        )
+        self.types["Any"] = TypeNode(id="Any", kind=TypeKind.ANY, name="Any", defined_at="builtin")
 
         # Bottom type
         self.types["Never"] = TypeNode(
@@ -320,10 +318,7 @@ class TypeLattice:
         # Return the greatest (most general) common subtype
         # A type is greatest if it's a supertype of all others in common
         for candidate in common:
-            if all(
-                self.is_subtype(other, candidate) or candidate == other
-                for other in common
-            ):
+            if all(self.is_subtype(other, candidate) or candidate == other for other in common):
                 return candidate
 
         return "Never"
@@ -350,10 +345,7 @@ class TypeLattice:
         # Return the least (most specific) common supertype
         # A type is least if it's a subtype of all others in common
         for candidate in common:
-            if all(
-                self.is_subtype(candidate, other) or candidate == other
-                for other in common
-            ):
+            if all(self.is_subtype(candidate, other) or candidate == other for other in common):
                 return candidate
 
         return "Any"
@@ -369,17 +361,13 @@ class TypeLattice:
         # Auto-create edges to Any
         if node.kind != TypeKind.ANY and node.id != "Any":
             self.edges.append(
-                SubtypeEdge(
-                    subtype_id=node.id, supertype_id="Any", reason="all types ≤ Any"
-                )
+                SubtypeEdge(subtype_id=node.id, supertype_id="Any", reason="all types ≤ Any")
             )
 
         # Auto-create edges from Never
         if node.kind != TypeKind.NEVER and node.id != "Never":
             self.edges.append(
-                SubtypeEdge(
-                    subtype_id="Never", supertype_id=node.id, reason="Never ≤ all types"
-                )
+                SubtypeEdge(subtype_id="Never", supertype_id=node.id, reason="Never ≤ all types")
             )
 
     def add_subtype_edge(self, edge: SubtypeEdge) -> None:
@@ -421,18 +409,14 @@ class TypeLattice:
         second = await self.registry.get(second_id)
 
         if not first or not second:
-            return CompositionResult(
-                compatible=False, reason="One or both artifacts not found"
-            )
+            return CompositionResult(compatible=False, reason="One or both artifacts not found")
 
         # Check type compatibility
         output_type = first.output_type
         input_type = second.input_type
 
         if not output_type or not input_type:
-            return CompositionResult(
-                compatible=False, reason="Missing type information"
-            )
+            return CompositionResult(compatible=False, reason="Missing type information")
 
         if self.is_subtype(output_type, input_type):
             return CompositionResult(
@@ -472,9 +456,7 @@ class TypeLattice:
         for i in range(len(artifact_ids) - 1):
             result = await self.can_compose(artifact_ids[i], artifact_ids[i + 1])
             stages.append(
-                CompositionStage(
-                    from_id=artifact_ids[i], to_id=artifact_ids[i + 1], result=result
-                )
+                CompositionStage(from_id=artifact_ids[i], to_id=artifact_ids[i + 1], result=result)
             )
             if not result.compatible:
                 all_valid = False

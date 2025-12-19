@@ -566,9 +566,7 @@ class CentralBank:
         diff = lease.estimated_tokens - actual_tokens
         if diff > 0:
             # Refund excess
-            self.bucket.balance = min(
-                self.bucket.max_balance, self.bucket.balance + diff
-            )
+            self.bucket.balance = min(self.bucket.max_balance, self.bucket.balance + diff)
         elif diff < 0:
             # Additional charge (should be rare if estimates are good)
             self.bucket.force_consume(-diff)
@@ -603,19 +601,11 @@ class CentralBank:
             "total_refilled": self.bucket.total_refilled,
             "sinking_fund_reserve": self.sinking_fund.reserve,
             "outstanding_loans": len(
-                [
-                    loan
-                    for loan in self.sinking_fund.outstanding_loans
-                    if not loan.repaid
-                ]
+                [loan for loan in self.sinking_fund.outstanding_loans if not loan.repaid]
             ),
             "active_futures": len(self.futures_market.futures),
             "active_leases": len(
-                [
-                    lease
-                    for lease in self.leases.values()
-                    if not lease.settled and not lease.voided
-                ]
+                [lease for lease in self.leases.values() if not lease.settled and not lease.voided]
             ),
         }
 
@@ -661,9 +651,7 @@ class DualBudget:
     economic: TokenBucket
 
     def can_proceed(self, entropy_cost: float, token_cost: int) -> bool:
-        return self.entropy.can_afford(entropy_cost) and self.economic.can_afford(
-            token_cost
-        )
+        return self.entropy.can_afford(entropy_cost) and self.economic.can_afford(token_cost)
 
     def spend(self, entropy_cost: float, token_cost: int) -> bool:
         """

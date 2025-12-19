@@ -286,9 +286,7 @@ class GhostWriter:
 
         if self._field:
             try:
-                active = len(
-                    [p for p in self._field._pheromones.values() if p.is_active]
-                )
+                active = len([p for p in self._field._pheromones.values() if p.is_active])
                 parts.append(f"signals:{active}")
             except Exception:
                 pass
@@ -313,14 +311,10 @@ class GhostWriter:
                 # Extract status line
                 for line in content.split("\n"):
                     if line.startswith("**Status**:"):
-                        context["hydrate_status"] = line.replace(
-                            "**Status**:", ""
-                        ).strip()
+                        context["hydrate_status"] = line.replace("**Status**:", "").strip()
                         break
                     if line.startswith("## Current:"):
-                        context["hydrate_current"] = line.replace(
-                            "## Current:", ""
-                        ).strip()
+                        context["hydrate_current"] = line.replace("## Current:", "").strip()
                         break
             except Exception:
                 pass
@@ -405,9 +399,7 @@ class GhostWriter:
             "summary": {
                 "total": len(projection.tensions),
                 "high": len([t for t in projection.tensions if t.severity == "high"]),
-                "medium": len(
-                    [t for t in projection.tensions if t.severity == "medium"]
-                ),
+                "medium": len([t for t in projection.tensions if t.severity == "medium"]),
                 "low": len([t for t in projection.tensions if t.severity == "low"]),
             },
         }
@@ -506,9 +498,7 @@ def create_ghost_writer(
     ghost_dir = project_root / ".kgents" / "ghost"
     hydrate_path_candidate = project_root / "HYDRATE.md"
 
-    hydrate_path: Path | None = (
-        hydrate_path_candidate if hydrate_path_candidate.exists() else None
-    )
+    hydrate_path: Path | None = hydrate_path_candidate if hydrate_path_candidate.exists() else None
 
     return GhostWriter(
         ghost_dir=ghost_dir,

@@ -177,10 +177,7 @@ class PruneNode(BaseLogosNode):
                 # Determine reason
                 if holon.age_days > self._nursery._config.max_age_days:
                     reason = f"Too old ({holon.age_days} days)"
-                elif (
-                    holon.success_rate
-                    < self._nursery._config.min_success_rate_for_survival
-                ):
+                elif holon.success_rate < self._nursery._config.min_success_rate_for_survival:
                     reason = f"Low success rate ({holon.success_rate:.1%})"
                 elif force:
                     reason = "Force pruned"
@@ -333,9 +330,7 @@ class PruneNode(BaseLogosNode):
 
         # Calculate aggregate stats
         total_usage = sum(e.usage_count for e in self._compost)
-        avg_success_rate = sum(e.success_rate for e in self._compost) / len(
-            self._compost
-        )
+        avg_success_rate = sum(e.success_rate for e in self._compost) / len(self._compost)
         avg_age = sum(e.age_days for e in self._compost) / len(self._compost)
 
         return {

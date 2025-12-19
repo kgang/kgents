@@ -162,9 +162,7 @@ class LatencyReport:
         jit_ms = sum(m.total_time_ms for m in jit_measurements) / len(jit_measurements)
 
         reduction_ms = baseline_ms - jit_ms
-        reduction_percent = (
-            (reduction_ms / baseline_ms * 100) if baseline_ms > 0 else 0.0
-        )
+        reduction_percent = (reduction_ms / baseline_ms * 100) if baseline_ms > 0 else 0.0
         speedup_factor = baseline_ms / jit_ms if jit_ms > 0 else float("inf")
 
         # Calculate value
@@ -666,9 +664,7 @@ class LatencyBenchmark:
         Compare baseline and JIT parsers, generate report.
         """
         # Benchmark both
-        baseline_measurements = self.benchmark_parser(
-            baseline_parse, test_inputs, baseline_execute
-        )
+        baseline_measurements = self.benchmark_parser(baseline_parse, test_inputs, baseline_execute)
         jit_measurements = self.benchmark_parser(jit_parse, test_inputs, jit_execute)
 
         # Generate report
@@ -754,9 +750,7 @@ class ProfitEntry:
             "system_credit": self.system_credit,
             "reason": self.reason,
             "timestamp": self.timestamp,
-            "latency_report": self.latency_report.to_dict()
-            if self.latency_report
-            else None,
+            "latency_report": self.latency_report.to_dict() if self.latency_report else None,
         }
 
 
@@ -998,9 +992,7 @@ class JITEfficiencyMonitor:
 
             # Calculate priority (higher = more urgent)
             # Priority = value × usage_count × latency
-            priority = (
-                estimated_value * (stats.parse_count / 1000) * stats.avg_latency_ms
-            )
+            priority = estimated_value * (stats.parse_count / 1000) * stats.avg_latency_ms
 
             opportunities.append(
                 JITOpportunity(

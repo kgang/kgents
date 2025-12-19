@@ -226,9 +226,7 @@ class LoomScreen(Screen[None]):
             yield Static(
                 f"[bold #e6a352]COGNITIVE LOOM[/]  │  Agent: [bold #f5d08a]{self.agent_name or self.agent_id or 'Demo'}[/]"
             )
-            yield Static(
-                "Navigate decision history  │  j/k: time  h/l: branches  c: crystallize"
-            )
+            yield Static("Navigate decision history  │  j/k: time  h/l: branches  c: crystallize")
 
         # Main container
         with Container(id="main-container"):

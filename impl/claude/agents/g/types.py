@@ -155,9 +155,7 @@ class InterpreterConfig:
     """
 
     runtime: str  # "python" | "isolated" | "sandboxed"
-    semantics: dict[str, str] = field(
-        default_factory=dict
-    )  # production -> action mapping
+    semantics: dict[str, str] = field(default_factory=dict)  # production -> action mapping
     pure_functions_only: bool = False
     timeout_ms: int = 5000
 
@@ -296,9 +294,7 @@ class TongueProtocol(Protocol):
         """Parse text using the grammar."""
         ...
 
-    def execute(
-        self, ast: Any, context: dict[str, Any] | None = None
-    ) -> ExecutionResult:
+    def execute(self, ast: Any, context: dict[str, Any] | None = None) -> ExecutionResult:
         """Execute parsed AST in context."""
         ...
 
@@ -532,18 +528,14 @@ class Tongue:
             parser_config=ParserConfig(
                 strategy=data["parser_config"]["strategy"],
                 grammar_format=GrammarFormat(data["parser_config"]["grammar_format"]),
-                confidence_threshold=data["parser_config"].get(
-                    "confidence_threshold", 0.8
-                ),
+                confidence_threshold=data["parser_config"].get("confidence_threshold", 0.8),
                 repair_strategy=data["parser_config"].get("repair_strategy", "fail"),
                 case_sensitive=data["parser_config"].get("case_sensitive", True),
             ),
             interpreter_config=InterpreterConfig(
                 runtime=data["interpreter_config"]["runtime"],
                 semantics=data["interpreter_config"].get("semantics", {}),
-                pure_functions_only=data["interpreter_config"].get(
-                    "pure_functions_only", False
-                ),
+                pure_functions_only=data["interpreter_config"].get("pure_functions_only", False),
                 timeout_ms=data["interpreter_config"].get("timeout_ms", 5000),
             ),
         )

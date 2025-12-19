@@ -157,9 +157,7 @@ class MCPResponse:
 # =============================================================================
 
 
-async def handle_check(
-    target: str, principles: str = "spec/principles.md"
-) -> MCPToolResult:
+async def handle_check(target: str, principles: str = "spec/principles.md") -> MCPToolResult:
     """
     Verify code/agent/flow against principles.
 
@@ -206,7 +204,9 @@ async def handle_judge(input_text: str, strictness: str = "high") -> MCPToolResu
         verdict = result_report.overall_verdict.value
         formatted = f"Verdict: {verdict}\n\nEvaluations:\n"
         for eval in result_report.evaluations:
-            formatted += f"  - {eval.principle.value}: {eval.verdict.value} ({eval.confidence:.2f})\n"
+            formatted += (
+                f"  - {eval.principle.value}: {eval.verdict.value} ({eval.confidence:.2f})\n"
+            )
         formatted += f"\nSummary: {result_report.summary}\n"
 
         return MCPToolResult(
@@ -320,7 +320,9 @@ async def handle_speak(domain: str, level: str = "COMMAND") -> MCPToolResult:
         output += f"Level: {tongue.level.name}\n"
         output += f"Format: {tongue.format.name}\n"
         if tongue.grammar:
-            output += f"\nGrammar:\n{tongue.grammar[:500]}{'...' if len(tongue.grammar) > 500 else ''}"
+            output += (
+                f"\nGrammar:\n{tongue.grammar[:500]}{'...' if len(tongue.grammar) > 500 else ''}"
+            )
 
         return MCPToolResult(
             success=True,
@@ -559,9 +561,7 @@ KGENTS_TOOLS: list[MCPTool] = [
         name="kgents_fix",
         description="Repair malformed input (P-gent parser/repair). Attempts to fix syntax errors, missing fields, etc.",
         parameters=(
-            MCPToolParameter(
-                "target", "string", "File path or malformed content to repair"
-            ),
+            MCPToolParameter("target", "string", "File path or malformed content to repair"),
             MCPToolParameter(
                 "strategy",
                 "string",
@@ -819,9 +819,7 @@ class MCPServer:
         while self._running:
             try:
                 # Read line from stdin
-                line = await asyncio.get_event_loop().run_in_executor(
-                    None, sys.stdin.readline
-                )
+                line = await asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline)
 
                 if not line:
                     break

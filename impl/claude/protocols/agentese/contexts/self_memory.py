@@ -400,9 +400,7 @@ class MemoryNode(BaseLogosNode):
         # Try AssociativeMemory
         if self._associative_memory is not None:
             try:
-                content_bytes = (
-                    content.encode() if isinstance(content, str) else content
-                )
+                content_bytes = content.encode() if isinstance(content, str) else content
                 memory_id = await self._associative_memory.remember(
                     content=content_bytes,
                     metadata=kwargs.get("metadata", {}),
@@ -589,9 +587,7 @@ class MemoryNode(BaseLogosNode):
         # Store via M-gent AssociativeMemory
         if self._associative_memory is not None:
             try:
-                content_bytes = (
-                    content.encode() if isinstance(content, str) else content
-                )
+                content_bytes = content.encode() if isinstance(content, str) else content
                 memory_id = await self._associative_memory.remember(
                     content=content_bytes,
                     metadata={**metadata, "concept_id": concept_id},
@@ -737,10 +733,7 @@ class MemoryGhostNode(BaseLogosNode):
         composting_count = 0
 
         # Check parent memory for composting memories (ghosts)
-        if (
-            self._parent_memory is not None
-            and self._parent_memory._associative_memory is not None
-        ):
+        if self._parent_memory is not None and self._parent_memory._associative_memory is not None:
             try:
                 from agents.m import Lifecycle
 
@@ -802,10 +795,7 @@ class MemoryGhostNode(BaseLogosNode):
         limit = kwargs.get("limit", 5)
 
         # Try parent memory's AssociativeMemory
-        if (
-            self._parent_memory is not None
-            and self._parent_memory._associative_memory is not None
-        ):
+        if self._parent_memory is not None and self._parent_memory._associative_memory is not None:
             try:
                 # Search with lower threshold for ghosts
                 results = await self._parent_memory._associative_memory.recall(
@@ -957,10 +947,7 @@ class MemoryCartographyNode(BaseLogosNode):
             }
 
         # Try semantic search to find memories near target
-        if (
-            self._parent_memory is not None
-            and self._parent_memory._associative_memory is not None
-        ):
+        if self._parent_memory is not None and self._parent_memory._associative_memory is not None:
             try:
                 results = await self._parent_memory._associative_memory.recall(
                     cue=str(target),

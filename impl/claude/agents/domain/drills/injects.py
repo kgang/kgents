@@ -286,9 +286,7 @@ class InjectState:
             "status": self.status.name,
             "urgency": self.spec.urgency,
             "target_roles": list(self.spec.target_roles),
-            "triggered_at": self.triggered_at.isoformat()
-            if self.triggered_at
-            else None,
+            "triggered_at": self.triggered_at.isoformat() if self.triggered_at else None,
             "resolution_actions": list(self.spec.resolution_actions),
             "stress_increase": self.spec.stress_increase,
         }
@@ -362,10 +360,7 @@ class InjectSequence:
                             should_trigger = True
 
                 case InjectTrigger.STATE_BASED:
-                    if (
-                        inject.trigger_on_phase
-                        and current_phase == inject.trigger_on_phase
-                    ):
+                    if inject.trigger_on_phase and current_phase == inject.trigger_on_phase:
                         should_trigger = True
 
                 case InjectTrigger.MANUAL:

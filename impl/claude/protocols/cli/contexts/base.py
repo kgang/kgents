@@ -162,9 +162,7 @@ For more: https://github.com/kgents/kgents
 """
 
 
-def _emit_output(
-    human: str, semantic: dict[str, Any], ctx: "ReflectorContext | None"
-) -> None:
+def _emit_output(human: str, semantic: dict[str, Any], ctx: "ReflectorContext | None") -> None:
     """Emit output via dual-channel if ctx available, else print."""
     if ctx is not None:
         ctx.output(human=human, semantic=semantic)

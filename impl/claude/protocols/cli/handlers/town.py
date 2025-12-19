@@ -531,9 +531,7 @@ def _show_status(ctx: "InvocationContext | None") -> int:
         status,
         ctx,
     )
-    _emit(
-        f"  Events: {status['total_events']}  Tokens: {status['total_tokens']}", {}, ctx
-    )
+    _emit(f"  Events: {status['total_events']}  Tokens: {status['total_tokens']}", {}, ctx)
 
     return 0
 
@@ -695,9 +693,7 @@ def _demo(args: list[str], ctx: "InvocationContext | None") -> int:
             _emit("\n[DEMO] Interrupted.", {}, ctx)
 
     _emit("", {}, ctx)
-    _emit(
-        "[DEMO] Complete. Use 'kgents town step' to continue the simulation.", {}, ctx
-    )
+    _emit("[DEMO] Complete. Use 'kgents town step' to continue the simulation.", {}, ctx)
 
     return 0
 
@@ -770,9 +766,7 @@ def _load_simulation(path: str, ctx: "InvocationContext | None") -> int:
 # =============================================================================
 
 
-def _whisper_citizen(
-    citizen_name: str, message: str, ctx: "InvocationContext | None"
-) -> int:
+def _whisper_citizen(citizen_name: str, message: str, ctx: "InvocationContext | None") -> int:
     """
     Whisper to a citizen, influencing their thoughts.
 
@@ -994,18 +988,14 @@ def _inhabit_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
     _emit("\n[SESSION SUMMARY]", {}, ctx)
     _emit(f"  Duration: {status['duration']:.0f}s", {}, ctx)
     _emit(f"  Actions: {status['actions_count']}", {}, ctx)
-    _emit(
-        f"  Forces used: {status['force']['used']}/{status['force']['limit']}", {}, ctx
-    )
+    _emit(f"  Forces used: {status['force']['used']}/{status['force']['limit']}", {}, ctx)
     _emit(f"  Final consent debt: {status['consent']['debt']:.2f}", {}, ctx)
     _emit(f"  Status: {status['consent']['status']}", {}, ctx)
 
     return 0
 
 
-def _show_inhabit_view(
-    inhabit: "InhabitSession", ctx: "InvocationContext | None"
-) -> None:
+def _show_inhabit_view(inhabit: "InhabitSession", ctx: "InvocationContext | None") -> None:
     """Show the citizen's current view of the world."""
     from agents.town.inhabit_session import InhabitSession
 
@@ -1056,9 +1046,7 @@ def _show_inhabit_view(
     _emit("=" * 50, {}, ctx)
 
 
-def _show_consent_status(
-    inhabit: "InhabitSession", ctx: "InvocationContext | None"
-) -> None:
+def _show_consent_status(inhabit: "InhabitSession", ctx: "InvocationContext | None") -> None:
     """Show detailed consent and session status."""
     from agents.town.inhabit_session import InhabitSession
 
@@ -1152,9 +1140,7 @@ def _intervene_event(event_desc: str, ctx: "InvocationContext | None") -> int:
         for citizen in env.citizens.values():
             # Random trust impact
             delta = -0.1 if "bad" in event_lower else 0.05
-            citizen.eigenvectors.trust = max(
-                0.0, min(1.0, citizen.eigenvectors.trust + delta)
-            )
+            citizen.eigenvectors.trust = max(0.0, min(1.0, citizen.eigenvectors.trust + delta))
             effects.append(f"{citizen.name}'s trust shifts")
 
     elif any(w in event_lower for w in ["gift", "windfall", "treasure"]):
@@ -1298,9 +1284,7 @@ def _chat_citizen(citizen_name: str, ctx: "InvocationContext | None") -> int:
         _emit("\n  Recent conversation:", {}, ctx)
         for entry in history[-3:]:
             speaker = entry.speaker
-            msg_preview = (
-                entry.message[:50] + "..." if len(entry.message) > 50 else entry.message
-            )
+            msg_preview = entry.message[:50] + "..." if len(entry.message) > 50 else entry.message
             _emit(f"    {speaker}: {msg_preview}", {}, ctx)
 
     _emit("\n  Commands:", {}, ctx)
@@ -1461,9 +1445,7 @@ def _generate_fallback_response(
     # Default responses based on personality
     if not responses:
         if ev.warmth > 0.7 and ev.creativity > 0.5:
-            responses.append(
-                "I appreciate you sharing that with me. It makes me think..."
-            )
+            responses.append("I appreciate you sharing that with me. It makes me think...")
         elif ev.curiosity > 0.7:
             responses.append("Tell me more about that.")
         elif ev.trust > 0.7:
@@ -1537,9 +1519,7 @@ async def _generate_llm_citizen_response(
     # Add any relevant memories (search by message content)
     message_keywords = [w for w in message.lower().split() if len(w) > 3]
     if message_keywords:
-        relevant_memories = await memory.recall_by_content(
-            message_keywords[0], k_hops=1
-        )
+        relevant_memories = await memory.recall_by_content(message_keywords[0], k_hops=1)
         if relevant_memories:
             user_prompt_parts.append("Relevant memories:")
             for mem in relevant_memories[:2]:  # Top 2 memories
@@ -1554,9 +1534,7 @@ async def _generate_llm_citizen_response(
     # Add the current message
     user_prompt_parts.append(f"Kent says: {message}")
     user_prompt_parts.append("")
-    user_prompt_parts.append(
-        f"Respond as {citizen.name} in 1-3 sentences, staying in character."
-    )
+    user_prompt_parts.append(f"Respond as {citizen.name} in 1-3 sentences, staying in character.")
 
     user_prompt = "\n".join(user_prompt_parts)
 
@@ -1642,9 +1620,9 @@ def _witness_activity(ctx: "InvocationContext | None") -> int:
 
         # Show relationships
         if citizen.relationships:
-            top_rel = sorted(
-                citizen.relationships.items(), key=lambda x: abs(x[1]), reverse=True
-            )[:2]
+            top_rel = sorted(citizen.relationships.items(), key=lambda x: abs(x[1]), reverse=True)[
+                :2
+            ]
             for other_id, weight in top_rel:
                 other = env.get_citizen_by_id(other_id)
                 other_name = other.name if other else other_id[:6]
@@ -1856,7 +1834,9 @@ def _synthesize_discussion(citizens: list["Citizen"], topic: str) -> str:
     if unique >= 4:
         return f"Many perspectives enriched our understanding of {topic}. The diversity of thought brings wisdom."
     elif unique >= 2:
-        return f"Different approaches to {topic} complement each other. Together we see more clearly."
+        return (
+            f"Different approaches to {topic} complement each other. Together we see more clearly."
+        )
     else:
         return f"We share a common view on {topic}. Our unity gives us strength."
 

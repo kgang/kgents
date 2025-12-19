@@ -117,12 +117,8 @@ class GardenIdea(TimestampMixin, CausalMixin, Base):
     tags: Mapped[list[str]] = mapped_column(JSON, default=list)
 
     # Relationships
-    session: Mapped["GardenSession | None"] = relationship(
-        "GardenSession", back_populates="ideas"
-    )
-    plot: Mapped["GardenPlot | None"] = relationship(
-        "GardenPlot", back_populates="ideas"
-    )
+    session: Mapped["GardenSession | None"] = relationship("GardenSession", back_populates="ideas")
+    plot: Mapped["GardenPlot | None"] = relationship("GardenPlot", back_populates="ideas")
     outgoing_connections: Mapped[list["IdeaConnection"]] = relationship(
         "IdeaConnection",
         foreign_keys="IdeaConnection.source_id",
@@ -173,14 +169,10 @@ class GardenPlot(TimestampMixin, Base):
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
     name: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    color: Mapped[str | None] = mapped_column(
-        String(16), nullable=True
-    )  # Hex color for UI
+    color: Mapped[str | None] = mapped_column(String(16), nullable=True)  # Hex color for UI
 
     # Ideas in this plot
-    ideas: Mapped[list["GardenIdea"]] = relationship(
-        "GardenIdea", back_populates="plot"
-    )
+    ideas: Mapped[list["GardenIdea"]] = relationship("GardenIdea", back_populates="plot")
 
     __table_args__ = (Index("idx_garden_plots_name", "name"),)
 

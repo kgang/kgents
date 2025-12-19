@@ -248,17 +248,13 @@ class Subscription:
 
     id: str
     config: SubscriptionConfig
-    _queue: asyncio.Queue[AgentesEvent] = field(
-        default_factory=lambda: asyncio.Queue(maxsize=1000)
-    )
+    _queue: asyncio.Queue[AgentesEvent] = field(default_factory=lambda: asyncio.Queue(maxsize=1000))
     _active: bool = field(default=True)
     _acknowledged: set[str] = field(default_factory=set)
     _heartbeat_task: asyncio.Task[None] | None = field(default=None)
     _manager: "SubscriptionManager | None" = field(default=None)
     # AT_LEAST_ONCE: Track pending events for redelivery
-    _pending_events: dict[str, tuple[AgentesEvent, datetime]] = field(
-        default_factory=dict
-    )
+    _pending_events: dict[str, tuple[AgentesEvent, datetime]] = field(default_factory=dict)
     _redelivery_task: asyncio.Task[None] | None = field(default=None)
     # Redelivery settings
     _redelivery_timeout: float = field(default=30.0)  # seconds
@@ -288,10 +284,7 @@ class Subscription:
             self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
         # Start redelivery task for AT_LEAST_ONCE
-        if (
-            self.config.delivery == DeliveryMode.AT_LEAST_ONCE
-            and self._redelivery_task is None
-        ):
+        if self.config.delivery == DeliveryMode.AT_LEAST_ONCE and self._redelivery_task is None:
             self._redelivery_task = asyncio.create_task(self._redelivery_loop())
 
         while self._active:
@@ -331,9 +324,7 @@ class Subscription:
         """Background task to redeliver unacknowledged events (AT_LEAST_ONCE)."""
         while self._active:
             try:
-                await asyncio.sleep(
-                    self._redelivery_timeout / 2
-                )  # Check twice per timeout
+                await asyncio.sleep(self._redelivery_timeout / 2)  # Check twice per timeout
                 if not self._active:
                     break
 
@@ -366,9 +357,7 @@ class Subscription:
 
                 # Redeliver events
                 for event in events_to_redeliver:
-                    logger.debug(
-                        f"Subscription {self.id}: Redelivering event {event.event_id}"
-                    )
+                    logger.debug(f"Subscription {self.id}: Redelivering event {event.event_id}")
                     self._emit(event)
 
             except asyncio.CancelledError:
@@ -416,9 +405,7 @@ class Subscription:
             self._queue.put_nowait(event)
             return True
         except asyncio.QueueFull:
-            logger.warning(
-                f"Subscription {self.id} buffer full, dropping event for {event.path}"
-            )
+            logger.warning(f"Subscription {self.id} buffer full, dropping event for {event.path}")
             return False
 
     def _matches(self, path: str, aspect: str | None = None) -> bool:
@@ -1039,9 +1026,7 @@ class SubscriptionMetrics:
             "events_dropped": self.events_dropped,
             "total_lag_seconds": self.total_lag_seconds,
             "avg_lag_seconds": (
-                self.total_lag_seconds / self.events_delivered
-                if self.events_delivered > 0
-                else 0.0
+                self.total_lag_seconds / self.events_delivered if self.events_delivered > 0 else 0.0
             ),
         }
 

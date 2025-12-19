@@ -424,14 +424,11 @@ async def assert_associativity_law(
             emit_law_check=False,
         )
 
-        associativity_holds = _results_equivalent(
-            left_result.result, right_result.result
-        )
+        associativity_holds = _results_equivalent(left_result.result, right_result.result)
 
         if not associativity_holds:
             errors.append(
-                f"Associativity violation at {a} >> {b} >> {c}: "
-                f"results differ between invocations"
+                f"Associativity violation at {a} >> {b} >> {c}: results differ between invocations"
             )
 
     except Exception as e:

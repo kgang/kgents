@@ -132,9 +132,7 @@ class SharedEntropyBudget:
             "remaining": self.remaining,
             "threshold": self.threshold,
             "is_exhausted": self.is_exhausted,
-            "utilization": 1.0 - (self.remaining / self.initial)
-            if self.initial > 0
-            else 1.0,
+            "utilization": 1.0 - (self.remaining / self.initial) if self.initial > 0 else 1.0,
         }
 
 
@@ -231,9 +229,7 @@ class DualEntropyBudget:
             and not self.recursion.is_exhausted
         )
 
-    def spend(
-        self, economic_cost: float, recursion_cost: float = 0.0
-    ) -> "DualEntropyBudget":
+    def spend(self, economic_cost: float, recursion_cost: float = 0.0) -> "DualEntropyBudget":
         """
         Spend from both budgets.
 

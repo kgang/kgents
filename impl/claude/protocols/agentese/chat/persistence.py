@@ -563,9 +563,7 @@ class MemoryInjector:
             content_score = 0.0
             for turn in session.turns:
                 turn_text = (
-                    turn.get("user_message", "")
-                    + " "
-                    + turn.get("assistant_response", "")
+                    turn.get("user_message", "") + " " + turn.get("assistant_response", "")
                 ).lower()
 
                 # Word overlap

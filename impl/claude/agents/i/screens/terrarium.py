@@ -258,9 +258,7 @@ class TracesSubview(Static):
             else:
                 result_color = "#b3a89a"  # neutral
 
-            lines.append(
-                f"{prefix} [{result_color}]{path}[/] ({args}) → {result}  [{duration}]"
-            )
+            lines.append(f"{prefix} [{result_color}]{path}[/] ({args}) → {result}  [{duration}]")
 
         return "\n".join(lines)
 
@@ -364,9 +362,7 @@ class TurnsSubview(Static):
 
         total = sum(self.turn_counts.values())
 
-        for turn_type, count in sorted(
-            self.turn_counts.items(), key=lambda x: x[1], reverse=True
-        ):
+        for turn_type, count in sorted(self.turn_counts.items(), key=lambda x: x[1], reverse=True):
             color = type_colors.get(turn_type, "#b3a89a")
             pct = (count / total * 100) if total > 0 else 0
             bar_width = int(pct / 5)
@@ -527,10 +523,7 @@ class TerrariumScreen(Screen[None]):
                 f"LOD: SURFACE  │  Agents: {agent_count}  │  "
                 f"Entropy: {entropy * 100:.0f}%"
             )
-            yield Static(
-                "[Tab] cycle  [Enter/+] cockpit  [-] observatory  "
-                "[1-4] subview  [?] help"
-            )
+            yield Static("[Tab] cycle  [Enter/+] cockpit  [-] observatory  [1-4] subview  [?] help")
 
         # Main content area
         with Container(id="main-container"):
@@ -541,9 +534,7 @@ class TerrariumScreen(Screen[None]):
                         for agent_id in self.garden.agent_ids[:8]:  # Max 8 agents
                             agent = self.flux_state.agents.get(agent_id)
                             if agent:
-                                card = TerrariumAgentCard(
-                                    agent=agent, id=f"agent-{agent_id}"
-                                )
+                                card = TerrariumAgentCard(agent=agent, id=f"agent-{agent_id}")
                                 self._agent_cards[agent_id] = card
                                 yield card
                     else:

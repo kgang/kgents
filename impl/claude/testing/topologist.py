@@ -77,9 +77,7 @@ class InvarianceResult:
 
     def __repr__(self) -> str:
         status = "INVARIANT" if self.invariant else f"VIOLATED ({len(self.violations)})"
-        return (
-            f"InvarianceResult({self.agent}: {status}, {self.contexts_tested} contexts)"
-        )
+        return f"InvarianceResult({self.agent}: {status}, {self.contexts_tested} contexts)"
 
 
 # =============================================================================
@@ -125,9 +123,7 @@ class TypeTopology:
             return True  # Can stringify anything
         return False
 
-    def equivalent_paths(
-        self, start: str, end: str, max_depth: int = 5
-    ) -> list[list[str]]:
+    def equivalent_paths(self, start: str, end: str, max_depth: int = 5) -> list[list[str]]:
         """Find all paths between two agents (for commutativity testing).
 
         Args:
@@ -366,9 +362,7 @@ class Topologist:
         class ComposedAgent:
             def __init__(inner_self, agents: list[Any]):
                 inner_self.agents = agents
-                inner_self.name = " >> ".join(
-                    getattr(a, "name", type(a).__name__) for a in agents
-                )
+                inner_self.name = " >> ".join(getattr(a, "name", type(a).__name__) for a in agents)
 
             async def invoke(inner_self, data: Any) -> Any:
                 result = data
@@ -409,9 +403,7 @@ class Topologist:
             try:
                 noisy_result = await lifted.invoke(input_data)
 
-                equivalent = await self.oracle.semantically_equivalent(
-                    baseline, noisy_result
-                )
+                equivalent = await self.oracle.semantically_equivalent(baseline, noisy_result)
                 similarity = await self.oracle.similarity(baseline, noisy_result)
 
                 if not equivalent:
@@ -442,9 +434,7 @@ class Topologist:
             invariant=len(violations) == 0,
         )
 
-    async def fuzz_equivalent_paths(
-        self, count: int = 100
-    ) -> list[CommutativityResult]:
+    async def fuzz_equivalent_paths(self, count: int = 100) -> list[CommutativityResult]:
         """Find and test all equivalent path pairs.
 
         Args:
@@ -467,9 +457,7 @@ class Topologist:
                             def make_gen(s=start):
                                 return lambda: self._sample_input(s)
 
-                            result = await self.test_commutativity(
-                                path_a, path_b, make_gen()
-                            )
+                            result = await self.test_commutativity(path_a, path_b, make_gen())
                             results.append(result)
 
                             if len(results) >= count:
@@ -546,9 +534,7 @@ def format_topologist_report(report: TopologistReport) -> str:
         lines.append(" INVARIANCE VIOLATIONS:")
         for inv_result in report.invariance_results:
             for v in inv_result.violations:
-                lines.append(
-                    f"   {inv_result.agent} + {v.functor}: sim={v.similarity:.2f}"
-                )
+                lines.append(f"   {inv_result.agent} + {v.functor}: sim={v.similarity:.2f}")
 
     lines.append("=" * 60)
     return "\n".join(lines)

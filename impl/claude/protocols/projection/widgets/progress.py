@@ -106,9 +106,7 @@ class ProgressWidget(KgentsWidget[ProgressWidgetState]):
     """
 
     def __init__(self, state: ProgressWidgetState | None = None) -> None:
-        self.state = Signal.of(
-            state or ProgressWidgetState(value=0, variant=ProgressVariant.BAR)
-        )
+        self.state = Signal.of(state or ProgressWidgetState(value=0, variant=ProgressVariant.BAR))
 
     def project(self, target: RenderTarget) -> Any:
         """Project progress to target surface."""
@@ -203,9 +201,7 @@ class ProgressWidget(KgentsWidget[ProgressWidgetState]):
         if s.variant == ProgressVariant.STEPS:
             return self._steps_to_marimo()
 
-        label_html = (
-            f'<span class="kgents-progress-label">{s.label}</span>' if s.label else ""
-        )
+        label_html = f'<span class="kgents-progress-label">{s.label}</span>' if s.label else ""
         percentage_html = (
             f'<span class="kgents-progress-percentage">{s.percentage}%</span>'
             if s.show_percentage

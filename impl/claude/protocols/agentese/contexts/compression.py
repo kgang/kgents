@@ -84,13 +84,10 @@ class CompressionQuality:
     def __post_init__(self) -> None:
         """Validate quality metrics are in valid ranges."""
         if self.compression_ratio < 0:
-            raise ValueError(
-                f"compression_ratio must be >= 0, got {self.compression_ratio}"
-            )
+            raise ValueError(f"compression_ratio must be >= 0, got {self.compression_ratio}")
         if not 0.0 <= self.reconstruction_error <= 1.0:
             raise ValueError(
-                f"reconstruction_error must be between 0.0 and 1.0, "
-                f"got {self.reconstruction_error}"
+                f"reconstruction_error must be between 0.0 and 1.0, got {self.reconstruction_error}"
             )
         if self.quality < 0:
             raise ValueError(f"quality must be >= 0, got {self.quality}")

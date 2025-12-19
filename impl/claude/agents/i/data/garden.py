@@ -277,9 +277,7 @@ def create_demo_polynomial_state() -> PolynomialState:
     - Loads from pre-computed fixture when available
     - Falls back to inline definition for first-run scenarios
     """
-    return DEMO_POLYNOMIAL_STATE_HOTDATA.load_or_default(
-        _create_fallback_polynomial_state()
-    )
+    return DEMO_POLYNOMIAL_STATE_HOTDATA.load_or_default(_create_fallback_polynomial_state())
 
 
 def create_demo_yield_turns() -> list[YieldTurn]:

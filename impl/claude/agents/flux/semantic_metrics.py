@@ -137,9 +137,7 @@ class DurabilitySignal:
         This is eta_Postgres in the categorical sense.
         """
         # Compute semantic metrics from vendor metrics
-        pool_available = (
-            1 - (pulse.pool_active / pulse.pool_max) if pulse.pool_max > 0 else 0
-        )
+        pool_available = 1 - (pulse.pool_active / pulse.pool_max) if pulse.pool_max > 0 else 0
 
         # Write capacity is available pool + no waiters
         write_capacity = pool_available if pulse.pool_waiting == 0 else pool_available * 0.5
@@ -220,9 +218,7 @@ class ReflexSignal:
         """
         # Memory pressure: how close to limit
         memory_pressure = (
-            pulse.memory_used_mb / pulse.memory_max_mb
-            if pulse.memory_max_mb > 0
-            else 0.0
+            pulse.memory_used_mb / pulse.memory_max_mb if pulse.memory_max_mb > 0 else 0.0
         )
 
         # Thought speed: inverse of memory pressure (more room = faster)
@@ -444,8 +440,7 @@ class TriadHealth:
     def can_associate(self) -> bool:
         """True if semantic search is functional."""
         return (
-            self.resonance.search_responsiveness > 0.3
-            and self.resonance.coherency_with_truth > 0.5
+            self.resonance.search_responsiveness > 0.3 and self.resonance.coherency_with_truth > 0.5
         )
 
     def to_dict(self) -> dict[str, object]:

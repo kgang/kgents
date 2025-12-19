@@ -252,9 +252,7 @@ class SemaphoreToken(Generic[R]):
             "severity": self.severity,
             "created_at": self.created_at.isoformat(),
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
-            "cancelled_at": (
-                self.cancelled_at.isoformat() if self.cancelled_at else None
-            ),
+            "cancelled_at": (self.cancelled_at.isoformat() if self.cancelled_at else None),
             "voided_at": self.voided_at.isoformat() if self.voided_at else None,
         }
 
@@ -279,11 +277,7 @@ class SemaphoreToken(Generic[R]):
             frozen_state=base64.b64decode(data["frozen_state"]),
             original_event=data.get("original_event"),
             required_type=None,  # Type name only, not actual type
-            deadline=(
-                datetime.fromisoformat(data["deadline"])
-                if data.get("deadline")
-                else None
-            ),
+            deadline=(datetime.fromisoformat(data["deadline"]) if data.get("deadline") else None),
             escalation=data.get("escalation"),
             prompt=data.get("prompt", ""),
             options=data.get("options", []),

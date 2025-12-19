@@ -1165,10 +1165,7 @@ class TestSoulChallengeTracing:
         if len(thread_events) >= 2:
             # Get one event from each of two threads
             sources_list = list(thread_events.keys())
-            if (
-                len(thread_events[sources_list[0]]) > 0
-                and len(thread_events[sources_list[1]]) > 0
-            ):
+            if len(thread_events[sources_list[0]]) > 0 and len(thread_events[sources_list[1]]) > 0:
                 e1 = thread_events[sources_list[0]][0]
                 e2 = thread_events[sources_list[1]][0]
 

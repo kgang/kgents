@@ -65,9 +65,7 @@ def generate_waveform(
     Returns:
         String of waveform characters
     """
-    pattern = WAVEFORM_PATTERNS.get(
-        operation_type, WAVEFORM_PATTERNS[OperationType.WAITING]
-    )
+    pattern = WAVEFORM_PATTERNS.get(operation_type, WAVEFORM_PATTERNS[OperationType.WAITING])
 
     # Create a seamless loop by repeating the pattern
     extended_pattern = pattern * ((width // len(pattern)) + 2)

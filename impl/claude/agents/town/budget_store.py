@@ -184,9 +184,7 @@ class UserBudgetInfo:
     subscription_tier: str  # TOURIST, RESIDENT, CITIZEN, FOUNDER
     subscription_renews_at: datetime | None  # Next renewal date
     credits: int = 0  # Available credits
-    monthly_usage: dict[str, int] = field(
-        default_factory=dict
-    )  # Action -> count this month
+    monthly_usage: dict[str, int] = field(default_factory=dict)  # Action -> count this month
     last_monthly_reset: datetime = field(default_factory=datetime.now)
 
     @property
@@ -223,10 +221,7 @@ class UserBudgetInfo:
         limit: int = int(limit_value) if limit_value is not None else 0
         if limit == 0:  # Either unlimited or not allowed
             # Check if feature is actually allowed
-            if (
-                action == "branch"
-                and self.tier.features.get("branching", False) is False
-            ):
+            if action == "branch" and self.tier.features.get("branching", False) is False:
                 return 0
             return 999999
         action_used: int = self.monthly_usage.get(action, 0)
@@ -249,9 +244,7 @@ class BudgetStore(Protocol):
         """Get budget info for a user."""
         ...
 
-    async def create_budget(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def create_budget(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Create budget for a new user."""
         ...
 
@@ -275,9 +268,7 @@ class BudgetStore(Protocol):
         """
         ...
 
-    async def get_consent_state(
-        self, user_id: str, citizen_id: str
-    ) -> ConsentState | None:
+    async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None:
         """Get consent debt state for a user-citizen pair."""
         ...
 
@@ -285,15 +276,11 @@ class BudgetStore(Protocol):
         """Update consent debt state."""
         ...
 
-    async def update_subscription(
-        self, user_id: str, tier: str, renews_at: datetime
-    ) -> bool:
+    async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool:
         """Update user's subscription tier and renewal date."""
         ...
 
-    async def get_or_create(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def get_or_create(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Get existing budget or create new one."""
         ...
 
@@ -322,9 +309,7 @@ class InMemoryBudgetStore:
             self._check_reset(budget)
         return budget
 
-    async def create_budget(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def create_budget(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Create budget for a new user."""
         budget = UserBudgetInfo(
             user_id=user_id,
@@ -374,9 +359,7 @@ class InMemoryBudgetStore:
 
         return True
 
-    async def get_consent_state(
-        self, user_id: str, citizen_id: str
-    ) -> ConsentState | None:
+    async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None:
         """Get consent debt state."""
         key = (user_id, citizen_id)
         consent = self._consent_states.get(key)
@@ -396,9 +379,7 @@ class InMemoryBudgetStore:
         self._consent_states[key] = consent
         return True
 
-    async def update_subscription(
-        self, user_id: str, tier: str, renews_at: datetime
-    ) -> bool:
+    async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool:
         """Update subscription tier and renewal."""
         budget = await self.get_budget(user_id)
         if not budget:
@@ -408,9 +389,7 @@ class InMemoryBudgetStore:
         budget.subscription_renews_at = renews_at
         return True
 
-    async def get_or_create(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def get_or_create(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Get existing budget or create new one.
 
         Special test users (for development and testing):
@@ -464,9 +443,7 @@ class RedisBudgetStore:
         """
         import os
 
-        self._redis_url = redis_url or os.environ.get(
-            "REDIS_URL", "redis://localhost:6379"
-        )
+        self._redis_url = redis_url or os.environ.get("REDIS_URL", "redis://localhost:6379")
         self._redis: Any = None
 
     async def _get_redis(self) -> Any:
@@ -505,9 +482,7 @@ class RedisBudgetStore:
                 year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0
             )
         else:
-            end_of_month = now.replace(
-                month=now.month + 1, day=1, hour=0, minute=0, second=0
-            )
+            end_of_month = now.replace(month=now.month + 1, day=1, hour=0, minute=0, second=0)
         return int((end_of_month - now).total_seconds())
 
     async def get_budget(self, user_id: str) -> UserBudgetInfo | None:
@@ -521,18 +496,14 @@ class RedisBudgetStore:
 
         tier = sub_data.get(b"tier", b"TOURIST").decode()
         renews_at_str = sub_data.get(b"renews_at")
-        renews_at = (
-            datetime.fromisoformat(renews_at_str.decode()) if renews_at_str else None
-        )
+        renews_at = datetime.fromisoformat(renews_at_str.decode()) if renews_at_str else None
 
         # Get credits
         credits = int(await r.get(self._credits_key(user_id)) or 0)
 
         # Get monthly usage
         monthly_data = await r.hgetall(self._monthly_key(user_id))
-        monthly_usage = {
-            k.decode(): int(v) for k, v in monthly_data.items() if monthly_data
-        }
+        monthly_usage = {k.decode(): int(v) for k, v in monthly_data.items() if monthly_data}
 
         return UserBudgetInfo(
             user_id=user_id,
@@ -542,9 +513,7 @@ class RedisBudgetStore:
             monthly_usage=monthly_usage,
         )
 
-    async def create_budget(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def create_budget(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Create budget for a new user."""
         r = await self._get_redis()
 
@@ -606,9 +575,7 @@ class RedisBudgetStore:
 
         return True
 
-    async def get_consent_state(
-        self, user_id: str, citizen_id: str
-    ) -> ConsentState | None:
+    async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None:
         """Get consent debt state."""
         r = await self._get_redis()
 
@@ -621,9 +588,7 @@ class RedisBudgetStore:
         cooldown = float(data.get(b"cooldown", b"0.0"))
         last_update_str = data.get(b"last_update")
         last_update = (
-            datetime.fromisoformat(last_update_str.decode())
-            if last_update_str
-            else datetime.now()
+            datetime.fromisoformat(last_update_str.decode()) if last_update_str else datetime.now()
         )
 
         consent = ConsentState(
@@ -655,9 +620,7 @@ class RedisBudgetStore:
         await r.hset(self._consent_key(user_id, consent.citizen_id), mapping=data)
         return True
 
-    async def update_subscription(
-        self, user_id: str, tier: str, renews_at: datetime
-    ) -> bool:
+    async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool:
         """Update subscription tier and renewal."""
         r = await self._get_redis()
 
@@ -665,9 +628,7 @@ class RedisBudgetStore:
         await r.hset(self._subscription_key(user_id), mapping=sub_data)
         return True
 
-    async def get_or_create(
-        self, user_id: str, tier: str = "TOURIST"
-    ) -> UserBudgetInfo:
+    async def get_or_create(self, user_id: str, tier: str = "TOURIST") -> UserBudgetInfo:
         """Get existing budget or create new one.
 
         Special test users (for development and testing):

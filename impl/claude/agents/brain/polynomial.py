@@ -114,9 +114,7 @@ class BrainInput:
         return CaptureInput(content=content, tags=tags, source_type=source_type)
 
     @staticmethod
-    def search(
-        query: str, limit: int = 10, tags: tuple[str, ...] | None = None
-    ) -> SearchInput:
+    def search(query: str, limit: int = 10, tags: tuple[str, ...] | None = None) -> SearchInput:
         """Create a search input."""
         return SearchInput(query=query, limit=limit, tags=tags)
 
@@ -201,9 +199,7 @@ def brain_directions(phase: BrainPhase) -> FrozenSet[Any]:
     """
     match phase:
         case BrainPhase.IDLE:
-            return frozenset(
-                {CaptureInput, SearchInput, SurfaceInput, HealInput, type, Any}
-            )
+            return frozenset({CaptureInput, SearchInput, SurfaceInput, HealInput, type, Any})
         case BrainPhase.CAPTURING:
             return frozenset({IdleInput, type, Any})
         case BrainPhase.SEARCHING:

@@ -213,11 +213,7 @@ def _apply_constraints(operations: list[str], constraints: list[str]) -> list[st
             return [
                 op
                 for op in operations
-                if "READ" in op
-                or "GET" in op
-                or "LIST" in op
-                or "QUERY" in op
-                or "CHECK" in op
+                if "READ" in op or "GET" in op or "LIST" in op or "QUERY" in op or "CHECK" in op
             ]
 
         # Explicit forbidden operations

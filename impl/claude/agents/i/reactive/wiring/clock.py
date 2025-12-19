@@ -157,12 +157,8 @@ class Clock:
         if not current.running:
             return current
 
-        now = (
-            time.time() * 1000 if self.config.use_wall_time else self._last_tick + 16.67
-        )
-        delta = (
-            override_delta if override_delta is not None else (now - self._last_tick)
-        )
+        now = time.time() * 1000 if self.config.use_wall_time else self._last_tick + 16.67
+        delta = override_delta if override_delta is not None else (now - self._last_tick)
         self._last_tick = now
 
         # Apply playback rate

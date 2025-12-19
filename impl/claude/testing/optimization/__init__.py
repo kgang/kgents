@@ -244,11 +244,7 @@ class RefinementTracker:
 
     def slow_tests(self) -> list[TestProfile]:
         """Get tests in SLOW or EXPENSIVE tier."""
-        return [
-            p
-            for p in self.profiles.values()
-            if p.tier in (TestTier.SLOW, TestTier.EXPENSIVE)
-        ]
+        return [p for p in self.profiles.values() if p.tier in (TestTier.SLOW, TestTier.EXPENSIVE)]
 
     def summary(self) -> dict[str, Any]:
         """Generate optimization summary."""
@@ -266,8 +262,7 @@ class RefinementTracker:
             "tier_distribution": tier_counts,
             "tier_time_ms": tier_time,
             "expensive_tests": [
-                {"test_id": p.test_id, "duration_ms": p.duration_ms}
-                for p in self.expensive_tests()
+                {"test_id": p.test_id, "duration_ms": p.duration_ms} for p in self.expensive_tests()
             ],
         }
 

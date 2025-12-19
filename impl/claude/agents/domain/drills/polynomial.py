@@ -300,9 +300,7 @@ def crisis_directions(phase: CrisisPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def crisis_transition(
-    phase: CrisisPhase, input: Any
-) -> tuple[CrisisPhase, CrisisOutput]:
+def crisis_transition(phase: CrisisPhase, input: Any) -> tuple[CrisisPhase, CrisisOutput]:
     """
     Crisis state transition function.
 

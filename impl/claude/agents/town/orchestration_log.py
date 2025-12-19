@@ -377,9 +377,7 @@ class OrchestrationLog:
 
     # --- Replay ---
 
-    async def replay_from(
-        self, checkpoint_id: str | None = None
-    ) -> AsyncIterator[dict[str, Any]]:
+    async def replay_from(self, checkpoint_id: str | None = None) -> AsyncIterator[dict[str, Any]]:
         """
         Replay events from checkpoint (or beginning).
 
@@ -422,9 +420,7 @@ class OrchestrationLog:
         Uses temp file + rename for crash safety.
         """
         # Write to temp file
-        fd, temp_path = tempfile.mkstemp(
-            dir=path.parent, prefix=".tmp_", suffix=".json"
-        )
+        fd, temp_path = tempfile.mkstemp(dir=path.parent, prefix=".tmp_", suffix=".json")
         try:
             with os.fdopen(fd, "w") as f:
                 json.dump(data, f, indent=2)

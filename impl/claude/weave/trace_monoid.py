@@ -80,9 +80,7 @@ class TraceMonoid(Generic[T]):
         """
         new_events = list(self.events) + [event]
 
-        new_graph = DependencyGraph(
-            _dependencies=dict(self._dependency_graph._dependencies)
-        )
+        new_graph = DependencyGraph(_dependencies=dict(self._dependency_graph._dependencies))
         new_graph.add_node(event.id, depends_on)
 
         return TraceMonoid(
@@ -275,9 +273,7 @@ class TraceMonoid(Generic[T]):
 
     def get_latest_event(self, source: str | None = None) -> Event[T] | None:
         """Get the latest event, optionally filtered by source."""
-        candidates = (
-            self.events if source is None else self.get_events_by_source(source)
-        )
+        candidates = self.events if source is None else self.get_events_by_source(source)
         if not candidates:
             return None
         return max(candidates, key=lambda e: e.timestamp)

@@ -100,9 +100,7 @@ class LibraryCLI(CLICapable):
                 {
                     "id": r.entry.id,
                     "name": r.entry.name,
-                    "type": r.entry.entity_type.value
-                    if r.entry.entity_type
-                    else "unknown",
+                    "type": r.entry.entity_type.value if r.entry.entity_type else "unknown",
                     "status": r.entry.status.value if r.entry.status else "unknown",
                     "description": r.entry.description,
                 }
@@ -363,9 +361,7 @@ class LibraryCLI(CLICapable):
         type_list = list(lattice.types.values())
 
         return {
-            "types": [
-                {"id": t.id, "name": t.name, "kind": t.kind.value} for t in type_list
-            ],
+            "types": [{"id": t.id, "name": t.name, "kind": t.kind.value} for t in type_list],
             "count": len(type_list),
         }
 

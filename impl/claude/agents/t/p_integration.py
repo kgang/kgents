@@ -57,9 +57,7 @@ class SchemaParser(Parser[dict[str, Any]]):
         schema = query_confident_fields(result.value, min_confidence=0.7)
 
         if not schema or not isinstance(schema, dict):
-            return ParseResult[dict[str, Any]](
-                success=False, error="Schema is not a valid object"
-            )
+            return ParseResult[dict[str, Any]](success=False, error="Schema is not a valid object")
 
         # Convert to Tool signature
         tool_sig: dict[str, Any] = {}
@@ -68,9 +66,7 @@ class SchemaParser(Parser[dict[str, Any]]):
         if "name" in schema:
             tool_sig["name"] = schema["name"]
         else:
-            return ParseResult[dict[str, Any]](
-                success=False, error="Schema missing 'name' field"
-            )
+            return ParseResult[dict[str, Any]](success=False, error="Schema missing 'name' field")
 
         # Infer input type from schema
         if "inputSchema" in schema:
@@ -128,9 +124,7 @@ class SchemaParser(Parser[dict[str, Any]]):
                 return default
         return default
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing (buffer and parse once)."""
         text = "".join(tokens)
         yield self.parse(text)
@@ -182,22 +176,16 @@ class InputParser(Parser[dict[str, Any]]):
             prob_result = prob_parser.parse(text)
 
             if prob_result.success and prob_result.value is not None:
-                confident = query_confident_fields(
-                    prob_result.value, min_confidence=0.6
-                )
+                confident = query_confident_fields(prob_result.value, min_confidence=0.6)
                 if confident and isinstance(confident, dict):
                     params = confident
                     confidence_scores = [prob_result.confidence]
 
         if not params:
-            return ParseResult[dict[str, Any]](
-                success=False, error="No parameters found in input"
-            )
+            return ParseResult[dict[str, Any]](success=False, error="No parameters found in input")
 
         avg_confidence = (
-            sum(confidence_scores) / len(confidence_scores)
-            if confidence_scores
-            else 0.5
+            sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
         )
 
         return ParseResult[dict[str, Any]](
@@ -208,9 +196,7 @@ class InputParser(Parser[dict[str, Any]]):
             metadata={"param_count": len(params)},
         )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing."""
         text = "".join(tokens)
         yield self.parse(text)
@@ -242,9 +228,7 @@ class OutputParser(Parser[Any]):
         result = prob_parser.parse(text)
 
         if not result.success:
-            return ParseResult[Any](
-                success=False, error=f"Failed to parse output: {result.error}"
-            )
+            return ParseResult[Any](success=False, error=f"Failed to parse output: {result.error}")
 
         # Extract confident value
         if result.value is None:
@@ -255,9 +239,7 @@ class OutputParser(Parser[Any]):
 
         return ParseResult[Any](
             success=True,
-            value=confident_value
-            if confident_value is not None
-            else result.value.value,
+            value=confident_value if confident_value is not None else result.value.value,
             confidence=result.confidence,
             strategy="output-parsed",
             repairs=result.repairs,
@@ -329,10 +311,7 @@ class ErrorParser(Parser[dict[str, Any]]):
         if any(word in text_lower for word in ["timeout", "connection", "network"]):
             error_type = "transient"
             recovery = "retry"
-        elif any(
-            word in text_lower
-            for word in ["auth", "permission", "forbidden", "401", "403"]
-        ):
+        elif any(word in text_lower for word in ["auth", "permission", "forbidden", "401", "403"]):
             error_type = "auth"
             recovery = "refresh_credentials"
         elif any(word in text_lower for word in ["not found", "404", "missing"]):
@@ -360,15 +339,9 @@ class ErrorParser(Parser[dict[str, Any]]):
     def _classify_error(self, error_data: dict[str, Any]) -> dict[str, Any]:
         """Classify error from structured data."""
         # Check for status code
-        code = (
-            error_data.get("code")
-            or error_data.get("status_code")
-            or error_data.get("status")
-        )
+        code = error_data.get("code") or error_data.get("status_code") or error_data.get("status")
         message = (
-            error_data.get("error")
-            or error_data.get("message")
-            or error_data.get("details", "")
+            error_data.get("error") or error_data.get("message") or error_data.get("details", "")
         )
 
         if isinstance(code, (int, str)):
@@ -420,9 +393,7 @@ class ErrorParser(Parser[dict[str, Any]]):
             }
         )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing."""
         text = "".join(tokens)
         yield self.parse(text)

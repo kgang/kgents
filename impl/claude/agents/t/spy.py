@@ -140,9 +140,7 @@ class SpyAgent(Agent[A, A], Generic[A]):
             AssertionError: If count doesn't match
         """
         actual = len(self._history)
-        assert actual == count, (
-            f"Expected {count} invocations in {self.name}, got {actual}"
-        )
+        assert actual == count, f"Expected {count} invocations in {self.name}, got {actual}"
 
     def assert_not_empty(self) -> None:
         """

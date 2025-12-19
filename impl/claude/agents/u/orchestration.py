@@ -309,9 +309,7 @@ class SupervisorPattern(Generic[A, B]):
             for w in workers
         }
 
-    def _round_robin_selector(
-        self, task: Task[A], workers: list[Tool[A, B]]
-    ) -> Tool[A, B]:
+    def _round_robin_selector(self, task: Task[A], workers: list[Tool[A, B]]) -> Tool[A, B]:
         """Default round-robin worker selection."""
         worker = workers[self._current_worker_index]
         self._current_worker_index = (self._current_worker_index + 1) % len(workers)
@@ -461,9 +459,7 @@ class HandoffPattern(Generic[A, B]):
                     if rule.from_tool == self.primary.name:
                         # Transform if needed
                         handoff_input: A = (
-                            rule.transform(result)
-                            if rule.transform
-                            else cast(A, result)
+                            rule.transform(result) if rule.transform else cast(A, result)
                         )
                         try:
                             handoff_result = await rule.to_tool.invoke(handoff_input)
@@ -589,9 +585,7 @@ class SelectionStrategy(ABC, Generic[A, B]):
     """
 
     @abstractmethod
-    async def select(
-        self, context: SelectionContext, tools: list[Tool[A, B]]
-    ) -> Tool[A, B]:
+    async def select(self, context: SelectionContext, tools: list[Tool[A, B]]) -> Tool[A, B]:
         """Select appropriate tool based on context."""
         pass
 
@@ -599,9 +593,7 @@ class SelectionStrategy(ABC, Generic[A, B]):
 class CostBasedSelection(SelectionStrategy[A, B]):
     """Select tool based on cost budget."""
 
-    async def select(
-        self, context: SelectionContext, tools: list[Tool[A, B]]
-    ) -> Tool[A, B]:
+    async def select(self, context: SelectionContext, tools: list[Tool[A, B]]) -> Tool[A, B]:
         """Select cheapest tool within budget."""
         if not context.cost_budget_usd:
             return tools[0]  # Default to first tool
@@ -614,9 +606,7 @@ class CostBasedSelection(SelectionStrategy[A, B]):
 class LatencyBasedSelection(SelectionStrategy[A, B]):
     """Select tool based on latency budget."""
 
-    async def select(
-        self, context: SelectionContext, tools: list[Tool[A, B]]
-    ) -> Tool[A, B]:
+    async def select(self, context: SelectionContext, tools: list[Tool[A, B]]) -> Tool[A, B]:
         """Select fastest tool within latency budget."""
         if not context.latency_budget_ms:
             return tools[0]
@@ -641,9 +631,7 @@ class EnvironmentBasedSelection(SelectionStrategy[A, B]):
         """
         self.tool_map = tool_map
 
-    async def select(
-        self, context: SelectionContext, tools: list[Tool[A, B]]
-    ) -> Tool[A, B]:
+    async def select(self, context: SelectionContext, tools: list[Tool[A, B]]) -> Tool[A, B]:
         """Select tool based on environment."""
         return self.tool_map.get(context.environment, tools[0])
 

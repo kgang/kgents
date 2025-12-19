@@ -151,9 +151,7 @@ class FluxMetabolism(Generic[A, B]):
             **engine_status,
             "events_metabolized": self._events_metabolized,
             "fevers_triggered": self._fevers_triggered,
-            "last_fever_oblique": (
-                self._last_fever.oblique_strategy if self._last_fever else None
-            ),
+            "last_fever_oblique": (self._last_fever.oblique_strategy if self._last_fever else None),
         }
 
 

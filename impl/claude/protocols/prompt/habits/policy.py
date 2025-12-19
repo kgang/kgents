@@ -80,9 +80,7 @@ class PolicyVector:
         # Merge scalar values
         new_verbosity = self.verbosity * self_weight + other.verbosity * weight
         new_formality = self.formality * self_weight + other.formality * weight
-        new_risk_tolerance = (
-            self.risk_tolerance * self_weight + other.risk_tolerance * weight
-        )
+        new_risk_tolerance = self.risk_tolerance * self_weight + other.risk_tolerance * weight
 
         # Merge section weights
         section_dict: dict[str, float] = {}
@@ -108,9 +106,7 @@ class PolicyVector:
         new_sources = tuple(sorted(set(self.learned_from) | set(other.learned_from)))
         new_confidence = min(self.confidence, other.confidence)  # Conservative
         new_traces = (
-            self.reasoning_trace
-            + (f"Merged with weight={weight}",)
-            + other.reasoning_trace
+            self.reasoning_trace + (f"Merged with weight={weight}",) + other.reasoning_trace
         )
 
         return PolicyVector(
@@ -209,9 +205,7 @@ class PolicyVector:
                     if ratio > 0.1 and len(pattern.evidence) > i:
                         dir_name = pattern.evidence[i].split(":")[0].strip().rstrip("/")
                         # Extract last component for domain name
-                        domain = (
-                            dir_name.split("/")[-1] if "/" in dir_name else dir_name
-                        )
+                        domain = dir_name.split("/")[-1] if "/" in dir_name else dir_name
                         if domain:
                             domain_focus[domain] = min(1.0, ratio * 2)  # Scale up
                             traces.append(

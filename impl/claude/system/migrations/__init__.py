@@ -114,9 +114,7 @@ async def get_current_revision() -> str | None:
 
     try:
         async with engine.connect() as conn:
-            result = await conn.execute(
-                text("SELECT version_num FROM alembic_version LIMIT 1")
-            )
+            result = await conn.execute(text("SELECT version_num FROM alembic_version LIMIT 1"))
             row = result.fetchone()
             return row[0] if row else None
     except Exception:

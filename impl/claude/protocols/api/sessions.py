@@ -487,9 +487,7 @@ def create_sessions_router() -> "APIRouter":
             # Store assistant message
             response_text = result.payload.get("response", "")
             tokens_used = result.payload.get("tokens_used", 0)
-            assistant_msg = _add_message(
-                session_id, "assistant", response_text, tokens_used
-            )
+            assistant_msg = _add_message(session_id, "assistant", response_text, tokens_used)
 
             # Record usage
             await _tenant_service.record_usage(

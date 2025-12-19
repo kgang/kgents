@@ -80,9 +80,7 @@ async def api_client(mo):  # type: ignore[no-untyped-def]
             response.raise_for_status()
             return response.json()  # type: ignore[no-any-return]
 
-    async def fetch_scatter_data(
-        town_id: str, projection: str = "PAIR_WT"
-    ) -> dict[str, Any]:
+    async def fetch_scatter_data(town_id: str, projection: str = "PAIR_WT") -> dict[str, Any]:
         """Fetch scatter plot data for a town."""
         async with httpx.AsyncClient() as client:
             response = await client.get(

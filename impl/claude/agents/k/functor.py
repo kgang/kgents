@@ -175,9 +175,7 @@ class SoulAgent(Agent[Soul[A], Soul[B]]):
             metadata=input.metadata.copy(),
         )
 
-    def __rshift__(
-        self, other: "Agent[Soul[B], C]"
-    ) -> "ComposedAgent[Soul[A], Soul[B], C]":
+    def __rshift__(self, other: "Agent[Soul[B], C]") -> "ComposedAgent[Soul[A], Soul[B], C]":
         """Compose with another soul-aware agent."""
         return ComposedAgent(self, other)
 

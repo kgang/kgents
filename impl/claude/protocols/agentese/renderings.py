@@ -138,9 +138,7 @@ class AdminRendering:
             "metrics": self.metrics,
             "config": self.config,
             "alerts": list(self.alerts),
-            "last_updated": self.last_updated.isoformat()
-            if self.last_updated
-            else None,
+            "last_updated": self.last_updated.isoformat() if self.last_updated else None,
         }
 
     def to_text(self) -> str:
@@ -236,9 +234,7 @@ class MemoryRendering:
         )
         lines.append(f"Capacity: {self.capacity_used:.1%}")
         if self.checkpoints:
-            lines.append(
-                f"Checkpoints: {', '.join(self.checkpoints[-3:])}"
-            )  # Show last 3
+            lines.append(f"Checkpoints: {', '.join(self.checkpoints[-3:])}")  # Show last 3
         return "\n".join(lines)
 
 
@@ -271,9 +267,7 @@ class EntropyRendering:
         pct = (self.remaining / self.total * 100) if self.total > 0 else 0
         lines = ["ACCURSED SHARE"]
         lines.append(f"Entropy: {self.remaining:.1f}/{self.total:.1f} ({pct:.1f}%)")
-        lines.append(
-            f"History: {self.history_length} draws | Last: {self.last_sip:.3f}"
-        )
+        lines.append(f"History: {self.history_length} draws | Last: {self.last_sip:.3f}")
         lines.append(f"Gratitude: {self.gratitude_balance:.2f}")
         return "\n".join(lines)
 
@@ -298,15 +292,9 @@ class TemporalRendering:
             "type": "temporal",
             "trace_count": self.trace_count,
             "scheduled_count": self.scheduled_count,
-            "earliest_trace": self.earliest_trace.isoformat()
-            if self.earliest_trace
-            else None,
-            "latest_trace": self.latest_trace.isoformat()
-            if self.latest_trace
-            else None,
-            "next_scheduled": self.next_scheduled.isoformat()
-            if self.next_scheduled
-            else None,
+            "earliest_trace": self.earliest_trace.isoformat() if self.earliest_trace else None,
+            "latest_trace": self.latest_trace.isoformat() if self.latest_trace else None,
+            "next_scheduled": self.next_scheduled.isoformat() if self.next_scheduled else None,
             "horizon": self.horizon,
         }
 
@@ -378,9 +366,7 @@ class StandardRenderingFactory:
             case _:
                 return self._create_basic(entity, state)
 
-    def _create_blueprint(
-        self, entity: str, state: dict[str, Any]
-    ) -> BlueprintRendering:
+    def _create_blueprint(self, entity: str, state: dict[str, Any]) -> BlueprintRendering:
         return BlueprintRendering(
             dimensions=state.get("dimensions", {}),
             materials=tuple(state.get("materials", [])),
@@ -405,9 +391,7 @@ class StandardRenderingFactory:
             appreciation_forecast=state.get("forecast", {}),
         )
 
-    def _create_scientific(
-        self, entity: str, state: dict[str, Any]
-    ) -> ScientificRendering:
+    def _create_scientific(self, entity: str, state: dict[str, Any]) -> ScientificRendering:
         return ScientificRendering(
             entity=entity,
             measurements=state.get("measurements", {}),
@@ -416,9 +400,7 @@ class StandardRenderingFactory:
             confidence=state.get("confidence", 0.5),
         )
 
-    def _create_developer(
-        self, entity: str, state: dict[str, Any]
-    ) -> DeveloperRendering:
+    def _create_developer(self, entity: str, state: dict[str, Any]) -> DeveloperRendering:
         return DeveloperRendering(
             entity=entity,
             language=state.get("language", ""),
@@ -439,9 +421,7 @@ class StandardRenderingFactory:
             alerts=tuple(state.get("alerts", [])),
         )
 
-    def _create_philosopher(
-        self, entity: str, state: dict[str, Any]
-    ) -> PhilosopherRendering:
+    def _create_philosopher(self, entity: str, state: dict[str, Any]) -> PhilosopherRendering:
         return PhilosopherRendering(
             concept=entity,
             definition=state.get("definition", ""),
@@ -467,9 +447,7 @@ class StandardRenderingFactory:
 class MemoryRenderingFactory:
     """Factory for self.memory renderings."""
 
-    def create(
-        self, memories: dict[str, Any], checkpoints: list[str]
-    ) -> MemoryRendering:
+    def create(self, memories: dict[str, Any], checkpoints: list[str]) -> MemoryRendering:
         consolidated = sum(1 for m in memories.values() if not m.get("temporary", True))
         temporary = len(memories) - consolidated
 
@@ -510,9 +488,7 @@ class TemporalRenderingFactory:
     ) -> TemporalRendering:
         earliest = traces[0]["timestamp"] if traces else None
         latest = traces[-1]["timestamp"] if traces else None
-        next_sched = (
-            min((s["at"] for s in scheduled), default=None) if scheduled else None
-        )
+        next_sched = min((s["at"] for s in scheduled), default=None) if scheduled else None
 
         return TemporalRendering(
             trace_count=len(traces),

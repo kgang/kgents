@@ -122,9 +122,7 @@ class NervousSystemConfig:
         """Create from configuration dict (e.g., from YAML)."""
         return cls(
             spinal_reflexes=set(data.get("spinal_reflexes", cls().spinal_reflexes)),
-            flashbulb_patterns=set(
-                data.get("flashbulb_patterns", cls().flashbulb_patterns)
-            ),
+            flashbulb_patterns=set(data.get("flashbulb_patterns", cls().flashbulb_patterns)),
             log_reflexes=data.get("log_reflexes", True),
         )
 
@@ -376,9 +374,7 @@ class NervousSystem:
                 await self._fast_store.append(events)
                 for signal in reflex_signals:
                     results.append(
-                        TransmissionResult(
-                            signal=signal, routed_to="reflex", logged=True
-                        )
+                        TransmissionResult(signal=signal, routed_to="reflex", logged=True)
                     )
                     self._reflex_count += 1
             except Exception as e:
@@ -458,9 +454,5 @@ def create_nervous_system(
     Returns:
         Configured NervousSystem
     """
-    config = (
-        NervousSystemConfig.from_dict(config_dict)
-        if config_dict
-        else NervousSystemConfig()
-    )
+    config = NervousSystemConfig.from_dict(config_dict) if config_dict else NervousSystemConfig()
     return NervousSystem(fast_store=telemetry_store, config=config)

@@ -206,9 +206,7 @@ class MetabolismPanel(Static, can_focus=True):
     """Metabolic engine state panel."""
 
     DEFAULT_CSS = (
-        FOCUS_CSS.format(
-            cls="MetabolismPanel", color="#e6a352", focus_color="#ffa500d6"
-        )
+        FOCUS_CSS.format(cls="MetabolismPanel", color="#e6a352", focus_color="#ffa500d6")
         + """
     MetabolismPanel .panel-title {
         color: #e6a352;
@@ -554,18 +552,14 @@ class TraceAnalysisPanel(Static):
         if ta.call_trees:
             lines.append("└─ Call Trees:")
             for i, tree in enumerate(ta.call_trees[:2]):
-                tree_str = self._render_call_tree(
-                    tree, is_last=(i == len(ta.call_trees[:2]) - 1)
-                )
+                tree_str = self._render_call_tree(tree, is_last=(i == len(ta.call_trees[:2]) - 1))
                 lines.append(tree_str)
         else:
             lines.append("└─ (no call trees)")
 
         self.content = "\n".join(lines)
 
-    def _render_call_tree(
-        self, node: Any, prefix: str = "   ", is_last: bool = True
-    ) -> str:
+    def _render_call_tree(self, node: Any, prefix: str = "   ", is_last: bool = True) -> str:
         """Render a CallTreeNode as ASCII."""
         # Handle the CallTreeNode render method if available
         if hasattr(node, "render"):
@@ -751,9 +745,7 @@ class DashboardScreen(Screen[None]):
                 yield self._traces_panel
 
             with Container(id="trace-analysis-container"):
-                self._trace_analysis_panel = TraceAnalysisPanel(
-                    id="trace-analysis-panel"
-                )
+                self._trace_analysis_panel = TraceAnalysisPanel(id="trace-analysis-panel")
                 yield self._trace_analysis_panel
 
         # Replay controls (shown in replay mode)
@@ -823,9 +815,7 @@ class DashboardScreen(Screen[None]):
             # temperature → token rate (warmth)
             # flux queue depth → pressure (congestion)
             entropy = metrics.metabolism.pressure if metrics.metabolism else 0.3
-            token_rate = (
-                metrics.metabolism.temperature * 100.0 if metrics.metabolism else 100.0
-            )
+            token_rate = metrics.metabolism.temperature * 100.0 if metrics.metabolism else 100.0
             queue_depth = metrics.flux.queue_depth if metrics.flux else 5
 
             self._weather_widget.update_metrics(
@@ -840,9 +830,7 @@ class DashboardScreen(Screen[None]):
                 if len(history) >= 3:
                     # Calculate trend from last 3 readings
                     recent_avg = sum(history[-3:]) / 3
-                    older_avg = (
-                        sum(history[-6:-3]) / 3 if len(history) >= 6 else recent_avg
-                    )
+                    older_avg = sum(history[-6:-3]) / 3 if len(history) >= 6 else recent_avg
                     self._weather_engine.set_trend(recent_avg - older_avg)
 
         # Update status bar
@@ -853,9 +841,7 @@ class DashboardScreen(Screen[None]):
                 mode_str = f"[REPLAY {play_str} {state.speed}x]"
                 ts = f"{state.current_hour:02d}:00"
                 progress = f" {state.progress_pct}%"
-                self._status_bar.update(
-                    f"{mode_str} Simulated: {ts}{progress} | p=toggle s=speed"
-                )
+                self._status_bar.update(f"{mode_str} Simulated: {ts}{progress} | p=toggle s=speed")
             else:
                 mode_str = "[DEMO]" if self.demo_mode else "[LIVE]"
                 offline_str = " (some services offline)" if metrics.any_offline else ""
@@ -935,11 +921,7 @@ class DashboardScreen(Screen[None]):
         """Toggle replay play/pause."""
         if self._replay_provider:
             self._replay_provider.toggle_pause()
-            state = (
-                "Playing"
-                if self._replay_provider.state.state.name == "PLAYING"
-                else "Paused"
-            )
+            state = "Playing" if self._replay_provider.state.state.name == "PLAYING" else "Paused"
             self.notify(f"Replay: {state}")
 
     def action_cycle_speed(self) -> None:
@@ -1182,9 +1164,9 @@ class DashboardApp(
 
         # Get focused agent from state manager if not provided
         if agent_id is None:
-            focus = self._state_manager.get_focus(
-                "observatory"
-            ) or self._state_manager.get_focus("terrarium")
+            focus = self._state_manager.get_focus("observatory") or self._state_manager.get_focus(
+                "terrarium"
+            )
             agent_id = focus or ""
 
         self.push_screen(

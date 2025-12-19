@@ -103,9 +103,7 @@ class LgentServer:
             logger.error(f"Failed to initialize registry: {e}")
             self._ready = False
 
-    async def handle_request(
-        self, method: str, path: str, body: bytes | None = None
-    ) -> Response:
+    async def handle_request(self, method: str, path: str, body: bytes | None = None) -> Response:
         """Route and handle HTTP request."""
         # Health endpoints
         if path == "/health":
@@ -360,9 +358,7 @@ class LgentServer:
 class StubRegistry:
     """Stub registry for when L-gent imports fail."""
 
-    async def find(
-        self, query: str | None = None, limit: int = 10, **kwargs: Any
-    ) -> list[Any]:
+    async def find(self, query: str | None = None, limit: int = 10, **kwargs: Any) -> list[Any]:
         """Return empty results."""
         return []
 

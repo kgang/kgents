@@ -167,8 +167,7 @@ def validate_aspect_registration(
 
     # Rule 4: CALLS effect requires budget estimation
     has_calls = any(
-        isinstance(e, DeclaredEffect) and e.effect == Effect.CALLS
-        for e in aspect_meta.effects
+        isinstance(e, DeclaredEffect) and e.effect == Effect.CALLS for e in aspect_meta.effects
     )
     if has_calls and aspect_meta.budget_estimate is None:
         result.errors.append(

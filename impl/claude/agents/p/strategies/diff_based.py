@@ -108,15 +108,11 @@ class DiffBasedParser(Parser[str]):
             lines = text.splitlines()
 
             # Check if it looks like a unified diff
-            has_header = any(
-                line.startswith("---") or line.startswith("+++") for line in lines
-            )
+            has_header = any(line.startswith("---") or line.startswith("+++") for line in lines)
             has_hunks = any(line.startswith("@@") for line in lines)
 
             if not (has_header and has_hunks):
-                return ParseResult[str](
-                    success=False, error="Not a unified diff format"
-                )
+                return ParseResult[str](success=False, error="Not a unified diff format")
 
             # Extract changes (simplified - real implementation would need full diff parser)
             # For now, we'll reconstruct by applying + lines and removing - lines
@@ -156,9 +152,7 @@ class DiffBasedParser(Parser[str]):
             )
 
         except Exception as e:
-            return ParseResult[str](
-                success=False, error=f"Unified diff parsing failed: {e}"
-            )
+            return ParseResult[str](success=False, error=f"Unified diff parsing failed: {e}")
 
     def _try_simple_replacement(self, text: str) -> ParseResult[str]:
         """
@@ -214,14 +208,10 @@ class DiffBasedParser(Parser[str]):
                         repairs=[f"Replaced {old} -> {new}"],
                     )
 
-            return ParseResult[str](
-                success=False, error="No simple replacement pattern found"
-            )
+            return ParseResult[str](success=False, error="No simple replacement pattern found")
 
         except Exception as e:
-            return ParseResult[str](
-                success=False, error=f"Simple replacement parsing failed: {e}"
-            )
+            return ParseResult[str](success=False, error=f"Simple replacement parsing failed: {e}")
 
     def _try_line_patch(self, text: str) -> ParseResult[str]:
         """
@@ -287,14 +277,10 @@ class DiffBasedParser(Parser[str]):
                         repairs=[f"Updated line {line_num}"],
                     )
 
-            return ParseResult[str](
-                success=False, error="No line-based patch pattern found"
-            )
+            return ParseResult[str](success=False, error="No line-based patch pattern found")
 
         except Exception as e:
-            return ParseResult[str](
-                success=False, error=f"Line patch parsing failed: {e}"
-            )
+            return ParseResult[str](success=False, error=f"Line patch parsing failed: {e}")
 
     def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[str]]:
         """

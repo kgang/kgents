@@ -333,9 +333,7 @@ class MetricsStore:
         p50_idx = len(latencies) // 2
         p95_idx = int(len(latencies) * 0.95)
 
-        avg_margin = (
-            (total_revenue - total_cost) / total_revenue if total_revenue > 0 else 0.0
-        )
+        avg_margin = (total_revenue - total_cost) / total_revenue if total_revenue > 0 else 0.0
 
         return {
             "count": len(metrics),

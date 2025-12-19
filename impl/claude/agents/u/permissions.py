@@ -205,9 +205,7 @@ class TemporaryToken:
 
     # Temporal bounds
     issued_at: datetime = field(default_factory=datetime.now)
-    expires_at: datetime = field(
-        default_factory=lambda: datetime.now() + timedelta(minutes=15)
-    )
+    expires_at: datetime = field(default_factory=lambda: datetime.now() + timedelta(minutes=15))
 
     # Revocation
     revoked: bool = False
@@ -288,9 +286,9 @@ class PermissionClassifier:
     """
 
     # Custom permission rules (can be extended)
-    custom_rules: list[
-        Callable[[ToolCapabilities, AgentContext], Optional[PermissionLevel]]
-    ] = field(default_factory=list)
+    custom_rules: list[Callable[[ToolCapabilities, AgentContext], Optional[PermissionLevel]]] = (
+        field(default_factory=list)
+    )
 
     def classify(
         self,
@@ -429,9 +427,7 @@ class PermissionClassifier:
         permission = self.classify(capabilities, context)
 
         if permission == PermissionLevel.DENIED:
-            msg = (
-                f"Permission denied for tool '{tool_id}' in context {context.agent_id}"
-            )
+            msg = f"Permission denied for tool '{tool_id}' in context {context.agent_id}"
             return err(msg, message=msg, recoverable=False)
 
         if permission == PermissionLevel.RESTRICTED:

@@ -127,18 +127,14 @@ class TestPlanView:
 class TestDormancyRule:
     """Tests for the dormancy compatibility rule."""
 
-    def test_no_overlap_compatible(
-        self, dormant_view: PlanView, independent_view: PlanView
-    ):
+    def test_no_overlap_compatible(self, dormant_view: PlanView, independent_view: PlanView):
         """Plans with no overlap are compatible."""
         overlap = frozenset()  # No shared resonances
         result = check_dormancy_rule(dormant_view, independent_view, overlap)
         assert result.compatible
         assert "No overlap" in result.reason
 
-    def test_dormant_with_active_warns(
-        self, dormant_view: PlanView, blooming_view: PlanView
-    ):
+    def test_dormant_with_active_warns(self, dormant_view: PlanView, blooming_view: PlanView):
         """Dormant plan sharing resonances with active plan is a soft conflict."""
         overlap = dormant_view.resonances & blooming_view.resonances
         result = check_dormancy_rule(dormant_view, blooming_view, overlap)
@@ -146,9 +142,7 @@ class TestDormancyRule:
         assert result.compatible
         assert "Soft conflict" in result.reason
 
-    def test_two_active_compatible(
-        self, blooming_view: PlanView, sprouting_view: PlanView
-    ):
+    def test_two_active_compatible(self, blooming_view: PlanView, sprouting_view: PlanView):
         """Two active plans are compatible."""
         overlap = blooming_view.resonances & sprouting_view.resonances
         result = check_dormancy_rule(blooming_view, sprouting_view, overlap)
@@ -158,17 +152,13 @@ class TestDormancyRule:
 class TestEntropyIndependenceRule:
     """Tests for the entropy budget rule."""
 
-    def test_both_within_budget_compatible(
-        self, blooming_view: PlanView, sprouting_view: PlanView
-    ):
+    def test_both_within_budget_compatible(self, blooming_view: PlanView, sprouting_view: PlanView):
         """Plans within their entropy budgets are compatible."""
         overlap = frozenset()
         result = check_entropy_independence(blooming_view, sprouting_view, overlap)
         assert result.compatible
 
-    def test_overbudget_incompatible(
-        self, blooming_view: PlanView, overbudget_view: PlanView
-    ):
+    def test_overbudget_incompatible(self, blooming_view: PlanView, overbudget_view: PlanView):
         """Plan exceeding budget causes incompatibility."""
         overlap = blooming_view.resonances & overbudget_view.resonances
         result = check_entropy_independence(blooming_view, overbudget_view, overlap)
@@ -179,9 +169,7 @@ class TestEntropyIndependenceRule:
 class TestMomentumCoherenceRule:
     """Tests for the momentum divergence rule."""
 
-    def test_similar_momentum_compatible(
-        self, blooming_view: PlanView, sprouting_view: PlanView
-    ):
+    def test_similar_momentum_compatible(self, blooming_view: PlanView, sprouting_view: PlanView):
         """Plans with similar momentum are compatible."""
         overlap = blooming_view.resonances & sprouting_view.resonances
         result = check_momentum_coherence(blooming_view, sprouting_view, overlap)
@@ -189,9 +177,7 @@ class TestMomentumCoherenceRule:
         # Momentum diff is 0.2, which is < 0.5 threshold
         assert "divergence" not in result.reason.lower()
 
-    def test_high_divergence_warns(
-        self, blooming_view: PlanView, dormant_view: PlanView
-    ):
+    def test_high_divergence_warns(self, blooming_view: PlanView, dormant_view: PlanView):
         """Large momentum divergence produces a warning."""
         overlap = blooming_view.resonances & dormant_view.resonances
         result = check_momentum_coherence(blooming_view, dormant_view, overlap)
@@ -264,9 +250,7 @@ class TestGardenSheafCompatibility:
         result = sheaf.compatible(blooming_view, sprouting_view)
         assert result.compatible
 
-    def test_incompatible_overbudget(
-        self, blooming_view: PlanView, overbudget_view: PlanView
-    ):
+    def test_incompatible_overbudget(self, blooming_view: PlanView, overbudget_view: PlanView):
         """Plan exceeding entropy budget fails compatibility."""
         sheaf = GardenSheaf()
         result = sheaf.compatible(blooming_view, overbudget_view)
@@ -305,9 +289,7 @@ class TestGardenSheafGlue:
 
         # Check resonance graph
         assert "feature-y" in result.resonance_graph["feature-x"]  # Share "api"
-        assert (
-            "separate-project" not in result.resonance_graph["feature-x"]
-        )  # No overlap
+        assert "separate-project" not in result.resonance_graph["feature-x"]  # No overlap
 
     def test_glue_strict_rejects_overbudget(
         self,
@@ -486,9 +468,7 @@ class TestSheafProperties:
         result = sheaf.compatible(blooming_view, independent_view)
         assert result.compatible
 
-    def test_glue_preserves_all_plans(
-        self, blooming_view: PlanView, sprouting_view: PlanView
-    ):
+    def test_glue_preserves_all_plans(self, blooming_view: PlanView, sprouting_view: PlanView):
         """Gluing doesn't lose any plans."""
         sheaf = GardenSheaf()
         result = sheaf.glue([blooming_view, sprouting_view])

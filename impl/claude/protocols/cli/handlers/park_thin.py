@@ -168,6 +168,7 @@ def _parse_park_kwargs(args: list[str], subcommand: str) -> dict[str, str | int 
 def _print_help() -> None:
     """Print park command help (projected from AGENTESE affordances)."""
     from protocols.cli.handlers._help import show_projected_help
+
     show_projected_help("world.park", _print_help_fallback)
 
 

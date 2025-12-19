@@ -803,9 +803,7 @@ class CriticsLoop:
         """Compute maximum depth of nested dict."""
         if not isinstance(d, dict) or not d:
             return current
-        depths = [
-            self._dict_depth(v, current + 1) for v in d.values() if isinstance(v, dict)
-        ]
+        depths = [self._dict_depth(v, current + 1) for v in d.values() if isinstance(v, dict)]
         return max(depths) if depths else current + 1
 
     def _generate_reasoning(
@@ -1019,9 +1017,7 @@ class CriticsLoop:
             return None
 
         # Build prompt for skeleton rewriting
-        user_prompt = build_skeleton_rewrite_prompt(
-            artifact, critique, self._current_purpose
-        )
+        user_prompt = build_skeleton_rewrite_prompt(artifact, critique, self._current_purpose)
 
         try:
             # Call LLM solver
@@ -1278,9 +1274,7 @@ def _rule_based_restructure(skeleton: Skeleton, critique: Critique) -> Skeleton:
 class _SuggestsStructureChangeDescriptor:
     """Property descriptor for Critique.suggests_structure_change."""
 
-    def __get__(
-        self, obj: Critique | None, objtype: type[Critique] | None = None
-    ) -> bool:
+    def __get__(self, obj: Critique | None, objtype: type[Critique] | None = None) -> bool:
         if obj is None:
             return False
         return critique_suggests_structure_change(obj)
@@ -1289,9 +1283,7 @@ class _SuggestsStructureChangeDescriptor:
 class _StructuralIssuesDescriptor:
     """Property descriptor for Critique.structural_issues."""
 
-    def __get__(
-        self, obj: Critique | None, objtype: type[Critique] | None = None
-    ) -> list[str]:
+    def __get__(self, obj: Critique | None, objtype: type[Critique] | None = None) -> list[str]:
         if obj is None:
             return []
         return critique_structural_issues(obj)

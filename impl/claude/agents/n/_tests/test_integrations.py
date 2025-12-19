@@ -108,9 +108,7 @@ class MockVectorIndex:
         """Add embedding."""
         self._embeddings[id] = (embedding, metadata or {})
 
-    async def search(
-        self, query: list[float], limit: int = 10
-    ) -> list[tuple[str, float]]:
+    async def search(self, query: list[float], limit: int = 10) -> list[tuple[str, float]]:
         """Search for similar embeddings."""
         # Simple cosine similarity
         results: list[tuple[str, float]] = []
@@ -481,10 +479,7 @@ class TestBudgetedBard:
         assert isinstance(cost, NarrationCost)
         assert cost.estimated_input_tokens > 0
         assert cost.estimated_output_tokens > 0
-        assert (
-            cost.total_estimated
-            == cost.estimated_input_tokens + cost.estimated_output_tokens
-        )
+        assert cost.total_estimated == cost.estimated_input_tokens + cost.estimated_output_tokens
 
     def test_estimate_cost_verbosity(self) -> None:
         """Test cost varies with verbosity."""

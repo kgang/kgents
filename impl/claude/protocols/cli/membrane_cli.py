@@ -192,9 +192,7 @@ class MembraneSenseResult:
     def to_dict(self) -> dict[str, Any]:
         return {
             "integrity_score": self.integrity_score,
-            "dominant_shape": self.dominant_shape.to_dict()
-            if self.dominant_shape
-            else None,
+            "dominant_shape": self.dominant_shape.to_dict() if self.dominant_shape else None,
             "shape_count": self.shape_count,
             "sensed_at": self.sensed_at.isoformat(),
         }
@@ -290,12 +288,9 @@ class MembraneCLI:
             # Calculate integrity from shape intensities
             if shapes:
                 avg_intensity = sum(
-                    getattr(s, "intensity", 0.5) or getattr(s, "depth", 0.5) or 0.5
-                    for s in shapes
+                    getattr(s, "intensity", 0.5) or getattr(s, "depth", 0.5) or 0.5 for s in shapes
                 ) / len(shapes)
-                integrity = 1.0 - (
-                    avg_intensity * 0.5
-                )  # Higher intensity = lower integrity
+                integrity = 1.0 - (avg_intensity * 0.5)  # Higher intensity = lower integrity
             else:
                 integrity = 1.0
 
@@ -351,9 +346,7 @@ class MembraneCLI:
         dominant = (
             max(
                 shapes,
-                key=lambda s: getattr(s, "intensity", 0)
-                or getattr(s, "depth", 0)
-                or 0.5,
+                key=lambda s: getattr(s, "intensity", 0) or getattr(s, "depth", 0) or 0.5,
             )
             if shapes
             else None
@@ -361,9 +354,7 @@ class MembraneCLI:
 
         # Calculate quick integrity
         if dominant:
-            intensity = getattr(dominant, "intensity", 0.5) or getattr(
-                dominant, "depth", 0.5
-            )
+            intensity = getattr(dominant, "intensity", 0.5) or getattr(dominant, "depth", 0.5)
             integrity = 1.0 - (intensity * 0.3)
         else:
             integrity = 1.0
@@ -395,10 +386,7 @@ class MembraneCLI:
         # Find momentum for this topic
         momentum = None
         for shape in self._shapes:
-            if (
-                isinstance(shape, SemanticMomentum)
-                and topic.lower() in shape.topic.lower()
-            ):
+            if isinstance(shape, SemanticMomentum) and topic.lower() in shape.topic.lower():
                 momentum = shape
                 break
 
@@ -587,9 +575,7 @@ class MembraneCLI:
     # Shape Detection (Internal)
     # =========================================================================
 
-    async def _detect_shapes(
-        self, target: Path, ctx: CLIContext
-    ) -> list[SemanticShape]:
+    async def _detect_shapes(self, target: Path, ctx: CLIContext) -> list[SemanticShape]:
         """
         Detect semantic shapes in target.
 
@@ -684,9 +670,7 @@ class MembraneCLI:
             if sharpest.intensity > 0.7:
                 return f"High curvature around '{sharpest.centroid_topic}' suggests contested concepts. Tension gathers here."
 
-        return (
-            "Shapes detected. Use 'touch' to acknowledge, 'name' to voice the unsaid."
-        )
+        return "Shapes detected. Use 'touch' to acknowledge, 'name' to voice the unsaid."
 
 
 # =============================================================================
@@ -739,9 +723,7 @@ def format_membrane_observe_rich(result: MembraneObserveResult) -> str:
 
     Matches the ephemeral HUD collapse from membrane.md.
     """
-    trend_symbol = {"improving": "▵", "stable": "", "declining": "▿"}.get(
-        result.trend, ""
-    )
+    trend_symbol = {"improving": "▵", "stable": "", "declining": "▿"}.get(result.trend, "")
 
     lines = [
         "",
@@ -756,17 +738,11 @@ def format_membrane_observe_rich(result: MembraneObserveResult) -> str:
                 f"  {shape.shape_id}   {', '.join(shape.boundary[:3])} -- {shape.interpretation}"
             )
         elif isinstance(shape, SemanticCurvature):
-            lines.append(
-                f"  {shape.shape_id}   {shape.centroid_topic} -- {shape.interpretation}"
-            )
+            lines.append(f"  {shape.shape_id}   {shape.centroid_topic} -- {shape.interpretation}")
         elif isinstance(shape, SemanticMomentum):
-            lines.append(
-                f"  {shape.shape_id}   {shape.topic} -- {shape.interpretation}"
-            )
+            lines.append(f"  {shape.shape_id}   {shape.topic} -- {shape.interpretation}")
         elif isinstance(shape, DampeningField):
-            lines.append(
-                f'  {shape.shape_id}   "{shape.trigger}" -- {shape.interpretation}'
-            )
+            lines.append(f'  {shape.shape_id}   "{shape.trigger}" -- {shape.interpretation}')
 
     lines.append("")
     lines.append(f"Suggestion: {result.suggestion}")

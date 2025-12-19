@@ -59,9 +59,7 @@ class ArchitectureMetabolics:
     def estimate_tokens(self, module_count: int = 100) -> int:
         """Estimate tokens based on codebase size."""
         if self.requires_filesystem:
-            return int(
-                self.token_cost * (1 + self.complexity_factor * (module_count / 100))
-            )
+            return int(self.token_cost * (1 + self.complexity_factor * (module_count / 100)))
         return self.token_cost
 
 

@@ -325,9 +325,7 @@ class TestEconomicsObservationIntegration:
         assert receipt is not None
         assert receipt.voi >= 0
 
-    def test_voi_optimizer_creation(
-        self, value_ledger: ValueLedger, voi_ledger: VoILedger
-    ) -> None:
+    def test_voi_optimizer_creation(self, value_ledger: ValueLedger, voi_ledger: VoILedger) -> None:
         """Test VoI optimizer creates successfully."""
         optimizer = create_voi_optimizer(value_ledger, voi_ledger)
 
@@ -395,9 +393,7 @@ class TestEconomicsCatalogIntegration:
     """B × L: Catalog operations have economic implications."""
 
     @pytest.mark.asyncio
-    async def test_catalog_registration(
-        self, semantic_registry: SemanticRegistry
-    ) -> None:
+    async def test_catalog_registration(self, semantic_registry: SemanticRegistry) -> None:
         """Test registering items in catalog."""
         # CatalogEntry needs: id, entity_type, name, version, description
         entry = CatalogEntry(
@@ -443,9 +439,7 @@ class TestEconomicsStackFullIntegration:
         """Test ValueTensor tracks value across agent dimensions."""
         # Create tensor for an operation using actual field names
         tensor = ValueTensor(
-            physical=PhysicalDimension(
-                input_tokens=100, output_tokens=50, wall_clock_ms=50.0
-            ),
+            physical=PhysicalDimension(input_tokens=100, output_tokens=50, wall_clock_ms=50.0),
             semantic=SemanticDimension(compression_ratio=0.7, confidence=0.9),
             economic=EconomicDimension(gas_cost_usd=10.0, impact_value=25.0),
             ethical=EthicalDimension(security_risk=0.05),

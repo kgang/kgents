@@ -143,9 +143,7 @@ class SemaphoreMixin(Generic[A, B, S]):
         from .reason import SemaphoreReason
 
         return SemaphoreToken(
-            reason=reason
-            if isinstance(reason, SemaphoreReason)
-            else SemaphoreReason(reason),
+            reason=reason if isinstance(reason, SemaphoreReason) else SemaphoreReason(reason),
             frozen_state=self.freeze_state(state),
             original_event=original_event,
             prompt=prompt,

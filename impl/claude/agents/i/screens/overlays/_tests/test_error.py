@@ -116,9 +116,7 @@ class TestFriendlyErrorMessage:
         assert len(message) > 0
         assert len(hints) > 0
         # Should suggest refreshing or reporting
-        assert any(
-            "refresh" in hint.lower() or "report" in hint.lower() for hint in hints
-        )
+        assert any("refresh" in hint.lower() or "report" in hint.lower() for hint in hints)
 
     def test_all_messages_have_hints(self) -> None:
         """All error types produce recovery hints."""

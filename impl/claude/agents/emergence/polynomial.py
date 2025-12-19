@@ -209,12 +209,7 @@ class NoChange:
 
 # Union type for all emergence outputs
 EmergenceOutput = (
-    PhaseChanged
-    | FamilyChanged
-    | ConfigChanged
-    | CircadianChanged
-    | ExportReady
-    | NoChange
+    PhaseChanged | FamilyChanged | ConfigChanged | CircadianChanged | ExportReady | NoChange
 )
 
 
@@ -240,8 +235,7 @@ def emergence_directions(state: EmergenceState) -> frozenset[type]:
 
         case EmergencePhase.GALLERY:
             return frozenset(
-                base_inputs
-                | {SelectFamily, SelectPreset, EnterExplore, ApplyConfig, TuneParam}
+                base_inputs | {SelectFamily, SelectPreset, EnterExplore, ApplyConfig, TuneParam}
             )
 
         case EmergencePhase.EXPLORING:
@@ -293,9 +287,7 @@ def emergence_transition(
 
         case EnterExplore(config=config):
             if state.phase == EmergencePhase.GALLERY:
-                new_state = state.with_phase(EmergencePhase.EXPLORING).with_config(
-                    config
-                )
+                new_state = state.with_phase(EmergencePhase.EXPLORING).with_config(config)
                 return new_state, PhaseChanged(state.phase, EmergencePhase.EXPLORING)
             return state, NoChange(state, "Can only enter explore from gallery")
 
@@ -464,9 +456,7 @@ def create_emergence_polynomial(
             selected_family=f,
             circadian=c,
             qualia=(
-                FAMILY_QUALIA[f].apply_modifier(CIRCADIAN_MODIFIERS[c])
-                if f
-                else QualiaCoords()
+                FAMILY_QUALIA[f].apply_modifier(CIRCADIAN_MODIFIERS[c]) if f else QualiaCoords()
             ),
         )
         for p in EmergencePhase

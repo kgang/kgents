@@ -245,9 +245,7 @@ class GhostDaemon:
 
         path.write_text("\n".join(lines))
 
-    async def _write_context(
-        self, health: CompositeHealth, results: list[CollectorResult]
-    ) -> None:
+    async def _write_context(self, health: CompositeHealth, results: list[CollectorResult]) -> None:
         """Write context.json."""
         path = self.ghost_dir / self.CONTEXT_JSON
 

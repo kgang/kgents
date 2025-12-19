@@ -219,11 +219,7 @@ def _execute_pending(
             details.append(f"{content_preview}\n", style="white")
             details.append("Confidence: ", style="dim")
             conf_color = (
-                "green"
-                if turn.confidence > 0.7
-                else "yellow"
-                if turn.confidence > 0.3
-                else "red"
+                "green" if turn.confidence > 0.7 else "yellow" if turn.confidence > 0.3 else "red"
             )
             details.append(f"{turn.confidence:.0%}\n", style=conf_color)
             details.append("Approved by: ", style="dim")
@@ -401,8 +397,7 @@ def cmd_reject(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
     if not turn_id:
         _emit_output(
-            "[REJECT] No turn ID specified.\n"
-            "Usage: kgents reject <turn_id> [--reason <reason>]",
+            "[REJECT] No turn ID specified.\nUsage: kgents reject <turn_id> [--reason <reason>]",
             {"error": "No turn ID specified"},
             ctx,
         )

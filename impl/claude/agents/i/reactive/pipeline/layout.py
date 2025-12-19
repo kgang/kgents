@@ -85,9 +85,7 @@ class Sizing:
     @classmethod
     def range(cls, min_val: int, max_val: int) -> Sizing:
         """Size between min and max."""
-        return cls(
-            mode=SizingMode.MIN, value=min_val, min_value=min_val, max_value=max_val
-        )
+        return cls(mode=SizingMode.MIN, value=min_val, min_value=min_val, max_value=max_val)
 
     def resolve(self, available: int, content: int = 0) -> int:
         """
@@ -275,11 +273,7 @@ class LayoutBox:
     @property
     def total_vertical(self) -> int:
         """Total vertical space used by box."""
-        return (
-            self.margin.total_vertical
-            + self.border.total_vertical
-            + self.padding.total_vertical
-        )
+        return self.margin.total_vertical + self.border.total_vertical + self.padding.total_vertical
 
 
 # =============================================================================
@@ -488,9 +482,7 @@ class FlexLayout:
         Returns:
             Container's layout rect
         """
-        self._rect = LayoutRect(
-            x=x, y=y, width=available_width, height=available_height
-        )
+        self._rect = LayoutRect(x=x, y=y, width=available_width, height=available_height)
 
         if not self._children:
             return self._rect
@@ -692,9 +684,7 @@ class GridLayout:
 
         Children flow into grid cells left-to-right, top-to-bottom.
         """
-        self._rect = LayoutRect(
-            x=x, y=y, width=available_width, height=available_height
-        )
+        self._rect = LayoutRect(x=x, y=y, width=available_width, height=available_height)
 
         if not self._children:
             return self._rect

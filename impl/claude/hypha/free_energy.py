@@ -55,9 +55,7 @@ class FreeEnergyState:
     @property
     def prediction_error(self) -> float:
         """Inaccuracy: divergence between expected and actual."""
-        return float(
-            np.linalg.norm(self.expected_observation - self.actual_observation)
-        )
+        return float(np.linalg.norm(self.expected_observation - self.actual_observation))
 
     @property
     def free_energy(self) -> float:

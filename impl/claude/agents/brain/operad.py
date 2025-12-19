@@ -65,18 +65,10 @@ class MemoryMetabolics:
 # =============================================================================
 
 
-CAPTURE_METABOLICS = MemoryMetabolics(
-    token_cost=100, coherency_impact=0.1, requires_embedding=True
-)
-SEARCH_METABOLICS = MemoryMetabolics(
-    token_cost=50, coherency_impact=0.0, requires_embedding=True
-)
-SURFACE_METABOLICS = MemoryMetabolics(
-    token_cost=30, coherency_impact=0.0, requires_embedding=False
-)
-HEAL_METABOLICS = MemoryMetabolics(
-    token_cost=200, coherency_impact=0.5, requires_embedding=False
-)
+CAPTURE_METABOLICS = MemoryMetabolics(token_cost=100, coherency_impact=0.1, requires_embedding=True)
+SEARCH_METABOLICS = MemoryMetabolics(token_cost=50, coherency_impact=0.0, requires_embedding=True)
+SURFACE_METABOLICS = MemoryMetabolics(token_cost=30, coherency_impact=0.0, requires_embedding=False)
+HEAL_METABOLICS = MemoryMetabolics(token_cost=200, coherency_impact=0.5, requires_embedding=False)
 ASSOCIATE_METABOLICS = MemoryMetabolics(
     token_cost=80, coherency_impact=0.2, requires_embedding=True
 )

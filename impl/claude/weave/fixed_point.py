@@ -118,10 +118,7 @@ def find_cycle_length(turns: list[Turn[Any]], max_length: int = 10) -> int | Non
     for period in range(1, min(max_length + 1, len(turns) // 2 + 1)):
         is_cycle = True
         for i in range(period):
-            if (
-                turns[-(i + 1)].state_hash_post
-                != turns[-(i + 1 + period)].state_hash_post
-            ):
+            if turns[-(i + 1)].state_hash_post != turns[-(i + 1 + period)].state_hash_post:
                 is_cycle = False
                 break
         if is_cycle:

@@ -127,9 +127,7 @@ class BaseCollector(ABC):
         if self._last_topology is None:
             self._last_topology = new_topology
             return [
-                TopologyUpdate(
-                    kind="full", timestamp=new_topology.timestamp, topology=new_topology
-                )
+                TopologyUpdate(kind="full", timestamp=new_topology.timestamp, topology=new_topology)
             ]
 
         # Preserve positions from previous topology for existing entities

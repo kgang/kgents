@@ -156,8 +156,4 @@ class Datum:
             if len(self.content) > 20
             else self.content.decode("utf-8", errors="replace")
         )
-        return (
-            f"Datum(id={self.id[:8]}..., "
-            f"content={content_preview!r}, "
-            f"size={self.size}B)"
-        )
+        return f"Datum(id={self.id[:8]}..., content={content_preview!r}, size={self.size}B)"

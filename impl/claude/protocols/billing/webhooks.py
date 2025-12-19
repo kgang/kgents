@@ -59,9 +59,7 @@ WebhookHandlerFunc = Callable[[WebhookEvent], None]
 class WebhookHandlerProtocol(Protocol):
     """Protocol for webhook handling operations."""
 
-    def register_handler(
-        self, event_type: WebhookEventType, handler: WebhookHandlerFunc
-    ) -> None:
+    def register_handler(self, event_type: WebhookEventType, handler: WebhookHandlerFunc) -> None:
         """Register a handler for a specific event type."""
         ...
 
@@ -89,16 +87,12 @@ class WebhookHandler:
             webhook_secret: Stripe webhook signing secret
         """
         if not STRIPE_AVAILABLE:
-            raise RuntimeError(
-                "stripe package not installed. Install with: pip install stripe"
-            )
+            raise RuntimeError("stripe package not installed. Install with: pip install stripe")
 
         self._webhook_secret = webhook_secret
         self._handlers: dict[str, list[WebhookHandlerFunc]] = {}
 
-    def register_handler(
-        self, event_type: WebhookEventType, handler: WebhookHandlerFunc
-    ) -> None:
+    def register_handler(self, event_type: WebhookEventType, handler: WebhookHandlerFunc) -> None:
         """
         Register a handler for a specific event type.
 
@@ -148,9 +142,7 @@ class WebhookHandler:
         Raises:
             stripe.error.SignatureVerificationError: If signature is invalid
         """
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, self._webhook_secret
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, self._webhook_secret)
         return WebhookEvent.from_stripe(dict(event))
 
 
@@ -184,25 +176,19 @@ class DefaultWebhookHandlers:
     def on_subscription_created(event: WebhookEvent) -> None:
         """Handle customer.subscription.created event."""
         subscription = event.data
-        print(
-            f"Subscription created: {subscription['id']} for customer {subscription['customer']}"
-        )
+        print(f"Subscription created: {subscription['id']} for customer {subscription['customer']}")
 
     @staticmethod
     def on_subscription_updated(event: WebhookEvent) -> None:
         """Handle customer.subscription.updated event."""
         subscription = event.data
-        print(
-            f"Subscription updated: {subscription['id']} - status: {subscription['status']}"
-        )
+        print(f"Subscription updated: {subscription['id']} - status: {subscription['status']}")
 
     @staticmethod
     def on_subscription_deleted(event: WebhookEvent) -> None:
         """Handle customer.subscription.deleted event."""
         subscription = event.data
-        print(
-            f"Subscription deleted: {subscription['id']} for customer {subscription['customer']}"
-        )
+        print(f"Subscription deleted: {subscription['id']} for customer {subscription['customer']}")
 
     @staticmethod
     def on_invoice_paid(event: WebhookEvent) -> None:
@@ -216,17 +202,13 @@ class DefaultWebhookHandlers:
     def on_invoice_payment_failed(event: WebhookEvent) -> None:
         """Handle invoice.payment_failed event."""
         invoice = event.data
-        print(
-            f"Invoice payment failed: {invoice['id']} for customer {invoice['customer']}"
-        )
+        print(f"Invoice payment failed: {invoice['id']} for customer {invoice['customer']}")
 
     @staticmethod
     def on_checkout_session_completed(event: WebhookEvent) -> None:
         """Handle checkout.session.completed event."""
         session = event.data
-        print(
-            f"Checkout session completed: {session['id']} - customer: {session.get('customer')}"
-        )
+        print(f"Checkout session completed: {session['id']} - customer: {session.get('customer')}")
 
 
 def create_webhook_handler(webhook_secret: str) -> WebhookHandler:
@@ -263,9 +245,7 @@ def create_webhook_handler(webhook_secret: str) -> WebhookHandler:
         WebhookEventType.SUBSCRIPTION_DELETED,
         DefaultWebhookHandlers.on_subscription_deleted,
     )
-    handler.register_handler(
-        WebhookEventType.INVOICE_PAID, DefaultWebhookHandlers.on_invoice_paid
-    )
+    handler.register_handler(WebhookEventType.INVOICE_PAID, DefaultWebhookHandlers.on_invoice_paid)
     handler.register_handler(
         WebhookEventType.INVOICE_PAYMENT_FAILED,
         DefaultWebhookHandlers.on_invoice_payment_failed,

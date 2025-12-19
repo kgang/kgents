@@ -516,9 +516,7 @@ def create_day_scenario(base_date: datetime | None = None) -> DayScenario:
         A DayScenario with all turn events and metrics.
     """
     if base_date is None:
-        base_date = datetime.now(timezone.utc).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
+        base_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
 
     # Build all turns
     turns = []
@@ -574,9 +572,7 @@ def get_scenario_metrics_at_hour(scenario: DayScenario, hour: int) -> dict[str, 
     garden = scenario.garden_evolution.get(hour, GardenEvolution.at_hour(hour))
 
     # Get pressure
-    pressure = (
-        scenario.pressure_curve[hour] if hour < len(scenario.pressure_curve) else 0.3
-    )
+    pressure = scenario.pressure_curve[hour] if hour < len(scenario.pressure_curve) else 0.3
 
     # Count turns by type
     by_type: dict[str, int] = {}
@@ -616,15 +612,12 @@ def get_scenario_metrics_at_hour(scenario: DayScenario, hour: int) -> dict[str, 
             "garden_flowers": garden.flowers,
             "garden_compost": garden.compost,
             "garden_season": garden.season,
-            "interactions_count": len(
-                [t for t in turns_so_far if t.turn_type == "SPEECH"]
-            ),
+            "interactions_count": len([t for t in turns_so_far if t.turn_type == "SPEECH"]),
             "last_dream": last_dream,
         },
         "metabolism": {
             "pressure": pressure,
-            "temperature": 0.5
-            + (pressure * 0.5),  # Temperature correlates with pressure
+            "temperature": 0.5 + (pressure * 0.5),  # Temperature correlates with pressure
             "in_fever": in_fever,
             "fever_count": fever_count,
             "last_tithe": scenario.tithe_times[-1] if scenario.tithe_times else None,

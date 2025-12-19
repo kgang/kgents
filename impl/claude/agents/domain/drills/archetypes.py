@@ -162,13 +162,9 @@ class CrisisArchetypeSpec:
             warmth=max(0.0, min(1.0, 0.5 + self.warmth_bias * stress_multiplier)),
             curiosity=max(0.0, min(1.0, 0.5 + self.curiosity_bias * stress_multiplier)),
             trust=max(0.0, min(1.0, 0.5 + self.trust_bias * stress_multiplier)),
-            creativity=max(
-                0.0, min(1.0, 0.5 + self.creativity_bias * stress_multiplier)
-            ),
+            creativity=max(0.0, min(1.0, 0.5 + self.creativity_bias * stress_multiplier)),
             patience=max(0.0, min(1.0, 0.5 + self.patience_bias * stress_multiplier)),
-            resilience=max(
-                0.0, min(1.0, 0.5 + self.resilience_bias * stress_multiplier)
-            ),
+            resilience=max(0.0, min(1.0, 0.5 + self.resilience_bias * stress_multiplier)),
             ambition=max(0.0, min(1.0, 0.5 + self.ambition_bias * stress_multiplier)),
         )
 

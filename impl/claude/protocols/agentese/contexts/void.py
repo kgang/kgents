@@ -136,9 +136,7 @@ class EntropyPool:
         that order comes from chaos.
         """
         # Small regeneration as reward for gratitude
-        self.remaining = min(
-            self.initial_budget, self.remaining + self.regeneration_rate
-        )
+        self.remaining = min(self.initial_budget, self.remaining + self.regeneration_rate)
 
         event = {
             "action": "tithe",
@@ -377,12 +375,8 @@ class SerendipityNode(BaseLogosNode):
         template_idx = int(seed * len(self._tangent_templates))
         template = self._tangent_templates[template_idx]
 
-        random_concept = self._random_concepts[
-            int(seed * 1000) % len(self._random_concepts)
-        ]
-        random_person = self._random_persons[
-            int(seed * 1000) % len(self._random_persons)
-        ]
+        random_concept = self._random_concepts[int(seed * 1000) % len(self._random_concepts)]
+        random_person = self._random_persons[int(seed * 1000) % len(self._random_persons)]
 
         tangent = template.format(
             context=context,
@@ -1117,9 +1111,7 @@ class JoyNode(BaseLogosNode):
         seed = kwargs.get("seed")
 
         if seed is not None:
-            idx = int(float(seed) * len(self._oblique_strategies)) % len(
-                self._oblique_strategies
-            )
+            idx = int(float(seed) * len(self._oblique_strategies)) % len(self._oblique_strategies)
         else:
             try:
                 grant = self._pool.sip(0.02)

@@ -292,9 +292,7 @@ class TestDuplication:
         )
 
         # Should find "world.gardens" as similar
-        assert (
-            len(result.similar_holons) >= 0
-        )  # May or may not find depending on threshold
+        assert len(result.similar_holons) >= 0  # May or may not find depending on threshold
 
 
 # === Validation Tests ===
@@ -385,9 +383,7 @@ class TestNursery:
         # Record usage
         nursery.record_usage(holon.germination_id, success=True)
         nursery.record_usage(holon.germination_id, success=True)
-        nursery.record_usage(
-            holon.germination_id, success=False, failure_pattern="Test failure"
-        )
+        nursery.record_usage(holon.germination_id, success=False, failure_pattern="Test failure")
 
         holon = nursery.get(holon.germination_id)
         assert holon is not None
@@ -460,9 +456,7 @@ class TestOperad:
     def test_law_tests_pass(self) -> None:
         """All operad law tests should pass."""
         results = run_all_law_tests()
-        assert all(results.values()), (
-            f"Failed laws: {[k for k, v in results.items() if not v]}"
-        )
+        assert all(results.values()), f"Failed laws: {[k for k, v in results.items() if not v]}"
 
 
 # === Rollback Token Tests ===

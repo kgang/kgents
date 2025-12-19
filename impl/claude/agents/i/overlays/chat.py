@@ -197,8 +197,7 @@ class AgentChatPanel(ModalScreen[None]):
         """Compose the chat panel."""
         with Container(id="chat-container"):
             yield Static(
-                f"[bold]Chat with {self.agent_name}[/]  │  "
-                "Ask about reasoning and decisions",
+                f"[bold]Chat with {self.agent_name}[/]  │  Ask about reasoning and decisions",
                 id="chat-header",
             )
 
@@ -260,9 +259,7 @@ class AgentChatPanel(ModalScreen[None]):
         """Add a user message."""
         self._add_message(MessageRole.USER, content)
 
-    def _add_agent_message(
-        self, content: str, turn_refs: list[str] | None = None
-    ) -> None:
+    def _add_agent_message(self, content: str, turn_refs: list[str] | None = None) -> None:
         """Add an agent message."""
         self._add_message(MessageRole.AGENT, content, turn_refs)
 

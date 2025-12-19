@@ -114,9 +114,7 @@ def reset_isolated_buffer() -> None:
 
 
 # Correlation ID for request-level tracing (Phase 6A)
-_current_correlation_id: ContextVar[str | None] = ContextVar(
-    "correlation_id", default=None
-)
+_current_correlation_id: ContextVar[str | None] = ContextVar("correlation_id", default=None)
 
 
 def get_correlation_id() -> str | None:

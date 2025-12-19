@@ -122,9 +122,7 @@ class TestStorageRouter:
         await store.close()
 
     @pytest.mark.asyncio
-    async def test_create_auto_fallback_to_sqlite(
-        self, tmp_path: Path, monkeypatch: Any
-    ) -> None:
+    async def test_create_auto_fallback_to_sqlite(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Should fall back to SQLite when Postgres unavailable."""
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         store = await create_relational_store(
@@ -268,9 +266,7 @@ class TestPostgresRelationalStoreIntegration:
         )
         assert count == 5
 
-        rows = await store.fetch_all(
-            "SELECT * FROM test_captures WHERE id LIKE 'batch-%'"
-        )
+        rows = await store.fetch_all("SELECT * FROM test_captures WHERE id LIKE 'batch-%'")
         assert len(rows) == 5
 
     @pytest.mark.asyncio

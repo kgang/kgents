@@ -231,9 +231,7 @@ def format_principles_json() -> str:
         }
         for p in DESIGN_PRINCIPLES
     ]
-    return json.dumps(
-        {"principles": principles_dict, "count": len(principles_dict)}, indent=2
-    )
+    return json.dumps({"principles": principles_dict, "count": len(principles_dict)}, indent=2)
 
 
 def format_evaluation_rich(report: EvaluationReport) -> str:
@@ -432,9 +430,7 @@ async def evaluate_against_principles(
             verdict=joy_verdict,
             reasoning=joy_reasoning,
             confidence=0.4 if joy_score > 0 or joy_anti_score > 0 else 0.2,
-            suggestions=["Consider adding personality"]
-            if joy_verdict != Verdict.ACCEPT
-            else [],
+            suggestions=["Consider adding personality"] if joy_verdict != Verdict.ACCEPT else [],
         )
     )
 
@@ -460,9 +456,7 @@ async def evaluate_against_principles(
             principle=PrincipleName.COMPOSABLE,
             verdict=composable_verdict,
             reasoning=composable_reasoning,
-            confidence=0.6
-            if composable_score > 0 or composable_anti_score > 0
-            else 0.3,
+            confidence=0.6 if composable_score > 0 or composable_anti_score > 0 else 0.3,
             suggestions=["Define clear input/output types"]
             if composable_verdict != Verdict.ACCEPT
             else [],
@@ -520,9 +514,7 @@ async def evaluate_against_principles(
             principle=PrincipleName.GENERATIVE,
             verdict=generative_verdict,
             reasoning=generative_reasoning,
-            confidence=0.5
-            if generative_score > 0 or generative_anti_score > 0
-            else 0.3,
+            confidence=0.5 if generative_score > 0 or generative_anti_score > 0 else 0.3,
             suggestions=["Write spec that can regenerate implementation"]
             if generative_verdict != Verdict.ACCEPT
             else [],
@@ -623,9 +615,7 @@ def cmd_principles(args: list[str]) -> int:
         if not parsed.input:
             print("Error: check requires input text or file path")
             print("Usage: kgents principles check <input>")
-            print(
-                'Example: kgents principles check "A monolithic agent that does everything"'
-            )
+            print('Example: kgents principles check "A monolithic agent that does everything"')
             return 1
 
         # Check if input is a file path

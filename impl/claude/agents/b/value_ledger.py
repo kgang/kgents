@@ -120,9 +120,7 @@ class ComplexityOracle:
             return 0.0
 
         complexity = self.assess(output)
-        return (
-            (complexity / tokens_consumed) * semantic_coefficient * 1000
-        )  # Scale factor
+        return (complexity / tokens_consumed) * semantic_coefficient * 1000  # Scale factor
 
 
 # =============================================================================
@@ -346,9 +344,7 @@ class Treasury:
 
     def deduct_gas(self, agent_id: str, gas: Gas) -> None:
         """Record gas consumption."""
-        self._gas_consumed[agent_id] = (
-            self._gas_consumed.get(agent_id, 0.0) + gas.cost_usd
-        )
+        self._gas_consumed[agent_id] = self._gas_consumed.get(agent_id, 0.0) + gas.cost_usd
         self._transaction_count[agent_id] = self._transaction_count.get(agent_id, 0) + 1
 
     def mint_impact(self, agent_id: str, impact: float) -> None:
@@ -514,9 +510,7 @@ class ValueLedger:
             ),
             ethical=EthicalDimension(
                 security_risk=0.5 if output.has_vulnerabilities() else 0.0,
-                maintainability_improvement=0.3
-                if output.improved_maintainability()
-                else 0.0,
+                maintainability_improvement=0.3 if output.improved_maintainability() else 0.0,
             ),
         )
 
@@ -549,9 +543,7 @@ class ValueLedger:
             return 0.0
         return self.treasury.total_impact() / total_gas
 
-    def get_agent_history(
-        self, agent_id: str, limit: int = 100
-    ) -> list[TransactionReceipt]:
+    def get_agent_history(self, agent_id: str, limit: int = 100) -> list[TransactionReceipt]:
         """Get recent transactions for an agent."""
         agent_txs = [t for t in self.transactions if t.agent_id == agent_id]
         return agent_txs[-limit:]
@@ -564,9 +556,7 @@ class ValueLedger:
             "total_debt": self.treasury.total_debt(),
             "total_gas_usd": self.treasury.total_gas(),
             "system_roc": self.system_roc(),
-            "profitable_count": sum(
-                1 for t in self.transactions if t.status == "profitable"
-            ),
+            "profitable_count": sum(1 for t in self.transactions if t.status == "profitable"),
             "debt_count": sum(1 for t in self.transactions if t.status == "debt"),
         }
 

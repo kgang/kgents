@@ -317,11 +317,7 @@ class TracingContext:
             else:
                 self.historian.abort_trace(self._ctx, str(exc_val))
         else:
-            outputs = (
-                self._result
-                if isinstance(self._result, dict)
-                else {"result": self._result}
-            )
+            outputs = self._result if isinstance(self._result, dict) else {"result": self._result}
             self.historian.end_trace(self._ctx, self.action, outputs)
 
         return False  # Don't suppress exceptions

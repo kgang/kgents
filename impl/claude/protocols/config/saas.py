@@ -69,9 +69,7 @@ def _parse_bool(value: str, default: bool = False) -> bool:
     return value.lower() in ("true", "1", "yes", "on")
 
 
-def _parse_servers(
-    value: str, default: str = "nats://localhost:4222"
-) -> tuple[str, ...]:
+def _parse_servers(value: str, default: str = "nats://localhost:4222") -> tuple[str, ...]:
     """Parse comma-separated server list."""
     if not value:
         return (default,)
@@ -98,16 +96,10 @@ def get_saas_config() -> SaaSConfig:
         nats_max_reconnect=int(os.environ.get("NATS_MAX_RECONNECT", "10")),
         # OpenMeter
         openmeter_api_key=os.environ.get("OPENMETER_API_KEY", ""),
-        openmeter_base_url=os.environ.get(
-            "OPENMETER_BASE_URL", "https://openmeter.cloud"
-        ),
-        openmeter_enabled=_parse_bool(
-            os.environ.get("OPENMETER_ENABLED", ""), default=False
-        ),
+        openmeter_base_url=os.environ.get("OPENMETER_BASE_URL", "https://openmeter.cloud"),
+        openmeter_enabled=_parse_bool(os.environ.get("OPENMETER_ENABLED", ""), default=False),
         openmeter_batch_size=int(os.environ.get("OPENMETER_BATCH_SIZE", "100")),
-        openmeter_flush_interval=float(
-            os.environ.get("OPENMETER_FLUSH_INTERVAL", "1.0")
-        ),
+        openmeter_flush_interval=float(os.environ.get("OPENMETER_FLUSH_INTERVAL", "1.0")),
     )
 
 

@@ -124,9 +124,7 @@ class StackBalancingParser:
         if stack:
             closing_tags = "".join(f"</{tag}>" for tag in reversed(stack))
             balanced_text = text + closing_tags
-            repairs.append(
-                f"Auto-closed {len(stack)} unclosed tags: {', '.join(reversed(stack))}"
-            )
+            repairs.append(f"Auto-closed {len(stack)} unclosed tags: {', '.join(reversed(stack))}")
             confidence = max(0.75, 1.0 - 0.05 * len(stack))
         else:
             balanced_text = text
@@ -165,9 +163,7 @@ class StackBalancingParser:
         if stack:
             closing_chars = "".join(self.pairs[opener] for opener in reversed(stack))
             balanced_text = text + closing_chars
-            repairs.append(
-                f"Auto-closed {len(stack)} unclosed delimiters: {closing_chars}"
-            )
+            repairs.append(f"Auto-closed {len(stack)} unclosed delimiters: {closing_chars}")
             confidence = max(0.75, 1.0 - 0.05 * len(stack))
         else:
             balanced_text = text
@@ -252,9 +248,7 @@ class StackBalancingParser:
             closing_tags = "".join(f"</{tag}>" for tag in reversed(stack))
             balanced = buffer + closing_tags
             confidence = max(0.75, 1.0 - 0.05 * len(stack))
-            repairs = [
-                f"Final auto-closure of {len(stack)} tags: {', '.join(reversed(stack))}"
-            ]
+            repairs = [f"Final auto-closure of {len(stack)} tags: {', '.join(reversed(stack))}"]
         else:
             balanced = buffer
             confidence = 1.0
@@ -292,9 +286,7 @@ class StackBalancingParser:
 
             # Create balanced snapshot
             if stack:
-                closing_chars = "".join(
-                    self.pairs[opener] for opener in reversed(stack)
-                )
+                closing_chars = "".join(self.pairs[opener] for opener in reversed(stack))
                 balanced = buffer + closing_chars
                 confidence = max(0.75, 1.0 - 0.05 * len(stack))
                 partial = True

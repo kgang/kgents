@@ -282,9 +282,7 @@ class TestAspectPipeline:
     @pytest.mark.asyncio
     async def test_fluent_api(self, node: MockNode, observer: Observer) -> None:
         """Test fluent builder API."""
-        result = await (
-            AspectPipeline(node).add("load").add("parse").add("transform").run(observer)
-        )
+        result = await AspectPipeline(node).add("load").add("parse").add("transform").run(observer)
 
         assert result.success is True
         assert len(result.stages) == 3

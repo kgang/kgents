@@ -260,9 +260,7 @@ async def handle_session_resume(
             return {
                 "status": "no_session",
                 "message": "No active session to resume",
-                "recent_sessions": [
-                    {"id": s.id, "name": s.name, "phase": s.phase} for s in recent
-                ],
+                "recent_sessions": [{"id": s.id, "name": s.name, "phase": s.phase} for s in recent],
             }
 
         span.set_attribute("session.id", stored.id)

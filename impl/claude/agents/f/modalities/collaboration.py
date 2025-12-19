@@ -267,9 +267,7 @@ class CollaborationFlow:
                     result, agent_role, self.blackboard.current_round
                 )
 
-                if contribution and self._check_permission(
-                    agent_role.id, Permission.POST
-                ):
+                if contribution and self._check_permission(agent_role.id, Permission.POST):
                     self.blackboard.post(contribution)
                     contributions_this_round += 1
                     yield contribution
@@ -539,9 +537,7 @@ class CollaborationFlow:
             return None
 
         # Simple synthesis: concatenate high-confidence contributions
-        high_confidence = [
-            c for c in self.blackboard.contributions if c.confidence > 0.7
-        ]
+        high_confidence = [c for c in self.blackboard.contributions if c.confidence > 0.7]
 
         if not high_confidence:
             return "No high-confidence contributions"

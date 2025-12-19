@@ -71,15 +71,9 @@ class XDGPaths:
         cache_home = os.environ.get("XDG_CACHE_HOME")
 
         return cls(
-            config=Path(config_home) / "kgents"
-            if config_home
-            else home / ".config" / "kgents",
-            data=Path(data_home) / "kgents"
-            if data_home
-            else home / ".local" / "share" / "kgents",
-            cache=Path(cache_home) / "kgents"
-            if cache_home
-            else home / ".cache" / "kgents",
+            config=Path(config_home) / "kgents" if config_home else home / ".config" / "kgents",
+            data=Path(data_home) / "kgents" if data_home else home / ".local" / "share" / "kgents",
+            cache=Path(cache_home) / "kgents" if cache_home else home / ".cache" / "kgents",
         )
 
     def ensure_dirs(self) -> None:

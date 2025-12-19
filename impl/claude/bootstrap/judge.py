@@ -323,9 +323,7 @@ class VerdictAccumulator:
 # --- Mini-Judge Registry ---
 
 # Map principle names to checker functions
-MINI_JUDGES: dict[
-    str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]
-] = {
+MINI_JUDGES: dict[str, Callable[[Agent[Any, Any], Optional[dict[str, Any]]], PartialVerdict]] = {
     Principles.TASTEFUL: check_tasteful,
     Principles.CURATED: check_curated,
     Principles.ETHICAL: check_ethical,
@@ -437,9 +435,7 @@ class Judge(Agent[JudgeInput, Verdict]):
 # --- Convenience Functions ---
 
 
-async def judge(
-    agent: Agent[Any, Any], principles: Optional[tuple[str, ...]] = None
-) -> Verdict:
+async def judge(agent: Agent[Any, Any], principles: Optional[tuple[str, ...]] = None) -> Verdict:
     """
     Judge an agent against principles.
 

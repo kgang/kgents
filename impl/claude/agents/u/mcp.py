@@ -434,9 +434,7 @@ class MCPClient:
             await self.transport.send(init_request)
 
             # 3. Receive initialize response
-            init_response = await asyncio.wait_for(
-                self.transport.receive(), timeout=10.0
-            )
+            init_response = await asyncio.wait_for(self.transport.receive(), timeout=10.0)
 
             if init_response.is_error():
                 error = init_response.error or {}
@@ -461,9 +459,7 @@ class MCPClient:
             )
 
             # 4. Send initialized notification
-            initialized_notification = JsonRpcRequest(
-                method="notifications/initialized", params={}
-            )
+            initialized_notification = JsonRpcRequest(method="notifications/initialized", params={})
             await self.transport.send(initialized_notification)
 
             return ok(self.server_info)
@@ -511,9 +507,7 @@ class MCPClient:
             )
 
         try:
-            request = JsonRpcRequest(
-                id=self._next_request_id(), method="tools/list", params={}
-            )
+            request = JsonRpcRequest(id=self._next_request_id(), method="tools/list", params={})
 
             await self.transport.send(request)
             response = await asyncio.wait_for(self.transport.receive(), timeout=10.0)
@@ -569,9 +563,7 @@ class MCPClient:
                 recoverable=True,
             )
 
-    async def call_tool(
-        self, tool_name: str, arguments: Dict[str, Any]
-    ) -> Result[Any, ToolError]:
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Result[Any, ToolError]:
         """
         Call a tool on the MCP server.
 
@@ -690,9 +682,7 @@ class MCPClient:
             )
 
         try:
-            request = JsonRpcRequest(
-                id=self._next_request_id(), method="resources/list", params={}
-            )
+            request = JsonRpcRequest(id=self._next_request_id(), method="resources/list", params={})
 
             await self.transport.send(request)
             response = await asyncio.wait_for(self.transport.receive(), timeout=10.0)

@@ -383,9 +383,7 @@ class LogosAgenteseBridge:
             # Check if this is a streaming-capable path
             if "soul" in handle and "challenge" in handle:
                 # Stream soul challenge via K-gent
-                async for chunk in self._stream_soul_challenge(
-                    umwelt, handle, kwargs, observer
-                ):
+                async for chunk in self._stream_soul_challenge(umwelt, handle, kwargs, observer):
                     yield SSEEvent(
                         event="chunk",
                         data=SSEChunk(
@@ -410,9 +408,7 @@ class LogosAgenteseBridge:
 
             elif "dialectic" in handle:
                 # Stream dialectic phases
-                async for phase, content in self._stream_dialectic(
-                    umwelt, handle, kwargs
-                ):
+                async for phase, content in self._stream_dialectic(umwelt, handle, kwargs):
                     yield SSEEvent(
                         event="chunk",
                         data=SSEChunk(
@@ -487,8 +483,7 @@ class LogosAgenteseBridge:
         # WebSocket subscriptions will be implemented in Wave 3
         # For now, raise NotImplementedError
         raise NotImplementedError(
-            "WebSocket subscriptions not yet implemented. "
-            "Use SSE streaming for real-time updates."
+            "WebSocket subscriptions not yet implemented. Use SSE streaming for real-time updates."
         )
 
     async def verify_laws(

@@ -214,7 +214,9 @@ class BrainPersistence:
             summary=summary,
             captured_at=datetime.utcnow().isoformat(),
             has_embedding=has_embedding,
-            storage="postgres" if "postgres" in str(self.table.session_factory).lower() else "sqlite",
+            storage="postgres"
+            if "postgres" in str(self.table.session_factory).lower()
+            else "sqlite",
             datum_id=datum_id,
             tags=tags,
         )
@@ -302,7 +304,9 @@ class BrainPersistence:
                             content=content,
                             summary=crystal.summary,
                             similarity=similarity,
-                            captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
+                            captured_at=crystal.created_at.isoformat()
+                            if crystal.created_at
+                            else "",
                             is_stale=False,
                         )
                     )
@@ -434,7 +438,9 @@ class BrainPersistence:
             coherency_rate=coherency_rate,
             ghosts_healed=self._ghosts_healed,
             storage_path="~/.local/share/kgents/brain",
-            storage_backend="postgres" if "postgres" in str(self.table.session_factory).lower() else "sqlite",
+            storage_backend="postgres"
+            if "postgres" in str(self.table.session_factory).lower()
+            else "sqlite",
         )
 
     # =========================================================================

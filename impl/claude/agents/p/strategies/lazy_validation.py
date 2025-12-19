@@ -311,9 +311,7 @@ class LazyValidationParser(Generic[A]):
                 strategy="lazy-validation",
             )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[LazyValidatedDict[A]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[LazyValidatedDict[A]]]:
         """
         Stream parsing (buffer and parse complete).
 

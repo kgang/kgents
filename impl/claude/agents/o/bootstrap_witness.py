@@ -207,9 +207,7 @@ class ComposedAgent(Generic[A, B]):
     def __init__(self, first: ComposableAgent[A, Any], second: ComposableAgent[Any, B]):
         self._first = first
         self._second = second
-        self._name = (
-            f"({getattr(first, 'name', 'f')} >> {getattr(second, 'name', 'g')})"
-        )
+        self._name = f"({getattr(first, 'name', 'f')} >> {getattr(second, 'name', 'g')})"
 
     @property
     def name(self) -> str:
@@ -436,9 +434,7 @@ class BootstrapWitness(BaseObserver):
         return IdentityLawResult(
             left_identity=left_identity_holds,
             right_identity=right_identity_holds,
-            evidence="; ".join(evidence_parts)
-            if evidence_parts
-            else "All tests passed",
+            evidence="; ".join(evidence_parts) if evidence_parts else "All tests passed",
             test_cases_run=cases_run,
         )
 
@@ -494,9 +490,7 @@ class BootstrapWitness(BaseObserver):
         return CompositionLawResult(
             associativity=associativity_holds,
             closure=closure_holds,
-            evidence="; ".join(evidence_parts)
-            if evidence_parts
-            else "All tests passed",
+            evidence="; ".join(evidence_parts) if evidence_parts else "All tests passed",
             test_cases_run=cases_run,
         )
 

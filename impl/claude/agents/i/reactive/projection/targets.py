@@ -256,9 +256,7 @@ def targets_by_fidelity(level: FidelityLevel) -> list[ExtendedTarget]:
 
     low, high = thresholds[level]
     matches = [
-        t
-        for t, cap in _CAPABILITIES.items()
-        if low <= cap.fidelity <= high and cap.implemented
+        t for t, cap in _CAPABILITIES.items() if low <= cap.fidelity <= high and cap.implemented
     ]
     return sorted(matches, key=lambda t: _CAPABILITIES[t].fidelity, reverse=True)
 
