@@ -170,11 +170,11 @@ Use this for:
     ) -> str:
         """Capture content to Brain and return crystal ID."""
         # Import here to avoid circular imports
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
         # Create a minimal logos for capture
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Create concept ID based on path and date
@@ -298,10 +298,10 @@ Track this for:
         event: SynergyEvent,
     ) -> str:
         """Capture drift violation to Brain and return crystal ID."""
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Create unique concept ID for this drift

@@ -358,6 +358,7 @@ class TestPerformanceBaselines:
         assert response.status_code == 200
         assert elapsed < 0.3, f"Discovery took {elapsed:.3f}s, should be <0.3s"
 
+    @pytest.mark.integration  # Full codebase scan too slow for fast CI
     @pytest.mark.anyio
     async def test_bulk_manifest_performance(self, client: "AsyncClient"):
         """Multiple manifest calls complete in reasonable time."""

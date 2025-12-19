@@ -198,6 +198,7 @@ class TestGestaltNodeTopology:
 class TestGestaltNodeAspects:
     """Test other aspects."""
 
+    @pytest.mark.integration  # Requires full codebase scan
     @pytest.mark.asyncio
     async def test_health_aspect(self) -> None:
         """Health aspect returns health metrics."""

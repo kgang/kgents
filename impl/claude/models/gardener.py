@@ -10,7 +10,7 @@ AGENTESE: self.data.table.idea.*, self.data.table.garden.*
 from __future__ import annotations
 
 import enum
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -135,7 +135,7 @@ class GardenIdea(TimestampMixin, CausalMixin, Base):
     def nurture(self) -> None:
         """Record a nurturing action."""
         self.nurture_count += 1
-        self.last_nurtured = datetime.utcnow()
+        self.last_nurtured = datetime.now(UTC)
 
     def promote(self) -> bool:
         """

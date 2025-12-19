@@ -20,7 +20,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -301,7 +301,7 @@ class TownPersistence:
 
             # Update citizen interaction tracking
             citizen.interaction_count += 1
-            citizen.last_interaction = datetime.utcnow()
+            citizen.last_interaction = datetime.now(UTC)
 
             await session.commit()
 

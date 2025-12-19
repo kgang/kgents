@@ -24,7 +24,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -451,7 +451,7 @@ class ParkPersistence:
             # Update access counts
             for m in memories:
                 m.access_count += 1
-                m.last_accessed = datetime.utcnow()
+                m.last_accessed = datetime.now(UTC)
 
             await session.commit()
 
@@ -564,7 +564,7 @@ class ParkPersistence:
                 return None
 
             episode.status = status
-            episode.ended_at = datetime.utcnow()
+            episode.ended_at = datetime.now(UTC)
             episode.summary = summary
 
             # Calculate duration

@@ -203,11 +203,11 @@ Use this for compliance reporting, training records, and performance tracking.
     ) -> str:
         """Capture content to Brain and return crystal ID."""
         # Import here to avoid circular imports
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
         # Create a minimal logos for capture
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Create concept ID based on drill and date
@@ -400,10 +400,10 @@ Use this for tracking your practice progress and reviewing key learning moments.
         event: SynergyEvent,
     ) -> str:
         """Capture content to Brain and return crystal ID."""
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         date_str = event.timestamp.strftime("%Y-%m-%d")
