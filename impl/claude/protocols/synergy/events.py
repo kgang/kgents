@@ -90,6 +90,13 @@ class SynergyEventType(Enum):
     CONCEPT_READY = "concept_ready"  # Concept ready for promotion (UI prompt)
     CONCEPT_PROMOTED = "concept_promoted"  # Concept accepted into permanent impl
 
+    # Witness events (8th Crown Jewel - The Witnessing Ghost)
+    WITNESS_THOUGHT_CAPTURED = "witness.thought.captured"  # Thought observed and stored
+    WITNESS_GIT_COMMIT = "witness.git.commit"  # Git commit detected
+    WITNESS_GIT_PUSH = "witness.git.push"  # Git push detected
+    WITNESS_DAEMON_STARTED = "witness.daemon.started"  # Daemon started watching
+    WITNESS_DAEMON_STOPPED = "witness.daemon.stopped"  # Daemon stopped
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -101,6 +108,7 @@ class Jewel(Enum):
     COALITION = "coalition"
     PARK = "park"
     DOMAIN = "domain"
+    WITNESS = "witness"  # 8th Crown Jewel - The Witnessing Ghost
 
     # Infrastructure jewels
     DGENT = "dgent"  # Data layer (D-gent)
@@ -1450,6 +1458,132 @@ def create_concept_promoted_event(
     )
 
 
+# =============================================================================
+# Witness Events (8th Crown Jewel - The Witnessing Ghost)
+# =============================================================================
+
+
+def create_witness_thought_event(
+    thought_id: str,
+    content: str,
+    source: str,
+    tags: list[str] | tuple[str, ...],
+    confidence: float = 1.0,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Witness thought captured event.
+
+    When the Witness observes developer activity and captures a thought,
+    this event triggers cross-jewel handlers (e.g., auto-capture to Brain).
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.WITNESS,
+        target_jewel=Jewel.BRAIN,
+        event_type=SynergyEventType.WITNESS_THOUGHT_CAPTURED,
+        source_id=thought_id,
+        payload={
+            "content": content,
+            "source": source,
+            "tags": list(tags) if isinstance(tags, tuple) else tags,
+            "confidence": confidence,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_witness_git_commit_event(
+    commit_hash: str,
+    author_email: str,
+    message: str,
+    files_changed: int,
+    insertions: int = 0,
+    deletions: int = 0,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Witness git commit detected event."""
+    return SynergyEvent(
+        source_jewel=Jewel.WITNESS,
+        target_jewel=Jewel.GARDENER,
+        event_type=SynergyEventType.WITNESS_GIT_COMMIT,
+        source_id=commit_hash,
+        payload={
+            "author_email": author_email,
+            "message": message[:200],
+            "files_changed": files_changed,
+            "insertions": insertions,
+            "deletions": deletions,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_witness_git_push_event(
+    push_id: str,
+    remote: str,
+    branch: str,
+    commits_pushed: int,
+    author_email: str,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Witness git push detected event."""
+    return SynergyEvent(
+        source_jewel=Jewel.WITNESS,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.WITNESS_GIT_PUSH,
+        source_id=push_id,
+        payload={
+            "remote": remote,
+            "branch": branch,
+            "commits_pushed": commits_pushed,
+            "author_email": author_email,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_witness_daemon_started_event(
+    daemon_id: str,
+    pid: int,
+    watched_paths: list[str],
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Witness daemon started event."""
+    return SynergyEvent(
+        source_jewel=Jewel.WITNESS,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.WITNESS_DAEMON_STARTED,
+        source_id=daemon_id,
+        payload={
+            "pid": pid,
+            "watched_paths": watched_paths,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_witness_daemon_stopped_event(
+    daemon_id: str,
+    pid: int,
+    uptime_seconds: float,
+    thoughts_captured: int = 0,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """Create a Witness daemon stopped event."""
+    return SynergyEvent(
+        source_jewel=Jewel.WITNESS,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.WITNESS_DAEMON_STOPPED,
+        source_id=daemon_id,
+        payload={
+            "pid": pid,
+            "uptime_seconds": uptime_seconds,
+            "thoughts_captured": thoughts_captured,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -1499,4 +1633,10 @@ __all__ = [
     "create_concept_grew_event",
     "create_concept_ready_event",
     "create_concept_promoted_event",
+    # Factory functions - Witness (8th Crown Jewel)
+    "create_witness_thought_event",
+    "create_witness_git_commit_event",
+    "create_witness_git_push_event",
+    "create_witness_daemon_started_event",
+    "create_witness_daemon_stopped_event",
 ]

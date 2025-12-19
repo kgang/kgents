@@ -276,6 +276,133 @@ def wire_synergy_to_event(
     return unsubscribes
 
 
+def wire_witness_to_global_synergy(
+    witness_bus: WitnessSynergyBus,
+) -> list[UnsubscribeFunc]:
+    """
+    Bridge Witness events to the global SynergyBus.
+
+    This enables cross-jewel handlers to receive Witness events:
+    - WitnessToBrainHandler: Captures thoughts as crystals
+    - WitnessToGardenHandler: Updates plots from commits
+
+    Args:
+        witness_bus: Local Witness synergy bus
+
+    Returns:
+        List of unsubscribe functions
+    """
+    from protocols.synergy import SynergyEventType, get_synergy_bus
+    from protocols.synergy.events import (
+        create_witness_daemon_started_event,
+        create_witness_daemon_stopped_event,
+        create_witness_git_commit_event,
+        create_witness_thought_event,
+    )
+
+    unsubscribes: list[UnsubscribeFunc] = []
+    global_bus = get_synergy_bus()
+
+    # Map witness topics to SynergyEvent factories
+    async def bridge_thought(topic: str, event: Any) -> None:
+        """Bridge thought events to global synergy."""
+        if not isinstance(event, dict):
+            return
+
+        synergy_event = create_witness_thought_event(
+            thought_id=event.get("thought_id", "unknown"),
+            content=event.get("content", ""),
+            source=event.get("source", "witness"),
+            tags=event.get("tags", []),
+            confidence=event.get("confidence", 1.0),
+        )
+        await global_bus.emit(synergy_event)
+
+    async def bridge_git_commit(topic: str, event: Any) -> None:
+        """Bridge git commit events to global synergy."""
+        if not isinstance(event, dict):
+            return
+
+        synergy_event = create_witness_git_commit_event(
+            commit_hash=event.get("commit_hash", "unknown"),
+            author_email=event.get("author_email", "unknown"),
+            message=event.get("message", ""),
+            files_changed=event.get("files_changed", 0),
+            insertions=event.get("insertions", 0),
+            deletions=event.get("deletions", 0),
+        )
+        await global_bus.emit(synergy_event)
+
+    async def bridge_daemon_started(topic: str, event: Any) -> None:
+        """Bridge daemon started events to global synergy."""
+        if not isinstance(event, dict):
+            return
+
+        synergy_event = create_witness_daemon_started_event(
+            daemon_id=event.get("daemon_id", "unknown"),
+            pid=event.get("pid", 0),
+            watched_paths=event.get("watched_paths", []),
+        )
+        await global_bus.emit(synergy_event)
+
+    async def bridge_daemon_stopped(topic: str, event: Any) -> None:
+        """Bridge daemon stopped events to global synergy."""
+        if not isinstance(event, dict):
+            return
+
+        synergy_event = create_witness_daemon_stopped_event(
+            daemon_id=event.get("daemon_id", "unknown"),
+            pid=event.get("pid", 0),
+            uptime_seconds=event.get("uptime_seconds", 0.0),
+            thoughts_captured=event.get("thoughts_captured", 0),
+        )
+        await global_bus.emit(synergy_event)
+
+    # Subscribe to specific topics
+    unsubscribes.append(witness_bus.subscribe(WitnessTopics.THOUGHT_CAPTURED, bridge_thought))
+    unsubscribes.append(witness_bus.subscribe(WitnessTopics.GIT_COMMIT, bridge_git_commit))
+    unsubscribes.append(witness_bus.subscribe(WitnessTopics.DAEMON_STARTED, bridge_daemon_started))
+    unsubscribes.append(witness_bus.subscribe(WitnessTopics.DAEMON_STOPPED, bridge_daemon_stopped))
+
+    logger.info("Witness → Global SynergyBus bridge wired")
+    return unsubscribes
+
+
+def register_witness_handlers() -> list[UnsubscribeFunc]:
+    """
+    Register Witness handlers with the global SynergyBus.
+
+    This enables cross-jewel processing of Witness events:
+    - WITNESS_THOUGHT_CAPTURED → WitnessToBrainHandler → Brain crystals
+    - WITNESS_GIT_COMMIT → WitnessToGardenHandler → Plot updates
+
+    Returns:
+        List of unsubscribe functions for cleanup
+    """
+    from protocols.synergy import SynergyEventType, get_synergy_bus
+    from protocols.synergy.handlers import WitnessToBrainHandler, WitnessToGardenHandler
+
+    global_bus = get_synergy_bus()
+    unsubscribes: list[UnsubscribeFunc] = []
+
+    # Create handlers (auto_capture=True for production)
+    brain_handler = WitnessToBrainHandler(auto_capture=True)
+    garden_handler = WitnessToGardenHandler(auto_update=True)
+
+    # Register brain handler for thought events
+    unsubscribes.append(
+        global_bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, brain_handler)
+    )
+    # Brain also handles git commits (for crystal capture)
+    unsubscribes.append(global_bus.register(SynergyEventType.WITNESS_GIT_COMMIT, brain_handler))
+
+    # Register garden handler for git commit events
+    unsubscribes.append(global_bus.register(SynergyEventType.WITNESS_GIT_COMMIT, garden_handler))
+
+    logger.info("Witness handlers registered with global SynergyBus")
+    return unsubscribes
+
+
 # =============================================================================
 # WitnessBusManager (Orchestrator)
 # =============================================================================
@@ -312,14 +439,21 @@ class WitnessBusManager:
         """
         Wire cross-jewel event handlers.
 
-        Example handlers (to be implemented):
-        - K-gent: thought → narrative generation
-        - Brain: thought → crystal storage
-        - Gardener: commit → plot cultivation
+        Handlers registered:
+        - WitnessToBrainHandler: thought → crystal storage
+        - WitnessToGardenHandler: commit → plot cultivation
+
+        Also bridges local WitnessSynergyBus → global SynergyBus.
         """
-        # Placeholder for cross-jewel handlers
-        # These will be added as other jewels integrate with Witness
-        pass
+        # Bridge local bus to global synergy
+        bridge_unsubs = wire_witness_to_global_synergy(self.synergy_bus)
+        self._cross_jewel_unsubs.extend(bridge_unsubs)
+
+        # Register handlers with global bus
+        handler_unsubs = register_witness_handlers()
+        self._cross_jewel_unsubs.extend(handler_unsubs)
+
+        logger.info("Witness cross-jewel handlers wired")
 
     def unwire_all(self) -> None:
         """Disconnect all wiring."""
@@ -384,6 +518,8 @@ __all__ = [
     "WitnessEventBus",
     # Wiring
     "wire_synergy_to_event",
+    "wire_witness_to_global_synergy",
+    "register_witness_handlers",
     # Manager
     "WitnessBusManager",
     "get_witness_bus_manager",
