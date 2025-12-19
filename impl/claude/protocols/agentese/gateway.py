@@ -147,6 +147,12 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (garden): {e}")
 
+        # === Concept context nodes ===
+        try:
+            from .contexts import concept_principles  # noqa: F401  # concept.principles.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (concept.principles): {e}")
+
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
         logger.warning(f"Could not import some node modules: {e}")

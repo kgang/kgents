@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from services.morpheus.persistence import MorpheusPersistence
     from services.park import ParkPersistence
     from services.park.scenario_service import ScenarioService
+    from services.principles import PrincipleLoader
     from services.town import TownPersistence
     from services.town.bus_wiring import TownBusManager
     from services.town.coalition_service import CoalitionService
@@ -262,6 +263,17 @@ async def get_scenario_service() -> "ScenarioService":
     return ScenarioService()
 
 
+async def get_principle_loader() -> "PrincipleLoader":
+    """
+    Get the PrincipleLoader for concept.principles node.
+
+    Used by PrinciplesNode to load principle files from spec/principles/.
+    """
+    from services.principles import create_principle_loader
+
+    return create_principle_loader()
+
+
 async def get_workshop_service() -> "WorkshopService":
     """
     Get the WorkshopService for Agent Town builder coordination.
@@ -378,8 +390,11 @@ async def setup_providers() -> None:
     # Park Services (Punchdrunk Park scenarios)
     container.register("scenario_service", get_scenario_service, singleton=True)
 
+    # Principles Service (concept.principles node)
+    container.register("principle_loader", get_principle_loader, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios)"
+        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles)"
     )
 
     # Import Witness node to trigger @node registration
@@ -447,6 +462,13 @@ async def setup_providers() -> None:
         logger.info("CommissionNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"CommissionNode not available: {e}")
+
+    try:
+        from protocols.agentese.contexts.concept_principles import PrinciplesNode  # noqa: F401
+
+        logger.info("PrinciplesNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"PrinciplesNode not available: {e}")
 
     # Wire DifferanceStore to DifferanceTraceNode
     try:
@@ -538,6 +560,8 @@ __all__ = [
     "get_bus_manager",
     # Park services
     "get_scenario_service",
+    # Principles
+    "get_principle_loader",
     # K-gent Soul
     "get_kgent_soul",
     # Differance Engine
