@@ -293,7 +293,9 @@ async def invoke_with_marimo_output(
     """
     mo_module: Any = None
     try:
-        import marimo as mo_module  # noqa: F811
+        import marimo as _mo
+
+        mo_module = _mo
     except ImportError:
         pass
 

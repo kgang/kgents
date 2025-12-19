@@ -26,7 +26,7 @@ EARTH_COLORS = {
 }
 
 
-class KgentsWidget(anywidget.AnyWidget):
+class KgentsWidget(anywidget.AnyWidget):  # type: ignore[misc]
     """
     Base class for kgents anywidgets.
 
