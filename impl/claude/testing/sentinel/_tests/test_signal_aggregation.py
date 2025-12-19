@@ -63,7 +63,9 @@ class TestSignalAggregationBasic:
         """Non-blocking failure should be a warning, not block push."""
         signals = [
             CISignal(kind=SignalKind.LINT, passed=True, blocking=True),
-            CISignal(kind=SignalKind.CONTRACT, passed=False, blocking=False, reason="Backend offline"),
+            CISignal(
+                kind=SignalKind.CONTRACT, passed=False, blocking=False, reason="Backend offline"
+            ),
         ]
 
         result = evaluate_push_readiness(signals)
@@ -268,8 +270,7 @@ class TestEdgeCases:
     def test_large_signal_count(self) -> None:
         """Can handle large number of signals."""
         signals = [
-            CISignal(kind=SignalKind.TEST, passed=i % 2 == 0, blocking=True)
-            for i in range(100)
+            CISignal(kind=SignalKind.TEST, passed=i % 2 == 0, blocking=True) for i in range(100)
         ]
 
         result = evaluate_push_readiness(signals)

@@ -59,8 +59,12 @@ class TestRegistrySnapshotBasic:
 
     def test_snapshot_extra_data_affects_equality(self) -> None:
         """Extra data is considered in equality checks."""
-        snap1 = RegistrySnapshot(operad_count=5, node_count=10, fixture_count=0, extra_data={"a": 1})
-        snap2 = RegistrySnapshot(operad_count=5, node_count=10, fixture_count=0, extra_data={"a": 2})
+        snap1 = RegistrySnapshot(
+            operad_count=5, node_count=10, fixture_count=0, extra_data={"a": 1}
+        )
+        snap2 = RegistrySnapshot(
+            operad_count=5, node_count=10, fixture_count=0, extra_data={"a": 2}
+        )
 
         assert snap1 != snap2
 
@@ -125,15 +129,23 @@ class TestIsolationPropertiesBasic:
     def test_isolation_detects_operad_difference(self) -> None:
         """Operad count differences detected."""
         for diff in [1, 5, 10, 50]:
-            snap1 = RegistrySnapshot(operad_count=10, node_count=100, fixture_count=0, extra_data={})
-            snap2 = RegistrySnapshot(operad_count=10 + diff, node_count=100, fixture_count=0, extra_data={})
+            snap1 = RegistrySnapshot(
+                operad_count=10, node_count=100, fixture_count=0, extra_data={}
+            )
+            snap2 = RegistrySnapshot(
+                operad_count=10 + diff, node_count=100, fixture_count=0, extra_data={}
+            )
             assert verify_isolation(snap1, snap2) is False
 
     def test_isolation_detects_node_difference(self) -> None:
         """Node count differences detected."""
         for diff in [1, 5, 10, 50]:
-            snap1 = RegistrySnapshot(operad_count=10, node_count=100, fixture_count=0, extra_data={})
-            snap2 = RegistrySnapshot(operad_count=10, node_count=100 + diff, fixture_count=0, extra_data={})
+            snap1 = RegistrySnapshot(
+                operad_count=10, node_count=100, fixture_count=0, extra_data={}
+            )
+            snap2 = RegistrySnapshot(
+                operad_count=10, node_count=100 + diff, fixture_count=0, extra_data={}
+            )
             assert verify_isolation(snap1, snap2) is False
 
 
