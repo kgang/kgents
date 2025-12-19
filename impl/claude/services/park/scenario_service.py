@@ -568,6 +568,123 @@ class ScenarioService:
         return self._session_to_view(session)
 
     # =========================================================================
+    # Consent Debt - "Westworld where hosts can say no"
+    # =========================================================================
+
+    async def get_consent_debt(
+        self,
+        session_id: str,
+        citizen_name: str,
+    ) -> float:
+        """
+        Get consent debt for a citizen in a session.
+
+        Args:
+            session_id: Session ID
+            citizen_name: Citizen name
+
+        Returns:
+            Debt value between 0.0 and 1.0
+
+        Raises:
+            ValueError: If session not found
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            raise ValueError(f"Session not found: {session_id}")
+
+        return session.get_consent_debt(citizen_name)
+
+    async def incur_consent_debt(
+        self,
+        session_id: str,
+        citizen_name: str,
+        amount: float = 0.1,
+    ) -> dict[str, Any]:
+        """
+        Incur consent debt for forcing a host to act.
+
+        Args:
+            session_id: Session ID
+            citizen_name: Citizen name
+            amount: Debt to add
+
+        Returns:
+            Dict with new_debt and can_inject_beat status
+
+        Raises:
+            ValueError: If session not found
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            raise ValueError(f"Session not found: {session_id}")
+
+        new_debt = session.incur_debt(citizen_name, amount)
+        return {
+            "citizen": citizen_name,
+            "new_debt": new_debt,
+            "can_inject_beat": session.can_inject_beat(citizen_name),
+        }
+
+    async def can_inject_beat(
+        self,
+        session_id: str,
+        citizen_name: str,
+    ) -> bool:
+        """
+        Check if a beat can be injected for this citizen.
+
+        Debt > 0.7 blocks injections.
+
+        Args:
+            session_id: Session ID
+            citizen_name: Citizen name
+
+        Returns:
+            True if beat can be injected
+
+        Raises:
+            ValueError: If session not found
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            raise ValueError(f"Session not found: {session_id}")
+
+        return session.can_inject_beat(citizen_name)
+
+    async def apologize(
+        self,
+        session_id: str,
+        citizen_name: str,
+        reduction: float = 0.15,
+    ) -> dict[str, Any]:
+        """
+        Reduce consent debt by apologizing.
+
+        Args:
+            session_id: Session ID
+            citizen_name: Citizen name
+            reduction: Amount to reduce debt
+
+        Returns:
+            Dict with new_debt and can_inject_beat status
+
+        Raises:
+            ValueError: If session not found
+        """
+        session = self._sessions.get(session_id)
+        if session is None:
+            raise ValueError(f"Session not found: {session_id}")
+
+        new_debt = session.apologize(citizen_name, reduction)
+        return {
+            "citizen": citizen_name,
+            "new_debt": new_debt,
+            "can_inject_beat": session.can_inject_beat(citizen_name),
+            "status": "apology_accepted",
+        }
+
+    # =========================================================================
     # Helper Methods
     # =========================================================================
 

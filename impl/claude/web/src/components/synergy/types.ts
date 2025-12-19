@@ -127,6 +127,7 @@ export interface JewelInfo {
 
 /**
  * Map of jewel identifiers to display info.
+ * AGENTESE paths: The URL IS the AGENTESE path.
  */
 export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
   brain: {
@@ -135,7 +136,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-purple-400',
     bgColor: 'bg-purple-500/10',
     borderColor: 'border-purple-500/30',
-    path: '/brain',
+    path: '/self.memory',
   },
   gestalt: {
     name: 'Gestalt',
@@ -143,7 +144,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-blue-400',
     bgColor: 'bg-blue-500/10',
     borderColor: 'border-blue-500/30',
-    path: '/gestalt',
+    path: '/world.codebase',
   },
   gardener: {
     name: 'Gardener',
@@ -151,7 +152,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-green-400',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/30',
-    path: '/gardener',
+    path: '/concept.gardener',
   },
   forge: {
     name: 'Forge',
@@ -159,7 +160,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-amber-400',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/30',
-    path: '/forge',
+    path: '/world.forge',
   },
   coalition: {
     name: 'Coalition',
@@ -167,7 +168,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-cyan-400',
     bgColor: 'bg-cyan-500/10',
     borderColor: 'border-cyan-500/30',
-    path: '/town/demo',
+    path: '/world.town',
   },
   park: {
     name: 'Park',
@@ -175,7 +176,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-pink-400',
     bgColor: 'bg-pink-500/10',
     borderColor: 'border-pink-500/30',
-    path: '/park',
+    path: '/world.park',
   },
   domain: {
     name: 'Domain',
@@ -183,7 +184,7 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-orange-400',
     bgColor: 'bg-orange-500/10',
     borderColor: 'border-orange-500/30',
-    path: '/park', // Domain accessed via Park for now
+    path: '/world.domain',
   },
   dgent: {
     name: 'D-gent',
@@ -191,6 +192,6 @@ export const JEWEL_INFO: Record<Jewel, JewelInfo> = {
     color: 'text-slate-400',
     bgColor: 'bg-slate-500/10',
     borderColor: 'border-slate-500/30',
-    path: '/brain', // D-gent accessed via Brain for now
+    path: '/self.memory', // D-gent accessed via Brain for now
   },
 };

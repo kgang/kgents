@@ -67,6 +67,25 @@ jobs:
           uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/
         # Fully strict - zero tolerance for type errors!
 
+  typecheck-frontend:
+    name: Type Check (Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: impl/claude/web/package-lock.json
+
+      - name: Install dependencies
+        run: cd impl/claude/web && npm ci
+
+      - name: TypeScript check
+        run: cd impl/claude/web && npm run typecheck
+        # Strict TypeScript - catches prop mismatches like currentPath vs currentRoute
+
   # ===========================================================================
   # Tier 1.5: Contract sync check (< 1 min)
   # Ensures BE/FE AGENTESE contracts stay in sync
@@ -109,6 +128,30 @@ jobs:
           npm run sync-types:check
         env:
           VITE_API_URL: http://localhost:8000
+
+  # ===========================================================================
+  # Tier 1.6: AGENTESE path alignment (< 1 min)
+  # Ensures frontend AGENTESE paths match backend @node registry
+  # ===========================================================================
+  path-alignment:
+    name: Path Alignment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Validate AGENTESE path alignment
+        run: cd impl/claude && uv run python scripts/validate_path_alignment.py
 
   # ===========================================================================
   # Tier 2: Unit tests (1-3 min)

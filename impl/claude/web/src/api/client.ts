@@ -6,15 +6,7 @@ import type {
   CitizenDetailResponse,
   CoalitionsResponse,
   CheckoutSession,
-  WorkshopStatus,
-  WorkshopPlan,
-  BuilderSummary,
-  TaskHistoryResponse,
-  TaskDetailResponse,
-  AggregateMetrics,
-  BuilderPerformanceMetrics,
-  FlowMetrics,
-  WorkshopEvent,
+  // Workshop types removed (AD-009 Phase 3) - use AGENTESE world.workshop.*
   GalleryResponse,
   PilotResponse,
   GalleryCategoryInfo,
@@ -493,81 +485,53 @@ export const userApi = {
 };
 
 // =============================================================================
-// Workshop API
+// Workshop API - REMOVED (AD-009 Phase 3)
 // =============================================================================
-
-export const workshopApi = {
-  get: () => apiClient.get<WorkshopStatus>('/v1/workshop'),
-
-  assignTask: (description: string, priority: number = 1) =>
-    apiClient.post<WorkshopPlan>('/v1/workshop/task', { description, priority }),
-
-  getStatus: () => apiClient.get<WorkshopStatus>('/v1/workshop/status'),
-
-  getBuilders: () =>
-    apiClient.get<{ builders: BuilderSummary[]; count: number }>('/v1/workshop/builders'),
-
-  getBuilder: (archetype: string, lod: number = 1) =>
-    apiClient.get(`/v1/workshop/builder/${archetype}?lod=${lod}`),
-
-  whisper: (archetype: string, message: string) =>
-    apiClient.post(`/v1/workshop/builder/${archetype}/whisper`, { message }),
-
-  perturb: (action: string, builder?: string, artifact?: unknown) =>
-    apiClient.post('/v1/workshop/perturb', { action, builder, artifact }),
-
-  reset: () => apiClient.post('/v1/workshop/reset'),
-
-  getArtifacts: () => apiClient.get('/v1/workshop/artifacts'),
-
-  // History endpoints (Chunk 9)
-  getHistory: (page: number = 1, pageSize: number = 10, status?: string) =>
-    apiClient.get<TaskHistoryResponse>('/v1/workshop/history', {
-      params: { page, page_size: pageSize, status },
-    }),
-
-  getTaskDetail: (taskId: string) =>
-    apiClient.get<TaskDetailResponse>(`/v1/workshop/history/${taskId}`),
-
-  getTaskEvents: (taskId: string) =>
-    apiClient.get<{
-      task_id: string;
-      events: WorkshopEvent[];
-      count: number;
-      duration_seconds: number;
-    }>(`/v1/workshop/history/${taskId}/events`),
-
-  // Metrics endpoints (Chunk 9)
-  getAggregateMetrics: (period: string = '24h') =>
-    apiClient.get<AggregateMetrics>('/v1/workshop/metrics/aggregate', {
-      params: { period },
-    }),
-
-  getBuilderMetrics: (archetype: string, period: string = '24h') =>
-    apiClient.get<BuilderPerformanceMetrics>(`/v1/workshop/metrics/builder/${archetype}`, {
-      params: { period },
-    }),
-
-  getFlowMetrics: () => apiClient.get<FlowMetrics>('/v1/workshop/metrics/flow'),
-};
+// The /v1/workshop/* endpoints are superseded by:
+// - GET /agentese/world/workshop/manifest - Workshop status
+// - POST /agentese/world/workshop/task - Assign task
+// - GET /agentese/world/workshop/stream (SSE) - Event stream
+// - POST /agentese/world/workshop/builders - List builders
+// - POST /agentese/world/workshop/perturb - Inject perturbation
+// - POST /agentese/world/workshop/history - Task history
+// - POST /agentese/world/workshop/metrics - Aggregate metrics
+// See: protocols/agentese/contexts/world_workshop.py (WorkshopNode)
 
 // =============================================================================
-// Gallery API
+// Gallery API - AGENTESE Universal Protocol
+// Routes:
+//   world.gallery.manifest - All pilots
+//   world.gallery.categories - Category list
+//   world.gallery.pilot - Single pilot detail
 // =============================================================================
 
 export const galleryApi = {
-  getAll: (overrides?: GalleryOverrides, category?: string) =>
-    apiClient.get<GalleryResponse>('/api/gallery', {
-      params: { ...overrides, category },
-    }),
+  /** Get all pilots via AGENTESE: world.gallery.manifest */
+  getAll: async (overrides?: GalleryOverrides, category?: string): Promise<GalleryResponse> => {
+    const response = await apiClient.post<AgenteseResponse<GalleryResponse>>(
+      '/agentese/world/gallery/manifest',
+      { ...overrides, category }
+    );
+    return unwrapAgentese(response);
+  },
 
-  getCategories: () =>
-    apiClient.get<{ categories: GalleryCategoryInfo[] }>('/api/gallery/categories'),
+  /** Get categories via AGENTESE: world.gallery.categories */
+  getCategories: async (): Promise<{ categories: GalleryCategoryInfo[] }> => {
+    const response = await apiClient.post<AgenteseResponse<{ categories: GalleryCategoryInfo[] }>>(
+      '/agentese/world/gallery/categories',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
 
-  getPilot: (name: string, overrides?: GalleryOverrides) =>
-    apiClient.get<PilotResponse>(`/api/gallery/${name}`, {
-      params: overrides,
-    }),
+  /** Get single pilot via AGENTESE: world.gallery.pilot */
+  getPilot: async (name: string, overrides?: GalleryOverrides): Promise<PilotResponse> => {
+    const response = await apiClient.post<AgenteseResponse<PilotResponse>>(
+      '/agentese/world/gallery/pilot',
+      { name, ...overrides }
+    );
+    return unwrapAgentese(response);
+  },
 };
 
 // =============================================================================
@@ -709,7 +673,16 @@ export const gestaltApi = {
 };
 
 // =============================================================================
-// Infrastructure API (Gestalt Live)
+// Infrastructure API (Gestalt Live) - AGENTESE Universal Protocol
+// Routes:
+//   world.gestalt.live.status - Collector status
+//   world.gestalt.live.connect - Connect to K8s
+//   world.gestalt.live.disconnect - Disconnect
+//   world.gestalt.live.topology - Current topology
+//   world.gestalt.live.topology_stream - SSE topology updates
+//   world.gestalt.live.events_stream - SSE event stream
+//   world.gestalt.live.health - Aggregate health
+//   world.gestalt.live.entity_detail - Entity details
 // =============================================================================
 
 import type {
@@ -720,36 +693,73 @@ import type {
 } from './types';
 
 export const infraApi = {
-  /** Get collector status */
-  getStatus: () => apiClient.get<InfraStatusResponse>('/api/infra/status'),
-
-  /** Connect to infrastructure data source */
-  connect: () => apiClient.post<{ status: string }>('/api/infra/connect'),
-
-  /** Disconnect from infrastructure data source */
-  disconnect: () => apiClient.post<{ status: string }>('/api/infra/disconnect'),
-
-  /** Get current infrastructure topology */
-  getTopology: (params?: { namespaces?: string; kinds?: string; min_health?: number }) =>
-    apiClient.get<InfraTopologyResponse>('/api/infra/topology', { params }),
-
-  /** Get aggregate infrastructure health */
-  getHealth: () => apiClient.get<InfraHealthResponse>('/api/infra/health'),
-
-  /** Get single entity details */
-  getEntity: (entityId: string) =>
-    apiClient.get<InfraEntity>(`/api/infra/entity/${encodeURIComponent(entityId)}`),
-
-  /** Create EventSource for topology stream */
-  createTopologyStream: () => {
-    const baseUrl = apiClient.defaults.baseURL || '';
-    return new EventSource(`${baseUrl}/api/infra/topology/stream`);
+  /** Get collector status via AGENTESE: world.gestalt.live.status */
+  getStatus: async (): Promise<InfraStatusResponse> => {
+    const response = await apiClient.get<AgenteseResponse<InfraStatusResponse>>(
+      '/agentese/world/gestalt/live/status/manifest'
+    );
+    return unwrapAgentese(response);
   },
 
-  /** Create EventSource for events stream */
+  /** Connect to infrastructure data source via AGENTESE: world.gestalt.live.connect */
+  connect: async (): Promise<{ status: string }> => {
+    const response = await apiClient.post<AgenteseResponse<{ status: string }>>(
+      '/agentese/world/gestalt/live/connect',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Disconnect from infrastructure data source via AGENTESE: world.gestalt.live.disconnect */
+  disconnect: async (): Promise<{ status: string }> => {
+    const response = await apiClient.post<AgenteseResponse<{ status: string }>>(
+      '/agentese/world/gestalt/live/disconnect',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get current infrastructure topology via AGENTESE: world.gestalt.live.topology */
+  getTopology: async (params?: {
+    namespaces?: string;
+    kinds?: string;
+    min_health?: number;
+  }): Promise<InfraTopologyResponse> => {
+    const response = await apiClient.post<AgenteseResponse<InfraTopologyResponse>>(
+      '/agentese/world/gestalt/live/topology',
+      params || {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get aggregate infrastructure health via AGENTESE: world.gestalt.live.health */
+  getHealth: async (): Promise<InfraHealthResponse> => {
+    const response = await apiClient.post<AgenteseResponse<InfraHealthResponse>>(
+      '/agentese/world/gestalt/live/health',
+      {}
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Get single entity details via AGENTESE: world.gestalt.live.entity_detail */
+  getEntity: async (entityId: string): Promise<InfraEntity> => {
+    const response = await apiClient.post<AgenteseResponse<InfraEntity>>(
+      '/agentese/world/gestalt/live/entity_detail',
+      { entity_id: entityId }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Create EventSource for topology stream via AGENTESE: world.gestalt.live.topology_stream */
+  createTopologyStream: () => {
+    const baseUrl = apiClient.defaults.baseURL || '';
+    return new EventSource(`${baseUrl}/agentese/world/gestalt/live/topology_stream/stream`);
+  },
+
+  /** Create EventSource for events stream via AGENTESE: world.gestalt.live.events_stream */
   createEventsStream: () => {
     const baseUrl = apiClient.defaults.baseURL || '';
-    return new EventSource(`${baseUrl}/api/infra/events/stream`);
+    return new EventSource(`${baseUrl}/agentese/world/gestalt/live/events_stream/stream`);
   },
 };
 

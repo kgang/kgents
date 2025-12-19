@@ -369,6 +369,12 @@ class ServiceRegistry:
                 dgent=self.dgent,
             )
 
+        # Scenario service (for Park Crown Jewel)
+        if name == "scenario_service":
+            from services.park.scenario_service import ScenarioService
+
+            return ScenarioService()
+
         # Morpheus persistence (no database - wraps LLM gateway)
         if name == "morpheus_persistence":
             from services.morpheus import MorpheusGateway, MorpheusPersistence
@@ -448,6 +454,7 @@ class ServiceRegistry:
             "forge_persistence",
             "coalition_persistence",
             "park_persistence",
+            "scenario_service",
             "morpheus_persistence",
             "chat_factory",
             "kgent_soul",

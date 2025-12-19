@@ -507,10 +507,10 @@ class ChatServiceFactory:
 
 # === Global Factory Instance ===
 
-_factory_instance: ChatSessionFactory | None = None
+_factory_instance: ChatSessionFactory | ChatServiceFactory | None = None
 
 
-def get_chat_factory() -> ChatSessionFactory:
+def get_chat_factory() -> ChatSessionFactory | ChatServiceFactory:
     """Get the global chat session factory."""
     global _factory_instance
     if _factory_instance is None:
@@ -518,7 +518,7 @@ def get_chat_factory() -> ChatSessionFactory:
     return _factory_instance
 
 
-def set_chat_factory(factory: ChatSessionFactory) -> None:
+def set_chat_factory(factory: ChatSessionFactory | ChatServiceFactory) -> None:
     """Set the global chat session factory (for testing)."""
     global _factory_instance
     _factory_instance = factory

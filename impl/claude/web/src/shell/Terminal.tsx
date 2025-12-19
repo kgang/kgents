@@ -73,6 +73,12 @@ const HEIGHTS = {
 /** Prompt prefix */
 const PROMPT = 'kg>';
 
+/** Storage key for persisted terminal output */
+const STORAGE_KEY_OUTPUT = 'kgents:terminal:output';
+
+/** Maximum lines to persist */
+const MAX_PERSISTED_LINES = 50;
+
 // =============================================================================
 // Line Renderers
 // =============================================================================
@@ -197,7 +203,23 @@ export function Terminal({
 
   // State
   const [input, setInput] = useState('');
-  const [lines, setLines] = useState<TerminalLine[]>([]);
+  // Initialize lines from localStorage for session persistence
+  const [lines, setLines] = useState<TerminalLine[]>(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_OUTPUT);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        // Restore dates from ISO strings
+        return parsed.map((line: TerminalLine) => ({
+          ...line,
+          timestamp: new Date(line.timestamp),
+        }));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return [];
+  });
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [suggestions, setSuggestions] = useState<CompletionSuggestion[]>([]);
   const [selectedSuggestion, setSelectedSuggestion] = useState(0);
@@ -216,10 +238,45 @@ export function Terminal({
     }
   }, [defaultExpanded, terminalExpanded, setTerminalExpanded]);
 
+  // Listen for shell focus/command events
+  useEffect(() => {
+    const handleFocus = () => {
+      inputRef.current?.focus();
+    };
+
+    const handleCommand = (event: Event) => {
+      const customEvent = event as CustomEvent<{ command: string }>;
+      const command = customEvent.detail?.command;
+      if (command) {
+        setInput(command);
+        inputRef.current?.focus();
+      }
+    };
+
+    document.addEventListener('shell:focus-terminal', handleFocus);
+    document.addEventListener('shell:terminal-command', handleCommand);
+
+    return () => {
+      document.removeEventListener('shell:focus-terminal', handleFocus);
+      document.removeEventListener('shell:terminal-command', handleCommand);
+    };
+  }, []);
+
   // Auto-scroll output
   useEffect(() => {
     if (outputRef.current) {
       outputRef.current.scrollTop = outputRef.current.scrollHeight;
+    }
+  }, [lines]);
+
+  // Persist lines to localStorage
+  useEffect(() => {
+    try {
+      // Only persist the most recent lines
+      const toStore = lines.slice(-MAX_PERSISTED_LINES);
+      localStorage.setItem(STORAGE_KEY_OUTPUT, JSON.stringify(toStore));
+    } catch {
+      // Ignore storage errors
     }
   }, [lines]);
 
@@ -238,6 +295,12 @@ export function Terminal({
 
   const handleClear = useCallback(() => {
     setLines([]);
+    // Also clear persisted output
+    try {
+      localStorage.removeItem(STORAGE_KEY_OUTPUT);
+    } catch {
+      // Ignore storage errors
+    }
   }, []);
 
   const handleExecute = useCallback(async () => {
@@ -700,8 +763,16 @@ export function Terminal({
           className="flex-1 overflow-auto px-4 py-2 space-y-0.5 min-h-0"
         >
           {lines.length === 0 ? (
-            <div className="text-gray-500 text-xs font-mono">
-              Type "help" for available commands
+            <div className="text-xs font-mono space-y-0.5">
+              <div className="text-cyan-400">Welcome to the AGENTESE Terminal</div>
+              <div className="text-gray-500">&nbsp;</div>
+              <div className="text-gray-400">Try these commands:</div>
+              <div className="text-gray-300">  <span className="text-cyan-300">discover</span>         List all paths</div>
+              <div className="text-gray-300">  <span className="text-cyan-300">self.soul.manifest</span> View K-gent state</div>
+              <div className="text-gray-300">  <span className="text-cyan-300">world.codebase</span>     Codebase health</div>
+              <div className="text-gray-300">  <span className="text-cyan-300">help</span>              Full command reference</div>
+              <div className="text-gray-500">&nbsp;</div>
+              <div className="text-gray-500">Tab for completion · ↑↓ for history</div>
             </div>
           ) : (
             lines.map((line) => (

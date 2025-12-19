@@ -45,6 +45,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     Callable,
+    Mapping,
     TypeVar,
 )
 
@@ -61,6 +62,34 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
+class NodeExample:
+    """
+    A pre-seeded example invocation for a node.
+
+    Examples show up as one-click buttons in the Habitat, enabling
+    rapid exploration of node affordances without needing to know
+    the exact arguments.
+
+    Attributes:
+        aspect: The aspect to invoke (e.g., "capture", "search")
+        kwargs: Keyword arguments to pass to the aspect
+        label: Display label for the button (defaults to "Try {aspect}")
+    """
+
+    aspect: str
+    kwargs: Mapping[str, Any] = field(default_factory=dict)
+    label: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "aspect": self.aspect,
+            "kwargs": dict(self.kwargs),
+            "label": self.label or f"Try {self.aspect}",
+        }
+
+
+@dataclass(frozen=True)
 class NodeMetadata:
     """
     Metadata attached to a node class by @node decorator.
@@ -72,6 +101,7 @@ class NodeMetadata:
         singleton: Whether to cache a single instance
         lazy: Whether to defer instantiation until first use
         contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
+        examples: Pre-seeded example invocations (Habitat 2.0)
     """
 
     path: str
@@ -80,6 +110,7 @@ class NodeMetadata:
     singleton: bool = True  # Default: cache single instance
     lazy: bool = True  # Default: defer instantiation
     contracts: "ContractsDict | None" = None  # Phase 7: Contract declarations
+    examples: tuple[NodeExample, ...] = ()  # Habitat 2.0: Example invocations
 
 
 # Marker attribute name for registered nodes
@@ -97,6 +128,8 @@ def node(
     singleton: bool = True,
     lazy: bool = True,
     contracts: "ContractsDict | None" = None,
+    examples: list[tuple[str, dict[str, Any]] | tuple[str, dict[str, Any], str] | NodeExample]
+    | None = None,
 ) -> Callable[[type[T]], type[T]]:
     """
     Decorator to register a LogosNode class with the AGENTESE registry.
@@ -112,6 +145,10 @@ def node(
         lazy: Defer instantiation until first use (default: True)
         contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
             Use Contract(), Response(), Request() from protocols.agentese.contract
+        examples: Pre-seeded examples for Habitat (Habitat 2.0)
+            Can be NodeExample objects or tuples:
+            - (aspect, kwargs) - aspect name and arguments
+            - (aspect, kwargs, label) - with custom label
 
     Returns:
         Decorated class with node metadata
@@ -125,7 +162,11 @@ def node(
             contracts={
                 "manifest": Response(BrainManifestResponse),
                 "capture": Contract(CaptureRequest, CaptureResponse),
-            }
+            },
+            examples=[
+                ("search", {"query": "Python tips", "limit": 5}, "Search for Python"),
+                ("recent", {"limit": 10}, "Show recent memories"),
+            ]
         )
         class BrainNode(BaseLogosNode):
             '''Holographic Brain AGENTESE node.'''
@@ -146,11 +187,30 @@ def node(
         - Dependencies are resolved by ServiceContainer at instantiation
         - Singleton nodes are cached after first instantiation
         - Contracts enable FE type generation via /discover?include_schemas=true
+        - Examples appear as one-click buttons in Concept Home
     """
 
     def decorator(cls: type[T]) -> type[T]:
         # Get description from docstring if not provided
         desc = description or (cls.__doc__ or "").split("\n")[0].strip()
+
+        # Parse examples into NodeExample objects
+        parsed_examples: tuple[NodeExample, ...] = ()
+        if examples:
+            example_list: list[NodeExample] = []
+            for ex in examples:
+                if isinstance(ex, NodeExample):
+                    example_list.append(ex)
+                elif isinstance(ex, tuple):
+                    if len(ex) == 2:
+                        aspect, kwargs = ex
+                        example_list.append(NodeExample(aspect=aspect, kwargs=kwargs))
+                    elif len(ex) == 3:
+                        aspect, kwargs, label = ex
+                        example_list.append(NodeExample(aspect=aspect, kwargs=kwargs, label=label))
+                    else:
+                        logger.warning(f"Invalid example format for {path}: {ex}")
+            parsed_examples = tuple(example_list)
 
         # Create metadata
         meta = NodeMetadata(
@@ -160,6 +220,7 @@ def node(
             singleton=singleton,
             lazy=lazy,
             contracts=contracts,
+            examples=parsed_examples,
         )
 
         # Attach metadata to class
@@ -201,6 +262,9 @@ def get_node_metadata(cls: type[Any]) -> NodeMetadata | None:
 class NodeRegistry:
     """
     Central registry for AGENTESE nodes.
+
+    The registry is the SINGLE SOURCE OF TRUTH for AGENTESE paths.
+    If a path is not registered here via @node, it does not exist.
 
     The registry:
     1. Stores @node decorated classes mapped by path
@@ -322,9 +386,7 @@ class NodeRegistry:
             try:
                 instance = cls()
             except TypeError as e:
-                logger.error(
-                    f"Cannot instantiate {cls.__name__} without container: {e}"
-                )
+                logger.error(f"Cannot instantiate {cls.__name__} without container: {e}")
                 return None
 
         # Cache singleton
@@ -376,9 +438,7 @@ class NodeRegistry:
                 "registered_nodes": len(self._nodes),
                 "cached_instances": len(self._instances),
                 "paths": list(self._nodes.keys()),
-                "contexts": list(
-                    set(p.split(".")[0] for p in self._nodes.keys() if "." in p)
-                ),
+                "contexts": list(set(p.split(".")[0] for p in self._nodes.keys() if "." in p)),
                 "paths_with_contracts": paths_with_contracts,
             }
 
@@ -400,11 +460,7 @@ class NodeRegistry:
     def list_paths_with_contracts(self) -> list[str]:
         """List all paths that have contract declarations."""
         with self._lock:
-            return [
-                path
-                for path, meta in self._metadata.items()
-                if meta.contracts is not None
-            ]
+            return [path for path, meta in self._metadata.items() if meta.contracts is not None]
 
     def get_all_contracts(self) -> dict[str, "ContractsDict"]:
         """
@@ -474,6 +530,7 @@ __all__ = [
     "get_node_metadata",
     # Metadata
     "NodeMetadata",
+    "NodeExample",
     "NODE_MARKER",
     # Registry
     "NodeRegistry",

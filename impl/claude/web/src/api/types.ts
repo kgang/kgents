@@ -23,6 +23,8 @@
 
 // Export all generated types directly from their source files
 export * from './types/_generated/world-town';
+// world-town-citizen types are re-exported from world-town.ts - only export unique type
+export type { WorldTownCitizenManifestResponse } from './types/_generated/world-town-citizen';
 export * from './types/_generated/self-memory';
 export * from './types/_generated/self-chat';
 export * from './types/_generated/world-forge';
@@ -31,11 +33,11 @@ export * from './types/_generated/world-park';
 
 // Type aliases for backwards compatibility during migration
 // These map legacy names to the new generated types
+export type { WorldTownManifestResponse as TownManifestContract } from './types/_generated/world-town';
 export type {
-  WorldTownManifestResponse as TownManifestContract,
   WorldTownCitizenListResponse as TownCitizenListContract,
   WorldTownCitizenGetResponse as TownCitizenGetContract,
-} from './types/_generated/world-town';
+} from './types/_generated/world-town-citizen';
 
 export type {
   SelfMemoryManifestResponse as BrainManifestContract,
@@ -78,8 +80,8 @@ export type {
   ConceptGardenerSessionDefineResponse as GardenerDefineResponseContract,
   ConceptGardenerSessionAdvanceRequest as GardenerAdvanceRequestContract,
   ConceptGardenerSessionAdvanceResponse as GardenerAdvanceResponseContract,
-  ConceptGardenerPolynomialResponse as GardenerPolynomialContract,
-  ConceptGardenerSessionsListResponse as GardenerSessionsListContract,
+  ConceptGardenerSessionPolynomialResponse as GardenerPolynomialContract,
+  ConceptGardenerSessionsManifestResponse as GardenerSessionsListContract,
 } from './types/_generated/concept-gardener';
 
 // =============================================================================

@@ -86,15 +86,17 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 |-------|---|--------|
 | Brain | 100 | Spatial cathedral of memory |
 | Gardener | 100 | Cultivation practice for ideas |
-| Gestalt | 85 | Living garden where code breathes |
-| **Forge** | 0 | **Developer's workshop for metaphysical fullstack agents** |
+| Gestalt | 100 | Living garden where code breathes |
+| **Forge** | 85 | **Developer's workshop for metaphysical fullstack agents** |
 | Coalition | 55 | Workshop where agents collaborate visibly |
 | Park | 40 | Westworld where hosts can say no |
 | Domain | 0 | Enterprise categorical foundation |
 
 **Design DNA**: Observer-dependent • Consent-first • Visible process • Composable • Joy-inducing
 
-**Strategic Note**: Atelier → Metaphysical Forge transformation. See `spec/protocols/metaphysical-forge.md`.
+**Forge Status**: Phase 4 COMPLETE. All 4 creative artisans (Architect, Smith, Herald, Projector) = real work. 165 tests. Next: Sentinel, Witness.
+
+**Habitat 2.0**: Layer 1 (Adaptive Habitat) COMPLETE. Layer 2 (MiniPolynomial) + Layer 3 (Ghosts) planned. AD-010 (Habitat Guarantee) ensures every AGENTESE path projects into at least a minimal experience.
 
 ---
 
@@ -103,6 +105,7 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 **Tests**: 20,122 | **AGENTESE v3.1**: Self-doc, WiredLogos, aliases
 **Archived**: E-gent, H-gent, Q-gent, R-gent, Psi-gent → `agents/_archived/`; Terrarium → `protocols/_archived/` (superseded by AUP)
 **Differance**: 192 tests, Phase 5 complete → Phase 6 (Crown Jewel wiring) ready
+**Router Consolidation**: 50% (P0+P1+P2 complete). Soul, K-gent sessions, N-Phase now via AGENTESE gateway
 
 ---
 
@@ -122,8 +125,12 @@ Full 11-phase: `docs/skills/n-phase-cycle/`
 ## Quick Commands
 
 ```bash
+# Backend
 cd impl/claude && uv run pytest -q && uv run mypy .
+
+# Frontend (run typecheck before committing!)
+cd impl/claude/web && npm run typecheck && npm run lint
 ```
 
 
-*Lines: 124. Ceiling: 160.*
+*Lines: 136. Ceiling: 160.*

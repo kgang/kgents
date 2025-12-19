@@ -272,7 +272,7 @@ export function TownOverview() {
         <div className="flex items-center gap-2">
           <TeachingToggle compact />
           <button
-            onClick={() => navigate('/town/simulation')}
+            onClick={() => navigate('/world.town.simulation')}
             className="flex items-center gap-2 px-4 py-2 bg-violet-500 hover:bg-violet-400 rounded-lg text-white font-medium transition-colors"
           >
             <Sparkles className="w-4 h-4" />
@@ -303,7 +303,7 @@ export function TownOverview() {
           label="Total Citizens"
           value={manifestData?.total_citizens ?? 0}
           subtext={`${manifestData?.active_citizens ?? 0} active`}
-          onClick={() => navigate('/town/citizens')}
+          onClick={() => navigate('/world.town.citizen')}
         />
         <StatCard
           icon={<MessageCircle className="w-5 h-5" />}
@@ -316,7 +316,7 @@ export function TownOverview() {
           label="Coalitions"
           value={coalitionManifestData?.total_coalitions ?? 0}
           subtext={`${coalitionManifestData?.bridge_citizens ?? 0} bridges`}
-          onClick={() => navigate('/town/coalitions')}
+          onClick={() => navigate('/world.town.coalition')}
         />
         <StatCard
           icon={<Activity className="w-5 h-5" />}
@@ -335,7 +335,7 @@ export function TownOverview() {
             title="Citizens"
             action={
               <button
-                onClick={() => navigate('/town/citizens')}
+                onClick={() => navigate('/world.town.citizen')}
                 className="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
               >
                 View all <ChevronRight className="w-4 h-4" />
@@ -351,7 +351,7 @@ export function TownOverview() {
                   archetype={citizen.archetype}
                   isActive={citizen.is_active}
                   interactionCount={citizen.interaction_count}
-                  onClick={() => navigate(`/town/citizens/${citizen.id}`)}
+                  onClick={() => navigate(`/world.town.citizen.${citizen.id}`)}
                 />
               ))
             ) : (
@@ -371,7 +371,7 @@ export function TownOverview() {
             title="Coalitions"
             action={
               <button
-                onClick={() => navigate('/town/coalitions')}
+                onClick={() => navigate('/world.town.coalition')}
                 className="text-sm text-violet-400 hover:text-violet-300 flex items-center gap-1"
               >
                 View all <ChevronRight className="w-4 h-4" />

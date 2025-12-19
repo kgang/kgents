@@ -73,6 +73,15 @@ export type { TerminalProps } from './Terminal';
 export { Shell } from './Shell';
 export type { default as ShellComponent } from './Shell';
 
+// Keyboard shortcuts
+export { useKeyboardShortcuts } from './useKeyboardShortcuts';
+export type { KeyboardShortcut, UseKeyboardShortcutsOptions } from './useKeyboardShortcuts';
+
+// Overlays
+export { KeyboardHints } from './KeyboardHints';
+export { CommandPalette } from './CommandPalette';
+export { PathSearch } from './PathSearch';
+
 // Error Boundaries - Graceful degradation for shell components
 export {
   ShellErrorBoundary,
@@ -89,6 +98,31 @@ export {
   createTerminalService,
   getTerminalService,
 } from './TerminalService';
+
+// === AGENTESE-as-Route Projection System ===
+// The URL IS the API call
+export {
+  UniversalProjection,
+  useProjectionContext,
+  ProjectionLoading,
+  ProjectionError,
+  GenericProjection,
+  ConceptHomeProjection,
+  resolveProjection,
+  registerTypeProjection,
+  registerPathProjection,
+  getRegisteredPatterns,
+  getRegisteredTypes,
+} from './projections';
+export type {
+  ProjectionContext as UniversalProjectionContext,
+  ProjectionProps,
+  ProjectionComponent,
+  ProjectionRegistration,
+  ProjectionLoadingProps,
+  ProjectionErrorProps,
+  UniversalProjectionOptions,
+} from './projections';
 
 // Types
 export type {

@@ -63,6 +63,11 @@ from .budget_service import (
     UserBudgetInfo,
     create_budget_store,
 )
+from .citizen_node import (
+    CitizenManifestRendering,
+    CitizenManifestResponse,
+    CitizenNode,
+)
 from .coalition_node import (
     CoalitionListRendering,
     CoalitionManifestRendering,
@@ -158,6 +163,10 @@ __all__ = [
     "CitizenListRendering",
     "ConversationRendering",
     "RelationshipListRendering",
+    # Citizen Node
+    "CitizenNode",
+    "CitizenManifestRendering",
+    "CitizenManifestResponse",
     # INHABIT Node
     "InhabitNode",
     "InhabitSessionRendering",

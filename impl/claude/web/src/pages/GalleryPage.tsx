@@ -37,16 +37,16 @@ export default function GalleryPage() {
   const [overrides, setOverrides] = useState<GalleryOverrides>({});
   const [selectedPilot, setSelectedPilot] = useState<PilotResponse | null>(null);
 
-  // Fetch gallery data
+  // Fetch gallery data via AGENTESE: world.gallery.manifest
   const fetchGallery = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await galleryApi.getAll(
+      const data = await galleryApi.getAll(
         overrides,
         activeCategory !== 'ALL' ? activeCategory : undefined
       );
-      setGalleryData(response.data);
+      setGalleryData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load gallery');
     } finally {

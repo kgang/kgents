@@ -1323,3 +1323,292 @@ export default function BrainPage() {
 
 *Zen Principle: The fullstack agent is complete in definition, universal in projection.*
 
+### AD-010: The Habitat Guarantee (2025-12-18)
+
+> **Every registered AGENTESE path SHALL project into at least a minimal Habitat experience. No blank pages. No 404 behavior.**
+
+**Context**: The NavigationTree discovers AGENTESE paths via `/agentese/discover`. Users can click any path—but paths without custom pages show nothing. This creates "seams" where exploration dead-ends. The user clicks, expecting discovery, and finds a wall.
+
+**Decision**: Every path has a **Habitat**—a minimum viable projection that makes exploration rewarding:
+
+```
+Habitat : AGENTESENode → ProjectedExperience
+
+For all registered paths p:
+  Habitat(p) = ReferencePanel(p) × Playground(p) × Teaching(p)
+
+where:
+  ReferencePanel(p) = p.metadata ∪ p.aspects ∪ MiniPolynomial(p)
+  Playground(p)     = REPL.focus(p.path) ⊕ Examples(p) ⊕ Ghosts(p)
+  Teaching(p)       = AspectHints × (enabled: TeachingMode)
+```
+
+**The Three Tiers** (Progressive Enhancement):
+
+| Tier | Metadata Required | Experience |
+|------|-------------------|------------|
+| **Minimal** | Path only | Path header + context badge + warm "cultivating" copy + REPL input |
+| **Standard** | Description + aspects | Reference Panel + REPL seeded with examples |
+| **Rich** | Custom playground | Full bespoke visualization (Crown Jewels) |
+
+**Habitat 2.0: The Three Layers**
+
+The Habitat evolves through three progressive enhancement layers:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Layer 3: GHOSTS (Différance Integration)                    │
+│   Show alternatives after invocation                        │
+│   Exploration breadcrumbs                                   │
+│   "What almost was" is visible                              │
+├─────────────────────────────────────────────────────────────┤
+│ Layer 2: LIVE POLYNOMIAL                                    │
+│   Mini state diagram in Reference Panel                     │
+│   Current position highlighted                              │
+│   Click transition to invoke                                │
+├─────────────────────────────────────────────────────────────┤
+│ Layer 1: ADAPTIVE HABITAT (✅ implemented)                  │
+│   ConceptHomeProjection as universal fallback               │
+│   Teaching hints, breathing animations                      │
+│   Context badges, cultivation messaging                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Layer | Component | Purpose | Status |
+|-------|-----------|---------|--------|
+| **Layer 1** | Adaptive Habitat | Universal fallback projection for all paths | ✅ Complete |
+| **Layer 2** | MiniPolynomial | State machine visualization in Reference Panel | Planned |
+| **Layer 3** | Ghost Integration | Différance made visible via alternatives | Planned |
+
+**Layer 1 (Adaptive Habitat)**: The AGENTESE REPL IS the default playground. For paths without custom components:
+- Left: Reference Panel (aspects, effects, description)
+- Center: REPL pre-focused on that path
+- Clicking aspects → invokes them in the playground
+
+**Layer 2 (Live Polynomial)**: Mini state diagram shows PolyAgent structure (AD-002):
+- Positions (states) as nodes
+- Directions (valid inputs) as edges
+- Current position highlighted
+- Click transition to invoke
+
+**Layer 3 (Ghosts)**: After invocation, show alternatives (Différance):
+- Ghost alternatives = aspects not taken
+- One-click to explore alternatives
+- Breadcrumb trail of exploration
+
+**The Five Home Archetypes** (by context):
+
+| Context | Default Experience |
+|---------|-------------------|
+| `concept.*` | Category playground (PolynomialPlayground, OperadViz) |
+| `world.*` | Entity inspector (live invocation + state) |
+| `self.*` | Introspection panel (capabilities, memory) |
+| `void.*` | Entropy sandbox (sip/pour controls) |
+| `time.*` | Timeline browser (traces, history) |
+
+**Warm Copy for Minimal Tier**:
+
+Even paths with no metadata feel intentional:
+
+> *"This path is being cultivated. Every kgents path grows from a seed—this one is young. You can still explore it via the REPL below."*
+
+**The Affirmative Framing**:
+- **Not**: "No orphan paths" (negative)
+- **But**: "Every path has a home" (affirmative)
+
+**Connection to Principles**:
+
+| Principle | How Habitat Embodies It |
+|-----------|------------------------|
+| **Tasteful** | No blank pages; every path gets considered treatment |
+| **Joy-Inducing** | Discovery rewards; warm copy signals care |
+| **Generative** | Tier derives from metadata; implementation follows spec |
+| **Composable** | Habitat is a morphism; composes with Projection Protocol |
+
+**Consequences**:
+
+1. **NavigationTree fallback**: Unmapped paths route to `/home/:context/:path*`
+2. **@node extension**: Accept `examples=[]` metadata for one-click invocations
+3. **Discovery enhancement**: `/agentese/discover?include_metadata=true` returns Habitat metadata
+4. **Progressive richness**: More metadata → richer experience, but nothing is blank
+5. **REPL fusion**: Terminal becomes playground for Standard/Minimal tiers
+6. **Polynomial visibility**: MiniPolynomial makes state machines tangible (Layer 2)
+7. **Ghost alternatives**: `alternatives` aspect shows paths not taken (Layer 3)
+
+**Anti-patterns**:
+
+- Blank 404 for unmapped paths (violates Habitat Guarantee)
+- Custom component for every path (unsustainable; use Generated Playground)
+- Dense error copy in Minimal tier (should feel cultivated, not broken)
+- Teaching always on (toggleable, off by default for guests)
+
+**Implementation**: See `spec/protocols/concept-home.md` (renamed to `habitat.md`)
+
+*Zen Principle: The seams disappear when every path has somewhere to go.*
+
+### AD-011: Registry as Single Source of Truth (2025-12-19)
+
+> **The AGENTESE registry (`@node` decorator) SHALL be the single source of truth for all paths. Frontend, backend, CLI, and documentation MUST derive from it—never the reverse.**
+
+**Context**: A pattern emerged where frontend code referenced AGENTESE paths that weren't registered in the backend. NavigationTree had paths like `world.town.simulation` and `world.domain` that didn't exist as `@node` registrations. Aliases were proposed as a workaround. This was wrong. Workarounds obscure the underlying model.
+
+**The Discovery**: The problem wasn't missing paths—it was that the frontend was making claims the backend couldn't support. The solution isn't to patch the frontend with aliases; it's to enforce strict adherence to the registry.
+
+**Decision**: The registry is truth. Everything else adapts.
+
+```
+SINGLE SOURCE OF TRUTH
+
+    @node("world.town")           ◄─── This is the ONLY place a path is defined
+           │
+           ▼
+    ┌──────────────────────────────────────────────────────┐
+    │              AGENTESE Registry                        │
+    │   get_registry().list_paths() → ["world.town", ...]   │
+    └──────────────────────────────────────────────────────┘
+           │
+           ├──────────────► NavigationTree.tsx (MUST match)
+           ├──────────────► Cockpit.tsx (MUST match)
+           ├──────────────► CLI handlers (MUST match)
+           ├──────────────► API routes (auto-generated)
+           └──────────────► Documentation (derived)
+```
+
+**The Strict Protocol**:
+
+1. **No aliases**: If a path doesn't exist as `@node`, it doesn't exist. Period.
+2. **No workarounds**: Frontend can only reference paths that are registered.
+3. **CI validation**: `scripts/validate_path_alignment.py` fails if frontend references unregistered paths.
+4. **Warnings are failures**: `logger.warning` for import failures, not `logger.debug`.
+
+**The Validation Script**:
+
+```bash
+cd impl/claude
+uv run python scripts/validate_path_alignment.py
+```
+
+Output:
+```
+PASSED: All frontend paths are registered in backend
+Backend registry: 39 paths
+Frontend references: 17 paths
+Valid: 17
+```
+
+**Consequences**:
+
+1. **Frontend is derivative**: NavigationTree, Cockpit, etc. are projections of the registry
+2. **Dead links are bugs**: If a frontend path isn't registered, fix the frontend or add the node
+3. **No hardcoded paths in frontend**: Use discovery, not static arrays
+4. **Import failures surface**: `logger.warning` ensures broken nodes are visible
+5. **Registration is the API**: The `@node` decorator is where paths come to life
+
+**The Philosophical Insight**:
+
+> *"The map must never claim territories that don't exist. When the map diverges from the territory, fix the map—not the territory."*
+
+The registry IS the territory. Frontend paths are claims about that territory. Claims must be verified.
+
+**Anti-patterns**:
+
+- Aliases that map non-existent paths to existing ones (obscures truth)
+- Frontend paths that "will be implemented later" (claims without backing)
+- Silent import failures that leave paths unregistered (hidden failures)
+- Hardcoded path arrays that drift from registry (source confusion)
+
+**Connection to Other Principles**:
+
+| Principle | How AD-011 Embodies It |
+|-----------|------------------------|
+| **Tasteful** | No ghost paths; every path is intentional |
+| **Generative** | Frontend derived from registry, not hand-maintained |
+| **Ethical** | No false promises; paths only exist if they work |
+| **Composable** | Registry is the compositional ground truth |
+
+**Implementation**: See `scripts/validate_path_alignment.py`, `docs/skills/agentese-node-registration.md`
+
+*Zen Principle: The territory doesn't negotiate with the map.*
+
+### AD-012: Aspect Projection Protocol (2025-12-19)
+
+> **Paths are PLACES; aspects are ACTIONS. Navigation shows paths. Projection provides aspects.**
+
+**Context**: The NavigationTree was showing aspects (`:manifest`, `:polynomial`, `:witness`) as clickable children of paths. This caused 405 errors—clicking them triggered GET requests on what should be POST operations. The confusion ran deeper: treating aspects as "places to go" rather than "actions to take."
+
+**The Semantic Distinction**:
+
+```
+Level 1: Contexts (world, self, concept, void, time)     NAVIGABLE
+Level 2: Holons (town, memory, gardener, etc.)           NAVIGABLE
+Level 3: Entities (citizen.kent_001, crystal.abc123)     NAVIGABLE
+Level 4: Aspects (manifest, polynomial, capture)         INVOCABLE
+```
+
+**Key Insight**: You can GO TO a town. You can GO TO a citizen. You can't GO TO a "greeting"—you DO a greeting.
+
+**Decision**: Strict separation of concerns:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│ NavTree (Loop Mode)                 │ Projection (Function Mode)        │
+│ "Where can I go?"                   │ "What can I do here?"             │
+│                                     │                                   │
+│ ▶ world                             │ ┌───────────────────────────────┐ │
+│   ▶ town                            │ │ Reference Panel               │ │
+│     ○ citizen                       │ │                               │ │
+│     ○ coalition                     │ │ Path: concept.gardener        │ │
+│ ▶ concept                           │ │                               │ │
+│   ● gardener ◄── YOU ARE HERE       │ │ Aspects:                      │ │
+│ ▶ self                              │ │  [manifest] [polynomial]      │ │
+│   ○ memory                          │ │  [alternatives] [witness]     │ │
+│                                     │ │       ↑                       │ │
+│                                     │ │  clickable = invoke (POST)    │ │
+│                                     │ └───────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**The URL Notation**: `/{path}:{aspect}` is valid for:
+- Sharing a specific invocation
+- Bookmarking a frequently-used aspect
+- Deep-linking from docs
+
+The colon captures INTENT. The projection EXECUTES that intent. Users navigate to PATHS with aspects pre-invoked, not TO aspects themselves.
+
+**Consequences**:
+
+1. **NavTree shows paths only**: Aspects are never added as children
+2. **ReferencePanel shows aspects as buttons**: Click invokes (POST)
+3. **Aspects feel like powers**: Something you wield, not somewhere you visit
+4. **URL captures intent**: `/{path}:{aspect}` invokes on load
+5. **AD-010 applies to paths**: Habitats are for paths; aspects render WITHIN habitats
+
+**Connection to Heterarchical Principle**:
+
+- **Paths** are explored in loop mode (navigate, perceive, navigate again)
+- **Aspects** are invoked in function mode (call with args, get result)
+
+The navtree is a loop-mode interface. Aspect invocation is function-mode. Mixing them creates UX dissonance.
+
+**Connection to Puppet Constructions**:
+
+We were using the **wrong puppet** for aspects:
+- NavTree puppet: good for hierarchical exploration
+- Aspects don't fit this puppet—they're not hierarchical children
+
+The right puppet for aspects is the **Reference Panel + Playground**:
+- Shows what operations are available
+- Provides controls to invoke
+- Displays results intelligently
+
+**Anti-patterns**:
+
+- Adding aspects as navtree children (causes 405 errors)
+- Making aspects navigable GET destinations (semantic confusion)
+- Separate pages for each aspect (unsustainable, unnecessary)
+- Treating aspects as places (they're verbs, not nouns)
+
+**Implementation**: See `plans/aspect-projection-protocol.md`, `impl/claude/web/src/shell/NavigationTree.tsx`
+
+*Zen Principle: The river doesn't ask the clock when to flow. Aspects flow from paths when invoked, not when navigated.*
+

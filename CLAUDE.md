@@ -100,6 +100,16 @@ npm install && npm run dev
 # Visit http://localhost:3000
 ```
 
+### Verify Before Committing
+
+```bash
+# Backend
+cd impl/claude && uv run pytest -q && uv run mypy .
+
+# Frontend (REQUIRED - catches prop mismatches, type errors)
+cd impl/claude/web && npm run typecheck && npm run lint
+```
+
 ---
 
 ## The Metaphysical Fullstack (AD-009)
@@ -247,6 +257,7 @@ Sheaf gluing = emergence: compatible locals → global
 @node runs at import time: If module not imported, node not registered
 _import_node_modules() in gateway.py: Ensures all nodes load before discovery
 Two-way mapping needed: AGENTESE path ↔ React route in NavigationTree
+dependencies= must match providers: If @node declares deps, register them in setup_providers()
 ```
 
 ### Event-Driven Architecture
@@ -276,8 +287,9 @@ Context dumping: large payloads tax every turn
 1. **ANTI-SAUSAGE FIRST** — Ground in voice anchors before suggesting work
 2. **READ SKILLS** — `docs/skills/` has the answer
 3. **CHECK SYSTEMS** — `docs/systems-reference.md` before building new
-4. **UPDATE NOW.md** — At session end, update the living document
-5. **USE AGENTESE** — The protocol IS the API
+4. **TYPECHECK FRONTEND** — Run `npm run typecheck` after any `.tsx` changes
+5. **UPDATE NOW.md** — At session end, update the living document
+6. **USE AGENTESE** — The protocol IS the API
 
 ---
 

@@ -836,3 +836,96 @@ world.atelier.*  → world.forge.*
 
 **Changelog**:
 - 2025-12-18: Initial specification (Kent + Claude)
+- 2025-12-18: Phase 2.5 Implementation - Commission Workflow
+
+---
+
+## Appendix C: Implementation Progress (Living Section)
+
+> *This section tracks actual implementation against the spec. Updated each session.*
+
+### Phase 1: Foundation ✅ (Complete)
+
+| Task | Status | Location |
+|------|--------|----------|
+| Rename Atelier → Forge | ✅ | `services/forge/`, `web/src/components/forge/` |
+| Remove spectator economy | ✅ | Token/bid remnants in contracts (deprecate, don't delete) |
+| Update AGENTESE paths | ✅ | `world.forge.*` in `node.py`, `soul_node.py` |
+| Create ForgeVisualization | ✅ | 393-line clean component |
+| Backend tests passing | ✅ | 79 tests (56 existing + 23 commission) |
+
+### Phase 2: K-gent Integration ✅ (Complete)
+
+| Task | Status | Location |
+|------|--------|----------|
+| SoulPresence indicator | ✅ | `SoulPresence.tsx` with eigenvector popup |
+| ForgeSoulNode | ✅ | `services/forge/soul_node.py` |
+| Governance gate | ✅ | `_invoke_aspect()` with governed aspects |
+
+### Phase 2.5: Commission Workflow 🔨 (In Progress)
+
+The **Commission** is the core innovation - Kent's intent flowing through artisans.
+
+| Task | Status | Location |
+|------|--------|----------|
+| CommissionService | ✅ | `services/forge/commission.py` |
+| CommissionNode | ✅ | `services/forge/commission_node.py` |
+| Commission contracts | ✅ | 14 new types in `contracts.py` |
+| Commission tests | ✅ | 23 tests passing |
+| Frontend hooks | ✅ | 8 hooks in `useForgeQuery.ts` |
+| CommissionPanel UI | ✅ | Intent form + progress view |
+
+**Key Implementation Insights**:
+
+1. **Commission State Machine** works well as PolyAgent pattern:
+   ```
+   PENDING → DESIGNING → IMPLEMENTING → EXPOSING → PROJECTING → SECURING → VERIFYING → REVIEWING → COMPLETE
+   ```
+
+2. **Artisan outputs are additive** - each stage adds to `artisan_outputs` dict, not replaces
+
+3. **Graceful degradation** - when K-gent unavailable, commission auto-approves with annotation
+
+4. **Intervention tracking** - pause/resume/cancel recorded in `interventions` list for trace
+
+### Implementation Patterns Discovered
+
+**Pattern: Commission-Owns-Workflow**
+```python
+# CommissionService orchestrates, artisans contribute
+async def advance(self, commission_id: str) -> Commission:
+    commission = await self.get(commission_id)
+    artisan = ARTISAN_MAP[commission.status]
+    # Artisan does work, updates commission.artisan_outputs
+    commission.status = NEXT_STATUS[commission.status]
+    return commission
+```
+
+**Pattern: Rendering-Per-Type**
+```python
+# Each commission state gets its own rendering
+@dataclass(frozen=True)
+class CommissionRendering:
+    commission: Commission
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"type": "commission", **self.commission.to_dict()}
+```
+
+### Remaining Work
+
+1. **Architect artisan** - Actual categorical design generation via LLM
+2. **Streaming progress** - SSE for real-time artisan work visibility
+3. **Cross-jewel wiring** - Brain capture, Gardener plots on commission
+
+### Test Coverage
+
+```
+services/forge/         79 tests passing
+  - persistence         10 tests
+  - node               32 tests
+  - soul_integration   14 tests
+  - commission         23 tests
+
+web/src/components/forge/  TypeScript clean
+```

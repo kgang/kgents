@@ -49,6 +49,9 @@ from protocols.agentese.node import (
 from protocols.agentese.registry import node
 
 from .contracts import (
+    # Consent debt contracts
+    ConsentDebtRequest,
+    ConsentDebtResponse,
     EpisodeEndRequest,
     EpisodeEndResponse,
     EpisodeListResponse,
@@ -68,6 +71,18 @@ from .contracts import (
     LocationCreateResponse,
     LocationListResponse,
     ParkManifestResponse,
+    # Scenario contracts
+    ScenarioEndRequest,
+    ScenarioEndResponse,
+    ScenarioGetRequest,
+    ScenarioGetResponse,
+    ScenarioListResponse,
+    ScenarioSessionListResponse,
+    ScenarioStartRequest,
+    ScenarioStartResponse,
+    ScenarioTickRequest,
+    ScenarioTickResponse,
+    SessionProgress,
 )
 from .persistence import (
     EpisodeView,
@@ -77,6 +92,11 @@ from .persistence import (
     MemoryView,
     ParkPersistence,
     ParkStatus,
+)
+from .scenario_service import (
+    ScenarioService,
+    ScenarioView,
+    SessionView,
 )
 
 if TYPE_CHECKING:
@@ -109,9 +129,7 @@ class ParkManifestRendering:
 
     def to_text(self) -> str:
         s = self.status
-        refusal_pct = (
-            f"{s.consent_refusal_rate * 100:.1f}%" if s.consent_refusal_rate else "0%"
-        )
+        refusal_pct = f"{s.consent_refusal_rate * 100:.1f}%" if s.consent_refusal_rate else "0%"
         return "\n".join(
             [
                 "Punchdrunk Park",
@@ -154,9 +172,7 @@ class HostRendering:
     def to_text(self) -> str:
         h = self.host
         status = "active" if h.is_active else "inactive"
-        energy_bar = "█" * int(h.energy_level * 10) + "░" * (
-            10 - int(h.energy_level * 10)
-        )
+        energy_bar = "█" * int(h.energy_level * 10) + "░" * (10 - int(h.energy_level * 10))
         lines = [
             f"{h.name} [{h.character}] ({status})",
             "=" * 40,
@@ -168,9 +184,7 @@ class HostRendering:
             lines.append(f"Backstory: {h.backstory[:100]}...")
         if h.boundaries:
             lines.append(f"Boundaries: {', '.join(h.boundaries[:3])}")
-        lines.append(
-            f"Interactions: {h.interaction_count} (refusals: {h.consent_refusal_count})"
-        )
+        lines.append(f"Interactions: {h.interaction_count} (refusals: {h.consent_refusal_count})")
         return "\n".join(lines)
 
 
@@ -272,9 +286,7 @@ class InteractionRendering:
 
     def to_text(self) -> str:
         i = self.interaction
-        consent_icon = (
-            "✓" if i.consent_given else "✗" if i.consent_given is False else " "
-        )
+        consent_icon = "✓" if i.consent_given else "✗" if i.consent_given is False else " "
         lines = [
             f"[{consent_icon}] {i.host_name} [{i.interaction_type}]",
             f"Visitor: {i.visitor_input}",
@@ -315,13 +327,7 @@ class MemoryListRendering:
         lines = [f"Host Memories ({len(self.memories)})", ""]
         for m in self.memories:
             salience_bar = "█" * int(m.salience * 5)
-            valence = (
-                "+"
-                if m.emotional_valence > 0
-                else "-"
-                if m.emotional_valence < 0
-                else "○"
-            )
+            valence = "+" if m.emotional_valence > 0 else "-" if m.emotional_valence < 0 else "○"
             lines.append(
                 f"  [{m.memory_type}] {salience_bar} {valence} {m.summary or m.content[:40]}"
             )
@@ -371,7 +377,7 @@ class LocationListRendering:
 @node(
     "world.park",
     description="Punchdrunk Park - Immersive agent simulation with consent",
-    dependencies=("park_persistence",),
+    dependencies=("park_persistence", "scenario_service"),
     contracts={
         # Perception aspects (Response only - no request needed)
         "manifest": Response(ParkManifestResponse),
@@ -387,6 +393,17 @@ class LocationListRendering:
         "episode.start": Contract(EpisodeStartRequest, EpisodeStartResponse),
         "episode.end": Contract(EpisodeEndRequest, EpisodeEndResponse),
         "location.create": Contract(LocationCreateRequest, LocationCreateResponse),
+        # Scenario aspects - "Westworld where hosts can say no"
+        "scenario.list": Response(ScenarioListResponse),
+        "scenario.get": Contract(ScenarioGetRequest, ScenarioGetResponse),
+        "scenario.start": Contract(ScenarioStartRequest, ScenarioStartResponse),
+        "scenario.tick": Contract(ScenarioTickRequest, ScenarioTickResponse),
+        "scenario.end": Contract(ScenarioEndRequest, ScenarioEndResponse),
+        "scenario.sessions": Response(ScenarioSessionListResponse),
+        # Consent debt aspects
+        "consent.debt": Contract(ConsentDebtRequest, ConsentDebtResponse),
+        "consent.incur": Contract(ConsentDebtRequest, ConsentDebtResponse),
+        "consent.apologize": Contract(ConsentDebtRequest, ConsentDebtResponse),
     },
 )
 class ParkNode(BaseLogosNode):
@@ -417,17 +434,20 @@ class ParkNode(BaseLogosNode):
     def __init__(
         self,
         park_persistence: ParkPersistence,
+        scenario_service: ScenarioService | None = None,
     ) -> None:
         """
         Initialize ParkNode.
 
         Args:
             park_persistence: Persistence layer for park entities
+            scenario_service: Service for scenario management (optional for graceful fallback)
 
         Raises:
             TypeError: If park_persistence is not provided
         """
         self._persistence = park_persistence
+        self._scenarios = scenario_service or ScenarioService()
 
     @property
     def handle(self) -> str:
@@ -558,10 +578,36 @@ class ParkNode(BaseLogosNode):
         elif aspect == "location.create":
             return await self._location_create(**kwargs)
 
-        # === Scenario Operations (placeholder for ScenarioService integration) ===
+        # === Scenario Operations ===
 
-        elif aspect.startswith("scenario."):
-            return {"error": f"Scenario operations not yet implemented: {aspect}"}
+        elif aspect == "scenario.list":
+            return await self._scenario_list(**kwargs)
+
+        elif aspect == "scenario.get":
+            return await self._scenario_get(**kwargs)
+
+        elif aspect == "scenario.start":
+            return await self._scenario_start(**kwargs)
+
+        elif aspect == "scenario.tick":
+            return await self._scenario_tick(**kwargs)
+
+        elif aspect == "scenario.end":
+            return await self._scenario_end(**kwargs)
+
+        elif aspect == "scenario.sessions":
+            return await self._scenario_sessions(**kwargs)
+
+        # === Consent Debt Operations ===
+
+        elif aspect == "consent.debt":
+            return await self._consent_debt(**kwargs)
+
+        elif aspect == "consent.incur":
+            return await self._consent_incur(**kwargs)
+
+        elif aspect == "consent.apologize":
+            return await self._consent_apologize(**kwargs)
 
         else:
             return {"error": f"Unknown aspect: {aspect}"}
@@ -791,6 +837,209 @@ class ParkNode(BaseLogosNode):
             "atmosphere": location.atmosphere,
             "is_open": location.is_open,
         }
+
+    # =========================================================================
+    # Scenario Operations - "Westworld where hosts can say no"
+    # =========================================================================
+
+    async def _scenario_list(self, **kwargs: Any) -> dict[str, Any]:
+        """List available scenario templates."""
+        scenario_type = kwargs.get("scenario_type")
+        tags = kwargs.get("tags")
+        difficulty = kwargs.get("difficulty")
+        limit = kwargs.get("limit", 50)
+
+        scenarios = await self._scenarios.list_scenarios(
+            scenario_type=scenario_type,
+            tags=tags,
+            difficulty=difficulty,
+            limit=limit,
+        )
+
+        return {
+            "type": "scenario_list",
+            "count": len(scenarios),
+            "scenarios": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "scenario_type": s.scenario_type,
+                    "difficulty": s.difficulty,
+                    "estimated_duration_minutes": s.estimated_duration_minutes,
+                    "citizen_count": s.citizen_count,
+                    "tags": s.tags,
+                }
+                for s in scenarios
+            ],
+        }
+
+    async def _scenario_get(self, **kwargs: Any) -> dict[str, Any]:
+        """Get a scenario template by ID."""
+        scenario_id = kwargs.get("scenario_id")
+        if not scenario_id:
+            return {"error": "scenario_id required"}
+
+        detail = kwargs.get("detail", False)
+        scenario = await self._scenarios.get_scenario(scenario_id, detail=detail)
+
+        if scenario is None:
+            return {"error": f"Scenario not found: {scenario_id}"}
+
+        return {
+            "type": "scenario_detail",
+            "scenario": scenario.to_dict(),
+        }
+
+    async def _scenario_start(self, **kwargs: Any) -> dict[str, Any]:
+        """Start a new scenario session."""
+        scenario_id = kwargs.get("scenario_id")
+        if not scenario_id:
+            return {"error": "scenario_id required"}
+
+        try:
+            session = await self._scenarios.start_session(scenario_id)
+            return {
+                "type": "scenario_session",
+                "session": self._session_view_to_dict(session),
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _scenario_tick(self, **kwargs: Any) -> dict[str, Any]:
+        """Advance a scenario session."""
+        session_id = kwargs.get("session_id")
+        if not session_id:
+            return {"error": "session_id required"}
+
+        elapsed_seconds = kwargs.get("elapsed_seconds", 1.0)
+
+        try:
+            result = await self._scenarios.tick(session_id, elapsed_seconds)
+            return {
+                "type": "scenario_tick",
+                "phase": result.phase,
+                "time_elapsed": result.time_elapsed,
+                "progress": [{"criterion": k, "met": v} for k, v in result.progress.items()],
+                "is_complete": result.is_complete,
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _scenario_end(self, **kwargs: Any) -> dict[str, Any]:
+        """End/abandon a scenario session."""
+        session_id = kwargs.get("session_id")
+        if not session_id:
+            return {"error": "session_id required"}
+
+        reason = kwargs.get("reason", "")
+
+        try:
+            session = await self._scenarios.abandon_session(session_id, reason)
+            return {
+                "type": "scenario_session",
+                "session": self._session_view_to_dict(session),
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _scenario_sessions(self, **kwargs: Any) -> dict[str, Any]:
+        """List active scenario sessions."""
+        active_only = kwargs.get("active_only", True)
+        limit = kwargs.get("limit", 20)
+
+        sessions = await self._scenarios.list_sessions(
+            active_only=active_only,
+            limit=limit,
+        )
+
+        return {
+            "type": "scenario_session_list",
+            "count": len(sessions),
+            "sessions": [self._session_view_to_dict(s) for s in sessions],
+        }
+
+    def _session_view_to_dict(self, session: SessionView) -> dict[str, Any]:
+        """Convert SessionView to dict for response."""
+        return {
+            "id": session.id,
+            "template_id": session.template_id,
+            "template_name": session.template_name,
+            "phase": session.phase,
+            "is_active": session.is_active,
+            "is_terminal": session.is_terminal,
+            "citizens": session.citizens,
+            "time_elapsed": session.time_elapsed,
+            "progress": [{"criterion": k, "met": v} for k, v in session.progress.items()],
+            "started_at": session.started_at,
+            "ended_at": session.ended_at,
+        }
+
+    # =========================================================================
+    # Consent Debt Operations - "Westworld where hosts can say no"
+    # =========================================================================
+
+    async def _consent_debt(self, **kwargs: Any) -> dict[str, Any]:
+        """Get consent debt for a citizen in a session."""
+        session_id = kwargs.get("session_id")
+        citizen_name = kwargs.get("citizen_name")
+
+        if not session_id or not citizen_name:
+            return {"error": "session_id and citizen_name required"}
+
+        try:
+            debt = await self._scenarios.get_consent_debt(session_id, citizen_name)
+            can_inject = await self._scenarios.can_inject_beat(session_id, citizen_name)
+            return {
+                "type": "consent_debt",
+                "citizen": citizen_name,
+                "debt": debt,
+                "can_inject_beat": can_inject,
+                "status": "ok",
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _consent_incur(self, **kwargs: Any) -> dict[str, Any]:
+        """Incur consent debt for forcing a host to act."""
+        session_id = kwargs.get("session_id")
+        citizen_name = kwargs.get("citizen_name")
+        amount = kwargs.get("amount", 0.1)
+
+        if not session_id or not citizen_name:
+            return {"error": "session_id and citizen_name required"}
+
+        try:
+            result = await self._scenarios.incur_consent_debt(session_id, citizen_name, amount)
+            return {
+                "type": "consent_debt",
+                "citizen": result["citizen"],
+                "debt": result["new_debt"],
+                "can_inject_beat": result["can_inject_beat"],
+                "status": "debt_incurred",
+            }
+        except ValueError as e:
+            return {"error": str(e)}
+
+    async def _consent_apologize(self, **kwargs: Any) -> dict[str, Any]:
+        """Reduce consent debt by apologizing."""
+        session_id = kwargs.get("session_id")
+        citizen_name = kwargs.get("citizen_name")
+        reduction = kwargs.get("amount", 0.15)  # Use 'amount' param for reduction
+
+        if not session_id or not citizen_name:
+            return {"error": "session_id and citizen_name required"}
+
+        try:
+            result = await self._scenarios.apologize(session_id, citizen_name, reduction)
+            return {
+                "type": "consent_debt",
+                "citizen": result["citizen"],
+                "debt": result["new_debt"],
+                "can_inject_beat": result["can_inject_beat"],
+                "status": "apology_accepted",
+            }
+        except ValueError as e:
+            return {"error": str(e)}
 
     # =========================================================================
     # Helper Methods

@@ -32,20 +32,17 @@ export interface TimeDifferanceHeritageResponse {
   node_count: number;
   edge_count: number;
   max_depth: number;
-  nodes: Record<
-    string,
-    {
-      id: string;
-      type: unknown;
-      operation: string;
-      timestamp: string;
-      depth: number;
-      output?: unknown;
-      reason?: string | null;
-      explorable?: boolean;
-      inputs?: string[];
-    }
-  >;
+  nodes: Record<string, {
+    id: string;
+    type: unknown;
+    operation: string;
+    timestamp: string;
+    depth: number;
+    output?: unknown;
+    reason?: string | null;
+    explorable?: boolean;
+    inputs?: string[];
+  }>;
   edges: {
     source: string;
     target: string;
@@ -71,15 +68,13 @@ export interface TimeDifferanceWhyResponse {
   alternatives_considered: number;
   summary?: string | null;
   cli_output?: string | null;
-  chosen_path?:
-    | {
-        id: string;
-        operation: string;
-        inputs: string[];
-        output: unknown;
-        ghosts: Record<string, unknown>[];
-      }[]
-    | null;
+  chosen_path?: {
+    id: string;
+    operation: string;
+    inputs: string[];
+    output: unknown;
+    ghosts: Record<string, unknown>[];
+  }[] | null;
   error?: string | null;
 }
 

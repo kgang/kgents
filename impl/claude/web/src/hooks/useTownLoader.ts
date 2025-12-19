@@ -6,6 +6,8 @@
  * - Creating demo towns when paramTownId is 'demo'
  * - Error handling for 404s
  *
+ * AGENTESE Route: /world.town.simulation?townId=demo
+ *
  * Extracted from Town.tsx for projection-first architecture.
  *
  * @example
@@ -91,7 +93,8 @@ export function useTownLoader(paramTownId: string | undefined): UseTownLoaderRes
         clearLoadTimeout();
         const newTownId = response.id;
         if (newTownId !== paramTownId) {
-          window.history.replaceState(null, '', `/town/${newTownId}`);
+          // AGENTESE style: update URL with query params
+          window.history.replaceState(null, '', `/world.town.simulation?townId=${newTownId}`);
         }
         setTownId(newTownId);
       } catch (err: unknown) {

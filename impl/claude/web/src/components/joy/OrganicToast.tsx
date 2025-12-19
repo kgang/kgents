@@ -124,7 +124,9 @@ export function OrganicToast({
   style,
 }: OrganicToastProps) {
   const { shouldAnimate } = useMotionPreferences();
-  const { scale, opacity, stage, trigger, reset } = useGrowing({
+  // Note: scale/opacity from useGrowing are not used as framer-motion handles animation
+  // Only stage is used for the GrowthIndicator component
+  const { stage, trigger, reset } = useGrowing({
     duration: GROWING_ANIMATION.duration,
     respectReducedMotion: true,
   });
@@ -184,7 +186,7 @@ export function OrganicToast({
       opacity: 1,
       y: 0,
       transition: {
-        type: 'spring',
+        type: 'spring' as const,
         stiffness: 400,
         damping: 25,
       },

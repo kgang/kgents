@@ -114,6 +114,53 @@ From v1:
 - **Annotations** `@span=research` → Use envelope
 - **Prefix macros** → Use explicit aliases
 
+### 2.5 Paths vs Aspects: Navigation vs Invocation (AD-012)
+
+**Critical distinction for UI implementation:**
+
+```
+Paths are PLACES you can GO TO    → Navigable (GET)
+Aspects are ACTIONS you DO        → Invocable (POST)
+```
+
+| Level | Example | Navigable? | HTTP Method |
+|-------|---------|------------|-------------|
+| Context | `world` | Yes | GET |
+| Holon | `world.town` | Yes | GET |
+| Entity | `world.town.citizen` | Yes | GET |
+| Aspect | `:manifest`, `:polynomial` | **No** | POST |
+
+**URL Notation**: `/{path}:{aspect}?params`
+
+The colon captures INTENT. The projection layer EXECUTES that intent.
+
+- `world.town.citizen` → Navigate to citizen holon
+- `world.town.citizen:manifest` → Navigate AND invoke manifest aspect
+- `world.town.citizen:polynomial?direction=greet` → Navigate, invoke polynomial with params
+
+**Key Insight**: You can GO TO a town. You can't GO TO a "greeting"—you DO a greeting.
+
+**Navigation Tree** shows paths only:
+```
+▶ world
+  ▶ town
+    ○ citizen      ◄── navigable
+    ○ coalition    ◄── navigable
+```
+
+**Reference Panel** shows aspects as actions:
+```
+Aspects: [manifest] [polynomial] [witness] [alternatives]
+           ↑ click = invoke (POST)
+```
+
+**Anti-pattern**: Adding aspects as children in the navigation tree causes:
+1. Semantic confusion (treating verbs as nouns)
+2. 405 errors (GET request to POST endpoint)
+3. UX dissonance (loop mode mixed with function mode)
+
+**See**: `spec/principles.md` AD-012 for full rationale.
+
 ---
 
 ## Part III: The Five Contexts (Unchanged)
@@ -1146,6 +1193,79 @@ The **Contract Protocol** enables BE/FE type synchronization via the `@node` dec
 - **Types**: `protocols/agentese/contract.py`
 - **Schema**: `protocols/agentese/schema_gen.py`
 - **Gateway**: `/discover?include_schemas=true`
+
+---
+
+## Appendix E: REPL Reliability Contract (AD-011)
+
+> **Every path discovered via `/agentese/discover` SHALL be invokable via the Terminal REPL. No silent failures. No leaky abstractions.**
+
+### The Problem
+
+The AGENTESE REPL is a first-class projection surface (see AD-007: Liturgical CLI). However, the current implementation has a leaky abstraction:
+- Frontend React hooks use `client.ts` API patterns that work
+- Terminal REPL uses direct `/agentese/{path}/{aspect}` calls that often fail
+- Errors are swallowed silently, showing "(no result)" instead of helpful messages
+- Tab completion shows paths that don't work
+
+### The Contract
+
+1. **Response Parity**: For any registered path P:
+   ```
+   apiClient.get('/agentese/' + P.replace(/\./g, '/') + '/manifest')
+   service.execute(P + '.manifest')
+   ```
+   MUST return equivalent results.
+
+2. **Error Surfacing**: Silent failures are forbidden. Every error MUST:
+   - Display error type (404, 403, 500)
+   - Suggest remediation (try discover, check archetype)
+   - Include backend detail if available
+
+3. **Completion Accuracy**: Tab completion MUST only show paths that respond to manifest without error. Stale hardcoded lists are forbidden.
+
+4. **Discovery Authority**: `/agentese/discover?include_metadata=true` is the single source of truth for:
+   - Available paths
+   - Valid aspects per path
+   - Example invocations
+
+### Testing Gate
+
+No PR merges that add AGENTESE paths without:
+1. Path appearing in `/agentese/discover`
+2. Path responding to manifest without error (verified in CI)
+3. Integration test covering happy path
+4. Examples metadata if path is user-facing
+
+### Error Message Guidelines
+
+Error messages should feel warm, not hostile:
+
+| Status | Bad | Good |
+|--------|-----|------|
+| 404 | "Path not found" | "This path doesn't exist yet. The garden is still growing here." |
+| 403 | "Forbidden" | "This path isn't available to you right now. Try a different archetype." |
+| 500 | "Internal server error" | "Something went wrong on our end. We're sorry." |
+| timeout | "Timeout" | "The backend took too long. Maybe try again?" |
+
+### Implementation Checklist
+
+```
+[ ] TerminalService._invokeAgentese() handles response envelope correctly
+[ ] Error responses surface with helpful messages
+[ ] Tab completion fetches live from /agentese/discover
+[ ] Path audit script runs in CI
+[ ] All registered paths respond to manifest
+```
+
+### Connection to Principles
+
+| Principle | How This Embodies It |
+|-----------|---------------------|
+| **Tasteful** | No broken paths; every invocation considered |
+| **Joy-Inducing** | Working commands feel like magic; errors are sympathetic |
+| **Ethical** | Honest about what works and doesn't |
+| **Transparent Infrastructure** | Errors explain themselves |
 
 ---
 

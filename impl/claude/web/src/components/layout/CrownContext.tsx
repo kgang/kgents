@@ -19,39 +19,36 @@ import { JEWEL_INFO, type Jewel } from '../synergy/types';
 import { brainApi, gardenerApi } from '../../api/client';
 
 /**
- * Map routes to jewels for path display.
+ * Map AGENTESE paths to jewels for display.
+ * The URL IS the AGENTESE path - no translation needed.
  */
-const ROUTE_TO_JEWEL: Record<string, Jewel> = {
-  '/brain': 'brain',
-  '/gestalt': 'gestalt',
-  '/gestalt/live': 'gestalt',
-  '/gardener': 'gardener',
-  '/garden': 'gardener',
-  '/forge': 'forge',
-  '/atelier': 'forge', // Legacy route
-  '/town': 'coalition',
-  '/workshop': 'coalition',
-  '/inhabit': 'coalition',
-  '/park': 'park',
-  '/emergence': 'park',
+const PATH_TO_JEWEL: Record<string, Jewel> = {
+  '/self.memory': 'brain',
+  '/world.codebase': 'gestalt',
+  '/world.gestalt.live': 'gestalt',
+  '/concept.gardener': 'gardener',
+  '/self.garden': 'gardener',
+  '/world.forge': 'forge',
+  '/world.town': 'coalition',
+  '/world.domain': 'coalition',
+  '/world.park': 'park',
+  '/time.differance': 'gestalt',
 };
 
 /**
- * Map routes to AGENTESE paths.
+ * Map paths to display AGENTESE context.
  */
-const ROUTE_TO_PATH: Record<string, string> = {
-  '/brain': 'self.memory.*',
-  '/gestalt': 'world.codebase.*',
-  '/gestalt/live': 'world.infra.*',
-  '/gardener': 'concept.gardener.*',
-  '/garden': 'concept.garden.*',
-  '/forge': 'world.forge.*',
-  '/atelier': 'world.forge.*', // Legacy route
-  '/town': 'world.town.*',
-  '/workshop': 'world.workshop.*',
-  '/inhabit': 'world.citizen.*',
-  '/park': 'world.park.*',
-  '/emergence': 'world.emergence.*',
+const PATH_TO_AGENTESE: Record<string, string> = {
+  '/self.memory': 'self.memory.*',
+  '/world.codebase': 'world.codebase.*',
+  '/world.gestalt.live': 'world.gestalt.live.*',
+  '/concept.gardener': 'concept.gardener.*',
+  '/self.garden': 'self.garden.*',
+  '/world.forge': 'world.forge.*',
+  '/world.town': 'world.town.*',
+  '/world.domain': 'world.domain.*',
+  '/world.park': 'world.park.*',
+  '/time.differance': 'time.differance.*',
 };
 
 interface CrownState {
@@ -68,17 +65,17 @@ interface CrownState {
 }
 
 /**
- * Get jewel from pathname.
+ * Get jewel from AGENTESE pathname.
  */
 function getJewelFromPath(pathname: string): Jewel | undefined {
   // Check for exact match first
-  if (ROUTE_TO_JEWEL[pathname]) {
-    return ROUTE_TO_JEWEL[pathname];
+  if (PATH_TO_JEWEL[pathname]) {
+    return PATH_TO_JEWEL[pathname];
   }
 
-  // Check for prefix match (e.g., /town/default matches /town)
-  for (const [route, jewel] of Object.entries(ROUTE_TO_JEWEL)) {
-    if (pathname.startsWith(route)) {
+  // Check for prefix match (e.g., /self.memory.capture matches /self.memory)
+  for (const [path, jewel] of Object.entries(PATH_TO_JEWEL)) {
+    if (pathname.startsWith(path)) {
       return jewel;
     }
   }
@@ -87,18 +84,18 @@ function getJewelFromPath(pathname: string): Jewel | undefined {
 }
 
 /**
- * Get AGENTESE path from pathname.
+ * Get AGENTESE display path from pathname.
  */
 function getAgentesePath(pathname: string): string | undefined {
   // Check for exact match first
-  if (ROUTE_TO_PATH[pathname]) {
-    return ROUTE_TO_PATH[pathname];
+  if (PATH_TO_AGENTESE[pathname]) {
+    return PATH_TO_AGENTESE[pathname];
   }
 
   // Check for prefix match
-  for (const [route, path] of Object.entries(ROUTE_TO_PATH)) {
-    if (pathname.startsWith(route)) {
-      return path;
+  for (const [path, agentese] of Object.entries(PATH_TO_AGENTESE)) {
+    if (pathname.startsWith(path)) {
+      return agentese;
     }
   }
 
@@ -193,7 +190,7 @@ export function CrownContext() {
         {/* Gardener phase */}
         {state.gardenerPhase && (
           <Link
-            to="/gardener"
+            to="/concept.gardener"
             className="flex items-center gap-1 text-green-400/70 hover:text-green-400 transition-colors"
             title="Active Gardener Session"
           >
@@ -205,7 +202,7 @@ export function CrownContext() {
         {/* Season indicator */}
         {state.season && (
           <Link
-            to="/garden"
+            to="/self.garden"
             className="flex items-center gap-1 text-green-400/70 hover:text-green-400 transition-colors"
             title="Current Season"
           >
@@ -217,7 +214,7 @@ export function CrownContext() {
         {/* Crystal count */}
         {state.crystalCount !== undefined && state.crystalCount > 0 && (
           <Link
-            to="/brain"
+            to="/self.memory"
             className="flex items-center gap-1 text-purple-400/70 hover:text-purple-400 transition-colors"
             title="Brain Crystals"
           >
@@ -229,7 +226,7 @@ export function CrownContext() {
         {/* Active mask */}
         {state.activeMask && (
           <Link
-            to="/park"
+            to="/world.park"
             className="flex items-center gap-1 text-pink-400/70 hover:text-pink-400 transition-colors"
             title="Active Park Mask"
           >

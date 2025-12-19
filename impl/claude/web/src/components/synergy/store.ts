@@ -195,7 +195,7 @@ export const synergyToast = {
       'brain',
       'analysis_complete',
       `${modulePath} health: ${healthGrade}`,
-      { label: 'View Crystal', href: '/brain' }
+      { label: 'View Crystal', href: '/self.memory' }
     );
   },
 
@@ -203,7 +203,7 @@ export const synergyToast = {
   crystalFormed: (title: string) => {
     showSynergyToast('brain', '*', 'crystal_formed', `"${title}"`, {
       label: 'View',
-      href: '/brain',
+      href: '/self.memory',
     });
   },
 
@@ -214,7 +214,7 @@ export const synergyToast = {
       'brain',
       'session_complete',
       `${sessionName}: ${artifactCount} artifacts`,
-      { label: 'View Learnings', href: '/brain' }
+      { label: 'View Learnings', href: '/self.memory' }
     );
   },
 
@@ -222,7 +222,7 @@ export const synergyToast = {
   pieceCreated: (title: string) => {
     showSynergyToast('forge', 'brain', 'piece_created', `"${title}"`, {
       label: 'View Crystal',
-      href: '/brain',
+      href: '/self.memory',
     });
   },
 
@@ -233,7 +233,7 @@ export const synergyToast = {
       'brain',
       'task_assigned',
       `${coalitionSize} agents, ${duration}`,
-      { label: 'View Crystal', href: '/brain' }
+      { label: 'View Crystal', href: '/self.memory' }
     );
   },
 
@@ -244,7 +244,7 @@ export const synergyToast = {
       'brain',
       'scenario_complete',
       `${scenarioName} (${forcesUsed} forces used)`,
-      { label: 'View Crystal', href: '/brain' }
+      { label: 'View Crystal', href: '/self.memory' }
     );
   },
 
@@ -252,7 +252,7 @@ export const synergyToast = {
   drillComplete: (drillName: string, grade: string) => {
     showSynergyToast('domain', 'brain', 'drill_complete', `${drillName}: Grade ${grade}`, {
       label: 'View Report',
-      href: '/brain',
+      href: '/self.memory',
     });
   },
 
@@ -260,7 +260,7 @@ export const synergyToast = {
   seasonChanged: (newSeason: string) => {
     showSynergyToast('gardener', '*', 'season_changed', `Garden entering ${newSeason}`, {
       label: 'View Garden',
-      href: '/garden',
+      href: '/self.garden',
     });
   },
 
@@ -271,7 +271,7 @@ export const synergyToast = {
       '*',
       'drift_detected',
       `${modulePath}: ${violationCount} violations`,
-      { label: 'View Details', href: '/gestalt' }
+      { label: 'View Details', href: '/world.codebase' }
     );
   },
 

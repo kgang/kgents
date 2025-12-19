@@ -18,7 +18,6 @@ import {
 import {
   useUnfurling,
   type UnfurlDirection,
-  type UnfurlingOptions,
 } from '@/hooks';
 import { LIVING_EARTH, UNFURLING_ANIMATION } from '@/constants';
 import { useMotionPreferences } from './useMotionPreferences';
@@ -186,7 +185,6 @@ export const UnfurlPanel = forwardRef<UnfurlPanelRef, UnfurlPanelProps>(
       toggle,
       style: unfurlStyle,
       contentStyle: unfurlContentStyle,
-      clipPath,
     } = useUnfurling({
       enabled: shouldAnimate,
       duration,
@@ -219,26 +217,6 @@ export const UnfurlPanel = forwardRef<UnfurlPanelRef, UnfurlPanelProps>(
       }),
       [unfurl, fold, toggle, hookIsOpen, progress]
     );
-
-    // Calculate organic border gradient
-    const borderStyle = organicBorder
-      ? {
-          position: 'relative' as const,
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: -1,
-            borderRadius: 'inherit',
-            padding: 1,
-            background: `linear-gradient(135deg, ${accentColor}40, transparent 50%, ${accentColor}20)`,
-            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-            maskComposite: 'xor',
-            WebkitMaskComposite: 'xor',
-            pointerEvents: 'none',
-            opacity: progress,
-          },
-        }
-      : {};
 
     // If reduced motion, show/hide immediately
     if (!shouldAnimate) {

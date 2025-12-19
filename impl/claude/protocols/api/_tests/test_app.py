@@ -61,8 +61,10 @@ class TestApplicationCreation:
         # Check key endpoints exist
         assert "/health" in routes
         assert "/" in routes
-        assert "/v1/soul/governance" in routes
-        assert "/v1/soul/dialogue" in routes
+        # AGENTESE gateway routes (soul endpoints migrated to gateway)
+        # The internal FastAPI path uses {path:path} but check any agentese route exists
+        agentese_routes = [r for r in routes if r and r.startswith("/agentese")]
+        assert len(agentese_routes) > 0
 
 
 class TestRootEndpoint:
@@ -92,10 +94,12 @@ class TestRootEndpoint:
         assert "soul" in endpoints
         assert "gateway" in endpoints  # AGENTESE Universal Gateway
         assert "kgent" in endpoints
-        assert endpoints["soul"]["governance"] == "/v1/soul/governance"
-        assert endpoints["soul"]["dialogue"] == "/v1/soul/dialogue"
+        # Soul endpoints now use AGENTESE gateway (AD-009 Phase 2)
+        assert "POST /agentese/self/soul/governance" in endpoints["soul"]["governance"]
+        assert "POST /agentese/self/soul/dialogue" in endpoints["soul"]["dialogue"]
         assert endpoints["gateway"]["invoke"] == "POST /agentese/{context}/{holon}/{aspect}"
-        assert endpoints["kgent"]["sessions"] == "/v1/kgent/sessions"
+        # K-gent sessions now use AGENTESE gateway (AD-009 Phase 2)
+        assert "POST /agentese/self/kgent/create" in endpoints["kgent"]["create"]
 
 
 class TestHealthEndpoint:
@@ -161,8 +165,10 @@ class TestOpenAPIDocumentation:
         paths = data["paths"]
 
         assert "/health" in paths
-        assert "/v1/soul/governance" in paths
-        assert "/v1/soul/dialogue" in paths
+        # Soul endpoints now use AGENTESE gateway (AD-009 Phase 2)
+        # OpenAPI shows path params as {path} not {path:path}
+        assert "/agentese/{path}/manifest" in paths
+        assert "/agentese/{path}/{aspect}" in paths
 
     def test_openapi_info(self, client: TestClient) -> None:
         """Test OpenAPI info section."""
@@ -239,7 +245,7 @@ class TestErrorHandling:
         assert response.status_code == 405
 
     def test_422_for_invalid_body(self, client: TestClient) -> None:
-        """Test 422 for invalid request body."""
+        """Test 422 for invalid request body - uses AGENTESE gateway."""
         from protocols.api.auth import ApiKeyData, register_api_key
 
         # Register a test key
@@ -252,10 +258,11 @@ class TestErrorHandling:
             )
         )
 
-        # Send invalid body (missing required fields)
+        # Send invalid body via AGENTESE gateway (AD-009 Phase 2)
+        # The AUP router still validates composition requests
         response = client.post(
-            "/v1/soul/dialogue",
-            json={},  # Missing 'prompt'
+            "/api/v1/compose",
+            json={},  # Missing 'paths'
             headers={"X-API-Key": "kg_test"},
         )
 
@@ -291,18 +298,18 @@ class TestAppMetadata:
 class TestEndpointTags:
     """Tests for endpoint tags."""
 
-    def test_soul_endpoints_tagged(self, client: TestClient) -> None:
-        """Test soul endpoints have 'soul' tag."""
+    def test_agentese_gateway_tagged(self, client: TestClient) -> None:
+        """Test AGENTESE gateway endpoints have proper tag."""
         response = client.get("/openapi.json")
         data = response.json()
 
-        # Check governance endpoint
-        gov_path = data["paths"]["/v1/soul/governance"]["post"]
-        assert "soul" in gov_path["tags"]
+        # Check gateway discover endpoint
+        discover_path = data["paths"]["/agentese/discover"]["get"]
+        assert "agentese-gateway" in discover_path["tags"]
 
-        # Check dialogue endpoint
-        dialogue_path = data["paths"]["/v1/soul/dialogue"]["post"]
-        assert "soul" in dialogue_path["tags"]
+        # Check gateway manifest endpoint (OpenAPI shows {path} not {path:path})
+        manifest_path = data["paths"]["/agentese/{path}/manifest"]["get"]
+        assert "agentese-gateway" in manifest_path["tags"]
 
     def test_system_endpoints_tagged(self, client: TestClient) -> None:
         """Test system endpoints have 'system' tag."""

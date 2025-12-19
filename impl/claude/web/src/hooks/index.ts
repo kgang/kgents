@@ -375,8 +375,8 @@ export {
   type ConceptGardenerSessionDefineResponse,
   type ConceptGardenerSessionAdvanceRequest,
   type ConceptGardenerSessionAdvanceResponse,
-  type ConceptGardenerPolynomialResponse,
-  type ConceptGardenerSessionsListResponse,
+  type ConceptGardenerSessionPolynomialResponse,
+  type ConceptGardenerSessionsManifestResponse,
   type ConceptGardenerRouteRequest,
   type ConceptGardenerRouteResponse,
   type ConceptGardenerProposeResponse,
@@ -443,3 +443,38 @@ export {
   type SoulManifestResponse,
   type SoulVibeResponse,
 } from './useSoulQuery';
+
+// Garden AGENTESE queries (self.garden.* - garden STATE)
+// Distinct from Gardener (concept.gardener.* - SESSION orchestration)
+export {
+  // Query keys
+  gardenQueryKeys,
+  // Garden manifest (full GardenJSON state)
+  useGardenManifest,
+  // Garden queries
+  useGardenSeason,
+  useGardenHealth,
+  useGardenSuggest,
+  // Garden mutations
+  useGardenTransition,
+  useGardenAccept,
+  useGardenDismiss,
+  // Conversion helper
+  toTransitionSuggestion,
+  // Type re-exports
+  type GardenSeasonResponse,
+  type GardenHealthResponse,
+  type GardenSuggestResponse,
+  type GardenTransitionRequest,
+  type GardenTransitionResponse,
+  type GardenAcceptResponse,
+  type GardenDismissResponse,
+} from './useGardenQuery';
+
+// Simple toast notifications (general-purpose feedback)
+export {
+  useSimpleToast,
+  simpleToast,
+  type SimpleToastOptions,
+  type UseSimpleToastReturn,
+} from './useSimpleToast';

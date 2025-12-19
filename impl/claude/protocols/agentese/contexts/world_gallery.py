@@ -1,5 +1,22 @@
 """
-AGENTESE Gallery Context: Living Autopoietic Showcase.
+AGENTESE Emergence Gallery Context: Educational Categorical Showcase.
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  DISTINCTION: world.emergence.gallery vs world.gallery                      │
+│                                                                             │
+│  world.emergence.gallery (THIS FILE):                                       │
+│    - Educational categorical showcase                                       │
+│    - Demonstrates PolyAgent, Operad, Sheaf patterns                        │
+│    - Interactive polynomial simulation and law verification                 │
+│    - Learning-focused: "How do categorical primitives work?"               │
+│                                                                             │
+│  world.gallery (world_gallery_api.py):                                      │
+│    - Practical projection rendering API                                     │
+│    - Multi-target output (CLI, HTML, JSON)                                  │
+│    - Developer-focused: "Render this widget to different targets"          │
+│                                                                             │
+│  Both are valid; they serve different purposes.                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 
 The world.emergence.gallery context provides access to the Gallery V2:
 - world.emergence.gallery.manifest - Gallery overview with categories and counts
@@ -28,7 +45,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, aspect
-from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..node import BaseLogosNode, BasicRendering, Observer, Renderable
 from ..registry import node
 
 if TYPE_CHECKING:
@@ -195,8 +212,7 @@ class GalleryNode(BaseLogosNode):
                 pilots = list(PILOT_REGISTRY.values())
 
             lines = [
-                f"Gallery Pilots ({len(pilots)})"
-                + (f" - {category}" if category else ""),
+                f"Gallery Pilots ({len(pilots)})" + (f" - {category}" if category else ""),
                 "=" * 50,
                 "",
             ]
@@ -214,9 +230,7 @@ class GalleryNode(BaseLogosNode):
                 metadata={
                     "count": len(pilots),
                     "category": category,
-                    "pilots": [
-                        {"name": p.name, "category": p.category.name} for p in pilots
-                    ],
+                    "pilots": [{"name": p.name, "category": p.category.name} for p in pilots],
                 },
             )
 
@@ -235,7 +249,7 @@ class GalleryNode(BaseLogosNode):
     )
     async def polynomial(
         self,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Renderable:
         """Show gallery polynomial visualization."""

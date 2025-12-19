@@ -15,7 +15,7 @@ Key invariants:
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
@@ -104,6 +104,36 @@ class Observer:
             archetype=archetype,
             capabilities=frozenset(caps) if not isinstance(caps, frozenset) else caps,
         )
+
+
+# === Polynomial Manifest ===
+
+
+@dataclass(frozen=True)
+class PolynomialManifest:
+    """The polynomial functor structure of an agent.
+
+    This makes AD-002 (Polynomial Generalization) visible by exposing
+    the state machine structure of any agent.
+
+    Every agent has a polynomial functor P[S, A, B] where:
+    - S is the set of positions (states)
+    - For each position s in S, we have E(s) = directions available from s
+    - A is the input type, B is the output type (not captured here)
+
+    This type captures the S and E structure, making it visible and interactive.
+    """
+
+    positions: tuple[str, ...]  # S: set of positions (states)
+    current: str  # Current position
+    directions: Mapping[str, tuple[str, ...]]  # E(s): directions from each position
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "positions": list(self.positions),
+            "current": self.current,
+            "directions": {k: list(v) for k, v in self.directions.items()},
+        }
 
 
 # === Agent Metadata (v1 compatibility) ===
@@ -298,7 +328,28 @@ class BaseLogosNode(ABC):
 
     # Standard affordances available to all archetypes
     # v3.1: Added "help" for self-documentation
-    _base_affordances: tuple[str, ...] = ("manifest", "witness", "affordances", "help")
+    # v3.2: Added "alternatives" for Ghost Integration
+    # v3.3: Added "polynomial" for Mini Polynomial (AD-002 visualization)
+    _base_affordances: tuple[str, ...] = (
+        "manifest",
+        "witness",
+        "affordances",
+        "help",
+        "alternatives",
+        "polynomial",
+    )
+
+    # Aspect hints for Ghost Integration (v3.2)
+    # Override in subclasses to provide domain-specific hints
+    ASPECT_HINTS: dict[str, str] = {
+        "manifest": "Collapse to observer's view—see the entity as it appears to you",
+        "witness": "View historical traces—see what happened before",
+        "affordances": "List available aspects—discover what you can do here",
+        "help": "Get detailed help about this node and its aspects",
+        "alternatives": "Show ghost alternatives—paths you could have taken",
+        "lens": "Get a composable agent view for category-theoretic composition",
+        "polynomial": "Show polynomial functor structure—visualize state machine",
+    }
 
     def affordances(self, observer: AgentMeta) -> list[str]:
         """
@@ -354,6 +405,14 @@ class BaseLogosNode(ABC):
             # v3.1: Self-documentation aspect
             meta = self._umwelt_to_meta(observer)
             return self._generate_help(meta)
+        if aspect == "alternatives":
+            # v3.2: Ghost alternatives aspect
+            invoked_aspect = kwargs.get("invoked_aspect")
+            meta = self._umwelt_to_meta(observer)
+            return self._get_alternatives(invoked_aspect, meta)
+        if aspect == "polynomial":
+            # v3.3: Polynomial functor structure (Mini Polynomial)
+            return await self.polynomial(observer)
         return await self._invoke_aspect(aspect, observer, **kwargs)
 
     def _generate_help(self, observer: AgentMeta) -> str:
@@ -399,6 +458,95 @@ class BaseLogosNode(ABC):
                 lines.append(f"  {aff:20} (custom aspect)")
 
         return "\n".join(lines)
+
+    def _get_alternatives(
+        self,
+        invoked_aspect: str | None,
+        observer: AgentMeta,
+    ) -> list[dict[str, Any]]:
+        """
+        Get ghost alternatives for this node.
+
+        Returns sibling aspects that could have been invoked instead of
+        the current aspect. Excludes the invoked aspect itself.
+
+        v3.2: Ghost Integration for Différance visibility.
+
+        Args:
+            invoked_aspect: The aspect that was invoked (to exclude)
+            observer: The observer requesting alternatives
+
+        Returns:
+            List of Ghost dictionaries with aspect, hint, and category
+        """
+        from .affordances import STANDARD_ASPECTS
+
+        # Get all affordances for this observer
+        all_affordances = self.affordances(observer)
+
+        # Exclude the invoked aspect and the introspection aspects
+        exclude = {"alternatives", "affordances", "help"}
+        if invoked_aspect:
+            exclude.add(invoked_aspect)
+
+        ghosts: list[Ghost] = []
+        for aspect in all_affordances:
+            if aspect in exclude:
+                continue
+
+            # Get hint from class-level ASPECT_HINTS or affordances registry
+            hint = self.ASPECT_HINTS.get(aspect)
+            if not hint:
+                aspect_info = STANDARD_ASPECTS.get(aspect)
+                hint = aspect_info.description if aspect_info else f"Invoke {aspect}"
+
+            # Get category
+            aspect_info = STANDARD_ASPECTS.get(aspect)
+            category = aspect_info.category.name if aspect_info else "UNKNOWN"
+
+            ghosts.append(
+                Ghost(
+                    aspect=aspect,
+                    hint=hint,
+                    category=category,
+                )
+            )
+
+        # Limit to 5 ghosts max (per requirements)
+        ghosts = ghosts[:5]
+
+        # Return as dictionaries for serialization
+        return [g.to_dict() for g in ghosts]
+
+    async def polynomial(self, observer: "Observer | Umwelt[Any, Any]") -> PolynomialManifest:
+        """
+        Return the polynomial functor structure of this agent.
+
+        This makes AD-002 (Polynomial Generalization) visible by exposing
+        the state machine as P[S, A, B] where S is positions and E(s) is
+        directions available from each position.
+
+        Default implementation: single 'default' position with all aspects
+        as available directions. Override in subclasses for real state machines
+        (e.g., Gardener with SENSE/ACT/REFLECT positions).
+
+        Args:
+            observer: The observer context (Observer or Umwelt)
+
+        Returns:
+            PolynomialManifest with positions, current, and directions
+        """
+        meta = (
+            self._umwelt_to_meta(observer)
+            if not isinstance(observer, Observer)
+            else AgentMeta.from_observer(observer)
+        )
+        aspects = self.affordances(meta)
+        return PolynomialManifest(
+            positions=("default",),
+            current="default",
+            directions={"default": tuple(aspects)},
+        )
 
     @abstractmethod
     async def _invoke_aspect(
@@ -528,11 +676,39 @@ class JITLogosNode:
             return 0.0
         return self.success_count / self.usage_count
 
-    def should_promote(
-        self, threshold: int = 100, success_threshold: float = 0.8
-    ) -> bool:
+    def should_promote(self, threshold: int = 100, success_threshold: float = 0.8) -> bool:
         """Check if node should be promoted to permanent implementation."""
         return self.usage_count >= threshold and self.success_rate >= success_threshold
+
+
+# === Ghost Alternative ===
+
+
+@dataclass(frozen=True)
+class Ghost:
+    """
+    An alternative aspect that could have been invoked.
+
+    Represents a path not taken in the AGENTESE graph. These are the
+    ghosts of Différance—aspects that were available but not chosen.
+
+    Attributes:
+        aspect: The aspect name (e.g., "witness", "refine")
+        hint: Human-readable hint about what this aspect does
+        category: Optional category for grouping (e.g., "PERCEPTION", "MUTATION")
+    """
+
+    aspect: str
+    hint: str
+    category: str = "UNKNOWN"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for serialization."""
+        return {
+            "aspect": self.aspect,
+            "hint": self.hint,
+            "category": self.category,
+        }
 
 
 # === Renderable Implementations ===

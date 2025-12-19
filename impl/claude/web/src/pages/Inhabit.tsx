@@ -4,6 +4,8 @@
  * Allows users to "inhabit" a citizen and interact with the town through their perspective.
  * Uses ElasticContainer for inhabitant view with ElasticCard patterns.
  *
+ * AGENTESE Route: /world.town.inhabit?citizenId=kent_001
+ *
  * Layout:
  * - Desktop (>1024px): Citizen focus | Interaction panels (resizable)
  * - Tablet (768-1024px): Citizen focus | Panels (collapsible)
@@ -15,7 +17,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   ElasticSplit,
   ElasticContainer,
@@ -30,7 +32,9 @@ import type { CitizenManifest, InhabitStatus, InhabitActionResult, Eigenvectors 
 type Density = 'compact' | 'comfortable' | 'spacious';
 
 export default function Inhabit() {
-  const { citizenId } = useParams<{ citizenId: string }>();
+  // AGENTESE style: parameters flow through query strings
+  const [searchParams] = useSearchParams();
+  const citizenId = searchParams.get('citizenId') || undefined;
   const navigate = useNavigate();
   const { density, isMobile, isDesktop } = useWindowLayout();
 
@@ -229,7 +233,7 @@ function EmptyInhabit({ citizenId, density }: EmptyInhabitProps) {
           : emptyState.description}
       </p>
       <Link
-        to="/town/demo"
+        to="/world.town.simulation?townId=demo"
         className={`bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors ${
           isCompact ? 'px-3 py-1.5 text-sm' : 'px-4 py-2'
         }`}

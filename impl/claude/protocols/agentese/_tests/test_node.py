@@ -25,6 +25,7 @@ from ..node import (
     JITLogosNode,
     LogosNode,
     PoeticRendering,
+    PolynomialManifest,
     Renderable,
 )
 
@@ -171,9 +172,7 @@ class TestLogosNodeProtocol:
         assert agent is not None
 
     @pytest.mark.asyncio
-    async def test_protocol_has_manifest(
-        self, mock_node: Any, mock_umwelt: Any
-    ) -> None:
+    async def test_protocol_has_manifest(self, mock_node: Any, mock_umwelt: Any) -> None:
         """LogosNode must have manifest method."""
         result = await mock_node.manifest(mock_umwelt)
         assert isinstance(result, Renderable)
@@ -188,9 +187,7 @@ class TestLogosNodeProtocol:
 class TestPolymorphicAffordances:
     """Tests for observer-dependent affordances."""
 
-    def test_different_archetypes_get_different_affordances(
-        self, polymorphic_node: Any
-    ) -> None:
+    def test_different_archetypes_get_different_affordances(self, polymorphic_node: Any) -> None:
         """Same node, different observers, different affordances."""
         architect_meta = AgentMeta(name="a", archetype="architect")
         poet_meta = AgentMeta(name="p", archetype="poet")
@@ -357,9 +354,7 @@ class TestBaseLogosNode:
             async def manifest(self, observer: Any) -> Renderable:
                 return BasicRendering(summary="Concrete node")
 
-            async def _invoke_aspect(
-                self, aspect: str, observer: Any, **kwargs: Any
-            ) -> Any:
+            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
                 return {"aspect": aspect}
 
         node = ConcreteNode()
@@ -377,3 +372,129 @@ class TestBaseLogosNode:
         assert "manifest" in admin_affs
         assert "delete" in admin_affs
         assert "modify" in admin_affs
+
+
+class TestPolynomialManifest:
+    """Tests for PolynomialManifest type (Mini Polynomial - AD-002)."""
+
+    def test_creation(self) -> None:
+        """PolynomialManifest can be created."""
+        pm = PolynomialManifest(
+            positions=("idle", "working", "done"),
+            current="working",
+            directions={
+                "idle": ("start",),
+                "working": ("pause", "finish"),
+                "done": ("reset",),
+            },
+        )
+        assert pm.positions == ("idle", "working", "done")
+        assert pm.current == "working"
+        assert pm.directions["working"] == ("pause", "finish")
+
+    def test_to_dict(self) -> None:
+        """PolynomialManifest serializes to dict."""
+        pm = PolynomialManifest(
+            positions=("default",),
+            current="default",
+            directions={"default": ("manifest", "witness")},
+        )
+        d = pm.to_dict()
+        assert d["positions"] == ["default"]
+        assert d["current"] == "default"
+        assert d["directions"]["default"] == ["manifest", "witness"]
+
+    def test_immutable(self) -> None:
+        """PolynomialManifest is frozen."""
+        pm = PolynomialManifest(
+            positions=("a", "b"),
+            current="a",
+            directions={"a": ("x",), "b": ("y",)},
+        )
+        with pytest.raises(Exception):  # FrozenInstanceError
+            pm.current = "b"  # type: ignore[misc]
+
+
+class TestPolynomialAspect:
+    """Tests for polynomial aspect in BaseLogosNode (Mini Polynomial - AD-002)."""
+
+    @pytest.mark.asyncio
+    async def test_default_polynomial_returns_single_position(self, mock_umwelt: Any) -> None:
+        """Default polynomial returns 'default' position with all aspects."""
+
+        class TestNode(BaseLogosNode):
+            @property
+            def handle(self) -> str:
+                return "test.polynomial"
+
+            def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+                return ("custom_aspect",)
+
+            async def manifest(self, observer: Any) -> Renderable:
+                return BasicRendering(summary="Test")
+
+            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
+                return {"aspect": aspect}
+
+        node = TestNode()
+        pm = await node.polynomial(mock_umwelt)
+
+        # Should have single 'default' position
+        assert pm.positions == ("default",)
+        assert pm.current == "default"
+
+        # Should have all affordances as directions
+        assert "manifest" in pm.directions["default"]
+        assert "witness" in pm.directions["default"]
+        assert "affordances" in pm.directions["default"]
+        assert "polynomial" in pm.directions["default"]
+        assert "custom_aspect" in pm.directions["default"]
+
+    @pytest.mark.asyncio
+    async def test_polynomial_in_base_affordances(self) -> None:
+        """Polynomial is in base affordances for all nodes."""
+
+        class TestNode(BaseLogosNode):
+            @property
+            def handle(self) -> str:
+                return "test"
+
+            def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+                return ()
+
+            async def manifest(self, observer: Any) -> Renderable:
+                return BasicRendering(summary="Test")
+
+            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
+                return None
+
+        node = TestNode()
+        meta = AgentMeta(name="test")
+        affs = node.affordances(meta)
+
+        assert "polynomial" in affs
+
+    @pytest.mark.asyncio
+    async def test_polynomial_invokable_via_invoke(self, mock_umwelt: Any) -> None:
+        """Polynomial can be invoked via node.invoke()."""
+
+        class TestNode(BaseLogosNode):
+            @property
+            def handle(self) -> str:
+                return "test"
+
+            def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+                return ()
+
+            async def manifest(self, observer: Any) -> Renderable:
+                return BasicRendering(summary="Test")
+
+            async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
+                return None
+
+        node = TestNode()
+        result = await node.invoke("polynomial", mock_umwelt)
+
+        assert isinstance(result, PolynomialManifest)
+        assert result.positions == ("default",)
+        assert result.current == "default"

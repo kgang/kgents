@@ -17,18 +17,15 @@ export interface WorldForgeCommissionManifestResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -57,18 +54,15 @@ export interface WorldForgeCommissionCreateResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -96,18 +90,15 @@ export interface WorldForgeCommissionGetResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -135,18 +126,15 @@ export interface WorldForgeCommissionStartResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -174,18 +162,15 @@ export interface WorldForgeCommissionAdvanceResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -213,18 +198,15 @@ export interface WorldForgeCommissionPauseResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;
@@ -252,18 +234,15 @@ export interface WorldForgeCommissionResumeResponse {
     updated_at: string;
     soul_approved: boolean;
     soul_annotation: string | null;
-    artisan_outputs: Record<
-      string,
-      {
-        artisan: string;
-        status: string;
-        output: Record<string, unknown> | null;
-        annotation: string | null;
-        started_at: string | null;
-        completed_at: string | null;
-        error?: string | null;
-      }
-    >;
+    artisan_outputs: Record<string, {
+      artisan: string;
+      status: string;
+      output: Record<string, unknown> | null;
+      annotation: string | null;
+      started_at: string | null;
+      completed_at: string | null;
+      error?: string | null;
+    }>;
     artifact_path: string | null;
     artifact_summary: string | null;
     paused: boolean;

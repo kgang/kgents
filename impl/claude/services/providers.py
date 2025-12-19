@@ -38,11 +38,13 @@ if TYPE_CHECKING:
     from agents.k.soul import KgentSoul
     from models.brain import Crystal
     from services.brain import BrainPersistence
-    from services.chat import ChatPersistence, ChatSessionFactory
+    from services.chat import ChatPersistence, ChatServiceFactory, ChatSessionFactory
     from services.coalition import CoalitionPersistence
     from services.forge import ForgePersistence
+    from services.forge.commission import CommissionService
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
+    from services.morpheus.persistence import MorpheusPersistence
     from services.park import ParkPersistence
     from services.town import TownPersistence
     from services.town.coalition_service import CoalitionService
@@ -164,11 +166,23 @@ async def get_chat_persistence() -> "ChatPersistence":
     return get_persistence()
 
 
-async def get_chat_factory() -> "ChatSessionFactory":
-    """Get the ChatSessionFactory service."""
-    from services.chat import get_chat_factory as get_factory
+async def get_chat_factory() -> "ChatServiceFactory":
+    """
+    Get the ChatSessionFactory service with Morpheus integration.
 
-    return get_factory()
+    Uses ChatServiceFactory which properly wires the Morpheus composer
+    for real LLM responses instead of stub fallbacks.
+    """
+    from services.chat import ChatServiceFactory, set_chat_factory
+
+    # Get morpheus_persistence from bootstrap - it has ClaudeCLIAdapter registered
+    morpheus = await get_service("morpheus_persistence")
+    factory = ChatServiceFactory(morpheus=morpheus)
+
+    # Set as global factory so ChatNode uses it too
+    set_chat_factory(factory)
+
+    return factory
 
 
 async def get_kgent_soul() -> "KgentSoul":
@@ -181,6 +195,34 @@ async def get_differance_store() -> "DifferanceStore":
     from agents.differance import DifferanceStore
 
     return await get_service("differance_store")
+
+
+async def get_morpheus_persistence() -> "MorpheusPersistence":
+    """
+    Get the MorpheusPersistence service (LLM gateway).
+
+    Creates a new MorpheusPersistence with default gateway.
+    """
+    from services.morpheus.persistence import MorpheusPersistence
+
+    return MorpheusPersistence()
+
+
+async def get_commission_service() -> "CommissionService":
+    """
+    Get the CommissionService for the Metaphysical Forge.
+
+    Optionally injects KgentSoul for governance if available.
+    """
+    from services.forge.commission import CommissionService
+
+    # Try to get KgentSoul for governance
+    try:
+        soul = await get_service("kgent_soul")
+    except Exception:
+        soul = None
+
+    return CommissionService(kgent_soul=soul)
 
 
 # =============================================================================
@@ -223,8 +265,14 @@ async def setup_providers() -> None:
     # Differance Store (trace heritage persistence)
     container.register("differance_store", get_differance_store, singleton=True)
 
+    # Morpheus LLM Gateway
+    container.register("morpheus_persistence", get_morpheus_persistence, singleton=True)
+
+    # Commission Service (Metaphysical Forge)
+    container.register("commission_service", get_commission_service, singleton=True)
+
     logger.info(
-        "All 8 Crown Jewel persistence services + K-gent Soul + Differance Store registered"
+        "All 8 Crown Jewel persistence services + K-gent Soul + Differance Store + Morpheus + Commission registered"
     )
 
     # Import service nodes to trigger @node registration
@@ -270,6 +318,20 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.debug(f"GestaltNode not available: {e}")
 
+    try:
+        from services.morpheus.node import MorpheusNode  # noqa: F401
+
+        logger.info("MorpheusNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.debug(f"MorpheusNode not available: {e}")
+
+    try:
+        from services.forge.commission_node import CommissionNode  # noqa: F401
+
+        logger.info("CommissionNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.debug(f"CommissionNode not available: {e}")
+
     # Wire DifferanceStore to DifferanceTraceNode
     try:
         from agents.differance import DifferanceStore
@@ -288,6 +350,18 @@ async def setup_providers() -> None:
             logger.info("DifferanceStore wired to DifferanceTraceNode")
     except Exception as e:
         logger.debug(f"DifferanceStore wiring skipped: {e}")
+
+    # Wire KgentSoul to SoulNode
+    try:
+        from agents.k.soul import KgentSoul
+        from protocols.agentese.contexts.self_soul import set_soul
+
+        soul = await get_service("kgent_soul")
+        if isinstance(soul, KgentSoul):
+            set_soul(soul)
+            logger.info("KgentSoul wired to SoulNode")
+    except Exception as e:
+        logger.debug(f"KgentSoul wiring skipped: {e}")
 
     # Log registry stats
     from protocols.agentese.registry import get_registry as get_agentese_registry
@@ -345,4 +419,8 @@ __all__ = [
     "get_kgent_soul",
     # Differance Engine
     "get_differance_store",
+    # Morpheus LLM Gateway
+    "get_morpheus_persistence",
+    # Metaphysical Forge
+    "get_commission_service",
 ]

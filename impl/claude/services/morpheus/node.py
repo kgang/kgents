@@ -28,6 +28,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
     BasicRendering,
@@ -36,6 +37,19 @@ from protocols.agentese.node import (
 )
 from protocols.agentese.registry import node
 
+from .contracts import (
+    CompleteRequest,
+    CompleteResponse,
+    HealthResponse,
+    MetricsResponse,
+    MorpheusManifestResponse,
+    ProvidersResponse,
+    RateLimitResponse,
+    RouteRequest,
+    RouteResponse,
+    StreamRequest,
+    StreamResponse,
+)
 from .persistence import MorpheusPersistence, MorpheusStatus
 from .types import ChatRequest
 
@@ -132,6 +146,18 @@ class ProvidersRendering:
     "world.morpheus",
     description="LLM Gateway - universal completion interface",
     dependencies=("morpheus_persistence",),
+    contracts={
+        # Perception aspects (Response only - no request needed)
+        "manifest": Response(MorpheusManifestResponse),
+        "providers": Response(ProvidersResponse),
+        "metrics": Response(MetricsResponse),
+        "health": Response(HealthResponse),
+        "rate_limit": Response(RateLimitResponse),
+        # Mutation aspects (Contract with request + response)
+        "complete": Contract(CompleteRequest, CompleteResponse),
+        "stream": Contract(StreamRequest, StreamResponse),
+        "route": Contract(RouteRequest, RouteResponse),
+    },
 )
 class MorpheusNode(BaseLogosNode):
     """
@@ -256,9 +282,7 @@ class MorpheusNode(BaseLogosNode):
         else:
             return {"error": f"Unknown aspect: {aspect}"}
 
-    async def _handle_complete(
-        self, kwargs: dict[str, Any], archetype: str
-    ) -> dict[str, Any]:
+    async def _handle_complete(self, kwargs: dict[str, Any], archetype: str) -> dict[str, Any]:
         """Handle completion request with rate limiting."""
         # Build ChatRequest from kwargs
         model = kwargs.get("model")
@@ -314,9 +338,7 @@ class MorpheusNode(BaseLogosNode):
             tokens=total_tokens,
         ).to_dict()
 
-    async def _handle_stream(
-        self, kwargs: dict[str, Any], archetype: str
-    ) -> dict[str, Any]:
+    async def _handle_stream(self, kwargs: dict[str, Any], archetype: str) -> dict[str, Any]:
         """
         Handle streaming request.
 
@@ -365,9 +387,7 @@ class MorpheusNode(BaseLogosNode):
             "stream": stream_generator(),
         }
 
-    async def _handle_providers(
-        self, archetype: str, kwargs: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_providers(self, archetype: str, kwargs: dict[str, Any]) -> dict[str, Any]:
         """Handle providers list with observer-dependent filtering."""
         # Filter based on observer archetype
         if archetype in ("admin", "system"):
@@ -380,9 +400,7 @@ class MorpheusNode(BaseLogosNode):
             filter_applied = "enabled"
         else:
             # Guest sees public providers only
-            providers = await self._persistence.list_providers(
-                enabled_only=True, public_only=True
-            )
+            providers = await self._persistence.list_providers(enabled_only=True, public_only=True)
             filter_applied = "public"
 
         return ProvidersRendering(
@@ -401,9 +419,7 @@ class MorpheusNode(BaseLogosNode):
             "total_requests": status.total_requests,
             "total_errors": status.total_errors,
             "error_rate": (
-                status.total_errors / status.total_requests
-                if status.total_requests > 0
-                else 0
+                status.total_errors / status.total_requests if status.total_requests > 0 else 0
             ),
             "uptime_seconds": status.uptime_seconds,
             "providers_healthy": status.providers_healthy,

@@ -13,6 +13,7 @@ import pytest
 from protocols.agentese.node import BaseLogosNode, BasicRendering, Observer, Renderable
 from protocols.agentese.registry import (
     NODE_MARKER,
+    NodeExample,
     NodeMetadata,
     NodeRegistry,
     get_node_metadata,
@@ -397,3 +398,121 @@ class TestRegistryIntegration:
         # list_by_context should find all self.* paths
         self_paths = registry.list_by_context("self")
         assert len(self_paths) >= 3
+
+
+# === Test Examples (Habitat 2.0) ===
+
+
+class TestNodeExamples:
+    """Tests for pre-seeded examples feature."""
+
+    def test_node_example_creation(self):
+        """NodeExample can be created and serialized."""
+        example = NodeExample(
+            aspect="search", kwargs={"query": "Python", "limit": 5}, label="Search Python"
+        )
+
+        assert example.aspect == "search"
+        assert example.kwargs == {"query": "Python", "limit": 5}
+        assert example.label == "Search Python"
+
+        # Test to_dict serialization
+        data = example.to_dict()
+        assert data["aspect"] == "search"
+        assert data["kwargs"] == {"query": "Python", "limit": 5}
+        assert data["label"] == "Search Python"
+
+    def test_node_example_default_label(self):
+        """NodeExample generates default label if not provided."""
+        example = NodeExample(aspect="capture", kwargs={"content": "test"})
+
+        assert example.label == ""
+        # Default label should be generated in to_dict
+        data = example.to_dict()
+        assert data["label"] == "Try capture"
+
+    def test_node_with_tuple_examples(self):
+        """@node accepts examples as tuples."""
+
+        @node(
+            "test.examples",
+            examples=[
+                ("search", {"query": "test"}),
+                ("recent", {"limit": 10}, "Show recent"),
+            ],
+        )
+        class ExamplesNode(SimpleNode):
+            pass
+
+        meta = get_node_metadata(ExamplesNode)
+        assert meta is not None
+        assert len(meta.examples) == 2
+
+        # First example (2-tuple)
+        ex1 = meta.examples[0]
+        assert ex1.aspect == "search"
+        assert ex1.kwargs == {"query": "test"}
+        assert ex1.label == ""  # No label provided
+
+        # Second example (3-tuple with label)
+        ex2 = meta.examples[1]
+        assert ex2.aspect == "recent"
+        assert ex2.kwargs == {"limit": 10}
+        assert ex2.label == "Show recent"
+
+    def test_node_with_nodeexample_objects(self):
+        """@node accepts NodeExample objects."""
+        example1 = NodeExample(aspect="capture", kwargs={"content": "test"}, label="Capture")
+        example2 = NodeExample(aspect="search", kwargs={"query": "Python"})
+
+        @node("test.example_objects", examples=[example1, example2])
+        class ExampleObjectsNode(SimpleNode):
+            pass
+
+        meta = get_node_metadata(ExampleObjectsNode)
+        assert meta is not None
+        assert len(meta.examples) == 2
+        assert meta.examples[0].aspect == "capture"
+        assert meta.examples[1].aspect == "search"
+
+    def test_node_examples_empty_by_default(self):
+        """Nodes without examples have empty tuple."""
+
+        @node("test.noexamples")
+        class NoExamplesNode(SimpleNode):
+            pass
+
+        meta = get_node_metadata(NoExamplesNode)
+        assert meta is not None
+        assert meta.examples == ()
+
+    def test_node_examples_serialization(self):
+        """Examples can be serialized for discovery endpoint."""
+
+        @node(
+            "test.serialization",
+            examples=[
+                ("search", {"query": "Python tips", "limit": 5}, "Search for Python"),
+                ("recent", {"limit": 10}, "Show recent memories"),
+            ],
+        )
+        class SerializationNode(SimpleNode):
+            pass
+
+        meta = get_node_metadata(SerializationNode)
+        assert meta is not None
+
+        # Serialize all examples
+        serialized = [ex.to_dict() for ex in meta.examples]
+
+        assert len(serialized) == 2
+        assert serialized[0] == {
+            "aspect": "search",
+            "kwargs": {"query": "Python tips", "limit": 5},
+            "label": "Search for Python",
+        }
+        assert serialized[1] == {
+            "aspect": "recent",
+            "kwargs": {"limit": 10},
+            "label": "Show recent memories",
+        }

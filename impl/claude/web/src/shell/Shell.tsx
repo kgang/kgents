@@ -21,12 +21,17 @@
  * ```
  */
 
+import { useState, useCallback } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { ShellProvider, useShell } from './ShellProvider';
 import { ObserverDrawer } from './ObserverDrawer';
 import { NavigationTree } from './NavigationTree';
 import { Terminal } from './Terminal';
+import { KeyboardHints } from './KeyboardHints';
+import { CommandPalette } from './CommandPalette';
+import { PathSearch } from './PathSearch';
+import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import {
   ObserverErrorBoundary,
   NavigationErrorBoundary,
@@ -55,17 +60,18 @@ interface ShellLayoutProps {
 function CrownContext() {
   const location = useLocation();
 
-  // Determine active jewel from route
+  // Determine active jewel from AGENTESE path
   const getActiveJewel = (): JewelName | null => {
     const path = location.pathname;
-    if (path.startsWith('/brain')) return 'brain';
-    if (path.startsWith('/gestalt')) return 'gestalt';
-    if (path.startsWith('/gardener') || path.startsWith('/garden')) return 'gardener';
-    if (path.startsWith('/forge')) return 'forge';
-    if (path.startsWith('/town') || path.startsWith('/inhabit')) return 'coalition';
-    if (path.startsWith('/park')) return 'park';
-    if (path.startsWith('/workshop')) return 'domain';
-    if (path.startsWith('/emergence')) return 'gestalt'; // Emergence is related to visualization
+    // AGENTESE paths: context.holon.aspect
+    if (path.startsWith('/self.memory')) return 'brain';
+    if (path.startsWith('/world.codebase')) return 'gestalt';
+    if (path.startsWith('/concept.gardener') || path.startsWith('/self.garden')) return 'gardener';
+    if (path.startsWith('/world.forge')) return 'forge';
+    if (path.startsWith('/world.town')) return 'coalition';
+    if (path.startsWith('/world.park')) return 'park';
+    if (path.startsWith('/world.domain')) return 'domain';
+    if (path.startsWith('/time.differance')) return 'gestalt'; // Différance related to visualization
     return null;
   };
 
@@ -103,13 +109,14 @@ function QuickNav() {
   const location = useLocation();
   const { density } = useShell();
 
+  // AGENTESE paths for jewels
   const jewels: Array<{ name: JewelName; route: string }> = [
-    { name: 'brain', route: '/brain' },
-    { name: 'gestalt', route: '/gestalt' },
-    { name: 'gardener', route: '/gardener' },
-    { name: 'forge', route: '/forge' },
-    { name: 'coalition', route: '/town' },
-    { name: 'park', route: '/park' },
+    { name: 'brain', route: '/self.memory' },
+    { name: 'gestalt', route: '/world.codebase' },
+    { name: 'gardener', route: '/concept.gardener' },
+    { name: 'forge', route: '/world.forge' },
+    { name: 'coalition', route: '/world.town' },
+    { name: 'park', route: '/world.park' },
   ];
 
   // In spacious mode, navigation is in sidebar
@@ -162,8 +169,88 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
     navigationWidth,
     navigationTreeExpanded,
     setNavigationTreeExpanded,
+    observerDrawerExpanded,
+    setObserverDrawerExpanded,
+    terminalExpanded,
+    setTerminalExpanded,
     isAnimating,
   } = useShell();
+
+  // Keyboard overlay states
+  const [keyboardHintsOpen, setKeyboardHintsOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [pathSearchOpen, setPathSearchOpen] = useState(false);
+
+  // Keyboard shortcut handlers
+  const handleCloseAllPanels = useCallback(() => {
+    // Close in order of priority: path search > command palette > keyboard hints > panels
+    if (pathSearchOpen) {
+      setPathSearchOpen(false);
+      return;
+    }
+    if (commandPaletteOpen) {
+      setCommandPaletteOpen(false);
+      return;
+    }
+    if (keyboardHintsOpen) {
+      setKeyboardHintsOpen(false);
+      return;
+    }
+    // Close expanded panels
+    if (observerDrawerExpanded) setObserverDrawerExpanded(false);
+    if (navigationTreeExpanded) setNavigationTreeExpanded(false);
+    if (terminalExpanded) setTerminalExpanded(false);
+  }, [
+    pathSearchOpen,
+    commandPaletteOpen,
+    keyboardHintsOpen,
+    observerDrawerExpanded,
+    navigationTreeExpanded,
+    terminalExpanded,
+    setObserverDrawerExpanded,
+    setNavigationTreeExpanded,
+    setTerminalExpanded,
+  ]);
+
+  const handleFocusTerminal = useCallback(() => {
+    setTerminalExpanded(true);
+    // Dispatch event to focus terminal input
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('shell:focus-terminal'));
+    }, 100);
+  }, [setTerminalExpanded]);
+
+  const handleToggleTerminal = useCallback(() => {
+    setTerminalExpanded(!terminalExpanded);
+  }, [terminalExpanded, setTerminalExpanded]);
+
+  const handleToggleNavTree = useCallback(() => {
+    setNavigationTreeExpanded(!navigationTreeExpanded);
+  }, [navigationTreeExpanded, setNavigationTreeExpanded]);
+
+  const handleToggleObserver = useCallback(() => {
+    setObserverDrawerExpanded(!observerDrawerExpanded);
+  }, [observerDrawerExpanded, setObserverDrawerExpanded]);
+
+  const handleTerminalCommand = useCallback((command: string) => {
+    setTerminalExpanded(true);
+    // Dispatch event to run command in terminal
+    setTimeout(() => {
+      document.dispatchEvent(new CustomEvent('shell:terminal-command', { detail: { command } }));
+    }, 100);
+  }, [setTerminalExpanded]);
+
+  // Register keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts({
+    onCloseAllPanels: handleCloseAllPanels,
+    onFocusTerminal: handleFocusTerminal,
+    onToggleTerminal: handleToggleTerminal,
+    onToggleNavTree: handleToggleNavTree,
+    onToggleObserver: handleToggleObserver,
+    onOpenCommandPalette: () => setCommandPaletteOpen(true),
+    onShowKeyboardHints: () => setKeyboardHintsOpen(true),
+    onOpenPathSearch: () => setPathSearchOpen(true),
+  });
 
   // Main content positioning uses animated offsets for smooth coordination
   // When observer collapses: main slides up
@@ -255,6 +342,26 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
           kgents - Tasteful, curated, ethical, joy-inducing agents
         </footer>
       )}
+
+      {/* Keyboard Shortcuts Overlay */}
+      <KeyboardHints
+        isOpen={keyboardHintsOpen}
+        onClose={() => setKeyboardHintsOpen(false)}
+        shortcuts={shortcuts}
+      />
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onTerminalCommand={handleTerminalCommand}
+      />
+
+      {/* Path Search (press / to open) */}
+      <PathSearch
+        isOpen={pathSearchOpen}
+        onClose={() => setPathSearchOpen(false)}
+      />
     </div>
   );
 }

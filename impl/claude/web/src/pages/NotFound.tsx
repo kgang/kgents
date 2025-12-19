@@ -38,7 +38,7 @@ export default function NotFound() {
             Return Home
           </Link>
           <Link
-            to="/town/demo"
+            to="/world.town.simulation?townId=demo"
             className="px-6 py-3 bg-town-accent/50 hover:bg-town-accent/70 rounded-lg font-medium transition-colors text-gray-200"
           >
             Visit Demo Town

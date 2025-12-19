@@ -274,7 +274,7 @@ describe('useGardenerPropose', () => {
 
     expect(result.current.data).toEqual(mockProposeResponse.result);
     expect(result.current.data?.suggestion_count).toBe(3);
-    expect(result.current.data?.suggestions.length).toBe(2);
+    expect(result.current.data?.suggestions?.length).toBe(2);
   });
 });
 

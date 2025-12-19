@@ -10,7 +10,7 @@
  */
 
 import { type ReactNode, type CSSProperties, useMemo } from 'react';
-import { useBreathing, getStaggeredPhaseOffset, type BreathingOptions } from '@/hooks';
+import { useBreathing, getStaggeredPhaseOffset } from '@/hooks';
 import { BREATHING_ANIMATION, LIVING_EARTH } from '@/constants';
 import { useMotionPreferences } from './useMotionPreferences';
 
@@ -121,7 +121,7 @@ export function BreathingContainer({
   staggerIndex = 0,
   glowPulse = false,
   glowColor = LIVING_EARTH.amber,
-  onPhaseChange,
+  onPhaseChange: _onPhaseChange,
   className = '',
   style,
   as: Component = 'div',
@@ -135,13 +135,14 @@ export function BreathingContainer({
   );
 
   // Use breathing hook
-  const { scale, phase, isBreathing, pause, resume } = useBreathing({
+  // Note: onPhaseChange prop is accepted for API compatibility but not currently
+  // implemented in useBreathing hook. The prop remains available for future use.
+  const { scale, isBreathing, pause, resume } = useBreathing({
     enabled: enabled && shouldAnimate,
     period,
     amplitude,
     phaseOffset,
     respectReducedMotion: true,
-    onPhaseChange,
   });
 
   // Handle pause state
@@ -192,7 +193,6 @@ export function BreathingContainer({
       className={className}
       style={containerStyle}
       data-breathing={isBreathing}
-      data-breath-phase={phase}
     >
       {children}
     </Component>

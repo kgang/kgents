@@ -411,15 +411,15 @@ export function CoalitionGraph() {
   }, [coalitions.data, bridges.data, graphWidth, graphHeight]);
 
   const handleSelectCoalition = useCallback((id: string) => {
-    navigate(`/town/coalitions/${id}`);
+    navigate(`/world.town.coalition.${id}`);
   }, [navigate]);
 
   const handleCloseCoalition = useCallback(() => {
-    navigate('/town/coalitions');
+    navigate('/world.town.coalition');
   }, [navigate]);
 
   const handleViewCitizen = useCallback((citizenId: string) => {
-    navigate(`/town/citizens/${citizenId}`);
+    navigate(`/world.town.citizen.${citizenId}`);
   }, [navigate]);
 
   const handleDetect = useCallback(() => {

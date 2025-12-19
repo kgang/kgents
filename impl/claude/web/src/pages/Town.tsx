@@ -4,16 +4,20 @@
  * A projection-first page using StreamPathProjection for SSE-based data.
  * All business logic delegated to hooks and visualization components.
  *
+ * AGENTESE Route: /world.town.simulation?townId=demo
+ *
  * @see spec/protocols/os-shell.md - Part III: Projection-First Rendering
  * @see docs/skills/crown-jewel-patterns.md
  */
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { useTownLoader, useTownStreamWidget } from '../hooks';
 import { StreamPathProjection } from '../shell/StreamPathProjection';
 import { TownVisualization } from '../components/town/TownVisualization';
 
 export default function TownPage() {
-  const { townId: paramTownId } = useParams<{ townId: string }>();
+  // AGENTESE style: parameters flow through query strings
+  const [searchParams] = useSearchParams();
+  const paramTownId = searchParams.get('townId') || 'demo';
   const loader = useTownLoader(paramTownId);
   const stream = useTownStreamWidget({ townId: loader.townId || '', autoConnect: !!loader.townId });
 
@@ -23,7 +27,7 @@ export default function TownPage() {
       loader={loader}
       stream={stream}
       notFoundAction="Create Demo Town"
-      onNotFoundAction={() => (window.location.href = '/town/demo')}
+      onNotFoundAction={() => (window.location.href = '/world.town.simulation?townId=demo')}
     >
       {(s, ctx) => (
         <TownVisualization

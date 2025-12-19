@@ -1,31 +1,28 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Shell } from './shell';
+import { Shell, UniversalProjection } from './shell';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { SynergyToaster } from './components/synergy';
 import { PageTransition, PersonalityLoading } from './components/joy';
 
-// Essential pages only
-const Cockpit = lazy(() => import('./pages/Cockpit'));
-const Town = lazy(() => import('./pages/Town'));
-const Forge = lazy(() => import('./pages/Forge'));
+/**
+ * AGENTESE-as-Route Architecture (AD-009 Phase 3 Complete)
+ *
+ * The URL IS the AGENTESE invocation. UniversalProjection catches all paths,
+ * parses them as AGENTESE, invokes via the gateway, and renders projections.
+ *
+ * All legacy routes have been removed - the URL IS the AGENTESE path.
+ *
+ * @see spec/protocols/agentese-as-route.md
+ */
+
+// Gallery pages (kept as explicit routes - not AGENTESE paths)
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
-const Brain = lazy(() => import('./pages/Brain'));
-const Workshop = lazy(() => import('./pages/Workshop'));
-const Inhabit = lazy(() => import('./pages/Inhabit'));
-const Gestalt = lazy(() => import('./pages/Gestalt'));
-const Gardener = lazy(() => import('./pages/Gardener'));
-const Garden = lazy(() => import('./pages/Garden'));
-const ParkScenario = lazy(() => import('./pages/ParkScenario'));
-const Differance = lazy(() => import('./pages/Differance'));
-const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Town sub-pages (Contract-Driven)
-const TownOverviewPage = lazy(() => import('./pages/TownOverviewPage'));
-const TownCitizensPage = lazy(() => import('./pages/TownCitizensPage'));
-const TownCoalitionsPage = lazy(() => import('./pages/TownCoalitionsPage'));
+// Town simulation and Inhabit now handled via UniversalProjection
+// (see registry.tsx for world.town.simulation and world.town.inhabit projections)
 
 function LoadingFallback() {
   return (
@@ -47,41 +44,32 @@ function App() {
             <Routes location={location}>
               {/* OS Shell - Unified layout with three persistent layers */}
               <Route element={<Shell />}>
-                {/* Cockpit — Kent's developer portal (Anti-Sausage Protocol manifest) */}
-                <Route path="/" element={<Cockpit />} />
+                {/*
+                 * Explicit routes (non-AGENTESE paths)
+                 * Developer galleries use /_/ prefix (not part of AGENTESE ontology)
+                 * Town simulation and Inhabit now use AGENTESE dot-paths with query params:
+                 *   /world.town.simulation?townId=demo
+                 *   /world.town.inhabit?citizenId=kent_001
+                 */}
 
-                {/* Crown Jewels */}
-                <Route path="/brain" element={<Brain />} />
-                <Route path="/gestalt" element={<Gestalt />} />
-                <Route path="/gardener" element={<Gardener />} />
-                <Route path="/garden" element={<Garden />} />
-                <Route path="/forge" element={<Forge />} />
-                {/* Town - Coalition Crown Jewel */}
-                <Route path="/town" element={<TownOverviewPage />} />
-                <Route path="/town/overview" element={<TownOverviewPage />} />
-                <Route path="/town/citizens" element={<TownCitizensPage />} />
-                <Route path="/town/citizens/:citizenId" element={<TownCitizensPage />} />
-                <Route path="/town/coalitions" element={<TownCoalitionsPage />} />
-                <Route path="/town/coalitions/:coalitionId" element={<TownCoalitionsPage />} />
-                <Route
-                  path="/town/simulation"
-                  element={<Navigate to="/town/simulation/demo" replace />}
-                />
-                <Route path="/town/simulation/:townId" element={<Town />} />
-                <Route path="/inhabit/:citizenId?" element={<Inhabit />} />
-                <Route path="/park" element={<ParkScenario />} />
-                <Route path="/workshop" element={<Workshop />} />
+                {/* Developer Galleries - system routes (/_/) not AGENTESE ontology */}
+                <Route path="/_/gallery" element={<GalleryPage />} />
+                <Route path="/_/gallery/layout" element={<LayoutGallery />} />
 
-                {/* Galleries */}
-                <Route path="/gallery" element={<GalleryPage />} />
-                <Route path="/gallery/layout" element={<LayoutGallery />} />
-
-                {/* Différance Engine — Ghost Heritage Graph Explorer */}
-                <Route path="/differance" element={<Differance />} />
+                {/*
+                 * Universal AGENTESE Projection (catch-all)
+                 *
+                 * All paths are parsed as AGENTESE invocations:
+                 *   /world.town.citizen.kent_001 → logos.invoke("world.town.citizen.kent_001")
+                 *   /self.memory:capture → logos.invoke("self.memory", aspect="capture")
+                 *
+                 * Root (/) redirects to /self.cockpit (developer cockpit).
+                 * Legacy routes have been removed - unknown paths show ConceptHome.
+                 *
+                 * @see spec/protocols/agentese-as-route.md
+                 */}
+                <Route path="/*" element={<UniversalProjection />} />
               </Route>
-
-              {/* 404 catch-all */}
-              <Route path="*" element={<NotFound />} />
             </Routes>
           </PageTransition>
         </AnimatePresence>

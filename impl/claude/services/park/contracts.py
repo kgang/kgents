@@ -314,6 +314,164 @@ class LocationCreateResponse:
     is_open: bool
 
 
+# === Scenario Types ===
+# "Westworld where hosts can say no."
+
+
+@dataclass(frozen=True)
+class ScenarioSummary:
+    """Summary of a scenario template for list views."""
+
+    id: str
+    name: str
+    scenario_type: str
+    difficulty: str
+    estimated_duration_minutes: int
+    citizen_count: int
+    tags: list[str]
+
+
+@dataclass(frozen=True)
+class ScenarioListResponse:
+    """Response for scenario list aspect."""
+
+    count: int
+    scenarios: list[ScenarioSummary]
+
+
+@dataclass(frozen=True)
+class ScenarioDetail:
+    """Full scenario template details."""
+
+    id: str
+    name: str
+    scenario_type: str
+    description: str
+    difficulty: str
+    estimated_duration_minutes: int
+    citizen_count: int
+    region_count: int
+    tags: list[str]
+
+
+@dataclass(frozen=True)
+class ScenarioGetRequest:
+    """Request to get a scenario template."""
+
+    scenario_id: str
+    detail: bool = False
+
+
+@dataclass(frozen=True)
+class ScenarioGetResponse:
+    """Response for scenario get aspect."""
+
+    scenario: ScenarioDetail
+
+
+@dataclass(frozen=True)
+class ScenarioStartRequest:
+    """Request to start a scenario session."""
+
+    scenario_id: str
+
+
+@dataclass(frozen=True)
+class SessionProgress:
+    """Progress of a scenario session."""
+
+    criterion: str
+    met: bool
+
+
+@dataclass(frozen=True)
+class ScenarioSessionDetail:
+    """Details of an active scenario session."""
+
+    id: str
+    template_id: str
+    template_name: str
+    phase: str
+    is_active: bool
+    is_terminal: bool
+    citizens: list[str]
+    time_elapsed: float
+    progress: list[SessionProgress]
+    started_at: str | None
+    ended_at: str | None
+
+
+@dataclass(frozen=True)
+class ScenarioStartResponse:
+    """Response after starting a scenario."""
+
+    session: ScenarioSessionDetail
+
+
+@dataclass(frozen=True)
+class ScenarioTickRequest:
+    """Request to advance a scenario session."""
+
+    session_id: str
+    elapsed_seconds: float = 1.0
+
+
+@dataclass(frozen=True)
+class ScenarioTickResponse:
+    """Response after advancing a scenario."""
+
+    phase: str
+    time_elapsed: float
+    progress: list[SessionProgress]
+    is_complete: bool
+
+
+@dataclass(frozen=True)
+class ScenarioEndRequest:
+    """Request to end/abandon a scenario session."""
+
+    session_id: str
+    reason: str = ""
+
+
+@dataclass(frozen=True)
+class ScenarioEndResponse:
+    """Response after ending a scenario."""
+
+    session: ScenarioSessionDetail
+
+
+@dataclass(frozen=True)
+class ScenarioSessionListResponse:
+    """Response for active sessions list."""
+
+    count: int
+    sessions: list[ScenarioSessionDetail]
+
+
+# === Consent Debt Types ===
+# "Westworld where hosts can say no"
+
+
+@dataclass(frozen=True)
+class ConsentDebtRequest:
+    """Request for consent debt operations."""
+
+    session_id: str
+    citizen_name: str
+    amount: float = 0.1  # For incur/apologize operations
+
+
+@dataclass(frozen=True)
+class ConsentDebtResponse:
+    """Response for consent debt operations."""
+
+    citizen: str
+    debt: float
+    can_inject_beat: bool
+    status: str = "ok"
+
+
 # === Exports ===
 
 __all__ = [
@@ -349,4 +507,22 @@ __all__ = [
     "LocationListResponse",
     "LocationCreateRequest",
     "LocationCreateResponse",
+    # Scenario
+    "ScenarioSummary",
+    "ScenarioListResponse",
+    "ScenarioDetail",
+    "ScenarioGetRequest",
+    "ScenarioGetResponse",
+    "ScenarioStartRequest",
+    "ScenarioSessionDetail",
+    "SessionProgress",
+    "ScenarioStartResponse",
+    "ScenarioTickRequest",
+    "ScenarioTickResponse",
+    "ScenarioEndRequest",
+    "ScenarioEndResponse",
+    "ScenarioSessionListResponse",
+    # Consent Debt
+    "ConsentDebtRequest",
+    "ConsentDebtResponse",
 ]

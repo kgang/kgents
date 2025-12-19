@@ -47,6 +47,11 @@ vi.mock('@react-three/postprocessing', () => ({
   Bloom: () => null,
 }));
 
+// Mock useMotionPreferences for animation tests
+vi.mock('@/components/joy/useMotionPreferences', () => ({
+  useMotionPreferences: () => ({ shouldAnimate: false }),
+}));
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();

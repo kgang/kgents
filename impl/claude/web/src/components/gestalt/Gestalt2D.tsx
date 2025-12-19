@@ -70,7 +70,7 @@ export function Gestalt2D({
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerContent, setDrawerContent] = useState<'filters' | 'detail'>('filters');
-  const [viewMode, setViewMode] = useState<'tree' | 'grid'>('tree'); // Tree is now default!
+  const [viewMode, _setViewMode] = useState<'tree' | 'grid'>('tree'); // Tree is now default!
 
   // Apply filters to modules
   const filteredNodes = useMemo(() => {

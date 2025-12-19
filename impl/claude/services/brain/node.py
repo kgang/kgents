@@ -178,6 +178,12 @@ class SearchRendering:
         "heal": Response(HealResponse),
         "topology": Contract(TopologyRequest, TopologyResponse),
     },
+    examples=[
+        ("search", {"query": "Python tips", "limit": 5}, "Search for Python"),
+        ("recent", {"limit": 10}, "Show recent memories"),
+        ("surface", {"entropy": 0.7}, "Surface from the void"),
+        ("topology", {"max_nodes": 200}, "Visualize knowledge graph"),
+    ],
 )
 class BrainNode(BaseLogosNode):
     """

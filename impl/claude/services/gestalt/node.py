@@ -135,6 +135,12 @@ class TopologyRendering:
         "module": Contract(ModuleRequest, ModuleResponse),
         "scan": Contract(ScanRequest, ScanResponse),
     },
+    examples=[
+        ("health", {}, "View health metrics"),
+        ("topology", {"max_nodes": 200, "min_health": 0.5}, "Visualize healthy modules"),
+        ("drift", {}, "Show drift violations"),
+        ("scan", {"language": "python"}, "Rescan codebase"),
+    ],
 )
 class GestaltNode(BaseLogosNode):
     """
@@ -236,9 +242,7 @@ class GestaltNode(BaseLogosNode):
             module_name = kwargs.get("module_name") or kwargs.get("name")
             if not module_name:
                 return {"error": "module_name required"}
-            result = handle_module_manifest(
-                module_name, [], json_output=True, store=store
-            )
+            result = handle_module_manifest(module_name, [], json_output=True, store=store)
             return result
 
         elif aspect == "scan":
@@ -273,9 +277,7 @@ class GestaltNode(BaseLogosNode):
 
         # Filter and limit modules
         modules_with_health = [
-            m
-            for m in graph.modules.values()
-            if m.health and m.health.overall_health >= min_health
+            m for m in graph.modules.values() if m.health and m.health.overall_health >= min_health
         ]
 
         # Sort by health (best first for importance)
@@ -328,9 +330,7 @@ class GestaltNode(BaseLogosNode):
                     "label": label,
                     "layer": module.layer,
                     "health_grade": module.health.grade if module.health else "?",
-                    "health_score": module.health.overall_health
-                    if module.health
-                    else 0.0,
+                    "health_score": module.health.overall_health if module.health else 0.0,
                     "lines_of_code": module.lines_of_code,
                     "coupling": module.health.coupling if module.health else 0.0,
                     "cohesion": module.health.cohesion if module.health else 1.0,
@@ -369,9 +369,7 @@ class GestaltNode(BaseLogosNode):
                 "link_count": len(links),
                 "layer_count": len(layers_set),
                 "violation_count": violation_count,
-                "avg_health": sum(health_scores) / len(health_scores)
-                if health_scores
-                else 0,
+                "avg_health": sum(health_scores) / len(health_scores) if health_scores else 0,
                 "overall_grade": graph.overall_grade,
             },
         }

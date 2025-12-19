@@ -224,26 +224,34 @@ function JewelCard({ status }: { status: JewelStatus }) {
 
 /**
  * Quick launch button for a jewel.
+ *
+ * IMPORTANT: All paths MUST be registered in the AGENTESE registry.
+ * The registry (@node decorator) is the single source of truth.
  */
 function QuickLaunchButton({ jewel, label }: { jewel: JewelName; label: string }) {
   const navigate = useNavigate();
   const Icon = JEWEL_ICONS[jewel];
   const colors = JEWEL_COLORS[jewel];
 
-  const routes: Record<JewelName, string> = {
-    brain: '/brain',
-    gestalt: '/gestalt',
-    gardener: '/gardener',
-    forge: '/forge',
-    coalition: '/town',
-    park: '/park',
-    domain: '/workshop',
+  // AGENTESE-as-Route: The URL IS the AGENTESE path
+  // Only include paths that have @node registered
+  const routes: Partial<Record<JewelName, string>> = {
+    brain: '/self.memory',
+    gestalt: '/world.codebase',
+    gardener: '/concept.gardener',
+    forge: '/world.forge',
+    coalition: '/world.town',
+    park: '/world.park',
+    // domain: Not yet implemented - no @node registered
   };
+
+  const route = routes[jewel];
+  if (!route) return null; // Skip unregistered jewels
 
   return (
     <Breathe intensity={0.15} speed="slow">
       <motion.button
-        onClick={() => navigate(routes[jewel])}
+        onClick={() => navigate(route)}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/60 border border-gray-700/50 hover:border-gray-600 transition-colors"
@@ -330,7 +338,7 @@ export default function Cockpit() {
           gardenerRes.status === 'fulfilled' && gardenerRes.value
             ? {
                 season: gardenerRes.value.season,
-                plots: gardenerRes.value.plots?.length ?? 0,
+                plots: Object.keys(gardenerRes.value.plots ?? {}).length,
               }
             : null,
       });
@@ -347,18 +355,18 @@ export default function Cockpit() {
   // Navigate to heritage exploration
   const handleExploreHeritage = useCallback(
     (traceId: string) => {
-      // Navigate to Différance page with trace selected
-      navigate(`/differance?trace=${traceId}`);
+      // Navigate to Différance page with trace selected (AGENTESE path)
+      navigate(`/time.differance?trace=${traceId}`);
     },
     [navigate]
   );
 
   // Navigate to full Différance view
   const handleViewAllTraces = useCallback(() => {
-    navigate('/differance');
+    navigate('/time.differance');
   }, [navigate]);
 
-  // Build jewel status cards with real ghost counts
+  // Build jewel status cards with real ghost counts (AGENTESE paths)
   const jewelStatuses: JewelStatus[] = useMemo(() => {
     const statuses: JewelStatus[] = [
       {
@@ -366,7 +374,7 @@ export default function Cockpit() {
         label: 'Brain',
         value: state.brain?.crystals ?? '—',
         subtext: 'crystals',
-        route: '/brain',
+        route: '/self.memory',
         ghostCount: ghostCounts.brain,
       },
       {
@@ -374,7 +382,7 @@ export default function Cockpit() {
         label: 'Gestalt',
         value: state.gestalt?.grade ?? '—',
         subtext: state.gestalt?.healthy ? 'healthy' : 'needs attention',
-        route: '/gestalt',
+        route: '/world.codebase',
         ghostCount: ghostCounts.gestalt,
       },
       {
@@ -382,7 +390,7 @@ export default function Cockpit() {
         label: 'Gardener',
         value: state.gardener?.season ?? '—',
         subtext: state.gardener ? `${state.gardener.plots} plots` : undefined,
-        route: '/gardener',
+        route: '/concept.gardener',
         ghostCount: ghostCounts.gardener,
       },
       {
@@ -390,7 +398,7 @@ export default function Cockpit() {
         label: 'Forge',
         value: 'Ready',
         subtext: 'awaiting commission',
-        route: '/forge',
+        route: '/world.forge',
         ghostCount: ghostCounts.forge,
       },
     ];

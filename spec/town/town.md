@@ -47,6 +47,15 @@ operad:
       arity: 2
       signature: "Citizen x Citizen -> SkillTransfer"
       description: "Skill transfer from teacher to student"
+    # Coalition Operations
+    coalition_form:
+      arity: -1
+      signature: "Citizen* -> Coalition"
+      description: "Citizens form a coalition with shared goals (variable arity)"
+    coalition_dissolve:
+      arity: 1
+      signature: "Coalition -> Citizen*"
+      description: "Coalition disbands, returning members to independent state"
   laws:
     locality: "interact(a, b) implies same_region(a, b)"
     rest_inviolability: "resting(a) implies not in_interaction(a)"

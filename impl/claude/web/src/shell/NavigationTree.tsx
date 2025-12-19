@@ -32,7 +32,6 @@ import {
   Palette,
   Users,
   Theater,
-  Building,
   Layers,
   GitBranch,
   type LucideIcon,
@@ -41,6 +40,7 @@ import { useShell } from './ShellProvider';
 import { getJewelColor, type JewelName } from '@/constants/jewels';
 import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
 import { apiClient } from '@/api/client';
+import { parseAgentesePath } from '@/utils/parseAgentesePath';
 import type { PathInfo, Density } from './types';
 
 // =============================================================================
@@ -59,11 +59,11 @@ interface TreeNode {
   path: string;
   /** Child nodes */
   children: Map<string, TreeNode>;
-  /** Is this a leaf (registered path) */
-  isLeaf: boolean;
+  /** Is this a registered path (not just an intermediate segment) */
+  isRegistered: boolean;
   /** Description from discovery */
   description?: string;
-  /** Available aspects */
+  /** Available aspects (affordances) - stored for reference, shown in ReferencePanel */
   aspects?: string[];
 }
 
@@ -112,34 +112,38 @@ const CONTEXT_INFO: Record<string, ContextInfo> = {
   },
 };
 
-/** Crown Jewel shortcuts */
+/**
+ * Crown Jewel shortcuts - navigate via AGENTESE path.
+ *
+ * IMPORTANT: All paths MUST be registered in the AGENTESE registry.
+ * The registry (@node decorator) is the single source of truth.
+ * Run `scripts/validate_path_alignment.py` to check alignment.
+ */
 const CROWN_JEWELS: Array<{
   name: JewelName;
   label: string;
   path: string;
-  route: string;
   icon: LucideIcon;
-  children?: Array<{ label: string; route: string; path: string }>;
+  children?: Array<{ label: string; path: string }>;
 }> = [
-  { name: 'brain', label: 'Brain', path: 'self.memory', route: '/brain', icon: Brain },
-  { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', route: '/gestalt', icon: Network },
-  { name: 'gardener', label: 'Gardener', path: 'concept.gardener', route: '/gardener', icon: Leaf },
-  { name: 'forge', label: 'Forge', path: 'world.forge', route: '/forge', icon: Palette },
+  { name: 'brain', label: 'Brain', path: 'self.memory', icon: Brain },
+  { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', icon: Network },
+  { name: 'gardener', label: 'Gardener', path: 'concept.gardener', icon: Leaf },
+  { name: 'forge', label: 'Forge', path: 'world.forge', icon: Palette },
   {
     name: 'coalition',
     label: 'Coalition',
     path: 'world.town',
-    route: '/town',
     icon: Users,
     children: [
-      { label: 'Overview', route: '/town', path: 'world.town.manifest' },
-      { label: 'Citizens', route: '/town/citizens', path: 'world.town.citizen' },
-      { label: 'Coalitions', route: '/town/coalitions', path: 'world.town.coalition' },
-      { label: 'Simulation', route: '/town/simulation', path: 'world.town.simulation' },
+      { label: 'Overview', path: 'world.town' },
+      { label: 'Citizens', path: 'world.town.citizen' },
+      { label: 'Coalitions', path: 'world.town.coalition' },
+      { label: 'Inhabit', path: 'world.town.inhabit' },
     ],
   },
-  { name: 'park', label: 'Park', path: 'world.park', route: '/park', icon: Theater },
-  { name: 'domain', label: 'Domain', path: 'world.domain', route: '/workshop', icon: Building },
+  { name: 'park', label: 'Park', path: 'world.park', icon: Theater },
+  // Domain is not yet implemented - no @node registered
 ];
 
 /** Sidebar width by density */
@@ -172,6 +176,10 @@ const MAX_DISCOVERY_RETRIES = 3;
 /** Cache expiry time in milliseconds (5 minutes) */
 const DISCOVERY_CACHE_TTL = 5 * 60 * 1000;
 
+/** localStorage keys for persisting nav tree state */
+const STORAGE_KEY_EXPANDED_PATHS = 'kgents:navtree:expandedPaths';
+const STORAGE_KEY_EXPANDED_JEWELS = 'kgents:navtree:expandedJewels';
+
 /** Cached discovery result */
 interface DiscoveryCache {
   paths: PathInfo[];
@@ -194,10 +202,12 @@ export function __clearDiscoveryCache(): void {
  * - Retry with exponential backoff
  * - Local caching with TTL
  * - Graceful fallback to hardcoded paths
+ * - Preloads affordances for all paths (for 3-level navigation)
  */
 function useDiscovery() {
   const [paths, setPaths] = useState<PathInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAspects, setLoadingAspects] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -207,6 +217,20 @@ function useDiscovery() {
     if (!discoveryCache) return false;
     return Date.now() - discoveryCache.timestamp < DISCOVERY_CACHE_TTL;
   }, []);
+
+  // Fetch affordances for a single path
+  const fetchAffordances = async (path: string): Promise<string[]> => {
+    try {
+      const pathSegments = path.replace(/\./g, '/');
+      const response = await apiClient.get<{
+        path: string;
+        affordances: string[];
+      }>(`/agentese/${pathSegments}/affordances`);
+      return response.data.affordances || [];
+    } catch {
+      return ['manifest']; // Fallback
+    }
+  };
 
   const fetchPaths = useCallback(
     async (attempt = 0): Promise<void> => {
@@ -227,26 +251,42 @@ function useDiscovery() {
           };
         }>('/agentese/discover');
 
-        // Transform flat paths to PathInfo
+        // Transform flat paths to PathInfo (initially without aspects)
         const pathInfos: PathInfo[] = response.data.paths.map((p) => ({
           path: p,
           context: p.split('.')[0] as PathInfo['context'],
-          aspects: ['manifest'], // Default - actual aspects come from individual path queries
+          aspects: ['manifest'], // Placeholder
         }));
 
-        // Update cache (intentional module-level cache pattern)
+        // Set paths immediately so tree renders
+        setPaths(pathInfos);
+        setLoading(false);
+        setError(null);
+        setRetryCount(0);
+
+        // Now fetch affordances for all paths in parallel (background)
+        setLoadingAspects(true);
+        const affordancePromises = pathInfos.map(async (info) => {
+          const aspects = await fetchAffordances(info.path);
+          return { ...info, aspects };
+        });
+
+        // Wait for all affordances (with a reasonable timeout per batch)
+        const pathsWithAspects = await Promise.all(affordancePromises);
+
+        // Update cache with full data
         // eslint-disable-next-line require-atomic-updates
         discoveryCache = {
-          paths: pathInfos,
+          paths: pathsWithAspects,
           timestamp: Date.now(),
         };
 
-        setPaths(pathInfos);
-        setError(null);
-        setRetryCount(0);
+        setPaths(pathsWithAspects);
+        setLoadingAspects(false);
       } catch (e) {
         const err = e as Error;
         setError(err);
+        setLoading(false);
 
         // Retry with exponential backoff if we haven't exceeded max retries
         if (attempt < MAX_DISCOVERY_RETRIES) {
@@ -269,8 +309,6 @@ function useDiscovery() {
           }));
           setPaths(fallbackPaths);
         }
-      } finally {
-        setLoading(false);
       }
     },
     [isCacheValid]
@@ -289,11 +327,25 @@ function useDiscovery() {
     fetchPaths();
   }, [fetchPaths]);
 
-  return { paths, loading, error, retryCount, refetch: () => fetchPaths(0) };
+  return { paths, loading, loadingAspects, error, retryCount, refetch: () => fetchPaths(0) };
 }
 
 /**
  * Build tree structure from flat paths.
+ *
+ * DESIGN DECISION (AD-012: Aspect Projection Protocol):
+ * Aspects are NOT added as navigable children. The navtree shows PATHS only.
+ *
+ * Semantic distinction:
+ * - PATHS (world.town, self.memory) are PLACES you can GO TO → navigable
+ * - ASPECTS (manifest, polynomial, witness) are ACTIONS you DO → invocable
+ *
+ * You can GO TO a town. You can't GO TO a "greeting"—you DO a greeting.
+ * Aspects are shown in the ReferencePanel as clickable buttons that POST,
+ * not in the navtree as navigable destinations that GET.
+ *
+ * @see plans/aspect-projection-protocol.md
+ * @see spec/principles.md AD-012
  */
 function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
   const root = new Map<string, TreeNode>();
@@ -312,17 +364,19 @@ function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
           segment,
           path: currentPath,
           children: new Map(),
-          isLeaf: false,
+          isRegistered: false,
         });
       }
 
       const node = currentLevel.get(segment)!;
 
-      // Mark as leaf and add metadata for final segment
+      // Mark as registered and add metadata for final segment
       if (i === segments.length - 1) {
-        node.isLeaf = true;
+        node.isRegistered = true;
         node.description = pathInfo.description;
         node.aspects = pathInfo.aspects;
+        // Aspects are NOT added as children - they're actions, not destinations
+        // See AD-012: Aspect Projection Protocol
       }
 
       currentLevel = node.children;
@@ -336,12 +390,13 @@ function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
 // Subcomponents
 // =============================================================================
 
-/** Tree node item */
+/** Tree node item with split click zones */
 const TreeNodeItem = memo(function TreeNodeItem({
   node,
   level,
   expandedPaths,
   currentPath,
+  ancestorPaths,
   onToggle,
   onNavigate,
 }: {
@@ -349,63 +404,96 @@ const TreeNodeItem = memo(function TreeNodeItem({
   level: number;
   expandedPaths: Set<string>;
   currentPath: string;
+  ancestorPaths: Set<string>;
   onToggle: (path: string) => void;
   onNavigate: (path: string) => void;
 }) {
   const hasChildren = node.children.size > 0;
   const isExpanded = expandedPaths.has(node.path);
-  const isActive = currentPath === node.path || currentPath.startsWith(`${node.path}.`);
   const isExactMatch = currentPath === node.path;
+  const isAncestor = ancestorPaths.has(node.path);
+  const canNavigate = node.isRegistered; // Only registered paths are navigable
 
   // Context info for top-level nodes
   const contextInfo = level === 0 ? CONTEXT_INFO[node.segment] : null;
-  const Icon = contextInfo?.icon || ChevronRight;
+  const Icon = contextInfo?.icon || null;
 
-  const handleClick = () => {
-    if (hasChildren) {
-      onToggle(node.path);
-    }
-    if (node.isLeaf) {
+  // Handle expand/collapse (chevron click)
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggle(node.path);
+  };
+
+  // Handle navigation (label click)
+  const handleNavigate = () => {
+    if (canNavigate) {
       onNavigate(node.path);
+    } else if (hasChildren) {
+      // If not navigable, toggle instead
+      onToggle(node.path);
     }
   };
 
   return (
     <div>
-      <button
-        onClick={handleClick}
+      <div
         className={`
-          w-full flex items-center gap-2 px-3 py-1.5 text-sm
-          hover:bg-gray-700/50 transition-colors rounded-md
-          ${isExactMatch ? 'bg-gray-700/70 text-white' : 'text-gray-300'}
-          ${isActive && !isExactMatch ? 'text-gray-200' : ''}
+          flex items-center text-sm rounded-md transition-colors
+          ${isExactMatch ? 'bg-cyan-900/40 text-white font-medium ring-1 ring-cyan-500/30' : ''}
+          ${isAncestor && !isExactMatch ? 'text-cyan-300 bg-gray-700/30' : ''}
+          ${!isExactMatch && !isAncestor ? 'text-gray-300' : ''}
         `}
-        style={{ paddingLeft: `${12 + level * 16}px` }}
+        style={{ paddingLeft: `${8 + level * 14}px` }}
       >
-        {/* Expand/collapse icon */}
+        {/* Expand/collapse button (separate click zone) */}
         {hasChildren ? (
-          <motion.span
-            animate={{ rotate: isExpanded ? 90 : 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex-shrink-0"
+          <button
+            onClick={handleToggle}
+            className="p-1.5 hover:bg-gray-600/50 rounded transition-colors flex-shrink-0"
+            aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
-            <ChevronRight className="w-3 h-3 text-gray-500" />
-          </motion.span>
+            <motion.span
+              animate={{ rotate: isExpanded ? 90 : 0 }}
+              transition={{ duration: 0.15 }}
+              className="block"
+            >
+              <ChevronRight className="w-3 h-3 text-gray-500" />
+            </motion.span>
+          </button>
         ) : (
-          <span className="w-3" /> // Spacer
+          <span className="w-6" /> // Spacer to align with expandable nodes
         )}
 
-        {/* Icon for contexts */}
-        {contextInfo && <Icon className={`w-4 h-4 ${contextInfo.color}`} />}
+        {/* Navigable label area */}
+        <button
+          onClick={handleNavigate}
+          className={`
+            flex-1 flex items-center gap-2 py-1.5 pr-2 text-left
+            ${canNavigate ? 'hover:text-white cursor-pointer' : 'cursor-default opacity-60'}
+            transition-colors truncate
+          `}
+        >
+          {/* Icon for contexts */}
+          {Icon && <Icon className={`w-4 h-4 flex-shrink-0 ${contextInfo?.color}`} />}
 
-        {/* Label */}
-        <span className="truncate">{node.segment}</span>
+          {/* Destination indicator - small dot for navigable paths */}
+          {canNavigate && !Icon && (
+            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-cyan-400/70" />
+          )}
 
-        {/* Leaf indicator */}
-        {node.isLeaf && !hasChildren && (
-          <span className="ml-auto text-xs text-gray-500">{node.aspects?.length || 0}</span>
-        )}
-      </button>
+          {/* Label */}
+          <span className="truncate">
+            {node.segment}
+          </span>
+
+          {/* Child count for nodes with children */}
+          {hasChildren && (
+            <span className="ml-auto text-xs text-gray-500 flex-shrink-0">
+              {node.children.size}
+            </span>
+          )}
+        </button>
+      </div>
 
       {/* Children */}
       <AnimatePresence>
@@ -424,6 +512,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
                 level={level + 1}
                 expandedPaths={expandedPaths}
                 currentPath={currentPath}
+                ancestorPaths={ancestorPaths}
                 onToggle={onToggle}
                 onNavigate={onNavigate}
               />
@@ -437,13 +526,34 @@ const TreeNodeItem = memo(function TreeNodeItem({
 
 /** Crown Jewels shortcuts section */
 function CrownJewelsSection({
-  currentRoute,
+  currentPath,
   onNavigate,
 }: {
-  currentRoute: string;
-  onNavigate: (route: string) => void;
+  currentPath: string;
+  onNavigate: (path: string) => void;
 }) {
-  const [expandedJewels, setExpandedJewels] = useState<Set<string>>(new Set(['coalition']));
+  // Track expanded jewels - persisted to localStorage
+  const [expandedJewels, setExpandedJewels] = useState<Set<string>>(() => {
+    // Load from localStorage, default to collapsed
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_EXPANDED_JEWELS);
+      if (stored) {
+        return new Set(JSON.parse(stored));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return new Set(); // Default: collapsed
+  });
+
+  // Persist expandedJewels to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EXPANDED_JEWELS, JSON.stringify([...expandedJewels]));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [expandedJewels]);
 
   const toggleJewel = (name: string) => {
     setExpandedJewels((prev) => {
@@ -464,8 +574,9 @@ function CrownJewelsSection({
       </h3>
       <div className="space-y-0.5">
         {CROWN_JEWELS.map((jewel) => {
+          // Check if current path matches or starts with this jewel's path
           const isActive =
-            currentRoute === jewel.route || currentRoute.startsWith(`${jewel.route}/`);
+            currentPath === jewel.path || currentPath.startsWith(`${jewel.path}.`);
           const isExpanded = expandedJewels.has(jewel.name);
           const hasChildren = jewel.children && jewel.children.length > 0;
           const color = getJewelColor(jewel.name);
@@ -478,7 +589,7 @@ function CrownJewelsSection({
                   if (hasChildren) {
                     toggleJewel(jewel.name);
                   } else {
-                    onNavigate(jewel.route);
+                    onNavigate(jewel.path);
                   }
                 }}
                 className={`
@@ -512,14 +623,14 @@ function CrownJewelsSection({
                     className="overflow-hidden"
                   >
                     {jewel.children!.map((child) => {
+                      // Check if current path matches this child
                       const childActive =
-                        currentRoute === child.route ||
-                        (child.route !== '/town' && currentRoute.startsWith(child.route));
+                        currentPath === child.path || currentPath.startsWith(`${child.path}.`);
 
                       return (
                         <button
-                          key={child.route}
-                          onClick={() => onNavigate(child.route)}
+                          key={child.path}
+                          onClick={() => onNavigate(child.path)}
                           className={`
                             w-full flex items-center gap-2 pl-10 pr-3 py-1 text-sm
                             hover:bg-gray-700/30 transition-colors rounded-md
@@ -544,7 +655,7 @@ function CrownJewelsSection({
   );
 }
 
-/** Gallery shortcuts section */
+/** Gallery shortcuts section - uses system routes (/_/) not AGENTESE */
 function GallerySection({
   currentRoute,
   onNavigate,
@@ -553,8 +664,8 @@ function GallerySection({
   onNavigate: (route: string) => void;
 }) {
   const galleries = [
-    { route: '/gallery', label: 'Projection Gallery' },
-    { route: '/gallery/layout', label: 'Layout Gallery' },
+    { route: '/_/gallery', label: 'Projection Gallery' },
+    { route: '/_/gallery/layout', label: 'Layout Gallery' },
   ];
 
   return (
@@ -585,16 +696,16 @@ function GallerySection({
   );
 }
 
-/** Tools section (Differance, etc.) */
+/** Tools section - uses AGENTESE paths */
 function ToolsSection({
-  currentRoute,
+  currentPath,
   onNavigate,
 }: {
-  currentRoute: string;
-  onNavigate: (route: string) => void;
+  currentPath: string;
+  onNavigate: (path: string) => void;
 }) {
   const tools = [
-    { route: '/differance', label: 'Différance', icon: GitBranch, path: 'time.differance' },
+    { path: 'time.differance', label: 'Différance', icon: GitBranch },
   ];
 
   return (
@@ -604,12 +715,12 @@ function ToolsSection({
       </h3>
       <div className="space-y-0.5">
         {tools.map((tool) => {
-          const isActive = currentRoute === tool.route || currentRoute.startsWith(`${tool.route}/`);
+          const isActive = currentPath === tool.path || currentPath.startsWith(`${tool.path}.`);
           const Icon = tool.icon;
           return (
             <button
-              key={tool.route}
-              onClick={() => onNavigate(tool.route)}
+              key={tool.path}
+              onClick={() => onNavigate(tool.path)}
               className={`
                 w-full flex items-center gap-2 px-3 py-1.5 text-sm
                 hover:bg-gray-700/50 transition-colors rounded-md
@@ -670,48 +781,73 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { shouldAnimate } = useMotionPreferences();
-  const { paths, loading } = useDiscovery();
+  const { paths, loading, loadingAspects } = useDiscovery();
 
-  // Build tree from paths
+  // Build tree from paths - aspects are now preloaded by useDiscovery
   const tree = useMemo(() => buildTree(paths), [paths]);
 
-  // Track expanded paths in tree
+  // Track expanded paths in tree - persisted to localStorage
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => {
-    // Default: expand all contexts
-    return new Set(['world', 'self', 'concept', 'void', 'time']);
+    // Load from localStorage, default to collapsed
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_EXPANDED_PATHS);
+      if (stored) {
+        return new Set(JSON.parse(stored));
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return new Set(); // Default: collapsed
   });
 
-  // Current AGENTESE path (derived from route)
+  // Persist expandedPaths to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_EXPANDED_PATHS, JSON.stringify([...expandedPaths]));
+    } catch {
+      // Ignore storage errors
+    }
+  }, [expandedPaths]);
+
+  // Current AGENTESE path (derived from URL)
+  // Now that URLs ARE AGENTESE paths, we parse directly
   const currentPath = useMemo(() => {
-    // Map routes to AGENTESE paths
-    const routeToPath: Record<string, string> = {
-      '/brain': 'self.memory',
-      '/gestalt': 'world.codebase',
-      '/gestalt/live': 'world.gestalt.live',
-      '/gardener': 'concept.gardener',
-      '/forge': 'world.forge',
-      '/town': 'world.town',
-      '/town/overview': 'world.town.manifest',
-      '/town/citizens': 'world.town.citizen',
-      '/town/coalitions': 'world.town.coalition',
-      '/town/simulation': 'world.town.simulation',
-      '/park': 'world.park',
-      '/workshop': 'world.domain',
-      '/emergence': 'world.emergence',
-      '/differance': 'time.differance',
-    };
-    // Check for exact match first, then prefix match for dynamic routes
-    if (routeToPath[location.pathname]) {
-      return routeToPath[location.pathname];
-    }
-    // Handle dynamic routes like /town/citizens/:citizenId
-    for (const [route, path] of Object.entries(routeToPath)) {
-      if (location.pathname.startsWith(route + '/') || location.pathname === route) {
-        return path;
-      }
-    }
-    return '';
+    const parsed = parseAgentesePath(location.pathname);
+    return parsed.isValid ? parsed.path : '';
   }, [location.pathname]);
+
+  // Compute ancestor paths for current path (for highlighting)
+  const ancestorPaths = useMemo(() => {
+    if (!currentPath) return new Set<string>();
+    const segments = currentPath.split('.');
+    const ancestors = new Set<string>();
+    for (let i = 1; i < segments.length; i++) {
+      ancestors.add(segments.slice(0, i).join('.'));
+    }
+    return ancestors;
+  }, [currentPath]);
+
+  // Auto-expand tree to reveal current path when it changes
+  useEffect(() => {
+    if (!currentPath) return;
+
+    // Expand all ancestors of the current path
+    const segments = currentPath.split('.');
+    const pathsToExpand: string[] = [];
+    for (let i = 1; i <= segments.length; i++) {
+      pathsToExpand.push(segments.slice(0, i).join('.'));
+    }
+
+    // Only expand if there are paths to expand that aren't already expanded
+    const needsExpanding = pathsToExpand.some(p => !expandedPaths.has(p));
+    if (needsExpanding) {
+      setExpandedPaths(prev => {
+        const next = new Set(prev);
+        pathsToExpand.forEach(p => next.add(p));
+        return next;
+      });
+    }
+  }, [currentPath]); // Intentionally not including expandedPaths to avoid loops
 
   // Toggle tree node expansion
   const handleToggle = useCallback((path: string) => {
@@ -727,38 +863,16 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
   }, []);
 
   // Navigate to AGENTESE path
+  // The URL IS the AGENTESE path - no mapping needed
   const handleNavigateToPath = useCallback(
     (path: string) => {
-      // Map AGENTESE paths to routes
-      const pathToRoute: Record<string, string> = {
-        'self.memory': '/brain',
-        'world.codebase': '/gestalt',
-        'world.gestalt.live': '/gestalt/live',
-        'concept.gardener': '/gardener',
-        'world.forge': '/forge',
-        'world.town': '/town',
-        'world.town.manifest': '/town',
-        'world.town.citizen': '/town/citizens',
-        'world.town.citizen.list': '/town/citizens',
-        'world.town.coalition': '/town/coalitions',
-        'world.town.coalition.list': '/town/coalitions',
-        'world.town.simulation': '/town/simulation',
-        'world.park': '/park',
-        'world.domain': '/workshop',
-        'world.emergence': '/emergence',
-        'time.differance': '/differance',
-        'time.differance.recent': '/differance',
-        'time.differance.at': '/differance',
-        'time.differance.why': '/differance',
-        'time.differance.heritage': '/differance',
-      };
-      const route = pathToRoute[path];
-      if (route) {
-        navigate(route);
-        // Close on mobile after navigation
-        if (density === 'compact') {
-          setNavigationTreeExpanded(false);
-        }
+      // Navigate directly to AGENTESE path
+      // UniversalProjection handles rendering and legacy redirects
+      navigate(`/${path}`);
+
+      // Close on mobile after navigation
+      if (density === 'compact') {
+        setNavigationTreeExpanded(false);
       }
     },
     [navigate, density, setNavigationTreeExpanded]
@@ -831,7 +945,12 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
 
                 {/* Content */}
                 <div className="p-4 space-y-4">
-                  <h2 className="text-sm font-semibold text-white">AGENTESE Paths</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-white">AGENTESE Paths</h2>
+                    {loadingAspects && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                    )}
+                  </div>
                   {loading ? (
                     <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
                   ) : (
@@ -843,6 +962,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                           level={0}
                           expandedPaths={expandedPaths}
                           currentPath={currentPath}
+                          ancestorPaths={ancestorPaths}
                           onToggle={handleToggle}
                           onNavigate={handleNavigateToPath}
                         />
@@ -851,13 +971,13 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   )}
 
                   <CrownJewelsSection
-                    currentRoute={location.pathname}
-                    onNavigate={handleNavigateToRoute}
+                    currentPath={currentPath}
+                    onNavigate={handleNavigateToPath}
                   />
 
                   <ToolsSection
-                    currentRoute={location.pathname}
-                    onNavigate={handleNavigateToRoute}
+                    currentPath={currentPath}
+                    onNavigate={handleNavigateToPath}
                   />
 
                   <GallerySection
@@ -916,9 +1036,14 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
 
               {/* Content */}
               <div className="p-3 pt-8 space-y-4">
-                <h2 className="px-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  AGENTESE Paths
-                </h2>
+                <div className="flex items-center gap-2 px-3">
+                  <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    AGENTESE Paths
+                  </h2>
+                  {loadingAspects && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                  )}
+                </div>
                 {loading ? (
                   <div className="py-4 text-center text-gray-500 text-sm">Loading...</div>
                 ) : (
@@ -930,6 +1055,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                         level={0}
                         expandedPaths={expandedPaths}
                         currentPath={currentPath}
+                        ancestorPaths={ancestorPaths}
                         onToggle={handleToggle}
                         onNavigate={handleNavigateToPath}
                       />
@@ -938,11 +1064,11 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 )}
 
                 <CrownJewelsSection
-                  currentRoute={location.pathname}
-                  onNavigate={handleNavigateToRoute}
+                  currentPath={currentPath}
+                  onNavigate={handleNavigateToPath}
                 />
 
-                <ToolsSection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
+                <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
                 <GallerySection
                   currentRoute={location.pathname}
@@ -1000,9 +1126,14 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
           >
             {/* Close button in header */}
             <div className="sticky top-0 bg-gray-800/[0.825] backdrop-blur-md border-b border-gray-700/50 px-3 py-2 flex items-center justify-between">
-              <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                AGENTESE Paths
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  AGENTESE Paths
+                </h2>
+                {loadingAspects && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                )}
+              </div>
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
                 className="p-1 hover:bg-gray-700 rounded transition-colors"
@@ -1025,6 +1156,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                       level={0}
                       expandedPaths={expandedPaths}
                       currentPath={currentPath}
+                      ancestorPaths={ancestorPaths}
                       onToggle={handleToggle}
                       onNavigate={handleNavigateToPath}
                     />
@@ -1033,11 +1165,11 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               )}
 
               <CrownJewelsSection
-                currentRoute={location.pathname}
-                onNavigate={handleNavigateToRoute}
+                currentPath={currentPath}
+                onNavigate={handleNavigateToPath}
               />
 
-              <ToolsSection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
+              <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
               <GallerySection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
             </div>

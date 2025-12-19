@@ -285,3 +285,207 @@ export interface WorldParkLocationCreateResponse {
   atmosphere: string | null;
   is_open: boolean;
 }
+
+/**
+ * Response for scenario list aspect.
+ */
+export interface WorldParkScenarioListResponse {
+  count: number;
+  scenarios: {
+    id: string;
+    name: string;
+    scenario_type: string;
+    difficulty: string;
+    estimated_duration_minutes: number;
+    citizen_count: number;
+    tags: string[];
+  }[];
+}
+
+/**
+ * Request to get a scenario template.
+ */
+export interface WorldParkScenarioGetRequest {
+  scenario_id: string;
+  detail?: boolean;
+}
+
+/**
+ * Response for scenario get aspect.
+ */
+export interface WorldParkScenarioGetResponse {
+  /** Full scenario template details. */
+  scenario: {
+    id: string;
+    name: string;
+    scenario_type: string;
+    description: string;
+    difficulty: string;
+    estimated_duration_minutes: number;
+    citizen_count: number;
+    region_count: number;
+    tags: string[];
+  };
+}
+
+/**
+ * Request to start a scenario session.
+ */
+export interface WorldParkScenarioStartRequest {
+  scenario_id: string;
+}
+
+/**
+ * Response after starting a scenario.
+ */
+export interface WorldParkScenarioStartResponse {
+  /** Details of an active scenario session. */
+  session: {
+    id: string;
+    template_id: string;
+    template_name: string;
+    phase: string;
+    is_active: boolean;
+    is_terminal: boolean;
+    citizens: string[];
+    time_elapsed: number;
+    progress: {
+      criterion: string;
+      met: boolean;
+    }[];
+    started_at: string | null;
+    ended_at: string | null;
+  };
+}
+
+/**
+ * Request to advance a scenario session.
+ */
+export interface WorldParkScenarioTickRequest {
+  session_id: string;
+  elapsed_seconds?: number;
+}
+
+/**
+ * Response after advancing a scenario.
+ */
+export interface WorldParkScenarioTickResponse {
+  phase: string;
+  time_elapsed: number;
+  progress: {
+    criterion: string;
+    met: boolean;
+  }[];
+  is_complete: boolean;
+}
+
+/**
+ * Request to end/abandon a scenario session.
+ */
+export interface WorldParkScenarioEndRequest {
+  session_id: string;
+  reason?: string;
+}
+
+/**
+ * Response after ending a scenario.
+ */
+export interface WorldParkScenarioEndResponse {
+  /** Details of an active scenario session. */
+  session: {
+    id: string;
+    template_id: string;
+    template_name: string;
+    phase: string;
+    is_active: boolean;
+    is_terminal: boolean;
+    citizens: string[];
+    time_elapsed: number;
+    progress: {
+      criterion: string;
+      met: boolean;
+    }[];
+    started_at: string | null;
+    ended_at: string | null;
+  };
+}
+
+/**
+ * Response for active sessions list.
+ */
+export interface WorldParkScenarioSessionsResponse {
+  count: number;
+  sessions: {
+    id: string;
+    template_id: string;
+    template_name: string;
+    phase: string;
+    is_active: boolean;
+    is_terminal: boolean;
+    citizens: string[];
+    time_elapsed: number;
+    progress: {
+      criterion: string;
+      met: boolean;
+    }[];
+    started_at: string | null;
+    ended_at: string | null;
+  }[];
+}
+
+/**
+ * Request for consent debt operations.
+ */
+export interface WorldParkConsentDebtRequest {
+  session_id: string;
+  citizen_name: string;
+  amount?: number;
+}
+
+/**
+ * Response for consent debt operations.
+ */
+export interface WorldParkConsentDebtResponse {
+  citizen: string;
+  debt: number;
+  can_inject_beat: boolean;
+  status?: string;
+}
+
+/**
+ * Request for consent debt operations.
+ */
+export interface WorldParkConsentIncurRequest {
+  session_id: string;
+  citizen_name: string;
+  amount?: number;
+}
+
+/**
+ * Response for consent debt operations.
+ */
+export interface WorldParkConsentIncurResponse {
+  citizen: string;
+  debt: number;
+  can_inject_beat: boolean;
+  status?: string;
+}
+
+/**
+ * Request for consent debt operations.
+ */
+export interface WorldParkConsentApologizeRequest {
+  session_id: string;
+  citizen_name: string;
+  amount?: number;
+}
+
+/**
+ * Response for consent debt operations.
+ */
+export interface WorldParkConsentApologizeResponse {
+  citizen: string;
+  debt: number;
+  can_inject_beat: boolean;
+  status?: string;
+}

@@ -1,12 +1,25 @@
 """
-AGENTESE API Endpoints.
+AGENTESE API Endpoints (DEPRECATED).
 
-Exposes AGENTESE Logos resolver via REST API:
+⚠️ DEPRECATED: This module is no longer mounted in app.py as of AD-009.
+
+Use the AGENTESE Universal Gateway instead:
+- GET  /agentese/{path}/manifest    - Manifest a node
+- POST /agentese/{path}/{aspect}    - Invoke an aspect
+- GET  /agentese/{path}/affordances - List affordances
+- GET  /agentese/discover           - Discover all paths
+
+The gateway at protocols/agentese/gateway.py auto-exposes all @node
+registered services. See AD-009 (Metaphysical Fullstack) for details.
+
+This module is kept for reference and potential migration of:
+- Pydantic models (InvokeRequest, InvokeResponse, etc.)
+- Usage recording patterns
+
+Legacy endpoints (no longer exposed):
 - POST /v1/agentese/invoke - Invoke an AGENTESE path
 - GET /v1/agentese/resolve - Resolve path to node info
 - GET /v1/agentese/affordances - List available affordances
-
-Records usage to OpenMeter for billing when configured.
 """
 
 from __future__ import annotations

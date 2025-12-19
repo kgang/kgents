@@ -25,9 +25,9 @@ import type {
   ConceptGardenerSessionAdvanceRequest,
   ConceptGardenerSessionAdvanceResponse,
   // Polynomial
-  ConceptGardenerPolynomialResponse,
+  ConceptGardenerSessionPolynomialResponse,
   // Sessions list
-  ConceptGardenerSessionsListResponse,
+  ConceptGardenerSessionsManifestResponse,
   // Route
   ConceptGardenerRouteRequest,
   ConceptGardenerRouteResponse,
@@ -191,13 +191,13 @@ export function useGardenerSession(
  */
 export function useGardenerPolynomial(
   options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerPolynomialResponse> {
-  const { state, execute, reset } = useAsyncState<ConceptGardenerPolynomialResponse>();
+): QueryResult<ConceptGardenerSessionPolynomialResponse> {
+  const { state, execute, reset } = useAsyncState<ConceptGardenerSessionPolynomialResponse>();
   const enabled = options?.enabled !== false;
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<ConceptGardenerPolynomialResponse>('concept.gardener.session.polynomial', {}));
+    execute(fetchAgentese<ConceptGardenerSessionPolynomialResponse>('concept.gardener.session.polynomial', {}));
   }, [execute, enabled]);
 
   useEffect(() => {
@@ -222,13 +222,13 @@ export function useGardenerPolynomial(
  */
 export function useGardenerSessions(
   options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerSessionsListResponse> {
-  const { state, execute, reset } = useAsyncState<ConceptGardenerSessionsListResponse>();
+): QueryResult<ConceptGardenerSessionsManifestResponse> {
+  const { state, execute, reset } = useAsyncState<ConceptGardenerSessionsManifestResponse>();
   const enabled = options?.enabled !== false;
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<ConceptGardenerSessionsListResponse>('concept.gardener.sessions.manifest', {}));
+    execute(fetchAgentese<ConceptGardenerSessionsManifestResponse>('concept.gardener.sessions.manifest', {}));
   }, [execute, enabled]);
 
   useEffect(() => {
@@ -405,8 +405,8 @@ export type {
   ConceptGardenerSessionDefineResponse,
   ConceptGardenerSessionAdvanceRequest,
   ConceptGardenerSessionAdvanceResponse,
-  ConceptGardenerPolynomialResponse,
-  ConceptGardenerSessionsListResponse,
+  ConceptGardenerSessionPolynomialResponse,
+  ConceptGardenerSessionsManifestResponse,
   ConceptGardenerRouteRequest,
   ConceptGardenerRouteResponse,
   ConceptGardenerProposeResponse,

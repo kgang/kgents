@@ -209,8 +209,7 @@ class SuccessCriterion:
                 required = self.params.get("required_pairs", [])
                 for pair in required:
                     if not any(
-                        i.get("from") == pair[0] and i.get("to") == pair[1]
-                        for i in interactions
+                        i.get("from") == pair[0] and i.get("to") == pair[1] for i in interactions
                     ):
                         return False
                 return True
@@ -435,9 +434,7 @@ class ScenarioTemplate:
             base["difficulty"] = self.difficulty
 
         if lod >= 2:
-            base["citizens"] = [
-                {"name": c.name, "archetype": c.archetype} for c in self.citizens
-            ]
+            base["citizens"] = [{"name": c.name, "archetype": c.archetype} for c in self.citizens]
             base["estimated_duration_minutes"] = self.estimated_duration_minutes
 
         if lod >= 3:
@@ -642,9 +639,7 @@ def validate_scenario_template(template: ScenarioTemplate) -> list[str]:
 
     # Validate difficulty
     if template.difficulty not in {"easy", "medium", "hard"}:
-        errors.append(
-            f"Invalid difficulty '{template.difficulty}'; must be easy/medium/hard"
-        )
+        errors.append(f"Invalid difficulty '{template.difficulty}'; must be easy/medium/hard")
 
     # Validate estimated duration
     if template.estimated_duration_minutes <= 0:
@@ -700,6 +695,9 @@ class ScenarioSession:
         self.context.setdefault("votes", {})
         self.context.setdefault("events", [])
         self.context.setdefault("time_elapsed", 0.0)
+        # Consent debt tracking - "hosts can say no"
+        # debt > 0.7 blocks beat injection
+        self.context.setdefault("consent_debt", {})
 
     @property
     def citizens(self) -> list[Citizen]:
@@ -767,9 +765,7 @@ class ScenarioSession:
         if self.template.trigger.is_satisfied(self.context):
             old_phase = self.phase
             self.phase = ScenarioPhase.ACTIVE
-            self._record_phase_transition(
-                old_phase, self.phase, "immediate trigger satisfied"
-            )
+            self._record_phase_transition(old_phase, self.phase, "immediate trigger satisfied")
 
     def tick(self, elapsed_seconds: float = 1.0) -> dict[str, Any]:
         """
@@ -783,9 +779,7 @@ class ScenarioSession:
         Returns:
             Status dict with phase and progress info
         """
-        self.context["time_elapsed"] = (
-            self.context.get("time_elapsed", 0.0) + elapsed_seconds
-        )
+        self.context["time_elapsed"] = self.context.get("time_elapsed", 0.0) + elapsed_seconds
 
         # Handle different phases
         if self.phase == ScenarioPhase.TRIGGERED:
@@ -793,18 +787,14 @@ class ScenarioSession:
             if self.template.trigger.is_satisfied(self.context):
                 old_phase = self.phase
                 self.phase = ScenarioPhase.ACTIVE
-                self._record_phase_transition(
-                    old_phase, self.phase, "trigger satisfied"
-                )
+                self._record_phase_transition(old_phase, self.phase, "trigger satisfied")
 
         elif self.phase == ScenarioPhase.ACTIVE:
             # Check success criteria
             if self.template.success_criteria.is_met(self.context):
                 old_phase = self.phase
                 self.phase = ScenarioPhase.COMPLETED
-                self._record_phase_transition(
-                    old_phase, self.phase, "success criteria met"
-                )
+                self._record_phase_transition(old_phase, self.phase, "success criteria met")
                 self.ended_at = datetime.now()
 
         return {
@@ -848,9 +838,7 @@ class ScenarioSession:
 
     def add_resources(self, amount: int) -> None:
         """Add to pooled resources."""
-        self.context["pooled_resources"] = (
-            self.context.get("pooled_resources", 0) + amount
-        )
+        self.context["pooled_resources"] = self.context.get("pooled_resources", 0) + amount
 
     def record_vote(self, option: str, count: int = 1) -> None:
         """Record votes for consensus tracking."""
@@ -863,9 +851,7 @@ class ScenarioSession:
 
         old_phase = self.phase
         self.phase = ScenarioPhase.ABANDONED
-        self._record_phase_transition(
-            old_phase, self.phase, reason or "abandoned by user"
-        )
+        self._record_phase_transition(old_phase, self.phase, reason or "abandoned by user")
         self.ended_at = datetime.now()
 
     def fail(self, reason: str = "") -> None:
@@ -875,10 +861,95 @@ class ScenarioSession:
 
         old_phase = self.phase
         self.phase = ScenarioPhase.FAILED
-        self._record_phase_transition(
-            old_phase, self.phase, reason or "scenario failed"
-        )
+        self._record_phase_transition(old_phase, self.phase, reason or "scenario failed")
         self.ended_at = datetime.now()
+
+    # =========================================================================
+    # Consent Debt - "Westworld where hosts can say no"
+    # =========================================================================
+
+    def get_consent_debt(self, citizen_name: str) -> float:
+        """
+        Get consent debt for a citizen.
+
+        Debt accumulates when hosts are forced to act against their will.
+        Debt > 0.7 blocks beat injections.
+
+        Returns:
+            Debt value between 0.0 and 1.0
+        """
+        return self.context["consent_debt"].get(citizen_name, 0.0)
+
+    def incur_debt(self, citizen_name: str, amount: float = 0.1) -> float:
+        """
+        Incur consent debt for forcing a host to act.
+
+        Args:
+            citizen_name: The host who is being forced
+            amount: Debt to add (default 0.1 per forced action)
+
+        Returns:
+            New debt level
+        """
+        current = self.get_consent_debt(citizen_name)
+        new_debt = min(1.0, current + amount)
+        self.context["consent_debt"][citizen_name] = new_debt
+
+        # Record the event
+        self.context["events"].append(
+            {
+                "type": "consent_debt_incurred",
+                "citizen": citizen_name,
+                "amount": amount,
+                "new_debt": new_debt,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        return new_debt
+
+    def can_inject_beat(self, citizen_name: str) -> bool:
+        """
+        Check if a beat can be injected for this citizen.
+
+        Debt > 0.7 blocks injections. The host refuses.
+
+        Returns:
+            True if beat can be injected, False if blocked by debt
+        """
+        debt = self.get_consent_debt(citizen_name)
+        return debt <= 0.7
+
+    def apologize(self, citizen_name: str, reduction: float = 0.15) -> float:
+        """
+        Reduce consent debt by apologizing/making amends.
+
+        The visitor acknowledges they pushed too hard and makes amends.
+        This reduces debt and re-enables beat injection.
+
+        Args:
+            citizen_name: The host to apologize to
+            reduction: Amount to reduce debt (default 0.15)
+
+        Returns:
+            New debt level
+        """
+        current = self.get_consent_debt(citizen_name)
+        new_debt = max(0.0, current - reduction)
+        self.context["consent_debt"][citizen_name] = new_debt
+
+        # Record the event
+        self.context["events"].append(
+            {
+                "type": "consent_debt_reduced",
+                "citizen": citizen_name,
+                "reduction": reduction,
+                "new_debt": new_debt,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
+        return new_debt
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize session state."""
@@ -896,6 +967,8 @@ class ScenarioSession:
                 "revealed_info": list(self.context.get("revealed_info", set())),
                 "coalitions_count": len(self.context.get("coalitions", [])),
                 "pooled_resources": self.context.get("pooled_resources", 0),
+                # Consent debt - "hosts can say no"
+                "consent_debt": self.context.get("consent_debt", {}),
             },
             "progress": self.template.success_criteria.get_progress(self.context),
             "phase_history": self.phase_history,
@@ -943,9 +1016,7 @@ def create_scenario_polynomial(session: ScenarioSession) -> Any:
     """
     from agents.poly.protocol import PolyAgent
 
-    def transition(
-        phase: ScenarioPhase, input: Any
-    ) -> tuple[ScenarioPhase, dict[str, Any]]:
+    def transition(phase: ScenarioPhase, input: Any) -> tuple[ScenarioPhase, dict[str, Any]]:
         """Scenario state transition function."""
         cmd = (
             input
@@ -995,9 +1066,7 @@ def create_scenario_polynomial(session: ScenarioSession) -> Any:
                     session.reveal_information(input.get("info", ""))
                     return session.phase, {"status": "info_revealed"}
                 elif cmd == "coalition" and isinstance(input, dict):
-                    session.record_coalition(
-                        input.get("id", ""), input.get("members", [])
-                    )
+                    session.record_coalition(input.get("id", ""), input.get("members", []))
                     return session.phase, {"status": "coalition_recorded"}
                 elif cmd == "vote" and isinstance(input, dict):
                     session.record_vote(input.get("option", ""), input.get("count", 1))
@@ -1006,14 +1075,10 @@ def create_scenario_polynomial(session: ScenarioSession) -> Any:
                     session.abandon()
                     return session.phase, {"status": "abandoned"}
                 elif cmd == "fail":
-                    session.fail(
-                        input.get("reason", "") if isinstance(input, dict) else ""
-                    )
+                    session.fail(input.get("reason", "") if isinstance(input, dict) else "")
                     return session.phase, {"status": "failed"}
 
-            case (
-                ScenarioPhase.COMPLETED | ScenarioPhase.FAILED | ScenarioPhase.ABANDONED
-            ):
+            case ScenarioPhase.COMPLETED | ScenarioPhase.FAILED | ScenarioPhase.ABANDONED:
                 if cmd == "reset":
                     # Reset to new pending session
                     session.phase = ScenarioPhase.PENDING

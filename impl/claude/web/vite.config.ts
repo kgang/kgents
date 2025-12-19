@@ -41,10 +41,18 @@ export default defineConfig({
       'axios',
       'immer',
       'nanoid',
+      // Include url polyfill that pixi.js depends on
+      'url',
+      // eventemitter3 is CJS - must pre-bundle for ESM interop
+      // (transitive dep: @pixi/react → @pixi/core → @pixi/utils → eventemitter3)
+      'eventemitter3',
+      // earcut is CJS - must pre-bundle for ESM interop
+      // (transitive dep: pixi.js → @pixi/graphics → earcut)
+      'earcut',
+      // pixi.js and @pixi/react need pre-bundling for ESM named exports (Text, Stage, etc.)
+      'pixi.js',
+      '@pixi/react',
     ],
-    // Exclude pixi.js (lazy-loaded for Town visualization)
-    // three.js ecosystem removed entirely for performance
-    exclude: ['pixi.js', '@pixi/react'],
   },
   server: {
     port: 3000,

@@ -67,6 +67,7 @@ Symmetric lifting: every functor needs lift() AND unlift()
 Protocol > ABC: typing.Protocol enables duck typing without inheritance coupling
 Slash shortcuts (/cmd) map to AGENTESE paths—preserves semantics, adds ergonomics
 INHABIT consent debt: continuous [0,1] beats binary—enables nuanced relationships
+AD-012: Paths are PLACES (navigable), aspects are ACTIONS (invocable)—mixing causes 405 errors
 Punchdrunk principle: collaboration > control; citizen refusal is core feature, not bug
 ```
 
@@ -290,6 +291,42 @@ Dual-API mismatch kills SSE: AGENTESE singleton + AUP multi-tenant don't share s
 EventSource auth: can't send headers; add query param support (?api_key=...) for SSE endpoints
 ```
 
+### AGENTESE Router Consolidation (2025-12-18)
+```
+Legacy router removal is safe: gateway tests cover all functionality; delete test file, not just router
+87 explicit routes remain in 12 routers; priority by existing @node infrastructure (gardener, gestalt first)
+Frontend migration pattern: /v1/{service}/{path} → /agentese/{context}/{holon}/{aspect} + unwrap result
+Check /agentese/discover before removing router: confirms @node is registered and reachable
+Import order matters: gateway.py must import context modules to trigger @node registration
+Two garden backends coexist: protocols.gardener_logos (garden state) vs agents.k.garden (persona ideas)
+Archive legacy tests to _archived/: preserves history, keeps pytest happy
+Phase 2: @node decorator must be FIRST in stack (before @chatty) for registration to work
+Phase 2: OpenAPI path format is {path} not {path:path}—test assertions must use OpenAPI format
+```
+
+### AGENTESE Node Overhaul (2025-12-19)
+```
+Two node architectural patterns: Service (contracts={}) vs Context (@aspect decorators)—both valid
+Context resolver audit: 95% clean, no true duplicates—intentional separation of concerns
+Projection coverage: 54% of paths (13/24) have dedicated projections; rest use ConceptHome fallback
+Gallery path distinction: world.gallery (practical API) vs world.emergence.gallery (educational showcase)
+Morpheus contracts pattern: Response() for perception, Contract(req, resp) for mutation aspects
+Quick wins unlock value: 4 projection registry entries + 1 contracts file = measurable progress in 1 session
+Gardener needs TWO node families: self.garden.* (state) + concept.gardener.* (session)—different concerns
+Two-hook pattern: useGardenManifest() (plots/seasons) + useGardenerSession() (polynomial phase)
+Graceful fallback pattern: DEFAULT_* constants when API unavailable; friendly error states
+```
+
+### OpenAPI as Projection Surface (2025-12-19)
+```
+OpenAPI is projection, not authority: registry is truth, spec is derived via AgenteseLens functor
+REST ≠ AGENTESE: ONE route = ONE op vs ONE path + MANY observers = MANY semantic ops—not a bug
+Observer in header, not path: X-Observer-Archetype preserves REST compat while honoring observer-dependence
+x-agentese extensions: metadata for tools that understand paradigm; standard OpenAPI for REST devs
+Custom docs UI at /docs/agentese: path explorer + observer picker + examples runner = joy-inducing
+Discovery endpoint is source: /agentese/discover?include_metadata=true already has contracts, examples, effects
+```
+
 ### OS Shell Architecture (2025-12-17)
 ```
 PathProjection = render-props pattern: child receives (data, context) → flexible composition
@@ -317,6 +354,13 @@ Law verification UX: button + loading state + pass/fail badges + result list = c
 Design vertical slice complete: types → polynomial → operad → sheaf → node → gateway → hook → UI
 ```
 
+### Differance Postgres Integration (2025-12-18)
+```
+Audit before building: 200+ line plan reduced to 50 lines—DifferanceStore already accepted DgentProtocol
+DifferanceStore is polymorphic: any DgentProtocol backend (Memory, SQLite, Postgres) works via wiring alone
+Bootstrap wiring pattern: add service factory + provider getter + node.set_store() in setup_providers()
+```
+
 ### AGENTESE Contract Protocol (2025-12-18)
 ```
 @node(contracts={}) makes node the contract authority—BE defines, FE discovers, both stay sync'd
@@ -328,6 +372,15 @@ Three modes for drift: Advisory (warn), Gatekeeping (fail CI), Aspirational (tra
 TypeScript "bundler" moduleResolution: requires explicit file paths, not bare directory imports
 Re-export pattern: types.ts exports from _generated/*.ts + provides type aliases for migration
 CI contract sync: separate job with BE server—test contract drift before main test suite
+```
+
+### Habitat 2.0 Architecture (2025-12-18)
+```
+Habitat three-layer pattern: Adaptive → Polynomial → Ghosts; progressive enhancement by metadata richness
+Ghost = sibling aspects not taken; Différance made visible via alternatives aspect
+MiniPolynomial visualization IS AD-002 made tangible—click transitions to invoke
+Examples metadata enables one-click invocation; time-to-first-call → 1 click
+Habitat Guarantee: ∀ path p: Habitat(p) ≠ ∅; no blank pages, no 404 behavior
 ```
 
 ## Anti-Patterns
@@ -350,4 +403,4 @@ DensityField animation: 30fps always or only when focused?
 
 ---
 
-*Lines: ~290/200 | Last pruned: 2025-12-17 | Floating overlay patterns added | NEEDS PRUNING*
+*Lines: 382/200 | Last pruned: 2025-12-17 | Habitat 2.0 learnings added | NEEDS PRUNING*

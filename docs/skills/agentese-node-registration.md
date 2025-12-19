@@ -1,7 +1,34 @@
 # AGENTESE Node Registration
 
 **Status:** Canonical Pattern
-**Last Updated:** 2025-12-18
+**Last Updated:** 2025-12-19
+
+---
+
+## The Core Principle (AD-011)
+
+> **The AGENTESE registry is the SINGLE SOURCE OF TRUTH.**
+> If a path isn't registered via `@node`, it doesn't exist.
+
+See `spec/principles.md` AD-011 for the full architectural decision.
+
+```
+SINGLE SOURCE OF TRUTH
+
+    @node("world.town")           ◄─── This is the ONLY place a path is defined
+           │
+           ▼
+    ┌──────────────────────────────────────────────────────┐
+    │              AGENTESE Registry                        │
+    │   get_registry().list_paths() → ["world.town", ...]   │
+    └──────────────────────────────────────────────────────┘
+           │
+           ├──────────────► NavigationTree.tsx (MUST match)
+           ├──────────────► Cockpit.tsx (MUST match)
+           ├──────────────► CLI handlers (MUST match)
+           ├──────────────► API routes (auto-generated)
+           └──────────────► Documentation (derived)
+```
 
 ---
 
@@ -379,6 +406,80 @@ if TYPE_CHECKING:
 
 ---
 
+## Dependency Injection for Nodes
+
+When a node requires dependencies (services, persistence layers, etc.), you must:
+
+### 1. Declare dependencies in @node decorator
+
+```python
+@node(
+    "world.forge.commission",
+    description="Commission workflow for building agents",
+    dependencies=("commission_service",),  # REQUIRED: explicit declaration
+    contracts={...},
+)
+class CommissionNode(BaseLogosNode):
+    def __init__(self, commission_service: CommissionService) -> None:
+        self.service = commission_service
+```
+
+### 2. Register providers in `services/providers.py`
+
+```python
+# Add provider function
+async def get_commission_service() -> "CommissionService":
+    """Get the CommissionService for the Metaphysical Forge."""
+    from services.forge.commission import CommissionService
+    return CommissionService()
+
+# Register in setup_providers()
+async def setup_providers() -> None:
+    container = get_container()
+    # ...existing registrations...
+    container.register("commission_service", get_commission_service, singleton=True)
+```
+
+### 3. Container resolution flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  @node(dependencies=("commission_service",))                     │
+│         │                                                        │
+│         ▼                                                        │
+│  container.create_node(cls, meta)                               │
+│         │                                                        │
+│         ├──→ Check meta.dependencies                            │
+│         │         │                                              │
+│         │         ▼                                              │
+│         │    Resolve each via container.resolve(name)           │
+│         │         │                                              │
+│         │         ▼                                              │
+│         │    container._providers["commission_service"]()       │
+│         │         │                                              │
+│         │         ▼                                              │
+│         │    get_commission_service() → CommissionService       │
+│         │                                                        │
+│         ▼                                                        │
+│  cls(**resolved_kwargs) → Node instance                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Common DI Error
+
+```
+TypeError: CommissionNode.__init__() missing 1 required positional argument: 'commission_service'
+```
+
+**Cause:** Node declares/requires a dependency that isn't registered in the container.
+
+**Fix:**
+1. Add `dependencies=("service_name",)` to `@node` decorator
+2. Add provider function `get_service_name()` to `services/providers.py`
+3. Register: `container.register("service_name", get_service_name, singleton=True)`
+
+---
+
 ## Related Patterns
 
 - **agentese-path.md** - Adding new AGENTESE paths
@@ -396,8 +497,63 @@ _import_node_modules(): Gateway calls this to ensure all nodes load
 Two-way mapping needed: AGENTESE path ↔ React route
 Discovery is pull-based: Frontend fetches /agentese/discover
 contracts={} enables BE/FE type sync: JSON Schema generation at build time
+Registry is single source of truth: Frontend MUST NOT reference unregistered paths (AD-011)
+dependencies= must match providers: If @node declares deps, register them in setup_providers()
 ```
 
 ---
 
-*Last updated: 2025-12-18*
+## Validation (AD-011)
+
+The registry is the single source of truth. Validate that frontend paths match backend:
+
+```bash
+cd impl/claude
+uv run python scripts/validate_path_alignment.py
+```
+
+**What it checks:**
+1. All paths in `NavigationTree.tsx` have `@node` registrations
+2. All paths in `Cockpit.tsx` have `@node` registrations
+3. All hardcoded AGENTESE paths in frontend match backend
+
+**Example output:**
+```
+=== AGENTESE Path Alignment Validator ===
+
+Loading backend registry...
+Found 39 registered paths
+
+Checking web/src/shell/NavigationTree.tsx...
+  OK: All 10 paths registered
+Checking web/src/pages/Cockpit.tsx...
+  OK: All 7 paths registered
+
+=== Validation Summary ===
+
+Backend registry: 39 paths
+Frontend references: 17 paths
+Valid: 17
+
+PASSED: All frontend paths are registered in backend
+```
+
+**CI Integration:**
+
+Add to `.github/workflows/ci.yml`:
+
+```yaml
+- name: Validate AGENTESE path alignment
+  run: cd impl/claude && uv run python scripts/validate_path_alignment.py
+```
+
+**The Strict Protocol:**
+
+1. **No aliases**: If a path doesn't exist as `@node`, it doesn't exist
+2. **No workarounds**: Frontend can only reference registered paths
+3. **Warnings are failures**: `logger.warning` for import failures, not `logger.debug`
+4. **Dead links are bugs**: Fix frontend or add the node—no middle ground
+
+---
+
+*Last updated: 2025-12-19*

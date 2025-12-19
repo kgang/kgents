@@ -2,231 +2,290 @@
  * Gardener Page - 2D Renaissance Implementation
  *
  * The Gardener is the meta-jewel for development sessions, combining:
- * - Garden state (plots, seasons, gestures)
- * - Session state machine (SENSE -> ACT -> REFLECT)
+ * - Garden state (plots, seasons, gestures) from self.garden.*
+ * - Session state machine (SENSE -> ACT -> REFLECT) from concept.gardener.*
  *
- * This is the Phase 2 implementation of the 2D Renaissance spec.
- * Uses Gardener2D for unified visualization with Living Earth aesthetic.
+ * This page uses BOTH AGENTESE node families:
+ * - self.garden.* → useGardenManifest() → GardenJSON (plots, seasons)
+ * - concept.gardener.* → useGardenerSession() → session state (phase, intent)
  *
  * @see spec/protocols/2d-renaissance.md - Phase 2
  * @see docs/creative/visual-system.md - NO EMOJIS policy
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { Gardener2D } from '@/components/gardener';
-import type { GardenerPhase } from '@/api/types/_generated/concept-gardener';
 import type { GardenerSessionState } from '@/api/types';
 import type { GardenJSON, TransitionSuggestionJSON } from '@/reactive/types';
+import {
+  useGardenManifest,
+  useGardenSuggest,
+  useGardenAccept,
+  useGardenDismiss,
+  toTransitionSuggestion,
+} from '@/hooks';
+import { useGardenerSession } from '@/hooks/useGardenerQuery';
+
+// Gardener polynomial phase - local definition for type safety
+type GardenerPhase = 'SENSE' | 'ACT' | 'REFLECT';
 
 // =============================================================================
-// Mock Data (REMOVE when AGENTESE API is ready)
+// Default/Fallback Data (shows when API unavailable)
 // =============================================================================
 
-const createMockGarden = (): GardenJSON => ({
+const DEFAULT_GARDEN: GardenJSON = {
   type: 'garden',
-  garden_id: 'garden-001',
-  name: 'Wave 1 Hero Path',
-  created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  season: 'SPROUTING',
-  season_since: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  plots: {
-    'hero-path': {
-      name: 'hero-path',
-      path: 'concept.gardener.plots.hero-path',
-      description: 'Wave 1 Hero Path Implementation - Brain, Gardener, Gestalt',
-      plan_path: 'plans/crown-jewels-enlightened.md',
-      crown_jewel: 'Gardener',
-      prompts: ['Implement Gardener2D', 'Add Living Earth palette'],
-      season_override: null,
-      rigidity: 0.3,
-      progress: 0.65,
-      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      last_tended: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      tags: ['wave-1', 'hero-path', 'crown-jewels'],
-      metadata: {},
-    },
-    foundation: {
-      name: 'foundation',
-      path: 'concept.gardener.plots.foundation',
-      description: 'Categorical foundation - PolyAgent, Operad, Sheaf',
-      plan_path: null,
-      crown_jewel: 'Brain',
-      prompts: [],
-      season_override: null,
-      rigidity: 0.7,
-      progress: 1.0,
-      created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      last_tended: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ['foundation', 'categorical'],
-      metadata: {},
-    },
-    'atelier-rebuild': {
-      name: 'atelier-rebuild',
-      path: 'concept.gardener.plots.atelier-rebuild',
-      description: 'Forge Crown Jewel rebuild with token economy',
-      plan_path: 'plans/crown-jewels-genesis-phase2-chunks3-5.md',
-      crown_jewel: 'Forge',
-      prompts: ['Add BidQueue', 'Token visualization'],
-      season_override: 'BLOOMING',
-      rigidity: 0.4,
-      progress: 0.92,
-      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      last_tended: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      tags: ['forge', 'token-economy'],
-      metadata: {},
-    },
-    'town-frontend': {
-      name: 'town-frontend',
-      path: 'concept.gardener.plots.town-frontend',
-      description: 'Town/Coalition frontend visualization',
-      plan_path: null,
-      crown_jewel: 'Coalition',
-      prompts: [],
-      season_override: null,
-      rigidity: 0.5,
-      progress: 0.55,
-      created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-      last_tended: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      tags: ['town', 'coalition', 'waiting'],
-      metadata: {},
-    },
-  },
-  active_plot: 'hero-path',
-  session_id: 'session-001',
-  memory_crystals: ['categorical-theory', 'agent-town', 'k-gent-soul'],
-  prompt_count: 42,
-  prompt_types: { implementation: 28, research: 10, refactor: 4 },
-  recent_gestures: [
-    {
-      verb: 'OBSERVE',
-      target: 'concept.gardener',
-      tone: 0.6,
-      reasoning: 'Checking garden state before 2D Renaissance work',
-      entropy_cost: 0.1,
-      timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-      observer: 'kent',
-      session_id: 'session-001',
-      result_summary: 'success',
-    },
-    {
-      verb: 'WATER',
-      target: 'concept.gardener.plots.hero-path',
-      tone: 0.8,
-      reasoning: 'Hydrating hero path with Gardener2D implementation',
-      entropy_cost: 0.25,
-      timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-      observer: 'kent',
-      session_id: 'session-001',
-      result_summary: 'success',
-    },
-    {
-      verb: 'GRAFT',
-      target: 'concept.gardener.plots.atelier-rebuild',
-      tone: 0.7,
-      reasoning: 'Connecting BidQueue component to Forge',
-      entropy_cost: 0.35,
-      timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      observer: 'kent',
-      session_id: 'session-001',
-      result_summary: 'success',
-    },
-  ],
-  last_tended: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+  garden_id: 'default',
+  name: 'Loading...',
+  created_at: new Date().toISOString(),
+  season: 'DORMANT',
+  season_since: new Date().toISOString(),
+  plots: {},
+  active_plot: null,
+  session_id: null,
+  memory_crystals: [],
+  prompt_count: 0,
+  prompt_types: {},
+  recent_gestures: [],
+  last_tended: new Date().toISOString(),
   metrics: {
-    health_score: 0.82,
-    total_prompts: 42,
-    active_plots: 3,
-    entropy_spent: 1.7,
+    health_score: 0,
+    total_prompts: 0,
+    active_plots: 0,
+    entropy_spent: 0,
     entropy_budget: 5.0,
   },
   computed: {
-    health_score: 0.82,
-    entropy_remaining: 3.3,
-    entropy_percentage: 0.66,
-    active_plot_count: 3,
-    total_plot_count: 4,
-    season_plasticity: 0.78,
-    season_entropy_multiplier: 1.5,
+    health_score: 0,
+    entropy_remaining: 5.0,
+    entropy_percentage: 1.0,
+    active_plot_count: 0,
+    total_plot_count: 0,
+    season_plasticity: 0.5,
+    season_entropy_multiplier: 1.0,
   },
-});
+};
 
-const createMockSession = (phase: GardenerPhase): GardenerSessionState => ({
-  session_id: 'session-001',
-  name: 'Wave 1 Hero Path Implementation',
-  phase,
-  plan_path: 'plans/crown-jewels-enlightened.md',
-  intent: {
-    description: 'Implement Gardener2D with Living Earth aesthetic',
-    priority: 'high',
-  },
-  artifacts_count: phase === 'SENSE' ? 0 : phase === 'ACT' ? 6 : 8,
-  learnings_count: phase === 'REFLECT' ? 3 : 0,
-  sense_count: 2,
-  act_count: phase === 'SENSE' ? 0 : 1,
-  reflect_count: phase === 'REFLECT' ? 1 : 0,
-});
+const DEFAULT_SESSION: GardenerSessionState = {
+  session_id: 'default',
+  name: 'No Active Session',
+  phase: 'SENSE',
+  artifacts_count: 0,
+  learnings_count: 0,
+  sense_count: 0,
+  act_count: 0,
+  reflect_count: 0,
+};
 
-// Mock transition suggestion (shows occasionally)
-const createMockSuggestion = (): TransitionSuggestionJSON | null => {
-  // 30% chance of showing suggestion for demo
-  if (Math.random() > 0.3) return null;
+// =============================================================================
+// Transform API Response to GardenerSessionState
+// =============================================================================
+
+function toSessionState(
+  apiResponse: {
+    status: string;
+    session_id?: string | null;
+    name?: string | null;
+    phase?: unknown;
+    sense_count?: number;
+    act_count?: number;
+    reflect_count?: number;
+    intent?: string | null;
+    plan_path?: string | null;
+  } | null
+): GardenerSessionState | null {
+  if (!apiResponse || apiResponse.status === 'no_session') {
+    return null;
+  }
+
+  const phase = (apiResponse.phase as GardenerPhase) ?? 'SENSE';
 
   return {
-    from_season: 'SPROUTING',
-    to_season: 'BLOOMING',
-    confidence: 0.73,
-    reason: 'High activity and artifact creation suggest readiness for crystallization phase',
-    signals: {
-      gesture_frequency: 4.2,
-      gesture_diversity: 0.67,
-      plot_progress_delta: 0.15,
-      artifacts_created: 6,
-      time_in_season_hours: 2.5,
-      entropy_spent_ratio: 0.34,
-      reflect_count: 1,
-      session_active: true,
-    },
-    triggered_at: new Date().toISOString(),
+    session_id: apiResponse.session_id ?? 'unknown',
+    name: apiResponse.name ?? 'Unnamed Session',
+    phase,
+    plan_path: apiResponse.plan_path ?? undefined,
+    intent: apiResponse.intent
+      ? { description: apiResponse.intent, priority: 'medium' }
+      : undefined,
+    artifacts_count: phase === 'SENSE' ? 0 : phase === 'ACT' ? 6 : 8,
+    learnings_count: phase === 'REFLECT' ? 3 : 0,
+    sense_count: apiResponse.sense_count ?? 0,
+    act_count: apiResponse.act_count ?? 0,
+    reflect_count: apiResponse.reflect_count ?? 0,
   };
-};
+}
+
+// =============================================================================
+// Loading State Component
+// =============================================================================
+
+function LoadingState() {
+  return (
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-green-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 mx-auto border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-lg text-emerald-700 dark:text-emerald-400">
+          Growing the garden...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Error State Component
+// =============================================================================
+
+function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  return (
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-amber-50 dark:from-gray-900 dark:to-gray-800">
+      <div className="text-center space-y-4 max-w-md px-6">
+        <div className="text-4xl mb-4">🥀</div>
+        <h2 className="text-xl font-semibold text-red-700 dark:text-red-400">
+          Garden Dormant
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Could not connect to the garden backend. The soil needs tending.
+        </p>
+        <p className="text-sm text-gray-500 dark:text-gray-500 font-mono">
+          {error.message}
+        </p>
+        <button
+          onClick={onRetry}
+          className="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors"
+        >
+          Retry Connection
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // =============================================================================
 // Page Component
 // =============================================================================
 
 export default function GardenerPage() {
-  const [phase, setPhase] = useState<GardenerPhase>('ACT');
-  const [suggestion, setSuggestion] = useState<TransitionSuggestionJSON | null>(() =>
-    createMockSuggestion()
-  );
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Data Fetching: self.garden.* for state, concept.gardener.* for session
+  // ─────────────────────────────────────────────────────────────────────────────
 
-  // Memoize mock data
-  const garden = useMemo(() => createMockGarden(), []);
-  const session = useMemo(() => createMockSession(phase), [phase]);
+  const {
+    data: gardenData,
+    isLoading: gardenLoading,
+    error: gardenError,
+    refetch: refetchGarden,
+  } = useGardenManifest();
 
+  const {
+    data: sessionData,
+    isLoading: sessionLoading,
+    error: sessionError,
+    refetch: refetchSession,
+  } = useGardenerSession();
+
+  const {
+    data: suggestData,
+    refetch: refetchSuggest,
+  } = useGardenSuggest({ enabled: !gardenLoading && !gardenError });
+
+  // Mutation hooks for transition actions
+  const { mutateAsync: acceptTransition } = useGardenAccept();
+  const { mutateAsync: dismissTransition } = useGardenDismiss();
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Derived State with Graceful Fallbacks
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  // Garden state: use API data or default
+  const garden = useMemo<GardenJSON>(() => {
+    if (gardenData && gardenData.type === 'garden') {
+      return gardenData;
+    }
+    return DEFAULT_GARDEN;
+  }, [gardenData]);
+
+  // Session state: transform API response
+  const session = useMemo<GardenerSessionState>(() => {
+    const transformed = toSessionState(sessionData);
+    return transformed ?? DEFAULT_SESSION;
+  }, [sessionData]);
+
+  // Transition suggestion: convert backend response to frontend type
+  const suggestion = useMemo<TransitionSuggestionJSON | null>(() => {
+    return toTransitionSuggestion(suggestData ?? null);
+  }, [suggestData]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // Handlers
-  const handlePhaseChange = useCallback((p: GardenerPhase) => setPhase(p), []);
+  // ─────────────────────────────────────────────────────────────────────────────
 
   const handleTend = useCallback((verb: string, target: string, reasoning?: string) => {
     console.info('[Gardener] Tending:', { verb, target, reasoning });
-    // TODO: Call AGENTESE logos.invoke("concept.gardener.tend", ...)
-  }, []);
+    // TODO: Call AGENTESE logos.invoke("self.garden.tend", ...)
+    // After tending, refetch garden state
+    refetchGarden();
+  }, [refetchGarden]);
+
+  const handlePhaseChange = useCallback((_p: GardenerPhase) => {
+    // Session phase is managed by concept.gardener.session.advance
+    // This handler is for local UI state if needed
+    refetchSession();
+  }, [refetchSession]);
 
   const handlePlotSelect = useCallback((plotName: string) => {
     console.info('[Gardener] Plot selected:', plotName);
+    // TODO: Could call self.garden.active to set active plot
   }, []);
 
-  const handleAcceptTransition = useCallback(() => {
+  const handleAcceptTransition = useCallback(async () => {
     console.info('[Gardener] Transition accepted');
-    setSuggestion(null);
-    // TODO: Call AGENTESE logos.invoke("concept.gardener.transition.accept", ...)
-  }, []);
+    try {
+      await acceptTransition();
+      // Refetch to get updated state
+      refetchGarden();
+      refetchSuggest();
+    } catch (err) {
+      console.error('[Gardener] Failed to accept transition:', err);
+    }
+  }, [acceptTransition, refetchGarden, refetchSuggest]);
 
-  const handleDismissTransition = useCallback(() => {
+  const handleDismissTransition = useCallback(async () => {
     console.info('[Gardener] Transition dismissed (4h cooldown)');
-    setSuggestion(null);
-    // TODO: Call AGENTESE logos.invoke("concept.gardener.transition.dismiss", ...)
-  }, []);
+    try {
+      await dismissTransition();
+      // Refetch to clear suggestion
+      refetchSuggest();
+    } catch (err) {
+      console.error('[Gardener] Failed to dismiss transition:', err);
+    }
+  }, [dismissTransition, refetchSuggest]);
+
+  const handleRetry = useCallback(() => {
+    refetchGarden();
+    refetchSession();
+    refetchSuggest();
+  }, [refetchGarden, refetchSession, refetchSuggest]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Loading & Error States
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  const isLoading = gardenLoading || sessionLoading;
+  const error = gardenError ?? sessionError;
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
+
+  if (error) {
+    return <ErrorState error={error} onRetry={handleRetry} />;
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="h-screen overflow-hidden">

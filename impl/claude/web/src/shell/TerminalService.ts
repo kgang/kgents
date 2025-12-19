@@ -46,6 +46,9 @@ const MIN_HISTORY_AFTER_PRUNE = 20;
 /** Maximum collections to retain */
 const MAX_COLLECTIONS = 20;
 
+/** Cache TTL in milliseconds (30 seconds) - AD-011 REPL Reliability */
+const PATH_CACHE_TTL_MS = 30_000;
+
 /** Default aliases */
 const DEFAULT_ALIASES: Record<string, string> = {
   me: 'self.soul',
@@ -73,31 +76,6 @@ const BUILTIN_COMMANDS = [
 type BuiltinCommand = (typeof BUILTIN_COMMANDS)[number];
 
 // =============================================================================
-// AGENTESE Response Types (from backend)
-// =============================================================================
-
-interface AgenteseResponse<T> {
-  path: string;
-  result: T;
-  error?: string;
-  tokens_used?: number;
-  cached?: boolean;
-}
-
-interface ResolveResponse {
-  path: string;
-  handle: string;
-  context: string;
-  affordances: string[];
-}
-
-interface AffordancesResponse {
-  path: string;
-  affordances: string[];
-  observer_archetype: string;
-}
-
-// =============================================================================
 // TerminalService Class
 // =============================================================================
 
@@ -123,6 +101,7 @@ export class TerminalService {
   private _collections: TerminalCollection[] = [];
   private _aliases: Record<string, string> = { ...DEFAULT_ALIASES };
   private _pathCache: PathInfo[] = [];
+  private _pathCacheTimestamp: number = 0; // AD-011: Cache TTL tracking
   private _observer: Observer | null = null;
 
   constructor() {
@@ -192,9 +171,11 @@ export class TerminalService {
       return lines;
 
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      lines.push(this._createLine('error', `Error: ${errorMsg}`));
-      this._addHistoryEntry(trimmed, startTime, 'error', undefined, errorMsg);
+      // AD-011: Provide sympathetic error messages
+      const rawMsg = error instanceof Error ? error.message : String(error);
+      const errorMsg = this._sympatheticError(rawMsg, trimmed);
+      lines.push(this._createLine('error', errorMsg));
+      this._addHistoryEntry(trimmed, startTime, 'error', undefined, rawMsg);
       return lines;
     }
   }
@@ -271,57 +252,114 @@ export class TerminalService {
 
   /**
    * Discover available AGENTESE paths.
+   *
+   * AD-011 REPL Reliability: Uses cache with 30s TTL, surfaces errors sympathetically.
+   * Fetches metadata for richer path info (description, aspects).
    */
   async discover(context?: string): Promise<PathInfo[]> {
-    // Return cached paths if available
-    if (this._pathCache.length > 0 && !context) {
-      return context
-        ? this._pathCache.filter((p) => p.context === context)
-        : this._pathCache;
+    const now = Date.now();
+    const cacheValid = this._pathCache.length > 0 &&
+      (now - this._pathCacheTimestamp) < PATH_CACHE_TTL_MS;
+
+    // Return cached paths if valid and not filtering by context
+    if (cacheValid && !context) {
+      return this._pathCache;
+    }
+
+    // Filter cached paths if context provided and cache is valid
+    if (cacheValid && context) {
+      return this._pathCache.filter((p) => p.context === context);
     }
 
     try {
-      // Fetch from registry via AGENTESE gateway
-      const response = await apiClient.get<{ paths: PathInfo[] }>(
-        '/api/agentese/discover',
-        { params: context ? { context } : {} }
+      // Fetch from registry via AGENTESE gateway (AD-009)
+      // Request metadata for richer path info
+      const response = await apiClient.get<{
+        paths: string[];
+        metadata?: Record<string, {
+          path: string;
+          description: string | null;
+          aspects: string[];
+          effects: string[];
+          examples: unknown[];
+        }>;
+      }>(
+        '/agentese/discover',
+        { params: { include_metadata: true, ...(context ? { context } : {}) } }
       );
 
-      // Cache results
+      // Transform backend response to PathInfo format
+      const pathInfos: PathInfo[] = response.data.paths.map((path) => {
+        const meta = response.data.metadata?.[path];
+        const pathContext = path.split('.')[0] as PathInfo['context'];
+
+        return {
+          path,
+          description: meta?.description ?? undefined,
+          aspects: meta?.aspects ?? ['manifest'],
+          context: pathContext,
+        };
+      });
+
+      // Filter by context if requested
+      const filteredPaths = context
+        ? pathInfos.filter((p) => p.context === context)
+        : pathInfos;
+
+      // Cache results (only for full discovery)
       if (!context) {
-        this._pathCache = response.data.paths;
+        this._pathCache = pathInfos;
+        this._pathCacheTimestamp = now;
       }
 
-      return response.data.paths;
-    } catch {
-      // Return well-known paths as fallback
-      return this._getWellKnownPaths(context);
+      return filteredPaths;
+    } catch (error) {
+      // AD-011: Surface errors sympathetically, but provide fallback
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`[TerminalService] Discovery failed: ${msg}`);
+
+      // Return well-known paths as fallback, but log the issue
+      const fallback = this._getWellKnownPaths(context);
+      console.info(
+        `[TerminalService] Using ${fallback.length} well-known paths as fallback`
+      );
+      return fallback;
     }
   }
 
   /**
    * Get affordances for a path.
+   *
+   * AD-011 REPL Reliability: Surfaces errors with context, provides sensible fallback.
    */
   async affordances(path: string): Promise<string[]> {
     try {
-      const response = await apiClient.get<AffordancesResponse>(
-        '/v1/agentese/affordances',
-        {
-          params: {
-            path,
-            archetype: this._observer?.archetype ?? 'developer',
-          },
-        }
-      );
+      // Use gateway endpoint: /agentese/{path}/affordances (AD-009)
+      const pathSegments = path.replace(/\./g, '/');
+      const response = await apiClient.get<{
+        path: string;
+        affordances: string[];
+      }>(`/agentese/${pathSegments}/affordances`, {
+        headers: {
+          'X-Observer-Archetype': this._observer?.archetype ?? 'developer',
+        },
+      });
       return response.data.affordances;
-    } catch {
-      // Return common affordances as fallback
+    } catch (error) {
+      // AD-011: Log error but provide usable fallback
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(`[TerminalService] Affordances lookup failed for '${path}': ${msg}`);
+
+      // Return common affordances so completion still works
       return ['manifest', 'witness', 'refine'];
     }
   }
 
   /**
    * Get help text for a path or command.
+   *
+   * AD-011 REPL Reliability: Surfaces specific errors to help users understand what's wrong.
+   * Phase 5: Includes inline examples when available (Habitat 2.0).
    */
   async help(pathOrCommand: string): Promise<string> {
     // Check if it's a built-in command
@@ -329,23 +367,127 @@ export class TerminalService {
       return this._getBuiltinHelp(pathOrCommand as BuiltinCommand);
     }
 
-    // Try to resolve the path
+    // Use gateway manifest endpoint (AD-009)
+    // Manifest includes affordances and acts as path resolution
     try {
-      const response = await apiClient.get<ResolveResponse>(
-        '/v1/agentese/resolve',
-        { params: { path: pathOrCommand } }
-      );
+      const pathSegments = pathOrCommand.replace(/\./g, '/');
+      const response = await apiClient.get<{
+        path: string;
+        aspect: string;
+        result: Record<string, unknown>;
+        error?: string;
+      }>(`/agentese/${pathSegments}/manifest`, {
+        headers: {
+          'X-Observer-Archetype': this._observer?.archetype ?? 'developer',
+        },
+      });
 
-      const { path, handle, context, affordances } = response.data;
-      return [
+      // AD-011: Check for error in response envelope
+      if (response.data.error) {
+        return `Path '${pathOrCommand}' exists but returned error:\n${response.data.error}`;
+      }
+
+      const { path } = response.data;
+      const context = path.split('.')[0] || 'unknown';
+
+      // Get affordances separately for help display
+      const affords = await this.affordances(pathOrCommand);
+
+      const helpLines = [
         `Path: ${path}`,
-        `Handle: ${handle}`,
         `Context: ${context}`,
-        `Affordances: ${affordances.join(', ') || 'none'}`,
-      ].join('\n');
-    } catch {
-      return `No help available for: ${pathOrCommand}`;
+        `Affordances: ${affords.join(', ') || 'none'}`,
+      ];
+
+      // Phase 5 (Habitat 2.0): Try to get examples from metadata
+      const pathInfo = await this._getPathMetadata(path);
+      if (pathInfo?.examples && pathInfo.examples.length > 0) {
+        helpLines.push('');
+        helpLines.push('Examples:');
+        for (const ex of pathInfo.examples.slice(0, 3)) {
+          const label = ex.label || `Try ${ex.aspect}`;
+          const cmd = this._formatExampleCommand(path, ex);
+          helpLines.push(`  ${cmd}`);
+          helpLines.push(`    ${label}`);
+        }
+      }
+
+      return helpLines.join('\n');
+    } catch (error) {
+      // AD-011: Provide sympathetic error messages
+      const msg = error instanceof Error ? error.message : String(error);
+
+      // Classify error for better UX
+      if (msg.includes('404') || msg.includes('not found')) {
+        return `Path '${pathOrCommand}' not registered. Try 'discover' to see available paths.`;
+      }
+      if (msg.includes('500') || msg.includes('Internal')) {
+        return `Path '${pathOrCommand}' exists but the backend encountered an error. Check server logs.`;
+      }
+      if (msg.includes('Network') || msg.includes('ECONNREFUSED')) {
+        return `Cannot reach backend. Is the server running? (uv run uvicorn protocols.api.app:create_app --factory)`;
+      }
+
+      return `Help unavailable for '${pathOrCommand}': ${msg}`;
     }
+  }
+
+  /**
+   * Get path metadata including examples (Habitat 2.0).
+   */
+  private async _getPathMetadata(path: string): Promise<{
+    description?: string;
+    aspects?: string[];
+    examples?: Array<{
+      aspect: string;
+      kwargs: Record<string, unknown>;
+      label?: string;
+    }>;
+  } | null> {
+    try {
+      // Use cached discovery if available
+      const paths = await this.discover();
+      const info = paths.find((p) => p.path === path);
+      if (info) {
+        // PathInfo doesn't have examples yet, need to fetch from metadata
+        const response = await apiClient.get<{
+          paths: string[];
+          metadata?: Record<string, {
+            description?: string;
+            aspects?: string[];
+            examples?: Array<{
+              aspect: string;
+              kwargs: Record<string, unknown>;
+              label?: string;
+            }>;
+          }>;
+        }>('/agentese/discover', { params: { include_metadata: true } });
+        return response.data.metadata?.[path] ?? null;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Format an example as a command string.
+   */
+  private _formatExampleCommand(
+    path: string,
+    example: { aspect: string; kwargs: Record<string, unknown> }
+  ): string {
+    // Simple invocation for manifest
+    if (example.aspect === 'manifest' && Object.keys(example.kwargs).length === 0) {
+      return path;
+    }
+    // With aspect
+    if (Object.keys(example.kwargs).length === 0) {
+      return `${path}.${example.aspect}`;
+    }
+    // With kwargs (show as JSON inline for now)
+    const kwargsStr = JSON.stringify(example.kwargs);
+    return `${path}.${example.aspect} ${kwargsStr}`;
   }
 
   /**
@@ -528,7 +670,7 @@ export class TerminalService {
         }
         return [this._createLine('error', 'Usage: affordances <path>')];
 
-      case 'discover':
+      case 'discover': {
         const paths = await this.discover(args[0]);
         return [
           this._createLine('info', `Available paths${args[0] ? ` (${args[0]})` : ''}:`),
@@ -539,6 +681,7 @@ export class TerminalService {
             ? this._createLine('info', `  ... and ${paths.length - 20} more`)
             : null,
         ].filter(Boolean) as TerminalLine[];
+      }
 
       default:
         return [this._createLine('error', `Unknown command: ${command}`)];
@@ -607,24 +750,68 @@ export class TerminalService {
   }
 
   /**
-   * Invoke AGENTESE path via API.
+   * Invoke AGENTESE path via gateway (AD-009).
+   *
+   * Uses /agentese/{path}/{aspect} instead of legacy /v1/agentese/invoke.
+   * AD-011 REPL Reliability: Properly handles AgenteseResponse envelope and surfaces errors.
+   *
+   * Path resolution strategy:
+   * 1. Check if full path exists in discovery → use manifest aspect
+   * 2. Otherwise split last segment as aspect → invoke on remaining path
+   *
+   * Examples:
+   *   "self.soul" → path="self.soul", aspect="manifest" (if self.soul is registered)
+   *   "self.soul.witness" → path="self.soul", aspect="witness"
+   *   "self.memory.capture" → path="self.memory", aspect="capture"
    */
   private async _invokeAgentese(path: string, input?: unknown): Promise<unknown> {
-    const response = await apiClient.post<AgenteseResponse<unknown>>(
-      '/v1/agentese/invoke',
+    // First, check if the full path is a registered node (should use manifest)
+    const knownPaths = await this._getKnownPaths();
+    const isRegisteredPath = knownPaths.has(path);
+
+    let pathSegments: string;
+    let aspect: string;
+
+    if (isRegisteredPath) {
+      // Full path is registered → use manifest aspect
+      pathSegments = path.replace(/\./g, '/');
+      aspect = 'manifest';
+    } else {
+      // Try splitting last segment as aspect
+      const parts = path.split('.');
+      aspect = parts.pop() || 'manifest';
+      const basePath = parts.join('.');
+
+      // Check if base path exists
+      if (parts.length > 0 && knownPaths.has(basePath)) {
+        pathSegments = basePath.replace(/\./g, '/');
+      } else {
+        // Neither full path nor base path found - try full path anyway
+        // (might be a dynamic path or user error - let backend decide)
+        pathSegments = path.replace(/\./g, '/');
+        aspect = 'manifest';
+      }
+    }
+
+    const response = await apiClient.post<{
+      path: string;
+      aspect: string;
+      result: unknown;
+      error?: string;
+    }>(
+      `/agentese/${pathSegments}/${aspect}`,
+      input ? { input } : {},
       {
-        path,
-        observer: {
-          name: this._observer?.userId ?? 'terminal_user',
-          archetype: this._observer?.archetype ?? 'developer',
-          capabilities: this._observer
-            ? Array.from(this._observer.capabilities)
-            : [],
+        headers: {
+          'X-Observer-Archetype': this._observer?.archetype ?? 'developer',
+          'X-Observer-Capabilities': this._observer
+            ? Array.from(this._observer.capabilities).join(',')
+            : '',
         },
-        kwargs: input ? { input } : {},
       }
     );
 
+    // AD-011: Check for error in response envelope
     if (response.data.error) {
       throw new Error(response.data.error);
     }
@@ -635,6 +822,52 @@ export class TerminalService {
   // ===========================================================================
   // Private Methods - Helpers
   // ===========================================================================
+
+  /**
+   * Convert raw error messages to sympathetic, actionable guidance.
+   * AD-011 REPL Reliability Contract.
+   */
+  private _sympatheticError(rawMsg: string, path: string): string {
+    const lowerMsg = rawMsg.toLowerCase();
+
+    // Network errors
+    if (lowerMsg.includes('network') || lowerMsg.includes('econnrefused') || lowerMsg.includes('fetch')) {
+      return `Cannot reach backend. Is the server running?\n  → cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --port 8000`;
+    }
+
+    // 404 - Path not found
+    if (lowerMsg.includes('404') || lowerMsg.includes('not found')) {
+      return `Path '${path}' not registered.\n  → Type 'discover' to see available paths\n  → Check that the node module is imported in gateway.py`;
+    }
+
+    // 500 - Server error
+    if (lowerMsg.includes('500') || lowerMsg.includes('internal server')) {
+      return `Backend error for '${path}'.\n  → Check the server terminal for full traceback\n  → The path exists but the handler crashed`;
+    }
+
+    // 422 - Validation error
+    if (lowerMsg.includes('422') || lowerMsg.includes('validation')) {
+      return `Invalid input for '${path}'.\n  → Type 'help ${path}' to see expected format`;
+    }
+
+    // Timeout
+    if (lowerMsg.includes('timeout')) {
+      return `Request timed out for '${path}'.\n  → The operation took too long\n  → Try again or check backend logs`;
+    }
+
+    // Default: show raw error
+    return `Error: ${rawMsg}`;
+  }
+
+  /**
+   * Get known paths as a Set for O(1) lookup.
+   * Uses the cached discovery data.
+   */
+  private async _getKnownPaths(): Promise<Set<string>> {
+    // Use cached paths if available and fresh
+    const paths = await this.discover();
+    return new Set(paths.map((p) => p.path));
+  }
 
   /**
    * Expand aliases in input.

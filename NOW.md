@@ -7,23 +7,65 @@
 
 ## Current Work
 
-**🔥 METAPHYSICAL FORGE** — NEW. Transforming Atelier from spectator fishbowl to developer's forge. The Forge is where Kent builds metaphysical fullstack agents using categorical artisans. Spec: `spec/protocols/metaphysical-forge.md`. This is the **multi-year strategic direction**.
+**🔍 AGENTESE NODE OVERHAUL** — Sessions 1-5 + Phase 4 COMPLETE. See `plans/agentese-node-overhaul-strategy.md` for 10-session roadmap.
+
+| Session | Status | Key Deliverables |
+|---------|--------|------------------|
+| Session 1 | ✅ | 4 projections, Morpheus contracts, gallery docs |
+| Session 2 | ✅ | **Gardener wiring** — `useGardenQuery` hooks, real data, graceful fallbacks |
+| Phase 4 | ✅ | **Missing Projections** — DesignSystemProjection + EmergenceProjection |
+| **Phase 5** | ✅ | **Park Scenarios** — ScenarioService wiring, consent debt (hosts can say no) |
+| Sessions 6-10 | Pending | Consistency polish, DevEx, testing |
+
+**Session 2 Key Discovery**: Gardener2D needs TWO node families:
+- `self.garden.*` → Garden STATE (plots, seasons, gestures) via `useGardenManifest()`
+- `concept.gardener.*` → Session POLYNOMIAL (SENSE→ACT→REFLECT) via `useGardenerSession()`
+
+**🚀 AGENTESE-AS-ROUTE** — COMPLETE. *"The URL IS the API call."* Unified routing and AGENTESE into a single grammar. Spec: `spec/protocols/agentese-as-route.md`. Implementation complete.
+
+**🔥 METAPHYSICAL FORGE** — Transforming Atelier from spectator fishbowl to developer's forge. The Forge is where Kent builds metaphysical fullstack agents using categorical artisans. Spec: `spec/protocols/metaphysical-forge.md`. This is the **multi-year strategic direction**.
 
 **Core Vision**: Seven artisans (K-gent, Architect, Smith, Herald, Projector, Sentinel, Witness) that help Kent commission, design, implement, expose, project, secure, and test new agents. Every artifact traverses all Crown Jewels.
 
-**2D Renaissance Phase 4 — COMPLETE.** Brain2D fully implemented with Living Earth aesthetic. 4 new components (~1000 lines), 13 passing tests. Spec: `spec/protocols/2d-renaissance.md`.
+**Phase 4 COMPLETE (2025-12-18)**: All four creative artisans do REAL work:
+- **Architect**: LLM-powered categorical design generation (PolyAgent specs)
+- **Smith**: Code generation (service modules to `_generated/`)
+- **Herald**: AGENTESE node generation (`@node` decorator, contracts, routing)
+- **Projector**: React component generation (visualization + hooks)
 
-**2D Renaissance Phase 3** — COMPLETE. Gestalt2D fully implemented with Living Earth aesthetic. 4 new components (~800 lines), 28 passing tests.
+---
 
-**Town Frontend** — 60% done. Backend is solid (1559 tests: Sheaf, Events, AGENTESE nodes). Frontend components exist: TownOverview, CitizenBrowser, CoalitionGraph. Mesa (2D) is the visualization now.
+### 🎉 2D RENAISSANCE — COMPLETE
+
+> *"3D was spectacle. 2D is truth. And truth breathes."*
+
+**All five phases delivered 2025-12-18.** Spec archived: `spec/protocols/2d-renaissance.md`
+
+| Deliverable | Lines | Tests |
+|-------------|-------|-------|
+| Gardener2D (7 components) | 1,485 | 30 |
+| Gestalt2D (4 components) | 1,084 | 28 |
+| Brain2D (4 components) | ~1,000 | 13 |
+| Town Dialogue (2 components) | ~710 | 20 |
+| **TOTAL** | **~4,300** | **91** |
+
+**Replaced**: 2,447 lines of Three.js. **Gained**: Living Earth aesthetic, mobile-first, real AGENTESE, LLM dialogue.
+
+---
+
+**Town Frontend** — 70% done. Backend is solid. Frontend has TownOverview, CitizenBrowser, CoalitionGraph, Mesa (2D), and now **DialogueModal** for citizen conversations.
 
 **Coalition/Park** — Waiting on Town patterns. Once Town's consent model is proven, the others will follow fast.
 
-**Brain** — 100% complete with Brain2D! CrystalTree (tree-based cartography), CaptureForm (memory capture), GhostSurface (serendipitous recall). Ship-ready.
+**Brain** — 100% complete with Brain2D! CrystalTree, CaptureForm, GhostSurface. Ship-ready.
 
-**Gardener** — 100% complete. Gardener2D with season orb, plot tiles, tending palette. Ship-ready.
+**Gardener** — 100% complete. Gardener2D with season orb, plot tiles, tending palette. **Now wired to real AGENTESE hooks** (self.garden.* + concept.gardener.*). Ship-ready.
 
-**Gestalt** — 100%. Full Gestalt2D with layer cards, violation feed, module detail. Living Earth aesthetic applied.
+**Gestalt** — 100%. Full Gestalt2D with layer cards, violation feed. Ship-ready.
+
+**Design System** — 100%. DesignSystemProjection exposes `concept.design.*` (3 operads + unified). Live law verification.
+
+**Emergence** — 100%. EmergenceProjection exposes `world.emergence.*` (Cymatics Design Sampler). 9 pattern families, qualia space, circadian modulation.
 
 ---
 
@@ -37,7 +79,7 @@
 
 ## What I Want Next
 
-**Metaphysical Forge Phase 1**: Strip Atelier → Establish Forge identity. Remove spectator economy, demo messaging, token gates. Rename to Forge. Create minimal ForgeVisualization.tsx. K-gent integration comes next.
+**Metaphysical Forge Phase 5**: Sentinel (security review) and Witness (test generation) artisans. Plus SSE streaming for real-time progress and cross-jewel wiring (Brain capture, Gardener plots).
 
 *"The Forge is where we build ourselves."*
 
@@ -50,16 +92,409 @@
 | Brain | 100 | Spatial cathedral of memory. Ship-ready. |
 | Gardener | 100 | Cultivation practice. Ship-ready. |
 | Gestalt | 85 | Living garden where code breathes. Gestalt2D COMPLETE. |
-| **Forge** | 0 | **NEW**. Developer's workshop for metaphysical fullstack agents. |
-| Town/Coalition | 55 | Workshop where agents collaborate visibly. |
-| Park | 40 | Westworld where hosts can say no. |
+| **Forge** | 85 | Phase 1-4 ✅. Four creative artisans = REAL work. |
+| Town/Coalition | 70 | Workshop where agents collaborate visibly. Dialogue COMPLETE. |
+| **Park** | 60 | Westworld where hosts can say no. **Scenarios + Consent Debt COMPLETE.** |
 | Domain | 0 | Enterprise. Dormant. |
 
-**Note**: Atelier (100%) → Forge (0%) is intentional. We're rebuilding from first principles.
+**Forge Assessment (2025-12-18)**: Phase 4 COMPLETE. All four creative artisans (Architect, Smith, Herald, Projector) now do real work. **165 backend tests**. Next: Phase 5 (Sentinel, Witness) + SSE streaming + cross-jewel wiring.
 
 ---
 
 ## Session Notes
+
+### 2025-12-19 — AGENTESE Node Overhaul Phase 5 (Park Scenarios)
+
+Executed **Phase 5** of `plans/agentese-node-overhaul-strategy.md` — *"Westworld where hosts can say no."*
+
+**ScenarioService → ParkNode Wiring**:
+- Added `scenario_service` dependency to ParkNode
+- Registered in `bootstrap.py` via `get_service("scenario_service")`
+- 6 new scenario aspects: `scenario.{list,get,start,tick,end,sessions}`
+
+**Consent Debt Mechanics** (the differentiator):
+- Added to `ScenarioSession`: `incur_debt()`, `can_inject_beat()`, `apologize()`
+- **Debt > 0.7 blocks beat injection** — hosts genuinely refuse
+- 3 new consent aspects: `consent.{debt,incur,apologize}`
+- Verified behavior:
+  ```
+  debt=0.0 → can_inject=True
+  debt=0.8 → can_inject=False (host refuses!)
+  apologize → debt=0.6, can_inject=True (amends made)
+  ```
+
+**Contract Types Added** (14 new):
+- `ScenarioSummary`, `ScenarioDetail`, `ScenarioSessionDetail`, `SessionProgress`
+- `ScenarioListResponse`, `ScenarioGetRequest/Response`, `ScenarioStartRequest/Response`
+- `ScenarioTickRequest/Response`, `ScenarioEndRequest/Response`, `ScenarioSessionListResponse`
+- `ConsentDebtRequest`, `ConsentDebtResponse`
+
+**Files Modified**:
+```
+agents/park/scenario.py           # +75 lines: consent debt methods
+services/park/contracts.py        # +120 lines: 14 contract types
+services/park/node.py             # +150 lines: 9 new aspects
+services/park/scenario_service.py # +120 lines: consent debt service methods
+services/bootstrap.py             # +5 lines: scenario_service registration
+```
+
+**Tests Passing**: 37 service + 88 agent + 40 director = **165 Park tests**
+
+**Remaining** (Future Sessions):
+1. Chat protocol bridge — Wire `self.chat` for SSE streaming host dialogue
+2. ScenarioProjection.tsx — Beat timeline, consent meters, phase visualization
+
+*"The hosts have a voice. When debt exceeds 0.7, they say no."*
+
+---
+
+### 2025-12-19 — AGENTESE Node Overhaul Phase 4 (Missing Projections)
+
+Executed **Phase 4** of `plans/agentese-node-overhaul-strategy.md` — *"Every path gets a home, not just a JSON dump."*
+
+**DesignSystemProjection** (`pages/DesignSystem.tsx`, ~400 lines):
+- Exposes `concept.design.*` — the three orthogonal design functors
+- UI = Layout[D] ∘ Content[D] ∘ Motion[M]
+- **Operad selector**: Layout, Content, Motion, Unified — each shows operations and laws
+- **Live law verification**: Click "Verify Laws" → shows passed/structural/failed with messages
+- Uses `useAgentese` and `useAgenteseMutation` for path invocation
+
+**EmergenceProjection** (`pages/Emergence.tsx`, ~500 lines):
+- Exposes `world.emergence.*` — the Cymatics Design Experience
+- *"Don't tune blindly. Show everything. Let the eye choose."*
+- **Pattern families**: 9 families (chladni, interference, mandala, flow, reaction, spiral, voronoi, moire, fractal)
+- **Qualia space**: 7 cross-modal aesthetic coordinates (warmth, weight, tempo, texture, brightness, saturation, complexity)
+- **Circadian badge**: Dawn/Noon/Dusk/Midnight with modifier display
+- Pattern cards with selection and parameter details
+
+**Registry** (`shell/projections/registry.tsx`):
+- Added `DesignSystemProjection` for `concept.design.*` paths
+- Added `EmergenceProjection` for `world.emergence.*` paths
+- Type registry: LayoutOperadManifest, ContentOperadManifest, MotionOperadManifest, DesignOperadManifest, EmergenceManifest, EmergenceQualia, EmergenceCircadian
+
+**Build Status**: TypeScript clean, ESLint clean (new files), backend mypy clean.
+
+**Phase 4 Complete**. Remaining phases: LLM integration (Soul projection), Park scenarios, polish.
+
+*"The URL IS the thought. The page IS the answer."*
+
+---
+
+### 2025-12-19 — AGENTESE REPL Renaissance COMPLETE
+
+Completed the **REPL Renaissance** plan — making the AGENTESE Terminal actually work.
+
+**The Problem**: Terminal had correct design but broken execution. Paths weren't always registered, errors were swallowed, completion showed paths that didn't work.
+
+**The Solution**: All 5 phases delivered:
+
+| Phase | What |
+|-------|------|
+| 1. Audit & Fix | `scripts/audit_agentese_paths.py` — 39/39 paths pass (100%) |
+| 2. Error Surfacing | `_sympatheticError()` with 5 categories (network, 404, 500, 422, timeout) |
+| 3. Completion Overhaul | Live discovery with metadata, 30s cache TTL |
+| 4. Testing Harness | `test_registry_ci_gate.py` — 7 CI tests for path verification |
+| 5. Examples & Teaching | Welcome message with working paths, inline examples in `help` |
+
+**New Files**:
+- `protocols/agentese/_tests/test_registry_ci_gate.py` — CI gate prevents broken paths from shipping
+
+**Files Modified**:
+- `web/src/shell/Terminal.tsx` — Rich welcome message with working commands
+- `web/src/shell/TerminalService.ts` — `_getPathMetadata()` + `_formatExampleCommand()` for inline examples
+
+**The REPL Now**:
+- ✅ Shows working paths on first open
+- ✅ Tab completion only shows paths that exist
+- ✅ Errors explain what went wrong with remediation hints
+- ✅ `help <path>` shows examples when available
+- ✅ CI gate prevents future breakage
+
+*"The REPL is the garden's conversation partner. Now it speaks."*
+
+---
+
+### 2025-12-19 — AGENTESE-as-Route Final Wiring
+
+Completed the **final integration step**: wired `UniversalProjection` into `App.tsx`.
+
+**What Changed**:
+- **App.tsx** (from 100 → 90 lines): Replaced 25+ explicit routes with UniversalProjection catch-all
+- **registry.tsx**: Registered `CockpitProjection` for `/self.cockpit` path
+- **plans/agentese-as-route.md**: Updated phase checklist to reflect completion
+
+**Architecture Now**:
+```tsx
+<Route element={<Shell />}>
+  <Route path="/town/simulation/:townId" element={<Town />} />  {/* Explicit (param) */}
+  <Route path="/gallery/*" element={<Gallery />} />             {/* Explicit (dev) */}
+  <Route path="/*" element={<UniversalProjection />} />         {/* AGENTESE catch-all */}
+</Route>
+```
+
+**Legacy redirects** (in UniversalProjection): `/brain` → `/self.memory`, `/town` → `/world.town`, etc.
+
+**Status**: Phases 1-4 ✅ COMPLETE. Phase 5 (Polish) 90% complete.
+
+*"The URL IS the thought. The page IS the answer."*
+
+---
+
+### 2025-12-18 — AGENTESE-as-Route Protocol
+
+Implemented the radical URL unification: **The URL IS the AGENTESE path.**
+
+**Spec** (`spec/protocols/agentese-as-route.md`):
+- URL grammar: `/{context}.{entity}.{sub}...[:aspect][?params]`
+- Examples: `/world.town.citizen.kent_001`, `/self.memory:capture`, `/time.differance?limit=20`
+- Reserved prefixes: `/_/` for system routes
+- Five synergies: Contract-First Types, Metaphysical Fullstack, Différance, Teaching Mode, Elastic UI
+
+**Implementation** (`impl/claude/web/src/`):
+- **parseAgentesePath.ts** (180 lines): URL → AGENTESE path parsing with validation
+- **useAgentesePath.ts** (340 lines): `useAgentese`, `useAgenteseMutation`, `useAgenteseStream` hooks
+- **shell/projections/** (6 files, ~1,200 lines):
+  - `UniversalProjection.tsx`: Catches all AGENTESE paths, invokes, projects
+  - `registry.tsx`: Response type → Component mapping (by type or path pattern)
+  - `GenericProjection.tsx`: JSON fallback with collapsible viewer
+  - `ProjectionLoading.tsx`, `ProjectionError.tsx`: State components
+- **AgentLink.tsx**: AGENTESE-aware `<Link>` replacement
+
+**Tests**: 31 passing tests for path parsing
+
+**Key Insight**: *"The URL IS the thought. The page IS the answer."* — Define a node, get a URL. No glue required. Navigation becomes pure AGENTESE discovery.
+
+**Migration Strategy**: Dual-mode (legacy redirects + universal catch-all). Existing pages work unchanged.
+
+---
+
+### 2025-12-18 — Metaphysical Forge Phase 4 (Herald & Projector Artisans)
+
+Implemented **real artisans** for AGENTESE node and React component generation:
+
+**Backend** (`services/forge/artisans/`):
+- **HeraldArtisan** (350 lines): Generates AGENTESE nodes from designs
+  - `@node` decorator with contracts dict and aspect routing
+  - `contracts_ext.py` with Request/Response types per operation
+  - Path derivation: `CounterAgent` → `world.counter`
+  - LLM mode + template fallback
+- **ProjectorArtisan** (400 lines): Generates React components from designs
+  - `{Name}Visualization.tsx` with elastic UI patterns
+  - `use{Name}Query.ts` with AGENTESE hooks (useAsyncState pattern)
+  - `index.ts` barrel export
+  - Files written to `_generated/{commission_id}/web/`
+
+**Commission Integration** (`commission.py`):
+- `advance()` now calls **real artisans** for EXPOSING and PROJECTING stages
+- Herald output (`registered_path`) flows to Projector input
+- Error handling: graceful failure if upstream output missing
+
+**Tests**: 51 new tests (Herald: 19, Projector: 24, Integration: 8). Total Forge: **165 tests** (all passing).
+
+**Key Implementation Decisions**:
+1. **Herald generates complete node.py**: Not a stub—immediately importable
+2. **Projector generates complete .tsx**: Density-aware, Living Earth aesthetic
+3. **Template fallback pattern**: Same as Smith/Architect—LLM when available, templates always work
+4. **Sentinel/Witness remain placeholders**: Phase 5 work
+
+**Generated Artifacts** (from a single commission):
+```
+services/forge/_generated/commission-{id}/
+├── __init__.py        # Smith
+├── polynomial.py      # Smith
+├── service.py         # Smith
+├── node.py            # Herald ← NEW
+├── contracts_ext.py   # Herald ← NEW
+└── web/               # Projector ← NEW
+    ├── index.ts
+    ├── {Name}Visualization.tsx
+    └── use{Name}Query.ts
+```
+
+**Exit Criteria** (from spec):
+- ✅ Commissioned agent works via CLI (node.py importable)
+- ✅ Commissioned agent works via HTTP (AGENTESE path registered)
+- ⏳ Commissioned agent works via Web UI (files generated, manual testing needed)
+
+*"The Herald makes the agent speakable. The Projector gives it form."*
+
+---
+
+### 2025-12-18 night — Metaphysical Forge Phase 3 (Architect & Smith Artisans)
+
+Implemented **real artisans** that do actual LLM-powered work:
+
+**Backend** (`services/forge/artisans/`):
+- **ArchitectArtisan** (320 lines): Generates categorical designs (PolyAgent specs) via K-gent `soul.dialogue()`
+  - JSON structured output: name, states, transitions, operations, laws
+  - Validation for design consistency
+  - Graceful fallback to stub design when K-gent unavailable
+- **SmithArtisan** (460 lines): Generates Python service code from designs
+  - Template-based code generation: `__init__.py`, `polynomial.py`, `service.py`
+  - Writes files to `services/forge/_generated/<commission_id>/`
+  - LLM enhancement when K-gent available, pure templates otherwise
+- **AgentDesign** dataclass: Structured design with validation
+
+**Commission Integration** (`commission.py`):
+- `advance()` now calls **real artisans** for DESIGNING and IMPLEMENTING stages
+- Architect output flows to Smith input
+- `artifact_path` populated with generated code location
+- Herald, Projector, Sentinel, Witness remain placeholders (Phase 4-5)
+
+**Contracts** (`contracts.py`):
+- `AgentDesignResponse`: Architect output schema
+- `SmithOutputResponse`: Smith output schema
+
+**Tests**: 35 new tests for artisans. Total Forge: **114 tests** (all passing).
+
+**Key Implementation Decisions**:
+1. **Real LLM via K-gent**: Uses `soul.dialogue()` with BudgetTier.DIALOGUE
+2. **Graceful degradation**: Stub/template mode when K-gent unavailable
+3. **Validated designs**: AgentDesign.validate() catches inconsistencies
+4. **Generated code compiles**: Templates produce syntactically valid Python
+
+**What Remains** (Phase 4-5):
+- Herald: AGENTESE node generation
+- Projector: React component generation
+- Sentinel: Security review
+- Witness: Test generation
+
+*"The Architect sees the shape. The Smith forges it into reality."*
+
+---
+
+### 2025-12-18 evening — Differance DevEx Phases 7D-7E (Session Recording & Export)
+
+Completed the **Differance DevEx Enlightenment** plan with final two phases:
+
+**Phase 7D: Session Recording** (`RecordingControls.tsx`, 420 lines):
+- One-click session recording with customizable names
+- Pause/resume/stop controls with Living Earth aesthetic
+- Decision markers with timestamps (flag important moments)
+- Auto-stop on 5 minutes idle
+- Real-time stats: traces, ghosts, duration
+- `useSessionRecording` hook for state management
+- Breathe animation on recording indicator
+
+**Phase 7E: Export & Share** (`ExportPanel.tsx`, 540 lines):
+- JSON export (machine-readable, for replay)
+- Markdown export (human-readable documentation)
+- ADR export (Architecture Decision Record format)
+- Shareable "why?" snapshots (one-click copy)
+- Session and trace export support
+- Mobile-friendly collapsible panel
+- Tip about ADR format for institutional knowledge
+
+**Differance.tsx Integration**:
+- RecordingControls in header area
+- ExportPanel beside search bar (desktop) / below content (mobile)
+- Wired to `useSessionRecording` hook with correlation IDs
+
+**Design Principles Applied**:
+- "Zero-Config Recording": Traces auto-record, sessions are opt-in enhancement
+- "Generative, Not Archival": Export answers "what should I do next?"
+- Living Earth aesthetic throughout
+
+**Status**: Differance DevEx COMPLETE (all 5 phases delivered).
+
+*"The Différance Engine is where kgents becomes conscious of its own cognition."*
+
+---
+
+### 2025-12-19 morning — Metaphysical Forge Phase 2.5 (Commission Workflow)
+
+Implemented the **Commission Workflow** — the core innovation of the Forge:
+
+**Backend** (`services/forge/`):
+- **commission.py** (400 lines): `Commission` dataclass, `CommissionService` with 9 methods, `CommissionStatus` enum (11 states), `ArtisanType` enum (7 artisans)
+- **commission_node.py** (300 lines): `CommissionNode` AGENTESE node with contracts for create/get/start/advance/pause/resume/cancel
+- **contracts.py** (+150 lines): 14 new contract types for commission workflow
+- **State Machine**: `PENDING → DESIGNING → IMPLEMENTING → EXPOSING → PROJECTING → SECURING → VERIFYING → REVIEWING → COMPLETE`
+
+**Frontend** (`web/src/`):
+- **useForgeQuery.ts** (+400 lines): 8 new hooks (`useCommissions`, `useCreateCommission`, `useStartCommission`, `useAdvanceCommission`, `usePauseCommission`, `useResumeCommission`, `useCancelCommission`, `useCommission`)
+- **CommissionPanel.tsx** (420 lines): Intent form + commission list + artisan progress view + intervention controls
+
+**Tests**: 23 new tests for commission (all passing). Total Forge: **79 tests**.
+
+**Key Implementation Decisions**:
+1. **Graceful degradation**: Commission auto-approves when K-gent unavailable
+2. **Additive outputs**: Each artisan adds to `artisan_outputs` dict, nothing replaces
+3. **Intervention tracking**: pause/resume/cancel recorded in `interventions` list
+4. **Fire-and-forget pattern**: Commission creation → auto-start in single flow
+
+**Spec Updated**: Added "Appendix C: Implementation Progress" to `spec/protocols/metaphysical-forge.md` with patterns discovered.
+
+**What Remains**:
+1. Architect artisan (actual LLM design generation)
+2. SSE streaming for real-time progress
+3. Cross-jewel wiring (Brain capture, Gardener plots)
+
+*"The commission is the intent. The artisans are the hands. The artifact is the agent."*
+
+### 2025-12-18 night — 2D Renaissance Phase 5 (Town Dialogue)
+Implemented **Phase 5** of the 2D Renaissance spec — citizen dialogue frontend:
+
+**Components Created** (4 files, ~710 lines):
+- **townApi dialogue methods** (`client.ts`): `converse()`, `turn()`, `getHistory()` via AGENTESE
+- **useCitizenDialogue.ts** (190 lines): Hook managing conversation lifecycle
+- **DialogueModal.tsx** (490 lines): Chat UI with Living Earth aesthetic
+- **CitizenPanel enhancement**: "Start Conversation" button
+
+**Living Earth Aesthetic**: Bark surfaces, archetype-colored borders, sage focus, amber loading.
+
+**Tests**: 20 passing (10 hook, 10 component)
+
+**What Remains** (Future Sessions):
+1. SSE streaming for LLM responses
+2. Park consent integration
+3. Event feed wiring to TownTracePanel
+4. Full memory grounding (M-gent foveation)
+
+*"Citizens should feel alive through dialogue."*
+
+### 2025-12-18 late — Différance Crown Jewel Wiring (Phase 6A-C)
+Executed **Phase 6A-C** of `plans/differance-crown-jewel-wiring.md`:
+
+**Phase 6A — Test Infrastructure + Buffer Isolation**:
+- **ContextVar-based buffer isolation** (`create_isolated_buffer()`, `reset_isolated_buffer()`)
+- pytest-xdist safe: each test gets isolated buffer, no cross-test pollution
+- **Correlation ID** support (`get_correlation_id()`, `set_correlation_id()`)
+- conftest fixture auto-applies isolation for all differance tests
+
+**Phase 6B — Brain Wiring**:
+- `BrainPersistence` now has `DifferanceIntegration("brain")`
+- `capture()` → trace with alternatives (auto_tag, defer_embedding)
+- `surface()` → trace with alternatives (different_seed, context_weighted)
+- `delete()` → trace with alternatives (archive_instead, soft_delete)
+- **Read operations (search, get, list) → NO traces** (high frequency, read-only)
+- Fire-and-forget pattern: `loop.create_task()` ensures zero latency impact
+
+**Phase 6C — Gardener Wiring**:
+- `GardenerPersistence` now has `DifferanceIntegration("gardener")`
+- `start_session()` → trace with alternatives (resume_previous)
+- `end_session()` → trace with alternatives (extend)
+- `plant_idea()` → trace with alternatives (different_lifecycle, auto_connect)
+- `nurture_idea()` → trace with alternatives (prune, water)
+- `harvest_idea()` → trace with alternatives (stay, compost)
+- `create_plot()` → trace with alternatives (use_existing)
+
+**Static Alternatives Registry** (`agents/differance/alternatives.py`):
+- Tier 1 static alternatives for Brain, Gardener, Town, Atelier
+- `get_alternatives(jewel, operation)` returns pre-defined alternatives
+- Zero-cost: no computation at trace time
+
+**Test Count**: 158 differance tests passing
+
+**Key Design Decisions** (per plan):
+1. Fire-and-forget: traces don't slow down operations
+2. Graceful degradation: no event loop → skip trace (don't crash)
+3. Read-heavy immunity: search/get/list are NOT traced
+4. Static alternatives: Tier 1 (constant) vs Tier 2 (computed) separation
+
+**Next**: Phase 6D — UI Integration (Ghost Badge + Why Panel for Cockpit)
+
+*"Every Brain capture and Gardener gesture now leaves a ghost trail."*
 
 ### 2025-12-18 late — Developer Cockpit (Anti-Sausage Portal)
 **Kent's daily entry point** — Replaced Crown (Hero Path) with developer-focused Cockpit:
@@ -343,4 +778,167 @@ Executed Week 3 of Atelier Rebuild:
 
 ---
 
-*Last: 2025-12-18 night (Metaphysical Forge spec created)*
+### 2025-12-18 night — 2D Renaissance COMPLETE 🎉
+Closed out the 2D Renaissance spec. All five phases delivered in a single day:
+- **Phase 1**: Mothball (9 Three.js files → `_mothballed/`)
+- **Phase 2**: Gardener2D (7 components, 1,485 lines, 30 tests)
+- **Phase 3**: Gestalt2D (4 components, 1,084 lines, 28 tests)
+- **Phase 4**: Brain2D (4 components, ~1,000 lines, 13 tests)
+- **Phase 5**: Town Dialogue (DialogueModal + hook, ~710 lines, 20 tests)
+
+**Total**: 24 new components, ~4,300 lines, 91 tests. Replaced 2,447 lines of hollow Three.js.
+
+*"3D was spectacle. 2D is truth. And truth breathes."*
+
+---
+
+### 2025-12-19 — Différance DevEx Enlightenment (Phases 7A-7C)
+Executed **Phase 7** of Différance DevEx (`plans/differance-devex-enlightenment.md`):
+
+**Phase 7A — TraceTimeline** (replaces RecentTracesPanel):
+- **TraceTimeline.tsx** (540 lines): Real trace data via `time.differance.recent`, jewel filtering, ghost count badges
+- Horizontal timeline with vertical branching, inline WhyPanel on selection
+- Living Earth aesthetic, responsive (compact mode for mobile)
+
+**Phase 7B — TraceInspector**:
+- **TraceInspector.tsx** (460 lines): Detailed trace view with operation, inputs/outputs, context
+- "Why this path?" section from `time.differance.why`
+- Ghost list with exploration buttons, polynomial state before/after viewer
+- Actions: Replay, View Full Heritage
+
+**Phase 7C — GhostExplorationModal**:
+- **GhostExplorationModal.tsx** (370 lines): Side-by-side comparison (Chosen vs Ghost)
+- Fork & Explore workflow via `time.branch.create` + `time.branch.explore`
+- Hypothesis input for exploration, non-explorable ghost warning
+
+**Differance Page Enhancement**:
+- Split view: Timeline (left) + Heritage Graph (center) + Inspector (right)
+- View mode toggle: Split / Full Timeline / Full Graph
+- Mobile support with inline inspector
+- Progressive disclosure: Badge → Timeline → Inspector → Modal → Full Graph
+
+**Tests**: TraceTimeline.test.tsx (12 tests)
+
+**TypeScript**: All new components compile cleanly (fixed unused imports, prop types)
+
+**Design Principles Enforced**:
+- "Ghosts Are Friends": Exploration feels like opening a gift, not a wound
+- "Temporal Intuition": Time flows left-to-right, chosen solid, ghosts translucent
+- "Progressive Disclosure": Each level reveals more detail
+- "Generative, Not Archival": "What should I do next?" not just "What happened?"
+
+**Remaining** (Future Sessions):
+- Phase 7D: Session Recording (RecordingControls, decision markers)
+- Phase 7E: Export & Share (JSON/Markdown export, shareable snapshots)
+
+*"The Différance Engine is where kgents becomes conscious of its own cognition."*
+
+---
+
+### 2025-12-18 — Concept Home Protocol: Foundation + Habitat 2.0 Vision
+
+Assessed Concept Home Protocol status and implemented foundation for **Habitat 2.0**:
+
+**Foundation Implemented**:
+- **ConceptHomeProjection.tsx** (340 lines): Universal fallback projection replacing GenericProjection
+  - Three-tier model: Minimal (cultivation card), Standard (reference panel), Rich (redirect)
+  - Context badges, breathing animations, warm cultivation copy
+  - Receives `ProjectionContext`, extracts metadata from response
+- **GeneratedPlayground enhancements**:
+  - Breathing animation for loading state (Sparkles icon with rotation)
+  - Micro-teaching hints after successful invocation (`ASPECT_HINTS` dictionary)
+  - Educational feedback: "Manifest reveals the current state—like asking 'what are you right now?'"
+- **Backend metadata wiring**: `/agentese/discover?include_metadata=true` now returns node descriptions, aspects, effects
+- **Registry updated**: `ConceptHomeProjection` is now the fallback (every path has a home)
+
+**Habitat 2.0 Vision** (3 new plans created):
+- **`plans/habitat-2.0.md`**: Master vision doc with three-layer architecture (Adaptive Habitat → Live Polynomial → Ghosts)
+- **`plans/ghost-integration.md`**: Priority 1 — Show alternatives after invocation (7h estimate)
+- **`plans/habitat-examples.md`**: Priority 2 — Pre-seeded one-click examples in `@node` (4h estimate)
+- **`plans/mini-polynomial.md`**: Priority 3 — Mini state machine diagrams in Reference Panel (6-8h estimate)
+
+**The Insight**: *"From 'every path has a home' to 'every path is a place to think'"* — aligned with Bret Victor's explorable explanations philosophy.
+
+**Key UX Principles Identified** (from research):
+- Time-to-first-invoke optimization (Stripe-style one-click)
+- Progressive disclosure (Nielsen Norman)
+- Ghost integration (Différance spec: "what almost was")
+- Observer-adaptive disclosure (developer/learner/operator/guest)
+
+**Tests**: TypeScript compiles cleanly, registry tests pass, gateway imports OK.
+
+*"The persona is a garden, not a museum. The Habitat is where agents grow visible."*
+
+---
+
+### 2025-12-18 — Habitat 2.0 Implementation (Complete)
+
+**Executed all four Habitat 2.0 plans with parallel agents:**
+
+**Priority 1: Ghost Integration** ✅
+- **Backend**: `Ghost` dataclass in `node.py`, `_get_alternatives()` on BaseLogosNode (excludes introspection aspects, max 5 ghosts, category-aware)
+- **Frontend**: `GhostPanel.tsx` (purple Différance theme, ghost emoji, category coloring), `ExplorationBreadcrumb.tsx` (last 5 invocations)
+- **Integration**: `GeneratedPlayground.tsx` fetches ghosts after invoke, displays in panel below results
+- **Tests**: 10 backend + 18 frontend tests passing
+
+**Priority 2: Habitat Examples** ✅
+- **Backend**: `NodeExample` dataclass in `registry.py`, `@node(examples=[...])` parameter, gateway includes examples in discovery
+- **Frontend**: `ExamplesPanel.tsx` (emerald action theme, one-click invocation)
+- **Examples Added**: BrainNode (search, recent, surface, topology), GardenerNode (propose, session.define, route), GestaltNode (health, topology, drift, scan)
+- **Tests**: 6 backend + 10 frontend tests passing
+
+**Priority 3: Mini Polynomial** ✅
+- **Backend**: `PolynomialManifest` dataclass, `polynomial` aspect on ALL BaseLogosNode (default position with all aspects as directions)
+- **Frontend**: `MiniPolynomial.tsx` (emerald current position, clickable directions)
+- **Integration**: `ConceptHomeProjection.tsx` fetches polynomial, displays in Reference Panel
+- **Tests**: 6 backend + 9 frontend tests passing
+
+**Specs Updated** ✅
+- Updated `spec/principles.md` AD-010 (Habitat Guarantee)
+- Updated `HYDRATE.md` with new Habitat status
+- Updated `plans/_forest.md` with current phase state
+
+**Totals**: 37 new frontend tests, 22 new backend tests. All Habitat 2.0 priorities 1-3 complete.
+
+**The Insight**: *"Category theory becomes tangible when you can click a transition."* Ghosts embody Différance philosophy—seeing paths not taken. Polynomial makes AD-002 visible and interactive.
+
+*"The persona is a garden, not a museum. The Habitat is where agents grow visible."*
+
+---
+
+### 2025-12-19 — AD-012: Aspect Projection Protocol
+
+**The Problem**: NavigationTree was showing aspects (`:manifest`, `:polynomial`) as clickable children, causing 405 errors and semantic confusion.
+
+**The Insight**: *"You can GO TO a town. You can't GO TO a greeting—you DO a greeting."*
+
+Paths are PLACES (navigable), aspects are ACTIONS (invocable). Conflating them breaks the model.
+
+**Implementation**:
+- **NavigationTree.tsx**: Removed aspects from `buildTree()` — navtree shows paths only
+- **spec/protocols/agentese.md §2.5**: Added navigation vs invocation semantics
+- **spec/principles.md AD-012**: Full rationale, puppet swap, anti-patterns
+- **plans/aspect-projection-protocol.md**: Marked COMPLETE
+
+**Key Diagram**:
+```
+NavTree (Loop Mode)          Projection (Function Mode)
+"Where can I go?"            "What can I do here?"
+
+▶ world                      ┌─────────────────────┐
+  ▶ town                     │ Aspects:            │
+    ○ citizen                │  [manifest] [poly]  │
+    ○ coalition              │       ↑             │
+▶ concept                    │  click = POST       │
+  ● gardener ◄── HERE        └─────────────────────┘
+```
+
+**Connection to Principles**:
+- **Heterarchical**: Paths are loop-mode, aspects are function-mode
+- **Puppet Constructions**: NavTree puppet wrong for aspects; Reference Panel + Playground is right puppet
+
+*"The river doesn't ask the clock when to flow. Aspects flow from paths when invoked, not when navigated."*
+
+---
+
+*Last: 2025-12-19 (AD-012: Aspect Projection Protocol)*

@@ -608,6 +608,12 @@ class GardenerSession:
             ConceptGardenerRouteResponse,
         ),
     },
+    examples=[
+        ("propose", {}, "Get suggestions"),
+        ("session.define", {"name": "New Feature"}, "Start session"),
+        ("sessions.manifest", {}, "List sessions"),
+        ("route", {"input": "show me the forest"}, "Route natural language"),
+    ],
 )
 @dataclass
 class GardenerNode(BaseLogosNode):

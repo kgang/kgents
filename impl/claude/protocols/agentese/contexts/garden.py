@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -72,6 +73,11 @@ def _season_description(season_name: str) -> str:
     return descriptions.get(season_name, "Unknown season")
 
 
+@node(
+    "self.garden",
+    description="Garden State Manager - seasons, plots, and tending gestures",
+    dependencies=(),  # Uses protocols.gardener_logos directly
+)
 @dataclass
 class GardenNode(BaseLogosNode):
     """
@@ -83,6 +89,11 @@ class GardenNode(BaseLogosNode):
     - Auto-inducer integration
 
     AGENTESE: self.garden.*
+
+    Metaphysical Fullstack (AD-009):
+    The protocol IS the API. This node replaces:
+    - /v1/gardener/garden (legacy route)
+    - /v1/gardener/tending/* (legacy routes)
     """
 
     _handle: str = "self.garden"
@@ -160,9 +171,7 @@ class GardenNode(BaseLogosNode):
         help="Show current season info",
         examples=["kg garden season"],
     )
-    async def _season(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _season(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Get current season information."""
         from protocols.gardener_logos import create_garden
 
@@ -184,17 +193,13 @@ class GardenNode(BaseLogosNode):
         help="Show health metrics",
         examples=["kg garden health"],
     )
-    async def _health(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _health(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Get garden health metrics."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
         garden = create_garden(name="kgents")
         garden.plots = create_crown_jewel_plots()
-        garden.metrics.active_plots = len(
-            [p for p in garden.plots.values() if p.is_active]
-        )
+        garden.metrics.active_plots = len([p for p in garden.plots.values() if p.is_active])
 
         metrics = garden.metrics
         return {
@@ -215,9 +220,7 @@ class GardenNode(BaseLogosNode):
         help="Initialize garden with default plots",
         examples=["kg garden init"],
     )
-    async def _init(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _init(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Initialize garden with crown jewel plots."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
 
@@ -239,9 +242,7 @@ class GardenNode(BaseLogosNode):
         help="Transition to new season",
         examples=["kg garden transition SPROUTING"],
     )
-    async def _transition(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _transition(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Transition garden to a new season."""
         from protocols.gardener_logos import GardenSeason, create_garden
 
@@ -284,9 +285,7 @@ class GardenNode(BaseLogosNode):
         help="Check for auto-inducer season suggestion",
         examples=["kg garden suggest"],
     )
-    async def _suggest(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _suggest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Check for season transition suggestion."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.seasons import (
@@ -296,9 +295,7 @@ class GardenNode(BaseLogosNode):
 
         garden = create_garden(name="kgents")
         garden.plots = create_crown_jewel_plots()
-        garden.metrics.active_plots = len(
-            [p for p in garden.plots.values() if p.is_active]
-        )
+        garden.metrics.active_plots = len([p for p in garden.plots.values() if p.is_active])
 
         signals = TransitionSignals.gather(garden)
         suggestion = suggest_season_transition(garden)
@@ -328,9 +325,7 @@ class GardenNode(BaseLogosNode):
         help="Accept auto-inducer transition suggestion",
         examples=["kg garden accept"],
     )
-    async def _accept(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _accept(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Accept current transition suggestion."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.seasons import (
@@ -369,9 +364,7 @@ class GardenNode(BaseLogosNode):
         help="Dismiss auto-inducer transition suggestion (4h cooldown)",
         examples=["kg garden dismiss"],
     )
-    async def _dismiss(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _dismiss(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """Dismiss current transition suggestion."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.seasons import (
@@ -390,9 +383,7 @@ class GardenNode(BaseLogosNode):
                 "message": "No pending transition suggestion to dismiss.",
             }
 
-        dismiss_transition(
-            garden.garden_id, suggestion.from_season, suggestion.to_season
-        )
+        dismiss_transition(garden.garden_id, suggestion.from_season, suggestion.to_season)
 
         return {
             "status": "dismissed",

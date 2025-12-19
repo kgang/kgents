@@ -290,11 +290,11 @@ export function CitizenBrowser() {
   }, [citizens.data?.citizens, searchQuery, archetypeFilter, showActiveOnly]);
 
   const handleSelectCitizen = (id: string) => {
-    navigate(`/town/citizens/${id}`);
+    navigate(`/world.town.citizen.${id}`);
   };
 
   const handleCloseCitizen = () => {
-    navigate('/town/citizens');
+    navigate('/world.town.citizen');
   };
 
   const handleStartConversation = async () => {

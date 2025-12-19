@@ -38,7 +38,6 @@ from agents.k.soul import KgentSoul
 from .auth import ApiKeyData, TenantContextMiddleware, get_optional_api_key
 from .metering import MeteringMiddleware
 from .models import HealthResponse
-from .soul import create_soul_router
 
 logger = logging.getLogger(__name__)
 
@@ -112,24 +111,24 @@ def create_app(
     app.add_middleware(MeteringMiddleware)
 
     # Register routers
-    # Soul endpoints
-    soul_router = create_soul_router()
-    if soul_router is not None:
-        app.include_router(soul_router)
+    # === Soul endpoints REMOVED (AD-009 Phase 2 Router Consolidation) ===
+    # The /v1/soul/* endpoints are superseded by:
+    # - POST /agentese/self/soul/dialogue - Dialogue with K-gent
+    # - POST /agentese/self/soul/governance - Semantic gatekeeper
+    # See: protocols/agentese/contexts/self_soul.py (SoulNode)
 
-    # AGENTESE endpoints
-    from .agentese import create_agentese_router
+    # === AGENTESE Legacy Router REMOVED (AD-009) ===
+    # The /v1/agentese/* endpoints are superseded by /agentese/* gateway.
+    # All clients should use the gateway at /agentese/{path}/{aspect}.
+    # See: protocols/agentese/gateway.py
 
-    agentese_router = create_agentese_router()
-    if agentese_router is not None:
-        app.include_router(agentese_router)
-
-    # K-gent Sessions endpoints
-    from .sessions import create_sessions_router
-
-    sessions_router = create_sessions_router()
-    if sessions_router is not None:
-        app.include_router(sessions_router)
+    # === K-gent Sessions REMOVED (AD-009 Phase 2) ===
+    # The /v1/kgent/* endpoints are superseded by:
+    # - POST /agentese/self/kgent/create - Create session
+    # - POST /agentese/self/kgent/list - List sessions
+    # - POST /agentese/self/kgent/message - Send message (SSE)
+    # - POST /agentese/self/kgent/history - Get message history
+    # See: protocols/agentese/contexts/self_kgent.py (KgentSessionNode)
 
     # AGENTESE Universal Protocol (AUP) endpoints
     from .aup import create_aup_router
@@ -152,26 +151,32 @@ def create_app(
     if metrics_router is not None:
         app.include_router(metrics_router)
 
-    # N-Phase Session endpoints (not yet AGENTESE-ified)
-    from .nphase import create_nphase_router
+    # === N-Phase Session REMOVED (AD-009 Phase 2) ===
+    # The /v1/nphase/* endpoints are superseded by:
+    # - POST /agentese/self/session/create - Create session
+    # - POST /agentese/self/session/list - List sessions
+    # - POST /agentese/self/session/{id}/advance - Advance phase
+    # - POST /agentese/self/session/{id}/checkpoint - Create checkpoint
+    # - POST /agentese/self/session/{id}/detect - Detect phase signal
+    # See: protocols/agentese/contexts/self_nphase.py (NPhaseNode)
 
-    nphase_router = create_nphase_router()
-    if nphase_router is not None:
-        app.include_router(nphase_router)
+    # === Workshop Router REMOVED (AD-009 Phase 3) ===
+    # The /v1/workshop/* endpoints are superseded by:
+    # - GET /agentese/world/workshop/manifest - Workshop status
+    # - POST /agentese/world/workshop/task - Assign task
+    # - GET /agentese/world/workshop/stream (SSE) - Event stream
+    # - GET /agentese/world/workshop/builders - List builders
+    # - POST /agentese/world/workshop/perturb - Inject perturbation
+    # - GET /agentese/world/workshop/history - Task history
+    # - GET /agentese/world/workshop/metrics - Aggregate metrics
+    # See: protocols/agentese/contexts/world_workshop.py (WorkshopNode)
 
-    # Workshop endpoints (not yet AGENTESE-ified)
-    from .workshop import create_workshop_router
-
-    workshop_router = create_workshop_router()
-    if workshop_router is not None:
-        app.include_router(workshop_router)
-
-    # Gallery endpoints (Projection Component Gallery - keep for now)
-    from .gallery import create_gallery_router
-
-    gallery_router = create_gallery_router()
-    if gallery_router is not None:
-        app.include_router(gallery_router)
+    # === Gallery Router REMOVED (AD-009 Phase 3) ===
+    # The /api/gallery/* endpoints are superseded by:
+    # - GET /agentese/world/gallery/manifest - All pilots
+    # - GET /agentese/world/gallery/categories - Category list
+    # - POST /agentese/world/gallery/pilot - Single pilot detail
+    # See: protocols/agentese/contexts/world_gallery_api.py (GalleryApiNode)
 
     # Brain WebSocket (real-time updates - keep for now)
     from .brain_websocket import create_brain_websocket_router
@@ -180,26 +185,29 @@ def create_app(
     if brain_ws_router is not None:
         app.include_router(brain_ws_router)
 
-    # Gestalt endpoints (Living Architecture Visualizer - not yet AGENTESE-ified)
-    from .gestalt import create_gestalt_router
+    # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
+    # The /v1/world/codebase/* endpoints are superseded by:
+    # - GET/POST /agentese/world/codebase/{aspect}
+    # - GET /agentese/world/codebase/{aspect}/stream (SSE)
+    # See: services/gestalt/node.py (GestaltNode)
 
-    gestalt_router = create_gestalt_router()
-    if gestalt_router is not None:
-        app.include_router(gestalt_router)
+    # === Infrastructure Router REMOVED (AD-009 Phase 3) ===
+    # The /api/infra/* endpoints are superseded by:
+    # - GET /agentese/world/gestalt/live/status - Collector status
+    # - POST /agentese/world/gestalt/live/connect - Connect to K8s
+    # - POST /agentese/world/gestalt/live/disconnect - Disconnect
+    # - GET /agentese/world/gestalt/live/topology - Current topology
+    # - GET /agentese/world/gestalt/live/topology_stream (SSE) - Topology updates
+    # - GET /agentese/world/gestalt/live/events_stream (SSE) - Event stream
+    # - GET /agentese/world/gestalt/live/health - Aggregate health
+    # - POST /agentese/world/gestalt/live/entity_detail - Entity details
+    # See: protocols/agentese/contexts/world_gestalt_live.py (GestaltLiveNode)
 
-    # Infrastructure endpoints (Gestalt Live - not yet AGENTESE-ified)
-    from .infrastructure import create_infrastructure_router
-
-    infrastructure_router = create_infrastructure_router()
-    if infrastructure_router is not None:
-        app.include_router(infrastructure_router)
-
-    # Gardener endpoints (not yet AGENTESE-ified)
-    from .gardener import create_gardener_router
-
-    gardener_router = create_gardener_router()
-    if gardener_router is not None:
-        app.include_router(gardener_router)
+    # Gardener endpoints REMOVED (AD-009 Router Consolidation)
+    # The /v1/gardener/* endpoints are superseded by:
+    # - concept.gardener.*  - Session polynomial (SENSE→ACT→REFLECT)
+    # - self.garden.*       - Garden state (seasons, plots, tending)
+    # See: protocols/agentese/contexts/gardener.py, contexts/garden.py
 
     # === AGENTESE Universal Gateway (AD-009) ===
     # The protocol IS the API - auto-exposes all @node registered services
@@ -405,42 +413,81 @@ def create_app(
                     "health": "GET /agentese/world/morpheus/health",
                     "legacy": "POST /v1/chat/completions (307 redirect)",
                 },
-                # === Non-AGENTESE Endpoints ===
+                # === K-gent Soul (via AGENTESE Gateway) ===
                 "soul": {
-                    "governance": "/v1/soul/governance",
-                    "dialogue": "/v1/soul/dialogue",
+                    "note": "Use AGENTESE gateway instead of /v1/soul/*",
+                    "manifest": "GET /agentese/self/soul/manifest",
+                    "dialogue": "POST /agentese/self/soul/dialogue",
+                    "governance": "POST /agentese/self/soul/governance",
+                    "challenge": "POST /agentese/self/soul/challenge",
+                    "reflect": "POST /agentese/self/soul/reflect",
                 },
+                # === K-gent Sessions (via AGENTESE Gateway) ===
                 "kgent": {
-                    "sessions": "/v1/kgent/sessions",
-                    "messages": "/v1/kgent/sessions/{id}/messages",
+                    "note": "Use AGENTESE gateway instead of /v1/kgent/*",
+                    "create": "POST /agentese/self/kgent/create",
+                    "list": "POST /agentese/self/kgent/list",
+                    "message": "POST /agentese/self/kgent/message",
+                    "history": "POST /agentese/self/kgent/history",
                 },
+                # === N-Phase Sessions (via AGENTESE Gateway) ===
+                "nphase": {
+                    "note": "Use AGENTESE gateway instead of /v1/nphase/*",
+                    "create": "POST /agentese/self/session/create",
+                    "list": "POST /agentese/self/session/list",
+                    "advance": "POST /agentese/self/session/advance",
+                    "checkpoint": "POST /agentese/self/session/checkpoint",
+                    "detect": "POST /agentese/self/session/detect",
+                },
+                # === Workshop (via AGENTESE Gateway) ===
+                "workshop": {
+                    "note": "Use AGENTESE gateway instead of /v1/workshop/*",
+                    "manifest": "GET /agentese/world/workshop/manifest",
+                    "task": "POST /agentese/world/workshop/task",
+                    "stream": "GET /agentese/world/workshop/stream/stream (SSE)",
+                    "builders": "POST /agentese/world/workshop/builders",
+                    "perturb": "POST /agentese/world/workshop/perturb",
+                    "history": "POST /agentese/world/workshop/history",
+                    "metrics": "POST /agentese/world/workshop/metrics",
+                },
+                # === Gallery (via AGENTESE Gateway) ===
+                "gallery": {
+                    "note": "Use AGENTESE gateway instead of /api/gallery/*",
+                    "manifest": "GET /agentese/world/gallery/manifest",
+                    "categories": "POST /agentese/world/gallery/categories",
+                    "pilot": "POST /agentese/world/gallery/pilot",
+                },
+                # === Gestalt Codebase (via AGENTESE Gateway) ===
+                "gestalt": {
+                    "note": "Use AGENTESE gateway instead of /v1/world/codebase/*",
+                    "manifest": "GET /agentese/world/codebase/manifest",
+                    "health": "POST /agentese/world/codebase/health",
+                    "topology": "POST /agentese/world/codebase/topology",
+                    "stream": "GET /agentese/world/codebase/topology/stream (SSE)",
+                },
+                # === Gardener (via AGENTESE Gateway) ===
+                "gardener": {
+                    "note": "Use AGENTESE gateway instead of /v1/gardener/*",
+                    "session": "GET /agentese/concept/gardener/manifest",
+                    "garden": "GET /agentese/self/garden/manifest",
+                    "season": "POST /agentese/self/garden/season",
+                    "health": "POST /agentese/self/garden/health",
+                },
+                # === Infrastructure / Gestalt Live (via AGENTESE Gateway) ===
+                "infrastructure": {
+                    "note": "Use AGENTESE gateway instead of /api/infra/*",
+                    "status": "GET /agentese/world/gestalt/live/status/manifest",
+                    "topology": "POST /agentese/world/gestalt/live/topology",
+                    "topology_stream": "GET /agentese/world/gestalt/live/topology_stream/stream (SSE)",
+                    "events_stream": "GET /agentese/world/gestalt/live/events_stream/stream (SSE)",
+                    "health": "POST /agentese/world/gestalt/live/health",
+                    "connect": "POST /agentese/world/gestalt/live/connect",
+                    "disconnect": "POST /agentese/world/gestalt/live/disconnect",
+                },
+                # === Non-AGENTESE Endpoints ===
                 "webhooks": {
                     "stripe": "/webhooks/stripe",
                     "stripe_health": "/webhooks/stripe/health",
-                },
-                "nphase": {
-                    "sessions": "GET /v1/nphase/sessions",
-                    "create": "POST /v1/nphase/sessions",
-                    "advance": "POST /v1/nphase/sessions/{id}/advance",
-                },
-                "workshop": {
-                    "get": "GET /v1/workshop",
-                    "stream": "GET /v1/workshop/stream",
-                    "status": "GET /v1/workshop/status",
-                },
-                "gallery": {
-                    "all": "GET /api/gallery",
-                    "categories": "GET /api/gallery/categories",
-                },
-                "gestalt": {
-                    "manifest": "GET /v1/world/codebase/manifest",
-                    "health": "GET /v1/world/codebase/health",
-                    "topology": "GET /v1/world/codebase/topology",
-                },
-                "infrastructure": {
-                    "status": "GET /api/infra/status",
-                    "topology": "GET /api/infra/topology",
-                    "topology_stream": "GET /api/infra/topology/stream (SSE)",
                 },
                 "websocket": {
                     "brain": "WS /ws/brain",

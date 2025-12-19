@@ -17,13 +17,6 @@ import { useAsyncState } from './useAsyncState';
 import type {
   // Town manifest
   WorldTownManifestResponse,
-  // Citizen types
-  WorldTownCitizenListResponse,
-  WorldTownCitizenGetResponse,
-  WorldTownCitizenCreateRequest,
-  WorldTownCitizenCreateResponse,
-  WorldTownCitizenUpdateRequest,
-  WorldTownCitizenUpdateResponse,
   // Conversation types
   WorldTownConverseRequest,
   WorldTownConverseResponse,
@@ -35,6 +28,15 @@ import type {
   WorldTownRelationshipsRequest,
   WorldTownRelationshipsResponse,
 } from '../api/types/_generated/world-town';
+import type {
+  // Citizen types
+  WorldTownCitizenListResponse,
+  WorldTownCitizenGetResponse,
+  WorldTownCitizenCreateRequest,
+  WorldTownCitizenCreateResponse,
+  WorldTownCitizenUpdateRequest,
+  WorldTownCitizenUpdateResponse,
+} from '../api/types/_generated/world-town-citizen';
 import type {
   // Coalition types
   WorldTownCoalitionManifestResponse,

@@ -2,13 +2,14 @@
 path: docs/skills/crown-jewel-patterns
 status: active
 progress: 100
-last_touched: 2025-12-16
+last_touched: 2025-12-19
 touched_by: claude-opus-4
 blocking: []
 enables: [atelier, coalition, park, domain, gestalt]
 session_notes: |
   Extracted from Gardener-Logos post-implementation reflection.
   These patterns are reusable across all Crown Jewels.
+  Pattern 15 added from Morpheus/Chat debugging (hollow service anti-pattern).
 phase_ledger:
   PLAN: complete
   REFLECT: complete
@@ -811,6 +812,105 @@ function TracePanel({ events, maxEvents }: TracePanelProps) {
 
 ---
 
+## Pattern 15: No Hollow Services
+
+**Problem**: Services with default constructors can be instantiated without required configuration, creating objects that pass type checks but fail at runtime.
+
+**Wrong**: Default constructor bypasses DI
+```python
+# Direct instantiation creates hollow object
+async def get_chat_factory():
+    # ❌ Creates MorpheusPersistence with empty gateway - no providers!
+    morpheus = MorpheusPersistence()
+    return ChatServiceFactory(morpheus=morpheus)
+
+# Later at runtime:
+# "No provider found for model: claude-sonnet-4-20250514"
+# Cryptic error because gateway has no adapters registered
+```
+
+**Right**: Always go through DI/bootstrap
+```python
+async def get_chat_factory():
+    # ✅ Gets properly configured service with ClaudeCLIAdapter registered
+    morpheus = await get_service("morpheus_persistence")
+    return ChatServiceFactory(morpheus=morpheus)
+```
+
+**Why This Matters for Agent Systems**:
+
+Agent services have deep dependency graphs. An LLM gateway isn't just a class—it's a *composition* of:
+- Adapters (ClaudeCLI, OpenAI, Anthropic)
+- Rate limiters per archetype
+- Telemetry/observability hooks
+- Provider routing by model prefix
+
+When you instantiate directly, you get a **structurally valid but behaviorally hollow** object:
+- ✅ Has all the right methods
+- ✅ Passes type checks
+- ✅ Can be assigned to the correct type
+- ❌ Missing runtime configuration
+- ❌ Fails with cryptic "no provider" errors
+
+**Prevention Strategies**:
+
+```python
+# Option 1: Make wrong thing impossible (no default for critical deps)
+class MorpheusPersistence:
+    def __init__(self, gateway: MorpheusGateway):  # Required!
+        if not gateway.list_providers():
+            raise ValueError("Gateway must have at least one provider")
+        self._gateway = gateway
+
+# Option 2: Factory function only (hide constructor)
+def create_morpheus_persistence() -> MorpheusPersistence:
+    """Only way to create a properly configured instance."""
+    gateway = MorpheusGateway()
+    gateway.register_provider("claude-cli", ClaudeCLIAdapter(), "claude-")
+    return MorpheusPersistence(gateway=gateway)
+
+# Option 3: Builder with validation
+MorpheusPersistence.builder() \
+    .with_provider(ClaudeCLIAdapter()) \
+    .build()  # Raises if no providers
+```
+
+**Detection**:
+
+```python
+# In bootstrap or app startup, verify services are wired
+async def verify_services():
+    morpheus = await get_service("morpheus_persistence")
+    providers = morpheus.gateway.list_providers()
+    if not providers:
+        raise RuntimeError("Morpheus has no providers - check bootstrap wiring")
+    logger.info(f"Morpheus OK: {len(providers)} providers registered")
+```
+
+**The Rule**:
+
+> **Crown Jewels should NEVER be instantiated directly outside bootstrap.**
+> Always go through `get_service()` or the DI container.
+> If a service needs runtime wiring (adapters, buses, stores),
+> the "convenient" direct instantiation is the wrong way.
+
+**Benefits**:
+- Catches misconfiguration at startup, not runtime
+- Single source of truth for service creation
+- Makes the "wrong way" awkward (or impossible)
+- Cryptic runtime errors become clear startup errors
+
+**Apply to**:
+| Service | Required Wiring |
+|---------|-----------------|
+| MorpheusPersistence | Gateway with registered providers |
+| ChatServiceFactory | MorpheusPersistence for LLM composition |
+| BrainPersistence | TableAdapter + D-gent router |
+| TownPersistence | Citizen + Conversation adapters |
+| DifferanceStore | D-gent backend + DataBus |
+
+---
+
 ## Quick Reference
 
 | Pattern | Use When | Key Insight |
@@ -828,7 +928,8 @@ function TracePanel({ events, maxEvents }: TracePanelProps) {
 | Circadian Modulation | Time-of-day UI shifts | Phase → modifier → apply |
 | Law Honesty | Laws that aren't runtime | STRUCTURAL status for design constraints |
 | Contract-First Types | BE/FE type sync | `@node(contracts={})` is authority |
-| **Teaching Mode Toggle** | Learner vs. power user UX | Context + localStorage + accessibility |
+| Teaching Mode Toggle | Learner vs. power user UX | Context + localStorage + accessibility |
+| **No Hollow Services** | Services needing runtime config | Always use DI; never direct instantiation |
 
 ---
 
@@ -843,6 +944,7 @@ function TracePanel({ events, maxEvents }: TracePanelProps) {
 
 ## Changelog
 
+- 2025-12-19: Added Pattern 15 (No Hollow Services) from Morpheus/Chat provider debugging
 - 2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from Park-Town Design Overhaul Phase 5
 - 2025-12-18: Added Pattern 13 (Contract-First Types) from Phase 7 Autopoietic Architecture
 - 2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel
