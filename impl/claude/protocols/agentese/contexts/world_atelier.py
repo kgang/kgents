@@ -33,9 +33,8 @@ from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
 
 if TYPE_CHECKING:
-    from services.atelier import AtelierPersistence, AtelierStatus
-
     from bootstrap.umwelt import Umwelt
+    from services.atelier import AtelierPersistence, AtelierStatus
 
 
 # Atelier affordances available at world.atelier.*
