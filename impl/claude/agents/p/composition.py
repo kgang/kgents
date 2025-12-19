@@ -88,8 +88,7 @@ class FallbackParser(Generic[A]):
         # All strategies failed
         return ParseResult(
             success=False,
-            error=f"All {len(self.strategies)} strategies failed:\n"
-            + "\n".join(errors),
+            error=f"All {len(self.strategies)} strategies failed:\n" + "\n".join(errors),
             strategy="fallback",
             metadata={"strategies_tried": len(self.strategies)},
         )
@@ -338,10 +337,10 @@ class SwitchParser(Generic[A]):
 
                             if hasattr(parser, "parse_stream"):
                                 for result in parser.parse_stream(stream):
-                                    result.metadata["switch_condition"] = (
-                                        condition.__name__
+                                    result.metadata["switch_condition"] = condition.__name__
+                                    result.strategy = (
+                                        f"switch[{condition.__name__}]:{result.strategy}"
                                     )
-                                    result.strategy = f"switch[{condition.__name__}]:{result.strategy}"
                                     yield result
                             else:
                                 # Fallback: buffer and parse

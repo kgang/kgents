@@ -133,9 +133,7 @@ class TerminalCapabilities:
         term = os.environ.get("TERM", "").lower()
 
         # True color terminals
-        if any(
-            x in term for x in ("256color", "truecolor", "24bit", "kitty", "alacritty")
-        ):
+        if any(x in term for x in ("256color", "truecolor", "24bit", "kitty", "alacritty")):
             return "rgb" if colorterm else "256"
 
         # 256 color support

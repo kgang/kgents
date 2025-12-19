@@ -124,9 +124,7 @@ class Prism:
 
         return self._parser
 
-    def _add_arguments(
-        self, parser: argparse.ArgumentParser, method: Callable[..., Any]
-    ) -> None:
+    def _add_arguments(self, parser: argparse.ArgumentParser, method: Callable[..., Any]) -> None:
         """
         Add argparse arguments from method signature.
 

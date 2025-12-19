@@ -319,9 +319,7 @@ class LucidDreamer:
         """Check if it's time for a REM cycle."""
         return self._night_watch.should_dream()
 
-    def add_question(
-        self, text: str, context: dict[str, Any], priority: int = 0
-    ) -> Question:
+    def add_question(self, text: str, context: dict[str, Any], priority: int = 0) -> Question:
         """
         Add a question to the morning briefing.
 
@@ -345,9 +343,7 @@ class LucidDreamer:
         if len(self._morning_briefing) > self._config.max_questions:
             # Remove lowest priority
             self._morning_briefing.sort(key=lambda q: q.priority, reverse=True)
-            self._morning_briefing = self._morning_briefing[
-                : self._config.max_questions
-            ]
+            self._morning_briefing = self._morning_briefing[: self._config.max_questions]
 
         return question
 
@@ -428,9 +424,7 @@ class LucidDreamer:
                 report.errors.append(f"Consolidation error: {e}")
 
             if await self._should_interrupt():
-                return self._finalize_interrupted(
-                    report, "Interrupt during consolidation"
-                )
+                return self._finalize_interrupted(report, "Interrupt during consolidation")
 
             # Phase 3: Maintenance (interruptible)
             self._phase = DreamPhase.REM_MAINTENANCE
@@ -469,9 +463,7 @@ class LucidDreamer:
             return False
 
         # Check synapse for high-surprise signals
-        return self._synapse.has_flashbulb_pending(
-            window_ms=self._config.interrupt_check_ms
-        )
+        return self._synapse.has_flashbulb_pending(window_ms=self._config.interrupt_check_ms)
 
     def _finalize_interrupted(self, report: DreamReport, reason: str) -> DreamReport:
         """Finalize an interrupted dream report."""
@@ -491,9 +483,7 @@ class LucidDreamer:
         for chunk in task_chunks:
             # Check for interrupt before each chunk
             if await self._should_interrupt():
-                return self._finalize_interrupted(
-                    report, "Interrupt during maintenance"
-                )
+                return self._finalize_interrupted(report, "Interrupt during maintenance")
 
             # Process chunk
             try:
@@ -583,9 +573,7 @@ class LucidDreamer:
 
         # Example: Check for epoch accumulation
         if len(self._hippocampus.epochs) > 10:
-            epoch_context: dict[str, Any] = {
-                "epoch_count": float(len(self._hippocampus.epochs))
-            }
+            epoch_context: dict[str, Any] = {"epoch_count": float(len(self._hippocampus.epochs))}
             questions.append(
                 (
                     f"You have {len(self._hippocampus.epochs)} memory epochs. Should we consolidate?",
@@ -608,15 +596,11 @@ class LucidDreamer:
             "total_dreams": self._total_dreams,
             "total_interrupts": self._total_interrupts,
             "interrupt_rate": (
-                self._total_interrupts / self._total_dreams
-                if self._total_dreams > 0
-                else 0.0
+                self._total_interrupts / self._total_dreams if self._total_dreams > 0 else 0.0
             ),
             "pending_questions": len(self.morning_briefing),
             "next_rem": (
-                self._night_watch.next_rem.isoformat()
-                if self._night_watch.next_rem
-                else None
+                self._night_watch.next_rem.isoformat() if self._night_watch.next_rem else None
             ),
             "time_until_next": str(self._night_watch.time_until_next()),
         }

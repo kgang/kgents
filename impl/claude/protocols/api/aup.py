@@ -459,9 +459,7 @@ def create_aup_router() -> "APIRouter | None":
                         "name": c.name,
                         "archetype": c.archetype,
                         "region": c.region,
-                        "phase": c.phase.name
-                        if hasattr(c.phase, "name")
-                        else str(c.phase),
+                        "phase": c.phase.name if hasattr(c.phase, "name") else str(c.phase),
                         "position": {"x": hash(c.id) % 10, "y": hash(c.name) % 10},
                         "energy": getattr(c, "energy", 1.0),
                         "mood": getattr(c, "mood", 0.5),

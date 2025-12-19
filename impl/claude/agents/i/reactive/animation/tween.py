@@ -109,9 +109,7 @@ def lerp_int(a: int, b: int, t: float) -> int:
     return round(a + (b - a) * t)
 
 
-def lerp_tuple(
-    a: tuple[float, ...], b: tuple[float, ...], t: float
-) -> tuple[float, ...]:
+def lerp_tuple(a: tuple[float, ...], b: tuple[float, ...], t: float) -> tuple[float, ...]:
     """Linear interpolation for tuples of numbers."""
     return tuple(lerp_number(av, bv, t) for av, bv in zip(a, b))
 
@@ -286,9 +284,7 @@ class Tween(Generic[T]):
         # Calculate progress (accounting for delay)
         active_elapsed = new_elapsed - self.config.delay_ms
         raw_progress = (
-            active_elapsed / self.config.duration_ms
-            if self.config.duration_ms > 0
-            else 1.0
+            active_elapsed / self.config.duration_ms if self.config.duration_ms > 0 else 1.0
         )
 
         # Handle looping
@@ -325,8 +321,7 @@ class Tween(Generic[T]):
         # Determine status
         status = TransitionStatus.RUNNING
         if progress >= 1.0 and (
-            self.config.loops == 0
-            or (self.config.loops > 0 and loop >= self.config.loops)
+            self.config.loops == 0 or (self.config.loops > 0 and loop >= self.config.loops)
         ):
             status = TransitionStatus.COMPLETE
             value = end if forward else start
@@ -409,12 +404,8 @@ class Tween(Generic[T]):
             start=current.end,
             end=current.start,
             status=current.status,
-            progress=1.0 - current.progress
-            if current.status == TransitionStatus.RUNNING
-            else 0.0,
-            elapsed_ms=0.0
-            if current.status != TransitionStatus.RUNNING
-            else current.elapsed_ms,
+            progress=1.0 - current.progress if current.status == TransitionStatus.RUNNING else 0.0,
+            elapsed_ms=0.0 if current.status != TransitionStatus.RUNNING else current.elapsed_ms,
             loop=current.loop,
             forward=not current.forward,
         )

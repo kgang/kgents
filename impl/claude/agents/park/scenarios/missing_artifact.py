@@ -73,8 +73,7 @@ GUARD = CitizenSpec(
         ambition=0.3,
     ),
     cosmotechnics=GATHERING,
-    backstory="Night guard who was on duty. "
-    "He saw something unusual but isn't sure what.",
+    backstory="Night guard who was on duty. He saw something unusual but isn't sure what.",
     metadata={
         "has_clue": "saw_figure",
         "secret": "Took a break he wasn't supposed to",
@@ -117,8 +116,7 @@ COLLECTOR = CitizenSpec(
         ambition=0.9,
     ),
     cosmotechnics=GATHERING,
-    backstory="Wealthy collector who offered to buy the artifact. "
-    "His offer was refused.",
+    backstory="Wealthy collector who offered to buy the artifact. His offer was refused.",
     metadata={
         "has_clue": "financial_motive",
         "secret": "His business is in trouble",

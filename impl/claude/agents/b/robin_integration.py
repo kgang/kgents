@@ -151,18 +151,14 @@ class RobinOutput:
 
         # Personalization
         lines.append("\n📌 PERSONALIZATION:")
-        lines.append(
-            f"  Style hints: {', '.join(self.personalization.suggested_style)}"
-        )
+        lines.append(f"  Style hints: {', '.join(self.personalization.suggested_style)}")
         lines.append(f"  K-gent reflection: {self.kgent_reflection.response[:200]}...")
 
         # Hypotheses
         lines.append(f"\n🔬 HYPOTHESES ({len(self.hypotheses)}):")
         for i, h in enumerate(self.hypotheses, 1):
             lines.append(f"\n  {i}. {h.statement}")
-            lines.append(
-                f"     Confidence: {h.confidence:.0%} | Novelty: {h.novelty.value}"
-            )
+            lines.append(f"     Confidence: {h.confidence:.0%} | Novelty: {h.novelty.value}")
             lines.append("     Falsifiable by:")
             for f in h.falsifiable_by[:2]:
                 lines.append(f"       - {f}")
@@ -296,9 +292,7 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
             fallback_mode=self._fallback_mode,
         )
 
-    async def invoke(
-        self, input: RobinInput, runtime: Optional[Runtime] = None
-    ) -> RobinOutput:
+    async def invoke(self, input: RobinInput, runtime: Optional[Runtime] = None) -> RobinOutput:
         """
         Execute Robin's scientific companion workflow.
 
@@ -334,15 +328,11 @@ class RobinAgent(Agent[RobinInput, RobinOutput]):
         # Step 3: Generate hypotheses
         if effective_runtime is None or self._fallback_mode:
             # Fallback mode: Generate deterministic placeholder hypotheses for testing
-            hypothesis_output = generate_fallback_hypotheses(
-                input, self._hypothesis_count
-            )
+            hypothesis_output = generate_fallback_hypotheses(input, self._hypothesis_count)
         else:
             # Build hypothesis input
             hyp_input = HypothesisInput(
-                observations=input.observations
-                if input.observations
-                else [input.query],
+                observations=input.observations if input.observations else [input.query],
                 domain=input.domain,
                 question=input.query,
                 constraints=input.constraints,

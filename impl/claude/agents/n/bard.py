@@ -174,9 +174,7 @@ class Narrative:
 
         # Metadata section
         lines.append(f"*Genre: {self.genre.value}*")
-        lines.append(
-            f"*Traces: {len(self.traces_used)} | Duration: {self.total_duration_ms}ms*\n"
-        )
+        lines.append(f"*Traces: {len(self.traces_used)} | Duration: {self.total_duration_ms}ms*\n")
 
         # Chapters
         for chapter in self.chapters:
@@ -298,9 +296,7 @@ class Bard:
             },
         )
 
-    def _build_prompt(
-        self, request: NarrativeRequest, traces: list[SemanticTrace]
-    ) -> str:
+    def _build_prompt(self, request: NarrativeRequest, traces: list[SemanticTrace]) -> str:
         """Build the prompt for the LLM."""
         crystals_formatted = self._format_crystals(traces)
 
@@ -347,12 +343,10 @@ Now tell the story of what happened."""
                 "Write terse operational notes. Just the facts. No flourish."
             ),
             NarrativeGenre.MINIMAL: (
-                "Write the most compact summary possible. "
-                "One line per significant event."
+                "Write the most compact summary possible. One line per significant event."
             ),
             NarrativeGenre.DETECTIVE: (
-                "Write as if investigating a mystery. "
-                "Clues, deductions, timeline analysis."
+                "Write as if investigating a mystery. Clues, deductions, timeline analysis."
             ),
         }
 
@@ -409,10 +403,7 @@ Now tell the story of what happened."""
                 is_break = True
 
             # Temporal gap > 60 seconds
-            elif (
-                i > 0
-                and (trace.timestamp - traces[i - 1].timestamp).total_seconds() > 60
-            ):
+            elif i > 0 and (trace.timestamp - traces[i - 1].timestamp).total_seconds() > 60:
                 is_break = True
 
             # Commit current chapter if break detected
@@ -581,9 +572,7 @@ class ForensicBard(Bard):
     ) -> str:
         """Build a forensic analysis prompt."""
         context_formatted = self._format_crystals(context) if context else "None"
-        similar_formatted = (
-            self._format_similar_failures(similar) if similar else "None"
-        )
+        similar_formatted = self._format_similar_failures(similar) if similar else "None"
 
         return f"""You are a forensic analyst investigating a system failure.
 
@@ -645,9 +634,7 @@ Be specific. Reference trace IDs where relevant."""
 
         return "Unable to determine cause"
 
-    def _assess_severity(
-        self, failure: SemanticTrace, context: list[SemanticTrace]
-    ) -> str:
+    def _assess_severity(self, failure: SemanticTrace, context: list[SemanticTrace]) -> str:
         """Assess the severity of the failure."""
         # Check for cascade indicators
         cascade_count = sum(1 for t in context if t.action == "ERROR")

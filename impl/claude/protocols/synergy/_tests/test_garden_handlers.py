@@ -316,16 +316,12 @@ class TestGestaltToGardenHandler:
         )
 
         # Should match "forge" or "coalition" in path
-        matches = handler._find_matching_plots(
-            garden, "/impl/claude/agents/forge/something.py"
-        )
+        matches = handler._find_matching_plots(garden, "/impl/claude/agents/forge/something.py")
         assert len(matches) == 1
         assert matches[0].name == "forge"
 
         # Should not match unrelated path
-        matches = handler._find_matching_plots(
-            garden, "/impl/claude/protocols/brain/memory.py"
-        )
+        matches = handler._find_matching_plots(garden, "/impl/claude/protocols/brain/memory.py")
         assert len(matches) == 0
 
     def test_plot_matching_by_plan_path(self) -> None:

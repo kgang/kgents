@@ -307,9 +307,7 @@ def get_all_usage_stats() -> dict[str, dict[str, Any]]:
             "requests_today": stats.requests_today,
             "tokens_today": stats.tokens_today,
             "tokens_month": stats.tokens_month,
-            "last_request": (
-                stats.last_request.isoformat() if stats.last_request else None
-            ),
+            "last_request": (stats.last_request.isoformat() if stats.last_request else None),
             "endpoints_hit": dict(stats.endpoints_hit),
         }
         for user_id, stats in _USAGE_STORE.items()

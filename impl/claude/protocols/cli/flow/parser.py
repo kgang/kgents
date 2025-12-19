@@ -45,9 +45,7 @@ def render_template(template: str, variables: dict[str, Any]) -> str:
     result = template
 
     # Pattern: {{ variable | default('value') }}
-    default_pattern = (
-        r"\{\{\s*(\w+)\s*\|\s*default\(['\"]([^'\"]*)['\"](?:\s*,\s*[^)]+)?\)\s*\}\}"
-    )
+    default_pattern = r"\{\{\s*(\w+)\s*\|\s*default\(['\"]([^'\"]*)['\"](?:\s*,\s*[^)]+)?\)\s*\}\}"
     for match in re.finditer(default_pattern, template):
         var_name = match.group(1)
         default_value = match.group(2)
@@ -164,8 +162,7 @@ def parse_flowfile(source: str | Path, content: str | None = None) -> Flowfile:
             raise FlowValidationError(f"Flowfile not found: {source_path}")
         if path.suffix not in (".yaml", ".yml", ".flow.yaml", ".flow.yml", ".flow"):
             raise FlowValidationError(
-                f"Invalid flowfile extension: {path.suffix}. "
-                "Expected .yaml, .yml, or .flow.yaml"
+                f"Invalid flowfile extension: {path.suffix}. Expected .yaml, .yml, or .flow.yaml"
             )
         content = path.read_text()
 

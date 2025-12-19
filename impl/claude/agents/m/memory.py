@@ -73,15 +73,11 @@ class Memory:
         """Validate memory fields."""
         # Validate resolution
         if not 0.0 <= self.resolution <= 1.0:
-            object.__setattr__(
-                self, "resolution", max(0.0, min(1.0, self.resolution))
-            )
+            object.__setattr__(self, "resolution", max(0.0, min(1.0, self.resolution)))
 
         # Validate relevance
         if not 0.0 <= self.relevance <= 1.0:
-            object.__setattr__(
-                self, "relevance", max(0.0, min(1.0, self.relevance))
-            )
+            object.__setattr__(self, "relevance", max(0.0, min(1.0, self.relevance)))
 
         # Convert embedding list to tuple if needed
         if isinstance(self.embedding, list):

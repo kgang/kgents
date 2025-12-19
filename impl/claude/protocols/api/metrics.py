@@ -247,9 +247,7 @@ def record_stripe_error(error_type: str = "processing") -> None:
     stripe_webhooks_errors.labels(error_type=error_type).inc()
 
 
-def record_api_request(
-    method: str, endpoint: str, status: int, latency_seconds: float
-) -> None:
+def record_api_request(method: str, endpoint: str, status: int, latency_seconds: float) -> None:
     """Record an API request with latency."""
     if not HAS_PROMETHEUS:
         return
@@ -258,9 +256,7 @@ def record_api_request(
         api_requests.labels(method=method, endpoint=endpoint, status=str(status)).inc()
 
     if api_request_latency is not None:
-        api_request_latency.labels(method=method, endpoint=endpoint).observe(
-            latency_seconds
-        )
+        api_request_latency.labels(method=method, endpoint=endpoint).observe(latency_seconds)
 
 
 # --- Metrics Router ---

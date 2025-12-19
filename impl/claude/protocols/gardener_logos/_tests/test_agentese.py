@@ -141,9 +141,7 @@ class TestTend:
     """Tests for concept.gardener.tend."""
 
     @pytest.mark.asyncio
-    async def test_tend_observe(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_tend_observe(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """OBSERVE gesture works."""
         result = await gardener_node._invoke_aspect(
             "tend",
@@ -199,9 +197,7 @@ class TestTend:
         assert result.metadata["accepted"] is True
 
     @pytest.mark.asyncio
-    async def test_tend_rotate(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_tend_rotate(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """ROTATE gesture works."""
         result = await gardener_node._invoke_aspect(
             "tend",
@@ -227,9 +223,7 @@ class TestTend:
         assert result.metadata["state_changed"] is False
 
     @pytest.mark.asyncio
-    async def test_tend_invalid_verb(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_tend_invalid_verb(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Invalid verb returns error."""
         result = await gardener_node._invoke_aspect(
             "tend",
@@ -241,9 +235,7 @@ class TestTend:
         assert result.metadata["error"] == "invalid_verb"
 
     @pytest.mark.asyncio
-    async def test_tend_updates_garden(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_tend_updates_garden(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Tending updates the garden state."""
         # Get initial entropy
         garden = gardener_node._get_garden()
@@ -271,9 +263,7 @@ class TestSeason:
     """Tests for concept.gardener.season.* paths."""
 
     @pytest.mark.asyncio
-    async def test_season_manifest(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_season_manifest(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Season manifest shows current season."""
         result = await gardener_node._invoke_aspect("season.manifest", mock_umwelt)
         assert "SEASON" in result.content
@@ -373,9 +363,7 @@ class TestPlotCreate:
     """Tests for concept.gardener.plot.create."""
 
     @pytest.mark.asyncio
-    async def test_plot_create(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_plot_create(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Plot creation works."""
         result = await gardener_node._invoke_aspect(
             "plot.create",
@@ -388,9 +376,7 @@ class TestPlotCreate:
         assert result.metadata["path"] == "concept.new"
 
     @pytest.mark.asyncio
-    async def test_plot_create_with_plan(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_plot_create_with_plan(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Plot creation with plan link works."""
         result = await gardener_node._invoke_aspect(
             "plot.create",
@@ -402,9 +388,7 @@ class TestPlotCreate:
         assert result.metadata["plan_path"] == "plans/test.md"
 
     @pytest.mark.asyncio
-    async def test_plot_create_no_name(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_plot_create_no_name(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Plot creation without name returns error."""
         result = await gardener_node._invoke_aspect(
             "plot.create",
@@ -581,9 +565,7 @@ class TestUnknownAspect:
             "unknown.aspect",
             mock_umwelt,
         )
-        assert "error" in result.metadata or "unknown_aspect" in result.metadata.get(
-            "error", ""
-        )
+        assert "error" in result.metadata or "unknown_aspect" in result.metadata.get("error", "")
 
 
 # =============================================================================
@@ -595,9 +577,7 @@ class TestIntegration:
     """Integration-style tests for complete workflows."""
 
     @pytest.mark.asyncio
-    async def test_full_garden_workflow(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_full_garden_workflow(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Test complete garden workflow: transition → create plot → tend."""
         # 1. Transition to SPROUTING
         result = await gardener_node._invoke_aspect(
@@ -653,9 +633,7 @@ class TestIntegration:
         assert len(garden.recent_gestures) >= 2
 
     @pytest.mark.asyncio
-    async def test_season_affects_tending(
-        self, gardener_node: GardenerLogosNode, mock_umwelt: Any
-    ):
+    async def test_season_affects_tending(self, gardener_node: GardenerLogosNode, mock_umwelt: Any):
         """Test that season affects tending results."""
         # In SPROUTING (high plasticity), grafting should work well
         await gardener_node._invoke_aspect(

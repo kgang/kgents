@@ -208,9 +208,7 @@ class TextGRADImprover:
 
         # Filter by rigidity
         if rigidity_lookup:
-            gradient = gradient.filter_by_rigidity(
-                lambda s: rigidity_lookup.get(s, 0.5)
-            )
+            gradient = gradient.filter_by_rigidity(lambda s: rigidity_lookup.get(s, 0.5))
             traces.extend(gradient.reasoning)
             traces.append(f"After rigidity filter: {len(gradient)} steps remain")
 
@@ -223,9 +221,7 @@ class TextGRADImprover:
                 # Global feedback - apply to all sections
                 for name, content in sections.items():
                     steps = gradient.for_section("*")
-                    new_content, step_traces = self.section_improver.improve(
-                        name, content, steps
-                    )
+                    new_content, step_traces = self.section_improver.improve(name, content, steps)
                     traces.extend(step_traces)
                     if new_content != content:
                         improved_sections[name] = new_content

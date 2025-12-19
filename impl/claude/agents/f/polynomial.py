@@ -169,9 +169,7 @@ def _chat_transition(state: FlowState, input: str) -> tuple[FlowState, dict[str,
             raise ValueError(msg)
 
 
-def _research_transition(
-    state: FlowState, input: str
-) -> tuple[FlowState, dict[str, Any]]:
+def _research_transition(state: FlowState, input: str) -> tuple[FlowState, dict[str, Any]]:
     """State transition for research modality."""
     match (state, input):
         case (FlowState.DORMANT, "start"):
@@ -207,9 +205,7 @@ def _research_transition(
             raise ValueError(msg)
 
 
-def _collaboration_transition(
-    state: FlowState, input: str
-) -> tuple[FlowState, dict[str, Any]]:
+def _collaboration_transition(state: FlowState, input: str) -> tuple[FlowState, dict[str, Any]]:
     """State transition for collaboration modality."""
     match (state, input):
         case (FlowState.DORMANT, "start"):

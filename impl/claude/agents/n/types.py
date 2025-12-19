@@ -118,9 +118,7 @@ class SemanticTrace:
         }
 
     @classmethod
-    def from_dict(
-        cls, data: dict[str, Any], input_snapshot: bytes = b""
-    ) -> SemanticTrace:
+    def from_dict(cls, data: dict[str, Any], input_snapshot: bytes = b"") -> SemanticTrace:
         """Create from dictionary."""
         vector = data.get("vector")
         return cls(

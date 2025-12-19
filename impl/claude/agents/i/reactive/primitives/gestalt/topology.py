@@ -202,9 +202,7 @@ class TopologyGraphWidget(KgentsWidget[TopologyGraphState]):
                     "dotted": "┄",
                 }.get(edge.style, "─")
                 label = f" ({edge.label})" if edge.label else ""
-                lines.append(
-                    f"  {edge.source} {style_char}{arrow} {edge.target}{label}"
-                )
+                lines.append(f"  {edge.source} {style_char}{arrow} {edge.target}{label}")
 
         return "\n".join(lines)
 
@@ -235,9 +233,7 @@ class TopologyGraphWidget(KgentsWidget[TopologyGraphState]):
                     emoji = NODE_EMOJIS.get(node.type, "•")
                     status = STATUS_INDICATORS.get(node.status, "?")
                     style = "bold" if node.id == s.highlight_node else ""
-                    node_branch = branch.add(
-                        f"{emoji} [{status}] {node.label}", style=style
-                    )
+                    node_branch = branch.add(f"{emoji} [{status}] {node.label}", style=style)
 
                     if s.zoom_level >= 3 and node.metadata:
                         for key, value in node.metadata:

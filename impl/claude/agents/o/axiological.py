@@ -394,15 +394,9 @@ class TensorValidator:
 
         # Check dimension health
         dimensions_healthy = {
-            "physical": tensor.physical.total_tokens > 0
-            if hasattr(tensor, "physical")
-            else True,
-            "semantic": tensor.semantic.confidence > 0.3
-            if hasattr(tensor, "semantic")
-            else True,
-            "economic": tensor.economic.roc >= 0
-            if hasattr(tensor, "economic")
-            else True,
+            "physical": tensor.physical.total_tokens > 0 if hasattr(tensor, "physical") else True,
+            "semantic": tensor.semantic.confidence > 0.3 if hasattr(tensor, "semantic") else True,
+            "economic": tensor.economic.roc >= 0 if hasattr(tensor, "economic") else True,
             "ethical": True,  # Simplified
         }
 
@@ -623,8 +617,7 @@ class LedgerAuditor:
         # Simplified: Just check gas/impact totals are consistent
         total_impact = self.ledger.treasury.total_impact()
         sum_agent_impact = sum(
-            self.ledger.get_agent_balance_sheet(a).assets
-            for a in self.ledger.get_all_agents()
+            self.ledger.get_agent_balance_sheet(a).assets for a in self.ledger.get_all_agents()
         )
         return bool(abs(total_impact - sum_agent_impact) < 0.001)
 

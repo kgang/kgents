@@ -244,11 +244,7 @@ class ProjectionRegistry:
         instance = cls._get_instance()
 
         # Normalize target to string
-        target_name = (
-            target.name.lower()
-            if isinstance(target, ExtendedTarget)
-            else target.lower()
-        )
+        target_name = target.name.lower() if isinstance(target, ExtendedTarget) else target.lower()
 
         # Try primary target
         projector = instance._projectors.get(target_name)
@@ -325,9 +321,7 @@ class ProjectionRegistry:
         }
 
         low, high = thresholds[level]
-        matches = [
-            p for p in instance._projectors.values() if low <= p.fidelity <= high
-        ]
+        matches = [p for p in instance._projectors.values() if low <= p.fidelity <= high]
         return sorted(matches, key=lambda p: p.fidelity, reverse=True)
 
     @classmethod

@@ -421,12 +421,8 @@ class FixConfig(Generic[A]):
     """Configuration for fixed-point iteration."""
 
     max_iterations: int = 100
-    equality_check: Callable[[A, A], bool] = field(
-        default_factory=lambda: lambda a, b: a == b
-    )
-    should_continue: Callable[[A, int], bool] = field(
-        default_factory=lambda: lambda a, i: True
-    )
+    equality_check: Callable[[A, A], bool] = field(default_factory=lambda: lambda a, b: a == b)
+    should_continue: Callable[[A, int], bool] = field(default_factory=lambda: lambda a, i: True)
     # J-gents entropy budget: diminishes with recursion depth
     # None means no budget tracking (backward compatible)
     entropy_budget: Optional[float] = None

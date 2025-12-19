@@ -399,9 +399,7 @@ class CortexObserver:
         self._config = config or CortexObserverConfig()
 
         # History tracking
-        self._history: deque[CortexHealthSnapshot] = deque(
-            maxlen=self._config.history_limit
-        )
+        self._history: deque[CortexHealthSnapshot] = deque(maxlen=self._config.history_limit)
 
         # Health change callbacks
         self._callbacks: list[HealthChangeCallback] = []
@@ -535,9 +533,7 @@ class CortexObserver:
 
             # Coherency rate estimation
             total_recent = recent_ghosts + recent_stale + 100  # Assume 100 valid
-            coherency_rate = (total_recent - recent_ghosts - recent_stale) / max(
-                total_recent, 1
-            )
+            coherency_rate = (total_recent - recent_ghosts - recent_stale) / max(total_recent, 1)
 
             return CoherencyStatus(
                 ghost_count=recent_ghosts,
@@ -563,22 +559,14 @@ class CortexObserver:
 
             # Calculate rates
             total = metrics.high_surprise_count + metrics.low_surprise_count
-            flashbulb_rate = (
-                metrics.flashbulb_count / max(total, 1) if total > 0 else 0.0
-            )
-            fast_rate = (
-                metrics.high_surprise_count / max(total, 1) if total > 0 else 0.0
-            )
-            batch_rate = (
-                metrics.low_surprise_count / max(total, 1) if total > 0 else 0.0
-            )
+            flashbulb_rate = metrics.flashbulb_count / max(total, 1) if total > 0 else 0.0
+            fast_rate = metrics.high_surprise_count / max(total, 1) if total > 0 else 0.0
+            batch_rate = metrics.low_surprise_count / max(total, 1) if total > 0 else 0.0
 
             # Calculate average surprise
             type_surprises = list(metrics.type_total_surprise.values())
             type_counts = list(metrics.type_counts.values())
-            avg_surprise = (
-                sum(type_surprises) / sum(type_counts) if sum(type_counts) > 0 else 0.5
-            )
+            avg_surprise = sum(type_surprises) / sum(type_counts) if sum(type_counts) > 0 else 0.5
 
             return SynapseStatus(
                 available=True,
@@ -771,9 +759,7 @@ class CortexObserver:
 
         # Add hippocampus
         if health.hippocampus.available:
-            parts.append(
-                f"H:{health.hippocampus.memory_count}/{health.hippocampus.max_size}"
-            )
+            parts.append(f"H:{health.hippocampus.memory_count}/{health.hippocampus.max_size}")
 
         # Add synapse
         if health.synapse.available:
@@ -809,11 +795,7 @@ def create_cortex_observer(
     Returns:
         Configured CortexObserver
     """
-    config = (
-        CortexObserverConfig.from_dict(config_dict)
-        if config_dict
-        else CortexObserverConfig()
-    )
+    config = CortexObserverConfig.from_dict(config_dict) if config_dict else CortexObserverConfig()
 
     return CortexObserver(
         bicameral=bicameral,

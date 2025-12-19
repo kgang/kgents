@@ -112,11 +112,7 @@ class TelegramNotifier:
     @property
     def is_enabled(self) -> bool:
         """Check if notifications are enabled and configured."""
-        return (
-            self.config.enabled
-            and bool(self.config.bot_token)
-            and bool(self.config.chat_id)
-        )
+        return self.config.enabled and bool(self.config.bot_token) and bool(self.config.chat_id)
 
     @property
     def is_configured(self) -> bool:
@@ -194,9 +190,7 @@ class TelegramNotifier:
                             return True
                         else:
                             error_text = await resp.text()
-                            logger.error(
-                                f"Telegram API error: {resp.status} - {error_text}"
-                            )
+                            logger.error(f"Telegram API error: {resp.status} - {error_text}")
                             return False
             except ImportError:
                 # Fall back to httpx

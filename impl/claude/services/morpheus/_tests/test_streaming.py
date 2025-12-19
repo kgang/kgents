@@ -84,9 +84,7 @@ class TestMockAdapterStreaming:
 class TestGatewayStreaming:
     """Tests for MorpheusGateway streaming."""
 
-    async def test_gateway_stream_routes_correctly(
-        self, gateway_with_streaming: MorpheusGateway
-    ):
+    async def test_gateway_stream_routes_correctly(self, gateway_with_streaming: MorpheusGateway):
         """Gateway should route streaming requests to correct provider."""
         request = ChatRequest(
             model="mock-test",

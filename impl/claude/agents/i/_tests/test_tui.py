@@ -142,9 +142,7 @@ class TestFieldRenderer:
     def test_render_contains_entities(self) -> None:
         """Test rendered output contains entities."""
         state = FieldState(width=60, height=20)
-        state.add_entity(
-            Entity(id="test-judge", entity_type=EntityType.JUDGE, x=30, y=10)
-        )
+        state.add_entity(Entity(id="test-judge", entity_type=EntityType.JUDGE, x=30, y=10))
 
         config = RenderConfig(use_color=False)
         renderer = FieldRenderer(state, config)

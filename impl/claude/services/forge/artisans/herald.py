@@ -207,7 +207,7 @@ def _generate_node_template(design: AgentDesign, agentese_path: str) -> str:
 
 AGENTESE paths:
 - {agentese_path}.manifest - Agent status
-{chr(10).join(f"- {agentese_path}.{op.get("name", "unknown")} - {op.get("description", "")}" for op in design.operations)}
+{chr(10).join(f"- {agentese_path}.{op.get('name', 'unknown')} - {op.get('description', '')}" for op in design.operations)}
 
 Design Rationale:
 {design.rationale}

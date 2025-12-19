@@ -101,9 +101,7 @@ class TestApprovalResult:
             yield_reason="test",
             required_approvers={"approver"},
         )
-        result = ApprovalResult(
-            status=ApprovalStatus.TIMEOUT, turn=turn, timeout_duration=5.0
-        )
+        result = ApprovalResult(status=ApprovalStatus.TIMEOUT, turn=turn, timeout_duration=5.0)
 
         assert not result.is_approved
         assert result.is_timeout
@@ -387,9 +385,7 @@ class TestShouldYield:
 
     def test_thought_never_yields(self) -> None:
         """THOUGHT never yields regardless of confidence."""
-        assert not should_yield(
-            confidence=0.1, yield_threshold=0.3, turn_type="THOUGHT"
-        )
+        assert not should_yield(confidence=0.1, yield_threshold=0.3, turn_type="THOUGHT")
 
     def test_boundary_confidence(self) -> None:
         """Boundary confidence exactly at threshold does not yield."""
@@ -422,17 +418,13 @@ class TestComputeRiskScore:
     def test_destructive_doubles_risk(self) -> None:
         """Destructive actions double the risk."""
         score1 = compute_risk_score(confidence=0.5, entropy_cost=0.0)
-        score2 = compute_risk_score(
-            confidence=0.5, entropy_cost=0.0, is_destructive=True
-        )
+        score2 = compute_risk_score(confidence=0.5, entropy_cost=0.0, is_destructive=True)
         assert score2 == score1 * 2.0
 
     def test_external_effects_increase_risk(self) -> None:
         """External effects increase risk by 50%."""
         score1 = compute_risk_score(confidence=0.5, entropy_cost=0.0)
-        score2 = compute_risk_score(
-            confidence=0.5, entropy_cost=0.0, has_external_effects=True
-        )
+        score2 = compute_risk_score(confidence=0.5, entropy_cost=0.0, has_external_effects=True)
         assert score2 == score1 * 1.5
 
     def test_combined_modifiers(self) -> None:

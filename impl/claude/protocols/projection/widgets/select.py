@@ -164,8 +164,7 @@ class SelectWidget(KgentsWidget[SelectWidgetState]):
             selected = "selected" if opt.value in s.selected else ""
             disabled = "disabled" if opt.disabled else ""
             options_html.append(
-                f'<option value="{opt.value}" {selected} {disabled}>'
-                f"{opt.label}</option>"
+                f'<option value="{opt.value}" {selected} {disabled}>{opt.label}</option>'
             )
 
         multiple = "multiple" if s.multiple else ""

@@ -304,9 +304,7 @@ class CommunicationTracker:
 
         for pair in list(self.logs.keys()):
             original_count = len(self.logs[pair])
-            self.logs[pair] = [
-                log for log in self.logs[pair] if log.timestamp >= cutoff
-            ]
+            self.logs[pair] = [log for log in self.logs[pair] if log.timestamp >= cutoff]
             removed += original_count - len(self.logs[pair])
 
             # Remove empty pairs
@@ -524,9 +522,7 @@ class CompressionROICalculator:
             domain_score = 0.3  # Mixed domains
 
         # Weighted average
-        regularity = (
-            0.3 * length_consistency + 0.4 * repetition_score + 0.3 * domain_score
-        )
+        regularity = 0.3 * length_consistency + 0.4 * repetition_score + 0.3 * domain_score
 
         return float(min(1.0, max(0.0, regularity)))
 
@@ -590,9 +586,7 @@ class CompressionEconomyMonitor:
         self.pidgins: dict[tuple[str, str], PidginMetadata] = {}
 
         # Callbacks
-        self._on_pidgin_available: list[
-            Callable[[PidginAvailable, str, str], None]
-        ] = []
+        self._on_pidgin_available: list[Callable[[PidginAvailable, str, str], None]] = []
 
         # Monitoring state
         self._running = False
@@ -822,9 +816,7 @@ class CompressionEconomyMonitor:
         total_pairs = len(self.tracker.get_all_pairs())
         active_pidgins = sum(1 for p in self.pidgins.values() if p.is_active)
         total_savings = sum(p.actual_savings_to_date for p in self.pidgins.values())
-        total_synthesis_cost = sum(
-            p.synthesis_cost.tokens for p in self.pidgins.values()
-        )
+        total_synthesis_cost = sum(p.synthesis_cost.tokens for p in self.pidgins.values())
 
         return {
             "total_agent_pairs": total_pairs,

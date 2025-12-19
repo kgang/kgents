@@ -140,9 +140,7 @@ class SimpleEmbedder:
         # Compute IDF
         import math
 
-        self._idf = {
-            term: math.log(self._doc_count / count) for term, count in df.items()
-        }
+        self._idf = {term: math.log(self._doc_count / count) for term, count in df.items()}
 
     def _tokenize(self, text: str) -> list[str]:
         """Simple tokenization (lowercas + word split)."""
@@ -209,9 +207,7 @@ class SemanticBrain:
         """
         # Fit embedder if it's a SimpleEmbedder
         if isinstance(self.embedder, SimpleEmbedder):
-            documents = [
-                self._make_searchable_text(entry) for entry in entries.values()
-            ]
+            documents = [self._make_searchable_text(entry) for entry in entries.values()]
             await self.embedder.fit(documents)
 
         # Embed all entries

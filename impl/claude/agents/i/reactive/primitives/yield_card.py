@@ -342,7 +342,9 @@ class YieldCardWidget(CompositeWidget[YieldCardState]):
             f"background: {bg_color};"
         )
 
-        html = f'<div class="kgents-yield-card" data-yield-id="{state.yield_id}" style="{card_style}">'
+        html = (
+            f'<div class="kgents-yield-card" data-yield-id="{state.yield_id}" style="{card_style}">'
+        )
 
         # Header line
         html += '<div class="kgents-yield-header" style="display: flex; align-items: center;">'
@@ -389,9 +391,7 @@ class YieldCardWidget(CompositeWidget[YieldCardState]):
         }
 
         if state.entropy > 0.1:
-            result["distortion"] = entropy_to_distortion(
-                state.entropy, state.seed, state.t
-            )
+            result["distortion"] = entropy_to_distortion(state.entropy, state.seed, state.t)
 
         return result
 

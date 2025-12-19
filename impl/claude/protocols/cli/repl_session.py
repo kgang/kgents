@@ -37,9 +37,7 @@ class SessionData:
 
     path: list[str] = field(default_factory=list)
     observer: str = "explorer"
-    timestamp: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 def save_session(
@@ -107,9 +105,7 @@ def load_session(
         return None
 
 
-def restore_session_to_state(
-    state: Any, session_file: Path = DEFAULT_SESSION_FILE
-) -> bool:
+def restore_session_to_state(state: Any, session_file: Path = DEFAULT_SESSION_FILE) -> bool:
     """
     Restore session state to a ReplState object.
 

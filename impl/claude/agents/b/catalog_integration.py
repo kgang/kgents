@@ -122,9 +122,7 @@ async def register_hypothesis(
         relationships={
             "falsifiable_by": hypothesis.falsifiable_by,
             "assumptions": hypothesis.assumptions,
-            "supporting_observations": [
-                str(i) for i in hypothesis.supporting_observations
-            ],
+            "supporting_observations": [str(i) for i in hypothesis.supporting_observations],
             "observations": observations or [],
             "domain": [domain],
             "novelty": [hypothesis.novelty.value],
@@ -193,9 +191,7 @@ async def find_hypotheses(
     """
     # Use L-gent find for base search
     # Note: EntityType.HYPOTHESIS may not exist yet, fall back to SPEC
-    entity_type = (
-        EntityType.HYPOTHESIS if hasattr(EntityType, "HYPOTHESIS") else EntityType.SPEC
-    )
+    entity_type = EntityType.HYPOTHESIS if hasattr(EntityType, "HYPOTHESIS") else EntityType.SPEC
 
     # Pass None for empty query so registry returns all matching entity_type
     results = await registry.find(
@@ -216,9 +212,7 @@ async def find_hypotheses(
 
         # Novelty filter
         if novelty:
-            novelty_val = (
-                novelty.value if isinstance(novelty, NoveltyLevel) else novelty
-            )
+            novelty_val = novelty.value if isinstance(novelty, NoveltyLevel) else novelty
             entry_novelty = entry.relationships.get("novelty", [])
             if novelty_val not in entry_novelty:
                 continue
@@ -487,9 +481,7 @@ def _extract_keywords(hypothesis: Hypothesis, domain: str) -> list[str]:
     # Add assumption keywords
     for assumption in hypothesis.assumptions[:3]:
         assumption_words = assumption.lower().split()
-        significant_assumption = [
-            w for w in assumption_words if len(w) > 3 and w not in common
-        ]
+        significant_assumption = [w for w in assumption_words if len(w) > 3 and w not in common]
         keywords.extend(significant_assumption[:2])
 
     return list(set(keywords))

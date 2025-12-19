@@ -145,9 +145,7 @@ class TestMCPServerResources:
     @pytest.mark.asyncio
     async def test_resources_templates_list(self) -> None:
         server = MCPServer()
-        req = MCPRequest(
-            jsonrpc="2.0", id=1, method="resources/templates/list", params={}
-        )
+        req = MCPRequest(jsonrpc="2.0", id=1, method="resources/templates/list", params={})
         resp = await server.handle_request(req)
 
         assert "resourceTemplates" in resp.result

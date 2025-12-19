@@ -111,9 +111,7 @@ def design_directions(state: DesignState) -> frozenset[Any]:
     )
 
 
-def design_transition(
-    state: DesignState, input: DesignInput
-) -> tuple[DesignState, DesignOutput]:
+def design_transition(state: DesignState, input: DesignInput) -> tuple[DesignState, DesignOutput]:
     """
     Process a design input and return new state + output.
 

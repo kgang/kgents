@@ -190,9 +190,7 @@ class DurablePurgatory(Purgatory):
                         "token_id": token.id,
                         "reason": token.reason.value,
                         "severity": token.severity,
-                        "deadline": token.deadline.isoformat()
-                        if token.deadline
-                        else None,
+                        "deadline": token.deadline.isoformat() if token.deadline else None,
                         "escalation": token.escalation,
                     },
                 )
@@ -241,9 +239,7 @@ class DurablePurgatory(Purgatory):
             return
 
         state: PurgatoryState = {
-            "tokens": {
-                token_id: token.to_json() for token_id, token in self._pending.items()
-            },
+            "tokens": {token_id: token.to_json() for token_id, token in self._pending.items()},
             "version": 1,
         }
 

@@ -68,9 +68,7 @@ class TestStaticAnalysis:
         provider = TraceDataProvider.get_instance()
 
         # Set path to weave module
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         provider.set_base_path(weave_path)
 
         metrics = await provider.analyze_static()
@@ -89,9 +87,7 @@ class TestStaticAnalysis:
         TraceDataProvider._instance = None
         provider = TraceDataProvider.get_instance()
 
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         provider.set_base_path(weave_path)
 
         # First analysis
@@ -103,8 +99,7 @@ class TestStaticAnalysis:
         assert metrics1.files_analyzed == metrics2.files_analyzed
         # Cache returns same metrics
         assert (
-            metrics2.analysis_time_ms == 0
-            or metrics2.analysis_time_ms == metrics1.analysis_time_ms
+            metrics2.analysis_time_ms == 0 or metrics2.analysis_time_ms == metrics1.analysis_time_ms
         )
 
     @pytest.mark.asyncio
@@ -116,9 +111,7 @@ class TestStaticAnalysis:
         TraceDataProvider._instance = None
         provider = TraceDataProvider.get_instance()
 
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         provider.set_base_path(weave_path)
 
         # First analysis
@@ -145,9 +138,7 @@ class TestCallersCallees:
         TraceDataProvider._instance = None
         self.provider = TraceDataProvider.get_instance()
 
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         self.provider.set_base_path(weave_path)
         await self.provider.analyze_static()
 
@@ -187,17 +178,13 @@ class TestCallTree:
         TraceDataProvider._instance = None
         self.provider = TraceDataProvider.get_instance()
 
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         self.provider.set_base_path(weave_path)
         await self.provider.analyze_static()
 
     def test_build_call_tree_callers(self) -> None:
         """build_call_tree with callers direction."""
-        tree = self.provider.build_call_tree(
-            "TraceRenderer", depth=2, direction="callers"
-        )
+        tree = self.provider.build_call_tree("TraceRenderer", depth=2, direction="callers")
 
         # May be None if no callers found
         if tree is not None:
@@ -206,9 +193,7 @@ class TestCallTree:
 
     def test_build_call_tree_callees(self) -> None:
         """build_call_tree with callees direction."""
-        tree = self.provider.build_call_tree(
-            "StaticCallGraph", depth=2, direction="callees"
-        )
+        tree = self.provider.build_call_tree("StaticCallGraph", depth=2, direction="callees")
 
         if tree is not None:
             assert tree.name == "StaticCallGraph"
@@ -337,9 +322,7 @@ class TestUnifiedCollection:
         TraceDataProvider._instance = None
         provider = TraceDataProvider.get_instance()
 
-        weave_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "..", "..", "weave"
-        )
+        weave_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "weave")
         provider.set_base_path(weave_path)
 
         metrics = await provider.collect_metrics(include_static=True)
@@ -425,11 +408,7 @@ class TestMetricTypes:
 
         unhealthy = TraceMetrics(
             static=StaticAnalysisMetrics(is_available=True),
-            anomalies=[
-                TraceAnomaly(
-                    type="error", description="", location="", severity="error"
-                )
-            ],
+            anomalies=[TraceAnomaly(type="error", description="", location="", severity="error")],
         )
         assert not unhealthy.is_healthy
 

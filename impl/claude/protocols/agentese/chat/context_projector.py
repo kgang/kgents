@@ -223,9 +223,7 @@ class WorkingContextProjector:
         Uses cached summary if available, otherwise falls back to sliding.
         """
         # Check if we need to summarize
-        threshold_tokens = int(
-            self.config.context_window * self.config.summarization_threshold
-        )
+        threshold_tokens = int(self.config.context_window * self.config.summarization_threshold)
         all_tokens = sum(t.tokens_in + t.tokens_out for t in turns)
 
         if all_tokens <= threshold_tokens:
@@ -260,9 +258,7 @@ class WorkingContextProjector:
 
         Generates new summary if needed.
         """
-        threshold_tokens = int(
-            self.config.context_window * self.config.summarization_threshold
-        )
+        threshold_tokens = int(self.config.context_window * self.config.summarization_threshold)
         all_tokens = sum(t.tokens_in + t.tokens_out for t in turns)
 
         if all_tokens <= threshold_tokens:

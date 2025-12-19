@@ -191,9 +191,7 @@ def _generate_violating_inputs(constraint: str, analysis: DomainAnalysis) -> lis
     return violating
 
 
-def _check_structural_rejection(
-    input_text: str, grammar: str, analysis: DomainAnalysis
-) -> bool:
+def _check_structural_rejection(input_text: str, grammar: str, analysis: DomainAnalysis) -> bool:
     """
     Check if input is structurally rejected by grammar.
 
@@ -344,9 +342,7 @@ async def validate_tongue_comprehensive(tongue: Tongue) -> ValidationReport:
     )
 
     # Check round-trip (placeholder)
-    round_trip_verified = await verify_round_trip(
-        tongue, [ex.text for ex in tongue.examples]
-    )
+    round_trip_verified = await verify_round_trip(tongue, [ex.text for ex in tongue.examples])
 
     # Overall validation
     is_valid = is_unambiguous and constraints_structural and round_trip_verified

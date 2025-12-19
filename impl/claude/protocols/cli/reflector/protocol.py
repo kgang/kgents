@@ -319,9 +319,7 @@ class BaseReflector(ABC):
     def clear_alerts(self) -> None:
         """Clear critical alerts (after user acknowledgment)."""
         self._critical_alerts.clear()
-        self._update_prompt_state(
-            RuntimeEvent(event_type=EventType.INFO, source="reflector")
-        )
+        self._update_prompt_state(RuntimeEvent(event_type=EventType.INFO, source="reflector"))
 
 
 # =============================================================================

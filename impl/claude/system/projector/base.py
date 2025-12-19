@@ -44,9 +44,7 @@ class UnsupportedCapabilityError(ProjectorError):
             "K8sProjector": ["@Stateful", "@Soulful", "@Observable", "@Streamable"],
         }
         supported = supported_map.get(projector, [])
-        suggestion = (
-            f" Supported capabilities: {', '.join(supported)}." if supported else ""
-        )
+        suggestion = f" Supported capabilities: {', '.join(supported)}." if supported else ""
 
         super().__init__(
             f"Projector '{projector}' does not support capability "

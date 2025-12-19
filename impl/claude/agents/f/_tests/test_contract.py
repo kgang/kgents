@@ -145,9 +145,7 @@ class TestInvariantExtraction:
         contract = synthesize_contract(intent)
         invariants = [inv.description for inv in contract.invariants]
         assert any("Idempotency" in inv for inv in invariants)
-        idempotent = next(
-            inv for inv in contract.invariants if "Idempotency" in inv.description
-        )
+        idempotent = next(inv for inv in contract.invariants if "Idempotency" in inv.description)
         assert "f(f(x)) == f(x)" in idempotent.property
 
     def test_extract_deterministic_invariant(self) -> None:
@@ -295,9 +293,7 @@ class TestRealWorldExamples:
 
     def test_summarizer_agent(self) -> None:
         """Summarizer agent from spec/f-gents/forge.md."""
-        text = (
-            "Build an agent that summarizes academic papers to concise, objective JSON"
-        )
+        text = "Build an agent that summarizes academic papers to concise, objective JSON"
         intent = parse_intent(text)
         contract = synthesize_contract(intent, "Summarizer")
 

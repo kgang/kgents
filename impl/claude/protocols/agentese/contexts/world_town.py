@@ -109,10 +109,7 @@ class TownNode(BaseLogosNode):
         if self._environment is None:
             return BasicRendering(
                 summary="Agent Town: Not Running",
-                content=(
-                    "No simulation running.\n"
-                    "Use 'kg town start' to begin a new simulation."
-                ),
+                content=("No simulation running.\nUse 'kg town start' to begin a new simulation."),
                 metadata={"status": "not_running"},
             )
 
@@ -186,9 +183,7 @@ class TownNode(BaseLogosNode):
         tension = env.tension_index()
         coop = env.cooperation_level()
         lines.append(
-            f"  TENSION: {tension:.2f}  "
-            f"COOPERATION: {coop:.2f}  "
-            f"TOKENS: {env.total_token_spend}"
+            f"  TENSION: {tension:.2f}  COOPERATION: {coop:.2f}  TOKENS: {env.total_token_spend}"
         )
         lines.append("=" * 60)
 
@@ -349,9 +344,7 @@ class TownNode(BaseLogosNode):
             participants_str = ", ".join(event.participants)
             lines.append(f"  {icon} [{event.operation.upper()}] {event.message}")
             lines.append(f"    Participants: {participants_str}")
-            lines.append(
-                f"    Tokens: {event.tokens_used}, Drama: {event.drama_contribution:.2f}"
-            )
+            lines.append(f"    Tokens: {event.tokens_used}, Drama: {event.drama_contribution:.2f}")
 
         lines.append("\n[METRICS]")
         lines.append(f"  Tension Index: {status['tension_index']:.4f}")

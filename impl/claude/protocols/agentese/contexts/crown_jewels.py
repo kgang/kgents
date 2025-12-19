@@ -778,9 +778,7 @@ class CrownJewelRegistry:
     Can be wired into Logos for resolution.
     """
 
-    paths: dict[str, dict[str, Any]] = field(
-        default_factory=lambda: ALL_CROWN_JEWEL_PATHS.copy()
-    )
+    paths: dict[str, dict[str, Any]] = field(default_factory=lambda: ALL_CROWN_JEWEL_PATHS.copy())
 
     def list_paths(self, jewel: str | None = None) -> list[str]:
         """

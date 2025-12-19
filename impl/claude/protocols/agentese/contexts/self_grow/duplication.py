@@ -132,9 +132,7 @@ async def check_duplication(
         existing_handles = []
         if logos is not None:
             try:
-                result = await logos.invoke(
-                    "world.registry.list", None, context=proposal.context
-                )
+                result = await logos.invoke("world.registry.list", None, context=proposal.context)
                 if isinstance(result, list):
                     existing_handles = result
             except Exception:

@@ -38,9 +38,7 @@ class ExecuteRequest(BaseModel):
 
     prompt: str = Field(..., description="The operation to execute")
     tool_name: Optional[str] = Field(None, description="Specific tool to use")
-    context: dict[str, Any] = Field(
-        default_factory=dict, description="Additional context"
-    )
+    context: dict[str, Any] = Field(default_factory=dict, description="Additional context")
     require_approval: bool = Field(True, description="Require Soul approval")
     severity: float = Field(0.5, ge=0.0, le=1.0, description="Operation severity")
 
@@ -149,9 +147,7 @@ def create_app() -> Any:
         from fastapi import FastAPI, HTTPException
         from fastapi.responses import JSONResponse
     except ImportError:
-        raise ImportError(
-            "FastAPI not installed. Install with: pip install fastapi uvicorn"
-        )
+        raise ImportError("FastAPI not installed. Install with: pip install fastapi uvicorn")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -171,9 +167,7 @@ def create_app() -> Any:
 
         # Log Morpheus status
         if state.morpheus_available:
-            morpheus_url = os.environ.get(
-                "MORPHEUS_URL", os.environ.get("LLM_ENDPOINT")
-            )
+            morpheus_url = os.environ.get("MORPHEUS_URL", os.environ.get("LLM_ENDPOINT"))
             logger.info(f"Morpheus Gateway configured: {morpheus_url}")
         else:
             logger.info("Morpheus Gateway not configured (Soul will use templates)")
@@ -215,9 +209,7 @@ def create_app() -> Any:
 
         token = DecisionToken(
             prompt=request.prompt,
-            reason=f"Tool: {request.tool_name}"
-            if request.tool_name
-            else "Direct execution",
+            reason=f"Tool: {request.tool_name}" if request.tool_name else "Direct execution",
             severity=request.severity,
             id=f"ugent-{int(time.time() * 1000)}",
         )
@@ -244,9 +236,7 @@ def create_app() -> Any:
                         )
 
                     # Approved by Soul
-                    logger.info(
-                        f"Soul approved: {token.id} (confidence={result.confidence:.2f})"
-                    )
+                    logger.info(f"Soul approved: {token.id} (confidence={result.confidence:.2f})")
 
                 except Exception as e:
                     logger.error(f"Soul intercept failed: {e}")

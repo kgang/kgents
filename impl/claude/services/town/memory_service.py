@@ -180,9 +180,7 @@ class PersistentCitizenMemory:
             await self._dgent.put(datum)
 
         # Save conversations
-        conv_data = json.dumps([c.to_dict() for c in self._conversations]).encode(
-            "utf-8"
-        )
+        conv_data = json.dumps([c.to_dict() for c in self._conversations]).encode("utf-8")
         datum = Datum.create(
             content=conv_data,
             id=f"{self._namespace}:conversations",
@@ -242,9 +240,7 @@ class PersistentCitizenMemory:
             for node in result.nodes
         ]
 
-    async def recall_by_content(
-        self, substring: str, k_hops: int = 2
-    ) -> list[dict[str, Any]]:
+    async def recall_by_content(self, substring: str, k_hops: int = 2) -> list[dict[str, Any]]:
         """
         Recall memories by content search.
 
@@ -452,9 +448,7 @@ class PersistentCitizenMemory:
                 return []
         return []
 
-    async def get_eigenvector_drift(
-        self, window_size: int = 10
-    ) -> dict[str, float] | None:
+    async def get_eigenvector_drift(self, window_size: int = 10) -> dict[str, float] | None:
         """
         Calculate eigenvector drift over recent history.
 
@@ -728,9 +722,7 @@ class TownCollectiveMemory:
         if citizen_ids:
             # Find events involving any of the citizens
             relevant = [
-                e
-                for e in self._events
-                if any(cid in e.participants for cid in citizen_ids)
+                e for e in self._events if any(cid in e.participants for cid in citizen_ids)
             ]
             if len(relevant) >= limit:
                 return list(reversed(relevant[-limit:]))

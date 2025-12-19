@@ -170,9 +170,7 @@ class GardenerLogosNode(BaseLogosNode):
     _handle: str = "concept.gardener"
     _garden: GardenState | None = None
     _personality: Any = None  # TendingPersonality (lazy loaded)
-    _prompt_resolver: "PromptContextResolver | None" = (
-        None  # Phase 5: Prompt delegation
-    )
+    _prompt_resolver: "PromptContextResolver | None" = None  # Phase 5: Prompt delegation
 
     @property
     def handle(self) -> str:
@@ -226,9 +224,7 @@ class GardenerLogosNode(BaseLogosNode):
         Returns:
             The result from PromptNode
         """
-        with _tracer.start_as_current_span(
-            f"gardener_logos.prompt.{sub_aspect}"
-        ) as span:
+        with _tracer.start_as_current_span(f"gardener_logos.prompt.{sub_aspect}") as span:
             span.set_attribute("sub_aspect", sub_aspect)
 
             garden = self._get_garden()
@@ -266,9 +262,7 @@ class GardenerLogosNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Return role-gated affordances."""
-        return GARDENER_LOGOS_AFFORDANCES.get(
-            archetype, GARDENER_LOGOS_AFFORDANCES["default"]
-        )
+        return GARDENER_LOGOS_AFFORDANCES.get(archetype, GARDENER_LOGOS_AFFORDANCES["default"])
 
     # =========================================================================
     # manifest - Garden Overview
@@ -351,9 +345,7 @@ class GardenerLogosNode(BaseLogosNode):
                     # Handle prompt.* aspects by delegating to PromptNode
                     if aspect.startswith("prompt."):
                         sub_aspect = aspect[7:]  # Remove "prompt." prefix
-                        return await self._delegate_to_prompt(
-                            sub_aspect, observer, **kwargs
-                        )
+                        return await self._delegate_to_prompt(sub_aspect, observer, **kwargs)
 
                     # Unknown aspect
                     return BasicRendering(
@@ -616,9 +608,7 @@ class GardenerLogosNode(BaseLogosNode):
             progress = int(plot.progress * 10)
             bar = "█" * progress + "░" * (10 - progress)
 
-            lines.append(
-                f"  {plot.display_name:<18} {bar} {plot.progress:.0%}{active_marker}"
-            )
+            lines.append(f"  {plot.display_name:<18} {bar} {plot.progress:.0%}{active_marker}")
             lines.append(f"    Path: {plot.path}")
             if plot.crown_jewel:
                 lines.append(f"    Crown Jewel: {plot.crown_jewel}")
@@ -989,9 +979,7 @@ class GardenerLogosNode(BaseLogosNode):
 
         if new_season:
             lines.append("")
-            lines.append(
-                f"🔄 Season changed: {garden.season.emoji} {garden.season.name}"
-            )
+            lines.append(f"🔄 Season changed: {garden.season.emoji} {garden.season.name}")
 
         return BasicRendering(
             summary=f"Phase: {old_phase.name} → {session.phase.name}",

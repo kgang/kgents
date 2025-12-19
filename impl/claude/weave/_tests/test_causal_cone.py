@@ -238,9 +238,7 @@ class TestCausalConeWithTurns:
         """THOUGHT turns are in cone (just hidden by default)."""
         weave: TheWeave = TheWeave()
 
-        thought = Turn.create_turn(
-            "Thinking...", "agent", TurnType.THOUGHT, turn_id="th"
-        )
+        thought = Turn.create_turn("Thinking...", "agent", TurnType.THOUGHT, turn_id="th")
         speech = Turn.create_turn("Hello", "agent", TurnType.SPEECH, turn_id="sp")
 
         weave.monoid.append_mut(thought)

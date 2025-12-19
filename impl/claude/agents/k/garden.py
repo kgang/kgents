@@ -489,10 +489,7 @@ class PersonaGarden:
         composted: list[GardenEntry] = []
 
         for entry in self._entries.values():
-            if (
-                entry.lifecycle != GardenLifecycle.COMPOST
-                and entry.staleness_days > days_threshold
-            ):
+            if entry.lifecycle != GardenLifecycle.COMPOST and entry.staleness_days > days_threshold:
                 entry.lifecycle = GardenLifecycle.COMPOST
                 composted.append(entry)
 
@@ -569,9 +566,7 @@ class PersonaGarden:
                 continue
 
             # Check for similar existing entry
-            similar = self._find_similar_entry(
-                other_entry.content, similarity_threshold
-            )
+            similar = self._find_similar_entry(other_entry.content, similarity_threshold)
 
             if similar:
                 # Merge: boost confidence, combine evidence
@@ -600,9 +595,7 @@ class PersonaGarden:
 
         return imported
 
-    def _find_similar_entry(
-        self, content: str, threshold: float
-    ) -> Optional[GardenEntry]:
+    def _find_similar_entry(self, content: str, threshold: float) -> Optional[GardenEntry]:
         """Find an entry with similar content.
 
         Returns None if content is empty or whitespace-only.
@@ -710,9 +703,7 @@ class PersonaGarden:
 
         return affected
 
-    def _detect_implicit_patterns(
-        self, message: str, response: str
-    ) -> list[tuple[str, float]]:
+    def _detect_implicit_patterns(self, message: str, response: str) -> list[tuple[str, float]]:
         """
         Detect implicit patterns from dialogue content.
 
@@ -773,9 +764,7 @@ class PersonaGarden:
                 existing.evidence = list(set(existing.evidence + pattern.evidence))
             else:
                 # Create new entry
-                confidence = self._pattern_maturity_to_confidence(
-                    pattern.maturity.value
-                )
+                confidence = self._pattern_maturity_to_confidence(pattern.maturity.value)
                 await self.plant_pattern(
                     content=pattern.content,
                     source="hypnagogia",
@@ -815,9 +804,7 @@ class PersonaGarden:
 
         for entry in entries:
             by_type[entry.entry_type.value] = by_type.get(entry.entry_type.value, 0) + 1
-            by_lifecycle[entry.lifecycle.value] = (
-                by_lifecycle.get(entry.lifecycle.value, 0) + 1
-            )
+            by_lifecycle[entry.lifecycle.value] = by_lifecycle.get(entry.lifecycle.value, 0) + 1
 
         avg_confidence = sum(e.confidence for e in entries) / len(entries)
         total_evidence = sum(len(e.evidence) for e in entries)
@@ -851,9 +838,7 @@ class PersonaGarden:
         by_lifecycle: dict[str, int] = {}
         by_type: dict[str, int] = {}
         for entry in entries:
-            by_lifecycle[entry.lifecycle.value] = (
-                by_lifecycle.get(entry.lifecycle.value, 0) + 1
-            )
+            by_lifecycle[entry.lifecycle.value] = by_lifecycle.get(entry.lifecycle.value, 0) + 1
             by_type[entry.entry_type.value] = by_type.get(entry.entry_type.value, 0) + 1
 
         lines = [

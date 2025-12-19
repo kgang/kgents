@@ -110,9 +110,7 @@ class GardenMetrics:
         """
         plot_factor = min(1.0, self.active_plots / 3) * 0.25
         gesture_factor = min(1.0, self.recent_gestures / 5) * 0.25
-        entropy_factor = (
-            min(1.0, max(0, self.entropy_budget - self.entropy_spent)) * 0.25
-        )
+        entropy_factor = min(1.0, max(0, self.entropy_budget - self.entropy_spent)) * 0.25
         cycle_factor = min(1.0, self.session_cycles / 10) * 0.25
 
         return min(1.0, plot_factor + gesture_factor + entropy_factor + cycle_factor)
@@ -205,9 +203,7 @@ class GardenState:
             return datetime.now()
 
         plots = {k: PlotState.from_dict(v) for k, v in data.get("plots", {}).items()}
-        gestures = [
-            TendingGesture.from_dict(g) for g in data.get("recent_gestures", [])
-        ]
+        gestures = [TendingGesture.from_dict(g) for g in data.get("recent_gestures", [])]
 
         metrics_data = data.get("metrics", {})
         metrics = GardenMetrics(
@@ -411,9 +407,7 @@ class GardenState:
         Returns:
             The new season (HARVEST)
         """
-        self.transition_season(
-            GardenSeason.HARVEST, "Session completed - time to gather"
-        )
+        self.transition_season(GardenSeason.HARVEST, "Session completed - time to gather")
 
         # Clear the session reference (but keep session_id for history)
         self._session = None
@@ -493,9 +487,7 @@ def _emit_season_changed_event(
             import logging
 
             logger = logging.getLogger("kgents.gardener.synergy")
-            logger.debug(
-                f"No event loop for season change emission: {old_season} → {new_season}"
-            )
+            logger.debug(f"No event loop for season change emission: {old_season} → {new_season}")
 
     except ImportError:
         # Synergy module not available - skip silently

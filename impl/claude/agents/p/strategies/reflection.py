@@ -121,9 +121,7 @@ class ReflectionParser(Generic[A]):
 
                 # Add repair note if we reflected
                 if attempt > 0:
-                    result.repairs.append(
-                        f"Fixed via {attempt} reflection iteration(s)"
-                    )
+                    result.repairs.append(f"Fixed via {attempt} reflection iteration(s)")
 
                 return result
             else:

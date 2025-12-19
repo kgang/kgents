@@ -90,9 +90,7 @@ class FlowConfig:
     branching_threshold: float = 0.3
     """Branch if confidence < this threshold."""
 
-    branching_strategy: Literal["uncertainty", "contradiction", "explicit"] = (
-        "uncertainty"
-    )
+    branching_strategy: Literal["uncertainty", "contradiction", "explicit"] = "uncertainty"
     """When to trigger branching."""
 
     pruning_threshold: float = 0.2
@@ -104,9 +102,7 @@ class FlowConfig:
     merge_strategy: Literal["best_first", "weighted_vote", "synthesis"] = "synthesis"
     """How to merge branches."""
 
-    exploration_strategy: Literal["depth_first", "breadth_first", "best_first"] = (
-        "best_first"
-    )
+    exploration_strategy: Literal["depth_first", "breadth_first", "best_first"] = "best_first"
     """Order of hypothesis exploration."""
 
     exploration_budget: int = 50
@@ -222,14 +218,10 @@ class ResearchConfig:
     depth_limit: int = 4
     max_nodes: int = 100
     branching_threshold: float = 0.3
-    branching_strategy: Literal["uncertainty", "contradiction", "explicit"] = (
-        "uncertainty"
-    )
+    branching_strategy: Literal["uncertainty", "contradiction", "explicit"] = "uncertainty"
     pruning_threshold: float = 0.2
     merge_strategy: Literal["best_first", "weighted_vote", "synthesis"] = "synthesis"
-    exploration_strategy: Literal["depth_first", "breadth_first", "best_first"] = (
-        "best_first"
-    )
+    exploration_strategy: Literal["depth_first", "breadth_first", "best_first"] = "best_first"
     exploration_budget: int = 50
     confidence_threshold: float = 0.9
     insight_target: int | None = None

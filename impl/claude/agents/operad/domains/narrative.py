@@ -103,10 +103,7 @@ def _fork_compose(
             }
 
     positions = frozenset(
-        (p, a, b)
-        for p in predicate.positions
-        for a in path_a.positions
-        for b in path_b.positions
+        (p, a, b) for p in predicate.positions for a in path_a.positions for b in path_b.positions
     )
 
     return PolyAgent(

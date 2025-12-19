@@ -276,9 +276,13 @@ class ShadowCardWidget(CompositeWidget[ShadowCardState]):
                 item.difficulty, "#fff"
             )
             indicator = self._difficulty_indicator(item.difficulty)
-            html += f'<div style="color: {color};">{indicator} {item.content} ({item.difficulty})</div>'
+            html += (
+                f'<div style="color: {color};">{indicator} {item.content} ({item.difficulty})</div>'
+            )
             if state.style == "full":
-                html += f'<div style="color: #666; margin-left: 16px;">-> {item.exclusion_reason}</div>'
+                html += (
+                    f'<div style="color: #666; margin-left: 16px;">-> {item.exclusion_reason}</div>'
+                )
 
         if not state.shadow_inventory:
             html += '<div style="color: #666;">No shadow content detected.</div>'
@@ -531,9 +535,7 @@ class DialecticCardWidget(CompositeWidget[DialecticCardState]):
 
         # Antithesis
         if state.antithesis:
-            html += (
-                f'<div style="color: #ef4444;">├ Antithesis: {state.antithesis}</div>'
-            )
+            html += f'<div style="color: #ef4444;">├ Antithesis: {state.antithesis}</div>'
 
         # Synthesis or tension
         if state.productive_tension:

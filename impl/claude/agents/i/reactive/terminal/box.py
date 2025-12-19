@@ -200,9 +200,7 @@ class BoxRenderer:
             lines.append(chars.vertical + " " * interior_width + chars.vertical)
 
         # Bottom border
-        lines.append(
-            chars.bottom_left + chars.horizontal * (spec.width - 2) + chars.bottom_right
-        )
+        lines.append(chars.bottom_left + chars.horizontal * (spec.width - 2) + chars.bottom_right)
 
         return lines
 
@@ -243,9 +241,7 @@ class BoxRenderer:
             lines.append(line)
 
         # Bottom border
-        lines.append(
-            chars.bottom_left + chars.horizontal * (spec.width - 2) + chars.bottom_right
-        )
+        lines.append(chars.bottom_left + chars.horizontal * (spec.width - 2) + chars.bottom_right)
 
         return lines
 

@@ -201,15 +201,11 @@ class K8sProjector(Projector[list[K8sResource]]):
         # 1. Create workload (StatefulSet or Deployment)
         if is_stateful:
             resources.append(
-                self._create_statefulset(
-                    agent_name, base_labels, stateful_cap, soulful_cap
-                )
+                self._create_statefulset(agent_name, base_labels, stateful_cap, soulful_cap)
             )
             resources.append(self._create_pvc(agent_name, base_labels, stateful_cap))
         else:
-            resources.append(
-                self._create_deployment(agent_name, base_labels, soulful_cap)
-            )
+            resources.append(self._create_deployment(agent_name, base_labels, soulful_cap))
 
         # 2. Create Service (always needed)
         resources.append(self._create_service(agent_name, base_labels, observable_cap))
@@ -220,9 +216,7 @@ class K8sProjector(Projector[list[K8sResource]]):
 
         # 4. Create HPA if @Streamable
         if streamable_cap is not None:
-            resources.append(
-                self._create_hpa(agent_name, base_labels, streamable_cap, is_stateful)
-            )
+            resources.append(self._create_hpa(agent_name, base_labels, streamable_cap, is_stateful))
 
         # 5. Create ConfigMap for agent config
         resources.append(self._create_configmap(agent_name, base_labels, halo))
@@ -257,9 +251,7 @@ class K8sProjector(Projector[list[K8sResource]]):
 
         # Handle empty result
         if not sanitized:
-            raise InvalidNameError(
-                name, "Agent name produces empty K8s name after sanitization"
-            )
+            raise InvalidNameError(name, "Agent name produces empty K8s name after sanitization")
 
         # Truncate if too long, but ensure we don't end with a hyphen
         if len(sanitized) > _MAX_K8S_NAME_LENGTH:

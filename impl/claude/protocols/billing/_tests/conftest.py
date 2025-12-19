@@ -11,9 +11,7 @@ _stripe_error_mock = MagicMock()
 
 # Set up error classes that the code expects
 _stripe_error_mock.InvalidRequestError = type("InvalidRequestError", (Exception,), {})
-_stripe_error_mock.SignatureVerificationError = type(
-    "SignatureVerificationError", (Exception,), {}
-)
+_stripe_error_mock.SignatureVerificationError = type("SignatureVerificationError", (Exception,), {})
 
 # Set stripe.error on the main mock
 _stripe_mock.error = _stripe_error_mock

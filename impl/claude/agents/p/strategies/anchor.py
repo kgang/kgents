@@ -51,9 +51,7 @@ class AnchorBasedParser(Generic[A]):
         self.anchor = anchor
         # When no extractor is provided, we return str as A (user must use AnchorBasedParser[str])
         self._extractor: Callable[[str], A] = (
-            extractor
-            if extractor is not None
-            else cast(Callable[[str], A], lambda x: x)
+            extractor if extractor is not None else cast(Callable[[str], A], lambda x: x)
         )
         self.config = config or ParserConfig()
 

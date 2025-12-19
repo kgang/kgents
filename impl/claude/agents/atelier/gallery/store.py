@@ -29,9 +29,7 @@ class Gallery:
     """
 
     def __init__(self, storage_path: Path | None = None) -> None:
-        self.storage_path = (
-            storage_path or Path.home() / ".kgents" / "atelier" / "gallery"
-        )
+        self.storage_path = storage_path or Path.home() / ".kgents" / "atelier" / "gallery"
         self.storage_path.mkdir(parents=True, exist_ok=True)
 
     def _piece_path(self, piece_id: str) -> Path:
@@ -185,9 +183,7 @@ class Gallery:
             try:
                 data = json.loads(path.read_text())
                 content = str(data.get("content", "")).lower()
-                interpretation = (
-                    data.get("provenance", {}).get("interpretation", "").lower()
-                )
+                interpretation = data.get("provenance", {}).get("interpretation", "").lower()
 
                 if query_lower in content or query_lower in interpretation:
                     results.append(self._deserialize(data))

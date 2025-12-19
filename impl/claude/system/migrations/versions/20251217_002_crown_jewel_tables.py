@@ -54,7 +54,9 @@ def upgrade() -> None:
     op.execute("CREATE INDEX IF NOT EXISTS idx_brain_crystals_hash ON brain_crystals(content_hash)")
     op.execute("CREATE INDEX IF NOT EXISTS idx_brain_crystals_datum ON brain_crystals(datum_id)")
     op.execute("CREATE INDEX IF NOT EXISTS idx_brain_crystals_recent ON brain_crystals(created_at)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_brain_crystals_accessed ON brain_crystals(last_accessed)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_brain_crystals_accessed ON brain_crystals(last_accessed)"
+    )
 
     # brain_crystal_tags: Normalized tags for efficient queries
     op.execute("""
@@ -66,7 +68,9 @@ def upgrade() -> None:
         )
     """)
     op.execute("CREATE INDEX IF NOT EXISTS idx_crystal_tags_tag ON brain_crystal_tags(tag)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_crystal_tags_lookup ON brain_crystal_tags(tag, crystal_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_crystal_tags_lookup ON brain_crystal_tags(tag, crystal_id)"
+    )
 
     # brain_settings: User preferences for Brain behavior
     op.execute("""
@@ -121,9 +125,15 @@ def upgrade() -> None:
             FOREIGN KEY (citizen_id) REFERENCES town_citizens(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_town_conversations_citizen ON town_conversations(citizen_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_town_conversations_active ON town_conversations(is_active)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_town_conversations_recent ON town_conversations(created_at)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_town_conversations_citizen ON town_conversations(citizen_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_town_conversations_active ON town_conversations(is_active)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_town_conversations_recent ON town_conversations(created_at)"
+    )
 
     # town_conversation_turns: Individual turns in conversations
     op.execute("""
@@ -141,8 +151,12 @@ def upgrade() -> None:
             FOREIGN KEY (conversation_id) REFERENCES town_conversations(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_town_turns_conversation ON town_conversation_turns(conversation_id, turn_number)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_town_turns_causal ON town_conversation_turns(causal_parent)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_town_turns_conversation ON town_conversation_turns(conversation_id, turn_number)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_town_turns_causal ON town_conversation_turns(causal_parent)"
+    )
 
     # town_citizen_relationships: Relationships between citizens
     op.execute("""
@@ -160,7 +174,9 @@ def upgrade() -> None:
             FOREIGN KEY (citizen_b_id) REFERENCES town_citizens(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_relationships_citizens ON town_citizen_relationships(citizen_a_id, citizen_b_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_relationships_citizens ON town_citizen_relationships(citizen_a_id, citizen_b_id)"
+    )
 
     # =========================================================================
     # GARDENER CROWN JEWEL
@@ -177,7 +193,9 @@ def upgrade() -> None:
             updated_at TEXT NOT NULL
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_garden_sessions_recent ON garden_sessions(created_at)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_garden_sessions_recent ON garden_sessions(created_at)"
+    )
 
     # garden_plots: Thematic groupings of ideas
     op.execute("""
@@ -232,8 +250,12 @@ def upgrade() -> None:
             FOREIGN KEY (target_id) REFERENCES garden_ideas(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_garden_connections_source ON garden_idea_connections(source_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_garden_connections_target ON garden_idea_connections(target_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_garden_connections_source ON garden_idea_connections(source_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_garden_connections_target ON garden_idea_connections(target_id)"
+    )
 
     # =========================================================================
     # GESTALT CROWN JEWEL
@@ -257,7 +279,9 @@ def upgrade() -> None:
         )
     """)
     op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_topologies_name ON gestalt_topologies(name)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_topologies_repo ON gestalt_topologies(repo_path)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_topologies_repo ON gestalt_topologies(repo_path)"
+    )
 
     # gestalt_code_blocks: Code blocks in topologies
     op.execute("""
@@ -281,9 +305,15 @@ def upgrade() -> None:
             FOREIGN KEY (topology_id) REFERENCES gestalt_topologies(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_topology ON gestalt_code_blocks(topology_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_file ON gestalt_code_blocks(file_path)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_type ON gestalt_code_blocks(block_type)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_topology ON gestalt_code_blocks(topology_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_file ON gestalt_code_blocks(file_path)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_blocks_type ON gestalt_code_blocks(block_type)"
+    )
 
     # gestalt_code_links: Links between code blocks
     op.execute("""
@@ -303,9 +333,15 @@ def upgrade() -> None:
             FOREIGN KEY (target_block_id) REFERENCES gestalt_code_blocks(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_links_topology ON gestalt_code_links(topology_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_links_source ON gestalt_code_links(source_block_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_links_target ON gestalt_code_links(target_block_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_links_topology ON gestalt_code_links(topology_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_links_source ON gestalt_code_links(source_block_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_links_target ON gestalt_code_links(target_block_id)"
+    )
 
     # gestalt_topology_snapshots: Historical snapshots
     op.execute("""
@@ -322,8 +358,12 @@ def upgrade() -> None:
             FOREIGN KEY (topology_id) REFERENCES gestalt_topologies(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_snapshots_topology ON gestalt_topology_snapshots(topology_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_gestalt_snapshots_created ON gestalt_topology_snapshots(created_at)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_snapshots_topology ON gestalt_topology_snapshots(topology_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_gestalt_snapshots_created ON gestalt_topology_snapshots(created_at)"
+    )
 
     # =========================================================================
     # ATELIER CROWN JEWEL
@@ -344,7 +384,9 @@ def upgrade() -> None:
             updated_at TEXT NOT NULL
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_workshops_active ON atelier_workshops(is_active)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_workshops_active ON atelier_workshops(is_active)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_workshops_theme ON atelier_workshops(theme)")
 
     # atelier_artisans: Creative agents in workshops
@@ -363,8 +405,12 @@ def upgrade() -> None:
             FOREIGN KEY (workshop_id) REFERENCES atelier_workshops(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_artisans_workshop ON atelier_artisans(workshop_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_artisans_specialty ON atelier_artisans(specialty)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_artisans_workshop ON atelier_artisans(workshop_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_artisans_specialty ON atelier_artisans(specialty)"
+    )
 
     # atelier_exhibitions: Exhibitions of creative work
     op.execute("""
@@ -383,8 +429,12 @@ def upgrade() -> None:
             FOREIGN KEY (workshop_id) REFERENCES atelier_workshops(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_exhibitions_workshop ON atelier_exhibitions(workshop_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_exhibitions_open ON atelier_exhibitions(is_open)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_exhibitions_workshop ON atelier_exhibitions(workshop_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_exhibitions_open ON atelier_exhibitions(is_open)"
+    )
 
     # atelier_gallery_items: Items in exhibitions
     op.execute("""
@@ -403,8 +453,12 @@ def upgrade() -> None:
             FOREIGN KEY (exhibition_id) REFERENCES atelier_exhibitions(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_gallery_exhibition ON atelier_gallery_items(exhibition_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_gallery_order ON atelier_gallery_items(exhibition_id, display_order)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_gallery_exhibition ON atelier_gallery_items(exhibition_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_gallery_order ON atelier_gallery_items(exhibition_id, display_order)"
+    )
 
     # atelier_artifact_contributions: Contributions by artisans
     op.execute("""
@@ -424,8 +478,12 @@ def upgrade() -> None:
             FOREIGN KEY (artisan_id) REFERENCES atelier_artisans(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_contributions_artisan ON atelier_artifact_contributions(artisan_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_atelier_contributions_type ON atelier_artifact_contributions(contribution_type)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_contributions_artisan ON atelier_artifact_contributions(artisan_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_atelier_contributions_type ON atelier_artifact_contributions(contribution_type)"
+    )
 
     # =========================================================================
     # COALITION CROWN JEWEL
@@ -474,8 +532,12 @@ def upgrade() -> None:
             FOREIGN KEY (coalition_id) REFERENCES coalition_coalitions(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_member_agent ON coalition_members(agent_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_member_coalition ON coalition_members(coalition_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_member_agent ON coalition_members(agent_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_member_coalition ON coalition_members(coalition_id)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_member_role ON coalition_members(role)")
 
     # coalition_proposals: Proposals within coalitions
@@ -502,9 +564,15 @@ def upgrade() -> None:
             FOREIGN KEY (proposer_id) REFERENCES coalition_members(id) ON DELETE SET NULL
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_proposal_coalition ON coalition_proposals(coalition_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_proposal_status ON coalition_proposals(status)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_proposal_type ON coalition_proposals(proposal_type)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_proposal_coalition ON coalition_proposals(coalition_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_proposal_status ON coalition_proposals(status)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_proposal_type ON coalition_proposals(proposal_type)"
+    )
 
     # coalition_proposal_votes: Votes on proposals
     op.execute("""
@@ -521,8 +589,12 @@ def upgrade() -> None:
             FOREIGN KEY (member_id) REFERENCES coalition_members(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_proposal_vote_proposal ON coalition_proposal_votes(proposal_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_proposal_vote_member ON coalition_proposal_votes(member_id)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_proposal_vote_proposal ON coalition_proposal_votes(proposal_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_proposal_vote_member ON coalition_proposal_votes(member_id)"
+    )
 
     # coalition_outputs: Outputs produced by coalitions
     op.execute("""
@@ -543,8 +615,12 @@ def upgrade() -> None:
             FOREIGN KEY (proposal_id) REFERENCES coalition_proposals(id) ON DELETE SET NULL
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_output_coalition ON coalition_outputs(coalition_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_coalition_output_type ON coalition_outputs(output_type)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_output_coalition ON coalition_outputs(coalition_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_coalition_output_type ON coalition_outputs(output_type)"
+    )
 
     # =========================================================================
     # PARK CROWN JEWEL
@@ -622,8 +698,12 @@ def upgrade() -> None:
         )
     """)
     op.execute("CREATE INDEX IF NOT EXISTS idx_park_memories_host ON park_host_memories(host_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_park_memories_type ON park_host_memories(memory_type)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_park_memories_salience ON park_host_memories(salience)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_park_memories_type ON park_host_memories(memory_type)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_park_memories_salience ON park_host_memories(salience)"
+    )
     op.execute("CREATE INDEX IF NOT EXISTS idx_park_memories_datum ON park_host_memories(datum_id)")
 
     # park_interactions: Interactions between visitors and hosts
@@ -648,9 +728,15 @@ def upgrade() -> None:
             FOREIGN KEY (host_id) REFERENCES park_hosts(id) ON DELETE CASCADE
         )
     """)
-    op.execute("CREATE INDEX IF NOT EXISTS idx_park_interactions_episode ON park_interactions(episode_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_park_interactions_host ON park_interactions(host_id)")
-    op.execute("CREATE INDEX IF NOT EXISTS idx_park_interactions_type ON park_interactions(interaction_type)")
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_park_interactions_episode ON park_interactions(episode_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_park_interactions_host ON park_interactions(host_id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_park_interactions_type ON park_interactions(interaction_type)"
+    )
 
     # park_locations: Locations in the Park
     op.execute("""

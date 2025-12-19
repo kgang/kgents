@@ -285,9 +285,7 @@ class PersistentAgent(Generic[S]):
                 kwargs[field_name] = None
             elif field_type and is_dataclass(field_type):
                 # Recursively deserialize nested dataclass
-                kwargs[field_name] = self._deserialize_dataclass(
-                    field_type, field_value
-                )
+                kwargs[field_name] = self._deserialize_dataclass(field_type, field_value)
             elif field_type:
                 # Try to handle enums (check if it's an Enum class)
                 try:

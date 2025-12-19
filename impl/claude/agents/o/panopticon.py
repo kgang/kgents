@@ -432,9 +432,7 @@ class IntegratedPanopticon(BaseObserver):
 
         if self.semantic:
             if hasattr(self.semantic, "drift_detector"):
-                status.drift_score = self.semantic.drift_detector.get_average_drift(
-                    "system"
-                )
+                status.drift_score = self.semantic.drift_detector.get_average_drift("system")
             if status.drift_score < 0.1:
                 status.drift_severity = "NONE"
             elif status.drift_score < 0.3:
@@ -452,9 +450,7 @@ class IntegratedPanopticon(BaseObserver):
             status.knots_checked = len(history)
             if history:
                 intact = sum(1 for h in history if h.knot_intact)
-                status.knots_intact_pct = (
-                    (intact / len(history)) * 100 if history else 100.0
-                )
+                status.knots_intact_pct = (intact / len(history)) * 100 if history else 100.0
 
         return status
 
@@ -496,9 +492,7 @@ class IntegratedPanopticon(BaseObserver):
             status.verification_streak = self.bootstrap_observer.integrity_streak
 
             if last.agent_results:
-                status.agents_importable = sum(
-                    1 for r in last.agent_results if r.importable
-                )
+                status.agents_importable = sum(1 for r in last.agent_results if r.importable)
                 status.agents_total = len(last.agent_results)
 
         return status
@@ -560,9 +554,7 @@ class IntegratedPanopticon(BaseObserver):
         bootstrap = self._collect_bootstrap_status()
         voi = self._collect_voi_status()
 
-        system_status = self._determine_system_status(
-            telemetry, semantic, axiological, bootstrap
-        )
+        system_status = self._determine_system_status(telemetry, semantic, axiological, bootstrap)
 
         # Count alerts by severity
         alert_counts = {}
@@ -600,11 +592,7 @@ class IntegratedPanopticon(BaseObserver):
                     AlertSeverity.CRITICAL,
                     "bootstrap",
                     "Identity laws BROKEN - Category laws violated",
-                    {
-                        "evidence": result.identity_result.evidence
-                        if result.identity_result
-                        else ""
-                    },
+                    {"evidence": result.identity_result.evidence if result.identity_result else ""},
                 )
             if not result.composition_laws_hold:
                 self.add_alert(
@@ -728,9 +716,7 @@ def render_unified_dashboard(status: UnifiedPanopticonStatus) -> str:
             f"│  │ TOP PERFORMER: [{z.top_performer}] (RoC: {z.top_performer_roc:.1f}x)              │     │"
         )
     if z.worst_performer and z.worst_performer_roc < 0.5:
-        lines.append(
-            f"│  │ CASH BURNER:   [{z.worst_performer}] -> [UNDER AUDIT]          │     │"
-        )
+        lines.append(f"│  │ CASH BURNER:   [{z.worst_performer}] -> [UNDER AUDIT]          │     │")
 
     lines.extend(
         [
@@ -757,19 +743,13 @@ def render_unified_dashboard(status: UnifiedPanopticonStatus) -> str:
 
     # Alerts section
     if s.alerts:
-        lines.append(
-            "│                                                                      │"
-        )
-        lines.append(
-            "│  ┌─ ALERTS ────────────────────────────────────────────────────┐     │"
-        )
+        lines.append("│                                                                      │")
+        lines.append("│  ┌─ ALERTS ────────────────────────────────────────────────────┐     │")
         for alert in s.alerts[-5:]:
             sev = alert.severity.value[:4]
             msg = str(alert)[:56]
             lines.append(f"│  │ [{sev}] {msg.ljust(56)}│     │")
-        lines.append(
-            "│  └─────────────────────────────────────────────────────────────┘     │"
-        )
+        lines.append("│  └─────────────────────────────────────────────────────────────┘     │")
 
     lines.extend(
         [
@@ -866,9 +846,7 @@ def create_integrated_panopticon(
         kwargs["semantic"] = SemanticObserver(observer_id=f"{observer_id}_semantic")
 
     if with_axiological:
-        kwargs["axiological"] = AxiologicalObserver(
-            observer_id=f"{observer_id}_axiological"
-        )
+        kwargs["axiological"] = AxiologicalObserver(observer_id=f"{observer_id}_axiological")
 
     if with_bootstrap:
         kwargs["bootstrap_observer"] = BootstrapObserver()
@@ -937,9 +915,7 @@ class PanopticonObserver(BaseObserver):
     ) -> ObservationResult:
         """Post-invoke hook - records to Panopticon."""
         # Record telemetry
-        obs_result = await self.panopticon.telemetry.post_invoke(
-            context, result, duration_ms
-        )
+        obs_result = await self.panopticon.telemetry.post_invoke(context, result, duration_ms)
 
         # Record topology
         self.panopticon.topology.observe_invocation(context.agent_name)
@@ -954,9 +930,7 @@ class PanopticonObserver(BaseObserver):
 
         return obs_result
 
-    def record_entropy(
-        self, context: ObservationContext, error: Exception
-    ) -> EntropyEvent:
+    def record_entropy(self, context: ObservationContext, error: Exception) -> EntropyEvent:
         """Record entropy (error) to Panopticon."""
         entropy_event = self.panopticon.telemetry.record_entropy(context, error)
         self.panopticon.add_alert(

@@ -158,9 +158,7 @@ class MRIScreen(KgentsScreen):
             with Container(classes="panel"):
                 yield Static("[Token Context Window]", classes="panel-title")
                 yield Static("")
-                yield Static(
-                    "[#8b7ba5]Token heatmap visualization - not yet implemented[/]"
-                )
+                yield Static("[#8b7ba5]Token heatmap visualization - not yet implemented[/]")
                 yield Static("")
                 yield Static("This would show:")
                 yield Static("  • Token-by-token attention weights")
@@ -172,9 +170,7 @@ class MRIScreen(KgentsScreen):
             with Container(classes="panel"):
                 yield Static("[Vector Store Retrieval]", classes="panel-title")
                 yield Static("")
-                yield Static(
-                    "[#8b7ba5]Retrieval visualization - not yet implemented[/]"
-                )
+                yield Static("[#8b7ba5]Retrieval visualization - not yet implemented[/]")
                 yield Static("")
                 yield Static("This would show:")
                 yield Static("  • Retrieved memory chunks")
@@ -189,9 +185,7 @@ class MRIScreen(KgentsScreen):
                 if self.agent_snapshot:
                     # Derive entropy from activity (mock calculation)
                     entropy = self.agent_snapshot.activity * 0.3
-                    yield Static(
-                        f"[#b3a89a]Current entropy:[/] [#f5d08a]{entropy:.3f}[/]"
-                    )
+                    yield Static(f"[#b3a89a]Current entropy:[/] [#f5d08a]{entropy:.3f}[/]")
                     yield Static(
                         f"[#b3a89a]Activity level:[/] [#f5d08a]{self.agent_snapshot.activity:.3f}[/]"
                     )
@@ -226,21 +220,13 @@ class MRIScreen(KgentsScreen):
                 if self.agent_snapshot:
                     yield Static(f"[#b3a89a]ID:[/] {self.agent_snapshot.id}")
                     yield Static(f"[#b3a89a]Name:[/] {self.agent_snapshot.name}")
-                    yield Static(
-                        f"[#b3a89a]Phase:[/] {self.agent_snapshot.phase.value}"
-                    )
-                    yield Static(
-                        f"[#b3a89a]Activity:[/] {self.agent_snapshot.activity:.3f}"
-                    )
+                    yield Static(f"[#b3a89a]Phase:[/] {self.agent_snapshot.phase.value}")
+                    yield Static(f"[#b3a89a]Activity:[/] {self.agent_snapshot.activity:.3f}")
                     yield Static(
                         f"[#b3a89a]Grid Position:[/] ({self.agent_snapshot.grid_x}, {self.agent_snapshot.grid_y})"
                     )
-                    yield Static(
-                        f"[#b3a89a]Children:[/] {len(self.agent_snapshot.children)}"
-                    )
-                    yield Static(
-                        f"[#b3a89a]Connections:[/] {len(self.agent_snapshot.connections)}"
-                    )
+                    yield Static(f"[#b3a89a]Children:[/] {len(self.agent_snapshot.children)}")
+                    yield Static(f"[#b3a89a]Connections:[/] {len(self.agent_snapshot.connections)}")
                     yield Static("")
                     yield Static(f"[#b3a89a]Summary:[/] {self.agent_snapshot.summary}")
                 else:
@@ -366,10 +352,7 @@ class MRIScreen(KgentsScreen):
 
         Returns formatted lines showing crystal stats and patterns.
         """
-        if (
-            self._memory_provider is None
-            or self._memory_provider.memory_crystal is None
-        ):
+        if self._memory_provider is None or self._memory_provider.memory_crystal is None:
             return []
 
         try:
@@ -383,9 +366,7 @@ class MRIScreen(KgentsScreen):
                 f"[#b3a89a]Concepts:[/] [#f5d08a]{stats['concept_count']}[/]  "
                 f"[#b3a89a]Hot:[/] [#ff6b6b]{stats['hot_count']}[/]"
             )
-            lines.append(
-                f"[#b3a89a]Avg Resolution:[/] [#f5d08a]{stats['avg_resolution']:.2f}[/]"
-            )
+            lines.append(f"[#b3a89a]Avg Resolution:[/] [#f5d08a]{stats['avg_resolution']:.2f}[/]")
             lines.append("")
 
             # Top patterns by resolution

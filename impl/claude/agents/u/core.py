@@ -71,9 +71,7 @@ class ToolInterface:
     input_description: str  # What the input represents
     output_schema: Type[Any]  # Output type/schema
     output_description: str  # What the output represents
-    error_codes: list[tuple[str, str]] = field(
-        default_factory=list
-    )  # (code, description)
+    error_codes: list[tuple[str, str]] = field(default_factory=list)  # (code, description)
 
 
 @dataclass

@@ -86,9 +86,7 @@ class CounterAgent(Agent[A, A], Generic[A]):
         Raises:
             AssertionError: If count doesn't match expected
         """
-        assert self.count == expected, (
-            f"Expected {expected} invocations, got {self.count}"
-        )
+        assert self.count == expected, f"Expected {expected} invocations, got {self.count}"
 
     def __rshift__(self, other: Agent[A, B]) -> ComposedAgent[A, A, B]:
         """Composition operator: self >> other.

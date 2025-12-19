@@ -266,13 +266,9 @@ class GestaltToGardenHandler(BaseSynergyHandler):
         plot.metadata["gestalt_average_health"] = average_health
         plot.metadata["gestalt_module_count"] = module_count
         plot.metadata["gestalt_drift_count"] = drift_count
-        plot.metadata["gestalt_last_analysis"] = (
-            __import__("datetime").datetime.now().isoformat()
-        )
+        plot.metadata["gestalt_last_analysis"] = __import__("datetime").datetime.now().isoformat()
 
-        self._logger.info(
-            f"Observed plot {plot.name} with Gestalt grade {health_grade}"
-        )
+        self._logger.info(f"Observed plot {plot.name} with Gestalt grade {health_grade}")
 
 
 __all__ = ["GestaltToGardenHandler"]

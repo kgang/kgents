@@ -13,6 +13,7 @@ T = TypeVar("T")
 @dataclass
 class LocalityConfig:
     """DEPRECATED: Old locality configuration."""
+
     threshold: float = 0.8
     max_distance: float = 1.0
 
@@ -20,6 +21,7 @@ class LocalityConfig:
 @dataclass
 class PrefixSimilarity:
     """DEPRECATED: Old prefix similarity calculator."""
+
     prefix_weight: float = 0.5
 
     def calculate(self, a: str, b: str) -> float:
@@ -36,6 +38,7 @@ class PrefixSimilarity:
 @dataclass
 class SemanticRouter(Generic[T]):
     """DEPRECATED: Old semantic router."""
+
     locality: LocalityConfig = field(default_factory=LocalityConfig)
     _routes: dict[str, T] = field(default_factory=dict, repr=False)
 

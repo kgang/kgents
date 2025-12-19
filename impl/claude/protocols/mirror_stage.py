@@ -369,9 +369,7 @@ class MirrorStage:
         # Select most appropriate metaphor based on telemetry
         if condition == SystemCondition.FRAGMENTATION:
             metaphor_key = (
-                "corps_morcele"
-                if state.telemetry.error_rate > 0.2
-                else "shattered_mirror"
+                "corps_morcele" if state.telemetry.error_rate > 0.2 else "shattered_mirror"
             )
         elif condition == SystemCondition.CONFLICT:
             metaphor_key = (
@@ -394,9 +392,7 @@ class MirrorStage:
             suggested_approach=metaphor["suggested_approach"],
         )
 
-    async def synthesize(
-        self, state: SystemState, interpretation: Interpretation
-    ) -> EgoIdeal:
+    async def synthesize(self, state: SystemState, interpretation: Interpretation) -> EgoIdeal:
         """
         H-gent phase: What SHOULD the system become?
 
@@ -437,8 +433,7 @@ class MirrorStage:
             "error_rate": max(0.05, state.telemetry.error_rate * 0.5),  # Halve errors
             "active_ratio": min(
                 1.0,
-                (state.telemetry.active_agents / max(state.telemetry.agent_count, 1))
-                + 0.2,
+                (state.telemetry.active_agents / max(state.telemetry.agent_count, 1)) + 0.2,
             ),
             "blocked_messages": 0,  # Target zero blocked
         }
@@ -458,9 +453,7 @@ class MirrorStage:
             metrics=metrics,
         )
 
-    def _plan_transition(
-        self, state: SystemState, ideal: EgoIdeal
-    ) -> list[HealingStep]:
+    def _plan_transition(self, state: SystemState, ideal: EgoIdeal) -> list[HealingStep]:
         """Generate concrete healing steps."""
         steps: list[HealingStep] = []
 

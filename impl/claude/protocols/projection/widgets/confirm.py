@@ -104,9 +104,7 @@ class ConfirmWidget(KgentsWidget[ConfirmWidgetState]):
                 def compose(self) -> Any:
                     yield Static(self._state.message)
                     if self._state.requires_type_confirm:
-                        yield Input(
-                            placeholder=f"Type '{self._state.requires_type_confirm}'"
-                        )
+                        yield Input(placeholder=f"Type '{self._state.requires_type_confirm}'")
                     with Horizontal():
                         variant: str = "error" if self._state.destructive else "primary"
                         yield Button(self._state.confirm_label, variant=variant)  # type: ignore[arg-type]

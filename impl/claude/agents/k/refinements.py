@@ -99,21 +99,11 @@ class SoulPathResolver:
             SoulPath.MANIFEST.value: self._handle_manifest,
             SoulPath.WITNESS.value: self._handle_witness,
             SoulPath.EIGENVECTORS.value: self._handle_eigenvectors,
-            SoulPath.AESTHETIC.value: lambda o: self._handle_eigenvector(
-                "aesthetic", o
-            ),
-            SoulPath.CATEGORICAL.value: lambda o: self._handle_eigenvector(
-                "categorical", o
-            ),
-            SoulPath.GRATITUDE.value: lambda o: self._handle_eigenvector(
-                "gratitude", o
-            ),
-            SoulPath.HETERARCHY.value: lambda o: self._handle_eigenvector(
-                "heterarchy", o
-            ),
-            SoulPath.GENERATIVITY.value: lambda o: self._handle_eigenvector(
-                "generativity", o
-            ),
+            SoulPath.AESTHETIC.value: lambda o: self._handle_eigenvector("aesthetic", o),
+            SoulPath.CATEGORICAL.value: lambda o: self._handle_eigenvector("categorical", o),
+            SoulPath.GRATITUDE.value: lambda o: self._handle_eigenvector("gratitude", o),
+            SoulPath.HETERARCHY.value: lambda o: self._handle_eigenvector("heterarchy", o),
+            SoulPath.GENERATIVITY.value: lambda o: self._handle_eigenvector("generativity", o),
             SoulPath.JOY.value: lambda o: self._handle_eigenvector("joy", o),
             SoulPath.SIP.value: self._handle_sip,
             SoulPath.TITHE.value: self._handle_tithe,
@@ -628,9 +618,7 @@ class HolographicConstitution:
 
     def get_by_eigenvector(self, eigenvector: str) -> list[ConstitutionArticle]:
         """Get articles weighted by an eigenvector."""
-        weighted = [
-            (a, a.eigenvector_weights.get(eigenvector, 0)) for a in self._articles
-        ]
+        weighted = [(a, a.eigenvector_weights.get(eigenvector, 0)) for a in self._articles]
         weighted.sort(key=lambda x: -x[1])
         return [a for a, w in weighted if w > 0]
 

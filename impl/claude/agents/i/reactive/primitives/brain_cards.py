@@ -364,8 +364,7 @@ def create_ghost_card(
         ], context="programming")
     """
     ghost_states = tuple(
-        GhostState(content=content, relevance=relevance)
-        for content, relevance in (ghosts or [])
+        GhostState(content=content, relevance=relevance) for content, relevance in (ghosts or [])
     )
 
     return GhostNotifierCard(

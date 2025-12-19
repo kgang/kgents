@@ -401,9 +401,7 @@ def display_dialogue(mo, dashboard):  # type: ignore[no-untyped-def]
             _dialogue_lines = []
             for _msg in _messages[-5:]:
                 _icon = "monologue" if _msg.is_monologue else "says"
-                _dialogue_lines.append(
-                    f"**{_msg.speaker_name}** {_icon}: {_msg.message}"
-                )
+                _dialogue_lines.append(f"**{_msg.speaker_name}** {_icon}: {_msg.message}")
 
             dialogue_view = mo.vstack([mo.md(line) for line in _dialogue_lines], gap=1)
 

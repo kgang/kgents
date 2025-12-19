@@ -253,9 +253,7 @@ class Analyzer(Protocol):
         ...
 
     @abstractmethod
-    def analyze_source(
-        self, source: str, module_name: str = "unknown"
-    ) -> list[DependencyEdge]:
+    def analyze_source(self, source: str, module_name: str = "unknown") -> list[DependencyEdge]:
         """
         Extract imports from source code string.
 
@@ -544,9 +542,7 @@ TS_IMPORT_STANDARD = re.compile(
     r"import\s+(?:\*\s+as\s+\w+|\{[^}]+\}|\w+)\s+from\s+['\"]([^'\"]+)['\"]"
 )
 TS_IMPORT_SIDE_EFFECT = re.compile(r"import\s+['\"]([^'\"]+)['\"]")
-TS_IMPORT_TYPE = re.compile(
-    r"import\s+type\s+(?:\{[^}]+\}|\w+)\s+from\s+['\"]([^'\"]+)['\"]"
-)
+TS_IMPORT_TYPE = re.compile(r"import\s+type\s+(?:\{[^}]+\}|\w+)\s+from\s+['\"]([^'\"]+)['\"]")
 TS_REQUIRE = re.compile(r"require\s*\(\s*['\"]([^'\"]+)['\"]\s*\)")
 
 
@@ -646,9 +642,7 @@ def analyze_typescript_file(path: Path) -> Module:
         [
             l
             for l in lines
-            if l.strip()
-            and not l.strip().startswith("//")
-            and not l.strip().startswith("/*")
+            if l.strip() and not l.strip().startswith("//") and not l.strip().startswith("/*")
         ]
     )
 
@@ -691,9 +685,7 @@ class PythonAnalyzer:
         """Check if this analyzer can handle the file."""
         return path.suffix == ".py"
 
-    def analyze_source(
-        self, source: str, module_name: str = "unknown"
-    ) -> list[DependencyEdge]:
+    def analyze_source(self, source: str, module_name: str = "unknown") -> list[DependencyEdge]:
         """Extract imports from Python source code."""
         return analyze_python_imports(source, module_name)
 
@@ -720,9 +712,7 @@ class TypeScriptAnalyzer:
         """Check if this analyzer can handle the file."""
         return path.suffix in (".ts", ".tsx") and not path.name.endswith(".d.ts")
 
-    def analyze_source(
-        self, source: str, module_name: str = "unknown"
-    ) -> list[DependencyEdge]:
+    def analyze_source(self, source: str, module_name: str = "unknown") -> list[DependencyEdge]:
         """Extract imports from TypeScript source code."""
         return analyze_typescript_imports(source, module_name)
 
@@ -794,10 +784,7 @@ def discover_typescript_modules(root: Path) -> Iterator[Path]:
     for pattern in ["*.ts", "*.tsx"]:
         for path in root.rglob(pattern):
             parts = path.parts
-            if any(
-                p in parts
-                for p in ["node_modules", ".git", "dist", "build", "__pycache__"]
-            ):
+            if any(p in parts for p in ["node_modules", ".git", "dist", "build", "__pycache__"]):
                 continue
             # Skip declaration files
             if path.name.endswith(".d.ts"):

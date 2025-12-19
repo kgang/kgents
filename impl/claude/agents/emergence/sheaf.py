@@ -178,9 +178,7 @@ class EmergenceSheaf:
                      Defaults to just the gallery context.
         """
         self.contexts = contexts or {GALLERY_CONTEXT}
-        self._context_map: dict[str, EmergenceContext] = {
-            ctx.name: ctx for ctx in self.contexts
-        }
+        self._context_map: dict[str, EmergenceContext] = {ctx.name: ctx for ctx in self.contexts}
 
     def add_context(self, context: EmergenceContext) -> None:
         """Add a context to the sheaf."""

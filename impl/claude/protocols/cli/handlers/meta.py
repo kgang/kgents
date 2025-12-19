@@ -73,9 +73,7 @@ def cmd_meta(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         case "laws":
             return _verify_laws(ctx)
         case _:
-            _emit(
-                f"[META] Unknown subcommand: {subcommand}", {"error": subcommand}, ctx
-            )
+            _emit(f"[META] Unknown subcommand: {subcommand}", {"error": subcommand}, ctx)
             return 1
 
 

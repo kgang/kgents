@@ -97,9 +97,7 @@ def demo_turn_types() -> None:
     for turn in turns:
         observable = "[green]Yes[/]" if turn.is_observable() else "[dim]No[/]"
         content = (
-            str(turn.content)[:40] + "..."
-            if len(str(turn.content)) > 40
-            else str(turn.content)
+            str(turn.content)[:40] + "..." if len(str(turn.content)) > 40 else str(turn.content)
         )
         table.add_row(
             turn.turn_type.name,
@@ -195,9 +193,7 @@ def demo_causal_cones() -> None:
 
 async def demo_yield_governance() -> None:
     """Demonstrate YIELD turn approval flow."""
-    console.print(
-        "\n[bold cyan]3. Yield Governance: Preserving Human Agency[/bold cyan]"
-    )
+    console.print("\n[bold cyan]3. Yield Governance: Preserving Human Agency[/bold cyan]")
     console.print("=" * 60)
 
     handler = YieldHandler(default_strategy=ApprovalStrategy.ALL)
@@ -287,9 +283,7 @@ def demo_turn_economics() -> None:
     stats = tracker.stats()
     console.print("\n[yellow]Final state:[/yellow]")
     console.print(f"  Order spent: {stats.order_spent:.2f} / {stats.order_total:.2f}")
-    console.print(
-        f"  Surplus spent: {stats.surplus_spent:.2f} / {stats.surplus_total:.2f}"
-    )
+    console.print(f"  Surplus spent: {stats.surplus_spent:.2f} / {stats.surplus_total:.2f}")
     console.print(f"  Exploration ratio: {stats.exploration_ratio:.0%}")
 
     # Check policy

@@ -114,9 +114,7 @@ class GrammarRule:
 
     def to_bnf(self) -> str:
         """Convert to BNF notation."""
-        prods = " | ".join(
-            f'"{p}"' if self.is_terminal else f"<{p}>" for p in self.productions
-        )
+        prods = " | ".join(f'"{p}"' if self.is_terminal else f"<{p}>" for p in self.productions)
         return f"<{self.name}> ::= {prods}"
 
 
@@ -400,9 +398,7 @@ class GrammarSynthesizer:
             source_patterns=patterns,
         )
 
-    def _synthesize_command_grammar(
-        self, patterns: list[ObservedPattern]
-    ) -> list[GrammarRule]:
+    def _synthesize_command_grammar(self, patterns: list[ObservedPattern]) -> list[GrammarRule]:
         """Synthesize VERB NOUN style grammar."""
         rules = []
 
@@ -443,9 +439,7 @@ class GrammarSynthesizer:
 
         return rules
 
-    def _synthesize_recursive_grammar(
-        self, patterns: list[ObservedPattern]
-    ) -> list[GrammarRule]:
+    def _synthesize_recursive_grammar(self, patterns: list[ObservedPattern]) -> list[GrammarRule]:
         """Synthesize function call style grammar."""
         rules = []
 
@@ -700,16 +694,11 @@ class PatternInferenceEngine:
 
             # Refine
             hypothesis = self.synthesizer.refine(hypothesis, validation.failed_inputs)
-            refinements.append(
-                f"Iteration {i + 1}: Coverage {validation.coverage:.1%} → refined"
-            )
+            refinements.append(f"Iteration {i + 1}: Coverage {validation.coverage:.1%} → refined")
 
         # 4. Crystallize to Tongue
         final_validation = validation_history[-1] if validation_history else None
-        success = (
-            final_validation is not None
-            and final_validation.coverage >= self.min_coverage
-        )
+        success = final_validation is not None and final_validation.coverage >= self.min_coverage
 
         tongue = None
         if success:

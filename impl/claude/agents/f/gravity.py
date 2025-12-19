@@ -587,9 +587,7 @@ class GravityBuilder:
         error_message: str = "Predicate failed",
     ) -> "GravityBuilder":
         """Add custom predicate contract."""
-        self._contracts.append(
-            PredicateContract(predicate=predicate, error_message=error_message)
-        )
+        self._contracts.append(PredicateContract(predicate=predicate, error_message=error_message))
         return self
 
     def with_contract(self, contract: GravityContract) -> "GravityBuilder":

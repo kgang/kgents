@@ -294,9 +294,7 @@ class MemoryMapScreen(Screen[None]):
             concepts = list(self._crystal.concepts)
             if concepts:
                 # Weighted selection by resolution
-                resolutions = [
-                    self._crystal.resolution_levels.get(c, 0.5) for c in concepts
-                ]
+                resolutions = [self._crystal.resolution_levels.get(c, 0.5) for c in concepts]
                 total_weight = sum(resolutions)
 
                 if total_weight > 0:
@@ -425,9 +423,7 @@ class MemoryMapScreen(Screen[None]):
         try:
             header = self.query_one("#header-text", Static)
             sim_status = "[#1dd1a1]SIM:ON[/]" if active else "[#8b7ba5]SIM:OFF[/]"
-            header.update(
-                f"[bold #f5d08a]MEMORY MAP[/] - Four Pillars Visualization  {sim_status}"
-            )
+            header.update(f"[bold #f5d08a]MEMORY MAP[/] - Four Pillars Visualization  {sim_status}")
         except Exception:
             pass
 
@@ -495,9 +491,7 @@ class MemoryMapScreen(Screen[None]):
             f"[#b3a89a]Deposits:[/] [#f5d08a]{data.get('deposit_count', 0)}[/]  "
             f"[#b3a89a]Evaporated:[/] [#f5d08a]{data.get('evaporation_count', 0)}[/]"
         )
-        lines.append(
-            f"[#b3a89a]Decay Rate:[/] [#f5d08a]{data.get('decay_rate', 0):.1%}[/]/hr"
-        )
+        lines.append(f"[#b3a89a]Decay Rate:[/] [#f5d08a]{data.get('decay_rate', 0):.1%}[/]/hr")
         lines.append("")
 
         # Gradient visualization
@@ -523,9 +517,7 @@ class MemoryMapScreen(Screen[None]):
                 concept = g["concept"][:15].ljust(15)
                 traces = g["traces"]
 
-                lines.append(
-                    f"  {concept} [#ff9f43]{bar}[/] {g['intensity']:.1f} ({traces})"
-                )
+                lines.append(f"  {concept} [#ff9f43]{bar}[/] {g['intensity']:.1f} ({traces})")
         else:
             lines.append("[#8b7ba5]No traces deposited yet[/]")
             lines.append("")

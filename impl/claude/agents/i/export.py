@@ -91,9 +91,7 @@ class MarkdownExporter:
             if self.include_mermaid:
                 lines.append("```mermaid")
                 lines.append("graph TD")
-                lines.append(
-                    f"    {state.agent_id}(({state.phase.symbol} {state.agent_id}))"
-                )
+                lines.append(f"    {state.agent_id}(({state.phase.symbol} {state.agent_id}))")
 
                 for target in state.composes_with:
                     lines.append(f"    {state.agent_id} --> {target}")
@@ -105,9 +103,7 @@ class MarkdownExporter:
             else:
                 # Plain text fallback
                 if state.composes_with:
-                    lines.append(
-                        f"- **composes with**: {', '.join(state.composes_with)}"
-                    )
+                    lines.append(f"- **composes with**: {', '.join(state.composes_with)}")
                 if state.composed_by:
                     lines.append(f"- **composed by**: {', '.join(state.composed_by)}")
 
@@ -232,9 +228,7 @@ class MarkdownExporter:
 
         return "\n".join(lines)
 
-    def export_margin_notes(
-        self, notes: List[MarginNote], title: str = "Margin Notes"
-    ) -> str:
+    def export_margin_notes(self, notes: List[MarginNote], title: str = "Margin Notes") -> str:
         """Export margin notes as a standalone document."""
         lines = []
 

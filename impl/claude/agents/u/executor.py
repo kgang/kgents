@@ -306,18 +306,14 @@ class ToolExecutor(Generic[A, B]):
 
             return err(tool_error, str(e), False)
 
-    async def execute_with_timeout(
-        self, input: A, timeout_ms: int
-    ) -> Result[B, ToolError]:
+    async def execute_with_timeout(self, input: A, timeout_ms: int) -> Result[B, ToolError]:
         """
         Execute tool with timeout.
 
         Returns ToolError(TIMEOUT) if execution exceeds timeout.
         """
         try:
-            result = await asyncio.wait_for(
-                self.execute(input), timeout=timeout_ms / 1000
-            )
+            result = await asyncio.wait_for(self.execute(input), timeout=timeout_ms / 1000)
             return result
         except asyncio.TimeoutError:
             timeout_error = ToolError(
@@ -571,9 +567,7 @@ class SecureToolExecutor(Generic[A, B]):
 
         # Permission and audit
         self.classifier = classifier or PermissionClassifier()
-        self.audit_logger: AuditLogger = (
-            audit_logger if audit_logger is not None else AuditLogger()
-        )
+        self.audit_logger: AuditLogger = audit_logger if audit_logger is not None else AuditLogger()
 
         # Robust execution
         self.robust_executor = RobustToolExecutor(
@@ -586,9 +580,7 @@ class SecureToolExecutor(Generic[A, B]):
         # Token (if granted)
         self.token: Optional[TemporaryToken] = None
 
-    async def request_permission(
-        self, duration_seconds: int = 900
-    ) -> Result[TemporaryToken, str]:
+    async def request_permission(self, duration_seconds: int = 900) -> Result[TemporaryToken, str]:
         """
         Request short-lived permission token.
 

@@ -253,17 +253,12 @@ class HallucinationDetector:
 
         return sorted(indicators, key=lambda i: -i.severity)
 
-    def _detect_overconfidence(
-        self, traces: list[UnreliableTrace]
-    ) -> list[HallucinationIndicator]:
+    def _detect_overconfidence(self, traces: list[UnreliableTrace]) -> list[HallucinationIndicator]:
         """Detect high confidence without corroboration."""
         indicators = []
 
         for t in traces:
-            if (
-                t.reliability.confidence > 0.8
-                and len(t.reliability.corroborated_by) == 0
-            ):
+            if t.reliability.confidence > 0.8 and len(t.reliability.corroborated_by) == 0:
                 indicators.append(
                     HallucinationIndicator(
                         type=HallucinationType.OVERCONFIDENCE,
@@ -277,9 +272,7 @@ class HallucinationDetector:
 
         return indicators
 
-    def _detect_contradictions(
-        self, traces: list[UnreliableTrace]
-    ) -> list[HallucinationIndicator]:
+    def _detect_contradictions(self, traces: list[UnreliableTrace]) -> list[HallucinationIndicator]:
         """Detect internal contradictions."""
         indicators = []
 
@@ -299,8 +292,7 @@ class HallucinationDetector:
                         HallucinationIndicator(
                             type=HallucinationType.CONTRADICTION,
                             description=f"Agent {agent_id} has contradicting claims",
-                            affected_traces=[t.trace_id]
-                            + t.reliability.contradicted_by,
+                            affected_traces=[t.trace_id] + t.reliability.contradicted_by,
                             severity=0.7,
                             evidence=f"Trace {t.trace_id} contradicted by {t.reliability.contradicted_by}",
                         )
@@ -396,9 +388,7 @@ class UnreliableNarrative:
         """Aggregate confidence across all traces."""
         if not self.annotated_traces:
             return 0.0
-        return sum(t.confidence for t in self.annotated_traces) / len(
-            self.annotated_traces
-        )
+        return sum(t.confidence for t in self.annotated_traces) / len(self.annotated_traces)
 
     @property
     def confidence_level(self) -> ConfidenceLevel:
@@ -425,7 +415,9 @@ class UnreliableNarrative:
         base = self.narrative.render(format)
 
         # Add confidence summary
-        summary = f"\n\n---\nConfidence: {self.overall_confidence:.2f} ({self.confidence_level.value})"
+        summary = (
+            f"\n\n---\nConfidence: {self.overall_confidence:.2f} ({self.confidence_level.value})"
+        )
 
         if self.has_hallucination_warnings:
             summary += f"\nWarnings: {len(self.hallucination_indicators)}"
@@ -949,8 +941,7 @@ class ReconciliationResult:
         return {
             "matches": self.matches,
             "mismatches": [
-                {"trace_id": t, "narrative": n, "ground_truth": g}
-                for t, n, g in self.mismatches
+                {"trace_id": t, "narrative": n, "ground_truth": g} for t, n, g in self.mismatches
             ],
             "unverified": self.unverified,
             "accuracy": self.accuracy,

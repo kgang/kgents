@@ -115,9 +115,7 @@ def record_render(
         _state.total_renders += 1
         _state.total_duration_s += duration_s
 
-        _state.renders_by_widget[widget_type] = (
-            _state.renders_by_widget.get(widget_type, 0) + 1
-        )
+        _state.renders_by_widget[widget_type] = _state.renders_by_widget.get(widget_type, 0) + 1
         _state.renders_by_target[target] = _state.renders_by_target.get(target, 0) + 1
 
         # Track durations for P95 calculation (keep last 1000 per widget)
@@ -130,9 +128,7 @@ def record_render(
 
         if not success:
             _state.total_errors += 1
-            _state.errors_by_widget[widget_type] = (
-                _state.errors_by_widget.get(widget_type, 0) + 1
-            )
+            _state.errors_by_widget[widget_type] = _state.errors_by_widget.get(widget_type, 0) + 1
 
 
 def record_error(widget_type: str, target: str, error_type: str = "unknown") -> None:
@@ -151,9 +147,7 @@ def record_error(widget_type: str, target: str, error_type: str = "unknown") -> 
 
     with _state._lock:
         _state.total_errors += 1
-        _state.errors_by_widget[widget_type] = (
-            _state.errors_by_widget.get(widget_type, 0) + 1
-        )
+        _state.errors_by_widget[widget_type] = _state.errors_by_widget.get(widget_type, 0) + 1
 
 
 # === Summary Functions ===
@@ -168,9 +162,7 @@ def get_metrics_summary() -> dict[str, Any]:
     """
     with _state._lock:
         avg_duration = (
-            _state.total_duration_s / _state.total_renders
-            if _state.total_renders > 0
-            else 0.0
+            _state.total_duration_s / _state.total_renders if _state.total_renders > 0 else 0.0
         )
 
         # Compute P95 durations per widget

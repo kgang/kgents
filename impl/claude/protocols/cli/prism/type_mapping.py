@@ -42,9 +42,7 @@ class TypeRegistry:
     _custom_mappings: dict[type, Callable[[type], dict[str, Any]]] = {}
 
     @classmethod
-    def register(
-        cls, python_type: type, mapper: Callable[[type], dict[str, Any]]
-    ) -> None:
+    def register(cls, python_type: type, mapper: Callable[[type], dict[str, Any]]) -> None:
         """
         Register a custom type mapping.
 

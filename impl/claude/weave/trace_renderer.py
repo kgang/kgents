@@ -446,9 +446,7 @@ class TraceRenderer:
 
         # Legend
         lines.append("")
-        lines.append(
-            f"Legend: {CHARS['flame_char']}=call  {CHARS['flame_ghost']}=ghost"
-        )
+        lines.append(f"Legend: {CHARS['flame_char']}=call  {CHARS['flame_ghost']}=ghost")
         lines.append(f"Max depth: {max_depth}, Total calls: {len(stacks)}")
 
         return "\n".join(lines)
@@ -506,9 +504,7 @@ class TraceRenderer:
         lines.append("")
         lines.append(CHARS["h_line"] * min(self.config.width, 60))
         lines.append(f"Before: {len(before)} events, After: {len(after)} events")
-        lines.append(
-            f"Added: {len(added)}, Removed: {len(removed)}, Unchanged: {len(unchanged)}"
-        )
+        lines.append(f"Added: {len(added)}, Removed: {len(removed)}, Unchanged: {len(unchanged)}")
 
         return "\n".join(lines)
 
@@ -592,7 +588,9 @@ class TraceRenderer:
         if event_type == "exception":
             line = f"{prefix}{connector}{CHARS['h_line']}! {self._truncate(func_name)}"
         elif is_ghost:
-            line = f"{prefix}{connector}{CHARS['h_line']}{glyph} [ghost] {self._truncate(func_name)}"
+            line = (
+                f"{prefix}{connector}{CHARS['h_line']}{glyph} [ghost] {self._truncate(func_name)}"
+            )
         else:
             line = f"{prefix}{connector}{CHARS['h_line']}{glyph} {self._truncate(func_name)}"
 

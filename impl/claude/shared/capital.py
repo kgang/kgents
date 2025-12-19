@@ -194,9 +194,7 @@ class EventSourcedLedger:
         """Atomic append—concurrency safe."""
         self._events.append(event)
 
-    def credit(
-        self, agent: str, amount: float, reason: str, **metadata: Any
-    ) -> LedgerEvent:
+    def credit(self, agent: str, amount: float, reason: str, **metadata: Any) -> LedgerEvent:
         """
         AGENTESE: void.capital.credit
 
@@ -211,9 +209,7 @@ class EventSourcedLedger:
         self._append(event)
         return event
 
-    def debit(
-        self, agent: str, amount: float, reason: str, **metadata: Any
-    ) -> LedgerEvent | None:
+    def debit(self, agent: str, amount: float, reason: str, **metadata: Any) -> LedgerEvent | None:
         """
         AGENTESE: void.capital.debit
 

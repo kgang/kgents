@@ -227,18 +227,12 @@ class RollbackNode(BaseLogosNode):
                 for t in tokens[:limit]
             ],
             "total": len(tokens),
-            "total_expired": sum(
-                1 for t in self._rollback_tokens.values() if t.is_expired
-            ),
+            "total_expired": sum(1 for t in self._rollback_tokens.values() if t.is_expired),
         }
 
     def _expire_tokens(self, **kwargs: Any) -> dict[str, Any]:
         """Clean up expired tokens."""
-        expired = [
-            handle
-            for handle, token in self._rollback_tokens.items()
-            if token.is_expired
-        ]
+        expired = [handle for handle, token in self._rollback_tokens.items() if token.is_expired]
 
         for handle in expired:
             del self._rollback_tokens[handle]
@@ -288,8 +282,6 @@ def create_rollback_node(
     Returns:
         Configured RollbackNode
     """
-    node = RollbackNode(
-        _rollback_tokens=rollback_tokens if rollback_tokens is not None else {}
-    )
+    node = RollbackNode(_rollback_tokens=rollback_tokens if rollback_tokens is not None else {})
     node.__post_init__()
     return node

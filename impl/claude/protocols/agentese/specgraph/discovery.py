@@ -395,9 +395,7 @@ def generate_stubs(
             continue
 
         # Check which components need generation
-        needs_polynomial = any(
-            g.component == ComponentType.POLYNOMIAL for g in path_gaps
-        )
+        needs_polynomial = any(g.component == ComponentType.POLYNOMIAL for g in path_gaps)
         needs_operad = any(g.component == ComponentType.OPERAD for g in path_gaps)
         needs_node = any(g.component == ComponentType.NODE for g in path_gaps)
 
@@ -517,9 +515,7 @@ def print_audit_report(audit: AuditReport, verbose: bool = False) -> str:
         lines.append("-" * 40)
         lines.append("   1. Add missing implementations, OR")
         lines.append("   2. Remove requirements from spec YAML frontmatter")
-        lines.append(
-            "   3. Run `generate_stubs(audit.gaps, impl_root)` for scaffolding"
-        )
+        lines.append("   3. Run `generate_stubs(audit.gaps, impl_root)` for scaffolding")
         lines.append("")
     else:
         lines.append("✅ No gaps found! Spec and impl are aligned.")

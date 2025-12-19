@@ -204,9 +204,7 @@ class GestaltStore:
 
         # Active (unsuppressed) drift count
         self._active_drift_count = Computed.of(
-            compute=lambda: len(
-                [v for v in self._violations.value if not v.suppressed]
-            ),
+            compute=lambda: len([v for v in self._violations.value if not v.suppressed]),
             sources=[self._violations],
         )
 
@@ -352,9 +350,7 @@ class GestaltStore:
         # Update module health with drift scores
         for module in graph.modules.values():
             if module.health:
-                module_violations = [
-                    v for v in violations if v.source_module == module.name
-                ]
+                module_violations = [v for v in violations if v.source_module == module.name]
                 module.health.drift = min(1.0, len(module_violations) * 0.2)
 
         # Track file mtimes for incremental updates
@@ -405,8 +401,7 @@ class GestaltStore:
             language=old_graph.language,
         )
         old_violations = set(
-            (v.source_module, v.target_module, v.rule_name)
-            for v in self._violations.value
+            (v.source_module, v.target_module, v.rule_name) for v in self._violations.value
         )
 
         # Process each change
@@ -458,9 +453,7 @@ class GestaltStore:
                 self._file_mtimes[diff.path] = diff.timestamp
 
         # Recompute health for affected modules
-        affected = set(
-            result.added_modules + result.modified_modules + result.removed_modules
-        )
+        affected = set(result.added_modules + result.modified_modules + result.removed_modules)
         self._recompute_health(graph, affected)
 
         # Rerun drift detection
@@ -469,9 +462,7 @@ class GestaltStore:
         # Update drift scores in health
         for module in graph.modules.values():
             if module.health:
-                module_violations = [
-                    v for v in new_violations if v.source_module == module.name
-                ]
+                module_violations = [v for v in new_violations if v.source_module == module.name]
                 module.health.drift = min(1.0, len(module_violations) * 0.2)
 
         # Compute violation diff
@@ -878,9 +869,7 @@ class GestaltStoreFactory:
         self._graph = graph
         return self
 
-    def with_violations(
-        self, violations: list[DriftViolation]
-    ) -> "GestaltStoreFactory":
+    def with_violations(self, violations: list[DriftViolation]) -> "GestaltStoreFactory":
         """
         Pre-populate with violations (for testing).
 

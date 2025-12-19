@@ -241,10 +241,7 @@ def run_static_analysis(code: str) -> StaticAnalysisReport:
         report.add_result(result)
 
         # Early exit if parse fails (no point running other checks)
-        if (
-            result.category == ValidationCategory.PARSE
-            and result.status == ValidationStatus.FAIL
-        ):
+        if result.category == ValidationCategory.PARSE and result.status == ValidationStatus.FAIL:
             break
 
     return report

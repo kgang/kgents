@@ -278,11 +278,7 @@ class CitizenDialogueEngine:
         elif budget.tier == "leader":
             return DialogueTier.HAIKU if budget.can_afford(50) else DialogueTier.CACHED
         else:
-            return (
-                DialogueTier.CACHED
-                if self._has_cached(citizen)
-                else DialogueTier.TEMPLATE
-            )
+            return DialogueTier.CACHED if self._has_cached(citizen) else DialogueTier.TEMPLATE
 
     def _has_cached(self, citizen: "Citizen") -> bool:
         """Check if citizen has usable cached dialogue."""
@@ -398,9 +394,7 @@ class CitizenDialogueEngine:
         """
         # Relationship descriptor
         rel = context.relationship
-        rel_word = (
-            "positive" if rel > 0.3 else ("negative" if rel < -0.3 else "neutral")
-        )
+        rel_word = "positive" if rel > 0.3 else ("negative" if rel < -0.3 else "neutral")
 
         # Memory section
         memory_section = context.to_context_string()
@@ -448,9 +442,7 @@ Generate your {operation} dialogue as {speaker.name}. Speak in first person. 1-3
             return self._generate_template(speaker, listener, operation)
 
         # Build context
-        context = await self._build_context(
-            speaker, listener, operation, phase, recent_events
-        )
+        context = await self._build_context(speaker, listener, operation, phase, recent_events)
 
         # Build prompts
         system = self._build_system_prompt(speaker, operation)
@@ -535,16 +527,12 @@ Generate your {operation} dialogue as {speaker.name}. Speak in first person. 1-3
 
         # Template/cached don't support streaming
         if tier in (DialogueTier.TEMPLATE, DialogueTier.CACHED):
-            result = await self.generate(
-                speaker, listener, operation, phase, recent_events
-            )
+            result = await self.generate(speaker, listener, operation, phase, recent_events)
             yield result.text
             yield result
             return
 
-        context = await self._build_context(
-            speaker, listener, operation, phase, recent_events
-        )
+        context = await self._build_context(speaker, listener, operation, phase, recent_events)
         system = self._build_system_prompt(speaker, operation)
         user = self._build_user_prompt(speaker, listener, operation, context)
         model_name = self._config.model_for_operation(operation)

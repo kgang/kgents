@@ -253,9 +253,7 @@ class AGENTESEBinding:
             The created PathBinding
         """
         cfg = config or BindingConfig(path_pattern=path)
-        binding: PathBinding[Any] = PathBinding.create(
-            path, self.logos, self.observer, cfg
-        )
+        binding: PathBinding[Any] = PathBinding.create(path, self.logos, self.observer, cfg)
         self._bindings[path] = binding
         return binding
 

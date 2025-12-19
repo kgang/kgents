@@ -141,9 +141,7 @@ class DgentStateBackend(Generic[S]):
         if datum is None:
             if self.initial is not None:
                 return copy.deepcopy(self.initial)
-            raise ValueError(
-                f"No state found for key '{self.key}' and no initial provided"
-            )
+            raise ValueError(f"No state found for key '{self.key}' and no initial provided")
         return self.deserialize(datum.content)
 
     async def save(self, state: S) -> None:

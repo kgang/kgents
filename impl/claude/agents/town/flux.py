@@ -245,9 +245,7 @@ class TownFlux:
                 # Night: consolidation, reflection, less activity
                 weights = {"greet": 0.1, "gossip": 0.2, "trade": 0.1, "solo": 0.6}
 
-        return self.rng.choices(
-            list(weights.keys()), weights=list(weights.values()), k=1
-        )[0]
+        return self.rng.choices(list(weights.keys()), weights=list(weights.values()), k=1)[0]
 
     def _select_participants(self, operation: str) -> list[Citizen]:
         """Select participants for an operation."""
@@ -376,12 +374,8 @@ class TownFlux:
             dialogue=dialogue_result.text if dialogue_result else None,
             dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
             dialogue_model=dialogue_result.model if dialogue_result else "",
-            dialogue_was_template=dialogue_result.was_template
-            if dialogue_result
-            else False,
-            dialogue_grounded=dialogue_result.grounded_memories
-            if dialogue_result
-            else [],
+            dialogue_was_template=dialogue_result.was_template if dialogue_result else False,
+            dialogue_grounded=dialogue_result.grounded_memories if dialogue_result else [],
         )
 
     async def _recall_gossip_subjects(self, citizen: Citizen) -> list[str]:
@@ -511,12 +505,8 @@ class TownFlux:
             dialogue=dialogue_result.text if dialogue_result else None,
             dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
             dialogue_model=dialogue_result.model if dialogue_result else "",
-            dialogue_was_template=dialogue_result.was_template
-            if dialogue_result
-            else False,
-            dialogue_grounded=dialogue_result.grounded_memories
-            if dialogue_result
-            else [],
+            dialogue_was_template=dialogue_result.was_template if dialogue_result else False,
+            dialogue_grounded=dialogue_result.grounded_memories if dialogue_result else [],
         )
 
     async def _execute_trade(
@@ -574,12 +564,8 @@ class TownFlux:
             dialogue=dialogue_result.text if dialogue_result else None,
             dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
             dialogue_model=dialogue_result.model if dialogue_result else "",
-            dialogue_was_template=dialogue_result.was_template
-            if dialogue_result
-            else False,
-            dialogue_grounded=dialogue_result.grounded_memories
-            if dialogue_result
-            else [],
+            dialogue_was_template=dialogue_result.was_template if dialogue_result else False,
+            dialogue_grounded=dialogue_result.grounded_memories if dialogue_result else [],
         )
 
     async def _execute_solo(
@@ -635,12 +621,8 @@ class TownFlux:
             dialogue=dialogue_result.text if dialogue_result else None,
             dialogue_tokens=dialogue_result.tokens_used if dialogue_result else 0,
             dialogue_model=dialogue_result.model if dialogue_result else "",
-            dialogue_was_template=dialogue_result.was_template
-            if dialogue_result
-            else False,
-            dialogue_grounded=dialogue_result.grounded_memories
-            if dialogue_result
-            else [],
+            dialogue_was_template=dialogue_result.was_template if dialogue_result else False,
+            dialogue_grounded=dialogue_result.grounded_memories if dialogue_result else [],
         )
 
     async def emit_nphase_transition(

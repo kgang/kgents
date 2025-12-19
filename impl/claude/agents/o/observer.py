@@ -589,9 +589,7 @@ def create_functor(observer: Observer | None = None) -> ObserverFunctor:
     return ObserverFunctor(observer=observer)
 
 
-def observe(
-    agent: Agent[A, B], observer: Observer | None = None
-) -> ProprioceptiveWrapper[A, B]:
+def observe(agent: Agent[A, B], observer: Observer | None = None) -> ProprioceptiveWrapper[A, B]:
     """
     Lift an agent into observation.
 

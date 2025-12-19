@@ -95,45 +95,35 @@ class TestFiveContexts:
         assert VALID_CONTEXTS == frozenset({"world", "self", "concept", "void", "time"})
 
     @pytest.mark.asyncio
-    async def test_world_context(
-        self, logos: Logos, developer_umwelt: MagicMock
-    ) -> None:
+    async def test_world_context(self, logos: Logos, developer_umwelt: MagicMock) -> None:
         """world.* context resolves and manifests."""
         node = logos.resolve("world.project")
         rendering = await node.manifest(developer_umwelt)
         assert rendering is not None
 
     @pytest.mark.asyncio
-    async def test_self_context(
-        self, logos: Logos, developer_umwelt: MagicMock
-    ) -> None:
+    async def test_self_context(self, logos: Logos, developer_umwelt: MagicMock) -> None:
         """self.* context resolves and manifests."""
         node = logos.resolve("self.memory")
         rendering = await node.manifest(developer_umwelt)
         assert rendering is not None
 
     @pytest.mark.asyncio
-    async def test_concept_context(
-        self, logos: Logos, developer_umwelt: MagicMock
-    ) -> None:
+    async def test_concept_context(self, logos: Logos, developer_umwelt: MagicMock) -> None:
         """concept.* context resolves and manifests."""
         node = logos.resolve("concept.justice")
         rendering = await node.manifest(developer_umwelt)
         assert rendering is not None
 
     @pytest.mark.asyncio
-    async def test_void_context(
-        self, logos: Logos, developer_umwelt: MagicMock
-    ) -> None:
+    async def test_void_context(self, logos: Logos, developer_umwelt: MagicMock) -> None:
         """void.* context resolves and manifests."""
         node = logos.resolve("void.entropy")
         rendering = await node.manifest(developer_umwelt)
         assert rendering is not None
 
     @pytest.mark.asyncio
-    async def test_time_context(
-        self, logos: Logos, developer_umwelt: MagicMock
-    ) -> None:
+    async def test_time_context(self, logos: Logos, developer_umwelt: MagicMock) -> None:
         """time.* context resolves and manifests."""
         node = logos.resolve("time.trace")
         rendering = await node.manifest(developer_umwelt)
@@ -410,9 +400,7 @@ class TestErrorHandling:
         error_msg = str(exc_info.value)
         assert "invalid" in error_msg.lower()
         # Should suggest valid contexts
-        assert any(
-            ctx in error_msg for ctx in ["world", "self", "concept", "void", "time"]
-        )
+        assert any(ctx in error_msg for ctx in ["world", "self", "concept", "void", "time"])
 
     def test_unknown_agent_error(self, agent_resolver: AgentContextResolver) -> None:
         """Unknown agent raises PathNotFoundError with suggestions."""
@@ -467,9 +455,7 @@ class TestRegistryCompleteness:
             ]
 
             for d in dirs:
-                assert d in AGENT_REGISTRY, (
-                    f"Agent directory '{d}' not in AGENT_REGISTRY"
-                )
+                assert d in AGENT_REGISTRY, f"Agent directory '{d}' not in AGENT_REGISTRY"
 
     def test_registry_has_required_metadata(self) -> None:
         """Each registry entry has name, theme, status."""

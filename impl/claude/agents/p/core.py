@@ -40,9 +40,7 @@ class ParseResult(Generic[A]):
     confidence: float = 0.0  # 0.0-1.0
     error: Optional[str] = None  # What went wrong
     partial: bool = False  # Is this a partial parse?
-    repairs: list[str] = field(
-        default_factory=list
-    )  # Applied repairs (ethical transparency)
+    repairs: list[str] = field(default_factory=list)  # Applied repairs (ethical transparency)
     stream_position: Optional[int] = None  # For incremental parsing
     metadata: dict[str, Any] = field(default_factory=dict)  # Strategy-specific info
 
@@ -155,17 +153,13 @@ class ParserConfig:
     def validate(self) -> None:
         """Validate configuration parameters."""
         if not 0.0 <= self.min_confidence <= 1.0:
-            raise ValueError(
-                f"min_confidence must be in [0.0, 1.0], got {self.min_confidence}"
-            )
+            raise ValueError(f"min_confidence must be in [0.0, 1.0], got {self.min_confidence}")
         if self.max_attempts < 1:
             raise ValueError(f"max_attempts must be >= 1, got {self.max_attempts}")
         if self.timeout_ms < 0:
             raise ValueError(f"timeout_ms must be >= 0, got {self.timeout_ms}")
         if self.stream_chunk_size < 1:
-            raise ValueError(
-                f"stream_chunk_size must be >= 1, got {self.stream_chunk_size}"
-            )
+            raise ValueError(f"stream_chunk_size must be >= 1, got {self.stream_chunk_size}")
         if self.max_reflection_retries < 0:
             raise ValueError(
                 f"max_reflection_retries must be >= 0, got {self.max_reflection_retries}"

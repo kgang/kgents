@@ -80,9 +80,7 @@ class WorldNode(BaseLogosNode):
     def __post_init__(self) -> None:
         if not self.name:
             # Extract name from handle (e.g., "world.house" -> "house")
-            self.name = (
-                self._handle.split(".")[-1] if "." in self._handle else self._handle
-            )
+            self.name = self._handle.split(".")[-1] if "." in self._handle else self._handle
 
     @property
     def handle(self) -> str:
@@ -434,9 +432,7 @@ class PurgatoryNode(BaseLogosNode):
             return [
                 {
                     "id": t.id,
-                    "reason": t.reason.value
-                    if hasattr(t.reason, "value")
-                    else str(t.reason),
+                    "reason": t.reason.value if hasattr(t.reason, "value") else str(t.reason),
                     "prompt": t.prompt,
                     "options": t.options,
                     "severity": t.severity,
@@ -569,15 +565,9 @@ class PurgatoryNode(BaseLogosNode):
                 "severity": token.severity,
                 "deadline": token.deadline.isoformat() if token.deadline else None,
                 "escalation": token.escalation,
-                "created_at": token.created_at.isoformat()
-                if token.created_at
-                else None,
-                "resolved_at": token.resolved_at.isoformat()
-                if token.resolved_at
-                else None,
-                "cancelled_at": token.cancelled_at.isoformat()
-                if token.cancelled_at
-                else None,
+                "created_at": token.created_at.isoformat() if token.created_at else None,
+                "resolved_at": token.resolved_at.isoformat() if token.resolved_at else None,
+                "cancelled_at": token.cancelled_at.isoformat() if token.cancelled_at else None,
                 "voided_at": token.voided_at.isoformat() if token.voided_at else None,
             }
         except Exception as e:
@@ -713,9 +703,7 @@ def create_world_resolver(
     purgatory: Any = None,
 ) -> WorldContextResolver:
     """Create a WorldContextResolver with optional integrations."""
-    resolver = WorldContextResolver(
-        registry=registry, narrator=narrator, purgatory=purgatory
-    )
+    resolver = WorldContextResolver(registry=registry, narrator=narrator, purgatory=purgatory)
     resolver.__post_init__()  # Initialize singleton nodes
     return resolver
 

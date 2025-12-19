@@ -135,9 +135,7 @@ def get_metrics() -> CompressionMetrics:
 
     # Compute aggregates
     total_saved = sum(e.full_tokens - e.cone_tokens for e in _compression_events)
-    avg_ratio = sum(e.compression_ratio for e in _compression_events) / len(
-        _compression_events
-    )
+    avg_ratio = sum(e.compression_ratio for e in _compression_events) / len(_compression_events)
 
     # Per-agent breakdown
     agent_events: dict[str, list[CompressionEvent]] = {}

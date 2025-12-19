@@ -202,9 +202,7 @@ class SpecParser:
 
         # Extract behavior descriptions from markdown sections
         behaviors: dict[str, str] = {}
-        behavior_re = re.compile(
-            r"###\s+(\w+)\s+\([^)]+\)\s*\n(.*?)(?=\n###|\n##|\Z)", re.DOTALL
-        )
+        behavior_re = re.compile(r"###\s+(\w+)\s+\([^)]+\)\s*\n(.*?)(?=\n###|\n##|\Z)", re.DOTALL)
         for match in behavior_re.finditer(body):
             aspect_name = match.group(1)
             behavior_desc = match.group(2).strip()
@@ -251,20 +249,14 @@ class SpecCompiler:
         affordance_dict = self._generate_affordance_dict(spec.affordances)
 
         # Generate manifest method
-        manifest_method = self._generate_manifest_method(
-            spec.manifest, spec.description
-        )
+        manifest_method = self._generate_manifest_method(spec.manifest, spec.description)
 
         # Generate invoke method for custom aspects
         invoke_method = self._generate_invoke_method(spec.behaviors, spec.affordances)
 
         # Build source with proper indentation
-        desc_truncated = spec.description[:200] + (
-            "..." if len(spec.description) > 200 else ""
-        )
-        desc_short = spec.description[:100] + (
-            "..." if len(spec.description) > 100 else ""
-        )
+        desc_truncated = spec.description[:200] + ("..." if len(spec.description) > 200 else "")
+        desc_short = spec.description[:100] + ("..." if len(spec.description) > 100 else "")
 
         source = f'''"""
 JIT-Generated LogosNode for {handle}

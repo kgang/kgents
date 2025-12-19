@@ -79,9 +79,7 @@ class ProjectView:
     @property
     def active_plans(self) -> list[PlanView]:
         """Plans in SPROUTING or BLOOMING season."""
-        return [
-            p for p in self.plans if p.season in (Season.SPROUTING, Season.BLOOMING)
-        ]
+        return [p for p in self.plans if p.season in (Season.SPROUTING, Season.BLOOMING)]
 
     @property
     def dormant_plans(self) -> list[PlanView]:

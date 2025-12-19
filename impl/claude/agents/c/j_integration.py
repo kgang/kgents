@@ -52,9 +52,7 @@ class PromiseAgent(Agent[A, JPromise[B]]):
         result = await resolve_promise(promise)
     """
 
-    def __init__(
-        self, inner: Agent[A, B], ground: B, intent: Optional[str] = None
-    ) -> None:
+    def __init__(self, inner: Agent[A, B], ground: B, intent: Optional[str] = None) -> None:
         """
         Args:
             inner: The agent to wrap as a promise

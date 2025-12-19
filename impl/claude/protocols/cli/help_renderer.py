@@ -262,6 +262,7 @@ def _can_use_rich() -> bool:
     # Check Rich is available
     try:
         import rich  # noqa: F401
+
         return True
     except ImportError:
         return False

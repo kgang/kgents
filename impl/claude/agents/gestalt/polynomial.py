@@ -131,9 +131,7 @@ class GestaltInput:
         patterns: tuple[str, ...] = ("**/*.py",),
     ) -> WatchInput:
         """Create a watch input."""
-        return WatchInput(
-            enable=enable, debounce_seconds=debounce_seconds, patterns=patterns
-        )
+        return WatchInput(enable=enable, debounce_seconds=debounce_seconds, patterns=patterns)
 
     @staticmethod
     def analyze(
@@ -240,9 +238,7 @@ def gestalt_directions(phase: GestaltPhase) -> FrozenSet[Any]:
     """
     match phase:
         case GestaltPhase.IDLE:
-            return frozenset(
-                {ScanInput, WatchInput, AnalyzeInput, HealInput, type, Any}
-            )
+            return frozenset({ScanInput, WatchInput, AnalyzeInput, HealInput, type, Any})
         case GestaltPhase.SCANNING:
             return frozenset({IdleInput, type, Any})  # Can cancel
         case GestaltPhase.WATCHING:
@@ -261,9 +257,7 @@ def gestalt_directions(phase: GestaltPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def gestalt_transition(
-    phase: GestaltPhase, input: Any
-) -> tuple[GestaltPhase, GestaltOutput]:
+def gestalt_transition(phase: GestaltPhase, input: Any) -> tuple[GestaltPhase, GestaltOutput]:
     """
     Gestalt state transition function.
 

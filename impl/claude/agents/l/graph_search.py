@@ -66,9 +66,7 @@ class GraphBrain:
         # Returns: agents that can receive NewsParser's output
     """
 
-    def __init__(
-        self, registry: Registry, lineage: LineageGraph, lattice: TypeLattice
-    ) -> None:
+    def __init__(self, registry: Registry, lineage: LineageGraph, lattice: TypeLattice) -> None:
         """Initialize graph search brain.
 
         Args:
@@ -175,9 +173,7 @@ class GraphBrain:
 
         return None
 
-    async def get_dependents(
-        self, artifact_id: str, depth: int = 1
-    ) -> list[GraphResult]:
+    async def get_dependents(self, artifact_id: str, depth: int = 1) -> list[GraphResult]:
         """Find artifacts that depend on the given one.
 
         Args:
@@ -192,9 +188,7 @@ class GraphBrain:
         # Find relationships where artifact is the target (depended upon)
         relationships = await self.lineage.get_relationships(target_id=artifact_id)
         depends_on_rels = [
-            r
-            for r in relationships
-            if r.relationship_type == RelationshipType.DEPENDS_ON
+            r for r in relationships if r.relationship_type == RelationshipType.DEPENDS_ON
         ]
 
         for rel in depends_on_rels:
@@ -261,9 +255,7 @@ class GraphBrain:
 
         return results
 
-    async def get_descendants(
-        self, artifact_id: str, depth: int = -1
-    ) -> list[GraphResult]:
+    async def get_descendants(self, artifact_id: str, depth: int = -1) -> list[GraphResult]:
         """Find descendants (artifacts evolved from this one).
 
         Args:
@@ -316,9 +308,7 @@ class GraphBrain:
 
         # Filter by type if specified
         if relationship_type:
-            relationships = [
-                r for r in relationships if r.relationship_type == relationship_type
-            ]
+            relationships = [r for r in relationships if r.relationship_type == relationship_type]
 
         results: list[GraphResult] = []
         for rel in relationships[:limit]:
@@ -386,9 +376,7 @@ class GraphBrain:
 
         return results[:limit]
 
-    async def _find_upstream_compatible(
-        self, entry: CatalogEntry, limit: int
-    ) -> list[GraphResult]:
+    async def _find_upstream_compatible(self, entry: CatalogEntry, limit: int) -> list[GraphResult]:
         """Find agents that can feed into this artifact's input."""
         if not entry.input_type:
             return []

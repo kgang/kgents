@@ -177,9 +177,7 @@ class ParsedPath:
             if clause.value is None:
                 parts.append(f"[{clause.modifier}]")
             elif isinstance(clause.value, bool):
-                parts.append(
-                    f"[{clause.modifier}={'true' if clause.value else 'false'}]"
-                )
+                parts.append(f"[{clause.modifier}={'true' if clause.value else 'false'}]")
             elif isinstance(clause.value, float):
                 parts.append(f"[{clause.modifier}={clause.value}]")
             else:
@@ -348,9 +346,7 @@ class PathParser:
         clause_start = path.find("[")
         annotation_start = path.find("@")
 
-        if clause_start != -1 and (
-            annotation_start == -1 or clause_start < annotation_start
-        ):
+        if clause_start != -1 and (annotation_start == -1 or clause_start < annotation_start):
             base_end = clause_start
         elif annotation_start != -1:
             base_end = annotation_start
@@ -492,9 +488,7 @@ class PathParser:
                     next_pos += 1
 
                 annotation_content = modifiers[pos + 1 : next_pos]
-                annotation_result = self._parse_annotation(
-                    annotation_content, full_path, pos
-                )
+                annotation_result = self._parse_annotation(annotation_content, full_path, pos)
                 if annotation_result.error:
                     return _ModifierResult(success=False, error=annotation_result.error)
                 if annotation_result.annotation:
@@ -569,9 +563,7 @@ class PathParser:
 
         return _ClauseResult(clause=Clause(modifier=modifier, value=value))
 
-    def _parse_annotation(
-        self, content: str, full_path: str, pos: int
-    ) -> "_AnnotationResult":
+    def _parse_annotation(self, content: str, full_path: str, pos: int) -> "_AnnotationResult":
         """Parse a single annotation content (without @)."""
         if "=" not in content:
             return _AnnotationResult(

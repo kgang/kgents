@@ -150,9 +150,7 @@ class PhaseSignalDetectedEvent(NPhaseEvent):
         base.update(
             {
                 "signal": self.signal.to_dict() if self.signal else None,
-                "output_text_preview": self.output_text[:200]
-                if self.output_text
-                else "",
+                "output_text_preview": self.output_text[:200] if self.output_text else "",
                 "auto_advanced": self.auto_advanced,
             }
         )

@@ -79,9 +79,7 @@ class FusionResult:
         if not self.conflicts:
             return False
         resolved_ids = {id(r.conflict) for r in self.resolutions}
-        unresolved = [
-            c for c in self.conflicts if id(c) not in resolved_ids and c.is_blocking()
-        ]
+        unresolved = [c for c in self.conflicts if id(c) not in resolved_ids and c.is_blocking()]
         return len(unresolved) > 0
 
     @property
@@ -133,9 +131,7 @@ class PromptFusion:
         if not isinstance(content, str):
             raise FusionError(f"{name} must be a string, got {type(content).__name__}")
         if len(content) > MAX_CONTENT_LENGTH:
-            raise FusionError(
-                f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars"
-            )
+            raise FusionError(f"{name} exceeds maximum length of {MAX_CONTENT_LENGTH} chars")
 
     def _validate_rigidity(self, rigidity: float, name: str) -> float:
         """Validate and clamp rigidity value."""
@@ -262,9 +258,7 @@ class PromptFusion:
 
         # Step 3: Detect conflicts
         conflict_detector = ConflictDetector()
-        conflicts = conflict_detector.detect(
-            content_a, content_b, source_a_name, source_b_name
-        )
+        conflicts = conflict_detector.detect(content_a, content_b, source_a_name, source_b_name)
         traces.append(f"Detected {len(conflicts)} conflicts")
         for conflict in conflicts:
             traces.append(f"  - {conflict.summary}")
@@ -348,9 +342,7 @@ class PromptFusion:
         b_count = sum(1 for r in resolutions if r.chosen_source == "b")
         merged_count = sum(1 for r in resolutions if r.chosen_source == "merged")
 
-        traces.append(
-            f"Resolution tally: A={a_count}, B={b_count}, merged={merged_count}"
-        )
+        traces.append(f"Resolution tally: A={a_count}, B={b_count}, merged={merged_count}")
 
         if merged_count > 0:
             # If any resolution suggests merging, try structural merge
@@ -458,9 +450,7 @@ class PromptFusion:
         sections_a = parse_sections(content_a)
         sections_b = parse_sections(content_b)
 
-        traces.append(
-            f"A has {len(sections_a)} sections, B has {len(sections_b)} sections"
-        )
+        traces.append(f"A has {len(sections_a)} sections, B has {len(sections_b)} sections")
 
         # Merge sections
         merged_sections: dict[str, str] = {}
@@ -580,9 +570,7 @@ def fuse_sources(
     """
     try:
         fusion = PromptFusion(policy=policy)
-        return fusion.fuse(
-            content_a, content_b, rigidity_a=rigidity_a, rigidity_b=rigidity_b
-        )
+        return fusion.fuse(content_a, content_b, rigidity_a=rigidity_a, rigidity_b=rigidity_b)
     except FusionError:
         raise
     except (SimilarityError, ConflictError, ResolutionError) as e:

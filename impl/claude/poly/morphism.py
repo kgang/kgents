@@ -73,9 +73,7 @@ class PolyMorphism(ABC, Generic[S1, A, S2, B]):
         """Apply the morphism to an interface."""
         ...
 
-    def __rshift__(
-        self, other: "PolyMorphism[Any, Any, Any, Any]"
-    ) -> "ComposedMorphism":
+    def __rshift__(self, other: "PolyMorphism[Any, Any, Any, Any]") -> "ComposedMorphism":
         """Compose morphisms: f >> g means apply f then g."""
         return ComposedMorphism(self, other)
 

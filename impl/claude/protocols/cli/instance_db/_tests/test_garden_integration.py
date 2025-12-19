@@ -241,9 +241,7 @@ class TestNutrientFeedback:
         for entry in old_entries:
             old_signals.extend(garden_entry_to_signals(entry))
 
-        old_block = create_nutrient_block(
-            "old-batch", cast(list[ICompostable], old_signals)
-        )
+        old_block = create_nutrient_block("old-batch", cast(list[ICompostable], old_signals))
 
         # New batch: fresh entries (would benefit from old context)
         new_entries = [
@@ -261,9 +259,7 @@ class TestNutrientFeedback:
         for entry in new_entries:
             new_signals.extend(garden_entry_to_signals(entry))
 
-        new_block = create_nutrient_block(
-            "new-batch", cast(list[ICompostable], new_signals)
-        )
+        new_block = create_nutrient_block("new-batch", cast(list[ICompostable], new_signals))
 
         # Merge blocks to get combined context
         combined = old_block.merge(new_block)
@@ -413,9 +409,7 @@ class TestFullLifecycle:
 
         # Old should be composted
         old_record = store.get_record("garden-old")
-        assert (
-            old_record is not None or store.get_nutrient_block("garden-old") is not None
-        )
+        assert old_record is not None or store.get_nutrient_block("garden-old") is not None
 
         # Ancient should be forgotten (or composted first)
         ancient_record = store.get_record("garden-ancient")

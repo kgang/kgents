@@ -277,9 +277,7 @@ def create_webhooks_router() -> Optional["APIRouter"]:
             )
 
         # Log event type
-        logger.info(
-            f"Received Stripe webhook: {webhook_event.type} ({webhook_event.id})"
-        )
+        logger.info(f"Received Stripe webhook: {webhook_event.type} ({webhook_event.id})")
 
         # Always return 200 to acknowledge receipt
         return {
@@ -350,9 +348,7 @@ async def _process_budget_update(event: "WebhookEvent") -> None:
     Also sends Telegram notifications for Kent's motivation loop.
     """
     if not HAS_PAYMENT_HANDLERS or not HAS_BUDGET_STORE:
-        logger.debug(
-            "Payment handlers or BudgetStore not available, skipping budget update"
-        )
+        logger.debug("Payment handlers or BudgetStore not available, skipping budget update")
         return
 
     budget_store = _get_budget_store()
@@ -369,9 +365,7 @@ async def _process_budget_update(event: "WebhookEvent") -> None:
         if event_type == "customer.subscription.created":
             result = handle_subscription_created(event_data)
             if result.get("user_id"):
-                await budget_store.get_or_create(
-                    result["user_id"], result.get("tier", "RESIDENT")
-                )
+                await budget_store.get_or_create(result["user_id"], result.get("tier", "RESIDENT"))
                 await budget_store.update_subscription(
                     result["user_id"],
                     result["tier"],
@@ -446,9 +440,7 @@ async def _process_budget_update(event: "WebhookEvent") -> None:
             result = handle_payment_succeeded(event_data)
             if result.get("user_id") and result.get("credits", 0) > 0:
                 # Add credits from credit pack purchase
-                await budget_store.get_or_create(
-                    result["user_id"]
-                )  # Ensure user exists
+                await budget_store.get_or_create(result["user_id"])  # Ensure user exists
                 await budget_store.add_credits(result["user_id"], result["credits"])
                 logger.info(
                     f"BudgetStore: Added {result['credits']} credits to {result['user_id']} (pack={result.get('pack')})"

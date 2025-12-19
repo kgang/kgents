@@ -117,9 +117,7 @@ class TestPromptDelegation:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Prompt manifest is delegated to PromptNode."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             # Set up mock
             mock_node = AsyncMock()
             mock_node.manifest = AsyncMock(
@@ -133,9 +131,7 @@ class TestPromptDelegation:
             mock_resolver.resolve.return_value = mock_node
             mock_create.return_value = mock_resolver
 
-            result = await sprouting_garden._invoke_aspect(
-                "prompt.manifest", mock_umwelt
-            )
+            result = await sprouting_garden._invoke_aspect("prompt.manifest", mock_umwelt)
 
             # Verify delegation occurred
             mock_resolver.resolve.assert_called_once_with("prompt", ["manifest"])
@@ -146,9 +142,7 @@ class TestPromptDelegation:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Prompt evolve is delegated with garden context."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             # Set up mock
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(
@@ -179,9 +173,7 @@ class TestPromptDelegation:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Evolve adjusts learning_rate based on season plasticity."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
@@ -205,9 +197,7 @@ class TestPromptDelegation:
         self, dormant_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """DORMANT season significantly reduces learning rate."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
@@ -240,18 +230,14 @@ class TestGardenContextInjection:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Garden context includes season name."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
             mock_resolver.resolve.return_value = mock_node
             mock_create.return_value = mock_resolver
 
-            await sprouting_garden._invoke_aspect(
-                "prompt.evolve", mock_umwelt, feedback="Test"
-            )
+            await sprouting_garden._invoke_aspect("prompt.evolve", mock_umwelt, feedback="Test")
 
             call_args = mock_node._invoke_aspect.call_args
             ctx = call_args.kwargs["garden_context"]
@@ -262,18 +248,14 @@ class TestGardenContextInjection:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Garden context includes active plot."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
             mock_resolver.resolve.return_value = mock_node
             mock_create.return_value = mock_resolver
 
-            await sprouting_garden._invoke_aspect(
-                "prompt.history", mock_umwelt, limit=5
-            )
+            await sprouting_garden._invoke_aspect("prompt.history", mock_umwelt, limit=5)
 
             call_args = mock_node._invoke_aspect.call_args
             ctx = call_args.kwargs["garden_context"]
@@ -284,9 +266,7 @@ class TestGardenContextInjection:
         self, blooming_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Garden context includes plasticity value."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
@@ -305,9 +285,7 @@ class TestGardenContextInjection:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Garden context includes entropy multiplier."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
@@ -416,9 +394,7 @@ class TestPromptDelegationIntegration:
         # This test verifies the delegation path works end-to-end
         # The actual PromptNode may not be available in test env
 
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(
                 return_value=MagicMock(
@@ -462,9 +438,7 @@ class TestPromptDelegationIntegration:
         assert garden.season.plasticity == 0.1
 
         # Now evolve should use DORMANT plasticity
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(return_value=MagicMock())
             mock_resolver = MagicMock()
@@ -496,9 +470,7 @@ class TestPromptDelegationErrors:
         self, sprouting_garden: GardenerLogosNode, mock_umwelt: Any
     ):
         """Unknown prompt aspects are still delegated."""
-        with patch(
-            "protocols.agentese.contexts.prompt.create_prompt_resolver"
-        ) as mock_create:
+        with patch("protocols.agentese.contexts.prompt.create_prompt_resolver") as mock_create:
             mock_node = AsyncMock()
             mock_node._invoke_aspect = AsyncMock(
                 return_value={"aspect": "unknown", "status": "not implemented"}

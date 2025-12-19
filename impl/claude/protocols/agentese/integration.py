@@ -198,9 +198,7 @@ class MembraneAgenteseBridge:
     """
 
     logos: Any  # Logos resolver (avoid circular import)
-    command_map: dict[str, str] = field(
-        default_factory=lambda: MEMBRANE_AGENTESE_MAP.copy()
-    )
+    command_map: dict[str, str] = field(default_factory=lambda: MEMBRANE_AGENTESE_MAP.copy())
 
     async def execute(
         self,

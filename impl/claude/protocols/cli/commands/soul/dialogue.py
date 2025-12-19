@@ -116,9 +116,7 @@ async def _handle_single(
 
         if response.referenced_preferences:
             lines.append("")
-            lines.append(
-                f"  Principles: {', '.join(response.referenced_preferences[:2])}"
-            )
+            lines.append(f"  Principles: {', '.join(response.referenced_preferences[:2])}")
 
         if response.tokens_used > 0 and not response.was_template:
             lines.append(f"  [{response.tokens_used} tokens]")
@@ -195,9 +193,7 @@ async def _handle_interactive(
                 print(f"\n{response.response}")
 
                 if response.referenced_preferences:
-                    print(
-                        f"\n  Principles: {', '.join(response.referenced_preferences[:2])}"
-                    )
+                    print(f"\n  Principles: {', '.join(response.referenced_preferences[:2])}")
 
         except Exception as e:
             print(f"[SOUL] Error: {e}")

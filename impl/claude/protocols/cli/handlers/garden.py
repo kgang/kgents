@@ -314,9 +314,7 @@ async def _handle_health(
         health_bar = _progress_bar(metrics.health_score, 20)
         entropy_remaining = max(0, metrics.entropy_budget - metrics.entropy_spent)
         entropy_pct = (
-            entropy_remaining / metrics.entropy_budget
-            if metrics.entropy_budget > 0
-            else 0
+            entropy_remaining / metrics.entropy_budget if metrics.entropy_budget > 0 else 0
         )
         entropy_bar = _progress_bar(entropy_pct, 20)
 
@@ -583,9 +581,7 @@ async def _handle_accept(
     # Accept the transition
     old_season = suggestion.from_season
     new_season = suggestion.to_season
-    garden.transition_season(
-        new_season, f"Accepted auto-inducer suggestion: {suggestion.reason}"
-    )
+    garden.transition_season(new_season, f"Accepted auto-inducer suggestion: {suggestion.reason}")
 
     # Clear dismissals since we're accepting
     clear_dismissals(garden.garden_id)

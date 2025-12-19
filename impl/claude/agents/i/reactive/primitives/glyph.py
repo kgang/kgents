@@ -28,9 +28,7 @@ from agents.i.reactive.widget import KgentsWidget, RenderTarget
 if TYPE_CHECKING:
     from agents.i.reactive.entropy import VisualDistortion
 
-Phase = Literal[
-    "idle", "active", "waiting", "error", "yielding", "thinking", "complete"
-]
+Phase = Literal["idle", "active", "waiting", "error", "yielding", "thinking", "complete"]
 Animation = Literal["none", "pulse", "blink", "breathe", "wiggle"]
 
 
@@ -261,9 +259,7 @@ class GlyphWidget(ComposableMixin, KgentsWidget[GlyphState]):
 
         style = "; ".join(style_parts)
         class_attr = (
-            f' class="kgents-glyph {anim_class}"'
-            if anim_class
-            else ' class="kgents-glyph"'
+            f' class="kgents-glyph {anim_class}"' if anim_class else ' class="kgents-glyph"'
         )
 
         return f'<span{class_attr} style="{style}">{char}</span>'

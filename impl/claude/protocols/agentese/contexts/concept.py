@@ -98,9 +98,7 @@ class ConceptNode(BaseLogosNode):
 
     def __post_init__(self) -> None:
         if not self.name:
-            self.name = (
-                self._handle.split(".")[-1] if "." in self._handle else self._handle
-            )
+            self.name = self._handle.split(".")[-1] if "." in self._handle else self._handle
 
     @property
     def extends(self) -> list[str]:
@@ -144,7 +142,9 @@ class ConceptNode(BaseLogosNode):
             case "philosopher":
                 # Generate dialectical structure for philosopher
                 thesis = self.definition or f"The concept of {self.name}"
-                antithesis = f"Against {self.name}: The concept may be an illusion or mere convention."
+                antithesis = (
+                    f"Against {self.name}: The concept may be an illusion or mere convention."
+                )
                 synthesis = f"Beyond the opposition: {self.name} must be understood as both constructed and real."
 
                 return PhilosopherRendering(
@@ -307,9 +307,7 @@ class ConceptNode(BaseLogosNode):
         thesis = kwargs.get("thesis", self.definition)
 
         # Generate antithesis
-        antithesis = (
-            f"Against {self.name}: The concept may be an illusion or mere convention."
-        )
+        antithesis = f"Against {self.name}: The concept may be an illusion or mere convention."
 
         # Gesture toward synthesis
         synthesis = (

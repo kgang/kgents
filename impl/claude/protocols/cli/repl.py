@@ -541,10 +541,7 @@ class ReplState:
         v3: Uses Observer class from AGENTESE for proper gradation support.
         Falls back to legacy LightweightUmwelt if v3 Observer unavailable.
         """
-        if (
-            self._umwelt is None
-            or getattr(self._umwelt, "_observer_type", None) != self.observer
-        ):
+        if self._umwelt is None or getattr(self._umwelt, "_observer_type", None) != self.observer:
             try:
                 # v3: Use Observer class with from_archetype factory
                 from protocols.agentese import Observer as V3Observer
@@ -858,9 +855,7 @@ def _query_affordances(state: ReplState, logos: Any) -> str | None:
                     lines.append(f"  \033[33m{child}\033[0m")
 
         if result.has_more:
-            lines.append(
-                f"  \033[90m... and {result.total_count - len(result)} more\033[0m"
-            )
+            lines.append(f"  \033[90m... and {result.total_count - len(result)} more\033[0m")
 
         return "\n".join(lines)
 
@@ -893,9 +888,7 @@ def _show_static_affordances(state: ReplState) -> str:
         for holon in holons:
             lines.append(f"  \033[33m{holon}\033[0m")
         lines.append("")
-        lines.append(
-            "\033[90mUse '<holon>' to navigate or '<holon> <aspect>' to invoke\033[0m"
-        )
+        lines.append("\033[90mUse '<holon>' to navigate or '<holon> <aspect>' to invoke\033[0m")
 
     else:
         # In a holon - show aspects
@@ -1120,9 +1113,7 @@ def _suggest_for_path(path: list[str], state: ReplState | None = None) -> str | 
                 if ctx_suggestion:
                     return ctx_suggestion
 
-        return (
-            f"'{context}' is not a valid context. Try: self, world, concept, void, time"
-        )
+        return f"'{context}' is not a valid context. Try: self, world, concept, void, time"
 
     if len(path) == 1:
         holons = CONTEXT_HOLONS.get(context, [])
@@ -1387,9 +1378,7 @@ def handle_composition(state: ReplState, line: str) -> str:
         return _execute_pipeline_cli(state, full_paths, None)
 
 
-def _execute_pipeline_cli(
-    state: ReplState, paths: list[str], logos_error: Exception | None
-) -> str:
+def _execute_pipeline_cli(state: ReplState, paths: list[str], logos_error: Exception | None) -> str:
     """Execute pipeline via CLI routing (fallback when Logos unavailable)."""
     lines = []
 
@@ -1602,9 +1591,7 @@ def handle_alias_command(state: ReplState, line: str) -> str:
                     lines.append(f"    \033[33m{name:<15}\033[0m → {target}")
 
             lines.append("")
-            lines.append(
-                "\033[90mUsage: /alias <name> <path> or /unalias <name>\033[0m"
-            )
+            lines.append("\033[90mUsage: /alias <name> <path> or /unalias <name>\033[0m")
             return "\n".join(lines)
 
         if len(parts) == 2:
@@ -1747,9 +1734,7 @@ def handle_slash_shortcut(state: ReplState, line: str) -> str | None:
 
             cli_args = _build_nphase_args(cmd, args)
 
-            def nphase_handler(
-                args: list[str], ctx: InvocationContext | None = None
-            ) -> int:
+            def nphase_handler(args: list[str], ctx: InvocationContext | None = None) -> int:
                 """Thin wrapper to match handler signature used below."""
                 del args, ctx  # Unused, using cli_args from closure
                 return cmd_nphase(cli_args)
@@ -1958,12 +1943,7 @@ def _easter_world_hello() -> str:
 
 def _easter_too_far() -> str:
     """You've gone too far."""
-    return (
-        "\033[31m⚠\033[0m You've gone too far.\n"
-        "\033[90mHere there be dragons.\033[0m\n"
-        "\n"
-        "    🐉"
-    )
+    return "\033[31m⚠\033[0m You've gone too far.\n\033[90mHere there be dragons.\033[0m\n\n    🐉"
 
 
 def get_contextual_hint(state: ReplState) -> str | None:
@@ -2080,9 +2060,7 @@ def _render_ambient_screen(metrics: Any, paused: bool, focus: int | None = None)
     # Header
     pause_indicator = " \033[33m[PAUSED]\033[0m" if paused else ""
     lines.append(f"\033[36m╭─── kgents ambient{pause_indicator} ───╮\033[0m")
-    lines.append(
-        "\033[36m│\033[0m [q]uit [r]efresh [space]pause [1-5]focus  \033[36m│\033[0m"
-    )
+    lines.append("\033[36m│\033[0m [q]uit [r]efresh [space]pause [1-5]focus  \033[36m│\033[0m")
     lines.append("\033[36m├───────────────────────────────────────────╯\033[0m")
     lines.append("")
 
@@ -2202,9 +2180,7 @@ def run_ambient_mode(state: ReplState) -> int:
 
     # Check if we have a terminal
     if not sys.stdin.isatty():
-        print(
-            "\033[33mWarning:\033[0m Ambient mode requires a terminal. Using single snapshot."
-        )
+        print("\033[33mWarning:\033[0m Ambient mode requires a terminal. Using single snapshot.")
         # Single snapshot mode
         try:
             metrics = asyncio.run(collect_metrics())
@@ -2241,10 +2217,7 @@ def run_ambient_mode(state: ReplState) -> int:
                     last_refresh = 0.0  # Force refresh
 
             # Refresh if not paused and interval elapsed
-            if (
-                not state.ambient_paused
-                and (current_time - last_refresh) >= state.ambient_interval
-            ):
+            if not state.ambient_paused and (current_time - last_refresh) >= state.ambient_interval:
                 # Clear screen
                 print("\033[2J\033[H", end="", flush=True)
 
@@ -2287,9 +2260,7 @@ def run_ambient_mode(state: ReplState) -> int:
 # =============================================================================
 
 
-def _display_matches(
-    substitution: str, matches: Sequence[str], longest_match_length: int
-) -> None:
+def _display_matches(substitution: str, matches: Sequence[str], longest_match_length: int) -> None:
     """
     Custom display hook for showing completion matches.
 
@@ -2309,8 +2280,7 @@ def _display_matches(
     commands = [
         m
         for m in matches
-        if m.startswith("/")
-        or m in ("help", "exit", "quit", "clear", "?", "??", "..", ".", "/")
+        if m.startswith("/") or m in ("help", "exit", "quit", "clear", "?", "??", "..", ".", "/")
     ]
     others = [m for m in matches if m not in contexts_list and m not in commands]
 
@@ -2472,9 +2442,7 @@ class Completer:
         # Complete archetype names after /observer
         if text.startswith("/observer "):
             prefix = text[len("/observer ") :]
-            matches = [
-                f"/observer {a}" for a in OBSERVER_ARCHETYPES if a.startswith(prefix)
-            ]
+            matches = [f"/observer {a}" for a in OBSERVER_ARCHETYPES if a.startswith(prefix)]
 
         return sorted(set(matches))
 
@@ -2543,9 +2511,7 @@ class Completer:
                     pass  # Graceful degradation
 
             # Filter by completing prefix and add input prefix
-            matches = [
-                f"{prefix}{h}" for h in candidates if h.lower().startswith(completing)
-            ]
+            matches = [f"{prefix}{h}" for h in candidates if h.lower().startswith(completing)]
 
         elif len(full_path_parts) == 2:
             # Completing aspects for a holon
@@ -2559,9 +2525,7 @@ class Completer:
                 "sip",
                 "tithe",
             ]
-            matches = [
-                f"{prefix}{a}" for a in aspects if a.lower().startswith(completing)
-            ]
+            matches = [f"{prefix}{a}" for a in aspects if a.lower().startswith(completing)]
 
         else:
             # Deeper paths - no standard completions
@@ -2822,9 +2786,7 @@ def run_repl(
                     learn_result = handle_learn_command(guide, args)
                     print(learn_result)
                 else:
-                    print(
-                        "\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn"
-                    )
+                    print("\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn")
                 continue
 
             if line == "/fluency":
@@ -2835,9 +2797,7 @@ def run_repl(
                     fluency_result = handle_fluency_command(guide)
                     print(fluency_result)
                 else:
-                    print(
-                        "\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn"
-                    )
+                    print("\033[33mLearning mode not available.\033[0m Enable with: kg -i --learn")
                 continue
 
             if line == "/hint":
@@ -2853,11 +2813,7 @@ def run_repl(
                 continue
 
             # v3: Alias management commands
-            if (
-                line.startswith("/alias")
-                or line == "/aliases"
-                or line.startswith("/unalias")
-            ):
+            if line.startswith("/alias") or line == "/aliases" or line.startswith("/unalias"):
                 alias_result = handle_alias_command(state, line)
                 print(alias_result)
                 continue

@@ -220,9 +220,7 @@ def _graft_compose(plan_a: PlanState, plan_b: PlanState) -> PlanState:
     entropy_cost = 0.05
 
     # Letter merges context
-    new_letter = (
-        f"{plan_a.letter}\n\n[Grafted from {plan_b.name}]: {plan_b.letter[:100]}..."
-    )
+    new_letter = f"{plan_a.letter}\n\n[Grafted from {plan_b.name}]: {plan_b.letter[:100]}..."
 
     return PlanState(
         name=plan_a.name,

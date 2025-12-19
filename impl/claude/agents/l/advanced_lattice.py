@@ -268,10 +268,7 @@ class AdvancedLattice(CachedLattice):
 
         if sub_members and super_members:
             # Both are unions: every member of sub must be subtype of some member of super
-            return all(
-                any(self.is_subtype(sm, sp) for sp in super_members)
-                for sm in sub_members
-            )
+            return all(any(self.is_subtype(sm, sp) for sp in super_members) for sm in sub_members)
         elif sub_members:
             # Sub is union: all members must be subtypes of super
             return all(self.is_subtype(m, super_) for m in sub_members)
@@ -343,10 +340,7 @@ class AdvancedLattice(CachedLattice):
 
         if sub_members and super_members:
             # Both intersections: sub must have all requirements of super
-            return all(
-                any(self.is_subtype(sm, sp) for sm in sub_members)
-                for sp in super_members
-            )
+            return all(any(self.is_subtype(sm, sp) for sm in sub_members) for sp in super_members)
         elif sub_members:
             # Sub is intersection: any member being subtype suffices
             return any(self.is_subtype(m, super_) for m in sub_members)

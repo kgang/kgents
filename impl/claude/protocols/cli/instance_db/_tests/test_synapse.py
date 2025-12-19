@@ -585,11 +585,7 @@ class TestSynapseMetrics:
             await synapse.fire(signal)
 
         metrics = synapse.metrics
-        total = (
-            metrics.high_surprise_count
-            + metrics.low_surprise_count
-            + metrics.flashbulb_count
-        )
+        total = metrics.high_surprise_count + metrics.low_surprise_count + metrics.flashbulb_count
         assert total == 10
 
     @pytest.mark.asyncio

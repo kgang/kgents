@@ -112,9 +112,7 @@ class TestMCPTool:
             description="Verify code against principles",
             parameters=(
                 MCPToolParameter("target", "string", "File to check"),
-                MCPToolParameter(
-                    "strictness", "string", "Level", required=False, default="high"
-                ),
+                MCPToolParameter("strictness", "string", "Level", required=False, default="high"),
             ),
         )
         d = tool.to_dict()

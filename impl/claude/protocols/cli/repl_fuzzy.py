@@ -125,9 +125,7 @@ class FuzzyMatcher:
         else:
             return f"Did you mean: {', '.join(suggestions)}?"
 
-    def _fallback_match(
-        self, query: str, candidates: list[str]
-    ) -> list[tuple[str, int]]:
+    def _fallback_match(self, query: str, candidates: list[str]) -> list[tuple[str, int]]:
         """
         Simple fallback matching when rapidfuzz unavailable.
 

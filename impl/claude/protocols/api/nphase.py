@@ -76,7 +76,9 @@ class SessionResponse(BaseModel if HAS_FASTAPI else object):  # type: ignore[mis
     checkpoint_count: int = Field(default=0, description="Number of checkpoints")
     handle_count: int = Field(default=0, description="Number of handles")
     ledger_count: int = Field(default=0, description="Number of ledger entries")
-    entropy_spent: dict[str, float] = Field(default_factory=dict, description="Entropy spent by category")
+    entropy_spent: dict[str, float] = Field(
+        default_factory=dict, description="Entropy spent by category"
+    )
     created_at: str = Field(..., description="Creation timestamp")
     last_touched: str = Field(..., description="Last activity timestamp")
 
@@ -170,7 +172,9 @@ class DetectPhaseRequest(BaseModel if HAS_FASTAPI else object):  # type: ignore[
 class DetectPhaseResponse(BaseModel if HAS_FASTAPI else object):  # type: ignore[misc]
     """Response for phase detection."""
 
-    action: str = Field(..., description="Detected action (CONTINUE, HALT, ELASTIC, HEURISTIC, NONE)")
+    action: str = Field(
+        ..., description="Detected action (CONTINUE, HALT, ELASTIC, HEURISTIC, NONE)"
+    )
     target_phase: str | None = Field(default=None, description="Suggested phase")
     confidence: float = Field(..., description="Detection confidence")
     reason: str | None = Field(default=None, description="Halt reason if HALT")

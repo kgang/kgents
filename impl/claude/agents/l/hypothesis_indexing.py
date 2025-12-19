@@ -59,9 +59,7 @@ class HypothesisRecord:
     generated_by: str = "unknown"  # B-gent instance that created it
     generated_at: datetime = field(default_factory=datetime.now)
     keywords: list[str] = field(default_factory=list)  # For search
-    related_hypotheses: list[str] = field(
-        default_factory=list
-    )  # IDs of related hypotheses
+    related_hypotheses: list[str] = field(default_factory=list)  # IDs of related hypotheses
 
     # Experimental data
     experiments_conducted: list[dict[str, Any]] = field(default_factory=list)
@@ -146,9 +144,7 @@ class HypothesisIndex:
         }
         self.keyword_index: dict[str, list[str]] = {}  # keyword -> hypothesis IDs
 
-        logger.info(
-            f"Initialized HypothesisIndex (storage: {storage_path or 'in-memory'})"
-        )
+        logger.info(f"Initialized HypothesisIndex (storage: {storage_path or 'in-memory'})")
 
     def index_hypothesis(
         self,
@@ -177,9 +173,7 @@ class HypothesisIndex:
                 self.keyword_index[keyword] = []
             self.keyword_index[keyword].append(hypothesis_record.id)
 
-        logger.info(
-            f"Indexed hypothesis: {hypothesis_record.id} ({hypothesis_record.domain})"
-        )
+        logger.info(f"Indexed hypothesis: {hypothesis_record.id} ({hypothesis_record.domain})")
 
     def update_outcome(
         self,
@@ -251,8 +245,7 @@ class HypothesisIndex:
             candidates = [
                 h
                 for h in candidates
-                if h.success_rate is not None
-                and h.success_rate >= query.min_success_rate
+                if h.success_rate is not None and h.success_rate >= query.min_success_rate
             ]
 
         # Keyword scoring
@@ -263,9 +256,7 @@ class HypothesisIndex:
             if query.keywords:
                 matching_keywords = set(query.keywords) & set(candidate.keywords)
                 keyword_score = (
-                    len(matching_keywords) / len(query.keywords)
-                    if query.keywords
-                    else 0
+                    len(matching_keywords) / len(query.keywords) if query.keywords else 0
                 )
                 score *= 0.5 + 0.5 * keyword_score  # Keyword match boosts score
                 if matching_keywords:
@@ -315,12 +306,8 @@ class HypothesisIndex:
         domain_hypotheses = [self.hypotheses[hid] for hid in self.domain_index[domain]]
 
         total = len(domain_hypotheses)
-        confirmed = [
-            h for h in domain_hypotheses if h.outcome == HypothesisOutcome.CONFIRMED
-        ]
-        refuted = [
-            h for h in domain_hypotheses if h.outcome == HypothesisOutcome.REFUTED
-        ]
+        confirmed = [h for h in domain_hypotheses if h.outcome == HypothesisOutcome.CONFIRMED]
+        refuted = [h for h in domain_hypotheses if h.outcome == HypothesisOutcome.REFUTED]
 
         confirmed_count = len(confirmed)
         refuted_count = len(refuted)
@@ -336,18 +323,14 @@ class HypothesisIndex:
             novelty_success[h.novelty] = novelty_success.get(h.novelty, 0) + 1
 
         most_successful_novelty = (
-            max(novelty_success, key=lambda k: novelty_success[k])
-            if novelty_success
-            else None
+            max(novelty_success, key=lambda k: novelty_success[k]) if novelty_success else None
         )
 
         # Confidence analysis
         avg_conf_confirmed = (
             sum(h.confidence for h in confirmed) / len(confirmed) if confirmed else None
         )
-        avg_conf_refuted = (
-            sum(h.confidence for h in refuted) / len(refuted) if refuted else None
-        )
+        avg_conf_refuted = sum(h.confidence for h in refuted) / len(refuted) if refuted else None
 
         # Keyword analysis
         confirmed_keywords: dict[str, int] = {}
@@ -413,9 +396,7 @@ class HypothesisIndex:
     def get_statistics(self) -> dict[str, Any]:
         """Get overall index statistics."""
         total = len(self.hypotheses)
-        by_outcome = {
-            outcome.value: len(ids) for outcome, ids in self.outcome_index.items()
-        }
+        by_outcome = {outcome.value: len(ids) for outcome, ids in self.outcome_index.items()}
         by_domain = {domain: len(ids) for domain, ids in self.domain_index.items()}
 
         return {

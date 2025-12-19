@@ -184,16 +184,12 @@ class Spring:
         current = self.state.value
         if current.status == TransitionStatus.PENDING:
             # Check if already at target
-            at_rest = (
-                abs(current.value - current.target) < self.config.rest_displacement
-            )
+            at_rest = abs(current.value - current.target) < self.config.rest_displacement
             new_state = SpringState(
                 value=current.value,
                 target=current.target,
                 velocity=0.0,
-                status=TransitionStatus.COMPLETE
-                if at_rest
-                else TransitionStatus.RUNNING,
+                status=TransitionStatus.COMPLETE if at_rest else TransitionStatus.RUNNING,
                 elapsed_ms=0.0,
                 at_rest=at_rest,
             )

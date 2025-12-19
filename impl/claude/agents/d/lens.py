@@ -244,9 +244,7 @@ def verify_put_put_law(lens: Lens[S, A], state: S, a1: A, a2: A) -> bool:
     return result1 == result2
 
 
-def verify_lens_laws(
-    lens: Lens[S, A], state: S, value1: A, value2: A
-) -> dict[str, bool]:
+def verify_lens_laws(lens: Lens[S, A], state: S, value1: A, value2: A) -> dict[str, bool]:
     """
     Verify all three lens laws.
 
@@ -313,9 +311,7 @@ class Prism(Generic[S, A]):
         If either prism fails to focus, the composition fails.
         """
         return Prism(
-            preview=lambda s: (
-                other.preview(a) if (a := self.preview(s)) is not None else None
-            ),
+            preview=lambda s: (other.preview(a) if (a := self.preview(s)) is not None else None),
             review=lambda b: self.review(other.review(b)),
             modify_if_present=lambda s, f: self.modify_if_present(
                 s, lambda a: other.modify_if_present(a, f)

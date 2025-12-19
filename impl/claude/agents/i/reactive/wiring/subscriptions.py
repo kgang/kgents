@@ -278,9 +278,7 @@ class EventBus:
     )
     _history: list[Event[Any]] = field(default_factory=list)
     _history_max: int = 1000
-    _throttled: dict[EventType | str, ThrottledSignal[Event[Any]]] = field(
-        default_factory=dict
-    )
+    _throttled: dict[EventType | str, ThrottledSignal[Event[Any]]] = field(default_factory=dict)
 
     def subscribe(
         self,

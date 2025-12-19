@@ -101,9 +101,7 @@ class PersonaSeed:
     """
 
     name: str = "Kent"
-    roles: list[str] = field(
-        default_factory=lambda: ["researcher", "creator", "thinker"]
-    )
+    roles: list[str] = field(default_factory=lambda: ["researcher", "creator", "thinker"])
 
     # Explicit preferences
     preferences: dict[str, Any] = field(
@@ -316,9 +314,7 @@ class PersonaQueryAgent(Agent[PersonaQuery, PersonaResponse]):
                     for key, value in seed.preferences.items():
                         if query.topic.lower() in key.lower():
                             if isinstance(value, dict):
-                                preferences.extend(
-                                    [f"{k}: {v}" for k, v in value.items()]
-                                )
+                                preferences.extend([f"{k}: {v}" for k, v in value.items()])
                             elif isinstance(value, list):
                                 preferences.extend(value)
                             else:
@@ -494,9 +490,7 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
             referenced_patterns=referenced_pats[:3],
         )
 
-    async def invoke_stream(
-        self, input: DialogueInput
-    ) -> AsyncIterator[tuple[str, bool, int]]:
+    async def invoke_stream(self, input: DialogueInput) -> AsyncIterator[tuple[str, bool, int]]:
         """
         Engage in streaming dialogue with K-gent.
 
@@ -519,9 +513,7 @@ class KgentAgent(Agent[DialogueInput, DialogueOutput]):
         # Use LLM streaming if available
         if self._llm is not None:
             system_prompt = self._build_system_prompt(mode)
-            user_prompt = self._build_user_prompt(
-                message, referenced_prefs, referenced_pats, mode
-            )
+            user_prompt = self._build_user_prompt(message, referenced_prefs, referenced_pats, mode)
             temperature = self.MODE_TEMPERATURES.get(mode, 0.6)
 
             # Stream chunks from LLM
@@ -770,9 +762,7 @@ Response length: 2-4 sentences typically. Longer only if the question genuinely 
             )
 
         elif mode == DialogueMode.ADVISE:
-            comm_style = seed.preferences.get("communication", {}).get(
-                "style", "direct"
-            )
+            comm_style = seed.preferences.get("communication", {}).get("style", "direct")
             if pats:
                 return (
                     f"Your pattern is to {pats[0]}. "
@@ -802,18 +792,14 @@ Response length: 2-4 sentences typically. Longer only if the question genuinely 
                     )
                 if eigens.heterarchy.value > 0.8:
                     challenges.append(
-                        "You prefer peer-to-peer. What hierarchy are you "
-                        "implicitly assuming here?"
+                        "You prefer peer-to-peer. What hierarchy are you implicitly assuming here?"
                     )
 
                 if challenges:
                     import random
 
                     challenge = random.choice(challenges)
-                    return (
-                        f"{challenge}\n\n"
-                        f"What would you tell someone else in this position?"
-                    )
+                    return f"{challenge}\n\nWhat would you tell someone else in this position?"
 
             # Fallback to pattern-based challenge
             dislikes = seed.preferences.get("dislikes", [])

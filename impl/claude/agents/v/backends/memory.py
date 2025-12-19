@@ -183,9 +183,7 @@ class MemoryVectorBackend(BaseVgent):
                 continue
 
             # Compute similarity
-            similarity = self._metric.similarity(
-                query_emb.vector, entry.embedding.vector
-            )
+            similarity = self._metric.similarity(query_emb.vector, entry.embedding.vector)
             distance = self._metric.distance(query_emb.vector, entry.embedding.vector)
 
             # Apply threshold

@@ -36,9 +36,7 @@ class TestAction:
     def test_classify_deterministic(self) -> None:
         """Deterministic actions classified correctly."""
         assert Action.classify_determinism(Action.LOOKUP) == Determinism.DETERMINISTIC
-        assert (
-            Action.classify_determinism(Action.TRANSFORM) == Determinism.DETERMINISTIC
-        )
+        assert Action.classify_determinism(Action.TRANSFORM) == Determinism.DETERMINISTIC
         assert Action.classify_determinism(Action.PARSE) == Determinism.DETERMINISTIC
         assert Action.classify_determinism(Action.VALIDATE) == Determinism.DETERMINISTIC
 
@@ -145,9 +143,7 @@ class TestSemanticTrace:
     def test_trace_from_dict(self, sample_trace: SemanticTrace) -> None:
         """Reconstruction from dict."""
         data = sample_trace.to_dict()
-        restored = SemanticTrace.from_dict(
-            data, input_snapshot=sample_trace.input_snapshot
-        )
+        restored = SemanticTrace.from_dict(data, input_snapshot=sample_trace.input_snapshot)
 
         assert restored.trace_id == sample_trace.trace_id
         assert restored.agent_id == sample_trace.agent_id
@@ -157,9 +153,7 @@ class TestSemanticTrace:
     def test_trace_roundtrip(self, sample_trace: SemanticTrace) -> None:
         """Dict conversion roundtrip preserves data."""
         data = sample_trace.to_dict()
-        restored = SemanticTrace.from_dict(
-            data, input_snapshot=sample_trace.input_snapshot
-        )
+        restored = SemanticTrace.from_dict(data, input_snapshot=sample_trace.input_snapshot)
         data2 = restored.to_dict()
 
         # Compare dicts (excluding input_snapshot which isn't in dict)

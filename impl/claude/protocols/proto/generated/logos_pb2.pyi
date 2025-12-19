@@ -22,6 +22,7 @@ class InvokeRequest(_message.Message):
         key: str
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+
     PATH_FIELD_NUMBER: _ClassVar[int]
     OBSERVER_DNA_FIELD_NUMBER: _ClassVar[int]
     LENS_FIELD_NUMBER: _ClassVar[int]
@@ -30,7 +31,13 @@ class InvokeRequest(_message.Message):
     observer_dna: bytes
     lens: str
     kwargs: _containers.ScalarMap[str, str]
-    def __init__(self, path: _Optional[str] = ..., observer_dna: _Optional[bytes] = ..., lens: _Optional[str] = ..., kwargs: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(
+        self,
+        path: _Optional[str] = ...,
+        observer_dna: _Optional[bytes] = ...,
+        lens: _Optional[str] = ...,
+        kwargs: _Optional[_Mapping[str, str]] = ...,
+    ) -> None: ...
 
 class InvokeResponse(_message.Message):
     __slots__ = ("result", "result_json", "metadata")
@@ -40,10 +47,23 @@ class InvokeResponse(_message.Message):
     result: _any_pb2.Any
     result_json: str
     metadata: InvokeMetadata
-    def __init__(self, result: _Optional[_Union[_any_pb2.Any, _Mapping]] = ..., result_json: _Optional[str] = ..., metadata: _Optional[_Union[InvokeMetadata, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        result: _Optional[_Union[_any_pb2.Any, _Mapping]] = ...,
+        result_json: _Optional[str] = ...,
+        metadata: _Optional[_Union[InvokeMetadata, _Mapping]] = ...,
+    ) -> None: ...
 
 class InvokeMetadata(_message.Message):
-    __slots__ = ("path", "lens", "duration", "tokens_input", "tokens_output", "trace_id", "from_cache")
+    __slots__ = (
+        "path",
+        "lens",
+        "duration",
+        "tokens_input",
+        "tokens_output",
+        "trace_id",
+        "from_cache",
+    )
     PATH_FIELD_NUMBER: _ClassVar[int]
     LENS_FIELD_NUMBER: _ClassVar[int]
     DURATION_FIELD_NUMBER: _ClassVar[int]
@@ -58,7 +78,16 @@ class InvokeMetadata(_message.Message):
     tokens_output: int
     trace_id: str
     from_cache: bool
-    def __init__(self, path: _Optional[str] = ..., lens: _Optional[str] = ..., duration: _Optional[_Union[datetime.timedelta, _duration_pb2.Duration, _Mapping]] = ..., tokens_input: _Optional[int] = ..., tokens_output: _Optional[int] = ..., trace_id: _Optional[str] = ..., from_cache: bool = ...) -> None: ...
+    def __init__(
+        self,
+        path: _Optional[str] = ...,
+        lens: _Optional[str] = ...,
+        duration: _Optional[_Union[datetime.timedelta, _duration_pb2.Duration, _Mapping]] = ...,
+        tokens_input: _Optional[int] = ...,
+        tokens_output: _Optional[int] = ...,
+        trace_id: _Optional[str] = ...,
+        from_cache: bool = ...,
+    ) -> None: ...
 
 class StatusRequest(_message.Message):
     __slots__ = ("verbose", "components")
@@ -66,10 +95,20 @@ class StatusRequest(_message.Message):
     COMPONENTS_FIELD_NUMBER: _ClassVar[int]
     verbose: bool
     components: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, verbose: bool = ..., components: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(
+        self, verbose: bool = ..., components: _Optional[_Iterable[str]] = ...
+    ) -> None: ...
 
 class StatusResponse(_message.Message):
-    __slots__ = ("health", "agents", "pheromone_levels", "metabolic_pressure", "instance_id", "timestamp", "components")
+    __slots__ = (
+        "health",
+        "agents",
+        "pheromone_levels",
+        "metabolic_pressure",
+        "instance_id",
+        "timestamp",
+        "components",
+    )
     class PheromoneLevelsEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -77,6 +116,7 @@ class StatusResponse(_message.Message):
         key: str
         value: float
         def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+
     HEALTH_FIELD_NUMBER: _ClassVar[int]
     AGENTS_FIELD_NUMBER: _ClassVar[int]
     PHEROMONE_LEVELS_FIELD_NUMBER: _ClassVar[int]
@@ -91,7 +131,16 @@ class StatusResponse(_message.Message):
     instance_id: str
     timestamp: _timestamp_pb2.Timestamp
     components: _containers.RepeatedCompositeFieldContainer[ComponentHealth]
-    def __init__(self, health: _Optional[str] = ..., agents: _Optional[_Iterable[_Union[AgentStatus, _Mapping]]] = ..., pheromone_levels: _Optional[_Mapping[str, float]] = ..., metabolic_pressure: _Optional[float] = ..., instance_id: _Optional[str] = ..., timestamp: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., components: _Optional[_Iterable[_Union[ComponentHealth, _Mapping]]] = ...) -> None: ...
+    def __init__(
+        self,
+        health: _Optional[str] = ...,
+        agents: _Optional[_Iterable[_Union[AgentStatus, _Mapping]]] = ...,
+        pheromone_levels: _Optional[_Mapping[str, float]] = ...,
+        metabolic_pressure: _Optional[float] = ...,
+        instance_id: _Optional[str] = ...,
+        timestamp: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...,
+        components: _Optional[_Iterable[_Union[ComponentHealth, _Mapping]]] = ...,
+    ) -> None: ...
 
 class AgentStatus(_message.Message):
     __slots__ = ("name", "genus", "status", "last_active")
@@ -103,7 +152,13 @@ class AgentStatus(_message.Message):
     genus: str
     status: str
     last_active: _timestamp_pb2.Timestamp
-    def __init__(self, name: _Optional[str] = ..., genus: _Optional[str] = ..., status: _Optional[str] = ..., last_active: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        name: _Optional[str] = ...,
+        genus: _Optional[str] = ...,
+        status: _Optional[str] = ...,
+        last_active: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...,
+    ) -> None: ...
 
 class ComponentHealth(_message.Message):
     __slots__ = ("name", "healthy", "message")
@@ -113,7 +168,9 @@ class ComponentHealth(_message.Message):
     name: str
     healthy: bool
     message: str
-    def __init__(self, name: _Optional[str] = ..., healthy: bool = ..., message: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self, name: _Optional[str] = ..., healthy: bool = ..., message: _Optional[str] = ...
+    ) -> None: ...
 
 class DreamInput(_message.Message):
     __slots__ = ("text", "start_session", "end_session", "set_phase")
@@ -125,7 +182,13 @@ class DreamInput(_message.Message):
     start_session: bool
     end_session: bool
     set_phase: str
-    def __init__(self, text: _Optional[str] = ..., start_session: bool = ..., end_session: bool = ..., set_phase: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        text: _Optional[str] = ...,
+        start_session: bool = ...,
+        end_session: bool = ...,
+        set_phase: _Optional[str] = ...,
+    ) -> None: ...
 
 class DreamOutput(_message.Message):
     __slots__ = ("text", "awaiting_input", "phase", "metadata")
@@ -137,7 +200,13 @@ class DreamOutput(_message.Message):
     awaiting_input: bool
     phase: str
     metadata: DreamMetadata
-    def __init__(self, text: _Optional[str] = ..., awaiting_input: bool = ..., phase: _Optional[str] = ..., metadata: _Optional[_Union[DreamMetadata, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        text: _Optional[str] = ...,
+        awaiting_input: bool = ...,
+        phase: _Optional[str] = ...,
+        metadata: _Optional[_Union[DreamMetadata, _Mapping]] = ...,
+    ) -> None: ...
 
 class DreamMetadata(_message.Message):
     __slots__ = ("confidence", "source", "memory_ids")
@@ -147,7 +216,12 @@ class DreamMetadata(_message.Message):
     confidence: float
     source: str
     memory_ids: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, confidence: _Optional[float] = ..., source: _Optional[str] = ..., memory_ids: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(
+        self,
+        confidence: _Optional[float] = ...,
+        source: _Optional[str] = ...,
+        memory_ids: _Optional[_Iterable[str]] = ...,
+    ) -> None: ...
 
 class ObserveRequest(_message.Message):
     __slots__ = ("event_types", "min_significance", "focus_path")
@@ -157,7 +231,12 @@ class ObserveRequest(_message.Message):
     event_types: _containers.RepeatedScalarFieldContainer[str]
     min_significance: float
     focus_path: str
-    def __init__(self, event_types: _Optional[_Iterable[str]] = ..., min_significance: _Optional[float] = ..., focus_path: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        event_types: _Optional[_Iterable[str]] = ...,
+        min_significance: _Optional[float] = ...,
+        focus_path: _Optional[str] = ...,
+    ) -> None: ...
 
 class ObserveEvent(_message.Message):
     __slots__ = ("event_type", "content", "timestamp", "source", "significance")
@@ -171,10 +250,24 @@ class ObserveEvent(_message.Message):
     timestamp: _timestamp_pb2.Timestamp
     source: str
     significance: float
-    def __init__(self, event_type: _Optional[str] = ..., content: _Optional[str] = ..., timestamp: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., source: _Optional[str] = ..., significance: _Optional[float] = ...) -> None: ...
+    def __init__(
+        self,
+        event_type: _Optional[str] = ...,
+        content: _Optional[str] = ...,
+        timestamp: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ...,
+        source: _Optional[str] = ...,
+        significance: _Optional[float] = ...,
+    ) -> None: ...
 
 class MapRequest(_message.Message):
-    __slots__ = ("focus", "resolution", "format", "include_desire_lines", "include_voids", "include_attractors")
+    __slots__ = (
+        "focus",
+        "resolution",
+        "format",
+        "include_desire_lines",
+        "include_voids",
+        "include_attractors",
+    )
     FOCUS_FIELD_NUMBER: _ClassVar[int]
     RESOLUTION_FIELD_NUMBER: _ClassVar[int]
     FORMAT_FIELD_NUMBER: _ClassVar[int]
@@ -187,10 +280,26 @@ class MapRequest(_message.Message):
     include_desire_lines: bool
     include_voids: bool
     include_attractors: bool
-    def __init__(self, focus: _Optional[str] = ..., resolution: _Optional[str] = ..., format: _Optional[str] = ..., include_desire_lines: bool = ..., include_voids: bool = ..., include_attractors: bool = ...) -> None: ...
+    def __init__(
+        self,
+        focus: _Optional[str] = ...,
+        resolution: _Optional[str] = ...,
+        format: _Optional[str] = ...,
+        include_desire_lines: bool = ...,
+        include_voids: bool = ...,
+        include_attractors: bool = ...,
+    ) -> None: ...
 
 class HoloMap(_message.Message):
-    __slots__ = ("landmarks", "desire_lines", "voids", "attractors", "horizon", "rendered", "metadata")
+    __slots__ = (
+        "landmarks",
+        "desire_lines",
+        "voids",
+        "attractors",
+        "horizon",
+        "rendered",
+        "metadata",
+    )
     LANDMARKS_FIELD_NUMBER: _ClassVar[int]
     DESIRE_LINES_FIELD_NUMBER: _ClassVar[int]
     VOIDS_FIELD_NUMBER: _ClassVar[int]
@@ -205,7 +314,16 @@ class HoloMap(_message.Message):
     horizon: MapHorizon
     rendered: str
     metadata: MapMetadata
-    def __init__(self, landmarks: _Optional[_Iterable[_Union[MapLandmark, _Mapping]]] = ..., desire_lines: _Optional[_Iterable[_Union[DesireLine, _Mapping]]] = ..., voids: _Optional[_Iterable[_Union[MapVoid, _Mapping]]] = ..., attractors: _Optional[_Iterable[_Union[Attractor, _Mapping]]] = ..., horizon: _Optional[_Union[MapHorizon, _Mapping]] = ..., rendered: _Optional[str] = ..., metadata: _Optional[_Union[MapMetadata, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        landmarks: _Optional[_Iterable[_Union[MapLandmark, _Mapping]]] = ...,
+        desire_lines: _Optional[_Iterable[_Union[DesireLine, _Mapping]]] = ...,
+        voids: _Optional[_Iterable[_Union[MapVoid, _Mapping]]] = ...,
+        attractors: _Optional[_Iterable[_Union[Attractor, _Mapping]]] = ...,
+        horizon: _Optional[_Union[MapHorizon, _Mapping]] = ...,
+        rendered: _Optional[str] = ...,
+        metadata: _Optional[_Union[MapMetadata, _Mapping]] = ...,
+    ) -> None: ...
 
 class MapLandmark(_message.Message):
     __slots__ = ("name", "path", "significance", "category", "position")
@@ -219,7 +337,14 @@ class MapLandmark(_message.Message):
     significance: float
     category: str
     position: MapPosition
-    def __init__(self, name: _Optional[str] = ..., path: _Optional[str] = ..., significance: _Optional[float] = ..., category: _Optional[str] = ..., position: _Optional[_Union[MapPosition, _Mapping]] = ...) -> None: ...
+    def __init__(
+        self,
+        name: _Optional[str] = ...,
+        path: _Optional[str] = ...,
+        significance: _Optional[float] = ...,
+        category: _Optional[str] = ...,
+        position: _Optional[_Union[MapPosition, _Mapping]] = ...,
+    ) -> None: ...
 
 class DesireLine(_message.Message):
     __slots__ = ("from_path", "to_path", "strength", "traversal_count")
@@ -231,7 +356,13 @@ class DesireLine(_message.Message):
     to_path: str
     strength: float
     traversal_count: int
-    def __init__(self, from_path: _Optional[str] = ..., to_path: _Optional[str] = ..., strength: _Optional[float] = ..., traversal_count: _Optional[int] = ...) -> None: ...
+    def __init__(
+        self,
+        from_path: _Optional[str] = ...,
+        to_path: _Optional[str] = ...,
+        strength: _Optional[float] = ...,
+        traversal_count: _Optional[int] = ...,
+    ) -> None: ...
 
 class MapVoid(_message.Message):
     __slots__ = ("path", "description", "mystery_score")
@@ -241,7 +372,12 @@ class MapVoid(_message.Message):
     path: str
     description: str
     mystery_score: float
-    def __init__(self, path: _Optional[str] = ..., description: _Optional[str] = ..., mystery_score: _Optional[float] = ...) -> None: ...
+    def __init__(
+        self,
+        path: _Optional[str] = ...,
+        description: _Optional[str] = ...,
+        mystery_score: _Optional[float] = ...,
+    ) -> None: ...
 
 class Attractor(_message.Message):
     __slots__ = ("name", "position", "strength", "attracted_files")
@@ -253,7 +389,13 @@ class Attractor(_message.Message):
     position: MapPosition
     strength: float
     attracted_files: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, name: _Optional[str] = ..., position: _Optional[_Union[MapPosition, _Mapping]] = ..., strength: _Optional[float] = ..., attracted_files: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(
+        self,
+        name: _Optional[str] = ...,
+        position: _Optional[_Union[MapPosition, _Mapping]] = ...,
+        strength: _Optional[float] = ...,
+        attracted_files: _Optional[_Iterable[str]] = ...,
+    ) -> None: ...
 
 class MapHorizon(_message.Message):
     __slots__ = ("visible_files", "beyond")
@@ -261,7 +403,11 @@ class MapHorizon(_message.Message):
     BEYOND_FIELD_NUMBER: _ClassVar[int]
     visible_files: _containers.RepeatedScalarFieldContainer[str]
     beyond: _containers.RepeatedScalarFieldContainer[str]
-    def __init__(self, visible_files: _Optional[_Iterable[str]] = ..., beyond: _Optional[_Iterable[str]] = ...) -> None: ...
+    def __init__(
+        self,
+        visible_files: _Optional[_Iterable[str]] = ...,
+        beyond: _Optional[_Iterable[str]] = ...,
+    ) -> None: ...
 
 class MapPosition(_message.Message):
     __slots__ = ("x", "y", "z")
@@ -271,7 +417,9 @@ class MapPosition(_message.Message):
     x: float
     y: float
     z: float
-    def __init__(self, x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...) -> None: ...
+    def __init__(
+        self, x: _Optional[float] = ..., y: _Optional[float] = ..., z: _Optional[float] = ...
+    ) -> None: ...
 
 class MapMetadata(_message.Message):
     __slots__ = ("generated_at", "total_files", "total_landmarks", "focus", "resolution")
@@ -285,7 +433,16 @@ class MapMetadata(_message.Message):
     total_landmarks: int
     focus: str
     resolution: str
-    def __init__(self, generated_at: _Optional[_Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]] = ..., total_files: _Optional[int] = ..., total_landmarks: _Optional[int] = ..., focus: _Optional[str] = ..., resolution: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        generated_at: _Optional[
+            _Union[datetime.datetime, _timestamp_pb2.Timestamp, _Mapping]
+        ] = ...,
+        total_files: _Optional[int] = ...,
+        total_landmarks: _Optional[int] = ...,
+        focus: _Optional[str] = ...,
+        resolution: _Optional[str] = ...,
+    ) -> None: ...
 
 class TitheRequest(_message.Message):
     __slots__ = ("amount", "gratitude")
@@ -307,7 +464,14 @@ class TitheResponse(_message.Message):
     remaining_pressure: float
     discharged: float
     fever_dream: str
-    def __init__(self, success: bool = ..., gratitude_response: _Optional[str] = ..., remaining_pressure: _Optional[float] = ..., discharged: _Optional[float] = ..., fever_dream: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        success: bool = ...,
+        gratitude_response: _Optional[str] = ...,
+        remaining_pressure: _Optional[float] = ...,
+        discharged: _Optional[float] = ...,
+        fever_dream: _Optional[str] = ...,
+    ) -> None: ...
 
 class Umwelt(_message.Message):
     __slots__ = ("id", "archetype", "permissions", "focus", "personality", "metadata")
@@ -318,6 +482,7 @@ class Umwelt(_message.Message):
         key: str
         value: float
         def __init__(self, key: _Optional[str] = ..., value: _Optional[float] = ...) -> None: ...
+
     class MetadataEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -325,6 +490,7 @@ class Umwelt(_message.Message):
         key: str
         value: str
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
+
     ID_FIELD_NUMBER: _ClassVar[int]
     ARCHETYPE_FIELD_NUMBER: _ClassVar[int]
     PERMISSIONS_FIELD_NUMBER: _ClassVar[int]
@@ -337,7 +503,15 @@ class Umwelt(_message.Message):
     focus: str
     personality: _containers.ScalarMap[str, float]
     metadata: _containers.ScalarMap[str, str]
-    def __init__(self, id: _Optional[str] = ..., archetype: _Optional[str] = ..., permissions: _Optional[int] = ..., focus: _Optional[str] = ..., personality: _Optional[_Mapping[str, float]] = ..., metadata: _Optional[_Mapping[str, str]] = ...) -> None: ...
+    def __init__(
+        self,
+        id: _Optional[str] = ...,
+        archetype: _Optional[str] = ...,
+        permissions: _Optional[int] = ...,
+        focus: _Optional[str] = ...,
+        personality: _Optional[_Mapping[str, float]] = ...,
+        metadata: _Optional[_Mapping[str, str]] = ...,
+    ) -> None: ...
 
 class LogosError(_message.Message):
     __slots__ = ("code", "message", "path", "suggestions", "fallback_used")
@@ -351,4 +525,11 @@ class LogosError(_message.Message):
     path: str
     suggestions: _containers.RepeatedScalarFieldContainer[str]
     fallback_used: str
-    def __init__(self, code: _Optional[str] = ..., message: _Optional[str] = ..., path: _Optional[str] = ..., suggestions: _Optional[_Iterable[str]] = ..., fallback_used: _Optional[str] = ...) -> None: ...
+    def __init__(
+        self,
+        code: _Optional[str] = ...,
+        message: _Optional[str] = ...,
+        path: _Optional[str] = ...,
+        suggestions: _Optional[_Iterable[str]] = ...,
+        fallback_used: _Optional[str] = ...,
+    ) -> None: ...

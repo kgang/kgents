@@ -68,9 +68,7 @@ class PydanticParser(ParserStrategy):
 
     def parse(self, text: str, config: ParserConfig) -> ParseResult:
         if not HAS_PYDANTIC:
-            return ParseResult(
-                success=False, error="Pydantic not installed (pip install pydantic)"
-            )
+            return ParseResult(success=False, error="Pydantic not installed (pip install pydantic)")
 
         grammar = config.grammar_spec
 
@@ -91,9 +89,7 @@ class PydanticParser(ParserStrategy):
                     break
 
             if model_class is None:
-                return ParseResult(
-                    success=False, error="No Pydantic model found in grammar"
-                )
+                return ParseResult(success=False, error="No Pydantic model found in grammar")
 
             # Parse text as Python code or JSON
             import json
@@ -121,9 +117,7 @@ class PydanticParser(ParserStrategy):
                             local_scope,
                         )
                     except Exception:
-                        return ParseResult(
-                            success=False, error=f"Failed to parse as Pydantic: {e}"
-                        )
+                        return ParseResult(success=False, error=f"Failed to parse as Pydantic: {e}")
 
             # Validate
             if not isinstance(result, model_class):
@@ -143,9 +137,7 @@ class PydanticParser(ParserStrategy):
                 success=False, error=f"Pydantic validation failed: {e}", confidence=0.0
             )
         except Exception as e:
-            return ParseResult(
-                success=False, error=f"Pydantic parsing error: {e}", confidence=0.0
-            )
+            return ParseResult(success=False, error=f"Pydantic parsing error: {e}", confidence=0.0)
 
 
 # ============================================================================
@@ -229,9 +221,7 @@ class LarkRecursiveParser(ParserStrategy):
 
     def parse(self, text: str, config: ParserConfig) -> ParseResult:
         if not HAS_LARK:
-            return ParseResult(
-                success=False, error="Lark not installed (pip install lark)"
-            )
+            return ParseResult(success=False, error="Lark not installed (pip install lark)")
 
         grammar = config.grammar_spec
 
@@ -252,9 +242,7 @@ class LarkRecursiveParser(ParserStrategy):
             )
 
         except Exception as e:
-            return ParseResult(
-                success=False, error=f"Lark parsing failed: {e}", confidence=0.0
-            )
+            return ParseResult(success=False, error=f"Lark parsing failed: {e}", confidence=0.0)
 
     def _tree_to_dict(self, tree: Any) -> dict[str, Any] | str:
         """Convert Lark tree to dict representation."""

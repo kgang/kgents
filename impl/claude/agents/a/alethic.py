@@ -173,9 +173,7 @@ def _validate_query(input: Any) -> Query:
     return Query(claim=claim)
 
 
-def _compute_confidence(
-    n_supporting: int, n_contradicting: int, prior: float = 0.5
-) -> float:
+def _compute_confidence(n_supporting: int, n_contradicting: int, prior: float = 0.5) -> float:
     """
     Compute confidence with Bayesian-style propagation.
 
@@ -329,9 +327,7 @@ def alethic_transition(state: AlethicState, input: Any) -> tuple[AlethicState, A
 
                 antithesis = Antithesis(thesis=thesis, contradiction=antithesis_content)
                 try:
-                    _, synthesis = SUBLATE.invoke(
-                        SublateState.ANALYZING, (thesis, antithesis)
-                    )
+                    _, synthesis = SUBLATE.invoke(SublateState.ANALYZING, (thesis, antithesis))
                 except Exception:
                     # Synthesis failed - create a fallback synthesis
                     synthesis = Synthesis(
@@ -435,9 +431,7 @@ class AlethicAgent:
 
         # Run through all states until we get back to GROUNDING
         for _ in range(4):  # Max 4 transitions
-            self._state, current_input = self._poly.transition(
-                self._state, current_input
-            )
+            self._state, current_input = self._poly.transition(self._state, current_input)
             if isinstance(current_input, AlethicResponse):
                 return current_input
 

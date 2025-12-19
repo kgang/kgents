@@ -447,9 +447,7 @@ def audit_imports(agents_dir: Path) -> ImportAuditResult:
             )
 
             # Determine if acceptable
-            is_acceptable = (
-                imported_agent in FOUNDATIONAL_AGENTS or is_integration_file(py_file)
-            )
+            is_acceptable = imported_agent in FOUNDATIONAL_AGENTS or is_integration_file(py_file)
 
             if is_acceptable:
                 acceptable.append(cross_import)
@@ -527,9 +525,7 @@ class TestImportAudit:
                 print(f"\n   {source.upper()}-gent:")
                 for v in vlist:
                     filename = Path(v.file_path).name
-                    print(
-                        f"     → imports {v.imported_agent.upper()}-gent in {filename}"
-                    )
+                    print(f"     → imports {v.imported_agent.upper()}-gent in {filename}")
 
             print("\n   Consider either:")
             print("   1. Rename file to *_integration.py if intentional coupling")

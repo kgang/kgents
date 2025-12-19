@@ -70,9 +70,7 @@ class CatalogEntry:
     # Type information (for lattice)
     input_type: str | None = None  # For agents: input type signature
     output_type: str | None = None  # For agents: output type signature
-    contracts_implemented: list[str] = field(
-        default_factory=list
-    )  # Contracts this satisfies
+    contracts_implemented: list[str] = field(default_factory=list)  # Contracts this satisfies
     contracts_required: list[str] = field(default_factory=list)  # Contracts this needs
 
     # Graph relationships (for lineage)
@@ -103,15 +101,11 @@ class CatalogEntry:
     optimization_iterations: int | None = None  # Number of optimization iterations
     optimization_cost_usd: float | None = None  # Compute cost for optimization
     optimization_trace_id: str | None = None  # Link to full optimization trace
-    optimized_for_model: str | None = (
-        None  # Model used during optimization (for drift detection)
-    )
+    optimized_for_model: str | None = None  # Model used during optimization (for drift detection)
 
     # Tongue-specific metadata (for EntityType.TONGUE)
     tongue_domain: str | None = None  # Domain this tongue operates in
-    tongue_constraints: list[str] = field(
-        default_factory=list
-    )  # Constraints encoded structurally
+    tongue_constraints: list[str] = field(default_factory=list)  # Constraints encoded structurally
     tongue_level: str | None = None  # SCHEMA, COMMAND, RECURSIVE
     tongue_format: str | None = None  # PYDANTIC, BNF, EBNF, LARK
 
@@ -196,9 +190,7 @@ class CatalogEntry:
         # Parse dates
         created_at = datetime.fromisoformat(data["created_at"])
         updated_at = datetime.fromisoformat(data["updated_at"])
-        last_used = (
-            datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None
-        )
+        last_used = datetime.fromisoformat(data["last_used"]) if data.get("last_used") else None
 
         return cls(
             id=data["id"],
@@ -275,9 +267,7 @@ class Catalog:
             id: CatalogEntry.from_dict(entry_data)
             for id, entry_data in data.get("entries", {}).items()
         }
-        last_updated = datetime.fromisoformat(
-            data.get("last_updated", datetime.now().isoformat())
-        )
+        last_updated = datetime.fromisoformat(data.get("last_updated", datetime.now().isoformat()))
 
         return cls(
             entries=entries,

@@ -278,9 +278,7 @@ class NPhaseSession:
             target = next_phase(self.current_phase)
 
         if not self.can_advance_to(target):
-            raise ValueError(
-                f"Invalid transition: {self.current_phase.name} → {target.name}"
-            )
+            raise ValueError(f"Invalid transition: {self.current_phase.name} → {target.name}")
 
         # Auto-checkpoint at phase boundary
         if auto_checkpoint:
@@ -460,9 +458,7 @@ class NPhaseSession:
         )
 
         # Restore phase state
-        session.phase_state.current_phase = NPhase[
-            data.get("current_phase", "UNDERSTAND")
-        ]
+        session.phase_state.current_phase = NPhase[data.get("current_phase", "UNDERSTAND")]
         session.phase_state.cycle_count = data.get("cycle_count", 0)
 
         # Restore checkpoints
@@ -522,9 +518,7 @@ class SessionStore:
     def __init__(self) -> None:
         self._sessions: dict[str, NPhaseSession] = {}
 
-    def create(
-        self, title: str = "", metadata: dict[str, Any] | None = None
-    ) -> NPhaseSession:
+    def create(self, title: str = "", metadata: dict[str, Any] | None = None) -> NPhaseSession:
         """Create a new N-Phase session."""
         session = NPhaseSession(title=title, metadata=metadata or {})
         self._sessions[session.id] = session
@@ -573,9 +567,7 @@ def reset_session_store() -> None:
 # =============================================================================
 
 
-def create_session(
-    title: str = "", metadata: dict[str, Any] | None = None
-) -> NPhaseSession:
+def create_session(title: str = "", metadata: dict[str, Any] | None = None) -> NPhaseSession:
     """Create a new N-Phase session."""
     return _session_store.create(title=title, metadata=metadata)
 

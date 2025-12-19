@@ -40,9 +40,7 @@ class SimpleJsonParser:
                 strategy="simple-json",
             )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """Parse stream (not implemented for testing)."""
         raise NotImplementedError("Stream parsing not needed for tests")
 
@@ -364,10 +362,7 @@ class TestConfiguration:
         parser2 = parser1.configure(max_reflection_retries=5)
 
         assert parser1 is not parser2
-        assert (
-            parser1.config.max_reflection_retries
-            != parser2.config.max_reflection_retries
-        )
+        assert parser1.config.max_reflection_retries != parser2.config.max_reflection_retries
 
     def test_max_reflection_retries_respected(self) -> None:
         """Parser should respect max_reflection_retries setting."""

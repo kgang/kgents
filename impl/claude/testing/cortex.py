@@ -207,9 +207,7 @@ class Cortex:
         self.witness_store.record(witness)
 
         # Update market statistics
-        self.budget_manager.market.update_statistics(
-            test_id, outcome == "pass", duration_ms
-        )
+        self.budget_manager.market.update_statistics(test_id, outcome == "pass", duration_ms)
 
     # =========================================================================
     # Daytime Operations
@@ -336,12 +334,8 @@ class Cortex:
 
         topo_summary = TopologistSummary(
             paths_tested=len(topo_report.commutativity_results) if topo_report else 0,
-            commutativity_violations=topo_report.commutativity_violations
-            if topo_report
-            else 0,
-            invariance_violations=topo_report.invariance_violations
-            if topo_report
-            else 0,
+            commutativity_violations=topo_report.commutativity_violations if topo_report else 0,
+            invariance_violations=topo_report.invariance_violations if topo_report else 0,
         )
 
         # Analyst summary
@@ -377,9 +371,7 @@ class Cortex:
         recommendations = []
         for r in oracle_results:
             if r.validity_score < 0.8:
-                recommendations.append(
-                    f"Investigate {r.agent_name} metamorphic failures"
-                )
+                recommendations.append(f"Investigate {r.agent_name} metamorphic failures")
 
         oracle_summary = OracleSummary(
             agents_validated=len(oracle_results),
@@ -388,17 +380,9 @@ class Cortex:
         )
 
         # Overall health
-        if (
-            topo_summary.commutativity_violations > 5
-            or total_vulns > 3
-            or total_violations > 10
-        ):
+        if topo_summary.commutativity_violations > 5 or total_vulns > 3 or total_violations > 10:
             health = "RED"
-        elif (
-            topo_summary.commutativity_violations > 0
-            or total_vulns > 0
-            or total_violations > 3
-        ):
+        elif topo_summary.commutativity_violations > 0 or total_vulns > 0 or total_violations > 3:
             health = "YELLOW"
         else:
             health = "GREEN"

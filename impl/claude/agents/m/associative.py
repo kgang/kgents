@@ -210,9 +210,7 @@ class AssociativeMemory:
         # Compute embedding if not provided
         if embedding is None:
             text = (
-                content.decode("utf-8", errors="ignore")
-                if isinstance(content, bytes)
-                else content
+                content.decode("utf-8", errors="ignore") if isinstance(content, bytes) else content
             )
             assert self.embedder is not None, "Embedder should be set in __post_init__"
             embedding = await self.embedder(text)
@@ -443,9 +441,7 @@ class AssociativeMemory:
         # This is the "graceful forgetting" - vectors are removed from search
         if self._vgent is not None:
             composting_ids = [
-                m.datum_id
-                for m in self._memories.values()
-                if m.lifecycle == Lifecycle.COMPOSTING
+                m.datum_id for m in self._memories.values() if m.lifecycle == Lifecycle.COMPOSTING
             ]
             for memory_id in composting_ids:
                 await self._vgent.remove(memory_id)
@@ -479,28 +475,16 @@ class AssociativeMemory:
         Get current memory system state.
         """
         total = len(self._memories)
-        active = sum(
-            1 for m in self._memories.values() if m.lifecycle == Lifecycle.ACTIVE
-        )
-        dormant = sum(
-            1 for m in self._memories.values() if m.lifecycle == Lifecycle.DORMANT
-        )
-        dreaming = sum(
-            1 for m in self._memories.values() if m.lifecycle == Lifecycle.DREAMING
-        )
-        composting = sum(
-            1 for m in self._memories.values() if m.lifecycle == Lifecycle.COMPOSTING
-        )
+        active = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.ACTIVE)
+        dormant = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.DORMANT)
+        dreaming = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.DREAMING)
+        composting = sum(1 for m in self._memories.values() if m.lifecycle == Lifecycle.COMPOSTING)
 
         avg_resolution = (
-            sum(m.resolution for m in self._memories.values()) / total
-            if total > 0
-            else 0.0
+            sum(m.resolution for m in self._memories.values()) / total if total > 0 else 0.0
         )
         avg_relevance = (
-            sum(m.relevance for m in self._memories.values()) / total
-            if total > 0
-            else 0.0
+            sum(m.relevance for m in self._memories.values()) / total if total > 0 else 0.0
         )
 
         return MemoryStatus(

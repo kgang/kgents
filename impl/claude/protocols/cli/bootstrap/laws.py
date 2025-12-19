@@ -250,9 +250,7 @@ def format_verification_rich(report: VerificationReport) -> str:
 
     for result in report.results:
         char = status_char[result.verdict]
-        law_title = next(
-            (l.title for l in CATEGORY_LAWS if l.name == result.law), result.law.value
-        )
+        law_title = next((l.title for l in CATEGORY_LAWS if l.name == result.law), result.law.value)
         lines.append(f"  {char} {law_title}")
         if result.verdict == Verdict.FAIL:
             lines.append(f"     Evidence: {result.evidence}")
@@ -286,9 +284,7 @@ def format_witness_rich(report: WitnessReport) -> str:
     ]
 
     for law_name in report.laws_checked:
-        law_title = next(
-            (l.title for l in CATEGORY_LAWS if l.name == law_name), law_name.value
-        )
+        law_title = next((l.title for l in CATEGORY_LAWS if l.name == law_name), law_name.value)
         lines.append(f"    ✓ {law_title}")
 
     if report.notes:

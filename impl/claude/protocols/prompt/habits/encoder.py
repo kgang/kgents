@@ -219,9 +219,7 @@ class HabitEncoder:
             patterns = self._session_analyzer.analyze()
             traces.append(f"  Found {len(patterns)} session patterns")
             if patterns:
-                return PolicyVector.from_git_patterns(
-                    patterns
-                )  # Reuse pattern conversion
+                return PolicyVector.from_git_patterns(patterns)  # Reuse pattern conversion
 
         # Try to import session analyzer
         try:
@@ -257,9 +255,7 @@ class HabitEncoder:
             patterns = self._code_analyzer.analyze()
             traces.append(f"  Found {len(patterns)} code patterns")
             if patterns:
-                return PolicyVector.from_git_patterns(
-                    patterns
-                )  # Reuse pattern conversion
+                return PolicyVector.from_git_patterns(patterns)  # Reuse pattern conversion
 
         # Try to import code analyzer
         try:
@@ -305,9 +301,7 @@ class HabitEncoder:
 
         # Normalize weights
         total_weight = sum(w for _, w in policies)
-        normalized: list[tuple[PolicyVector, float]] = [
-            (p, w / total_weight) for p, w in policies
-        ]
+        normalized: list[tuple[PolicyVector, float]] = [(p, w / total_weight) for p, w in policies]
 
         # Start with first policy
         result = normalized[0][0]
@@ -324,9 +318,7 @@ class HabitEncoder:
         return result
 
 
-def encode_habits(
-    repo_path: Path | str, config: HabitEncoderConfig | None = None
-) -> PolicyVector:
+def encode_habits(repo_path: Path | str, config: HabitEncoderConfig | None = None) -> PolicyVector:
     """
     Convenience function to encode habits from a repository.
 

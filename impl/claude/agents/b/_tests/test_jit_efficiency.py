@@ -196,9 +196,7 @@ class TestLatencyReport:
             LatencyMeasurement(1_200_000, 0, 1_200_000, 10),
         ]
 
-        report = LatencyReport.from_benchmarks(
-            baseline, jit, JITCompilationTarget.REGEX
-        )
+        report = LatencyReport.from_benchmarks(baseline, jit, JITCompilationTarget.REGEX)
 
         assert report.baseline_ms == 11.0  # Average of 10 and 12
         assert report.jit_ms == 1.1  # Average of 1 and 1.2
@@ -275,9 +273,7 @@ class TestRegexJITCompiler:
         assert artifact.compilation_time_ms >= 0
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(
-        self, bid_grammar: str, bid_inputs: list[str]
-    ) -> None:
+    def test_compiled_parse_success(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test that compiled parser works correctly."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -348,9 +344,7 @@ class TestJumpTableJITCompiler:
         assert artifact.target == JITCompilationTarget.JUMP_TABLE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(
-        self, jump_table_grammar: str, jump_table_input: str
-    ) -> None:
+    def test_compiled_parse_success(self, jump_table_grammar: str, jump_table_input: str) -> None:
         """Test that jump table parser works."""
         compiler = JumpTableJITCompiler()
         config = CompilationConfig()
@@ -397,9 +391,7 @@ class TestBytecodeJITCompiler:
         assert artifact.target == JITCompilationTarget.BYTECODE
         assert artifact.parse_fn is not None
 
-    def test_compiled_parse_success(
-        self, bid_grammar: str, bid_inputs: list[str]
-    ) -> None:
+    def test_compiled_parse_success(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test that bytecode parser works."""
         compiler = BytecodeJITCompiler()
         config = CompilationConfig()
@@ -500,9 +492,7 @@ class TestCompiledTongue:
         assert tongue.tongue_version == "1.0.0"
         assert tongue.usage_count == 0
 
-    def test_parse_increments_usage(
-        self, bid_grammar: str, bid_inputs: list[str]
-    ) -> None:
+    def test_parse_increments_usage(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test that parse increments usage count."""
         compiler = RegexJITCompiler()
         config = CompilationConfig()
@@ -925,9 +915,7 @@ class TestJITEfficiencyMonitor:
         assert compiled is not None
         assert compiled.tongue_name == "BidTongue"
 
-    def test_benchmark_and_credit(
-        self, bid_grammar: str, bid_inputs: list[str]
-    ) -> None:
+    def test_benchmark_and_credit(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test benchmarking and crediting."""
         import re
 
@@ -1166,9 +1154,7 @@ class TestIntegration:
             m = pattern.match(text)
             return m.groupdict() if m else None
 
-        report, entry = monitor.benchmark_and_credit(
-            "BidTongue", baseline, compiled, bid_inputs
-        )
+        report, entry = monitor.benchmark_and_credit("BidTongue", baseline, compiled, bid_inputs)
 
         # 7. Verify credits recorded (can be negative if no speedup in microbenchmark)
         # In real HFT scenarios, JIT provides significant speedup, but in tests
@@ -1279,9 +1265,7 @@ class TestEdgeCases:
 class TestPerformance:
     """Performance tests (marked slow for selective running)."""
 
-    def test_jit_speedup_measurable(
-        self, bid_grammar: str, bid_inputs: list[str]
-    ) -> None:
+    def test_jit_speedup_measurable(self, bid_grammar: str, bid_inputs: list[str]) -> None:
         """Test that JIT provides measurable speedup."""
         import re
 

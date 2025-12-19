@@ -217,9 +217,7 @@ class KgentAllocationManager:
     def _ensure_initialized(self) -> None:
         """Ensure allocations are initialized."""
         if not self._initialized:
-            raise RuntimeError(
-                "KgentAllocationManager not initialized. Call initialize() first."
-            )
+            raise RuntimeError("KgentAllocationManager not initialized. Call initialize() first.")
 
     # -------------------------------------------------------------------------
     # Working Memory
@@ -286,9 +284,7 @@ class KgentAllocationManager:
             "value": value,
             "stored_at": datetime.now().isoformat(),
         }
-        return await self._eigenvector.store(
-            f"eigenvector:{dimension}", content, embedding
-        )
+        return await self._eigenvector.store(f"eigenvector:{dimension}", content, embedding)
 
     async def cache_soul_state(
         self,

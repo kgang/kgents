@@ -181,11 +181,13 @@ class SoulMemory:
                     tags_str = memory.metadata.get("tags", "")
                     tags = tags_str.split(",") if tags_str else []
 
-                    beliefs.append(BeliefMemory(
-                        memory_id=memory_id,
-                        content=content,
-                        tags=tags,
-                    ))
+                    beliefs.append(
+                        BeliefMemory(
+                            memory_id=memory_id,
+                            content=content,
+                            tags=tags,
+                        )
+                    )
 
         return beliefs
 
@@ -484,8 +486,7 @@ class SoulMemory:
 
         if not include_seeds:
             results = [
-                r for r in results
-                if r.memory.metadata.get("category") != MemoryCategory.SEED.value
+                r for r in results if r.memory.metadata.get("category") != MemoryCategory.SEED.value
             ]
 
         return results[:limit]
@@ -513,11 +514,13 @@ class SoulMemory:
                     tags_str = result.memory.metadata.get("tags", "")
                     tags = tags_str.split(",") if tags_str else []
 
-                    beliefs.append(BeliefMemory(
-                        memory_id=result.memory.datum_id,
-                        content=content,
-                        tags=tags,
-                    ))
+                    beliefs.append(
+                        BeliefMemory(
+                            memory_id=result.memory.datum_id,
+                            content=content,
+                            tags=tags,
+                        )
+                    )
 
         return beliefs[:limit]
 
@@ -544,9 +547,7 @@ class SoulMemory:
             "dormant": status.dormant_count,
             "composting": status.composting_count,
             "by_category": categories,
-            "cherished": sum(
-                1 for m in self.mgent._memories.values() if m.is_cherished
-            ),
+            "cherished": sum(1 for m in self.mgent._memories.values() if m.is_cherished),
             "avg_relevance": status.average_relevance,
         }
 

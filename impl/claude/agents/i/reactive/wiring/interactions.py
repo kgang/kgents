@@ -242,9 +242,7 @@ class FocusState:
         Returns:
             ID of focused item, or None if group empty
         """
-        group_items = [
-            item for item in self._get_sorted_focusable() if item.group == group
-        ]
+        group_items = [item for item in self._get_sorted_focusable() if item.group == group]
         if not group_items:
             return None
 
@@ -637,9 +635,7 @@ class SelectionState(Generic[T]):
     mode: SelectionMode = SelectionMode.SINGLE
     _selected: set[T] = field(default_factory=set)
     _anchor: T | None = None  # For range selection
-    _signal: Signal[frozenset[T]] = field(
-        default_factory=lambda: Signal.of(frozenset())
-    )
+    _signal: Signal[frozenset[T]] = field(default_factory=lambda: Signal.of(frozenset()))
     _event_bus: EventBus | None = None
 
     @property
@@ -874,12 +870,10 @@ class InteractionHandler:
         ))
     """
 
-    _handlers: dict[InteractionType | str, list[Callable[[Interaction[Any]], None]]] = (
-        field(default_factory=lambda: {})
+    _handlers: dict[InteractionType | str, list[Callable[[Interaction[Any]], None]]] = field(
+        default_factory=lambda: {}
     )
-    _global_handlers: list[Callable[[Interaction[Any]], None]] = field(
-        default_factory=list
-    )
+    _global_handlers: list[Callable[[Interaction[Any]], None]] = field(default_factory=list)
     _event_bus: EventBus | None = None
     _parent: InteractionHandler | None = None
 
@@ -1164,9 +1158,7 @@ class InteractiveDashboardState:
 
         return self.keyboard.handle(event)
 
-    def handle_click(
-        self, agent_id: str, modifiers: KeyModifiers | None = None
-    ) -> None:
+    def handle_click(self, agent_id: str, modifiers: KeyModifiers | None = None) -> None:
         """Handle click on an agent."""
         mods = modifiers or KeyModifiers()
 

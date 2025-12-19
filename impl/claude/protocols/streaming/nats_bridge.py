@@ -148,9 +148,7 @@ class CircuitBreaker:
         elif self._state == CircuitState.CLOSED:
             if self._failures >= self.failure_threshold:
                 self._state = CircuitState.OPEN
-                logger.warning(
-                    f"Circuit breaker opened after {self._failures} failures"
-                )
+                logger.warning(f"Circuit breaker opened after {self._failures} failures")
 
     def reset(self) -> None:
         """Reset circuit breaker to initial state."""
@@ -164,9 +162,7 @@ class CircuitBreaker:
         return {
             "state": self._state.value,
             "failures": self._failures,
-            "last_failure": self._last_failure.isoformat()
-            if self._last_failure
-            else None,
+            "last_failure": self._last_failure.isoformat() if self._last_failure else None,
             "failure_threshold": self.failure_threshold,
             "recovery_timeout": self.recovery_timeout,
         }
@@ -261,9 +257,7 @@ class NATSBridge:
                 stream_config = StreamConfig(
                     name=self.config.stream_name,
                     subjects=self.config.stream_subjects,
-                    max_age=self.config.stream_max_age_hours
-                    * 3600
-                    * 1_000_000_000,  # nanoseconds
+                    max_age=self.config.stream_max_age_hours * 3600 * 1_000_000_000,  # nanoseconds
                     max_msgs_per_subject=self.config.stream_max_msgs_per_subject,
                 )
                 await self._js.add_stream(stream_config)
@@ -456,9 +450,7 @@ class NATSBridge:
         session_id_str = str(session_id)
 
         if self.is_connected:
-            async for event in self._jetstream_subscribe(
-                session_id_str, from_beginning
-            ):
+            async for event in self._jetstream_subscribe(session_id_str, from_beginning):
                 yield event
         else:
             async for event in self._fallback_subscribe(session_id_str):

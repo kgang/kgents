@@ -265,9 +265,7 @@ class MetricsPanel(Widget):
         # Pressure gauge (0-100)
         pressure_bar = _gauge_bar(self.pressure, 100, width - 25)
         pressure_spark = _sparkline(self._pressure_state.history, 10)
-        pressure_indicator = (
-            "🔴" if self.pressure > 80 else "🟡" if self.pressure >= 50 else "🟢"
-        )
+        pressure_indicator = "🔴" if self.pressure > 80 else "🟡" if self.pressure >= 50 else "🟢"
         lines.append(
             f" Pressure  {pressure_indicator} {pressure_bar} {self.pressure:5.1f} {pressure_spark}"
         )
@@ -284,9 +282,7 @@ class MetricsPanel(Widget):
         temp_spark = _sparkline(self._temperature_state.history, 10)
         temp_indicator = "🔥" if self.temperature > 0.8 else "🌡️"
         temp_pct = self.temperature * 100
-        lines.append(
-            f" Temp      {temp_indicator} {temp_bar} {temp_pct:5.1f}% {temp_spark}"
-        )
+        lines.append(f" Temp      {temp_indicator} {temp_bar} {temp_pct:5.1f}% {temp_spark}")
 
         return "\n".join(lines)
 

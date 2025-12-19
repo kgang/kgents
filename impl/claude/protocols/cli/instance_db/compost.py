@@ -200,9 +200,7 @@ class NutrientBlock:
             merged.frequency_sketch[key] = merged.frequency_sketch.get(key, 0) + count
 
         # Merge cardinality sketches (max of estimates)
-        for key in set(self.cardinality_sketch.keys()) | set(
-            other.cardinality_sketch.keys()
-        ):
+        for key in set(self.cardinality_sketch.keys()) | set(other.cardinality_sketch.keys()):
             merged.cardinality_sketch[key] = max(
                 self.cardinality_sketch.get(key, 0),
                 other.cardinality_sketch.get(key, 0),
@@ -210,28 +208,22 @@ class NutrientBlock:
 
         # Merge sum/count (add)
         for key in set(self.sum_values.keys()) | set(other.sum_values.keys()):
-            merged.sum_values[key] = self.sum_values.get(
-                key, 0.0
-            ) + other.sum_values.get(key, 0.0)
+            merged.sum_values[key] = self.sum_values.get(key, 0.0) + other.sum_values.get(key, 0.0)
         for key in set(self.count_values.keys()) | set(other.count_values.keys()):
-            merged.count_values[key] = self.count_values.get(
+            merged.count_values[key] = self.count_values.get(key, 0) + other.count_values.get(
                 key, 0
-            ) + other.count_values.get(key, 0)
+            )
 
         # Merge min/max
         for key in set(self.min_values.keys()) | set(other.min_values.keys()):
             vals = [
-                v
-                for v in [self.min_values.get(key), other.min_values.get(key)]
-                if v is not None
+                v for v in [self.min_values.get(key), other.min_values.get(key)] if v is not None
             ]
             if vals:
                 merged.min_values[key] = min(vals)
         for key in set(self.max_values.keys()) | set(other.max_values.keys()):
             vals = [
-                v
-                for v in [self.max_values.get(key), other.max_values.get(key)]
-                if v is not None
+                v for v in [self.max_values.get(key), other.max_values.get(key)] if v is not None
             ]
             if vals:
                 merged.max_values[key] = max(vals)

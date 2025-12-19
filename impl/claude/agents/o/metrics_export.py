@@ -530,12 +530,9 @@ class OpenTelemetryExporter(MetricsExporter):
         for metric in metrics:
             data_point = {
                 "asDouble": metric.value,
-                "timeUnixNano": (
-                    int(metric.timestamp * 1e9) if metric.timestamp else None
-                ),
+                "timeUnixNano": (int(metric.timestamp * 1e9) if metric.timestamp else None),
                 "attributes": [
-                    {"key": k, "value": {"stringValue": v}}
-                    for k, v in metric.labels.items()
+                    {"key": k, "value": {"stringValue": v}} for k, v in metric.labels.items()
                 ],
             }
 
@@ -726,11 +723,7 @@ def create_metrics_exporter(
     Returns:
         Configured MetricsExporter
     """
-    config = (
-        MetricsExportConfig.from_dict(config_dict)
-        if config_dict
-        else MetricsExportConfig()
-    )
+    config = MetricsExportConfig.from_dict(config_dict) if config_dict else MetricsExportConfig()
 
     exporters: dict[
         str, type[PrometheusExporter] | type[OpenTelemetryExporter] | type[JSONExporter]

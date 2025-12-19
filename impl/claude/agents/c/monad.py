@@ -112,9 +112,7 @@ class MaybeEither(Generic[A]):
         Short-circuits on Nothing or Left.
         """
         if self._value.is_nothing():
-            return MaybeEither(
-                Nothing
-            )  # Nothing is compatible with Maybe[Either[Any, B]]
+            return MaybeEither(Nothing)  # Nothing is compatible with Maybe[Either[Any, B]]
         inner = self._value.value  # type: ignore
         if inner.is_left():
             return MaybeEither(Just(inner))

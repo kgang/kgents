@@ -182,28 +182,26 @@ async def check_compatibility(
 
     # Generate reason
     if compatible:
-        reason = f"Compatible tongues. Domain overlap: {domain_overlap:.2f}, no constraint conflicts."
+        reason = (
+            f"Compatible tongues. Domain overlap: {domain_overlap:.2f}, no constraint conflicts."
+        )
     elif constraint_conflicts:
         reason = f"Incompatible due to constraint conflicts: {'; '.join(constraint_conflicts)}"
     elif domain_overlap > 0.8:
-        reason = f"High domain overlap ({domain_overlap:.2f}) suggests redundancy, not incompatibility."
+        reason = (
+            f"High domain overlap ({domain_overlap:.2f}) suggests redundancy, not incompatibility."
+        )
     else:
         reason = "Incompatible for unknown reasons."
 
     # Generate suggestions
     suggestions = []
     if composable and composition_type == "sequential":
-        suggestions.append(
-            f"Consider sequential composition: {tongue_a.name} >> {tongue_b.name}"
-        )
+        suggestions.append(f"Consider sequential composition: {tongue_a.name} >> {tongue_b.name}")
     if domain_overlap > 0.5 and not constraint_conflicts:
-        suggestions.append(
-            "Tongues serve similar domains - consider merging or differentiating"
-        )
+        suggestions.append("Tongues serve similar domains - consider merging or differentiating")
     if constraint_conflicts:
-        suggestions.append(
-            "Resolve constraint conflicts through H-gent dialectic synthesis"
-        )
+        suggestions.append("Resolve constraint conflicts through H-gent dialectic synthesis")
 
     return CompatibilityReport(
         compatible=compatible,

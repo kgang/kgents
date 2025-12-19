@@ -43,9 +43,7 @@ class InvocationContext:
     _reflector_ctx: Any = field(default=None, repr=False)
 
     @classmethod
-    def from_args(
-        cls, args: list[str], reflector_ctx: Any = None
-    ) -> "InvocationContext":
+    def from_args(cls, args: list[str], reflector_ctx: Any = None) -> "InvocationContext":
         """
         Parse context from command-line arguments.
 

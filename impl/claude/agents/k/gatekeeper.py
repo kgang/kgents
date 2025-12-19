@@ -100,11 +100,7 @@ class Violation:
 
         if self.evidence:
             # Truncate long evidence
-            evidence = (
-                self.evidence[:100] + "..."
-                if len(self.evidence) > 100
-                else self.evidence
-            )
+            evidence = self.evidence[:100] + "..." if len(self.evidence) > 100 else self.evidence
             lines.append(f"    Evidence: {evidence}")
 
         if self.suggestion:
@@ -238,9 +234,7 @@ class TastefullnessAnalyzer:
         violations.extend(function_violations)
 
         # Check 3: Import complexity
-        import_count = len(
-            [l for l in lines if l.strip().startswith(("import ", "from "))]
-        )
+        import_count = len([l for l in lines if l.strip().startswith(("import ", "from "))])
         if import_count > self.MAX_IMPORTS:
             violations.append(
                 Violation(
@@ -465,9 +459,7 @@ class GratitudeAnalyzer:
         max_signals = 5
 
         # Check 1: License/credits comments
-        if re.search(
-            r"#.*license|#.*credit|#.*thanks|#.*based on", content, re.IGNORECASE
-        ):
+        if re.search(r"#.*license|#.*credit|#.*thanks|#.*based on", content, re.IGNORECASE):
             gratitude_signals += 1
             insights.append("Credits/license acknowledgment found")
 
@@ -482,9 +474,7 @@ class GratitudeAnalyzer:
 
         # Check 3: Entropy acknowledgment
         if re.search(r"random|entropy|seed|uuid", content, re.IGNORECASE):
-            if re.search(
-                r"#.*seed|#.*random|seed\s*=|random_state", content, re.IGNORECASE
-            ):
+            if re.search(r"#.*seed|#.*random|seed\s*=|random_state", content, re.IGNORECASE):
                 gratitude_signals += 1
                 insights.append("Entropy sources documented")
             else:
@@ -556,9 +546,7 @@ class ValidationHistory:
         entry = ValidationHistoryEntry(
             target=result.target,
             timestamp=result.timestamp,
-            violations=[
-                f"{v.principle.value}:{v.message[:50]}" for v in result.violations
-            ],
+            violations=[f"{v.principle.value}:{v.message[:50]}" for v in result.violations],
             passed=result.passed,
         )
         self._entries.append(entry)
@@ -1017,9 +1005,7 @@ class SemanticGatekeeper:
         )
 
         # Collect insights
-        all_insights = (
-            taste_result.insights + comp_result.insights + grat_result.insights
-        )
+        all_insights = taste_result.insights + comp_result.insights + grat_result.insights
 
         # Generate principle explanations if requested
         explanations: dict[str, str] = {}
@@ -1097,9 +1083,7 @@ class SemanticGatekeeper:
         for principle in violated_principles:
             explanation = principle_details.get(principle, "")
             violation_count = sum(1 for v in violations if v.principle == principle)
-            explanations[principle.value] = (
-                f"{explanation} (Found {violation_count} issue(s))"
-            )
+            explanations[principle.value] = f"{explanation} (Found {violation_count} issue(s))"
 
         return explanations
 
@@ -1241,12 +1225,8 @@ List any violations of the kgents principles. If none found, say "No violations 
                     severity=severity,
                     message=message,
                     location=f"{target} (LLM analysis)",
-                    evidence=evidence_match.group(1).strip()[:200]
-                    if evidence_match
-                    else None,
-                    suggestion=suggestion_match.group(1).strip()
-                    if suggestion_match
-                    else None,
+                    evidence=evidence_match.group(1).strip()[:200] if evidence_match else None,
+                    suggestion=suggestion_match.group(1).strip() if suggestion_match else None,
                 )
             )
 

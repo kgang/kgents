@@ -102,9 +102,7 @@ class XYZHealth:
     @property
     def overall(self) -> float:
         """Overall health (geometric mean of dimensions)."""
-        result: float = (self.x_telemetry * self.y_semantic * self.z_economic) ** (
-            1 / 3
-        )
+        result: float = (self.x_telemetry * self.y_semantic * self.z_economic) ** (1 / 3)
         return result
 
     @property
@@ -284,9 +282,7 @@ class OgentPoller:
 
                 # Derive health from metrics
                 return XYZHealth(
-                    x_telemetry=min(
-                        1.0, max(0.0, 1.0 - metrics.get("error_rate", 0.0))
-                    ),
+                    x_telemetry=min(1.0, max(0.0, 1.0 - metrics.get("error_rate", 0.0))),
                     x_latency_ms=metrics.get("latency_ms", 0.0),
                     x_error_rate=metrics.get("error_rate", 0.0),
                     x_throughput=metrics.get("throughput", 0.0),

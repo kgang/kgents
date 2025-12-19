@@ -77,16 +77,12 @@ class TestGardenStoreInit:
         await store.init()
         # Should not raise
 
-    async def test_init_creates_tables(
-        self, store: GardenStore, temp_db_path: Path
-    ) -> None:
+    async def test_init_creates_tables(self, store: GardenStore, temp_db_path: Path) -> None:
         """Test that init creates all required tables."""
         import sqlite3
 
         conn = sqlite3.connect(str(temp_db_path))
-        cursor = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-        )
+        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
         tables = {row[0] for row in cursor.fetchall()}
         conn.close()
 
@@ -104,9 +100,7 @@ class TestGardenStoreInit:
 class TestGardenSaveLoad:
     """Tests for saving and loading gardens."""
 
-    async def test_save_garden(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_save_garden(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test saving a garden."""
         await store.save(sample_garden)
 
@@ -207,9 +201,7 @@ class TestDefaultGarden:
 
         assert garden1.garden_id == garden2.garden_id
 
-    async def test_set_default(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_set_default(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test setting a specific garden as default."""
         await store.save(sample_garden)
         await store.set_default(sample_garden.garden_id)
@@ -226,9 +218,7 @@ class TestDefaultGarden:
 class TestGestureStorage:
     """Tests for gesture persistence."""
 
-    async def test_save_gesture(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_save_gesture(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test saving a gesture."""
         await store.save(sample_garden)
 
@@ -237,9 +227,7 @@ class TestGestureStorage:
 
         assert gesture_id > 0
 
-    async def test_get_gestures(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_get_gestures(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test retrieving gestures."""
         await store.save(sample_garden)
 
@@ -331,9 +319,7 @@ class TestPlotStorage:
         assert loaded.plots["extra"].progress == 0.5
         assert loaded.plots["extra"].rigidity == 0.8
 
-    async def test_update_plot(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_update_plot(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test updating a specific plot."""
         await store.save(sample_garden)
 
@@ -409,9 +395,7 @@ class TestListAndCount:
 class TestDelete:
     """Tests for deleting gardens."""
 
-    async def test_delete_garden(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_delete_garden(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test deleting a garden."""
         await store.save(sample_garden)
         assert await store.count() == 1
@@ -464,9 +448,7 @@ class TestAutoSaveIntegration:
         assert len(gestures) >= 1
         assert any(g.target == "world.test" for g in gestures)
 
-    async def test_apply_gesture_without_store(
-        self, sample_garden: GardenState
-    ) -> None:
+    async def test_apply_gesture_without_store(self, sample_garden: GardenState) -> None:
         """Test that apply_gesture works without store."""
         gesture = observe("world.test", "No store")
         result = await apply_gesture(sample_garden, gesture)
@@ -482,9 +464,7 @@ class TestAutoSaveIntegration:
         await store.save(sample_garden)
 
         gesture = observe("world.test", "No auto-save")
-        result = await apply_gesture(
-            sample_garden, gesture, store=store, auto_save=False
-        )
+        result = await apply_gesture(sample_garden, gesture, store=store, auto_save=False)
 
         assert result.accepted
 
@@ -511,9 +491,7 @@ class TestFactory:
         store = create_garden_store()
         assert "gardener_gardens.db" in str(store.db_path)
 
-    async def test_get_garden_store_singleton(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_get_garden_store_singleton(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_garden_store returns singleton."""
         reset_garden_store()
 
@@ -556,9 +534,7 @@ class TestEdgeCases:
         assert loaded is not None
         assert len(loaded.plots) == 0
 
-    async def test_plot_with_metadata(
-        self, store: GardenStore, sample_garden: GardenState
-    ) -> None:
+    async def test_plot_with_metadata(self, store: GardenStore, sample_garden: GardenState) -> None:
         """Test plot with complex metadata."""
         sample_garden.plots["test-plot"].metadata = {
             "key": "value",

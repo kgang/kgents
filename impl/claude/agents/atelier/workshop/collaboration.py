@@ -180,9 +180,7 @@ class Collaboration:
             return events, piece
 
         # Gather all results
-        results = await asyncio.gather(
-            *[collect_piece(artisan) for artisan in self.artisans]
-        )
+        results = await asyncio.gather(*[collect_piece(artisan) for artisan in self.artisans])
 
         # Yield events from all artisans (interleaved would be better, but complex)
         pieces: list[Piece] = []
@@ -202,9 +200,7 @@ class Collaboration:
             return
 
         # Merge pieces
-        merged_content = "\n\n---\n\n".join(
-            f"[{p.artisan}]\n{p.content}" for p in pieces
-        )
+        merged_content = "\n\n---\n\n".join(f"[{p.artisan}]\n{p.content}" for p in pieces)
 
         merged_piece = Piece(
             content=merged_content,
@@ -213,9 +209,7 @@ class Collaboration:
             form="collection",
             provenance=Provenance(
                 interpretation=f"Ensemble of {len(pieces)} voices",
-                considerations=[
-                    f"{p.artisan}: {p.provenance.interpretation}" for p in pieces
-                ],
+                considerations=[f"{p.artisan}: {p.provenance.interpretation}" for p in pieces],
                 choices=[
                     Choice(
                         decision="Created ensemble collection",
@@ -401,9 +395,7 @@ class Collaboration:
 
                     if not is_last:
                         # Extract the visible edge for next artisan
-                        visible_edge = _extract_edge(
-                            str(piece.content), visibility_ratio
-                        )
+                        visible_edge = _extract_edge(str(piece.content), visibility_ratio)
 
                         # Prepare next commission with limited visibility
                         current_commission = Commission(
@@ -432,8 +424,7 @@ class Collaboration:
                 provenance=Provenance(
                     interpretation=f"Exquisite corpse with {len(all_pieces)} contributors, each seeing only {int(visibility_ratio * 100)}% of the previous",
                     considerations=[
-                        f"{p.artisan} contributed: {str(p.content)[:50]}..."
-                        for p in all_pieces
+                        f"{p.artisan} contributed: {str(p.content)[:50]}..." for p in all_pieces
                     ],
                     choices=[
                         Choice(

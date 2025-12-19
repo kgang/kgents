@@ -349,9 +349,7 @@ class ProprioceptionBars(Widget):
         yield Static(f"MORPHOLOGY: {self._state.morphology}", classes="morphology-line")
         yield Static("")
         yield ProprioceptionBar(label="strain:", value=self._state.strain, id="strain")
-        yield ProprioceptionBar(
-            label="pressure:", value=self._state.pressure, id="pressure"
-        )
+        yield ProprioceptionBar(label="pressure:", value=self._state.pressure, id="pressure")
         yield ReplicaIndicator(label="reach:", count=self._state.reach, id="reach")
         yield ProprioceptionBar(
             label="temperature:", value=self._state.temperature, id="temperature"
@@ -367,9 +365,7 @@ class ProprioceptionBars(Widget):
             self.query_one("#strain", ProprioceptionBar).set_value(state.strain)
             self.query_one("#pressure", ProprioceptionBar).set_value(state.pressure)
             self.query_one("#reach", ReplicaIndicator).set_count(state.reach)
-            self.query_one("#temperature", ProprioceptionBar).set_value(
-                state.temperature
-            )
+            self.query_one("#temperature", ProprioceptionBar).set_value(state.temperature)
             self.query_one("#trauma", TraumaIndicator).set_level(state.trauma)
         except Exception:
             pass  # Widget not mounted yet

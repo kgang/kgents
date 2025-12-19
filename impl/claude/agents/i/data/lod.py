@@ -180,14 +180,11 @@ class LODProjector:
         # Linear interpolation for now
         # Could be enhanced with easing functions
         return {
-            "opacity": 1.0 - progress
-            if from_level.value < to_level.value
-            else progress,
+            "opacity": 1.0 - progress if from_level.value < to_level.value else progress,
             "scale": 1.0 + progress * 0.5
             if from_level.value < to_level.value
             else 1.5 - progress * 0.5,
-            "detail_level": from_level.value
-            + (to_level.value - from_level.value) * progress,
+            "detail_level": from_level.value + (to_level.value - from_level.value) * progress,
         }
 
 

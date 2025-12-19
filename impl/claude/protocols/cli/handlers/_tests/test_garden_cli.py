@@ -361,9 +361,7 @@ class TestTendCommand:
         """Test kg tend prune with --reason."""
         from protocols.cli.handlers.tend import cmd_tend
 
-        result = cmd_tend(
-            ["prune", "concept.prompt.old", "--reason", "No longer needed"]
-        )
+        result = cmd_tend(["prune", "concept.prompt.old", "--reason", "No longer needed"])
         assert result == 0
 
     def test_tend_prune_without_reason(self) -> None:
@@ -391,9 +389,7 @@ class TestTendCommand:
         """Test kg tend water with --feedback."""
         from protocols.cli.handlers.tend import cmd_tend
 
-        result = cmd_tend(
-            ["water", "concept.prompt.task", "--feedback", "Add specificity"]
-        )
+        result = cmd_tend(["water", "concept.prompt.task", "--feedback", "Add specificity"])
         assert result == 0
 
     def test_tend_water_json(self) -> None:

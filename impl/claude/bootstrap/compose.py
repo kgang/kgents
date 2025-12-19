@@ -99,9 +99,7 @@ class Compose(Agent[tuple[Agent[A, B], Agent[B, C]], ComposedAgent[A, B, C]]):
     def name(self) -> str:
         return "Compose"
 
-    async def invoke(
-        self, input: tuple[Agent[A, B], Agent[B, C]]
-    ) -> ComposedAgent[A, B, C]:
+    async def invoke(self, input: tuple[Agent[A, B], Agent[B, C]]) -> ComposedAgent[A, B, C]:
         """Compose the two agents."""
         f, g = input
         return compose(f, g)

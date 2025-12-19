@@ -83,9 +83,7 @@ class HolographicBuffer:
     _history: deque[dict[str, Any]] = field(init=False)
     _event_count: int = field(default=0, init=False)
     _broadcast_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False)
-    _pending_broadcasts: set[asyncio.Task[None]] = field(
-        default_factory=set, init=False
-    )
+    _pending_broadcasts: set[asyncio.Task[None]] = field(default_factory=set, init=False)
     _shutting_down: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:

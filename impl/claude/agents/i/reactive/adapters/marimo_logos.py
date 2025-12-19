@@ -169,9 +169,7 @@ class LogosCell:
                 return loop.run_until_complete(
                     self.invoke(path, observer, input=input, target=target)
                 )
-            return loop.run_until_complete(
-                self.invoke(path, observer, input=input, target=target)
-            )
+            return loop.run_until_complete(self.invoke(path, observer, input=input, target=target))
         except RuntimeError:
             # No event loop, create one
             return asyncio.run(self.invoke(path, observer, input=input, target=target))

@@ -132,9 +132,7 @@ class TestLODProjector:
 
         assert isinstance(widget, Static)
 
-    def test_project_different_levels_return_different_widgets(
-        self, projector, sample_snapshot
-    ):
+    def test_project_different_levels_return_different_widgets(self, projector, sample_snapshot):
         """Test that different LOD levels return different widget types."""
         orbit_widget = projector.project(sample_snapshot, LODLevel.ORBIT)
         surface_widget = projector.project(sample_snapshot, LODLevel.SURFACE)

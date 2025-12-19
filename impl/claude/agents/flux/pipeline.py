@@ -141,9 +141,7 @@ class FluxPipeline(Generic[A, B]):
 
         if errors:
             error_msgs = [f"Stage {i} ({name}): {e}" for i, name, e in errors]
-            raise FluxPipelineError(
-                f"Errors stopping pipeline: {'; '.join(error_msgs)}"
-            )
+            raise FluxPipelineError(f"Errors stopping pipeline: {'; '.join(error_msgs)}")
 
     async def wait(self) -> None:
         """Wait for all stages to complete."""

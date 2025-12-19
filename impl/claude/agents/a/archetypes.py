@@ -130,11 +130,7 @@ class Archetype(Agent[A, B], Generic[A, B]):
             if base is Archetype:
                 # We've reached the base, no archetype parent found
                 break
-            if (
-                isinstance(base, type)
-                and issubclass(base, Archetype)
-                and base is not Archetype
-            ):
+            if isinstance(base, type) and issubclass(base, Archetype) and base is not Archetype:
                 # Found an archetype parent (Kappa, Lambda, Delta, or custom)
                 archetype_parent = base
                 break

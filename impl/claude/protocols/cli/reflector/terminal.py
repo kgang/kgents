@@ -68,7 +68,10 @@ class TerminalReflector(BaseReflector):
                 self._fd3 = open(self._fd3_path, "w")  # noqa: SIM115
             except OSError as e:
                 if self._verbose:
-                    print(f"[reflector] Failed to open FD3 at {self._fd3_path}: {e}", file=self._stderr)
+                    print(
+                        f"[reflector] Failed to open FD3 at {self._fd3_path}: {e}",
+                        file=self._stderr,
+                    )
 
     def _handle_event(self, event: RuntimeEvent) -> None:
         """Handle runtime events."""

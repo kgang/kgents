@@ -178,9 +178,7 @@ Create 4-8 nodes with meaningful connections."""
                 choices=[
                     Choice(
                         decision=f"Created {data.get('form', 'concept_map')}",
-                        reason=data.get(
-                            "legend", "Territory seemed to call for this form"
-                        ),
+                        reason=data.get("legend", "Territory seemed to call for this form"),
                         alternatives=[],
                     )
                 ],

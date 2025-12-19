@@ -161,9 +161,7 @@ class SQLPersonaGarden:
             return garden
 
         except ImportError:
-            raise RuntimeError(
-                "asyncpg required for SQLPersonaGarden: pip install asyncpg"
-            )
+            raise RuntimeError("asyncpg required for SQLPersonaGarden: pip install asyncpg")
 
     async def close(self) -> None:
         """Close the connection pool."""
@@ -524,9 +522,7 @@ class SQLPersonaGarden:
                     )
                 else:
                     # Create new
-                    confidence = self._pattern_maturity_to_confidence(
-                        pattern.maturity.value
-                    )
+                    confidence = self._pattern_maturity_to_confidence(pattern.maturity.value)
                     await self.plant_pattern(
                         content=pattern.content,
                         source="hypnagogia",
@@ -576,9 +572,7 @@ class SQLPersonaGarden:
 
         return affected
 
-    async def _find_similar_entry(
-        self, content: str, threshold: float
-    ) -> Optional[GardenEntry]:
+    async def _find_similar_entry(self, content: str, threshold: float) -> Optional[GardenEntry]:
         """Find an entry with similar content using trigram similarity."""
         if not content or not content.strip():
             return None

@@ -59,9 +59,7 @@ class APIClient:
                     timeout=self.timeout,
                 )
             except ImportError:
-                raise ImportError(
-                    "httpx package required. Install with: pip install httpx"
-                )
+                raise ImportError("httpx package required. Install with: pip install httpx")
 
     def _is_transient_error(self, error: Exception) -> bool:
         """Classify HTTP errors as transient or permanent."""
@@ -77,12 +75,7 @@ class APIClient:
         # HTTP status code errors
         if "429" in error_str or "rate limit" in error_str:
             return True
-        if (
-            "500" in error_str
-            or "502" in error_str
-            or "503" in error_str
-            or "504" in error_str
-        ):
+        if "500" in error_str or "502" in error_str or "503" in error_str or "504" in error_str:
             return True
         if "timeout" in error_str:
             return True
@@ -195,9 +188,7 @@ class OpenRouterRuntime(Runtime):
         # Initialize composable API client morphism
         resolved_api_key = api_key or os.environ.get("OPENROUTER_API_KEY")
         if not resolved_api_key:
-            raise ValueError(
-                "OpenRouter API key required. Set OPENROUTER_API_KEY or pass api_key."
-            )
+            raise ValueError("OpenRouter API key required. Set OPENROUTER_API_KEY or pass api_key.")
         self._client = APIClient(
             api_key=resolved_api_key,
             model=model or self.DEFAULT_MODEL,
@@ -272,9 +263,7 @@ class OpenRouterRuntime(Runtime):
         if origin is not None:
             # For Union types, check if value matches any of the types
             if hasattr(origin, "__name__") and origin.__name__ == "UnionType":
-                return any(
-                    self._check_type_match(value, t) for t in get_args(expected_type)
-                )
+                return any(self._check_type_match(value, t) for t in get_args(expected_type))
 
             # For generic types like list[str], dict[str, int]
             # Just check the outer type (list, dict) for now

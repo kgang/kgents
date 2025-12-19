@@ -192,9 +192,7 @@ class FrameScheduler:
 
         # Get delta from clock state or raw value
         raw_delta = (
-            clock_state.delta
-            if clock_state
-            else (delta_ms or self.config.frame_duration_ms)
+            clock_state.delta if clock_state else (delta_ms or self.config.frame_duration_ms)
         )
         frame_from_clock = clock_state.frame if clock_state else current.frame + 1
         t_from_clock = clock_state.t if clock_state else current.elapsed_ms + raw_delta

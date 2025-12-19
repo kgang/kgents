@@ -546,9 +546,7 @@ class GraphLayout(Widget):
 
     def remove_edge(self, source: str, destination: str) -> None:
         """Remove an edge from the graph."""
-        self.edges = [
-            (s, d) for s, d in self.edges if not (s == source and d == destination)
-        ]
+        self.edges = [(s, d) for s, d in self.edges if not (s == source and d == destination)]
 
     def set_focus(self, node_id: str | None) -> None:
         """Set the focused node."""

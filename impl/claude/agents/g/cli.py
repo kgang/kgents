@@ -95,9 +95,7 @@ class GrammarianCLI(CLICapable):
             examples_path = Path(examples)
             if examples_path.exists():
                 example_list = [
-                    line.strip()
-                    for line in examples_path.read_text().splitlines()
-                    if line.strip()
+                    line.strip() for line in examples_path.read_text().splitlines() if line.strip()
                 ]
 
         g_gent = Grammarian()
@@ -198,23 +196,17 @@ class GrammarianCLI(CLICapable):
             examples_path = Path(examples)
             if examples_path.exists():
                 example_list = [
-                    line.strip()
-                    for line in examples_path.read_text().splitlines()
-                    if line.strip()
+                    line.strip() for line in examples_path.read_text().splitlines() if line.strip()
                 ]
 
         # Use pattern inference to evolve
         engine = PatternInferenceEngine()
 
         # Use infer_grammar instead of observe/hypothesize
-        report = await engine.infer_grammar(
-            example_list, domain=tongue_entries[0].tongue_domain
-        )
+        report = await engine.infer_grammar(example_list, domain=tongue_entries[0].tongue_domain)
 
         return {
-            "new_patterns": len(report.final_hypothesis.rules)
-            if report.final_hypothesis
-            else 0,
+            "new_patterns": len(report.final_hypothesis.rules) if report.final_hypothesis else 0,
             "grammar_updated": report.success,
             "hypothesis_confidence": report.final_hypothesis.confidence
             if report.final_hypothesis
@@ -348,11 +340,7 @@ class GrammarianCLI(CLICapable):
             file_path = Path(file)
             if file_path.exists():
                 pattern_list.extend(
-                    [
-                        line.strip()
-                        for line in file_path.read_text().splitlines()
-                        if line.strip()
-                    ]
+                    [line.strip() for line in file_path.read_text().splitlines() if line.strip()]
                 )
 
         if not pattern_list:
@@ -380,10 +368,6 @@ class GrammarianCLI(CLICapable):
             "pattern_count": len(pattern_list),
             "rule_count": len(hypothesis.rules),
             "confidence": hypothesis.confidence,
-            "grammar": hypothesis.to_bnf()
-            if hasattr(hypothesis, "to_bnf")
-            else str(hypothesis),
-            "level": hypothesis.level.value
-            if hasattr(hypothesis, "level")
-            else "unknown",
+            "grammar": hypothesis.to_bnf() if hasattr(hypothesis, "to_bnf") else str(hypothesis),
+            "level": hypothesis.level.value if hasattr(hypothesis, "level") else "unknown",
         }

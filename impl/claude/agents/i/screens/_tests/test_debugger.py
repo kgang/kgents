@@ -115,9 +115,7 @@ class TestDebuggerScreen:
             assert isinstance(screen, DebuggerScreen)
 
             # Get initial position
-            initial_index = (
-                screen._turn_dag.get_current_index() if screen._turn_dag else -1
-            )
+            initial_index = screen._turn_dag.get_current_index() if screen._turn_dag else -1
 
             # Press j to navigate next
             await pilot.press("j")

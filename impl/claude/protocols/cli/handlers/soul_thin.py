@@ -147,6 +147,7 @@ def _extract_kwargs(subcommand: str, args: list[str]) -> dict[str, Any]:
 def _print_help() -> None:
     """Print soul command help (projected from AGENTESE affordances)."""
     from protocols.cli.handlers._help import show_projected_help
+
     show_projected_help("self.soul", _print_help_fallback)
 
 

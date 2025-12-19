@@ -135,9 +135,7 @@ def record_invocation(
         _state.total_tokens_in += tokens_in
         _state.total_tokens_out += tokens_out
 
-        _state.invocations_by_context[context] = (
-            _state.invocations_by_context.get(context, 0) + 1
-        )
+        _state.invocations_by_context[context] = _state.invocations_by_context.get(context, 0) + 1
         _state.invocations_by_path[path] = _state.invocations_by_path.get(path, 0) + 1
 
         if not success:

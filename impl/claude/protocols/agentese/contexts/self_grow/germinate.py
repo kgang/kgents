@@ -288,9 +288,7 @@ class GerminateNode(BaseLogosNode):
 
         async with tracer.start_span_async("growth.germinate") as span:
             span.set_attribute("growth.phase", "germinate")
-            span.set_attribute(
-                "growth.proposal.handle", f"{proposal.context}.{proposal.entity}"
-            )
+            span.set_attribute("growth.proposal.handle", f"{proposal.context}.{proposal.entity}")
             span.set_attribute("growth.proposal.hash", proposal.content_hash)
 
             # Generate JIT source

@@ -237,9 +237,7 @@ class TestBasePolyInterface:
             new_value: int
 
         @dataclass
-        class SimpleInterface(
-            BasePolyInterface[SimpleState, SimpleInput, SimpleOutput]
-        ):
+        class SimpleInterface(BasePolyInterface[SimpleState, SimpleInput, SimpleOutput]):
             state: SimpleState = field(default_factory=SimpleState)
 
             def scope(self, s: SimpleState) -> Type[SimpleInput]:

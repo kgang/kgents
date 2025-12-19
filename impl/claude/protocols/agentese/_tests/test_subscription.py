@@ -335,9 +335,7 @@ class TestSubscriptionManager:
         """Test emitting to multiple matching subscribers."""
         manager = SubscriptionManager()
         sub1 = await manager.subscribe("self.**")  # Matches any depth under self
-        sub2 = await manager.subscribe(
-            "self.memory.*"
-        )  # Matches one level under self.memory
+        sub2 = await manager.subscribe("self.memory.*")  # Matches one level under self.memory
         sub3 = await manager.subscribe("world.*")
 
         delivered = manager.emit_invoked(

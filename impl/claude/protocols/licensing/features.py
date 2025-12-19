@@ -238,18 +238,12 @@ class FeatureRegistry:
     @classmethod
     def get_features_for_tier(cls, tier: LicenseTier) -> list[FeatureFlag]:
         """Get all features available at a specific tier."""
-        return [
-            flag
-            for flag, required_tier in cls._FEATURE_TIERS.items()
-            if required_tier <= tier
-        ]
+        return [flag for flag, required_tier in cls._FEATURE_TIERS.items() if required_tier <= tier]
 
     @classmethod
     def get_features_by_category(cls, category: str) -> list[FeatureFlag]:
         """Get all features in a specific category."""
-        return [
-            flag for flag, cat in cls._FEATURE_CATEGORIES.items() if cat == category
-        ]
+        return [flag for flag, cat in cls._FEATURE_CATEGORIES.items() if cat == category]
 
     @classmethod
     def is_enabled(cls, feature: FeatureFlag, tier: LicenseTier) -> bool:

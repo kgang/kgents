@@ -416,9 +416,7 @@ class FunctorRegistry:
         reports = {}
         for name, functor in cls._functors.items():
             test_input = test_input_factory(name)
-            reports[name] = await verify_functor(
-                functor, identity_agent, f, g, test_input
-            )
+            reports[name] = await verify_functor(functor, identity_agent, f, g, test_input)
         return reports
 
 

@@ -75,9 +75,7 @@ async def execute_eigenvectors(ctx: InvocationContext, soul: Any) -> int:
     return 0
 
 
-def execute_audit(
-    ctx: InvocationContext, soul: Any, summary_mode: bool, limit: int
-) -> int:
+def execute_audit(ctx: InvocationContext, soul: Any, summary_mode: bool, limit: int) -> int:
     """Handle 'soul audit' command."""
     output = OutputFormatter(ctx)
     audit_trail = soul.audit
@@ -105,9 +103,7 @@ def execute_audit(
     return 0
 
 
-async def execute_garden(
-    ctx: InvocationContext, soul: Any, sync_hypnagogia: bool
-) -> int:
+async def execute_garden(ctx: InvocationContext, soul: Any, sync_hypnagogia: bool) -> int:
     """
     Handle 'soul garden' command - view PersonaGarden state.
 

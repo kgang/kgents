@@ -76,8 +76,7 @@ class PostgresRelationalStore:
         """
         if not ASYNCPG_AVAILABLE:
             raise ImportError(
-                "asyncpg is required for PostgresRelationalStore. "
-                "Install with: pip install asyncpg"
+                "asyncpg is required for PostgresRelationalStore. Install with: pip install asyncpg"
             )
 
         self._url = url
@@ -100,9 +99,7 @@ class PostgresRelationalStore:
                     )
         return self._pool
 
-    def _convert_params(
-        self, query: str, params: dict[str, Any] | None
-    ) -> tuple[str, list[Any]]:
+    def _convert_params(self, query: str, params: dict[str, Any] | None) -> tuple[str, list[Any]]:
         """
         Convert :name params to $N placeholders for PostgreSQL.
 
@@ -211,9 +208,7 @@ class PostgresRelationalStore:
                 seen.append(name)
 
         # Convert all param sets to positional
-        positional_list = [
-            tuple(params.get(name) for name in seen) for params in params_list
-        ]
+        positional_list = [tuple(params.get(name) for name in seen) for params in params_list]
 
         async with pool.acquire() as conn:
             # asyncpg doesn't have executemany, use copy for bulk inserts

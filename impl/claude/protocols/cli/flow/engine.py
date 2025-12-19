@@ -44,9 +44,7 @@ from .types import (
 StepExecutor = Callable[[FlowStep, Any, dict[str, Any]], Awaitable[Any]]
 
 
-async def execute_p_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_p_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a P-gent (Parser) step."""
     operation = step.operation
 
@@ -77,9 +75,7 @@ async def execute_p_gent_step(
         return {"type": "p_gent", "operation": operation, "input": input_data}
 
 
-async def execute_j_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_j_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a J-gent (JIT) step."""
     operation = step.operation
 
@@ -109,9 +105,7 @@ async def execute_j_gent_step(
         return {"type": "j_gent", "operation": operation, "input": input_data}
 
 
-async def execute_g_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_g_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a G-gent (Grammarian) step."""
     operation = step.operation
 
@@ -135,9 +129,7 @@ async def execute_g_gent_step(
         return {"type": "g_gent", "operation": operation, "input": input_data}
 
 
-async def execute_bootstrap_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_bootstrap_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a Bootstrap step."""
     operation = step.operation
 
@@ -169,9 +161,7 @@ async def execute_bootstrap_step(
         return {"type": "bootstrap", "operation": operation, "input": input_data}
 
 
-async def execute_w_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_w_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a W-gent (Witness) step."""
     operation = step.operation
 
@@ -193,9 +183,7 @@ async def execute_w_gent_step(
         return {"type": "w_gent", "operation": operation, "input": input_data}
 
 
-async def execute_r_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_r_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute an R-gent (Refiner) step."""
     operation = step.operation
 
@@ -217,9 +205,7 @@ async def execute_r_gent_step(
         return {"type": "r_gent", "operation": operation, "input": input_data}
 
 
-async def execute_l_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_l_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute an L-gent (Library) step."""
     operation = step.operation
 
@@ -247,9 +233,7 @@ async def execute_l_gent_step(
         return {"type": "l_gent", "operation": operation, "input": input_data}
 
 
-async def execute_t_gent_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_t_gent_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Execute a T-gent (Tester) step."""
     operation = step.operation
 
@@ -272,9 +256,7 @@ async def execute_t_gent_step(
         return {"type": "t_gent", "operation": operation, "input": input_data}
 
 
-async def execute_generic_step(
-    step: FlowStep, input_data: Any, context: dict[str, Any]
-) -> Any:
+async def execute_generic_step(step: FlowStep, input_data: Any, context: dict[str, Any]) -> Any:
     """Fallback executor for unimplemented genera."""
     return {
         "type": "generic",
@@ -613,8 +595,7 @@ class FlowEngine:
         if failed_step:
             status = FlowStatus.FAILED
         elif all(
-            r.status in (StepStatus.COMPLETED, StepStatus.SKIPPED)
-            for r in step_results.values()
+            r.status in (StepStatus.COMPLETED, StepStatus.SKIPPED) for r in step_results.values()
         ):
             status = FlowStatus.COMPLETED
         else:

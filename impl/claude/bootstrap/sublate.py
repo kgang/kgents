@@ -168,9 +168,7 @@ class NegateStrategy:
                 resolution_type="negate",
                 result=winner,
                 explanation=f"Negated {loser}, boolean resolution",
-                preserved_from_thesis=()
-                if loser == "thesis"
-                else (str(tension.thesis),),
+                preserved_from_thesis=() if loser == "thesis" else (str(tension.thesis),),
                 preserved_from_antithesis=()
                 if loser == "antithesis"
                 else (str(tension.antithesis),),

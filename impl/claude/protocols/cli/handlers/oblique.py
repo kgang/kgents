@@ -178,9 +178,7 @@ def cmd_oblique(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             import json
 
             data = {
-                "strategies": [
-                    {"index": i, "text": s} for i, s in enumerate(OBLIQUE_STRATEGIES)
-                ],
+                "strategies": [{"index": i, "text": s} for i, s in enumerate(OBLIQUE_STRATEGIES)],
                 "count": len(OBLIQUE_STRATEGIES),
             }
             print(json.dumps(data, indent=2))
@@ -208,9 +206,7 @@ def cmd_oblique(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         # Beautiful output with box
         print()
         print("\033[35m┌" + "─" * 58 + "┐\033[0m")
-        print(
-            f"\033[35m│\033[0m  \033[1;33m{strategy.text:<54}\033[0m  \033[35m│\033[0m"
-        )
+        print(f"\033[35m│\033[0m  \033[1;33m{strategy.text:<54}\033[0m  \033[35m│\033[0m")
         print("\033[35m└" + "─" * 58 + "┘\033[0m")
         print()
         print("\033[90m  — Oblique Strategies (Eno/Schmidt)\033[0m")

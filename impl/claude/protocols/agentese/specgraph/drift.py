@@ -90,9 +90,7 @@ def _compare_agentese(spec: SpecNode, impl: SpecNode) -> list[str]:
         diffs.append("agentese: extra in impl (not in spec)")
     elif spec.agentese and impl.agentese:
         if spec.agentese.path != impl.agentese.path:
-            diffs.append(
-                f"agentese.path: spec={spec.agentese.path}, impl={impl.agentese.path}"
-            )
+            diffs.append(f"agentese.path: spec={spec.agentese.path}, impl={impl.agentese.path}")
 
         spec_aspects = set(spec.agentese.aspects)
         impl_aspects = set(impl.agentese.aspects)

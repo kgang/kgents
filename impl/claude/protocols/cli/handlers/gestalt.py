@@ -152,9 +152,7 @@ def _print_help() -> None:
 # =============================================================================
 
 
-async def _show_status(
-    ctx: "InvocationContext | None", json_output: bool = False
-) -> int:
+async def _show_status(ctx: "InvocationContext | None", json_output: bool = False) -> int:
     """Show current research status."""
     display_path_header(
         path="self.jewel.gestalt.flow.research.manifest",
@@ -174,9 +172,7 @@ async def _show_status(
                     "hypothesis_count": len(state.hypotheses),
                     "current_focus": state.current_focus_id,
                     "has_synthesis": state.synthesis is not None,
-                    "started_at": state.started_at.isoformat()
-                    if state.started_at
-                    else None,
+                    "started_at": state.started_at.isoformat() if state.started_at else None,
                 },
                 indent=2,
             )
@@ -205,9 +201,7 @@ async def _show_status(
         console.print(f"\n[bold green]Research:[/] {state.question}")
         console.print(f"[dim]Hypotheses: {len(state.hypotheses)}[/]")
         if state.current_focus_id:
-            focus = next(
-                (h for h in state.hypotheses if h.id == state.current_focus_id), None
-            )
+            focus = next((h for h in state.hypotheses if h.id == state.current_focus_id), None)
             if focus:
                 console.print(f"[bold]Focus:[/] {focus.content[:60]}...")
         console.print("\n[dim]Use 'kg gestalt tree' to see hypothesis tree[/]")
@@ -420,9 +414,7 @@ async def _show_tree(ctx: "InvocationContext | None", json_output: bool = False)
                 "refuted": "❌",
                 "pending": "🔄",
             }.get(h.status, "⬜")
-            label = (
-                f"{status_icon} {h.content[:50]}{'...' if len(h.content) > 50 else ''}"
-            )
+            label = f"{status_icon} {h.content[:50]}{'...' if len(h.content) > 50 else ''}"
 
             if h.parent_id is None:
                 # Root node
@@ -445,9 +437,7 @@ async def _show_tree(ctx: "InvocationContext | None", json_output: bool = False)
     return 0
 
 
-async def _synthesize(
-    ctx: "InvocationContext | None", json_output: bool = False
-) -> int:
+async def _synthesize(ctx: "InvocationContext | None", json_output: bool = False) -> int:
     """Synthesize research findings."""
     display_path_header(
         path="self.jewel.gestalt.flow.research.synthesize",
@@ -544,9 +534,7 @@ async def _reset(ctx: "InvocationContext | None") -> int:
     return 0
 
 
-async def _codebase_overview(
-    ctx: "InvocationContext | None", json_output: bool = False
-) -> int:
+async def _codebase_overview(ctx: "InvocationContext | None", json_output: bool = False) -> int:
     """Quick codebase overview using Gestalt analysis."""
     from protocols.gestalt.handler import (
         _ensure_scanned_sync,

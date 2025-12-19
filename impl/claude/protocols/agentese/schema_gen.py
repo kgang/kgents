@@ -292,9 +292,7 @@ def node_contracts_to_schema(contracts: ContractsDict) -> dict[str, dict[str, An
     Returns:
         Dictionary of aspect -> schema dict
     """
-    return {
-        aspect: contract_to_schema(contract) for aspect, contract in contracts.items()
-    }
+    return {aspect: contract_to_schema(contract) for aspect, contract in contracts.items()}
 
 
 # === Full Discovery Schema ===
@@ -314,9 +312,7 @@ def discovery_schema(
     Returns:
         Dictionary of path -> aspect -> schema
     """
-    return {
-        path: node_contracts_to_schema(contracts) for path, contracts in paths.items()
-    }
+    return {path: node_contracts_to_schema(contracts) for path, contracts in paths.items()}
 
 
 # === Exports ===

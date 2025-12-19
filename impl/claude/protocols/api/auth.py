@@ -308,9 +308,7 @@ if HAS_FASTAPI:
         4. Clear context after request completes
         """
 
-        async def dispatch(
-            self, request: "Request", call_next: Callable[["Request"], Any]
-        ) -> Any:
+        async def dispatch(self, request: "Request", call_next: Callable[["Request"], Any]) -> Any:
             """Process request with tenant context."""
             from protocols.tenancy.context import (
                 clear_tenant_context,

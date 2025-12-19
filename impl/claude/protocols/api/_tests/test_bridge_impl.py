@@ -133,9 +133,7 @@ class TestBridgeInvoke:
         """Create a mock Logos."""
         logos = MagicMock()
 
-        async def mock_invoke(
-            path: str, observer: Any, **kwargs: Any
-        ) -> dict[str, Any]:
+        async def mock_invoke(path: str, observer: Any, **kwargs: Any) -> dict[str, Any]:
             return {"invoked": path, "kwargs": kwargs}
 
         logos.invoke = AsyncMock(side_effect=mock_invoke)
@@ -144,9 +142,7 @@ class TestBridgeInvoke:
         return logos
 
     @pytest.mark.asyncio
-    async def test_invoke_returns_response_envelope(
-        self, mock_logos: MagicMock
-    ) -> None:
+    async def test_invoke_returns_response_envelope(self, mock_logos: MagicMock) -> None:
         """Invoke returns proper AgenteseResponse structure."""
         from protocols.api.bridge_impl import LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
@@ -191,9 +187,7 @@ class TestBridgeInvoke:
         from protocols.api.bridge_impl import BridgeError, LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
 
-        mock_logos.invoke.side_effect = PathNotFoundError(
-            "not found", path="missing.path"
-        )
+        mock_logos.invoke.side_effect = PathNotFoundError("not found", path="missing.path")
 
         bridge = LogosAgenteseBridge(logos=mock_logos, telemetry_enabled=False)
         observer = ObserverContext()
@@ -214,9 +208,7 @@ class TestBridgeCompose:
 
         call_count = 0
 
-        async def mock_invoke(
-            path: str, observer: Any, **kwargs: Any
-        ) -> dict[str, Any]:
+        async def mock_invoke(path: str, observer: Any, **kwargs: Any) -> dict[str, Any]:
             nonlocal call_count
             call_count += 1
             return {"step": call_count, "path": path}
@@ -229,9 +221,7 @@ class TestBridgeCompose:
         return logos
 
     @pytest.mark.asyncio
-    async def test_compose_returns_response_with_trace(
-        self, mock_logos: MagicMock
-    ) -> None:
+    async def test_compose_returns_response_with_trace(self, mock_logos: MagicMock) -> None:
         """Compose returns CompositionResponse with pipeline trace."""
         from protocols.api.bridge_impl import LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
@@ -269,9 +259,7 @@ class TestBridgeCompose:
         assert "associativity" in response.laws_verified
 
     @pytest.mark.asyncio
-    async def test_compose_skips_laws_when_disabled(
-        self, mock_logos: MagicMock
-    ) -> None:
+    async def test_compose_skips_laws_when_disabled(self, mock_logos: MagicMock) -> None:
         """Compose skips law verification when emit_law_check=False."""
         from protocols.api.bridge_impl import LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
@@ -350,9 +338,7 @@ class TestBridgeVerifyLaws:
         logos = MagicMock()
 
         # Consistent results for identity check
-        async def mock_invoke(
-            path: str, observer: Any, **kwargs: Any
-        ) -> dict[str, Any]:
+        async def mock_invoke(path: str, observer: Any, **kwargs: Any) -> dict[str, Any]:
             return {"path": path, "stable": True}
 
         logos.invoke = AsyncMock(side_effect=mock_invoke)
@@ -386,9 +372,7 @@ class TestBridgeVerifyLaws:
         assert result.identity_holds is True
 
     @pytest.mark.asyncio
-    async def test_verify_laws_checks_associativity(
-        self, mock_logos: MagicMock
-    ) -> None:
+    async def test_verify_laws_checks_associativity(self, mock_logos: MagicMock) -> None:
         """verify_laws checks associativity for 3+ paths."""
         from protocols.api.bridge_impl import LogosAgenteseBridge
         from protocols.api.serializers import ObserverContext
@@ -435,9 +419,7 @@ class TestBridgeAffordances:
         assert "define" in result
 
     @pytest.mark.asyncio
-    async def test_affordances_handles_missing_path(
-        self, mock_logos: MagicMock
-    ) -> None:
+    async def test_affordances_handles_missing_path(self, mock_logos: MagicMock) -> None:
         """affordances returns empty list for missing paths."""
         from protocols.agentese.exceptions import PathNotFoundError
         from protocols.api.bridge_impl import LogosAgenteseBridge

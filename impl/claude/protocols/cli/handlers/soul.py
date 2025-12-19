@@ -183,9 +183,7 @@ async def _async_route(
             case "approve":
                 from .soul_approve import _async_soul_approve
 
-                return await _async_soul_approve(
-                    prompt or "", ctx.json_mode, ctx._reflector_ctx
-                )
+                return await _async_soul_approve(prompt or "", ctx.json_mode, ctx._reflector_ctx)
 
             case "why":
                 # Recursive why - delegates to dedicated handler
@@ -207,9 +205,7 @@ async def _async_route(
 
             # Ambient commands
             case "stream":
-                return await ambient.execute_stream(
-                    ctx, soul, pulse_interval, show_pulses
-                )
+                return await ambient.execute_stream(ctx, soul, pulse_interval, show_pulses)
             case "watch":
                 return await ambient.execute_watch(ctx, soul, watch_path)
 
@@ -234,18 +230,14 @@ async def _async_route(
             case "history":
                 return await being.execute_history(ctx, limit)
             case "propose":
-                desc_parts = [
-                    a for a in args if not a.startswith("-") and a != "propose"
-                ]
+                desc_parts = [a for a in args if not a.startswith("-") and a != "propose"]
                 description = " ".join(desc_parts) if desc_parts else None
                 return await being.execute_propose(ctx, description)
             case "commit":
                 change_id = _extract_id(args, "commit")
                 return await being.execute_commit(ctx, change_id)
             case "crystallize":
-                name_parts = [
-                    a for a in args if not a.startswith("-") and a != "crystallize"
-                ]
+                name_parts = [a for a in args if not a.startswith("-") and a != "crystallize"]
                 name = " ".join(name_parts) if name_parts else None
                 return await being.execute_crystallize(ctx, name)
             case "resume":

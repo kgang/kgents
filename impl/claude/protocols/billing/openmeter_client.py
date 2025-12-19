@@ -142,17 +142,11 @@ class OpenMeterClient:
     config: OpenMeterConfig = field(default_factory=OpenMeterConfig)
 
     # Event buffer
-    _buffer: list[UsageEventSchema] = field(
-        default_factory=list, init=False, repr=False
-    )
-    _buffer_lock: asyncio.Lock = field(
-        default_factory=asyncio.Lock, init=False, repr=False
-    )
+    _buffer: list[UsageEventSchema] = field(default_factory=list, init=False, repr=False)
+    _buffer_lock: asyncio.Lock = field(default_factory=asyncio.Lock, init=False, repr=False)
 
     # Background flush task
-    _flush_task: Optional[asyncio.Task[None]] = field(
-        default=None, init=False, repr=False
-    )
+    _flush_task: Optional[asyncio.Task[None]] = field(default=None, init=False, repr=False)
     _running: bool = field(default=False, init=False)
 
     # Metrics
@@ -172,9 +166,7 @@ class OpenMeterClient:
                 self._flush_loop(),
                 name="openmeter-flush",
             )
-            logger.info(
-                f"OpenMeter client started (batch_size={self.config.batch_size})"
-            )
+            logger.info(f"OpenMeter client started (batch_size={self.config.batch_size})")
         else:
             logger.info("OpenMeter client started in local-only mode")
 
@@ -433,9 +425,7 @@ class OpenMeterClient:
                             return
                         elif response.status_code == 429:
                             # Rate limited, retry with backoff
-                            await asyncio.sleep(
-                                self.config.retry_delay_seconds * (attempt + 1)
-                            )
+                            await asyncio.sleep(self.config.retry_delay_seconds * (attempt + 1))
                         else:
                             logger.warning(
                                 f"OpenMeter API error: {response.status_code} - {response.text}"
@@ -448,9 +438,7 @@ class OpenMeterClient:
 
             # All retries failed
             self._events_failed += len(events)
-            logger.error(
-                f"OpenMeter: failed to send {len(events)} events after retries"
-            )
+            logger.error(f"OpenMeter: failed to send {len(events)} events after retries")
 
         except ImportError:
             # httpx not installed, count locally

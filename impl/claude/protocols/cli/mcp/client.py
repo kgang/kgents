@@ -198,15 +198,9 @@ class MCPClient:
         conn._initialized = False
         return True
 
-    async def _send_request(
-        self, connection: MCPConnection, request: MCPRequest
-    ) -> MCPResponse:
+    async def _send_request(self, connection: MCPConnection, request: MCPRequest) -> MCPResponse:
         """Send request and wait for response."""
-        if (
-            not connection.process
-            or not connection.process.stdin
-            or not connection.process.stdout
-        ):
+        if not connection.process or not connection.process.stdin or not connection.process.stdout:
             raise RuntimeError("Not connected")
 
         # Send request
@@ -303,9 +297,7 @@ class MCPClient:
             is_error = result.get("isError", False)
 
             if content_list:
-                text_parts = [
-                    c.get("text", "") for c in content_list if c.get("type") == "text"
-                ]
+                text_parts = [c.get("text", "") for c in content_list if c.get("type") == "text"]
                 content = "\n".join(text_parts)
             else:
                 content = json.dumps(result)

@@ -125,9 +125,7 @@ def create_soul_router() -> "APIRouter":
 
         # Create a mock semaphore token from the request
         class _MockToken:
-            def __init__(
-                self, prompt: str, reason: str, severity: float, token_id: str
-            ) -> None:
+            def __init__(self, prompt: str, reason: str, severity: float, token_id: str) -> None:
                 self.prompt = prompt
                 self.reason = reason
                 self.severity = severity

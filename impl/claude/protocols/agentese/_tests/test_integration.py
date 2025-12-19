@@ -283,9 +283,7 @@ class TestMembraneIntegration:
         assert path == "world.project.manifest"
 
     @pytest.mark.asyncio
-    async def test_execute_trace_with_topic(
-        self, mock_logos: Any, mock_umwelt: Any
-    ) -> None:
+    async def test_execute_trace_with_topic(self, mock_logos: Any, mock_umwelt: Any) -> None:
         """Test executing trace command with topic."""
         bridge = create_membrane_bridge(mock_logos)
         result = await bridge.execute("trace", mock_umwelt, topic="authentication")
@@ -295,9 +293,7 @@ class TestMembraneIntegration:
         assert kwargs["topic"] == "authentication"
 
     @pytest.mark.asyncio
-    async def test_execute_unknown_command_raises(
-        self, mock_logos: Any, mock_umwelt: Any
-    ) -> None:
+    async def test_execute_unknown_command_raises(self, mock_logos: Any, mock_umwelt: Any) -> None:
         """Test that unknown command raises error."""
         bridge = create_membrane_bridge(mock_logos)
 
@@ -659,9 +655,7 @@ class TestUnifiedIntegrations:
         integrations = create_agentese_integrations()
         assert integrations.is_fully_integrated() is False
 
-    def test_is_fully_integrated_true(
-        self, mock_logos: Any, mock_registry: Any
-    ) -> None:
+    def test_is_fully_integrated_true(self, mock_logos: Any, mock_registry: Any) -> None:
         """Test is_fully_integrated returns True when all present."""
 
         # Mock grammarian
@@ -683,9 +677,7 @@ class TestUnifiedIntegrations:
         assert "umwelt" in available
         assert "membrane" not in available
 
-    def test_available_integrations_full(
-        self, mock_logos: Any, mock_registry: Any
-    ) -> None:
+    def test_available_integrations_full(self, mock_logos: Any, mock_registry: Any) -> None:
         """Test available_integrations with full setup."""
 
         class MockGrammarian:

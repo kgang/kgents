@@ -55,9 +55,7 @@ class LineageGraph:
         Updates both the new piece's node and its ancestors' children lists.
         """
         preview = (
-            str(piece.content)[:50] + "..."
-            if len(str(piece.content)) > 50
-            else str(piece.content)
+            str(piece.content)[:50] + "..." if len(str(piece.content)) > 50 else str(piece.content)
         )
         preview = preview.replace("\n", " ")
 
@@ -173,9 +171,7 @@ class LineageGraph:
             children = node.children
             for i, child_id in enumerate(children):
                 is_last = i == len(children) - 1
-                child_prefix = prefix + (
-                    "   " if depth == 0 else ("│  " if not is_last else "   ")
-                )
+                child_prefix = prefix + ("   " if depth == 0 else ("│  " if not is_last else "   "))
                 render_node(child_id, depth + 1, child_prefix)
 
         if root_id:

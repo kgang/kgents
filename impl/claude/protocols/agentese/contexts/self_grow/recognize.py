@@ -52,9 +52,7 @@ def cluster_errors_into_gaps(
         List of gap recognitions sorted by confidence
     """
     # Group by location
-    groups: dict[tuple[str, str, str | None], list[GrowthRelevantError]] = defaultdict(
-        list
-    )
+    groups: dict[tuple[str, str, str | None], list[GrowthRelevantError]] = defaultdict(list)
 
     for error in errors:
         key = (error.context, error.holon, error.aspect)
@@ -89,9 +87,7 @@ def cluster_errors_into_gaps(
             gap_type = "missing_holon"
 
         # Extract pattern
-        pattern = (
-            group_errors[0].attempted_path if group_errors else f"{context}.{holon}"
-        )
+        pattern = group_errors[0].attempted_path if group_errors else f"{context}.{holon}"
 
         gap = GapRecognition(
             gap_id=str(uuid.uuid4()),
@@ -299,12 +295,8 @@ class RecognizeNode(BaseLogosNode):
 
             # Record metrics
             metrics.counter("growth.recognize.invocations").add(1)
-            metrics.counter("growth.recognize.gaps_found").add(
-                len(self._recognized_gaps)
-            )
-            span.set_attribute(
-                "growth.recognize.gaps_found", len(self._recognized_gaps)
-            )
+            metrics.counter("growth.recognize.gaps_found").add(len(self._recognized_gaps))
+            span.set_attribute("growth.recognize.gaps_found", len(self._recognized_gaps))
 
         return {
             "status": "scanned",

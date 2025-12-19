@@ -236,9 +236,7 @@ def render_dream_report(
         completed_at = report.completed_at
         phase = report.phase_reached
         interrupted = report.interrupted
-        interrupt_reason = (
-            report.interrupt_reason if hasattr(report, "interrupt_reason") else None
-        )
+        interrupt_reason = report.interrupt_reason if hasattr(report, "interrupt_reason") else None
         chunks_completed = report.chunks_completed
         chunks_total = report.chunks_total
         questions = report.questions_generated
@@ -247,9 +245,7 @@ def render_dream_report(
     lines = []
 
     # Header
-    status = (
-        "INTERRUPTED" if interrupted else ("COMPLETE" if completed_at else "ACTIVE")
-    )
+    status = "INTERRUPTED" if interrupted else ("COMPLETE" if completed_at else "ACTIVE")
     lines.append(f"╔{'═' * 58}╗")
     lines.append(f"║ DREAM REPORT: {dream_id[:30]:<30} [{status:^10}] ║")
     lines.append(f"╠{'═' * 58}╣")

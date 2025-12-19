@@ -83,9 +83,7 @@ class PhysicalDimension:
             compute_time_ms=self.compute_time_ms + other.compute_time_ms,
             queue_time_ms=self.queue_time_ms + other.queue_time_ms,
             peak_memory_bytes=max(self.peak_memory_bytes, other.peak_memory_bytes),
-            context_window_used=max(
-                self.context_window_used, other.context_window_used
-            ),
+            context_window_used=max(self.context_window_used, other.context_window_used),
             estimated_joules=(
                 (self.estimated_joules or 0) + (other.estimated_joules or 0)
                 if self.estimated_joules or other.estimated_joules
@@ -233,9 +231,7 @@ class EconomicDimension:
     @property
     def total_cost(self) -> float:
         """Total cost including opportunity cost."""
-        return (
-            self.gas_cost_usd + self.opportunity_cost_usd + self.infrastructure_cost_usd
-        )
+        return self.gas_cost_usd + self.opportunity_cost_usd + self.infrastructure_cost_usd
 
     @property
     def profit_usd(self) -> float:
@@ -469,18 +465,14 @@ class ConservationLaw:
 TOKEN_MONOTONICITY = ConservationLaw(
     name="token_monotonicity",
     description="Total tokens consumed never decreases",
-    check=lambda before, after: (
-        after.physical.total_tokens >= before.physical.total_tokens
-    ),
+    check=lambda before, after: (after.physical.total_tokens >= before.physical.total_tokens),
     severity="critical",
 )
 
 TIME_ARROW = ConservationLaw(
     name="time_arrow",
     description="Time flows forward",
-    check=lambda before, after: (
-        after.physical.wall_clock_ms >= before.physical.wall_clock_ms
-    ),
+    check=lambda before, after: (after.physical.wall_clock_ms >= before.physical.wall_clock_ms),
     severity="critical",
 )
 
@@ -671,9 +663,7 @@ class ValueTensor:
     ethical: EthicalDimension = field(default_factory=EthicalDimension)
 
     # Exchange rates for dimension conversion
-    exchange_rates: ExchangeMatrix = field(
-        default_factory=create_standard_exchange_rates
-    )
+    exchange_rates: ExchangeMatrix = field(default_factory=create_standard_exchange_rates)
 
     # Conservation laws that must hold
     invariants: list[ConservationLaw] = field(
@@ -775,17 +765,13 @@ class ValueTensor:
             compression_ratio=data.get("semantic", {}).get("compression_ratio", 0.5),
             entropy_estimate=data.get("semantic", {}).get("entropy_estimate", 0.0),
             confidence=data.get("semantic", {}).get("confidence", 0.5),
-            measurement_method=data.get("semantic", {}).get(
-                "measurement_method", "unknown"
-            ),
+            measurement_method=data.get("semantic", {}).get("measurement_method", "unknown"),
         )
 
         economic = EconomicDimension(
             gas_cost_usd=data.get("economic", {}).get("gas_cost_usd", 0.0),
             impact_value=data.get("economic", {}).get("impact_value", 0.0),
-            impact_tier=ImpactTier(
-                data.get("economic", {}).get("impact_tier", "syntactic")
-            ),
+            impact_tier=ImpactTier(data.get("economic", {}).get("impact_tier", "syntactic")),
         )
 
         ethical = EthicalDimension(
@@ -872,8 +858,7 @@ class TensorAlgebra:
         # Economic: sum
         economic = EconomicDimension(
             gas_cost_usd=a.economic.gas_cost_usd + b.economic.gas_cost_usd,
-            opportunity_cost_usd=a.economic.opportunity_cost_usd
-            + b.economic.opportunity_cost_usd,
+            opportunity_cost_usd=a.economic.opportunity_cost_usd + b.economic.opportunity_cost_usd,
             infrastructure_cost_usd=a.economic.infrastructure_cost_usd
             + b.economic.infrastructure_cost_usd,
             impact_value=a.economic.impact_value + b.economic.impact_value,
@@ -882,11 +867,8 @@ class TensorAlgebra:
                 b.economic.impact_tier,
                 key=lambda t: list(ImpactTier).index(t),
             ),
-            realized_revenue_usd=a.economic.realized_revenue_usd
-            + b.economic.realized_revenue_usd,
-            value_confidence=max(
-                a.economic.value_confidence, b.economic.value_confidence
-            ),
+            realized_revenue_usd=a.economic.realized_revenue_usd + b.economic.realized_revenue_usd,
+            value_confidence=max(a.economic.value_confidence, b.economic.value_confidence),
             cost_confidence=min(a.economic.cost_confidence, b.economic.cost_confidence),
         )
 
@@ -895,9 +877,7 @@ class TensorAlgebra:
             security_risk=max(a.ethical.security_risk, b.ethical.security_risk),
             privacy_risk=max(a.ethical.privacy_risk, b.ethical.privacy_risk),
             bias_risk=max(a.ethical.bias_risk, b.ethical.bias_risk),
-            reliability_risk=max(
-                a.ethical.reliability_risk, b.ethical.reliability_risk
-            ),
+            reliability_risk=max(a.ethical.reliability_risk, b.ethical.reliability_risk),
             maintainability_improvement=a.ethical.maintainability_improvement
             + b.ethical.maintainability_improvement,
             accessibility_improvement=a.ethical.accessibility_improvement
@@ -906,8 +886,7 @@ class TensorAlgebra:
             + b.ethical.documentation_improvement,
             test_coverage_improvement=a.ethical.test_coverage_improvement
             + b.ethical.test_coverage_improvement,
-            license_compliant=a.ethical.license_compliant
-            and b.ethical.license_compliant,
+            license_compliant=a.ethical.license_compliant and b.ethical.license_compliant,
             security_policy_compliant=a.ethical.security_policy_compliant
             and b.ethical.security_policy_compliant,
             style_guide_compliant=a.ethical.style_guide_compliant
