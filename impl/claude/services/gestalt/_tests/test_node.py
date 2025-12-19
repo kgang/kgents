@@ -213,6 +213,7 @@ class TestGestaltNodeAspects:
         assert "average_health" in result
         assert "overall_grade" in result
 
+    @pytest.mark.slow  # Requires full codebase scan - too slow for CI unit tests
     @pytest.mark.asyncio
     async def test_drift_aspect(self) -> None:
         """Drift aspect returns violations."""
