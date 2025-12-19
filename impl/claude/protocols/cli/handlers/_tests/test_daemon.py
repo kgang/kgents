@@ -219,6 +219,7 @@ class TestDaemonCommands:
         assert "not running" in captured.out
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="launchd tests require macOS")
 class TestLaunchdInstallation:
     """Test launchd service installation."""
 

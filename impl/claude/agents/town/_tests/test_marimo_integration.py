@@ -30,6 +30,9 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+# Skip all tests in this module if anywidget is not installed
+pytest.importorskip("anywidget", reason="anywidget required for marimo widget tests")
+
 if TYPE_CHECKING:
     pass
 
