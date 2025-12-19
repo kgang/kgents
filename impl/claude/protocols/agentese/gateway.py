@@ -380,6 +380,23 @@ class AgenteseGateway:
 
             return JSONResponse(content=content)
 
+        @router.get("/openapi.json")
+        async def openapi_spec() -> JSONResponse:
+            """
+            OpenAPI 3.1 spec projected from AGENTESE registry.
+
+            This is a PROJECTION of the AGENTESE registry.
+            For the authoritative source, use /agentese/discover.
+
+            The generated spec includes:
+            - Standard OpenAPI 3.1 paths and operations
+            - x-agentese extensions preserving observer semantics
+            - JSON Schema from contracts (when available)
+            """
+            from .openapi import generate_openapi_spec
+
+            return JSONResponse(content=generate_openapi_spec())
+
         @router.get("/discover/{context}")
         async def discover_context(context: str) -> JSONResponse:
             """List paths for a specific context."""
