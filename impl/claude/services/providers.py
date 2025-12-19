@@ -31,14 +31,16 @@ from typing import TYPE_CHECKING
 from protocols.agentese.container import get_container
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import async_sessionmaker
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
     from agents.d import DgentProtocol, TableAdapter
+    from agents.differance import DifferanceStore
+    from agents.k.soul import KgentSoul
     from models.brain import Crystal
-    from services.atelier import AtelierPersistence
     from services.brain import BrainPersistence
     from services.chat import ChatPersistence, ChatSessionFactory
     from services.coalition import CoalitionPersistence
+    from services.forge import ForgePersistence
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
     from services.park import ParkPersistence
@@ -128,9 +130,9 @@ async def get_gestalt_persistence() -> "GestaltPersistence":
     return await get_service("gestalt_persistence")
 
 
-async def get_atelier_persistence() -> "AtelierPersistence":
-    """Get the AtelierPersistence service."""
-    return await get_service("atelier_persistence")
+async def get_forge_persistence() -> "ForgePersistence":
+    """Get the ForgePersistence service."""
+    return await get_service("forge_persistence")
 
 
 async def get_coalition_persistence() -> "CoalitionPersistence":
@@ -169,6 +171,18 @@ async def get_chat_factory() -> "ChatSessionFactory":
     return get_factory()
 
 
+async def get_kgent_soul() -> "KgentSoul":
+    """Get the KgentSoul service (Middleware of Consciousness)."""
+    return await get_service("kgent_soul")
+
+
+async def get_differance_store() -> "DifferanceStore":
+    """Get the DifferanceStore service (trace heritage persistence)."""
+    from agents.differance import DifferanceStore
+
+    return await get_service("differance_store")
+
+
 # =============================================================================
 # Setup Function
 # =============================================================================
@@ -194,7 +208,7 @@ async def setup_providers() -> None:
     container.register("town_persistence", get_town_persistence, singleton=True)
     container.register("gardener_persistence", get_gardener_persistence, singleton=True)
     container.register("gestalt_persistence", get_gestalt_persistence, singleton=True)
-    container.register("atelier_persistence", get_atelier_persistence, singleton=True)
+    container.register("forge_persistence", get_forge_persistence, singleton=True)
     container.register("coalition_persistence", get_coalition_persistence, singleton=True)
     container.register("park_persistence", get_park_persistence, singleton=True)
     container.register("chat_persistence", get_chat_persistence, singleton=True)
@@ -203,7 +217,15 @@ async def setup_providers() -> None:
     # Town sub-services (for CoalitionNode, WorkshopNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
 
-    logger.info("All 8 Crown Jewel persistence services registered")
+    # K-gent Soul (Middleware of Consciousness)
+    container.register("kgent_soul", get_kgent_soul, singleton=True)
+
+    # Differance Store (trace heritage persistence)
+    container.register("differance_store", get_differance_store, singleton=True)
+
+    logger.info(
+        "All 8 Crown Jewel persistence services + K-gent Soul + Differance Store registered"
+    )
 
     # Import service nodes to trigger @node registration
     try:
@@ -235,11 +257,11 @@ async def setup_providers() -> None:
         logger.debug(f"ParkNode not available: {e}")
 
     try:
-        from services.atelier import AtelierNode  # noqa: F401
+        from services.forge import ForgeNode  # noqa: F401
 
-        logger.info("AtelierNode registered with AGENTESE registry")
+        logger.info("ForgeNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"AtelierNode not available: {e}")
+        logger.debug(f"ForgeNode not available: {e}")
 
     try:
         from services.gestalt import GestaltNode  # noqa: F401
@@ -247,6 +269,25 @@ async def setup_providers() -> None:
         logger.info("GestaltNode registered with AGENTESE registry")
     except ImportError as e:
         logger.debug(f"GestaltNode not available: {e}")
+
+    # Wire DifferanceStore to DifferanceTraceNode
+    try:
+        from agents.differance import DifferanceStore
+        from agents.differance.integration import set_differance_store
+        from protocols.agentese.contexts.time_differance import get_differance_node
+
+        store = await get_service("differance_store")
+        if isinstance(store, DifferanceStore):
+            # Wire to the AGENTESE node
+            differance_node = get_differance_node()
+            differance_node.set_store(store)
+
+            # Also set global integration store
+            set_differance_store(store)
+
+            logger.info("DifferanceStore wired to DifferanceTraceNode")
+    except Exception as e:
+        logger.debug(f"DifferanceStore wiring skipped: {e}")
 
     # Log registry stats
     from protocols.agentese.registry import get_registry as get_agentese_registry
@@ -292,7 +333,7 @@ __all__ = [
     "get_gardener_persistence",
     # Secondary Crown Jewels
     "get_gestalt_persistence",
-    "get_atelier_persistence",
+    "get_forge_persistence",
     "get_coalition_persistence",
     "get_park_persistence",
     # Chat Crown Jewel
@@ -300,4 +341,8 @@ __all__ = [
     "get_chat_factory",
     # Town sub-services
     "get_coalition_service",
+    # K-gent Soul
+    "get_kgent_soul",
+    # Differance Engine
+    "get_differance_store",
 ]

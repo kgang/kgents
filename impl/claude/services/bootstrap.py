@@ -40,9 +40,9 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
     from agents.d import DgentProtocol, TableAdapter
-    from services.atelier import AtelierPersistence
     from services.brain import BrainPersistence
     from services.coalition import CoalitionPersistence
+    from services.forge import ForgePersistence
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
     from services.morpheus import MorpheusPersistence
@@ -312,10 +312,10 @@ class ServiceRegistry:
                 dgent=self.dgent,
             )
 
-        # Atelier persistence
-        if name == "atelier_persistence":
+        # Forge persistence
+        if name == "forge_persistence":
             from models.atelier import Artisan, Workshop
-            from services.atelier import AtelierPersistence
+            from services.forge import ForgePersistence
 
             workshop_adapter = TableAdapter(
                 model=Workshop,
@@ -325,7 +325,7 @@ class ServiceRegistry:
                 model=Artisan,
                 session_factory=self.session_factory,
             )
-            return AtelierPersistence(
+            return ForgePersistence(
                 workshop_adapter=workshop_adapter,
                 artisan_adapter=artisan_adapter,
                 dgent=self.dgent,
@@ -394,6 +394,22 @@ class ServiceRegistry:
                 logger.warning("Morpheus unavailable, chat will use echo mode")
                 return ChatServiceFactory()
 
+        # K-gent Soul (Middleware of Consciousness - no database needed)
+        if name == "kgent_soul":
+            from agents.k.soul import KgentSoul
+
+            return KgentSoul(auto_llm=True)
+
+        # Differance Store (trace heritage persistence)
+        if name == "differance_store":
+            from agents.d.bus import get_data_bus
+            from agents.differance import DifferanceStore
+
+            # Use the dgent router's backend directly
+            bus = get_data_bus()
+            store = DifferanceStore(backend=self.dgent, bus=bus)
+            return store
+
         return None
 
     def register_factory(self, name: str, factory: Callable[[], Any]) -> None:
@@ -429,11 +445,13 @@ class ServiceRegistry:
             "town_persistence",
             "gardener_persistence",
             "gestalt_persistence",
-            "atelier_persistence",
+            "forge_persistence",
             "coalition_persistence",
             "park_persistence",
             "morpheus_persistence",
             "chat_factory",
+            "kgent_soul",
+            "differance_store",
         ]
 
     def stats(self) -> dict[str, Any]:

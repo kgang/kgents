@@ -255,9 +255,7 @@ class GardenerPersistence:
 
             # Calculate duration
             if garden_session.created_at:
-                duration = int(
-                    (datetime.utcnow() - garden_session.created_at).total_seconds()
-                )
+                duration = int((datetime.utcnow() - garden_session.created_at).total_seconds())
                 garden_session.duration_seconds = duration
 
             if notes:
@@ -341,11 +339,7 @@ class GardenerPersistence:
     async def list_sessions(self, limit: int = 20) -> list[SessionView]:
         """List recent gardening sessions."""
         async with self.sessions.session_factory() as session:
-            stmt = (
-                select(GardenSession)
-                .order_by(GardenSession.created_at.desc())
-                .limit(limit)
-            )
+            stmt = select(GardenSession).order_by(GardenSession.created_at.desc()).limit(limit)
             result = await session.execute(stmt)
             sessions = result.scalars().all()
 
@@ -528,7 +522,7 @@ class GardenerPersistence:
                 if plot:
                     plot_name = plot.name
 
-            return IdeaView(
+            result = IdeaView(
                 id=idea.id,
                 content=idea.content,
                 lifecycle=idea.lifecycle,
@@ -538,12 +532,27 @@ class GardenerPersistence:
                 plot_name=plot_name,
                 tags=idea.tags or [],
                 nurture_count=idea.nurture_count,
-                last_nurtured=idea.last_nurtured.isoformat()
-                if idea.last_nurtured
-                else None,
+                last_nurtured=idea.last_nurtured.isoformat() if idea.last_nurtured else None,
                 created_at=idea.created_at.isoformat() if idea.created_at else "",
                 connections=[],
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="nurture",
+                        inputs=(idea_id, refinement[:50] if refinement else "confidence"),
+                        output=idea_id,
+                        context=f"Nurtured idea (confidence now {idea.confidence:.2f})",
+                        alternatives=get_alternatives("gardener", "nurture"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for nurture trace recording")
+
+            return result
 
     async def harvest_idea(self, idea_id: str) -> IdeaView | None:
         """
@@ -590,7 +599,7 @@ class GardenerPersistence:
                 if plot:
                     plot_name = plot.name
 
-            return IdeaView(
+            result = IdeaView(
                 id=idea.id,
                 content=idea.content,
                 lifecycle=idea.lifecycle,
@@ -600,12 +609,27 @@ class GardenerPersistence:
                 plot_name=plot_name,
                 tags=idea.tags or [],
                 nurture_count=idea.nurture_count,
-                last_nurtured=idea.last_nurtured.isoformat()
-                if idea.last_nurtured
-                else None,
+                last_nurtured=idea.last_nurtured.isoformat() if idea.last_nurtured else None,
                 created_at=idea.created_at.isoformat() if idea.created_at else "",
                 connections=[],
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="harvest",
+                        inputs=(idea_id,),
+                        output=f"{idea_id}:{idea.lifecycle}",
+                        context=f"Harvested idea to {idea.lifecycle}",
+                        alternatives=get_alternatives("gardener", "harvest"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for harvest trace recording")
+
+            return result
 
     async def get_idea(
         self,
@@ -629,8 +653,7 @@ class GardenerPersistence:
             connections = []
             if include_connections:
                 stmt = select(IdeaConnection).where(
-                    (IdeaConnection.source_id == idea_id)
-                    | (IdeaConnection.target_id == idea_id)
+                    (IdeaConnection.source_id == idea_id) | (IdeaConnection.target_id == idea_id)
                 )
                 result = await session.execute(stmt)
                 conn_rows = result.scalars().all()
@@ -656,9 +679,7 @@ class GardenerPersistence:
                 plot_name=plot_name,
                 tags=idea.tags or [],
                 nurture_count=idea.nurture_count,
-                last_nurtured=idea.last_nurtured.isoformat()
-                if idea.last_nurtured
-                else None,
+                last_nurtured=idea.last_nurtured.isoformat() if idea.last_nurtured else None,
                 created_at=idea.created_at.isoformat() if idea.created_at else "",
                 connections=connections,
             )
@@ -707,9 +728,7 @@ class GardenerPersistence:
                         last_nurtured=idea.last_nurtured.isoformat()
                         if idea.last_nurtured
                         else None,
-                        created_at=idea.created_at.isoformat()
-                        if idea.created_at
-                        else "",
+                        created_at=idea.created_at.isoformat() if idea.created_at else "",
                         connections=[],
                     )
                 )
@@ -739,7 +758,7 @@ class GardenerPersistence:
             session.add(plot)
             await session.commit()
 
-            return PlotView(
+            result = PlotView(
                 id=plot_id,
                 name=name,
                 description=description,
@@ -747,6 +766,23 @@ class GardenerPersistence:
                 idea_count=0,
                 created_at=plot.created_at.isoformat() if plot.created_at else "",
             )
+
+            # Fire-and-forget trace recording (Phase 6C)
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    self._differance.record(
+                        operation="create_plot",
+                        inputs=(name,),
+                        output=plot_id,
+                        context=f"Created plot: {name}",
+                        alternatives=get_alternatives("gardener", "create_plot"),
+                    )
+                )
+            except RuntimeError:
+                logger.debug("No event loop for create_plot trace recording")
+
+            return result
 
     async def list_plots(self) -> list[PlotView]:
         """List all garden plots."""
@@ -772,9 +808,7 @@ class GardenerPersistence:
                         description=plot.description,
                         color=plot.color,
                         idea_count=idea_count,
-                        created_at=plot.created_at.isoformat()
-                        if plot.created_at
-                        else "",
+                        created_at=plot.created_at.isoformat() if plot.created_at else "",
                     )
                 )
 
@@ -840,15 +874,11 @@ class GardenerPersistence:
             total_sessions = session_count_result.scalar() or 0
 
             # Count ideas
-            idea_count_result = await session.execute(
-                select(func.count()).select_from(GardenIdea)
-            )
+            idea_count_result = await session.execute(select(func.count()).select_from(GardenIdea))
             total_ideas = idea_count_result.scalar() or 0
 
             # Count plots
-            plot_count_result = await session.execute(
-                select(func.count()).select_from(GardenPlot)
-            )
+            plot_count_result = await session.execute(select(func.count()).select_from(GardenPlot))
             total_plots = plot_count_result.scalar() or 0
 
             # Count ideas by lifecycle

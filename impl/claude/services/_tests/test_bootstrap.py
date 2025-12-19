@@ -53,13 +53,13 @@ class TestServiceRegistry:
         registry = ServiceRegistry()
         services = registry.list_services()
 
-        # Core 7 Crown Jewels
+        # Core 7 Crown Jewels (Atelier → Forge migration)
         expected_core = [
             "brain_persistence",
             "town_persistence",
             "gardener_persistence",
             "gestalt_persistence",
-            "atelier_persistence",
+            "forge_persistence",  # Was atelier_persistence
             "coalition_persistence",
             "park_persistence",
         ]
@@ -220,12 +220,12 @@ class TestAllSevenServices:
         assert type(svc).__name__ == "GestaltPersistence"
 
     @pytest.mark.asyncio
-    async def test_atelier_persistence(self, bootstrapped_registry):
-        """Atelier persistence should instantiate."""
+    async def test_forge_persistence(self, bootstrapped_registry):
+        """Forge persistence should instantiate (was Atelier)."""
         from services.bootstrap import get_service
 
-        svc = await get_service("atelier_persistence")
-        assert type(svc).__name__ == "AtelierPersistence"
+        svc = await get_service("forge_persistence")
+        assert type(svc).__name__ == "ForgePersistence"
 
     @pytest.mark.asyncio
     async def test_coalition_persistence(self, bootstrapped_registry):
@@ -270,9 +270,9 @@ class TestBackwardCompatibleProviders:
     async def test_provider_getters(self):
         """Individual provider getters should work."""
         from services.providers import (
-            get_atelier_persistence,
             get_brain_persistence,
             get_coalition_persistence,
+            get_forge_persistence,
             get_gardener_persistence,
             get_gestalt_persistence,
             get_park_persistence,
@@ -290,7 +290,7 @@ class TestBackwardCompatibleProviders:
             get_town_persistence,
             get_gardener_persistence,
             get_gestalt_persistence,
-            get_atelier_persistence,
+            get_forge_persistence,  # Was get_atelier_persistence
             get_coalition_persistence,
             get_park_persistence,
         ]

@@ -64,6 +64,9 @@ from agents.differance.contracts import (
     # Heritage
     HeritageRequest,
     HeritageResponse,
+    # Recent
+    RecentTracesRequest,
+    RecentTracesResponse,
     # Replay
     ReplayRequest,
     ReplayResponse,
@@ -81,6 +84,7 @@ DIFFERANCE_TRACE_AFFORDANCES: tuple[str, ...] = (
     "at",
     "replay",
     "why",
+    "recent",  # Recent traces for RecentTracesPanel
 )
 
 DIFFERANCE_BRANCH_AFFORDANCES: tuple[str, ...] = (
@@ -106,6 +110,7 @@ DIFFERANCE_BRANCH_AFFORDANCES: tuple[str, ...] = (
         "ghosts": Contract(GhostsRequest, GhostsResponse),
         "at": Contract(AtRequest, AtResponse),
         "replay": Contract(ReplayRequest, ReplayResponse),
+        "recent": Contract(RecentTracesRequest, RecentTracesResponse),
     },
 )
 @dataclass
@@ -180,6 +185,8 @@ class DifferanceTraceNode(BaseLogosNode):
                 return await self._why(observer, **kwargs)
             case "replay":
                 return await self._replay(observer, **kwargs)
+            case "recent":
+                return await self._recent(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -517,6 +524,122 @@ class DifferanceTraceNode(BaseLogosNode):
             }
         except Exception as e:
             return {"error": str(e), "aspect": "replay"}
+
+    async def _recent(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get recent traces from store/buffer.
+
+        AGENTESE: time.differance.recent
+
+        This powers the RecentTracesPanel in the Cockpit, showing
+        the most recent wiring operations with jewel attribution.
+
+        Prefers store (Postgres) when available; falls back to in-memory buffer.
+
+        Args:
+            limit: Max traces to return (default: 10)
+            jewel_filter: Optional filter by crown jewel name (brain, gardener, etc.)
+
+        Returns:
+            Recent traces with previews for UI display
+        """
+        from agents.differance.integration import get_trace_buffer
+
+        limit = kwargs.get("limit", 10)
+        jewel_filter = kwargs.get("jewel_filter")
+
+        traces: list[dict[str, Any]] = []
+        total_traces = 0
+        source = "buffer"
+
+        # Prefer store over buffer when available
+        if self._store is not None:
+            try:
+                # Query store for recent traces
+                raw_traces: list["WiringTrace"] = []
+                async for trace in self._store.query(limit=limit * 2):  # Fetch extra for filtering
+                    raw_traces.append(trace)
+
+                # Sort by timestamp descending
+                raw_traces.sort(key=lambda t: t.timestamp, reverse=True)
+
+                store_count = await self._store.count()
+                total_traces = store_count
+                source = "postgres"
+
+                for trace in raw_traces:
+                    # Extract jewel from context
+                    jewel: str | None = None
+                    if trace.context.startswith("["):
+                        bracket_end = trace.context.find("]")
+                        if bracket_end > 1:
+                            jewel = trace.context[1:bracket_end]
+
+                    # Apply jewel filter
+                    if jewel_filter and jewel != jewel_filter:
+                        continue
+
+                    traces.append(
+                        {
+                            "id": trace.trace_id,
+                            "operation": trace.operation,
+                            "context": trace.context,
+                            "timestamp": trace.timestamp.isoformat(),
+                            "ghost_count": len(trace.alternatives),
+                            "output_preview": (str(trace.output)[:50] if trace.output else None),
+                            "jewel": jewel,
+                        }
+                    )
+
+                    if len(traces) >= limit:
+                        break
+            except Exception:
+                # Fall back to buffer on store error
+                pass
+
+        # Fall back to buffer if no store or store empty
+        if not traces:
+            buffer = get_trace_buffer()
+            total_traces = len(buffer)
+            source = "buffer"
+
+            for trace in reversed(buffer):
+                # Extract jewel from context
+                jewel = None
+                if trace.context.startswith("["):
+                    bracket_end = trace.context.find("]")
+                    if bracket_end > 1:
+                        jewel = trace.context[1:bracket_end]
+
+                # Apply jewel filter
+                if jewel_filter and jewel != jewel_filter:
+                    continue
+
+                traces.append(
+                    {
+                        "id": trace.trace_id,
+                        "operation": trace.operation,
+                        "context": trace.context,
+                        "timestamp": trace.timestamp.isoformat(),
+                        "ghost_count": len(trace.alternatives),
+                        "output_preview": (str(trace.output)[:50] if trace.output else None),
+                        "jewel": jewel,
+                    }
+                )
+
+                if len(traces) >= limit:
+                    break
+
+        return {
+            "traces": traces,
+            "total": total_traces,
+            "source": source,
+            "store_connected": self._store is not None,
+        }
 
     # === Helper Methods ===
 

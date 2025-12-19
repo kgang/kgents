@@ -7,6 +7,8 @@ creation with seven specialized artisans.
 
 AGENTESE Paths:
 - world.forge.manifest - Show forge status
+- world.forge.soul.manifest - K-gent soul state
+- world.forge.soul.vibe - Personality eigenvectors
 - world.forge.commission.* - Commission workflow (K-gent review)
 - world.forge.artisan.* - Artisan interaction
 - world.forge.artifact.* - Artifact gallery
@@ -29,6 +31,19 @@ Design DNA:
 See: spec/protocols/metaphysical-forge.md
 """
 
+from .commission import (
+    COMMISSION_TRANSITIONS,
+    ArtisanOutput,
+    ArtisanType,
+    Commission,
+    CommissionService,
+    CommissionStatus,
+)
+from .commission_node import (
+    CommissionListRendering,
+    CommissionNode,
+    CommissionRendering,
+)
 from .festival_service import (
     FestivalEntryView,
     FestivalSummaryView,
@@ -57,6 +72,11 @@ from .persistence import (
     GalleryItemView,
     WorkshopView,
 )
+from .soul_node import (
+    ForgeSoulNode,
+    SoulManifestRendering,
+    SoulVibeRendering,
+)
 
 __all__ = [
     # Persistence
@@ -84,4 +104,18 @@ __all__ = [
     "FestivalView",
     "FestivalEntryView",
     "FestivalSummaryView",
+    # Soul Node (K-gent governance)
+    "ForgeSoulNode",
+    "SoulManifestRendering",
+    "SoulVibeRendering",
+    # Commission (Phase 2.5: Commission Workflow)
+    "Commission",
+    "CommissionService",
+    "CommissionStatus",
+    "ArtisanType",
+    "ArtisanOutput",
+    "COMMISSION_TRANSITIONS",
+    "CommissionNode",
+    "CommissionRendering",
+    "CommissionListRendering",
 ]

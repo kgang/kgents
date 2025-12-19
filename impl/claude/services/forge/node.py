@@ -95,6 +95,7 @@ if TYPE_CHECKING:
     from agents.atelier.bidding import BidQueue, BidResult, BidType
     from agents.atelier.economy import AsyncTokenPool
     from agents.atelier.festival import Festival, FestivalManager
+    from agents.k.soul import KgentSoul
 
 
 # === Rendering Types ===
@@ -424,14 +425,19 @@ class ForgeNode(BaseLogosNode):
     """
     AGENTESE node for Forge Crown Jewel.
 
-    Wraps ForgePersistence, TokenPool, BidQueue, and FestivalManager
+    Wraps ForgePersistence, TokenPool, FestivalManager, and KgentSoul
     for universal gateway access.
 
     DI Requirements:
     - forge_persistence: ForgePersistence (required)
     - token_pool: AsyncTokenPool (optional, for spectator economy)
-    - bid_queue: BidQueue (optional, for constraint injection)
     - festival_manager: FestivalManager (optional, for seasonal events)
+    - kgent_soul: KgentSoul (optional, for K-gent governance)
+
+    K-gent Governance (Phase 2):
+    When kgent_soul is provided, governed aspects pass through K-gent intercept
+    before execution. Governed aspects: workshop.create, contribute,
+    exhibition.create, gallery.add, festival.create
     """
 
     def __init__(
@@ -439,6 +445,7 @@ class ForgeNode(BaseLogosNode):
         forge_persistence: ForgePersistence,
         token_pool: "AsyncTokenPool | None" = None,
         festival_manager: "FestivalManager | None" = None,
+        kgent_soul: "KgentSoul | None" = None,
     ) -> None:
         """
         Initialize ForgeNode with dependencies.
@@ -447,10 +454,12 @@ class ForgeNode(BaseLogosNode):
             forge_persistence: ForgePersistence for workshop/exhibition data
             token_pool: Optional AsyncTokenPool for spectator economy
             festival_manager: Optional FestivalManager for seasonal events
+            kgent_soul: Optional KgentSoul for governance (Phase 2)
         """
         self.persistence = forge_persistence
         self.token_pool = token_pool
         self.festival_manager = festival_manager
+        self.soul = kgent_soul
 
     # === Handle & Affordances ===
 
@@ -474,6 +483,7 @@ class ForgeNode(BaseLogosNode):
                 "exhibitions": True,
                 "spectator_economy": self.token_pool is not None,
                 "festivals": self.festival_manager is not None,
+                "kgent_governance": self.soul is not None,
             },
         }
 
@@ -1059,6 +1069,17 @@ class ForgeNode(BaseLogosNode):
 
     # === Aspect Routing ===
 
+    # Aspects that produce artifacts requiring K-gent governance
+    GOVERNED_ASPECTS: frozenset[str] = frozenset(
+        [
+            "workshop.create",
+            "contribute",
+            "exhibition.create",
+            "gallery.add",
+            "festival.create",
+        ]
+    )
+
     async def _invoke_aspect(
         self,
         aspect: str,
@@ -1076,6 +1097,44 @@ class ForgeNode(BaseLogosNode):
         Returns:
             Renderable result or dict
         """
+        # === K-gent Governance Gate ===
+        # Governed aspects pass through K-gent intercept before execution
+        if self.soul is not None and aspect in self.GOVERNED_ASPECTS:
+            try:
+                # Create intercept context for K-gent
+                intercept_context = f"Forge operation: {aspect}"
+                if "name" in kwargs:
+                    intercept_context += f" (name={kwargs['name']})"
+                if "content" in kwargs:
+                    # Truncate content for intercept
+                    content_preview = str(kwargs["content"])[:100]
+                    intercept_context += f" content preview: {content_preview}"
+
+                # K-gent intercept returns guidance
+                intercept_result = await self.soul.intercept(intercept_context)
+
+                # If K-gent recommends escalation, block the operation
+                if intercept_result.recommendation == "escalate":
+                    return BasicRendering(
+                        f"K-gent governance: {intercept_result.annotation or 'Requires review'}",
+                        {
+                            "governance": "blocked",
+                            "aspect": aspect,
+                            "annotation": intercept_result.annotation,
+                            "matching_principles": intercept_result.matching_principles,
+                        },
+                    )
+
+                # If K-gent annotated the request, attach context
+                if intercept_result.annotation:
+                    kwargs["_soul_annotation"] = intercept_result.annotation
+
+            except Exception as e:
+                # K-gent failure should not block operations - log and continue
+                import logging
+
+                logging.getLogger(__name__).warning(f"K-gent intercept failed for {aspect}: {e}")
+
         # === Workshop Operations ===
         if aspect == "workshop.list":
             return await self._workshop_list(

@@ -444,6 +444,149 @@ class FestivalEnterResponse:
     entry: FestivalEntrySummary
 
 
+# === Commission Types (Phase 2.5: Commission Workflow) ===
+
+
+@dataclass(frozen=True)
+class ArtisanOutputSummary:
+    """Summary of an artisan's output."""
+
+    artisan: str
+    status: str
+    output: dict[str, Any] | None
+    annotation: str | None
+    started_at: str | None
+    completed_at: str | None
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class CommissionSummary:
+    """Summary of a commission."""
+
+    id: str
+    intent: str
+    name: str | None
+    status: str
+    created_at: str
+    updated_at: str
+    soul_approved: bool
+    soul_annotation: str | None
+    artisan_outputs: dict[str, ArtisanOutputSummary]
+    artifact_path: str | None
+    artifact_summary: str | None
+    paused: bool
+
+
+@dataclass(frozen=True)
+class CommissionCreateRequest:
+    """Request to create a commission."""
+
+    intent: str
+    name: str | None = None
+
+
+@dataclass(frozen=True)
+class CommissionCreateResponse:
+    """Response after creating a commission."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionGetRequest:
+    """Request for commission details."""
+
+    commission_id: str
+
+
+@dataclass(frozen=True)
+class CommissionGetResponse:
+    """Response for commission details."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionListResponse:
+    """Response for commission list."""
+
+    count: int
+    commissions: list[CommissionSummary]
+
+
+@dataclass(frozen=True)
+class CommissionStartRequest:
+    """Request to start commission review."""
+
+    commission_id: str
+
+
+@dataclass(frozen=True)
+class CommissionStartResponse:
+    """Response after starting commission."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionAdvanceRequest:
+    """Request to advance commission to next stage."""
+
+    commission_id: str
+
+
+@dataclass(frozen=True)
+class CommissionAdvanceResponse:
+    """Response after advancing commission."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionPauseRequest:
+    """Request to pause a commission."""
+
+    commission_id: str
+
+
+@dataclass(frozen=True)
+class CommissionPauseResponse:
+    """Response after pausing commission."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionResumeRequest:
+    """Request to resume a commission."""
+
+    commission_id: str
+
+
+@dataclass(frozen=True)
+class CommissionResumeResponse:
+    """Response after resuming commission."""
+
+    commission: CommissionSummary
+
+
+@dataclass(frozen=True)
+class CommissionCancelRequest:
+    """Request to cancel a commission."""
+
+    commission_id: str
+    reason: str | None = None
+
+
+@dataclass(frozen=True)
+class CommissionCancelResponse:
+    """Response after canceling commission."""
+
+    success: bool
+    commission_id: str
+
+
 # === Spectator Types (Phase 2: FishbowlCanvas) ===
 
 
@@ -515,6 +658,65 @@ class SessionStreamEvent:
     data: dict[str, Any] = field(default_factory=dict)
 
 
+# === Artisan Design Types (Phase 3: Architect & Smith) ===
+
+
+@dataclass(frozen=True)
+class AgentDesignOperation:
+    """Operation in an agent design."""
+
+    name: str
+    input: str
+    output: str
+    description: str = ""
+
+
+@dataclass(frozen=True)
+class AgentDesignResponse:
+    """Architect's categorical design output."""
+
+    name: str
+    description: str
+    states: list[str]
+    initial_state: str
+    transitions: dict[str, list[str]]
+    operations: list[AgentDesignOperation]
+    laws: list[str]
+    rationale: str
+
+
+@dataclass(frozen=True)
+class SmithOutputResponse:
+    """Smith's code generation output."""
+
+    path: str
+    files: list[str]
+    file_count: int
+    summary: str
+
+
+# === Soul Types (K-gent Governance) ===
+
+
+@dataclass(frozen=True)
+class SoulManifestResponse:
+    """K-gent soul state manifest response."""
+
+    mode: str
+    eigenvectors: dict[str, float]
+    session_interactions: int
+    session_tokens: int
+    has_llm: bool
+
+
+@dataclass(frozen=True)
+class SoulVibeResponse:
+    """K-gent personality eigenvector response."""
+
+    dimensions: dict[str, float]
+    context: str
+
+
 # === Exports ===
 
 __all__ = [
@@ -576,4 +778,29 @@ __all__ = [
     "SpectatorCursorUpdateResponse",
     "BidQueueResponse",
     "SessionStreamEvent",
+    # Soul (K-gent Governance)
+    "SoulManifestResponse",
+    "SoulVibeResponse",
+    # Commission (Phase 2.5: Commission Workflow)
+    "ArtisanOutputSummary",
+    "CommissionSummary",
+    "CommissionCreateRequest",
+    "CommissionCreateResponse",
+    "CommissionGetRequest",
+    "CommissionGetResponse",
+    "CommissionListResponse",
+    "CommissionStartRequest",
+    "CommissionStartResponse",
+    "CommissionAdvanceRequest",
+    "CommissionAdvanceResponse",
+    "CommissionPauseRequest",
+    "CommissionPauseResponse",
+    "CommissionResumeRequest",
+    "CommissionResumeResponse",
+    "CommissionCancelRequest",
+    "CommissionCancelResponse",
+    # Artisan Design (Phase 3: Architect & Smith)
+    "AgentDesignOperation",
+    "AgentDesignResponse",
+    "SmithOutputResponse",
 ]

@@ -21,6 +21,13 @@ See: spec/protocols/differance.md
 
 from __future__ import annotations
 
+from .alternatives import (
+    BRAIN_ALTERNATIVES,
+    GARDENER_ALTERNATIVES,
+    get_alternatives,
+    list_jewels,
+    list_operations,
+)
 from .contracts import (
     AtAlternativeResponse,
     # At
@@ -67,12 +74,16 @@ from .integration import (
     DifferanceIntegration,
     TraceContext,
     clear_trace_buffer,
+    create_isolated_buffer,
+    get_correlation_id,
     get_differance_store,
     get_trace_buffer,
     get_trace_context,
     get_trace_monoid,
     record_trace,
     record_trace_sync,
+    reset_isolated_buffer,
+    set_correlation_id,
     set_differance_store,
     set_trace_monoid,
 )
@@ -150,4 +161,16 @@ __all__ = [
     "set_trace_monoid",
     "get_trace_buffer",
     "clear_trace_buffer",
+    # Test Isolation (Phase 6A)
+    "create_isolated_buffer",
+    "reset_isolated_buffer",
+    # Correlation ID (Phase 6A)
+    "get_correlation_id",
+    "set_correlation_id",
+    # Static Alternatives (Phase 6B/6C)
+    "BRAIN_ALTERNATIVES",
+    "GARDENER_ALTERNATIVES",
+    "get_alternatives",
+    "list_operations",
+    "list_jewels",
 ]

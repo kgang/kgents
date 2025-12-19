@@ -25,6 +25,42 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 
 # =============================================================================
+# Recent Traces Types (for RecentTracesPanel)
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class RecentTracesRequest:
+    """Request for recent traces from buffer/store."""
+
+    limit: int = 10
+    jewel_filter: str | None = None  # Filter by crown jewel name
+
+
+@dataclass(frozen=True)
+class TracePreviewResponse:
+    """Preview of a single trace for listing."""
+
+    id: str
+    operation: str
+    context: str
+    timestamp: str
+    ghost_count: int
+    output_preview: str | None = None
+    jewel: str | None = None  # brain, gardener, forge, etc.
+
+
+@dataclass(frozen=True)
+class RecentTracesResponse:
+    """Response with recent traces."""
+
+    traces: list[TracePreviewResponse]
+    total: int
+    buffer_size: int
+    store_connected: bool
+
+
+# =============================================================================
 # Manifest Types
 # =============================================================================
 
@@ -307,6 +343,10 @@ class BranchCompareResponse:
 # =============================================================================
 
 __all__ = [
+    # Recent Traces
+    "RecentTracesRequest",
+    "TracePreviewResponse",
+    "RecentTracesResponse",
     # Manifest
     "DifferanceManifestResponse",
     "BranchManifestResponse",

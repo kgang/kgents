@@ -304,6 +304,172 @@ class TestDifferanceReplay:
         assert len(result["steps"]) == 2
 
 
+class TestDifferanceRecent:
+    """Tests for time.differance.recent (RecentTracesPanel endpoint)."""
+
+    @pytest.fixture
+    def buffer_with_traces(self) -> Any:
+        """Create isolated buffer with test traces."""
+        from agents.differance import Alternative, WiringTrace
+        from agents.differance.integration import (
+            create_isolated_buffer,
+            reset_isolated_buffer,
+        )
+
+        buffer = create_isolated_buffer()
+
+        # Add traces with different jewel contexts
+        trace1 = WiringTrace(
+            trace_id="recent_001",
+            timestamp=datetime.now(timezone.utc),
+            operation="capture",
+            inputs=("test content",),
+            output="crystal_001",
+            context="[brain] Captured memory",
+            alternatives=(),
+            positions_before={},
+            positions_after={},
+            parent_trace_id=None,
+        )
+
+        trace2 = WiringTrace(
+            trace_id="recent_002",
+            timestamp=datetime.now(timezone.utc),
+            operation="record_gesture",
+            inputs=("prune", "old_item"),
+            output="gesture_002",
+            context="[gardener] Pruning garden",
+            alternatives=(Alternative("water", ("old_item",), "Could water instead", True),),
+            positions_before={},
+            positions_after={},
+            parent_trace_id=None,
+        )
+
+        trace3 = WiringTrace(
+            trace_id="recent_003",
+            timestamp=datetime.now(timezone.utc),
+            operation="forge_intent",
+            inputs=("build widget",),
+            output="intent_003",
+            context="[forge] Forging new intent",
+            alternatives=(),
+            positions_before={},
+            positions_after={},
+            parent_trace_id=None,
+        )
+
+        buffer.extend([trace1, trace2, trace3])
+
+        yield buffer
+
+        # Cleanup
+        reset_isolated_buffer()
+
+    @pytest.fixture
+    def recent_node(self) -> Any:
+        """Create a DifferanceTraceNode for recent tests."""
+        from protocols.agentese.contexts.time_differance import DifferanceTraceNode
+
+        return DifferanceTraceNode()
+
+    @pytest.mark.asyncio
+    async def test_recent_returns_traces_from_buffer(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent returns traces from buffer."""
+        result = await recent_node._invoke_aspect("recent", observer)
+
+        assert "error" not in result
+        assert "traces" in result
+        assert len(result["traces"]) == 3
+        assert result["total"] == 3
+        assert result["source"] == "buffer"  # Changed from buffer_size to source
+
+    @pytest.mark.asyncio
+    async def test_recent_respects_limit(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent respects limit parameter."""
+        result = await recent_node._invoke_aspect("recent", observer, limit=2)
+
+        assert len(result["traces"]) == 2
+        assert result["total"] == 3  # Total is still 3
+
+    @pytest.mark.asyncio
+    async def test_recent_returns_most_recent_first(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent returns most recent traces first (reversed order)."""
+        result = await recent_node._invoke_aspect("recent", observer)
+
+        # Most recent (trace3) should be first
+        assert result["traces"][0]["id"] == "recent_003"
+        assert result["traces"][2]["id"] == "recent_001"
+
+    @pytest.mark.asyncio
+    async def test_recent_extracts_jewel_from_context(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent extracts jewel name from [jewel] context prefix."""
+        result = await recent_node._invoke_aspect("recent", observer)
+
+        jewels = {t["jewel"] for t in result["traces"]}
+        assert "brain" in jewels
+        assert "gardener" in jewels
+        assert "forge" in jewels
+
+    @pytest.mark.asyncio
+    async def test_recent_filters_by_jewel(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent filters by jewel_filter parameter."""
+        result = await recent_node._invoke_aspect("recent", observer, jewel_filter="gardener")
+
+        assert len(result["traces"]) == 1
+        assert result["traces"][0]["jewel"] == "gardener"
+        assert result["traces"][0]["operation"] == "record_gesture"
+
+    @pytest.mark.asyncio
+    async def test_recent_includes_ghost_count(
+        self, recent_node: Any, observer: Any, buffer_with_traces: Any
+    ) -> None:
+        """Recent includes ghost count from alternatives."""
+        result = await recent_node._invoke_aspect("recent", observer)
+
+        # Find the gardener trace which has 1 alternative
+        gardener_trace = next(t for t in result["traces"] if t["jewel"] == "gardener")
+        assert gardener_trace["ghost_count"] == 1
+
+        # Find the brain trace which has 0 alternatives
+        brain_trace = next(t for t in result["traces"] if t["jewel"] == "brain")
+        assert brain_trace["ghost_count"] == 0
+
+    @pytest.mark.asyncio
+    async def test_recent_empty_buffer(self, recent_node: Any, observer: Any) -> None:
+        """Recent returns empty list when buffer is empty."""
+        from agents.differance.integration import (
+            create_isolated_buffer,
+            reset_isolated_buffer,
+        )
+
+        # Create empty isolated buffer
+        create_isolated_buffer()
+
+        try:
+            result = await recent_node._invoke_aspect("recent", observer)
+
+            assert result["traces"] == []
+            assert result["total"] == 0
+            assert result["source"] == "buffer"  # Changed from buffer_size
+        finally:
+            reset_isolated_buffer()
+
+    def test_recent_in_affordances(self, recent_node: Any) -> None:
+        """Recent is included in affordances."""
+        affordances = recent_node._get_affordances_for_archetype("default")
+        assert "recent" in affordances
+
+
 # === BranchNode Tests ===
 
 

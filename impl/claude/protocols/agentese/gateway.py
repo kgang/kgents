@@ -111,11 +111,12 @@ def _import_node_modules() -> None:
             logger.debug(f"Could not import morpheus node: {e}")
 
         try:
-            from services.atelier import (  # type: ignore[import-untyped]
-                node as atelier_node,  # noqa: F401  # world.atelier.*
+            from services.forge import (
+                node as forge_node,  # noqa: F401  # world.forge.*
+                soul_node as forge_soul_node,  # noqa: F401  # world.forge.soul.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import atelier node: {e}")
+            logger.debug(f"Could not import forge node: {e}")
 
         try:
             from services.gestalt import (
