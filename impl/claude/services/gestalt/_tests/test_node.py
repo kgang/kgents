@@ -91,6 +91,7 @@ class TestGestaltNodeManifest:
     """Test manifest() method."""
 
     @pytest.mark.asyncio
+    @pytest.mark.slow  # Scans full codebase - too slow for CI unit tests
     async def test_manifest_returns_rendering(self) -> None:
         """Manifest returns GestaltManifestRendering."""
         from protocols.agentese.node import Observer
@@ -118,6 +119,7 @@ class TestGestaltNodeManifest:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.slow  # Scans full codebase - too slow for CI unit tests
     async def test_manifest_to_dict(self) -> None:
         """Manifest rendering can convert to dict."""
         from protocols.agentese.node import Observer

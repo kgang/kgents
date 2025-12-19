@@ -117,6 +117,7 @@ class TestGestaltE2E:
     """End-to-end tests for Gestalt (world.codebase)."""
 
     @pytest.mark.anyio
+    @pytest.mark.slow  # Scans full codebase - too slow for CI unit tests
     async def test_gestalt_manifest_e2e(self, client: "AsyncClient"):
         """Gestalt manifest returns valid response."""
         response = await client.get("/agentese/world/codebase/manifest")
