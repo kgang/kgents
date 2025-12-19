@@ -143,8 +143,13 @@ class TestGestaltNodeManifest:
 
 
 class TestGestaltNodeTopology:
-    """Test topology aspect."""
+    """Test topology aspect.
 
+    NOTE: These tests are marked slow because they trigger full codebase scanning
+    which takes 30s+ in CI. Run with: pytest -m slow
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_topology_returns_nodes_and_links(self) -> None:
         """Topology returns node and link data."""
@@ -163,6 +168,7 @@ class TestGestaltNodeTopology:
         assert isinstance(result["nodes"], list)
         assert len(result["nodes"]) <= 20  # Respects max_nodes
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_topology_nodes_have_required_fields(self) -> None:
         """Topology nodes have all required visualization fields."""
