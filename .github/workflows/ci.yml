@@ -6,9 +6,24 @@ on:
   pull_request:
     branches: [main]
 
+# =============================================================================
+# MULTI-AGENT COMPATIBLE CONCURRENCY
+# =============================================================================
+# Design Philosophy:
+#   - Every commit to main gets validated (agents don't cancel each other)
+#   - PRs can cancel superseded runs (same PR number)
+#   - Each push creates a unique workflow run
+#   - Runs queue rather than cancel on main
+#
+# For solo dev + multiple Claude agents on main:
+#   - Agent A pushes → CI starts
+#   - Agent B pushes → NEW CI starts (Agent A's continues)
+#   - Both agents get feedback on their commits
+# =============================================================================
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Main: unique per run (no cancel), PRs: cancel superseded
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('main-{0}', github.run_number) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # =============================================================================
 # Meta-Bootstrap: CI emits semantic field signals
@@ -120,7 +135,9 @@ jobs:
         run: |
           cd impl/claude
           uv run uvicorn protocols.api.app:create_app --factory --port 8000 &
-          sleep 5  # Wait for server to start
+
+      - name: Wait for backend health
+        run: ./scripts/ci/wait-for-health.sh http://localhost:8000/health 5
 
       - name: Check contract sync
         run: |
@@ -366,6 +383,7 @@ jobs:
   # ===========================================================================
   # Meta-Bootstrap: Emit CI signals
   # Runs after all tests to emit success/failure signals
+  # Format matches CISignalCollector data model for feedback loop
   # ===========================================================================
   emit-signal:
     name: Emit CI Signal
@@ -375,27 +393,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Emit success signal
-        if: needs.unit-tests.result == 'success' && needs.laws.result == 'success'
+      - name: Emit CI signal
         run: |
           mkdir -p .kgents/ghost
-          echo "{\"ts\": $(date +%s), \"type\": \"CI_SUCCESS\", \"sha\": \"${{ github.sha }}\", \"ref\": \"${{ github.ref }}\", \"tests\": \"unit,laws,integration\"}" >> .kgents/ghost/ci_signals.jsonl
-          echo "CI Signal: SUCCESS emitted"
 
-      - name: Emit failure signal
-        if: needs.unit-tests.result == 'failure' || needs.laws.result == 'failure' || needs.integration.result == 'failure'
-        run: |
-          mkdir -p .kgents/ghost
-          FAILED=""
-          [ "${{ needs.unit-tests.result }}" == "failure" ] && FAILED="${FAILED}unit,"
-          [ "${{ needs.laws.result }}" == "failure" ] && FAILED="${FAILED}laws,"
-          [ "${{ needs.integration.result }}" == "failure" ] && FAILED="${FAILED}integration,"
-          echo "{\"ts\": $(date +%s), \"type\": \"CI_FAILURE\", \"sha\": \"${{ github.sha }}\", \"ref\": \"${{ github.ref }}\", \"failed\": \"${FAILED%,}\"}" >> .kgents/ghost/ci_signals.jsonl
-          echo "CI Signal: FAILURE emitted (${FAILED%,})"
+          # Determine overall result
+          UNIT="${{ needs.unit-tests.result }}"
+          LAWS="${{ needs.laws.result }}"
+          INTEGRATION="${{ needs.integration.result }}"
+
+          if [ "$UNIT" == "success" ] && [ "$LAWS" == "success" ] && [ "$INTEGRATION" == "success" ]; then
+            TYPE="CI_SUCCESS"
+          else
+            TYPE="CI_FAILURE"
+          fi
+
+          # Emit signal in CISignalCollector-compatible format
+          cat >> .kgents/ghost/ci_signals.jsonl << EOF
+          {"ts": $(date +%s), "type": "$TYPE", "sha": "${{ github.sha }}", "ref": "${{ github.ref }}", "run_number": ${{ github.run_number }}, "suites": {"unit": "$UNIT", "laws": "$LAWS", "integration": "$INTEGRATION"}}
+          EOF
+
+          echo "CI Signal: $TYPE emitted (unit=$UNIT, laws=$LAWS, integration=$INTEGRATION)"
 
       - name: Upload signal artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ci-signals
+          name: ci-signals-${{ github.run_number }}
           path: .kgents/ghost/ci_signals.jsonl
           retention-days: 30

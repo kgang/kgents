@@ -184,9 +184,7 @@ class GitCollector(GhostCollector):
             # Kill the process on timeout
             proc.kill()
             await proc.wait()
-            logger.warning(
-                f"Git command timed out after {timeout}s: git {' '.join(args)}"
-            )
+            logger.warning(f"Git command timed out after {timeout}s: git {' '.join(args)}")
             return subprocess.CompletedProcess(
                 args=["git", *args],
                 returncode=-1,
@@ -207,9 +205,7 @@ class FlinchCollector(GhostCollector):
     """
 
     def __init__(self, flinch_path: Path | None = None):
-        self.flinch_path = (
-            flinch_path or Path.cwd() / ".kgents/ghost/test_flinches.jsonl"
-        )
+        self.flinch_path = flinch_path or Path.cwd() / ".kgents/ghost/test_flinches.jsonl"
 
     @property
     def name(self) -> str:
@@ -246,12 +242,8 @@ class FlinchCollector(GhostCollector):
             day_ago = now - 86400
 
             # Time-based analysis
-            recent_hour = [
-                flinch for flinch in flinches if flinch.get("ts", 0) > hour_ago
-            ]
-            recent_day = [
-                flinch for flinch in flinches if flinch.get("ts", 0) > day_ago
-            ]
+            recent_hour = [flinch for flinch in flinches if flinch.get("ts", 0) > hour_ago]
+            recent_day = [flinch for flinch in flinches if flinch.get("ts", 0) > day_ago]
 
             # Hot files (most failures)
             file_counts: dict[str, int] = {}
@@ -347,9 +339,7 @@ class FlinchCollector(GhostCollector):
         for module, failures in module_groups.items():
             if len(failures) >= 3:  # Recurring pattern threshold
                 # Check for common test names
-                test_names = [
-                    failure.get("test", "").split("::")[-1] for failure in failures
-                ]
+                test_names = [failure.get("test", "").split("::")[-1] for failure in failures]
                 name_counts: dict[str, int] = {}
                 for name in test_names:
                     name_counts[name] = name_counts.get(name, 0) + 1
@@ -393,9 +383,7 @@ class FlinchCollector(GhostCollector):
                             test = flinch.get("test", "")
                             if isinstance(test, str) and "::" in test:
                                 file_path = test.split("::")[0]
-                                file_counts[file_path] = (
-                                    file_counts.get(file_path, 0) + 1
-                                )
+                                file_counts[file_path] = file_counts.get(file_path, 0) + 1
                         except json.JSONDecodeError:
                             continue
         except OSError as e:
@@ -759,9 +747,7 @@ class MemoryCollector(GhostCollector):
 
             # Create provider in demo mode for now
             # In the future, this will connect to live agent memory
-            provider: MemoryDataProvider = await create_memory_provider_async(
-                demo_mode=True
-            )
+            provider: MemoryDataProvider = await create_memory_provider_async(demo_mode=True)
 
             # Gather all Four Pillars stats
             crystal_stats = provider.get_crystal_stats()
@@ -866,9 +852,13 @@ def create_all_collectors(project_root: Path | None = None) -> list[GhostCollect
     if project_root is None:
         project_root = Path.cwd()
 
+    # Import CISignalCollector here to avoid circular imports
+    from .ci_collector import CISignalCollector
+
     return [
         GitCollector(repo_path=project_root),
         FlinchCollector(flinch_path=project_root / ".kgents/ghost/test_flinches.jsonl"),
+        CISignalCollector(signal_path=project_root / ".kgents/ghost/ci_signals.jsonl"),
         InfraCollector(),
         MetaGhostCollector(),
         TraceGhostCollector(base_path=project_root),
