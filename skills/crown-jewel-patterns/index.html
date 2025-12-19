@@ -749,6 +749,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pattern-15-no-hollow-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pattern 15: No Hollow Services
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#quick-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1464,6 +1475,87 @@
 | <code>TeachingCallout</code> | Gradient callout with category styling |</p>
 <p><strong>Apply to</strong>: Park (crisis phases, consent debt), Town (citizen polynomial, trace).</p>
 <hr />
+<h2 id="pattern-15-no-hollow-services">Pattern 15: No Hollow Services</h2>
+<p><strong>Problem</strong>: Services with default constructors can be instantiated without required configuration, creating objects that pass type checks but fail at runtime.</p>
+<p><strong>Wrong</strong>: Default constructor bypasses DI
+<div class="language-python highlight"><pre><span></span><code><span id="__span-28-1"><a id="__codelineno-28-1" name="__codelineno-28-1" href="#__codelineno-28-1"></a><span class="c1"># Direct instantiation creates hollow object</span>
+</span><span id="__span-28-2"><a id="__codelineno-28-2" name="__codelineno-28-2" href="#__codelineno-28-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chat_factory</span><span class="p">():</span>
+</span><span id="__span-28-3"><a id="__codelineno-28-3" name="__codelineno-28-3" href="#__codelineno-28-3"></a>    <span class="c1"># ❌ Creates MorpheusPersistence with empty gateway - no providers!</span>
+</span><span id="__span-28-4"><a id="__codelineno-28-4" name="__codelineno-28-4" href="#__codelineno-28-4"></a>    <span class="n">morpheus</span> <span class="o">=</span> <span class="n">MorpheusPersistence</span><span class="p">()</span>
+</span><span id="__span-28-5"><a id="__codelineno-28-5" name="__codelineno-28-5" href="#__codelineno-28-5"></a>    <span class="k">return</span> <span class="n">ChatServiceFactory</span><span class="p">(</span><span class="n">morpheus</span><span class="o">=</span><span class="n">morpheus</span><span class="p">)</span>
+</span><span id="__span-28-6"><a id="__codelineno-28-6" name="__codelineno-28-6" href="#__codelineno-28-6"></a>
+</span><span id="__span-28-7"><a id="__codelineno-28-7" name="__codelineno-28-7" href="#__codelineno-28-7"></a><span class="c1"># Later at runtime:</span>
+</span><span id="__span-28-8"><a id="__codelineno-28-8" name="__codelineno-28-8" href="#__codelineno-28-8"></a><span class="c1"># &quot;No provider found for model: claude-sonnet-4-20250514&quot;</span>
+</span><span id="__span-28-9"><a id="__codelineno-28-9" name="__codelineno-28-9" href="#__codelineno-28-9"></a><span class="c1"># Cryptic error because gateway has no adapters registered</span>
+</span></code></pre></div></p>
+<p><strong>Right</strong>: Always go through DI/bootstrap
+<div class="language-python highlight"><pre><span></span><code><span id="__span-29-1"><a id="__codelineno-29-1" name="__codelineno-29-1" href="#__codelineno-29-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">get_chat_factory</span><span class="p">():</span>
+</span><span id="__span-29-2"><a id="__codelineno-29-2" name="__codelineno-29-2" href="#__codelineno-29-2"></a>    <span class="c1"># ✅ Gets properly configured service with ClaudeCLIAdapter registered</span>
+</span><span id="__span-29-3"><a id="__codelineno-29-3" name="__codelineno-29-3" href="#__codelineno-29-3"></a>    <span class="n">morpheus</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_service</span><span class="p">(</span><span class="s2">&quot;morpheus_persistence&quot;</span><span class="p">)</span>
+</span><span id="__span-29-4"><a id="__codelineno-29-4" name="__codelineno-29-4" href="#__codelineno-29-4"></a>    <span class="k">return</span> <span class="n">ChatServiceFactory</span><span class="p">(</span><span class="n">morpheus</span><span class="o">=</span><span class="n">morpheus</span><span class="p">)</span>
+</span></code></pre></div></p>
+<p><strong>Why This Matters for Agent Systems</strong>:</p>
+<p>Agent services have deep dependency graphs. An LLM gateway isn't just a class—it's a <em>composition</em> of:
+- Adapters (ClaudeCLI, OpenAI, Anthropic)
+- Rate limiters per archetype
+- Telemetry/observability hooks
+- Provider routing by model prefix</p>
+<p>When you instantiate directly, you get a <strong>structurally valid but behaviorally hollow</strong> object:
+- ✅ Has all the right methods
+- ✅ Passes type checks
+- ✅ Can be assigned to the correct type
+- ❌ Missing runtime configuration
+- ❌ Fails with cryptic "no provider" errors</p>
+<p><strong>Prevention Strategies</strong>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-30-1"><a id="__codelineno-30-1" name="__codelineno-30-1" href="#__codelineno-30-1"></a><span class="c1"># Option 1: Make wrong thing impossible (no default for critical deps)</span>
+</span><span id="__span-30-2"><a id="__codelineno-30-2" name="__codelineno-30-2" href="#__codelineno-30-2"></a><span class="k">class</span><span class="w"> </span><span class="nc">MorpheusPersistence</span><span class="p">:</span>
+</span><span id="__span-30-3"><a id="__codelineno-30-3" name="__codelineno-30-3" href="#__codelineno-30-3"></a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gateway</span><span class="p">:</span> <span class="n">MorpheusGateway</span><span class="p">):</span>  <span class="c1"># Required!</span>
+</span><span id="__span-30-4"><a id="__codelineno-30-4" name="__codelineno-30-4" href="#__codelineno-30-4"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">gateway</span><span class="o">.</span><span class="n">list_providers</span><span class="p">():</span>
+</span><span id="__span-30-5"><a id="__codelineno-30-5" name="__codelineno-30-5" href="#__codelineno-30-5"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Gateway must have at least one provider&quot;</span><span class="p">)</span>
+</span><span id="__span-30-6"><a id="__codelineno-30-6" name="__codelineno-30-6" href="#__codelineno-30-6"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">_gateway</span> <span class="o">=</span> <span class="n">gateway</span>
+</span><span id="__span-30-7"><a id="__codelineno-30-7" name="__codelineno-30-7" href="#__codelineno-30-7"></a>
+</span><span id="__span-30-8"><a id="__codelineno-30-8" name="__codelineno-30-8" href="#__codelineno-30-8"></a><span class="c1"># Option 2: Factory function only (hide constructor)</span>
+</span><span id="__span-30-9"><a id="__codelineno-30-9" name="__codelineno-30-9" href="#__codelineno-30-9"></a><span class="k">def</span><span class="w"> </span><span class="nf">create_morpheus_persistence</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MorpheusPersistence</span><span class="p">:</span>
+</span><span id="__span-30-10"><a id="__codelineno-30-10" name="__codelineno-30-10" href="#__codelineno-30-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Only way to create a properly configured instance.&quot;&quot;&quot;</span>
+</span><span id="__span-30-11"><a id="__codelineno-30-11" name="__codelineno-30-11" href="#__codelineno-30-11"></a>    <span class="n">gateway</span> <span class="o">=</span> <span class="n">MorpheusGateway</span><span class="p">()</span>
+</span><span id="__span-30-12"><a id="__codelineno-30-12" name="__codelineno-30-12" href="#__codelineno-30-12"></a>    <span class="n">gateway</span><span class="o">.</span><span class="n">register_provider</span><span class="p">(</span><span class="s2">&quot;claude-cli&quot;</span><span class="p">,</span> <span class="n">ClaudeCLIAdapter</span><span class="p">(),</span> <span class="s2">&quot;claude-&quot;</span><span class="p">)</span>
+</span><span id="__span-30-13"><a id="__codelineno-30-13" name="__codelineno-30-13" href="#__codelineno-30-13"></a>    <span class="k">return</span> <span class="n">MorpheusPersistence</span><span class="p">(</span><span class="n">gateway</span><span class="o">=</span><span class="n">gateway</span><span class="p">)</span>
+</span><span id="__span-30-14"><a id="__codelineno-30-14" name="__codelineno-30-14" href="#__codelineno-30-14"></a>
+</span><span id="__span-30-15"><a id="__codelineno-30-15" name="__codelineno-30-15" href="#__codelineno-30-15"></a><span class="c1"># Option 3: Builder with validation</span>
+</span><span id="__span-30-16"><a id="__codelineno-30-16" name="__codelineno-30-16" href="#__codelineno-30-16"></a><span class="n">MorpheusPersistence</span><span class="o">.</span><span class="n">builder</span><span class="p">()</span> \
+</span><span id="__span-30-17"><a id="__codelineno-30-17" name="__codelineno-30-17" href="#__codelineno-30-17"></a>    <span class="o">.</span><span class="n">with_provider</span><span class="p">(</span><span class="n">ClaudeCLIAdapter</span><span class="p">())</span> \
+</span><span id="__span-30-18"><a id="__codelineno-30-18" name="__codelineno-30-18" href="#__codelineno-30-18"></a>    <span class="o">.</span><span class="n">build</span><span class="p">()</span>  <span class="c1"># Raises if no providers</span>
+</span></code></pre></div>
+<p><strong>Detection</strong>:</p>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-31-1"><a id="__codelineno-31-1" name="__codelineno-31-1" href="#__codelineno-31-1"></a><span class="c1"># In bootstrap or app startup, verify services are wired</span>
+</span><span id="__span-31-2"><a id="__codelineno-31-2" name="__codelineno-31-2" href="#__codelineno-31-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">verify_services</span><span class="p">():</span>
+</span><span id="__span-31-3"><a id="__codelineno-31-3" name="__codelineno-31-3" href="#__codelineno-31-3"></a>    <span class="n">morpheus</span> <span class="o">=</span> <span class="k">await</span> <span class="n">get_service</span><span class="p">(</span><span class="s2">&quot;morpheus_persistence&quot;</span><span class="p">)</span>
+</span><span id="__span-31-4"><a id="__codelineno-31-4" name="__codelineno-31-4" href="#__codelineno-31-4"></a>    <span class="n">providers</span> <span class="o">=</span> <span class="n">morpheus</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">list_providers</span><span class="p">()</span>
+</span><span id="__span-31-5"><a id="__codelineno-31-5" name="__codelineno-31-5" href="#__codelineno-31-5"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">providers</span><span class="p">:</span>
+</span><span id="__span-31-6"><a id="__codelineno-31-6" name="__codelineno-31-6" href="#__codelineno-31-6"></a>        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Morpheus has no providers - check bootstrap wiring&quot;</span><span class="p">)</span>
+</span><span id="__span-31-7"><a id="__codelineno-31-7" name="__codelineno-31-7" href="#__codelineno-31-7"></a>    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Morpheus OK: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">providers</span><span class="p">)</span><span class="si">}</span><span class="s2"> providers registered&quot;</span><span class="p">)</span>
+</span></code></pre></div>
+<p><strong>The Rule</strong>:</p>
+<blockquote>
+<p><strong>Crown Jewels should NEVER be instantiated directly outside bootstrap.</strong>
+Always go through <code>get_service()</code> or the DI container.
+If a service needs runtime wiring (adapters, buses, stores),
+the "convenient" direct instantiation is the wrong way.</p>
+</blockquote>
+<p><strong>Benefits</strong>:
+- Catches misconfiguration at startup, not runtime
+- Single source of truth for service creation
+- Makes the "wrong way" awkward (or impossible)
+- Cryptic runtime errors become clear startup errors</p>
+<p><strong>Apply to</strong>:
+| Service | Required Wiring |
+|---------|-----------------|
+| MorpheusPersistence | Gateway with registered providers |
+| ChatServiceFactory | MorpheusPersistence for LLM composition |
+| BrainPersistence | TableAdapter + D-gent router |
+| TownPersistence | Citizen + Conversation adapters |
+| DifferanceStore | D-gent backend + DataBus |</p>
+<hr />
 <h2 id="quick-reference">Quick Reference</h2>
 <table>
 <thead>
@@ -1540,9 +1632,14 @@
 <td><code>@node(contracts={})</code> is authority</td>
 </tr>
 <tr>
-<td><strong>Teaching Mode Toggle</strong></td>
+<td>Teaching Mode Toggle</td>
 <td>Learner vs. power user UX</td>
 <td>Context + localStorage + accessibility</td>
+</tr>
+<tr>
+<td><strong>No Hollow Services</strong></td>
+<td>Services needing runtime config</td>
+<td>Always use DI; never direct instantiation</td>
 </tr>
 </tbody>
 </table>
@@ -1557,6 +1654,7 @@
 <hr />
 <h2 id="changelog">Changelog</h2>
 <ul>
+<li>2025-12-19: Added Pattern 15 (No Hollow Services) from Morpheus/Chat provider debugging</li>
 <li>2025-12-18: Added Pattern 14 (Teaching Mode Toggle) from Park-Town Design Overhaul Phase 5</li>
 <li>2025-12-18: Added Pattern 13 (Contract-First Types) from Phase 7 Autopoietic Architecture</li>
 <li>2025-12-18: Added patterns 10-12 (Operad Inheritance, Circadian Modulation, Law Honesty) from Emergence Crown Jewel</li>
