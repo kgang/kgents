@@ -478,3 +478,12 @@ export {
   type SimpleToastOptions,
   type UseSimpleToastReturn,
 } from './useSimpleToast';
+
+// Chat streaming (SSE token-by-token)
+export {
+  useChatStream,
+  useChatStreamPost,
+  type StreamChunk,
+  type UseChatStreamOptions,
+  type UseChatStreamResult,
+} from './useChatStream';

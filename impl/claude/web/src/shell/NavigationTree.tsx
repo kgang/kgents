@@ -482,9 +482,7 @@ const TreeNodeItem = memo(function TreeNodeItem({
           )}
 
           {/* Label */}
-          <span className="truncate">
-            {node.segment}
-          </span>
+          <span className="truncate">{node.segment}</span>
 
           {/* Child count for nodes with children */}
           {hasChildren && (
@@ -575,8 +573,7 @@ function CrownJewelsSection({
       <div className="space-y-0.5">
         {CROWN_JEWELS.map((jewel) => {
           // Check if current path matches or starts with this jewel's path
-          const isActive =
-            currentPath === jewel.path || currentPath.startsWith(`${jewel.path}.`);
+          const isActive = currentPath === jewel.path || currentPath.startsWith(`${jewel.path}.`);
           const isExpanded = expandedJewels.has(jewel.name);
           const hasChildren = jewel.children && jewel.children.length > 0;
           const color = getJewelColor(jewel.name);
@@ -666,6 +663,7 @@ function GallerySection({
   const galleries = [
     { route: '/_/gallery', label: 'Projection Gallery' },
     { route: '/_/gallery/layout', label: 'Layout Gallery' },
+    { route: '/_/docs/agentese', label: 'AGENTESE Explorer' },
   ];
 
   return (
@@ -704,9 +702,7 @@ function ToolsSection({
   currentPath: string;
   onNavigate: (path: string) => void;
 }) {
-  const tools = [
-    { path: 'time.differance', label: 'Différance', icon: GitBranch },
-  ];
+  const tools = [{ path: 'time.differance', label: 'Différance', icon: GitBranch }];
 
   return (
     <div className="border-t border-gray-700/50 pt-3">
@@ -839,11 +835,11 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     }
 
     // Only expand if there are paths to expand that aren't already expanded
-    const needsExpanding = pathsToExpand.some(p => !expandedPaths.has(p));
+    const needsExpanding = pathsToExpand.some((p) => !expandedPaths.has(p));
     if (needsExpanding) {
-      setExpandedPaths(prev => {
+      setExpandedPaths((prev) => {
         const next = new Set(prev);
-        pathsToExpand.forEach(p => next.add(p));
+        pathsToExpand.forEach((p) => next.add(p));
         return next;
       });
     }
@@ -948,7 +944,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   <div className="flex items-center gap-2">
                     <h2 className="text-sm font-semibold text-white">AGENTESE Paths</h2>
                     {loadingAspects && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                      <span
+                        className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                        title="Loading aspects..."
+                      />
                     )}
                   </div>
                   {loading ? (
@@ -970,15 +969,9 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                     </div>
                   )}
 
-                  <CrownJewelsSection
-                    currentPath={currentPath}
-                    onNavigate={handleNavigateToPath}
-                  />
+                  <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
-                  <ToolsSection
-                    currentPath={currentPath}
-                    onNavigate={handleNavigateToPath}
-                  />
+                  <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
                   <GallerySection
                     currentRoute={location.pathname}
@@ -1041,7 +1034,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                     AGENTESE Paths
                   </h2>
                   {loadingAspects && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                    <span
+                      className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                      title="Loading aspects..."
+                    />
                   )}
                 </div>
                 {loading ? (
@@ -1063,10 +1059,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   </div>
                 )}
 
-                <CrownJewelsSection
-                  currentPath={currentPath}
-                  onNavigate={handleNavigateToPath}
-                />
+                <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
                 <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
@@ -1131,7 +1124,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   AGENTESE Paths
                 </h2>
                 {loadingAspects && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" title="Loading aspects..." />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+                    title="Loading aspects..."
+                  />
                 )}
               </div>
               <button
@@ -1164,10 +1160,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 </div>
               )}
 
-              <CrownJewelsSection
-                currentPath={currentPath}
-                onNavigate={handleNavigateToPath}
-              />
+              <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 
               <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
 

@@ -60,10 +60,7 @@ interface DiscoveryResponse {
 
 // === JSON Schema to TypeScript ===
 
-function jsonSchemaToTypeScript(
-  schema: JsonSchemaProperty,
-  indent: number = 0
-): string {
+function jsonSchemaToTypeScript(schema: JsonSchemaProperty, indent: number = 0): string {
   const pad = '  '.repeat(indent);
 
   // Handle nullable
@@ -128,13 +125,8 @@ function jsonSchemaToTypeScript(
   }
 }
 
-function generateInterface(
-  name: string,
-  schema: JsonSchemaProperty
-): string {
-  const description = schema.description
-    ? `/**\n * ${schema.description}\n */\n`
-    : '';
+function generateInterface(name: string, schema: JsonSchemaProperty): string {
+  const description = schema.description ? `/**\n * ${schema.description}\n */\n` : '';
 
   if (schema.type !== 'object' || !schema.properties) {
     // Not an object, generate type alias
@@ -169,7 +161,11 @@ function pathToFileName(agentesePath: string): string {
   return agentesePath.replace(/\./g, '-') + '.ts';
 }
 
-function aspectToTypeName(moduleName: string, aspect: string, kind: 'Request' | 'Response'): string {
+function aspectToTypeName(
+  moduleName: string,
+  aspect: string,
+  kind: 'Request' | 'Response'
+): string {
   // WorldTown + manifest + Response -> WorldTownManifestResponse
   const aspectName = aspect
     .split('.')
@@ -180,10 +176,59 @@ function aspectToTypeName(moduleName: string, aspect: string, kind: 'Request' | 
 
 // === File Generation ===
 
+/**
+ * Global registry of generated type names to their owning path.
+ * Used to detect and resolve collisions (child paths win).
+ */
+const generatedTypes = new Map<string, string>();
+
+/**
+ * Check if a child path should own a type over a parent path.
+ *
+ * The principle: "Child paths own their types."
+ * - world.town.citizen.list → WorldTownCitizenListResponse (child owns)
+ * - world.town.citizen.list → WorldTownCitizenListResponse (parent should NOT duplicate)
+ *
+ * A path P is a child of path Q if P starts with Q + "."
+ */
+function isChildPath(path: string, otherPath: string): boolean {
+  return path.startsWith(otherPath + '.');
+}
+
+/**
+ * Check if this path should claim a type name.
+ *
+ * Returns:
+ * - 'claim': This path should generate the type
+ * - 'skip': Another path already claimed it and should keep it
+ * - 'replace': This path should claim it (it's more specific)
+ */
+function shouldClaimType(typeName: string, currentPath: string): 'claim' | 'skip' | 'replace' {
+  const existingPath = generatedTypes.get(typeName);
+
+  if (!existingPath) {
+    return 'claim';
+  }
+
+  // If current path is a child of the existing path, current wins (more specific)
+  if (isChildPath(currentPath, existingPath)) {
+    return 'replace';
+  }
+
+  // If existing path is a child of current path, existing wins
+  if (isChildPath(existingPath, currentPath)) {
+    return 'skip';
+  }
+
+  // Unrelated paths with same type name - this shouldn't happen with proper
+  // AGENTESE path design, but if it does, first one wins
+  return 'skip';
+}
+
 function generatePathFile(
   agentesePath: string,
   aspects: Record<string, AspectSchema>
-): string {
+): { content: string; skippedTypes: string[] } {
   const moduleName = pathToModuleName(agentesePath);
   const lines: string[] = [
     `/**`,
@@ -193,6 +238,8 @@ function generatePathFile(
     ``,
   ];
 
+  const skippedTypes: string[] = [];
+
   for (const [aspect, schema] of Object.entries(aspects)) {
     if (schema.error) {
       lines.push(`// Error generating ${aspect}: ${schema.error}`);
@@ -201,16 +248,32 @@ function generatePathFile(
 
     if (schema.request) {
       const typeName = aspectToTypeName(moduleName, aspect, 'Request');
-      lines.push(generateInterface(typeName, schema.request));
+      const decision = shouldClaimType(typeName, agentesePath);
+
+      if (decision === 'claim' || decision === 'replace') {
+        generatedTypes.set(typeName, agentesePath);
+        lines.push(generateInterface(typeName, schema.request));
+      } else {
+        skippedTypes.push(typeName);
+        lines.push(`// ${typeName} defined in ${generatedTypes.get(typeName)}`);
+      }
     }
 
     if (schema.response) {
       const typeName = aspectToTypeName(moduleName, aspect, 'Response');
-      lines.push(generateInterface(typeName, schema.response));
+      const decision = shouldClaimType(typeName, agentesePath);
+
+      if (decision === 'claim' || decision === 'replace') {
+        generatedTypes.set(typeName, agentesePath);
+        lines.push(generateInterface(typeName, schema.response));
+      } else {
+        skippedTypes.push(typeName);
+        lines.push(`// ${typeName} defined in ${generatedTypes.get(typeName)}`);
+      }
     }
   }
 
-  return lines.join('\n');
+  return { content: lines.join('\n'), skippedTypes };
 }
 
 function generateIndexFile(paths: string[]): string {
@@ -266,7 +329,9 @@ async function main() {
     console.error('Failed to connect to backend:', error);
     console.error('');
     console.error('Make sure the backend is running:');
-    console.error('  cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000');
+    console.error(
+      '  cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000'
+    );
     process.exit(1);
   }
 
@@ -295,9 +360,21 @@ async function main() {
     process.exit(0);
   }
 
-  console.log(`Found ${pathsWithSchemas.length} paths with contracts:`);
-  pathsWithSchemas.forEach((p) => console.log(`  - ${p}`));
+  // Sort paths so child paths come FIRST (more specific paths claim types first)
+  // This ensures world.town.citizen claims "WorldTownCitizenListResponse" before world.town tries
+  const sortedPaths = pathsWithSchemas.sort((a, b) => {
+    // Longer paths (more specific) come first
+    if (a.length !== b.length) return b.length - a.length;
+    // Alphabetical for same length
+    return a.localeCompare(b);
+  });
+
+  console.log(`Found ${sortedPaths.length} paths with contracts:`);
+  sortedPaths.forEach((p) => console.log(`  - ${p}`));
   console.log('');
+
+  // Reset the global type registry for this run
+  generatedTypes.clear();
 
   // Ensure output directory exists
   const outputPath = path.resolve(OUTPUT_DIR);
@@ -306,14 +383,20 @@ async function main() {
     console.log(`Created directory: ${outputPath}`);
   }
 
-  // Generate files
+  // Generate files - process in sorted order (child paths first)
   const generatedFiles: string[] = [];
   let hasChanges = false;
+  let totalSkipped = 0;
 
-  for (const [agentesePath, aspects] of Object.entries(schemas)) {
+  for (const agentesePath of sortedPaths) {
+    const aspects = schemas[agentesePath];
     const fileName = pathToFileName(agentesePath);
     const filePath = path.join(outputPath, fileName);
-    const content = generatePathFile(agentesePath, aspects);
+    const { content, skippedTypes } = generatePathFile(agentesePath, aspects);
+
+    if (skippedTypes.length > 0) {
+      totalSkipped += skippedTypes.length;
+    }
 
     // Check for drift
     if (checkMode && fs.existsSync(filePath)) {
@@ -326,10 +409,15 @@ async function main() {
 
     if (!checkMode) {
       fs.writeFileSync(filePath, content);
-      console.log(`Generated: ${fileName}`);
+      const skipNote = skippedTypes.length > 0 ? ` (${skippedTypes.length} deduped)` : '';
+      console.log(`Generated: ${fileName}${skipNote}`);
     }
 
     generatedFiles.push(agentesePath);
+  }
+
+  if (totalSkipped > 0 && !checkMode) {
+    console.log(`\nDeduplicated ${totalSkipped} types (child paths own their types)`);
   }
 
   // Generate index file

@@ -15,6 +15,8 @@ export interface WorldTownManifestResponse {
   storage_backend: string;
 }
 
+// WorldTownCitizenListResponse defined in world.town.citizen
+// WorldTownCitizenGetResponse defined in world.town.citizen
 /**
  * Request for citizen relationships.
  */
@@ -64,6 +66,10 @@ export interface WorldTownHistoryResponse {
   }[];
 }
 
+// WorldTownCitizenCreateRequest defined in world.town.citizen
+// WorldTownCitizenCreateResponse defined in world.town.citizen
+// WorldTownCitizenUpdateRequest defined in world.town.citizen
+// WorldTownCitizenUpdateResponse defined in world.town.citizen
 /**
  * Request to start a conversation with a citizen.
  */

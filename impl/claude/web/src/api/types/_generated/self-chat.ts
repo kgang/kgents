@@ -92,6 +92,28 @@ export interface SelfChatSendResponse {
 }
 
 /**
+ * Request to stream a message response.
+ */
+export interface SelfChatStreamRequest {
+  message: string;
+  session_id?: string | null;
+  node_path?: string | null;
+}
+
+/**
+ * A single chunk in a streaming response.
+
+Yielded via SSE as the LLM generates tokens.
+ */
+export interface SelfChatStreamResponse {
+  content: string;
+  session_id: string;
+  turn_number: number;
+  is_complete?: boolean;
+  tokens_so_far?: number;
+}
+
+/**
  * Request for conversation history.
  */
 export interface SelfChatHistoryRequest {

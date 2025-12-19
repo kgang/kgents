@@ -31,6 +31,7 @@ import { Terminal } from './Terminal';
 import { KeyboardHints } from './KeyboardHints';
 import { CommandPalette } from './CommandPalette';
 import { PathSearch } from './PathSearch';
+import { ObserverDebugPanel } from '../components/dev';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
 import {
   ObserverErrorBoundary,
@@ -232,13 +233,16 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
     setObserverDrawerExpanded(!observerDrawerExpanded);
   }, [observerDrawerExpanded, setObserverDrawerExpanded]);
 
-  const handleTerminalCommand = useCallback((command: string) => {
-    setTerminalExpanded(true);
-    // Dispatch event to run command in terminal
-    setTimeout(() => {
-      document.dispatchEvent(new CustomEvent('shell:terminal-command', { detail: { command } }));
-    }, 100);
-  }, [setTerminalExpanded]);
+  const handleTerminalCommand = useCallback(
+    (command: string) => {
+      setTerminalExpanded(true);
+      // Dispatch event to run command in terminal
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('shell:terminal-command', { detail: { command } }));
+      }, 100);
+    },
+    [setTerminalExpanded]
+  );
 
   // Register keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts({
@@ -262,20 +266,21 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
   // - Header: ~44px (py-2 + content)
   // Total: ~84px top offset needed
   const MOBILE_HEADER_HEIGHT = 44;
-  const mainStyle: React.CSSProperties = density === 'compact'
-    ? {
-        // Mobile: account for fixed ObserverDrawer + Header at top
-        paddingTop: `${observerHeight + MOBILE_HEADER_HEIGHT}px`,
-        paddingBottom: '5rem', // Space for FAB/bottom toolbar
-      }
-    : {
-        // Desktop: use animated offsets
-        marginTop: `${observerHeight}px`,
-        marginBottom: `${terminalHeight}px`,
-        marginLeft: navigationTreeExpanded ? `${navigationWidth}px` : 0,
-        // Disable CSS transitions when JS is animating to avoid double-animation
-        transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-      };
+  const mainStyle: React.CSSProperties =
+    density === 'compact'
+      ? {
+          // Mobile: account for fixed ObserverDrawer + Header at top
+          paddingTop: `${observerHeight + MOBILE_HEADER_HEIGHT}px`,
+          paddingBottom: '5rem', // Space for FAB/bottom toolbar
+        }
+      : {
+          // Desktop: use animated offsets
+          marginTop: `${observerHeight}px`,
+          marginBottom: `${terminalHeight}px`,
+          marginLeft: navigationTreeExpanded ? `${navigationWidth}px` : 0,
+          // Disable CSS transitions when JS is animating to avoid double-animation
+          transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        };
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col relative">
@@ -321,10 +326,7 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
         </NavigationErrorBoundary>
 
         {/* Content Canvas - uses coordinated offsets */}
-        <main
-          className="flex-1 overflow-auto absolute inset-0"
-          style={mainStyle}
-        >
+        <main className="flex-1 overflow-auto absolute inset-0" style={mainStyle}>
           <ProjectionErrorBoundary>
             <Outlet />
           </ProjectionErrorBoundary>
@@ -358,10 +360,10 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
       />
 
       {/* Path Search (press / to open) */}
-      <PathSearch
-        isOpen={pathSearchOpen}
-        onClose={() => setPathSearchOpen(false)}
-      />
+      <PathSearch isOpen={pathSearchOpen} onClose={() => setPathSearchOpen(false)} />
+
+      {/* Observer Debug Panel - Phase 8: Toggle with Ctrl+Shift+O */}
+      <ObserverDebugPanel />
     </div>
   );
 }

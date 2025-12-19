@@ -20,6 +20,7 @@ import { PageTransition, PersonalityLoading } from './components/joy';
 // Gallery pages (kept as explicit routes - not AGENTESE paths)
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
+const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
 
 // Town simulation and Inhabit now handled via UniversalProjection
 // (see registry.tsx for world.town.simulation and world.town.inhabit projections)
@@ -55,6 +56,9 @@ function App() {
                 {/* Developer Galleries - system routes (/_/) not AGENTESE ontology */}
                 <Route path="/_/gallery" element={<GalleryPage />} />
                 <Route path="/_/gallery/layout" element={<LayoutGallery />} />
+
+                {/* AGENTESE Docs Explorer - Phase 3 OpenAPI projection */}
+                <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
 
                 {/*
                  * Universal AGENTESE Projection (catch-all)

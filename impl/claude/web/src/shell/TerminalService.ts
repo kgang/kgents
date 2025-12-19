@@ -169,11 +169,10 @@ export class TerminalService {
       lines.push(...result);
       this._addHistoryEntry(trimmed, startTime, 'success', result);
       return lines;
-
     } catch (error) {
-      // AD-011: Provide sympathetic error messages
+      // Format error with actionable hints
       const rawMsg = error instanceof Error ? error.message : String(error);
-      const errorMsg = this._sympatheticError(rawMsg, trimmed);
+      const errorMsg = this._formatError(rawMsg, trimmed);
       lines.push(this._createLine('error', errorMsg));
       this._addHistoryEntry(trimmed, startTime, 'error', undefined, rawMsg);
       return lines;
@@ -192,9 +191,7 @@ export class TerminalService {
    */
   searchHistory(query: string): HistoryEntry[] {
     const lower = query.toLowerCase();
-    return this._history.filter(
-      (entry) => entry.input.toLowerCase().includes(lower)
-    );
+    return this._history.filter((entry) => entry.input.toLowerCase().includes(lower));
   }
 
   /**
@@ -253,13 +250,13 @@ export class TerminalService {
   /**
    * Discover available AGENTESE paths.
    *
-   * AD-011 REPL Reliability: Uses cache with 30s TTL, surfaces errors sympathetically.
+   * AD-011 REPL Reliability: Uses cache with 30s TTL, surfaces errors with actionable hints.
    * Fetches metadata for richer path info (description, aspects).
    */
   async discover(context?: string): Promise<PathInfo[]> {
     const now = Date.now();
-    const cacheValid = this._pathCache.length > 0 &&
-      (now - this._pathCacheTimestamp) < PATH_CACHE_TTL_MS;
+    const cacheValid =
+      this._pathCache.length > 0 && now - this._pathCacheTimestamp < PATH_CACHE_TTL_MS;
 
     // Return cached paths if valid and not filtering by context
     if (cacheValid && !context) {
@@ -276,17 +273,19 @@ export class TerminalService {
       // Request metadata for richer path info
       const response = await apiClient.get<{
         paths: string[];
-        metadata?: Record<string, {
-          path: string;
-          description: string | null;
-          aspects: string[];
-          effects: string[];
-          examples: unknown[];
-        }>;
-      }>(
-        '/agentese/discover',
-        { params: { include_metadata: true, ...(context ? { context } : {}) } }
-      );
+        metadata?: Record<
+          string,
+          {
+            path: string;
+            description: string | null;
+            aspects: string[];
+            effects: string[];
+            examples: unknown[];
+          }
+        >;
+      }>('/agentese/discover', {
+        params: { include_metadata: true, ...(context ? { context } : {}) },
+      });
 
       // Transform backend response to PathInfo format
       const pathInfos: PathInfo[] = response.data.paths.map((path) => {
@@ -302,9 +301,7 @@ export class TerminalService {
       });
 
       // Filter by context if requested
-      const filteredPaths = context
-        ? pathInfos.filter((p) => p.context === context)
-        : pathInfos;
+      const filteredPaths = context ? pathInfos.filter((p) => p.context === context) : pathInfos;
 
       // Cache results (only for full discovery)
       if (!context) {
@@ -314,15 +311,13 @@ export class TerminalService {
 
       return filteredPaths;
     } catch (error) {
-      // AD-011: Surface errors sympathetically, but provide fallback
+      // AD-011: Surface errors with hints, but provide fallback
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(`[TerminalService] Discovery failed: ${msg}`);
 
       // Return well-known paths as fallback, but log the issue
       const fallback = this._getWellKnownPaths(context);
-      console.info(
-        `[TerminalService] Using ${fallback.length} well-known paths as fallback`
-      );
+      console.info(`[TerminalService] Using ${fallback.length} well-known paths as fallback`);
       return fallback;
     }
   }
@@ -414,21 +409,21 @@ export class TerminalService {
 
       return helpLines.join('\n');
     } catch (error) {
-      // AD-011: Provide sympathetic error messages
+      // Format error with actionable hints
       const msg = error instanceof Error ? error.message : String(error);
 
       // Classify error for better UX
       if (msg.includes('404') || msg.includes('not found')) {
-        return `Path '${pathOrCommand}' not registered. Try 'discover' to see available paths.`;
+        return `Path '${pathOrCommand}' not registered.\n  → Type "discover" to see available paths`;
       }
       if (msg.includes('500') || msg.includes('Internal')) {
-        return `Path '${pathOrCommand}' exists but the backend encountered an error. Check server logs.`;
+        return `Server error for '${pathOrCommand}'.\n  → Check backend logs for details`;
       }
       if (msg.includes('Network') || msg.includes('ECONNREFUSED')) {
-        return `Cannot reach backend. Is the server running? (uv run uvicorn protocols.api.app:create_app --factory)`;
+        return `Connection failed.\n  → Is the server running?\n  → cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory`;
       }
 
-      return `Help unavailable for '${pathOrCommand}': ${msg}`;
+      return `Error: ${msg}`;
     }
   }
 
@@ -452,15 +447,18 @@ export class TerminalService {
         // PathInfo doesn't have examples yet, need to fetch from metadata
         const response = await apiClient.get<{
           paths: string[];
-          metadata?: Record<string, {
-            description?: string;
-            aspects?: string[];
-            examples?: Array<{
-              aspect: string;
-              kwargs: Record<string, unknown>;
-              label?: string;
-            }>;
-          }>;
+          metadata?: Record<
+            string,
+            {
+              description?: string;
+              aspects?: string[];
+              examples?: Array<{
+                aspect: string;
+                kwargs: Record<string, unknown>;
+                label?: string;
+              }>;
+            }
+          >;
         }>('/agentese/discover', { params: { include_metadata: true } });
         return response.data.metadata?.[path] ?? null;
       }
@@ -584,9 +582,7 @@ export class TerminalService {
   /**
    * Parse a built-in command from input.
    */
-  private _parseBuiltinCommand(
-    input: string
-  ): { command: BuiltinCommand; args: string[] } | null {
+  private _parseBuiltinCommand(input: string): { command: BuiltinCommand; args: string[] } | null {
     const parts = input.split(/\s+/);
     const command = parts[0].toLowerCase();
 
@@ -603,10 +599,7 @@ export class TerminalService {
   /**
    * Execute a built-in command.
    */
-  private async _executeBuiltin(
-    command: BuiltinCommand,
-    args: string[]
-  ): Promise<TerminalLine[]> {
+  private async _executeBuiltin(command: BuiltinCommand, args: string[]): Promise<TerminalLine[]> {
     switch (command) {
       case 'help':
         if (args.length > 0) {
@@ -674,9 +667,11 @@ export class TerminalService {
         const paths = await this.discover(args[0]);
         return [
           this._createLine('info', `Available paths${args[0] ? ` (${args[0]})` : ''}:`),
-          ...paths.slice(0, 20).map((p) =>
-            this._createLine('output', `  ${p.path}${p.description ? ` - ${p.description}` : ''}`)
-          ),
+          ...paths
+            .slice(0, 20)
+            .map((p) =>
+              this._createLine('output', `  ${p.path}${p.description ? ` - ${p.description}` : ''}`)
+            ),
           paths.length > 20
             ? this._createLine('info', `  ... and ${paths.length - 20} more`)
             : null,
@@ -693,9 +688,7 @@ export class TerminalService {
    */
   private async _executeQuery(pattern: string): Promise<TerminalLine[]> {
     const paths = await this.discover();
-    const matching = paths.filter((p) =>
-      p.path.toLowerCase().includes(pattern.toLowerCase())
-    );
+    const matching = paths.filter((p) => p.path.toLowerCase().includes(pattern.toLowerCase()));
 
     if (matching.length === 0) {
       return [this._createLine('info', `No paths matching: ${pattern}`)];
@@ -703,9 +696,7 @@ export class TerminalService {
 
     return [
       this._createLine('info', `Paths matching "${pattern}":`),
-      ...matching.slice(0, 20).map((p) =>
-        this._createLine('output', `  ${p.path}`)
-      ),
+      ...matching.slice(0, 20).map((p) => this._createLine('output', `  ${p.path}`)),
       matching.length > 20
         ? this._createLine('info', `  ... and ${matching.length - 20} more`)
         : null,
@@ -798,18 +789,14 @@ export class TerminalService {
       aspect: string;
       result: unknown;
       error?: string;
-    }>(
-      `/agentese/${pathSegments}/${aspect}`,
-      input ? { input } : {},
-      {
-        headers: {
-          'X-Observer-Archetype': this._observer?.archetype ?? 'developer',
-          'X-Observer-Capabilities': this._observer
-            ? Array.from(this._observer.capabilities).join(',')
-            : '',
-        },
-      }
-    );
+    }>(`/agentese/${pathSegments}/${aspect}`, input ? { input } : {}, {
+      headers: {
+        'X-Observer-Archetype': this._observer?.archetype ?? 'developer',
+        'X-Observer-Capabilities': this._observer
+          ? Array.from(this._observer.capabilities).join(',')
+          : '',
+      },
+    });
 
     // AD-011: Check for error in response envelope
     if (response.data.error) {
@@ -824,35 +811,49 @@ export class TerminalService {
   // ===========================================================================
 
   /**
-   * Convert raw error messages to sympathetic, actionable guidance.
-   * AD-011 REPL Reliability Contract.
+   * Format error messages with actionable hints.
+   * Neutral tone — clear and direct, not poetic.
    */
-  private _sympatheticError(rawMsg: string, path: string): string {
+  private _formatError(rawMsg: string, path: string): string {
     const lowerMsg = rawMsg.toLowerCase();
 
     // Network errors
-    if (lowerMsg.includes('network') || lowerMsg.includes('econnrefused') || lowerMsg.includes('fetch')) {
-      return `Cannot reach backend. Is the server running?\n  → cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --port 8000`;
+    if (
+      lowerMsg.includes('network') ||
+      lowerMsg.includes('econnrefused') ||
+      lowerMsg.includes('fetch')
+    ) {
+      return `Connection failed.\n  → Is the server running?\n  → cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --port 8000`;
     }
 
     // 404 - Path not found
     if (lowerMsg.includes('404') || lowerMsg.includes('not found')) {
-      return `Path '${path}' not registered.\n  → Type 'discover' to see available paths\n  → Check that the node module is imported in gateway.py`;
+      return `Not found: '${path}'\n  → Type "discover" to see available paths\n  → Check that the node module is imported in gateway.py`;
     }
 
     // 500 - Server error
     if (lowerMsg.includes('500') || lowerMsg.includes('internal server')) {
-      return `Backend error for '${path}'.\n  → Check the server terminal for full traceback\n  → The path exists but the handler crashed`;
+      return `Server error: '${path}'\n  → Check the backend terminal for traceback`;
     }
 
     // 422 - Validation error
     if (lowerMsg.includes('422') || lowerMsg.includes('validation')) {
-      return `Invalid input for '${path}'.\n  → Type 'help ${path}' to see expected format`;
+      return `Invalid input: '${path}'\n  → Type "help ${path}" to see expected format`;
     }
 
     // Timeout
     if (lowerMsg.includes('timeout')) {
-      return `Request timed out for '${path}'.\n  → The operation took too long\n  → Try again or check backend logs`;
+      return `Timed out: '${path}'\n  → Try again or check backend logs`;
+    }
+
+    // 451 - Consent required
+    if (lowerMsg.includes('451') || lowerMsg.includes('consent')) {
+      return `Consent required: '${path}'\n  → This entity has refused the interaction`;
+    }
+
+    // 429 - Rate limited
+    if (lowerMsg.includes('429') || lowerMsg.includes('rate')) {
+      return `Rate limited.\n  → Wait before retrying`;
     }
 
     // Default: show raw error
@@ -885,11 +886,7 @@ export class TerminalService {
   /**
    * Create a terminal line.
    */
-  private _createLine(
-    type: TerminalLine['type'],
-    content: string,
-    data?: unknown
-  ): TerminalLine {
+  private _createLine(type: TerminalLine['type'], content: string, data?: unknown): TerminalLine {
     return {
       id: nanoid(8),
       type,
@@ -1014,10 +1011,7 @@ export class TerminalService {
     return [
       this._createLine('info', `Last ${entries.length} commands:`),
       ...entries.map((e, i) =>
-        this._createLine(
-          'output',
-          `  ${entries.length - i}. ${e.input} [${e.status}]`
-        )
+        this._createLine('output', `  ${entries.length - i}. ${e.input} [${e.status}]`)
       ),
     ];
   }
@@ -1030,9 +1024,7 @@ export class TerminalService {
 
     return [
       this._createLine('info', 'Aliases:'),
-      ...entries.map(([name, path]) =>
-        this._createLine('output', `  ${name} -> ${path}`)
-      ),
+      ...entries.map(([name, path]) => this._createLine('output', `  ${name} -> ${path}`)),
     ];
   }
 
@@ -1070,9 +1062,7 @@ export class TerminalService {
       { path: 'time.forest', context: 'time', aspects: ['manifest', 'status'] },
     ];
 
-    return context
-      ? allPaths.filter((p) => p.context === context)
-      : allPaths;
+    return context ? allPaths.filter((p) => p.context === context) : allPaths;
   }
 
   // ===========================================================================
@@ -1175,11 +1165,7 @@ export class TerminalService {
    * @param pruneCallback - Callback to prune data if quota exceeded
    * @returns true if saved successfully, false otherwise
    */
-  private _safeSetItem(
-    key: string,
-    value: string,
-    pruneCallback?: () => boolean
-  ): boolean {
+  private _safeSetItem(key: string, value: string, pruneCallback?: () => boolean): boolean {
     if (typeof window === 'undefined') return false;
 
     try {
@@ -1225,10 +1211,8 @@ export class TerminalService {
   private _saveHistory(): void {
     if (typeof window === 'undefined') return;
 
-    this._safeSetItem(
-      STORAGE_KEYS.history,
-      JSON.stringify(this._history),
-      () => this._pruneHistory()
+    this._safeSetItem(STORAGE_KEYS.history, JSON.stringify(this._history), () =>
+      this._pruneHistory()
     );
   }
 
@@ -1241,10 +1225,8 @@ export class TerminalService {
       this._collections = this._collections.slice(0, MAX_COLLECTIONS);
     }
 
-    this._safeSetItem(
-      STORAGE_KEYS.collections,
-      JSON.stringify(this._collections),
-      () => this._pruneCollections()
+    this._safeSetItem(STORAGE_KEYS.collections, JSON.stringify(this._collections), () =>
+      this._pruneCollections()
     );
   }
 
