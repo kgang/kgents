@@ -20,6 +20,7 @@ from protocols.agentese.registry import (
     get_registry,
     is_node,
     node,
+    repopulate_registry,
     reset_registry,
 )
 
@@ -79,10 +80,21 @@ class DependentNode(BaseLogosNode):
 
 @pytest.fixture(autouse=True)
 def clean_registry():
-    """Reset registry before each test."""
+    """
+    Reset registry before each test, repopulate after.
+
+    CRITICAL for pytest-xdist: Without repopulation, tests on the same
+    worker that run after this test will see an empty registry, breaking
+    canary tests and any test that relies on global node registration.
+
+    See: protocols/agentese/_tests/test_xdist_node_registry_canary.py
+    """
     reset_registry()
     yield
-    reset_registry()
+    # Repopulate registry for subsequent tests on this worker
+    # NOTE: repopulate_registry() scans sys.modules for @node classes
+    # _import_node_modules() won't work because imports are cached
+    repopulate_registry()
 
 
 # === Test @node Decorator ===
