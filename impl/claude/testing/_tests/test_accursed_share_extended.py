@@ -198,9 +198,7 @@ class TestLGentChaos:
         for query in edge_cases:
             try:
                 results = await registry.find_semantic(query, limit=10)
-                print(
-                    f"L-gent edge: Query '{query[:20]!r}' returned {len(results)} results"
-                )
+                print(f"L-gent edge: Query '{query[:20]!r}' returned {len(results)} results")
             except Exception as e:
                 print(f"L-gent edge: Query '{query[:20]!r}' raised {type(e).__name__}")
 
@@ -348,16 +346,14 @@ class TestCrossAgentChaos:
         for s in stores:
             state = await s.load()
             total_keys += len(state)
-        print(
-            f"Concurrent multi-agent: {total_keys} total keys across {len(stores)} stores"
-        )
+        print(f"Concurrent multi-agent: {total_keys} total keys across {len(stores)} stores")
         assert total_keys == 500  # 5 stores * 100 keys
 
     @pytest.mark.asyncio
     async def test_composition_with_stateful_agents(self) -> None:
         """Compose stateful D-gents with pure transforms."""
         from agents.d import Symbiont, VolatileAgent
-        from bootstrap import compose
+        from agents.poly import compose
 
         # Create a counter symbiont
         def counter_logic(inc: int, count: int) -> tuple[int, int]:
@@ -402,7 +398,7 @@ class TestCompositionBoundaryChaos:
         """Pipeline with aggressive type coercions."""
         from typing import Any
 
-        from bootstrap import compose
+        from agents.poly import compose
 
         @dataclass
         class IntToStr:
@@ -446,7 +442,7 @@ class TestCompositionBoundaryChaos:
     @pytest.mark.asyncio
     async def test_exception_in_middle_of_chain(self) -> None:
         """Exception handling in the middle of a chain."""
-        from bootstrap import compose
+        from agents.poly import compose
 
         @dataclass
         class Safe:
@@ -478,7 +474,7 @@ class TestCompositionBoundaryChaos:
     @pytest.mark.asyncio
     async def test_none_propagation(self) -> None:
         """How None propagates through composition."""
-        from bootstrap import compose
+        from agents.poly import compose
 
         @dataclass
         class MaybeReturn:
@@ -537,7 +533,7 @@ class TestMemoryPressureChaos:
         """Very long composition chains."""
         from functools import reduce
 
-        from bootstrap import compose
+        from agents.poly import compose
 
         @dataclass
         class Increment:

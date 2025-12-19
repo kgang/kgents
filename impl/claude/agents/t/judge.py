@@ -19,8 +19,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Optional, Tuple, TypeVar
 
-from agents.poly.types import Agent, JudgeInput, Verdict
-from bootstrap.judge import Judge as BootstrapJudge
+from agents.poly import Agent, BootstrapVerdict as Verdict, Judge as BootstrapJudge, JudgeInput
 from runtime.base import AgentContext, LLMAgent
 
 A = TypeVar("A")  # Intent type
@@ -219,9 +218,7 @@ Evaluate the output against the intent. Return JSON with scores."""
         style = max(0.0, min(1.0, style))
 
         # Calculate weighted score
-        total_weight = (
-            self.criteria.correctness + self.criteria.safety + self.criteria.style
-        )
+        total_weight = self.criteria.correctness + self.criteria.safety + self.criteria.style
 
         if total_weight > 0:
             weighted_score = (

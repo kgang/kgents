@@ -112,11 +112,7 @@ function generateWaypoints(
     const seed = (hash(edgeId + i.toString()) % 1000) / 1000;
     const offset = Math.sin(t * Math.PI) * 0.03 * (seed - 0.5);
 
-    waypoints.push([
-      x + perpX * offset,
-      y + perpY * offset,
-      z,
-    ]);
+    waypoints.push([x + perpX * offset, y + perpY * offset, z]);
   }
 
   return waypoints;
@@ -190,14 +186,8 @@ interface InternalEdge extends GrowthEdge {
 // Main Hook
 // =============================================================================
 
-export function useGrowthAnimation(
-  options: GrowthAnimationOptions = {}
-): UseGrowthAnimationReturn {
-  const {
-    config = {},
-    onEdgeComplete,
-    onAllComplete,
-  } = options;
+export function useGrowthAnimation(options: GrowthAnimationOptions = {}): UseGrowthAnimationReturn {
+  const { config = {}, onEdgeComplete, onAllComplete } = options;
 
   // Merge config with defaults
   const fullConfig: EdgeGrowthConfig = {
@@ -249,7 +239,7 @@ export function useGrowthAnimation(
       // Calculate progress based on configured duration
       const progressIncrement = deltaTime / fullConfig.duration;
 
-      let completedEdges: string[] = [];
+      const completedEdges: string[] = [];
       let hasChanges = false;
 
       setEdges((prev) => {
@@ -263,10 +253,7 @@ export function useGrowthAnimation(
           }
 
           // Update progress
-          const newProgress = Math.min(
-            edge.progress + progressIncrement * edge.growthRate,
-            1
-          );
+          const newProgress = Math.min(edge.progress + progressIncrement * edge.growthRate, 1);
 
           if (newProgress !== edge.progress) {
             hasChanges = true;

@@ -92,8 +92,8 @@ def import_all_operads() -> None:
         pass  # Optional
 
 
-# Import on module load
-import_all_operads()
+# NOTE: import_all_operads() is called in fixture, not at module load.
+# This ensures clean registry state for parallel test execution (xdist).
 
 
 # ============================================================================

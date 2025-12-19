@@ -73,7 +73,7 @@ class TestFluxFunctorLaws:
     @pytest.mark.asyncio
     async def test_identity_law(self):
         """Flux(Id) ≅ Id_Flux"""
-        from bootstrap.id import Id
+        from agents.poly import Id
 
         # Lift identity agent
         flux_id: FluxAgent[int, int] = Flux.lift(Id())

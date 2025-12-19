@@ -1,11 +1,11 @@
 """
 L-gent Vector Database Backends: Scalable semantic search for large catalogs.
 
-.. deprecated::
-    This module is deprecated in favor of agents.v (V-gent).
-    Use VgentProtocol and V-gent backends for new code.
+Note (2025-12-19):
+    For new code, prefer agents.v (V-gent) which provides a cleaner API.
+    This module remains for L-gent internal use and backward compatibility.
 
-    Migration path:
+    Migration path for new code:
     1. Replace: from agents.l import VectorBackend
        With: from agents.v import VgentProtocol
 
@@ -41,14 +41,6 @@ from dataclasses import dataclass
 from typing import Any, Optional, Protocol
 
 from .types import CatalogEntry
-
-# Emit deprecation warning on import
-warnings.warn(
-    "agents.l.vector_backend is deprecated. Use agents.v (V-gent) for new code. "
-    "See module docstring for migration path.",
-    DeprecationWarning,
-    stacklevel=2,
-)
 
 
 @dataclass
@@ -190,9 +182,7 @@ class ChromaDBBackend:
             ImportError: If chromadb not installed
         """
         if not CHROMADB_AVAILABLE:
-            raise ImportError(
-                "chromadb not installed. Install with: pip install chromadb"
-            )
+            raise ImportError("chromadb not installed. Install with: pip install chromadb")
 
         self._dimension = dimension
         self._path = path
@@ -226,9 +216,7 @@ class ChromaDBBackend:
         # Convert complex types to strings
         clean_metadata = self._clean_metadata(metadata)
 
-        self._collection.upsert(
-            ids=[id], embeddings=[vector], metadatas=[clean_metadata]
-        )
+        self._collection.upsert(ids=[id], embeddings=[vector], metadatas=[clean_metadata])
 
     async def add_batch(
         self, ids: list[str], vectors: list[list[float]], metadata: list[dict[str, Any]]
@@ -394,9 +382,7 @@ class FAISSBackend:
             ImportError: If faiss not installed
         """
         if not FAISS_AVAILABLE:
-            raise ImportError(
-                "faiss not installed. Install with: pip install faiss-cpu"
-            )
+            raise ImportError("faiss not installed. Install with: pip install faiss-cpu")
 
         self._dimension = dimension
         self._index_type = index_type
@@ -523,9 +509,7 @@ class FAISSBackend:
 
         # Search (returns distances and indices)
         # For normalized vectors with IndexFlatIP, distance = cosine similarity
-        distances, indices = self._index.search(
-            vec, limit * 2
-        )  # Search more for filtering
+        distances, indices = self._index.search(vec, limit * 2)  # Search more for filtering
 
         # Convert to results
         results = []
@@ -601,9 +585,7 @@ class FAISSBackend:
         """Get number of entries in FAISS index."""
         return int(self._index.ntotal)
 
-    def _matches_filters(
-        self, metadata: dict[str, Any], filters: dict[str, Any]
-    ) -> bool:
+    def _matches_filters(self, metadata: dict[str, Any], filters: dict[str, Any]) -> bool:
         """Check if metadata matches filters."""
         for key, value in filters.items():
             if metadata.get(key) != value:
@@ -704,15 +686,11 @@ def create_vector_backend(
 
     if backend_type == "chroma":
         if not CHROMADB_AVAILABLE:
-            raise ImportError(
-                "chromadb not installed. Install with: pip install chromadb"
-            )
+            raise ImportError("chromadb not installed. Install with: pip install chromadb")
         return ChromaDBBackend(path=path or ".kgents/chroma", dimension=dimension)
     elif backend_type == "faiss":
         if not FAISS_AVAILABLE:
-            raise ImportError(
-                "faiss not installed. Install with: pip install faiss-cpu"
-            )
+            raise ImportError("faiss not installed. Install with: pip install faiss-cpu")
         return FAISSBackend(dimension=dimension, save_path=path)
     else:
         raise ValueError(f"Unknown backend type: {backend_type}")

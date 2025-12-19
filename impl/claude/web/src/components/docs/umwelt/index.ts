@@ -30,6 +30,9 @@ export {
 
 export { computeUmweltDiff, useUmweltDiff, useAspectAvailability } from './useUmweltDiff';
 
+// Observer Persistence (Umwelt v2)
+export { useObserverPersistence, clearStoredObserver } from './useObserverPersistence';
+
 // Animation components
 export {
   UmweltRipple,

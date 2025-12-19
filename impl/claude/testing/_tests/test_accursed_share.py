@@ -157,7 +157,9 @@ class TestWeirdInputs:
 
         This is a chaos test - we're exploring, not asserting.
         """
-        from bootstrap import ID
+        from agents.poly import Id
+
+        ID = Id()
 
         inputs = generate_weird_inputs()
         handled = 0
@@ -191,7 +193,7 @@ class TestChaoticComposition:
         from functools import reduce
 
         from agents.o.bootstrap_witness import TestAgent
-        from bootstrap import compose
+        from agents.poly import compose
 
         # Create a pool of test agents
         def make_adder(i: int) -> Callable[[Any], Any]:
@@ -224,10 +226,10 @@ class TestChaoticComposition:
         """Test very deep composition chains."""
         from functools import reduce
 
-        from bootstrap import ID, compose
+        from agents.poly import Id, compose
 
-        # Chain 100 identity agents
-        agents = [ID for _ in range(100)]
+        # Chain 100 identity agents (create fresh Id instances)
+        agents = [Id() for _ in range(100)]
 
         deep_chain = reduce(compose, agents)  # type: ignore[arg-type]
 
@@ -267,7 +269,7 @@ class TestSerendipitousDiscovery:
         Discovers how composition handles type changes.
         """
         from agents.o.bootstrap_witness import TestAgent
-        from bootstrap import compose
+        from agents.poly import compose
 
         # int -> str -> list -> dict
         to_str: TestAgent[Any, Any] = TestAgent("to_str", lambda x: str(x))
@@ -290,7 +292,7 @@ class TestSerendipitousDiscovery:
         Discovers error handling behavior.
         """
         from agents.o.bootstrap_witness import TestAgent
-        from bootstrap import compose
+        from agents.poly import compose
 
         def failing_transform(x: int) -> int:
             if x == 0:

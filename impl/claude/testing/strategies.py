@@ -58,7 +58,7 @@ if HYPOTHESIS_AVAILABLE:
             def __rshift__(self, other):
                 from typing import cast
 
-                from bootstrap import Agent, compose
+                from agents.poly import Agent, compose
 
                 return compose(cast(Agent[Any, Any], self), other)
 

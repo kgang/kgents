@@ -11,9 +11,9 @@
 - **AGENTESE Paths**: 58+ (Crown Jewels registered)
 - **Hero Path**: 100% (Brain 100% + Gardener 100% + Gestalt 100%)
 
-### 🔧 AGENTESE Node Overhaul (80% Complete)
-**Sessions 1-8 Complete**: SSE streaming, neutral errors, observer audit, contracts
-**Remaining**: Session 9 (CI Contract Gates) + Session 10 (E2E + Performance)
+### 🎉 AGENTESE Node Overhaul (100% Complete)
+**Sessions 1-10 Complete**: SSE streaming, neutral errors, observer audit, contracts, CI gates, E2E tests
+**Tests**: 56 new tests (38 contract/projection + 18 E2E/performance)
 
 ### 🎉 2D Renaissance Complete (2025-12-18)
 **Spec closed**: `spec/protocols/2d-renaissance.md` — 24 components, ~4,300 lines, 91 tests
@@ -41,7 +41,7 @@
 | **plans/kgentsd-event-architecture** | 0% | **planning** | Sub-plan: Flux, watchers (FS/Git/Test/AGENTESE/CI), no timers. |
 | **plans/kgentsd-trust-system** | 0% | **planning** | Sub-plan: Trust escalation L0→L3, action gating, confirmations. |
 | **plans/kgentsd-cross-jewel** | 0% | **planning** | Sub-plan: Invoke any jewel, pipelines, scheduling. |
-| **plans/agentese-node-overhaul-strategy** | 80% | **active** | Sessions 1-8 complete. Remaining: CI gates + E2E. |
+| **plans/agentese-node-overhaul-strategy** | 100% | **complete** | Sessions 1-10 complete. 56 new CI/E2E tests. |
 | **plans/crown-jewels-genesis-phase2** | 0% | **active** | NEW. Atelier rebuild (Weeks 3-5). Phase 1 foundation complete. |
 | **plans/crown-jewels-enlightened** | 88% | **active** | Master plan. Phase 1-4 complete. |
 | **plans/differance-cultivation** | 100% | **complete** | Phase 5 FRUITING complete. 192 tests. Contracts + hooks + component ready. |
@@ -90,7 +90,17 @@
 
 ---
 
-## Recently Archived (2025-12-18)
+## Recently Completed (2025-12-19)
+
+| Plan | Tests | Notes |
+|------|-------|-------|
+| openapi-projection-surface | 42 | OpenAPI 3.1 from AGENTESE registry. 183 paths. |
+| fail-fast-crown-jewel-audit | 5 | DI→WARNING, silent catch fixes, CI enforcement. |
+| umwelt-visualization | — | Observer reality shift animations, 5 phases. |
+| aspect-projection-protocol | — | AD-012 codified. Aspects ≠ navigation. |
+| agentese-repl-renaissance | 7 | 39/39 paths pass. Error surfacing, completion. |
+
+## Previously Archived (2025-12-18)
 
 ### Complete (Shipped)
 | Plan | Tests | Notes |
@@ -175,4 +185,4 @@ Based on `_focus.md` intent (2025-12-12):
 
 ---
 
-*Last verified: 2025-12-18 night | Chief of Staff Garden Protocol Assessment*
+*Last verified: 2025-12-19 | Chief of Staff Forest Audit*

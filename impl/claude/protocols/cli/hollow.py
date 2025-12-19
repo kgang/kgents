@@ -127,6 +127,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "brain": "protocols.cli.handlers.brain_thin:cmd_brain",
     # ==========================================================================
+    # Witness (8th Crown Jewel - The Witnessing Ghost)
+    # Uses thin routing shim - all logic in services/witness/
+    # ==========================================================================
+    "witness": "protocols.cli.handlers.witness_thin:cmd_witness",
+    # ==========================================================================
     # Shortcuts (ergonomic aliases for common operations)
     # ==========================================================================
     "play": "protocols.cli.handlers.play:cmd_play",

@@ -84,7 +84,9 @@ export async function latencyRoute(
 
   await page.route(pattern, async (route) => {
     const latency = Math.floor(random() * (maxLatencyMs - minLatencyMs)) + minLatencyMs;
-    await new Promise((resolve) => setTimeout(resolve, latency));
+    await new Promise<void>((resolve) => {
+      setTimeout(resolve, latency);
+    });
     await route.continue();
   });
 }

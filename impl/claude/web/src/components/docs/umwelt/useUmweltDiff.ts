@@ -6,22 +6,44 @@
  * This hook computes the diff between two observer states,
  * determining which aspects become revealed, hidden, or unchanged.
  *
+ * Umwelt v2 (2025-12-19): Registry-backed capability resolution with heuristic fallback.
+ * The registry is truth; heuristics are graceful degradation.
+ *
  * @see plans/umwelt-visualization.md
+ * @see plans/umwelt-v2-expansion.md
  */
 
 import { useMemo, useCallback } from 'react';
 import type { Observer } from '../ObserverPicker';
-import type { PathMetadata } from '../useAgenteseDiscovery';
+import type { PathMetadata, AspectMetadataEntry } from '../useAgenteseDiscovery';
 import type { AspectInfo, UmweltDiff } from './umwelt.types';
 
 // =============================================================================
-// Capability Checking
+// Capability Checking (Umwelt v2: Registry-backed with heuristic fallback)
 // =============================================================================
 
 /**
  * Determines what capability (if any) is required for an aspect.
+ *
+ * Umwelt v2: Uses registry metadata when available, falls back to heuristics.
+ * The registry is the SINGLE SOURCE OF TRUTH - heuristics are graceful degradation.
+ *
+ * @param aspect - The aspect name (e.g., "create", "manifest")
+ * @param aspectMetadata - Optional metadata from registry with requiredCapability
+ * @returns Required capability string or null (null = read capability)
  */
-function getRequiredCapability(aspect: string): string | null {
+function getRequiredCapability(
+  aspect: string,
+  aspectMetadata?: AspectMetadataEntry
+): string | null {
+  // Priority 1: Registry truth (Umwelt v2)
+  if (aspectMetadata?.requiredCapability !== undefined) {
+    return aspectMetadata.requiredCapability;
+  }
+
+  // Priority 2: Heuristic fallback (graceful degradation)
+  // These are the legacy rules - kept for paths without @aspect decorators
+
   // Mutations require write
   if (['create', 'update', 'delete'].some((m) => aspect.includes(m))) {
     return 'write';
@@ -59,11 +81,17 @@ function hasCapability(observer: Observer, capability: string | null): boolean {
 }
 
 // =============================================================================
-// Aspect Extraction
+// Aspect Extraction (Umwelt v2: Registry-aware)
 // =============================================================================
 
 /**
  * Extract all aspects visible to an observer from metadata.
+ *
+ * Umwelt v2: Now uses per-aspect metadata from registry when available.
+ * This provides:
+ * - Accurate requiredCapability from @aspect decorator
+ * - Contract awareness (hasContract = has schema)
+ * - Streaming detection from metadata
  */
 function getVisibleAspects(
   observer: Observer,
@@ -73,17 +101,24 @@ function getVisibleAspects(
 
   for (const [path, pathMeta] of Object.entries(metadata)) {
     const aspects = pathMeta.aspects || ['manifest'];
+    const aspectMetadataMap = pathMeta.aspectMetadata || {};
 
     for (const aspect of aspects) {
-      const requiredCapability = getRequiredCapability(aspect);
+      // Get per-aspect metadata if available (Umwelt v2)
+      const aspectMeta = aspectMetadataMap[aspect];
+
+      // Use registry-backed capability resolution with heuristic fallback
+      const requiredCapability = getRequiredCapability(aspect, aspectMeta);
 
       if (hasCapability(observer, requiredCapability)) {
         result.push({
           aspect,
           path,
           requiredCapability,
-          hasContract: false, // TODO: get from schema
-          isStreaming: pathMeta.effects?.includes('streaming') ?? false,
+          // Umwelt v2: Contract awareness from metadata
+          hasContract: aspectMeta !== undefined,
+          // Umwelt v2: Streaming from metadata or effects
+          isStreaming: aspectMeta?.streaming ?? pathMeta.effects?.includes('streaming') ?? false,
         });
       }
     }
@@ -165,13 +200,15 @@ export function useUmweltDiff(
 
 /**
  * Hook to check if a specific aspect is available to the current observer.
+ *
+ * Umwelt v2: Accepts optional aspectMetadata for registry-backed capability check.
  */
 export function useAspectAvailability(
   observer: Observer
-): (aspect: string) => { available: boolean; reason?: string } {
+): (aspect: string, aspectMeta?: AspectMetadataEntry) => { available: boolean; reason?: string } {
   return useCallback(
-    (aspect: string) => {
-      const required = getRequiredCapability(aspect);
+    (aspect: string, aspectMeta?: AspectMetadataEntry) => {
+      const required = getRequiredCapability(aspect, aspectMeta);
 
       if (!hasCapability(observer, 'read')) {
         return { available: false, reason: 'Requires read capability' };

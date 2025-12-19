@@ -72,9 +72,7 @@ class AgentInterface:
     input_description: str
     output_type: Type[Any]
     output_description: str
-    error_codes: list[tuple[str, str]] = field(
-        default_factory=list
-    )  # (code, description)
+    error_codes: list[tuple[str, str]] = field(default_factory=list)  # (code, description)
 
 
 @dataclass
@@ -134,11 +132,7 @@ class AgentMeta:
     @classmethod
     def minimal(cls, name: str, genus: str, purpose: str) -> "AgentMeta":
         """Create minimal metadata with just identity."""
-        return cls(
-            identity=AgentIdentity(
-                name=name, genus=genus, version="0.1.0", purpose=purpose
-            )
-        )
+        return cls(identity=AgentIdentity(name=name, genus=genus, version="0.1.0", purpose=purpose))
 
 
 # Protocol-based extension points for introspection and validation
@@ -219,9 +213,7 @@ def is_composable(agent: Agent[Any, Any]) -> bool:
     return isinstance(agent, Composable)
 
 
-def check_composition(
-    agent_a: Agent[Any, Any], agent_b: Agent[Any, Any]
-) -> tuple[bool, str]:
+def check_composition(agent_a: Agent[Any, Any], agent_b: Agent[Any, Any]) -> tuple[bool, str]:
     """
     Check if two agents can be composed (agent_a >> agent_b).
 
@@ -286,10 +278,7 @@ class BootstrapVerificationResult:
             self.all_agents_exist
             and self.identity_laws_hold
             and self.composition_laws_hold
-            and (
-                self.overall_verdict is None
-                or self.overall_verdict.type.value == "accept"
-            )
+            and (self.overall_verdict is None or self.overall_verdict.type.value == "accept")
         )
 
 
@@ -445,9 +434,7 @@ class BootstrapWitness:
             async def invoke(self, input: int) -> int:
                 return input + 1
 
-        return await cls.verify_composition_laws(
-            DoubleAgent(), SquareAgent(), AddOneAgent(), 3
-        )
+        return await cls.verify_composition_laws(DoubleAgent(), SquareAgent(), AddOneAgent(), 3)
 
     @classmethod
     async def verify_identity_laws(cls, agent: Agent[A, B], test_input: A) -> bool:
@@ -457,7 +444,7 @@ class BootstrapWitness:
         - Left identity: Id >> agent ≡ agent
         - Right identity: agent >> Id ≡ agent
         """
-        from bootstrap.id import Id
+        from agents.poly import Id
 
         id_agent: Agent[Any, Any] = Id()
 
@@ -849,9 +836,7 @@ class AgentFactory:
         return None
 
     @classmethod
-    def compose(
-        cls, *agents: Agent[Any, Any], validate: bool = True
-    ) -> Agent[Any, Any]:
+    def compose(cls, *agents: Agent[Any, Any], validate: bool = True) -> Agent[Any, Any]:
         """
         Compose multiple agents with optional validation.
 

@@ -158,6 +158,9 @@ class AspectMetadata:
     - streaming: Enable streaming output (Interactivity.STREAMING)
     - interactive: Enable REPL mode (Interactivity.INTERACTIVE)
     - budget_estimate: LLM cost estimate (required if CALLS effect present)
+
+    Extended for Umwelt v2 (v3.3):
+    - required_capability: Capability required to invoke this aspect (e.g., "write", "admin")
     """
 
     category: AspectCategory
@@ -175,6 +178,8 @@ class AspectMetadata:
     streaming: bool = False  # Enable streaming output
     interactive: bool = False  # Enable REPL mode
     budget_estimate: str | None = None  # LLM cost estimate (e.g., "~100 tokens")
+    # v3.3: Extended for Umwelt v2 observer reality
+    required_capability: str | None = None  # Capability required (e.g., "write", "admin", "void")
 
 
 def aspect(
@@ -193,9 +198,11 @@ def aspect(
     streaming: bool = False,
     interactive: bool = False,
     budget_estimate: str | None = None,
+    # v3.3: Extended for Umwelt v2 observer reality
+    required_capability: str | None = None,
 ) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """
-    Decorator to mark a method as an AGENTESE aspect (v3.2 API).
+    Decorator to mark a method as an AGENTESE aspect (v3.3 API).
 
     Attaches metadata and optionally enforces category constraints at runtime.
 
@@ -213,6 +220,11 @@ def aspect(
         streaming: Enable streaming output (v3.2)
         interactive: Enable REPL mode (v3.2)
         budget_estimate: LLM cost estimate (v3.2, required if CALLS effect)
+        required_capability: Capability required to invoke (v3.3, Umwelt v2)
+            - None: Available to all observers with "read" capability
+            - "write": Requires write capability (mutations)
+            - "admin": Requires admin capability
+            - "void": Requires void capability (entropy operations)
 
     Example:
         @aspect(
@@ -235,6 +247,7 @@ def aspect(
             help="Store a memory crystal",
             budget_estimate="~200 tokens",
             streaming=True,
+            required_capability="write",  # v3.3: Explicit capability
         )
         async def engram(self, observer: Observer, content: str) -> Crystal:
             ...
@@ -269,6 +282,8 @@ def aspect(
             streaming=streaming,
             interactive=interactive,
             budget_estimate=budget_estimate,
+            # v3.3 fields
+            required_capability=required_capability,
         )
         func.__aspect_meta__ = meta  # type: ignore[attr-defined]
 
@@ -313,9 +328,7 @@ STANDARD_ASPECTS: dict[str, Aspect] = {
     "sense": Aspect("sense", AspectCategory.PERCEPTION, "Raw perception"),
     "map": Aspect("map", AspectCategory.PERCEPTION, "Spatial view"),
     # Mutation
-    "transform": Aspect(
-        "transform", AspectCategory.MUTATION, "Change state", side_effects=True
-    ),
+    "transform": Aspect("transform", AspectCategory.MUTATION, "Change state", side_effects=True),
     "renovate": Aspect(
         "renovate",
         AspectCategory.MUTATION,
@@ -323,12 +336,8 @@ STANDARD_ASPECTS: dict[str, Aspect] = {
         requires_archetype=("architect",),
         side_effects=True,
     ),
-    "evolve": Aspect(
-        "evolve", AspectCategory.MUTATION, "Evolutionary change", side_effects=True
-    ),
-    "repair": Aspect(
-        "repair", AspectCategory.MUTATION, "Fix damage", side_effects=True
-    ),
+    "evolve": Aspect("evolve", AspectCategory.MUTATION, "Evolutionary change", side_effects=True),
+    "repair": Aspect("repair", AspectCategory.MUTATION, "Fix damage", side_effects=True),
     # Composition
     "compose": Aspect("compose", AspectCategory.COMPOSITION, "Combine entities"),
     "merge": Aspect("merge", AspectCategory.COMPOSITION, "Merge entities"),
@@ -336,33 +345,19 @@ STANDARD_ASPECTS: dict[str, Aspect] = {
     "relate": Aspect("relate", AspectCategory.COMPOSITION, "Find connections"),
     "lens": Aspect("lens", AspectCategory.COMPOSITION, "Get composable agent"),
     # Introspection
-    "affordances": Aspect(
-        "affordances", AspectCategory.INTROSPECTION, "What can I do?"
-    ),
+    "affordances": Aspect("affordances", AspectCategory.INTROSPECTION, "What can I do?"),
     "help": Aspect(
         "help",
         AspectCategory.INTROSPECTION,
         "Self-documenting help for this node",
     ),
-    "constraints": Aspect(
-        "constraints", AspectCategory.INTROSPECTION, "What limits me?"
-    ),
-    "lineage": Aspect(
-        "lineage", AspectCategory.INTROSPECTION, "Where did I come from?"
-    ),
+    "constraints": Aspect("constraints", AspectCategory.INTROSPECTION, "What limits me?"),
+    "lineage": Aspect("lineage", AspectCategory.INTROSPECTION, "Where did I come from?"),
     # Generation
-    "define": Aspect(
-        "define", AspectCategory.GENERATION, "Create concept", side_effects=True
-    ),
-    "spawn": Aspect(
-        "spawn", AspectCategory.GENERATION, "Create child", side_effects=True
-    ),
-    "fork": Aspect(
-        "fork", AspectCategory.GENERATION, "Create variant", side_effects=True
-    ),
-    "dream": Aspect(
-        "dream", AspectCategory.GENERATION, "Generate from void", side_effects=True
-    ),
+    "define": Aspect("define", AspectCategory.GENERATION, "Create concept", side_effects=True),
+    "spawn": Aspect("spawn", AspectCategory.GENERATION, "Create child", side_effects=True),
+    "fork": Aspect("fork", AspectCategory.GENERATION, "Create variant", side_effects=True),
+    "dream": Aspect("dream", AspectCategory.GENERATION, "Generate from void", side_effects=True),
     # Entropy (void.* only)
     "sip": Aspect("sip", AspectCategory.ENTROPY, "Draw from entropy"),
     "pour": Aspect("pour", AspectCategory.ENTROPY, "Return entropy"),
@@ -562,19 +557,13 @@ STANDARD_ASPECTS: dict[str, Aspect] = {
         "Hypnagogic cycle",
         side_effects=True,
     ),
-    "prune": Aspect(
-        "prune", AspectCategory.MUTATION, "Garbage collect", side_effects=True
-    ),
+    "prune": Aspect("prune", AspectCategory.MUTATION, "Garbage collect", side_effects=True),
     "checkpoint": Aspect(
         "checkpoint", AspectCategory.GENERATION, "Snapshot state", side_effects=True
     ),
     "recall": Aspect("recall", AspectCategory.PERCEPTION, "Retrieve memory"),
-    "acquire": Aspect(
-        "acquire", AspectCategory.MUTATION, "Gain capability", side_effects=True
-    ),
-    "release": Aspect(
-        "release", AspectCategory.MUTATION, "Release capability", side_effects=True
-    ),
+    "acquire": Aspect("acquire", AspectCategory.MUTATION, "Gain capability", side_effects=True),
+    "release": Aspect("release", AspectCategory.MUTATION, "Release capability", side_effects=True),
     # Time aspects
     "project": Aspect("project", AspectCategory.PERCEPTION, "View past state"),
     "defer": Aspect(
@@ -816,9 +805,7 @@ class CapabilityAffordanceMatcher:
     registry: AffordanceRegistry = field(default_factory=AffordanceRegistry)
     capability_grants: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
-    def matches(
-        self, archetype: str, aspect: str, capabilities: tuple[str, ...] = ()
-    ) -> bool:
+    def matches(self, archetype: str, aspect: str, capabilities: tuple[str, ...] = ()) -> bool:
         """Check if archetype + capabilities can access aspect."""
         # Check archetype-based access
         if self.registry.has_affordance(archetype, aspect):

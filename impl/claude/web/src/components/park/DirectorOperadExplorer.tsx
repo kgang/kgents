@@ -55,7 +55,8 @@ const DIRECTOR_OPERATIONS: Operation[] = [
     description: 'Watch guest behavior passively',
     icon: Eye,
     color: '#22c55e',
-    teaching: 'The director watches from the shadows, gathering tension metrics without intervening.',
+    teaching:
+      'The director watches from the shadows, gathering tension metrics without intervening.',
   },
   {
     id: 'build_tension',
@@ -75,7 +76,8 @@ const DIRECTOR_OPERATIONS: Operation[] = [
     description: 'Introduce lucky coincidence',
     icon: Zap,
     color: '#8b5cf6',
-    teaching: 'A surprise arrival, a revelation, a twist. Injections shift the narrative without forcing outcomes.',
+    teaching:
+      'A surprise arrival, a revelation, a twist. Injections shift the narrative without forcing outcomes.',
   },
   {
     id: 'cooldown',
@@ -200,7 +202,9 @@ export function DirectorOperadExplorer({
 
   const handleVerifyLaws = useCallback(async () => {
     setVerifyingLaws(true);
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise<void>((r) => {
+      setTimeout(r, 500);
+    });
     setVerifyingLaws(false);
   }, []);
 
@@ -318,9 +322,9 @@ export function DirectorOperadExplorer({
             Teaching
           </div>
           <p className="text-sm text-gray-200">
-            The DIRECTOR_OPERAD captures how a Punchdrunk-style director composes actions.
-            Each operation has constraints (laws) that prevent harmful compositions—like
-            injecting serendipity when consent debt is too high.
+            The DIRECTOR_OPERAD captures how a Punchdrunk-style director composes actions. Each
+            operation has constraints (laws) that prevent harmful compositions—like injecting
+            serendipity when consent debt is too high.
           </p>
         </div>
       )}
@@ -330,9 +334,7 @@ export function DirectorOperadExplorer({
   if (variant === 'modal') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          {content}
-        </div>
+        <div className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">{content}</div>
       </div>
     );
   }

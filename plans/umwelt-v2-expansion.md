@@ -4,11 +4,40 @@
 >
 > *"Different observers don't just have different permissions—they have different perceptions."*
 
-**Status**: 🌱 PLANNING
+**Status**: 🚧 IN PROGRESS (Phase 0 Complete, Phase 1 Next)
 **Parent**: `plans/umwelt-visualization.md` (✅ COMPLETE)
 **Last Updated**: 2025-12-19
+**Phase 0 Progress**: 6/8 tasks complete
 **Priority**: P1 (Educational UX, AD-010 Layer 3)
 **Aligned With**: AD-008 (Simplifying Isomorphisms), AD-010 (Habitat Guarantee), AD-012 (Aspect Projection Protocol)
+
+---
+
+## Session Log
+
+### 2025-12-19: Phase 0 Complete ✅
+**Refined approach**: After deep audit of the codebase, the implementation was cleaner than expected:
+- `@aspect` decorator already has `requires_archetype` tuple—extended with `required_capability`
+- Discovery endpoint already returns aspects from contracts—added per-aspect metadata
+- Frontend already has schema data—wired `hasContract` properly
+
+**Completed in this session**:
+1. ✅ **Backend**: Added `required_capability: str | None` to `@aspect` decorator (v3.3)
+2. ✅ **Backend**: Enhanced `/agentese/discover?include_metadata=true` to return `aspectMetadata` per path
+3. ✅ **Frontend**: Added `AspectMetadataEntry` type and updated `PathMetadata` interface
+4. ✅ **Frontend**: Updated `getRequiredCapability()` with registry-backed resolution + heuristic fallback
+5. ✅ **Frontend**: Updated `getVisibleAspects()` to use per-aspect metadata for `hasContract`, `requiredCapability`
+6. ✅ **Frontend**: Created `useObserverPersistence` hook for session storage
+
+**Files Modified**:
+- `impl/claude/protocols/agentese/affordances.py` — v3.3 `@aspect` decorator
+- `impl/claude/protocols/agentese/gateway.py` — `_extract_aspect_metadata_from_class()`, enhanced `/discover`
+- `impl/claude/web/src/components/docs/useAgenteseDiscovery.ts` — `AspectMetadataEntry` type
+- `impl/claude/web/src/components/docs/umwelt/useUmweltDiff.ts` — registry-backed `getRequiredCapability()`
+- `impl/claude/web/src/components/docs/umwelt/useObserverPersistence.ts` — NEW
+- `impl/claude/web/src/components/docs/umwelt/index.ts` — export new hook
+
+**Key insight**: Phase 0 establishes the **correctness foundation**. Registry is now truth; heuristics are graceful degradation.
 
 ---
 
@@ -105,10 +134,10 @@ GET /agentese/discover?include_aspect_metadata=true
 
 **Tasks**
 
-- [ ] Add `required_capability` to `@aspect` decorator
-- [ ] Enhance `/agentese/discover` to return per-aspect metadata
-- [ ] Update `useAgenteseDiscovery.ts` to parse aspect metadata
-- [ ] Update `getRequiredCapability()` to use registry with heuristic fallback
+- [x] Add `required_capability` to `@aspect` decorator
+- [x] Enhance `/agentese/discover` to return per-aspect metadata
+- [x] Update `useAgenteseDiscovery.ts` to parse aspect metadata
+- [x] Update `getRequiredCapability()` to use registry with heuristic fallback
 - [ ] Add tests for edge cases (aspect names that fool heuristics)
 
 **Open Questions**
@@ -180,8 +209,8 @@ function getVisibleAspects(
 
 **Tasks**
 
-- [ ] Thread `schemas` through to `computeUmweltDiff()`
-- [ ] Populate `hasContract`, `contractType`, `schemaPreview`
+- [x] Thread `schemas` through to `computeUmweltDiff()` (via aspectMetadata)
+- [x] Populate `hasContract`, `contractType`, `schemaPreview` (hasContract done, others TODO)
 - [ ] Add schema badge to AspectPanel buttons
 - [ ] Show schema preview in ghost tooltips
 
@@ -250,9 +279,9 @@ export function useObserverPersistence(defaultObserver: Observer) {
 
 **Tasks**
 
-- [ ] Create `useObserverPersistence.ts` hook
+- [x] Create `useObserverPersistence.ts` hook
 - [ ] Wire into `AgenteseDocs.tsx`
-- [ ] Add version migration logic
+- [x] Add version migration logic
 - [ ] Test: corrupted storage, old version, fresh session
 
 **Open Questions**
@@ -900,8 +929,8 @@ class CapabilityNode:
 3. Contract-aware aspects (1B)
 
 **Exit Criteria**:
-- [ ] Capability requirements come from registry, not heuristics
-- [ ] Observer persists across page refresh
+- [x] Capability requirements come from registry, not heuristics
+- [x] Observer persists across page refresh (hook created, wiring pending)
 - [ ] Ghost tooltips show contract schemas
 
 **Estimated Effort**: 2-3 sessions

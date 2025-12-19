@@ -5,14 +5,17 @@ Provides singleton lifecycle management for SaaS infrastructure clients:
 - OpenMeterClient: Usage-based billing
 - NATSBridge: Event streaming
 
-Usage in FastAPI:
-    @app.on_event("startup")
-    async def startup():
-        await get_saas_clients().start()
+Usage with FastAPI lifespan (preferred, no deprecation warnings):
+    from contextlib import asynccontextmanager
+    from fastapi import FastAPI
 
-    @app.on_event("shutdown")
-    async def shutdown():
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        await get_saas_clients().start()
+        yield
         await get_saas_clients().stop()
+
+    app = FastAPI(lifespan=lifespan)
 """
 
 from __future__ import annotations

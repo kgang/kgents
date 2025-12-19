@@ -250,6 +250,97 @@ async def verified_bootstrap(bootstrap_witness: Any) -> Any:
 
 
 # =============================================================================
+# Global Registry Population (xdist-safe)
+# =============================================================================
+#
+# These fixtures ensure all global registries are populated at session start.
+# This is CRITICAL for pytest-xdist parallel execution where each worker is
+# a separate process with independent Python state.
+#
+# The Problem:
+# - Global singletons (OperadRegistry, NodeRegistry) use class/module-level state
+# - Registration happens at module import time (OperadRegistry.register(...))
+# - In xdist, different workers may import different modules in different orders
+# - Tests checking registry state fail inconsistently across workers
+#
+# The Solution:
+# - Session-scoped fixtures that run ONCE per worker at session start
+# - Import ALL modules that register with singletons
+# - Place in ROOT conftest.py so ALL tests get consistent state
+#
+# WARNING: Do NOT reset these registries! Re-import won't re-register because
+# Python caches modules. Only import, never clear.
+
+
+def _populate_operad_registry() -> None:
+    """Import all operad modules to trigger registration."""
+    # Core (auto-registered)
+    # Atelier
+    from agents.atelier.workshop.operad import ATELIER_OPERAD  # noqa: F401
+
+    # Brain
+    from agents.brain.operad import BRAIN_OPERAD  # noqa: F401
+
+    # Flow (4 operads)
+    from agents.f.operad import (  # noqa: F401
+        CHAT_OPERAD,
+        COLLABORATION_OPERAD,
+        FLOW_OPERAD,
+        RESEARCH_OPERAD,
+    )
+    from agents.operad.core import AGENT_OPERAD  # noqa: F401
+
+    # Park/Director
+    from agents.park.operad import DIRECTOR_OPERAD  # noqa: F401
+
+    # Town
+    from agents.town.operad import TOWN_OPERAD  # noqa: F401
+
+    # Growth
+    from protocols.agentese.contexts.self_grow.operad import GROWTH_OPERAD  # noqa: F401
+
+    # N-Phase
+    from protocols.nphase.operad import NPHASE_OPERAD  # noqa: F401
+
+    # Optional operads (may not exist in all configurations)
+    try:
+        from agents.emergence.operad import EMERGENCE_OPERAD  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from agents.design.operad import DESIGN_OPERAD  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from agents.differance.operad import TRACED_OPERAD  # noqa: F401
+    except ImportError:
+        pass
+
+
+def _populate_node_registry() -> None:
+    """Import all AGENTESE node modules to trigger @node registration."""
+    from protocols.agentese.gateway import _import_node_modules
+
+    _import_node_modules()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _ensure_global_registries_populated():
+    """
+    Ensure all global registries are populated at session start.
+
+    This is the CRITICAL fixture for xdist-safe parallel execution.
+    It runs ONCE per worker process before any tests execute.
+
+    Canary tests: See agents/operad/_tests/test_xdist_registry_canary.py
+    """
+    _populate_operad_registry()
+    _populate_node_registry()
+
+
+# =============================================================================
 # Custom Markers
 # =============================================================================
 
@@ -266,23 +357,13 @@ def pytest_configure(config: Any) -> None:
     # tier1: Unit tests - pure functions, no I/O, no mocks (<30s target)
     # tier2: Integration tests - mocked external deps (<5m target)
     # tier3: E2E tests - real external services (K8s, APIs)
-    config.addinivalue_line(
-        "markers", "tier1: Unit tests (pure functions, no I/O, no mocks)"
-    )
-    config.addinivalue_line(
-        "markers", "tier2: Integration tests (mocked external deps)"
-    )
-    config.addinivalue_line(
-        "markers", "tier3: E2E tests (real external services like K8s cluster)"
-    )
+    config.addinivalue_line("markers", "tier1: Unit tests (pure functions, no I/O, no mocks)")
+    config.addinivalue_line("markers", "tier2: Integration tests (mocked external deps)")
+    config.addinivalue_line("markers", "tier3: E2E tests (real external services like K8s cluster)")
 
     # Law markers
-    config.addinivalue_line(
-        "markers", "law(name): mark test as category law verification"
-    )
-    config.addinivalue_line(
-        "markers", "law_identity: tests identity law (Id >> f == f == f >> Id)"
-    )
+    config.addinivalue_line("markers", "law(name): mark test as category law verification")
+    config.addinivalue_line("markers", "law_identity: tests identity law (Id >> f == f == f >> Id)")
     config.addinivalue_line(
         "markers",
         "law_associativity: tests associativity ((f >> g) >> h == f >> (g >> h))",
@@ -297,12 +378,8 @@ def pytest_configure(config: Any) -> None:
 
     # Meta markers
     config.addinivalue_line("markers", "slow: mark test as slow-running")
-    config.addinivalue_line(
-        "markers", "accursed_share: mark test as exploratory/chaos (Phase 5)"
-    )
-    config.addinivalue_line(
-        "markers", "property: mark test as property-based (Phase 3)"
-    )
+    config.addinivalue_line("markers", "accursed_share: mark test as exploratory/chaos (Phase 5)")
+    config.addinivalue_line("markers", "property: mark test as property-based (Phase 3)")
     config.addinivalue_line(
         "markers", "needs_llm: mark test as requiring real LLM (auto_llm enabled)"
     )

@@ -31,8 +31,7 @@ from agents.a.skeleton import (
     has_meta,
     verify_composition_types,
 )
-from agents.poly.types import VOID, Agent, VerdictType
-from bootstrap.id import Id
+from agents.poly import VOID, Agent, Id, VerdictType
 
 # =============================================================================
 # Test Fixtures
@@ -120,7 +119,7 @@ class TestBootstrapWitness:
     async def test_all_bootstrap_agents_exist(self) -> None:
         """All 7 bootstrap agents can be imported and instantiated."""
         # These should not raise ImportError
-        from bootstrap import Compose, Contradict, Fix, Ground, Id, Judge, Sublate
+        from agents.poly import Compose, Contradict, Fix, Ground, Id, Judge, Sublate
 
         # Verify they're agents
         assert hasattr(Id, "invoke") or callable(Id)

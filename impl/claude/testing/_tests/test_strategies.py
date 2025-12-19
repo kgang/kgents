@@ -64,7 +64,7 @@ class TestAgentStrategies:
         """Agent chains should be composable."""
         from functools import reduce
 
-        from bootstrap import compose
+        from agents.poly import compose
 
         composed = reduce(compose, agents)
         assert hasattr(composed, "invoke")

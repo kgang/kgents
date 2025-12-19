@@ -21,6 +21,17 @@ Migration: 2025-12-16
 See: plans/ideas/impl/meta-construction.md
 """
 
+# Bootstrap agents (re-exported from bootstrap/ for convenience)
+# These are the 7 irreducible agents from which all of kgents can be regenerated
+# Note: ID is exported from primitives (as a PolyAgent), so we only import Id (the class)
+from bootstrap.compose import Compose, compose, decompose, depth, flatten, pipeline
+from bootstrap.contradict import Contradict, TensionDetector, contradict
+from bootstrap.fix import Fix, PollState, fix, iterate_until_stable, poll_until_stable
+from bootstrap.ground import Ground, ground
+from bootstrap.id import Id
+from bootstrap.judge import MINI_JUDGES, Judge, accepts, judge
+from bootstrap.sublate import Sublate, resolve_or_hold, sublate
+
 from .primitives import (
     # Primitives - Bootstrap (7)
     COMPOSE,
@@ -246,4 +257,29 @@ __all__ = [
     "JudgeInput",
     "Void",
     "VOID",
+    # Bootstrap Agents (re-exported from bootstrap/)
+    "Id",
+    "Compose",
+    "compose",
+    "pipeline",
+    "decompose",
+    "flatten",
+    "depth",
+    "Contradict",
+    "contradict",
+    "TensionDetector",
+    "Fix",
+    "fix",
+    "iterate_until_stable",
+    "poll_until_stable",
+    "PollState",
+    "Ground",
+    "ground",
+    "Judge",
+    "judge",
+    "accepts",
+    "MINI_JUDGES",
+    "Sublate",
+    "sublate",
+    "resolve_or_hold",
 ]

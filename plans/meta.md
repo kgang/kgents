@@ -113,8 +113,8 @@ Fetch debounce defense: lastFetchRef + isFetchingRef guard against rapid-fire re
 DI > mocking: set_soul() injection pattern beats patch() for testability
 Property-based tests catch edge cases: Hypothesis found boundary issues humans missed
 Performance baselines as assertions: `assert elapsed < 1.0` catches regressions
-Registry singleton + reset(): class-level state works with pytest fixtures via reset()
-Global singletons + xdist = race: sequential OK, parallel risky—document or use markers
+Registry singleton + xdist: session-scoped fixtures in ROOT conftest.py ensure all workers populated
+Global singletons: NEVER reset (re-import won't re-register); import-at-session-start pattern works
 Contract tests bridge type gaps: Python validators mirror TypeScript interfaces
 Stress test phase machines: Hypothesis with action sequences reveals invalid transitions
 ```
@@ -327,6 +327,15 @@ Ghost aspects should be explorable, not just grayed—show schema preview, capab
 Observer persistence uses sessionStorage + version field for graceful migration
 PathExplorer dimming teaches capability shape—paths with 0 accessible aspects are "ghost"
 Observer history enables exploration breadcrumbs—revert to previous without manual re-selection
+```
+
+### AGENTESE CI/E2E Testing (2025-12-19)
+```
+CI gates enforce contracts: test_all_nodes_have_contracts.py catches missing contracts at PR time
+Projection coverage testing: read registry.tsx directly, pattern match path entries
+E2E with DI skip: if 500 error contains "persistence", route exists but service not bootstrapped—skip, don't fail
+Performance baselines: generous (0.5s) to avoid CI flakiness; tighten after measuring real production
+Union type instanceof: ContractType.__args__ throws in Python 3.13; use explicit tuple (Response, Contract, Request)
 ```
 
 ### OpenAPI as Projection Surface (2025-12-19)

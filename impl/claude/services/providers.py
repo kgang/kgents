@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from services.town.coalition_service import CoalitionService
     from services.town.inhabit_service import InhabitService
     from services.town.workshop_service import WorkshopService
+    from services.witness.persistence import WitnessPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -245,6 +246,11 @@ async def get_commission_service() -> "CommissionService":
     return CommissionService(kgent_soul=soul)
 
 
+async def get_witness_persistence() -> "WitnessPersistence":
+    """Get the WitnessPersistence service (8th Crown Jewel)."""
+    return await get_service("witness_persistence")
+
+
 async def get_scenario_service() -> "ScenarioService":
     """
     Get the ScenarioService for Punchdrunk Park.
@@ -347,6 +353,7 @@ async def setup_providers() -> None:
     container.register("park_persistence", get_park_persistence, singleton=True)
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     container.register("chat_factory", get_chat_factory, singleton=True)
+    container.register("witness_persistence", get_witness_persistence, singleton=True)
 
     # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
@@ -374,6 +381,14 @@ async def setup_providers() -> None:
     logger.info(
         "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios)"
     )
+
+    # Import Witness node to trigger @node registration
+    try:
+        from services.witness import WitnessNode  # noqa: F401
+
+        logger.info("WitnessNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"WitnessNode not available: {e}")
 
     # Import service nodes to trigger @node registration
     # FAIL-FAST: Crown Jewel import failures are WARNING level (visible)
@@ -531,4 +546,6 @@ __all__ = [
     "get_morpheus_persistence",
     # Metaphysical Forge
     "get_commission_service",
+    # 8th Crown Jewel (Witness)
+    "get_witness_persistence",
 ]

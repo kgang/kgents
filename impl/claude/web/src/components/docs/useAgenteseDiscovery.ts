@@ -12,6 +12,26 @@ import { apiClient } from '@/api/client';
 // Types
 // =============================================================================
 
+/**
+ * Per-aspect metadata from the @aspect decorator (Umwelt v2).
+ *
+ * This is the registry truth - no more heuristic guessing.
+ */
+export interface AspectMetadataEntry {
+  /** Aspect category (e.g., "PERCEPTION", "MUTATION") */
+  category: string;
+  /** Capability required to invoke (e.g., "write", "admin", null for read) */
+  requiredCapability: string | null;
+  /** Declared effects (e.g., ["reads:memory", "writes:crystals"]) */
+  effects: string[];
+  /** Human-readable description */
+  description: string;
+  /** Whether this aspect streams results */
+  streaming: boolean;
+  /** Whether repeated calls have same effect */
+  idempotent: boolean;
+}
+
 export interface PathMetadata {
   aspects: string[];
   effects: string[];
@@ -21,6 +41,11 @@ export interface PathMetadata {
     payload?: Record<string, unknown>;
   }>;
   description?: string;
+  /**
+   * Per-aspect metadata with requiredCapability (Umwelt v2).
+   * Maps aspect name -> metadata from @aspect decorator.
+   */
+  aspectMetadata?: Record<string, AspectMetadataEntry>;
 }
 
 export interface AspectSchema {

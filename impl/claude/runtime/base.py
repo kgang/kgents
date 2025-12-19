@@ -12,8 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Generic, Optional, TypeVar, Union
 
-from agents.poly.types import Agent, FixConfig, FixResult
-from bootstrap.fix import Fix
+from agents.poly import Agent, Fix, FixConfig, FixResult
 
 A = TypeVar("A")
 B = TypeVar("B")
@@ -195,9 +194,7 @@ class AsyncComposedAgent(LLMAgent[A, C], Generic[A, B, C]):
 
     async def invoke(self, input: A) -> C:
         """Not implemented - use execute_async with runtime instead."""
-        raise NotImplementedError(
-            "AsyncComposedAgent requires runtime. Use execute_async."
-        )
+        raise NotImplementedError("AsyncComposedAgent requires runtime. Use execute_async.")
 
     def build_prompt(self, input: A) -> AgentContext:
         """Not used - async execution bypasses this."""
@@ -260,10 +257,7 @@ async def parallel_execute(
     if len(agents) != len(inputs):
         raise ValueError("agents and inputs must have same length")
 
-    tasks = [
-        agent.execute_async(input_val, runtime)
-        for agent, input_val in zip(agents, inputs)
-    ]
+    tasks = [agent.execute_async(input_val, runtime) for agent, input_val in zip(agents, inputs)]
 
     return await asyncio.gather(*tasks)
 
@@ -371,9 +365,7 @@ async def with_retry(
 
     initial_state: RetryState[B] = RetryState()
     fix_agent: Fix[RetryState[B]] = Fix(config)
-    fix_result: FixResult[RetryState[B]] = await fix_agent.invoke(
-        (retry_transform, initial_state)
-    )
+    fix_result: FixResult[RetryState[B]] = await fix_agent.invoke((retry_transform, initial_state))
 
     final_state = fix_result.value
 

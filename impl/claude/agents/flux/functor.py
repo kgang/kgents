@@ -76,7 +76,7 @@ class Flux:
             FluxAgent wrapping the input agent
 
         Example:
-            >>> from bootstrap.id import Id
+            >>> from agents.poly import Id
             >>> flux_id = Flux.lift(Id())
             >>> # flux_id now maps AsyncIterator[A] → AsyncIterator[A]
         """

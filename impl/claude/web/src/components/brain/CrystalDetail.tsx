@@ -64,20 +64,25 @@ function renderObserverView(
         badges: ['Simple', 'TL;DR'],
       };
 
-    case 'security':
+    case 'security': {
       // Security-focused view
       const securityConcerns = [];
-      if (content.toLowerCase().includes('password')) securityConcerns.push('⚠️ Contains password reference');
-      if (content.toLowerCase().includes('api key')) securityConcerns.push('⚠️ Contains API key reference');
-      if (content.toLowerCase().includes('secret')) securityConcerns.push('⚠️ Contains secret reference');
+      if (content.toLowerCase().includes('password'))
+        securityConcerns.push('⚠️ Contains password reference');
+      if (content.toLowerCase().includes('api key'))
+        securityConcerns.push('⚠️ Contains API key reference');
+      if (content.toLowerCase().includes('secret'))
+        securityConcerns.push('⚠️ Contains secret reference');
 
       return {
         title: 'Security Analysis',
-        content: securityConcerns.length > 0
-          ? `${content}\n\n--- Security Notes ---\n${securityConcerns.join('\n')}`
-          : `${content}\n\n✓ No obvious security concerns detected`,
+        content:
+          securityConcerns.length > 0
+            ? `${content}\n\n--- Security Notes ---\n${securityConcerns.join('\n')}`
+            : `${content}\n\n✓ No obvious security concerns detected`,
         badges: securityConcerns.length > 0 ? ['⚠️ Review Required'] : ['✓ Clear'],
       };
+    }
 
     case 'creative':
       // Metaphorical interpretation
@@ -117,8 +122,7 @@ function StatBadge({ label, value, color = 'cyan' }: StatBadgeProps) {
 
   return (
     <div className={`px-2 py-1 rounded border ${colorClasses[color]} text-xs`}>
-      <span className="text-gray-400">{label}:</span>{' '}
-      <span className="font-semibold">{value}</span>
+      <span className="text-gray-400">{label}:</span> <span className="font-semibold">{value}</span>
     </div>
   );
 }
@@ -135,10 +139,7 @@ export function CrystalDetail({
   variant = 'panel',
 }: CrystalDetailProps) {
   // Generate observer-specific view
-  const view = useMemo(
-    () => renderObserverView(crystal, observer),
-    [crystal, observer]
-  );
+  const view = useMemo(() => renderObserverView(crystal, observer), [crystal, observer]);
 
   // Format age
   const ageDisplay = useMemo(() => {
@@ -156,21 +157,20 @@ export function CrystalDetail({
     return 'red';
   }, [crystal.resolution]);
 
-  const containerClass = variant === 'modal'
-    ? 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'
-    : 'h-full';
+  const containerClass =
+    variant === 'modal'
+      ? 'fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm'
+      : 'h-full';
 
-  const panelClass = variant === 'modal'
-    ? 'bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col'
-    : 'bg-gray-800 border-l border-gray-700 h-full flex flex-col';
+  const panelClass =
+    variant === 'modal'
+      ? 'bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col'
+      : 'bg-gray-800 border-l border-gray-700 h-full flex flex-col';
 
   return (
     <div className={containerClass} onClick={variant === 'modal' ? onClose : undefined}>
       <PopOnMount scale={1.02} duration={200}>
-        <div
-          className={panelClass}
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className={panelClass} onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="p-4 border-b border-gray-700 bg-gray-800/90">
             <div className="flex justify-between items-start gap-2 mb-3">
@@ -198,7 +198,11 @@ export function CrystalDetail({
 
             {/* Stats */}
             <div className="flex flex-wrap gap-2">
-              <StatBadge label="Resolution" value={`${Math.round(crystal.resolution * 100)}%`} color={resolutionColor} />
+              <StatBadge
+                label="Resolution"
+                value={`${Math.round(crystal.resolution * 100)}%`}
+                color={resolutionColor}
+              />
               <StatBadge label="Accesses" value={crystal.access_count} color="purple" />
               <StatBadge label="Age" value={ageDisplay} color="cyan" />
               {crystal.is_hot && <StatBadge label="Status" value="Hot" color="yellow" />}
@@ -248,7 +252,9 @@ export function CrystalDetail({
           {/* Actions */}
           <div className="p-3 border-t border-gray-700 bg-gray-800/90 flex gap-2">
             <button
-              onClick={() => {/* TODO: Implement ghost surfacing from this crystal */}}
+              onClick={() => {
+                /* TODO: Implement ghost surfacing from this crystal */
+              }}
               className="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded text-sm font-medium transition-colors"
             >
               🔮 Surface Related

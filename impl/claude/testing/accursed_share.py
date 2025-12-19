@@ -236,7 +236,7 @@ async def chaos_compose(agents: list[Any], input_val: Any, log: DiscoveryLog) ->
     from functools import reduce
 
     try:
-        from bootstrap import compose
+        from agents.poly import compose
 
         composed = reduce(compose, agents)
         result = await composed.invoke(input_val)

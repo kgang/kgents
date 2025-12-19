@@ -93,6 +93,110 @@ print(project_garden_to_ascii(garden))
 
 ---
 
+## Différance Engine (Ghost Heritage Tracing)
+
+**The Self-Knowing System** — Every output carries trace of what it IS and what it ALMOST WAS (ghosts).
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **TraceMonoid** | `agents/differance/trace.py` | Monoidal composition of wiring decisions with ghost preservation |
+| **DifferanceStore** | `agents/differance/store.py` | Append-only trace persistence via D-gent |
+| **TRACED_OPERAD** | `agents/differance/operad.py` | Extends AGENT_OPERAD with traced composition |
+| **DifferanceIntegration** | `agents/differance/integration.py` | Crown Jewel integration (fire-and-forget traces) |
+| **GhostHeritageDAG** | `agents/differance/heritage.py` | Graph of choices + alternatives |
+
+```python
+from agents.differance import (
+    Alternative, WiringTrace, TraceMonoid,
+    DifferanceStore, DifferanceIntegration,
+    traced_seq, traced_par,
+)
+
+# Record a trace with alternatives (ghosts)
+trace = WiringTrace(
+    operation="select_model",
+    input_summary={"query": "..."},
+    output_summary={"model": "claude-sonnet"},
+    alternatives=[
+        Alternative(
+            operation="select_model",
+            inputs={"query": "..."},
+            reason_rejected="Cost constraint",
+            could_revisit=True,
+        )
+    ],
+)
+
+# Store via D-gent
+store = DifferanceStore(dgent_instance)
+await store.append(trace)
+
+# Reconstruct monoid from storage
+monoid = await store.to_monoid()
+ghosts = monoid.ghosts  # All alternatives considered
+```
+
+**AGENTESE Paths:**
+- `time.differance.recent` — Recent traces (limit=20)
+- `time.differance.why` — Explain why a decision was made
+- `time.differance.at` — Get trace at specific timestamp
+- `time.branch.create` — Create speculative branch
+- `time.branch.explore` — Explore ghost alternative
+
+**Laws Verified** (property-based tests):
+- Identity: `ε ⊗ T = T = T ⊗ ε`
+- Associativity: `(A ⊗ B) ⊗ C = A ⊗ (B ⊗ C)`
+- Ghost Preservation: `ghosts(a ⊗ b) ⊇ ghosts(a) ∪ ghosts(b)`
+- Semantic Preservation: traced operations preserve base behavior
+
+**Key Insight**: *"The ghost heritage graph is the UI innovation: seeing what almost was alongside what is."*
+
+---
+
+## Witness Crown Jewel (8th Jewel — Autonomous Agency)
+
+**Kent's Developer Agency, Crystallized** — Event-driven daemon with trust-gated capabilities.
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| **WitnessPolynomial** | `services/witness/polynomial.py` | Trust-gated state machine (L0→L3) |
+| **WITNESS_OPERAD** | `services/witness/operad.py` | Extends AGENT_OPERAD with witness operations |
+| **GitWatcher** | `services/witness/watchers/git.py` | Event-driven Git observation (no timers!) |
+| **WitnessNode** | `services/witness/node.py` | AGENTESE registration (pending) |
+
+```python
+from services.witness import (
+    WitnessPolynomial, WitnessState, TrustLevel,
+    WITNESS_OPERAD, GitWatcher,
+)
+
+# Trust levels gate capabilities
+poly = WitnessPolynomial(initial_trust=TrustLevel.L0)
+
+# L0: Observe only (suggest, no action)
+# L1: Read + non-destructive (run tests, lint)
+# L2: Write + reversible (git commit, but no push)
+# L3: Full Kent (push, PR, invoke any Crown Jewel)
+
+# Event-driven watching (Flux lifting, no timers)
+watcher = GitWatcher(repo_path="/path/to/repo")
+async for event in watcher.watch():
+    # event: FileChanged | CommitCreated | BranchSwitched
+    await process_event(event)
+```
+
+**Trust Level Semantics:**
+| Level | Name | Capabilities | Example Actions |
+|-------|------|-------------|-----------------|
+| L0 | Observer | Suggest only | "I notice tests are failing" |
+| L1 | Reader | Non-destructive | Run pytest, mypy, lint |
+| L2 | Writer | Reversible writes | git commit, file edits |
+| L3 | Kent | Full autonomy | git push, create PR, invoke any jewel |
+
+**Key Insight**: *"At Trust Level 3, Witness can do everything Kent does—tests, fixes, commits, PRs."*
+
+---
+
 ## Categorical Foundation (USE FOR ANY DOMAIN)
 
 | Component | Location | Purpose | Tests |
@@ -668,4 +772,4 @@ from protocols.tenancy import set_tenant_context
 
 ---
 
-*Last updated: 2025-12-17*
+*Last updated: 2025-12-19*

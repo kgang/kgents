@@ -39,9 +39,7 @@ class LawStatus(Enum):
     PASSED = auto()  # Law verified with concrete test cases
     FAILED = auto()  # Law violation detected
     SKIPPED = auto()  # Law not tested (e.g., law not found)
-    STRUCTURAL = (
-        auto()
-    )  # Law verified by type structure, not runtime (honest about limits)
+    STRUCTURAL = auto()  # Law verified by type structure, not runtime (honest about limits)
 
 
 @dataclass(frozen=True)
@@ -129,9 +127,7 @@ class Operad:
         """
         return self.operations.get(op_name)
 
-    def compose(
-        self, op_name: str, *agents: PolyAgent[Any, Any, Any]
-    ) -> PolyAgent[Any, Any, Any]:
+    def compose(self, op_name: str, *agents: PolyAgent[Any, Any, Any]) -> PolyAgent[Any, Any, Any]:
         """
         Apply an operation to compose agents.
 
@@ -319,9 +315,7 @@ def _fix_compose(
 
     MAX_ITERATIONS = 10
 
-    def fix_transition(
-        state: tuple[Any, Any, int], input: Any
-    ) -> tuple[tuple[Any, Any, int], Any]:
+    def fix_transition(state: tuple[Any, Any, int], input: Any) -> tuple[tuple[Any, Any, int], Any]:
         p_state, b_state, iterations = state
         if iterations >= MAX_ITERATIONS:
             # Give up
@@ -515,17 +509,13 @@ def create_agent_operad() -> Operad:
             Law(
                 name="seq_associativity",
                 equation="seq(seq(a, b), c) = seq(a, seq(b, c))",
-                verify=lambda a, b, c: _verify_associativity(
-                    AGENT_OPERAD, a, b, c, "seq"
-                ),
+                verify=lambda a, b, c: _verify_associativity(AGENT_OPERAD, a, b, c, "seq"),
                 description="Sequential composition is associative",
             ),
             Law(
                 name="par_associativity",
                 equation="par(par(a, b), c) = par(a, par(b, c))",
-                verify=lambda a, b, c: _verify_associativity(
-                    AGENT_OPERAD, a, b, c, "par"
-                ),
+                verify=lambda a, b, c: _verify_associativity(AGENT_OPERAD, a, b, c, "par"),
                 description="Parallel composition is associative",
             ),
         ],
@@ -547,6 +537,9 @@ class OperadRegistry:
     Registry of all operads in kgents.
 
     Enables runtime discovery and verification of operads.
+
+    Thread-safety: Uses class-level state. For parallel test execution (xdist),
+    use reset() + re-import pattern to ensure consistent state per worker.
     """
 
     _operads: dict[str, Operad] = {}
@@ -573,6 +566,18 @@ class OperadRegistry:
         for name, operad in cls._operads.items():
             results[name] = operad.verify_all_laws(*test_agents)
         return results
+
+    @classmethod
+    def reset(cls) -> None:
+        """
+        Clear all registered operads (for testing).
+
+        After reset, AGENT_OPERAD must be re-registered via:
+            OperadRegistry.register(AGENT_OPERAD)
+
+        This enables clean state for parallel test execution (xdist).
+        """
+        cls._operads.clear()
 
 
 # Register the universal operad

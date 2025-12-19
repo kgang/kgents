@@ -2,6 +2,14 @@
 AGENTESE Test Fixtures
 
 Provides mock observers, nodes, and Umwelts for testing.
+
+Registry population is handled by impl/claude/conftest.py:
+  _ensure_global_registries_populated()
+
+That session-scoped fixture runs at session start for ALL tests,
+ensuring NodeRegistry is fully populated before any tests run.
+
+Canary tests: See test_xdist_node_registry_canary.py in this directory.
 """
 
 from __future__ import annotations
@@ -144,9 +152,7 @@ class MockNode:
             content=f"Rendered for {archetype}",
         )
 
-    async def invoke(
-        self, aspect: str, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> Any:
+    async def invoke(self, aspect: str, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Any:
         """Mock invocation."""
         if aspect == "manifest":
             return await self.manifest(observer)

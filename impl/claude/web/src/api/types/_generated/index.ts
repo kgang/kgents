@@ -12,6 +12,7 @@ export * from './world-forge-soul';
 export * from './time-differance';
 export * from './world-codebase';
 export * from './world-morpheus';
+export * from './self-witness';
 export * from './self-memory';
 export * from './time-branch';
 export * from './world-forge';

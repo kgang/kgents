@@ -2,17 +2,47 @@
 
 > *"The ghost is not a haunting—it's a witnessing that becomes a doing."*
 
-**Status**: PLANNING
+**Status**: EXECUTING (Phase 0.5)
 **Created**: 2025-12-19
+**Updated**: 2025-12-19 (vertical slice refinement)
 **Author**: Kent + Claude (collaborative architecture)
 **Priority**: TRANSFORMATIVE
 **Aligned With**: AD-009 (Metaphysical Fullstack), AD-006 (Unified Categorical Foundation)
 
 ---
 
+## Creative Direction
+
+🎯 **Grounding in Intent**:
+
+*"Daring, bold, creative, opinionated but not gaudy"*
+*"Tasteful > feature-complete; Joy-inducing > merely functional"*
+*"Depth over breadth"*
+
+### What Makes kgentsd Different
+
+This isn't another monitoring daemon. It's a **Witness** that becomes an **Agent**.
+
+| Principle | Application |
+|-----------|-------------|
+| **Daring** | Trust escalation from observer → actor is philosophically bold |
+| **Opinionated** | We believe developer tools should learn and anticipate |
+| **Joy-inducing** | Thought stream reads like a diary, not a log file |
+| **Not gaudy** | Minimal surface area; five event sources, not fifty |
+
+### The Mirror Test
+
+Does kgentsd feel like Kent on his best day? A good developer doesn't just react—they:
+- Notice patterns before they become problems
+- Build trust through consistent, valuable observations
+- Earn the right to act autonomously through track record
+- Know when NOT to intervene
+
+---
+
 ## Vision
 
-**kgentsd** (pronounced "kay-gents-dee") is the system daemon that watches, learns, and acts. It graduates from "invisible infrastructure" to the **8th Crown Jewel**—the only jewel that can invoke all others.
+**kgentsd** (pronounced "kay-gents-dee") is the Witness Agent that watches, learns, and acts. It graduates from "invisible infrastructure" to the **8th Crown Jewel**—the only jewel that can invoke all others.
 
 | Before (Ghost) | After (kgentsd) |
 |----------------|-----------------|
@@ -21,6 +51,7 @@
 | Read-only observation | Full autonomous capability (Trust Level 3) |
 | Separate from AGENTESE | Native AGENTESE citizen |
 | Infrastructure utility | **Crown Jewel** with its own frontend |
+| 7 collectors, separate code | Unified WatcherPolynomial per source |
 
 ### The kgentsd Thesis
 
@@ -35,7 +66,7 @@ At Trust Level 3, kgentsd can do everything Kent does:
 - Write documentation when gaps detected
 - Suggest architectural improvements
 
-The daemon is not a replacement—it's an amplification.
+The Witness is not a replacement—it's an amplification.
 
 ---
 
@@ -443,23 +474,108 @@ Shall I apply? [y/n]
 
 ---
 
-## Implementation Phases
+## Implementation Strategy: Vertical Slice First
 
-### Phase 1: Foundation Refactor (Week 1)
+> *"Depth over breadth"* — We prove the architecture with ONE complete slice before expanding.
 
-**Goal**: Transform existing Ghost into event-driven architecture
+### The Anti-Waterfall Approach
 
-- [ ] Rename `infra/ghost/` → `services/daemon/` (Crown Jewel location)
-- [ ] Replace timer loop with Flux lifting
-- [ ] Create `DaemonPolynomial` with trust level modes
-- [ ] Create `DAEMON_OPERAD` with composition laws
-- [ ] Register as AGENTESE node: `self.daemon.*`
+The original 6-week plan risks being waterfall-esque. Instead:
+
+```
+WRONG: Phase 1 (all foundation) → Phase 2 (all watchers) → Phase 3 (all trust) → ...
+RIGHT: Phase 0.5 (ONE complete vertical slice) → Validate → Expand
+```
+
+### What Exists Today (Ghost Audit)
+
+```
+infra/ghost/
+├── daemon.py          # Timer-based loop (180s interval) - REPLACE
+├── collectors.py      # 7 collectors (Git, Flinch, Infra, Meta, Trace, Memory, CI)
+├── health.py          # CompositeHealth aggregation - KEEP
+├── lifecycle.py       # TTL cache with human labels - KEEP
+├── cache.py           # GlassCacheManager - KEEP
+└── ci_collector.py    # CISignalCollector - MIGRATE
+```
+
+**What to Keep**: Health aggregation, lifecycle cache, glass cache
+**What to Replace**: Timer loop, file-only projection
+**What to Migrate**: Collectors → WatcherPolynomials
+
+---
+
+## Phase 0.5: The Git Watcher Vertical Slice (THIS SPRINT)
+
+**Goal**: Prove the entire architecture with ONE event source end-to-end.
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    VERTICAL SLICE: Git Watcher                           │
+├──────────────────────────────────────────────────────────────────────────┤
+│  7. PROJECTION     CLI: `kg witness thoughts` | Web: /witness/thoughts   │
+├──────────────────────────────────────────────────────────────────────────┤
+│  6. AGENTESE       self.witness.manifest | self.witness.thoughts         │
+├──────────────────────────────────────────────────────────────────────────┤
+│  5. @node          WitnessNode with aspects + contracts                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│  4. SERVICE        services/witness/ (Crown Jewel location)              │
+├──────────────────────────────────────────────────────────────────────────┤
+│  3. OPERAD         WITNESS_OPERAD: sense, analyze, suggest               │
+├──────────────────────────────────────────────────────────────────────────┤
+│  2. POLYNOMIAL     WitnessPolynomial[TrustLevel, Event, Action]          │
+├──────────────────────────────────────────────────────────────────────────┤
+│  1. FLUX           GitWatcherFlux (event-driven, no timers)              │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Deliverables (Phase 0.5)
+
+| Item | Path | Purpose |
+|------|------|---------|
+| WitnessPolynomial | `services/witness/polynomial.py` | Trust-gated state machine |
+| WITNESS_OPERAD | `services/witness/operad.py` | Composition grammar |
+| GitWatcherFlux | `services/witness/watchers/git.py` | Event-driven git monitoring |
+| WitnessNode | `protocols/agentese/contexts/self_witness.py` | AGENTESE integration |
+| CLI handler | `protocols/cli/handlers/witness.py` | `kg witness *` commands |
+| Basic tests | `services/witness/_tests/` | Property-based polynomial tests |
+
+### Why "Witness" Not "Daemon"?
+
+**Daemon** implies invisible background process (Unix heritage).
+**Witness** implies:
+- Observer that can testify (trust-gated action)
+- Presence matters (not just background noise)
+- Philosophical alignment with Observer-dependent ontology
+
+The name is opinionated—*"daring, bold, creative"*.
+
+### Phase 0.5 Success Criteria
+
+- [ ] `kg witness start` starts event-driven watcher (no timers)
+- [ ] Git commits trigger immediate thought stream update
+- [ ] `kg witness thoughts` shows recent observations
+- [ ] `self.witness.manifest` returns trust level and watcher status
+- [ ] Tests verify polynomial state transitions
+- [ ] Architecture is proven; other watchers are "just more of the same"
+
+---
+
+## Implementation Phases (Post-Vertical-Slice)
+
+### Phase 1: Foundation Complete (Week 1-2)
+
+**Goal**: Complete the service skeleton and add remaining watchers
+
+- [ ] Migrate `infra/ghost/` → `services/witness/` (preserve what works)
+- [ ] Add FileSystemWatcherFlux (inotify/FSEvents)
+- [ ] Add TestWatcherFlux (pytest hooks)
+- [ ] Add AgenteseWatcherFlux (SynergyBus subscription)
+- [ ] Add CIWatcherFlux (GitHub Actions)
 
 **Deliverables**:
-- `services/daemon/polynomial.py` — State machine
-- `services/daemon/operad.py` — Composition grammar
-- `services/daemon/node.py` — AGENTESE registration
-- `services/daemon/flux.py` — Event-driven core
+- `services/witness/watchers/` — All five event sources
+- `services/witness/aggregator.py` — Sheaf-like gluing of watcher sections
 
 ### Phase 2: Event Sources (Week 2)
 
@@ -573,15 +689,74 @@ Shall I apply? [y/n]
 
 ---
 
-## Open Questions
+## Design Decisions (Resolved)
 
-1. **Trust Persistence**: Should trust level persist across daemon restarts? (Proposed: Yes, with decay)
+### 1. Trust Persistence ✅
 
-2. **Multi-User**: If multiple developers use kgentsd, do they share trust level? (Proposed: Per-user trust)
+**Decision**: Yes, trust persists across restarts WITH decay.
 
-3. **Boundaries**: What actions should NEVER be autonomous, even at Level 3? (Proposed: Force push to main, delete production data, financial transactions)
+```python
+# Trust decays by 0.1 levels per 24h of inactivity
+# Minimum decay floor: L1 (never drops below L1 after first achievement)
+def compute_trust_with_decay(stored_level: TrustLevel, last_active: datetime) -> TrustLevel:
+    hours_inactive = (datetime.now() - last_active).total_seconds() / 3600
+    decay_steps = int(hours_inactive / 24) * 0.1
+    effective_level = max(stored_level.value - decay_steps, 1)  # Floor at L1
+    return TrustLevel(int(effective_level))
+```
 
-4. **Rollback Scope**: How far back should rollback capability extend? (Proposed: Last 100 actions or 24h, whichever is smaller)
+**Rationale**: Trust must be earned, and inactivity should modestly erode it. But the first climb from L0→L1 should never be lost.
+
+### 2. Multi-User ✅
+
+**Decision**: Per-repository trust, keyed by git user email.
+
+```python
+# Trust stored in .kgents/witness/trust/{git_email_hash}.json
+# Each developer earns their own trust level
+# Shared repos have shared OBSERVATIONS but separate TRUST
+```
+
+**Rationale**: Developer agency should be personal. My kgentsd shouldn't act on your behalf.
+
+### 3. Forbidden Actions ✅
+
+**Decision**: Hardcoded NEVER list, not configurable.
+
+```python
+FORBIDDEN_ACTIONS = frozenset({
+    "git push --force origin main",
+    "git push --force origin master",
+    "rm -rf /",
+    "DROP DATABASE",
+    "DELETE FROM",  # Must use soft-delete pattern
+    "kubectl delete namespace",
+    "vault token",  # Never touch secrets
+    "stripe",       # Never touch payments
+})
+```
+
+**Rationale**: Some things should NEVER be autonomous, period. This is not negotiable. *"Daring"* doesn't mean *"reckless"*.
+
+### 4. Rollback Scope ✅
+
+**Decision**: Last 100 actions OR 7 days, whichever is smaller.
+
+```python
+# Every action creates a reversibility checkpoint
+# Checkpoints are automatically pruned after 7 days
+# ActionHistory is append-only with bounded window
+
+@dataclass(frozen=True)
+class ActionCheckpoint:
+    action_id: str
+    timestamp: datetime
+    action_type: str
+    inverse: str | None  # The undo command, if determinable
+    snapshot_path: Path  # Git stash or file backup
+```
+
+**Rationale**: 7 days is long enough to notice problems, short enough to not bloat storage. 100 actions is sufficient granularity for debugging.
 
 ---
 

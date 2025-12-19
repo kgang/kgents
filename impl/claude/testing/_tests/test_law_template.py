@@ -17,8 +17,10 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
-from agents.poly.types import Agent
-from bootstrap import ID, compose
+from agents.poly import Agent, Id, compose
+
+# Create ID singleton for tests
+ID = Id()
 
 if TYPE_CHECKING:
     from agents.o.bootstrap_witness import TestAgent

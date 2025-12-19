@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from services.morpheus import MorpheusPersistence
     from services.park import ParkPersistence
     from services.town import TownPersistence
+    from services.witness import WitnessPersistence
 
 logger = logging.getLogger(__name__)
 
@@ -416,6 +417,15 @@ class ServiceRegistry:
             store = DifferanceStore(backend=self.dgent, bus=bus)
             return store
 
+        # Witness persistence (8th Crown Jewel)
+        if name == "witness_persistence":
+            from services.witness.persistence import WitnessPersistence
+
+            return WitnessPersistence(
+                session_factory=self.session_factory,
+                dgent=self.dgent,
+            )
+
         return None
 
     def register_factory(self, name: str, factory: Callable[[], Any]) -> None:
@@ -454,6 +464,7 @@ class ServiceRegistry:
             "forge_persistence",
             "coalition_persistence",
             "park_persistence",
+            "witness_persistence",  # 8th Crown Jewel
             "scenario_service",
             "morpheus_persistence",
             "chat_factory",

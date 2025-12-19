@@ -44,6 +44,7 @@ from typing import (
 if TYPE_CHECKING:
     from fastapi import FastAPI, Request, WebSocket
 
+from .affordances import get_aspect_metadata
 from .node import Observer
 from .registry import get_registry
 
@@ -183,6 +184,51 @@ VALID_CONTEXTS = frozenset({"world", "self", "concept", "void", "time"})
 # === Response Helpers ===
 
 
+def _extract_aspect_metadata_from_class(cls: type[Any]) -> dict[str, dict[str, Any]]:
+    """
+    Extract @aspect metadata from a node class's methods.
+
+    Inspects all methods of the class looking for __aspect_meta__ attribute
+    attached by the @aspect decorator.
+
+    Returns:
+        Dict mapping aspect name -> aspect metadata dict with:
+        - category: str (e.g., "PERCEPTION", "MUTATION")
+        - requiredCapability: str | None (e.g., "write", "admin")
+        - effects: list[str] (e.g., ["reads:memory", "writes:crystals"])
+        - description: str
+        - streaming: bool
+    """
+    aspect_data: dict[str, dict[str, Any]] = {}
+
+    # Inspect all methods on the class
+    for name in dir(cls):
+        if name.startswith("_"):
+            continue
+        try:
+            method = getattr(cls, name)
+            meta = get_aspect_metadata(method)
+            if meta is not None:
+                # Convert effects to string list
+                effects_str = [str(e) for e in meta.effects] if meta.effects else []
+
+                aspect_data[name] = {
+                    "category": meta.category.name
+                    if hasattr(meta.category, "name")
+                    else str(meta.category),
+                    "requiredCapability": meta.required_capability,
+                    "effects": effects_str,
+                    "description": meta.description or "",
+                    "streaming": meta.streaming,
+                    "idempotent": meta.idempotent,
+                }
+        except Exception:
+            # Some attributes may not be accessible
+            continue
+
+    return aspect_data
+
+
 def _to_json_safe(obj: Any) -> Any:
     """Convert object to JSON-safe representation."""
     if obj is None:
@@ -320,18 +366,29 @@ class AgenteseGateway:
             }
 
             # Include metadata for Concept Home Protocol (AD-010)
+            # Extended for Umwelt v2 (2025-12-19): per-aspect metadata with requiredCapability
             if include_metadata:
                 metadata: dict[str, Any] = {}
                 for path in registry.list_paths():
                     node_meta = registry.get_metadata(path)
+                    node_cls = registry.get(path)
+
+                    # Extract @aspect metadata from class methods
+                    aspect_metadata: dict[str, dict[str, Any]] = {}
+                    if node_cls is not None:
+                        aspect_metadata = _extract_aspect_metadata_from_class(node_cls)
+
                     if node_meta:
-                        # Extract aspects from contracts if available
+                        # Extract aspects from contracts if available, or from class inspection
                         aspects: list[str] = ["manifest"]  # Default
                         effects: list[str] = []
 
                         if node_meta.contracts:
                             # Get aspect names from contracts dict keys
                             aspects = list(node_meta.contracts.keys())
+                        elif aspect_metadata:
+                            # Fall back to introspected @aspect methods
+                            aspects = list(aspect_metadata.keys()) or ["manifest"]
 
                         # Include examples (Habitat 2.0)
                         examples_data = [ex.to_dict() for ex in node_meta.examples]
@@ -342,14 +399,17 @@ class AgenteseGateway:
                             "aspects": aspects,
                             "effects": effects,
                             "examples": examples_data,
+                            # Umwelt v2: Per-aspect metadata with requiredCapability
+                            "aspectMetadata": aspect_metadata,
                         }
                     else:
                         metadata[path] = {
                             "path": path,
                             "description": None,
-                            "aspects": ["manifest"],
+                            "aspects": list(aspect_metadata.keys()) or ["manifest"],
                             "effects": [],
                             "examples": [],
+                            "aspectMetadata": aspect_metadata,
                         }
 
                 content["metadata"] = metadata

@@ -4,6 +4,7 @@ Agent-level pytest configuration.
 Philosophy: Agents are morphisms in a category; fixtures support law verification.
 
 This conftest provides:
+- Registry population fixtures for xdist-safe parallel execution
 - Agent-specific fixtures for cross-agent testing
 - Integration test helpers
 """
@@ -13,6 +14,20 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+
+# =============================================================================
+# Registry Population (xdist-safe)
+# =============================================================================
+#
+# NOTE: The authoritative registry population fixture is in impl/claude/conftest.py:
+#   _ensure_global_registries_populated()
+#
+# That fixture runs at session start for ALL tests, populating both:
+# - OperadRegistry (all operads)
+# - NodeRegistry (all AGENTESE nodes)
+#
+# See: agents/operad/_tests/test_xdist_registry_canary.py for verification tests.
+
 
 # =============================================================================
 # Cross-Agent Fixtures
@@ -26,28 +41,26 @@ class CompositionHelper:
         """Compose a list of agents left-to-right."""
         from functools import reduce
 
-        from bootstrap import compose
+        from agents.poly import compose
 
         return reduce(compose, agents)
 
     async def verify_identity(self, agent: Any, test_input: Any) -> bool:
         """Verify identity law for an agent."""
-        from bootstrap import ID, compose
+        from agents.poly import ID, compose
 
         # Id >> agent == agent
-        left = await compose(ID, agent).invoke(test_input)
+        left: Any = await compose(ID, agent).invoke(test_input)  # type: ignore[arg-type]
         # agent >> Id == agent
-        right = await compose(agent, ID).invoke(test_input)
+        right: Any = await compose(agent, ID).invoke(test_input)  # type: ignore[arg-type]
         # Direct
         direct = await agent.invoke(test_input)
 
         return bool(left == direct == right)
 
-    async def verify_associativity(
-        self, f: Any, g: Any, h: Any, test_input: Any
-    ) -> bool:
+    async def verify_associativity(self, f: Any, g: Any, h: Any, test_input: Any) -> bool:
         """Verify associativity for three agents."""
-        from bootstrap import compose
+        from agents.poly import compose
 
         # (f >> g) >> h
         left = await compose(compose(f, g), h).invoke(test_input)

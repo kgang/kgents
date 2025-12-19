@@ -27,7 +27,12 @@ import {
 } from '@/components/elastic';
 import { PersonalityLoading } from '@/components/joy';
 import { getArchetypeColor, getEmptyState, TOOLTIPS } from '@/constants';
-import type { CitizenManifest, InhabitStatus, InhabitActionResult, Eigenvectors } from '@/api/types';
+import type {
+  CitizenManifest,
+  InhabitStatus,
+  InhabitActionResult,
+  Eigenvectors,
+} from '@/api/types';
 
 type Density = 'compact' | 'comfortable' | 'spacious';
 
@@ -60,7 +65,9 @@ export default function Inhabit() {
       setError(null);
 
       // Simulated load - would use API
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 500);
+      });
 
       // For now, show empty state
       setIsLoading(false);
@@ -99,7 +106,10 @@ export default function Inhabit() {
               className="h-full bg-town-bg"
             >
               {isLoading && (
-                <div className="h-full flex items-center justify-center" style={{ minHeight: isMobile ? '300px' : '400px' }}>
+                <div
+                  className="h-full flex items-center justify-center"
+                  style={{ minHeight: isMobile ? '300px' : '400px' }}
+                >
                   <PersonalityLoading jewel="coalition" action="inhabit" />
                 </div>
               )}
@@ -182,10 +192,7 @@ function InhabitHeader({ citizenName, citizenId, status, onExit }: InhabitHeader
     <div className="bg-town-surface/50 border-b border-town-accent/30 px-4 py-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={onExit}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
+          <button onClick={onExit} className="text-gray-400 hover:text-white transition-colors">
             &larr; Exit
           </button>
           <div className="h-6 w-px bg-town-accent/30" />
@@ -222,7 +229,9 @@ function EmptyInhabit({ citizenId, density }: EmptyInhabitProps) {
   const emptyState = getEmptyState('noCitizens');
 
   return (
-    <div className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}>
+    <div
+      className={`h-full flex flex-col items-center justify-center text-center ${isCompact ? 'p-4' : 'p-8'}`}
+    >
       <span className={`${isCompact ? 'text-4xl mb-2' : 'text-6xl mb-4'}`}>👤</span>
       <h2 className={`font-medium text-white ${isCompact ? 'text-lg mb-1' : 'text-xl mb-2'}`}>
         {citizenId ? 'Ready to Inhabit' : emptyState.title}
@@ -423,16 +432,26 @@ function StatusPanel({ status, density }: StatusPanelProps) {
   if (!status) {
     const emptyState = getEmptyState('noSessions');
     return (
-      <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-        <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>Session Status</h3>
-        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>{emptyState.description}</p>
+      <div
+        className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+      >
+        <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-1' : 'text-sm mb-2'}`}>
+          Session Status
+        </h3>
+        <p className={`text-gray-500 ${isCompact ? 'text-[10px]' : 'text-xs'}`}>
+          {emptyState.description}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>Session Status</h3>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
+      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
+        Session Status
+      </h3>
       <div className={`${isCompact ? 'space-y-1 text-xs' : 'space-y-2 text-sm'}`}>
         <div className="flex justify-between">
           <span className="text-gray-400">Tier</span>
@@ -468,8 +487,12 @@ function ActionsPanel({ onAction, disabled, density }: ActionsPanelProps) {
   ];
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>Actions</h3>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
+      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
+        Actions
+      </h3>
       <div className={`grid grid-cols-2 ${isCompact ? 'gap-1.5' : 'gap-2'}`}>
         {actions.map((action) => (
           <button
@@ -481,7 +504,9 @@ function ActionsPanel({ onAction, disabled, density }: ActionsPanelProps) {
             }`}
           >
             <span className={isCompact ? 'text-base' : 'text-lg'}>{action.icon}</span>
-            <span className={`text-gray-300 ${isCompact ? 'text-[10px]' : ''}`}>{action.label}</span>
+            <span className={`text-gray-300 ${isCompact ? 'text-[10px]' : ''}`}>
+              {action.label}
+            </span>
           </button>
         ))}
       </div>
@@ -498,8 +523,12 @@ function ConsentPanel({ consent, density }: ConsentPanelProps) {
   const isCompact = density === 'compact';
 
   return (
-    <div className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}>
-      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>Consent Status</h3>
+    <div
+      className={`rounded-lg bg-town-surface/50 border border-town-accent/30 ${isCompact ? 'p-3' : 'p-4'}`}
+    >
+      <h3 className={`font-medium text-gray-300 ${isCompact ? 'text-xs mb-2' : 'text-sm mb-3'}`}>
+        Consent Status
+      </h3>
       <div className={`${isCompact ? 'space-y-1 text-xs' : 'space-y-2 text-sm'}`}>
         <div className="flex justify-between">
           <span className="text-gray-400">Debt</span>
@@ -515,7 +544,9 @@ function ConsentPanel({ consent, density }: ConsentPanelProps) {
           <span className="text-gray-300">{consent.status}</span>
         </div>
         {consent.at_rupture && (
-          <div className={`rounded bg-red-500/10 text-red-400 mt-2 ${isCompact ? 'p-1.5 text-[10px]' : 'p-2 text-xs'}`}>
+          <div
+            className={`rounded bg-red-500/10 text-red-400 mt-2 ${isCompact ? 'p-1.5 text-[10px]' : 'p-2 text-xs'}`}
+          >
             At rupture threshold! Further actions may damage the relationship.
           </div>
         )}

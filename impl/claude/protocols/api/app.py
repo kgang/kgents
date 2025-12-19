@@ -18,7 +18,8 @@ The Metaphysical Fullstack Pattern:
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from contextlib import asynccontextmanager
+from typing import Any, AsyncIterator, Optional
 
 # Graceful FastAPI import
 try:
@@ -57,6 +58,43 @@ except ImportError:
     shutdown_saas_clients = None  # type: ignore[assignment]
 
 
+@asynccontextmanager
+async def _create_lifespan(
+    enable_saas: bool = True,
+) -> AsyncIterator[None]:
+    """
+    FastAPI lifespan context manager.
+
+    Handles startup and shutdown events without deprecated on_event decorators.
+    See: https://fastapi.tiangolo.com/advanced/events/#lifespan
+
+    Args:
+        enable_saas: Whether to initialize SaaS infrastructure clients.
+    """
+    # === STARTUP ===
+    # Initialize service providers
+    try:
+        from services.providers import setup_providers
+
+        await setup_providers()
+        logger.info("Service providers initialized")
+    except ImportError as e:
+        logger.warning(f"Could not initialize service providers: {e}")
+    except Exception as e:
+        logger.error(f"Error initializing service providers: {e}")
+
+    # Initialize SaaS clients if configured
+    if enable_saas and HAS_SAAS_CONFIG and init_saas_clients is not None:
+        await init_saas_clients()
+
+    yield  # App runs here
+
+    # === SHUTDOWN ===
+    # Shutdown SaaS clients
+    if enable_saas and HAS_SAAS_CONFIG and shutdown_saas_clients is not None:
+        await shutdown_saas_clients()
+
+
 def create_app(
     title: str = "kgents SaaS API",
     version: str = "v1",
@@ -83,7 +121,13 @@ def create_app(
     if not HAS_FASTAPI:
         raise ImportError("FastAPI is not installed. Install with: pip install fastapi uvicorn")
 
-    # Create app
+    # Create lifespan context manager
+    @asynccontextmanager
+    async def lifespan(app: "FastAPI") -> AsyncIterator[None]:
+        async with _create_lifespan(enable_saas=HAS_SAAS_CONFIG):
+            yield
+
+    # Create app with lifespan (replaces deprecated on_event)
     app = FastAPI(
         title=title,
         version=version,
@@ -91,6 +135,7 @@ def create_app(
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
+        lifespan=lifespan,
     )
 
     # Add CORS middleware
@@ -327,32 +372,9 @@ def create_app(
         }
 
     # === Service Provider Lifecycle ===
-    @app.on_event("startup")
-    async def startup_service_providers() -> None:
-        """Initialize service providers on app startup."""
-        try:
-            from services.providers import setup_providers
-
-            await setup_providers()
-            logger.info("Service providers initialized")
-        except ImportError as e:
-            logger.warning(f"Could not initialize service providers: {e}")
-        except Exception as e:
-            logger.error(f"Error initializing service providers: {e}")
-
-    # SaaS lifecycle events
-    if HAS_SAAS_CONFIG and init_saas_clients is not None:
-
-        @app.on_event("startup")
-        async def startup_saas_clients() -> None:
-            """Initialize SaaS infrastructure on app startup."""
-            await init_saas_clients()
-
-        @app.on_event("shutdown")
-        async def shutdown_saas_clients_handler() -> None:
-            """Shutdown SaaS infrastructure on app shutdown."""
-            if shutdown_saas_clients is not None:
-                await shutdown_saas_clients()
+    # NOTE: Startup/shutdown now handled via lifespan context manager above.
+    # This avoids FastAPI's deprecated on_event decorator.
+    # See: https://fastapi.tiangolo.com/advanced/events/#lifespan
 
     # Root endpoint
     @app.get("/", tags=["system"])
