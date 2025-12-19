@@ -65,22 +65,16 @@ section "Ruff lint (BLOCKING)" 2 $TOTAL_STEPS
 # First auto-fix what we can
 run_ruff_lint "$STAGED_PY" "false" 2>/dev/null || true
 
-# Now do a strict check on staged files
+# Now do a strict check on all staged files at once (BATCHED for performance)
+cd "$REPO_ROOT"
+LINT_OUTPUT=$(uv run ruff check $STAGED_PY 2>&1)
+LINT_EXIT=$?
 LINT_FAILED=0
-for file in $STAGED_PY; do
-    if [ -f "$file" ]; then
-        cd "$REPO_ROOT"
-        LINT_OUTPUT=$(uv run ruff check "$file" 2>&1)
-        LINT_EXIT=$?
-        if [ $LINT_EXIT -ne 0 ]; then
-            if [ $LINT_FAILED -eq 0 ]; then
-                error "Lint errors in staged files:"
-            fi
-            echo "$LINT_OUTPUT"
-            LINT_FAILED=1
-        fi
-    fi
-done
+if [ $LINT_EXIT -ne 0 ]; then
+    error "Lint errors in staged files:"
+    echo "$LINT_OUTPUT"
+    LINT_FAILED=1
+fi
 
 if [ $LINT_FAILED -eq 0 ]; then
     success "Lint passed"
@@ -98,23 +92,26 @@ IMPL_FILES=$(filter_impl_claude "$STAGED_PY")
 if [ -n "$IMPL_FILES" ]; then
     cd "$REPO_ROOT/impl/claude"
 
-    # Run mypy on each staged file individually for precise error reporting
-    MYPY_FAILED=0
+    # Convert paths to relative paths from impl/claude
+    REL_FILES=""
     for file in $IMPL_FILES; do
-        # Convert to relative path from impl/claude
         REL_FILE=$(echo "$file" | sed 's|impl/claude/||g')
         if [ -f "$REL_FILE" ]; then
-            MYPY_OUTPUT=$(uv run mypy --config-file mypy.ini "$REL_FILE" 2>&1)
-            MYPY_EXIT=$?
-            if [ $MYPY_EXIT -ne 0 ]; then
-                if [ $MYPY_FAILED -eq 0 ]; then
-                    error "Type errors in staged files:"
-                fi
-                echo "$MYPY_OUTPUT" | grep -v "^Success:"
-                MYPY_FAILED=1
-            fi
+            REL_FILES="$REL_FILES $REL_FILE"
         fi
     done
+
+    # Run mypy on ALL staged files at once (BATCHED for performance)
+    MYPY_FAILED=0
+    if [ -n "$REL_FILES" ]; then
+        MYPY_OUTPUT=$(uv run mypy --config-file mypy.ini $REL_FILES 2>&1)
+        MYPY_EXIT=$?
+        if [ $MYPY_EXIT -ne 0 ]; then
+            error "Type errors in staged files:"
+            echo "$MYPY_OUTPUT" | grep -v "^Success:"
+            MYPY_FAILED=1
+        fi
+    fi
 
     if [ $MYPY_FAILED -eq 0 ]; then
         success "Type check passed"
