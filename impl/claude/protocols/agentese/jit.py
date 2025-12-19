@@ -588,10 +588,13 @@ class JITPromoter:
 
     def __init__(
         self,
-        impl_root: Path = Path("impl/claude/protocols/agentese/generated"),
+        impl_root: Path | None = None,
         threshold: int = 100,
         success_threshold: float = 0.8,
     ):
+        # Default to absolute path relative to this file, not CWD
+        if impl_root is None:
+            impl_root = Path(__file__).parent / "generated"
         self.impl_root = impl_root
         self.threshold = threshold
         self.success_threshold = success_threshold
