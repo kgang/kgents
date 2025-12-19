@@ -1,10 +1,13 @@
 /**
- * ProjectionError - Error state for AGENTESE projections
+ * ProjectionError - Canonical error component for AGENTESE projections
  *
- * Shows a helpful error message with recovery suggestions when
- * an AGENTESE path cannot be resolved or invoked.
+ * Design Philosophy: Neutral > sympathetic for errors.
+ * - Clear, direct titles
+ * - Actionable hints
+ * - No poetry, no personality
  *
  * @see spec/protocols/agentese-as-route.md
+ * @see constants/messages.ts for centralized error vocabulary
  */
 
 import { motion } from 'framer-motion';
@@ -15,38 +18,54 @@ import { formatAgentesePath, getParentPath, AGENTESE_CONTEXTS } from '@/utils/pa
 import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api/client';
+import { ErrorCategory } from '@/constants/messages';
 
 /**
- * Error type classification
+ * Classify an error into a canonical category.
  */
-type ErrorType = 'not_found' | 'forbidden' | 'refused' | 'server' | 'network' | 'unknown';
-
-function classifyError(error: Error): ErrorType {
+function classifyError(error: Error): ErrorCategory {
   const message = error.message.toLowerCase();
-  if (message.includes('404') || message.includes('not found')) return 'not_found';
-  if (message.includes('403') || message.includes('forbidden')) return 'forbidden';
-  if (message.includes('451') || message.includes('consent')) return 'refused';
-  if (message.includes('500') || message.includes('server')) return 'server';
-  if (message.includes('network') || message.includes('fetch')) return 'network';
-  return 'unknown';
+  if (message.includes('404') || message.includes('not found')) return ErrorCategory.NOT_FOUND;
+  if (message.includes('403') || message.includes('forbidden')) return ErrorCategory.PERMISSION;
+  if (message.includes('451') || message.includes('consent')) return ErrorCategory.CONSENT;
+  if (message.includes('500') || message.includes('server') || message.includes('internal'))
+    return ErrorCategory.SERVER;
+  if (message.includes('network') || message.includes('fetch') || message.includes('econnrefused'))
+    return ErrorCategory.NETWORK;
+  if (message.includes('timeout')) return ErrorCategory.TIMEOUT;
+  if (message.includes('422') || message.includes('validation')) return ErrorCategory.VALIDATION;
+  if (message.includes('429') || message.includes('rate')) return ErrorCategory.RATE_LIMITED;
+  return ErrorCategory.UNKNOWN;
 }
 
-const ERROR_TITLES: Record<ErrorType, string> = {
-  not_found: 'Path Not Found',
-  forbidden: 'Access Denied',
-  refused: 'Consent Required',
-  server: 'Server Error',
-  network: 'Connection Lost',
-  unknown: 'Something Went Wrong',
+/**
+ * Neutral error titles — clear and direct.
+ */
+const ERROR_TITLES: Record<ErrorCategory, string> = {
+  [ErrorCategory.NOT_FOUND]: 'Not Found',
+  [ErrorCategory.PERMISSION]: 'Access Denied',
+  [ErrorCategory.CONSENT]: 'Consent Required',
+  [ErrorCategory.SERVER]: 'Server Error',
+  [ErrorCategory.NETWORK]: 'Connection Failed',
+  [ErrorCategory.TIMEOUT]: 'Request Timed Out',
+  [ErrorCategory.VALIDATION]: 'Invalid Input',
+  [ErrorCategory.RATE_LIMITED]: 'Rate Limited',
+  [ErrorCategory.UNKNOWN]: 'Unexpected Error',
 };
 
-const ERROR_DESCRIPTIONS: Record<ErrorType, string> = {
-  not_found: "This AGENTESE path doesn't exist in the registry.",
-  forbidden: 'You lack the capabilities required to access this path.',
-  refused: 'This entity has refused the interaction. Consent is required.',
-  server: 'The server encountered an error processing this request.',
-  network: 'Unable to connect to the AGENTESE gateway.',
-  unknown: 'An unexpected error occurred.',
+/**
+ * Actionable hints — what to do next.
+ */
+const ERROR_HINTS: Record<ErrorCategory, string> = {
+  [ErrorCategory.NOT_FOUND]: 'This path does not exist in the registry.',
+  [ErrorCategory.PERMISSION]: 'You do not have access to this path.',
+  [ErrorCategory.CONSENT]: 'This entity requires consent to interact.',
+  [ErrorCategory.SERVER]: 'An error occurred on the server.',
+  [ErrorCategory.NETWORK]: 'Unable to connect to the backend.',
+  [ErrorCategory.TIMEOUT]: 'The request took too long.',
+  [ErrorCategory.VALIDATION]: 'The request format is invalid.',
+  [ErrorCategory.RATE_LIMITED]: 'Too many requests. Wait and retry.',
+  [ErrorCategory.UNKNOWN]: 'An unexpected error occurred.',
 };
 
 export function ProjectionError({ path, aspect, error, similarPaths }: ProjectionErrorProps) {
@@ -98,7 +117,9 @@ export function ProjectionError({ path, aspect, error, similarPaths }: Projectio
       </motion.div>
 
       {/* Error title */}
-      <h1 className="mt-6 text-2xl font-semibold text-content-primary">{ERROR_TITLES[errorType]}</h1>
+      <h1 className="mt-6 text-2xl font-semibold text-content-primary">
+        {ERROR_TITLES[errorType]}
+      </h1>
 
       {/* Path that failed */}
       <code className="mt-3 px-4 py-2 rounded-md bg-surface-inset font-mono text-sm text-content-secondary">
@@ -106,10 +127,8 @@ export function ProjectionError({ path, aspect, error, similarPaths }: Projectio
         {aspect !== 'manifest' && `:${aspect}`}
       </code>
 
-      {/* Error description */}
-      <p className="mt-4 text-content-secondary max-w-md text-center">
-        {ERROR_DESCRIPTIONS[errorType]}
-      </p>
+      {/* Actionable hint */}
+      <p className="mt-4 text-content-secondary max-w-md text-center">{ERROR_HINTS[errorType]}</p>
 
       {/* Technical error (collapsed) */}
       <details className="mt-4 text-sm text-content-tertiary">
@@ -171,7 +190,7 @@ export function ProjectionError({ path, aspect, error, similarPaths }: Projectio
       )}
 
       {/* Valid contexts hint */}
-      {errorType === 'not_found' && (
+      {errorType === ErrorCategory.NOT_FOUND && (
         <div className="mt-6 text-sm text-content-tertiary">
           <p>
             Valid contexts:{' '}
@@ -187,5 +206,15 @@ export function ProjectionError({ path, aspect, error, similarPaths }: Projectio
     </div>
   );
 }
+
+// =============================================================================
+// Exports for reuse
+// =============================================================================
+
+/**
+ * Re-export for use by other components.
+ */
+export { classifyError, ErrorCategory };
+export type { ErrorCategory as ErrorType };
 
 export default ProjectionError;

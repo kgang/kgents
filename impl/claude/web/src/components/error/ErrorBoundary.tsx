@@ -1,10 +1,12 @@
 /**
  * ErrorBoundary: Catches render errors in React component tree.
  *
+ * Neutral error messaging — clear and direct.
  * Supports reset on route changes via resetKeys prop.
  */
 
 import { Component, type ReactNode, type ErrorInfo } from 'react';
+import { AlertCircle } from 'lucide-react';
 
 // =============================================================================
 // Types
@@ -31,7 +33,7 @@ interface ErrorBoundaryState {
 // =============================================================================
 
 /**
- * Error boundary that catches render errors and displays a friendly fallback.
+ * Error boundary that catches render errors and displays a neutral fallback.
  */
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
@@ -70,16 +72,18 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback;
       }
 
-      // Simple error UI
+      // Neutral error UI — Lucide icon, not emoji
       return (
-        <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
+        <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-gray-900">
           <div className="max-w-md w-full text-center p-8">
-            <div className="text-6xl mb-4">😵</div>
-            <h2 className="text-xl font-semibold mb-2 text-red-400">Something went wrong</h2>
-            <p className="text-gray-400 mb-6">{this.state.error?.message || 'Unknown error'}</p>
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="w-16 h-16 text-gray-500" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-semibold mb-2 text-white">Component Error</h2>
+            <p className="text-gray-400 mb-6">{this.state.error?.message || 'An error occurred'}</p>
             <button
               onClick={this.reset}
-              className="px-6 py-2 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-cyan-600 hover:bg-cyan-700 rounded-lg font-medium transition-colors text-white"
             >
               Try Again
             </button>

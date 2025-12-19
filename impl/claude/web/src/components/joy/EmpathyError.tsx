@@ -1,23 +1,11 @@
 /**
- * Empathy Error Component
+ * EmpathyError - DEPRECATED
  *
- * Humane error states with personality - not hostile, but helpful.
- * Transforms failures into guidance with warmth.
+ * Use ProjectionError from @/shell/projections/ProjectionError instead.
+ * This file is kept for backwards compatibility only.
  *
- * Uses Lucide icons per visual-system.md - no emojis in kgents-authored copy.
- *
- * Foundation 5: Personality & Joy - Empathetic Errors
- *
- * @example
- * ```tsx
- * <EmpathyError
- *   type="network"
- *   title="Lost in the void..."
- *   subtitle="The connection wandered off. Let's bring it back."
- *   action="Reconnect"
- *   onAction={handleReconnect}
- * />
- * ```
+ * @deprecated Use ProjectionError for new code
+ * @see shell/projections/ProjectionError.tsx — canonical error component
  */
 
 import type { CSSProperties } from 'react';
@@ -35,8 +23,15 @@ import {
   AlertTriangle,
   type LucideIcon,
 } from 'lucide-react';
+import { ERROR_TITLES, ERROR_HINTS } from '@/constants/messages';
 
-export type ErrorType = 'network' | 'notfound' | 'permission' | 'timeout' | 'validation' | 'unknown';
+export type ErrorType =
+  | 'network'
+  | 'notfound'
+  | 'permission'
+  | 'timeout'
+  | 'validation'
+  | 'unknown';
 
 export interface EmpathyErrorProps {
   /** Error type determines default messaging */
@@ -64,69 +59,57 @@ export interface EmpathyErrorProps {
 }
 
 // =============================================================================
-// Error Configuration
+// Map old types to centralized messages
 // =============================================================================
+
+const TYPE_TO_CATEGORY: Record<ErrorType, string> = {
+  network: 'network',
+  notfound: 'notFound',
+  permission: 'permission',
+  timeout: 'timeout',
+  validation: 'validation',
+  unknown: 'unknown',
+};
 
 interface ErrorConfig {
   icon: LucideIcon;
   color: string;
-  title: string;
-  subtitle: string;
-  suggestion: string;
   actionLabel: string;
 }
 
 /**
  * Error type configurations with Lucide icons.
- * Per visual-system.md: no emojis in kgents-authored copy.
+ * Neutral messaging from messages.ts.
  */
 const ERROR_CONFIG: Record<ErrorType, ErrorConfig> = {
   network: {
     icon: Wifi,
-    color: '#3B82F6', // blue-500
-    title: 'Lost in the void...',
-    subtitle: 'The connection wandered off. It happens to the best of us.',
-    suggestion: 'Check your internet connection and try again.',
-    actionLabel: 'Reconnect',
+    color: '#64748B', // slate-500 (neutral)
+    actionLabel: 'Retry',
   },
   notfound: {
     icon: MapPin,
-    color: '#8B5CF6', // violet-500
-    title: 'Nothing here...',
-    subtitle: "This place doesn't exist yet. Maybe it's waiting to be created.",
-    suggestion: 'Double-check the URL or navigate back home.',
+    color: '#64748B',
     actionLabel: 'Go Home',
   },
   permission: {
     icon: Lock,
-    color: '#F59E0B', // amber-500
-    title: "Door's locked...",
-    subtitle: "You'll need the right key to enter here.",
-    suggestion: 'Check your permissions or contact an administrator.',
-    actionLabel: 'Request Access',
+    color: '#64748B',
+    actionLabel: 'Sign In',
   },
   timeout: {
     icon: Clock,
-    color: '#64748B', // slate-500
-    title: 'Taking too long...',
-    subtitle: 'The universe is slow today. Even servers need a moment sometimes.',
-    suggestion: 'Try again, or check back in a moment.',
+    color: '#64748B',
     actionLabel: 'Try Again',
   },
   validation: {
     icon: FileText,
-    color: '#EC4899', // pink-500
-    title: 'Something needs fixing...',
-    subtitle: "The input wasn't quite right. Let's correct it together.",
-    suggestion: 'Review the highlighted fields and try again.',
+    color: '#64748B',
     actionLabel: 'Review',
   },
   unknown: {
     icon: HelpCircle,
-    color: '#6366F1', // indigo-500
-    title: 'Something unexpected...',
-    subtitle: 'Even the wisest agents encounter mysteries.',
-    suggestion: 'Try refreshing, or come back in a moment.',
+    color: '#64748B',
     actionLabel: 'Refresh',
   },
 };
@@ -167,7 +150,9 @@ const SIZE_CONFIG = {
 // =============================================================================
 
 /**
- * Empathetic error display with personality and actionable guidance.
+ * @deprecated Use ProjectionError from @/shell/projections/ProjectionError
+ *
+ * Error display with neutral messaging.
  * Uses Lucide icons instead of emojis per visual-system.md.
  */
 export function EmpathyError({
@@ -186,9 +171,11 @@ export function EmpathyError({
   const { shouldAnimate } = useMotionPreferences();
   const config = ERROR_CONFIG[type];
   const sizeConfig = SIZE_CONFIG[size];
+  const category = TYPE_TO_CATEGORY[type];
 
-  const displayTitle = title || config.title;
-  const displaySubtitle = subtitle || config.subtitle;
+  // Use neutral titles/hints from centralized messages, with fallback to props
+  const displayTitle = title || ERROR_TITLES[category] || 'Error';
+  const displaySubtitle = subtitle || ERROR_HINTS[category] || 'An error occurred.';
   const displayAction = action || config.actionLabel;
 
   const IconComponent = config.icon;
@@ -202,7 +189,7 @@ export function EmpathyError({
       transition={{ duration: 0.3 }}
       role="alert"
     >
-      {/* Icon with gentle breathing animation - Lucide icons per visual-system.md */}
+      {/* Icon — neutral gray */}
       <Breathe intensity={0.3} speed="slow">
         <IconComponent
           size={sizeConfig.iconSize}
@@ -212,27 +199,20 @@ export function EmpathyError({
         />
       </Breathe>
 
-      {/* Title */}
-      <h2 className={`${sizeConfig.title} font-semibold text-white mb-2`}>
-        {displayTitle}
-      </h2>
+      {/* Title — neutral */}
+      <h2 className={`${sizeConfig.title} font-semibold text-white mb-2`}>{displayTitle}</h2>
 
-      {/* Subtitle */}
-      <p className={`${sizeConfig.subtitle} text-gray-400 mb-2 max-w-md`}>
-        {displaySubtitle}
-      </p>
+      {/* Hint — actionable */}
+      <p className={`${sizeConfig.subtitle} text-gray-400 mb-2 max-w-md`}>{displaySubtitle}</p>
 
       {/* Technical details */}
       {details && (
-        <div className={`${sizeConfig.suggestion} text-gray-500 mb-4 font-mono bg-gray-800/50 px-3 py-2 rounded max-w-md break-all`}>
+        <div
+          className={`${sizeConfig.suggestion} text-gray-500 mb-4 font-mono bg-gray-800/50 px-3 py-2 rounded max-w-md break-all`}
+        >
           {details}
         </div>
       )}
-
-      {/* Suggestion */}
-      <p className={`${sizeConfig.suggestion} text-gray-500 mb-6 max-w-md`}>
-        {config.suggestion}
-      </p>
 
       {/* Actions */}
       <div className="flex gap-3">
@@ -270,11 +250,7 @@ export interface InlineErrorProps {
   className?: string;
 }
 
-export function InlineError({
-  message,
-  shake = false,
-  className = '',
-}: InlineErrorProps) {
+export function InlineError({ message, shake = false, className = '' }: InlineErrorProps) {
   return (
     <Shake trigger={shake} intensity="gentle">
       <p className={`text-sm text-red-400 flex items-center gap-1.5 ${className}`}>

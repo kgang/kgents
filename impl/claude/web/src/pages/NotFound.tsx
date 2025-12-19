@@ -1,32 +1,35 @@
 /**
- * NotFound: 404 page with town theme.
+ * NotFound: 404 page.
  *
  * Displayed when user navigates to a non-existent route.
- * Keeps the personality of Agent Town with friendly messaging.
+ * Neutral tone — clear and direct.
  *
- * @see plans/web-refactor/defensive-lifecycle.md
+ * @see spec/protocols/agentese-as-route.md
  */
 
 import { Link } from 'react-router-dom';
+import { MapPin } from 'lucide-react';
 
 /**
  * 404 Not Found page.
  *
- * Provides helpful navigation options with town-themed personality.
+ * Neutral messaging with helpful navigation options.
  */
 export default function NotFound() {
   return (
     <div className="h-[calc(100vh-64px)] flex items-center justify-center bg-town-bg">
       <div className="text-center max-w-md px-4">
-        {/* Icon */}
-        <div className="text-8xl mb-6">🏚️</div>
+        {/* Icon - Lucide, not emoji */}
+        <div className="flex justify-center mb-6">
+          <MapPin className="w-16 h-16 text-gray-500" strokeWidth={1.5} />
+        </div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold mb-3 text-white">Lost in the Wilderness</h1>
+        {/* Title - neutral */}
+        <h1 className="text-3xl font-bold mb-3 text-white">Page Not Found</h1>
 
-        {/* Description */}
+        {/* Description - actionable */}
         <p className="text-gray-400 mb-8 text-lg">
-          This path leads nowhere. The town you seek lies elsewhere.
+          This page does not exist. Check the URL or navigate home.
         </p>
 
         {/* Navigation options */}
@@ -35,20 +38,18 @@ export default function NotFound() {
             to="/"
             className="px-6 py-3 bg-town-highlight hover:bg-town-highlight/80 rounded-lg font-medium transition-colors text-white"
           >
-            Return Home
+            Go Home
           </Link>
           <Link
-            to="/world.town.simulation?townId=demo"
+            to="/concept.cockpit"
             className="px-6 py-3 bg-town-accent/50 hover:bg-town-accent/70 rounded-lg font-medium transition-colors text-gray-200"
           >
-            Visit Demo Town
+            Open Cockpit
           </Link>
         </div>
 
-        {/* Subtle hint */}
-        <p className="text-gray-600 text-sm mt-8">
-          Error 404 — Page not found
-        </p>
+        {/* Error code */}
+        <p className="text-gray-600 text-sm mt-8">404</p>
       </div>
     </div>
   );

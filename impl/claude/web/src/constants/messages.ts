@@ -96,55 +96,97 @@ export const GENERIC_LOADING_MESSAGES = [
 // =============================================================================
 
 /**
- * Empathetic error titles by category.
- * These replace generic "Error" titles with human-friendly language.
+ * Error Category Enum
+ * Canonical categories for error classification across the app.
+ */
+export enum ErrorCategory {
+  NETWORK = 'network',
+  TIMEOUT = 'timeout',
+  NOT_FOUND = 'notFound',
+  PERMISSION = 'permission',
+  VALIDATION = 'validation',
+  RATE_LIMITED = 'rateLimited',
+  SERVER = 'serverError',
+  CONSENT = 'consent',
+  UNKNOWN = 'unknown',
+}
+
+/**
+ * Neutral error titles.
+ * Clear and direct — professional, not cold.
+ *
+ * Philosophy: Neutral > sympathetic for errors.
+ * Poetry belongs in features, not failures.
  */
 export const ERROR_TITLES: Record<string, string> = {
-  network: 'Lost in the Ether',
-  timeout: 'Taking Too Long',
-  notFound: 'Cannot Find That',
-  permission: 'Access Restricted',
-  validation: 'Something Seems Off',
-  rateLimited: 'Slow Down a Bit',
-  serverError: 'Unexpected Turbulence',
-  unknown: 'Something Went Wrong',
+  network: 'Connection Failed',
+  timeout: 'Request Timed Out',
+  notFound: 'Not Found',
+  permission: 'Access Denied',
+  validation: 'Invalid Input',
+  rateLimited: 'Rate Limit Exceeded',
+  serverError: 'Server Error',
+  consent: 'Consent Required',
+  unknown: 'Unexpected Error',
 } as const;
 
 /**
- * Helpful error suggestions by category.
+ * Actionable error hints by category.
+ * Each hint should suggest a concrete action the user can take.
+ */
+export const ERROR_HINTS: Record<string, string> = {
+  network: 'Check your network connection',
+  timeout: 'Try again in a moment',
+  notFound: 'Use "discover" to see available paths',
+  permission: 'Check API key or permissions',
+  validation: 'Review the input format',
+  rateLimited: 'Wait before retrying',
+  serverError: 'Try again in a few minutes',
+  consent: 'Consent is required for this action',
+  unknown: 'Try again or refresh the page',
+} as const;
+
+/**
+ * Extended suggestions for detailed error displays.
+ * Use when you have space for multiple suggestions.
  */
 export const ERROR_SUGGESTIONS: Record<string, string[]> = {
   network: [
-    'Check your internet connection',
+    'Check your network connection',
+    'Verify the backend is running',
     'Try refreshing the page',
-    'The server might be temporarily unavailable',
   ],
   timeout: [
-    'The operation is taking longer than expected',
+    'The operation took too long',
     'Try again in a moment',
     'Consider simplifying your request',
   ],
   notFound: [
-    'This resource may have been moved',
-    'Double-check the address',
-    'Start from the homepage',
+    'This path does not exist',
+    'Use "discover" to see available paths',
+    'Check that the node is registered',
   ],
-  permission: [
-    'You may need to sign in',
-    'Request access from the owner',
-    'Check your account permissions',
-  ],
+  permission: ['You may need to sign in', 'Check your API key', 'Verify your permissions'],
   validation: [
     'Review the input fields',
     'Check for required fields',
-    'Make sure the format is correct',
+    'Verify the format is correct',
   ],
   rateLimited: [
-    'Wait a moment before trying again',
-    'Reduce the frequency of requests',
+    'Wait before trying again',
+    'Reduce request frequency',
     'Consider batching operations',
   ],
-  serverError: ['This is not your fault', 'We are looking into it', 'Try again in a few minutes'],
+  serverError: [
+    'An error occurred on the server',
+    'Check backend logs for details',
+    'Try again in a few minutes',
+  ],
+  consent: [
+    'This entity requires consent',
+    'Consent debt may be blocking the action',
+    'Try a less intrusive interaction',
+  ],
   unknown: [
     'Refresh the page and try again',
     'Clear your browser cache',
@@ -153,11 +195,16 @@ export const ERROR_SUGGESTIONS: Record<string, string[]> = {
 } as const;
 
 /**
- * Get an empathetic error message.
+ * Get neutral error content with actionable hints.
  */
-export function getErrorMessage(category: string): { title: string; suggestions: string[] } {
+export function getErrorMessage(category: string): {
+  title: string;
+  hint: string;
+  suggestions: string[];
+} {
   return {
     title: ERROR_TITLES[category] || ERROR_TITLES.unknown,
+    hint: ERROR_HINTS[category] || ERROR_HINTS.unknown,
     suggestions: ERROR_SUGGESTIONS[category] || ERROR_SUGGESTIONS.unknown,
   };
 }
