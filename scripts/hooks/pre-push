@@ -5,11 +5,12 @@
 # Philosophy: Gate pushes with rigorous verification.
 # This is the last line of defense before CI.
 #
-# Optimizations (2025-12-16):
-#   - Parallel test execution with pytest-xdist (-n auto)
+# Optimizations (2025-12-16, updated 2025-12-19):
+#   - Parallel test execution with pytest-xdist (-n 5 default)
 #   - Combined test passes (unit + law + property in single run)
 #   - Smart marker detection (skip empty passes)
 #   - Reduced collection overhead
+#   - Worker cap at 5 (was auto=all CPUs, caused system thrashing)
 #
 # Checks:
 #   1. Ruff lint (strict, blocking)
@@ -51,12 +52,20 @@ TOTAL_STEPS=3
 FAILED=0
 
 # Detect CPU count for parallel execution
-if command -v nproc &> /dev/null; then
-    CPU_COUNT=$(nproc)
+# KGENTS_PYTEST_WORKERS overrides auto-detection (default: 5 to reduce system load)
+if [ -n "${KGENTS_PYTEST_WORKERS:-}" ]; then
+    CPU_COUNT="$KGENTS_PYTEST_WORKERS"
+elif command -v nproc &> /dev/null; then
+    CPU_COUNT=$(( $(nproc) / 2 ))
+    [ "$CPU_COUNT" -lt 4 ] && CPU_COUNT=4
+    [ "$CPU_COUNT" -gt 5 ] && CPU_COUNT=5
 elif command -v sysctl &> /dev/null; then
-    CPU_COUNT=$(sysctl -n hw.ncpu 2>/dev/null || echo "auto")
+    TOTAL_CPU=$(sysctl -n hw.ncpu 2>/dev/null || echo "8")
+    CPU_COUNT=$(( TOTAL_CPU / 2 ))
+    [ "$CPU_COUNT" -lt 4 ] && CPU_COUNT=4
+    [ "$CPU_COUNT" -gt 5 ] && CPU_COUNT=5
 else
-    CPU_COUNT="auto"
+    CPU_COUNT=5
 fi
 
 # =============================================================================
