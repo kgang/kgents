@@ -641,8 +641,66 @@ class GardenerNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Return role-gated affordances."""
-        return GARDENER_ROLE_AFFORDANCES.get(archetype, GARDENER_ROLE_AFFORDANCES["default"])
+        """
+        Return role-gated affordances.
+
+        Phase 8 Observer Consistency:
+        - developer: Full polynomial control + routing + chat
+        - architect: Sessions + polynomial inspection (no chat)
+        - operator: Sessions + routing (no propose/polynomial)
+        - newcomer: Route + propose only
+        - guest: Route only (discovery)
+
+        Observer gradation: developers see polynomial internals,
+        guests see wayfinding only.
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Check for direct mapping first
+        if archetype_lower in GARDENER_ROLE_AFFORDANCES:
+            return GARDENER_ROLE_AFFORDANCES[archetype_lower]
+
+        # Map standard archetypes to role-based access
+        if archetype_lower in ("developer", "admin", "system"):
+            return GARDENER_ROLE_AFFORDANCES["developer"]
+
+        if archetype_lower == "architect":
+            # Architect: polynomial inspection without full session control
+            return (
+                "manifest",
+                "route",
+                "propose",
+                "session.manifest",
+                "session.polynomial",
+                "sessions.manifest",
+            )
+
+        if archetype_lower in ("operator", "reviewer", "security"):
+            # Operators: route + basic session view
+            return (
+                "manifest",
+                "route",
+                "session.manifest",
+                "sessions.manifest",
+            )
+
+        if archetype_lower in ("newcomer", "casual", "reflective"):
+            # Newcomers: routing + suggestions
+            return ("manifest", "route", "propose")
+
+        if archetype_lower in ("creative", "strategic", "tactical"):
+            # Creative: sessions + propose for exploration
+            return (
+                "manifest",
+                "route",
+                "propose",
+                "session.manifest",
+                "session.define",
+                "session.advance",
+            )
+
+        # Guest (default): discovery only
+        return GARDENER_ROLE_AFFORDANCES["guest"]
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> BasicRendering:
         """

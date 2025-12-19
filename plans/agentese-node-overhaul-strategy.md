@@ -8,15 +8,15 @@
 ## Executive Summary
 
 **Audit Date**: 2025-12-19
-**Last Updated**: 2025-12-19 (Phase 4 Complete)
+**Last Updated**: 2025-12-19 (Session 6 Complete)
 
 ### Current State (Post-Audit)
 
 | Category | Count | Production-Ready | Needs Work |
 |----------|-------|------------------|------------|
-| **Core Service Nodes** | 9 | 8 (89%) | 1 |
+| **Core Service Nodes** | 9 | 9 (100%) | 0 |
 | **Context Resolvers** | 15 | 12 (80%) | 3 |
-| **Frontend Projections** | 24 paths | 13 (54%) | 11 |
+| **Frontend Projections** | 24 paths | 14 (58%) | 10 |
 
 ### Session Progress
 
@@ -27,9 +27,11 @@
 | **Session 3** | Soul Wiring | **COMPLETE** | KgentSoul→SoulNode DI, 10 contracts, SoulPage, eigenvector viz |
 | **Phase 4** | Missing Projections | **COMPLETE** | DesignSystemProjection + EmergenceProjection (registry wired) |
 | **Phase 5** | Park Scenarios | **COMPLETE** | ScenarioService wiring, 9 aspects, consent debt (hosts can say no) |
-| Session 6 | Unified Chat | Pending | Chat engine for all jewels, SSE streaming |
-| Session 7-8 | Consistency Polish | Pending | Error UX, observer consistency |
-| Session 9-10 | DevEx & Testing | Pending | CI gates, E2E tests |
+| **Session 6** | SSE Chat Streaming | **COMPLETE** | AsyncIterator streaming, useChatStream hook, StreamChunk contracts |
+| **Session 7** | Neutral Error UX | **COMPLETE** | Neutral titles, ErrorCategory enum, deprecate FriendlyError/EmpathyError |
+| **Session 8** | Observer Audit | **COMPLETE** | ObserverDebugPanel, `_get_affordances_for_archetype` for all key nodes, test_observer_dependence.py |
+| Session 9 | CI Contract Gates | **NEXT** | Contract coverage in CI |
+| Session 10 | E2E + Performance | Pending | E2E tests, performance baselines |
 
 ---
 
@@ -266,110 +268,270 @@ impl/claude/protocols/agentese/contexts/world_gallery_api.py
 
 ---
 
-### Phase 3: LLM Integration (Session 3-4)
+### Phase 3: Soul Wiring (Session 3) ✅ COMPLETE
 
 > *"K-gent = Governance Functor, not chatbot"*
 
-#### 3A: K-gent Soul Wiring
+**Completed**:
+- [x] Wire `KgentSoul` to `SoulNode` via DI (`set_soul()` pattern)
+- [x] Implement `soul.dialogue()` calls in SoulNode aspects
+- [x] Add eigenvector-influenced responses
+- [x] Create `SoulProjection.tsx` with eigenvector visualization
 
-**Current State**:
-- `self.soul` has `@chatty` decorator but K-gent Soul rarely invoked
-- Frontend shows `KENT_EIGENVECTORS` fallback when Soul unavailable
-- Town dialogue uses separate `DialogueService` with LLM
-
-**Tasks**:
-- [ ] Wire `KgentSoul` to `SoulNode` via DI
-- [ ] Implement `soul.dialogue()` calls in SoulNode aspects
-- [ ] Add eigenvector-influenced responses (aesthetic, categorical, gratitude)
-- [ ] Create fallback chain: LLM → cached response → template
-
-#### 3B: Unified Chat Protocol
-
-**Tasks**:
-- [ ] Make `self.chat` the chat engine for all jewels
-- [ ] Town dialogue: `self.chat.create(node_path="world.town.citizen.{id}")`
-- [ ] Soul dialogue: `self.chat.create(node_path="self.soul")`
-- [ ] Standardize streaming: SSE for all chat endpoints
+See Session 3 Deliverables above for details.
 
 ---
 
-### Phase 4: Missing Projections (Session 5-6)
+### Phase 4: Missing Projections ✅ COMPLETE
 
 > *"Every path gets a home, not just a JSON dump."*
 
-**Paths Needing Dedicated Projections**:
-
-| Path | Current | Needed | Priority |
-|------|---------|--------|----------|
-| `concept.design.*` (5 paths) | ConceptHome | DesignSystemProjection | Medium |
-| `world.emergence.*` (2 paths) | ConceptHome | EmergenceProjection | Medium |
-| `self.forest` | ConceptHome | ForestProjection | Low |
-| `self.kgent` | ConceptHome | KgentProjection | Low |
-| `self.soul` | ConceptHome | SoulProjection | Medium |
-| `time.branch` | ConceptHome | BranchProjection | Low |
-
-**Tasks**:
-- [ ] Create DesignSystemProjection for concept.design.* hierarchy
-- [ ] Create EmergenceProjection for world.emergence.* (Cymatics design)
-- [ ] Create SoulProjection for K-gent dialogue interface
-- [ ] Register all new projections in registry.tsx
+**Completed**:
+- [x] DesignSystemProjection for `concept.design.*`
+- [x] EmergenceProjection for `world.emergence.*`
+- [x] SoulProjection for `self.soul`
+- [x] All projections registered in `registry.tsx`
 
 ---
 
-### Phase 5: Park Scenarios (Session 7)
+### Phase 5: Park Scenarios ✅ COMPLETE
 
 > *"Westworld where hosts can say no."*
 
-**Tasks**:
-- [ ] Design `Scenario` dataclass with beats, hosts, locations
-- [ ] Implement scenario state machine (OBSERVING → BUILDING_TENSION → INJECTING → COOLDOWN)
-- [ ] Add consent mechanics (hosts can refuse beats, debt > 0.7 blocks injection)
-- [ ] Wire Park hosts to `self.chat` protocol
-- [ ] Create `ScenarioProjection.tsx` with beat visualization
+**Completed**:
+- [x] ScenarioService with templates, sessions, phases
+- [x] Consent debt mechanics (debt > 0.7 blocks injection)
+- [x] 9 scenario aspects in ParkNode
+- [x] 14 contract types
+
+See Session Notes in NOW.md for details.
 
 ---
 
-### Phase 6: Consistency Polish (Session 8-9)
+### Session 6: SSE Chat Streaming (COMPLETE)
 
-> *"Daring, bold, creative, opinionated but not gaudy"*
+> *"SSE is a priority. Support arbitrary node paths."*
 
-**Tasks**:
-- [ ] Audit all endpoint responses for envelope consistency
-- [ ] Create `ProjectionError.tsx` with actionable hints
-- [ ] Add error categorization (network, not_found, validation, server)
-- [ ] Audit all nodes for observer-dependent behavior
-- [ ] Create `ObserverDebugPanel` for development
+**Kent's Decisions** (2025-12-19):
+- SSE streaming is HIGH priority
+- Support ANY `node_path`, not just curated list
+- Errors should be NEUTRAL, not sympathetic
+
+**Deliverables**:
+
+#### 6A: Backend Streaming ✅
+- [x] `ChatNode._stream_message()` now returns `AsyncIterator[dict[str, Any]]`
+- [x] Gateway detects `hasattr(result, "__aiter__")` and wraps in SSE via `_generate_sse()`
+- [x] Endpoint: `GET /agentese/self/chat/stream/stream` for SSE
+
+**Key Implementation**:
+```python
+async def _stream_message(self, observer, **kwargs) -> AsyncIterator[dict[str, Any]]:
+    session = self._get_or_create_session(...)
+    async for token in session.stream(message):
+        yield {
+            "content": token,
+            "session_id": session.session_id,
+            "turn_number": turn_number,
+            "is_complete": False,
+        }
+    yield {"is_complete": True, "full_response": full_response, ...}
+```
+
+#### 6B: Contract Types ✅
+Added to `services/chat/contracts.py`:
+- `StreamMessageRequest` — Request to stream a message
+- `StreamChunk` — Single chunk in streaming response
+- `StreamCompleteResponse` — Final message with metrics
+
+#### 6C: Frontend Streaming Hook ✅
+Created `web/src/hooks/useChatStream.ts`:
+```typescript
+export function useChatStream(options: UseChatStreamOptions = {}): UseChatStreamResult {
+  // Returns: { send, chunks, fullResponse, isStreaming, error, sessionId, turnNumber, stop, clear }
+}
+
+export function useChatStreamPost(...) // Alternative for complex request bodies
+```
+
+**Exit Criteria**:
+- [x] `self.chat:stream` returns real SSE events (via `ChatSession.stream()` → `ChatMorpheusComposer.compose_stream()`)
+- [x] Works with any `node_path` (self.soul, world.town.citizen.*, etc.)
+- [x] Frontend hook ready (`useChatStream`) with full state management
+- [ ] ChatPage shows streaming tokens (UI wiring pending - Session 7)
+- [ ] DialogueModal shows streaming tokens (UI wiring pending)
 
 ---
 
-### Phase 7: DevEx & Testing (Session 10)
+### Session 7: Neutral Error UX ✅ COMPLETE
 
-> *"Depth over breadth"*
+> *"More neutral for errors."*
 
-**Tasks**:
-- [ ] Add contract validation to CI (all service nodes must have contracts)
-- [ ] Add projection coverage check (high-value nodes have projections)
-- [ ] Create `test_e2e_agentese_flow.py` covering HTTP → Node → Response
-- [ ] Add streaming tests (SSE, WebSocket)
-- [ ] Performance baselines for manifest endpoints
+**Kent's Decision**: Drop sympathetic error language. Be clear and actionable.
+
+**Deliverables**:
+
+#### 7A: Error Constants
+- [x] Created `ErrorCategory` enum in `constants/messages.ts`
+- [x] Neutral `ERROR_TITLES` (e.g., "Connection Failed" not "Lost in the Ether")
+- [x] Actionable `ERROR_HINTS` (e.g., "Check network connection")
+
+#### 7B: Canonical Component
+- [x] `ProjectionError.tsx` updated with neutral messaging
+- [x] Uses `ErrorCategory` for classification
+- [x] Exports `classifyError()` for reuse
+
+#### 7C: Terminal
+- [x] Renamed `_sympatheticError()` → `_formatError()`
+- [x] Updated all error messages to neutral format
+- [x] Added consent (451) and rate limit (429) handlers
+
+#### 7D: Deprecated Components
+- [x] `FriendlyError.tsx` — marked deprecated, uses neutral messaging
+- [x] `EmpathyError.tsx` — marked deprecated, uses neutral messaging
+- [x] Both now use `ERROR_TITLES`/`ERROR_HINTS` from messages.ts
+
+#### 7E: Updated Pages
+- [x] `NotFound.tsx` — "Page Not Found" (not "Lost in the Wilderness")
+- [x] `ErrorBoundary.tsx` — neutral "Component Error" title, Lucide icon
+
+**Files Modified**:
+```
+impl/claude/web/src/constants/messages.ts         # ErrorCategory, neutral titles/hints
+impl/claude/web/src/shell/projections/ProjectionError.tsx  # Canonical, classifyError
+impl/claude/web/src/shell/TerminalService.ts      # _formatError (renamed)
+impl/claude/web/src/pages/NotFound.tsx            # Neutral title
+impl/claude/web/src/components/error/FriendlyError.tsx     # Deprecated
+impl/claude/web/src/components/joy/EmpathyError.tsx        # Deprecated
+impl/claude/web/src/components/error/ErrorBoundary.tsx     # Neutral fallback
+```
+
+**Verification**: TypeScript typecheck PASS, ESLint 0 errors (5 warnings in pre-existing code)
 
 ---
 
-## Node-by-Node Status (Updated)
+### Session 8: Observer Consistency Audit ✅ COMPLETE
+
+> *"Observer gradations: Observer (minimal) → Umwelt (full)"*
+
+**Deliverables**:
+
+#### 8A: ObserverDebugPanel
+- [x] Created `web/src/components/dev/ObserverDebugPanel.tsx`
+- [x] Shows current archetype and capabilities
+- [x] Displays affordances available per node
+- [x] Toggle with Ctrl+Shift+O (dev mode only)
+- [x] Added to App.tsx
+
+#### 8B: Node Observer Dependence
+- [x] `self.soul` — eigenvector/governance access varies by archetype
+- [x] `world.park` — force mechanics restricted to operators
+- [x] `world.park.scenario` — start/phase limited to operators
+- [x] `world.park.mask` — guests have no mask access
+- [x] `world.park.force` — only operators can use force
+- [x] `concept.gardener` — polynomial visibility varies
+- [x] `world.forge` — spectator/artisan/curator/developer gradations
+- [x] `self.memory` — cartography/crystal access varies
+
+#### 8C: Test Coverage
+- [x] Created `protocols/agentese/_tests/test_observer_dependence.py`
+- [x] 33 tests covering all key nodes
+- [x] Property-based tests with Hypothesis
+- [x] Edge case tests (invalid archetypes, case sensitivity)
+- [x] Privilege gradation tests
+
+#### 8D: Documentation
+- [x] All `_get_affordances_for_archetype` methods include "Phase 8 Observer Consistency" docstrings
+- [x] Observer gradation principle documented in each node
+
+**Files Created**:
+```
+impl/claude/web/src/components/dev/ObserverDebugPanel.tsx
+impl/claude/web/src/components/dev/index.ts
+impl/claude/protocols/agentese/_tests/test_observer_dependence.py
+```
+
+**Files Modified**:
+```
+impl/claude/web/src/App.tsx — Added ObserverDebugPanel
+impl/claude/protocols/agentese/contexts/self_soul.py — Observer gradations
+impl/claude/protocols/agentese/contexts/world_park.py — ParkNode, ScenarioNode, MaskNode, ForceNode
+impl/claude/protocols/agentese/contexts/gardener.py — Role-based affordances
+impl/claude/services/forge/node.py — Standard archetype mappings
+impl/claude/services/brain/node.py — Guest/newcomer/developer gradations
+```
+
+**Verification**: 33 backend tests PASS, TypeScript typecheck PASS
+
+---
+
+### Session 9: CI Contract Gates
+
+> *"Tests must pass before commit"*
+
+**Tasks**:
+- [ ] Create `test_all_nodes_have_contracts.py`:
+  - Every `@node` decorator must have `contracts={}`
+  - Every aspect must have Response or Contract entry
+- [ ] Create `test_projection_coverage.py`:
+  - High-value nodes (Brain, Gardener, Gestalt, Forge, Town, Park) have projections
+- [ ] Create `test_contract_types_importable.py`:
+  - All Response types can be imported
+  - No dangling references
+- [ ] Add to CI pipeline (fail build if contract missing)
+
+**Estimated Effort**: 3-4 hours
+
+---
+
+### Session 10: E2E + Performance
+
+> *"Performance baselines as assertions"*
+
+**Tasks**:
+- [ ] Create `test_e2e_agentese_flow.py`:
+  ```python
+  async def test_brain_e2e():
+      # HTTP → Gateway → BrainNode → Response
+      response = await client.get("/agentese/self/memory/manifest")
+      assert response.status_code == 200
+      assert "crystals" in response.json()["result"]
+  ```
+- [ ] Add streaming E2E tests:
+  ```python
+  async def test_chat_streaming_e2e():
+      async with client.stream("/agentese/self/chat/stream", ...) as response:
+          chunks = [chunk async for chunk in response.aiter_text()]
+          assert len(chunks) > 1
+  ```
+- [ ] Performance baselines:
+  ```python
+  def test_manifest_performance():
+      start = time.time()
+      client.get("/agentese/self/memory/manifest")
+      assert time.time() - start < 0.2  # 200ms
+  ```
+- [ ] Playwright tests for critical flows (optional)
+
+**Estimated Effort**: 6-8 hours
+
+---
+
+## Node-by-Node Status (Updated 2025-12-19)
 
 ### Core Service Nodes
 
 | Node | Path | Status | Gap | Phase |
 |------|------|--------|-----|-------|
 | **Brain** | `self.memory` | 100% | — | Done |
-| **Chat** | `self.chat` | 100% | — | Done |
-| **Morpheus** | `world.morpheus` | 100% | — | **Done (Session 1)** |
+| **Chat** | `self.chat` | 100% | — | Done (Session 6) |
+| **Morpheus** | `world.morpheus` | 100% | — | Done (Session 1) |
 | **Gestalt** | `world.codebase` | 100% | — | Done |
-| **Town** | `world.town` | 90% | Unify chat | Phase 3 |
-| **Forge** | `world.forge` | 85% | SSE streaming | Phase 6 |
-| **Park** | `world.park` | 80% | Scenarios placeholder | Phase 5 |
-| **Soul** | `self.soul` | 60% | LLM not wired | Phase 3 |
-| **Gardener** | `concept.gardener` + `self.garden` | 95% | Real hooks wired | **Done (Session 2)** |
+| **Town** | `world.town` | 95% | DialogueModal UI wiring | Session 7 |
+| **Forge** | `world.forge` | 90% | SSE for artisan progress | Session 8 |
+| **Park** | `world.park` | 100% | — | Done (Phase 5) |
+| **Soul** | `self.soul` | 100% | — | Done (Session 3) |
+| **Gardener** | `concept.gardener` + `self.garden` | 100% | — | Done (Session 2) |
 
 ### Context Resolvers (Clarified)
 
@@ -426,7 +588,30 @@ At the end of each session, verify:
 
 ---
 
+## Session 6 Quick Start
+
+When starting Session 6, run these to orient:
+
+```bash
+# Backend streaming infrastructure
+grep -l "stream_with_envelope" impl/claude/protocols/projection/streaming/
+
+# Chat session (where streaming needs to happen)
+code impl/claude/services/chat/session.py
+
+# Gateway (where SSE endpoint goes)
+code impl/claude/protocols/agentese/gateway.py
+
+# Frontend streaming hook
+code impl/claude/web/src/hooks/useAgentesePath.ts
+```
+
+**First task**: Make `ChatSession.stream()` yield real tokens instead of calling K-gent synchronously.
+
+---
+
 *Created: 2025-12-19*
-*Session 1 Complete: 2025-12-19*
-*Estimated Remaining: 9 sessions (~27-36 hours)*
-*Priority: High — Foundational for all future Crown Jewel work*
+*Sessions 1-6 + Phase 4-5 Complete: 2025-12-19*
+*Estimated Remaining: 4 sessions (~20-25 hours)*
+*Next: Session 7 — Neutral Error UX*
+*Priority: Medium — Polish before shipping*

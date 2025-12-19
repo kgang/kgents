@@ -29,6 +29,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
+import os
 from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from threading import Lock
@@ -46,6 +47,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+
+
+# === Exceptions ===
+
+
+class DependencyNotFoundError(Exception):
+    """Raised when a required dependency is not registered in the container."""
+
+    pass
 
 
 # === Provider Types ===
@@ -257,7 +267,19 @@ class ServiceContainer:
                 except Exception as e:
                     logger.warning(f"Failed to resolve dependency {name}: {e}")
             else:
-                logger.debug(f"No provider for dependency {name}, skipping")
+                # FAIL-FAST: Missing dependencies should be visible!
+                # This is the #1 cause of "TypeError: unsupported operand type 'NoneType'" errors.
+                # Fix: Add get_{name}() to services/providers.py and register it.
+                logger.warning(
+                    f"Node '{cls.__name__}' missing dependency '{name}'. "
+                    f"Add get_{name}() to services/providers.py and register with container."
+                )
+                # In strict mode (tests), fail immediately
+                if os.environ.get("AGENTESE_STRICT", "0") == "1":
+                    raise DependencyNotFoundError(
+                        f"Missing dependency: {name}. "
+                        f"Set AGENTESE_STRICT=0 to continue with degraded mode."
+                    )
 
         # Try to instantiate
         try:
@@ -380,6 +402,8 @@ def create_container() -> ServiceContainer:
 # === Exports ===
 
 __all__ = [
+    # Exceptions
+    "DependencyNotFoundError",
     # Types
     "Provider",
     "ProviderEntry",

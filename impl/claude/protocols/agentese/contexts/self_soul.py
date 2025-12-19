@@ -316,8 +316,73 @@ class SoulNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Soul affordances available to all archetypes."""
-        return SOUL_CHAT_AFFORDANCES
+        """
+        Soul affordances vary by archetype.
+
+        Phase 8 Observer Consistency:
+        - developer/architect: Full access including eigenvector inspection
+        - operator: Dialogue, governance, mode (no eigenvector adjustment)
+        - reviewer/newcomer: Basic dialogue only
+        - guest: Manifest only (read-only soul state)
+
+        Observer gradation: Observer (minimal) → Umwelt (full)
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Full access: all soul + chat affordances
+        if archetype_lower in ("developer", "architect", "admin", "system"):
+            return SOUL_CHAT_AFFORDANCES
+
+        # Operators: governance, dialogue, mode - no eigenvector deep-dive
+        if archetype_lower == "operator":
+            return (
+                "manifest",
+                "dialogue",
+                "governance",
+                "challenge",
+                "reflect",
+                "mode",
+                "starters",
+                "chat",
+            )
+
+        # Reviewers/security: dialogue and challenge, no mutation
+        if archetype_lower in ("reviewer", "security"):
+            return (
+                "manifest",
+                "dialogue",
+                "challenge",
+                "starters",
+            )
+
+        # Newcomers/casual: basic dialogue only
+        if archetype_lower in ("newcomer", "casual", "reflective"):
+            return (
+                "manifest",
+                "dialogue",
+                "starters",
+                "chat",
+            )
+
+        # Creative/strategic: dialogue modes for exploration
+        if archetype_lower in ("creative", "strategic", "tactical"):
+            return (
+                "manifest",
+                "dialogue",
+                "challenge",
+                "reflect",
+                "why",
+                "tension",
+                "starters",
+                "chat",
+            )
+
+        # Technical: similar to architect (full dialogue access)
+        if archetype_lower == "technical":
+            return SOUL_CHAT_AFFORDANCES
+
+        # Guest (default): read-only soul state
+        return ("manifest", "starters")
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View soul state."""

@@ -491,11 +491,15 @@ class ForgeNode(BaseLogosNode):
         """
         Return available affordances based on observer archetype.
 
+        Phase 8 Observer Consistency:
         Affordances vary by archetype:
-        - spectator: Read-only + bidding (if token_pool)
-        - artisan: Create contributions, view works
-        - curator: Manage exhibitions
-        - developer: Full access
+        - spectator/guest: Read-only + bidding (if token_pool)
+        - artisan/creative: Create contributions, view works
+        - curator/strategic: Manage exhibitions
+        - developer/operator/architect: Full access
+
+        Observer gradation: audience watches, artisans create,
+        curators orchestrate.
         """
         archetype_lower = archetype.lower() if archetype else "spectator"
 
@@ -509,7 +513,9 @@ class ForgeNode(BaseLogosNode):
             "gallery.list",
         )
 
-        if archetype_lower == "spectator":
+        # Map standard archetypes to forge roles
+        # Spectator: guest, newcomer, casual, reviewer
+        if archetype_lower in ("spectator", "guest", "newcomer", "casual", "reviewer"):
             extra = ()
             if self.token_pool:
                 extra += ("tokens.manifest", "bid.submit")
@@ -517,13 +523,15 @@ class ForgeNode(BaseLogosNode):
                 extra += ("festival.list",)
             return base + extra
 
-        elif archetype_lower == "artisan":
+        # Artisan: creative, tactical, reflective
+        elif archetype_lower in ("artisan", "creative", "tactical", "reflective"):
             extra = ("workshop.join", "contribute")
             if self.festival_manager:
                 extra += ("festival.list", "festival.enter")
             return base + extra
 
-        elif archetype_lower == "curator":
+        # Curator: strategic, security (can manage exhibitions)
+        elif archetype_lower in ("curator", "strategic", "security"):
             extra = (
                 "workshop.create",
                 "workshop.end",
@@ -537,7 +545,15 @@ class ForgeNode(BaseLogosNode):
                 extra += ("festival.list", "festival.create", "festival.enter")
             return base + extra
 
-        elif archetype_lower in ("developer", "admin", "system"):
+        # Full access: developer, operator, architect, admin, system
+        elif archetype_lower in (
+            "developer",
+            "operator",
+            "architect",
+            "admin",
+            "system",
+            "technical",
+        ):
             full_access = (
                 "workshop.list",
                 "workshop.get",

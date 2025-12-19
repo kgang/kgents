@@ -117,9 +117,7 @@ def _build_scenario_state() -> dict[str, Any]:
     for pt in getattr(scenario, "phase_transitions", []):
         phase_transitions.append(
             {
-                "timestamp": pt.timestamp.isoformat()
-                if hasattr(pt, "timestamp")
-                else None,
+                "timestamp": pt.timestamp.isoformat() if hasattr(pt, "timestamp") else None,
                 "from": pt.from_phase.name if hasattr(pt, "from_phase") else "NORMAL",
                 "to": pt.to_phase.name if hasattr(pt, "to_phase") else "INCIDENT",
                 "consent_debt": getattr(pt, "consent_debt", 0.0),
@@ -186,8 +184,33 @@ class ParkNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Park affordances - available to all archetypes."""
-        return PARK_AFFORDANCES
+        """
+        Park affordances vary by archetype.
+
+        Phase 8 Observer Consistency:
+        - developer/operator: Full control including force mechanics
+        - architect: View everything, limited force
+        - newcomer: View scenarios, no mutation
+        - guest: Manifest only
+
+        Observer gradation: tourist sees wonder, admin sees machinery.
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Full access: scenario control, force mechanics, masks
+        if archetype_lower in ("developer", "operator", "admin", "system"):
+            return PARK_AFFORDANCES
+
+        # Architects: view everything, can use masks but not force
+        if archetype_lower == "architect":
+            return ("manifest", "scenario", "host", "episode", "mask")
+
+        # Newcomers/casual: observe scenarios, no control
+        if archetype_lower in ("newcomer", "casual", "reviewer"):
+            return ("manifest", "scenario")
+
+        # Guest (default): park overview only
+        return ("manifest",)
 
     @aspect(
         category=AspectCategory.PERCEPTION,
@@ -267,7 +290,33 @@ class ScenarioNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        return ("manifest", "start", "tick", "phase", "complete")
+        """
+        Scenario affordances vary by archetype.
+
+        Phase 8 Observer Consistency:
+        - developer/operator: Full control (start, tick, phase, complete)
+        - architect: View and advance phases (no start)
+        - reviewer: View and tick only
+        - guest: View only
+
+        Observer gradation: participant vs observer vs spectator.
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Full control: start, tick, phase transitions, completion
+        if archetype_lower in ("developer", "operator", "admin", "system"):
+            return ("manifest", "start", "tick", "phase", "complete")
+
+        # Architects: can advance existing scenarios
+        if archetype_lower == "architect":
+            return ("manifest", "tick", "phase", "complete")
+
+        # Reviewers: can advance time, not phases
+        if archetype_lower in ("reviewer", "newcomer"):
+            return ("manifest", "tick")
+
+        # Guest: read-only observation
+        return ("manifest",)
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Show scenario status."""
@@ -685,7 +734,33 @@ class MaskNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        return ("manifest", "show", "don", "doff", "transform")
+        """
+        Mask affordances vary by archetype.
+
+        Phase 8 Observer Consistency:
+        - developer: Full mask control including transform
+        - architect/creative: Can don/doff masks
+        - newcomer: Can view masks only
+        - guest: No access to masks
+
+        Observer gradation: actors wear masks, audience watches.
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Full control: all mask operations
+        if archetype_lower in ("developer", "operator", "admin", "system"):
+            return ("manifest", "show", "don", "doff", "transform")
+
+        # Creative/architect: can wear masks
+        if archetype_lower in ("architect", "creative", "strategic"):
+            return ("manifest", "show", "don", "doff")
+
+        # Newcomers: can view available masks
+        if archetype_lower in ("newcomer", "reviewer", "casual"):
+            return ("manifest", "show")
+
+        # Guest: no mask access
+        return ()
 
     @aspect(
         category=AspectCategory.PERCEPTION,
@@ -877,7 +952,29 @@ class ForceNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        return ("manifest", "use")
+        """
+        Force affordances vary by archetype.
+
+        Phase 8 Observer Consistency:
+        - developer/operator: Can use force (with consent debt)
+        - architect: Can view force status, not use
+        - others: No force access
+
+        Observer gradation: only operators can break consent.
+        Force is a privileged action that accumulates debt.
+        """
+        archetype_lower = archetype.lower() if archetype else "guest"
+
+        # Operators can use force (with consequences)
+        if archetype_lower in ("developer", "operator", "admin", "system"):
+            return ("manifest", "use")
+
+        # Architects: can see force status
+        if archetype_lower == "architect":
+            return ("manifest",)
+
+        # Everyone else: no force access
+        return ()
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Show force mechanic status."""
@@ -1035,9 +1132,7 @@ def _render_scenario_status(
         emoji = _timer_emoji(timer.status)
         progress = _render_bar(timer.progress, 1.0, width=20)
         lines.append(f"    {emoji} {timer.config.name}")
-        lines.append(
-            f"       {format_countdown(timer)}  {progress}  {timer.progress:.0%}"
-        )
+        lines.append(f"       {format_countdown(timer)}  {progress}  {timer.progress:.0%}")
 
     # Phase
     lines.append("\n  [PHASE]")
@@ -1060,9 +1155,7 @@ def _render_scenario_status(
     return "\n".join(lines)
 
 
-def _render_phase_indicator(
-    scenario: "IntegratedScenarioState", width: int = 60
-) -> str:
+def _render_phase_indicator(scenario: "IntegratedScenarioState", width: int = 60) -> str:
     """Render crisis phase diagram."""
     current = scenario.crisis_phase
 

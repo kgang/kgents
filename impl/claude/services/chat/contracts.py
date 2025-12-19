@@ -275,6 +275,48 @@ class MetricsResponse:
     avg_turn_tokens: float | None = None
 
 
+# === Streaming ===
+
+
+@dataclass(frozen=True)
+class StreamMessageRequest:
+    """Request to stream a message response."""
+
+    message: str
+    session_id: str | None = None
+    node_path: str | None = None
+
+
+@dataclass(frozen=True)
+class StreamChunk:
+    """
+    A single chunk in a streaming response.
+
+    Yielded via SSE as the LLM generates tokens.
+    """
+
+    content: str
+    session_id: str
+    turn_number: int
+    is_complete: bool = False
+    tokens_so_far: int = 0
+
+
+@dataclass(frozen=True)
+class StreamCompleteResponse:
+    """
+    Final message when stream completes.
+
+    Contains aggregate metrics for the turn.
+    """
+
+    session_id: str
+    turn_number: int
+    full_response: str
+    tokens_in: int
+    tokens_out: int
+
+
 # === Exports ===
 
 __all__ = [
@@ -314,4 +356,8 @@ __all__ = [
     # Metrics
     "MetricsRequest",
     "MetricsResponse",
+    # Streaming
+    "StreamMessageRequest",
+    "StreamChunk",
+    "StreamCompleteResponse",
 ]

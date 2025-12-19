@@ -228,25 +228,59 @@ class BrainNode(BaseLogosNode):
         """
         Return archetype-specific affordances.
 
-        Core operations (capture, search, surface) available to all archetypes.
-        Mutation operations (delete, heal) restricted to privileged archetypes.
+        Phase 8 Observer Consistency:
+        - developer/operator: Full access (capture, delete, heal, topology)
+        - architect: Enhanced read + topology, no delete
+        - newcomer: Capture + search + surface
+        - guest: Search only (no capture)
 
-        This matches the existing SelfMemoryContext behavior to maintain
-        backward compatibility when Logos resolves self.memory paths.
+        Observer gradation: contributors capture, researchers explore,
+        guests observe.
         """
-        # Core operations available to all archetypes
-        # (matches existing MEMORY_AFFORDANCES)
-        base = ("capture", "search", "surface", "get", "recent", "bytag")
+        archetype_lower = archetype.lower() if archetype else "guest"
 
-        if archetype in ("developer", "admin", "system"):
-            # Full access including mutations
-            return base + ("delete", "heal", "topology")
-        elif archetype in ("architect", "artist", "poet", "researcher"):
-            # Enhanced read access with topology visualization
-            return base + ("topology",)
-        else:
-            # Standard access - includes capture for all archetypes
-            return base
+        # Full access: developers, operators, admins
+        if archetype_lower in ("developer", "operator", "admin", "system"):
+            return (
+                "capture",
+                "search",
+                "surface",
+                "get",
+                "recent",
+                "bytag",
+                "delete",
+                "heal",
+                "topology",
+                "cartography.manifest",
+                "crystal.list",
+                "crystal.detail",
+                "stigmergy.trail",
+            )
+
+        # Architects: exploration + topology, no mutation
+        if archetype_lower in ("architect", "artist", "poet", "researcher", "technical"):
+            return (
+                "capture",
+                "search",
+                "surface",
+                "get",
+                "recent",
+                "bytag",
+                "topology",
+                "cartography.manifest",
+                "crystal.list",
+            )
+
+        # Creative/strategic: capture + search + exploration
+        if archetype_lower in ("creative", "strategic", "tactical", "reflective"):
+            return ("capture", "search", "surface", "get", "recent", "bytag")
+
+        # Newcomers/reviewers: can capture, search, surface
+        if archetype_lower in ("newcomer", "casual", "reviewer", "security"):
+            return ("capture", "search", "surface", "get", "recent")
+
+        # Guest (default): read-only observation
+        return ("search", "surface", "get")
 
     async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
         """

@@ -31,12 +31,16 @@ from typing import TYPE_CHECKING
 from protocols.agentese.container import get_container
 
 if TYPE_CHECKING:
+    from typing import Callable
+
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
     from agents.d import DgentProtocol, TableAdapter
     from agents.differance import DifferanceStore
     from agents.k.soul import KgentSoul
+    from agents.town.sheaf import TownSheaf
     from models.brain import Crystal
+    from models.town import CitizenView
     from services.brain import BrainPersistence
     from services.chat import ChatPersistence, ChatServiceFactory, ChatSessionFactory
     from services.coalition import CoalitionPersistence
@@ -46,8 +50,12 @@ if TYPE_CHECKING:
     from services.gestalt import GestaltPersistence
     from services.morpheus.persistence import MorpheusPersistence
     from services.park import ParkPersistence
+    from services.park.scenario_service import ScenarioService
     from services.town import TownPersistence
+    from services.town.bus_wiring import TownBusManager
     from services.town.coalition_service import CoalitionService
+    from services.town.inhabit_service import InhabitService
+    from services.town.workshop_service import WorkshopService
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +167,18 @@ async def get_coalition_service() -> "CoalitionService":
     return CoalitionService()
 
 
+async def get_inhabit_service() -> "InhabitService":
+    """
+    Get the InhabitService for INHABIT mode session management.
+
+    Used by InhabitNode to manage user-citizen merge sessions with
+    consent tracking and force mechanics.
+    """
+    from services.town.inhabit_service import InhabitService
+
+    return InhabitService()
+
+
 async def get_chat_persistence() -> "ChatPersistence":
     """Get the ChatPersistence service."""
     from services.chat import get_persistence
@@ -225,6 +245,78 @@ async def get_commission_service() -> "CommissionService":
     return CommissionService(kgent_soul=soul)
 
 
+async def get_scenario_service() -> "ScenarioService":
+    """
+    Get the ScenarioService for Punchdrunk Park.
+
+    Used by ParkNode for scenario template management and session orchestration.
+    """
+    from services.park.scenario_service import ScenarioService
+
+    return ScenarioService()
+
+
+async def get_workshop_service() -> "WorkshopService":
+    """
+    Get the WorkshopService for Agent Town builder coordination.
+
+    Used by WorkshopNode for task assignment and builder collaboration.
+    """
+    from services.town.workshop_service import WorkshopService
+
+    return WorkshopService()
+
+
+async def get_town_sheaf() -> "TownSheaf":
+    """
+    Get the TownSheaf for collective emergence detection.
+
+    Used by CollectiveNode for gossip propagation and emergence metrics.
+    Creates a fresh sheaf with all region contexts.
+    """
+    from agents.town.sheaf import create_town_sheaf
+
+    return create_town_sheaf()
+
+
+async def get_bus_manager() -> "TownBusManager":
+    """
+    Get the TownBusManager for cross-jewel event coordination.
+
+    Used by CollectiveNode for DataBus → SynergyBus → EventBus wiring.
+    Wires all buses on creation.
+    """
+    from services.town.bus_wiring import TownBusManager
+
+    manager = TownBusManager()
+    manager.wire_all()
+    return manager
+
+
+async def get_citizen_resolver() -> "Callable[..., CitizenView | None]":
+    """
+    Get the citizen resolver callable for InhabitNode.
+
+    Returns a function that can resolve citizens by ID or name using TownPersistence.
+    Used by InhabitNode to find citizens for INHABIT sessions.
+    """
+    # Get TownPersistence to create the resolver
+    persistence = await get_service("town_persistence")
+
+    async def resolve_citizen(
+        citizen_id: str | None = None,
+        name: str | None = None,
+    ) -> "CitizenView | None":
+        """Resolve citizen by ID or name."""
+        if citizen_id:
+            return await persistence.get_citizen(citizen_id)
+        elif name:
+            return await persistence.get_citizen_by_name(name)
+        return None
+
+    return resolve_citizen
+
+
 # =============================================================================
 # Setup Function
 # =============================================================================
@@ -256,8 +348,13 @@ async def setup_providers() -> None:
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     container.register("chat_factory", get_chat_factory, singleton=True)
 
-    # Town sub-services (for CoalitionNode, WorkshopNode, etc.)
+    # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
+    container.register("inhabit_service", get_inhabit_service, singleton=True)
+    container.register("workshop_service", get_workshop_service, singleton=True)
+    container.register("citizen_resolver", get_citizen_resolver, singleton=True)
+    container.register("town_sheaf", get_town_sheaf, singleton=True)
+    container.register("bus_manager", get_bus_manager, singleton=True)
 
     # K-gent Soul (Middleware of Consciousness)
     container.register("kgent_soul", get_kgent_soul, singleton=True)
@@ -271,66 +368,70 @@ async def setup_providers() -> None:
     # Commission Service (Metaphysical Forge)
     container.register("commission_service", get_commission_service, singleton=True)
 
+    # Park Services (Punchdrunk Park scenarios)
+    container.register("scenario_service", get_scenario_service, singleton=True)
+
     logger.info(
-        "All 8 Crown Jewel persistence services + K-gent Soul + Differance Store + Morpheus + Commission registered"
+        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios)"
     )
 
     # Import service nodes to trigger @node registration
+    # FAIL-FAST: Crown Jewel import failures are WARNING level (visible)
     try:
         from services.brain import BrainNode  # noqa: F401
 
         logger.info("BrainNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"BrainNode not available: {e}")
+        logger.warning(f"BrainNode not available: {e}")
 
     try:
         from services.town import TownNode  # noqa: F401
 
         logger.info("TownNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"TownNode not available: {e}")
+        logger.warning(f"TownNode not available: {e}")
 
     try:
         from services.chat import ChatNode  # noqa: F401
 
         logger.info("ChatNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"ChatNode not available: {e}")
+        logger.warning(f"ChatNode not available: {e}")
 
     try:
         from services.park import ParkNode  # noqa: F401
 
         logger.info("ParkNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"ParkNode not available: {e}")
+        logger.warning(f"ParkNode not available: {e}")
 
     try:
         from services.forge import ForgeNode  # noqa: F401
 
         logger.info("ForgeNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"ForgeNode not available: {e}")
+        logger.warning(f"ForgeNode not available: {e}")
 
     try:
         from services.gestalt import GestaltNode  # noqa: F401
 
         logger.info("GestaltNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"GestaltNode not available: {e}")
+        logger.warning(f"GestaltNode not available: {e}")
 
     try:
         from services.morpheus.node import MorpheusNode  # noqa: F401
 
         logger.info("MorpheusNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"MorpheusNode not available: {e}")
+        logger.warning(f"MorpheusNode not available: {e}")
 
     try:
         from services.forge.commission_node import CommissionNode  # noqa: F401
 
         logger.info("CommissionNode registered with AGENTESE registry")
     except ImportError as e:
-        logger.debug(f"CommissionNode not available: {e}")
+        logger.warning(f"CommissionNode not available: {e}")
 
     # Wire DifferanceStore to DifferanceTraceNode
     try:
@@ -415,6 +516,13 @@ __all__ = [
     "get_chat_factory",
     # Town sub-services
     "get_coalition_service",
+    "get_inhabit_service",
+    "get_workshop_service",
+    "get_citizen_resolver",
+    "get_town_sheaf",
+    "get_bus_manager",
+    # Park services
+    "get_scenario_service",
     # K-gent Soul
     "get_kgent_soul",
     # Differance Engine

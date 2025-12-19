@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, AsyncIterator
 
 from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
@@ -62,6 +62,8 @@ from .contracts import (
     SendMessageResponse,
     SessionDetailResponse,
     SessionsResponse,
+    StreamChunk,
+    StreamMessageRequest,
 )
 from .factory import ChatSessionFactory, get_chat_factory
 from .persistence import (
@@ -217,6 +219,7 @@ class ChatResponseRendering:
         "session": Contract(GetSessionRequest, SessionDetailResponse),
         "create": Contract(CreateSessionRequest, CreateSessionResponse),
         "send": Contract(SendMessageRequest, SendMessageResponse),
+        "stream": Contract(StreamMessageRequest, StreamChunk),  # Yields StreamChunk via SSE
         "history": Contract(HistoryRequest, HistoryResponse),
         "save": Contract(SaveSessionRequest, SaveSessionResponse),
         "resume": Contract(ResumeSessionRequest, ResumeSessionResponse),
@@ -336,7 +339,9 @@ class ChatNode(BaseLogosNode):
         elif aspect == "send":
             return await self._send_message(observer, **kwargs)
         elif aspect == "stream":
-            return await self._stream_message(observer, **kwargs)
+            # Stream returns AsyncIterator directly (no await!)
+            # Gateway will detect hasattr(result, "__aiter__") and stream via SSE
+            return self._stream_message(observer, **kwargs)
         elif aspect == "history":
             return await self._get_history(observer, **kwargs)
         elif aspect == "save":
@@ -425,15 +430,74 @@ class ChatNode(BaseLogosNode):
         self,
         observer: "Observer | Umwelt[Any, Any]",
         **kwargs: Any,
-    ) -> dict[str, Any]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """
-        Stream a message response.
+        Stream a message response token by token.
 
-        Note: This returns the full response since AGENTESE invoke is not streaming.
-        For actual streaming, use the ChatProjection directly.
+        Returns an async iterator that the gateway will wrap in SSE format.
+        Each yielded dict represents a StreamChunk.
+
+        AGENTESE: self.chat.stream
+        Gateway: GET /agentese/self/chat/stream/stream (SSE endpoint)
         """
-        # For now, fall back to send
-        return await self._send_message(observer, **kwargs)
+        session_id = kwargs.get("session_id")
+        message = kwargs.get("message", "")
+        node_path = kwargs.get("node_path")
+
+        if not message:
+            yield {"error": "message required", "is_complete": True}
+            return
+
+        # Get session by ID or node_path
+        session: ChatSession | None = None
+        if session_id:
+            session = self._factory.get_session_by_id(session_id)
+        elif node_path:
+            session = self._factory.get_session(node_path, observer)
+
+        if session is None:
+            # Create new session
+            node_path = node_path or "self.soul"
+            session = await self._factory.create_session(node_path, observer)
+
+        # Track turn number before streaming starts
+        turn_number = session.turn_count + 1
+        tokens_so_far = 0
+        full_response = ""
+
+        try:
+            # Stream tokens from the session
+            async for token in session.stream(message):
+                tokens_so_far += 1
+                full_response += token
+                yield {
+                    "content": token,
+                    "session_id": session.session_id,
+                    "turn_number": turn_number,
+                    "is_complete": False,
+                    "tokens_so_far": tokens_so_far,
+                }
+
+            # Yield completion chunk with final metrics
+            last_turn = session._turns[-1] if session._turns else None
+            yield {
+                "content": "",
+                "session_id": session.session_id,
+                "turn_number": turn_number,
+                "is_complete": True,
+                "tokens_so_far": tokens_so_far,
+                "full_response": full_response,
+                "tokens_in": last_turn.tokens_in if last_turn else 0,
+                "tokens_out": last_turn.tokens_out if last_turn else tokens_so_far,
+            }
+
+        except RuntimeError as e:
+            yield {
+                "error": str(e),
+                "session_id": session.session_id,
+                "turn_number": turn_number,
+                "is_complete": True,
+            }
 
     async def _get_history(
         self,

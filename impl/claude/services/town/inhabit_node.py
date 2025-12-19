@@ -25,8 +25,11 @@ See: docs/skills/metaphysical-fullstack.md
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 from protocols.agentese.node import (
     BaseLogosNode,
@@ -500,8 +503,8 @@ class InhabitNode(BaseLogosNode):
                 return await self._resolve_citizen(citizen_id=citizen_id)
             elif citizen_name:
                 return await self._resolve_citizen(name=citizen_name)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to resolve citizen (id={citizen_id}, name={citizen_name}): {e}")
 
         return None
 
