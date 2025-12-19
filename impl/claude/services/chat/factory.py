@@ -11,10 +11,13 @@ The factory handles:
 from __future__ import annotations
 
 import hashlib
+import logging
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Callable
+
+logger = logging.getLogger(__name__)
 
 from .config import (
     AGENT_CHAT_CONFIG,
@@ -339,8 +342,9 @@ class ChatSessionFactory:
             meta = observer.meta
             ctx.observer_name = getattr(meta, "name", "user")
             ctx.observer_archetype = getattr(meta, "archetype", "guest")
-        except Exception:
-            pass
+        except Exception as e:
+            # Observer meta unavailable - continue with defaults
+            logger.debug(f"Observer meta extraction failed, using defaults: {e}")
 
         # Extract citizen info if applicable
         if "citizen" in node_path:

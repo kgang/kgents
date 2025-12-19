@@ -23,11 +23,14 @@ See: docs/skills/metaphysical-fullstack.md
 
 from __future__ import annotations
 
+import logging
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, AsyncIterator, Union
+
+logger = logging.getLogger(__name__)
 
 # K-gent LLM infrastructure
 from agents.k.llm import (
@@ -403,11 +406,7 @@ class DialogueService:
         elif budget.tier == "leader":
             return DialogueTier.HAIKU if budget.can_afford(50) else DialogueTier.CACHED
         else:
-            return (
-                DialogueTier.CACHED
-                if self._has_cached(citizen)
-                else DialogueTier.TEMPLATE
-            )
+            return DialogueTier.CACHED if self._has_cached(citizen) else DialogueTier.TEMPLATE
 
     def _has_cached(self, citizen: "Citizen") -> bool:
         """Check if citizen has usable cached dialogue."""
@@ -465,8 +464,11 @@ class DialogueService:
                         focal.append(mem)
                     else:
                         peripheral.append(mem)
-        except Exception:
-            pass  # Graceful degradation
+        except Exception as e:
+            # Log but continue with empty memories (degraded but functional)
+            logger.warning(
+                f"Memory query failed for {speaker.name}, continuing without memories: {e}"
+            )
 
         return DialogueContext(
             focal_memories=focal,
@@ -513,9 +515,7 @@ class DialogueService:
         """Build user prompt for dialogue generation."""
         # Relationship descriptor
         rel = context.relationship
-        rel_word = (
-            "positive" if rel > 0.3 else ("negative" if rel < -0.3 else "neutral")
-        )
+        rel_word = "positive" if rel > 0.3 else ("negative" if rel < -0.3 else "neutral")
 
         # Memory section
         memory_section = context.to_context_string()
@@ -563,9 +563,7 @@ Generate your {operation} dialogue as {speaker.name}. Speak in first person. 1-3
             return self._generate_template(speaker, listener, operation)
 
         # Build context
-        context = await self._build_context(
-            speaker, listener, operation, phase, recent_events
-        )
+        context = await self._build_context(speaker, listener, operation, phase, recent_events)
 
         # Build prompts
         system = self._build_system_prompt(speaker, operation)
@@ -626,16 +624,12 @@ Generate your {operation} dialogue as {speaker.name}. Speak in first person. 1-3
 
         # Template/cached don't support streaming
         if tier in (DialogueTier.TEMPLATE, DialogueTier.CACHED) or self._llm is None:
-            result = await self.generate(
-                speaker, listener, operation, phase, recent_events
-            )
+            result = await self.generate(speaker, listener, operation, phase, recent_events)
             yield result.text
             yield result
             return
 
-        context = await self._build_context(
-            speaker, listener, operation, phase, recent_events
-        )
+        context = await self._build_context(speaker, listener, operation, phase, recent_events)
         system = self._build_system_prompt(speaker, operation)
         user = self._build_user_prompt(speaker, listener, operation, context)
         model_name = self._config.model_for_operation(operation)
