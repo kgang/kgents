@@ -16,11 +16,9 @@ const Brain = lazy(() => import('./pages/Brain'));
 const Workshop = lazy(() => import('./pages/Workshop'));
 const Inhabit = lazy(() => import('./pages/Inhabit'));
 const Gestalt = lazy(() => import('./pages/Gestalt'));
-// GestaltLive mothballed - three.js eliminated for performance
 const Gardener = lazy(() => import('./pages/Gardener'));
 const Garden = lazy(() => import('./pages/Garden'));
 const ParkScenario = lazy(() => import('./pages/ParkScenario'));
-// EmergenceDemo mothballed - three.js eliminated for performance
 const Differance = lazy(() => import('./pages/Differance'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
@@ -55,7 +53,6 @@ function App() {
                 {/* Crown Jewels */}
                 <Route path="/brain" element={<Brain />} />
                 <Route path="/gestalt" element={<Gestalt />} />
-                {/* /gestalt/live mothballed - three.js eliminated */}
                 <Route path="/gardener" element={<Gardener />} />
                 <Route path="/garden" element={<Garden />} />
                 <Route path="/forge" element={<Forge />} />
@@ -81,8 +78,6 @@ function App() {
 
                 {/* Différance Engine — Ghost Heritage Graph Explorer */}
                 <Route path="/differance" element={<Differance />} />
-
-                {/* /emergence mothballed - three.js eliminated */}
               </Route>
 
               {/* 404 catch-all */}

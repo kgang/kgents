@@ -70,11 +70,7 @@ export type {
 
 // Priority-aware card
 export { ElasticCard } from './ElasticCard';
-export type {
-  ElasticCardProps,
-  MinContentLevel,
-  ShrinkBehavior,
-} from './ElasticCard';
+export type { ElasticCardProps, MinContentLevel, ShrinkBehavior } from './ElasticCard';
 
 // Intelligent placeholder states
 export { ElasticPlaceholder } from './ElasticPlaceholder';
@@ -107,10 +103,6 @@ export type { FixedBottomPanelProps } from './FixedBottomPanel';
 // Fixed top panel (Observer drawer - fixed pattern)
 export { FixedTopPanel, useTopPanelOffset, getTopPanelHeight } from './FixedTopPanel';
 export type { FixedTopPanelProps } from './FixedTopPanel';
-
-// 3D page HOC/wrapper for crown jewels
-export { Elastic3DPage, useElastic3DPage } from './Elastic3DPage';
-export type { Elastic3DPageProps, Elastic3DPageContext } from './Elastic3DPage';
 
 // Coordinated drawers demo (temporal coherence)
 export { CoordinatedDrawers } from './CoordinatedDrawers';

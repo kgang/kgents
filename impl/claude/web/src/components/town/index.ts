@@ -2,13 +2,7 @@
  * Town Components
  *
  * Agent Town visualization components for the Crown Jewel.
- *
- * 2D Renaissance (2025-12-18): TownCanvas3D mothballed.
- * See _mothballed/three-visualizers/town/ for preserved component.
- *
- * What remains: Mesa (2D), all panel components - the real UI.
- *
- * @see spec/protocols/2d-renaissance.md
+ * Mesa (2D) and panel components for the real UI.
  */
 
 // Core visualization (projection-first, 2D)
@@ -30,10 +24,3 @@ export type { ObserverSelectorProps, ObserverUmwelt, ObserverConfig } from './Ob
 export { TownOverview, default as TownOverviewDefault } from './TownOverview';
 export { CitizenBrowser, default as CitizenBrowserDefault } from './CitizenBrowser';
 export { CoalitionGraph, default as CoalitionGraphDefault } from './CoalitionGraph';
-
-// =============================================================================
-// MOTHBALLED (2025-12-18): Three.js visualization component
-// Preserved in: _mothballed/three-visualizers/town/
-// - TownCanvas3D.tsx (383 lines)
-// Revival condition: VR/AR projections or 3D town visualization
-// =============================================================================

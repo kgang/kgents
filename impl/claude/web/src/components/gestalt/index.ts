@@ -3,16 +3,11 @@
  *
  * UI components for the Living Architecture Visualizer.
  *
- * 2D Renaissance (2025-12-18): Three.js components mothballed.
- * See _mothballed/three-visualizers/gestalt/ for preserved components.
- *
- * Phase 3 (2025-12-18): Gestalt2D implementation complete.
+ * Components:
  * - Gestalt2D: Main container with ElasticSplit
  * - LayerCard: Health-colored layer panels
  * - ViolationFeed: Streaming violation alerts
  * - ModuleDetail: Module detail side panel
- *
- * @see spec/protocols/2d-renaissance.md
  */
 
 // Types
@@ -76,11 +71,7 @@ export { ViewPresets } from './ViewPresets';
 export { Legend } from './Legend';
 export type { LegendProps, NodeKindConfig, EdgeKindConfig } from './Legend';
 
-// NodeTooltip mothballed - uses @react-three/drei (three.js eliminated)
-// export { NodeTooltip, StandaloneTooltip } from './NodeTooltip';
-// export type { NodeTooltipProps, StandaloneTooltipProps } from './NodeTooltip';
-
-// Edge Styles (KEEP - types and utilities, no Three.js)
+// Edge Styles (types and utilities)
 export {
   EDGE_STYLES,
   getEdgeStyle,
@@ -93,13 +84,3 @@ export {
   calculatePulseGlow,
 } from './EdgeStyles';
 export type { EdgeStyle, EdgeType, FlowAnimationConfig } from './EdgeStyles';
-
-// =============================================================================
-// MOTHBALLED (2025-12-18): Three.js visualization components
-// Preserved in: _mothballed/three-visualizers/gestalt/
-// - GestaltVisualization.tsx (1060 lines)
-// - OrganicNode.tsx
-// - VineEdge.tsx
-// - AnimatedEdge.tsx
-// Revival condition: VR/AR projections or 3D-specific requirements
-// =============================================================================
