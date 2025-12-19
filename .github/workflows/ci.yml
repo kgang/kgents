@@ -45,6 +45,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -68,6 +69,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -114,6 +116,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -159,6 +162,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -188,6 +192,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -215,6 +220,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -247,6 +253,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -274,6 +281,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -301,6 +309,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -339,6 +348,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -367,6 +377,7 @@ jobs:
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
