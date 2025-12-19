@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from hypothesis import given, settings, strategies as st
+from hypothesis import assume, given, settings, strategies as st
 
 from agents.m.importers.markdown import (
     FrontmatterData,
@@ -832,10 +832,35 @@ class TestPropertyBased:
     @settings(max_examples=50)
     def test_frontmatter_title_preserved(self, title: str, body: str) -> None:
         """Title in frontmatter is preserved after parsing."""
+        # YAML special values that parse to non-string types (None, bool)
+        yaml_special = {
+            "NULL",
+            "null",
+            "Null",
+            "~",  # None
+            "TRUE",
+            "True",
+            "true",
+            "FALSE",
+            "False",
+            "false",  # bool
+            "YES",
+            "Yes",
+            "yes",
+            "NO",
+            "No",
+            "no",  # bool (YAML 1.1)
+            "ON",
+            "On",
+            "on",
+            "OFF",
+            "Off",
+            "off",  # bool (YAML 1.1)
+        }
+        assume(title.strip() not in yaml_special)
         # Skip titles with problematic YAML characters
-        # '#' is YAML comment, causes value to be None
-        if any(c in title for c in [":", "\n", "---", "'", "#"]):
-            return
+        assume(not any(c in title for c in [":", "\n", "---", "'", "#"]))
+
         content = f"---\ntitle: {title}\n---\n{body}"
         fm, _ = extract_frontmatter(content)
         # Title should be preserved (may be trimmed)

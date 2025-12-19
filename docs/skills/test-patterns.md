@@ -640,6 +640,32 @@ def test_with_global_singleton() -> None:
 - Avoid `asyncio.sleep()` for synchronization
 - Use events/queues for coordination
 
+### 7. Acceptable uses of time.sleep()
+
+While `time.sleep()` is generally an anti-pattern in tests, some cases require it:
+
+**Valid uses**:
+- Testing timing-sensitive behavior (debouncing, throttling, rate limiting)
+- Ensuring interleaving in concurrent/parallel tests
+- Waiting for background tasks that have no observable completion signal
+
+**Guidelines**:
+- Keep sleeps minimal (`< 100ms` preferred)
+- Mark tests with `@pytest.mark.slow` if sleep exceeds 100ms
+- Add a comment explaining why the sleep is necessary
+- Consider if an event/queue pattern would work instead
+
+```python
+# Good: documented, minimal, marked
+@pytest.mark.slow
+def test_debounce_fires_after_delay() -> None:
+    """Verify debounce waits the full delay before firing."""
+    debouncer = Debouncer(delay_ms=50)
+    debouncer.trigger()
+    time.sleep(0.06)  # Wait for debounce window to close
+    assert debouncer.fired
+```
+
 ---
 
 ## Test Organization Best Practices

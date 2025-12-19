@@ -103,6 +103,8 @@ markers = [
     "accursed_share: mark test as exploratory/chaos (Phase 5)",
     "property: mark test as property-based (Phase 3)",
     "e2e: end-to-end Kubernetes tests (require kind cluster) - DEPRECATED, use tier3",
+    "benchmark: mark test as performance benchmark",
+    "postgres: mark test as requiring PostgreSQL database",
 ]
 
 [dependency-groups]
