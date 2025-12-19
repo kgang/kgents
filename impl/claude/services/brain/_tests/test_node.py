@@ -220,16 +220,15 @@ class TestBrainNodeAffordances:
         assert "topology" in affordances
 
     def test_guest_affordances(self, brain_node):
-        """Guest gets standard affordances (capture included for backward compat)."""
+        """Guest gets read-only affordances (no mutation)."""
         meta = AgentMeta(name="test", archetype="guest")
         affordances = brain_node.affordances(meta)
 
-        # Core operations available to all
-        assert "capture" in affordances  # All archetypes can capture
+        # Read operations available to guests
         assert "search" in affordances
         assert "surface" in affordances
-        assert "recent" in affordances
-        # Mutation operations restricted
+        # Mutation operations restricted (including capture)
+        assert "capture" not in affordances  # Guests cannot write
         assert "delete" not in affordances
         assert "heal" not in affordances
 
