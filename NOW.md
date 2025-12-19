@@ -7,15 +7,28 @@
 
 ## Current Work
 
-**🔍 AGENTESE NODE OVERHAUL** — Sessions 1-5 + Phase 4 COMPLETE. See `plans/agentese-node-overhaul-strategy.md` for 10-session roadmap.
+**🔍 AGENTESE NODE OVERHAUL** — Sessions 1-6 + Phases 4-5 COMPLETE. See `plans/agentese-node-overhaul-strategy.md`.
 
 | Session | Status | Key Deliverables |
 |---------|--------|------------------|
 | Session 1 | ✅ | 4 projections, Morpheus contracts, gallery docs |
-| Session 2 | ✅ | **Gardener wiring** — `useGardenQuery` hooks, real data, graceful fallbacks |
-| Phase 4 | ✅ | **Missing Projections** — DesignSystemProjection + EmergenceProjection |
-| **Phase 5** | ✅ | **Park Scenarios** — ScenarioService wiring, consent debt (hosts can say no) |
-| Sessions 6-10 | Pending | Consistency polish, DevEx, testing |
+| Session 2 | ✅ | Gardener wiring — `useGardenQuery` hooks, real data |
+| Session 3 | ✅ | Soul wiring — KgentSoul→SoulNode DI, 10 contracts |
+| Phase 4 | ✅ | DesignSystemProjection + EmergenceProjection |
+| Phase 5 | ✅ | Park Scenarios — consent debt (hosts can say no) |
+| Session 6 | ✅ | SSE Chat Streaming — AsyncIterator, useChatStream, StreamChunk contracts |
+| **Session 7** | **NEXT** | **Neutral Error UX** — consistent errors, actionable hints |
+| Sessions 8-10 | Pending | Observer audit, CI gates, E2E tests |
+
+**Session 6 Delivered** (2025-12-19):
+- `ChatNode._stream_message()` returns `AsyncIterator[dict]` → Gateway wraps in SSE
+- `useChatStream` hook for frontend token-by-token streaming
+- `StreamChunk`, `StreamMessageRequest`, `StreamCompleteResponse` contracts
+- Works with ANY `node_path` (self.soul, world.town.citizen.*, etc.)
+
+**Session 7 Focus** (Kent's decisions 2025-12-19):
+- **Neutral errors** — Drop sympathetic language, be clear and actionable
+- **Wire streaming to UI** — ChatPage + DialogueModal show streaming tokens
 
 **Session 2 Key Discovery**: Gardener2D needs TWO node families:
 - `self.garden.*` → Garden STATE (plots, seasons, gestures) via `useGardenManifest()`

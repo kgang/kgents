@@ -13,7 +13,7 @@ Laws verified:
 """
 
 import pytest
-from hypothesis import assume, given, settings, strategies as st
+from hypothesis import HealthCheck, assume, given, settings, strategies as st
 
 from agents.design import (
     DESIGN_POLYNOMIAL,
@@ -70,7 +70,7 @@ class TestCompositionNaturality:
         container_width=container_width_strategy,
         motion=motion_type_strategy,
     )
-    @settings(max_examples=100)
+    @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
     def test_order_independence_viewport_container_motion(
         self,
         initial: DesignState,

@@ -410,6 +410,33 @@ if TYPE_CHECKING:
 
 When a node requires dependencies (services, persistence layers, etc.), you must:
 
+### ⚠️ CRITICAL: The Silent Skip Problem
+
+**The container SILENTLY SKIPS unregistered dependencies.** This is the #1 cause of cryptic `TypeError` messages.
+
+```python
+# In container.py create_node() - THE DANGEROUS CODE:
+for name in dep_names:
+    if self.has(name):
+        kwargs[name] = await self.resolve(name)
+    else:
+        logger.debug(f"No provider for dependency {name}, skipping")  # ← SILENT AT DEBUG LEVEL!
+
+# Then...
+return cls(**kwargs)  # ← TypeError: missing argument!
+```
+
+**What happens:**
+1. Node declares `dependencies=("inhabit_service",)`
+2. Container checks `has("inhabit_service")` → `False` (not registered!)
+3. Container logs at DEBUG level and **moves on** (silent skip)
+4. Container calls `cls()` without the dependency
+5. You get: `TypeError: __init__() missing 1 required positional argument: 'inhabit_service'`
+
+**The fix is ALWAYS the same:**
+1. Every dependency in `@node(dependencies=(...))` MUST have a matching provider
+2. Provider MUST be registered in `services/providers.py` → `setup_providers()`
+
 ### 1. Declare dependencies in @node decorator
 
 ```python
@@ -452,31 +479,73 @@ async def setup_providers() -> None:
 │         ├──→ Check meta.dependencies                            │
 │         │         │                                              │
 │         │         ▼                                              │
-│         │    Resolve each via container.resolve(name)           │
+│         │    For each dep: container.has(name)?                 │
 │         │         │                                              │
-│         │         ▼                                              │
-│         │    container._providers["commission_service"]()       │
-│         │         │                                              │
-│         │         ▼                                              │
-│         │    get_commission_service() → CommissionService       │
+│         │    YES → container.resolve(name) → add to kwargs      │
+│         │    NO  → ⚠️ SKIP SILENTLY (debug log only!)           │
 │         │                                                        │
 │         ▼                                                        │
 │  cls(**resolved_kwargs) → Node instance                         │
+│         │                                                        │
+│         └──→ If required param missing → TypeError!             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Common DI Error
 
 ```
-TypeError: CommissionNode.__init__() missing 1 required positional argument: 'commission_service'
+TypeError: InhabitNode.__init__() missing 1 required positional argument: 'inhabit_service'
 ```
 
 **Cause:** Node declares/requires a dependency that isn't registered in the container.
+
+**Debugging checklist:**
+1. ✓ Does `@node` have `dependencies=("inhabit_service",)`?
+2. ✓ Does `services/providers.py` have `get_inhabit_service()`?
+3. ✓ Is it registered in `setup_providers()` with `container.register("inhabit_service", ...)`?
+4. ✓ Is the name EXACTLY the same (case-sensitive)?
 
 **Fix:**
 1. Add `dependencies=("service_name",)` to `@node` decorator
 2. Add provider function `get_service_name()` to `services/providers.py`
 3. Register: `container.register("service_name", get_service_name, singleton=True)`
+
+### Quick Validation
+
+```bash
+# Check what providers are registered:
+cd impl/claude
+uv run python -c "
+from protocols.agentese.container import get_container
+from services.providers import setup_providers
+import asyncio
+
+async def check():
+    await setup_providers()
+    container = get_container()
+    print('Registered providers:')
+    for name in sorted(container.list_providers()):
+        print(f'  {name}')
+
+asyncio.run(check())
+"
+```
+
+### The DI Contract
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    THE DI CONTRACT                              │
+│                                                                 │
+│  For EVERY dependency in @node(dependencies=("foo", "bar")):   │
+│                                                                 │
+│    1. MUST exist: get_foo() in services/providers.py           │
+│    2. MUST register: container.register("foo", get_foo, ...)   │
+│    3. MUST match: Name in @node == Name in register()          │
+│                                                                 │
+│  If ANY of these are missing → silent skip → TypeError         │
+└────────────────────────────────────────────────────────────────┘
+```
 
 ---
 

@@ -257,7 +257,20 @@ Sheaf gluing = emergence: compatible locals → global
 @node runs at import time: If module not imported, node not registered
 _import_node_modules() in gateway.py: Ensures all nodes load before discovery
 Two-way mapping needed: AGENTESE path ↔ React route in NavigationTree
-dependencies= must match providers: If @node declares deps, register them in setup_providers()
+```
+
+### ⚠️ DI Container Silent Skip (Common Pitfall)
+```
+Container SILENTLY SKIPS unregistered dependencies at DEBUG level!
+
+@node(dependencies=("foo",)) → container.has("foo")? → NO → skip silently → TypeError
+
+THE FIX: For EVERY dep in dependencies=(...):
+  1. Add get_foo() to services/providers.py
+  2. Register: container.register("foo", get_foo, singleton=True)
+  3. Names MUST match exactly (case-sensitive)
+
+See: docs/skills/agentese-node-registration.md → "The Silent Skip Problem"
 ```
 
 ### Event-Driven Architecture

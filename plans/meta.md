@@ -315,16 +315,29 @@ Quick wins unlock value: 4 projection registry entries + 1 contracts file = meas
 Gardener needs TWO node families: self.garden.* (state) + concept.gardener.* (session)—different concerns
 Two-hook pattern: useGardenManifest() (plots/seasons) + useGardenerSession() (polynomial phase)
 Graceful fallback pattern: DEFAULT_* constants when API unavailable; friendly error states
+Neutral > sympathetic for errors: clear titles ("Connection Failed") + actionable hints, not poetry
+Canonical error component: ProjectionError.tsx; FriendlyError/EmpathyError deprecated with re-exports
+ErrorCategory enum: centralize in messages.ts; ProjectionError exports classifyError() for reuse
+```
+
+### Umwelt Visualization Deep Study (2025-12-19)
+```
+Heuristic capability checks create silent lies—registry-backed required_capability on @aspect is ground truth
+Ghost aspects should be explorable, not just grayed—show schema preview, capability pathway, "Preview As" mode
+Observer persistence uses sessionStorage + version field for graceful migration
+PathExplorer dimming teaches capability shape—paths with 0 accessible aspects are "ghost"
+Observer history enables exploration breadcrumbs—revert to previous without manual re-selection
 ```
 
 ### OpenAPI as Projection Surface (2025-12-19)
 ```
-OpenAPI is projection, not authority: registry is truth, spec is derived via AgenteseLens functor
+OpenAPI is projection, not authority: registry is truth, spec is derived via OpenAPILens functor
 REST ≠ AGENTESE: ONE route = ONE op vs ONE path + MANY observers = MANY semantic ops—not a bug
 Observer in header, not path: X-Observer-Archetype preserves REST compat while honoring observer-dependence
 x-agentese extensions: metadata for tools that understand paradigm; standard OpenAPI for REST devs
-Custom docs UI at /docs/agentese: path explorer + observer picker + examples runner = joy-inducing
 Discovery endpoint is source: /agentese/discover?include_metadata=true already has contracts, examples, effects
+Dotted aspects create URL collision: world.town has citizen.list AND world.town.citizen has list—normalize to /
+Skip duplicates in spec gen: if aspect_url already exists in paths dict, skip to avoid operation ID collision
 ```
 
 ### OS Shell Architecture (2025-12-17)

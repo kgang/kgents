@@ -113,6 +113,10 @@ services/brain/
 ```python
 # protocols/agentese/contexts/self_memory.py
 
+@node(
+    "self.memory",
+    dependencies=("brain_persistence",),  # ⚠️ MUST register in providers!
+)
 @dataclass
 class MemoryNode:
     """AGENTESE node wrapping Brain service."""
@@ -127,6 +131,8 @@ class MemoryNode:
     async def manifest(self, observer: Observer) -> BrainStatus:
         return await self.persistence.status()
 ```
+
+**⚠️ DI Contract**: Every `dependencies=("foo",)` in `@node` MUST have a matching provider registered in `services/providers.py`. The container **silently skips** unregistered dependencies, causing cryptic `TypeError` at instantiation. See `agentese-node-registration.md` → "The Silent Skip Problem".
 
 ### 3. AGENTESE Universal Protocol (The API IS the Protocol)
 

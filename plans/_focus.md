@@ -16,7 +16,9 @@
 * An app-builder building app-builder for app-building app-builders
 * Daring, bold, creative, opinionated but not gaudy
 * Make it easy for kent and kgents to do the correct, enlightened things
-* something expressive for my 4 yr old niec and my 35 yr old sister
+* Beautiful and coherent for all ages
+* Mad scientist feel yet clean
+* elegant systems!!!!!
 
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!

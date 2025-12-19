@@ -4,6 +4,9 @@
 # kgents local state
 .kgents/
 
+# Forge generated commissions (transient, not committed)
+impl/claude/services/forge/_generated/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

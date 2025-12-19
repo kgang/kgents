@@ -49,6 +49,8 @@
 | plans/town-frontend-implementation | 45% | superseded | Superseded by town-visualizer-renaissance. Core components done. |
 | plans/agentese-v3-crown-synergy-audit | 10% | **active** | v3 synergies audit |
 | **plans/agentese-router-consolidation** | 5% | **active** | NEW. 87 routes → @node. Phase 0 done (legacy /v1/agentese removed). |
+| **plans/openapi-projection-surface** | 80% | **blooming** | NEW. OpenAPI 3.1 from registry. 181 paths, 19 tests. Phase 1+2 complete. |
+| **plans/umwelt-v2-expansion** | 0% | **planning** | NEW. Observer reality expansion: registry-backed caps, ghost interaction, history. |
 | plans/3d-projection-consolidation | — | **active** | NEW. 3D substrate work. |
 | plans/gallery-pilots-top3 | — | **active** | Gallery pilots. |
 | plans/meta-planning-consolidation | 0% | **active** | NEW. Planning system cleanup. |
