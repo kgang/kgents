@@ -50,6 +50,13 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
+# Constants
+# =============================================================================
+
+MAX_LOG_LINES = 10000  # Cap -n to prevent memory issues
+
+
+# =============================================================================
 # AGENTESE Path Mapping
 # =============================================================================
 
@@ -184,9 +191,14 @@ def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         arg = args[i]
         if arg in ("-n", "--limit") and i + 1 < len(args):
             try:
-                limit = int(args[i + 1])
+                parsed_limit = int(args[i + 1])
+                if parsed_limit <= 0:
+                    print("Error: -n must be a positive integer")
+                    return 1
+                limit = min(parsed_limit, MAX_LOG_LINES)
             except ValueError:
-                pass
+                print(f"Error: -n requires an integer, got '{args[i + 1]}'")
+                return 1
             i += 2
         elif arg.startswith("-"):
             i += 1  # Skip other flags
@@ -472,6 +484,11 @@ async def _handle_logs(json_output: bool, limit: int, follow: bool, ctx: Any) ->
                 f.seek(0, 2)
 
                 while True:
+                    # Check if file was deleted/rotated
+                    if not log_file.exists():
+                        print()
+                        print("   ⚠️ Log file was deleted or rotated")
+                        break
                     line = f.readline()
                     if line:
                         print(line, end="")

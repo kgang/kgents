@@ -83,6 +83,71 @@ class TestWitnessLogsCommand:
         assert "Line 4" in output["lines"][0]
         assert "Line 5" in output["lines"][1]
 
+    def test_logs_empty_file(self, tmp_path: Path, capsys) -> None:
+        """Empty log file shows appropriate message."""
+        from protocols.cli.handlers.witness import cmd_witness
+
+        log_dir = tmp_path / ".kgents"
+        log_dir.mkdir(parents=True)
+        (log_dir / "witness.log").write_text("")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = cmd_witness(["logs"])
+
+        assert result == 0
+        captured = capsys.readouterr()
+        assert "(empty log file)" in captured.out
+        assert "Showing 0 of 0 lines" in captured.out
+
+    def test_logs_invalid_n_value(self, tmp_path: Path, capsys) -> None:
+        """Invalid -n value shows error."""
+        from protocols.cli.handlers.witness import cmd_witness
+
+        log_dir = tmp_path / ".kgents"
+        log_dir.mkdir(parents=True)
+        (log_dir / "witness.log").write_text("line 1\n")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = cmd_witness(["logs", "-n", "abc"])
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "requires an integer" in captured.out
+
+    def test_logs_negative_n_value(self, tmp_path: Path, capsys) -> None:
+        """Negative -n value shows error."""
+        from protocols.cli.handlers.witness import cmd_witness
+
+        log_dir = tmp_path / ".kgents"
+        log_dir.mkdir(parents=True)
+        (log_dir / "witness.log").write_text("line 1\n")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            result = cmd_witness(["logs", "-n", "-5"])
+
+        assert result == 1
+        captured = capsys.readouterr()
+        assert "positive integer" in captured.out
+
+    def test_logs_limit_capped_at_max(self, tmp_path: Path, capsys) -> None:
+        """Very large -n values are capped at MAX_LOG_LINES."""
+        from protocols.cli.handlers.witness import MAX_LOG_LINES, cmd_witness
+
+        log_dir = tmp_path / ".kgents"
+        log_dir.mkdir(parents=True)
+        # Create file with 5 lines
+        (log_dir / "witness.log").write_text("line 1\nline 2\nline 3\nline 4\nline 5\n")
+
+        with patch("pathlib.Path.home", return_value=tmp_path):
+            # Request more than MAX_LOG_LINES
+            result = cmd_witness(["logs", "-n", "1000000"])
+
+        # Should succeed (capped, not rejected)
+        assert result == 0
+        captured = capsys.readouterr()
+        # Should still show all 5 lines (since file is small)
+        assert "Showing 5 of 5 lines" in captured.out
+
 
 # =============================================================================
 # Test: kg witness status
