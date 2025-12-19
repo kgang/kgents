@@ -388,7 +388,7 @@ class TestPerformanceBaselines:
         """
         paths = [
             "/agentese/self/memory/manifest",  # Brain - fast (~20ms)
-            "/agentese/world/park/manifest",   # Park - fast (~10ms)
+            "/agentese/world/park/manifest",  # Park - fast (~10ms)
             "/agentese/world/forge/manifest",  # Forge - fast (~5ms)
         ]
 
