@@ -204,7 +204,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd impl/claude
-          uv run pytest -m "not slow and not integration" --tb=short -q
+          uv run pytest -m "not slow and not integration" --tb=short -q -n auto
 
   # ===========================================================================
   # Tier 3: Law verification (1-2 min)
