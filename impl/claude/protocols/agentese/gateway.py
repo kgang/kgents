@@ -71,44 +71,51 @@ def _import_node_modules() -> None:
         from .contexts import (
             design,  # noqa: F401 - Design Language System (concept.design.*)
             forest,  # noqa: F401 - Forest Protocol (self.forest.*)
+            garden,  # noqa: F401 - Garden State (self.garden.*)
             gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
+            self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)
+            self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
+            self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
+            world_gallery_api,  # noqa: F401 - Gallery REST API (world.gallery.*)
             world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
             world_park,  # noqa: F401 - Park scenarios (world.park.scenario/mask/force.*)
+            world_workshop,  # noqa: F401 - Builder's Workshop (world.workshop.*)
         )
 
         # === Service-level nodes (AD-009 Metaphysical Fullstack) ===
         # These are the authoritative implementations with persistence layers
         try:
             from services.town import (
+                citizen_node,  # noqa: F401  # world.town.citizen.*
                 coalition_node,  # noqa: F401  # world.town.coalition.*
                 inhabit_node,  # noqa: F401  # world.town.inhabit.*
                 node as town_node,  # noqa: F401  # world.town.*
                 workshop_node,  # noqa: F401  # world.town.workshop.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import town nodes: {e}")
+            logger.warning(f"AGENTESE node import failed (town): {e}")
 
         try:
             from services.brain import node as brain_node  # noqa: F401  # self.memory.*
         except ImportError as e:
-            logger.debug(f"Could not import brain node: {e}")
+            logger.warning(f"AGENTESE node import failed (brain): {e}")
 
         try:
             from services.chat import node as chat_node  # noqa: F401  # self.chat.*
         except ImportError as e:
-            logger.debug(f"Could not import chat node: {e}")
+            logger.warning(f"AGENTESE node import failed (chat): {e}")
 
         try:
             from services.morpheus import (
                 node as morpheus_node,  # noqa: F401  # world.morpheus.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import morpheus node: {e}")
+            logger.warning(f"AGENTESE node import failed (morpheus): {e}")
 
         try:
             from services.forge import (
@@ -116,19 +123,19 @@ def _import_node_modules() -> None:
                 soul_node as forge_soul_node,  # noqa: F401  # world.forge.soul.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import forge node: {e}")
+            logger.warning(f"AGENTESE node import failed (forge): {e}")
 
         try:
             from services.gestalt import (
                 node as gestalt_node,  # noqa: F401  # world.codebase.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import gestalt node: {e}")
+            logger.warning(f"AGENTESE node import failed (gestalt): {e}")
 
         try:
             from services.park import node as park_node  # noqa: F401  # world.park.*
         except ImportError as e:
-            logger.debug(f"Could not import park node: {e}")
+            logger.warning(f"AGENTESE node import failed (park): {e}")
 
         # === Garden Protocol nodes (Next-generation planning) ===
         try:
@@ -137,7 +144,7 @@ def _import_node_modules() -> None:
                 session as garden_session,  # noqa: F401  # self.forest.session.*
             )
         except ImportError as e:
-            logger.debug(f"Could not import garden nodes: {e}")
+            logger.warning(f"AGENTESE node import failed (garden): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
@@ -285,6 +292,110 @@ class AgenteseGateway:
         router = APIRouter(prefix=self.prefix, tags=["agentese-gateway"])
         self._router = router
 
+        # === Discovery Endpoints ===
+        # IMPORTANT: Must be defined BEFORE catch-all /{path:path}/* routes
+        # to prevent /discover/self being matched as path=discover/self
+        @router.get("/discover")
+        async def discover(
+            include_schemas: bool = False,
+            include_metadata: bool = False,
+        ) -> JSONResponse:
+            """
+            List all registered AGENTESE paths.
+
+            Query params:
+                include_schemas: If true, include JSON Schema for contracts (Phase 7)
+                include_metadata: If true, include node metadata for Concept Home (AD-010)
+
+            Returns:
+                paths: List of registered paths
+                stats: Registry statistics
+                metadata: (if include_metadata=true) Node metadata per path
+                schemas: (if include_schemas=true) JSON Schema for each path's contracts
+            """
+            registry = get_registry()
+            content: dict[str, Any] = {
+                "paths": registry.list_paths(),
+                "stats": registry.stats(),
+            }
+
+            # Include metadata for Concept Home Protocol (AD-010)
+            if include_metadata:
+                metadata: dict[str, Any] = {}
+                for path in registry.list_paths():
+                    node_meta = registry.get_metadata(path)
+                    if node_meta:
+                        # Extract aspects from contracts if available
+                        aspects: list[str] = ["manifest"]  # Default
+                        effects: list[str] = []
+
+                        if node_meta.contracts:
+                            # Get aspect names from contracts dict keys
+                            aspects = list(node_meta.contracts.keys())
+
+                        # Include examples (Habitat 2.0)
+                        examples_data = [ex.to_dict() for ex in node_meta.examples]
+
+                        metadata[path] = {
+                            "path": path,
+                            "description": node_meta.description or None,
+                            "aspects": aspects,
+                            "effects": effects,
+                            "examples": examples_data,
+                        }
+                    else:
+                        metadata[path] = {
+                            "path": path,
+                            "description": None,
+                            "aspects": ["manifest"],
+                            "effects": [],
+                            "examples": [],
+                        }
+
+                content["metadata"] = metadata
+
+            if include_schemas:
+                from .schema_gen import node_contracts_to_schema
+
+                schemas: dict[str, Any] = {}
+                all_contracts = registry.get_all_contracts()
+
+                for path, contracts in all_contracts.items():
+                    try:
+                        schemas[path] = node_contracts_to_schema(contracts)
+                    except Exception as e:
+                        logger.warning(f"Failed to generate schema for {path}: {e}")
+                        schemas[path] = {"error": str(e)}
+
+                content["schemas"] = schemas
+                content["contract_coverage"] = {
+                    "paths_with_contracts": len(all_contracts),
+                    "total_paths": len(registry.list_paths()),
+                    "coverage_pct": (
+                        round(len(all_contracts) / len(registry.list_paths()) * 100, 1)
+                        if registry.list_paths()
+                        else 0
+                    ),
+                }
+
+            return JSONResponse(content=content)
+
+        @router.get("/discover/{context}")
+        async def discover_context(context: str) -> JSONResponse:
+            """List paths for a specific context."""
+            if context not in VALID_CONTEXTS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Invalid context: {context}. Valid: {', '.join(VALID_CONTEXTS)}",
+                )
+            registry = get_registry()
+            return JSONResponse(
+                content={
+                    "context": context,
+                    "paths": registry.list_by_context(context),
+                }
+            )
+
         # === Manifest Endpoint ===
         @router.get("/{path:path}/manifest")
         async def manifest(path: str, request: Request) -> JSONResponse:
@@ -306,13 +417,16 @@ class AgenteseGateway:
             except FastAPIHTTPException:
                 raise  # Re-raise HTTP exceptions unchanged
             except Exception as e:
-                logger.error(f"Manifest error for {agentese_path}: {e}")
+                # AD-011: Log with traceback for debugging 500s
+                logger.error(f"Manifest error for {agentese_path}: {e}", exc_info=True)
                 raise FastAPIHTTPException(status_code=500, detail=str(e))
 
         # === Affordances Endpoint ===
         @router.get("/{path:path}/affordances")
         async def affordances(path: str, request: Request) -> JSONResponse:
             """List affordances for a node."""
+            from fastapi import HTTPException as FastAPIHTTPException
+
             observer = _extract_observer(request)
             agentese_path = path.replace("/", ".")
 
@@ -324,18 +438,23 @@ class AgenteseGateway:
                         "affordances": result if isinstance(result, list) else [],
                     }
                 )
+            except FastAPIHTTPException:
+                raise  # Re-raise HTTP exceptions (404, etc.) unchanged
             except Exception as e:
-                logger.error(f"Affordances error for {agentese_path}: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                # AD-011: Log with traceback for debugging 500s
+                logger.error(f"Affordances error for {agentese_path}: {e}", exc_info=True)
+                raise FastAPIHTTPException(status_code=500, detail=str(e))
 
-        # === Aspect Invocation Endpoint ===
+        # === Aspect Invocation Endpoint (POST) ===
         @router.post("/{path:path}/{aspect}")
-        async def invoke_aspect(
+        async def invoke_aspect_post(
             path: str,
             aspect: str,
             request: Request,
         ) -> JSONResponse:
-            """Invoke an aspect on a node."""
+            """Invoke an aspect on a node (POST with body kwargs)."""
+            from fastapi import HTTPException as FastAPIHTTPException
+
             observer = _extract_observer(request)
             agentese_path = path.replace("/", ".")
 
@@ -355,9 +474,46 @@ class AgenteseGateway:
                         "result": _to_json_safe(result),
                     }
                 )
+            except FastAPIHTTPException:
+                raise  # Re-raise HTTP exceptions (404, etc.) unchanged
             except Exception as e:
-                logger.error(f"Invoke error for {agentese_path}.{aspect}: {e}")
-                raise HTTPException(status_code=500, detail=str(e))
+                # AD-011: Log with traceback for debugging 500s
+                logger.error(f"Invoke error for {agentese_path}.{aspect}: {e}", exc_info=True)
+                raise FastAPIHTTPException(status_code=500, detail=str(e))
+
+        # === Aspect Invocation Endpoint (GET) ===
+        # This catches GET requests for aspects like /world/emergence/qualia
+        # Must be defined AFTER specific routes (/manifest, /affordances) to avoid conflicts
+        @router.get("/{path:path}/{aspect}")
+        async def invoke_aspect_get(
+            path: str,
+            aspect: str,
+            request: Request,
+        ) -> JSONResponse:
+            """Invoke an aspect on a node (GET with query params)."""
+            from fastapi import HTTPException as FastAPIHTTPException
+
+            observer = _extract_observer(request)
+            agentese_path = path.replace("/", ".")
+
+            # Parse query params as kwargs
+            kwargs = dict(request.query_params)
+
+            try:
+                result = await self._invoke_path(agentese_path, aspect, observer, **kwargs)
+                return JSONResponse(
+                    content={
+                        "path": agentese_path,
+                        "aspect": aspect,
+                        "result": _to_json_safe(result),
+                    }
+                )
+            except FastAPIHTTPException:
+                raise  # Re-raise HTTP exceptions (404, etc.) unchanged
+            except Exception as e:
+                # AD-011: Log with traceback for debugging 500s
+                logger.error(f"Invoke error for {agentese_path}.{aspect}: {e}", exc_info=True)
+                raise FastAPIHTTPException(status_code=500, detail=str(e))
 
         # === SSE Streaming Endpoint ===
         if self.enable_streaming:
@@ -369,6 +525,8 @@ class AgenteseGateway:
                 request: Request,
             ) -> StreamingResponse:
                 """Stream aspect results via SSE."""
+                from fastapi import HTTPException as FastAPIHTTPException
+
                 observer = _extract_observer(request)
                 agentese_path = path.replace("/", ".")
 
@@ -395,9 +553,12 @@ class AgenteseGateway:
                             single_event(),
                             media_type="text/event-stream",
                         )
+                except FastAPIHTTPException:
+                    raise  # Re-raise HTTP exceptions (404, etc.) unchanged
                 except Exception as e:
-                    logger.error(f"Stream error for {agentese_path}.{aspect}: {e}")
-                    raise HTTPException(status_code=500, detail=str(e))
+                    # AD-011: Log with traceback for debugging 500s
+                    logger.error(f"Stream error for {agentese_path}.{aspect}: {e}", exc_info=True)
+                    raise FastAPIHTTPException(status_code=500, detail=str(e))
 
         # === WebSocket Endpoint ===
         if self.enable_websocket:
@@ -467,68 +628,6 @@ class AgenteseGateway:
                         await websocket.close()
                     except Exception:
                         pass
-
-        # === Discovery Endpoints ===
-        @router.get("/discover")
-        async def discover(include_schemas: bool = False) -> JSONResponse:
-            """
-            List all registered AGENTESE paths.
-
-            Query params:
-                include_schemas: If true, include JSON Schema for contracts (Phase 7)
-
-            Returns:
-                paths: List of registered paths
-                stats: Registry statistics
-                schemas: (if include_schemas=true) JSON Schema for each path's contracts
-            """
-            registry = get_registry()
-            content: dict[str, Any] = {
-                "paths": registry.list_paths(),
-                "stats": registry.stats(),
-            }
-
-            if include_schemas:
-                from .schema_gen import node_contracts_to_schema
-
-                schemas: dict[str, Any] = {}
-                all_contracts = registry.get_all_contracts()
-
-                for path, contracts in all_contracts.items():
-                    try:
-                        schemas[path] = node_contracts_to_schema(contracts)
-                    except Exception as e:
-                        logger.warning(f"Failed to generate schema for {path}: {e}")
-                        schemas[path] = {"error": str(e)}
-
-                content["schemas"] = schemas
-                content["contract_coverage"] = {
-                    "paths_with_contracts": len(all_contracts),
-                    "total_paths": len(registry.list_paths()),
-                    "coverage_pct": (
-                        round(len(all_contracts) / len(registry.list_paths()) * 100, 1)
-                        if registry.list_paths()
-                        else 0
-                    ),
-                }
-
-            return JSONResponse(content=content)
-
-        @router.get("/discover/{context}")
-        async def discover_context(context: str) -> JSONResponse:
-            """List paths for a specific context."""
-            if context not in VALID_CONTEXTS:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid context: {context}. Valid: {', '.join(VALID_CONTEXTS)}",
-                )
-            registry = get_registry()
-            return JSONResponse(
-                content={
-                    "context": context,
-                    "paths": registry.list_by_context(context),
-                }
-            )
 
         # Mount router on app
         app.include_router(router)
