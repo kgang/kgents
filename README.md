@@ -185,7 +185,7 @@ cd impl/claude
 # Type checking (strict mode)
 uv run mypy .
 
-# Run tests
+# Run tests (fast - excludes tier3/slow)
 uv run pytest -m "not slow" -q
 
 # Lint
@@ -194,6 +194,36 @@ uv run ruff check
 # Full test suite
 uv run pytest
 ```
+
+### Optional Dependencies
+
+Some tests require optional dependencies for specific features:
+
+| Feature | Package | Install | Tests |
+|---------|---------|---------|-------|
+| Semantic embeddings | `sentence-transformers` | `uv pip install sentence-transformers` | L-gent, Brain |
+| Interactive notebooks | `marimo` | `uv pip install marimo` | I-gent reactive |
+| Vector search (FAISS) | `faiss-cpu` | `uv pip install faiss-cpu` | L-gent similarity |
+| Vector search (Chroma) | `chromadb` | `uv pip install chromadb` | Memory indexing |
+| Trace visualization | `weave` | `uv pip install weave` | Time context |
+
+Tests gracefully skip when optional dependencies are missing—this is expected behavior. To run the full test suite with all optional deps:
+
+```bash
+uv pip install sentence-transformers marimo faiss-cpu chromadb weave
+uv run pytest
+```
+
+### External Service Tests
+
+Some integration tests require external services and skip without credentials:
+
+| Service | Environment Variable | Tests |
+|---------|---------------------|-------|
+| PostgreSQL | `KGENTS_POSTGRES_URL` | D-gent persistence |
+| OpenAI API | `OPENAI_API_KEY` | L-gent embeddings |
+| Stripe | `STRIPE_API_KEY` | Payment integration |
+| LLM (Claude CLI) | `claude` in PATH | Town dialogue |
 
 ## Documentation
 

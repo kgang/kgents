@@ -319,58 +319,6 @@ class TestEffectStress:
         assert cleanup_count[0] == 1000  # Dispose calls final cleanup
 
 
-@pytest.mark.skip(reason="ModalScope removed in data-architecture-rewrite")
-class TestModalScopeStress:
-    """Stress tests for ModalScope deep nesting."""
-
-    def test_modal_scope_deep_nesting(self) -> None:
-        """ModalScope handles 50-deep branch nesting."""
-        from agents.d.modal_scope import ModalScope
-
-        root = ModalScope.create_root()
-        current = root
-
-        for i in range(50):
-            current = current.branch(f"level-{i}", budget=0.99)
-
-        assert current.depth == 50
-        assert ":level-49" in current.scope_id
-
-    def test_modal_scope_many_siblings(self) -> None:
-        """ModalScope handles many sibling branches."""
-        from agents.d.modal_scope import ModalScope
-
-        root = ModalScope.create_root()
-
-        for i in range(100):
-            root.branch(f"branch-{i}", budget=0.01)
-
-        assert len(root.children) == 100
-
-    def test_modal_scope_serialization_roundtrip_stress(self) -> None:
-        """ModalScope serialization handles complex trees."""
-        from agents.d.context_window import TurnRole
-        from agents.d.modal_scope import ModalScope
-
-        root = ModalScope.create_root()
-
-        # Build a tree with depth and breadth
-        for i in range(10):
-            branch = root.branch(f"b{i}", budget=0.1)
-            branch.window.append(TurnRole.ASSISTANT, f"Content {i}")
-            for j in range(5):
-                sub = branch.branch(f"sub{j}", budget=0.1)
-                sub.window.append(TurnRole.ASSISTANT, f"Sub content {j}")
-
-        # Serialize and restore
-        data = root.to_dict()
-        restored = ModalScope.from_dict(data)
-
-        assert len(restored.children) == 10
-        for child in restored.children:
-            assert len(child.children) == 5
-
-
 # =============================================================================
 # BOUNDARY VALUE TESTS
 # =============================================================================
@@ -562,11 +510,6 @@ class TestPerformanceBaselines:
         # Should complete 10000 updates with 10 subscribers in under 1 second
         assert elapsed < 1.0, f"Subscriber notification too slow: {elapsed:.3f}s"
         assert count[0] == 100000  # 10 subscribers * 10000 updates
-
-    @pytest.mark.skip(reason="ModalScope removed in data-architecture-rewrite")
-    def test_modal_scope_branch_performance(self) -> None:
-        """ModalScope branching should be fast."""
-        pass
 
 
 # =============================================================================

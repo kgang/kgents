@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -44,6 +45,11 @@ TEND_AFFORDANCES: tuple[str, ...] = (
 )
 
 
+@node(
+    "self.garden.tend",
+    description="Six tending gestures for garden interaction",
+    dependencies=(),  # Uses protocols.gardener_logos directly
+)
 @dataclass
 class TendNode(BaseLogosNode):
     """

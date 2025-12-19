@@ -4,11 +4,16 @@ E2E Tests: Full AGENTESE Flow from HTTP to Response.
 This test exercises the complete AGENTESE stack:
     HTTP Request → Gateway → Node Resolution → Aspect Invocation → Response
 
-These are integration tests that verify:
+These are **tier2 integration tests** that verify:
 1. Gateway routes requests correctly
 2. Nodes resolve with DI container
 3. Aspects return valid responses
 4. SSE streaming works for chat
+
+**DI Bootstrap Behavior**:
+Tests dynamically skip if the DI container doesn't have services bootstrapped.
+This is expected in CI without full infrastructure. When running locally with
+`uv run uvicorn ...`, these tests will pass.
 
 AD-011 (REPL Reliability): Every path in discover MUST be invokable.
 This test proves it works end-to-end, not just in isolation.
@@ -68,6 +73,7 @@ async def client() -> AsyncIterator["AsyncClient"]:
 # =============================================================================
 
 
+@pytest.mark.tier2
 class TestBrainE2E:
     """End-to-end tests for Brain (self.memory)."""
 
@@ -97,6 +103,7 @@ class TestBrainE2E:
         )
 
 
+@pytest.mark.tier2
 class TestChatE2E:
     """End-to-end tests for Chat (self.chat)."""
 
@@ -113,6 +120,7 @@ class TestChatE2E:
         assert isinstance(data, dict), f"Expected dict, got {type(data)}"
 
 
+@pytest.mark.tier2
 class TestGestaltE2E:
     """End-to-end tests for Gestalt (world.codebase)."""
 
@@ -129,6 +137,7 @@ class TestGestaltE2E:
         assert isinstance(data, dict), f"Expected dict, got {type(data)}"
 
 
+@pytest.mark.tier2
 class TestGardenerE2E:
     """End-to-end tests for Gardener (concept.gardener)."""
 
@@ -147,6 +156,7 @@ class TestGardenerE2E:
             assert isinstance(data, dict), f"Expected dict, got {type(data)}"
 
 
+@pytest.mark.tier2
 class TestGardenE2E:
     """End-to-end tests for Garden (self.garden)."""
 
@@ -161,6 +171,7 @@ class TestGardenE2E:
         )
 
 
+@pytest.mark.tier2
 class TestForgeE2E:
     """End-to-end tests for Forge (world.forge)."""
 
@@ -185,6 +196,7 @@ class TestForgeE2E:
         assert isinstance(data, dict), f"Expected dict, got {type(data)}"
 
 
+@pytest.mark.tier2
 class TestTownE2E:
     """End-to-end tests for Town (world.town)."""
 
@@ -209,6 +221,7 @@ class TestTownE2E:
         assert isinstance(data, dict), f"Expected dict, got {type(data)}"
 
 
+@pytest.mark.tier2
 class TestParkE2E:
     """End-to-end tests for Park (world.park)."""
 
@@ -238,6 +251,7 @@ class TestParkE2E:
 # =============================================================================
 
 
+@pytest.mark.tier2
 class TestDiscoveryE2E:
     """End-to-end tests for AGENTESE discovery."""
 
@@ -286,6 +300,7 @@ class TestDiscoveryE2E:
 # =============================================================================
 
 
+@pytest.mark.tier2
 class TestSSEStreamingE2E:
     """End-to-end tests for SSE streaming."""
 
@@ -379,6 +394,7 @@ class TestPerformanceBaselines:
 # =============================================================================
 
 
+@pytest.mark.tier2
 class TestErrorHandlingE2E:
     """End-to-end tests for error handling."""
 

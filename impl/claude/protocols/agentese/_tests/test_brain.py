@@ -616,45 +616,6 @@ class TestBrainPerformance:
         # Should complete in under 10 seconds (100ms average per item)
         assert elapsed < 10.0, f"Capturing 100 items took {elapsed:.2f}s (expected <10s)"
 
-    @pytest.mark.skip(reason="Ghost infrastructure removed in data-architecture-rewrite")
-    @pytest.mark.asyncio
-    async def test_ghost_surfacing_stays_fast(self, perf_logos: Any, observer: Any) -> None:
-        """Test that ghost surfacing stays fast (<100ms) with 100 items."""
-        import time
-
-        # First populate with 100 items
-        for i in range(100):
-            await perf_logos.invoke(
-                "self.memory.capture",
-                observer,
-                content=f"Content item {i} about various programming topics and techniques",
-            )
-
-        # Test surfacing performance
-        queries = [
-            "programming techniques",
-            "software development",
-            "code optimization",
-            "testing methods",
-            "design patterns",
-        ]
-
-        for query in queries:
-            start_time = time.time()
-
-            result = await perf_logos.invoke(
-                "self.memory.ghost.surface",
-                observer,
-                context=query,
-                limit=10,
-            )
-
-            elapsed_ms = (time.time() - start_time) * 1000
-
-            # Should complete in under 100ms
-            assert elapsed_ms < 100, f"Ghost surfacing took {elapsed_ms:.1f}ms (expected <100ms)"
-            assert result.get("count", 0) > 0, "Should find some results"
-
     @pytest.mark.asyncio
     async def test_cartography_with_large_dataset(self, perf_logos: Any, observer: Any) -> None:
         """Test cartography works with 100+ items."""

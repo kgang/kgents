@@ -1,73 +1,11 @@
 """
 Integration tests for P-gents protocol adapters.
 
-Tests E-gent, B-gent, and F-gent parsers conforming to P-gents Parser[A].
+Tests B-gent and F-gent parsers conforming to P-gents Parser[A].
+
+Note: E-gent parser tests were archived (2025-12-19) after E-gent
+parser module was refactored. See agents/e/_archived/ for history.
 """
-
-import pytest
-
-
-@pytest.mark.skip(reason="E-gent parser module was refactored - needs update")
-class TestEgentIntegration:
-    """Test E-gent parser integration."""
-
-    def test_code_parser_structured_format(self) -> None:
-        """Test E-gent code parser with structured format."""
-        from agents.e.parser.p_integration import code_parser
-
-        parser = code_parser()
-
-        response = """
-## METADATA
-```json
-{"description": "Test module"}
-```
-
-## CODE
-```python
-def hello() -> None:
-    return "world"
-```
-"""
-        result = parser.parse(response)
-
-        assert result.success
-        assert result.value is not None
-        assert "def hello() -> None:" in result.value.code
-        assert result.confidence > 0.5
-        assert result.strategy is not None
-        assert "e-gent" in result.strategy
-
-    def test_code_parser_pure_code_block(self) -> None:
-        """Test E-gent code parser with pure code block."""
-        from agents.e.parser.p_integration import code_parser
-
-        parser = code_parser()
-
-        response = """
-```python
-def test() -> None:
-    pass
-```
-"""
-        result = parser.parse(response)
-
-        assert result.success
-        assert result.value is not None
-        assert "def test() -> None:" in result.value.code
-
-    def test_code_parser_failure(self) -> None:
-        """Test E-gent code parser with invalid input."""
-        from agents.e.parser.p_integration import code_parser
-
-        parser = code_parser()
-
-        response = "No code here, just text"
-        result = parser.parse(response)
-
-        assert not result.success
-        assert result.error is not None
-        assert result.confidence == 0.0
 
 
 class TestBgentIntegration:
@@ -204,25 +142,3 @@ def invoke(input: str) -> str:
         assert not result.success
         assert result.error is not None
         assert result.confidence == 0.0
-
-
-@pytest.mark.skip(reason="E-gent parser module was refactored - needs update")
-class TestComposition:
-    """Test composition of different parsers."""
-
-    def test_fallback_composition(self) -> None:
-        """Test fallback composition of E-gent and B-gent parsers."""
-        from agents.e.parser.p_integration import code_parser
-
-        from agents.b.p_integration import hypothesis_parser
-
-        # This won't actually work type-wise since they parse to different types,
-        # but it demonstrates the composition interface
-        # In practice, you'd use type-compatible parsers or use Any
-
-        # Just verify the parsers can be constructed and used
-        e_parser = code_parser()
-        b_parser = hypothesis_parser()
-
-        assert e_parser is not None
-        assert b_parser is not None
