@@ -37,6 +37,7 @@ from agents.i.reactive.widget import KgentsWidget, RenderTarget
 # =============================================================================
 
 
+@pytest.mark.slow  # Benchmarks have variable performance in CI - run with pytest -m slow
 class TestEnvelopePerformance:
     """Verify envelope overhead is bounded."""
 

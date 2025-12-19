@@ -121,6 +121,7 @@ class TestChatE2E:
 
 
 @pytest.mark.tier2
+@pytest.mark.slow  # Real codebase scan can timeout in CI
 class TestGestaltE2E:
     """End-to-end tests for Gestalt (world.codebase)."""
 

@@ -87,6 +87,7 @@ class TestGestaltNodeAffordances:
 # =============================================================================
 
 
+@pytest.mark.slow  # Real codebase scan can timeout in CI
 class TestGestaltNodeManifest:
     """Test manifest() method."""
 

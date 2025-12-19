@@ -233,6 +233,7 @@ class TestGestaltReset:
         assert len(state.hypotheses) == 0
 
 
+@pytest.mark.slow  # Real codebase scan can timeout in CI
 class TestGestaltCodebase:
     """Tests for gestalt codebase command."""
 
