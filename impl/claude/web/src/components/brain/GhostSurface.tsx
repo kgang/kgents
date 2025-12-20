@@ -78,7 +78,8 @@ export function GhostSurface({ onSurface, compact = false, className = '' }: Gho
       setState('error');
       setError(err instanceof Error ? err.message : 'Failed to surface memories');
     }
-  }, [context, entropy]);
+    // Note: entropy is read at call time, not as a trigger dependency
+  }, [context]);
 
   const handleSelectCrystal = useCallback(() => {
     if (result) {

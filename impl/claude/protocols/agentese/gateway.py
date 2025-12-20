@@ -74,14 +74,17 @@ def _import_node_modules() -> None:
             forest,  # noqa: F401 - Forest Protocol (self.forest.*)
             garden,  # noqa: F401 - Garden State (self.garden.*)
             gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
+            self_conductor,  # noqa: F401 - CLI v7 Phase 2: Conversation Window (self.conductor.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)
             self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
+            self_repl,  # noqa: F401 - CLI v7 Phase 4: REPL state (self.repl.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
+            world_file,  # noqa: F401 - CLI v7 Phase 1: File I/O (world.file.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
             world_gallery_api,  # noqa: F401 - Gallery REST API (world.gallery.*)
             world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
@@ -150,7 +153,9 @@ def _import_node_modules() -> None:
 
         # === Witness Crown Jewel nodes ===
         try:
-            from services.witness import node as witness_node  # noqa: F401  # self.witness.*
+            from services.witness import (
+                node as witness_node,  # noqa: F401  # self.witness.*
+            )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (witness): {e}")
 
@@ -161,7 +166,9 @@ def _import_node_modules() -> None:
 
         # === Concept context nodes ===
         try:
-            from .contexts import concept_principles  # noqa: F401  # concept.principles.*
+            from .contexts import (
+                concept_principles,  # noqa: F401  # concept.principles.*
+            )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (concept.principles): {e}")
 
@@ -579,12 +586,12 @@ class AgenteseGateway:
         # === Aspect Invocation Endpoint (GET) ===
         # This catches GET requests for aspects like /world/emergence/qualia
         # Must be defined AFTER specific routes (/manifest, /affordances) to avoid conflicts
-        @router.get("/{path:path}/{aspect}")
+        @router.get("/{path:path}/{aspect}", response_model=None)
         async def invoke_aspect_get(
             path: str,
             aspect: str,
             request: Request,
-        ) -> JSONResponse:
+        ) -> JSONResponse | StreamingResponse:
             """Invoke an aspect on a node (GET with query params)."""
             from fastapi import HTTPException as FastAPIHTTPException
 
@@ -596,6 +603,20 @@ class AgenteseGateway:
 
             try:
                 result = await self._invoke_path(agentese_path, aspect, observer, **kwargs)
+
+                # Phase 5: If result is async generator, stream it as SSE
+                # This allows aspects like self.witness.stream to work directly
+                if hasattr(result, "__aiter__"):
+                    return StreamingResponse(
+                        _generate_sse(result),
+                        media_type="text/event-stream",
+                        headers={
+                            "Cache-Control": "no-cache",
+                            "Connection": "keep-alive",
+                            "X-Accel-Buffering": "no",
+                        },
+                    )
+
                 return JSONResponse(
                     content={
                         "path": agentese_path,

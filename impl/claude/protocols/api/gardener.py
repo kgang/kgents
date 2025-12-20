@@ -843,20 +843,84 @@ _garden_lock = threading.Lock()
 
 
 async def _get_or_create_garden() -> Any:
-    """Get or create the default garden state."""
+    """
+    Get or create the default garden state.
+
+    Phase 5: Batteries Included - Now uses real progress from plans/.
+    Crown Jewel plots are enriched with progress from plan files.
+    """
     global _garden_state
 
     if _garden_state is None:
         with _garden_lock:
             if _garden_state is None:
                 from protocols.gardener_logos.garden import create_garden
-                from protocols.gardener_logos.plots import create_crown_jewel_plots
+                from protocols.gardener_logos.plots import (
+                    create_crown_jewel_plots,
+                    discover_plots_from_forest,
+                )
 
-                _garden_state = create_garden(name="Default Garden")
-                _garden_state.plots = create_crown_jewel_plots()
+                _garden_state = create_garden(name="kgents Garden")
+
+                # 1. Start with Crown Jewel plots (base set)
+                crown_plots = create_crown_jewel_plots()
+
+                # 2. Discover plots from plans/ with real progress
+                try:
+                    discovered = await discover_plots_from_forest("plans")
+
+                    # 3. Merge: Link discovered plots to Crown Jewels
+                    for plot in discovered:
+                        if plot.crown_jewel and plot.crown_jewel in crown_plots:
+                            # Update Crown Jewel with discovered data
+                            crown_plots[plot.crown_jewel].progress = plot.progress
+                            crown_plots[plot.crown_jewel].plan_path = plot.plan_path
+                            crown_plots[plot.crown_jewel].description = (
+                                plot.description or crown_plots[plot.crown_jewel].description
+                            )
+                        elif plot.name not in crown_plots:
+                            # Add non-jewel plans as separate plots
+                            crown_plots[plot.name] = plot
+
+                except Exception as e:
+                    # Graceful degradation: use static plots if discovery fails
+                    logger.warning(f"Plot discovery failed, using defaults: {e}")
+
+                _garden_state.plots = crown_plots
                 _garden_state.metrics.active_plots = len(_garden_state.plots)
 
     return _garden_state
+
+
+async def refresh_garden_plots() -> None:
+    """
+    Refresh garden plots from disk.
+
+    Called by WATER gesture to re-read plan files.
+    """
+    global _garden_state
+
+    if _garden_state is None:
+        return
+
+    from protocols.gardener_logos.plots import discover_plots_from_forest
+
+    try:
+        discovered = await discover_plots_from_forest("plans")
+
+        for plot in discovered:
+            # Update existing plots with fresh progress
+            if plot.name in _garden_state.plots:
+                _garden_state.plots[plot.name].progress = plot.progress
+                _garden_state.plots[plot.name].plan_path = plot.plan_path
+            elif plot.crown_jewel and plot.crown_jewel in _garden_state.plots:
+                _garden_state.plots[plot.crown_jewel].progress = plot.progress
+                _garden_state.plots[plot.crown_jewel].plan_path = plot.plan_path
+
+        logger.info(f"Refreshed {len(discovered)} plots from plans/")
+
+    except Exception as e:
+        logger.warning(f"Plot refresh failed: {e}")
 
 
 def _garden_to_response(garden: Any) -> GardenStateResponse:

@@ -95,7 +95,6 @@ export function useKeyboardShortcuts({
   onOpenPathSearch,
   enabled = true,
 }: UseKeyboardShortcutsOptions): UseKeyboardShortcutsReturn {
-
   // Build shortcuts list for hints overlay
   const shortcuts: KeyboardShortcut[] = [
     {
@@ -147,13 +146,17 @@ export function useKeyboardShortcuts({
       category: 'actions',
       handler: onShowKeyboardHints,
     },
-    ...(onOpenPathSearch ? [{
-      id: 'path-search',
-      label: 'Go to path',
-      keys: '/',
-      category: 'navigation' as const,
-      handler: onOpenPathSearch,
-    }] : []),
+    ...(onOpenPathSearch
+      ? [
+          {
+            id: 'path-search',
+            label: 'Go to path',
+            keys: '/',
+            category: 'navigation' as const,
+            handler: onOpenPathSearch,
+          },
+        ]
+      : []),
   ];
 
   // Check if the active element is an input
@@ -241,7 +244,6 @@ export function useKeyboardShortcuts({
       if (key === '/' && !shiftKey && onOpenPathSearch) {
         event.preventDefault();
         onOpenPathSearch();
-        return;
       }
     },
     [

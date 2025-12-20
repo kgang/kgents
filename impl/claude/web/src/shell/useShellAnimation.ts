@@ -65,7 +65,11 @@ export interface UseShellAnimationResult {
   /** Current computed offsets */
   offsets: ShellOffsets;
   /** Register an animation for an element */
-  registerAnimation: (element: ShellElementId, action: 'expanding' | 'collapsing', duration?: number) => void;
+  registerAnimation: (
+    element: ShellElementId,
+    action: 'expanding' | 'collapsing',
+    duration?: number
+  ) => void;
   /** Get current progress for an element (0-1, null if not animating) */
   getProgress: (element: ShellElementId) => number | null;
   /** Check if any element is currently animating */
@@ -143,16 +147,24 @@ export function useShellAnimation({
 
   // Cleanup animation frames on unmount
   useEffect(() => {
+    // Capture ref values at effect run time (not cleanup time)
+    const observerRaf = observerRafRef.current;
+    const navigationRaf = navigationRafRef.current;
+    const terminalRaf = terminalRafRef.current;
     return () => {
-      if (observerRafRef.current) cancelAnimationFrame(observerRafRef.current);
-      if (navigationRafRef.current) cancelAnimationFrame(navigationRafRef.current);
-      if (terminalRafRef.current) cancelAnimationFrame(terminalRafRef.current);
+      if (observerRaf) cancelAnimationFrame(observerRaf);
+      if (navigationRaf) cancelAnimationFrame(navigationRaf);
+      if (terminalRaf) cancelAnimationFrame(terminalRaf);
     };
   }, []);
 
   // Register an animation
   const registerAnimation = useCallback(
-    (element: ShellElementId, action: 'expanding' | 'collapsing', duration = DEFAULT_ANIMATION_DURATION) => {
+    (
+      element: ShellElementId,
+      action: 'expanding' | 'collapsing',
+      duration = DEFAULT_ANIMATION_DURATION
+    ) => {
       if (!shouldAnimate) {
         // Skip animation, just set final value
         const finalProgress = action === 'expanding' ? 1 : 0;
@@ -177,17 +189,26 @@ export function useShellAnimation({
       });
 
       // Start animation loop
-      const setProgress = element === 'observer' ? setObserverProgress
-        : element === 'navigation' ? setNavigationProgress
-        : setTerminalProgress;
+      const setProgress =
+        element === 'observer'
+          ? setObserverProgress
+          : element === 'navigation'
+            ? setNavigationProgress
+            : setTerminalProgress;
 
-      const rafRef = element === 'observer' ? observerRafRef
-        : element === 'navigation' ? navigationRafRef
-        : terminalRafRef;
+      const rafRef =
+        element === 'observer'
+          ? observerRafRef
+          : element === 'navigation'
+            ? navigationRafRef
+            : terminalRafRef;
 
-      const startProgress = element === 'observer' ? observerProgress
-        : element === 'navigation' ? navigationProgress
-        : terminalProgress;
+      const startProgress =
+        element === 'observer'
+          ? observerProgress
+          : element === 'navigation'
+            ? navigationProgress
+            : terminalProgress;
 
       const targetProgress = action === 'expanding' ? 1 : 0;
       const startTime = performance.now();
@@ -292,14 +313,17 @@ export function useShellAnimation({
   }, [navigationProgress]);
 
   // Compute offsets
-  const offsets = useMemo((): ShellOffsets => ({
-    topOffset: observerHeight,
-    bottomOffset: terminalHeight,
-    leftOffset: navigationWidth,
-    observerAnimating: animations.has('observer'),
-    terminalAnimating: animations.has('terminal'),
-    navigationAnimating: animations.has('navigation'),
-  }), [observerHeight, terminalHeight, navigationWidth, animations]);
+  const offsets = useMemo(
+    (): ShellOffsets => ({
+      topOffset: observerHeight,
+      bottomOffset: terminalHeight,
+      leftOffset: navigationWidth,
+      observerAnimating: animations.has('observer'),
+      terminalAnimating: animations.has('terminal'),
+      navigationAnimating: animations.has('navigation'),
+    }),
+    [observerHeight, terminalHeight, navigationWidth, animations]
+  );
 
   const isAnyAnimating = animations.size > 0;
 
