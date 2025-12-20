@@ -27,6 +27,13 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def is_postgres() -> bool:
+    """Check if running against PostgreSQL."""
+    from alembic import context
+
+    return context.get_context().dialect.name == "postgresql"
+
+
 def upgrade() -> None:
     # === self_grow_proposals ===
     # Stores HolonProposal specifications for new holons.
@@ -142,11 +149,18 @@ def upgrade() -> None:
         )
     """)
 
-    # Insert default budget if not exists
-    op.execute("""
-        INSERT OR IGNORE INTO self_grow_budget (id, remaining, spent_this_run, updated_at)
-        VALUES ('singleton', 1.0, 0.0, datetime('now'))
-    """)
+    # Insert default budget if not exists (cross-database compatible)
+    if is_postgres():
+        op.execute("""
+            INSERT INTO self_grow_budget (id, remaining, spent_this_run, updated_at)
+            VALUES ('singleton', 1.0, 0.0, NOW())
+            ON CONFLICT (id) DO NOTHING
+        """)
+    else:
+        op.execute("""
+            INSERT OR IGNORE INTO self_grow_budget (id, remaining, spent_this_run, updated_at)
+            VALUES ('singleton', 1.0, 0.0, datetime('now'))
+        """)
 
 
 def downgrade() -> None:

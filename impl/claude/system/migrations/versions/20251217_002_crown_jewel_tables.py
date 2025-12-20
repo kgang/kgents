@@ -30,6 +30,13 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
+def is_postgres() -> bool:
+    """Check if running against PostgreSQL."""
+    from alembic import context
+
+    return context.get_context().dialect.name == "postgresql"
+
+
 def upgrade() -> None:
     # =========================================================================
     # BRAIN CROWN JEWEL
@@ -59,14 +66,24 @@ def upgrade() -> None:
     )
 
     # brain_crystal_tags: Normalized tags for efficient queries
-    op.execute("""
-        CREATE TABLE IF NOT EXISTS brain_crystal_tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            crystal_id TEXT NOT NULL,
-            tag TEXT NOT NULL,
-            FOREIGN KEY (crystal_id) REFERENCES brain_crystals(id) ON DELETE CASCADE
-        )
-    """)
+    if is_postgres():
+        op.execute("""
+            CREATE TABLE IF NOT EXISTS brain_crystal_tags (
+                id SERIAL PRIMARY KEY,
+                crystal_id TEXT NOT NULL,
+                tag TEXT NOT NULL,
+                FOREIGN KEY (crystal_id) REFERENCES brain_crystals(id) ON DELETE CASCADE
+            )
+        """)
+    else:
+        op.execute("""
+            CREATE TABLE IF NOT EXISTS brain_crystal_tags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                crystal_id TEXT NOT NULL,
+                tag TEXT NOT NULL,
+                FOREIGN KEY (crystal_id) REFERENCES brain_crystals(id) ON DELETE CASCADE
+            )
+        """)
     op.execute("CREATE INDEX IF NOT EXISTS idx_crystal_tags_tag ON brain_crystal_tags(tag)")
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_crystal_tags_lookup ON brain_crystal_tags(tag, crystal_id)"

@@ -98,16 +98,24 @@ def get_database_url() -> str:
     Mirrors the logic in migrations/env.py for consistency.
 
     Priority:
-    1. KGENTS_DATABASE_URL environment variable
-    2. XDG_DATA_HOME/kgents/membrane.db
-    3. ~/.local/share/kgents/membrane.db
+    1. KGENTS_DATABASE_URL environment variable (canonical)
+    2. KGENTS_POSTGRES_URL (legacy, auto-converted to async format)
+    3. XDG_DATA_HOME/kgents/membrane.db
+    4. ~/.local/share/kgents/membrane.db
 
     Postgres URL format: postgresql+asyncpg://user:pass@host:port/db
     SQLite URL format: sqlite+aiosqlite:///path/to/db.db
     """
-    # Check for explicit override
+    # Check for canonical URL first
     if url := os.environ.get("KGENTS_DATABASE_URL"):
         return url
+
+    # Check legacy Postgres URL and convert to async format
+    if postgres_url := os.environ.get("KGENTS_POSTGRES_URL"):
+        # Convert postgresql:// to postgresql+asyncpg://
+        if postgres_url.startswith("postgresql://"):
+            return postgres_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return postgres_url
 
     # Use XDG path for SQLite default
     xdg_data = os.environ.get("XDG_DATA_HOME")

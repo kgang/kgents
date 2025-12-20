@@ -107,6 +107,18 @@ markers = [
     "e2e: end-to-end Kubernetes tests (require kind cluster) - DEPRECATED, use tier3",
     "benchmark: mark test as performance benchmark",
     "postgres: mark test as requiring PostgreSQL database",
+    # ==========================================================================
+    # Domain markers for compartmentalized CI (multi-agent development)
+    # Auto-applied via pytest_collection_modifyitems in conftest.py
+    # ==========================================================================
+    "domain_foundation: Foundation agents (poly, operad, sheaf) - pure category theory",
+    "domain_crown: Crown Jewel services (brain, town, conductor, gestalt, etc.)",
+    "domain_agentese: AGENTESE protocol tests (gateway, nodes, contexts)",
+    "domain_cli: CLI handler and instance_db tests",
+    "domain_agents_core: Core agents (k, town, brain, f, j)",
+    "domain_agents_aux: Auxiliary agents (a, b, c, d, g, i, l, m, n, etc.)",
+    "domain_infra: Infrastructure (weave, field, hypha, shared, system)",
+    "domain_api: API and billing protocol tests",
 ]
 
 [dependency-groups]
@@ -118,6 +130,8 @@ dev = [
     "ruff>=0.8.0",
     "mypy>=1.19.0",
     "types-pyyaml",
+    "alembic>=1.17.2",
+    "asyncpg>=0.31.0",
 ]
 
 # =============================================================================
