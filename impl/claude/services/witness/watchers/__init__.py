@@ -6,7 +6,7 @@ Watchers are event-driven, NOT timer-driven (meta.md: "Timer-driven loops create
 
 Available Watchers:
 - GitWatcher: React to git operations (commits, pushes, checkouts)
-- FileSystemWatcher: React to file changes (placeholder)
+- FileSystemWatcher: React to file changes (create, modify, delete)
 - TestWatcher: React to pytest results (placeholder)
 - AgenteseWatcher: React to cross-jewel events via SynergyBus (placeholder)
 - CIWatcher: React to GitHub Actions events (placeholder)
@@ -14,20 +14,39 @@ Available Watchers:
 See: docs/skills/data-bus-integration.md
 """
 
-# Re-export GitEvent from polynomial (canonical location)
-from services.witness.polynomial import GitEvent
+# Re-export event types from polynomial (canonical location)
+from services.witness.polynomial import FileEvent, GitEvent
 
+# Base classes
+from .base import BaseWatcher, WatcherState, WatcherStats
+
+# Concrete watchers
+from .filesystem import (
+    Debouncer,
+    FileSystemConfig,
+    FileSystemWatcher,
+    PatternMatcher,
+    create_filesystem_watcher,
+)
 from .git import (
     GitWatcher,
-    WatcherState,
-    WatcherStats,
     create_git_watcher,
 )
 
 __all__ = [
-    "GitWatcher",
-    "GitEvent",
+    # Base
+    "BaseWatcher",
     "WatcherState",
     "WatcherStats",
+    # Git
+    "GitWatcher",
+    "GitEvent",
     "create_git_watcher",
+    # FileSystem
+    "FileSystemWatcher",
+    "FileSystemConfig",
+    "FileEvent",
+    "PatternMatcher",
+    "Debouncer",
+    "create_filesystem_watcher",
 ]
