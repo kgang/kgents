@@ -186,9 +186,7 @@ class AgenteseWatcher(BaseWatcher[AgenteseEvent]):
             unsub = self._bus.subscribe(pattern, self._handle_event)
             self._unsubscribes.append(unsub)
 
-        logger.info(
-            f"AgenteseWatcher subscribed to {len(self.config.topic_patterns)} patterns"
-        )
+        logger.info(f"AgenteseWatcher subscribed to {len(self.config.topic_patterns)} patterns")
 
     async def _handle_event(self, topic: str, event: Any) -> None:
         """Handle incoming SynergyBus event."""

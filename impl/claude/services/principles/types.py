@@ -81,9 +81,7 @@ STANCE_SLICES: dict[Stance, tuple[str, ...]] = {
         "CONSTITUTION.md",
         "operational.md",
     ),
-    Stance.KRISIS: (
-        "CONSTITUTION.md",
-    ),
+    Stance.KRISIS: ("CONSTITUTION.md",),
     Stance.THERAPEIA: (
         "CONSTITUTION.md",
         "puppets.md",

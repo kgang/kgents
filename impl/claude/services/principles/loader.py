@@ -408,7 +408,9 @@ class PrincipleLoader:
 # === Factory Function ===
 
 
-def create_principle_loader(base_path: Path | str | None = None, cache: bool = True) -> PrincipleLoader:
+def create_principle_loader(
+    base_path: Path | str | None = None, cache: bool = True
+) -> PrincipleLoader:
     """
     Create a PrincipleLoader with default or specified path.
 
