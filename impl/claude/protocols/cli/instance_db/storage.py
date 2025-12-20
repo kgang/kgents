@@ -501,6 +501,86 @@ class StorageProvider:
 
         INSERT OR IGNORE INTO schema_version (version, applied_at)
         VALUES (1, datetime('now'));
+
+        -- =================================================================
+        -- CLI Session Tables (unified from deprecated ~/.kgents/history.db)
+        -- =================================================================
+
+        -- CLI sessions: tracks kgents CLI sessions (kg repl, kg flow, etc.)
+        CREATE TABLE IF NOT EXISTS cli_sessions (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            session_type TEXT NOT NULL DEFAULT 'interactive',
+            state TEXT NOT NULL DEFAULT 'active',
+            started_at TEXT NOT NULL,
+            ended_at TEXT,
+            project_path TEXT,
+            project_hash TEXT,
+            flow_name TEXT,
+            flow_path TEXT,
+            budget_level TEXT DEFAULT 'medium',
+            tokens_used INTEGER DEFAULT 0,
+            metadata TEXT DEFAULT '{}'
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_cli_sessions_state ON cli_sessions(state);
+        CREATE INDEX IF NOT EXISTS idx_cli_sessions_project ON cli_sessions(project_hash);
+        CREATE INDEX IF NOT EXISTS idx_cli_sessions_started ON cli_sessions(started_at DESC);
+
+        -- CLI session events: granular event log within sessions
+        CREATE TABLE IF NOT EXISTS cli_session_events (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            timestamp TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            source TEXT NOT NULL,
+            message TEXT NOT NULL,
+            data TEXT DEFAULT '{}',
+            FOREIGN KEY (session_id) REFERENCES cli_sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_cli_events_session ON cli_session_events(session_id);
+        CREATE INDEX IF NOT EXISTS idx_cli_events_timestamp ON cli_session_events(timestamp DESC);
+        CREATE INDEX IF NOT EXISTS idx_cli_events_type ON cli_session_events(event_type);
+
+        -- CLI agents: agents spawned within CLI sessions
+        CREATE TABLE IF NOT EXISTS cli_session_agents (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            genus TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            started_at TEXT,
+            completed_at TEXT,
+            error TEXT,
+            metadata TEXT DEFAULT '{}',
+            FOREIGN KEY (session_id) REFERENCES cli_sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_cli_agents_session ON cli_session_agents(session_id);
+        CREATE INDEX IF NOT EXISTS idx_cli_agents_status ON cli_session_agents(status);
+
+        -- CLI artifacts: outputs from CLI sessions
+        CREATE TABLE IF NOT EXISTS cli_session_artifacts (
+            id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            path TEXT,
+            artifact_type TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            size_bytes INTEGER DEFAULT 0,
+            content_preview TEXT,
+            metadata TEXT DEFAULT '{}',
+            FOREIGN KEY (session_id) REFERENCES cli_sessions(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_cli_artifacts_session ON cli_session_artifacts(session_id);
+        CREATE INDEX IF NOT EXISTS idx_cli_artifacts_type ON cli_session_artifacts(artifact_type);
+
+        -- Update schema version to 2
+        INSERT OR IGNORE INTO schema_version (version, applied_at)
+        VALUES (2, datetime('now'));
         """
 
         await self.relational.execute(membrane_schema)

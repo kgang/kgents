@@ -11,6 +11,12 @@ Like git, kgents commands are context-aware:
 - `kgents check` uses defaults from .kgents/config.yaml
 - `kgents check --target=src/` overrides context
 
+STORAGE ARCHITECTURE (2025-12-20):
+- Global state: ~/.local/share/kgents/membrane.db (via StorageProvider)
+- Per-project config: .kgents/config.yaml
+- CLI session history: unified in membrane.db (cli_sessions, cli_session_events tables)
+- The `history` section in config.yaml is DEPRECATED
+
 Example .kgents/config.yaml:
 ```yaml
 version: "1.0"
@@ -27,10 +33,12 @@ defaults:
 registry:
   path: ".kgents/catalog.json"
 
-history:
-  enabled: true
-  path: ".kgents/history.db"
-  retention: "30d"
+# DEPRECATED: History is now in ~/.local/share/kgents/membrane.db
+# This section is kept for backward compatibility but ignored.
+# history:
+#   enabled: true
+#   path: ".kgents/history.db"
+#   retention: "30d"
 ```
 """
 
@@ -58,10 +66,13 @@ class KgentsConfig:
     # Registry
     registry_path: str = ".kgents/catalog.json"
 
-    # History
-    history_enabled: bool = True
-    history_path: str = ".kgents/history.db"
-    history_retention: str = "30d"
+    # History - DEPRECATED (2025-12-20)
+    # Session history is now unified in ~/.local/share/kgents/membrane.db
+    # These fields are kept for backward compatibility but are ignored.
+    # Use StorageProvider from instance_db for session tracking.
+    history_enabled: bool = True  # DEPRECATED: ignored
+    history_path: str = ".kgents/history.db"  # DEPRECATED: ignored
+    history_retention: str = "30d"  # DEPRECATED: ignored
 
     @classmethod
     def from_dict(cls, data: dict[str, Any], root: Path) -> "KgentsConfig":
@@ -255,10 +266,8 @@ defaults:
 registry:
   path: ".kgents/catalog.json"
 
-history:
-  enabled: true
-  path: ".kgents/history.db"
-  retention: "30d"
+# Session history is stored globally in ~/.local/share/kgents/membrane.db
+# via the StorageProvider. No per-project history configuration needed.
 """
         config_path.write_text(default_config.format(name=root.name))
 

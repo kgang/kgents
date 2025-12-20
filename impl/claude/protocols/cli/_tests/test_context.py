@@ -190,6 +190,7 @@ class TestKgentsConfig:
                 "output": "markdown",
             },
             "registry": {"path": "custom/catalog.json"},
+            # NOTE: history section is DEPRECATED but still parsed for backward compatibility
             "history": {
                 "enabled": False,
                 "path": "custom/history.db",
@@ -204,6 +205,7 @@ class TestKgentsConfig:
         assert config.default_target == "lib/"
         assert config.default_budget == "unlimited"
         assert config.registry_path == "custom/catalog.json"
+        # history fields still parsed for backward compatibility (though deprecated)
         assert config.history_enabled is False
 
     def test_from_dict_partial(self) -> None:

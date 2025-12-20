@@ -5,9 +5,9 @@ Production-grade implementations of the repository interfaces:
 - PostgresRelationalStore: Core state storage with connection pooling
 - PostgresVectorStore: pgvector-based similarity search (future)
 
-Environment Variables:
-- KGENTS_POSTGRES_URL: Connection string (required)
-  Example: postgresql://user:password@localhost:5432/kgents
+Environment Variables (checked in order):
+- KGENTS_DATABASE_URL: Canonical URL (postgresql+asyncpg://...)
+- KGENTS_POSTGRES_URL: Legacy URL (postgresql://...) - DEPRECATED
 
 These providers enable crown jewels to persist to Postgres when available.
 """
@@ -308,7 +308,25 @@ class _PostgresTransaction:
 
 
 def get_postgres_url() -> str | None:
-    """Get Postgres URL from environment."""
+    """
+    Get Postgres URL from environment.
+
+    Checks in order:
+    1. KGENTS_DATABASE_URL (canonical) - strips async driver prefix for asyncpg
+    2. KGENTS_POSTGRES_URL (legacy)
+
+    Returns:
+        Postgres URL in asyncpg format (postgresql://...), or None if not set.
+    """
+    # Check canonical URL first
+    if url := os.environ.get("KGENTS_DATABASE_URL"):
+        if url.startswith("postgresql"):
+            # Strip async driver prefix for asyncpg direct use
+            return url.replace("postgresql+asyncpg://", "postgresql://", 1)
+        # Not a Postgres URL, fall through to check legacy
+        return None
+
+    # Check legacy URL
     return os.environ.get(ENV_POSTGRES_URL)
 
 

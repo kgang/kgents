@@ -25,6 +25,14 @@ Design Principles:
 - Active Inference: Signal routing based on surprise
 """
 
+from .cli_session import (
+    CLISession,
+    CLISessionAgent,
+    CLISessionArtifact,
+    CLISessionEvent,
+    CLISessionService,
+    create_cli_session_service,
+)
 from .compost import (
     CompostBin,
     CompostConfig,
@@ -169,4 +177,11 @@ __all__ = [
     "MockSchemaIntrospector",
     "ISchemaIntrospector",
     "create_schema_neurogenesis",
+    # CLI Session Service (unified from deprecated history.db)
+    "CLISession",
+    "CLISessionEvent",
+    "CLISessionAgent",
+    "CLISessionArtifact",
+    "CLISessionService",
+    "create_cli_session_service",
 ]

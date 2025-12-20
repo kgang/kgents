@@ -68,7 +68,9 @@ async def check_backend_status(backend: StorageBackend) -> BackendStatus:
         if not is_postgres_available():
             url = get_postgres_url()
             if url is None:
-                return BackendStatus(backend, False, "KGENTS_POSTGRES_URL not set")
+                return BackendStatus(
+                    backend, False, "KGENTS_DATABASE_URL or KGENTS_POSTGRES_URL not set"
+                )
             else:
                 return BackendStatus(backend, False, "asyncpg not installed")
 
@@ -116,7 +118,7 @@ async def create_relational_store(
     if backend == "postgres":
         url = get_postgres_url()
         if not url:
-            raise RuntimeError("KGENTS_POSTGRES_URL not set")
+            raise RuntimeError("KGENTS_DATABASE_URL or KGENTS_POSTGRES_URL not set")
         if not is_postgres_available():
             raise RuntimeError("asyncpg not installed")
         logger.info("Using PostgreSQL backend")
