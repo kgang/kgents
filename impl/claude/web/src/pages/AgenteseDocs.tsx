@@ -1,19 +1,21 @@
 /**
- * AGENTESE Docs Explorer - Phase 3
+ * AGENTESE Docs Explorer - Phase 4 (Request Builder)
  *
  * A daring, observer-dependent API explorer that embodies AGENTESE philosophy.
  * Unlike Swagger (a form to fill), this is a world to explore.
  *
  * "Paths are PLACES, Aspects are ACTIONS"
  * - Left: Navigate contexts like a filesystem
- * - Middle: Live response with observer-colored syntax
- * - Right: Invoke aspects like buttons, not forms
+ * - Middle: Request Builder + Response Viewer (split panel)
+ * - Right: Aspect buttons for quick selection
  *
  * AD-010 Habitat Guarantee: No blank pages. Examples are one-click invocations.
  *
- * Now with Umwelt visualization: when the observer changes, the world shifts.
- * Aspects animate in/out, a ripple emanates from the picker, and a toast
- * summarizes the perceptual change.
+ * Phase 4 Additions:
+ * - Postman-like Request Builder with schema-driven forms
+ * - Request preview with syntax highlighting
+ * - Code export (cURL, fetch, axios, Python)
+ * - Headers editor (observer + custom)
  *
  * @see plans/openapi-projection-surface.md
  * @see plans/umwelt-visualization.md
@@ -21,12 +23,12 @@
 
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Compass, Zap } from 'lucide-react';
+import { Compass, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDesignPolynomial } from '@/hooks';
 import { ElasticSplit } from '@/components/elastic';
 import { BottomDrawer } from '@/components/elastic/BottomDrawer';
 import { FloatingActions } from '@/components/elastic/FloatingActions';
-import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
+import { useMotionPreferences, celebrateQuick } from '@/components/joy';
 
 import { PathExplorer } from '@/components/docs/PathExplorer';
 import { ObserverPicker, type Observer } from '@/components/docs/ObserverPicker';
@@ -35,6 +37,7 @@ import { ResponseViewer } from '@/components/docs/ResponseViewer';
 import { GuidedTour } from '@/components/docs/GuidedTour';
 import { useAgenteseDiscovery, type PathMetadata } from '@/components/docs/useAgenteseDiscovery';
 import { UmweltProvider, useUmwelt } from '@/components/docs/umwelt';
+import { RequestBuilder } from '@/components/docs/RequestBuilder';
 
 /**
  * AGENTESE Docs Explorer - The main page component.
@@ -89,6 +92,9 @@ function AgenteseDocsInner() {
   // Drawer state for mobile
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [activeDrawer, setActiveDrawer] = useState<'explorer' | 'aspects'>('explorer');
+
+  // Collapsible section state for mobile
+  const [requestExpanded, setRequestExpanded] = useState(true);
 
   // Get metadata for selected path
   const selectedMetadata: PathMetadata | undefined = selectedPath
@@ -165,6 +171,8 @@ function AgenteseDocsInner() {
             elapsed,
             status: 'success',
           });
+          // Joy-inducing celebration on successful response!
+          celebrateQuick();
         }
       } catch (err) {
         const elapsed = performance.now() - startTime;
@@ -189,21 +197,91 @@ function AgenteseDocsInner() {
         {/* Observer picker - always visible */}
         <ObserverPicker observer={observer} onChange={handleObserverChange} density={density} />
 
-        {/* Main content - either tour or response */}
-        <div className="flex-1 overflow-auto p-4">
+        {/* Main content - either tour or request/response */}
+        <div className="flex-1 overflow-auto">
           {loading ? (
-            <LoadingState message="Discovering paths..." />
+            <div className="p-4">
+              <LoadingState message="Discovering paths..." />
+            </div>
           ) : error ? (
-            <ErrorState message={error} onRetry={refetch} />
+            <div className="p-4">
+              <ErrorState message={error} onRetry={refetch} />
+            </div>
           ) : showTour ? (
-            <GuidedTour paths={paths} metadata={metadata} onSelectPath={handleSelectPath} />
+            <div className="p-4">
+              <GuidedTour paths={paths} metadata={metadata} onSelectPath={handleSelectPath} />
+            </div>
+          ) : selectedPath ? (
+            <div className="flex flex-col h-full">
+              {/* Collapsible Request Builder Section */}
+              <div className="border-b border-gray-700">
+                <button
+                  onClick={() => setRequestExpanded(!requestExpanded)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-gray-800/50 hover:bg-gray-800/70 transition-colors"
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium text-white">
+                    <span>🔧</span>
+                    <span>Request Builder</span>
+                    <span className="text-xs text-gray-400 font-normal">
+                      {selectedPath}:{selectedAspect}
+                    </span>
+                  </span>
+                  {requestExpanded ? (
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  )}
+                </button>
+                <AnimatePresence>
+                  {requestExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="max-h-[40vh] overflow-auto">
+                        <RequestBuilder
+                          path={selectedPath}
+                          aspect={selectedAspect}
+                          schema={selectedSchema?.[selectedAspect]}
+                          observer={observer}
+                          onObserverChange={handleObserverChange}
+                          onSend={(payload) => {
+                            handleInvoke(selectedAspect, payload);
+                            setRequestExpanded(false); // Collapse after sending on mobile
+                          }}
+                          density={density}
+                          examples={selectedMetadata?.examples?.filter(
+                            (ex) => ex.aspect === selectedAspect
+                          )}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Response Viewer */}
+              <div className="flex-1 min-h-0">
+                <ResponseViewer
+                  response={response}
+                  path={selectedPath}
+                  aspect={selectedAspect}
+                  observer={observer}
+                />
+              </div>
+            </div>
           ) : (
-            <ResponseViewer
-              response={response}
-              path={selectedPath}
-              aspect={selectedAspect}
-              observer={observer}
-            />
+            <div className="p-4">
+              <ResponseViewer
+                response={response}
+                path={selectedPath}
+                aspect={selectedAspect}
+                observer={observer}
+              />
+            </div>
           )}
         </div>
 
@@ -330,7 +408,7 @@ function AgenteseDocsInner() {
     );
   }
 
-  // Spacious (desktop) - full three-column layout
+  // Spacious (desktop) - full three-column layout with Request/Response split
   return (
     <div className="h-full flex flex-col bg-gray-900">
       <ObserverPicker observer={observer} onChange={handleObserverChange} density={density} />
@@ -354,9 +432,9 @@ function AgenteseDocsInner() {
           />
         </motion.div>
 
-        {/* Middle: Response Viewer */}
+        {/* Middle: Request Builder + Response Viewer (split) */}
         <motion.div
-          className="flex-1 overflow-auto"
+          className="flex-1 overflow-hidden"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: shouldAnimate ? 0.2 : 0, delay: 0.1 }}
@@ -369,21 +447,57 @@ function AgenteseDocsInner() {
                 metadata={metadata}
                 onSelectPath={handleSelectPath}
               />
-            ) : (
-              <ResponseViewer
-                key="response"
-                response={response}
-                path={selectedPath}
-                aspect={selectedAspect}
-                observer={observer}
+            ) : selectedPath ? (
+              <ElasticSplit
+                key="request-response"
+                direction="horizontal"
+                defaultRatio={0.5}
+                collapseAtDensity="compact"
+                primary={
+                  <div className="h-full overflow-auto border-r border-gray-700/50">
+                    <RequestBuilder
+                      path={selectedPath}
+                      aspect={selectedAspect}
+                      schema={selectedSchema?.[selectedAspect]}
+                      observer={observer}
+                      onObserverChange={handleObserverChange}
+                      onSend={(payload) => handleInvoke(selectedAspect, payload)}
+                      density={density}
+                      examples={selectedMetadata?.examples?.filter(
+                        (ex) => ex.aspect === selectedAspect
+                      )}
+                    />
+                  </div>
+                }
+                secondary={
+                  <div className="h-full overflow-auto">
+                    <ResponseViewer
+                      response={response}
+                      path={selectedPath}
+                      aspect={selectedAspect}
+                      observer={observer}
+                    />
+                  </div>
+                }
               />
+            ) : (
+              <div
+                key="empty"
+                className="h-full flex items-center justify-center text-gray-500 p-8 text-center"
+              >
+                <div>
+                  <div className="text-6xl mb-4">🌐</div>
+                  <h2 className="text-xl font-semibold text-white mb-2">AGENTESE Explorer</h2>
+                  <p>Select a path from the left panel to begin exploring.</p>
+                </div>
+              </div>
             )}
           </AnimatePresence>
         </motion.div>
 
         {/* Right: Aspect Panel */}
         <motion.div
-          className="w-80 border-l border-gray-700 overflow-y-auto bg-gray-800/30"
+          className="w-64 border-l border-gray-700 overflow-y-auto bg-gray-800/30"
           initial={{ x: 20, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: shouldAnimate ? 0.3 : 0 }}
@@ -395,7 +509,10 @@ function AgenteseDocsInner() {
               schema={selectedSchema}
               selectedAspect={selectedAspect}
               observer={observer}
-              onInvoke={handleInvoke}
+              onInvoke={(aspect) => {
+                // Just select the aspect - RequestBuilder will handle the actual send
+                setSelectedAspect(aspect);
+              }}
               density={density}
             />
           ) : (
