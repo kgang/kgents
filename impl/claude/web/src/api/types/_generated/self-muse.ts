@@ -64,7 +64,9 @@ export interface SelfMuseTensionResponse {
 /**
  * Request for whisper aspect - get current whisper if any.
  */
-export type SelfMuseWhisperRequest = Record<string, never>;
+export interface SelfMuseWhisperRequest {
+
+}
 
 /**
  * Response for whisper aspect.

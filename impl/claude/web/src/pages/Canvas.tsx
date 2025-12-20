@@ -23,16 +23,26 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Compass, RefreshCw, Users, Maximize2, Minimize2, Eye } from 'lucide-react';
+import { Compass, RefreshCw, Users, Maximize2, Minimize2, Eye, Play, Square, Sun, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-import { AgentCanvas, PresenceStatusBadge, CursorList } from '@/components/canvas';
-import { useCanvasNodes, usePresenceChannel, useUserFocus } from '@/hooks';
+import { AgentCanvas, PresenceStatusBadge, CursorList, NodeDetailPanel } from '@/components/canvas';
+import type { CanvasNode } from '@/components/canvas';
+import { useCanvasNodes, usePresenceChannel, useUserFocus, useCircadian } from '@/hooks';
 import { useDesignPolynomial } from '@/hooks';
+import { useAgenteseMutation } from '@/hooks/useAgentesePath';
 
 // =============================================================================
 // Component
 // =============================================================================
+
+// Demo mode response type
+interface DemoResponse {
+  success: boolean;
+  action: string;
+  message: string;
+  agent_ids: string[];
+}
 
 export function Canvas() {
   const navigate = useNavigate();
@@ -53,11 +63,23 @@ export function Canvas() {
     maxReconnectAttempts: 5,
   });
 
+  // Circadian warmth (Pattern #11: time-of-day modulation)
+  const { data: circadian, backgroundStyle: circadianBackground } = useCircadian();
+
+  // Demo mode mutation
+  const { mutate: toggleDemo, isLoading: demoLoading } = useAgenteseMutation<
+    { action: string; agent_count?: number },
+    DemoResponse
+  >('self.presence:demo');
+
   // UI state
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [detailNode, setDetailNode] = useState<CanvasNode | null>(null);
   const [showPresencePanel, setShowPresencePanel] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [trackingEnabled, setTrackingEnabled] = useState(true);
+  const [demoActive, setDemoActive] = useState(false);
+  const [teachingMode, setTeachingMode] = useState(false);
 
   // User focus tracking for agent cursor following
   const { focusPath, isHovering, idleTime } = useUserFocus({
@@ -83,10 +105,23 @@ export function Canvas() {
     return 'Exploring...';
   }, [trackingEnabled, isHovering, focusPath, idleTime]);
 
-  // Handle node click
-  const handleNodeClick = useCallback((node: { id: string; path: string }) => {
+  // Handle node click - select and open detail panel
+  const handleNodeClick = useCallback((node: CanvasNode) => {
     setSelectedNode(node.id);
+    setDetailNode(node);
   }, []);
+
+  // Close detail panel
+  const handleCloseDetail = useCallback(() => {
+    setDetailNode(null);
+  }, []);
+
+  // Invoke an aspect from the detail panel
+  const handleInvokeAspect = useCallback((path: string, aspect: string) => {
+    console.log(`[Canvas] Invoking ${path}:${aspect}`);
+    // Navigate to AGENTESE explorer with the aspect
+    navigate(`/agentese?path=${encodeURIComponent(path)}&aspect=${encodeURIComponent(aspect)}`);
+  }, [navigate]);
 
   // Handle node navigation (double-click)
   const handleNodeNavigate = useCallback(
@@ -109,6 +144,23 @@ export function Canvas() {
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen((prev) => !prev);
   }, []);
+
+  // Toggle demo mode - spawn/remove demo agent cursors
+  const handleDemoToggle = useCallback(async () => {
+    const action = demoActive ? 'stop' : 'start';
+    console.log('[Canvas] Toggling demo mode:', action);
+    try {
+      const result = await toggleDemo({ action, agent_count: 2 });
+      console.log('[Canvas] Demo toggle result:', result);
+      if (result?.success) {
+        setDemoActive(action === 'start');
+        // Force reconnect to SSE stream to pick up new cursors immediately
+        reconnect();
+      }
+    } catch (e) {
+      console.error('[Canvas] Demo toggle error:', e);
+    }
+  }, [demoActive, toggleDemo, reconnect]);
 
   // Render loading state
   if (loading) {
@@ -142,7 +194,10 @@ export function Canvas() {
   }
 
   return (
-    <div className={`h-full flex flex-col bg-gray-900 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div
+      className={`h-full flex flex-col ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}
+      style={circadianBackground}
+    >
       {/* Header */}
       <header className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-800 bg-gray-900/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
@@ -151,6 +206,16 @@ export function Canvas() {
           {stats && (
             <span className="text-xs text-gray-500">
               {stats.total_paths} paths • {stats.contexts.length} contexts
+            </span>
+          )}
+          {/* Circadian phase indicator */}
+          {circadian && (
+            <span
+              className="text-xs text-gray-600 flex items-center gap-1"
+              title={`Warmth: ${(circadian.warmth * 100).toFixed(0)}%`}
+            >
+              <Sun className="w-3 h-3" style={{ opacity: 0.5 + circadian.warmth * 0.5 }} />
+              {circadian.phase.toLowerCase()}
             </span>
           )}
         </div>
@@ -162,6 +227,23 @@ export function Canvas() {
             isConnected={isConnected}
             className="mr-2"
           />
+
+          {/* Demo mode toggle - spawn virtual agent cursors */}
+          <button
+            onClick={handleDemoToggle}
+            disabled={demoLoading}
+            className={`
+              p-2 rounded-lg transition-colors flex items-center gap-1.5
+              ${demoActive ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}
+              ${demoLoading ? 'opacity-50 cursor-wait' : ''}
+            `}
+            title={demoActive ? 'Stop demo agents' : 'Start demo agents'}
+          >
+            {demoActive ? <Square className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            <span className="text-xs hidden sm:inline">
+              {demoLoading ? '...' : demoActive ? 'Stop' : 'Demo'}
+            </span>
+          </button>
 
           {/* Toggle focus tracking */}
           <button
@@ -185,6 +267,18 @@ export function Canvas() {
             title={showPresencePanel ? 'Hide agents' : 'Show agents'}
           >
             <Users className="w-4 h-4" />
+          </button>
+
+          {/* Toggle teaching mode */}
+          <button
+            onClick={() => setTeachingMode((t) => !t)}
+            className={`
+              p-2 rounded-lg transition-colors
+              ${teachingMode ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400 hover:text-white'}
+            `}
+            title={teachingMode ? 'Disable teaching mode' : 'Enable teaching mode'}
+          >
+            <BookOpen className="w-4 h-4" />
           </button>
 
           {/* Refresh */}
@@ -221,6 +315,7 @@ export function Canvas() {
             showConnections={true}
             enablePan={true}
             enableZoom={true}
+            circadianTempo={circadian?.tempo_modifier ?? 1.0}
             className="w-full h-full"
           />
 
@@ -325,14 +420,29 @@ export function Canvas() {
               {/* Hint when no cursors */}
               {cursorList.length === 0 && isConnected && (
                 <p className="text-xs text-gray-600 mt-4">
-                  Agent cursors will appear here when they're active. Try invoking an AGENTESE path
-                  from the CLI.
+                  Agent cursors will appear here when they're active.
+                  <br />
+                  <button
+                    onClick={handleDemoToggle}
+                    className="text-blue-400 hover:text-blue-300 underline mt-1"
+                  >
+                    Start demo agents
+                  </button>{' '}
+                  to see the coworking feel.
                 </p>
               )}
             </div>
           </motion.aside>
         )}
       </div>
+
+      {/* Node detail panel (slides in from right when node clicked) */}
+      <NodeDetailPanel
+        node={detailNode}
+        onClose={handleCloseDetail}
+        onInvoke={handleInvokeAspect}
+        teachingMode={teachingMode}
+      />
     </div>
   );
 }

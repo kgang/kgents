@@ -1,9 +1,10 @@
 /**
- * Canvas Components for CLI v7 Phase 4: Collaborative Canvas.
+ * Canvas Components for CLI v7 Phase 5: Collaborative Canvas.
  *
- * These components render the AGENTESE mind-map with agent presence.
+ * These components render the AGENTESE mind-map with agent presence
+ * and spring-physics cursor animation.
  *
- * @see plans/cli-v7-implementation.md Phase 4
+ * @see plans/cli-v7-implementation.md Phase 5
  */
 
 export {
@@ -21,3 +22,13 @@ export {
   type PresenceStatusBadgeProps,
   type CursorListProps,
 } from './CursorOverlay';
+
+export {
+  AnimatedCursor,
+  type AnimatedCursorProps,
+} from './AnimatedCursor';
+
+export {
+  NodeDetailPanel,
+  type NodeDetailPanelProps,
+} from './NodeDetailPanel';

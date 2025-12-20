@@ -148,9 +148,9 @@ export function GrowingContainer({
     if (delay > 0) {
       const timeout = setTimeout(trigger, delay);
       return () => clearTimeout(timeout);
-    } else {
+    } 
       trigger();
-    }
+    
   }, [autoTrigger, delay, trigger]);
 
   // Merge custom styles with growing styles

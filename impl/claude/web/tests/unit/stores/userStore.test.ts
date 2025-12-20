@@ -107,14 +107,14 @@ describe('userStore', () => {
   describe('usage tracking', () => {
     it('should record action', () => {
       useUserStore.getState().recordAction('lod3');
-      expect(useUserStore.getState().monthlyUsage['lod3']).toBe(1);
+      expect(useUserStore.getState().monthlyUsage.lod3).toBe(1);
     });
 
     it('should increment action count', () => {
       useUserStore.getState().recordAction('lod3');
       useUserStore.getState().recordAction('lod3');
       useUserStore.getState().recordAction('lod3');
-      expect(useUserStore.getState().monthlyUsage['lod3']).toBe(3);
+      expect(useUserStore.getState().monthlyUsage.lod3).toBe(3);
     });
 
     it('should track multiple action types', () => {
@@ -122,9 +122,9 @@ describe('userStore', () => {
       useUserStore.getState().recordAction('lod4');
       useUserStore.getState().recordAction('inhabit');
 
-      expect(useUserStore.getState().monthlyUsage['lod3']).toBe(1);
-      expect(useUserStore.getState().monthlyUsage['lod4']).toBe(1);
-      expect(useUserStore.getState().monthlyUsage['inhabit']).toBe(1);
+      expect(useUserStore.getState().monthlyUsage.lod3).toBe(1);
+      expect(useUserStore.getState().monthlyUsage.lod4).toBe(1);
+      expect(useUserStore.getState().monthlyUsage.inhabit).toBe(1);
     });
   });
 

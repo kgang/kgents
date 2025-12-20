@@ -61,7 +61,7 @@ async function fetchGarden<T>(aspect: string, body?: unknown): Promise<T> {
     }
     // GardenNode returns BasicRendering with GardenJSON in metadata
     return response.data.result.metadata as T;
-  } else {
+  } 
     const response = await apiClient.post<AgenteseResponse<T>>(
       `/agentese/${urlPath}/${aspect}`,
       body ?? {}
@@ -70,7 +70,7 @@ async function fetchGarden<T>(aspect: string, body?: unknown): Promise<T> {
       throw new Error(response.data.error);
     }
     return response.data.result;
-  }
+  
 }
 
 // =============================================================================

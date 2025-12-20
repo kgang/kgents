@@ -396,3 +396,60 @@
 .page-enter {
   animation: page-enter 0.3s ease-out;
 }
+
+/* =============================================================================
+ * Canvas Vine Animations (Organic Connections)
+ *
+ * From mood-board.md:
+ * - "Everything Breathes" — 3-4 second cycle
+ * - "Data flows like water through vines" — subtle opacity pulse
+ * - Organic feel, not mechanical
+ * ============================================================================= */
+
+@keyframes vine-breathe {
+  0%,
+  100% {
+    opacity: 0.6;
+    stroke-width: 1.5;
+  }
+  50% {
+    opacity: 0.85;
+    stroke-width: 1.8;
+  }
+}
+
+.animate-vine-breathe {
+  animation: vine-breathe 4s ease-in-out infinite;
+}
+
+/* Variant: faster breathing for active connections */
+@keyframes vine-breathe-active {
+  0%,
+  100% {
+    opacity: 0.7;
+    stroke-width: 1.8;
+  }
+  50% {
+    opacity: 1;
+    stroke-width: 2.2;
+  }
+}
+
+.animate-vine-breathe-active {
+  animation: vine-breathe-active 2s ease-in-out infinite;
+}
+
+/* Flowing particle animation for data flow visualization */
+@keyframes vine-flow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-vine-flow {
+  stroke-dasharray: 4 16;
+  animation: vine-flow 1s linear infinite;
+}

@@ -281,10 +281,10 @@ describe('Chaos Tests: Random Widget Show/Hide', () => {
                 ...prev,
                 createMockCitizen(`chaos-new-${chaosCounter}-${Date.now()}`, chaosCounter),
               ];
-            } else {
+            } 
               // Shuffle order
               return [...prev].sort(() => Math.random() - 0.5);
-            }
+            
           });
         }, 50); // 20 changes per second
 

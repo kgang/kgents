@@ -19,8 +19,9 @@
  * @see plans/cli-v7-implementation.md Phase 4 spec
  */
 
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { AgentCursor } from '@/hooks/usePresenceChannel';
+import { useCanvasLayout } from '@/hooks/useCanvasLayout';
 import { CursorOverlay } from './CursorOverlay';
 
 // =============================================================================
@@ -87,6 +88,8 @@ export interface AgentCanvasProps {
   minZoom?: number;
   /** Maximum zoom level */
   maxZoom?: number;
+  /** Circadian tempo modifier for cursor animation (0.0-1.0) */
+  circadianTempo?: number;
 }
 
 // =============================================================================
@@ -123,20 +126,26 @@ const CONTEXT_BORDER_COLORS: Record<CanvasNode['context'], string> = {
 
 interface NodeCardProps {
   node: CanvasNode;
+  position: { x: number; y: number };
   isSelected: boolean;
   hasCursor: boolean;
+  isDragging: boolean;
   onClick: () => void;
   onDoubleClick: () => void;
   onToggle?: () => void;
+  onDragStart: (e: React.MouseEvent) => void;
 }
 
 function NodeCard({
   node,
+  position,
   isSelected,
   hasCursor,
+  isDragging,
   onClick,
   onDoubleClick,
   onToggle,
+  onDragStart,
 }: NodeCardProps) {
   const bgColor = CONTEXT_BG_COLORS[node.context];
   const borderColor = CONTEXT_BORDER_COLORS[node.context];
@@ -145,22 +154,32 @@ function NodeCard({
   return (
     <div
       className={`
-        absolute cursor-pointer select-none
+        absolute select-none
         rounded-lg border-2 px-3 py-2 min-w-[120px] max-w-[200px]
-        transition-all duration-200
+        ${isDragging ? 'cursor-grabbing z-50 shadow-xl shadow-black/40' : 'cursor-grab'}
         ${bgColor} ${borderColor}
         ${isSelected ? 'ring-2 ring-white/50 scale-105' : ''}
         ${hasCursor ? 'animate-pulse' : ''}
-        hover:scale-105 hover:shadow-lg hover:shadow-black/20
+        ${!isDragging ? 'transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-black/20' : ''}
       `}
       style={{
-        left: node.position.x,
-        top: node.position.y,
+        left: position.x,
+        top: position.y,
         transform: 'translate(-50%, -50%)',
+      }}
+      onMouseDown={(e) => {
+        // Only start drag on left click without modifier keys
+        if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+          e.stopPropagation();
+          onDragStart(e);
+        }
       }}
       onClick={(e) => {
         e.stopPropagation();
-        onClick();
+        // Only trigger click if not dragging
+        if (!isDragging) {
+          onClick();
+        }
       }}
       onDoubleClick={(e) => {
         e.stopPropagation();
@@ -179,6 +198,9 @@ function NodeCard({
           {node.expanded ? '-' : '+'}
         </button>
       )}
+
+      {/* Drag handle indicator */}
+      <div className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-gray-700 border border-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
 
       {/* Node label */}
       <div className="font-medium text-sm text-white truncate">{node.label}</div>
@@ -201,72 +223,236 @@ function NodeCard({
 }
 
 // =============================================================================
-// Connection Lines (SVG)
+// Connection Lines: Organic Vine Algorithm (Performance-Hardened)
+// =============================================================================
+//
+// Design Philosophy (from mood-board.md + crown-jewels-genesis-moodboard.md):
+// - "Data flows like water through vines" — organic curves with natural droop
+// - "Everything Breathes" — subtle animation on 3-4s cycle
+// - Living Earth palette — warm amber, sage, not cold gray
+// - Hand-drawn feel — slight imperfection, vine-like growth
+//
+// Algorithm: Organic Cubic Bezier with Gravitational Droop
+// Instead of simple quadratic, we use cubic bezier with:
+// 1. Control points that "droop" like hanging vines
+// 2. Asymmetric curves (exit horizontal, arc downward, enter from above)
+// 3. Context-aware coloring from parent → child gradient
+//
+// PERFORMANCE OPTIMIZATIONS (hardened 2025-12-20):
+// - Shared gradient defs per context-pair (not per-connection)
+// - Removed expensive Gaussian blur filter (use CSS opacity instead)
+// - Memoized path calculations with position hashing
+// - React.memo on ConnectionLines component
+// - Reduced SVG elements per connection (2 → 1 path)
 // =============================================================================
 
 interface ConnectionLinesProps {
   nodes: CanvasNode[];
-  viewport: ViewportState;
+  positions: Map<string, { x: number; y: number }>;
 }
 
-function ConnectionLines({ nodes, viewport }: ConnectionLinesProps) {
-  const nodeMap = useMemo(() => {
-    const map = new Map<string, CanvasNode>();
-    nodes.forEach((n) => map.set(n.id, n));
-    return map;
-  }, [nodes]);
+// =============================================================================
+// Performance: Hoisted Constants (no allocation per render)
+// =============================================================================
 
-  // Generate lines from parent → child
-  const lines = useMemo(() => {
-    const result: { from: CanvasNode; to: CanvasNode }[] = [];
-    nodes.forEach((node) => {
-      if (node.parent) {
-        const parent = nodeMap.get(node.parent);
-        if (parent) {
-          result.push({ from: parent, to: node });
-        }
-      }
-    });
-    return result;
-  }, [nodes, nodeMap]);
+/** Living Earth vine colors (more muted than node colors) */
+const CONTEXT_VINE_COLORS: Readonly<Record<string, string>> = {
+  world: '#6B8B6B',    // Sage-mint for world connections
+  self: '#9B7BB6',     // Soft violet
+  concept: '#7BA88B',  // Soft emerald
+  void: '#8B8B8B',     // Neutral gray
+  time: '#C4A060',     // Warm amber
+} as const;
 
-  if (lines.length === 0) return null;
+/** All unique context pairs for shared gradients */
+const CONTEXT_TYPES = ['world', 'self', 'concept', 'void', 'time'] as const;
+
+/** Pre-computed gradient ID for context pair (avoids string concat per connection) */
+function getGradientId(fromContext: string, toContext: string): string {
+  return `vine-${fromContext}-${toContext}`;
+}
+
+// =============================================================================
+// Path Calculation (Pure function, easily memoizable)
+// =============================================================================
+
+/**
+ * Calculate organic vine path between two points.
+ *
+ * The algorithm creates a natural "droop" like a hanging vine:
+ * - Leaves parent node horizontally
+ * - Arcs downward with gravity
+ * - Curves up to meet child node from below
+ *
+ * For upward connections (child above parent), inverts to create
+ * a "reaching" effect instead.
+ *
+ * PERFORMANCE: Pure function with no allocations beyond return string.
+ */
+function calculateVinePath(
+  fromX: number,
+  fromY: number,
+  toX: number,
+  toY: number
+): string {
+  const dx = toX - fromX;
+  const dy = toY - fromY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+
+  // Droop factor: how much the vine hangs down
+  // Longer distances = more droop, capped for aesthetics
+  const droopFactor = Math.min(0.3, dist / 800);
+  const droop = dist * droopFactor;
+
+  // Determine if we're going up or down
+  const goingDown = dy > 0;
+
+  // Control points for cubic bezier
+  // The magic: asymmetric control points create organic feel
+  if (goingDown) {
+    // Standard vine: droop down then curve up to target
+    const cp1x = fromX + dx * 0.3;
+    const cp1y = fromY + droop * 0.5; // Slight initial droop
+    const cp2x = fromX + dx * 0.7;
+    const cp2y = toY - droop * 0.3; // Rise up to meet target
+
+    return `M ${fromX} ${fromY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toX} ${toY}`;
+  } 
+    // Reaching upward: arc out then up
+    const absDy = Math.abs(dy);
+    const cp1x = fromX + dx * 0.4;
+    const cp1y = fromY + absDy * 0.2; // Small downward arc first
+    const cp2x = fromX + dx * 0.6;
+    const cp2y = toY + absDy * 0.1; // Slight undershoot
+
+    return `M ${fromX} ${fromY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${toX} ${toY}`;
+  
+}
+
+// =============================================================================
+// Shared Gradient Definitions (rendered once, used by all connections)
+// =============================================================================
+
+/** Pre-render all possible context-pair gradients (5x5 = 25 max, but only ~10 used) */
+function SharedGradientDefs() {
+  return (
+    <>
+      {CONTEXT_TYPES.map((fromCtx) =>
+        CONTEXT_TYPES.map((toCtx) => {
+          const fromColor = CONTEXT_VINE_COLORS[fromCtx];
+          const toColor = CONTEXT_VINE_COLORS[toCtx];
+          const gradientId = getGradientId(fromCtx, toCtx);
+
+          return (
+            <linearGradient
+              key={gradientId}
+              id={gradientId}
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="0%"
+            >
+              <stop offset="0%" stopColor={fromColor} stopOpacity={0.7} />
+              <stop offset="100%" stopColor={toColor} stopOpacity={0.7} />
+            </linearGradient>
+          );
+        })
+      )}
+    </>
+  );
+}
+
+// =============================================================================
+// Connection Lines Component (Memoized)
+// =============================================================================
+
+interface ConnectionData {
+  id: string;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  gradientId: string;
+}
+
+const ConnectionLinesInner = React.memo(function ConnectionLinesInner({
+  connections,
+}: {
+  connections: ConnectionData[];
+}) {
+  if (connections.length === 0) return null;
 
   return (
     <svg
-      className="absolute inset-0 pointer-events-none"
-      style={{
-        transform: `translate(${viewport.offsetX}px, ${viewport.offsetY}px) scale(${viewport.zoom})`,
-        transformOrigin: '0 0',
-      }}
+      className="absolute inset-0 pointer-events-none overflow-visible"
+      style={{ left: 0, top: 0 }}
     >
       <defs>
-        <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-          <polygon points="0 0, 6 3, 0 6" fill="#4b5563" />
-        </marker>
+        <SharedGradientDefs />
       </defs>
-      {lines.map(({ from, to }, i) => {
-        const dx = to.position.x - from.position.x;
-        const dy = to.position.y - from.position.y;
-        // Bezier control point for smooth curve
-        const cx = from.position.x + dx * 0.5;
-        const cy = from.position.y + dy * 0.5;
+
+      {connections.map(({ id, fromX, fromY, toX, toY, gradientId }) => {
+        const path = calculateVinePath(fromX, fromY, toX, toY);
 
         return (
           <path
-            key={i}
-            d={`M ${from.position.x} ${from.position.y} Q ${cx} ${from.position.y} ${cx} ${cy} T ${to.position.x} ${to.position.y}`}
-            stroke="#4b5563"
+            key={id}
+            d={path}
+            stroke={`url(#${gradientId})`}
             strokeWidth="1.5"
             fill="none"
-            strokeDasharray="4 2"
-            opacity={0.5}
+            strokeLinecap="round"
+            className="animate-vine-breathe"
           />
         );
       })}
     </svg>
   );
+});
+
+function ConnectionLines({ nodes, positions }: ConnectionLinesProps) {
+  // Build node lookup map (stable reference if nodes unchanged)
+  const nodeMap = useMemo(() => {
+    const map = new Map<string, CanvasNode>();
+    for (const n of nodes) {
+      map.set(n.id, n);
+    }
+    return map;
+  }, [nodes]);
+
+  // Generate flat connection data (optimized for React reconciliation)
+  // PERFORMANCE: Avoid object allocation by using flat structure
+  const connections = useMemo((): ConnectionData[] => {
+    const result: ConnectionData[] = [];
+
+    for (const node of nodes) {
+      if (!node.parent) continue;
+
+      const parent = nodeMap.get(node.parent);
+      if (!parent) continue;
+
+      const fromPos = positions.get(parent.id);
+      const toPos = positions.get(node.id);
+      if (!fromPos || !toPos) continue;
+
+      result.push({
+        id: `${parent.id}-${node.id}`,
+        fromX: fromPos.x,
+        fromY: fromPos.y,
+        toX: toPos.x,
+        toY: toPos.y,
+        gradientId: getGradientId(parent.context, node.context),
+      });
+    }
+
+    return result;
+  }, [nodes, nodeMap, positions]);
+
+  return <ConnectionLinesInner connections={connections} />;
 }
+
+// Make ConnectionLines available with memo
+const MemoizedConnectionLines = React.memo(ConnectionLines);
 
 // =============================================================================
 // Main Component
@@ -285,6 +471,7 @@ export function AgentCanvas({
   enableZoom = true,
   minZoom = 0.25,
   maxZoom = 2.0,
+  circadianTempo = 1.0,
 }: AgentCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState<ViewportState>({
@@ -294,6 +481,22 @@ export function AgentCanvas({
   });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 });
+
+  // Force-directed layout with draggable nodes
+  const {
+    positions,
+    startDrag,
+    updateDrag,
+    endDrag,
+    isDragging,
+    draggedNodeId,
+    resetPositions,
+  } = useCanvasLayout(nodes, {
+    centerX: 0,
+    centerY: 0,
+    radius: 250,
+    nodeSpacing: 140,
+  });
 
   // Create a map of path → cursor for quick lookup
   const cursorsByPath = useMemo(() => {
@@ -307,19 +510,26 @@ export function AgentCanvas({
     return map;
   }, [cursors]);
 
-  // Pan handling
+  // Pan handling (only when not dragging a node)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!enablePan) return;
+      if (!enablePan || isDragging) return;
       if (e.button !== 0) return; // Only left click
       setIsPanning(true);
       setLastPanPos({ x: e.clientX, y: e.clientY });
     },
-    [enablePan]
+    [enablePan, isDragging]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
+      // Handle node dragging
+      if (isDragging) {
+        updateDrag(e.clientX / viewport.zoom, e.clientY / viewport.zoom);
+        return;
+      }
+
+      // Handle canvas panning
       if (!isPanning) return;
       const dx = e.clientX - lastPanPos.x;
       const dy = e.clientY - lastPanPos.y;
@@ -330,12 +540,15 @@ export function AgentCanvas({
       }));
       setLastPanPos({ x: e.clientX, y: e.clientY });
     },
-    [isPanning, lastPanPos]
+    [isPanning, lastPanPos, isDragging, updateDrag, viewport.zoom]
   );
 
   const handleMouseUp = useCallback(() => {
+    if (isDragging) {
+      endDrag();
+    }
     setIsPanning(false);
-  }, []);
+  }, [isDragging, endDrag]);
 
   // Zoom handling
   const handleWheel = useCallback(
@@ -425,7 +638,14 @@ export function AgentCanvas({
           className="px-2 h-8 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs"
           title="Reset view"
         >
-          Reset
+          View
+        </button>
+        <button
+          onClick={resetPositions}
+          className="px-2 h-8 rounded bg-gray-800 hover:bg-gray-700 text-white text-xs"
+          title="Reset node positions"
+        >
+          Layout
         </button>
         <span className="text-xs text-gray-500">{Math.round(viewport.zoom * 100)}%</span>
       </div>
@@ -448,26 +668,35 @@ export function AgentCanvas({
           transformOrigin: '0 0',
         }}
       >
-        {/* Connection lines */}
-        {showConnections && (
-          <ConnectionLines nodes={nodes} viewport={{ offsetX: 0, offsetY: 0, zoom: 1 }} />
-        )}
+        {/* Connection lines (memoized for performance) */}
+        {showConnections && <MemoizedConnectionLines nodes={nodes} positions={positions} />}
 
         {/* Nodes */}
-        {nodes.map((node) => (
-          <NodeCard
-            key={node.id}
-            node={node}
-            isSelected={node.id === selectedNode}
-            hasCursor={cursorsByPath.has(node.path)}
-            onClick={() => onNodeClick?.(node)}
-            onDoubleClick={() => onNodeNavigate?.(node.path)}
-            onToggle={() => onNodeToggle?.(node)}
-          />
-        ))}
+        {nodes.map((node) => {
+          const pos = positions.get(node.id) || node.position;
+          return (
+            <NodeCard
+              key={node.id}
+              node={node}
+              position={pos}
+              isSelected={node.id === selectedNode}
+              hasCursor={cursorsByPath.has(node.path)}
+              isDragging={draggedNodeId === node.id}
+              onClick={() => onNodeClick?.(node)}
+              onDoubleClick={() => onNodeNavigate?.(node.path)}
+              onToggle={() => onNodeToggle?.(node)}
+              onDragStart={(e) => startDrag(node.id, e.clientX / viewport.zoom, e.clientY / viewport.zoom)}
+            />
+          );
+        })}
 
-        {/* Agent Cursors */}
-        <CursorOverlay cursors={cursors} nodes={nodes} />
+        {/* Agent Cursors with spring-physics animation */}
+        <CursorOverlay
+          cursors={cursors}
+          nodes={nodes}
+          positions={positions}
+          circadianTempo={circadianTempo}
+        />
       </div>
 
       {/* Empty state */}

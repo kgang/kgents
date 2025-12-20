@@ -389,9 +389,9 @@ export function getBreathingScale(timeMs: number): number {
   } else if (cyclePosition < 0.75) {
     // Hold: stay at inhale
     return phases.inhale;
-  } else {
+  } 
     // Exhale: interpolate from rest down to exhale
     const t = (cyclePosition - 0.75) / 0.25;
     return phases.rest - t * amplitude;
-  }
+  
 }

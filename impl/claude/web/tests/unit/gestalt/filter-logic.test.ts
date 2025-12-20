@@ -114,12 +114,12 @@ describe('calculateGradeDistribution', () => {
   it('counts modules by grade', () => {
     const distribution = calculateGradeDistribution(SAMPLE_MODULES);
     expect(distribution['A+']).toBe(1);
-    expect(distribution['A']).toBe(2);
+    expect(distribution.A).toBe(2);
     expect(distribution['B+']).toBe(1);
-    expect(distribution['B']).toBe(1);
-    expect(distribution['C']).toBe(1);
-    expect(distribution['D']).toBe(1);
-    expect(distribution['F']).toBe(1);
+    expect(distribution.B).toBe(1);
+    expect(distribution.C).toBe(1);
+    expect(distribution.D).toBe(1);
+    expect(distribution.F).toBe(1);
   });
 
   it('returns zeros for empty array', () => {
@@ -135,7 +135,7 @@ describe('calculateGradeDistribution', () => {
       createModule({ health_grade: 'A' }),
     ];
     const distribution = calculateGradeDistribution(modulesWithUnknown);
-    expect(distribution['A']).toBe(1);
+    expect(distribution.A).toBe(1);
     // Unknown grade not counted in standard distribution
   });
 });

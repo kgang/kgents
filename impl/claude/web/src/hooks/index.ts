@@ -518,6 +518,20 @@ export {
   type UseUserFocusReturn,
 } from './useUserFocus';
 
+// Circadian phase and warmth (CLI v7 Phase 5: Coworking Canvas)
+export {
+  useCircadian,
+  type CircadianData,
+  type UseCircadianReturn,
+} from './useCircadian';
+
+// Canvas layout with force-directed positioning and drag (CLI v7 Phase 5)
+export {
+  useCanvasLayout,
+  type LayoutOptions,
+  type UseCanvasLayoutReturn,
+} from './useCanvasLayout';
+
 // =============================================================================
 // WARP Phase 2: React Projection Layer
 // =============================================================================
@@ -554,3 +568,10 @@ export {
   type UseTerraceOptions,
   type UseTerraceReturn,
 } from './useTerrace';
+
+// Walk Dashboard (time.walk.list → SceneGraph) - Session 7
+export {
+  useWalkDashboard,
+  type UseWalkDashboardOptions,
+  type UseWalkDashboardReturn,
+} from './useWalkDashboard';
