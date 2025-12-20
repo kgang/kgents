@@ -79,6 +79,12 @@ from .events import (
     create_session_complete_event,
     create_task_complete_event,
     create_turn_completed_event,
+    # Witness factory functions (8th Crown Jewel)
+    create_witness_daemon_started_event,
+    create_witness_daemon_stopped_event,
+    create_witness_git_commit_event,
+    create_witness_git_push_event,
+    create_witness_thought_event,
 )
 from .handlers import (
     AtelierToBrainHandler,
@@ -86,6 +92,8 @@ from .handlers import (
     BrainToCoalitionHandler,
     CoalitionToBrainHandler,
     GestaltToBrainHandler,
+    WitnessToBrainHandler,
+    WitnessToGardenHandler,
 )
 
 __all__ = [
@@ -127,6 +135,15 @@ __all__ = [
     "AtelierToBrainHandler",
     "CoalitionToBrainHandler",
     "BrainToCoalitionHandler",
+    # Handlers - Witness (8th Crown Jewel)
+    "WitnessToBrainHandler",
+    "WitnessToGardenHandler",
+    # Factory functions - Witness (8th Crown Jewel)
+    "create_witness_thought_event",
+    "create_witness_git_commit_event",
+    "create_witness_git_push_event",
+    "create_witness_daemon_started_event",
+    "create_witness_daemon_stopped_event",
     # CLI Output (Wave 2: UI Integration)
     "display_synergy_notification",
     "display_synergy_results",

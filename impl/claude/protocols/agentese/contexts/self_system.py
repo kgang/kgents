@@ -511,9 +511,7 @@ Run `kg self.system.witness` to see evolution history.
         if result.success:
             files_list = "\n".join(f"  - {f}" for f in result.generated_files)
             warnings_list = (
-                "\n".join(f"  ⚠️ {w}" for w in result.warnings)
-                if result.warnings
-                else ""
+                "\n".join(f"  ⚠️ {w}" for w in result.warnings) if result.warnings else ""
             )
             content = f"""## Compile Result
 
@@ -784,8 +782,7 @@ Run `kg self.system.witness` to see evolution history.
                             {
                                 "hash": parts[0][:8],
                                 "author": parts[1],
-                                "message": parts[2][:60]
-                                + ("..." if len(parts[2]) > 60 else ""),
+                                "message": parts[2][:60] + ("..." if len(parts[2]) > 60 else ""),
                                 "when": parts[3],
                             }
                         )
@@ -1200,16 +1197,12 @@ Copy to `spec/{holon}/{holon}.md` to create/update spec.
         for holon, holon_gaps in sorted(gaps_by_holon.items()):
             lines.append(f"### {holon}")
             for gap in holon_gaps:
-                icon = {"critical": "🔴", "important": "🟡", "minor": "⚪"}[
-                    gap.severity.value
-                ]
+                icon = {"critical": "🔴", "important": "🟡", "minor": "⚪"}[gap.severity.value]
                 lines.append(f"- {icon} **{gap.component.value}**: {gap.message}")
             lines.append("")
 
         lines.append("---")
-        lines.append(
-            "\n**To fix**: Create missing files or update spec YAML frontmatter."
-        )
+        lines.append("\n**To fix**: Create missing files or update spec YAML frontmatter.")
 
         return BasicRendering(
             summary=f"Gaps: {len(gaps)} {'(' + severity + ')' if severity else ''}",
@@ -1255,9 +1248,7 @@ Copy to `spec/{holon}/{holon}.md` to create/update spec.
         all_healthy = True
         total_confidence = 0.0
 
-        for holon, result in sorted(
-            results.items(), key=lambda x: x[1].confidence, reverse=True
-        ):
+        for holon, result in sorted(results.items(), key=lambda x: x[1].confidence, reverse=True):
             spec = result.spec_node
             conf = result.confidence
             total_confidence += conf
@@ -1266,14 +1257,8 @@ Copy to `spec/{holon}/{holon}.md` to create/update spec.
             if conf < 1.0:
                 all_healthy = False
 
-            poly_str = (
-                f"{len(spec.polynomial.positions)} pos"
-                if spec and spec.polynomial
-                else "—"
-            )
-            operad_str = (
-                f"{len(spec.operad.operations)} ops" if spec and spec.operad else "—"
-            )
+            poly_str = f"{len(spec.polynomial.positions)} pos" if spec and spec.polynomial else "—"
+            operad_str = f"{len(spec.operad.operations)} ops" if spec and spec.operad else "—"
             node_str = spec.agentese.path if spec and spec.agentese else "—"
 
             table_rows.append(

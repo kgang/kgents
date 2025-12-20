@@ -181,9 +181,7 @@ def distort_border(
     for char in text:
         if char in border_chars and random.random() < intensity:
             idx = border_chars.index(char)
-            result.append(
-                distorted[idx] if random.random() > 0.5 else random.choice(GLITCH_CHARS)
-            )
+            result.append(distorted[idx] if random.random() > 0.5 else random.choice(GLITCH_CHARS))
         else:
             result.append(char)
     return "".join(result)

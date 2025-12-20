@@ -99,9 +99,7 @@ class ClaudeRuntime(Runtime):
             try:
                 import anthropic
             except ImportError:
-                raise ImportError(
-                    "anthropic package required. Install with: pip install anthropic"
-                )
+                raise ImportError("anthropic package required. Install with: pip install anthropic")
 
             # OAuth token takes precedence over API key
             if self._auth_token:
@@ -152,10 +150,7 @@ class ClaudeRuntime(Runtime):
             return True
 
         # Auth errors - permanent
-        if any(
-            term in error_str
-            for term in ["auth", "unauthorized", "forbidden", "401", "403"]
-        ):
+        if any(term in error_str for term in ["auth", "unauthorized", "forbidden", "401", "403"]):
             return False
 
         # Invalid request errors - permanent
@@ -209,8 +204,7 @@ class ClaudeRuntime(Runtime):
                 "usage": {
                     "input_tokens": response.usage.input_tokens,
                     "output_tokens": response.usage.output_tokens,
-                    "total_tokens": response.usage.input_tokens
-                    + response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
                 },
                 "stop_reason": response.stop_reason,
                 "trace_id": trace_id,

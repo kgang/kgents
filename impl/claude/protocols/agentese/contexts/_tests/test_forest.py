@@ -353,9 +353,7 @@ Looking at how to integrate forest handles.
 
 
 @pytest.fixture
-def forest_node_with_epilogues(
-    sample_forest_file: Path, epilogues_dir: Path
-) -> ForestNode:
+def forest_node_with_epilogues(sample_forest_file: Path, epilogues_dir: Path) -> ForestNode:
     """Create a ForestNode with both forest file and epilogues."""
     return create_forest_node(
         forest_path=str(sample_forest_file),
@@ -825,9 +823,7 @@ class TestManifestFromHeaders:
         assert "# Forest Health" in result.content
 
     @pytest.mark.asyncio
-    async def test_manifest_includes_metadata(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_manifest_includes_metadata(self, forest_node_with_plans: ForestNode) -> None:
         """_manifest_from_headers should include plan counts in metadata."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._manifest_from_headers(observer)
@@ -867,9 +863,7 @@ class TestTithe:
     """Tests for self.forest.tithe (archive stale plans)."""
 
     @pytest.mark.asyncio
-    async def test_tithe_dry_run_default(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_tithe_dry_run_default(self, forest_node_with_plans: ForestNode) -> None:
         """_tithe should be dry run by default."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._tithe(observer)
@@ -877,9 +871,7 @@ class TestTithe:
         assert result.metadata["dry_run"] is True
 
     @pytest.mark.asyncio
-    async def test_tithe_returns_report(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_tithe_returns_report(self, forest_node_with_plans: ForestNode) -> None:
         """_tithe should return a report."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._tithe(observer)
@@ -902,9 +894,7 @@ class TestReconcile:
         assert "_forest.md" in result.metadata["files_updated"]
 
     @pytest.mark.asyncio
-    async def test_reconcile_returns_summary(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_reconcile_returns_summary(self, forest_node_with_plans: ForestNode) -> None:
         """_reconcile should return a summary."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._reconcile(observer)
@@ -917,9 +907,7 @@ class TestForestAspectRouting:
     """Tests for _invoke_aspect routing to new operations."""
 
     @pytest.mark.asyncio
-    async def test_invoke_aspect_manifest(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_invoke_aspect_manifest(self, forest_node_with_plans: ForestNode) -> None:
         """_invoke_aspect('manifest') should route to _manifest_from_headers."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._invoke_aspect("manifest", observer)
@@ -928,9 +916,7 @@ class TestForestAspectRouting:
         assert "Forest" in result.content
 
     @pytest.mark.asyncio
-    async def test_invoke_aspect_witness(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_invoke_aspect_witness(self, forest_node_with_plans: ForestNode) -> None:
         """_invoke_aspect('witness') should route to _drift_report."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._invoke_aspect("witness", observer)
@@ -939,9 +925,7 @@ class TestForestAspectRouting:
         assert "DRIFT" in result.content
 
     @pytest.mark.asyncio
-    async def test_invoke_aspect_tithe(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_invoke_aspect_tithe(self, forest_node_with_plans: ForestNode) -> None:
         """_invoke_aspect('tithe') should route to _tithe."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._invoke_aspect("tithe", observer)
@@ -950,9 +934,7 @@ class TestForestAspectRouting:
         assert "TITHE" in result.content
 
     @pytest.mark.asyncio
-    async def test_invoke_aspect_reconcile(
-        self, forest_node_with_plans: ForestNode
-    ) -> None:
+    async def test_invoke_aspect_reconcile(self, forest_node_with_plans: ForestNode) -> None:
         """_invoke_aspect('reconcile') should route to _reconcile."""
         observer = MockUmwelt(archetype="ops")
         result = await forest_node_with_plans._invoke_aspect("reconcile", observer)

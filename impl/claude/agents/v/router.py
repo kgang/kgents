@@ -323,9 +323,7 @@ class VgentRouter(BaseVgent):
         async with self._lock:
             status = await self._check_available(backend)
             if not status.available:
-                raise RuntimeError(
-                    f"Backend {backend.name} not available: {status.reason}"
-                )
+                raise RuntimeError(f"Backend {backend.name} not available: {status.reason}")
             self._selected = backend
             self._backend = self._create_backend(backend)
             self._index_loaded = False

@@ -146,9 +146,7 @@ def check_paywall(check: PaywallCheck) -> PaywallResult:
     tier_config = SUBSCRIPTION_TIERS[budget.subscription_tier]
 
     # Step 1: Check if action requires a feature the user doesn't have
-    feature_check = _check_feature_access(
-        budget, action, check.citizen_id, check.consent_state
-    )
+    feature_check = _check_feature_access(budget, action, check.citizen_id, check.consent_state)
     if not feature_check.allowed:
         return feature_check
 

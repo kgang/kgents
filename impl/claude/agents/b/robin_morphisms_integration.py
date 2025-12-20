@@ -43,9 +43,7 @@ class NarrativeSynthesizer(Agent[SynthesisInput, str]):
     def name(self) -> str:
         return "NarrativeSynthesizer"
 
-    async def invoke(
-        self, input: SynthesisInput, runtime: Optional[Runtime] = None
-    ) -> str:
+    async def invoke(self, input: SynthesisInput, runtime: Optional[Runtime] = None) -> str:
         """Synthesize narrative from components."""
         parts = []
 
@@ -64,27 +62,18 @@ class NarrativeSynthesizer(Agent[SynthesisInput, str]):
                 f"{top_hyp.statement}"
             )
             if len(input.hypotheses.hypotheses) > 1:
-                parts.append(
-                    f"Alternative view: {input.hypotheses.hypotheses[1].statement}"
-                )
+                parts.append(f"Alternative view: {input.hypotheses.hypotheses[1].statement}")
 
         # Dialectic insight
         if input.dialectic:
             if input.dialectic.productive_tension:
-                parts.append(
-                    "These views are in productive tension—don't rush to resolve them."
-                )
+                parts.append("These views are in productive tension—don't rush to resolve them.")
             elif input.dialectic.synthesis:
                 parts.append(f"Synthesis emerges: {input.dialectic.synthesis}")
 
         # K-gent reflection integration
-        if (
-            hasattr(input.kgent, "referenced_patterns")
-            and input.kgent.referenced_patterns
-        ):
-            parts.append(
-                f"This connects to your pattern of {input.kgent.referenced_patterns[0]}."
-            )
+        if hasattr(input.kgent, "referenced_patterns") and input.kgent.referenced_patterns:
+            parts.append(f"This connects to your pattern of {input.kgent.referenced_patterns[0]}.")
 
         return " ".join(parts) if parts else "Further exploration needed."
 
@@ -109,9 +98,7 @@ class NextQuestionGenerator(Agent[QuestionInput, list[str]]):
     def name(self) -> str:
         return "NextQuestionGenerator"
 
-    async def invoke(
-        self, input: QuestionInput, runtime: Optional[Runtime] = None
-    ) -> list[str]:
+    async def invoke(self, input: QuestionInput, runtime: Optional[Runtime] = None) -> list[str]:
         """Generate questions to continue the inquiry."""
         questions = []
 

@@ -505,9 +505,7 @@ class TestChronicleBuilder:
         """Test setting correlation window."""
         traces = make_multi_agent_traces()
 
-        chronicle = (
-            ChronicleBuilder().with_correlation_window(200).add_traces(traces).build()
-        )
+        chronicle = ChronicleBuilder().with_correlation_window(200).add_traces(traces).build()
 
         assert chronicle.total_traces == 5
 
@@ -515,12 +513,7 @@ class TestChronicleBuilder:
         """Test disabling interaction detection."""
         traces = make_multi_agent_traces()
 
-        chronicle = (
-            ChronicleBuilder()
-            .without_interaction_detection()
-            .add_traces(traces)
-            .build()
-        )
+        chronicle = ChronicleBuilder().without_interaction_detection().add_traces(traces).build()
 
         assert len(chronicle.interactions) == 0
 
@@ -544,9 +537,7 @@ class TestChronicleBuilder:
             to_trace_id="b-1",
         )
 
-        chronicle = (
-            ChronicleBuilder().add_trace(trace).add_interaction(interaction).build()
-        )
+        chronicle = ChronicleBuilder().add_trace(trace).add_interaction(interaction).build()
 
         assert len(chronicle.interactions) >= 1
 
@@ -601,10 +592,7 @@ class TestCorrelationDetector:
         # Should find the parent-child relationship (within temporal window)
         assert len(interactions) >= 1
         # At least one should be detected (could be temporal or call type)
-        assert any(
-            i.from_trace_id == "parent" or i.to_trace_id == "child"
-            for i in interactions
-        )
+        assert any(i.from_trace_id == "parent" or i.to_trace_id == "child" for i in interactions)
 
     def test_detect_temporal_correlation(self) -> None:
         """Test detecting temporal correlations."""
@@ -613,9 +601,7 @@ class TestCorrelationDetector:
 
         traces = [
             make_trace("t-1", "AgentA", timestamp=base_time),
-            make_trace(
-                "t-2", "AgentB", timestamp=base_time + timedelta(milliseconds=50)
-            ),
+            make_trace("t-2", "AgentB", timestamp=base_time + timedelta(milliseconds=50)),
         ]
 
         interactions = detector.detect_all(traces)
@@ -646,9 +632,7 @@ class TestCorrelationDetector:
 
         traces = [
             make_trace("t-1", "AgentA", timestamp=base_time),
-            make_trace(
-                "t-2", "AgentA", timestamp=base_time + timedelta(milliseconds=10)
-            ),
+            make_trace("t-2", "AgentA", timestamp=base_time + timedelta(milliseconds=10)),
         ]
 
         interactions = detector.detect_all(traces)

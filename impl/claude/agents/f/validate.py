@@ -202,9 +202,7 @@ def _execute_in_sandbox(source_code: str, test_input: Any, agent_name: str) -> A
 
         # Verify agent class exists
         if agent_name not in restricted_globals:
-            raise SandboxExecutionError(
-                f"Agent class '{agent_name}' not found in generated code"
-            )
+            raise SandboxExecutionError(f"Agent class '{agent_name}' not found in generated code")
 
         # Instantiate agent
         agent_class = restricted_globals[agent_name]
@@ -216,9 +214,7 @@ def _execute_in_sandbox(source_code: str, test_input: Any, agent_name: str) -> A
 
         # Verify agent has invoke method
         if not hasattr(agent_instance, "invoke"):
-            raise SandboxExecutionError(
-                f"Agent '{agent_name}' does not have an 'invoke' method"
-            )
+            raise SandboxExecutionError(f"Agent '{agent_name}' does not have an 'invoke' method")
 
         # Execute test
         output = agent_instance.invoke(test_input)
@@ -478,9 +474,7 @@ def _build_failure_summary(
     if failed_invariants:
         lines.append("\nInvariant Violations:")
         for check in failed_invariants:
-            lines.append(
-                f"  - {check.invariant.description}: {check.violation_message}"
-            )
+            lines.append(f"  - {check.invariant.description}: {check.violation_message}")
 
     return "\n".join(lines)
 
@@ -555,9 +549,7 @@ async def validate_with_self_healing(
         # If no regenerate function, can't heal
         if regenerate_fn is None:
             report.verdict = VerdictStatus.ESCALATE
-            report.failure_summary += (
-                "\n\nSelf-healing not available (no regenerate_fn provided)"
-            )
+            report.failure_summary += "\n\nSelf-healing not available (no regenerate_fn provided)"
             return report
 
         # Check convergence: Are we stuck?

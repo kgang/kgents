@@ -90,9 +90,7 @@ def parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
     if frontmatter is None:
         return {}, remaining
     if not isinstance(frontmatter, dict):
-        raise ParseError(
-            f"Frontmatter must be a YAML mapping, got {type(frontmatter).__name__}"
-        )
+        raise ParseError(f"Frontmatter must be a YAML mapping, got {type(frontmatter).__name__}")
 
     return frontmatter, remaining
 
@@ -160,9 +158,7 @@ def parse_operad(data: dict[str, Any] | None) -> OperadSpec | None:
     if not operations_data:
         return None
 
-    operations = tuple(
-        parse_operation(name, op_data) for name, op_data in operations_data.items()
-    )
+    operations = tuple(parse_operation(name, op_data) for name, op_data in operations_data.items())
 
     laws_data = data.get("laws", {})
     laws = tuple(parse_law(name, law_data) for name, law_data in laws_data.items())

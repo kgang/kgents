@@ -321,9 +321,7 @@ class GardenRenderer:
 
         # Focus line
         focus_str = f"[{self.garden.focus}]" if self.garden.focus else "[none]"
-        focus_line = (
-            f"  focus: {focus_str}  │  > open page {self.garden.focus or '...'}"
-        )
+        focus_line = f"  focus: {focus_str}  │  > open page {self.garden.focus or '...'}"
         lines.append(f"│{focus_line:{inner_width}}│")
 
         # Bottom border
@@ -448,7 +446,9 @@ class LibraryRenderer:
 
         # Status line
         total = len(self.library.gardens)
-        status_line = f"  total gardens: {total}  │  orchestration: {self.library.orchestration_status}"
+        status_line = (
+            f"  total gardens: {total}  │  orchestration: {self.library.orchestration_status}"
+        )
         lines.append(f"│{status_line:{inner_width}}│")
 
         # Focus line
@@ -478,9 +478,7 @@ class LibraryRenderer:
         summary = garden.glyph_summary()
         if len(summary) > card_width - 4:
             summary = summary[: card_width - 7] + "..."
-        lines.append(
-            f"│  │  {summary:{card_width - 4}}│{' ' * (outer_width - card_width - 4)}│"
-        )
+        lines.append(f"│  │  {summary:{card_width - 4}}│{' ' * (outer_width - card_width - 4)}│")
 
         # Health bar
         if garden.health is not None:

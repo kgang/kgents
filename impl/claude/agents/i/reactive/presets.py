@@ -67,9 +67,7 @@ if TYPE_CHECKING:
     pass
 
 # GlyphState.phase uses this literal type
-GlyphPhase = Literal[
-    "idle", "active", "waiting", "error", "yielding", "thinking", "complete"
-]
+GlyphPhase = Literal["idle", "active", "waiting", "error", "yielding", "thinking", "complete"]
 
 
 # =============================================================================
@@ -77,9 +75,7 @@ GlyphPhase = Literal[
 # =============================================================================
 
 
-def metric_row(
-    *widgets: ComposableWidget, gap: int = 2, separator: str | None = None
-) -> HStack:
+def metric_row(*widgets: ComposableWidget, gap: int = 2, separator: str | None = None) -> HStack:
     """
     Compose widgets horizontally with consistent spacing.
 
@@ -113,9 +109,7 @@ def metric_row(
 # =============================================================================
 
 
-def metric_stack(
-    *widgets: ComposableWidget, gap: int = 0, separator: str | None = None
-) -> VStack:
+def metric_stack(*widgets: ComposableWidget, gap: int = 0, separator: str | None = None) -> VStack:
     """
     Compose widgets vertically with consistent spacing.
 
@@ -243,9 +237,7 @@ def status_row(
     if phase_colors:
         phase_fg = phase_colors.get(phase)
     glyph_phase = _phase_to_glyph_phase(phase)
-    phase_glyph = GlyphWidget(
-        GlyphState(char=phase_char, fg=phase_fg, phase=glyph_phase)
-    )
+    phase_glyph = GlyphWidget(GlyphState(char=phase_char, fg=phase_fg, phase=glyph_phase))
 
     # Phase name glyph
     phase_name = GlyphWidget(GlyphState(char=phase))
@@ -254,9 +246,7 @@ def status_row(
     activity_glyph = GlyphWidget(GlyphState(char=activity))
 
     # Health bar
-    health_bar = BarWidget(
-        BarState(value=max(0.0, min(1.0, health)), width=10, style="solid")
-    )
+    health_bar = BarWidget(BarState(value=max(0.0, min(1.0, health)), width=10, style="solid"))
 
     return HStack(
         children=[phase_glyph, phase_name, activity_glyph, health_bar],

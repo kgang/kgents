@@ -170,12 +170,8 @@ class WireServer:
 
             if state:
                 task = state.current_task or "running"
-                progress = (
-                    f"{int((state.progress or 0) * 100)}%" if state.progress else ""
-                )
-                notes.append(
-                    f"{ts} — [w-gent] {self.agent_name} {task} {progress}".strip()
-                )
+                progress = f"{int((state.progress or 0) * 100)}%" if state.progress else ""
+                notes.append(f"{ts} — [w-gent] {self.agent_name} {task} {progress}".strip())
 
             if metrics:
                 parts = []
@@ -283,9 +279,7 @@ def cli_main() -> None:
         default="auto",
         help="Fidelity mode",
     )
-    parser.add_argument(
-        "--no-open", action="store_true", help="Don't auto-open browser"
-    )
+    parser.add_argument("--no-open", action="store_true", help="Don't auto-open browser")
 
     args = parser.parse_args()
 

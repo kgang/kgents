@@ -76,9 +76,7 @@ class TestTelemetryMiddleware:
     ) -> None:
         """Middleware creates span for invocation."""
 
-        async def mock_handler(
-            path: str, observer: Any, *args: Any, **kwargs: Any
-        ) -> str:
+        async def mock_handler(path: str, observer: Any, *args: Any, **kwargs: Any) -> str:
             return "result"
 
         result = await middleware(
@@ -98,9 +96,7 @@ class TestTelemetryMiddleware:
     ) -> None:
         """Middleware propagates exceptions from handler."""
 
-        async def failing_handler(
-            path: str, observer: Any, *args: Any, **kwargs: Any
-        ) -> None:
+        async def failing_handler(path: str, observer: Any, *args: Any, **kwargs: Any) -> None:
             raise ValueError("test error")
 
         with pytest.raises(ValueError, match="test error"):
@@ -270,9 +266,7 @@ class TestTokenRecording:
                 if self.usage is None:
                     self.usage = Usage()
 
-        async def handler(
-            path: str, observer: Any, *args: Any, **kwargs: Any
-        ) -> Result:
+        async def handler(path: str, observer: Any, *args: Any, **kwargs: Any) -> Result:
             return Result()
 
         umwelt = MockUmwelt()
@@ -293,9 +287,7 @@ class TestTokenRecording:
     ) -> None:
         """Records tokens from dict-style result."""
 
-        async def handler(
-            path: str, observer: Any, *args: Any, **kwargs: Any
-        ) -> dict[str, Any]:
+        async def handler(path: str, observer: Any, *args: Any, **kwargs: Any) -> dict[str, Any]:
             return {
                 "content": "response",
                 "usage": {

@@ -53,9 +53,7 @@ def check_imports(
             # Not in whitelist - check risk
             risk = IMPORT_RISK.get(imp, DEFAULT_IMPORT_RISK)
             if risk > 0.5:
-                violations.append(
-                    f"Import '{imp}' not in allowed list (risk={risk:.1f})"
-                )
+                violations.append(f"Import '{imp}' not in allowed list (risk={risk:.1f})")
             total_risk += risk
         else:
             total_risk += IMPORT_RISK.get(imp, 0.0)

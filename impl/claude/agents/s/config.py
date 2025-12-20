@@ -44,9 +44,7 @@ class StateConfig:
     auto_save: bool = True
     auto_load: bool = True
     namespace: str = "default"
-    equality_check: Callable[[Any, Any], bool] = field(
-        default_factory=lambda: lambda a, b: a == b
-    )
+    equality_check: Callable[[Any, Any], bool] = field(default_factory=lambda: lambda a, b: a == b)
 
     def with_namespace(self, namespace: str) -> "StateConfig":
         """Create a copy with different namespace."""

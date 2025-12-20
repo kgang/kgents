@@ -74,9 +74,7 @@ class TaskRecord:
             "handoffs": self.handoffs,
             "duration_seconds": self.duration_seconds,
             "created_at": self.created_at.isoformat(),
-            "completed_at": self.completed_at.isoformat()
-            if self.completed_at
-            else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
         }
 
     def to_detail_dict(self) -> dict[str, Any]:
@@ -374,9 +372,7 @@ class WorkshopHistoryStore:
                 stats.tasks_led += 1
 
             # Count artifacts
-            stats.artifacts_produced += len(
-                [a for a in task.artifacts if a.builder == archetype]
-            )
+            stats.artifacts_produced += len([a for a in task.artifacts if a.builder == archetype])
 
             # Count handoffs
             for event in task.events:

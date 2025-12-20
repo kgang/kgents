@@ -27,50 +27,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import subprocess
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum, auto
 from pathlib import Path
-from typing import AsyncIterator, Callable
 
 from services.witness.polynomial import GitEvent
+from services.witness.watchers.base import BaseWatcher, WatcherState, WatcherStats
 
 logger = logging.getLogger(__name__)
-
-
-# =============================================================================
-# Watcher State
-# =============================================================================
-
-
-class WatcherState(Enum):
-    """State of the git watcher."""
-
-    STOPPED = auto()
-    STARTING = auto()
-    RUNNING = auto()
-    STOPPING = auto()
-    ERROR = auto()
-
-
-@dataclass
-class WatcherStats:
-    """Statistics for the watcher."""
-
-    events_emitted: int = 0
-    last_event_time: datetime | None = None
-    errors_count: int = 0
-    started_at: datetime | None = None
-
-    def record_event(self) -> None:
-        """Record an event emission."""
-        self.events_emitted += 1
-        self.last_event_time = datetime.now()
-
-    def record_error(self) -> None:
-        """Record an error."""
-        self.errors_count += 1
 
 
 # =============================================================================
@@ -165,7 +128,7 @@ async def get_recent_commits(since: datetime) -> list[str]:
 # =============================================================================
 
 
-class GitWatcher:
+class GitWatcher(BaseWatcher[GitEvent]):
     """
     Event-driven git watcher.
 
@@ -174,6 +137,8 @@ class GitWatcher:
 
     Fallback: If native watching unavailable, uses minimal polling
     with exponential backoff (not the 3-minute fixed timer).
+
+    Extends BaseWatcher for consistent lifecycle management.
     """
 
     def __init__(
@@ -181,83 +146,24 @@ class GitWatcher:
         repo_path: Path | None = None,
         poll_interval: float = 5.0,  # Fallback only
     ) -> None:
+        super().__init__()
         self.repo_path = repo_path or Path.cwd()
         self.poll_interval = poll_interval
-        self.state = WatcherState.STOPPED
-        self.stats = WatcherStats()
-        self._task: asyncio.Task[None] | None = None
-        self._stop_event = asyncio.Event()
 
         # Tracking state for change detection
         self._last_head: str | None = None
         self._last_branch: str | None = None
         self._known_commits: set[str] = set()
 
-        # Event handlers
-        self._handlers: list[Callable[[GitEvent], None]] = []
-
-    def add_handler(self, handler: Callable[[GitEvent], None]) -> None:
-        """Add an event handler."""
-        self._handlers.append(handler)
-
-    def remove_handler(self, handler: Callable[[GitEvent], None]) -> None:
-        """Remove an event handler."""
-        if handler in self._handlers:
-            self._handlers.remove(handler)
-
-    def _emit(self, event: GitEvent) -> None:
-        """Emit an event to all handlers."""
-        self.stats.record_event()
-        for handler in self._handlers:
-            try:
-                handler(event)
-            except Exception as e:
-                logger.warning(f"Handler error: {e}")
-                self.stats.record_error()
-
-    async def start(self) -> None:
-        """Start the watcher."""
-        if self.state == WatcherState.RUNNING:
-            return
-
-        self.state = WatcherState.STARTING
-        self._stop_event.clear()
-
-        # Initialize tracking state
+    async def _on_start(self) -> None:
+        """Initialize tracking state."""
         self._last_head = await get_git_head()
         self._last_branch = await get_git_branch()
 
         if self._last_head:
             self._known_commits.add(self._last_head)
 
-        self.stats.started_at = datetime.now()
-        self.state = WatcherState.RUNNING
-
-        # Start the watch loop
-        self._task = asyncio.create_task(self._watch_loop())
-
-        logger.info(f"GitWatcher started on {self.repo_path}")
-
-    async def stop(self) -> None:
-        """Stop the watcher."""
-        if self.state != WatcherState.RUNNING:
-            return
-
-        self.state = WatcherState.STOPPING
-        self._stop_event.set()
-
-        if self._task:
-            try:
-                await asyncio.wait_for(self._task, timeout=5.0)
-            except asyncio.TimeoutError:
-                self._task.cancel()
-                try:
-                    await self._task
-                except asyncio.CancelledError:
-                    pass
-
-        self.state = WatcherState.STOPPED
-        logger.info("GitWatcher stopped")
+        logger.info(f"GitWatcher initialized on {self.repo_path}")
 
     async def _watch_loop(self) -> None:
         """Main watch loop with exponential backoff."""
@@ -328,35 +234,6 @@ class GitWatcher:
             self._last_head = current_head
 
         return events
-
-    async def watch(self) -> AsyncIterator[GitEvent]:
-        """
-        Async iterator interface for event consumption.
-
-        Usage:
-            async for event in watcher.watch():
-                process(event)
-        """
-        queue: asyncio.Queue[GitEvent] = asyncio.Queue()
-
-        def enqueue(event: GitEvent) -> None:
-            queue.put_nowait(event)
-
-        self.add_handler(enqueue)
-
-        try:
-            await self.start()
-
-            while self.state == WatcherState.RUNNING:
-                try:
-                    event = await asyncio.wait_for(queue.get(), timeout=1.0)
-                    yield event
-                except asyncio.TimeoutError:
-                    continue  # Check state and continue
-
-        finally:
-            self.remove_handler(enqueue)
-            await self.stop()
 
 
 # =============================================================================

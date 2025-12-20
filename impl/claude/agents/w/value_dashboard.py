@@ -464,12 +464,8 @@ class ValueDashboard(WireObservable):
             tensor_current=self._state.tensor_history[-1].__dict__
             if self._state.tensor_history
             else {},
-            voi_current=self._state.voi_history[-1].__dict__
-            if self._state.voi_history
-            else {},
-            roc_current=self._state.roc_history[-1].__dict__
-            if self._state.roc_history
-            else {},
+            voi_current=self._state.voi_history[-1].__dict__ if self._state.voi_history else {},
+            roc_current=self._state.roc_history[-1].__dict__ if self._state.roc_history else {},
             anomaly_count=len(self._state.anomalies),
             warning_count=len(self._state.warnings),
         )

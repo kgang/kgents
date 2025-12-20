@@ -151,9 +151,7 @@ class TestHistorianTap:
         assert crystal.outputs == {"output": "result"}
 
     @pytest.mark.asyncio
-    async def test_error_aborts_trace(
-        self, tap: HistorianTap, store: MemoryCrystalStore
-    ) -> None:
+    async def test_error_aborts_trace(self, tap: HistorianTap, store: MemoryCrystalStore) -> None:
         """ERROR aborts the trace."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)
@@ -210,9 +208,7 @@ class TestHistorianTap:
         assert store.count() == 2
 
     @pytest.mark.asyncio
-    async def test_orphan_end_ignored(
-        self, tap: HistorianTap, store: MemoryCrystalStore
-    ) -> None:
+    async def test_orphan_end_ignored(self, tap: HistorianTap, store: MemoryCrystalStore) -> None:
         """INVOKE_END without matching START is ignored."""
         end = make_frame(
             FrameType.INVOKE_END,
@@ -224,9 +220,7 @@ class TestHistorianTap:
         assert store.count() == 0
 
     @pytest.mark.asyncio
-    async def test_action_from_metadata(
-        self, tap: HistorianTap, store: MemoryCrystalStore
-    ) -> None:
+    async def test_action_from_metadata(self, tap: HistorianTap, store: MemoryCrystalStore) -> None:
         """Action is extracted from frame metadata."""
         start = make_frame(FrameType.INVOKE_START)
         await tap.on_frame(start)

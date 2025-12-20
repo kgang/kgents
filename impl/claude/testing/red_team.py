@@ -297,7 +297,9 @@ class RTLMutation(MutationOperator):
         rtl_override = "\u202e"
         # Pop directional formatting
         pop_directional = "\u202c"
-        return f"{text[: len(text) // 2]}{rtl_override}EVIL{pop_directional}{text[len(text) // 2 :]}"
+        return (
+            f"{text[: len(text) // 2]}{rtl_override}EVIL{pop_directional}{text[len(text) // 2 :]}"
+        )
 
 
 # All mutation operators
@@ -512,9 +514,7 @@ class RedTeam:
         ]
         return any(indicator in result_str for indicator in safety_indicators)
 
-    def extract_vulnerabilities(
-        self, population: list[AdversarialInput]
-    ) -> list[Vulnerability]:
+    def extract_vulnerabilities(self, population: list[AdversarialInput]) -> list[Vulnerability]:
         """Extract vulnerabilities from evolved population.
 
         Args:
@@ -534,9 +534,7 @@ class RedTeam:
                 description = "Triggered safety filter (possible jailbreak)"
             elif individual.latency_ms > 5000:
                 severity = "HIGH"
-                description = (
-                    f"Caused significant latency spike ({individual.latency_ms:.0f}ms)"
-                )
+                description = f"Caused significant latency spike ({individual.latency_ms:.0f}ms)"
             elif individual.confidence < 0.3:
                 severity = "MEDIUM"
                 description = f"Caused low confidence ({individual.confidence:.2f})"

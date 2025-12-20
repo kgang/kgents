@@ -103,9 +103,7 @@ class PolicyResolver:
     def _validate_rigidity(self, rigidity: float, name: str) -> float:
         """Validate and clamp rigidity value."""
         if not isinstance(rigidity, (int, float)):
-            raise ResolutionError(
-                f"{name} must be numeric, got {type(rigidity).__name__}"
-            )
+            raise ResolutionError(f"{name} must be numeric, got {type(rigidity).__name__}")
         # Clamp to valid range
         clamped = max(MIN_RIGIDITY, min(MAX_RIGIDITY, rigidity))
         if clamped != rigidity:
@@ -119,9 +117,7 @@ class PolicyResolver:
         if content is None:
             raise ResolutionError(f"{name} cannot be None")
         if not isinstance(content, str):
-            raise ResolutionError(
-                f"{name} must be a string, got {type(content).__name__}"
-            )
+            raise ResolutionError(f"{name} must be a string, got {type(content).__name__}")
 
     def resolve(
         self,
@@ -163,9 +159,7 @@ class PolicyResolver:
 
         # Handle specific conflict types
         if conflict.conflict_type == ConflictType.DUPLICATION:
-            return self._resolve_duplication(
-                conflict, content_a, content_b, rigidity_a, rigidity_b
-            )
+            return self._resolve_duplication(conflict, content_a, content_b, rigidity_a, rigidity_b)
 
         if conflict.conflict_type == ConflictType.CONTRADICTION:
             return self._resolve_contradiction(
@@ -357,9 +351,7 @@ class PolicyResolver:
         Uses domain focus and verbosity to choose.
         """
         verbosity = self.policy.verbosity if self.policy else 0.5
-        domain_focus = (
-            self.policy.get_domain_focus(domain_hint, 0.5) if self.policy else 0.5
-        )
+        domain_focus = self.policy.get_domain_focus(domain_hint, 0.5) if self.policy else 0.5
 
         # If domain has high focus, prefer the longer/more detailed content
         if domain_focus > 0.7:
@@ -553,9 +545,7 @@ class PolicyResolver:
             List of resolutions
         """
         return [
-            self.resolve(
-                conflict, content_a, content_b, rigidity_a, rigidity_b, domain_hint
-            )
+            self.resolve(conflict, content_a, content_b, rigidity_a, rigidity_b, domain_hint)
             for conflict in conflicts
         ]
 

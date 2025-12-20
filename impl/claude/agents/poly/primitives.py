@@ -400,9 +400,7 @@ def _sublate_transition(
         SublateState.SYNTHESIZED,
         Synthesis(
             thesis=Thesis(content=str(input)),
-            antithesis=Antithesis(
-                thesis=Thesis(content=str(input)), contradiction="default"
-            ),
+            antithesis=Antithesis(thesis=Thesis(content=str(input)), contradiction="default"),
             resolution="default synthesis",
         ),
     )
@@ -466,9 +464,7 @@ FIX = PolyAgent[FixState, tuple[Any, int], dict[str, Any]](
 
 
 # 8. Manifest: Observer-dependent perception
-def _manifest_transition(
-    state: str, input: tuple[Handle, Umwelt]
-) -> tuple[str, Manifestation]:
+def _manifest_transition(state: str, input: tuple[Handle, Umwelt]) -> tuple[str, Manifestation]:
     """Manifest a handle according to observer umwelt."""
     if isinstance(input, tuple) and len(input) == 2:
         handle, umwelt = input
@@ -510,9 +506,7 @@ def _witness_directions(state: WitnessState) -> FrozenSet[Any]:
             return frozenset({"replay", Any})
 
 
-def _witness_transition(
-    state: WitnessState, input: Any
-) -> tuple[WitnessState, Trace | Any]:
+def _witness_transition(state: WitnessState, input: Any) -> tuple[WitnessState, Trace | Any]:
     """Record or replay traces."""
     if input == "replay":
         return WitnessState.REPLAYING, Trace(events=(), timestamp=0.0)
@@ -543,9 +537,7 @@ LENS: PolyAgent[str, Any, Any] = from_function(
 
 
 # 11. Sip: Draw from the Accursed Share
-def _sip_transition(
-    state: SipState, input: EntropyRequest
-) -> tuple[SipState, EntropyGrant]:
+def _sip_transition(state: SipState, input: EntropyRequest) -> tuple[SipState, EntropyGrant]:
     """Draw entropy from the void."""
     import random
 
@@ -571,9 +563,7 @@ SIP = PolyAgent[SipState, EntropyRequest, EntropyGrant](
 
 
 # 12. Tithe: Pay gratitude to the void
-def _tithe_transition(
-    state: TitheState, input: Offering
-) -> tuple[TitheState, dict[str, Any]]:
+def _tithe_transition(state: TitheState, input: Offering) -> tuple[TitheState, dict[str, Any]]:
     """Tithe gratitude to the void."""
     if isinstance(input, Offering):
         return (
@@ -630,9 +620,7 @@ DEFINE = PolyAgent[str, Spec, Definition](
 
 
 # 14. Remember: Persist to memory
-def _remember_transition(
-    state: RememberState, input: Memory
-) -> tuple[RememberState, MemoryResult]:
+def _remember_transition(state: RememberState, input: Memory) -> tuple[RememberState, MemoryResult]:
     """Store a memory."""
     import time
 
@@ -663,9 +651,7 @@ def _remember_transition(
 
 REMEMBER = PolyAgent[RememberState, Memory, MemoryResult](
     name="Remember",
-    positions=frozenset(
-        {RememberState.IDLE, RememberState.STORING, RememberState.STORED}
-    ),
+    positions=frozenset({RememberState.IDLE, RememberState.STORING, RememberState.STORED}),
     _directions=lambda s: frozenset({Memory, Any})  # type: ignore[arg-type]
     if s in (RememberState.IDLE, RememberState.STORING)
     else frozenset(),
@@ -674,9 +660,7 @@ REMEMBER = PolyAgent[RememberState, Memory, MemoryResult](
 
 
 # 15. Forget: Remove from memory
-def _forget_transition(
-    state: ForgetState, input: str
-) -> tuple[ForgetState, MemoryResult]:
+def _forget_transition(state: ForgetState, input: str) -> tuple[ForgetState, MemoryResult]:
     """Forget a memory by key."""
     if isinstance(input, str):
         return (
@@ -703,9 +687,7 @@ def _forget_transition(
 
 FORGET = PolyAgent[ForgetState, str, MemoryResult](
     name="Forget",
-    positions=frozenset(
-        {ForgetState.IDLE, ForgetState.FORGETTING, ForgetState.FORGOTTEN}
-    ),
+    positions=frozenset({ForgetState.IDLE, ForgetState.FORGETTING, ForgetState.FORGOTTEN}),
     _directions=lambda s: frozenset({str, Any})  # type: ignore[arg-type]
     if s in (ForgetState.IDLE, ForgetState.FORGETTING)
     else frozenset(),
@@ -719,17 +701,14 @@ FORGET = PolyAgent[ForgetState, str, MemoryResult](
 
 
 # 16. Evolve: Teleological evolution step
-def _evolve_transition(
-    state: EvolveState, input: Organism
-) -> tuple[EvolveState, Evolution]:
+def _evolve_transition(state: EvolveState, input: Organism) -> tuple[EvolveState, Evolution]:
     """Evolve an organism through mutation and selection."""
     import random
 
     if isinstance(input, Organism):
         # Mutation: randomly perturb genome
         mutated_genome = tuple(
-            g + random.gauss(0, 0.1) if isinstance(g, (int, float)) else g
-            for g in input.genome
+            g + random.gauss(0, 0.1) if isinstance(g, (int, float)) else g for g in input.genome
         )
         mutation_applied = mutated_genome != input.genome
 
@@ -746,9 +725,7 @@ def _evolve_transition(
             generation=input.generation + 1,
         )
 
-        new_state = (
-            EvolveState.CONVERGED if new_fitness > 0.9 else EvolveState.SELECTING
-        )
+        new_state = EvolveState.CONVERGED if new_fitness > 0.9 else EvolveState.SELECTING
 
         return (
             new_state,
@@ -791,9 +768,7 @@ EVOLVE = PolyAgent[EvolveState, Organism, Evolution](
 
 
 # 17. Narrate: Construct story from events (N-gent witness)
-def _narrate_transition(
-    state: NarrateState, input: tuple[Any, ...]
-) -> tuple[NarrateState, Story]:
+def _narrate_transition(state: NarrateState, input: tuple[Any, ...]) -> tuple[NarrateState, Story]:
     """Narrate a story from witnessed events."""
     if isinstance(input, tuple) and len(input) > 0:
         # Extract narrative structure
@@ -831,9 +806,7 @@ def _narrate_transition(
 
 NARRATE = PolyAgent[NarrateState, tuple[Any, ...], Story](
     name="Narrate",
-    positions=frozenset(
-        {NarrateState.LISTENING, NarrateState.COMPOSING, NarrateState.TOLD}
-    ),
+    positions=frozenset({NarrateState.LISTENING, NarrateState.COMPOSING, NarrateState.TOLD}),
     _directions=lambda s: frozenset({tuple, Any})  # type: ignore[arg-type]
     if s in (NarrateState.LISTENING, NarrateState.COMPOSING)
     else frozenset(),

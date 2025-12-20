@@ -194,9 +194,7 @@ class LiveDashboard:
     _event_task: "asyncio.Task[None] | None" = None
 
     # Callbacks
-    _on_state_change: list[Callable[[DashboardState], None]] = field(
-        default_factory=list
-    )
+    _on_state_change: list[Callable[[DashboardState], None]] = field(default_factory=list)
     _on_event: list[Callable[["TownEvent"], None]] = field(default_factory=list)
 
     # --- Initialization ---
@@ -544,9 +542,7 @@ class LiveDashboard:
 
         # Footer with metrics
         lines.append("├" + "─" * (width - 2) + "┤")
-        metrics = (
-            f"Events: {self._state.total_events} | Tokens: {self._state.total_tokens}"
-        )
+        metrics = f"Events: {self._state.total_events} | Tokens: {self._state.total_tokens}"
         lines.append(f"│ {metrics:<{width - 4}} │")
 
         lines.append("└" + "─" * (width - 2) + "┘")
@@ -601,9 +597,7 @@ class LiveDashboard:
 
     # --- Callbacks ---
 
-    def on_state_change(
-        self, callback: Callable[[DashboardState], None]
-    ) -> Callable[[], None]:
+    def on_state_change(self, callback: Callable[[DashboardState], None]) -> Callable[[], None]:
         """Register callback for state changes. Returns unsubscribe function."""
         self._on_state_change.append(callback)
         return lambda: self._on_state_change.remove(callback)

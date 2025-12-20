@@ -53,9 +53,7 @@ class OperationSpec:
     arity: int  # -1 or 0 means variadic
     signature: str = ""
     description: str = ""
-    variadic: bool = (
-        False  # Explicit variadic flag (inferred from arity <= 0 if not set)
-    )
+    variadic: bool = False  # Explicit variadic flag (inferred from arity <= 0 if not set)
 
     @property
     def is_variadic(self) -> bool:
@@ -130,9 +128,7 @@ class ServiceSpec:
     crown_jewel: bool = True  # Is this a Crown Jewel service?
     adapters: tuple[str, ...] = ()  # Required adapters (e.g., "crystals", "streaming")
     frontend: bool = False  # Has frontend component?
-    persistence: str = (
-        ""  # Persistence strategy (e.g., "d-gent", "sqlite", "in-memory")
-    )
+    persistence: str = ""  # Persistence strategy (e.g., "d-gent", "sqlite", "in-memory")
 
 
 @dataclass
@@ -156,9 +152,7 @@ class SpecNode:
     service: ServiceSpec | None = None  # Layer 4 metadata
 
     # Computed fields
-    dependencies: list[str] = field(
-        default_factory=list
-    )  # Other holons this depends on
+    dependencies: list[str] = field(default_factory=list)  # Other holons this depends on
     raw_content: str = ""  # Original markdown content
 
     @property

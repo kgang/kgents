@@ -33,13 +33,13 @@ class GestaltUmwelt(Enum):
     """
 
     # Core roles (matching frontend)
-    TECH_LEAD = "tech_lead"      # architect → High-level patterns, health, governance
-    DEVELOPER = "developer"      # developer → Implementation, dependencies
-    REVIEWER = "reviewer"        # reviewer → Code review, issues, violations
-    PRODUCT = "product"          # newcomer → Features, overview, entry points
+    TECH_LEAD = "tech_lead"  # architect → High-level patterns, health, governance
+    DEVELOPER = "developer"  # developer → Implementation, dependencies
+    REVIEWER = "reviewer"  # reviewer → Code review, issues, violations
+    PRODUCT = "product"  # newcomer → Features, overview, entry points
 
     # Extended roles (backend-only, API param)
-    SECURITY = "security"        # Vulnerable deps, access paths
+    SECURITY = "security"  # Vulnerable deps, access paths
     PERFORMANCE = "performance"  # Bottlenecks, complexity hotspots
 
 
@@ -69,18 +69,18 @@ class UmweltConfig:
     """
 
     # Display weights (0-1, default 0.5)
-    health_weight: float = 0.5       # Emphasize health grades
-    coupling_weight: float = 0.5     # Emphasize coupling metrics
-    violations_weight: float = 0.5   # Emphasize drift violations
-    complexity_weight: float = 0.5   # Emphasize cyclomatic complexity
-    size_weight: float = 0.5         # Emphasize lines of code
+    health_weight: float = 0.5  # Emphasize health grades
+    coupling_weight: float = 0.5  # Emphasize coupling metrics
+    violations_weight: float = 0.5  # Emphasize drift violations
+    complexity_weight: float = 0.5  # Emphasize cyclomatic complexity
+    size_weight: float = 0.5  # Emphasize lines of code
 
     # Visibility filters
-    min_health_score: float = 0.0    # Hide nodes below this health
-    min_importance: float = 0.0      # Hide nodes below this importance
+    min_health_score: float = 0.0  # Hide nodes below this health
+    min_importance: float = 0.0  # Hide nodes below this importance
     show_external_deps: bool = True  # Show external dependencies
-    show_test_modules: bool = True   # Show test modules
-    show_internal_only: bool = False # Only show internal modules
+    show_test_modules: bool = True  # Show test modules
+    show_internal_only: bool = False  # Only show internal modules
 
     # Layer emphasis (layers to highlight)
     emphasized_layers: list[str] = field(default_factory=list)
@@ -232,20 +232,20 @@ def compute_node_score(
 
     # Apply weights
     score = (
-        health * config.health_weight +
-        coupling * config.coupling_weight +
-        violations * config.violations_weight +
-        complexity * config.complexity_weight +
-        size * config.size_weight
+        health * config.health_weight
+        + coupling * config.coupling_weight
+        + violations * config.violations_weight
+        + complexity * config.complexity_weight
+        + size * config.size_weight
     )
 
     # Normalize to 0-1
     total_weight = (
-        config.health_weight +
-        config.coupling_weight +
-        config.violations_weight +
-        config.complexity_weight +
-        config.size_weight
+        config.health_weight
+        + config.coupling_weight
+        + config.violations_weight
+        + config.complexity_weight
+        + config.size_weight
     )
 
     return score / total_weight if total_weight > 0 else 0.5

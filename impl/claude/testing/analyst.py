@@ -92,9 +92,7 @@ class CounterfactualResult:
     supporting_evidence: list[TestWitness] = field(default_factory=list)
 
     def __repr__(self) -> str:
-        return (
-            f"CounterfactualResult('{self.answer}', confidence={self.confidence:.2f})"
-        )
+        return f"CounterfactualResult('{self.answer}', confidence={self.confidence:.2f})"
 
 
 @dataclass
@@ -449,9 +447,7 @@ class CausalAnalyst:
         for i, factor in enumerate(causal_factors):
             if i > 0:
                 # More significant factors cause less significant ones
-                edges.append(
-                    (causal_factors[0].feature, factor.feature, 1 - factor.p_value)
-                )
+                edges.append((causal_factors[0].feature, factor.feature, 1 - factor.p_value))
 
         return CausalGraph(
             nodes=[f.feature for f in causal_factors],
@@ -459,9 +455,7 @@ class CausalAnalyst:
             root_cause=causal_factors[0] if causal_factors else None,
         )
 
-    def _extract_features(
-        self, witnesses: list[TestWitness]
-    ) -> dict[str, dict[str, int]]:
+    def _extract_features(self, witnesses: list[TestWitness]) -> dict[str, dict[str, int]]:
         """Extract features from witnesses for causal analysis."""
         features: dict[str, dict[str, int]] = {}
 
@@ -496,9 +490,7 @@ class CausalAnalyst:
 
         return features
 
-    def _chi_squared_test(
-        self, dist_a: dict[str, int], dist_b: dict[str, int]
-    ) -> float:
+    def _chi_squared_test(self, dist_a: dict[str, int], dist_b: dict[str, int]) -> float:
         """Simplified chi-squared test for independence.
 
         Returns p-value (lower = more significant difference).

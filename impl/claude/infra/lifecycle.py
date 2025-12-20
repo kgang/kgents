@@ -233,9 +233,7 @@ class LifecycleManager:
             # Complete failure → DB-less fallback
             errors.append(f"Bootstrap failed: {e}")
             self._log_error(f"Bootstrap failed: {e}")
-            return self._create_db_less_state(
-                Path(project_path) if project_path else None, errors
-            )
+            return self._create_db_less_state(Path(project_path) if project_path else None, errors)
 
     async def shutdown(self) -> None:
         """
@@ -345,9 +343,7 @@ class LifecycleManager:
     # Private Methods
     # =========================================================================
 
-    async def _detect_mode(
-        self, paths: XDGPaths, project: Path | None
-    ) -> OperationMode:
+    async def _detect_mode(self, paths: XDGPaths, project: Path | None) -> OperationMode:
         """
         Detect operation mode based on existing databases.
 
@@ -417,9 +413,7 @@ class LifecycleManager:
                     event_type="instance.started",
                     timestamp=datetime.now().isoformat(),
                     instance_id=instance_id,
-                    project_hash=self._compute_project_hash(project)
-                    if project
-                    else None,
+                    project_hash=self._compute_project_hash(project) if project else None,
                     data={
                         "mode": mode.value,
                         "hostname": socket.gethostname(),
@@ -434,9 +428,7 @@ class LifecycleManager:
         """Compute a short hash of project path for grouping."""
         return hashlib.sha256(str(project.resolve()).encode()).hexdigest()[:8]
 
-    def _create_db_less_state(
-        self, project: Path | None, errors: list[str]
-    ) -> LifecycleState:
+    def _create_db_less_state(self, project: Path | None, errors: list[str]) -> LifecycleState:
         """Create a DB-less state for fallback."""
         self._state = LifecycleState(
             mode=OperationMode.DB_LESS,

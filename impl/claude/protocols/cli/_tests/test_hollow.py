@@ -230,9 +230,7 @@ class TestFlagParsing:
 class TestUnknownCommand:
     """Test handling of unknown commands."""
 
-    def test_unknown_command_exits_with_error(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_unknown_command_exits_with_error(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Unknown command prints error and exits 1."""
         from protocols.cli.hollow import main
 
@@ -265,9 +263,7 @@ class TestIntegration:
         assert "wipe" in out
         assert "help" in out.lower() or "USAGE" in out
 
-    def test_full_command_execution(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_full_command_execution(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Full command execution path works."""
         from protocols.cli.hollow import main
 

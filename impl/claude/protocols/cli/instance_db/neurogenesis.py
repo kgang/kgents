@@ -136,9 +136,7 @@ class ISchemaIntrospector(Protocol):
         """Get list of (table, column) pairs that contain JSON."""
         ...
 
-    async def sample_column(
-        self, table: str, column: str, limit: int
-    ) -> list[dict[str, Any]]:
+    async def sample_column(self, table: str, column: str, limit: int) -> list[dict[str, Any]]:
         """Sample JSON values from a column."""
         ...
 
@@ -155,18 +153,14 @@ class MockSchemaIntrospector:
         self._samples: dict[tuple[str, str], list[dict[str, Any]]] = {}
         self._executed_migrations: list[str] = []
 
-    def add_samples(
-        self, table: str, column: str, samples: list[dict[str, Any]]
-    ) -> None:
+    def add_samples(self, table: str, column: str, samples: list[dict[str, Any]]) -> None:
         """Add sample data for a column."""
         self._samples[(table, column)] = samples
 
     async def get_json_columns(self) -> list[tuple[str, str]]:
         return self._json_columns
 
-    async def sample_column(
-        self, table: str, column: str, limit: int
-    ) -> list[dict[str, Any]]:
+    async def sample_column(self, table: str, column: str, limit: int) -> list[dict[str, Any]]:
         return self._samples.get((table, column), [])[:limit]
 
     async def execute_migration(self, sql: str) -> bool:
@@ -239,10 +233,7 @@ class TypeInferrer:
             pass
         # Other common patterns
         timestamp_indicators = ["-", "T", ":", "Z", "UTC"]
-        return (
-            len(value) >= 10
-            and sum(1 for ind in timestamp_indicators if ind in value) >= 2
-        )
+        return len(value) >= 10 and sum(1 for ind in timestamp_indicators if ind in value) >= 2
 
 
 class SchemaNeurogenesis:
@@ -297,11 +288,7 @@ class SchemaNeurogenesis:
     @property
     def approved(self) -> list[MigrationProposal]:
         """Approved but not yet executed proposals."""
-        return [
-            p
-            for p in self._proposals
-            if p.approved and not p.executed and not p.rejected
-        ]
+        return [p for p in self._proposals if p.approved and not p.executed and not p.rejected]
 
     @property
     def history(self) -> list[MigrationProposal]:
@@ -341,9 +328,7 @@ class SchemaNeurogenesis:
 
             # Generate proposals from patterns
             for cluster in patterns:
-                proposals = self._proposals_from_cluster(
-                    cluster, table, column, len(samples)
-                )
+                proposals = self._proposals_from_cluster(cluster, table, column, len(samples))
                 self._proposals.extend(proposals)
 
         # Limit proposals
@@ -526,9 +511,5 @@ def create_schema_neurogenesis(
     Returns:
         Configured SchemaNeurogenesis
     """
-    config = (
-        NeurogenesisConfig.from_dict(config_dict)
-        if config_dict
-        else NeurogenesisConfig()
-    )
+    config = NeurogenesisConfig.from_dict(config_dict) if config_dict else NeurogenesisConfig()
     return SchemaNeurogenesis(introspector=introspector, config=config)

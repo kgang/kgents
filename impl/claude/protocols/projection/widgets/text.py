@@ -130,9 +130,7 @@ class TextWidget(KgentsWidget[TextWidgetState]):
         content = s.display_content
 
         # Escape HTML entities
-        content = (
-            content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        )
+        content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
         class_map = {
             "body": "kgents-text-body",

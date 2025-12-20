@@ -80,6 +80,7 @@ def make_help_function(
             '''
         )
     """
+
     def _print_help() -> None:
         def _fallback() -> None:
             print(fallback_text.strip())

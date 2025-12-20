@@ -201,9 +201,7 @@ class MetricsEmitter:
         Returns:
             The emitted FusionMetric
         """
-        blocking = sum(
-            1 for ct in conflict_types if ct in ("CONTRADICTION", "CRITICAL")
-        )
+        blocking = sum(1 for ct in conflict_types if ct in ("CONTRADICTION", "CRITICAL"))
 
         metric = FusionMetric(
             section_name=section_name,

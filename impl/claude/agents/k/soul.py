@@ -369,9 +369,7 @@ class KgentSoul:
                 input_data, mode, message, budget, on_chunk
             )
         else:
-            output = await self._invoke_without_streaming(
-                input_data, mode, budget, message
-            )
+            output = await self._invoke_without_streaming(input_data, mode, budget, message)
 
         # Use actual token count if available, otherwise estimate
         if actual_tokens > 0:
@@ -427,9 +425,7 @@ class KgentSoul:
                 budget_tier=budget.value,
                 message_length=len(message),
             ):
-                async for chunk, is_final, tokens in self._agent.invoke_stream(
-                    input_data
-                ):
+                async for chunk, is_final, tokens in self._agent.invoke_stream(input_data):
                     if chunk:
                         accumulated_response += chunk
                         on_chunk(chunk)
@@ -565,9 +561,7 @@ class KgentSoul:
             if template_response:
                 yield FluxEvent.data(template_response)
                 yield FluxEvent.metadata(
-                    StreamingLLMResponse(
-                        text=template_response, tokens_used=0, model="template"
-                    )
+                    StreamingLLMResponse(text=template_response, tokens_used=0, model="template")
                 )
                 return
 
@@ -577,9 +571,7 @@ class KgentSoul:
             whisper_response = get_whisper_response(message)
             yield FluxEvent.data(whisper_response)
             yield FluxEvent.metadata(
-                StreamingLLMResponse(
-                    text=whisper_response, tokens_used=50, model="whisper"
-                )
+                StreamingLLMResponse(text=whisper_response, tokens_used=50, model="whisper")
             )
             self._update_session_stats(50)
             return
@@ -594,9 +586,7 @@ class KgentSoul:
             )
             yield FluxEvent.data(template_response)
             yield FluxEvent.metadata(
-                StreamingLLMResponse(
-                    text=template_response, tokens_used=0, model="fallback"
-                )
+                StreamingLLMResponse(text=template_response, tokens_used=0, model="fallback")
             )
             return
 
@@ -605,9 +595,7 @@ class KgentSoul:
         # Find matching preferences and patterns for context
         prefs = self._agent._find_preferences(message)[:3]
         pats = self._agent._find_patterns(message)[:3]
-        user_prompt = self._agent._build_user_prompt(
-            message, prefs, pats, resolved_mode
-        )
+        user_prompt = self._agent._build_user_prompt(message, prefs, pats, resolved_mode)
 
         # Create LLM stream source
         source = LLMStreamSource(
@@ -659,9 +647,7 @@ class KgentSoul:
         matching_patterns = self._find_matching_patterns(prompt)
 
         # Calculate confidence based on matches
-        confidence = self._calculate_intercept_confidence(
-            matching_principles, matching_patterns
-        )
+        confidence = self._calculate_intercept_confidence(matching_principles, matching_patterns)
 
         # Decide: auto-resolve or annotate
         if confidence >= 0.8 and matching_principles:
@@ -684,9 +670,7 @@ class KgentSoul:
             )
         else:
             # Low confidence: annotate for human
-            annotation = self._generate_annotation(
-                prompt, matching_principles, matching_patterns
-            )
+            annotation = self._generate_annotation(prompt, matching_principles, matching_patterns)
 
             return InterceptResult(
                 handled=False,
@@ -833,9 +817,7 @@ PRINCIPLES: [comma-separated list of relevant principles]
 REASONING: [one-line explanation]
 """
 
-    def _build_intercept_user_prompt(
-        self, prompt: str, reason: str, severity: float
-    ) -> str:
+    def _build_intercept_user_prompt(self, prompt: str, reason: str, severity: float) -> str:
         """Build user prompt for intercept reasoning."""
         return f"""Evaluate this operation:
 
@@ -870,9 +852,7 @@ Based on Kent's principles, should this be approved, rejected, or escalated?
                 except ValueError:
                     confidence = 0.0
             elif line.upper().startswith("PRINCIPLES:"):
-                principles = [
-                    p.strip() for p in line.split(":", 1)[1].split(",") if p.strip()
-                ]
+                principles = [p.strip() for p in line.split(":", 1)[1].split(",") if p.strip()]
             elif line.upper().startswith("REASONING:"):
                 reasoning = line.split(":", 1)[1].strip()
 
@@ -1047,9 +1027,7 @@ Based on Kent's principles, should this be approved, rejected, or escalated?
 
         return matches[:3]  # Limit
 
-    def _calculate_intercept_confidence(
-        self, principles: list[str], patterns: list[str]
-    ) -> float:
+    def _calculate_intercept_confidence(self, principles: list[str], patterns: list[str]) -> float:
         """Calculate confidence for semaphore interception."""
         if not principles and not patterns:
             return 0.0
@@ -1072,9 +1050,7 @@ Based on Kent's principles, should this be approved, rejected, or escalated?
                 return "review"  # Minimalist bias = skeptical of additions
         return "review"
 
-    def _generate_annotation(
-        self, prompt: str, principles: list[str], patterns: list[str]
-    ) -> str:
+    def _generate_annotation(self, prompt: str, principles: list[str], patterns: list[str]) -> str:
         """Generate human-readable annotation for semaphore."""
         lines = [f"K-gent analysis of: '{prompt[:50]}...'"]
 

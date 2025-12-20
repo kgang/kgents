@@ -96,9 +96,7 @@ class GovernanceTableState:
         """Get entries sorted by current sort settings."""
         entries = self.entries
         if not self.show_inactive:
-            entries = tuple(
-                e for e in entries if e.status not in ("revoked", "suspended")
-            )
+            entries = tuple(e for e in entries if e.status not in ("revoked", "suspended"))
 
         key_funcs = {
             "name": lambda e: e.agent_name.lower(),
@@ -203,13 +201,9 @@ class GovernanceTableWidget(KgentsWidget[GovernanceTableState]):
 
         # Summary
         active_count = sum(1 for e in entries if e.status == "active")
-        avg_consent = (
-            sum(e.consent_level for e in entries) / len(entries) if entries else 0
-        )
+        avg_consent = sum(e.consent_level for e in entries) / len(entries) if entries else 0
         lines.append("")
-        lines.append(
-            f"Active: {active_count}/{len(entries)} | Avg Consent: {avg_consent:.0%}"
-        )
+        lines.append(f"Active: {active_count}/{len(entries)} | Avg Consent: {avg_consent:.0%}")
 
         return "\n".join(lines)
 
@@ -235,9 +229,7 @@ class GovernanceTableWidget(KgentsWidget[GovernanceTableState]):
                 # Consent bar with color
                 consent_color = _consent_color(entry.consent_level)
                 consent_text = Text()
-                consent_text.append(
-                    _consent_bar(entry.consent_level, 8), style=consent_color
-                )
+                consent_text.append(_consent_bar(entry.consent_level, 8), style=consent_color)
                 consent_text.append(f" {entry.consent_level * 100:.0f}%", style="dim")
 
                 permissions = ", ".join(entry.permissions[:4])
@@ -272,9 +264,7 @@ class GovernanceTableWidget(KgentsWidget[GovernanceTableState]):
             consent_color = _consent_color(entry.consent_level)
             consent_pct = entry.consent_level * 100
 
-            highlighted = (
-                "kgents-highlighted" if entry.agent_id == s.highlight_agent else ""
-            )
+            highlighted = "kgents-highlighted" if entry.agent_id == s.highlight_agent else ""
             permissions = ", ".join(entry.permissions)
 
             rows_html.append(f"""

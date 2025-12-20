@@ -273,9 +273,7 @@ class PheromoneManager:
 
     def active_trails(self) -> list[PheromoneTrail]:
         """Get all currently active (non-faded) trails."""
-        return [
-            t for t in self._trails.values() if not t.is_faded(self._fade_threshold)
-        ]
+        return [t for t in self._trails.values() if not t.is_faded(self._fade_threshold)]
 
     def trails_from(self, agent_id: str) -> list[PheromoneTrail]:
         """Get trails originating from a specific agent."""

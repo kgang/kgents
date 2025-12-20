@@ -103,9 +103,7 @@ class TestGrowPipeline:
         session.proposals.clear()
 
         # Create proposal
-        result = cmd_grow(
-            ["propose", "world", "test_garden", "--why", "Test garden for CLI"]
-        )
+        result = cmd_grow(["propose", "world", "test_garden", "--why", "Test garden for CLI"])
         assert result == 0
 
         # Check proposal was stored
@@ -364,9 +362,7 @@ class TestValidationFunctions:
         """Valid justification should pass."""
         from protocols.cli.handlers.grow import _validate_why_exists
 
-        valid, error = _validate_why_exists(
-            "This is a valid justification for the holon"
-        )
+        valid, error = _validate_why_exists("This is a valid justification for the holon")
         assert valid
         assert error == ""
 

@@ -81,9 +81,7 @@ PHASE_TO_ARCHETYPE: dict[WorkshopPhase, str] = {
 }
 
 # Mapping from builder archetype to WorkshopPhase
-ARCHETYPE_TO_PHASE: dict[str, WorkshopPhase] = {
-    v: k for k, v in PHASE_TO_ARCHETYPE.items()
-}
+ARCHETYPE_TO_PHASE: dict[str, WorkshopPhase] = {v: k for k, v in PHASE_TO_ARCHETYPE.items()}
 
 
 # =============================================================================
@@ -673,8 +671,7 @@ class WorkshopEnvironment:
         # Create plan
         phases = suggest_phases(lead)
         assignments: dict[str, list[str]] = {
-            PHASE_TO_ARCHETYPE[phase]: [f"Work on {task.description}"]
-            for phase in phases
+            PHASE_TO_ARCHETYPE[phase]: [f"Work on {task.description}"] for phase in phases
         }
 
         plan = WorkshopPlan(
@@ -753,9 +750,7 @@ class WorkshopEnvironment:
             return await self._advance_phase()
 
         # Builder does work
-        output = active.continue_work(
-            f"Working on {self._state.active_task.description}"
-        )
+        output = active.continue_work(f"Working on {self._state.active_task.description}")
 
         # Check if builder returned to IDLE (completed their part)
         if output.phase == BuilderPhase.IDLE:
@@ -835,12 +830,8 @@ class WorkshopEnvironment:
                         message=f"Handoff to {next_builder.archetype if next_builder else 'next'} for {next_phase.name}",
                         artifact=artifact,
                         metadata={
-                            "from_builder": current_builder.archetype
-                            if current_builder
-                            else None,
-                            "to_builder": next_builder.archetype
-                            if next_builder
-                            else None,
+                            "from_builder": current_builder.archetype if current_builder else None,
+                            "to_builder": next_builder.archetype if next_builder else None,
                         },
                     )
                     await self._emit_event(event)
@@ -871,9 +862,7 @@ class WorkshopEnvironment:
             phase=WorkshopPhase.COMPLETE,
             message=f"Task completed: {self._state.active_task.description if self._state.active_task else 'Unknown'}",
             metadata={
-                "task_id": self._state.active_task.id
-                if self._state.active_task
-                else None,
+                "task_id": self._state.active_task.id if self._state.active_task else None,
                 "artifacts_count": len(self._state.artifacts),
             },
         )
@@ -1019,13 +1008,9 @@ class WorkshopEnvironment:
         }
 
         if lod >= 1:
-            result["task"] = (
-                self._state.active_task.to_dict() if self._state.active_task else None
-            )
+            result["task"] = self._state.active_task.to_dict() if self._state.active_task else None
             result["active_builder"] = (
-                self._state.active_builder.archetype
-                if self._state.active_builder
-                else None
+                self._state.active_builder.archetype if self._state.active_builder else None
             )
             result["builders"] = [b.archetype for b in self._builders]
             result["artifacts_count"] = len(self._state.artifacts)
@@ -1289,9 +1274,7 @@ class WorkshopFlux:
 
         # Only advance if different
         current = self._nphase_session.current_phase
-        if target_nphase != current and self._nphase_session.can_advance_to(
-            target_nphase
-        ):
+        if target_nphase != current and self._nphase_session.can_advance_to(target_nphase):
             self._nphase_session.advance_phase(
                 target_nphase,
                 payload={"workshop_phase": self.current_phase.name},
@@ -1342,9 +1325,7 @@ class WorkshopFlux:
             RuntimeError: If already running.
         """
         if self._is_running:
-            raise RuntimeError(
-                "Flux is already running. Call stop() or wait for completion."
-            )
+            raise RuntimeError("Flux is already running. Call stop() or wait for completion.")
 
         # Reset metrics
         self._metrics = WorkshopMetrics(start_time=datetime.now())
@@ -1540,9 +1521,7 @@ class WorkshopFlux:
             return event
 
         elif action == "complete":
-            event = await self._workshop.complete(
-                summary=str(artifact) if artifact else ""
-            )
+            event = await self._workshop.complete(summary=str(artifact) if artifact else "")
             self._is_running = False
             self._metrics.end_time = datetime.now()
             event.metadata["perturbation"] = True
@@ -1554,9 +1533,7 @@ class WorkshopFlux:
                 raise ValueError("No active task to inject artifact into")
             ws_artifact = WorkshopArtifact.create(
                 task_id=self._workshop.state.active_task.id,
-                builder=self.active_builder.archetype
-                if self.active_builder
-                else "Unknown",
+                builder=self.active_builder.archetype if self.active_builder else "Unknown",
                 phase=self.current_phase,
                 content=artifact,
                 injected=True,
@@ -1603,9 +1580,7 @@ class WorkshopFlux:
         status: dict[str, Any] = {
             "is_running": self._is_running,
             "phase": self.current_phase.name,
-            "active_builder": self.active_builder.archetype
-            if self.active_builder
-            else None,
+            "active_builder": self.active_builder.archetype if self.active_builder else None,
             "step_count": self._step_count,
             "phase_step_count": self._phase_step_count,
             "task": (
@@ -1656,10 +1631,7 @@ class WorkshopFlux:
         )
 
         # If we have a dialogue engine, try LLM generation
-        if (
-            self._dialogue_engine is not None
-            and self._workshop.state.active_task is not None
-        ):
+        if self._dialogue_engine is not None and self._workshop.state.active_task is not None:
             try:
                 # Use the dialogue engine for richer dialogue
                 # Create a phantom listener (workshop itself)

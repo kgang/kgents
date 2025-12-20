@@ -185,9 +185,7 @@ def agent_not_found(name: str) -> SympatheticError:
     )
 
 
-def command_not_found(
-    cmd: str, suggestions: list[str] | None = None
-) -> SympatheticError:
+def command_not_found(cmd: str, suggestions: list[str] | None = None) -> SympatheticError:
     """Create a sympathetic 'command not found' error."""
     how = ["kgents --help  # See all commands"]
     if suggestions:

@@ -71,9 +71,7 @@ def print_help() -> None:
     print("  --input <data>      Input data for 'run' command")
     print("  --validate          Validate generated manifests (for 'manifest' command)")
     print("  --json              Output as JSON")
-    print(
-        "  --archetype <type>  Archetype for 'new' command (kappa|lambda|delta|minimal)"
-    )
+    print("  --archetype <type>  Archetype for 'new' command (kappa|lambda|delta|minimal)")
     print("  --output <path>     Output path for 'new' command")
     print("  --help, -h          Show this help")
     print()
@@ -83,9 +81,7 @@ def print_help() -> None:
     print('  kg a session "Hello"        # Cross-session K-gent')
 
 
-def _emit_output(
-    human: str, semantic: dict[str, Any], ctx: "InvocationContext | None"
-) -> None:
+def _emit_output(human: str, semantic: dict[str, Any], ctx: "InvocationContext | None") -> None:
     """Emit output via dual-channel if ctx available, else print."""
     if ctx is not None:
         ctx.output(human=human, semantic=semantic)

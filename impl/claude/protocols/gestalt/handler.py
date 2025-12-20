@@ -106,19 +106,36 @@ def _get_project_root(prefer_repo_root: bool = True) -> Path:
     # 3. pyproject.toml (fallback to nearest Python project)
     pyproject_root: Path | None = None
 
+    # Track first .kgents found (use as fallback if no .git when prefer_repo_root=True)
+    kgents_root: Path | None = None
+
     while current != current.parent:
-        # Check for repo-level markers first
+        # Check for .git first (always preferred when prefer_repo_root=True)
+        if (current / ".git").exists():
+            if prefer_repo_root:
+                return current
+            # When not preferring repo root, .git is still a valid marker
+            # but we continue to see if there's a closer .kgents
+            if kgents_root is None:
+                kgents_root = current
+
+        # Check for .kgents (local project marker)
         if (current / ".kgents").exists():
-            return current
-        if prefer_repo_root and (current / ".git").exists():
-            return current
-        # Remember first pyproject.toml as fallback
+            if not prefer_repo_root:
+                # When not preferring repo root, .kgents is the best match
+                return current
+            # When preferring repo root, remember .kgents as fallback
+            if kgents_root is None:
+                kgents_root = current
+
+        # Remember first pyproject.toml as lowest-priority fallback
         if pyproject_root is None and (current / "pyproject.toml").exists():
             pyproject_root = current
+
         current = current.parent
 
-    # Fallback: use pyproject.toml location or cwd
-    return pyproject_root or Path.cwd()
+    # Fallback priority: kgents_root > pyproject_root > cwd
+    return kgents_root or pyproject_root or Path.cwd()
 
 
 def _get_store(root: Path | None = None, language: str = "python") -> "GestaltStore":

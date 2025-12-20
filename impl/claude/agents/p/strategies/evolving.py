@@ -45,11 +45,7 @@ class FormatStats:
     @property
     def avg_parse_time_ms(self) -> float:
         """Average parse time in milliseconds."""
-        return (
-            self.total_parse_time_ms / self.success_count
-            if self.success_count > 0
-            else 0.0
-        )
+        return self.total_parse_time_ms / self.success_count if self.success_count > 0 else 0.0
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dict for serialization."""
@@ -131,9 +127,7 @@ class EvolvingParser(Generic[A], Parser[A]):
     def __post_init__(self) -> None:
         """Initialize stats for all strategies."""
         if not self._stats:
-            self._stats = {
-                name: FormatStats(name=name) for name in self.strategies.keys()
-            }
+            self._stats = {name: FormatStats(name=name) for name in self.strategies.keys()}
 
     def parse(self, text: str) -> ParseResult[A]:
         """
@@ -163,9 +157,7 @@ class EvolvingParser(Generic[A], Parser[A]):
 
                     # Update average confidence
                     n = stats.success_count
-                    stats.avg_confidence = (
-                        stats.avg_confidence * (n - 1) + result.confidence
-                    ) / n
+                    stats.avg_confidence = (stats.avg_confidence * (n - 1) + result.confidence) / n
 
                     # Add format metadata
                     result.metadata["format"] = name
@@ -181,9 +173,7 @@ class EvolvingParser(Generic[A], Parser[A]):
                 self._stats[name].failure_count += 1
                 continue
 
-        return ParseResult[A](
-            success=False, error=f"All {len(self.strategies)} formats failed"
-        )
+        return ParseResult[A](success=False, error=f"All {len(self.strategies)} formats failed")
 
     def _get_ranked_strategies(self) -> list[tuple[str, Parser[A]]]:
         """
@@ -235,11 +225,7 @@ class EvolvingParser(Generic[A], Parser[A]):
         drift_detected = False
         drift_reason = None
 
-        if (
-            self._last_dominant
-            and current_dominant
-            and current_dominant != self._last_dominant
-        ):
+        if self._last_dominant and current_dominant and current_dominant != self._last_dominant:
             old_stats = self._stats[self._last_dominant]
             new_stats = self._stats[current_dominant]
 

@@ -84,9 +84,7 @@ Create an archival piece. Respond with valid JSON only (no markdown code blocks)
   "threads": ["themes or connections you found"]
 }}"""
 
-        user_message = (
-            f'The patron asks: "{commission.request}"{archive_context}{source_context}'
-        )
+        user_message = f'The patron asks: "{commission.request}"{archive_context}{source_context}'
 
         return system_prompt, user_message
 
@@ -223,9 +221,7 @@ Create an archival piece. Respond with valid JSON only (no markdown code blocks)
                 ),
             )
 
-    async def synthesize(
-        self, pieces: list[Piece], theme: str
-    ) -> AsyncIterator[AtelierEvent]:
+    async def synthesize(self, pieces: list[Piece], theme: str) -> AsyncIterator[AtelierEvent]:
         """
         Special method: synthesize multiple pieces into one.
 

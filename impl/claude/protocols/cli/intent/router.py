@@ -272,11 +272,7 @@ def generate_plan(intent: str) -> ExecutionPlan:
         )
         step_id += 1
 
-    if (
-        category == IntentCategory.ANALYSIS
-        or "think" in intent_lower
-        or "analyze" in intent_lower
-    ):
+    if category == IntentCategory.ANALYSIS or "think" in intent_lower or "analyze" in intent_lower:
         # Extract topic from intent
         topic = intent.replace("think about", "").replace("analyze", "").strip()
         steps.append(
@@ -303,11 +299,7 @@ def generate_plan(intent: str) -> ExecutionPlan:
         )
         step_id += 1
 
-    if (
-        category == IntentCategory.EXECUTION
-        or "run" in intent_lower
-        or "test" in intent_lower
-    ):
+    if category == IntentCategory.EXECUTION or "run" in intent_lower or "test" in intent_lower:
         # Extract intent for run
         run_intent = intent.replace("run", "").replace("execute", "").strip()
         steps.append(
@@ -348,11 +340,7 @@ def generate_plan(intent: str) -> ExecutionPlan:
         )
         step_id += 1
 
-    if (
-        category == IntentCategory.LANGUAGE
-        or "speak" in intent_lower
-        or "tongue" in intent_lower
-    ):
+    if category == IntentCategory.LANGUAGE or "speak" in intent_lower or "tongue" in intent_lower:
         # Extract domain from intent
         domain = intent.replace("speak", "").replace("create tongue for", "").strip()
         steps.append(
@@ -366,11 +354,7 @@ def generate_plan(intent: str) -> ExecutionPlan:
         )
         step_id += 1
 
-    if (
-        category == IntentCategory.CREATION
-        or "create" in intent_lower
-        or "new" in intent_lower
-    ):
+    if category == IntentCategory.CREATION or "create" in intent_lower or "new" in intent_lower:
         # Extract what to create
         if "agent" in intent_lower:
             name = targets[0] if targets else "new-agent"
@@ -403,9 +387,7 @@ def generate_plan(intent: str) -> ExecutionPlan:
             for pattern in patterns:
                 if re.search(pattern, intent_lower):
                     # Recursively generate for each detected category
-                    sub_plan = _generate_single_category_step(
-                        cat, intent, targets, step_id
-                    )
+                    sub_plan = _generate_single_category_step(cat, intent, targets, step_id)
                     if sub_plan:
                         steps.append(sub_plan)
                         step_id += 1
@@ -509,10 +491,7 @@ async def execute_plan_async(plan: ExecutionPlan) -> dict[str, Any]:
         # Check condition (simple evaluation)
         if step.condition and prev_result:
             # Skip if condition references previous success but it failed
-            if (
-                "found issues" in step.condition
-                and prev_result.get("status") != "issues_found"
-            ):
+            if "found issues" in step.condition and prev_result.get("status") != "issues_found":
                 results.append(
                     {
                         "step_id": step.id,

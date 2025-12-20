@@ -205,9 +205,7 @@ class DebuggerScreen(CompositeWidget[DebuggerScreenState]):
         """Push a new activity value. Immutable."""
         current = self.state.value
         clamped = max(0.0, min(1.0, value))
-        new_history = (*current.activity_history, clamped)[
-            -current.max_activity_points :
-        ]
+        new_history = (*current.activity_history, clamped)[-current.max_activity_points :]
         return DebuggerScreen(
             DebuggerScreenState(
                 agent=current.agent,
@@ -478,18 +476,14 @@ class DebuggerScreen(CompositeWidget[DebuggerScreenState]):
         # Agent section
         html += '<div class="kgents-debugger-agent" style="margin-bottom: 24px;">'
         html += '<h3 style="border-bottom: 1px solid #444;">Agent</h3>'
-        html += (
-            '<div style="padding: 16px; border: 1px solid #333; border-radius: 4px;">'
-        )
+        html += '<div style="padding: 16px; border: 1px solid #333; border-radius: 4px;">'
         html += str(self.slots["agent_card"].project(RenderTarget.MARIMO))
         html += "</div></div>"
 
         # Activity timeline section
         html += '<div class="kgents-debugger-activity" style="margin-bottom: 24px;">'
         html += '<h3 style="border-bottom: 1px solid #444;">Activity Timeline</h3>'
-        html += (
-            '<div style="padding: 16px; border: 1px solid #333; border-radius: 4px;">'
-        )
+        html += '<div style="padding: 16px; border: 1px solid #333; border-radius: 4px;">'
         html += str(self.slots["activity_sparkline"].project(RenderTarget.MARIMO))
         html += f'<span style="margin-left: 8px; color: #666;">({len(state.activity_history)} points)</span>'
         html += "</div></div>"
@@ -541,9 +535,7 @@ class DebuggerScreen(CompositeWidget[DebuggerScreenState]):
         if state.agent is not None:
             result["agent_card"] = self.slots["agent_card"].project(RenderTarget.JSON)
 
-        result["activity_sparkline"] = self.slots["activity_sparkline"].project(
-            RenderTarget.JSON
-        )
+        result["activity_sparkline"] = self.slots["activity_sparkline"].project(RenderTarget.JSON)
 
         yield_projections = []
         yields_to_show = state.yields[: state.max_yields_shown]
@@ -552,8 +544,6 @@ class DebuggerScreen(CompositeWidget[DebuggerScreenState]):
             yield_projections.append(yield_card.project(RenderTarget.JSON))
 
         result["yields"] = yield_projections
-        result["entropy_slider"] = self.slots["entropy_slider"].project(
-            RenderTarget.JSON
-        )
+        result["entropy_slider"] = self.slots["entropy_slider"].project(RenderTarget.JSON)
 
         return result

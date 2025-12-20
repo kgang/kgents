@@ -42,9 +42,7 @@ class DiffResult(Generic[B]):
         if self.majority_output is None:
             return 0.0
 
-        matching = sum(
-            1 for _, output in self.outputs if output == self.majority_output
-        )
+        matching = sum(1 for _, output in self.outputs if output == self.majority_output)
         return matching / len(self.outputs)
 
 
@@ -179,14 +177,11 @@ class OracleAgent(Agent[Tuple[A, List[Agent[A, B]]], DiffResult[B]], Generic[A, 
 
         # Find deviants (agents not matching majority)
         deviants = [
-            name
-            for name, output in outputs
-            if not self.equality_fn(output, majority_output)
+            name for name, output in outputs if not self.equality_fn(output, majority_output)
         ]
 
         explanation = (
-            f"Agreement: {majority_proportion:.1%} "
-            f"({max_count}/{len(outputs)} agents agree)"
+            f"Agreement: {majority_proportion:.1%} ({max_count}/{len(outputs)} agents agree)"
         )
 
         return DiffResult(

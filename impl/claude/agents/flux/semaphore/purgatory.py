@@ -282,9 +282,7 @@ class Purgatory:
                         "token_id": token.id,
                         "reason": token.reason.value,
                         "severity": token.severity,
-                        "deadline": token.deadline.isoformat()
-                        if token.deadline
-                        else None,
+                        "deadline": token.deadline.isoformat() if token.deadline else None,
                         "escalation": token.escalation,
                     },
                 )

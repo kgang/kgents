@@ -488,9 +488,7 @@ class GardenStore:
             return datetime.now()
 
         season_override_name = row_dict.get("season_override")
-        season_override = (
-            GardenSeason[season_override_name] if season_override_name else None
-        )
+        season_override = GardenSeason[season_override_name] if season_override_name else None
 
         return PlotState(
             name=row_dict["name"],
@@ -740,9 +738,7 @@ def create_garden_store(db_path: Path | str | None = None) -> GardenStore:
     if db_path is None:
         import os
 
-        xdg_data = os.environ.get(
-            "XDG_DATA_HOME", str(Path.home() / ".local" / "share")
-        )
+        xdg_data = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share"))
         db_path = Path(xdg_data) / "kgents" / "gardener_gardens.db"
 
     return GardenStore(db_path=Path(db_path))

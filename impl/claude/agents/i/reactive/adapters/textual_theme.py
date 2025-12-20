@@ -97,12 +97,8 @@ class ThemeBinding:
         # Button styling
         lines.append("Button {")
         lines.append(f"    background: {self._rgb_to_css(theme.primary)};")
-        lines.append(
-            f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};"
-        )
-        lines.append(
-            f"    border: tall {self._rgb_to_css(theme.color(colors.border))};"
-        )
+        lines.append(f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};")
+        lines.append(f"    border: tall {self._rgb_to_css(theme.color(colors.border))};")
         lines.append("}")
         lines.append("")
 
@@ -112,9 +108,7 @@ class ThemeBinding:
         lines.append("")
 
         lines.append("Button:focus {")
-        lines.append(
-            f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};"
-        )
+        lines.append(f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};")
         lines.append("}")
         lines.append("")
 
@@ -126,9 +120,7 @@ class ThemeBinding:
         lines.append("")
 
         lines.append("Input:focus {")
-        lines.append(
-            f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};"
-        )
+        lines.append(f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};")
         lines.append("}")
         lines.append("")
 
@@ -139,9 +131,7 @@ class ThemeBinding:
         lines.append("")
 
         lines.append(".surface-variant {")
-        lines.append(
-            f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};"
-        )
+        lines.append(f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};")
         lines.append("}")
         lines.append("")
 
@@ -174,9 +164,7 @@ class ThemeBinding:
 
         # Focus ring (for custom focus indicators)
         lines.append(".focus-ring {")
-        lines.append(
-            f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};"
-        )
+        lines.append(f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};")
         lines.append("}")
         lines.append("")
 
@@ -189,25 +177,19 @@ class ThemeBinding:
         lines.append("")
 
         lines.append(".card:focus-within {")
-        lines.append(
-            f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};"
-        )
+        lines.append(f"    border: tall {self._rgb_to_css(theme.color(colors.border_focus))};")
         lines.append("}")
         lines.append("")
 
         # Header/Footer
         lines.append("Header {")
         lines.append(f"    background: {self._rgb_to_css(theme.primary)};")
-        lines.append(
-            f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};"
-        )
+        lines.append(f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};")
         lines.append("}")
         lines.append("")
 
         lines.append("Footer {")
-        lines.append(
-            f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};"
-        )
+        lines.append(f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};")
         lines.append("}")
         lines.append("")
 
@@ -218,18 +200,14 @@ class ThemeBinding:
         lines.append("")
 
         lines.append("DataTable > .datatable--header {")
-        lines.append(
-            f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};"
-        )
+        lines.append(f"    background: {self._rgb_to_css(theme.color(colors.surface_variant))};")
         lines.append(f"    color: {self._rgb_to_css(theme.text)};")
         lines.append("}")
         lines.append("")
 
         lines.append("DataTable > .datatable--cursor {")
         lines.append(f"    background: {self._rgb_to_css(theme.primary)};")
-        lines.append(
-            f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};"
-        )
+        lines.append(f"    color: {self._rgb_to_css(theme.color(colors.text_inverse))};")
         lines.append("}")
         lines.append("")
 

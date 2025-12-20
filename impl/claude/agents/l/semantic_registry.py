@@ -185,9 +185,7 @@ class SemanticRegistry(Registry):
         keyword_weight = 1.0 - semantic_weight
 
         # Run both searches
-        keyword_results = await self.find(
-            query=query, entity_type=entity_type, limit=limit * 2
-        )
+        keyword_results = await self.find(query=query, entity_type=entity_type, limit=limit * 2)
 
         filters = {"entity_type": entity_type} if entity_type else None
         semantic_results = await self.find_semantic(
@@ -212,9 +210,7 @@ class SemanticRegistry(Registry):
                 # Combine scores
                 existing_score, entry, existing_explanation = combined[entry_id]
                 total_score = existing_score + semantic_score
-                explanation = (
-                    f"{existing_explanation} | Semantic: {semantic_result.explanation}"
-                )
+                explanation = f"{existing_explanation} | Semantic: {semantic_result.explanation}"
                 combined[entry_id] = (total_score, entry, explanation)
             else:
                 # Add semantic-only result

@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "kgents-runtime"
 version = "1.0.0"
 description = "kgents reference implementation - bootstrap agents and runtime"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = "MIT"
 keywords = ["agents", "ai", "composition", "category-theory"]
 authors = [
@@ -45,7 +45,7 @@ brain = [
 ]
 dev = [
     "pytest>=7.0",
-    "pytest-asyncio>=0.21",
+    "pytest-asyncio>=0.24.0",
     "pytest-xdist>=3.5",
     "hypothesis>=6.100",
 ]
@@ -109,7 +109,15 @@ markers = [
 ]
 
 [dependency-groups]
-dev = []
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-xdist>=3.5",
+    "hypothesis>=6.100",
+    "ruff>=0.8.0",
+    "mypy>=1.19.0",
+    "types-pyyaml",
+]
 
 # =============================================================================
 # RUFF CONFIGURATION

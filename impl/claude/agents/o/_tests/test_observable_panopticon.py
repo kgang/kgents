@@ -154,9 +154,7 @@ class TestWireStatusSnapshot:
         assert data["bootstrap"]["intact"] is True
         assert data["alerts"]["count"] == 3
 
-    def test_from_panopticon_status(
-        self, mock_panopticon_status: UnifiedPanopticonStatus
-    ) -> None:
+    def test_from_panopticon_status(self, mock_panopticon_status: UnifiedPanopticonStatus) -> None:
         """Test creating snapshot from UnifiedPanopticonStatus."""
         snapshot = WireStatusSnapshot.from_panopticon_status(mock_panopticon_status)
 

@@ -383,9 +383,7 @@ class DriftReport:
     drift: float
     original_output: dict[str, Any]
     current_output: dict[str, Any]
-    report_timestamp: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    report_timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     @property
     def significant(self) -> bool:
@@ -610,9 +608,7 @@ class LucidDreamer:
     ) -> SemanticTrace:
         """Create a modified trace with new input."""
         # Serialize the modified input
-        modified_snapshot = json.dumps(
-            modified_input, sort_keys=True, default=str
-        ).encode("utf-8")
+        modified_snapshot = json.dumps(modified_input, sort_keys=True, default=str).encode("utf-8")
 
         # Create new inputs dict
         if isinstance(modified_input, dict):

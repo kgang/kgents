@@ -104,9 +104,7 @@ class NPhaseTemplate:
             lines.append("| Path | Lines | Purpose |")
             lines.append("|------|-------|---------|")
             for ref in project.file_map:
-                lines.append(
-                    f"| `{ref.path}` | {ref.lines or '-'} | {ref.purpose or '-'} |"
-                )
+                lines.append(f"| `{ref.path}` | {ref.lines or '-'} | {ref.purpose or '-'} |")
         else:
             lines.append("*No file map yet (complete RESEARCH phase)*")
 
@@ -116,9 +114,7 @@ class NPhaseTemplate:
             lines.append("| Name | Requirement | Verification |")
             lines.append("|------|-------------|--------------|")
             for inv in project.invariants:
-                lines.append(
-                    f"| {inv.name} | {inv.requirement} | {inv.verification or '-'} |"
-                )
+                lines.append(f"| {inv.name} | {inv.requirement} | {inv.verification or '-'} |")
         else:
             lines.append("*No invariants yet (complete DEVELOP phase)*")
 
@@ -142,9 +138,7 @@ class NPhaseTemplate:
             lines.append("|----|------|----------|--------|--------------|")
             for c in project.components:
                 deps = ", ".join(c.dependencies) if c.dependencies else "-"
-                lines.append(
-                    f"| {c.id} | {c.name} | `{c.location}` | {c.effort.value} | {deps} |"
-                )
+                lines.append(f"| {c.id} | {c.name} | `{c.location}` | {c.effort.value} | {deps} |")
         else:
             lines.append("*No components yet (complete DEVELOP phase)*")
 
@@ -263,9 +257,7 @@ class NPhaseTemplate:
         lines.append("|-------|--------|----------|")
 
         phases = (
-            list(PHASE_FAMILIES.keys())
-            if project.n_phases == 3
-            else list(PHASE_TEMPLATES.keys())
+            list(PHASE_FAMILIES.keys()) if project.n_phases == 3 else list(PHASE_TEMPLATES.keys())
         )
 
         for phase in phases:

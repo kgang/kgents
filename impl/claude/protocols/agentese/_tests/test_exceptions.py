@@ -457,6 +457,4 @@ class TestSympatheticErrorPrinciple:
         ]
 
         for cls in error_classes:
-            assert issubclass(cls, AgentesError), (
-                f"{cls.__name__} should inherit AgentesError"
-            )
+            assert issubclass(cls, AgentesError), f"{cls.__name__} should inherit AgentesError"

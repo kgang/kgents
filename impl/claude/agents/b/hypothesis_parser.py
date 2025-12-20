@@ -216,9 +216,7 @@ class HypothesisResponseParser:
         elif "SUPPORTS_OBS" in line.upper() or "SUPPORTING_OBS" in line.upper():
             val = line.split(":", 1)[1].strip() if ":" in line else ""
             try:
-                indices = [
-                    int(x.strip()) for x in val.split(",") if x.strip().isdigit()
-                ]
+                indices = [int(x.strip()) for x in val.split(",") if x.strip().isdigit()]
                 current["supporting_observations"] = indices
             except ValueError:
                 pass
@@ -274,9 +272,7 @@ class HypothesisResponseParser:
         # Ensure falsifiable_by has at least one entry
         falsifiable_by = data.get("falsifiable_by", [])
         if not falsifiable_by:
-            falsifiable_by = [
-                "[No falsification criteria provided - hypothesis incomplete]"
-            ]
+            falsifiable_by = ["[No falsification criteria provided - hypothesis incomplete]"]
 
         return Hypothesis(
             statement=data.get("statement", ""),

@@ -348,9 +348,7 @@ class ReplayController:
         """Get current replay statistics."""
         elapsed = timedelta()
         if self._playhead > 0 and self.turns:
-            elapsed = timedelta(
-                seconds=sum(t.duration for t in self.turns[: self._playhead])
-            )
+            elapsed = timedelta(seconds=sum(t.duration for t in self.turns[: self._playhead]))
 
         return ReplayStats(
             total_turns=len(self.turns),

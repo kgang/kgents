@@ -305,9 +305,7 @@ class JGent(Agent[JGentInput[T], JGentResult[T]], Generic[T]):
             if self._config.test_generation_enabled and result.success:
                 test = generate_test_for_intent(input.intent, result.value)
                 if not test.test_fn(result.value):
-                    logger.warning(
-                        f"JGent[{self._depth}] test failed: {test.description}"
-                    )
+                    logger.warning(f"JGent[{self._depth}] test failed: {test.description}")
                     return self._collapse(
                         root_promise,
                         f"Accountability test failed: {test.description}",
@@ -358,9 +356,7 @@ class JGent(Agent[JGentInput[T], JGentResult[T]], Generic[T]):
         # 2. Execute the tool
         # 3. Return the result
 
-        logger.debug(
-            f"JGent[{self._depth}] DETERMINISTIC: returning ground (placeholder)"
-        )
+        logger.debug(f"JGent[{self._depth}] DETERMINISTIC: returning ground (placeholder)")
 
         promise.mark_resolved(input.ground)
 

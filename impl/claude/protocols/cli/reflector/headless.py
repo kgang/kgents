@@ -118,11 +118,7 @@ class HeadlessReflector(BaseReflector):
 
     def get_command_events(self) -> list[CommandStartEvent | CommandEndEvent]:
         """Get all command-related events."""
-        return [
-            e
-            for e in self._events
-            if isinstance(e, (CommandStartEvent, CommandEndEvent))
-        ]
+        return [e for e in self._events if isinstance(e, (CommandStartEvent, CommandEndEvent))]
 
     def has_event(self, event_type: EventType) -> bool:
         """Check if an event of the given type was captured."""
@@ -158,7 +154,9 @@ class HeadlessReflector(BaseReflector):
         """Assert the number of captured events."""
         if event_type:
             actual = len(self.get_events_by_type(event_type))
-            assert actual == expected, f"Expected {expected} {event_type.value} events, got {actual}"
+            assert actual == expected, (
+                f"Expected {expected} {event_type.value} events, got {actual}"
+            )
         else:
             actual = len(self._events)
             assert actual == expected, f"Expected {expected} events, got {actual}"

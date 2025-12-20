@@ -198,9 +198,7 @@ class ExhibitionCurator:
 
     def list_exhibitions(self) -> list[Exhibition]:
         """List all exhibitions."""
-        return sorted(
-            self.exhibitions.values(), key=lambda e: e.created_at, reverse=True
-        )
+        return sorted(self.exhibitions.values(), key=lambda e: e.created_at, reverse=True)
 
     def delete(self, exhibition_id: str) -> bool:
         """Delete an exhibition."""

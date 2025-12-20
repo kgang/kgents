@@ -368,9 +368,7 @@ def _generate_polynomial_code(node: SpecNode) -> str:
     )
 
     # Generate phase enum members
-    phase_members = "\n".join(
-        f"    {pos.upper()} = auto()" for pos in node.polynomial.positions
-    )
+    phase_members = "\n".join(f"    {pos.upper()} = auto()" for pos in node.polynomial.positions)
 
     # Use provided function names or generate defaults
     transition_fn = node.polynomial.transition_fn or f"{holon}_transition"
@@ -424,9 +422,7 @@ def _generate_operation_function(op_name: str, arity: int, signature: str) -> st
         ''')
 
     # Fixed arity
-    params = ", ".join(
-        f"agent_{chr(97 + i)}: PolyAgent[Any, Any, Any]" for i in range(arity)
-    )
+    params = ", ".join(f"agent_{chr(97 + i)}: PolyAgent[Any, Any, Any]" for i in range(arity))
     param_names = ", ".join(f"agent_{chr(97 + i)}.name" for i in range(arity))
 
     return dedent(f'''\
@@ -483,9 +479,7 @@ def _generate_operad_code(node: SpecNode) -> str:
     op_functions = []
     add_ops = []
     for op in node.operad.operations:
-        op_functions.append(
-            _generate_operation_function(op.name, op.arity, op.signature)
-        )
+        op_functions.append(_generate_operation_function(op.name, op.arity, op.signature))
         add_ops.append(
             f'    ops["{op.name}"] = Operation(\n'
             f'        name="{op.name}",\n'
@@ -517,9 +511,7 @@ def _generate_operad_code(node: SpecNode) -> str:
         operation_functions="\n\n".join(op_functions)
         if op_functions
         else "# No operations defined",
-        law_functions="\n\n".join(law_functions)
-        if law_functions
-        else "# No laws defined",
+        law_functions="\n\n".join(law_functions) if law_functions else "# No laws defined",
         add_operations="\n".join(add_ops) if add_ops else "    pass  # No operations",
         add_laws="\n".join(add_laws) if add_laws else "        # No laws",
         operad_name=operad_name,

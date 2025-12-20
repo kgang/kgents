@@ -113,9 +113,7 @@ class DashboardScreen(CompositeWidget[DashboardScreenState]):
                 phase=agent_state.phase,
                 activity=agent_state.activity,
                 capability=agent_state.capability,
-                entropy=state.entropy
-                if agent_state.entropy == 0
-                else agent_state.entropy,
+                entropy=state.entropy if agent_state.entropy == 0 else agent_state.entropy,
                 seed=state.seed + i,
                 t=state.t,
                 style=agent_state.style,
@@ -133,9 +131,7 @@ class DashboardScreen(CompositeWidget[DashboardScreenState]):
                 content=yield_state.content,
                 importance=yield_state.importance,
                 timestamp=yield_state.timestamp,
-                entropy=state.entropy
-                if yield_state.entropy == 0
-                else yield_state.entropy,
+                entropy=state.entropy if yield_state.entropy == 0 else yield_state.entropy,
                 seed=state.seed + len(state.agents) + i,
                 t=state.t,
                 max_content_length=yield_state.max_content_length,
@@ -149,12 +145,8 @@ class DashboardScreen(CompositeWidget[DashboardScreenState]):
             entities: list[Entity] = []
             for i, agent in enumerate(state.agents):
                 # Distribute agents across the field
-                x = (i % 4) * (
-                    state.density_field_width // 4
-                ) + state.density_field_width // 8
-                y = (i // 4) * (
-                    state.density_field_height // 2
-                ) + state.density_field_height // 4
+                x = (i % 4) * (state.density_field_width // 4) + state.density_field_width // 8
+                y = (i // 4) * (state.density_field_height // 2) + state.density_field_height // 4
                 heat = 0.8 if agent.phase == "active" else 0.3
                 entities.append(
                     Entity(
@@ -299,9 +291,7 @@ class DashboardScreen(CompositeWidget[DashboardScreenState]):
         # Empty state handling
         if not state.agents and not state.yields:
             lines.append("")
-            lines.append(
-                "  No agents active. Waiting for activity...".center(state.width)
-            )
+            lines.append("  No agents active. Waiting for activity...".center(state.width))
             lines.append("")
             lines.append("=" * state.width)
             return "\n".join(lines)
@@ -494,8 +484,6 @@ class DashboardScreen(CompositeWidget[DashboardScreenState]):
         }
 
         if state.show_density_field and "density_field" in self.slots:
-            result["density_field"] = self.slots["density_field"].project(
-                RenderTarget.JSON
-            )
+            result["density_field"] = self.slots["density_field"].project(RenderTarget.JSON)
 
         return result

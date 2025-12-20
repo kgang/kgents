@@ -118,8 +118,7 @@ def _ground_check_compose() -> PolyAgent[Any, Any, Any]:
         if isinstance(input, str):
             # Heuristic: short, concrete strings are more grounded
             if len(input) < 100 and not any(
-                word in input.lower()
-                for word in ["maybe", "might", "could", "possibly"]
+                word in input.lower() for word in ["maybe", "might", "could", "possibly"]
             ):
                 return RealityClassification(
                     value=input,
@@ -127,10 +126,7 @@ def _ground_check_compose() -> PolyAgent[Any, Any, Any]:
                     confidence=0.85,
                     reasoning="Concrete, short assertion",
                 )
-            if any(
-                word in input.lower()
-                for word in ["probably", "likely", "estimate"]
-            ):
+            if any(word in input.lower() for word in ["probably", "likely", "estimate"]):
                 return RealityClassification(
                     value=input,
                     reality=RealityType.PROBABILISTIC,

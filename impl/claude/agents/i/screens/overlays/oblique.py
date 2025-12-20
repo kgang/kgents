@@ -167,8 +167,7 @@ class ObliqueStrategyOverlay(ModalScreen[None]):
 
                 # Footer with citation
                 footer_text = (
-                    "— Brian Eno & Peter Schmidt\n\n"
-                    "[Space] for another • [Escape] to close"
+                    "— Brian Eno & Peter Schmidt\n\n[Space] for another • [Escape] to close"
                 )
                 yield Static(footer_text, id="oblique-footer")
 

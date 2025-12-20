@@ -829,9 +829,7 @@ class NarrativeOrchestrator:
         Find resonating patterns in holographic memory.
         """
         if hasattr(self.store, "resonate_query"):
-            result: list[CrystalMemoryPattern] = await self.store.resonate_query(
-                query, threshold
-            )
+            result: list[CrystalMemoryPattern] = await self.store.resonate_query(query, threshold)
             return result
         return []
 

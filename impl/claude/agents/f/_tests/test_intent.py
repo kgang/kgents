@@ -236,8 +236,7 @@ class TestRealWorldExamples:
         assert "weather" in intent.purpose.lower()
         assert any("fetch" in b.lower() for b in intent.behavior)
         assert any(
-            d.type in [DependencyType.REST_API, DependencyType.NETWORK]
-            for d in intent.dependencies
+            d.type in [DependencyType.REST_API, DependencyType.NETWORK] for d in intent.dependencies
         )
 
     def test_summarizer_agent(self) -> None:

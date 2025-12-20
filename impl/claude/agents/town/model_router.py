@@ -193,9 +193,7 @@ def select_model(
     # Skip tier cap for cached/none models (they're free)
     if selected_model not in (ModelName.CACHED, ModelName.NONE, ModelName.TEMPLATE):
         if selected_model in DEGRADATION_CHAIN and tier_max in DEGRADATION_CHAIN:
-            if DEGRADATION_CHAIN.index(selected_model) < DEGRADATION_CHAIN.index(
-                tier_max
-            ):
+            if DEGRADATION_CHAIN.index(selected_model) < DEGRADATION_CHAIN.index(tier_max):
                 # User's tier doesn't allow this model - degrade
                 selected_model = tier_max
                 degraded = True
@@ -211,9 +209,7 @@ def select_model(
         threshold = credit_thresholds.get(selected_model, 0)
         if remaining_credits < threshold:
             # Not enough credits - degrade
-            while (
-                remaining_credits < threshold and selected_model != ModelName.TEMPLATE
-            ):
+            while remaining_credits < threshold and selected_model != ModelName.TEMPLATE:
                 selected_model = degrade_model(selected_model)
                 threshold = credit_thresholds.get(selected_model, 0)
                 degraded = True

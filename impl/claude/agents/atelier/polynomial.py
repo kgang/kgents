@@ -255,13 +255,9 @@ def workshop_directions(phase: WorkshopPhase) -> FrozenSet[Any]:
         case WorkshopPhase.GATHERING:
             return frozenset({JoinInput, ContributeInput, type, Any})
         case WorkshopPhase.CREATING:
-            return frozenset(
-                {ContributeInput, RefineInput, StartExhibitionInput, type, Any}
-            )
+            return frozenset({ContributeInput, RefineInput, StartExhibitionInput, type, Any})
         case WorkshopPhase.REVIEWING:
-            return frozenset(
-                {RefineInput, ContributeInput, StartExhibitionInput, type, Any}
-            )
+            return frozenset({RefineInput, ContributeInput, StartExhibitionInput, type, Any})
         case WorkshopPhase.EXHIBITING:
             return frozenset({ViewInput, OpenExhibitionInput, CloseInput, type, Any})
         case WorkshopPhase.CLOSED:
@@ -276,9 +272,7 @@ def workshop_directions(phase: WorkshopPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def workshop_transition(
-    phase: WorkshopPhase, input: Any
-) -> tuple[WorkshopPhase, WorkshopOutput]:
+def workshop_transition(phase: WorkshopPhase, input: Any) -> tuple[WorkshopPhase, WorkshopOutput]:
     """
     Workshop state transition function.
 

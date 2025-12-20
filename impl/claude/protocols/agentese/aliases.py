@@ -53,9 +53,7 @@ class AliasShadowError(AliasError):
     """Attempted to shadow a reserved context name."""
 
     def __init__(self, alias: str, context: str) -> None:
-        super().__init__(
-            f"Cannot create alias '{alias}': would shadow context '{context}'"
-        )
+        super().__init__(f"Cannot create alias '{alias}': would shadow context '{context}'")
         self.alias = alias
         self.context = context
 

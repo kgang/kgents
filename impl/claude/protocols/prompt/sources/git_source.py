@@ -144,9 +144,7 @@ class GitSource(SectionSource):
             traces.append(f"Git command error: {e}")
             return ""
 
-    def _parse_status(
-        self, status_output: str, traces: list[str]
-    ) -> dict[str, list[str]]:
+    def _parse_status(self, status_output: str, traces: list[str]) -> dict[str, list[str]]:
         """Parse git status --porcelain output."""
         modified: dict[str, list[str]] = {
             "modified": [],
@@ -198,17 +196,13 @@ class GitSource(SectionSource):
 
             if modified_files["modified"]:
                 count = len(modified_files["modified"])
-                files = ", ".join(
-                    f"`{f.split('/')[-1]}`" for f in modified_files["modified"][:5]
-                )
+                files = ", ".join(f"`{f.split('/')[-1]}`" for f in modified_files["modified"][:5])
                 suffix = f" (+{count - 5} more)" if count > 5 else ""
                 lines.append(f"- **Modified** ({count}): {files}{suffix}")
 
             if modified_files["added"]:
                 count = len(modified_files["added"])
-                files = ", ".join(
-                    f"`{f.split('/')[-1]}`" for f in modified_files["added"][:5]
-                )
+                files = ", ".join(f"`{f.split('/')[-1]}`" for f in modified_files["added"][:5])
                 suffix = f" (+{count - 5} more)" if count > 5 else ""
                 lines.append(f"- **Added** ({count}): {files}{suffix}")
 

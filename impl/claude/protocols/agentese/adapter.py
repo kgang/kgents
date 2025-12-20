@@ -288,9 +288,7 @@ TRANSLATION_PATTERNS: list[tuple[re.Pattern[str], str, str, float]] = [
     (re.compile(r"^express\s+gratitude$", re.I), "void.gratitude.thank", "thank", 0.9),
     # Temporal verbs → time.*
     (
-        re.compile(
-            r"^(?:show\s+)?(?:the\s+)?past\s+(?:state\s+(?:of\s+)?)?(\w+)?$", re.I
-        ),
+        re.compile(r"^(?:show\s+)?(?:the\s+)?past\s+(?:state\s+(?:of\s+)?)?(\w+)?$", re.I),
         "time.past.project",
         "project",
         0.85,
@@ -592,9 +590,7 @@ class LLMTranslator:
     """
 
     llm: LLMProtocol | None = None
-    examples: list[tuple[str, str]] = field(
-        default_factory=lambda: LLM_TRANSLATION_EXAMPLES.copy()
-    )
+    examples: list[tuple[str, str]] = field(default_factory=lambda: LLM_TRANSLATION_EXAMPLES.copy())
     validator: GgentIntegration = field(default_factory=GgentIntegration)
 
     async def translate(
@@ -756,15 +752,11 @@ class AgentesAdapter:
         if any(w in keywords for w in ("show", "get", "view", "see", "display")):
             suggestions.append("Try: 'show me the <entity>' → world.<entity>.manifest")
         if any(w in keywords for w in ("history", "happened", "trace", "log")):
-            suggestions.append(
-                "Try: 'what happened to <entity>' → world.<entity>.witness"
-            )
+            suggestions.append("Try: 'what happened to <entity>' → world.<entity>.witness")
         if any(w in keywords for w in ("memory", "recall", "remember")):
             suggestions.append("Try: 'show my memory' → self.memory.manifest")
         if any(w in keywords for w in ("think", "refine", "challenge")):
-            suggestions.append(
-                "Try: 'think about <concept>' → concept.<concept>.refine"
-            )
+            suggestions.append("Try: 'think about <concept>' → concept.<concept>.refine")
         if any(w in keywords for w in ("random", "surprise", "entropy")):
             suggestions.append("Try: 'give me randomness' → void.entropy.sip")
 

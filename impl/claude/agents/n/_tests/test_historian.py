@@ -63,9 +63,7 @@ class TestHistorian:
         assert ctx.input_hash is not None
         assert len(ctx.input_snapshot) > 0
 
-    def test_begin_trace_sets_current(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_begin_trace_sets_current(self, historian: Historian, agent: MockAgent) -> None:
         """Begin trace sets current trace ID."""
         ctx = historian.begin_trace(agent, {})
         assert historian.get_current_trace_id() == ctx.trace_id
@@ -87,9 +85,7 @@ class TestHistorian:
         assert stored is not None
         assert stored.trace_id == crystal.trace_id
 
-    def test_end_trace_restores_parent(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_end_trace_restores_parent(self, historian: Historian, agent: MockAgent) -> None:
         """End trace restores parent trace context."""
         # No parent initially
         assert historian.get_current_trace_id() is None
@@ -132,9 +128,7 @@ class TestHistorian:
         stored = store.get(crystal.trace_id)
         assert stored is not None
 
-    def test_abort_with_string_error(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_abort_with_string_error(self, historian: Historian, agent: MockAgent) -> None:
         """Can abort with string error message."""
         ctx = historian.begin_trace(agent, {})
         crystal = historian.abort_trace(ctx, "Manual error message")
@@ -161,9 +155,7 @@ class TestHistorian:
         # Rough estimate: 4 bytes per token
         assert crystal.gas_consumed > 0
 
-    def test_determinism_auto_detected(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_determinism_auto_detected(self, historian: Historian, agent: MockAgent) -> None:
         """Determinism is auto-detected from action."""
         ctx = historian.begin_trace(agent, {})
 
@@ -181,15 +173,11 @@ class TestHistorian:
     def test_determinism_override(self, historian: Historian, agent: MockAgent) -> None:
         """Can override auto-detected determinism."""
         ctx = historian.begin_trace(agent, {})
-        crystal = historian.end_trace(
-            ctx, Action.INVOKE, {}, determinism=Determinism.DETERMINISTIC
-        )
+        crystal = historian.end_trace(ctx, Action.INVOKE, {}, determinism=Determinism.DETERMINISTIC)
 
         assert crystal.determinism == Determinism.DETERMINISTIC
 
-    def test_input_hash_consistent(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_input_hash_consistent(self, historian: Historian, agent: MockAgent) -> None:
         """Same input produces same hash."""
         input_data = {"key": "value", "number": 42}
 
@@ -198,9 +186,7 @@ class TestHistorian:
 
         assert ctx1.input_hash == ctx2.input_hash
 
-    def test_different_input_different_hash(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_different_input_different_hash(self, historian: Historian, agent: MockAgent) -> None:
         """Different input produces different hash."""
         ctx1 = historian.begin_trace(agent, {"a": 1})
         ctx2 = historian.begin_trace(agent, {"b": 2})
@@ -263,9 +249,7 @@ class TestTracingContext:
         assert crystal.outputs is not None
         assert "test error" in crystal.outputs["error"]
 
-    def test_context_manager_trace_id(
-        self, historian: Historian, agent: MockAgent
-    ) -> None:
+    def test_context_manager_trace_id(self, historian: Historian, agent: MockAgent) -> None:
         """Can access trace ID during execution."""
         with TracingContext(historian, agent, {}) as ctx:
             assert ctx.trace_id is not None

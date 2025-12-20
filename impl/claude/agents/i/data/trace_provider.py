@@ -251,14 +251,8 @@ class TraceDataProvider:
         Caches results for performance. Use force=True to reanalyze.
         """
         # Return cached if recent (< 5 min)
-        if (
-            not force
-            and self._static_graph is not None
-            and self._static_analysis_time is not None
-        ):
-            age = (
-                datetime.now(timezone.utc) - self._static_analysis_time
-            ).total_seconds()
+        if not force and self._static_graph is not None and self._static_analysis_time is not None:
+            age = (datetime.now(timezone.utc) - self._static_analysis_time).total_seconds()
             if age < 300:  # 5 minutes
                 return self._get_static_metrics()
 
@@ -589,9 +583,7 @@ class TraceDataProvider:
             for dep in deps:
                 if not isinstance(dep, str):
                     continue
-                child = self._build_tree_from_graph(
-                    dep, graph, visited, current_depth + 1
-                )
+                child = self._build_tree_from_graph(dep, graph, visited, current_depth + 1)
                 tree_node.children.append(child)
         except TypeError as e:
             # deps not iterable

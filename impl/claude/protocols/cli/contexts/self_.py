@@ -128,9 +128,7 @@ def _handle_dashboard(args: list[str], ctx: "InvocationContext | None" = None) -
     return cmd_dashboard(args, ctx)
 
 
-def _handle_capabilities(
-    args: list[str], ctx: "InvocationContext | None" = None
-) -> int:
+def _handle_capabilities(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle self capabilities -> list available affordances."""
     print("[SELF] Capabilities (affordances):")
     print()

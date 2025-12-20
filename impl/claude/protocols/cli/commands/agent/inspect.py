@@ -67,9 +67,7 @@ def resolve_agent_class(agent_name: str) -> type[Any] | None:
     return None
 
 
-def execute_inspect(
-    agent_name: str, json_mode: bool, ctx: "InvocationContext | None"
-) -> int:
+def execute_inspect(agent_name: str, json_mode: bool, ctx: "InvocationContext | None") -> int:
     """Handle 'a inspect <agent>' command."""
     try:
         from agents.a.archetypes import get_archetype
@@ -139,9 +137,7 @@ def execute_inspect(
                 lines.append("    (none)")
             else:
                 for cap_info in capabilities:
-                    config_str = ", ".join(
-                        f"{k}={v}" for k, v in cap_info["config"].items()
-                    )
+                    config_str = ", ".join(f"{k}={v}" for k, v in cap_info["config"].items())
                     lines.append(f"    @{cap_info['name']}({config_str})")
 
             lines.append("")

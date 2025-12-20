@@ -589,9 +589,7 @@ async def _collect_turn_metrics_impl() -> TurnMetrics:
             pass  # Non-critical
 
         # Average compression
-        avg_compression = (
-            sum(cone_stats.values()) / len(cone_stats) if cone_stats else 0.0
-        )
+        avg_compression = sum(cone_stats.values()) / len(cone_stats) if cone_stats else 0.0
 
         return TurnMetrics(
             total_turns=weave_len,
@@ -631,9 +629,7 @@ async def collect_metrics() -> DashboardMetrics:
 
     # Handle any exceptions gracefully with type-safe extraction
     kgent: KgentMetrics = (
-        results[0]
-        if isinstance(results[0], KgentMetrics)
-        else KgentMetrics(is_online=False)
+        results[0] if isinstance(results[0], KgentMetrics) else KgentMetrics(is_online=False)
     )
     metabolism: MetabolismMetrics = (
         results[1]
@@ -641,14 +637,10 @@ async def collect_metrics() -> DashboardMetrics:
         else MetabolismMetrics(is_online=False)
     )
     triad: TriadMetrics = (
-        results[2]
-        if isinstance(results[2], TriadMetrics)
-        else TriadMetrics(is_online=False)
+        results[2] if isinstance(results[2], TriadMetrics) else TriadMetrics(is_online=False)
     )
     flux: FluxMetrics = (
-        results[3]
-        if isinstance(results[3], FluxMetrics)
-        else FluxMetrics(is_online=False)
+        results[3] if isinstance(results[3], FluxMetrics) else FluxMetrics(is_online=False)
     )
     traces: list[TraceEntry] = results[4] if isinstance(results[4], list) else []
     trace_analysis: TraceAnalysisMetrics = (
@@ -657,9 +649,7 @@ async def collect_metrics() -> DashboardMetrics:
         else TraceAnalysisMetrics(is_online=False)
     )
     turns: TurnMetrics = (
-        results[6]
-        if isinstance(results[6], TurnMetrics)
-        else TurnMetrics(is_online=False)
+        results[6] if isinstance(results[6], TurnMetrics) else TurnMetrics(is_online=False)
     )
 
     return DashboardMetrics(
@@ -795,9 +785,7 @@ def create_random_metrics() -> DashboardMetrics:
     base.metabolism.temperature = min(
         1.0, max(0.0, base.metabolism.temperature + random.uniform(-0.1, 0.1))
     )
-    base.flux.events_per_second = max(
-        0, base.flux.events_per_second + random.uniform(-0.5, 0.5)
-    )
+    base.flux.events_per_second = max(0, base.flux.events_per_second + random.uniform(-0.5, 0.5))
     base.flux.queue_depth = max(0, base.flux.queue_depth + random.randint(-2, 2))
 
     return base
@@ -966,9 +954,7 @@ class MetricsObservable:
         """Get the latest collected metrics."""
         return self._latest
 
-    async def start_collecting(
-        self, interval: float = 1.0, demo_mode: bool = False
-    ) -> None:
+    async def start_collecting(self, interval: float = 1.0, demo_mode: bool = False) -> None:
         """
         Start collecting metrics at the given interval.
 

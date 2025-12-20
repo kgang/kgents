@@ -107,9 +107,7 @@ def _handle_shadow(args: list[str], ctx: "InvocationContext | None" = None) -> i
     return cmd_shadow(args, ctx)
 
 
-def _handle_collective_shadow(
-    args: list[str], ctx: "InvocationContext | None" = None
-) -> int:
+def _handle_collective_shadow(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle void collective-shadow -> delegating to existing handler."""
     from protocols.cli.handlers.collective_shadow import cmd_collective_shadow
 

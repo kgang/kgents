@@ -119,8 +119,7 @@ heart of this request? What wants to be said?"""
         if self.memory:
             recent = self.memory[-3:]
             memory_context = "\n\nRecent pieces you've made:\n" + "\n".join(
-                f"- {p.provenance.interpretation}: {str(p.content)[:100]}"
-                for p in recent
+                f"- {p.provenance.interpretation}: {str(p.content)[:100]}" for p in recent
             )
 
         return f'The patron asks: "{commission.request}"{memory_context}'

@@ -89,18 +89,14 @@ class PredicateAgent(Agent[A, A], Generic[A]):
             holds = self.predicate(input)
         except Exception as e:
             self._fail_count += 1
-            raise ValueError(
-                f"Predicate '{self.predicate_name}' raised exception: {e}"
-            ) from e
+            raise ValueError(f"Predicate '{self.predicate_name}' raised exception: {e}") from e
 
         # Check result
         if not holds:
             self._fail_count += 1
             if self.error_message:
                 raise ValueError(self.error_message)
-            raise ValueError(
-                f"Predicate '{self.predicate_name}' failed for input: {input}"
-            )
+            raise ValueError(f"Predicate '{self.predicate_name}' failed for input: {input}")
 
         # Predicate passed
         self._pass_count += 1

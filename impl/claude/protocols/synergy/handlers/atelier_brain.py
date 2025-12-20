@@ -90,9 +90,7 @@ class AtelierToBrainHandler(BaseSynergyHandler):
 
         # Actually capture to Brain
         try:
-            crystal_id = await self._capture_to_brain(
-                content, event.source_id, piece_type, event
-            )
+            crystal_id = await self._capture_to_brain(content, event.source_id, piece_type, event)
             self._logger.info(f"Captured Atelier piece: {crystal_id}")
             return self.success(
                 message="Atelier piece captured to Brain",
@@ -120,8 +118,10 @@ class AtelierToBrainHandler(BaseSynergyHandler):
         timestamp: datetime,
     ) -> str:
         """Create the content to capture as a crystal."""
-        engagement = "No spectators" if spectator_count == 0 else (
-            f"{spectator_count} spectators, {bid_count} bids accepted"
+        engagement = (
+            "No spectators"
+            if spectator_count == 0
+            else (f"{spectator_count} spectators, {bid_count} bids accepted")
         )
 
         return f"""Atelier Creation: {title}
@@ -151,11 +151,11 @@ Use this for:
     ) -> str:
         """Capture content to Brain and return crystal ID."""
         # Import here to avoid circular imports
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
         # Create a minimal logos for capture
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Create concept ID based on piece info

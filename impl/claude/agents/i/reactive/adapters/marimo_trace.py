@@ -147,9 +147,7 @@ class AgentTraceWidget(KgentsWidget[AgentTraceState]):
             )
         )
 
-    def with_view(
-        self, view: Literal["timeline", "tree", "metrics"]
-    ) -> AgentTraceWidget:
+    def with_view(self, view: Literal["timeline", "tree", "metrics"]) -> AgentTraceWidget:
         """Return new widget with different view mode. Immutable."""
         current = self.state.value
         return AgentTraceWidget(
@@ -251,9 +249,7 @@ class AgentTraceWidget(KgentsWidget[AgentTraceState]):
             duration = max(1, int((span.end_time_ms - span.start_time_ms) * scale))
 
             bar = " " * start_pos + "█" * duration
-            status_char = (
-                "✓" if span.status == "ok" else "✗" if span.status == "error" else "○"
-            )
+            status_char = "✓" if span.status == "ok" else "✗" if span.status == "error" else "○"
             lines.append(f"{indent}{status_char} {span.name[:15]:<15} |{bar}")
 
         return "\n".join(lines)
@@ -275,17 +271,11 @@ class AgentTraceWidget(KgentsWidget[AgentTraceState]):
 
             for span in state.spans:
                 style = (
-                    "green"
-                    if span.status == "ok"
-                    else "red"
-                    if span.status == "error"
-                    else "dim"
+                    "green" if span.status == "ok" else "red" if span.status == "error" else "dim"
                 )
                 indent = "  " if span.parent_id else ""
                 duration = span.end_time_ms - span.start_time_ms
-                content.append(
-                    f"{indent}• {span.name} ({duration:.1f}ms)\n", style=style
-                )
+                content.append(f"{indent}• {span.name} ({duration:.1f}ms)\n", style=style)
 
             return Panel(content, title="Agent Trace", border_style="blue")
 
@@ -426,9 +416,7 @@ def create_trace_widget(
     if span_tuple:
         end_times = [s.end_time_ms for s in span_tuple]
         start_times = [s.start_time_ms for s in span_tuple]
-        total_latency = (
-            max(end_times) - min(start_times) if end_times and start_times else 0
-        )
+        total_latency = max(end_times) - min(start_times) if end_times and start_times else 0
         start_time = min(start_times) if start_times else 0
         end_time = max(end_times) if end_times else 0
         total_tokens = sum(

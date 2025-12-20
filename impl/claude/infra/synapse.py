@@ -169,9 +169,7 @@ class Synapse:
 
     def __init__(self, config: SynapseConfig | None = None):
         self._config = config or SynapseConfig()
-        self._handlers: dict[SignalKind, list[SignalHandler]] = {
-            k: [] for k in SignalKind
-        }
+        self._handlers: dict[SignalKind, list[SignalHandler]] = {k: [] for k in SignalKind}
         self._buffer: deque[Signal] = deque(maxlen=self._config.buffer_size)
         self._batch_queue: deque[Signal] = deque()
         self._predictive_model = PredictiveModel()
@@ -306,9 +304,7 @@ class Synapse:
             "fast_path_count": self._fast_path_count,
             "batch_path_count": self._batch_path_count,
             "fast_path_ratio": (
-                self._fast_path_count / self._signals_fired
-                if self._signals_fired > 0
-                else 0.0
+                self._fast_path_count / self._signals_fired if self._signals_fired > 0 else 0.0
             ),
             "buffer_size": len(self._buffer),
             "batch_queue_size": len(self._batch_queue),

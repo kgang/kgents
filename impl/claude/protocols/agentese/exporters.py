@@ -98,8 +98,7 @@ class TelemetryConfig:
             service_version=os.getenv("KGENTS_SERVICE_VERSION", "0.1.0"),
             deployment_environment=os.getenv("KGENTS_ENVIRONMENT", "development"),
             otlp_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-            otlp_insecure=os.getenv("OTEL_EXPORTER_OTLP_INSECURE", "true").lower()
-            == "true",
+            otlp_insecure=os.getenv("OTEL_EXPORTER_OTLP_INSECURE", "true").lower() == "true",
             jaeger_host=os.getenv("JAEGER_AGENT_HOST"),
             jaeger_port=int(os.getenv("JAEGER_AGENT_PORT", "6831")),
             local_json_path=os.getenv("KGENTS_TRACE_JSON_PATH"),

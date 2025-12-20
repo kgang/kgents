@@ -354,6 +354,43 @@ export interface TendResponseJSON {
 }
 
 // =============================================================================
+// Concept Nursery (JIT → Garden Integration)
+// =============================================================================
+
+/** Growth stages for concepts in the nursery */
+export type ConceptStage = 'SEED' | 'SPROUTING' | 'GROWING' | 'READY' | 'PROMOTED';
+
+/** A concept seed growing in the nursery */
+export interface ConceptSeedJSON {
+  handle: string;
+  stage: ConceptStage;
+  usage_count: number;
+  success_count: number;
+  success_rate: number;
+  created_at: string;
+  last_invoked: string;
+  /** CSS glow intensity (0-1) for visual feedback */
+  glow_intensity: number;
+  /** Whether this stage should have breathing animation */
+  should_pulse: boolean;
+  /** Lucide icon name for this stage */
+  icon: string;
+}
+
+/** Nursery state containing all seeds */
+export interface NurseryJSON {
+  seeds: Record<string, ConceptSeedJSON>;
+  counts: {
+    total: number;
+    seeds: number;
+    sprouting: number;
+    growing: number;
+    ready: number;
+    promoted: number;
+  };
+}
+
+// =============================================================================
 // Union Type
 // =============================================================================
 

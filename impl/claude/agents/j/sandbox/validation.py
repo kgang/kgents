@@ -34,9 +34,7 @@ def validate_jit_safety(
     - Chaosmonger stability analysis
     """
     # Check complexity
-    max_complexity = int(
-        constraints.entropy_budget * constraints.max_cyclomatic_complexity
-    )
+    max_complexity = int(constraints.entropy_budget * constraints.max_cyclomatic_complexity)
     if source.complexity > max_complexity:
         return (
             False,

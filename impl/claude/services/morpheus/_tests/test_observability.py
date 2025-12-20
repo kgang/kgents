@@ -247,9 +247,7 @@ class TestMorpheusTelemetry:
 class TestPersistenceTelemetryIntegration:
     """Tests for MorpheusPersistence telemetry integration."""
 
-    async def test_complete_records_metrics(
-        self, persistence_with_telemetry: MorpheusPersistence
-    ):
+    async def test_complete_records_metrics(self, persistence_with_telemetry: MorpheusPersistence):
         """Completion should record metrics."""
         request = ChatRequest(
             model="mock-test",
@@ -262,9 +260,7 @@ class TestPersistenceTelemetryIntegration:
         assert summary["total_requests"] >= 1
         assert "mock" in summary["requests_by_provider"]
 
-    async def test_complete_returns_span_id(
-        self, persistence_with_telemetry: MorpheusPersistence
-    ):
+    async def test_complete_returns_span_id(self, persistence_with_telemetry: MorpheusPersistence):
         """Completion result should include span ID."""
         request = ChatRequest(
             model="mock-test",
@@ -277,9 +273,7 @@ class TestPersistenceTelemetryIntegration:
         assert result.telemetry_span_id is not None
         assert len(result.telemetry_span_id) == 16  # 8 bytes = 16 hex chars
 
-    async def test_stream_records_metrics(
-        self, persistence_with_telemetry: MorpheusPersistence
-    ):
+    async def test_stream_records_metrics(self, persistence_with_telemetry: MorpheusPersistence):
         """Streaming should record metrics."""
         request = ChatRequest(
             model="mock-test",

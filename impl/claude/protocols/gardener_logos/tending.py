@@ -312,6 +312,7 @@ def _evaluate_and_add_transition_suggestion(
     except Exception as e:
         # Log but don't fail the gesture
         import logging
+
         logger = logging.getLogger("kgents.gardener.auto_inducer")
         logger.warning(f"Failed to evaluate season transition: {e}")
 
@@ -486,9 +487,7 @@ async def _handle_water(
 
             if textgrad_result.content_changed:
                 changes.append(f"TextGRAD improved: {target}")
-                changes.extend(
-                    f"  Modified: {s}" for s in textgrad_result.sections_modified
-                )
+                changes.extend(f"  Modified: {s}" for s in textgrad_result.sections_modified)
                 synergies.append("textgrad:improvement_applied")
             else:
                 changes.append(f"TextGRAD analyzed (no changes): {target}")

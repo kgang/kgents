@@ -351,9 +351,7 @@ class StorageProvider:
         ground.paths.ensure_dirs()
 
         # Create providers from config
-        relational, vector, blob, telemetry = await create_providers(
-            ground.config, ground.paths
-        )
+        relational, vector, blob, telemetry = await create_providers(ground.config, ground.paths)
 
         return cls(
             relational=relational,

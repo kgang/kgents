@@ -56,10 +56,10 @@ class StigmergicFieldWidget(KgentsWidget):
     cell_size = traitlets.Int(12).tag(sync=True)  # Pixels per cell
 
     # Entities: list of dicts with {id, symbol, x, y, phase, heat}
-    entities: list[dict[str, Any]] = traitlets.List([]).tag(sync=True)  # type: ignore[assignment]
+    entities: Any = traitlets.List([]).tag(sync=True)
 
     # Pheromones: list of dicts with {ptype, x, y, intensity, birth_tick}
-    pheromones: list[dict[str, Any]] = traitlets.List([]).tag(sync=True)  # type: ignore[assignment]
+    pheromones: Any = traitlets.List([]).tag(sync=True)
 
     # Global metrics
     entropy = traitlets.Float(0.5).tag(sync=True)  # 0.0-1.0

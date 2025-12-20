@@ -236,10 +236,7 @@ def detect_abuse(proposal: HolonProposal) -> AbuseCheckResult:
 
     # Aggregate concerns
     all_concerns = (
-        manipulation_concerns
-        + exfiltration_concerns
-        + escalation_concerns
-        + resource_concerns
+        manipulation_concerns + exfiltration_concerns + escalation_concerns + resource_concerns
     )
 
     # Determine max risk

@@ -34,9 +34,7 @@ class HypothesisInput:
     observations: list[str]  # Raw observations or data summaries
     domain: str  # Scientific domain (e.g., "molecular biology")
     question: Optional[str] = None  # Optional guiding research question
-    constraints: list[str] = field(
-        default_factory=list
-    )  # Known constraints or established facts
+    constraints: list[str] = field(default_factory=list)  # Known constraints or established facts
 
 
 # Re-export ParsedHypothesisResponse as HypothesisOutput for backward compatibility

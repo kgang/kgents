@@ -51,16 +51,12 @@ class PipelineStageResult:
     duration_ms: float = 0.0
 
     @classmethod
-    def ok(
-        cls, aspect: str, result: Any, duration_ms: float = 0.0
-    ) -> "PipelineStageResult":
+    def ok(cls, aspect: str, result: Any, duration_ms: float = 0.0) -> "PipelineStageResult":
         """Create a successful result."""
         return cls(aspect=aspect, success=True, result=result, duration_ms=duration_ms)
 
     @classmethod
-    def fail(
-        cls, aspect: str, error: Exception, duration_ms: float = 0.0
-    ) -> "PipelineStageResult":
+    def fail(cls, aspect: str, error: Exception, duration_ms: float = 0.0) -> "PipelineStageResult":
         """Create a failed result."""
         return cls(
             aspect=aspect,
@@ -239,9 +235,7 @@ class AspectPipeline:
         initial_input: Any = None,
     ) -> PipelineResult:
         """Execute the pipeline with configured aspects."""
-        return await self.pipe(
-            *self.aspects, observer=observer, initial_input=initial_input
-        )
+        return await self.pipe(*self.aspects, observer=observer, initial_input=initial_input)
 
 
 # === LogosNode Mixin ===
@@ -285,14 +279,10 @@ class PipelineMixin:
             )
         """
         pipeline = AspectPipeline(self)
-        result = await pipeline.pipe(
-            *aspects, observer=observer, initial_input=initial_input
-        )
+        result = await pipeline.pipe(*aspects, observer=observer, initial_input=initial_input)
 
         if not result.success:
-            raise result.error or Exception(
-                f"Pipeline failed at stage {result.failed_at}"
-            )
+            raise result.error or Exception(f"Pipeline failed at stage {result.failed_at}")
 
         return result.final_result
 

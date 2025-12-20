@@ -112,9 +112,7 @@ class ChangeEvent:
         )
 
     @classmethod
-    def delete(
-        cls, table: str, row_id: str, sequence_id: int | None = None
-    ) -> "ChangeEvent":
+    def delete(cls, table: str, row_id: str, sequence_id: int | None = None) -> "ChangeEvent":
         """Create a DELETE event."""
         return cls(
             table=table,
@@ -400,9 +398,7 @@ class SynapseMetrics:
             "max_sync_lag_ms": self.max_sync_lag_ms,
             "circuit_state": self.circuit_state,
             "last_successful_sync": (
-                self.last_successful_sync.isoformat()
-                if self.last_successful_sync
-                else None
+                self.last_successful_sync.isoformat() if self.last_successful_sync else None
             ),
             "last_failed_sync": (
                 self.last_failed_sync.isoformat() if self.last_failed_sync else None
@@ -470,9 +466,7 @@ class SynapseProcessor(Agent[ChangeEvent, list[SyncResult]]):
 
         return results
 
-    async def _sync_to_qdrant(
-        self, event: ChangeEvent, start_time: float
-    ) -> SyncResult:
+    async def _sync_to_qdrant(self, event: ChangeEvent, start_time: float) -> SyncResult:
         """Sync event to Qdrant vector store."""
         try:
             if event.operation == ChangeOperation.DELETE:
@@ -661,9 +655,7 @@ class RobustSynapseProcessor(Agent[ChangeEvent, list[SyncResult]]):
 
         return results
 
-    async def _sync_to_qdrant_with_retry(
-        self, event: ChangeEvent, start_time: float
-    ) -> SyncResult:
+    async def _sync_to_qdrant_with_retry(self, event: ChangeEvent, start_time: float) -> SyncResult:
         """Sync to Qdrant with retry and circuit breaker."""
         retry_config = self._config.retry_config
         last_error: str = ""
@@ -721,9 +713,7 @@ class RobustSynapseProcessor(Agent[ChangeEvent, list[SyncResult]]):
             sequence=event.sequence_id,
         )
 
-    async def _sync_to_qdrant(
-        self, event: ChangeEvent, start_time: float
-    ) -> SyncResult:
+    async def _sync_to_qdrant(self, event: ChangeEvent, start_time: float) -> SyncResult:
         """Sync event to Qdrant vector store."""
         try:
             if event.operation == ChangeOperation.DELETE:

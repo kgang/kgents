@@ -497,9 +497,7 @@ class TestVoIOptimizer:
         optimizer.set_observability("low_risk", 0.8)
 
         total_budget = Gas(tokens=1000)
-        allocations = optimizer.allocate_observation_budget(
-            total_budget, ["high_risk", "low_risk"]
-        )
+        allocations = optimizer.allocate_observation_budget(total_budget, ["high_risk", "low_risk"])
 
         assert "high_risk" in allocations
         assert "low_risk" in allocations
@@ -579,9 +577,7 @@ class TestAdaptiveObserver:
         optimizer.set_observability("agent1", 1.0)
 
         # Log transaction for impact
-        output = SimpleOutput(
-            content="def foo() -> None: pass" * 10, _valid_syntax=True
-        )
+        output = SimpleOutput(content="def foo() -> None: pass" * 10, _valid_syntax=True)
         value_ledger.log_transaction("agent1", Gas(tokens=100), output)
 
         interval = observer.compute_observation_interval("agent1")
@@ -808,14 +804,10 @@ class TestVoIIntegration:
         optimizer.set_observability("data_processor", 0.9)
 
         # Allocate observation budget
-        allocations = optimizer.allocate_observation_budget(
-            Gas(tokens=1000), ["data_processor"]
-        )
+        allocations = optimizer.allocate_observation_budget(Gas(tokens=1000), ["data_processor"])
 
         # Perform observation
-        depth = optimizer.select_observation_depth(
-            "data_processor", allocations["data_processor"]
-        )
+        depth = optimizer.select_observation_depth("data_processor", allocations["data_processor"])
 
         # Log observation finding
         finding = ObservationFinding(

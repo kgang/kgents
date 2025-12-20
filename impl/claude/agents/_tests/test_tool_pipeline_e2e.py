@@ -136,9 +136,7 @@ class TestPrototypeToTool:
     async def test_intent_to_tool(self) -> None:
         """Test transforming intent into executable tool."""
         # Step 1: Parse intent
-        intent = parse_intent(
-            "Create a tool that converts temperatures from Celsius to Fahrenheit"
-        )
+        intent = parse_intent("Create a tool that converts temperatures from Celsius to Fahrenheit")
 
         # Step 2: Synthesize contract (verifies intent is valid)
         _ = synthesize_contract(intent, "TemperatureConverter")

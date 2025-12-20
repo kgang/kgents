@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
@@ -478,7 +478,7 @@ class RedisBudgetStore:
 
     def _monthly_ttl(self) -> int:
         """Seconds until end of month (UTC)."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         if now.month == 12:
             end_of_month = now.replace(
                 year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0

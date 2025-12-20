@@ -53,9 +53,7 @@ class TestMemoryBackendBasics:
         assert entry.metadata["tag"] == "sample"
 
     @pytest.mark.asyncio
-    async def test_add_with_raw_vector(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_add_with_raw_vector(self, memory_backend: MemoryVectorBackend) -> None:
         """Add using raw list instead of Embedding."""
         raw = list(make_unit_vector(1))
         await memory_backend.add("test", raw)
@@ -82,9 +80,7 @@ class TestMemoryBackendBasics:
         assert entry is None
 
     @pytest.mark.asyncio
-    async def test_remove_nonexistent(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_remove_nonexistent(self, memory_backend: MemoryVectorBackend) -> None:
         """Remove nonexistent returns False."""
         result = await memory_backend.remove("nonexistent")
         assert result is False
@@ -139,9 +135,7 @@ class TestBatchOperations:
         assert await memory_backend.count() == 3
 
     @pytest.mark.asyncio
-    async def test_add_batch_with_raw_vectors(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_add_batch_with_raw_vectors(self, memory_backend: MemoryVectorBackend) -> None:
         """Batch add with raw vectors."""
         entries = [
             ("entry_1", list(make_unit_vector(1)), None),
@@ -163,18 +157,14 @@ class TestSearch:
     """Test search functionality."""
 
     @pytest.mark.asyncio
-    async def test_search_empty_index(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_empty_index(self, memory_backend: MemoryVectorBackend) -> None:
         """Search on empty index returns empty list."""
         query = make_embedding(1)
         results = await memory_backend.search(query)
         assert results == []
 
     @pytest.mark.asyncio
-    async def test_search_finds_exact_match(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_finds_exact_match(self, memory_backend: MemoryVectorBackend) -> None:
         """Search finds exact match with similarity ~1.0."""
         emb = make_embedding(1)
         await memory_backend.add("test", emb)
@@ -186,9 +176,7 @@ class TestSearch:
         assert results[0].similarity == pytest.approx(1.0, abs=1e-6)
 
     @pytest.mark.asyncio
-    async def test_search_with_limit(
-        self, populated_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_with_limit(self, populated_backend: MemoryVectorBackend) -> None:
         """Search respects limit parameter."""
         query = make_embedding(0)
 
@@ -196,9 +184,7 @@ class TestSearch:
         assert len(results) == 3
 
     @pytest.mark.asyncio
-    async def test_search_sorted_by_similarity(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_sorted_by_similarity(self, memory_backend: MemoryVectorBackend) -> None:
         """Results are sorted by similarity (highest first)."""
         base = make_embedding(1)
         similar = make_similar_embedding(base, noise=0.1, seed=42)
@@ -216,9 +202,7 @@ class TestSearch:
         assert results[1].id == "similar"
 
     @pytest.mark.asyncio
-    async def test_search_with_threshold(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_with_threshold(self, memory_backend: MemoryVectorBackend) -> None:
         """Search filters by similarity threshold."""
         base = make_embedding(1)
         similar = make_similar_embedding(base, noise=0.1)
@@ -234,9 +218,7 @@ class TestSearch:
         assert results[0].id == "base"
 
     @pytest.mark.asyncio
-    async def test_search_with_raw_vector(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_with_raw_vector(self, memory_backend: MemoryVectorBackend) -> None:
         """Search with raw vector list."""
         raw = list(make_unit_vector(1))
         await memory_backend.add("test", raw)
@@ -250,35 +232,23 @@ class TestMetadataFiltering:
     """Test metadata filter functionality."""
 
     @pytest.mark.asyncio
-    async def test_search_with_single_filter(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_with_single_filter(self, memory_backend: MemoryVectorBackend) -> None:
         """Filter results by single metadata key."""
         await memory_backend.add("a", make_embedding(1), {"type": "foo"})
         await memory_backend.add("b", make_embedding(2), {"type": "bar"})
         await memory_backend.add("c", make_embedding(3), {"type": "foo"})
 
-        results = await memory_backend.search(
-            make_embedding(1), filters={"type": "foo"}
-        )
+        results = await memory_backend.search(make_embedding(1), filters={"type": "foo"})
 
         assert len(results) == 2
         assert all(r.metadata["type"] == "foo" for r in results)
 
     @pytest.mark.asyncio
-    async def test_search_with_multiple_filters(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_with_multiple_filters(self, memory_backend: MemoryVectorBackend) -> None:
         """Filter results by multiple metadata keys."""
-        await memory_backend.add(
-            "a", make_embedding(1), {"type": "foo", "status": "active"}
-        )
-        await memory_backend.add(
-            "b", make_embedding(2), {"type": "foo", "status": "inactive"}
-        )
-        await memory_backend.add(
-            "c", make_embedding(3), {"type": "bar", "status": "active"}
-        )
+        await memory_backend.add("a", make_embedding(1), {"type": "foo", "status": "active"})
+        await memory_backend.add("b", make_embedding(2), {"type": "foo", "status": "inactive"})
+        await memory_backend.add("c", make_embedding(3), {"type": "bar", "status": "active"})
 
         results = await memory_backend.search(
             make_embedding(1), filters={"type": "foo", "status": "active"}
@@ -288,15 +258,11 @@ class TestMetadataFiltering:
         assert results[0].id == "a"
 
     @pytest.mark.asyncio
-    async def test_search_filter_no_match(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_filter_no_match(self, memory_backend: MemoryVectorBackend) -> None:
         """Filter with no matching entries returns empty."""
         await memory_backend.add("a", make_embedding(1), {"type": "foo"})
 
-        results = await memory_backend.search(
-            make_embedding(1), filters={"type": "nonexistent"}
-        )
+        results = await memory_backend.search(make_embedding(1), filters={"type": "nonexistent"})
 
         assert results == []
 
@@ -305,9 +271,7 @@ class TestDimensionValidation:
     """Test dimension validation."""
 
     @pytest.mark.asyncio
-    async def test_add_wrong_dimension_embedding(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_add_wrong_dimension_embedding(self, memory_backend: MemoryVectorBackend) -> None:
         """Adding embedding with wrong dimension raises."""
         wrong_dim = Embedding(
             vector=(0.1, 0.2, 0.3),  # 3 dimensions, backend expects TEST_DIMENSION
@@ -319,9 +283,7 @@ class TestDimensionValidation:
             await memory_backend.add("test", wrong_dim)
 
     @pytest.mark.asyncio
-    async def test_add_wrong_dimension_list(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_add_wrong_dimension_list(self, memory_backend: MemoryVectorBackend) -> None:
         """Adding raw vector with wrong dimension raises."""
         wrong_dim = [0.1, 0.2, 0.3]  # 3 dimensions, backend expects TEST_DIMENSION
 
@@ -329,9 +291,7 @@ class TestDimensionValidation:
             await memory_backend.add("test", wrong_dim)
 
     @pytest.mark.asyncio
-    async def test_search_wrong_dimension(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_search_wrong_dimension(self, memory_backend: MemoryVectorBackend) -> None:
         """Search with wrong dimension raises."""
         await memory_backend.add("test", make_embedding(1))
 
@@ -398,9 +358,7 @@ class TestEdgeCases:
         assert entry.metadata == {}
 
     @pytest.mark.asyncio
-    async def test_update_preserves_id(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_update_preserves_id(self, memory_backend: MemoryVectorBackend) -> None:
         """Updating entry preserves ID."""
         await memory_backend.add("test", make_embedding(1))
         await memory_backend.add("test", make_embedding(2))
@@ -410,17 +368,13 @@ class TestEdgeCases:
         assert entry.id == "test"
 
     @pytest.mark.asyncio
-    async def test_clear_empty_backend(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_clear_empty_backend(self, memory_backend: MemoryVectorBackend) -> None:
         """Clear on empty backend returns 0."""
         count = await memory_backend.clear()
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_limit_larger_than_count(
-        self, memory_backend: MemoryVectorBackend
-    ) -> None:
+    async def test_limit_larger_than_count(self, memory_backend: MemoryVectorBackend) -> None:
         """Limit larger than entry count returns all entries."""
         await memory_backend.add("a", make_embedding(1))
         await memory_backend.add("b", make_embedding(2))

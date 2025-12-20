@@ -251,9 +251,7 @@ class MemoryDataProvider:
             inference_health = min(1.0, precision / 1.5)
 
         # Overall health is weighted average
-        health_score = (
-            crystal_health * 0.4 + field_health * 0.3 + inference_health * 0.3
-        )
+        health_score = crystal_health * 0.4 + field_health * 0.3 + inference_health * 0.3
 
         # Status thresholds
         if health_score >= 0.7:

@@ -168,9 +168,7 @@ async def _async_whatif(
 
                     for alt in by_type[reality_type]:
                         confidence = alt.get("confidence", 0.5)
-                        lines.append(
-                            f"  • {alt['title']} (confidence: {confidence:.1f})"
-                        )
+                        lines.append(f"  • {alt['title']} (confidence: {confidence:.1f})")
                         lines.append(f"    {alt['description']}")
                         lines.append("")
 
@@ -263,12 +261,8 @@ def _parse_alternatives(response: str, n: int) -> list[dict[str, Any]]:
                         cleaned.append(
                             {
                                 "title": str(alt.get("title", "Unknown approach")),
-                                "description": str(
-                                    alt.get("description", "No description")
-                                ),
-                                "reality_type": str(
-                                    alt.get("reality_type", "realistic")
-                                ).lower(),
+                                "description": str(alt.get("description", "No description")),
+                                "reality_type": str(alt.get("reality_type", "realistic")).lower(),
                                 "confidence": float(alt.get("confidence", 0.5)),
                             }
                         )

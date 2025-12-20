@@ -290,9 +290,7 @@ class EntropyBudget:
             errors.append(f"Allocation ({allocated}) != total ({self.total})")
         for phase, amount in self.spent.items():
             if phase in self.allocation and amount > self.allocation[phase] + 0.001:
-                errors.append(
-                    f"Phase {phase} overspent: {amount} > {self.allocation[phase]}"
-                )
+                errors.append(f"Phase {phase} overspent: {amount} > {self.allocation[phase]}")
         return errors
 
     def to_dict(self) -> dict[str, Any]:
@@ -408,9 +406,7 @@ class ProjectDefinition:
         for wave in self.waves:
             for cid in wave.components:
                 if cid not in component_ids:
-                    errors.append(
-                        f"Wave '{wave.name}' references unknown component: {cid}"
-                    )
+                    errors.append(f"Wave '{wave.name}' references unknown component: {cid}")
 
         # Law 3: Blocker IDs unique
         blocker_ids = {b.id for b in self.blockers}
@@ -468,13 +464,10 @@ class ProjectDefinition:
         if self.entropy:
             d["entropy"] = self.entropy.to_dict()
         if self.phase_overrides:
-            d["phase_overrides"] = {
-                k: v.to_dict() for k, v in self.phase_overrides.items()
-            }
+            d["phase_overrides"] = {k: v.to_dict() for k, v in self.phase_overrides.items()}
         if self.phase_ledger:
             d["phase_ledger"] = {
-                k: v.value if hasattr(v, "value") else v
-                for k, v in self.phase_ledger.items()
+                k: v.value if hasattr(v, "value") else v for k, v in self.phase_ledger.items()
             }
         if self.session_notes:
             d["session_notes"] = self.session_notes
@@ -482,9 +475,7 @@ class ProjectDefinition:
 
     def to_yaml(self) -> str:
         """Serialize to YAML string."""
-        result: str = yaml.dump(
-            self.to_dict(), default_flow_style=False, sort_keys=False
-        )
+        result: str = yaml.dump(self.to_dict(), default_flow_style=False, sort_keys=False)
         return result
 
     @classmethod
@@ -497,27 +488,16 @@ class ProjectDefinition:
             n_phases=data.get("n_phases", 11),
             decisions=tuple(Decision.from_dict(d) for d in data.get("decisions", [])),
             file_map=tuple(FileRef.from_dict(f) for f in data.get("file_map", [])),
-            invariants=tuple(
-                Invariant.from_dict(i) for i in data.get("invariants", [])
-            ),
+            invariants=tuple(Invariant.from_dict(i) for i in data.get("invariants", [])),
             blockers=tuple(Blocker.from_dict(b) for b in data.get("blockers", [])),
-            components=tuple(
-                Component.from_dict(c) for c in data.get("components", [])
-            ),
+            components=tuple(Component.from_dict(c) for c in data.get("components", [])),
             waves=tuple(Wave.from_dict(w) for w in data.get("waves", [])),
-            checkpoints=tuple(
-                Checkpoint.from_dict(cp) for cp in data.get("checkpoints", [])
-            ),
-            entropy=(
-                EntropyBudget.from_dict(data["entropy"]) if "entropy" in data else None
-            ),
+            checkpoints=tuple(Checkpoint.from_dict(cp) for cp in data.get("checkpoints", [])),
+            entropy=(EntropyBudget.from_dict(data["entropy"]) if "entropy" in data else None),
             phase_overrides={
-                k: PhaseOverride.from_dict(v)
-                for k, v in data.get("phase_overrides", {}).items()
+                k: PhaseOverride.from_dict(v) for k, v in data.get("phase_overrides", {}).items()
             },
-            phase_ledger={
-                k: PhaseStatus(v) for k, v in data.get("phase_ledger", {}).items()
-            },
+            phase_ledger={k: PhaseStatus(v) for k, v in data.get("phase_ledger", {}).items()},
             session_notes=data.get("session_notes"),
         )
 
@@ -559,9 +539,7 @@ class ProjectDefinition:
         # Map to ProjectDefinition
         importance = header.get("importance", "standard")
         classification = (
-            Classification.CROWN_JEWEL
-            if importance == "crown_jewel"
-            else Classification.STANDARD
+            Classification.CROWN_JEWEL if importance == "crown_jewel" else Classification.STANDARD
         )
 
         entropy_data = header.get("entropy", {})
@@ -574,9 +552,7 @@ class ProjectDefinition:
             else None
         )
 
-        phase_ledger = {
-            k: PhaseStatus(v) for k, v in header.get("phase_ledger", {}).items()
-        }
+        phase_ledger = {k: PhaseStatus(v) for k, v in header.get("phase_ledger", {}).items()}
 
         # Extract goal from session notes or path
         session_notes = header.get("session_notes", "")

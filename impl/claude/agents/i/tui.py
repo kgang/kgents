@@ -181,9 +181,7 @@ class FieldRenderer:
             padding = width - len(label) - bar_width - len(pct) - 6
             return line + " " * padding + "│"
 
-        entropy_color = (
-            Color.GREEN.value if self.state.entropy > 30 else Color.RED.value
-        )
+        entropy_color = Color.GREEN.value if self.state.entropy > 30 else Color.RED.value
         heat_color = Color.RED.value if self.state.heat > 70 else Color.YELLOW.value
 
         return [
@@ -250,9 +248,7 @@ class FieldRenderer:
 
     def _render_compost(self) -> list[str]:
         """Render the compost heap (event log)."""
-        lines = [
-            "│" + " " * (self.state.width + self.config.field_padding * 2 + 2) + "│"
-        ]
+        lines = ["│" + " " * (self.state.width + self.config.field_padding * 2 + 2) + "│"]
 
         events = self.state.get_recent_events(self.config.compost_lines)
         width = self.state.width + self.config.field_padding * 2
@@ -284,13 +280,7 @@ class FieldRenderer:
 
         help_text = "[1]FIELD [2]FORGE [o]OBSERVE [q]QUIT [?]HELP"
         padding = (width - len(help_text)) // 2
-        line = (
-            "│"
-            + " " * padding
-            + help_text
-            + " " * (width - padding - len(help_text))
-            + "│"
-        )
+        line = "│" + " " * padding + help_text + " " * (width - padding - len(help_text)) + "│"
 
         bottom = "└" + "─" * width + "┘"
 

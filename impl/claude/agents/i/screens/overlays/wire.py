@@ -117,11 +117,7 @@ class WireOverlay(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         """Compose the WIRE overlay."""
         # Use demo events if none provided
-        events = (
-            self._events
-            if self._events is not None
-            else create_demo_events(self._agent_id)
-        )
+        events = self._events if self._events is not None else create_demo_events(self._agent_id)
 
         with Container(id="wire-container"):
             yield Static(f"─ WIRE: {self._agent_name} ─", id="wire-header")

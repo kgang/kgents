@@ -106,14 +106,10 @@ class WorkshopStatusResponse(BaseModel if HAS_FASTAPI else object):  # type: ign
     id: str = Field(..., description="Workshop ID")
     phase: str = Field(..., description="Current workshop phase")
     is_running: bool = Field(..., description="Whether flux is running")
-    active_task: Optional[dict[str, Any]] = Field(
-        default=None, description="Active task"
-    )
+    active_task: Optional[dict[str, Any]] = Field(default=None, description="Active task")
     builders: list[BuilderSummaryResponse] = Field(..., description="Builder states")
     artifacts_count: int = Field(default=0, description="Number of artifacts")
-    metrics: dict[str, Any] = Field(
-        default_factory=dict, description="Execution metrics"
-    )
+    metrics: dict[str, Any] = Field(default_factory=dict, description="Execution metrics")
 
 
 class WorkshopPlanResponse(BaseModel if HAS_FASTAPI else object):  # type: ignore[misc]
@@ -343,9 +339,7 @@ def create_workshop_router() -> "APIRouter | None":
 
         builder = workshop.get_builder(archetype)
         if builder is None:
-            raise HTTPException(
-                status_code=404, detail=f"Builder {archetype} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Builder {archetype} not found")
 
         # LOD 0: Basic info
         result: dict[str, Any] = {
@@ -358,9 +352,7 @@ def create_workshop_router() -> "APIRouter | None":
         if lod >= 1:
             result["is_in_specialty"] = builder.is_in_specialty
             result["is_active"] = (
-                workshop.state.active_builder == builder
-                if workshop.state.active_builder
-                else False
+                workshop.state.active_builder == builder if workshop.state.active_builder else False
             )
 
         # LOD 2: Citizen info (builder extends citizen)
@@ -383,9 +375,7 @@ def create_workshop_router() -> "APIRouter | None":
         return result
 
     @router.post("/builder/{archetype}/whisper")
-    async def whisper_builder(
-        archetype: str, request: WhisperRequest
-    ) -> dict[str, Any]:
+    async def whisper_builder(archetype: str, request: WhisperRequest) -> dict[str, Any]:
         """Send a whisper to a specific builder."""
         state = _get_or_create_workshop()
         workshop = state["workshop"]
@@ -393,9 +383,7 @@ def create_workshop_router() -> "APIRouter | None":
 
         builder = workshop.get_builder(archetype)
         if builder is None:
-            raise HTTPException(
-                status_code=404, detail=f"Builder {archetype} not found"
-            )
+            raise HTTPException(status_code=404, detail=f"Builder {archetype} not found")
 
         # For now, whisper is recorded but doesn't change behavior
         # Future: integrate with DialogueEngine
@@ -542,9 +530,7 @@ def create_workshop_router() -> "APIRouter | None":
         return store.get_aggregate_metrics(period)
 
     @router.get("/metrics/builder/{archetype}")
-    async def get_builder_metrics(
-        archetype: str, period: str = "24h"
-    ) -> dict[str, Any]:
+    async def get_builder_metrics(archetype: str, period: str = "24h") -> dict[str, Any]:
         """
         Get metrics for a specific builder archetype.
 

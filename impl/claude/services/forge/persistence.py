@@ -23,7 +23,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -204,7 +204,7 @@ class ForgePersistence:
                 description=description,
                 theme=theme,
                 is_active=True,
-                started_at=datetime.utcnow(),
+                started_at=datetime.now(UTC),
                 ended_at=None,
                 config=config or {},
             )
@@ -304,7 +304,7 @@ class ForgePersistence:
                 return False
 
             workshop.is_active = False
-            workshop.ended_at = datetime.utcnow()
+            workshop.ended_at = datetime.now(UTC)
             await session.commit()
             return True
 
@@ -590,7 +590,7 @@ class ForgePersistence:
                 return False
 
             exhibition.is_open = True
-            exhibition.opened_at = datetime.utcnow()
+            exhibition.opened_at = datetime.now(UTC)
             await session.commit()
             return True
 

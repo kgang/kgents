@@ -74,15 +74,11 @@ class StripeClientProtocol(Protocol):
         """Create a Stripe checkout session."""
         ...
 
-    def create_portal_session(
-        self, customer_id: str, return_url: str
-    ) -> dict[str, Any]:
+    def create_portal_session(self, customer_id: str, return_url: str) -> dict[str, Any]:
         """Create a Stripe customer portal session."""
         ...
 
-    def construct_webhook_event(
-        self, payload: bytes, sig_header: str
-    ) -> dict[str, Any]:
+    def construct_webhook_event(self, payload: bytes, sig_header: str) -> dict[str, Any]:
         """Construct and verify a webhook event."""
         ...
 
@@ -106,9 +102,7 @@ class StripeClient:
             RuntimeError: If stripe package is not installed.
         """
         if not STRIPE_AVAILABLE:
-            raise RuntimeError(
-                "stripe package not installed. Install with: pip install stripe"
-            )
+            raise RuntimeError("stripe package not installed. Install with: pip install stripe")
 
         self._config = config or get_stripe_config()
 
@@ -163,9 +157,7 @@ class StripeClient:
         )
         return dict(session)
 
-    def create_portal_session(
-        self, customer_id: str, return_url: str
-    ) -> dict[str, Any]:
+    def create_portal_session(self, customer_id: str, return_url: str) -> dict[str, Any]:
         """
         Create a Stripe customer portal session.
 
@@ -185,9 +177,7 @@ class StripeClient:
         )
         return dict(session)
 
-    def construct_webhook_event(
-        self, payload: bytes, sig_header: str
-    ) -> dict[str, Any]:
+    def construct_webhook_event(self, payload: bytes, sig_header: str) -> dict[str, Any]:
         """
         Construct and verify a webhook event.
 
@@ -201,9 +191,7 @@ class StripeClient:
         Raises:
             stripe.error.SignatureVerificationError: If signature is invalid
         """
-        event = stripe.Webhook.construct_event(
-            payload, sig_header, self._config.webhook_secret
-        )
+        event = stripe.Webhook.construct_event(payload, sig_header, self._config.webhook_secret)
         return dict(event)
 
 

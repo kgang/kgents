@@ -115,7 +115,9 @@ def _generate_why_chain(statement: str, depth: int = 5) -> WhyChain:
                 "creates value",
                 "is what users need",
             ]
-            answer = f"{random.choice(prefixes)} {current_statement.lower()} {random.choice(suffixes)}"
+            answer = (
+                f"{random.choice(prefixes)} {current_statement.lower()} {random.choice(suffixes)}"
+            )
         else:
             # Bedrock answer
             answer = random.choice(BEDROCK_PATTERNS)
@@ -127,9 +129,7 @@ def _generate_why_chain(statement: str, depth: int = 5) -> WhyChain:
     return chain
 
 
-async def _generate_with_llm(
-    statement: str, depth: int, socratic: bool
-) -> WhyChain | None:
+async def _generate_with_llm(statement: str, depth: int, socratic: bool) -> WhyChain | None:
     """
     Generate why chain using K-gent soul (if available).
 

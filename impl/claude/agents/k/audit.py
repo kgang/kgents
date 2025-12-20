@@ -137,9 +137,7 @@ class AuditTrail:
             # Log error but don't fail - audit is important but not critical
             import logging
 
-            logging.getLogger(__name__).warning(
-                "Failed to write audit entry to disk: %s", e
-            )
+            logging.getLogger(__name__).warning("Failed to write audit entry to disk: %s", e)
 
         # Update cache regardless of file write success
         self._cache.append(entry)

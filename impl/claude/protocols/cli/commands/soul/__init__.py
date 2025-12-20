@@ -85,9 +85,7 @@ def print_help() -> None:
     print("  resume <id>         Resume from a crystallized state")
     print()
     print("OPTIONS:")
-    print(
-        "  --stream            Stream response character-by-character with token count"
-    )
+    print("  --stream            Stream response character-by-character with token count")
     print("  --pipe              JSON-line output (one chunk per line) for shell pipes")
     print("  --quick             WHISPER budget (~100 tokens)")
     print("  --deep              DEEP budget (~8000+ tokens, Council of Ghosts)")

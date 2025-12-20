@@ -6,7 +6,7 @@ Tests entity creation, health scoring, and topology aggregation.
 @see plans/gestalt-live-infrastructure.md
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 
@@ -178,7 +178,7 @@ class TestInfraTopology:
         topology = InfraTopology(
             entities=[],
             connections=[],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         assert topology.total_entities == 0
@@ -196,7 +196,7 @@ class TestInfraTopology:
         topology = InfraTopology(
             entities=entities,
             connections=[],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         assert topology.total_entities == 3
@@ -216,7 +216,7 @@ class TestInfraTopology:
         topology = InfraTopology(
             entities=entities,
             connections=[],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         assert topology.overall_health == pytest.approx(0.8, abs=0.01)
@@ -348,7 +348,7 @@ class TestTopologyHealth:
         topology = InfraTopology(
             entities=entities,
             connections=[],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         health_report = calculate_topology_health(topology)
@@ -386,7 +386,7 @@ class TestTopologyHealth:
         topology = InfraTopology(
             entities=entities,
             connections=[],
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         health_report = calculate_topology_health(topology)

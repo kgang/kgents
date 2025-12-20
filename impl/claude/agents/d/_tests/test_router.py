@@ -203,9 +203,7 @@ class TestRouterMethods:
         assert router.selected_backend == Backend.MEMORY
 
     @pytest.mark.asyncio
-    async def test_force_unavailable_backend_raises(
-        self, temp_dir: Path
-    ) -> None:
+    async def test_force_unavailable_backend_raises(self, temp_dir: Path) -> None:
         """force_backend() raises for unavailable backend."""
         router = DgentRouter(namespace="test", data_dir=temp_dir)
 

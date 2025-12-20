@@ -9,7 +9,7 @@ AGENTESE: self.data.table.crystal.*
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -82,7 +82,7 @@ class Crystal(TimestampMixin, Base):
     def touch(self) -> None:
         """Record an access to this crystal."""
         self.access_count += 1
-        self.last_accessed = datetime.utcnow()
+        self.last_accessed = datetime.now(UTC)
 
 
 class CrystalTag(Base):

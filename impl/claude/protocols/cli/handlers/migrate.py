@@ -52,7 +52,7 @@ def _upgrade(args: list[str], ctx: "InvocationContext | None") -> int:
     target = args[0] if args else "head"
 
     try:
-        from alembic import command  # type: ignore[import-not-found]
+        from alembic import command
 
         from system.migrations import get_alembic_config
 

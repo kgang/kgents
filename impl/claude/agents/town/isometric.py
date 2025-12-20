@@ -260,9 +260,7 @@ class IsometricWidgetProtocol(Protocol):
         """Create new widget with transformed state."""
         ...
 
-    def map(
-        self, f: Callable[[IsometricState], IsometricState]
-    ) -> "IsometricWidgetProtocol":
+    def map(self, f: Callable[[IsometricState], IsometricState]) -> "IsometricWidgetProtocol":
         """
         Functor map: transform the widget via a state transformation.
 
@@ -577,9 +575,7 @@ class IsometricWidget:
         """
         from agents.i.reactive.signal import Signal
 
-        self._state: Signal[IsometricState] = Signal.of(
-            initial_state or IsometricState()
-        )
+        self._state: Signal[IsometricState] = Signal.of(initial_state or IsometricState())
 
     @property
     def state(self) -> "Signal[IsometricState]":
@@ -677,14 +673,14 @@ class IsometricWidget:
         phase_names = ["MORNING", "AFTERNOON", "EVENING", "NIGHT"]
         day = max(1, (state.current_tick // 4) + 1)
         phase_idx = state.current_tick % 4
-        phase_name = (
-            phase_names[phase_idx] if phase_idx < len(phase_names) else "MORNING"
-        )
+        phase_name = phase_names[phase_idx] if phase_idx < len(phase_names) else "MORNING"
 
         # Entropy bar (10 chars: filled + empty)
         entropy_filled = int(state.entropy_level * 10)
         entropy_bar = "▓" * entropy_filled + "░" * (10 - entropy_filled)
-        status_line = f"Day {day:>2} │ {phase_name:<9} │ Entropy: {entropy_bar} {state.entropy_level:.2f}"
+        status_line = (
+            f"Day {day:>2} │ {phase_name:<9} │ Entropy: {entropy_bar} {state.entropy_level:.2f}"
+        )
         lines.append(status_line)
 
         # Separator

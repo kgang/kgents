@@ -13,6 +13,7 @@ T = TypeVar("T")
 @dataclass
 class MemoryQuota:
     """DEPRECATED: Old memory quota."""
+
     max_bytes: int = 1_000_000
     used_bytes: int = 0
 
@@ -29,6 +30,7 @@ class MemoryQuota:
 @dataclass
 class SharedSubstrate(Generic[T]):
     """DEPRECATED: Old shared memory substrate."""
+
     quota: MemoryQuota = field(default_factory=MemoryQuota)
     _store: dict[str, T] = field(default_factory=dict, repr=False)
 
@@ -50,5 +52,6 @@ def create_substrate(max_bytes: int = 1_000_000) -> SharedSubstrate[Any]:
 @dataclass
 class CrystalPolicy:
     """DEPRECATED: Old crystal policy."""
+
     max_crystal_size: int = 10
     min_coherence: float = 0.5

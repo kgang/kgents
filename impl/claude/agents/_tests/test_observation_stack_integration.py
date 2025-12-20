@@ -205,9 +205,7 @@ class TestObservationWirePipeline:
         assert "input_preview" in context.metadata
 
     @pytest.mark.asyncio
-    async def test_wire_observer_records_completion(
-        self, mock_agent: MagicMock
-    ) -> None:
+    async def test_wire_observer_records_completion(self, mock_agent: MagicMock) -> None:
         """Test WireObserver records observation completion."""
         observer = create_wire_observer()
         context = observer.pre_invoke(mock_agent, {"input": "test"})
@@ -234,9 +232,7 @@ class TestObservationWirePipeline:
     def test_emission_modes(self, panopticon: Any) -> None:
         """Test different emission modes for ObservablePanopticon."""
         for mode in EmissionMode:
-            obs_panopticon = ObservablePanopticon(
-                panopticon=panopticon, emission_mode=mode
-            )
+            obs_panopticon = ObservablePanopticon(panopticon=panopticon, emission_mode=mode)
             assert obs_panopticon.emission_mode == mode
 
     def test_should_emit_continuous_mode(self, panopticon: Any) -> None:
@@ -518,9 +514,7 @@ class TestObservationNarrativeIntegration:
         assert child is not None
         assert child.parent_id == "parent-obs-001"
 
-    def test_panopticon_status_to_narrative(
-        self, historian: Historian, panopticon: Any
-    ) -> None:
+    def test_panopticon_status_to_narrative(self, historian: Historian, panopticon: Any) -> None:
         """Test Panopticon status converts to narrative trace."""
         status = panopticon.get_status()
 

@@ -46,9 +46,7 @@ async def assert_agent_output(
     """
     result = await agent.invoke(input)
     if result != expected:
-        default_msg = (
-            f"Agent {agent.name}.invoke({input!r}) = {result!r}, expected {expected!r}"
-        )
+        default_msg = f"Agent {agent.name}.invoke({input!r}) = {result!r}, expected {expected!r}"
         raise AssertionError(msg or default_msg)
 
 

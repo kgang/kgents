@@ -49,9 +49,7 @@ class WorkshopFlux:
 
     gallery: Gallery = field(default_factory=get_gallery)
     queue: CommissionQueue = field(default_factory=get_queue)
-    event_bus: EventBus[AtelierEvent] = field(
-        default_factory=lambda: EventBus(max_queue_size=1000)
-    )
+    event_bus: EventBus[AtelierEvent] = field(default_factory=lambda: EventBus(max_queue_size=1000))
 
     # Statistics
     total_pieces: int = 0

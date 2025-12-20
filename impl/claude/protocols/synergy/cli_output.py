@@ -85,12 +85,8 @@ def display_synergy_notification(
 
     if result.success and result.artifact_id:
         # Successful synergy with artifact
-        stream.write(
-            f"{prefix}{ARROW} {LINK_ICON} {_CYAN}Synergy:{_RESET} {result.message}\n"
-        )
-        stream.write(
-            f'{prefix}{ARROW} {CRYSTAL_ICON} Crystal: "{result.artifact_id}"\n'
-        )
+        stream.write(f"{prefix}{ARROW} {LINK_ICON} {_CYAN}Synergy:{_RESET} {result.message}\n")
+        stream.write(f'{prefix}{ARROW} {CRYSTAL_ICON} Crystal: "{result.artifact_id}"\n')
         return True
 
     elif result.success and result.metadata.get("skipped"):
@@ -101,9 +97,7 @@ def display_synergy_notification(
 
     elif result.success:
         # Successful but no artifact
-        stream.write(
-            f"{prefix}{ARROW} {SUCCESS_ICON} {_GREEN}{result.message}{_RESET}\n"
-        )
+        stream.write(f"{prefix}{ARROW} {SUCCESS_ICON} {_GREEN}{result.message}{_RESET}\n")
         return True
 
     elif not result.success:
@@ -139,9 +133,7 @@ def display_synergy_results(
     """
     displayed = 0
     for result in results:
-        if display_synergy_notification(
-            result, stream, indent, show_skipped, show_failures
-        ):
+        if display_synergy_notification(result, stream, indent, show_skipped, show_failures):
             displayed += 1
     return displayed
 

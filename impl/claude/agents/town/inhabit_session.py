@@ -636,12 +636,8 @@ class InhabitSession:
             "drama_contribution": 0.3 if response.type == "resist" else 0.1,
             "metadata": {
                 "inner_voice": response.inner_voice,
-                "alignment_score": response.alignment.score
-                if response.alignment
-                else None,
-                "violated_value": response.alignment.violated_value
-                if response.alignment
-                else None,
+                "alignment_score": response.alignment.score if response.alignment else None,
+                "violated_value": response.alignment.violated_value if response.alignment else None,
                 "consent_debt": self.consent.debt,
                 "forces_used": self.consent.forces,
             },

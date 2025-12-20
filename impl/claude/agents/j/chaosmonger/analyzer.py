@@ -72,9 +72,7 @@ def analyze_stability(
     imports = extract_imports(tree)
 
     # Check 1: Import safety
-    import_safe, import_risk, import_violations = check_imports(
-        imports, config, entropy_budget
-    )
+    import_safe, import_risk, import_violations = check_imports(imports, config, entropy_budget)
     violations.extend(import_violations)
 
     # Check 2: Cyclomatic complexity

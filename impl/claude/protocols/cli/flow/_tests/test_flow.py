@@ -136,9 +136,7 @@ class TestFlowfile:
             description="Parse and judge code",
             steps=[
                 FlowStep(id="parse", genus="P-gent", operation="extract"),
-                FlowStep(
-                    id="judge", genus="Bootstrap", operation="judge", input="from:parse"
-                ),
+                FlowStep(id="judge", genus="Bootstrap", operation="judge", input="from:parse"),
             ],
         )
         d = flow.to_dict()
@@ -208,9 +206,7 @@ class TestTemplateRendering:
 
     def test_override_default(self) -> None:
         """Override default value."""
-        result = render_template(
-            "Level: {{ strictness | default('high') }}", {"strictness": "low"}
-        )
+        result = render_template("Level: {{ strictness | default('high') }}", {"strictness": "low"})
         assert result == "Level: low"
 
     def test_multiple_variables(self) -> None:
@@ -343,9 +339,7 @@ class TestValidation:
             name="Valid",
             steps=[
                 FlowStep(id="s1", genus="P-gent", operation="extract"),
-                FlowStep(
-                    id="s2", genus="Bootstrap", operation="judge", input="from:s1"
-                ),
+                FlowStep(id="s2", genus="Bootstrap", operation="judge", input="from:s1"),
             ],
         )
         errors = validate_flowfile(flow)
@@ -412,9 +406,7 @@ class TestDependencyResolution:
             name="Test",
             steps=[
                 FlowStep(id="parse", genus="P-gent", operation="extract"),
-                FlowStep(
-                    id="judge", genus="Bootstrap", operation="judge", input="from:parse"
-                ),
+                FlowStep(id="judge", genus="Bootstrap", operation="judge", input="from:parse"),
                 FlowStep(
                     id="refine",
                     genus="R-gent",
@@ -447,12 +439,8 @@ class TestDependencyResolution:
             name="Parallel",
             steps=[
                 FlowStep(id="root", genus="P-gent", operation="extract"),
-                FlowStep(
-                    id="branch1", genus="P-gent", operation="extract", input="from:root"
-                ),
-                FlowStep(
-                    id="branch2", genus="P-gent", operation="extract", input="from:root"
-                ),
+                FlowStep(id="branch1", genus="P-gent", operation="extract", input="from:root"),
+                FlowStep(id="branch2", genus="P-gent", operation="extract", input="from:root"),
             ],
         )
         order = topological_sort(flow)
@@ -555,9 +543,7 @@ class TestFlowEngine:
             name="MultiStep",
             steps=[
                 FlowStep(id="parse", genus="P-gent", operation="extract"),
-                FlowStep(
-                    id="judge", genus="Bootstrap", operation="judge", input="from:parse"
-                ),
+                FlowStep(id="judge", genus="Bootstrap", operation="judge", input="from:parse"),
             ],
         )
 
@@ -570,9 +556,7 @@ class TestFlowEngine:
         assert result.total_steps == 1
 
     @pytest.mark.asyncio
-    async def test_execute_multi_step_flow(
-        self, engine: Any, multi_step_flow: Any
-    ) -> None:
+    async def test_execute_multi_step_flow(self, engine: Any, multi_step_flow: Any) -> None:
         """Execute a multi-step flow."""
         result = await engine.execute(multi_step_flow, "test input")
         assert result.status == FlowStatus.COMPLETED

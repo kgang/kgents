@@ -256,9 +256,7 @@ class HypothesisTree:
 
     def get_active(self) -> list[Hypothesis]:
         """Get all hypotheses currently being explored."""
-        return [
-            h for h in self._nodes.values() if h.status == HypothesisStatus.EXPLORING
-        ]
+        return [h for h in self._nodes.values() if h.status == HypothesisStatus.EXPLORING]
 
     def prune(self, hypothesis_id: str, recursive: bool = False) -> None:
         """
@@ -289,9 +287,7 @@ class HypothesisTree:
         max_depth = max((h.depth for h in self._nodes.values()), default=0)
 
         leaves = self.get_leaves()
-        avg_confidence = (
-            sum(h.confidence for h in leaves) / len(leaves) if leaves else 0.0
-        )
+        avg_confidence = sum(h.confidence for h in leaves) / len(leaves) if leaves else 0.0
 
         return {
             "total_nodes": len(self._nodes),

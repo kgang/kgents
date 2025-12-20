@@ -179,13 +179,15 @@ class IntegratedScenarioState:
 
     def record_phase_transition(self, from_phase: CrisisPhase, to_phase: CrisisPhase) -> None:
         """Record a polynomial phase transition."""
-        self.phase_transitions.append({
-            "timestamp": datetime.now().isoformat(),
-            "from": from_phase.name,
-            "to": to_phase.name,
-            "consent_debt": self.consent_debt,
-            "forces_used": self.forces_used,
-        })
+        self.phase_transitions.append(
+            {
+                "timestamp": datetime.now().isoformat(),
+                "from": from_phase.name,
+                "to": to_phase.name,
+                "consent_debt": self.consent_debt,
+                "forces_used": self.forces_used,
+            }
+        )
         self.crisis_phase = to_phase
 
 
@@ -264,10 +266,12 @@ class ParkDomainBridge:
         """
         timers = []
         if timer_type:
-            timers.append(TimerConfig(
-                timer_type=timer_type,
-                accelerated=accelerated,
-            ))
+            timers.append(
+                TimerConfig(
+                    timer_type=timer_type,
+                    accelerated=accelerated,
+                )
+            )
 
         config = IntegratedScenarioConfig(
             scenario_type=scenario_type,
@@ -275,7 +279,8 @@ class ParkDomainBridge:
             description=description,
             citizen_archetypes=citizen_archetypes or [],
             timers=timers,
-            crisis_phase_enabled=scenario_type in (
+            crisis_phase_enabled=scenario_type
+            in (
                 IntegratedScenarioType.CRISIS_PRACTICE,
                 IntegratedScenarioType.COMPLIANCE_DRILL,
                 IntegratedScenarioType.TABLETOP,
@@ -380,7 +385,7 @@ class ParkDomainBridge:
         }.get(to_phase, 0.2)
 
         # Reduce injection if consent debt is high
-        inject_probability *= (1.0 - state.consent_debt * 0.5)
+        inject_probability *= 1.0 - state.consent_debt * 0.5
 
         # Use director's entropy sampling if available
         if self._director:
@@ -532,7 +537,12 @@ def create_service_outage_practice(
         description="Practice coordinating response to a critical service outage.",
         timer_type=TimerType.INTERNAL_SLA,
         accelerated=accelerated,
-        citizen_archetypes=["on_call_engineer", "incident_commander", "executive", "customer_success"],
+        citizen_archetypes=[
+            "on_call_engineer",
+            "incident_commander",
+            "executive",
+            "customer_success",
+        ],
         difficulty=DrillDifficulty.STANDARD,
     )
 

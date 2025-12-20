@@ -232,9 +232,7 @@ def test_handler_exception_does_not_prevent_other_handlers():
     bus.emit(MetricsUpdatedEvent(metrics={"test": 1}))
 
     assert handler1_called[0], "Handler 1 should have been called"
-    assert handler3_called[0], (
-        "Handler 3 should have been called despite handler 2's error"
-    )
+    assert handler3_called[0], "Handler 3 should have been called despite handler 2's error"
 
 
 def test_error_isolation_with_multiple_failures():

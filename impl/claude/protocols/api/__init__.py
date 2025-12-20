@@ -41,9 +41,7 @@ except ImportError:
 
     def create_app() -> None:  # type: ignore[misc]
         """FastAPI is not installed."""
-        raise ImportError(
-            "FastAPI is not installed. Install with: pip install fastapi uvicorn"
-        )
+        raise ImportError("FastAPI is not installed. Install with: pip install fastapi uvicorn")
 
     class ApiKeyData:  # type: ignore[no-redef]
         """Stub for when FastAPI is not installed."""

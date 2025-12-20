@@ -219,9 +219,7 @@ class ParserCLI(CLICapable):
             for prop, prop_schema in schema["properties"].items():
                 if prop in data:
                     sub_path = f"{path}.{prop}" if path else prop
-                    errors.extend(
-                        self._validate_against_schema(data[prop], prop_schema, sub_path)
-                    )
+                    errors.extend(self._validate_against_schema(data[prop], prop_schema, sub_path))
 
         return errors
 

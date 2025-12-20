@@ -99,9 +99,7 @@ def _(mo):
 def _(MarimoAdapter, dashboard, is_anywidget_available, mo):
     # Show agents as anywidgets if available
     if is_anywidget_available():
-        agent_widgets = [
-            mo.ui.anywidget(MarimoAdapter(agent)) for agent in dashboard.agents
-        ]
+        agent_widgets = [mo.ui.anywidget(MarimoAdapter(agent)) for agent in dashboard.agents]
         mo.hstack(agent_widgets)
     else:
         mo.md("*anywidget not available - showing HTML fallback above*")

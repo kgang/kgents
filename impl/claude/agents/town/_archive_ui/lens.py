@@ -191,9 +191,7 @@ class LensView:
         text.append("Accursed Surplus: ", style="bold")
 
         surplus = manifest.get("accursed_surplus", 0)
-        surplus_style = (
-            "red bold" if surplus > 5 else "yellow" if surplus > 1 else "dim"
-        )
+        surplus_style = "red bold" if surplus > 5 else "yellow" if surplus > 1 else "dim"
         text.append(f"{surplus:.2f}", style=surplus_style)
 
         if surplus > 5:

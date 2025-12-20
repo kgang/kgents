@@ -94,9 +94,7 @@ class ConstraintResponse:
         }
 
 
-def _select_constraints(
-    topic: str, count: int = 3, persona: str | None = None
-) -> list[str]:
+def _select_constraints(topic: str, count: int = 3, persona: str | None = None) -> list[str]:
     """
     Select constraints using templates.
 
@@ -110,9 +108,7 @@ def _select_constraints(
         domain = "code"
     elif any(kw in topic_lower for kw in ["design", "ui", "ux", "visual", "layout"]):
         domain = "design"
-    elif any(
-        kw in topic_lower for kw in ["write", "writing", "essay", "story", "blog"]
-    ):
+    elif any(kw in topic_lower for kw in ["write", "writing", "essay", "story", "blog"]):
         domain = "writing"
 
     # Get pool of constraints
@@ -172,9 +168,7 @@ def _emit_output(
     print(human)
 
     if ctx is not None and hasattr(ctx, "emit_semantic"):
-        data = (
-            semantic.to_dict() if isinstance(semantic, ConstraintResponse) else semantic
-        )
+        data = semantic.to_dict() if isinstance(semantic, ConstraintResponse) else semantic
         ctx.emit_semantic(data)
 
 
@@ -184,9 +178,7 @@ def _print_help() -> None:
     print()
     print("OPTIONS:")
     print("  --count <n>         Number of constraints (default: 3)")
-    print(
-        "  --persona <type>    Style: playful, provocative, practical, philosophical, warm"
-    )
+    print("  --persona <type>    Style: playful, provocative, practical, philosophical, warm")
     print("  --llm               Use LLM for generation (costs tokens)")
     print("  --json              Output as JSON")
     print("  --help, -h          Show this help")
@@ -275,14 +267,10 @@ def cmd_constrain(args: list[str], ctx: "InvocationContext | None" = None) -> in
         if result is None:
             print("[CONSTRAIN] LLM unavailable, using templates")
             constraints = _select_constraints(topic, count, persona)
-            result = ConstraintResponse(
-                topic=topic, constraints=constraints, persona=persona
-            )
+            result = ConstraintResponse(topic=topic, constraints=constraints, persona=persona)
     else:
         constraints = _select_constraints(topic, count, persona)
-        result = ConstraintResponse(
-            topic=topic, constraints=constraints, persona=persona
-        )
+        result = ConstraintResponse(topic=topic, constraints=constraints, persona=persona)
 
     # Output
     if json_mode:

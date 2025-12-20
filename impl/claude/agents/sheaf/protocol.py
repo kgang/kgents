@@ -141,9 +141,7 @@ class AgentSheaf(Generic[Ctx]):
         return PolyAgent(
             name=f"{agent.name}|{subcontext}",
             positions=restricted_positions,
-            _directions=lambda s: agent.directions(s)
-            if s in restricted_positions
-            else frozenset(),
+            _directions=lambda s: agent.directions(s) if s in restricted_positions else frozenset(),
             _transition=agent._transition,
         )
 
@@ -263,9 +261,7 @@ AESTHETIC = Context("aesthetic", frozenset({"taste", "beauty", "minimalism"}))
 CATEGORICAL = Context("categorical", frozenset({"structure", "types", "morphisms"}))
 GRATITUDE = Context("gratitude", frozenset({"sacred", "appreciation", "surplus"}))
 HETERARCHY = Context("heterarchy", frozenset({"peer", "forest", "nonhierarchical"}))
-GENERATIVITY = Context(
-    "generativity", frozenset({"creation", "emergence", "autopoiesis"})
-)
+GENERATIVITY = Context("generativity", frozenset({"creation", "emergence", "autopoiesis"}))
 JOY = Context("joy", frozenset({"delight", "play", "fun"}))
 
 

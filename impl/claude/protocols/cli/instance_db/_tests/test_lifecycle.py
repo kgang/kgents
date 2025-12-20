@@ -263,9 +263,7 @@ class TestLifecycleManagerBootstrap:
         state = await manager.bootstrap()
 
         assert state.storage_provider is not None
-        events = await state.storage_provider.telemetry.query(
-            event_type="instance.started"
-        )
+        events = await state.storage_provider.telemetry.query(event_type="instance.started")
         assert len(events) >= 1
         assert events[0].instance_id == state.instance_id
 
@@ -473,9 +471,7 @@ class TestQuickBootstrap:
     """Tests for quick_bootstrap convenience function."""
 
     @pytest.mark.asyncio
-    async def test_quick_bootstrap(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_quick_bootstrap(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return manager and state tuple."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)

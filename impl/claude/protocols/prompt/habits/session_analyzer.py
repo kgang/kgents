@@ -35,9 +35,7 @@ class SessionAnalyzerError(Exception):
 class SessionPattern:
     """A detected pattern from session history."""
 
-    pattern_type: Literal[
-        "command_frequency", "time_usage", "project_focus", "tool_usage"
-    ]
+    pattern_type: Literal["command_frequency", "time_usage", "project_focus", "tool_usage"]
     description: str
     confidence: float  # 0.0-1.0
     evidence: tuple[str, ...]
@@ -138,9 +136,7 @@ class SessionPatternAnalyzer:
 
         # Filter to recent entries
         cutoff = datetime.now() - timedelta(days=self.lookback_days)
-        recent = [
-            e for e in entries if self._parse_timestamp(e.get("timestamp")) > cutoff
-        ]
+        recent = [e for e in entries if self._parse_timestamp(e.get("timestamp")) > cutoff]
 
         if len(recent) < 10:
             return None
@@ -296,9 +292,7 @@ class SessionPatternAnalyzer:
 
         # Filter to recent
         cutoff = datetime.now() - timedelta(days=self.lookback_days)
-        recent = [
-            e for e in entries if self._parse_timestamp(e.get("timestamp")) > cutoff
-        ]
+        recent = [e for e in entries if self._parse_timestamp(e.get("timestamp")) > cutoff]
 
         # Count project occurrences
         project_counts: Counter[str] = Counter()
@@ -388,9 +382,7 @@ class SessionPatternAnalyzer:
             description = f"Extended sessions (avg {messages_per_session:.0f} messages)"
             confidence = 0.7
         else:
-            description = (
-                f"Moderate session length (avg {messages_per_session:.0f} messages)"
-            )
+            description = f"Moderate session length (avg {messages_per_session:.0f} messages)"
             confidence = 0.5
 
         return SessionPattern(

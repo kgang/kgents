@@ -485,8 +485,7 @@ class GestaltPersistence:
                 stmt = stmt.where(CodeLink.link_type == link_type)
             if block_id:
                 stmt = stmt.where(
-                    (CodeLink.source_block_id == block_id)
-                    | (CodeLink.target_block_id == block_id)
+                    (CodeLink.source_block_id == block_id) | (CodeLink.target_block_id == block_id)
                 )
 
             stmt = stmt.limit(limit)
@@ -643,36 +642,26 @@ class GestaltPersistence:
         """
         async with self.topologies.session_factory() as session:
             # Count topologies
-            topo_count_result = await session.execute(
-                select(func.count()).select_from(Topology)
-            )
+            topo_count_result = await session.execute(select(func.count()).select_from(Topology))
             total_topologies = topo_count_result.scalar() or 0
 
             # Count blocks
-            block_count_result = await session.execute(
-                select(func.count()).select_from(CodeBlock)
-            )
+            block_count_result = await session.execute(select(func.count()).select_from(CodeBlock))
             total_blocks = block_count_result.scalar() or 0
 
             # Count links
-            link_count_result = await session.execute(
-                select(func.count()).select_from(CodeLink)
-            )
+            link_count_result = await session.execute(select(func.count()).select_from(CodeLink))
             total_links = link_count_result.scalar() or 0
 
             # Average complexity
             avg_complexity_result = await session.execute(
-                select(func.avg(CodeBlock.complexity)).where(
-                    CodeBlock.complexity.isnot(None)
-                )
+                select(func.avg(CodeBlock.complexity)).where(CodeBlock.complexity.isnot(None))
             )
             avg_complexity = avg_complexity_result.scalar()
 
             # Average coverage
             avg_coverage_result = await session.execute(
-                select(func.avg(CodeBlock.test_coverage)).where(
-                    CodeBlock.test_coverage.isnot(None)
-                )
+                select(func.avg(CodeBlock.test_coverage)).where(CodeBlock.test_coverage.isnot(None))
             )
             avg_coverage = avg_coverage_result.scalar()
 

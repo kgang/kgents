@@ -63,9 +63,7 @@ def _render_pydantic(ast: Any) -> str:
             items.append(f'"{key}": {value}')
         elif isinstance(value, list):
             list_repr = (
-                "["
-                + ", ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in value)
-                + "]"
+                "[" + ", ".join(f'"{v}"' if isinstance(v, str) else str(v) for v in value) + "]"
             )
             items.append(f'"{key}": {list_repr}')
         else:

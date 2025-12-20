@@ -70,9 +70,7 @@ def _find_polyagent_call(tree: ast.Module) -> tuple[str, list[str]] | None:
     return None
 
 
-def _find_enum_class(
-    tree: ast.Module, suffix: str = "Phase"
-) -> tuple[str, list[str]] | None:
+def _find_enum_class(tree: ast.Module, suffix: str = "Phase") -> tuple[str, list[str]] | None:
     """Find an Enum class ending with suffix and extract members."""
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
@@ -137,9 +135,7 @@ def _extract_operation_from_dict(tree: ast.Module) -> list[tuple[str, int, str]]
                                 raw_arity = kw.value.value
                                 if isinstance(raw_arity, int):
                                     arity = raw_arity
-                            elif kw.arg == "signature" and isinstance(
-                                kw.value, ast.Constant
-                            ):
+                            elif kw.arg == "signature" and isinstance(kw.value, ast.Constant):
                                 raw_sig = kw.value.value
                                 if isinstance(raw_sig, str):
                                     signature = raw_sig
@@ -160,9 +156,7 @@ def _find_node_decorator(tree: ast.Module) -> tuple[str, list[str]] | None:
                     func = decorator.func
                     if isinstance(func, ast.Name) and func.id == "node":
                         # Extract path from first argument
-                        if decorator.args and isinstance(
-                            decorator.args[0], ast.Constant
-                        ):
+                        if decorator.args and isinstance(decorator.args[0], ast.Constant):
                             raw_path = decorator.args[0].value
                             # Validate path is a string
                             if not isinstance(raw_path, str):
@@ -243,8 +237,7 @@ def reflect_operad(path: Path) -> OperadSpec | None:
     # Extract operations
     op_tuples = _extract_operation_from_dict(tree)
     operations = tuple(
-        OperationSpec(name=name, arity=arity, signature=sig)
-        for name, arity, sig in op_tuples
+        OperationSpec(name=name, arity=arity, signature=sig) for name, arity, sig in op_tuples
     )
 
     # Look for Law instantiations

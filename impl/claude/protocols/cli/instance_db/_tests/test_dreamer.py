@@ -193,9 +193,7 @@ class TestQuestion:
 class TestLucidDreamerBasic:
     """Basic tests for LucidDreamer."""
 
-    def test_creates_with_components(
-        self, synapse: Synapse, hippocampus: Hippocampus
-    ) -> None:
+    def test_creates_with_components(self, synapse: Synapse, hippocampus: Hippocampus) -> None:
         """LucidDreamer creates with required components."""
         dreamer = LucidDreamer(synapse=synapse, hippocampus=hippocampus)
         assert dreamer.phase == DreamPhase.AWAKE
@@ -371,9 +369,7 @@ class TestInterruptHandling:
             assert report.interrupt_reason is not None
 
     @pytest.mark.asyncio
-    async def test_flashbulb_disabled(
-        self, synapse: Synapse, hippocampus: Hippocampus
-    ) -> None:
+    async def test_flashbulb_disabled(self, synapse: Synapse, hippocampus: Hippocampus) -> None:
         """Can disable flashbulb interrupts."""
         dreamer = LucidDreamer(
             synapse=synapse,
@@ -556,9 +552,7 @@ class TestDreamerIntegration:
         assert dreamer.stats()["total_dreams"] == 1
 
     @pytest.mark.asyncio
-    async def test_multiple_cycles(
-        self, synapse: Synapse, hippocampus: Hippocampus
-    ) -> None:
+    async def test_multiple_cycles(self, synapse: Synapse, hippocampus: Hippocampus) -> None:
         """Multiple dream cycles work correctly."""
         dreamer = LucidDreamer(synapse=synapse, hippocampus=hippocampus)
 

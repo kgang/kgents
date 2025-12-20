@@ -118,9 +118,7 @@ class DgentClient:
                     updated_at=data.get("updated_at", ""),
                 )
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"
@@ -178,9 +176,7 @@ class DgentClient:
                     updated_at=data.get("updated_at", ""),
                 )
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"
@@ -213,9 +209,7 @@ class DgentClient:
                 response.raise_for_status()
                 return True
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"
@@ -245,9 +239,7 @@ class DgentClient:
                 keys: list[str] = data.get("keys", [])
                 return keys
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"
@@ -276,9 +268,7 @@ class DgentClient:
                 result: dict[str, Any] = response.json()
                 return result
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"
@@ -301,9 +291,7 @@ class DgentClient:
                 result: dict[str, Any] = response.json()
                 return result
         except httpx.ConnectError as e:
-            raise DgentConnectionError(
-                f"Cannot connect to D-gent at {self.base_url}: {e}"
-            ) from e
+            raise DgentConnectionError(f"Cannot connect to D-gent at {self.base_url}: {e}") from e
         except httpx.TimeoutException as e:
             raise DgentConnectionError(
                 f"Timeout connecting to D-gent at {self.base_url}: {e}"

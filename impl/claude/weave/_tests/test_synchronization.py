@@ -388,9 +388,7 @@ class TestExitCriteria:
         assert braid.are_concurrent(id_a, id_c)
 
         # Dependent event
-        id_b = await weave.record(
-            {"msg": "B to C"}, source="agent_b", depends_on={id_a}
-        )
+        id_b = await weave.record({"msg": "B to C"}, source="agent_b", depends_on={id_a})
 
         # Refresh braid after adding new event
         braid = weave.monoid.braid()

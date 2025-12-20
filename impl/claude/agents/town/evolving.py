@@ -287,9 +287,7 @@ class EvolvingCitizen(Citizen):
         # Default: observe more
         return "observe"
 
-    def _execute_action(
-        self, action_type: str, sensed: SensedState
-    ) -> tuple[bool, str]:
+    def _execute_action(self, action_type: str, sensed: SensedState) -> tuple[bool, str]:
         """Execute action and return success + effect description."""
         # Simple simulation of action effects
         match action_type:
@@ -304,9 +302,7 @@ class EvolvingCitizen(Citizen):
             case _:
                 return False, f"Unknown action: {action_type}"
 
-    def _calculate_relationship_delta(
-        self, action_type: str, success: bool
-    ) -> dict[str, float]:
+    def _calculate_relationship_delta(self, action_type: str, success: bool) -> dict[str, float]:
         """Calculate relationship changes from action."""
         if not success:
             return {}
@@ -407,9 +403,7 @@ class EvolvingCitizen(Citizen):
 
         for key, delta in proposed.items():
             # Clamp to max drift
-            bounded = max(
-                -self.max_eigenvector_drift, min(self.max_eigenvector_drift, delta)
-            )
+            bounded = max(-self.max_eigenvector_drift, min(self.max_eigenvector_drift, delta))
             applied[key] = bounded
 
         return applied

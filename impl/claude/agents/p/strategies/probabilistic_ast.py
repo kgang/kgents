@@ -46,9 +46,7 @@ class ProbabilisticASTNode:
         """Convert node to dict representation."""
         result = {
             "type": self.type,
-            "value": self.value
-            if self.type != "object" and self.type != "array"
-            else None,
+            "value": self.value if self.type != "object" and self.type != "array" else None,
             "confidence": self.confidence,
             "path": self.path,
         }
@@ -194,9 +192,7 @@ class ProbabilisticASTParser(Parser[ProbabilisticASTNode]):
                     child_confidence *= 0.9
                     child_repair = "String looks like number"
 
-                child = self._build_ast(
-                    value, child_confidence, child_path, child_repair
-                )
+                child = self._build_ast(value, child_confidence, child_path, child_repair)
                 children.append(child)
 
             return ProbabilisticASTNode(
@@ -328,9 +324,7 @@ class ProbabilisticASTParser(Parser[ProbabilisticASTNode]):
 
         return None
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[ProbabilisticASTNode]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[ProbabilisticASTNode]]:
         """
         Stream parsing for probabilistic AST.
 
@@ -345,9 +339,7 @@ class ProbabilisticASTParser(Parser[ProbabilisticASTNode]):
         return ProbabilisticASTParser(config=new_config)
 
 
-def query_confident_fields(
-    ast: ProbabilisticASTNode, min_confidence: float = 0.8
-) -> Any:
+def query_confident_fields(ast: ProbabilisticASTNode, min_confidence: float = 0.8) -> Any:
     """
     Extract only high-confidence fields from probabilistic AST.
 
@@ -364,9 +356,7 @@ def query_confident_fields(
     return ast.get_confident_value(min_confidence)
 
 
-def get_low_confidence_paths(
-    ast: ProbabilisticASTNode, max_confidence: float = 0.5
-) -> list[str]:
+def get_low_confidence_paths(ast: ProbabilisticASTNode, max_confidence: float = 0.5) -> list[str]:
     """
     Find all paths in the AST with confidence below threshold.
 

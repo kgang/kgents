@@ -95,11 +95,7 @@ async def load_plan(plan_name: str) -> GardenPlanHeader | None:
     plan_file = plans_dir / f"{plan_name}.md"
     if not plan_file.exists():
         # Try with dashes/underscores swapped
-        alt_name = (
-            plan_name.replace("-", "_")
-            if "-" in plan_name
-            else plan_name.replace("_", "-")
-        )
+        alt_name = plan_name.replace("-", "_") if "-" in plan_name else plan_name.replace("_", "-")
         plan_file = plans_dir / f"{alt_name}.md"
 
     if not plan_file.exists():
@@ -507,9 +503,7 @@ class PlanNode(BaseLogosNode):
         effects=[Effect.WRITES("plans")],
         help="Update plan with gesture",
         long_help="Update plan state with a tending gesture (code, insight, decision, etc.).",
-        examples=[
-            "kg plan coalition-forge tend --gesture code --summary 'Added events'"
-        ],
+        examples=["kg plan coalition-forge tend --gesture code --summary 'Added events'"],
         see_also=["manifest", "letter"],
     )
     async def _tend(
@@ -576,7 +570,9 @@ class PlanNode(BaseLogosNode):
             valid_inputs = GardenPolynomial.directions(plan.season)
             if garden_input not in valid_inputs:
                 # Warn but don't block - transitions are suggestions, not enforced
-                warning = f"Warning: '{gesture_type.value}' is unusual for {plan.season.value} season"
+                warning = (
+                    f"Warning: '{gesture_type.value}' is unusual for {plan.season.value} season"
+                )
             else:
                 warning = None
         else:

@@ -158,3 +158,29 @@ export const OBSERVER_COLORS: Record<string, string> = {
 export function getObserverColor(archetype: string): string {
   return OBSERVER_COLORS[archetype] ?? OBSERVER_COLORS.guest;
 }
+
+// =============================================================================
+// History/Trace Types
+// =============================================================================
+
+/**
+ * A trace entry recording an observer switch in the exploration history.
+ * Used by HistoryDrawer to show where the user has been.
+ */
+export interface UmweltTrace {
+  /** Unique identifier for this trace entry */
+  id: string;
+  /** The observer we switched from */
+  from: { archetype: string };
+  /** The observer we switched to */
+  to: { archetype: string };
+  /** Summary of what changed */
+  diff: {
+    revealedCount: number;
+    hiddenCount: number;
+  };
+  /** When this switch occurred */
+  timestamp: number;
+  /** The AGENTESE path that was active during the switch (optional) */
+  activePath?: string;
+}

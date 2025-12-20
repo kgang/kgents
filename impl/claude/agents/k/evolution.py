@@ -262,16 +262,12 @@ class ExplicitUpdateHandler:
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list):
                     values.append(input.content)
-                    logger.debug(
-                        "Added preference value", extra={"value": input.content}
-                    )
+                    logger.debug("Added preference value", extra={"value": input.content})
             elif input.operation == "remove":
                 values = new_state.seed.preferences.get("values", [])
                 if isinstance(values, list) and input.content in values:
                     values.remove(input.content)
-                    logger.debug(
-                        "Removed preference value", extra={"value": input.content}
-                    )
+                    logger.debug("Removed preference value", extra={"value": input.content})
 
         elif input.aspect == "pattern":
             if input.operation == "add":

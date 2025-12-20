@@ -71,9 +71,7 @@ class TestShouldUseMock:
 
     def test_explicit_mock_false(self) -> None:
         """GESTALT_USE_MOCK=false disables mock mode."""
-        with mock.patch.dict(
-            os.environ, {"GESTALT_USE_MOCK": "false", "KGENTS_ENV": "production"}
-        ):
+        with mock.patch.dict(os.environ, {"GESTALT_USE_MOCK": "false", "KGENTS_ENV": "production"}):
             assert should_use_mock() is False
 
     def test_test_env_enables_mock(self) -> None:

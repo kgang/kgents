@@ -83,9 +83,7 @@ class TestAnalyze:
     """Tests for time.trace.analyze."""
 
     @pytest.mark.asyncio
-    async def test_analyze_requires_target(
-        self, trace_node: Any, observer: Any
-    ) -> None:
+    async def test_analyze_requires_target(self, trace_node: Any, observer: Any) -> None:
         """Analyze requires a target."""
         result = await trace_node._invoke_aspect("analyze", observer)
 
@@ -186,9 +184,7 @@ class TestRender:
     """Tests for time.trace.render."""
 
     @pytest.mark.asyncio
-    async def test_render_static_requires_target(
-        self, trace_node: Any, observer: Any
-    ) -> None:
+    async def test_render_static_requires_target(self, trace_node: Any, observer: Any) -> None:
         """Static render requires target."""
         result = await trace_node._invoke_aspect(
             "render",
@@ -200,9 +196,7 @@ class TestRender:
         assert "target" in result["error"]
 
     @pytest.mark.asyncio
-    async def test_render_runtime_requires_trace(
-        self, trace_node: Any, observer: Any
-    ) -> None:
+    async def test_render_runtime_requires_trace(self, trace_node: Any, observer: Any) -> None:
         """Runtime render requires cached trace."""
         result = await trace_node._invoke_aspect(
             "render",
@@ -211,10 +205,7 @@ class TestRender:
         )
 
         assert "error" in result
-        assert (
-            "runtime trace" in result["error"].lower()
-            or "no runtime" in result["error"].lower()
-        )
+        assert "runtime trace" in result["error"].lower() or "no runtime" in result["error"].lower()
 
     @pytest.mark.asyncio
     async def test_render_static_tree(self, trace_node: Any, observer: Any) -> None:
@@ -241,9 +232,7 @@ class TestDiff:
     """Tests for time.trace.diff."""
 
     @pytest.mark.asyncio
-    async def test_diff_requires_both_traces(
-        self, trace_node: Any, observer: Any
-    ) -> None:
+    async def test_diff_requires_both_traces(self, trace_node: Any, observer: Any) -> None:
         """Diff requires both before and after."""
         result = await trace_node._invoke_aspect(
             "diff",
@@ -338,9 +327,7 @@ class TestIntegration:
         assert isinstance(node, TraceNode)
 
     @pytest.mark.asyncio
-    async def test_manifest_shows_cache_status(
-        self, trace_node: Any, observer: Any
-    ) -> None:
+    async def test_manifest_shows_cache_status(self, trace_node: Any, observer: Any) -> None:
         """Manifest shows static and runtime cache status."""
         rendering = await trace_node.manifest(observer)
 

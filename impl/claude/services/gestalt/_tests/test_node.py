@@ -87,10 +87,12 @@ class TestGestaltNodeAffordances:
 # =============================================================================
 
 
+@pytest.mark.slow  # Real codebase scan can timeout in CI
 class TestGestaltNodeManifest:
     """Test manifest() method."""
 
     @pytest.mark.asyncio
+    @pytest.mark.slow  # Scans full codebase - too slow for CI unit tests
     async def test_manifest_returns_rendering(self) -> None:
         """Manifest returns GestaltManifestRendering."""
         from protocols.agentese.node import Observer
@@ -118,6 +120,7 @@ class TestGestaltNodeManifest:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.slow  # Scans full codebase - too slow for CI unit tests
     async def test_manifest_to_dict(self) -> None:
         """Manifest rendering can convert to dict."""
         from protocols.agentese.node import Observer
@@ -141,8 +144,13 @@ class TestGestaltNodeManifest:
 
 
 class TestGestaltNodeTopology:
-    """Test topology aspect."""
+    """Test topology aspect.
 
+    NOTE: These tests are marked slow because they trigger full codebase scanning
+    which takes 30s+ in CI. Run with: pytest -m slow
+    """
+
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_topology_returns_nodes_and_links(self) -> None:
         """Topology returns node and link data."""
@@ -161,6 +169,7 @@ class TestGestaltNodeTopology:
         assert isinstance(result["nodes"], list)
         assert len(result["nodes"]) <= 20  # Respects max_nodes
 
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_topology_nodes_have_required_fields(self) -> None:
         """Topology nodes have all required visualization fields."""
@@ -190,6 +199,7 @@ class TestGestaltNodeTopology:
 class TestGestaltNodeAspects:
     """Test other aspects."""
 
+    @pytest.mark.integration  # Requires full codebase scan
     @pytest.mark.asyncio
     async def test_health_aspect(self) -> None:
         """Health aspect returns health metrics."""
@@ -204,6 +214,7 @@ class TestGestaltNodeAspects:
         assert "average_health" in result
         assert "overall_grade" in result
 
+    @pytest.mark.slow  # Requires full codebase scan - too slow for CI unit tests
     @pytest.mark.asyncio
     async def test_drift_aspect(self) -> None:
         """Drift aspect returns violations."""

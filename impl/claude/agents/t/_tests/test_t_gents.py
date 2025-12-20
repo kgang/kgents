@@ -36,9 +36,7 @@ async def test_mock_agent() -> None:
     print("\n=== Testing MockAgent ===")
 
     # Create mock agent
-    mock = MockAgent[str, dict[str, object]](
-        MockConfig(output={"status": "ok", "value": 42})
-    )
+    mock = MockAgent[str, dict[str, object]](MockConfig(output={"status": "ok", "value": 42}))
 
     # Test: constant morphism property
     result1 = await mock.invoke("input_1")
@@ -162,9 +160,7 @@ async def test_failing_agent_always_fails() -> None:
     """Test FailingAgent - always fails."""
     print("\n=== Testing FailingAgent (always fails) ===")
 
-    failing = FailingAgent[str, str](
-        FailingConfig(error_type=FailureType.TYPE, fail_count=-1)
-    )
+    failing = FailingAgent[str, str](FailingConfig(error_type=FailureType.TYPE, fail_count=-1))
 
     # Should always fail
     for i in range(3):

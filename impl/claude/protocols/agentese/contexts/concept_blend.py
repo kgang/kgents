@@ -279,9 +279,7 @@ def forge_blend(
 
     # Add detail based on generic space
     if generic:
-        shared = ", ".join(
-            g.replace("has_", "").replace("is_", "") for g in generic[:3]
-        )
+        shared = ", ".join(g.replace("has_", "").replace("is_", "") for g in generic[:3])
         blended = f"{blended} via shared {shared}"
 
     # 4. Identify emergent features

@@ -99,8 +99,7 @@ PERFORMER = CitizenSpec(
         ambition=0.7,
     ),
     cosmotechnics=GATHERING,
-    backstory="Street performer who draws crowds. "
-    "Uses humor and spectacle to brighten the day.",
+    backstory="Street performer who draws crowds. Uses humor and spectacle to brighten the day.",
     metadata={
         "role": "entertainer",
         "specialty": "crowd_gatherer",

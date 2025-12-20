@@ -46,9 +46,7 @@ class TestCreateAgent:
         assert result.output["slug"] == "test_scaffolding_agent"
         assert result.output["class_name"] == "TestScaffoldingAgent"
         assert result.output["archetype"] == "Lambda"
-        assert (
-            len(result.output["files"]) == 4
-        )  # __init__, agent, test __init__, test_agent
+        assert len(result.output["files"]) == 4  # __init__, agent, test __init__, test_agent
 
         # Verify files were created
         agents_dir = Path(__file__).parent.parent.parent.parent.parent / "agents"

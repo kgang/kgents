@@ -40,11 +40,12 @@ jobs:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -63,11 +64,12 @@ jobs:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -86,11 +88,11 @@ jobs:
     name: Type Check (Frontend)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: impl/claude/web/package-lock.json
 
@@ -109,11 +111,12 @@ jobs:
     name: Contract Sync
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -121,7 +124,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: impl/claude/web/package-lock.json
 
@@ -154,11 +157,12 @@ jobs:
     name: Path Alignment
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -180,14 +184,15 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ['3.12', '3.13']
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -199,7 +204,7 @@ jobs:
       - name: Run unit tests
         run: |
           cd impl/claude
-          uv run pytest -m "not slow and not integration" --tb=short -q
+          uv run pytest -m "not slow and not integration" --tb=short -q -n auto
 
   # ===========================================================================
   # Tier 3: Law verification (1-2 min)
@@ -210,11 +215,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -242,11 +248,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, laws]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -269,11 +276,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -296,11 +304,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -320,7 +329,7 @@ jobs:
             -m "not slow"
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./impl/claude/coverage.xml
           fail_ci_if_error: false
@@ -334,11 +343,12 @@ jobs:
     needs: [integration]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -362,11 +372,12 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     continue-on-error: true  # Chaos tests may fail - that's discovery
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
+          prune-cache: false  # Pruning is slow and times out
 
       - uses: actions/setup-python@v5
         with:
@@ -391,7 +402,7 @@ jobs:
     needs: [unit-tests, laws, integration]
     if: always()
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Emit CI signal
         run: |

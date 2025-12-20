@@ -147,9 +147,7 @@ class TestQueryPatterns:
         """Exact path should return that path and children."""
         matched = _query_known_paths("self.memory")
 
-        assert "self.memory" in matched or any(
-            p.startswith("self.memory.") for p in matched
-        )
+        assert "self.memory" in matched or any(p.startswith("self.memory.") for p in matched)
 
     def test_query_fuzzy_pattern(self) -> None:
         """Pattern '*memory*' should match paths containing 'memory'."""

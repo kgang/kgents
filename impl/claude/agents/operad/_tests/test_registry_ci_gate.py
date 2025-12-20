@@ -141,6 +141,7 @@ DOMAIN_OPERADS = [
     "EMERGENCE",  # Cymatics pattern composition (extends DESIGN, not AGENT)
     "GARDEN",  # Garden Protocol - plan composition (PlanState, not PolyAgent)
     "GalleryOperad",  # Gallery - pilot browsing/comparison (domain vocabulary)
+    "WitnessOperad",  # Witness Crown Jewel - domain-specific verify signatures
 ]
 
 # Legacy operads (not yet migrated to canonical pattern)

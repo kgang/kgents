@@ -172,10 +172,7 @@ class TrustGate:
         )
 
         # Standard path: all checks must pass
-        if (
-            judgment_score >= self.judgment_threshold
-            and proposal.risk <= self.risk_threshold
-        ):
+        if judgment_score >= self.judgment_threshold and proposal.risk <= self.risk_threshold:
             # Good proposal → credit agent
             self.capital_ledger.credit(
                 agent,

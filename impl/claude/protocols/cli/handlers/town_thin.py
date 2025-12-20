@@ -207,9 +207,7 @@ def _handle_citizen_command(
     elif subcommand == "whisper" and extra_args:
         kwargs["message"] = " ".join(extra_args).strip('"')
 
-    return project_command(
-        path, args, ctx, kwargs=kwargs, entity_name=citizen_name.title()
-    )
+    return project_command(path, args, ctx, kwargs=kwargs, entity_name=citizen_name.title())
 
 
 def _handle_demo(args: list[str], ctx: "InvocationContext | None") -> int:
@@ -230,6 +228,7 @@ def _handle_demo(args: list[str], ctx: "InvocationContext | None") -> int:
 def _print_help() -> None:
     """Print town command help (projected from AGENTESE affordances)."""
     from protocols.cli.handlers._help import show_projected_help
+
     show_projected_help("world.town", _print_help_fallback)
 
 

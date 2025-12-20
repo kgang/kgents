@@ -200,9 +200,7 @@ class TestExchangeMatrix:
     def test_conversion(self) -> None:
         """Test value conversion."""
         matrix = create_standard_exchange_rates()
-        converted, loss = matrix.convert(
-            1000, "physical.tokens", "economic.gas_cost_usd"
-        )
+        converted, loss = matrix.convert(1000, "physical.tokens", "economic.gas_cost_usd")
         assert converted > 0
         assert loss == 0  # Direct conversion, no loss
 
@@ -463,9 +461,7 @@ class TestPriorityAuction:
     @pytest.mark.asyncio
     async def test_single_bidder(self) -> None:
         """Test auction with single bidder."""
-        bids = [
-            Bid(agent_id="a1", requested_tokens=100, confidence=0.8, criticality=0.9)
-        ]
+        bids = [Bid(agent_id="a1", requested_tokens=100, confidence=0.8, criticality=0.9)]
         allocations = await priority_auction(bids, 1000)
         assert len(allocations) == 1
         assert allocations[0].winner == "a1"
@@ -673,9 +669,7 @@ class TestEthicalRegulator:
         """Test sin tax application."""
         regulator = EthicalRegulator()
         base = Impact(base_value=100)
-        adjusted = regulator.apply_adjustments(
-            base, sins=["security_vulnerability"], virtues=[]
-        )
+        adjusted = regulator.apply_adjustments(base, sins=["security_vulnerability"], virtues=[])
         assert "sin:security_vulnerability" in adjusted.multipliers
 
     def test_virtue_subsidy_application(self) -> None:
@@ -878,8 +872,7 @@ class TestBankerIntegration:
 
         # Good output with virtues
         output = SimpleOutput(
-            content="def foo() -> None:\n    '''Documented function.'''\n    return 42\n"
-            * 10,
+            content="def foo() -> None:\n    '''Documented function.'''\n    return 42\n" * 10,
             _valid_syntax=True,
             _tests_passed=True,
             _improved_maintainability=True,

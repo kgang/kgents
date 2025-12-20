@@ -25,9 +25,7 @@ class ParseErrorType(Enum):
     TRANSIENT_EXTRACTION = (
         "transient_extraction"  # Data present but malformed - retry with coercion
     )
-    PERMANENT_SCHEMA = (
-        "permanent_schema"  # Wrong data structure - fast fail or force coercion
-    )
+    PERMANENT_SCHEMA = "permanent_schema"  # Wrong data structure - fast fail or force coercion
     PERMANENT_MISSING = "permanent_missing"  # Required data absent - fast fail
     TIMEOUT = "timeout"  # CLI timeout - fast fail
     UNKNOWN = "unknown"  # Unclassified - retry
@@ -76,10 +74,7 @@ def classify_parse_error(error_msg: str, raw_response: str) -> ParseErrorType:
         return ParseErrorType.PERMANENT_MISSING
 
     # Schema/type errors - permanent
-    if any(
-        term in error_lower
-        for term in ["schema", "type", "field required", "missing key"]
-    ):
+    if any(term in error_lower for term in ["schema", "type", "field required", "missing key"]):
         return ParseErrorType.PERMANENT_SCHEMA
 
     # Extraction/parsing errors - transient if data seems present
@@ -172,9 +167,7 @@ class CLIAgent:
         )
 
         try:
-            stdout, stderr = await asyncio.wait_for(
-                proc.communicate(), timeout=self._timeout
-            )
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=self._timeout)
         except asyncio.TimeoutError:
             proc.kill()
             raise TimeoutError(f"Claude CLI timed out after {self._timeout}s")
@@ -471,9 +464,7 @@ OUTPUT FORMAT:
                             )
 
                             if confidence >= self._coercion_confidence:
-                                self._log(
-                                    f"Coercion succeeded with confidence {confidence:.2f}"
-                                )
+                                self._log(f"Coercion succeeded with confidence {confidence:.2f}")
                                 try:
                                     output = agent.parse_response(coerced)
                                     return AgentResult(
@@ -500,6 +491,4 @@ OUTPUT FORMAT:
                     )
 
         # Should not reach here
-        raise ParseError(
-            "Unexpected: no response generated", "", ParseErrorType.UNKNOWN
-        )
+        raise ParseError("Unexpected: no response generated", "", ParseErrorType.UNKNOWN)

@@ -112,10 +112,7 @@ class Query:
             and contribution.contribution_type != self.contribution_type
         ):
             return False
-        if (
-            self.min_confidence is not None
-            and contribution.confidence < self.min_confidence
-        ):
+        if self.min_confidence is not None and contribution.confidence < self.min_confidence:
             return False
         if self.min_round is not None and contribution.round < self.min_round:
             return False

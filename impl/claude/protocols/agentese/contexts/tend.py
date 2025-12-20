@@ -29,6 +29,7 @@ from typing import TYPE_CHECKING, Any
 
 from ..affordances import AspectCategory, Effect, aspect
 from ..node import BaseLogosNode, BasicRendering, Renderable
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -44,6 +45,11 @@ TEND_AFFORDANCES: tuple[str, ...] = (
 )
 
 
+@node(
+    "self.garden.tend",
+    description="Six tending gestures for garden interaction",
+    dependencies=(),  # Uses protocols.gardener_logos directly
+)
 @dataclass
 class TendNode(BaseLogosNode):
     """
@@ -91,8 +97,7 @@ class TendNode(BaseLogosNode):
             content="\n".join(lines),
             metadata={
                 "gestures": [
-                    {"verb": v, "description": d, "entropy_cost": c}
-                    for _, v, d, c in gestures
+                    {"verb": v, "description": d, "entropy_cost": c} for _, v, d, c in gestures
                 ]
             },
         )
@@ -126,9 +131,7 @@ class TendNode(BaseLogosNode):
         help="Observe without changing (nearly free)",
         examples=["kg tend observe concept.gardener"],
     )
-    async def _observe(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _observe(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """OBSERVE gesture - perceive without changing."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, observe
@@ -159,9 +162,7 @@ class TendNode(BaseLogosNode):
         help="Mark for removal (requires reason)",
         examples=["kg tend prune concept.old --reason 'No longer used'"],
     )
-    async def _prune(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _prune(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """PRUNE gesture - remove what no longer serves."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, prune
@@ -200,9 +201,7 @@ class TendNode(BaseLogosNode):
         help="Add something new (requires reason)",
         examples=["kg tend graft concept.new --reason 'New feature'"],
     )
-    async def _graft(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _graft(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """GRAFT gesture - add something new."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, graft
@@ -241,9 +240,7 @@ class TendNode(BaseLogosNode):
         help="Nurture via TextGRAD (requires feedback)",
         examples=["kg tend water concept.prompt --feedback 'Add more specificity'"],
     )
-    async def _water(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _water(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """WATER gesture - nurture via TextGRAD."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, water
@@ -287,9 +284,7 @@ class TendNode(BaseLogosNode):
         help="Change perspective (cheap)",
         examples=["kg tend rotate concept.gardener"],
     )
-    async def _rotate(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _rotate(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """ROTATE gesture - change perspective."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, rotate
@@ -322,9 +317,7 @@ class TendNode(BaseLogosNode):
         help="Intentional pause (free)",
         examples=["kg tend wait", "kg tend wait --reason 'Allowing ideas to settle'"],
     )
-    async def _wait(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> dict[str, Any]:
+    async def _wait(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
         """WAIT gesture - allow time to pass."""
         from protocols.gardener_logos import create_crown_jewel_plots, create_garden
         from protocols.gardener_logos.tending import apply_gesture, wait

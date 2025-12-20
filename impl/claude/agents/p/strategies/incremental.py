@@ -34,9 +34,7 @@ class IncrementalNode:
     - Type information (for validation)
     """
 
-    type: Literal[
-        "root", "object", "array", "string", "number", "boolean", "null", "incomplete"
-    ]
+    type: Literal["root", "object", "array", "string", "number", "boolean", "null", "incomplete"]
     value: Any
     complete: bool = False
     confidence: float = 0.5
@@ -126,9 +124,7 @@ class IncrementalParser:
                 },
             )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[IncrementalNode]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[IncrementalNode]]:
         """
         Parse token stream incrementally.
 
@@ -183,9 +179,7 @@ class IncrementalParser:
                     },
                 )
 
-    def _build_complete_ast(
-        self, data: Any, key: Optional[str] = None
-    ) -> IncrementalNode:
+    def _build_complete_ast(self, data: Any, key: Optional[str] = None) -> IncrementalNode:
         """Build AST from successfully parsed JSON data."""
         if isinstance(data, dict):
             children = [self._build_complete_ast(v, k) for k, v in data.items()]

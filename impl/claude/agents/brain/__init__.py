@@ -152,9 +152,7 @@ class BrainCrystal:
             await self._vector.initialize()
 
         # Load existing count
-        result = await self._relational.fetch_one(
-            "SELECT COUNT(*) as count FROM captures"
-        )
+        result = await self._relational.fetch_one("SELECT COUNT(*) as count FROM captures")
         if result:
             self._total_captures = result["count"]
 
@@ -304,8 +302,7 @@ class BrainCrystal:
                 SearchResult(
                     concept_id=vec_result.id,
                     content=row["content"],
-                    similarity=1
-                    - vec_result.distance,  # Convert distance to similarity
+                    similarity=1 - vec_result.distance,  # Convert distance to similarity
                     captured_at=row["captured_at"],
                     is_stale=is_stale,
                 )
@@ -384,9 +381,7 @@ class BrainCrystal:
             "concept_id": row["id"],
             "content": row["content"],
             "captured_at": row["captured_at"],
-            "metadata": json.loads(row["metadata_json"])
-            if row.get("metadata_json")
-            else None,
+            "metadata": json.loads(row["metadata_json"]) if row.get("metadata_json") else None,
         }
 
     async def list_captures(
@@ -440,9 +435,7 @@ class BrainCrystal:
         await self._ensure_initialized()
 
         # Get total count
-        result = await self._relational.fetch_one(
-            "SELECT COUNT(*) as count FROM captures"
-        )
+        result = await self._relational.fetch_one("SELECT COUNT(*) as count FROM captures")
         total = result["count"] if result else 0
 
         if total == 0:
@@ -530,9 +523,7 @@ class BrainCrystal:
         await self._ensure_initialized()
 
         # Count captures
-        result = await self._relational.fetch_one(
-            "SELECT COUNT(*) as count FROM captures"
-        )
+        result = await self._relational.fetch_one("SELECT COUNT(*) as count FROM captures")
         total_captures = result["count"] if result else 0
 
         # Count vectors
@@ -676,9 +667,7 @@ async def _create_brain_crystal() -> BrainCrystal:
     import logging
 
     logger = logging.getLogger(__name__)
-    backend_name = (
-        "postgres" if current_backend == StorageBackend.POSTGRES else "sqlite"
-    )
+    backend_name = "postgres" if current_backend == StorageBackend.POSTGRES else "sqlite"
     if current_backend == StorageBackend.POSTGRES:
         logger.info("Brain using PostgreSQL backend")
     else:

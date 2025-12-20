@@ -458,9 +458,7 @@ def create_hippocampus(
     Returns:
         Configured Hippocampus
     """
-    config = (
-        HippocampusConfig.from_dict(config_dict) if config_dict else HippocampusConfig()
-    )
+    config = HippocampusConfig.from_dict(config_dict) if config_dict else HippocampusConfig()
     return Hippocampus(cortex=cortex, config=config)
 
 

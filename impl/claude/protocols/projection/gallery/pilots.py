@@ -65,15 +65,11 @@ class Pilot:
     variations: list[dict[str, Any]] = field(default_factory=list)
     tags: list[str] = field(default_factory=list)
 
-    def create_widget(
-        self, overrides: dict[str, Any] | None = None
-    ) -> KgentsWidget[Any]:
+    def create_widget(self, overrides: dict[str, Any] | None = None) -> KgentsWidget[Any]:
         """Create the widget with optional overrides."""
         return self.widget_factory(overrides or {})
 
-    def render(
-        self, target: RenderTarget, overrides: dict[str, Any] | None = None
-    ) -> Any:
+    def render(self, target: RenderTarget, overrides: dict[str, Any] | None = None) -> Any:
         """Create and immediately render the widget."""
         widget = self.create_widget(overrides)
         return widget.project(target)
@@ -495,9 +491,7 @@ def _create_yield_card(overrides: dict[str, Any]) -> KgentsWidget[Any]:
     return YieldCardWidget(
         YieldCardState(
             yield_id="pilot-yield-1",
-            content=overrides.get(
-                "content", "This is a yielded result from an agent operation."
-            ),
+            content=overrides.get("content", "This is a yielded result from an agent operation."),
             source_agent="source-agent",
             yield_type="action",
             importance=overrides.get("importance", 0.8),
@@ -677,9 +671,7 @@ class _WidgetStateWrapper(KgentsWidget[None]):
                 return self._render_cli()
             case RenderTarget.JSON:
                 return (
-                    self._state.__dict__
-                    if hasattr(self._state, "__dict__")
-                    else str(self._state)
+                    self._state.__dict__ if hasattr(self._state, "__dict__") else str(self._state)
                 )
             case _:
                 return str(self._state)
@@ -997,8 +989,7 @@ class _PolynomialVizWidget(KgentsWidget[None]):
 
     def _render_html(self) -> str:
         positions = "".join(
-            f'<div class="poly-pos {"active" if p["is_current"] else ""}">'
-            f"{p['id']}</div>"
+            f'<div class="poly-pos {"active" if p["is_current"] else ""}">{p["id"]}</div>'
             for p in self._viz["positions"]
         )
         return f"""
@@ -1167,12 +1158,9 @@ class _OperadVizWidget(KgentsWidget[None]):
 
     def _render_html(self) -> str:
         ops = "".join(
-            f'<div class="op">{op["name"]} ({op["arity"]})</div>'
-            for op in self._viz["operations"]
+            f'<div class="op">{op["name"]} ({op["arity"]})</div>' for op in self._viz["operations"]
         )
-        laws = "".join(
-            f'<div class="law">{law["equation"]}</div>' for law in self._viz["laws"]
-        )
+        laws = "".join(f'<div class="law">{law["equation"]}</div>' for law in self._viz["laws"])
         return f"""
         <div class="operad-viz">
             <h3>{self._viz["name"]}</h3>
@@ -1491,9 +1479,7 @@ class _TownMiniWidget(KgentsWidget[None]):
 class _CrownJewelMiniWidget(KgentsWidget[None]):
     """Wrapper for Crown Jewel mini-demos."""
 
-    def __init__(
-        self, name: str, inner: KgentsWidget[Any], metadata: dict[str, Any]
-    ) -> None:
+    def __init__(self, name: str, inner: KgentsWidget[Any], metadata: dict[str, Any]) -> None:
         self._name = name
         self._inner = inner
         self._metadata = metadata
@@ -1839,9 +1825,7 @@ class _PolynomialPlaygroundWidget(KgentsWidget[None]):
         trace: list[str] | None = None,
     ) -> None:
         self._preset = preset
-        self._config = POLYNOMIAL_PRESETS.get(
-            preset, POLYNOMIAL_PRESETS["traffic_light"]
-        )
+        self._config = POLYNOMIAL_PRESETS.get(preset, POLYNOMIAL_PRESETS["traffic_light"])
         self._current_state = current_state or self._config["positions"][0]["id"]
         self._trace = trace or []
 
@@ -1921,9 +1905,7 @@ class _PolynomialPlaygroundWidget(KgentsWidget[None]):
             color = pos["color"]
             glow = f"box-shadow: 0 0 20px {color}60;" if is_current else ""
             border = (
-                f"border: 2px solid {color};"
-                if is_current
-                else f"border: 1px solid {color}40;"
+                f"border: 2px solid {color};" if is_current else f"border: 1px solid {color}40;"
             )
 
             state_nodes.append(f"""
@@ -2222,9 +2204,7 @@ class _OperadWiringWidget(KgentsWidget[None]):
     Teaching goal: Make operad composition visual and verifiable.
     """
 
-    def __init__(
-        self, operad: str, composition: list[dict[str, Any]] | None = None
-    ) -> None:
+    def __init__(self, operad: str, composition: list[dict[str, Any]] | None = None) -> None:
         self._operad_name = operad
         self._config = OPERAD_DEFINITIONS.get(operad, OPERAD_DEFINITIONS["TOWN_OPERAD"])
         self._composition = composition or []
@@ -2534,9 +2514,7 @@ class _TownLiveWidget(KgentsWidget[None]):
             "Citizens:",
         ]
         for c in self._citizens:
-            lines.append(
-                f"  {c['char']} {c['name']:<12} [{c['phase'].upper()}] {c['archetype']}"
-            )
+            lines.append(f"  {c['char']} {c['name']:<12} [{c['phase'].upper()}] {c['archetype']}")
 
         lines.extend(["", "Recent Events:"])
         for e in self._events[:5]:

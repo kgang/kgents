@@ -22,15 +22,9 @@ if TYPE_CHECKING:
     from protocols.tenancy.models import ApiKey, Tenant, TenantUser
 
 # Context variables for tenant state
-_current_tenant: ContextVar[Optional["Tenant"]] = ContextVar(
-    "current_tenant", default=None
-)
-_current_user: ContextVar[Optional["TenantUser"]] = ContextVar(
-    "current_user", default=None
-)
-_current_api_key: ContextVar[Optional["ApiKey"]] = ContextVar(
-    "current_api_key", default=None
-)
+_current_tenant: ContextVar[Optional["Tenant"]] = ContextVar("current_tenant", default=None)
+_current_user: ContextVar[Optional["TenantUser"]] = ContextVar("current_user", default=None)
+_current_api_key: ContextVar[Optional["ApiKey"]] = ContextVar("current_api_key", default=None)
 
 
 @dataclass

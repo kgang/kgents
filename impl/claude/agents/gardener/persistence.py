@@ -132,9 +132,7 @@ class StoredSession:
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "resumed_at": self.resumed_at.isoformat() if self.resumed_at else None,
-            "completed_at": self.completed_at.isoformat()
-            if self.completed_at
-            else None,
+            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "is_active": 1 if self.is_active else 0,
         }
 
@@ -200,9 +198,7 @@ class SessionHistoryEvent:
             event_type=row["event_type"],
             phase_from=row.get("phase_from"),
             phase_to=row.get("phase_to"),
-            artifact=json.loads(row["artifact_json"])
-            if row.get("artifact_json")
-            else None,
+            artifact=json.loads(row["artifact_json"]) if row.get("artifact_json") else None,
             timestamp=datetime.fromisoformat(row["timestamp"]),
         )
 
@@ -679,9 +675,7 @@ class SessionStore:
     async def count_active(self) -> int:
         """Count active sessions."""
         with self._connection() as conn:
-            cursor = conn.execute(
-                "SELECT COUNT(*) FROM gardener_sessions WHERE is_active = 1"
-            )
+            cursor = conn.execute("SELECT COUNT(*) FROM gardener_sessions WHERE is_active = 1")
             row = cursor.fetchone()
             return row[0] if row else 0
 
@@ -705,9 +699,7 @@ def create_session_store(db_path: Path | str | None = None) -> SessionStore:
         # Use XDG data directory
         import os
 
-        xdg_data = os.environ.get(
-            "XDG_DATA_HOME", str(Path.home() / ".local" / "share")
-        )
+        xdg_data = os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share"))
         db_path = Path(xdg_data) / "kgents" / "gardener_sessions.db"
 
     return SessionStore(db_path=Path(db_path))

@@ -654,9 +654,7 @@ class TestIdentityPath:
         assert id_path.name == "Id"
 
     @pytest.mark.asyncio
-    async def test_identity_path_invoke(
-        self, logos: Logos, observer: MockUmwelt
-    ) -> None:
+    async def test_identity_path_invoke(self, logos: Logos, observer: MockUmwelt) -> None:
         """IdentityPath invoke returns input unchanged."""
         id_path = logos.identity()
         result = await id_path.invoke(cast(Any, observer), initial_input="test")

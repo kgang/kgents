@@ -228,9 +228,7 @@ class ProposalVote(TimestampMixin, Base):
     )
 
     # Vote
-    vote: Mapped[str] = mapped_column(
-        String(16), nullable=False
-    )  # "for", "against", "abstain"
+    vote: Mapped[str] = mapped_column(String(16), nullable=False)  # "for", "against", "abstain"
     weight: Mapped[float] = mapped_column(Float, default=1.0)
     rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -238,9 +236,7 @@ class ProposalVote(TimestampMixin, Base):
     proposal: Mapped["CoalitionProposal"] = relationship(
         "CoalitionProposal", back_populates="votes"
     )
-    member: Mapped["CoalitionMember"] = relationship(
-        "CoalitionMember", back_populates="votes"
-    )
+    member: Mapped["CoalitionMember"] = relationship("CoalitionMember", back_populates="votes")
 
     __table_args__ = (
         Index("idx_proposal_vote_proposal", "proposal_id"),

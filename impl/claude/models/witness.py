@@ -17,7 +17,7 @@ AGENTESE: self.witness.*
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
@@ -94,7 +94,7 @@ class WitnessTrust(TimestampMixin, Base):
 
     def touch(self) -> None:
         """Update last_active timestamp."""
-        self.last_active = datetime.utcnow()
+        self.last_active = datetime.now(UTC)
 
     def apply_decay(self) -> "WitnessTrust":
         """
@@ -103,7 +103,11 @@ class WitnessTrust(TimestampMixin, Base):
         Trust decays by 0.1 levels per 24h of inactivity.
         Minimum floor: L1 (never drops below L1 after first achievement).
         """
-        hours_inactive = (datetime.utcnow() - self.last_active).total_seconds() / 3600
+        # Ensure last_active is timezone-aware for comparison
+        last_active = self.last_active
+        if last_active.tzinfo is None:
+            last_active = last_active.replace(tzinfo=UTC)
+        hours_inactive = (datetime.now(UTC) - last_active).total_seconds() / 3600
         decay_steps = int(hours_inactive / 24) * 0.1
 
         # Apply decay to raw level

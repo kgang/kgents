@@ -165,13 +165,9 @@ def display_piece_full(piece: Any) -> None:
                 console.print(f"      [dim]{ch.reason}[/dim]")
 
     if piece.provenance.inspirations:
-        console.print(
-            f"  [dim]Inspired by:[/dim] {', '.join(piece.provenance.inspirations)}"
-        )
+        console.print(f"  [dim]Inspired by:[/dim] {', '.join(piece.provenance.inspirations)}")
 
-    console.print(
-        f"\n  [dim]Created:[/dim] {piece.created_at.strftime('%Y-%m-%d %H:%M')}"
-    )
+    console.print(f"\n  [dim]Created:[/dim] {piece.created_at.strftime('%Y-%m-%d %H:%M')}")
     console.print()
 
 
@@ -425,9 +421,7 @@ def collaborate(
                 list(artisan_names), request, mode, patron, context=context
             ):
                 if event.event_type == AtelierEventType.CONTEMPLATING:
-                    live.update(
-                        Spinner("dots", text=event.message or "contemplating...")
-                    )
+                    live.update(Spinner("dots", text=event.message or "contemplating..."))
                 elif event.event_type == AtelierEventType.WORKING:
                     live.update(Spinner("dots2", text=event.message or "working..."))
                 elif event.event_type == AtelierEventType.PIECE_COMPLETE:
@@ -500,9 +494,7 @@ def exquisite(topic: str, artisans: tuple[str], visibility: float, patron: str) 
                 list(artisans), topic, "exquisite", patron, context=context
             ):
                 if event.event_type == AtelierEventType.CONTEMPLATING:
-                    live.update(
-                        Spinner("dots", text=event.message or "contemplating...")
-                    )
+                    live.update(Spinner("dots", text=event.message or "contemplating..."))
                 elif event.event_type == AtelierEventType.WORKING:
                     live.update(Spinner("dots2", text=event.message or "crafting..."))
                 elif event.event_type == AtelierEventType.PIECE_COMPLETE:
@@ -540,9 +532,7 @@ def handoff(start_text: str, artisan_name: str, patron: str) -> None:
     # Validate artisan
     if not get_artisan(artisan_name):
         artisan_list = "\n".join(f"  • {name}" for name in ARTISAN_REGISTRY.keys())
-        console.print(
-            ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list)
-        )
+        console.print(ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list))
         return
 
     workshop = get_workshop()
@@ -563,15 +553,11 @@ def handoff(start_text: str, artisan_name: str, patron: str) -> None:
         spinner = Spinner("dots", text=f"{artisan_name} receives the spark...")
 
         with Live(spinner, console=console, refresh_per_second=10) as live:
-            async for event in workshop.flux.commission(
-                artisan_name, handoff_request, patron
-            ):
+            async for event in workshop.flux.commission(artisan_name, handoff_request, patron):
                 if event.event_type == AtelierEventType.CONTEMPLATING:
                     live.update(Spinner("dots", text=f"{artisan_name} contemplates..."))
                 elif event.event_type == AtelierEventType.WORKING:
-                    live.update(
-                        Spinner("dots2", text=f"{artisan_name} continues your work...")
-                    )
+                    live.update(Spinner("dots2", text=f"{artisan_name} continues your work..."))
                 elif event.event_type == AtelierEventType.PIECE_COMPLETE:
                     piece = Piece.from_dict(event.data["piece"])
                     live.update(Text("✓ Handoff complete", style="green"))
@@ -588,9 +574,7 @@ def handoff(start_text: str, artisan_name: str, patron: str) -> None:
 
 
 @atelier.command()
-@click.option(
-    "--random", "-r", "use_random", is_flag=True, help="Inject a random constraint"
-)
+@click.option("--random", "-r", "use_random", is_flag=True, help="Inject a random constraint")
 @click.option("--constraint", "-c", help="Specific constraint to apply")
 def constrain(use_random: bool, constraint: str | None) -> None:
     """Inject a creative constraint into your next commission
@@ -648,9 +632,7 @@ def constrain(use_random: bool, constraint: str | None) -> None:
 @atelier.command()
 @click.argument("query")
 @click.argument("artisan_name")
-@click.option(
-    "--limit", "-n", default=3, help="Number of memories to pull (default: 3)"
-)
+@click.option("--limit", "-n", default=3, help="Number of memories to pull (default: 3)")
 @click.option("--patron", "-p", default="wanderer", help="Your name for provenance")
 def inspire(query: str, artisan_name: str, limit: int, patron: str) -> None:
     """Pull memories from Brain as inspiration for creation
@@ -674,9 +656,7 @@ def inspire(query: str, artisan_name: str, limit: int, patron: str) -> None:
     # Validate artisan
     if not get_artisan(artisan_name):
         artisan_list = "\n".join(f"  • {name}" for name in ARTISAN_REGISTRY.keys())
-        console.print(
-            ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list)
-        )
+        console.print(ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list))
         return
 
     async def do_inspire() -> None:
@@ -724,17 +704,11 @@ let them inform the mood, themes, or ideas of what you create."""
         spinner = Spinner("dots", text=f"{artisan_name} contemplates the memories...")
 
         with Live(spinner, console=console, refresh_per_second=10) as live:
-            async for event in workshop.flux.commission(
-                artisan_name, inspiration_request, patron
-            ):
+            async for event in workshop.flux.commission(artisan_name, inspiration_request, patron):
                 if event.event_type == AtelierEventType.CONTEMPLATING:
-                    live.update(
-                        Spinner("dots", text=f"{artisan_name} draws from memory...")
-                    )
+                    live.update(Spinner("dots", text=f"{artisan_name} draws from memory..."))
                 elif event.event_type == AtelierEventType.WORKING:
-                    live.update(
-                        Spinner("dots2", text=f"{artisan_name} transforms memories...")
-                    )
+                    live.update(Spinner("dots2", text=f"{artisan_name} transforms memories..."))
                 elif event.event_type == AtelierEventType.PIECE_COMPLETE:
                     piece = Piece.from_dict(event.data["piece"])
                     live.update(Text("✓ Memory transformed into art", style="green"))
@@ -746,9 +720,7 @@ let them inform the mood, themes, or ideas of what you create."""
             console.print()
             display_piece(piece)
             console.print(f"\n[dim]Piece ID: {piece.id}[/dim]")
-            console.print(
-                f"[dim]Inspired by {len(memories)} memories about '{query}'[/dim]"
-            )
+            console.print(f"[dim]Inspired by {len(memories)} memories about '{query}'[/dim]")
 
     run_async(do_inspire())
 
@@ -769,18 +741,14 @@ def queue_commission(artisan_name: str, request: str, patron: str) -> None:
     # Validate artisan
     if not get_artisan(artisan_name):
         artisan_list = "\n".join(f"  • {name}" for name in ARTISAN_REGISTRY.keys())
-        console.print(
-            ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list)
-        )
+        console.print(ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list))
         return
 
     workshop = get_workshop()
 
     async def do_queue() -> None:
         commission = await workshop.queue_commission(artisan_name, request, patron)
-        console.print(
-            f"[green]✓[/green] Queued commission [bold]{commission.id}[/bold]"
-        )
+        console.print(f"[green]✓[/green] Queued commission [bold]{commission.id}[/bold]")
         console.print(
             "  [dim]Process with 'kg atelier process' or wait for background worker[/dim]"
         )
@@ -843,9 +811,7 @@ def process_queue(process_all: bool) -> None:
             async for event in queue.process_all():
                 if event.event_type == AtelierEventType.PIECE_COMPLETE:
                     piece = Piece.from_dict(event.data["piece"])
-                    console.print(
-                        f"[green]✓[/green] Created piece [bold]{piece.id}[/bold]"
-                    )
+                    console.print(f"[green]✓[/green] Created piece [bold]{piece.id}[/bold]")
                     count += 1
                 elif event.event_type == AtelierEventType.ERROR:
                     console.print(f"[red]✗[/red] {event.message}")
@@ -855,9 +821,7 @@ def process_queue(process_all: bool) -> None:
             async for event in queue.process_one():
                 if event.event_type == AtelierEventType.PIECE_COMPLETE:
                     piece = Piece.from_dict(event.data["piece"])
-                    console.print(
-                        f"[green]✓[/green] Created piece [bold]{piece.id}[/bold]"
-                    )
+                    console.print(f"[green]✓[/green] Created piece [bold]{piece.id}[/bold]")
                     display_piece(piece)
                 elif event.event_type == AtelierEventType.ERROR:
                     console.print(f"[red]✗[/red] {event.message}")
@@ -939,9 +903,7 @@ def seed(force: bool, clear: bool) -> None:
 
         added = await seed_gallery(gallery, force=force)
         if added:
-            console.print(
-                f"[green]✓[/green] Added {len(added)} sample pieces to your gallery"
-            )
+            console.print(f"[green]✓[/green] Added {len(added)} sample pieces to your gallery")
             console.print("\n[dim]View them with:[/dim]")
             console.print("  [bold]kg atelier gallery[/bold]")
             for piece_id in added:
@@ -1015,9 +977,7 @@ def festival() -> None:
 @click.argument("theme")
 @click.option("--duration", "-d", default=72, help="Duration in hours (default: 72)")
 @click.option("--constraint", "-c", multiple=True, help="Creative constraints")
-def festival_create(
-    title: str, theme: str, duration: int, constraint: tuple[str]
-) -> None:
+def festival_create(title: str, theme: str, duration: int, constraint: tuple[str]) -> None:
     """Create a new festival
 
     Examples:
@@ -1149,9 +1109,7 @@ def festival_view(festival_id: str) -> None:
 @click.argument("artisan_name")
 @click.argument("prompt")
 @click.option("--patron", "-p", default="wanderer", help="Your name for provenance")
-def festival_enter(
-    festival_id: str, artisan_name: str, prompt: str, patron: str
-) -> None:
+def festival_enter(festival_id: str, artisan_name: str, prompt: str, patron: str) -> None:
     """Enter a festival with a creation
 
     The artisan will create a piece based on your prompt,
@@ -1169,9 +1127,7 @@ def festival_enter(
     # Validate artisan
     if not get_artisan(artisan_name):
         artisan_list = "\n".join(f"  • {name}" for name in ARTISAN_REGISTRY.keys())
-        console.print(
-            ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list)
-        )
+        console.print(ARTISAN_NOT_FOUND_MESSAGE.format(name=artisan_name, artisans=artisan_list))
         return
 
     manager = get_festival_manager()
@@ -1182,9 +1138,7 @@ def festival_enter(
         return
 
     if not fest.is_accepting_entries:
-        console.print(
-            f"[yellow]Festival '{fest.title}' is not accepting entries[/yellow]"
-        )
+        console.print(f"[yellow]Festival '{fest.title}' is not accepting entries[/yellow]")
         console.print(f"[dim]Status: {fest.status.value}[/dim]")
         return
 
@@ -1204,14 +1158,10 @@ def festival_enter(
         if fest.constraints:
             festival_prompt += f"\n\nConstraints: {', '.join(fest.constraints)}"
 
-        spinner = Spinner(
-            "dots", text=f"{artisan_name} contemplates the festival theme..."
-        )
+        spinner = Spinner("dots", text=f"{artisan_name} contemplates the festival theme...")
 
         with Live(spinner, console=console, refresh_per_second=10) as live:
-            async for event in workshop.flux.commission(
-                artisan_name, festival_prompt, patron
-            ):
+            async for event in workshop.flux.commission(artisan_name, festival_prompt, patron):
                 if event.event_type == AtelierEventType.CONTEMPLATING:
                     live.update(Spinner("dots", text=f"{artisan_name} contemplates..."))
                 elif event.event_type == AtelierEventType.WORKING:
@@ -1274,9 +1224,7 @@ def festival_vote(festival_id: str, entry_id: str, count: int) -> None:
             console.print(f"[dim]Total votes: {entry.votes}[/dim]")
     else:
         console.print("[red]Could not record vote[/red]")
-        console.print(
-            "[dim]Check that the entry exists and festival allows voting[/dim]"
-        )
+        console.print("[dim]Check that the entry exists and festival allows voting[/dim]")
 
 
 @festival.command("conclude")

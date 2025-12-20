@@ -264,9 +264,7 @@ def _validate_parameters(template: ForgeTemplate, params: TemplateParameters) ->
         )
 
 
-def _fill_contract_parameters(
-    template: ForgeTemplate, params: TemplateParameters
-) -> Contract:
+def _fill_contract_parameters(template: ForgeTemplate, params: TemplateParameters) -> Contract:
     """
     Fill template parameter placeholders in contract.
 
@@ -345,9 +343,7 @@ def _validate_template_source_safety(
     import re
 
     # Check complexity
-    max_complexity = int(
-        constraints.entropy_budget * constraints.max_cyclomatic_complexity
-    )
+    max_complexity = int(constraints.entropy_budget * constraints.max_cyclomatic_complexity)
     if source.complexity > max_complexity:
         return (
             False,

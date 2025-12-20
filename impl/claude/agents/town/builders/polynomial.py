@@ -257,9 +257,7 @@ def builder_directions(phase: BuilderPhase) -> FrozenSet[Any]:
     """
     match phase:
         case BuilderPhase.IDLE:
-            return frozenset(
-                {TaskAssignInput, HandoffInput, WakeInput, type, Any}
-            )
+            return frozenset({TaskAssignInput, HandoffInput, WakeInput, type, Any})
         case BuilderPhase.EXPLORING:
             return frozenset(
                 {
@@ -334,9 +332,7 @@ def builder_directions(phase: BuilderPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def builder_transition(
-    phase: BuilderPhase, input: Any
-) -> tuple[BuilderPhase, BuilderOutput]:
+def builder_transition(phase: BuilderPhase, input: Any) -> tuple[BuilderPhase, BuilderOutput]:
     """
     Builder state transition function.
 
@@ -389,29 +385,19 @@ def builder_transition(
                 )
 
         case BuilderPhase.EXPLORING:
-            return _handle_work_phase(
-                phase, input, "Scout", BuilderPhase.DESIGNING, "Sage"
-            )
+            return _handle_work_phase(phase, input, "Scout", BuilderPhase.DESIGNING, "Sage")
 
         case BuilderPhase.DESIGNING:
-            return _handle_work_phase(
-                phase, input, "Sage", BuilderPhase.PROTOTYPING, "Spark"
-            )
+            return _handle_work_phase(phase, input, "Sage", BuilderPhase.PROTOTYPING, "Spark")
 
         case BuilderPhase.PROTOTYPING:
-            return _handle_work_phase(
-                phase, input, "Spark", BuilderPhase.REFINING, "Steady"
-            )
+            return _handle_work_phase(phase, input, "Spark", BuilderPhase.REFINING, "Steady")
 
         case BuilderPhase.REFINING:
-            return _handle_work_phase(
-                phase, input, "Steady", BuilderPhase.INTEGRATING, "Sync"
-            )
+            return _handle_work_phase(phase, input, "Steady", BuilderPhase.INTEGRATING, "Sync")
 
         case BuilderPhase.INTEGRATING:
-            return _handle_work_phase(
-                phase, input, "Sync", BuilderPhase.IDLE, None
-            )
+            return _handle_work_phase(phase, input, "Sync", BuilderPhase.IDLE, None)
 
         case _:
             return BuilderPhase.IDLE, BuilderOutput(

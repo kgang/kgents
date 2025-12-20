@@ -338,10 +338,7 @@ class BrainFlowNode(JewelFlowNode):
         """View Brain chat flow state."""
         return BasicRendering(
             summary="Brain Chat Flow",
-            content=(
-                f"Active: {self._chat_flow is not None}\n"
-                f"Queries: {len(self._query_history)}"
-            ),
+            content=(f"Active: {self._chat_flow is not None}\nQueries: {len(self._query_history)}"),
             metadata={
                 "jewel": "brain",
                 "modality": "chat",
@@ -448,8 +445,7 @@ class GardenerFlowNode(JewelFlowNode):
         return BasicRendering(
             summary="Gardener Chat Flow",
             content=(
-                f"Active: {self._chat_flow is not None}\n"
-                f"Gestures: {len(self._tending_history)}"
+                f"Active: {self._chat_flow is not None}\nGestures: {len(self._tending_history)}"
             ),
             metadata={
                 "jewel": "gardener",

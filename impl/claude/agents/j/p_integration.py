@@ -44,18 +44,10 @@ class IntentParser(Parser[dict[str, Any]]):
     def parse(self, text: str) -> ParseResult[dict[str, Any]]:
         """Parse intent from text with anchors."""
         # Use anchor-based extraction for each field
-        behavior_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
-            anchor="###BEHAVIOR:"
-        )
-        constraint_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
-            anchor="###CONSTRAINT:"
-        )
-        input_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
-            anchor="###INPUT:"
-        )
-        output_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(
-            anchor="###OUTPUT:"
-        )
+        behavior_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###BEHAVIOR:")
+        constraint_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###CONSTRAINT:")
+        input_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###INPUT:")
+        output_parser: AnchorBasedParser[list[str]] = AnchorBasedParser(anchor="###OUTPUT:")
 
         intent: dict[str, Any] = {}
         confidence_scores: list[float] = []
@@ -63,9 +55,7 @@ class IntentParser(Parser[dict[str, Any]]):
         # Extract behavior
         behavior_result = behavior_parser.parse(text)
         if behavior_result.success:
-            intent["behavior"] = (
-                behavior_result.value[0] if behavior_result.value else ""
-            )
+            intent["behavior"] = behavior_result.value[0] if behavior_result.value else ""
             confidence_scores.append(behavior_result.confidence)
 
         # Extract constraints (optional, multiple)
@@ -79,9 +69,7 @@ class IntentParser(Parser[dict[str, Any]]):
         # Extract input type
         input_result = input_parser.parse(text)
         if input_result.success:
-            intent["input_type"] = (
-                input_result.value[0] if input_result.value else "Any"
-            )
+            intent["input_type"] = input_result.value[0] if input_result.value else "Any"
             confidence_scores.append(input_result.confidence)
         else:
             intent["input_type"] = "Any"
@@ -89,9 +77,7 @@ class IntentParser(Parser[dict[str, Any]]):
         # Extract output type
         output_result = output_parser.parse(text)
         if output_result.success:
-            intent["output_type"] = (
-                output_result.value[0] if output_result.value else "Any"
-            )
+            intent["output_type"] = output_result.value[0] if output_result.value else "Any"
             confidence_scores.append(output_result.confidence)
         else:
             intent["output_type"] = "Any"
@@ -102,9 +88,7 @@ class IntentParser(Parser[dict[str, Any]]):
             )
 
         avg_confidence = (
-            sum(confidence_scores) / len(confidence_scores)
-            if confidence_scores
-            else 0.5
+            sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0.5
         )
 
         return ParseResult[dict[str, Any]](
@@ -115,9 +99,7 @@ class IntentParser(Parser[dict[str, Any]]):
             metadata={"fields_extracted": len(intent)},
         )
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """Stream parsing (buffer and parse once)."""
         text = "".join(tokens)
         yield self.parse(text)
@@ -190,9 +172,7 @@ class SourceCodeParser(Parser[str]):
                 repairs=repairs,
                 metadata={
                     "node_count": len(list(ast.walk(tree))),
-                    "has_functions": any(
-                        isinstance(n, ast.FunctionDef) for n in ast.walk(tree)
-                    ),
+                    "has_functions": any(isinstance(n, ast.FunctionDef) for n in ast.walk(tree)),
                 },
             )
 
@@ -249,9 +229,7 @@ class AgentOutputParser(Parser[Any]):
             # Extract the actual value from the AST node
             return ParseResult[Any](
                 success=True,
-                value=result.value.value
-                if hasattr(result.value, "value")
-                else result.value,
+                value=result.value.value if hasattr(result.value, "value") else result.value,
                 confidence=result.confidence,
                 strategy="probabilistic-ast",
                 repairs=result.repairs,
@@ -261,9 +239,7 @@ class AgentOutputParser(Parser[Any]):
         if self.llm_func:
             from agents.p.strategies.reflection import ReflectionContext
 
-            def llm_fix_wrapper(
-                original: str, error: str, context: ReflectionContext
-            ) -> str:
+            def llm_fix_wrapper(original: str, error: str, context: ReflectionContext) -> str:
                 # Simple wrapper that ignores context and uses original llm_func
                 return (
                     self.llm_func(f"Fix this JSON: {original}\nError: {error}")

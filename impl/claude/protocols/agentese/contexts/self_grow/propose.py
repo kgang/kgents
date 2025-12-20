@@ -308,9 +308,7 @@ class ProposeNode(BaseLogosNode):
                 behaviors=kwargs.get("behaviors"),
             )
 
-            span.set_attribute(
-                "growth.proposal.handle", f"{proposal.context}.{proposal.entity}"
-            )
+            span.set_attribute("growth.proposal.handle", f"{proposal.context}.{proposal.entity}")
             span.set_attribute("growth.proposal.hash", proposal.content_hash)
 
             # Store proposal

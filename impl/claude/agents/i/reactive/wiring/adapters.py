@@ -326,9 +326,7 @@ class AgentRuntimeAdapter:
         seed: int = 0,
     ) -> tuple[AgentCardState, ...]:
         """Adapt multiple agents."""
-        return tuple(
-            self.adapt(agent, t, entropy, seed + i) for i, agent in enumerate(agents)
-        )
+        return tuple(self.adapt(agent, t, entropy, seed + i) for i, agent in enumerate(agents))
 
 
 # === Yield Adapter ===
@@ -382,9 +380,7 @@ class YieldAdapter:
                 "id", yield_data.get("yield_id", f"yield-{self._yield_counter}")
             )
             content = yield_data.get("content", yield_data.get("message", ""))
-            yield_type = yield_data.get(
-                "type", yield_data.get("yield_type", "observation")
-            )
+            yield_type = yield_data.get("type", yield_data.get("yield_type", "observation"))
             source_agent = yield_data.get("source", yield_data.get("source_agent", ""))
             importance = yield_data.get("importance", 0.5)
             timestamp = yield_data.get("timestamp")
@@ -423,9 +419,7 @@ class YieldAdapter:
         else:
             # Try to parse as ISO string
             try:
-                timestamp_float = (
-                    datetime.fromisoformat(str(timestamp)).timestamp() * 1000
-                )
+                timestamp_float = datetime.fromisoformat(str(timestamp)).timestamp() * 1000
             except (ValueError, TypeError):
                 timestamp_float = t
 

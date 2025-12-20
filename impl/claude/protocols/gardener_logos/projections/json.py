@@ -38,18 +38,14 @@ def project_garden_to_json(
     # Add computed fields
     result["computed"] = {
         "health_score": garden.metrics.health_score,
-        "entropy_remaining": max(
-            0, garden.metrics.entropy_budget - garden.metrics.entropy_spent
-        ),
+        "entropy_remaining": max(0, garden.metrics.entropy_budget - garden.metrics.entropy_spent),
         "entropy_percentage": (
             (garden.metrics.entropy_budget - garden.metrics.entropy_spent)
             / garden.metrics.entropy_budget
             if garden.metrics.entropy_budget > 0
             else 0
         ),
-        "active_plot_count": len(
-            [p for p in garden.plots.values() if p.is_active]
-        ),
+        "active_plot_count": len([p for p in garden.plots.values() if p.is_active]),
         "total_plot_count": len(garden.plots),
         "season_plasticity": garden.season.plasticity,
         "season_entropy_multiplier": garden.season.entropy_multiplier,
@@ -57,9 +53,7 @@ def project_garden_to_json(
 
     # Optionally limit gestures
     if include_gestures:
-        result["recent_gestures"] = [
-            g.to_dict() for g in garden.recent_gestures[-gesture_limit:]
-        ]
+        result["recent_gestures"] = [g.to_dict() for g in garden.recent_gestures[-gesture_limit:]]
     else:
         result.pop("recent_gestures", None)
 

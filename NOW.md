@@ -11,18 +11,24 @@
 
 | Plan | Status | Key Focus |
 |------|--------|-----------|
-| `plans/kgentsd-crown-jewel.md` | **EXECUTING (Phase 0.5)** | Vertical slice: Git Watcher end-to-end |
+| `plans/kgentsd-crown-jewel.md` | **Phase 2 IN PROGRESS** | Cross-jewel handlers, bus wiring |
 
-**Phase 0.5 Progress** (Vertical Slice):
-- ✅ `services/witness/` Crown Jewel created
-- ✅ `WitnessPolynomial` (trust-gated state machine, 29 tests passing)
-- ✅ `WITNESS_OPERAD` (merged with AGENT_OPERAD, 5 witness operations, 3 laws)
-- ✅ `GitWatcher` (event-driven, no timers)
-- ✅ **`WitnessPersistence`** (dual-track: D-gent + SQLAlchemy, 19 tests passing)
-- ✅ **`WitnessNode`** (AGENTESE @node("self.witness"), 7 aspects)
-- ✅ **SQLAlchemy models** (WitnessTrust, WitnessThought, WitnessAction, WitnessEscalation)
-- ✅ **Service registration** (bootstrap.py, providers.py)
-- 🔲 CLI handler (`kg witness *` commands)
+**Phase 1 Complete** (Event-Driven Flux Integration):
+- ✅ `GitWatcherFlux` (DORMANT → FLOWING → STOPPED state machine, 9 tests)
+- ✅ `WitnessSynergyBus` + `WitnessEventBus` (three-bus architecture, 15 tests)
+- ✅ `WitnessBusManager` (orchestrator with cross-jewel wiring)
+- ✅ Daemon is now pure event publisher (no HTTP coupling)
+- ✅ 72 witness tests passing, mypy clean
+
+**Phase 2 Progress** (Cross-Jewel Awakening):
+- ✅ `Jewel.WITNESS` added to synergy events
+- ✅ 5 new event types: `WITNESS_THOUGHT_CAPTURED`, `WITNESS_GIT_COMMIT`, etc.
+- ✅ `WitnessToBrainHandler` (thoughts → crystals, auto-capture)
+- ✅ `WitnessToGardenHandler` (commits → plot updates)
+- ✅ `wire_witness_to_global_synergy()` bridge function
+- ✅ `register_witness_handlers()` for global bus
+- ✅ 18 new handler tests (90 total witness-related tests)
+- 🔲 CLI handler (`kg witness logs` command)
 
 ---
 
@@ -62,7 +68,7 @@
 | Forge | 85 | Phase 1-4 done. Four creative artisans do real work. |
 | Town/Coalition | 70 | Workshop where agents collaborate. Dialogue complete. |
 | Park | 60 | Westworld where hosts can say no. Scenarios + Consent Debt complete. |
-| **Witness** | 60 | **8TH JEWEL**. Polynomial + Operad + Persistence + Node complete (48 tests). Needs CLI. |
+| **Witness** | 75 | **8TH JEWEL**. Phase 2: Cross-jewel handlers + bus wiring (90 tests). Just needs CLI. |
 | Domain | 0 | Enterprise. Dormant. |
 
 ---
@@ -117,4 +123,4 @@ These are DONE and documented elsewhere:
 
 ---
 
-*Last: 2025-12-19 (CI Safety Phase 2-3: blocking hooks, validation scripts, 76 sentinel tests)*
+*Last: 2025-12-19 (Witness Phase 3: CLI Handler - logs and status commands)*

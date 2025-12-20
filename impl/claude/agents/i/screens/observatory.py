@@ -166,8 +166,7 @@ class GardenCard(Static, HeartbeatMixin):
         with Container(classes="garden-metrics"):
             # Health sparkline (mock data for now)
             health_history = [
-                max(0.0, min(1.0, self.garden.health + (i % 3 - 1) * 0.05))
-                for i in range(14)
+                max(0.0, min(1.0, self.garden.health + (i % 3 - 1) * 0.05)) for i in range(14)
             ]
             self._sparkline = Sparkline(
                 values=health_history,
@@ -387,9 +386,7 @@ class ObservatoryScreen(KgentsScreen):
                 primary_garden = self.gardens[0]
                 orch_state = primary_garden.orchestration_state
                 breath_phase = int(primary_garden.breath_phase * 10)
-                breath_bar = (
-                    "░" * breath_phase + "█" * 4 + "░" * (10 - breath_phase - 4)
-                )
+                breath_bar = "░" * breath_phase + "█" * 4 + "░" * (10 - breath_phase - 4)
 
                 yield Static(
                     f"ORCHESTRATION: ●{orch_state}     "
@@ -462,9 +459,7 @@ class ObservatoryScreen(KgentsScreen):
         else:
             self.notify(f"Agent not found: {agent_id}")
 
-    def update_weather(
-        self, entropy: float, token_rate: float, queue_depth: int
-    ) -> None:
+    def update_weather(self, entropy: float, token_rate: float, queue_depth: int) -> None:
         """
         Update weather widget with system metrics.
 
@@ -528,9 +523,7 @@ class ObservatoryScreen(KgentsScreen):
             return
 
         # Get first agent in focused garden
-        focused_garden = next(
-            (g for g in self.gardens if g.id == self.focused_garden_id), None
-        )
+        focused_garden = next((g for g in self.gardens if g.id == self.focused_garden_id), None)
         if focused_garden and focused_garden.agent_ids:
             first_agent_id = focused_garden.agent_ids[0]
             self.zoom_to_agent(first_agent_id)
@@ -541,9 +534,7 @@ class ObservatoryScreen(KgentsScreen):
         """Open Debugger screen (d)."""
         # Get the first agent from focused garden for debugging context
         if self.focused_garden_id:
-            garden = next(
-                (g for g in self.gardens if g.id == self.focused_garden_id), None
-            )
+            garden = next((g for g in self.gardens if g.id == self.focused_garden_id), None)
             if garden and garden.agent_ids:
                 agent_id = garden.agent_ids[0]
                 from weave import TheWeave

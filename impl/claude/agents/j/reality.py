@@ -115,9 +115,7 @@ class ClassificationOutput:
 # --- Classification Logic ---
 
 
-def _check_budget(
-    budget: float, threshold: float = DEFAULT_CHAOS_THRESHOLD
-) -> Reality | None:
+def _check_budget(budget: float, threshold: float = DEFAULT_CHAOS_THRESHOLD) -> Reality | None:
     """
     Test 1: Budget Check.
 

@@ -228,9 +228,7 @@ class FluxApp(App[None]):
         await self._setup_live_mode()
 
         # Push the flux screen
-        self._flux_screen = FluxScreen(
-            state=self._flux_state, demo_mode=self._demo_mode
-        )
+        self._flux_screen = FluxScreen(state=self._flux_state, demo_mode=self._demo_mode)
         self.push_screen(self._flux_screen)
 
         # Start demo mode timers if enabled

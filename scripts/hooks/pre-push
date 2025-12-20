@@ -100,7 +100,7 @@ echo ""
 section "Mypy (strict, BLOCKING)" 2 $TOTAL_STEPS
 
 cd "$REPO_ROOT/impl/claude"
-MYPY_OUTPUT=$(uv run mypy --strict --explicit-package-bases agents/ bootstrap/ runtime/ 2>&1)
+MYPY_OUTPUT=$(uv run mypy --strict --explicit-package-bases --parallel-workers 4 agents/ bootstrap/ runtime/ 2>&1)
 MYPY_EXIT=$?
 if [ $MYPY_EXIT -eq 0 ]; then
     success "Type check passed"

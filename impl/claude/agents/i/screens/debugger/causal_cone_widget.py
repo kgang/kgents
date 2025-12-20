@@ -118,21 +118,13 @@ class CausalConeWidget(Widget):
 
             # Add turn type breakdown
             if self._stats.speech_turns > 0:
-                stats_text.append(
-                    f"  Speech: {self._stats.speech_turns}\n", style="green"
-                )
+                stats_text.append(f"  Speech: {self._stats.speech_turns}\n", style="green")
             if self._stats.action_turns > 0:
-                stats_text.append(
-                    f"  Action: {self._stats.action_turns}\n", style="blue"
-                )
+                stats_text.append(f"  Action: {self._stats.action_turns}\n", style="blue")
             if self._stats.thought_turns > 0:
-                stats_text.append(
-                    f"  Thought: {self._stats.thought_turns}\n", style="dim"
-                )
+                stats_text.append(f"  Thought: {self._stats.thought_turns}\n", style="dim")
             if self._stats.yield_turns > 0:
-                stats_text.append(
-                    f"  Yield: {self._stats.yield_turns}\n", style="yellow"
-                )
+                stats_text.append(f"  Yield: {self._stats.yield_turns}\n", style="yellow")
 
             tree.add(stats_text)
 

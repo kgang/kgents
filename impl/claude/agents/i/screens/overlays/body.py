@@ -129,9 +129,7 @@ class BodyOverlay(ModalScreen[None]):
             yield Static(f"─ BODY: {self._agent_name} ─", id="body-header")
             with Vertical(id="body-content"):
                 # Status indicator
-                status_class = (
-                    "status-healthy" if state.is_healthy() else "status-warning"
-                )
+                status_class = "status-healthy" if state.is_healthy() else "status-warning"
                 if state.trauma not in (TraumaLevel.NONE, TraumaLevel.MINOR):
                     status_class = "status-critical"
 

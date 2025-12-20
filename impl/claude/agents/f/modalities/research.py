@@ -175,9 +175,7 @@ class ResearchFlow:
                 self.stats.insights_discovered += 1
 
         # Generate final synthesis
-        leaves = [
-            h for h in self.tree.get_leaves() if h.status != HypothesisStatus.PRUNED
-        ]
+        leaves = [h for h in self.tree.get_leaves() if h.status != HypothesisStatus.PRUNED]
 
         if leaves:
             answer = await self.merge(leaves, self.config.merge_strategy)
@@ -315,9 +313,7 @@ class ResearchFlow:
             hypothesis.add_evidence(evidence)
 
         # Update max depth
-        self.stats.max_depth_reached = max(
-            self.stats.max_depth_reached, hypothesis.depth
-        )
+        self.stats.max_depth_reached = max(self.stats.max_depth_reached, hypothesis.depth)
 
     def _should_branch(self, hypothesis: Hypothesis) -> bool:
         """
@@ -435,9 +431,7 @@ Return alternatives as numbered list.
         for line in lines:
             line = line.strip()
             # Look for numbered items like "1. ...", "1) ...", etc.
-            if line and (
-                line[0].isdigit() or line.startswith("-") or line.startswith("*")
-            ):
+            if line and (line[0].isdigit() or line.startswith("-") or line.startswith("*")):
                 # Remove numbering
                 content = line.lstrip("0123456789.-*) ")
                 if content:
@@ -554,10 +548,7 @@ Return alternatives as numbered list.
             # In full implementation, would combine content too
             avg_confidence = total_conf / len(hypotheses)
             combined_content = "; ".join(
-                h.content
-                for h in sorted(hypotheses, key=lambda h: h.confidence, reverse=True)[
-                    :3
-                ]
+                h.content for h in sorted(hypotheses, key=lambda h: h.confidence, reverse=True)[:3]
             )
 
             return Synthesis(

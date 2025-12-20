@@ -71,9 +71,7 @@ class Subscription:
             current_period_start=datetime.fromtimestamp(
                 stripe_subscription["current_period_start"]
             ),
-            current_period_end=datetime.fromtimestamp(
-                stripe_subscription["current_period_end"]
-            ),
+            current_period_end=datetime.fromtimestamp(stripe_subscription["current_period_end"]),
             cancel_at_period_end=stripe_subscription["cancel_at_period_end"],
             canceled_at=(
                 datetime.fromtimestamp(stripe_subscription["canceled_at"])
@@ -109,9 +107,7 @@ class SubscriptionManagerProtocol(Protocol):
         """Update a subscription."""
         ...
 
-    def cancel_subscription(
-        self, subscription_id: str, at_period_end: bool = True
-    ) -> Subscription:
+    def cancel_subscription(self, subscription_id: str, at_period_end: bool = True) -> Subscription:
         """Cancel a subscription."""
         ...
 
@@ -131,9 +127,7 @@ class SubscriptionManager:
     def __init__(self) -> None:
         """Initialize subscription manager."""
         if not STRIPE_AVAILABLE:
-            raise RuntimeError(
-                "stripe package not installed. Install with: pip install stripe"
-            )
+            raise RuntimeError("stripe package not installed. Install with: pip install stripe")
 
     def get_subscription(self, subscription_id: str) -> Optional[Subscription]:
         """
@@ -204,23 +198,17 @@ class SubscriptionManager:
             current_sub = stripe.Subscription.retrieve(subscription_id)
             items_data = current_sub.get("items", {}).get("data", [])
             if not items_data:
-                raise ValueError(
-                    f"Subscription {subscription_id} has no items to update"
-                )
+                raise ValueError(f"Subscription {subscription_id} has no items to update")
             item_id = items_data[0]["id"]
             update_params["items"] = [{"id": item_id, "price": price_id}]
 
         if metadata is not None:
             update_params["metadata"] = metadata
 
-        stripe_subscription = stripe.Subscription.modify(
-            subscription_id, **update_params
-        )
+        stripe_subscription = stripe.Subscription.modify(subscription_id, **update_params)
         return Subscription.from_stripe(dict(stripe_subscription))
 
-    def cancel_subscription(
-        self, subscription_id: str, at_period_end: bool = True
-    ) -> Subscription:
+    def cancel_subscription(self, subscription_id: str, at_period_end: bool = True) -> Subscription:
         """
         Cancel a subscription.
 

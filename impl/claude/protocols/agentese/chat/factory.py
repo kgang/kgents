@@ -167,9 +167,7 @@ class ChatSessionFactory:
         resolved_config = self._resolve_config(node_path, config)
 
         # Build system prompt
-        system_prompt = await self._build_system_prompt(
-            node_path, observer, resolved_config
-        )
+        system_prompt = await self._build_system_prompt(node_path, observer, resolved_config)
         resolved_config.system_prompt = system_prompt
 
         # Create ChatFlow (if F-gent is available)

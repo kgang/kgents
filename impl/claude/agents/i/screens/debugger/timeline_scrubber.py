@@ -127,9 +127,7 @@ class TimelineScrubber(Widget):
             event = self.weave.monoid.get_event(event_id)
             if event:
                 # Calculate position (0 to width-1)
-                normalized = (
-                    (event.timestamp - min_time) / time_range if time_range > 0 else 0.5
-                )
+                normalized = (event.timestamp - min_time) / time_range if time_range > 0 else 0.5
                 pos = int(normalized * (width - 1))
                 pos = max(0, min(width - 1, pos))
 
@@ -163,9 +161,7 @@ class TimelineScrubber(Widget):
             current_event = self.weave.monoid.get_event(current_event_id)
             if current_event:
                 timeline.append("\nCursor: ", style="bold")
-                timeline.append(
-                    f"{self.cursor_position + 1}/{len(self._event_ids)} ", style="cyan"
-                )
+                timeline.append(f"{self.cursor_position + 1}/{len(self._event_ids)} ", style="cyan")
 
                 # Event info
                 source = getattr(current_event, "source", "unknown")

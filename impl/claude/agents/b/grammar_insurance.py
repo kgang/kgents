@@ -229,14 +229,10 @@ class VolatilityMetrics:
         # Weighted combination of factors
         base_volatility = self.failure_rate * 0.4
         stddev_factor = min(self.failure_rate_stddev * 2, 0.3)  # Cap at 0.3
-        error_diversity = (
-            self.unique_error_types / 10
-        ) * 0.15  # More error types = more volatile
+        error_diversity = (self.unique_error_types / 10) * 0.15  # More error types = more volatile
         trend_factor = 0.15 if self.trend == "degrading" else 0.0
 
-        return min(
-            base_volatility + stddev_factor + error_diversity + trend_factor, 1.0
-        )
+        return min(base_volatility + stddev_factor + error_diversity + trend_factor, 1.0)
 
     @property
     def category(self) -> VolatilityCategory:
@@ -341,9 +337,7 @@ class VolatilityMonitor:
         # Calculate latency variance
         durations = [e.duration_ms for e in window.events]
         avg_duration = sum(durations) / len(durations)
-        latency_variance = sum((d - avg_duration) ** 2 for d in durations) / len(
-            durations
-        )
+        latency_variance = sum((d - avg_duration) ** 2 for d in durations) / len(durations)
 
         # Determine trend
         trend, slope = self._calculate_trend(grammar_id)
@@ -688,9 +682,7 @@ class PremiumCalculator:
 
         # Claims history adjustment
         claims = self.claims_history.get(holder_id, [])
-        recent_claims = [
-            c for c in claims if (datetime.now() - c.failure_timestamp).days < 365
-        ]
+        recent_claims = [c for c in claims if (datetime.now() - c.failure_timestamp).days < 365]
         claims_adjustment = len(recent_claims) * 0.1  # 10% increase per claim
 
         # Volume discount (up to 15% for high coverage)
@@ -705,10 +697,7 @@ class PremiumCalculator:
 
         # Calculate final premium
         raw_premium = (
-            base_rate_tokens
-            * volatility_multiplier
-            * complexity_multiplier
-            * strategy_multiplier
+            base_rate_tokens * volatility_multiplier * complexity_multiplier * strategy_multiplier
         )
 
         adjusted_premium = raw_premium * (
@@ -903,11 +892,7 @@ class GrammarInsurance:
             deductible_tokens=deductible_tokens,
             premium_tokens_per_day=quote.daily_premium_tokens,
             premium_paid_through=datetime.now() + timedelta(days=duration_days),
-            expires_at=(
-                datetime.now() + timedelta(days=duration_days)
-                if not auto_renew
-                else None
-            ),
+            expires_at=(datetime.now() + timedelta(days=duration_days) if not auto_renew else None),
             auto_renew=auto_renew,
         )
 
@@ -1220,9 +1205,7 @@ class PortfolioAnalyzer:
             coverage = policy.coverage_limit_tokens
 
             # Track per-grammar coverage
-            grammar_coverage[grammar_id] = (
-                grammar_coverage.get(grammar_id, 0) + coverage
-            )
+            grammar_coverage[grammar_id] = grammar_coverage.get(grammar_id, 0) + coverage
 
             # Classify if spec available
             if grammar_specs and grammar_id in grammar_specs:
@@ -1268,9 +1251,7 @@ class PortfolioAnalyzer:
             total_daily_premiums=total_premiums,
             regular_coverage=coverage_by_level[ChomskyLevel.REGULAR],
             context_free_coverage=coverage_by_level[ChomskyLevel.CONTEXT_FREE],
-            context_sensitive_coverage=coverage_by_level[
-                ChomskyLevel.CONTEXT_SENSITIVE
-            ],
+            context_sensitive_coverage=coverage_by_level[ChomskyLevel.CONTEXT_SENSITIVE],
             turing_coverage=coverage_by_level[ChomskyLevel.TURING_COMPLETE],
             diversification_score=diversification_score,
             concentration_risk=concentration_risk,

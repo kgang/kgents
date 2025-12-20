@@ -247,9 +247,7 @@ class OutputEnvelope(Generic[T]):
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize for JSON output."""
-        result_dict = (
-            self.result if isinstance(self.result, dict) else {"value": self.result}
-        )
+        result_dict = self.result if isinstance(self.result, dict) else {"value": self.result}
         return {
             "envelope": {
                 "version": self.version,
@@ -312,9 +310,7 @@ class CommandResult(Generic[T]):
                 agent=agent,
                 duration_ms=self.duration_ms,
                 tokens_used=self.budget_status.tokens_used if self.budget_status else 0,
-                entropy_spent=self.budget_status.entropy_spent
-                if self.budget_status
-                else 0.0,
+                entropy_spent=self.budget_status.entropy_spent if self.budget_status else 0.0,
             )
         elif self.error:
             return OutputEnvelope(
