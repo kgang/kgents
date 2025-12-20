@@ -330,3 +330,224 @@ class TestWarpNodesIntegration:
         assert terrace_result.content is not None
         assert "Voice Gate" in voice_result.content
         assert "Terrace" in terrace_result.content
+
+
+# =============================================================================
+# Curate Aspect Tests (WARP Session 6)
+# =============================================================================
+
+
+class TestTerraceNodeCurate:
+    """Tests for brain.terrace.curate aspect (human curation → trust L3)."""
+
+    @pytest.fixture(autouse=True)
+    def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Create isolated store per test."""
+        from services.witness.terrace import TerraceStore
+
+        fresh_store = TerraceStore()
+        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+
+    @pytest.fixture
+    def node(self) -> TerraceNode:
+        """Create TerraceNode instance."""
+        return TerraceNode()
+
+    def test_curate_elevates_trust(self, node: TerraceNode) -> None:
+        """Curating a topic elevates trust to L3."""
+        # Create initial entry
+        node.create(topic="Testing Pattern", content="DI > mocking")
+
+        # Curate it
+        result = node.curate(topic="Testing Pattern", curator="kent", notes="Verified in practice")
+
+        assert result.metadata["curated"] is True
+        assert result.metadata["trust_level"] == "L3"
+        assert result.metadata["curator"] == "kent"
+        assert result.metadata["old_version"] == 1
+        assert result.metadata["new_version"] == 2
+
+    def test_curate_adds_curated_tag(self, node: TerraceNode) -> None:
+        """Curating adds 'curated' tag to the entry."""
+        node.create(topic="Tagged", content="Content", tags=["original"])
+        result = node.curate(topic="Tagged")
+
+        terrace = result.metadata["terrace"]
+        assert "curated" in terrace["tags"]
+        assert "original" in terrace["tags"]
+
+    def test_curate_preserves_content(self, node: TerraceNode) -> None:
+        """Curating preserves the original content."""
+        original_content = "Important learning about composition"
+        node.create(topic="Preserved", content=original_content)
+
+        result = node.curate(topic="Preserved")
+
+        assert result.metadata["terrace"]["content"] == original_content
+
+    def test_curate_missing_topic_returns_error(self, node: TerraceNode) -> None:
+        """Curating non-existent topic returns error."""
+        result = node.curate(topic="NonExistent")
+
+        assert "error" in result.metadata
+        assert result.metadata["error"] == "topic_not_found"
+
+    def test_curate_sets_full_confidence(self, node: TerraceNode) -> None:
+        """Curating sets confidence to 1.0 (full trust)."""
+        # Create with lower confidence
+        node.create(topic="LowConf", content="Test", confidence=0.5)
+
+        result = node.curate(topic="LowConf")
+
+        assert result.metadata["terrace"]["confidence"] == 1.0
+
+    def test_curate_adds_metadata(self, node: TerraceNode) -> None:
+        """Curating adds curation metadata."""
+        node.create(topic="MetadataTest", content="Test")
+        result = node.curate(topic="MetadataTest", curator="alice", notes="Looks good!")
+
+        metadata = result.metadata["terrace"]["metadata"]
+        assert metadata["curated"] is True
+        assert metadata["curator"] == "alice"
+        assert metadata["curation_notes"] == "Looks good!"
+        assert metadata["trust_level"] == "L3"
+
+
+# =============================================================================
+# Crystallize Aspect Tests (WARP Session 6)
+# =============================================================================
+
+
+class TestTerraceNodeCrystallize:
+    """Tests for brain.terrace.crystallize aspect (Brain → Terrace bridge)."""
+
+    @pytest.fixture(autouse=True)
+    def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Create isolated store per test."""
+        from services.witness.terrace import TerraceStore
+
+        fresh_store = TerraceStore()
+        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+
+    @pytest.fixture
+    def node(self) -> TerraceNode:
+        """Create TerraceNode instance."""
+        return TerraceNode()
+
+    @pytest.mark.asyncio
+    async def test_crystallize_missing_crystal_id_returns_error(self, node: TerraceNode) -> None:
+        """Crystallize without crystal_id returns error."""
+        result = await node.crystallize(crystal_id="", topic="Test")
+
+        assert "error" in result.metadata
+        assert result.metadata["error"] == "missing_crystal_id"
+
+    @pytest.mark.asyncio
+    async def test_crystallize_missing_topic_returns_error(self, node: TerraceNode) -> None:
+        """Crystallize without topic returns error."""
+        result = await node.crystallize(crystal_id="crystal-123", topic="")
+
+        assert "error" in result.metadata
+        assert result.metadata["error"] == "missing_topic"
+
+    @pytest.mark.asyncio
+    async def test_crystallize_handles_brain_not_found(self, node: TerraceNode) -> None:
+        """Crystallize handles crystal not found gracefully."""
+        # This will fail because the crystal doesn't exist
+        result = await node.crystallize(crystal_id="nonexistent-123", topic="Test")
+
+        # Should get an error (either crystal_not_found or brain_unavailable)
+        assert "error" in result.metadata
+
+
+# =============================================================================
+# VoiceGate Integration Tests (WARP Session 6)
+# =============================================================================
+
+
+class TestTerraceVoiceGateIntegration:
+    """Tests for VoiceGate integration in Terrace."""
+
+    @pytest.fixture(autouse=True)
+    def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Create isolated store per test."""
+        from services.witness.terrace import TerraceStore
+
+        fresh_store = TerraceStore()
+        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+
+    @pytest.fixture
+    def node(self) -> TerraceNode:
+        """Create TerraceNode instance."""
+        return TerraceNode()
+
+    def test_create_includes_voice_check(self, node: TerraceNode) -> None:
+        """Create includes voice check result in metadata."""
+        result = node.create(
+            topic="Voice Checked",
+            content="Tasteful > feature-complete is our guiding principle.",
+        )
+
+        # Should include voice check
+        assert "voice_check" in result.metadata
+        assert result.metadata["voice_check"]["passed"] is True
+        # Should detect the anchor
+        assert len(result.metadata["voice_check"]["anchors"]) > 0
+
+    def test_create_flags_corporate_speak(self, node: TerraceNode) -> None:
+        """Create flags corporate speak in voice check."""
+        result = node.create(
+            topic="Corporate",
+            content="We need to leverage synergies moving forward.",
+        )
+
+        # Still creates (permissive mode) but flags issues
+        assert result.metadata["created"] is True
+        assert "voice_check" in result.metadata
+        assert result.metadata["voice_check"]["warnings"] > 0
+
+    def test_curate_then_check_voice(self, node: TerraceNode) -> None:
+        """Curated content can be voice-checked separately."""
+        voice_node = VoiceGateNode()
+
+        # Create and curate
+        node.create(topic="Curated Content", content="The Mirror Test matters.")
+        node.curate(topic="Curated Content")
+
+        # Voice check the content
+        result = voice_node.check("The Mirror Test matters.")
+
+        assert result.metadata["passed"] is True
+        assert len(result.metadata["anchors_referenced"]) > 0
+
+
+# =============================================================================
+# Affordance Tests (WARP Session 6)
+# =============================================================================
+
+
+class TestTerraceAffordances:
+    """Tests for new affordances in TerraceNode."""
+
+    @pytest.fixture
+    def node(self) -> TerraceNode:
+        """Create TerraceNode instance."""
+        return TerraceNode()
+
+    def test_curate_in_affordances(self, node: TerraceNode) -> None:
+        """Curate is included in affordances."""
+        from protocols.agentese.node import AgentMeta
+
+        meta = AgentMeta(name="test", archetype="developer")
+        affordances = node.affordances(meta)
+
+        assert "curate" in affordances
+
+    def test_crystallize_in_affordances(self, node: TerraceNode) -> None:
+        """Crystallize is included in affordances."""
+        from protocols.agentese.node import AgentMeta
+
+        meta = AgentMeta(name="test", archetype="developer")
+        affordances = node.affordances(meta)
+
+        assert "crystallize" in affordances
