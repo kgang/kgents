@@ -557,9 +557,9 @@ class ConductorNode(BaseLogosNode):
         Returns flux running state, subscriber count, monitored event types.
         """
         try:
-            from services.conductor.flux import get_conductor_flux
-            from services.conductor.bus_bridge import is_bridge_active
             from protocols.synergy import SynergyEventType
+            from services.conductor.bus_bridge import is_bridge_active
+            from services.conductor.flux import get_conductor_flux
 
             flux = get_conductor_flux()
 
@@ -605,8 +605,8 @@ class ConductorNode(BaseLogosNode):
         Enables real-time event routing across all CLI v7 phases.
         """
         try:
-            from services.conductor.flux import get_conductor_flux
             from services.conductor.bus_bridge import wire_a2a_to_global_synergy
+            from services.conductor.flux import get_conductor_flux
 
             flux = get_conductor_flux()
             was_running = flux.running
@@ -640,8 +640,8 @@ class ConductorNode(BaseLogosNode):
         Disables real-time event routing.
         """
         try:
-            from services.conductor.flux import get_conductor_flux
             from services.conductor.bus_bridge import unwire_a2a_bridge
+            from services.conductor.flux import get_conductor_flux
 
             flux = get_conductor_flux()
             was_running = flux.running
