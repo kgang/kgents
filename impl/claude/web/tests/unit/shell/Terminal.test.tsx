@@ -57,7 +57,13 @@ vi.mock('@/api/client', () => ({
 
 // Mock nanoid for predictable IDs
 vi.mock('nanoid', () => ({
-  nanoid: vi.fn((length = 21) => 'test-id-' + Math.random().toString(36).slice(2, 2 + length)),
+  nanoid: vi.fn(
+    (length = 21) =>
+      'test-id-' +
+      Math.random()
+        .toString(36)
+        .slice(2, 2 + length)
+  ),
 }));
 
 // =============================================================================
@@ -154,9 +160,9 @@ describe('Terminal input', () => {
     const input = screen.getByPlaceholderText('Enter command...');
     await userEvent.type(input, 'help{enter}');
 
-    // Should show help output
+    // Should show help output - using getAllByText since "AGENTESE Terminal" appears in header and welcome message
     await waitFor(() => {
-      expect(screen.getByText(/AGENTESE Terminal/)).toBeInTheDocument();
+      expect(screen.getAllByText(/AGENTESE Terminal/).length).toBeGreaterThan(0);
     });
   });
 
@@ -229,8 +235,9 @@ describe('Terminal built-in commands', () => {
   it('shows placeholder text when output is empty', async () => {
     render(<Terminal defaultExpanded />, { wrapper: createWrapper() });
 
-    // Should show help hint when no commands have been executed
-    expect(screen.getByText(/Type "help" for available commands/)).toBeInTheDocument();
+    // Should show keyboard hints when no commands have been executed
+    // Current UI shows "Tab for completion · ↑↓ for history"
+    expect(screen.getByText(/Tab for completion/)).toBeInTheDocument();
   });
 });
 

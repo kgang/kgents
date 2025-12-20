@@ -276,7 +276,7 @@ export function useBrainStream({
         try {
           const message = JSON.parse(event.data) as BrainEvent;
           processMessage(message);
-        } catch (err) {
+        } catch (_err) {
           console.warn('[Brain Stream] Failed to parse message:', event.data);
         }
       };

@@ -64,25 +64,18 @@ function detectCapabilities(): DeviceCapabilities | null {
 
   // Get shader precision
   let shaderPrecision: 'lowp' | 'mediump' | 'highp' = 'lowp';
-  const fragmentShaderPrecision = gl.getShaderPrecisionFormat(
-    gl.FRAGMENT_SHADER,
-    gl.HIGH_FLOAT
-  );
+  const fragmentShaderPrecision = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
   if (fragmentShaderPrecision && fragmentShaderPrecision.precision > 0) {
     shaderPrecision = 'highp';
   } else {
-    const mediumPrecision = gl.getShaderPrecisionFormat(
-      gl.FRAGMENT_SHADER,
-      gl.MEDIUM_FLOAT
-    );
+    const mediumPrecision = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
     if (mediumPrecision && mediumPrecision.precision > 0) {
       shaderPrecision = 'mediump';
     }
   }
 
   // Check float texture support
-  const floatTexturesSupported =
-    isWebGL2 || !!gl.getExtension('OES_texture_float');
+  const floatTexturesSupported = isWebGL2 || !!gl.getExtension('OES_texture_float');
 
   // Check anisotropic filtering
   const anisotropyExt =
@@ -90,8 +83,8 @@ function detectCapabilities(): DeviceCapabilities | null {
     gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') ||
     gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
   const anisotropySupported = !!anisotropyExt;
-  const maxAnisotropy = anisotropySupported
-    ? gl.getParameter(anisotropyExt!.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
+  const maxAnisotropy = anisotropyExt
+    ? gl.getParameter(anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
     : 1;
 
   return {
@@ -208,17 +201,13 @@ const LOCAL_STORAGE_KEY = 'kgents-illumination-quality';
  * ```
  */
 export function useIlluminationQuality(): IlluminationQualityResult {
-  const [capabilities, setCapabilities] = useState<DeviceCapabilities | null>(
-    cachedCapabilities
-  );
+  const [capabilities, setCapabilities] = useState<DeviceCapabilities | null>(cachedCapabilities);
   const [battery, setBattery] = useState<BatteryStatus | null>(cachedBattery);
-  const [userOverride, setUserOverride] = useState<IlluminationQuality | null>(
-    () => {
-      if (typeof window === 'undefined') return null;
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return stored as IlluminationQuality | null;
-    }
-  );
+  const [userOverride, setUserOverride] = useState<IlluminationQuality | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return stored as IlluminationQuality | null;
+  });
 
   // Run detection once
   useEffect(() => {

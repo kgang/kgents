@@ -475,7 +475,7 @@ async def _handle_logs(json_output: bool, limit: int, follow: bool, ctx: Any) ->
 
     if follow:
         # Follow mode - like tail -f
-        print(f"   Following log (Ctrl+C to stop)...")
+        print("   Following log (Ctrl+C to stop)...")
         print("─" * 60)
 
         try:

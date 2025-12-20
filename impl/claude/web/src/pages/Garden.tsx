@@ -15,13 +15,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { gardenerApi, GardenStateResponse, TransitionSuggestion } from '@/api/client';
 import { GardenVisualization } from '@/components/garden';
 import type { GardenJSON, TendingVerb, TransitionSuggestionJSON } from '@/reactive/types';
-import {
-  PersonalityLoading,
-  EmpathyError,
-  Breathe,
-  PopOnMount,
-  celebrate,
-} from '@/components/joy';
+import { PersonalityLoading, EmpathyError, Breathe, PopOnMount, celebrate } from '@/components/joy';
 
 type LoadingState = 'loading' | 'loaded' | 'error';
 
@@ -32,7 +26,9 @@ export default function Garden() {
   const [tending, setTending] = useState<string | null>(null); // Tracks active tending operation
 
   // Phase 8: Auto-Inducer state
-  const [transitionSuggestion, setTransitionSuggestion] = useState<TransitionSuggestion | null>(null);
+  const [transitionSuggestion, setTransitionSuggestion] = useState<TransitionSuggestion | null>(
+    null
+  );
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
 
   // Load garden state
@@ -166,7 +162,9 @@ export default function Garden() {
           action="Retry"
           onAction={loadGarden}
           secondaryAction="Go Home"
-          onSecondaryAction={() => window.location.href = '/'}
+          onSecondaryAction={() => {
+            window.location.href = '/';
+          }}
           size="lg"
         />
       </div>

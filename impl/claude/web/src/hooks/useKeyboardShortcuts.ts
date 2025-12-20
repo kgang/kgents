@@ -252,7 +252,7 @@ export function createDefaultShortcuts(handlers: {
         key: String(i),
         contexts: ['global'],
         description: `Select agent ${i}`,
-        handler: () => handlers.onSelectAgent!(i - 1),
+        handler: () => handlers.onSelectAgent?.(i - 1),
       });
     }
   }
@@ -284,26 +284,31 @@ export function useKeyboardShortcuts({
   }, []);
 
   // Register a shortcut
-  const register = useCallback((shortcut: ShortcutDefinition) => {
-    const key = getShortcutKey(shortcut.key, shortcut.modifiers);
-    shortcutsRef.current.set(key, shortcut);
+  const register = useCallback(
+    (shortcut: ShortcutDefinition) => {
+      const key = getShortcutKey(shortcut.key, shortcut.modifiers);
+      shortcutsRef.current.set(key, shortcut);
 
-    // Return unregister function
-    return () => {
-      shortcutsRef.current.delete(key);
-    };
-  }, [getShortcutKey]);
+      // Return unregister function
+      return () => {
+        shortcutsRef.current.delete(key);
+      };
+    },
+    [getShortcutKey]
+  );
 
   // Unregister a shortcut
-  const unregister = useCallback((key: string, modifiers?: Modifiers) => {
-    const mapKey = getShortcutKey(key, modifiers);
-    shortcutsRef.current.delete(mapKey);
-  }, [getShortcutKey]);
+  const unregister = useCallback(
+    (key: string, modifiers?: Modifiers) => {
+      const mapKey = getShortcutKey(key, modifiers);
+      shortcutsRef.current.delete(mapKey);
+    },
+    [getShortcutKey]
+  );
 
   // Get active shortcuts for current context
   const getActiveShortcuts = useCallback(() => {
-    return Array.from(shortcutsRef.current.values())
-      .filter((s) => s.contexts.includes(context));
+    return Array.from(shortcutsRef.current.values()).filter((s) => s.contexts.includes(context));
   }, [context]);
 
   // Get all shortcuts
@@ -320,11 +325,7 @@ export function useKeyboardShortcuts({
 
       // Ignore events from input elements
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
 

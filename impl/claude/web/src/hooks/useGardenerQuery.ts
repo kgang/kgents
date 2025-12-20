@@ -80,7 +80,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
   if (!nodePath) {
     // Fallback: assume last segment is aspect
     const parts = path.split('.');
-    aspect = parts.pop()!;
+    aspect = parts.pop() ?? 'manifest';
     nodePath = parts.join('.');
   }
 
@@ -88,23 +88,20 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
 
   // Only manifest and affordances are GET, everything else is POST
   if (aspect === 'manifest' || aspect === 'affordances') {
-    const response = await apiClient.get<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`
-    );
-    if (response.data.error) {
-      throw new Error(response.data.error);
-    }
-    return response.data.result;
-  } else {
-    const response = await apiClient.post<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`,
-      body ?? {}
-    );
+    const response = await apiClient.get<AgenteseResponse<T>>(`/agentese/${urlPath}/${aspect}`);
     if (response.data.error) {
       throw new Error(response.data.error);
     }
     return response.data.result;
   }
+  const response = await apiClient.post<AgenteseResponse<T>>(
+    `/agentese/${urlPath}/${aspect}`,
+    body ?? {}
+  );
+  if (response.data.error) {
+    throw new Error(response.data.error);
+  }
+  return response.data.result;
 }
 
 // =============================================================================
@@ -158,15 +155,17 @@ export function useGardenerManifest(): QueryResult<ConceptGardenerManifestRespon
  * Fetch active session status.
  * AGENTESE: concept.gardener.session.manifest
  */
-export function useGardenerSession(
-  options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerSessionManifestResponse> {
+export function useGardenerSession(options?: {
+  enabled?: boolean;
+}): QueryResult<ConceptGardenerSessionManifestResponse> {
   const { state, execute, reset } = useAsyncState<ConceptGardenerSessionManifestResponse>();
   const enabled = options?.enabled !== false;
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<ConceptGardenerSessionManifestResponse>('concept.gardener.session.manifest', {}));
+    execute(
+      fetchAgentese<ConceptGardenerSessionManifestResponse>('concept.gardener.session.manifest', {})
+    );
   }, [execute, enabled]);
 
   useEffect(() => {
@@ -189,15 +188,20 @@ export function useGardenerSession(
  * Fetch full polynomial state visualization.
  * AGENTESE: concept.gardener.session.polynomial
  */
-export function useGardenerPolynomial(
-  options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerSessionPolynomialResponse> {
+export function useGardenerPolynomial(options?: {
+  enabled?: boolean;
+}): QueryResult<ConceptGardenerSessionPolynomialResponse> {
   const { state, execute, reset } = useAsyncState<ConceptGardenerSessionPolynomialResponse>();
   const enabled = options?.enabled !== false;
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<ConceptGardenerSessionPolynomialResponse>('concept.gardener.session.polynomial', {}));
+    execute(
+      fetchAgentese<ConceptGardenerSessionPolynomialResponse>(
+        'concept.gardener.session.polynomial',
+        {}
+      )
+    );
   }, [execute, enabled]);
 
   useEffect(() => {
@@ -220,15 +224,20 @@ export function useGardenerPolynomial(
  * Fetch list of recent sessions.
  * AGENTESE: concept.gardener.sessions.manifest
  */
-export function useGardenerSessions(
-  options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerSessionsManifestResponse> {
+export function useGardenerSessions(options?: {
+  enabled?: boolean;
+}): QueryResult<ConceptGardenerSessionsManifestResponse> {
   const { state, execute, reset } = useAsyncState<ConceptGardenerSessionsManifestResponse>();
   const enabled = options?.enabled !== false;
 
   const refetch = useCallback(() => {
     if (!enabled) return;
-    execute(fetchAgentese<ConceptGardenerSessionsManifestResponse>('concept.gardener.sessions.manifest', {}));
+    execute(
+      fetchAgentese<ConceptGardenerSessionsManifestResponse>(
+        'concept.gardener.sessions.manifest',
+        {}
+      )
+    );
   }, [execute, enabled]);
 
   useEffect(() => {
@@ -251,9 +260,9 @@ export function useGardenerSessions(
  * Fetch proactive suggestions for what to do next.
  * AGENTESE: concept.gardener.propose
  */
-export function useGardenerPropose(
-  options?: { enabled?: boolean }
-): QueryResult<ConceptGardenerProposeResponse> {
+export function useGardenerPropose(options?: {
+  enabled?: boolean;
+}): QueryResult<ConceptGardenerProposeResponse> {
   const { state, execute, reset } = useAsyncState<ConceptGardenerProposeResponse>();
   const enabled = options?.enabled !== false;
 
@@ -286,24 +295,38 @@ export function useGardenerPropose(
  * Start a new gardening session.
  * AGENTESE: concept.gardener.session.define
  */
-export function useDefineSession(): MutationResult<ConceptGardenerSessionDefineResponse, ConceptGardenerSessionDefineRequest> {
+export function useDefineSession(): MutationResult<
+  ConceptGardenerSessionDefineResponse,
+  ConceptGardenerSessionDefineRequest
+> {
   const { state, execute } = useAsyncState<ConceptGardenerSessionDefineResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: ConceptGardenerSessionDefineRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<ConceptGardenerSessionDefineResponse>('concept.gardener.session.define', data));
-      if (!result) throw new Error('Failed to define session');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: ConceptGardenerSessionDefineRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<ConceptGardenerSessionDefineResponse>(
+            'concept.gardener.session.define',
+            data
+          )
+        );
+        if (!result) throw new Error('Failed to define session');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: ConceptGardenerSessionDefineRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: ConceptGardenerSessionDefineRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -319,24 +342,38 @@ export function useDefineSession(): MutationResult<ConceptGardenerSessionDefineR
  * Advance session to next phase.
  * AGENTESE: concept.gardener.session.advance
  */
-export function useAdvanceSession(): MutationResult<ConceptGardenerSessionAdvanceResponse, ConceptGardenerSessionAdvanceRequest> {
+export function useAdvanceSession(): MutationResult<
+  ConceptGardenerSessionAdvanceResponse,
+  ConceptGardenerSessionAdvanceRequest
+> {
   const { state, execute } = useAsyncState<ConceptGardenerSessionAdvanceResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: ConceptGardenerSessionAdvanceRequest = {}) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<ConceptGardenerSessionAdvanceResponse>('concept.gardener.session.advance', data));
-      if (!result) throw new Error('Failed to advance session');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: ConceptGardenerSessionAdvanceRequest = {}) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<ConceptGardenerSessionAdvanceResponse>(
+            'concept.gardener.session.advance',
+            data
+          )
+        );
+        if (!result) throw new Error('Failed to advance session');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: ConceptGardenerSessionAdvanceRequest = {}) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: ConceptGardenerSessionAdvanceRequest = {}) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -352,24 +389,35 @@ export function useAdvanceSession(): MutationResult<ConceptGardenerSessionAdvanc
  * Route natural language to AGENTESE path.
  * AGENTESE: concept.gardener.route
  */
-export function useRouteInput(): MutationResult<ConceptGardenerRouteResponse, ConceptGardenerRouteRequest> {
+export function useRouteInput(): MutationResult<
+  ConceptGardenerRouteResponse,
+  ConceptGardenerRouteRequest
+> {
   const { state, execute } = useAsyncState<ConceptGardenerRouteResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: ConceptGardenerRouteRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<ConceptGardenerRouteResponse>('concept.gardener.route', data));
-      if (!result) throw new Error('Failed to route input');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: ConceptGardenerRouteRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<ConceptGardenerRouteResponse>('concept.gardener.route', data)
+        );
+        if (!result) throw new Error('Failed to route input');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: ConceptGardenerRouteRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: ConceptGardenerRouteRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,

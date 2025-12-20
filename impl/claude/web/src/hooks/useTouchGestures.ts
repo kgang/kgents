@@ -107,13 +107,7 @@ export function usePinchZoom(
   ref: RefObject<HTMLElement | null>,
   options: UsePinchZoomOptions = {}
 ): PinchState {
-  const {
-    minScale = 0.5,
-    maxScale = 3,
-    onScaleChange,
-    onPinchStart,
-    onPinchEnd,
-  } = options;
+  const { minScale = 0.5, maxScale = 3, onScaleChange, onPinchStart, onPinchEnd } = options;
 
   const stateRef = useRef<PinchState>({
     isPinching: false,
@@ -168,7 +162,10 @@ export function usePinchZoom(
 
         const currentDistance = getDistance(t1, t2);
         const scaleChange = currentDistance / stateRef.current.initialDistance;
-        const newScale = Math.min(maxScale, Math.max(minScale, initialScaleRef.current * scaleChange));
+        const newScale = Math.min(
+          maxScale,
+          Math.max(minScale, initialScaleRef.current * scaleChange)
+        );
         const center = getCenter(t1, t2);
 
         stateRef.current = {
@@ -216,12 +213,7 @@ export function useLongPress(
   ref: RefObject<HTMLElement | null>,
   options: UseLongPressOptions = {}
 ): LongPressState {
-  const {
-    duration = 500,
-    onLongPress,
-    onStart,
-    onCancel,
-  } = options;
+  const { duration = 500, onLongPress, onStart, onCancel } = options;
 
   const stateRef = useRef<LongPressState>({
     isPressing: false,
@@ -275,7 +267,9 @@ export function useLongPress(
       timerRef.current = setTimeout(() => {
         clearTimers();
         element.classList.remove('pressing');
-        onLongPress?.(stateRef.current.position!);
+        if (stateRef.current.position) {
+          onLongPress?.(stateRef.current.position);
+        }
         stateRef.current = {
           isPressing: false,
           progress: 0,

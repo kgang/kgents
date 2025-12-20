@@ -115,7 +115,7 @@ async function fetchAgentese<T>(path: string, body?: unknown, observer?: string)
   if (!nodePath) {
     // Fallback: assume last segment is aspect
     const parts = path.split('.');
-    aspect = parts.pop()!;
+    aspect = parts.pop() ?? 'manifest';
     nodePath = parts.join('.');
   }
 

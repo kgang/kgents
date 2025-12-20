@@ -89,7 +89,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
   if (!nodePath) {
     // Fallback: assume last segment is aspect
     const parts = path.split('.');
-    aspect = parts.pop()!;
+    aspect = parts.pop() ?? 'manifest';
     nodePath = parts.join('.');
   }
 
@@ -104,7 +104,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
       throw new Error(response.data.error);
     }
     return response.data.result;
-  } else {
+  } 
     const response = await apiClient.post<AgenteseResponse<T>>(
       `/agentese/${urlPath}/${aspect}`,
       body ?? {}
@@ -113,7 +113,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
       throw new Error(response.data.error);
     }
     return response.data.result;
-  }
+  
 }
 
 // =============================================================================

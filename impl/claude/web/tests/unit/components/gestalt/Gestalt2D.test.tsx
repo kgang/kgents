@@ -332,11 +332,13 @@ describe('Gestalt2D', () => {
     expect(screen.getByText('A-')).toBeInTheDocument(); // Overall grade
   });
 
-  it('renders layer cards', () => {
+  it('renders architecture tree (default view)', () => {
     render(withShell(<Gestalt2D topology={mockTopology} />));
 
-    expect(screen.getByText('Protocols')).toBeInTheDocument();
-    expect(screen.getByText('Services')).toBeInTheDocument();
+    // Default view is tree mode which shows "Architecture Tree" header
+    expect(screen.getByText('Architecture Tree')).toBeInTheDocument();
+    // Stats shown: "X modules · Y layers"
+    expect(screen.getByText(/modules/)).toBeInTheDocument();
   });
 
   it('renders violations feed', () => {
@@ -357,11 +359,11 @@ describe('Gestalt2D', () => {
   it('shows module detail when module selected', async () => {
     render(withShell(<Gestalt2D topology={mockTopology} />));
 
-    // Click on a module
-    fireEvent.click(screen.getByText('agentese'));
+    // Click on a module badge
+    fireEvent.click(screen.getByTitle(/agentese.*A\+/i));
 
-    // Module detail should appear
-    expect(screen.getByText('A+')).toBeInTheDocument();
+    // Module detail should appear - grade appears in both badge and detail panel
+    expect(screen.getAllByText('A+').length).toBeGreaterThan(0);
     expect(screen.getByText('Health Grade')).toBeInTheDocument();
   });
 });

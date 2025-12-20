@@ -76,7 +76,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
   if (!nodePath) {
     // Fallback: assume last segment is aspect
     const parts = path.split('.');
-    aspect = parts.pop()!;
+    aspect = parts.pop() ?? 'manifest';
     nodePath = parts.join('.');
   }
 
@@ -84,23 +84,20 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
 
   // Only manifest and affordances are GET, everything else is POST
   if (aspect === 'manifest' || aspect === 'affordances') {
-    const response = await apiClient.get<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`
-    );
-    if (response.data.error) {
-      throw new Error(response.data.error);
-    }
-    return response.data.result;
-  } else {
-    const response = await apiClient.post<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`,
-      body ?? {}
-    );
+    const response = await apiClient.get<AgenteseResponse<T>>(`/agentese/${urlPath}/${aspect}`);
     if (response.data.error) {
       throw new Error(response.data.error);
     }
     return response.data.result;
   }
+  const response = await apiClient.post<AgenteseResponse<T>>(
+    `/agentese/${urlPath}/${aspect}`,
+    body ?? {}
+  );
+  if (response.data.error) {
+    throw new Error(response.data.error);
+  }
+  return response.data.result;
 }
 
 // =============================================================================
@@ -158,9 +155,9 @@ export function useGestaltManifest(): QueryResult<WorldCodebaseManifestResponse>
  * Fetch codebase health metrics.
  * AGENTESE: world.codebase.health
  */
-export function useCodebaseHealth(
-  options?: { enabled?: boolean }
-): QueryResult<WorldCodebaseHealthResponse> {
+export function useCodebaseHealth(options?: {
+  enabled?: boolean;
+}): QueryResult<WorldCodebaseHealthResponse> {
   const { state, execute, reset } = useAsyncState<WorldCodebaseHealthResponse>();
   const enabled = options?.enabled !== false;
 
@@ -189,9 +186,9 @@ export function useCodebaseHealth(
  * Fetch architecture drift violations.
  * AGENTESE: world.codebase.drift
  */
-export function useCodebaseDrift(
-  options?: { enabled?: boolean }
-): QueryResult<WorldCodebaseDriftResponse> {
+export function useCodebaseDrift(options?: {
+  enabled?: boolean;
+}): QueryResult<WorldCodebaseDriftResponse> {
   const { state, execute, reset } = useAsyncState<WorldCodebaseDriftResponse>();
   const enabled = options?.enabled !== false;
 
@@ -220,9 +217,12 @@ export function useCodebaseDrift(
  * Fetch codebase topology for visualization.
  * AGENTESE: world.codebase.topology
  */
-export function useCodebaseTopology(
-  options?: { enabled?: boolean; maxNodes?: number; minHealth?: number; role?: string }
-): QueryResult<WorldCodebaseTopologyResponse> {
+export function useCodebaseTopology(options?: {
+  enabled?: boolean;
+  maxNodes?: number;
+  minHealth?: number;
+  role?: string;
+}): QueryResult<WorldCodebaseTopologyResponse> {
   const { state, execute, reset } = useAsyncState<WorldCodebaseTopologyResponse>();
   const enabled = options?.enabled !== false;
 
@@ -293,24 +293,35 @@ export function useCodebaseModule(
  * Trigger a codebase rescan.
  * AGENTESE: world.codebase.scan
  */
-export function useScanCodebase(): MutationResult<WorldCodebaseScanResponse, WorldCodebaseScanRequest> {
+export function useScanCodebase(): MutationResult<
+  WorldCodebaseScanResponse,
+  WorldCodebaseScanRequest
+> {
   const { state, execute } = useAsyncState<WorldCodebaseScanResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldCodebaseScanRequest = {}) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldCodebaseScanResponse>('world.codebase.scan', data));
-      if (!result) throw new Error('Failed to scan codebase');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldCodebaseScanRequest = {}) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldCodebaseScanResponse>('world.codebase.scan', data)
+        );
+        if (!result) throw new Error('Failed to scan codebase');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldCodebaseScanRequest = {}) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldCodebaseScanRequest = {}) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,

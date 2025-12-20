@@ -195,7 +195,7 @@ export async function setupTouristMocks(page: Page) {
   await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
-    const lod = lodParam ? parseInt(lodParam) : 0;
+    const lod = lodParam ? parseInt(lodParam, 10) : 0;
 
     // Tourists only get LOD 0-1
     if (lod >= 3) {
@@ -256,7 +256,7 @@ export async function setupResidentMocks(page: Page) {
   await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
-    const lod = lodParam ? parseInt(lodParam) : 0;
+    const lod = lodParam ? parseInt(lodParam, 10) : 0;
 
     // Residents get LOD 0-3
     if (lod >= 4) {

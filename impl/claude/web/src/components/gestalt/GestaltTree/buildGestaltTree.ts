@@ -67,7 +67,8 @@ export function buildLayerTree(
     if (!root.has(layer)) {
       root.set(layer, createEmptyNode(layer, layer));
     }
-    const layerNode = root.get(layer)!;
+    const layerNode = root.get(layer);
+    if (!layerNode) continue; // Should never happen due to set above
 
     // If module ID has segments beyond the layer, create intermediate nodes
     // Example: "protocols.agentese.gateway" → [agentese, gateway]
@@ -93,7 +94,9 @@ export function buildLayerTree(
         if (!currentNode.children.has(segment)) {
           currentNode.children.set(segment, createEmptyNode(segment, currentPath));
         }
-        currentNode = currentNode.children.get(segment)!;
+        const nextNode = currentNode.children.get(segment);
+        if (!nextNode) continue; // Should never happen due to set above
+        currentNode = nextNode;
       }
 
       // Insert module as leaf
@@ -144,7 +147,8 @@ export function buildPathTree(
         currentLevel.set(segment, createEmptyNode(segment, currentPath));
       }
 
-      const node = currentLevel.get(segment)!;
+      const node = currentLevel.get(segment);
+      if (!node) continue; // Should never happen due to set above
       currentLevel = node.children;
     }
 

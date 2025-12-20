@@ -167,7 +167,7 @@ test.describe('Route-Path Alignment @contract', () => {
       // Verify AGENTESE path is accessible in page context
       // This depends on how the app exposes the current path
       const currentPath = await page.evaluate(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         return (window as any).__AGENTESE_PATH__ || null;
       });
 
@@ -185,7 +185,7 @@ test.describe('LOD Contract Verification @contract', () => {
     await page.route('**/v1/town/*/citizen/**', async (route) => {
       const url = new URL(route.request().url());
       const lodParam = url.searchParams.get('lod');
-      const lod = lodParam ? parseInt(lodParam) : 0;
+      const lod = lodParam ? parseInt(lodParam, 10) : 0;
 
       const lodResponses: Record<number, object> = {
         0: { name: 'Alice', region: 'workshop', phase: 'WORKING' },

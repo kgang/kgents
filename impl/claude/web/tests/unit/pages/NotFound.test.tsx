@@ -15,20 +15,21 @@ const renderWithRouter = (component: React.ReactNode) => {
 
 describe('NotFound', () => {
   describe('content', () => {
-    it('should render the 404 emoji', () => {
+    it('should render the MapPin icon', () => {
       renderWithRouter(<NotFound />);
-      expect(screen.getByText('🏚️')).toBeInTheDocument();
+      // Uses Lucide MapPin icon (rendered as SVG) instead of emoji
+      expect(document.querySelector('svg')).toBeInTheDocument();
     });
 
     it('should render the title', () => {
       renderWithRouter(<NotFound />);
-      expect(screen.getByText('Lost in the Wilderness')).toBeInTheDocument();
+      expect(screen.getByText('Page Not Found')).toBeInTheDocument();
     });
 
     it('should render the description', () => {
       renderWithRouter(<NotFound />);
       expect(
-        screen.getByText('This path leads nowhere. The town you seek lies elsewhere.')
+        screen.getByText('This page does not exist. Check the URL or navigate home.')
       ).toBeInTheDocument();
     });
 
@@ -41,16 +42,16 @@ describe('NotFound', () => {
   describe('navigation links', () => {
     it('should have a link to home', () => {
       renderWithRouter(<NotFound />);
-      const homeLink = screen.getByRole('link', { name: /return home/i });
+      const homeLink = screen.getByRole('link', { name: /go home/i });
       expect(homeLink).toBeInTheDocument();
       expect(homeLink).toHaveAttribute('href', '/');
     });
 
-    it('should have a link to demo town', () => {
+    it('should have a link to cockpit', () => {
       renderWithRouter(<NotFound />);
-      const demoLink = screen.getByRole('link', { name: /visit demo town/i });
-      expect(demoLink).toBeInTheDocument();
-      expect(demoLink).toHaveAttribute('href', '/town/demo');
+      const cockpitLink = screen.getByRole('link', { name: /open cockpit/i });
+      expect(cockpitLink).toBeInTheDocument();
+      expect(cockpitLink).toHaveAttribute('href', '/concept.cockpit');
     });
   });
 
@@ -58,7 +59,7 @@ describe('NotFound', () => {
     it('should have heading level 1', () => {
       renderWithRouter(<NotFound />);
       const heading = screen.getByRole('heading', { level: 1 });
-      expect(heading).toHaveTextContent('Lost in the Wilderness');
+      expect(heading).toHaveTextContent('Page Not Found');
     });
   });
 });

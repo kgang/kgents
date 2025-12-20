@@ -19,34 +19,34 @@ vi.mock('@/api/client', () => ({
   townApi: {
     getCitizen: vi.fn().mockResolvedValue({
       citizen: {
-          name: 'Alice',
-          archetype: 'Builder',
-          phase: 'WORKING',
-          region: 'plaza',
-          mood: 'happy',
-          cosmotechnics: 'construction',
-          metaphor: 'Building bridges between ideas',
-          eigenvectors: {
-            warmth: 0.7,
-            curiosity: 0.8,
-            trust: 0.6,
-            creativity: 0.75,
-            patience: 0.65,
-            resilience: 0.8,
-            ambition: 0.7,
-          },
-          relationships: {
-            Bob: 0.8,
-            Charlie: -0.2,
-            Diana: 0.5,
-          },
-          accursed_surplus: 0.123,
-          id: 'alice-123',
-          opacity: {
-            statement: 'The foundation of all things',
-            message: 'In the depths, structure emerges',
-          },
+        name: 'Alice',
+        archetype: 'Builder',
+        phase: 'WORKING',
+        region: 'plaza',
+        mood: 'happy',
+        cosmotechnics: 'construction',
+        metaphor: 'Building bridges between ideas',
+        eigenvectors: {
+          warmth: 0.7,
+          curiosity: 0.8,
+          trust: 0.6,
+          creativity: 0.75,
+          patience: 0.65,
+          resilience: 0.8,
+          ambition: 0.7,
         },
+        relationships: {
+          Bob: 0.8,
+          Charlie: -0.2,
+          Diana: 0.5,
+        },
+        accursed_surplus: 0.123,
+        id: 'alice-123',
+        opacity: {
+          statement: 'The foundation of all things',
+          message: 'In the depths, structure emerges',
+        },
+      },
     }),
   },
 }));
@@ -144,7 +144,8 @@ describe('CitizenPanel', () => {
 
       await waitFor(() => {
         expect(screen.getByText('Phase')).toBeInTheDocument();
-        expect(screen.getByText('WORKING')).toBeInTheDocument();
+        // WORKING appears in both the state machine and info row, so use getAllByText
+        expect(screen.getAllByText('WORKING').length).toBeGreaterThan(0);
       });
     });
 

@@ -59,12 +59,28 @@ vi.mock('@/api/client', () => ({
           },
         };
       }
-      if (url === '/v1/agentese/affordances') {
+      // Handle /agentese/{path}/affordances pattern (AD-009 gateway)
+      if (url.includes('/affordances')) {
+        // Extract path from URL: /agentese/self/memory/affordances -> self.memory
+        const match = url.match(/\/agentese\/(.+)\/affordances/);
+        const pathFromUrl = match ? match[1].replace(/\//g, '.') : 'unknown';
         return {
           data: {
-            path: 'self.memory',
+            path: pathFromUrl,
             affordances: ['manifest', 'capture', 'ghost'],
             observer_archetype: 'developer',
+          },
+        };
+      }
+      // Handle /agentese/{path}/manifest pattern for help()
+      if (url.match(/\/agentese\/.+\/manifest/)) {
+        const match = url.match(/\/agentese\/(.+)\/manifest/);
+        const pathFromUrl = match ? match[1].replace(/\//g, '.') : 'unknown';
+        return {
+          data: {
+            path: pathFromUrl,
+            aspect: 'manifest',
+            data: { description: 'Test manifest data' },
           },
         };
       }
@@ -445,9 +461,9 @@ describe('TerminalService aliases', () => {
     service.removeAlias('temp');
 
     // Get the last call to setItem for aliases
-    const calls = vi.mocked(localStorage.setItem).mock.calls.filter(
-      (call) => call[0] === 'kgents.terminal.aliases'
-    );
+    const calls = vi
+      .mocked(localStorage.setItem)
+      .mock.calls.filter((call) => call[0] === 'kgents.terminal.aliases');
     const lastCall = calls[calls.length - 1];
 
     // Should not contain default aliases (brain is a default)
@@ -524,7 +540,9 @@ describe('TerminalService discovery', () => {
   it('filters by context when API fails', async () => {
     // The mock API doesn't filter, so service falls back to well-known paths
     // when discovery fails or when context filtering is needed
-    vi.mocked((await import('@/api/client')).apiClient.get).mockRejectedValueOnce(new Error('test'));
+    vi.mocked((await import('@/api/client')).apiClient.get).mockRejectedValueOnce(
+      new Error('test')
+    );
 
     const paths = await service.discover('self');
 

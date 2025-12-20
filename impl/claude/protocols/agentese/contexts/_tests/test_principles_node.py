@@ -12,7 +12,6 @@ import pytest
 from protocols.agentese.node import Observer
 from protocols.agentese.registry import get_registry
 
-
 # === Node Discovery ===
 
 
@@ -68,7 +67,7 @@ def observer() -> Observer:
 @pytest.mark.asyncio
 async def test_law_stance_coherence(node, observer: Observer) -> None:
     """Law: manifest(stance=X) returns exactly STANCE_SLICES[X]."""
-    from services.principles import Stance, STANCE_SLICES
+    from services.principles import STANCE_SLICES, Stance
 
     for stance in Stance:
         result = await node.manifest(observer, stance=stance.value)

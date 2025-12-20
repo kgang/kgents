@@ -53,8 +53,12 @@ function createMockResizeEntry(
   return {
     target,
     contentRect: { width, height } as DOMRectReadOnly,
-    borderBoxSize: [{ blockSize: height, inlineSize: width }] as unknown as readonly ResizeObserverSize[],
-    contentBoxSize: [{ blockSize: height, inlineSize: width }] as unknown as readonly ResizeObserverSize[],
+    borderBoxSize: [
+      { blockSize: height, inlineSize: width },
+    ] as unknown as readonly ResizeObserverSize[],
+    contentBoxSize: [
+      { blockSize: height, inlineSize: width },
+    ] as unknown as readonly ResizeObserverSize[],
     devicePixelContentBoxSize: [
       { blockSize: height, inlineSize: width },
     ] as unknown as readonly ResizeObserverSize[],
@@ -284,10 +288,10 @@ describe('Law 3: Physical Constraint Invariance', () => {
     const button = screen.getByLabelText('Action 1');
 
     // Even though we requested 30px, it should be at least 48px
-    expect(parseInt(button.style.minWidth)).toBeGreaterThanOrEqual(
+    expect(parseInt(button.style.minWidth, 10)).toBeGreaterThanOrEqual(
       PHYSICAL_CONSTRAINTS.minTouchTarget
     );
-    expect(parseInt(button.style.minHeight)).toBeGreaterThanOrEqual(
+    expect(parseInt(button.style.minHeight, 10)).toBeGreaterThanOrEqual(
       PHYSICAL_CONSTRAINTS.minTouchTarget
     );
   });
@@ -319,7 +323,7 @@ describe('Law 3: Physical Constraint Invariance', () => {
 
     // Gap should be enforced to minimum even if smaller value passed
     const toolbar = screen.getByRole('toolbar');
-    expect(parseInt(toolbar.style.gap)).toBeGreaterThanOrEqual(
+    expect(parseInt(toolbar.style.gap, 10)).toBeGreaterThanOrEqual(
       PHYSICAL_CONSTRAINTS.minTapSpacing
     );
   });
@@ -485,9 +489,7 @@ describe('Type System: Composition Laws', () => {
   it('should mark horizontal composition as non-preserving with transformation', () => {
     const horizontalLaw = COMPOSITION_LAWS.find((l) => l.operator === '>>');
     expect(horizontalLaw?.preservesUnderProjection).toBe(false);
-    expect(horizontalLaw?.compactTransformation).toBe(
-      'MainContent + FloatingAction(Secondary)'
-    );
+    expect(horizontalLaw?.compactTransformation).toBe('MainContent + FloatingAction(Secondary)');
   });
 });
 
@@ -552,9 +554,7 @@ describe('Edge Cases: Density Breakpoint Boundaries', () => {
 
     testWidths.forEach((width) => {
       const density = getDensityFromWidth(width);
-      expect(densityOrder[density]).toBeGreaterThanOrEqual(
-        densityOrder[prevDensity]
-      );
+      expect(densityOrder[density]).toBeGreaterThanOrEqual(densityOrder[prevDensity]);
       prevWidth = width;
       prevDensity = density;
     });

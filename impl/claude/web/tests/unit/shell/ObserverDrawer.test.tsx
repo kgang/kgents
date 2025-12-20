@@ -266,15 +266,15 @@ describe('ObserverDrawer', () => {
       expect(drawer.className).toContain('fixed');
     });
 
-    it('renders inline on desktop (spacious)', () => {
+    it('renders with fixed positioning on desktop (spacious)', () => {
       mockWindowSize(1200);
       const { container } = render(<ObserverDrawer />, {
         wrapper: createWrapper(),
       });
 
-      // Should have relative positioning class
+      // ObserverDrawer uses fixed positioning at all densities
       const drawer = container.firstChild as HTMLElement;
-      expect(drawer.className).toContain('relative');
+      expect(drawer.className).toContain('fixed');
     });
 
     it('shows backdrop on mobile when expanded', async () => {
@@ -295,10 +295,9 @@ describe('ObserverDrawer', () => {
 
   describe('props', () => {
     it('accepts className prop', () => {
-      const { container } = render(
-        <ObserverDrawer className="custom-class" />,
-        { wrapper: createWrapper() }
-      );
+      const { container } = render(<ObserverDrawer className="custom-class" />, {
+        wrapper: createWrapper(),
+      });
 
       const drawer = container.firstChild as HTMLElement;
       expect(drawer.className).toContain('custom-class');

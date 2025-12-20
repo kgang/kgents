@@ -399,7 +399,7 @@ export async function setupHotDataMocks(page: Page): Promise<void> {
   await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
-    const lod = lodParam ? parseInt(lodParam) : 0;
+    const lod = lodParam ? parseInt(lodParam, 10) : 0;
 
     // Extract citizen name from URL
     const pathParts = url.pathname.split('/');

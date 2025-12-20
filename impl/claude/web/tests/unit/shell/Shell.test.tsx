@@ -77,28 +77,61 @@ vi.mock('@/api/client', () => ({
 
 // Mock nanoid for predictable IDs
 vi.mock('nanoid', () => ({
-  nanoid: vi.fn((length = 21) => 'test-id-' + Math.random().toString(36).slice(2, 2 + length)),
+  nanoid: vi.fn(
+    (length = 21) =>
+      'test-id-' +
+      Math.random()
+        .toString(36)
+        .slice(2, 2 + length)
+  ),
 }));
 
-// Mock framer-motion
+// Mock framer-motion - comprehensive mock for all motion elements
 vi.mock('framer-motion', async () => {
   const actual = await vi.importActual<typeof import('framer-motion')>('framer-motion');
+
+  // Create a simple passthrough component factory
+  const createMotionComponent = (Tag: string) => {
+    return ({ children, ...props }: { children?: React.ReactNode; [key: string]: unknown }) => {
+      // Filter out motion-specific props
+      const filteredProps = Object.fromEntries(
+        Object.entries(props).filter(
+          ([key]) =>
+            ![
+              'initial',
+              'animate',
+              'exit',
+              'transition',
+              'variants',
+              'whileHover',
+              'whileTap',
+              'whileFocus',
+              'whileInView',
+              'layout',
+              'layoutId',
+            ].includes(key)
+        )
+      );
+      const Component = Tag as keyof JSX.IntrinsicElements;
+      return <Component {...filteredProps}>{children}</Component>;
+    };
+  };
+
   return {
     ...actual,
     AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
     motion: {
-      div: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-        <div {...props}>{children}</div>
-      ),
-      p: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-        <p {...props}>{children}</p>
-      ),
-      nav: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-        <nav {...props}>{children}</nav>
-      ),
-      aside: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
-        <aside {...props}>{children}</aside>
-      ),
+      div: createMotionComponent('div'),
+      p: createMotionComponent('p'),
+      span: createMotionComponent('span'),
+      nav: createMotionComponent('nav'),
+      aside: createMotionComponent('aside'),
+      button: createMotionComponent('button'),
+      ul: createMotionComponent('ul'),
+      li: createMotionComponent('li'),
+      header: createMotionComponent('header'),
+      section: createMotionComponent('section'),
+      article: createMotionComponent('article'),
     },
   };
 });

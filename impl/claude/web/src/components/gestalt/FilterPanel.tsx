@@ -313,7 +313,7 @@ export function FilterPanel({
           max={500}
           step={25}
           value={filters.maxNodes}
-          onChange={(e) => onFiltersChange({ maxNodes: parseInt(e.target.value) })}
+          onChange={(e) => onFiltersChange({ maxNodes: parseInt(e.target.value, 10) })}
           className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
         />
       </div>

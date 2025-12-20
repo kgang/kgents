@@ -22,12 +22,20 @@ vi.mock('@/api/client', () => ({
   },
 }));
 
+// Mock useMotionPreferences - must be before the component import
+vi.mock('@/components/joy/useMotionPreferences', () => ({
+  useMotionPreferences: () => ({ shouldAnimate: false, reducedMotion: true }),
+  getMotionPreferences: () => ({ shouldAnimate: false, reducedMotion: true }),
+}));
+
 // Mock celebrate function
 vi.mock('@/components/joy', async () => {
   const actual = await vi.importActual('@/components/joy');
   return {
     ...actual,
     celebrate: vi.fn(),
+    useMotionPreferences: () => ({ shouldAnimate: false, reducedMotion: true }),
+    getMotionPreferences: () => ({ shouldAnimate: false, reducedMotion: true }),
   };
 });
 

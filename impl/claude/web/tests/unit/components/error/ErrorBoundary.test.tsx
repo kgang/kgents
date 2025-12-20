@@ -93,8 +93,8 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      // ElasticPlaceholder shows "Something went wrong" for empty messages
-      expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+      // ErrorBoundary shows "An error occurred" for empty messages
+      expect(screen.getByText('An error occurred')).toBeInTheDocument();
     });
   });
 

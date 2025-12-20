@@ -368,7 +368,8 @@ function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
         });
       }
 
-      const node = currentLevel.get(segment)!;
+      const node = currentLevel.get(segment);
+      if (!node) continue; // Should never happen due to set above, but satisfies TS
 
       // Mark as registered and add metadata for final segment
       if (i === segments.length - 1) {
@@ -619,7 +620,7 @@ function CrownJewelsSection({
                     transition={{ duration: 0.15 }}
                     className="overflow-hidden"
                   >
-                    {jewel.children!.map((child) => {
+                    {jewel.children?.map((child) => {
                       // Check if current path matches this child
                       const childActive =
                         currentPath === child.path || currentPath.startsWith(`${child.path}.`);
@@ -843,7 +844,8 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
         return next;
       });
     }
-  }, [currentPath]); // Intentionally not including expandedPaths to avoid loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- expandedPaths excluded to prevent infinite loops
+  }, [currentPath]);
 
   // Toggle tree node expansion
   const handleToggle = useCallback((path: string) => {

@@ -70,7 +70,7 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
   if (!nodePath) {
     // Fallback: assume last segment is aspect
     const parts = path.split('.');
-    aspect = parts.pop()!;
+    aspect = parts.pop() ?? 'manifest';
     nodePath = parts.join('.');
   }
 
@@ -78,23 +78,20 @@ async function fetchAgentese<T>(path: string, body?: unknown): Promise<T> {
 
   // Only manifest and affordances are GET, everything else is POST
   if (aspect === 'manifest' || aspect === 'affordances') {
-    const response = await apiClient.get<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`
-    );
-    if (response.data.error) {
-      throw new Error(response.data.error);
-    }
-    return response.data.result;
-  } else {
-    const response = await apiClient.post<AgenteseResponse<T>>(
-      `/agentese/${urlPath}/${aspect}`,
-      body ?? {}
-    );
+    const response = await apiClient.get<AgenteseResponse<T>>(`/agentese/${urlPath}/${aspect}`);
     if (response.data.error) {
       throw new Error(response.data.error);
     }
     return response.data.result;
   }
+  const response = await apiClient.post<AgenteseResponse<T>>(
+    `/agentese/${urlPath}/${aspect}`,
+    body ?? {}
+  );
+  if (response.data.error) {
+    throw new Error(response.data.error);
+  }
+  return response.data.result;
 }
 
 // =============================================================================
@@ -148,9 +145,9 @@ export function useWorkshopManifest(): QueryResult<WorldTownWorkshopManifestResp
  * Fetch available builders in the workshop.
  * AGENTESE: world.town.workshop.builders
  */
-export function useWorkshopBuilders(
-  options?: { enabled?: boolean }
-): QueryResult<WorldTownWorkshopBuildersResponse> {
+export function useWorkshopBuilders(options?: {
+  enabled?: boolean;
+}): QueryResult<WorldTownWorkshopBuildersResponse> {
   const { state, execute, reset } = useAsyncState<WorldTownWorkshopBuildersResponse>();
   const enabled = options?.enabled !== false;
 
@@ -183,24 +180,35 @@ export function useWorkshopBuilders(
  * Assign a task to workshop builders.
  * AGENTESE: world.town.workshop.assign
  */
-export function useAssignWorkshopTask(): MutationResult<WorldTownWorkshopAssignResponse, WorldTownWorkshopAssignRequest> {
+export function useAssignWorkshopTask(): MutationResult<
+  WorldTownWorkshopAssignResponse,
+  WorldTownWorkshopAssignRequest
+> {
   const { state, execute } = useAsyncState<WorldTownWorkshopAssignResponse>();
   const [isPending, setIsPending] = useState(false);
 
-  const mutateAsync = useCallback(async (data: WorldTownWorkshopAssignRequest) => {
-    setIsPending(true);
-    try {
-      const result = await execute(fetchAgentese<WorldTownWorkshopAssignResponse>('world.town.workshop.assign', data));
-      if (!result) throw new Error('Failed to assign task');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
+  const mutateAsync = useCallback(
+    async (data: WorldTownWorkshopAssignRequest) => {
+      setIsPending(true);
+      try {
+        const result = await execute(
+          fetchAgentese<WorldTownWorkshopAssignResponse>('world.town.workshop.assign', data)
+        );
+        if (!result) throw new Error('Failed to assign task');
+        return result;
+      } finally {
+        setIsPending(false);
+      }
+    },
+    [execute]
+  );
 
-  const mutate = useCallback((data: WorldTownWorkshopAssignRequest) => {
-    mutateAsync(data).catch(() => {});
-  }, [mutateAsync]);
+  const mutate = useCallback(
+    (data: WorldTownWorkshopAssignRequest) => {
+      mutateAsync(data).catch(() => {});
+    },
+    [mutateAsync]
+  );
 
   return {
     data: state.data,
@@ -223,7 +231,9 @@ export function useAdvanceWorkshop(): MutationResult<WorldTownWorkshopAdvanceRes
   const mutateAsync = useCallback(async () => {
     setIsPending(true);
     try {
-      const result = await execute(fetchAgentese<WorldTownWorkshopAdvanceResponse>('world.town.workshop.advance', {}));
+      const result = await execute(
+        fetchAgentese<WorldTownWorkshopAdvanceResponse>('world.town.workshop.advance', {})
+      );
       if (!result) throw new Error('Failed to advance workshop');
       return result;
     } finally {
@@ -256,7 +266,9 @@ export function useCompleteWorkshop(): MutationResult<WorldTownWorkshopCompleteR
   const mutateAsync = useCallback(async () => {
     setIsPending(true);
     try {
-      const result = await execute(fetchAgentese<WorldTownWorkshopCompleteResponse>('world.town.workshop.complete', {}));
+      const result = await execute(
+        fetchAgentese<WorldTownWorkshopCompleteResponse>('world.town.workshop.complete', {})
+      );
       if (!result) throw new Error('Failed to complete workshop');
       return result;
     } finally {

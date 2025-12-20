@@ -111,7 +111,7 @@ export async function setupObserverMocks(page: Page, tier: ObserverTier): Promis
   await page.route('**/v1/town/*/citizen/**', async (route) => {
     const url = new URL(route.request().url());
     const lodParam = url.searchParams.get('lod');
-    const lod = lodParam ? parseInt(lodParam) : 0;
+    const lod = lodParam ? parseInt(lodParam, 10) : 0;
 
     // Check tier-based LOD access
     if (lod > config.maxLOD) {

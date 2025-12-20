@@ -7,6 +7,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Unmock useMotionPreferences so tests can control it via mockMatchMedia
+vi.unmock('@/components/joy/useMotionPreferences');
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
@@ -149,7 +152,11 @@ describe('Pop', () => {
   });
 
   it('respects disabled prop', () => {
-    const { container } = render(<Pop disabled trigger>Content</Pop>);
+    const { container } = render(
+      <Pop disabled trigger>
+        Content
+      </Pop>
+    );
     const wrapper = container.firstChild;
     expect(wrapper?.nodeName).toBe('DIV');
   });
@@ -197,7 +204,11 @@ describe('Shake', () => {
   });
 
   it('respects disabled prop', () => {
-    const { container } = render(<Shake disabled trigger>Content</Shake>);
+    const { container } = render(
+      <Shake disabled trigger>
+        Content
+      </Shake>
+    );
     const wrapper = container.firstChild;
     expect(wrapper?.nodeName).toBe('DIV');
   });
@@ -331,48 +342,42 @@ describe('EmpathyError', () => {
 
   it('renders network error with Lucide icon', () => {
     render(<EmpathyError type="network" />);
-    expect(screen.getByText('Lost in the void...')).toBeInTheDocument();
+    expect(screen.getByText('Connection Failed')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders notfound error with Lucide icon', () => {
     render(<EmpathyError type="notfound" />);
-    expect(screen.getByText('Nothing here...')).toBeInTheDocument();
+    expect(screen.getByText('Not Found')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders permission error with Lucide icon', () => {
     render(<EmpathyError type="permission" />);
-    expect(screen.getByText("Door's locked...")).toBeInTheDocument();
+    expect(screen.getByText('Access Denied')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders timeout error with Lucide icon', () => {
     render(<EmpathyError type="timeout" />);
-    expect(screen.getByText('Taking too long...')).toBeInTheDocument();
+    expect(screen.getByText('Request Timed Out')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders validation error with Lucide icon', () => {
     render(<EmpathyError type="validation" />);
-    expect(screen.getByText('Something needs fixing...')).toBeInTheDocument();
+    expect(screen.getByText('Invalid Input')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('renders unknown error with Lucide icon', () => {
     render(<EmpathyError type="unknown" />);
-    expect(screen.getByText('Something unexpected...')).toBeInTheDocument();
+    expect(screen.getByText('Unexpected Error')).toBeInTheDocument();
     expect(document.querySelector('svg')).toBeInTheDocument();
   });
 
   it('accepts custom title and subtitle', () => {
-    render(
-      <EmpathyError
-        type="network"
-        title="Custom title"
-        subtitle="Custom subtitle"
-      />
-    );
+    render(<EmpathyError type="network" title="Custom title" subtitle="Custom subtitle" />);
     expect(screen.getByText('Custom title')).toBeInTheDocument();
     expect(screen.getByText('Custom subtitle')).toBeInTheDocument();
   });
@@ -381,14 +386,9 @@ describe('EmpathyError', () => {
     const user = userEvent.setup();
     const handleAction = vi.fn();
 
-    render(
-      <EmpathyError
-        type="network"
-        onAction={handleAction}
-      />
-    );
+    render(<EmpathyError type="network" onAction={handleAction} />);
 
-    const button = screen.getByRole('button', { name: 'Reconnect' });
+    const button = screen.getByRole('button', { name: 'Retry' });
     await user.click(button);
     expect(handleAction).toHaveBeenCalledTimes(1);
   });
@@ -407,12 +407,7 @@ describe('EmpathyError', () => {
   });
 
   it('shows technical details when provided', () => {
-    render(
-      <EmpathyError
-        type="network"
-        details="Error code: 500"
-      />
-    );
+    render(<EmpathyError type="network" details="Error code: 500" />);
 
     expect(screen.getByText('Error code: 500')).toBeInTheDocument();
   });
@@ -431,7 +426,7 @@ describe('InlineError', () => {
 describe('FullPageError', () => {
   it('renders full-page error', () => {
     render(<FullPageError type="notfound" />);
-    expect(screen.getByText('Nothing here...')).toBeInTheDocument();
+    expect(screen.getByText('Not Found')).toBeInTheDocument();
   });
 });
 
