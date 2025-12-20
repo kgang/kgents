@@ -41,14 +41,17 @@ if TYPE_CHECKING:
     from agents.town.sheaf import TownSheaf
     from models.brain import Crystal
     from models.town import CitizenView
+    from protocols.agentese.logos import Logos
     from services.brain import BrainPersistence
     from services.chat import ChatPersistence, ChatServiceFactory, ChatSessionFactory
     from services.coalition import CoalitionPersistence
+    from services.conductor import Summarizer, WindowPersistence
     from services.forge import ForgePersistence
     from services.forge.commission import CommissionService
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
     from services.morpheus.persistence import MorpheusPersistence
+    from services.muse.node import MuseNode
     from services.park import ParkPersistence
     from services.park.scenario_service import ScenarioService
     from services.principles import PrincipleLoader
@@ -57,6 +60,7 @@ if TYPE_CHECKING:
     from services.town.coalition_service import CoalitionService
     from services.town.inhabit_service import InhabitService
     from services.town.workshop_service import WorkshopService
+    from services.witness.crystallization_node import TimeWitnessNode
     from services.witness.persistence import WitnessPersistence
 
 logger = logging.getLogger(__name__)
@@ -252,6 +256,43 @@ async def get_witness_persistence() -> "WitnessPersistence":
     return await get_service("witness_persistence")
 
 
+async def get_muse_node() -> "MuseNode":
+    """
+    Get the MuseNode for pattern detection and contextual whispers.
+
+    The Muse observes Experience Crystals from The Witness and
+    whispers contextual suggestions. It runs passively via kgentsd.
+    """
+    from services.muse import MuseNode
+
+    return MuseNode()
+
+
+async def get_time_witness_node() -> "TimeWitnessNode":
+    """
+    Get the TimeWitnessNode for experience crystallization.
+
+    Complements self.witness (trust-gated agency) with time.witness
+    (experience crystallization).
+    """
+    from services.witness import TimeWitnessNode
+
+    persistence = await get_witness_persistence()
+    return TimeWitnessNode(witness_persistence=persistence)
+
+
+async def get_logos() -> "Logos":
+    """
+    Get the Logos resolver for cross-jewel invocation.
+
+    Used by WitnessNode and WorldWitnessNode for invoking other jewels
+    via AGENTESE paths. Creates a Logos instance with standard configuration.
+    """
+    from protocols.agentese.logos import create_logos
+
+    return create_logos()
+
+
 async def get_scenario_service() -> "ScenarioService":
     """
     Get the ScenarioService for Punchdrunk Park.
@@ -272,6 +313,41 @@ async def get_principle_loader() -> "PrincipleLoader":
     from services.principles import create_principle_loader
 
     return create_principle_loader()
+
+
+# =============================================================================
+# Conductor Crown Jewel (CLI v7 Phase 2: Deep Conversation)
+# =============================================================================
+
+
+async def get_window_persistence() -> "WindowPersistence":
+    """
+    Get the WindowPersistence service for ConversationWindow state.
+
+    CLI v7 Phase 2: Enables window state to survive across sessions.
+    Used by ChatMorpheusComposer for D-gent-backed conversation memory.
+    """
+    from services.conductor import get_window_persistence as get_persistence
+
+    return get_persistence()
+
+
+async def get_summarizer() -> "Summarizer":
+    """
+    Get the Summarizer service for context compression.
+
+    CLI v7 Phase 2: LLM-powered summarization with circadian modulation.
+    Used by ConversationWindow to compress history when context grows.
+    """
+    from services.conductor import create_summarizer
+
+    # Get morpheus for LLM calls
+    try:
+        morpheus = await get_service("morpheus_persistence")
+    except Exception:
+        morpheus = None
+
+    return create_summarizer(morpheus=morpheus)
 
 
 async def get_workshop_service() -> "WorkshopService":
@@ -366,6 +442,8 @@ async def setup_providers() -> None:
     container.register("chat_persistence", get_chat_persistence, singleton=True)
     container.register("chat_factory", get_chat_factory, singleton=True)
     container.register("witness_persistence", get_witness_persistence, singleton=True)
+    container.register("muse_node", get_muse_node, singleton=True)
+    container.register("time_witness_node", get_time_witness_node, singleton=True)
 
     # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
@@ -393,17 +471,39 @@ async def setup_providers() -> None:
     # Principles Service (concept.principles node)
     container.register("principle_loader", get_principle_loader, singleton=True)
 
+    # Conductor Crown Jewel (CLI v7 Phase 2: Deep Conversation)
+    container.register("window_persistence", get_window_persistence, singleton=True)
+    container.register("summarizer", get_summarizer, singleton=True)
+
+    # Logos (cross-jewel invocation)
+    container.register("logos", get_logos, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles)"
+        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles + Conductor)"
     )
 
-    # Import Witness node to trigger @node registration
+    # Import Witness nodes to trigger @node registration
     try:
         from services.witness import WitnessNode  # noqa: F401
 
         logger.info("WitnessNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"WitnessNode not available: {e}")
+
+    try:
+        from services.witness import TimeWitnessNode  # noqa: F401
+
+        logger.info("TimeWitnessNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"TimeWitnessNode not available: {e}")
+
+    # Import Muse node to trigger @node registration
+    try:
+        from services.muse import MuseNode  # noqa: F401
+
+        logger.info("MuseNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"MuseNode not available: {e}")
 
     # Import service nodes to trigger @node registration
     # FAIL-FAST: Crown Jewel import failures are WARNING level (visible)
@@ -469,6 +569,14 @@ async def setup_providers() -> None:
         logger.info("PrinciplesNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"PrinciplesNode not available: {e}")
+
+    # CLI v7 Phase 2: Conductor Node (Deep Conversation)
+    try:
+        from protocols.agentese.contexts.self_conductor import ConductorNode  # noqa: F401
+
+        logger.info("ConductorNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"ConductorNode not available: {e}")
 
     # Wire DifferanceStore to DifferanceTraceNode
     try:
@@ -562,6 +670,9 @@ __all__ = [
     "get_scenario_service",
     # Principles
     "get_principle_loader",
+    # Conductor (CLI v7 Phase 2)
+    "get_window_persistence",
+    "get_summarizer",
     # K-gent Soul
     "get_kgent_soul",
     # Differance Engine
@@ -572,4 +683,10 @@ __all__ = [
     "get_commission_service",
     # 8th Crown Jewel (Witness)
     "get_witness_persistence",
+    # 9th Crown Jewel (Time Witness - Crystallization)
+    "get_time_witness_node",
+    # 10th Crown Jewel (Muse - Pattern Detection)
+    "get_muse_node",
+    # Logos (cross-jewel invocation)
+    "get_logos",
 ]

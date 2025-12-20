@@ -148,6 +148,17 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (garden): {e}")
 
+        # === Witness Crown Jewel nodes ===
+        try:
+            from services.witness import node as witness_node  # noqa: F401  # self.witness.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (witness): {e}")
+
+        try:
+            from .contexts import world_witness  # noqa: F401  # world.witness.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (world.witness): {e}")
+
         # === Concept context nodes ===
         try:
             from .contexts import concept_principles  # noqa: F401  # concept.principles.*
