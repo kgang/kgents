@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/tests-1460%20passing-brightgreen)](../../)
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](../../../pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.12+-blue)](../../../pyproject.toml)
 [![Performance](https://img.shields.io/badge/perf->4k%20renders%2Fsec-orange)](demo/unified_app.py)
 
 Target-agnostic reactive widgets for agent visualization.

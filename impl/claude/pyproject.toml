@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "kgents-runtime"
 version = "1.0.0"
 description = "kgents reference implementation - bootstrap agents and runtime"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = "MIT"
 keywords = ["agents", "ai", "composition", "category-theory"]
 authors = [
