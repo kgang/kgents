@@ -2,7 +2,7 @@
 
 > *"A single mighty oak casts too much shadow. We cultivate a forest where many trees grow."*
 
-**Quick Start**: Read `HYDRATE.md` (root) → `_forest.md` (canopy) → `_focus.md` (human intent)
+**Quick Start**: Read `CLAUDE.md` (root) → `_forest.md` (canopy) → `_focus.md` (human intent)
 
 ---
 
@@ -10,25 +10,23 @@
 
 | File | Purpose | Agent Protocol |
 |------|---------|----------------|
-| `/HYDRATE.md` | The seed — ground yourself here | Read first |
+| `/CLAUDE.md` | Ground yourself here | Read first |
 | `_forest.md` | Canopy — visible state | Regenerate |
 | `_focus.md` | Human intent | **Never overwrite** |
-| `meta.md` | Mycelium — learnings | Append, 50-line cap |
-| `principles.md` | Forest Protocol | Read for coordination |
-| `skills/` | HOW-TO guides | Pull → Apply → Push |
-| `_epilogues/` | Session handoffs | Write at session end |
+| `_bounty.md` | Ideas & friction | Post, claim, resolve |
+| `meta.md` | Mycelium — learnings | Append, 200-line cap |
+| `_archive/` | Completed/superseded work | 30-day deletion |
 
 ---
 
 ## Session Workflow
 
 ```bash
-cat HYDRATE.md             # Ground
-cat plans/_forest.md       # Canopy
-cat plans/_focus.md        # Human intent
-ls plans/_epilogues/       # Previous session
+cat CLAUDE.md               # Ground
+cat plans/_forest.md        # Canopy
+cat plans/_focus.md         # Human intent
 ```
 
 ---
 
-*For full principles: `spec/principles.md`. For forest protocols: `plans/principles.md`.*
+*For full principles: `spec/principles.md`. For skills: `docs/skills/`.*
