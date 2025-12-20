@@ -15,7 +15,7 @@ See: docs/skills/data-bus-integration.md
 """
 
 # Re-export event types from polynomial (canonical location)
-from services.witness.polynomial import AgenteseEvent, FileEvent, GitEvent, TestEvent
+from services.witness.polynomial import AgenteseEvent, CIEvent, FileEvent, GitEvent, TestEvent
 
 # Base classes
 from .base import BaseWatcher, WatcherState, WatcherStats
@@ -44,6 +44,11 @@ from .test_watcher import (
     TestWatcherPlugin,
     create_test_plugin,
     create_test_watcher,
+)
+from .ci import (
+    CIConfig,
+    CIWatcher,
+    create_ci_watcher,
 )
 
 __all__ = [
@@ -75,4 +80,9 @@ __all__ = [
     "AgenteseEvent",
     "parse_agentese_path",
     "create_agentese_watcher",
+    # CI
+    "CIWatcher",
+    "CIConfig",
+    "CIEvent",
+    "create_ci_watcher",
 ]
