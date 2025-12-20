@@ -1,16 +1,20 @@
 ---
 path: warp-servo/master
-status: dormant
-progress: 0
+status: active
+progress: 65
 last_touched: 2025-12-20
-touched_by: claude-opus-4
+touched_by: claude-opus-4-5
 blocking: []
 enables: [warp-servo/phase0-research, warp-servo/phase1-core-primitives, warp-servo/phase2-servo-integration, warp-servo/phase3-jewel-refinement]
 session_notes: |
   Master index for WARP + Servo integration project.
   Constitutional alignment verified. N-Phase skeleton complete.
+  2025-12-20: Status re-assessed. Phase 0 complete, Phase 1 complete, Phase 2 starting.
 phase_ledger:
   PLAN: complete
+  RESEARCH: complete
+  DEVELOP: active
+  IMPLEMENT: active
   REFLECT: pending
 ---
 

@@ -408,6 +408,36 @@ uv run pytest -m "not slow"
 uv run pytest -m "property"
 ```
 
+### Step 4: Domain Markers (Compartmentalized CI)
+
+kgents uses domain markers to run tests in parallel for faster CI feedback:
+
+| Marker | Tests | Purpose |
+|--------|-------|---------|
+| `domain_foundation` | ~179 | Pure category theory (poly, operad, sheaf) |
+| `domain_crown` | ~2,561 | Crown Jewel services |
+| `domain_agentese` | ~3,932 | AGENTESE protocol layer |
+| `domain_cli` | ~1,989 | CLI handlers |
+| `domain_api` | ~595 | API endpoints, billing |
+| `domain_agents_core` | ~3,598 | Core agents (k, town, brain, f, j, flux) |
+| `domain_agents_aux` | ~8,268 | Auxiliary agents |
+| `domain_infra` | ~1,588 | Shared infrastructure |
+
+**Run domain tests locally:**
+```bash
+# Run a specific domain
+uv run pytest -m "domain_foundation" -q
+
+# Combine domains
+uv run pytest -m "domain_foundation or domain_crown" -q
+
+# Exclude slow domain
+uv run pytest -m "not domain_agents_aux and not slow" -q
+```
+
+Domain markers are auto-applied based on file path (see `conftest.py`).
+CI runs 8 domains in parallel, reducing feedback time from ~10 min to ~3 min.
+
 ---
 
 ## Step-by-Step: Property-Based Testing (Hypothesis)

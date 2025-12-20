@@ -8,47 +8,63 @@ Every kgents agent follows a vertical slice architecture where **completeness of
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    PROJECTION SURFACES                          │
-│   CLI  │  TUI  │  Web UI  │  marimo  │  JSON API  │  VR  │ ... │
-└────────┼───────┼──────────┼──────────┼────────────┼──────┼─────┘
-         │       │          │          │            │      │
-         ▼       ▼          ▼          ▼            ▼      ▼
+│  7. PROJECTION SURFACES                                          │
+│     CLI  │  TUI  │  Web UI  │  marimo  │  JSON API  │  VR  │ ... │
+└──────────┼───────┼──────────┼──────────┼────────────┼──────┼─────┘
+           │       │          │          │            │      │
+           ▼       ▼          ▼          ▼            ▼      ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                  CONTAINER FUNCTOR (Main Website)               │
-│           Shallow passthrough for component projections          │
-│           Elastic composition of underlying surfaces             │
+│  6. CONTAINER FUNCTOR (Main Website)                             │
+│     Shallow passthrough for component projections                │
+│     Elastic composition of underlying surfaces                   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              AGENTESE UNIVERSAL PROTOCOL                        │
-│   The protocol IS the API. No explicit routes needed.            │
-│   logos.invoke("self.memory.capture", observer, content=...)     │
-│   → CLI, HTTP, WebSocket, gRPC all collapse to the same path     │
+│  5. AGENTESE UNIVERSAL PROTOCOL                                  │
+│     The protocol IS the API. No explicit routes needed.          │
+│     logos.invoke("self.memory.capture", observer, content=...)   │
+│     → CLI, HTTP, WebSocket, gRPC all collapse to the same path   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      AGENTESE NODE                              │
-│   @node("self.memory")  ─or─  @node("world.town.citizen")       │
-│   Semantic interface: aspects, effects, affordances              │
-│   Makes service available to all projections                     │
+│  4. AGENTESE NODE                                                │
+│     @node("self.memory")  ─or─  @node("world.town.citizen")      │
+│     Semantic interface: aspects, effects, affordances            │
+│     Makes service available to all projections                   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      SERVICE MODULE                             │
-│   services/brain/  ─or─  services/town/  ─or─  services/park/   │
-│   Business logic + TableAdapters + D-gent integration            │
-│   Frontend components live here (if any)                         │
+│  3. SERVICE MODULE (Crown Jewels)                                │
+│     services/brain/  ─or─  services/town/  ─or─  services/park/  │
+│     Business logic + Frontend components + D-gent integration    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    INFRASTRUCTURE LAYER                         │
-│   models/  │  agents/d/  │  agents/poly/  │  LLM clients  │ ... │
-│   Generic, reusable categorical primitives                       │
+│  2. CATEGORICAL INFRASTRUCTURE                                   │
+│     agents/poly/  │  agents/operad/  │  agents/sheaf/  │ ...     │
+│     PolyAgent, Operad, Sheaf — generic categorical primitives    │
 └─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  1. PERSISTENCE LAYER (D-gent)                                   │
+│     StorageProvider: membrane.db, vectors.json, blobs/           │
+│     XDG-compliant paths, graceful degradation, migrations        │
+│     See: spec/agents/d-gent.md, docs/skills/unified-storage.md   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Layer 1 (Persistence)** is the foundation. Every stateful agent ultimately persists through `StorageProvider`:
+
+```python
+from protocols.cli.instance_db import StorageProvider
+
+storage = await StorageProvider.from_config()
+await storage.relational.execute("INSERT INTO shapes ...")
 ```
 
 ## The Insight: Why Adapters Live in Service Modules
@@ -429,10 +445,11 @@ impl/claude/
 ## Related
 
 - `spec/principles.md` §AD-009 - Metaphysical Fullstack Agent
+- `spec/agents/d-gent.md` - D-gent Persistence Layer Spec (Layer 1)
+- `docs/skills/unified-storage.md` - Unified Storage Architecture
 - `spec/protocols/projection.md` - Projection Protocol
 - `spec/protocols/agentese.md` - AGENTESE Universal Protocol
 - `docs/skills/building-agent.md` - Agent construction
-- `plans/d-gent-dual-track-architecture.md` - Persistence architecture
 
 ---
 

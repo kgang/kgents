@@ -14,17 +14,25 @@ Five minutes. No fluff. Let's build.
 
 ```bash
 # Clone the garden
-git clone https://github.com/kgang/kgents.git
+git clone https://github.com/kentgang/kgents.git
 cd kgents
 
-# Grow the environment
+# Grow the environment (uv: https://github.com/astral-sh/uv)
 uv sync
 
 # Verify life
 kg --help   # (or 'kgents --help')
+
+# Run the test suite (11,170+ tests, ~2 min)
+cd impl/claude && uv run pytest -q
+
+# Verify types (strict mypy)
+uv run mypy .
 ```
 
-Requires Python 3.12+.
+**Requirements**: Python 3.12+ | [uv](https://github.com/astral-sh/uv) for dependency management
+
+**If tests fail**: Check Python version (`python --version`). Most failures come from 3.11 or earlier.
 
 ---
 
@@ -127,54 +135,7 @@ Laws, not vibes.
 
 K-gent isn't a chatbot. It's a categorical imperative—a point in personality-space that every response navigates toward.
 
-```bash
-# Interactive dialogue
-kg soul
-
-# Challenge an idea
-kg soul challenge "Should we rewrite this in Rust?"
-
-# Trigger dream cycle (hypnagogia)
-kg soul dream
-```
-
-K-gent has six eigenvectors: aesthetic, categorical, gratitude, heterarchy, generativity, joy. Each shapes how it responds.
-
----
-
-## CLI Commands
-
-### Soul Operations
-
-```bash
-kg soul                  # Enter REFLECT mode
-kg soul challenge "X"    # Dialectic challenge
-kg soul dream            # Trigger hypnagogia
-```
-
-### System Health
-
-```bash
-kg status               # Cortex health dashboard
-kg signal               # Semantic field state (pheromone intensity)
-kg map                  # M-gent holographic map
-kg tithe                # Discharge entropy pressure
-```
-
-### Agent Inspection
-
-```bash
-kg a list               # List archetypes
-kg a inspect Kappa      # Inspect capabilities
-kg a manifest Kappa     # Generate K8s manifests
-```
-
-### Observation
-
-```bash
-kg observe trace        # Execution traces
-kg observe metrics      # Metrics snapshot
-```
+K-gent has six eigenvectors: aesthetic, categorical, gratitude, heterarchy, generativity, joy. Each shapes how it responds. The CLI interface is under active development—for now, K-gent is best accessed via the Python API or web interface.
 
 ---
 
@@ -218,6 +179,45 @@ cd impl/claude/web
 npm install && npm run dev
 # Visit http://localhost:3000
 ```
+
+---
+
+## Common Gotchas (Read Before You Hit Them)
+
+### The DI Silent Skip
+```python
+@node(dependencies=("soul_provider",))  # If not registered → silently skipped
+class MyNode: ...                        # You get: TypeError on first invoke
+
+# Fix: Check services/providers.py has matching registration
+```
+
+### Import-Time Registration
+```python
+# @node decorator runs at import time
+# If your module isn't imported → node doesn't exist
+# Fix: Ensure _import_node_modules() in gateway.py includes your module
+```
+
+### Frontend Type Drift
+```bash
+# Backend changed. Frontend has stale types. Silent failures.
+cd impl/claude/web && npm run typecheck  # Run before every commit
+```
+
+### The Timer Zombie
+```python
+# ❌ Creates zombie processes that outlive their welcome
+while True:
+    await asyncio.sleep(1.0)
+    do_work()
+
+# ✅ Use event-driven Flux instead
+async for event in event_stream:
+    process(event)
+```
+
+**Pro tip**: When something fails silently, check `services/providers.py` first. 90% of cryptic errors are missing DI registrations.
 
 ---
 

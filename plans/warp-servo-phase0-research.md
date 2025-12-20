@@ -13,10 +13,11 @@ session_notes: |
   - docs/research/warp-behavior-audit.md (2 ADAPT, 5 EVOLVE, 2 INVENT)
   - docs/research/existing-leverage.md (70% leverage, 30% build)
   Parallel agent execution used for research chunks.
+  Chunk 5 (SpecGraph) deferred - primitives implemented directly.
 phase_ledger:
   PLAN: complete
   RESEARCH: complete
-  DEVELOP: pending (SpecGraph stubs next)
+  DEVELOP: complete
 entropy:
   planned: 0.1
   spent: 0.08

@@ -72,6 +72,7 @@ If the answer to any is "yes," revise before ending.
 | **Service/Crown Jewel** | `crown-jewel-patterns.md` (14 patterns), `metaphysical-fullstack.md` (architecture) |
 | **Event-driven feature** | `data-bus-integration.md` (DataBus, SynergyBus, EventBus) |
 | **Multi-target rendering** | `projection-target.md` (CLI/TUI/JSON/marimo), `elastic-ui-patterns.md` (responsive) |
+| **Persistence/Storage** | `unified-storage.md` (StorageProvider, XDG paths, CLI sessions) |
 | **Writing specs** | `spec-template.md` (structure), `spec-hygiene.md` (bloat patterns to avoid) |
 
 ### The Skill Composition Formula
@@ -110,6 +111,20 @@ cd impl/claude && uv run pytest -q && uv run mypy .
 cd impl/claude/web && npm run typecheck && npm run lint
 ```
 
+### Storage Configuration
+
+All storage uses Docker Postgres by default:
+
+```bash
+# Start Postgres
+cd impl/claude && docker compose up -d
+
+# Set env and verify (should show "Backend: 🐘 PostgreSQL")
+KGENTS_DATABASE_URL="postgresql+asyncpg://kgents:kgents@localhost:5432/kgents" kg brain status
+```
+
+See `spec/protocols/storage-migration.md` for migration patterns.
+
 ---
 
 ## The Metaphysical Fullstack (AD-009)
@@ -133,6 +148,8 @@ This is the core architectural insight—understand this, understand everything:
 │  2. POLYNOMIAL AGENT      PolyAgent[S, A, B]: state × input → output       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │  1. SHEAF COHERENCE       Local views → global consistency                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  0. PERSISTENCE LAYER     StorageProvider: membrane.db, vectors, blobs     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -140,8 +157,9 @@ This is the core architectural insight—understand this, understand everything:
 - `services/` = Crown Jewels (Brain, Town, Park...) — domain logic, adapters, frontend
 - `agents/` = Infrastructure (PolyAgent, Operad, Flux, D-gent) — categorical primitives
 - **No explicit backend routes** — AGENTESE universal protocol IS the API
+- **Persistence through D-gent** — All state via `StorageProvider` (XDG-compliant)
 
-**Full Pattern**: See `docs/skills/metaphysical-fullstack.md` (320 lines of detailed guidance)
+**Full Pattern**: See `docs/skills/metaphysical-fullstack.md` and `spec/agents/d-gent.md`
 
 ---
 

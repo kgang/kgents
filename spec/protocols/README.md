@@ -22,6 +22,7 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 |----------|---------|------------|--------|
 | [agentese.md](agentese.md) | Verb-first ontology, the protocol IS the API | All | Spec v3.0 |
 | [projection.md](projection.md) | Multi-target rendering (CLI/TUI/Web/marimo) | I, Reactive | Spec v1.0 |
+| [interactive-text.md](interactive-text.md) | Living documents with semantic tokens | I, D, Verification | Spec v1.0 |
 | [umwelt.md](umwelt.md) | Agent-specific world projection | D, F, G | Spec v1.0 |
 | [concept-home.md](concept-home.md) | Habitat Guarantee for AGENTESE paths | I, Reactive | Spec v1.0 |
 | [aspect-form-projection.md](aspect-form-projection.md) | Observer-dependent form rendering | Contract, Observer | Spec v1.0 |

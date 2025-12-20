@@ -65,11 +65,12 @@ widget.to_cli() | widget.to_marimo() | widget.to_json()
 ## Metaphysical Fullstack (AD-009)
 
 ```
-Projection → Container → AGENTESE Protocol → Node → Service → Infrastructure
+Projection → AGENTESE Protocol → Node → Service → Infrastructure → Persistence
 ```
 
-- `services/` = Crown Jewels (domain logic, adapters, frontend)
-- `agents/` = Infrastructure (categorical primitives)
+- Layer 0: `StorageProvider` (membrane.db, XDG-compliant)
+- `agents/` = Infrastructure (PolyAgent, Operad, Sheaf)
+- `services/` = Crown Jewels (Brain, Gardener, Town...)
 - **No explicit backend routes** — AGENTESE IS the API
 
 ---
@@ -84,7 +85,8 @@ Projection → Container → AGENTESE Protocol → Node → Service → Infrastr
 | Forge | 85% | Creative workshop |
 | Town | 70% | Multi-agent simulation |
 | Park | 60% | Westworld with consent |
-| Witness | 90% | Autonomous agency (CLI v7 Phase 4 complete) |
+| Witness | 98% | Autonomous agency (Session 7: TerrariumView, Walk dashboard, 46 tests) |
+| Conductor | 92% | CLI v7 orchestration (Phase 5B: spring-physics cursors, NodeDetailPanel) |
 
 ---
 

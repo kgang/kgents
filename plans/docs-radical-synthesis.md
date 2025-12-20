@@ -237,7 +237,46 @@ Key decisions:
 
 Learning: *"The persona is a garden, not a museum"* — ghosts show that the garden was cultivated, not found.
 
+### Session 6 (2025-12-20) — Warmth Restoration + Developer Focus
+
+Phase 5 compression went too far—50 lines was *minimal* rather than *warm*. Session 6 restored density and developer-focus:
+
+**README.md** (50 → ~180 lines):
+- Restructured "For Developers: Quick Start" with numbered steps
+- Requirements table (Python, uv, Node, Claude CLI, Docker)
+- Step-by-step: Clone → Backend/Frontend → LLM Setup → Postgres → Verify
+- LLM Setup section explaining Morpheus gateway (Claude CLI vs API keys)
+- "What Works Without LLM" table showing feature availability
+- Added "What Makes This Different" section explaining vs. LangChain/AutoGPT/DSPy
+- Added "The Vocabulary" table with 8 core terms and links
+- Added "The Seven Principles" in terse one-line form
+- Added "For AI Agents" section with anti-sausage protocol, voice anchors
+- ASCII art progress bars for Crown Jewels status
+- Removed half-baked CLI command examples — CLI under active development
+
+**docs/README.md** (restructured):
+- "The One Rule" section: Read skills first
+- "Where to Start (By Goal)" table with time estimates
+- "Common Pitfalls" section: Silent Skip, Frontend Type Drift, Import-Time Registration, Timer Zombie
+- "For AI Agents" section with critical learnings
+- "The Composition Formula" showing how skills compose
+
+**docs/quickstart.md**:
+- Expanded install section with test and mypy commands
+- Added "Common Gotchas" section with 4 common failures
+- Fixed GitHub URL (kgang → kentgang)
+- Removed half-baked CLI command examples (soul, brain) — CLI under active development
+
+Key decisions:
+- Dense with information > sparse with elegance
+- Developer concerns enumerated early
+- AI agents get explicit sections
+- Common failures documented before they happen
+- Warmth through directness: *"Skip them and you'll reinvent wheels we already built"*
+
+Learning: Compression serves discovery; density serves productivity. Both are needed.
+
 ---
 
-*Created: 2025-12-20 | Sessions: 5 complete*
+*Created: 2025-12-20 | Sessions: 6 complete*
 *Grounded in: "Daring, bold, creative, opinionated but not gaudy"*

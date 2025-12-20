@@ -115,6 +115,9 @@ Walk = session trace: anchored to Forest plans
 Ritual = lawful workflow: gated by Covenant, verified by laws
 Terrace = presentation layer: observer-dependent rendering
 VoiceGate = trust-gated output: L0-L3 determines expression
+Law 3 at gateway: _invoke_path() emits TraceNode—all AGENTESE paths traced automatically
+TraceNode after invocation: create frozen after completion, not mutable during—simpler
+Fire-and-forget bus: asyncio.create_task for non-blocking SynergyBus events
 ```
 
 ### Witness/Muse (2025-12-20)
@@ -132,6 +135,24 @@ Read-before-edit pattern: cache file content, reject edit if not cached
 FileEditGuard singleton via DI: guards injected, never instantiated
 Synergy events for file ops: FILE_READ, FILE_EDITED enable cross-jewel awareness
 Conductor ≠ kgentsd: Conductor orchestrates sessions; kgentsd watches + acts
+Demo aspect pattern: self.X.demo spawns simulated behavior—validate joy before polish
+CursorBehavior personality: follow_strength + exploration_tendency = heterarchical agents
+BehaviorAnimator: organic noise via sin combination, not just random (feels alive)
+SwarmRole = Behavior × Trust: capabilities from trust, personality from behavior
+A2A via WitnessSynergyBus: messages ARE events—reuse existing infrastructure
+ConductorFlux: unified cross-phase event routing, single subscription point
+SessionWalkBridge: CLI session can have at most one Walk (Law 1), optional binding (Law 3)
+Walk outlives Session: Walk persists after session ends for audit (Law 2)
+RitualNode real stores: Look up Covenant/Offering from global stores, fallback to stubs gracefully
+```
+
+### Servo/TerrariumView (Session 7)
+```
+Graceful degradation: React component null-check props with ?? fallbacks
+Contract tests verify Python JSON matches TypeScript interfaces—catches drift
+time.walk.list returns SceneGraph directly—no intermediate transform needed
+Edge case tests (unicode, empty, long content) found no bugs—converters robust
+WalkStatus styling lookup: fallback to ACTIVE if status unknown
 ```
 
 ---
@@ -159,4 +180,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: 199/200 | Last pruned: 2025-12-20 | Great Pruning complete*
+*Lines: ~212/200 | Last updated: 2025-12-20 | Session 7 complete: TerrariumView foundation*

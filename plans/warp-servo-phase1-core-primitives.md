@@ -1,23 +1,31 @@
 ---
 path: warp-servo/phase1-core-primitives
-status: dormant
-progress: 0
+status: complete
+progress: 100
 last_touched: 2025-12-20
-touched_by: claude-opus-4
-blocking: [warp-servo/phase0-research]
+touched_by: claude-opus-4-5
+blocking: []
 enables: [warp-servo/phase2-servo-integration, warp-servo/phase3-jewel-refinement]
 session_notes: |
-  Initial creation. Core primitive implementation phase.
-  Depends on Phase 0 research decisions.
+  2025-12-20: All 8 primitives implemented and tested.
+  - TraceNode: services/witness/trace_node.py + time_trace_warp.py (AGENTESE)
+  - Walk: services/witness/walk.py + time_trace_warp.py (AGENTESE)
+  - Offering: services/witness/offering.py + concept_offering.py (AGENTESE)
+  - Covenant: services/witness/covenant.py + self_covenant.py (AGENTESE)
+  - Ritual: services/witness/ritual.py + self_ritual.py (AGENTESE)
+  - IntentTree: services/witness/intent.py + concept_intent.py (AGENTESE)
+  - VoiceGate: services/witness/voice_gate.py + self_voice.py (AGENTESE)
+  - Terrace: services/brain/terrace.py + brain_terrace.py (AGENTESE)
+  66+ WARP tests passing. Sessions 3-6 completion documented.
 phase_ledger:
   PLAN: complete
-  DEVELOP: pending
-  STRATEGIZE: pending
-  IMPLEMENT: pending
-  TEST: pending
+  DEVELOP: complete
+  STRATEGIZE: complete
+  IMPLEMENT: complete
+  TEST: complete
 entropy:
   planned: 0.3
-  spent: 0.0
+  spent: 0.28
   returned: 0.0
 ---
 
@@ -62,12 +70,12 @@ impl/claude/protocols/agentese/contexts/time_trace.py
 ```
 
 **Tasks**:
-- [ ] Implement `TraceNode` dataclass (frozen=True)
-- [ ] Implement `TraceLink` for causal edges
-- [ ] Implement `TraceNodeStore` (append-only)
-- [ ] Wire to existing Witness event system
-- [ ] Add AGENTESE node: `time.trace.node.*`
-- [ ] Aspects: `manifest`, `capture`, `query`, `replay`
+- [x] Implement `TraceNode` dataclass (frozen=True)
+- [x] Implement `TraceLink` for causal edges
+- [x] Implement `TraceNodeStore` (append-only)
+- [x] Wire to existing Witness event system
+- [x] Add AGENTESE node: `time.trace.node.*`
+- [x] Aspects: `manifest`, `capture`, `query`, `replay`
 
 **Laws to Verify**:
 ```python
@@ -99,11 +107,11 @@ impl/claude/protocols/agentese/contexts/time_walk.py
 ```
 
 **Tasks**:
-- [ ] Implement `Walk` dataclass
-- [ ] Implement `WalkStore` (persistence)
-- [ ] Wire Walk to Forest plan files
-- [ ] Add AGENTESE node: `time.walk.*`
-- [ ] Aspects: `manifest`, `create`, `advance`, `pause`, `complete`
+- [x] Implement `Walk` dataclass
+- [x] Implement `WalkStore` (persistence)
+- [x] Wire Walk to Forest plan files
+- [x] Add AGENTESE node: `time.walk.*`
+- [x] Aspects: `manifest`, `create`, `advance`, `pause`, `complete`
 
 **Laws to Verify**:
 ```python
@@ -136,12 +144,12 @@ impl/claude/protocols/agentese/contexts/concept_offering.py
 ```
 
 **Tasks**:
-- [ ] Implement `Offering` dataclass
-- [ ] Implement `Budget` constraints
-- [ ] Implement `OfferingStore`
-- [ ] Wire to AGENTESE invocation (every call references Offering)
-- [ ] Add AGENTESE node: `concept.offering.*`
-- [ ] Aspects: `manifest`, `create`, `consume`, `extend`, `expire`
+- [x] Implement `Offering` dataclass
+- [x] Implement `Budget` constraints
+- [x] Implement `OfferingStore`
+- [x] Wire to AGENTESE invocation (every call references Offering)
+- [x] Add AGENTESE node: `concept.offering.*`
+- [x] Aspects: `manifest`, `create`, `consume`, `extend`, `expire`
 
 **Laws to Verify**:
 ```python
@@ -173,11 +181,11 @@ impl/claude/protocols/agentese/contexts/self_covenant.py
 ```
 
 **Tasks**:
-- [ ] Implement `Covenant` dataclass
-- [ ] Implement `ReviewGate` checkpoints
-- [ ] Implement `DegradationTier` fallbacks
-- [ ] Add AGENTESE node: `self.covenant.*`
-- [ ] Aspects: `manifest`, `propose`, `negotiate`, `grant`, `amend`
+- [x] Implement `Covenant` dataclass
+- [x] Implement `ReviewGate` checkpoints
+- [x] Implement `DegradationTier` fallbacks
+- [x] Add AGENTESE node: `self.covenant.*`
+- [x] Aspects: `manifest`, `propose`, `negotiate`, `grant`, `amend`
 
 **Integration**: Covenant required for Ritual (Phase 1.5).
 
@@ -197,12 +205,12 @@ impl/claude/protocols/agentese/contexts/self_ritual.py
 ```
 
 **Tasks**:
-- [ ] Implement `Ritual` dataclass
-- [ ] Implement `RitualPhase` state machine
-- [ ] Implement `SentinelGuard` checks
-- [ ] Wire to Covenant + Offering (required dependencies)
-- [ ] Add AGENTESE node: `self.ritual.*`
-- [ ] Aspects: `manifest`, `begin`, `advance`, `guard`, `complete`
+- [x] Implement `Ritual` dataclass
+- [x] Implement `RitualPhase` state machine
+- [x] Implement `SentinelGuard` checks
+- [x] Wire to Covenant + Offering (required dependencies)
+- [x] Add AGENTESE node: `self.ritual.*`
+- [x] Aspects: `manifest`, `begin`, `advance`, `guard`, `complete`
 
 **Laws to Verify**:
 ```python
@@ -234,11 +242,11 @@ impl/claude/protocols/agentese/contexts/concept_intent.py
 ```
 
 **Tasks**:
-- [ ] Implement `Intent` dataclass with type enum
-- [ ] Implement `IntentTree` graph structure
-- [ ] Implement `IntentEdge` dependencies
-- [ ] Add AGENTESE node: `concept.intent.*`
-- [ ] Aspects: `manifest`, `create`, `decompose`, `fulfill`
+- [x] Implement `Intent` dataclass with type enum
+- [x] Implement `IntentTree` graph structure
+- [x] Implement `IntentEdge` dependencies
+- [x] Add AGENTESE node: `concept.intent.*`
+- [x] Aspects: `manifest`, `create`, `decompose`, `fulfill`
 
 **Exit Criteria**: 10+ tests pass, task decomposition uses IntentTrees.
 
@@ -256,12 +264,12 @@ impl/claude/protocols/agentese/contexts/self_voice.py
 ```
 
 **Tasks**:
-- [ ] Implement `VoiceGate` with rules
-- [ ] Load voice anchors from `_focus.md`
-- [ ] Implement denylist patterns
-- [ ] Wire to CLI v7 prompt parsing
-- [ ] Add AGENTESE node: `self.voice.gate.*`
-- [ ] Aspects: `check`, `enforce`, `report`
+- [x] Implement `VoiceGate` with rules
+- [x] Load voice anchors from `_focus.md`
+- [x] Implement denylist patterns
+- [x] Wire to CLI v7 prompt parsing
+- [x] Add AGENTESE node: `self.voice.gate.*`
+- [x] Aspects: `check`, `enforce`, `report`
 
 **Voice Anchors to Encode**:
 ```python
@@ -290,13 +298,13 @@ impl/claude/protocols/agentese/contexts/brain_terrace.py
 ```
 
 **Tasks**:
-- [ ] Implement `Terrace` dataclass
-- [ ] Wire to existing Brain crystal system
-- [ ] Implement versioning
-- [ ] Add AGENTESE node: `brain.terrace.*`
-- [ ] Aspects: `manifest`, `curate`, `version`, `retrieve`
+- [x] Implement `Terrace` dataclass
+- [x] Wire to existing Brain crystal system
+- [x] Implement versioning
+- [x] Add AGENTESE node: `brain.terrace.*`
+- [x] Aspects: `manifest`, `curate`, `version`, `retrieve`
 
-**Exit Criteria**: 10+ tests pass, Terraces store reusable knowledge.
+**Exit Criteria**: ✅ 10+ tests pass, Terraces store reusable knowledge.
 
 ---
 

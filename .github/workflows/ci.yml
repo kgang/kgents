@@ -175,17 +175,48 @@ jobs:
         run: cd impl/claude && uv run python scripts/validate_path_alignment.py
 
   # ===========================================================================
-  # Tier 2: Unit tests (1-3 min)
-  # Mirrors pre-push hook
+  # Tier 2: Domain-Parallel Unit Tests
+  # ===========================================================================
+  # Design Philosophy:
+  #   - 7 domains run in parallel for fast feedback (~3 min vs ~10 min)
+  #   - Each domain is architecturally distinct (Foundation → Crown → CLI → API)
+  #   - Python 3.13 only for domain matrix (3.12 tested separately below)
+  #   - Domain boundaries match conftest.py _DOMAIN_RULES
+  #   - Multi-agent commits get fast, parallel validation
   # ===========================================================================
   unit-tests:
-    name: Unit Tests (Python ${{ matrix.python-version }})
+    name: Unit Tests (${{ matrix.domain.name }})
     runs-on: ubuntu-latest
     needs: [lint]
     strategy:
       matrix:
-        python-version: ['3.12', '3.13']
-      fail-fast: false
+        domain:
+          - name: foundation
+            marker: domain_foundation
+            timeout: 3  # 179 tests - pure category theory
+          - name: crown-jewels
+            marker: domain_crown
+            timeout: 8  # 2,561 tests - services with business logic
+          - name: agentese
+            marker: domain_agentese
+            timeout: 10  # 3,932 tests - protocol layer (largest protocol domain)
+          - name: cli
+            marker: domain_cli
+            timeout: 6  # 1,989 tests - command handlers
+          - name: api
+            marker: domain_api
+            timeout: 4  # 595 tests - external interface
+          - name: agents-core
+            marker: domain_agents_core
+            timeout: 10  # 3,598 tests - high-traffic agents
+          - name: agents-aux
+            marker: domain_agents_aux
+            timeout: 15  # 8,268 tests - large auxiliary agents
+          - name: infrastructure
+            marker: domain_infra
+            timeout: 5  # 1,588 tests - shared utilities
+      fail-fast: false  # All domains complete even if one fails
+    timeout-minutes: ${{ matrix.domain.timeout }}
     steps:
       - uses: actions/checkout@v6
 
@@ -196,7 +227,38 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run ${{ matrix.domain.name }} tests
+        run: |
+          cd impl/claude
+          uv run pytest -m "${{ matrix.domain.marker }} and not slow and not integration" \
+            --tb=short -q -n auto
+
+  # ===========================================================================
+  # Tier 2b: Python 3.12 Compatibility (single job, all domains)
+  # ===========================================================================
+  # Runs less frequently - full suite on 3.12 for compatibility verification
+  # ===========================================================================
+  unit-tests-compat:
+    name: Unit Tests (Python 3.12 Compat)
+    runs-on: ubuntu-latest
+    needs: [lint]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          prune-cache: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
       - name: Install dependencies
         run: cd impl/claude && uv sync --dev

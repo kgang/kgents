@@ -1,14 +1,15 @@
 ---
 path: warp-servo/phase3-jewel-refinement
-status: dormant
+status: blocked
 progress: 0
 last_touched: 2025-12-20
-touched_by: claude-opus-4
-blocking: [warp-servo/phase1-core-primitives, warp-servo/phase2-servo-integration]
+touched_by: claude-opus-4-5
+blocking: [warp-servo/phase2-servo-integration]
 enables: []
 session_notes: |
-  Initial creation. Crown Jewel B→A grade refinement.
-  Depends on Phase 1 (primitives) and Phase 2 (Servo substrate).
+  Awaiting Phase 2 (Servo substrate) completion.
+  Phase 1 primitives (TraceNode, Walk, Covenant, etc.) are ready.
+  Crown Jewel visual contracts defined but not implemented.
 phase_ledger:
   PLAN: complete
   CROSS-SYNERGIZE: pending

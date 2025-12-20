@@ -1,22 +1,26 @@
 ---
 path: warp-servo/phase2-servo-integration
-status: dormant
-progress: 0
+status: active
+progress: 15
 last_touched: 2025-12-20
-touched_by: claude-opus-4
-blocking: [warp-servo/phase0-research, warp-servo/phase1-core-primitives]
+touched_by: claude-opus-4-5
+blocking: []
 enables: [warp-servo/phase3-jewel-refinement]
 session_notes: |
-  Initial creation. Servo projection substrate implementation.
-  Depends on Phase 0 research (Servo viability) and Phase 1 (primitives).
+  Phase 0/1 blockers resolved. Ready for Servo substrate implementation.
+  Groundwork exists in React Canvas components:
+  - web/src/components/canvas/AgentCanvas.tsx
+  - web/src/hooks/useCanvasLayout.ts
+  - web/src/styles/animations.css (breathing primitives)
+  Decision: React-first implementation with Servo-like abstractions.
 phase_ledger:
   PLAN: complete
-  DEVELOP: pending
+  DEVELOP: active
   IMPLEMENT: pending
   TEST: pending
 entropy:
   planned: 0.4
-  spent: 0.0
+  spent: 0.05
   returned: 0.0
 ---
 
