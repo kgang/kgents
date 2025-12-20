@@ -30,7 +30,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -212,7 +212,7 @@ class BrainPersistence:
             crystal_id=crystal_id,
             content=content,
             summary=summary,
-            captured_at=datetime.utcnow().isoformat(),
+            captured_at=datetime.now(UTC).isoformat(),
             has_embedding=has_embedding,
             storage="postgres"
             if "postgres" in str(self.table.session_factory).lower()

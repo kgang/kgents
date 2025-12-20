@@ -191,7 +191,8 @@ class TestCoalitionNodeManifest:
         observer = MagicMock()
         result = await node.manifest(observer)
 
-        assert isinstance(result, CoalitionManifestRendering)
+        # Use type name comparison for xdist compatibility (class identity differs across workers)
+        assert type(result).__name__ == "CoalitionManifestRendering"
         assert result.summary["total_coalitions"] == 2
 
     @pytest.mark.asyncio

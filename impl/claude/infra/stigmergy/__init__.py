@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class StigmergyStore:
             target='agent-b',
             intensity=0.8,
             payload={'message': 'look here'},
-            emitted_at=datetime.utcnow(),
+            emitted_at=datetime.now(UTC),
         )
         key = await store.emit(p)
 

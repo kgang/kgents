@@ -35,7 +35,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -586,7 +586,7 @@ class WitnessPersistence:
         Returns:
             List of ActionResult objects, newest first
         """
-        since = datetime.utcnow() - timedelta(hours=hours)
+        since = datetime.now(UTC) - timedelta(hours=hours)
 
         async with self.session_factory() as session:
             stmt = (

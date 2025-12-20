@@ -11,7 +11,7 @@ Following Pattern: DI > mocking (from crown-jewel-patterns.md)
 """
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -92,7 +92,7 @@ class TestThoughtOperations:
             content="Noticed commit abc123: Refactored tests",
             source="git",
             tags=("refactor", "tests"),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         result = await persistence.save_thought(thought)
@@ -117,7 +117,7 @@ class TestThoughtOperations:
                 content=f"Thought {i}",
                 source="test",
                 tags=(),
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
             await persistence.save_thought(thought)
             await asyncio.sleep(0.01)  # Ensure different timestamps
@@ -132,11 +132,11 @@ class TestThoughtOperations:
     async def test_get_thoughts_filters_by_source(self, persistence):
         """Thoughts can be filtered by source."""
         await persistence.save_thought(
-            Thought(content="Git observation", source="git", tags=(), timestamp=datetime.utcnow())
+            Thought(content="Git observation", source="git", tags=(), timestamp=datetime.now(UTC))
         )
         await persistence.save_thought(
             Thought(
-                content="Test observation", source="tests", tags=(), timestamp=datetime.utcnow()
+                content="Test observation", source="tests", tags=(), timestamp=datetime.now(UTC)
             )
         )
 
@@ -233,7 +233,7 @@ class TestTrustDecay:
             trust = await session.get(WitnessTrust, trust_id)
             trust.trust_level = 2
             trust.trust_level_raw = 2.0
-            trust.last_active = datetime.utcnow() - timedelta(hours=48)  # 2 days ago
+            trust.last_active = datetime.now(UTC) - timedelta(hours=48)  # 2 days ago
             await session.commit()
 
         # Get trust with decay applied
@@ -257,7 +257,7 @@ class TestTrustDecay:
             trust = await session.get(WitnessTrust, trust_id)
             trust.trust_level = 1
             trust.trust_level_raw = 1.0
-            trust.last_active = datetime.utcnow() - timedelta(days=30)  # 30 days ago
+            trust.last_active = datetime.now(UTC) - timedelta(days=30)  # 30 days ago
             await session.commit()
 
         # Get trust with decay applied
@@ -284,7 +284,7 @@ class TestActionOperations:
             message="Commit created",
             reversible=True,
             inverse_action="git reset HEAD~1",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
 
         result = await persistence.record_action(
@@ -307,7 +307,7 @@ class TestActionOperations:
             message="",
             reversible=True,
             inverse_action=None,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
         )
         await persistence.record_action(action)
 
@@ -328,7 +328,7 @@ class TestActionOperations:
                 message="",
                 reversible=True,
                 inverse_action=None,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
         )
 
@@ -341,7 +341,7 @@ class TestActionOperations:
                 message="",
                 reversible=False,
                 inverse_action=None,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
         )
 
@@ -418,7 +418,7 @@ class TestManifestOperations:
         """Manifest counts match actual records."""
         # Add some data
         await persistence.save_thought(
-            Thought(content="Test", source="test", tags=(), timestamp=datetime.utcnow())
+            Thought(content="Test", source="test", tags=(), timestamp=datetime.now(UTC))
         )
         await persistence.record_action(
             ActionResult(
@@ -428,7 +428,7 @@ class TestManifestOperations:
                 message="",
                 reversible=True,
                 inverse_action=None,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
         )
         await persistence.get_trust_level("test@example.com")

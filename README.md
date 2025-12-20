@@ -3,7 +3,7 @@
 **A specification for tasteful, curated, ethical, joy-inducing agents.**
 
 [![Tests](https://img.shields.io/badge/tests-11,170+-brightgreen)](impl/claude)
-[![Python](https://img.shields.io/badge/python-3.11+-blue)](pyproject.toml)
+[![Python](https://img.shields.io/badge/python-3.12+-blue)](pyproject.toml)
 [![Mypy](https://img.shields.io/badge/mypy-strict-blue)](impl/claude/mypy.ini)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -76,7 +76,7 @@ See [spec/protocols/agentese.md](spec/protocols/agentese.md) for the full specif
 
 ## Installation
 
-Requires Python 3.11+ (tested with 3.12).
+Requires Python 3.12+.
 
 ```bash
 git clone https://github.com/kgang/kgents.git

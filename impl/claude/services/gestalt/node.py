@@ -36,6 +36,7 @@ from protocols.gestalt.analysis import ArchitectureGraph
 
 # Import handler functions from protocols.gestalt
 from protocols.gestalt.handler import (
+    _ensure_scanned,  # Use async version in async context
     _ensure_scanned_sync,
     _get_store,
     handle_codebase_manifest,
@@ -219,7 +220,7 @@ class GestaltNode(BaseLogosNode):
             **kwargs: Aspect-specific arguments
         """
         store = _get_store()
-        _ensure_scanned_sync(store)
+        await _ensure_scanned(store)  # Use async version in async context
 
         if aspect == "health":
             result = handle_health_manifest([], json_output=True, store=store)

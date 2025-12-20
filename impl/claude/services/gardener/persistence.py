@@ -34,7 +34,7 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -255,7 +255,7 @@ class GardenerPersistence:
 
             # Calculate duration
             if garden_session.created_at:
-                duration = int((datetime.utcnow() - garden_session.created_at).total_seconds())
+                duration = int((datetime.now(UTC) - garden_session.created_at).total_seconds())
                 garden_session.duration_seconds = duration
 
             if notes:

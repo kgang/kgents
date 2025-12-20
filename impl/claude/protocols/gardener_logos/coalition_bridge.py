@@ -139,10 +139,10 @@ async def spawn_coalition_from_garden(
 
     # Query for relevant context from Brain (optional, graceful degradation)
     try:
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Query for past tasks with same template

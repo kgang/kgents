@@ -98,6 +98,7 @@ class SynergyEventType(Enum):
     WITNESS_DAEMON_STOPPED = "witness.daemon.stopped"  # Daemon stopped
 
 
+
 class Jewel(Enum):
     """Crown Jewel identifiers."""
 

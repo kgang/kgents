@@ -27,7 +27,7 @@ See: plans/kgentsd-crown-jewel.md
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from protocols.agentese.contract import Contract, Response
@@ -323,7 +323,7 @@ class WitnessNode(BaseLogosNode):
                 content=content,
                 source=source,
                 tags=tuple(tags) if tags else (),
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
 
             thought_result = await self._persistence.save_thought(thought)
@@ -351,13 +351,13 @@ class WitnessNode(BaseLogosNode):
                 return {"error": "action required"}
 
             action_input = ActionResult(
-                action_id=f"action-{datetime.utcnow().timestamp():.0f}",
+                action_id=f"action-{datetime.now(UTC).timestamp():.0f}",
                 action=action_str,
                 success=success,
                 message=message,
                 reversible=reversible,
                 inverse_action=inverse_action,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
             )
 
             action_output = await self._persistence.record_action(

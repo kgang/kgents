@@ -24,7 +24,7 @@ from __future__ import annotations
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import func, select
@@ -326,7 +326,7 @@ class CoalitionPersistence:
                 return False
 
             coalition.status = "dissolved"
-            coalition.dissolved_at = datetime.utcnow()
+            coalition.dissolved_at = datetime.now(UTC)
 
             # Deactivate all members
             members_stmt = select(CoalitionMember).where(
@@ -336,7 +336,7 @@ class CoalitionPersistence:
             members = result.scalars().all()
             for m in members:
                 m.is_active = False
-                m.left_at = datetime.utcnow()
+                m.left_at = datetime.now(UTC)
 
             await session.commit()
             return True
@@ -419,7 +419,7 @@ class CoalitionPersistence:
 
             if coalition.status == "forming" and current_members >= coalition.min_members:
                 coalition.status = "active"
-                coalition.formed_at = datetime.utcnow()
+                coalition.formed_at = datetime.now(UTC)
 
             await session.commit()
 
@@ -444,7 +444,7 @@ class CoalitionPersistence:
                 return False
 
             member.is_active = False
-            member.left_at = datetime.utcnow()
+            member.left_at = datetime.now(UTC)
             await session.commit()
             return True
 
@@ -567,7 +567,7 @@ class CoalitionPersistence:
                 return False
 
             proposal.status = "voting"
-            proposal.voting_started_at = datetime.utcnow()
+            proposal.voting_started_at = datetime.now(UTC)
             await session.commit()
             return True
 
@@ -665,7 +665,7 @@ class CoalitionPersistence:
             if coalition is None:
                 return None
 
-            proposal.voting_ended_at = datetime.utcnow()
+            proposal.voting_ended_at = datetime.now(UTC)
 
             # Determine outcome
             if (

@@ -237,9 +237,10 @@ class TestGestaltReset:
 class TestGestaltCodebase:
     """Tests for gestalt codebase command."""
 
+    @pytest.mark.slow
     def test_codebase_returns_zero(self) -> None:
         """Codebase command returns 0."""
-        # This may take time for first scan
+        # This may take time for first scan - marked slow for CI
         result = cmd_gestalt(["codebase"])
         assert result == 0
 

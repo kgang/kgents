@@ -15,7 +15,7 @@ These models represent:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -391,7 +391,7 @@ class InfraEvent:
             entity_name=involved.get("name", "unknown"),
             entity_namespace=involved.get("namespace"),
             timestamp=datetime.fromisoformat(
-                k8s_event.get("lastTimestamp", datetime.utcnow().isoformat()).replace("Z", "+00:00")
+                k8s_event.get("lastTimestamp", datetime.now(UTC).isoformat()).replace("Z", "+00:00")
             ),
             count=k8s_event.get("count", 1),
             source="kubernetes",
