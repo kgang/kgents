@@ -1,0 +1,202 @@
+name: Integration Tests (With Secrets)
+
+# =============================================================================
+# Integration Tests Requiring External Services
+# =============================================================================
+# This workflow runs tests that require external service credentials:
+#   - PostgreSQL (KGENTS_POSTGRES_URL)
+#   - OpenAI API (OPENAI_API_KEY)
+#   - Stripe (STRIPE_API_KEY)
+#
+# These tests are skipped in the main CI workflow but run here with secrets.
+# Runs on:
+#   - Manual dispatch (workflow_dispatch)
+#   - Nightly schedule (for regression detection)
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_filter:
+        description: 'Test filter expression (e.g., "test_postgres" or "test_openai")'
+        required: false
+        default: ''
+  schedule:
+    # Run nightly at 3 AM UTC
+    - cron: '0 3 * * *'
+
+concurrency:
+  group: integration-tests
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # PostgreSQL Integration Tests
+  # ===========================================================================
+  postgres:
+    name: PostgreSQL Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: kgents
+          POSTGRES_PASSWORD: kgents
+          POSTGRES_DB: kgents_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run PostgreSQL tests
+        run: |
+          cd impl/claude
+          uv run pytest -k "postgres" --tb=short -v
+        env:
+          KGENTS_POSTGRES_URL: postgresql://kgents:kgents@localhost:5432/kgents_test
+
+  # ===========================================================================
+  # OpenAI API Integration Tests
+  # ===========================================================================
+  openai:
+    name: OpenAI API Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run OpenAI tests
+        run: |
+          cd impl/claude
+          uv run pytest -k "openai" --tb=short -v
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  # ===========================================================================
+  # Stripe Integration Tests
+  # ===========================================================================
+  stripe:
+    name: Stripe Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run Stripe tests
+        run: |
+          cd impl/claude
+          uv run pytest -k "stripe" --tb=short -v
+        env:
+          STRIPE_API_KEY: ${{ secrets.STRIPE_TEST_API_KEY }}
+
+  # ===========================================================================
+  # Full External Services Tests (requires all secrets)
+  # ===========================================================================
+  full-integration:
+    name: Full Integration (All Services)
+    runs-on: ubuntu-latest
+    needs: [postgres]
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: kgents
+          POSTGRES_PASSWORD: kgents
+          POSTGRES_DB: kgents_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Run all tier2 tests
+        run: |
+          cd impl/claude
+          uv run pytest -m "tier2" --tb=short -v
+        env:
+          KGENTS_POSTGRES_URL: postgresql://kgents:kgents@localhost:5432/kgents_test
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          STRIPE_API_KEY: ${{ secrets.STRIPE_TEST_API_KEY }}
+
+  # ===========================================================================
+  # Optional Dependencies Tests
+  # ===========================================================================
+  optional-deps:
+    name: Optional Dependencies Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies (including optional)
+        run: |
+          cd impl/claude
+          uv sync --dev
+          uv pip install sentence-transformers marimo faiss-cpu chromadb weave || true
+
+      - name: Run tests that need optional deps
+        run: |
+          cd impl/claude
+          uv run pytest -k "marimo or sentence_transformer or faiss or chromadb or weave" --tb=short -v
+        continue-on-error: true  # Some optional deps may fail to install

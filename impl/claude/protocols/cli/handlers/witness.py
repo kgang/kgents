@@ -50,15 +50,24 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
+# Constants
+# =============================================================================
+
+MAX_LOG_LINES = 10000  # Cap -n to prevent memory issues
+
+
+# =============================================================================
 # AGENTESE Path Mapping
 # =============================================================================
 
 
 WITNESS_SUBCOMMAND_MAP = {
     "manifest": "self.witness.manifest",
+    "status": "self.witness.status",
     "thoughts": "self.witness.thoughts",
     "trust": "self.witness.trust",
     "capture": "self.witness.capture",
+    "logs": None,  # File-based, not AGENTESE
     "start": None,  # Daemon management, not AGENTESE
     "stop": None,  # Daemon management, not AGENTESE
 }
@@ -99,6 +108,9 @@ kg witness - The Witnessing Ghost (8th Crown Jewel)
 Commands:
   kg witness                    Show witness status (alias for manifest)
   kg witness manifest           Show witness health + daemon status
+  kg witness status             Show bus stats + uptime
+  kg witness logs               Tail witness log file
+  kg witness logs -n 50         Show last 50 log lines
   kg witness thoughts           Show recent thought stream
   kg witness thoughts -n 20     Show 20 most recent thoughts
   kg witness trust <email>      Show trust level for git user
@@ -109,7 +121,8 @@ Commands:
 Options:
   --help, -h                    Show this help message
   --json                        Output as JSON
-  -n, --limit N                 Limit results (default: 10)
+  -n, --limit N                 Limit results (default: 10 for logs, 10 for thoughts)
+  -f, --follow                  Follow log output (like tail -f)
 
 Trust Levels:
   L0 READ_ONLY                  Observe only, no suggestions
@@ -119,6 +132,7 @@ Trust Levels:
 
 AGENTESE Paths:
   self.witness.manifest         Witness status
+  self.witness.status           Bus stats + uptime
   self.witness.thoughts         Thought stream
   self.witness.trust            Trust level query
   self.witness.capture          Capture thought
@@ -130,6 +144,9 @@ Daemon:
 
 Examples:
   kg witness                    # Quick status check
+  kg witness status             # Detailed bus stats
+  kg witness logs -n 20         # Recent log entries
+  kg witness logs -f            # Follow log in real-time
   kg witness thoughts           # What has the witness observed?
   kg witness trust user@email   # What trust level does this user have?
   kg witness start              # Start watching
@@ -162,6 +179,10 @@ def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     json_output = "--json" in args
     args = [a for a in args if a != "--json"]
 
+    # Parse follow flag (-f or --follow)
+    follow = "-f" in args or "--follow" in args
+    args = [a for a in args if a not in ("-f", "--follow")]
+
     # Parse limit option (-n or --limit)
     limit = 10
     clean_args = []
@@ -170,9 +191,14 @@ def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         arg = args[i]
         if arg in ("-n", "--limit") and i + 1 < len(args):
             try:
-                limit = int(args[i + 1])
+                parsed_limit = int(args[i + 1])
+                if parsed_limit <= 0:
+                    print("Error: -n must be a positive integer")
+                    return 1
+                limit = min(parsed_limit, MAX_LOG_LINES)
             except ValueError:
-                pass
+                print(f"Error: -n requires an integer, got '{args[i + 1]}'")
+                return 1
             i += 2
         elif arg.startswith("-"):
             i += 1  # Skip other flags
@@ -190,6 +216,7 @@ def cmd_witness(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             clean_args[1:],
             json_output,
             limit=limit,
+            follow=follow,
             ctx=ctx,
         )
     )
@@ -201,13 +228,18 @@ async def _async_route(
     args: list[str],
     json_output: bool,
     limit: int = 10,
+    follow: bool = False,
     ctx: Any = None,
 ) -> int:
     """Route to appropriate witness handler."""
     try:
         match subcommand:
-            case "manifest" | "status":
+            case "manifest":
                 return await _handle_manifest(json_output, ctx)
+            case "status":
+                return await _handle_status(json_output, ctx)
+            case "logs":
+                return await _handle_logs(json_output, limit, follow, ctx)
             case "thoughts":
                 return await _handle_thoughts(args, json_output, limit, ctx)
             case "trust":
@@ -299,6 +331,187 @@ async def _handle_manifest(json_output: bool, ctx: Any) -> int:
         else:
             print("   Run 'kg witness start' to begin observation")
 
+        print()
+
+    return 0
+
+
+# =============================================================================
+# Handler: status (bus stats + uptime)
+# =============================================================================
+
+
+async def _handle_status(json_output: bool, ctx: Any) -> int:
+    """Handle witness status command - show bus stats and uptime."""
+    display_path_header(
+        path="self.witness.status",
+        aspect="manifest",
+        effects=["STATUS_RETRIEVED"],
+    )
+
+    from pathlib import Path
+
+    from services.witness.bus import get_witness_bus_manager
+    from services.witness.daemon import get_daemon_status
+
+    # Get daemon status
+    daemon_status = get_daemon_status()
+
+    # Get bus stats
+    bus_manager = get_witness_bus_manager()
+    bus_stats = bus_manager.stats
+
+    # Calculate uptime from PID file modification time
+    uptime_str = "N/A"
+    if daemon_status["running"]:
+        pid_file = Path(daemon_status["pid_file"])
+        if pid_file.exists():
+            import time
+            from datetime import datetime
+
+            mtime = pid_file.stat().st_mtime
+            uptime_secs = time.time() - mtime
+            hours, remainder = divmod(int(uptime_secs), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            if hours > 0:
+                uptime_str = f"{hours}h {minutes}m {seconds}s"
+            elif minutes > 0:
+                uptime_str = f"{minutes}m {seconds}s"
+            else:
+                uptime_str = f"{seconds}s"
+
+    if json_output:
+        import json
+
+        output = {
+            "daemon": daemon_status,
+            "uptime": uptime_str,
+            "bus_stats": {
+                "synergy_bus": bus_stats.get("synergy_bus", {}),
+                "event_bus": bus_stats.get("event_bus", {}),
+            },
+        }
+        print(json.dumps(output, indent=2))
+    else:
+        daemon_icon = "🟢" if daemon_status["running"] else "🔴"
+        daemon_label = (
+            f"Running (PID: {daemon_status['pid']})" if daemon_status["running"] else "Stopped"
+        )
+
+        synergy_stats = bus_stats.get("synergy_bus", {})
+        event_stats = bus_stats.get("event_bus", {})
+
+        print()
+        print("👁 Witness Status")
+        print("─" * 50)
+        print(f"  Daemon:         {daemon_icon} {daemon_label}")
+        print(f"  Uptime:         {uptime_str}")
+        print()
+        print("📡 SynergyBus (Cross-Jewel)")
+        print("─" * 50)
+        print(f"  Events emitted: {synergy_stats.get('total_emitted', 0)}")
+        print(f"  Topic handlers: {synergy_stats.get('topic_count', 0)}")
+        print(f"  Wildcard subs:  {synergy_stats.get('wildcard_count', 0)}")
+        print(f"  Errors:         {synergy_stats.get('total_errors', 0)}")
+        print()
+        print("📺 EventBus (UI Fan-out)")
+        print("─" * 50)
+        print(f"  Events emitted: {event_stats.get('total_emitted', 0)}")
+        print(f"  Subscribers:    {event_stats.get('subscriber_count', 0)}")
+        print(f"  Dropped:        {event_stats.get('dropped_count', 0)}")
+        print()
+
+        if not daemon_status["running"]:
+            print("💡 Run 'kg witness start' to begin observation")
+            print()
+
+    return 0
+
+
+# =============================================================================
+# Handler: logs
+# =============================================================================
+
+
+async def _handle_logs(json_output: bool, limit: int, follow: bool, ctx: Any) -> int:
+    """Handle witness logs command - tail the witness log file."""
+    import sys
+    import time
+    from pathlib import Path
+
+    log_file = Path.home() / ".kgents" / "witness.log"
+
+    if not log_file.exists():
+        if json_output:
+            import json
+
+            print(json.dumps({"error": "Log file not found", "path": str(log_file)}))
+        else:
+            print()
+            print("📄 No log file found")
+            print(f"   Path: {log_file}")
+            print("   Run 'kg witness start' to create logs")
+            print()
+        return 1
+
+    if json_output:
+        import json
+
+        lines = log_file.read_text().splitlines()
+        tail_lines = lines[-limit:] if len(lines) > limit else lines
+        output = {
+            "path": str(log_file),
+            "total_lines": len(lines),
+            "showing": len(tail_lines),
+            "lines": tail_lines,
+        }
+        print(json.dumps(output, indent=2))
+        return 0
+
+    # Rich output
+    print()
+    print(f"📜 Witness Logs ({log_file})")
+    print("─" * 60)
+
+    if follow:
+        # Follow mode - like tail -f
+        print(f"   Following log (Ctrl+C to stop)...")
+        print("─" * 60)
+
+        try:
+            with open(log_file, "r") as f:
+                # Go to end of file
+                f.seek(0, 2)
+
+                while True:
+                    # Check if file was deleted/rotated
+                    if not log_file.exists():
+                        print()
+                        print("   ⚠️ Log file was deleted or rotated")
+                        break
+                    line = f.readline()
+                    if line:
+                        print(line, end="")
+                    else:
+                        time.sleep(0.5)
+        except KeyboardInterrupt:
+            print()
+            print("─" * 60)
+            print("   Stopped following.")
+            print()
+    else:
+        # Show last N lines
+        lines = log_file.read_text().splitlines()
+        tail_lines = lines[-limit:] if len(lines) > limit else lines
+
+        if not tail_lines:
+            print("   (empty log file)")
+        else:
+            for line in tail_lines:
+                print(f"  {line}")
+
+        print("─" * 60)
+        print(f"   Showing {len(tail_lines)} of {len(lines)} lines")
         print()
 
     return 0

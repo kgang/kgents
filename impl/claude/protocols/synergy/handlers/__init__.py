@@ -19,6 +19,10 @@ Wave 3 handlers (Tier 3 - Full Integration):
 Wave 4 handlers (Gardener-Logos Phase 6):
 - GardenToBrainHandler: Captures garden state changes to Brain
 - GestaltToGardenHandler: Updates garden plots when Gestalt analyzes
+
+Witness handlers (8th Crown Jewel):
+- WitnessToBrainHandler: Captures thoughts and commits to Brain
+- WitnessToGardenHandler: Updates plots when commits detected
 """
 
 from .atelier_brain import AtelierToBrainHandler
@@ -28,6 +32,8 @@ from .domain_brain import DomainToBrainHandler, ParkToBrainHandler
 from .garden_brain import GardenToBrainHandler
 from .gestalt_brain import GestaltToBrainHandler
 from .gestalt_garden import GestaltToGardenHandler
+from .witness_brain import WitnessToBrainHandler
+from .witness_garden import WitnessToGardenHandler
 
 __all__ = [
     # Base
@@ -44,4 +50,7 @@ __all__ = [
     # Wave 4: Garden (Gardener-Logos Phase 6)
     "GardenToBrainHandler",
     "GestaltToGardenHandler",
+    # Witness (8th Crown Jewel)
+    "WitnessToBrainHandler",
+    "WitnessToGardenHandler",
 ]

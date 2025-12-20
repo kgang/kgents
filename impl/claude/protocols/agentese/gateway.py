@@ -79,6 +79,7 @@ def _import_node_modules() -> None:
             self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
+            tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)

@@ -418,7 +418,6 @@ class TestErrorHandling:
 class TestRegistryCompleteness:
     """Verify agent registry is complete and accurate."""
 
-    @pytest.mark.skip(reason="Registry requires update after data-architecture-rewrite")
     def test_all_agent_directories_registered(self) -> None:
         """All agent directories should be in registry."""
         import os
@@ -448,6 +447,18 @@ class TestRegistryCompleteness:
                     "gardener",
                     "testing",
                     "crown",
+                    # Crown Jewel service directories (these are services, not agents)
+                    "design",
+                    "differance",
+                    "domain",
+                    "emergence",
+                    "gallery",
+                    "gestalt",
+                    "park",
+                    # V-gent moved to services/
+                    "v",
+                    # S-gent placeholder
+                    "s",
                 )
                 # Exclude any test-generated agents (scaffolding creates these)
                 and not d.startswith("test")

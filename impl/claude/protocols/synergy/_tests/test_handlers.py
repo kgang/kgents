@@ -163,7 +163,7 @@ class TestGestaltToBrainIntegration:
     """
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Requires Brain logos to be fully configured")
+    @pytest.mark.xfail(reason="Integration test: requires Brain service infrastructure", run=False)
     async def test_actual_capture(self) -> None:
         """Handler actually captures to Brain when enabled."""
         handler = GestaltToBrainHandler(auto_capture=True)

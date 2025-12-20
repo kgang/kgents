@@ -393,8 +393,20 @@ class TestEdgeCases:
         Paths without contracts still get manifest/affordances endpoints.
 
         Not all nodes define contracts - they should still be discoverable.
+        Nested aspects inherit the parent node's manifest (e.g., world.forge.workshop.list
+        inherits manifest from world.forge, not world.forge.workshop).
         """
         spec = generate_openapi_spec()
+
+        def has_ancestor_manifest(path: str, paths: dict) -> bool:
+            """Check if any ancestor path has a manifest endpoint."""
+            parts = path.strip("/").split("/")
+            # Walk up the path hierarchy
+            for i in range(len(parts) - 1, 0, -1):
+                ancestor = "/" + "/".join(parts[:i])
+                if f"{ancestor}/manifest" in paths:
+                    return True
+            return False
 
         # Every AGENTESE path family should have a manifest endpoint
         # (except /discover which is special, and /stream variants)
@@ -405,8 +417,6 @@ class TestEdgeCases:
             # Streaming variants are children of aspect paths, not path families
             if path.endswith("/stream"):
                 # A streaming variant should have a sibling without /stream
-                sibling = path.rsplit("/stream", 1)[0]
-                # Either the sibling exists, or this is an aspect named 'stream'
                 # Both are valid - no manifest check needed
                 continue
 
@@ -414,12 +424,13 @@ class TestEdgeCases:
             path_base = path.rsplit("/", 1)[0] if "/" in path else path
             manifest_path = f"{path_base}/manifest"
 
-            # Either this IS manifest, or manifest sibling exists
+            # Either this IS manifest, or manifest sibling exists, or ancestor has manifest
             is_manifest = path.endswith("/manifest")
             has_manifest_sibling = manifest_path in spec["paths"]
+            has_ancestor = has_ancestor_manifest(path, spec["paths"])
             is_affordances = path.endswith("/affordances")
 
-            assert is_manifest or has_manifest_sibling or is_affordances, (
+            assert is_manifest or has_manifest_sibling or has_ancestor or is_affordances, (
                 f"Path {path} has no manifest endpoint"
             )
 
