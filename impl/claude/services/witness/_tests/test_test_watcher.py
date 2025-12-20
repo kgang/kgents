@@ -31,7 +31,6 @@ from services.witness.watchers.test_watcher import (
     reset_test_event_queue,
 )
 
-
 # =============================================================================
 # Mock Pytest Report
 # =============================================================================

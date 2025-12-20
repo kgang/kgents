@@ -27,7 +27,6 @@ from services.witness.watchers.agentese import (
 )
 from services.witness.watchers.base import WatcherState
 
-
 # =============================================================================
 # Path Parsing Tests
 # =============================================================================

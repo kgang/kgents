@@ -24,33 +24,17 @@ See: spec/principles/node.md for the full specification.
 
 from __future__ import annotations
 
-# === Types ===
-from .types import (
-    # Enums
-    Stance,
-    # Constants
-    STANCE_SLICES,
-    THE_SEVEN_PRINCIPLES,
-    THE_SEVEN_QUESTIONS,
-    PRINCIPLE_NAMES,
-    PRINCIPLE_NUMBERS,
-    AD_TASK_MAPPING,
-    PRINCIPLE_AD_MAPPING,
-    # Core types
-    Principle,
-    # Renderings
-    PrincipleProjection,
-    ConstitutionRendering,
-    MetaPrincipleRendering,
-    OperationalRendering,
-    ADRendering,
-    # Check types
-    PrincipleCheck,
-    CheckResult,
-    # Healing types
-    HealingPrescription,
-    # Teaching types
-    TeachingContent,
+# === Checker ===
+from .checker import (
+    CheckJudgment,
+    PrincipleChecker,
+    create_principle_checker,
+)
+
+# === Healer ===
+from .healer import (
+    PrincipleHealer,
+    create_principle_healer,
 )
 
 # === Loader ===
@@ -61,38 +45,53 @@ from .loader import (
 
 # === Stance ===
 from .stance import (
+    GENESIS_SIGNALS,
+    KRISIS_SIGNALS,
+    POIESIS_SIGNALS,
+    THERAPEIA_SIGNALS,
     detect_stance,
     get_stance_slices,
     get_task_ad_slices,
     stance_from_aspect,
     validate_stance_transition,
-    GENESIS_SIGNALS,
-    POIESIS_SIGNALS,
-    KRISIS_SIGNALS,
-    THERAPEIA_SIGNALS,
-)
-
-# === Checker ===
-from .checker import (
-    PrincipleChecker,
-    CheckJudgment,
-    create_principle_checker,
-)
-
-# === Healer ===
-from .healer import (
-    PrincipleHealer,
-    create_principle_healer,
 )
 
 # === Teacher ===
 from .teacher import (
-    PrincipleTeacher,
-    create_principle_teacher,
     PRINCIPLE_EXAMPLES,
     PRINCIPLE_EXERCISES,
+    PrincipleTeacher,
+    create_principle_teacher,
 )
 
+# === Types ===
+from .types import (
+    AD_TASK_MAPPING,
+    PRINCIPLE_AD_MAPPING,
+    PRINCIPLE_NAMES,
+    PRINCIPLE_NUMBERS,
+    # Constants
+    STANCE_SLICES,
+    THE_SEVEN_PRINCIPLES,
+    THE_SEVEN_QUESTIONS,
+    ADRendering,
+    CheckResult,
+    ConstitutionRendering,
+    # Healing types
+    HealingPrescription,
+    MetaPrincipleRendering,
+    OperationalRendering,
+    # Core types
+    Principle,
+    # Check types
+    PrincipleCheck,
+    # Renderings
+    PrincipleProjection,
+    # Enums
+    Stance,
+    # Teaching types
+    TeachingContent,
+)
 
 # === Exports ===
 

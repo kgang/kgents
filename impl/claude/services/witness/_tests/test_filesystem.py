@@ -31,7 +31,6 @@ from services.witness.watchers.filesystem import (
     create_filesystem_watcher,
 )
 
-
 # =============================================================================
 # PatternMatcher Tests
 # =============================================================================

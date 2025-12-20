@@ -419,3 +419,194 @@ def pytest_addoption(parser: Any) -> None:
         opt_addoption(parser)
     except ImportError:
         pass  # Plugin not available
+
+
+# =============================================================================
+# Domain Auto-Marking for Compartmentalized CI
+# =============================================================================
+#
+# This hook automatically applies domain markers to tests based on file paths.
+# Enables multi-agent CI where different domains run in parallel.
+#
+# Usage:
+#   pytest -m "domain_foundation"           # Run only foundation tests
+#   pytest -m "domain_crown or domain_cli"  # Run crown jewels + CLI
+#   pytest -m "not domain_agents_aux"       # Skip auxiliary agents
+#
+# Domain boundaries align with architectural layers:
+#   Foundation → Crown Jewels → AGENTESE → CLI → API
+#
+# =============================================================================
+
+# Domain definitions: (marker_name, path_patterns)
+# Order matters: first match wins
+_DOMAIN_RULES: list[tuple[str, list[str]]] = [
+    # Foundation: Pure category theory, no external deps
+    (
+        "domain_foundation",
+        [
+            "agents/poly/",
+            "agents/operad/",
+            "agents/sheaf/",
+        ],
+    ),
+    # Crown Jewels: Core services with business logic
+    (
+        "domain_crown",
+        [
+            "services/brain/",
+            "services/town/",
+            "services/conductor/",
+            "services/gestalt/",
+            "services/gardener/",
+            "services/park/",
+            "services/forge/",
+            "services/muse/",
+            "services/morpheus/",
+            "services/witness/",
+            "services/coalition/",
+            "services/chat/",
+            "services/tooling/",
+            "services/verification/",
+            "services/interactive_text/",
+            "services/principles/",
+        ],
+    ),
+    # AGENTESE: Protocol layer
+    (
+        "domain_agentese",
+        [
+            "protocols/agentese/",
+        ],
+    ),
+    # CLI: Command-line interface
+    (
+        "domain_cli",
+        [
+            "protocols/cli/",
+        ],
+    ),
+    # API: HTTP/billing protocols
+    (
+        "domain_api",
+        [
+            "protocols/api/",
+            "protocols/billing/",
+            "protocols/licensing/",
+            "protocols/tenancy/",
+        ],
+    ),
+    # Core Agents: High-traffic agent modules
+    (
+        "domain_agents_core",
+        [
+            "agents/k/",
+            "agents/town/",
+            "agents/brain/",
+            "agents/f/",
+            "agents/j/",
+            "agents/flux/",
+        ],
+    ),
+    # Auxiliary Agents: Supporting agent modules
+    (
+        "domain_agents_aux",
+        [
+            "agents/a/",
+            "agents/b/",
+            "agents/c/",
+            "agents/d/",
+            "agents/g/",
+            "agents/i/",
+            "agents/l/",
+            "agents/m/",
+            "agents/n/",
+            "agents/o/",
+            "agents/p/",
+            "agents/s/",
+            "agents/t/",
+            "agents/u/",
+            "agents/v/",
+            "agents/w/",
+            "agents/atelier/",
+            "agents/design/",
+            "agents/differance/",
+            "agents/emergence/",
+            "agents/gallery/",
+            "agents/gardener/",
+            "agents/gestalt/",
+            "agents/infra/",
+            "agents/park/",
+            "agents/domain/",
+            "agents/shared/",
+            "agents/testagent/",
+        ],
+    ),
+    # Infrastructure: Shared utilities and system
+    (
+        "domain_infra",
+        [
+            "weave/",
+            "field/",
+            "hypha/",
+            "shared/",
+            "system/",
+            "bootstrap/",
+            "runtime/",
+            "testing/",
+            "infra/",
+            "poly/",  # Root-level poly (distinct from agents/poly/)
+            "models/",  # Data models
+            "services/_tests/",  # Root-level service tests
+        ],
+    ),
+    # Protocol Infrastructure: Protocol subdirs not in AGENTESE/CLI/API
+    # Must come AFTER specific protocol domains but BEFORE agent catch-alls
+    (
+        "domain_agentese",
+        [
+            "protocols/garden/",  # Garden protocol
+            "protocols/gardener_logos/",  # Gardener logos
+            "protocols/gestalt/",  # Gestalt protocol
+            "protocols/nphase/",  # N-phase protocol
+            "protocols/projection/",  # Projection layer
+            "protocols/prompt/",  # Prompt templates
+            "protocols/streaming/",  # Streaming protocol
+            "protocols/synergy/",  # Event synergy
+            "protocols/config/",  # Config protocol
+            "protocols/proto/",  # Proto definitions
+            "protocols/_archived/",  # Archived protocols
+            "protocols/_tests/",  # Root-level protocol tests
+        ],
+    ),
+    # Catch-all for remaining agent-level tests (e.g., agents/_tests/)
+    # Must come LAST - catches integration tests at agents root
+    (
+        "domain_agents_core",
+        [
+            "agents/_tests/",  # Root-level agent integration tests
+        ],
+    ),
+]
+
+
+def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:
+    """
+    Auto-apply domain markers to tests based on file paths.
+
+    This enables compartmentalized CI where different test domains
+    run in parallel, reducing feedback time for multi-agent development.
+
+    The marker is applied based on the FIRST matching path pattern,
+    so more specific patterns should come before general ones.
+    """
+    for item in items:
+        # Get relative path from impl/claude/
+        path = str(item.fspath)
+
+        # Find matching domain
+        for marker_name, patterns in _DOMAIN_RULES:
+            if any(pattern in path for pattern in patterns):
+                item.add_marker(getattr(pytest.mark, marker_name))
+                break
+        # Tests not matching any domain remain unmarked (will run with all)

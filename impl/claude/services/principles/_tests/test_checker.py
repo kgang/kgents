@@ -10,12 +10,11 @@ from __future__ import annotations
 import pytest
 
 from services.principles import (
-    PrincipleChecker,
     CheckResult,
-    create_principle_checker,
+    PrincipleChecker,
     Stance,
+    create_principle_checker,
 )
-
 
 # === Fixtures ===
 

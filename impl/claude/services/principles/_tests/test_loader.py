@@ -13,14 +13,13 @@ from pathlib import Path
 import pytest
 
 from services.principles import (
-    PrincipleLoader,
-    create_principle_loader,
+    ADRendering,
     ConstitutionRendering,
     MetaPrincipleRendering,
     OperationalRendering,
-    ADRendering,
+    PrincipleLoader,
+    create_principle_loader,
 )
-
 
 # === Fixtures ===
 

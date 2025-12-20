@@ -9,18 +9,17 @@ from __future__ import annotations
 import pytest
 
 from services.principles import (
-    Stance,
+    GENESIS_SIGNALS,
+    KRISIS_SIGNALS,
+    POIESIS_SIGNALS,
     STANCE_SLICES,
+    THERAPEIA_SIGNALS,
+    Stance,
     detect_stance,
     get_stance_slices,
     stance_from_aspect,
     validate_stance_transition,
-    GENESIS_SIGNALS,
-    POIESIS_SIGNALS,
-    KRISIS_SIGNALS,
-    THERAPEIA_SIGNALS,
 )
-
 
 # === Stance Enum Tests ===
 

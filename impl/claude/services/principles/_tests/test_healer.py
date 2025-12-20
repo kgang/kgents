@@ -9,14 +9,13 @@ from __future__ import annotations
 import pytest
 
 from services.principles import (
+    HealingPrescription,
     PrincipleHealer,
     PrincipleLoader,
-    HealingPrescription,
-    create_principle_loader,
-    create_principle_healer,
     Stance,
+    create_principle_healer,
+    create_principle_loader,
 )
-
 
 # === Fixtures ===
 
