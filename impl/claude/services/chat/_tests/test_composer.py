@@ -31,9 +31,22 @@ def _make_observer(archetype: str = "developer") -> MagicMock:
 def _make_session(node_path: str = "self.soul") -> MagicMock:
     """Create a mock ChatSession."""
     session = MagicMock()
+    session.session_id = "test-session-123"
     session.node_path = node_path
     session.get_messages.return_value = []
+    session.get_history.return_value = []
+
+    # Mock config with proper values for ConversationWindow (CLI v7 Phase 2)
     session.config.system_prompt = "You are a helpful assistant."
+    session.config.max_turns = 10
+    session.config.context_window = 8000
+    session.config.summarization_threshold = 0.8
+
+    # Mock context_strategy enum
+    mock_strategy = MagicMock()
+    mock_strategy.value = "sliding"
+    session.config.context_strategy = mock_strategy
+
     return session
 
 
@@ -180,9 +193,16 @@ class TestComposeTurn:
         mock_morpheus.complete.return_value = _make_morpheus_result()
 
         session = _make_session()
-        # Simulate existing conversation
+        # Simulate existing conversation via get_history (used by ConversationWindow)
+        # CLI v7 Phase 2: Window populates from session.get_history()
         from services.chat.session import Message
 
+        mock_turn = MagicMock()
+        mock_turn.user_message.content = "Hello"
+        mock_turn.assistant_response.content = "Hi there!"
+        session.get_history.return_value = [mock_turn]
+
+        # Also mock get_messages as fallback
         session.get_messages.return_value = [
             Message(role="user", content="Hello"),
             Message(role="assistant", content="Hi there!"),
@@ -195,6 +215,7 @@ class TestComposeTurn:
         request = call_args[0][0]
 
         # Should have: system + 2 context messages + new user message = 4
+        # (system prompt from window, user/assistant from history, new user message)
         assert len(request.messages) == 4
 
 
@@ -263,6 +284,61 @@ class TestTurnResult:
         """Total tokens sums in and out."""
         result = TurnResult(content="Hello", tokens_in=100, tokens_out=50)
         assert result.total_tokens == 150
+
+    def test_context_preview_captured(self) -> None:
+        """CLI v7: Context preview is captured in TurnResult."""
+        context = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "Hello!"},
+            {"role": "assistant", "content": "Hi there!"},
+        ]
+        result = TurnResult(
+            content="Response",
+            context_preview=context,
+            context_message_count=3,
+            context_has_summary=False,
+        )
+
+        assert result.context_message_count == 3
+        assert len(result.context_preview) == 3
+        assert result.context_has_summary is False
+
+    def test_format_context(self) -> None:
+        """CLI v7: format_context produces readable output."""
+        context = [
+            {"role": "system", "content": "You are helpful."},
+            {"role": "user", "content": "What is 2+2?"},
+        ]
+        result = TurnResult(
+            content="4",
+            context_preview=context,
+            context_message_count=2,
+            context_has_summary=False,
+        )
+
+        formatted = result.format_context()
+
+        assert "=== Context (2 messages) ===" in formatted
+        assert "[SYSTEM]" in formatted
+        assert "[USER]" in formatted
+        assert "You are helpful." in formatted
+        assert "What is 2+2?" in formatted
+
+    def test_format_context_truncates_long_content(self) -> None:
+        """CLI v7: format_context truncates very long messages."""
+        long_content = "x" * 300
+        context = [{"role": "user", "content": long_content}]
+        result = TurnResult(
+            content="Response",
+            context_preview=context,
+            context_message_count=1,
+        )
+
+        formatted = result.format_context()
+
+        assert "..." in formatted
+        # Should be truncated to 200 chars + "..."
+        assert len(formatted) < len(long_content)
 
 
 class TestCreateComposer:

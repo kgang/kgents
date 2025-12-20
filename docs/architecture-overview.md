@@ -1,3 +1,7 @@
+---
+context: concept
+---
+
 # Architecture Overview
 
 > *"Agents are morphisms. Functors lift them. Polynomials generalize them. Operads compose them."*

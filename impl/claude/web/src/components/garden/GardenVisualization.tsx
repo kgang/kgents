@@ -7,13 +7,20 @@
  * - Gesture history for recent tending operations
  * - Health metrics and entropy budget
  *
+ * ELASTIC UI (Phase 4):
+ * - Compact: Single column, collapsed details, simplified metrics
+ * - Comfortable: Two columns with adaptive sidebar
+ * - Spacious: Full layout with all metrics visible
+ *
  * @see plans/gardener-logos-enactment.md Phase 7
+ * @see plans/melodic-toasting-octopus.md Phase 4
  */
 
 import { useState } from 'react';
 import type { GardenJSON, PlotJSON, TendingVerb, TransitionSuggestionJSON } from '@/reactive/types';
+import type { Density } from '@/components/elastic/types';
 import { SeasonIndicator, SeasonBadge } from './SeasonIndicator';
-import { PlotCard, PlotListItem } from './PlotCard';
+import { PlotCard, PlotListItem, PlotCardCompact } from './PlotCard';
 import { GestureHistory, GestureList } from './GestureHistory';
 import { TransitionSuggestionBanner } from './TransitionSuggestionBanner';
 
@@ -22,6 +29,8 @@ interface GardenVisualizationProps {
   onTend?: (verb: TendingVerb, target: string, reasoning?: string) => void;
   onPlotSelect?: (plotName: string) => void;
   className?: string;
+  // Phase 4: Elastic UI
+  density?: Density;
   // Phase 8: Auto-Inducer
   transitionSuggestion?: TransitionSuggestionJSON | null;
   onAcceptTransition?: () => void;
@@ -34,6 +43,7 @@ export function GardenVisualization({
   onTend,
   onPlotSelect,
   className = '',
+  density = 'comfortable',
   // Phase 8: Auto-Inducer
   transitionSuggestion,
   onAcceptTransition,
@@ -50,10 +60,14 @@ export function GardenVisualization({
   const plots = Object.values(garden.plots);
   const selectedPlotData = selectedPlot ? garden.plots[selectedPlot] : null;
 
+  // Phase 4: Density-aware layout configuration
+  const isCompact = density === 'compact';
+  const isSpacious = density === 'spacious';
+
   return (
     <div className={`flex flex-col h-full ${className}`}>
-      {/* Header */}
-      <GardenHeader garden={garden} />
+      {/* Header - adapts to density */}
+      <GardenHeader garden={garden} density={density} />
 
       {/* Phase 8: Transition Suggestion Banner */}
       {transitionSuggestion && onAcceptTransition && onDismissTransition && (
@@ -67,64 +81,102 @@ export function GardenVisualization({
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden flex">
+      {/* Main Content - density-aware layout */}
+      <div className={`flex-1 overflow-hidden ${isCompact ? 'flex flex-col' : 'flex'}`}>
         {/* Left: Season + Plots */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Season Indicator */}
-          <SeasonIndicator
-            season={garden.season}
-            plasticity={garden.computed.season_plasticity}
-            entropyMultiplier={garden.computed.season_entropy_multiplier}
-            seasonSince={garden.season_since}
-          />
+        <div className={`${isCompact ? 'flex-1' : 'flex-1'} overflow-y-auto p-4 space-y-4`}>
+          {/* Season Indicator - compact shows badge only, spacious shows full */}
+          {isCompact ? (
+            <div className="flex items-center justify-between">
+              <SeasonBadge season={garden.season} />
+              <span className="text-xs text-gray-400">
+                Health: {(garden.computed.health_score * 100).toFixed(0)}%
+              </span>
+            </div>
+          ) : (
+            <SeasonIndicator
+              season={garden.season}
+              plasticity={garden.computed.season_plasticity}
+              entropyMultiplier={garden.computed.season_entropy_multiplier}
+              seasonSince={garden.season_since}
+            />
+          )}
 
-          {/* Health Metrics */}
-          <HealthMetrics garden={garden} />
+          {/* Health Metrics - hide on compact, show on comfortable+ */}
+          {!isCompact && <HealthMetrics garden={garden} />}
 
-          {/* Plot Grid */}
+          {/* Plot Grid - adapts to density */}
           <div>
             <h3 className="text-sm font-semibold text-gray-400 mb-3">
               Plots ({garden.computed.active_plot_count}/{garden.computed.total_plot_count} active)
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {plots.map((plot) => (
-                <PlotCard
-                  key={plot.name}
-                  plot={plot}
-                  isActive={plot.name === garden.active_plot}
-                  gardenSeason={garden.season}
-                  onSelect={handlePlotSelect}
-                />
-              ))}
+            <div
+              className={`grid gap-3 ${
+                isCompact
+                  ? 'grid-cols-1'
+                  : isSpacious
+                    ? 'grid-cols-2 lg:grid-cols-3'
+                    : 'grid-cols-1 md:grid-cols-2'
+              }`}
+            >
+              {plots.map((plot) =>
+                isCompact ? (
+                  <PlotCardCompact
+                    key={plot.name}
+                    plot={plot}
+                    isActive={plot.name === garden.active_plot}
+                    onSelect={handlePlotSelect}
+                  />
+                ) : (
+                  <PlotCard
+                    key={plot.name}
+                    plot={plot}
+                    isActive={plot.name === garden.active_plot}
+                    gardenSeason={garden.season}
+                    onSelect={handlePlotSelect}
+                  />
+                )
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Right: Details Panel */}
-        <div className="w-80 border-l border-gray-700 overflow-y-auto">
-          {selectedPlotData ? (
-            <PlotDetails
-              plot={selectedPlotData}
-              gardenSeason={garden.season}
-              onTend={onTend}
-              onClose={() => setSelectedPlot(null)}
-            />
-          ) : (
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-400 mb-3">Recent Gestures</h3>
-              <GestureHistory gestures={garden.recent_gestures} maxDisplay={10} />
-
-              {/* Quick Tending Actions */}
-              {onTend && (
-                <div className="mt-4">
-                  <h4 className="text-xs font-semibold text-gray-500 mb-2">Quick Actions</h4>
-                  <QuickTendActions onTend={onTend} target="concept.gardener" />
-                </div>
-              )}
+          {/* Recent gestures on compact - inline below plots */}
+          {isCompact && (
+            <div className="pt-2">
+              <h4 className="text-xs text-gray-500 mb-2">Recent Activity</h4>
+              <GestureList gestures={garden.recent_gestures} maxDisplay={3} />
             </div>
           )}
         </div>
+
+        {/* Right: Details Panel - hide on compact (uses BottomDrawer instead) */}
+        {!isCompact && (
+          <div
+            className={`border-l border-gray-700 overflow-y-auto ${isSpacious ? 'w-96' : 'w-80'}`}
+          >
+            {selectedPlotData ? (
+              <PlotDetails
+                plot={selectedPlotData}
+                gardenSeason={garden.season}
+                onTend={onTend}
+                onClose={() => setSelectedPlot(null)}
+              />
+            ) : (
+              <div className="p-4">
+                <h3 className="text-sm font-semibold text-gray-400 mb-3">Recent Gestures</h3>
+                <GestureHistory gestures={garden.recent_gestures} maxDisplay={10} />
+
+                {/* Quick Tending Actions */}
+                {onTend && (
+                  <div className="mt-4">
+                    <h4 className="text-xs font-semibold text-gray-500 mb-2">Quick Actions</h4>
+                    <QuickTendActions onTend={onTend} target="concept.gardener" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -134,32 +186,50 @@ export function GardenVisualization({
 // Sub-components
 // =============================================================================
 
-function GardenHeader({ garden }: { garden: GardenJSON }) {
+function GardenHeader({
+  garden,
+  density = 'comfortable',
+}: {
+  garden: GardenJSON;
+  density?: Density;
+}) {
+  const isCompact = density === 'compact';
+
   return (
-    <div className="flex-shrink-0 bg-gray-800/50 border-b border-gray-700 px-4 py-3">
+    <div
+      className={`flex-shrink-0 bg-gray-800/50 border-b border-gray-700 ${isCompact ? 'px-3 py-2' : 'px-4 py-3'}`}
+    >
       <div className="flex items-center justify-between">
-        {/* Left: Garden info */}
+        {/* Left: Garden info - simplified on compact */}
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🌱</span>
+          <span className={isCompact ? 'text-lg' : 'text-2xl'}>🌱</span>
           <div>
-            <h1 className="font-semibold text-lg">{garden.name}</h1>
-            <div className="flex items-center gap-2 text-xs text-gray-400">
-              <span>ID: {garden.garden_id.slice(0, 8)}</span>
-              <span>·</span>
-              <span>Last tended: {formatRelativeTime(garden.last_tended)}</span>
-            </div>
+            <h1 className={`font-semibold ${isCompact ? 'text-base' : 'text-lg'}`}>
+              {garden.name}
+            </h1>
+            {!isCompact && (
+              <div className="flex items-center gap-2 text-xs text-gray-400">
+                <span>ID: {garden.garden_id.slice(0, 8)}</span>
+                <span>·</span>
+                <span>Last tended: {formatRelativeTime(garden.last_tended)}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Right: Season badge + health */}
+        {/* Right: Season badge + health - compact shows only badge */}
         <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-sm text-gray-400">Health</div>
-            <div className={`text-lg font-semibold ${getHealthColor(garden.computed.health_score)}`}>
-              {(garden.computed.health_score * 100).toFixed(0)}%
+          {!isCompact && (
+            <div className="text-right">
+              <div className="text-sm text-gray-400">Health</div>
+              <div
+                className={`text-lg font-semibold ${getHealthColor(garden.computed.health_score)}`}
+              >
+                {(garden.computed.health_score * 100).toFixed(0)}%
+              </div>
             </div>
-          </div>
-          <SeasonBadge season={garden.season} />
+          )}
+          <SeasonBadge season={garden.season} className={isCompact ? 'text-[10px]' : ''} />
         </div>
       </div>
     </div>

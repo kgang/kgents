@@ -584,8 +584,19 @@ class PlanFromHeader:
         else:
             notes = ""
 
+        # Resolve path: prefer header path, fall back to relative path from project root
+        # The fallback uses try/except to support tests with isolated temp directories
+        if "path" in header:
+            path = header["path"]
+        else:
+            try:
+                path = str(file_path.relative_to(_PROJECT_ROOT))
+            except ValueError:
+                # File is outside project root (e.g., in test fixtures)
+                path = file_path.stem
+
         return cls(
-            path=header.get("path", str(file_path.relative_to(_PROJECT_ROOT))),
+            path=path,
             progress=int(header.get("progress", 0)),
             status=header.get("status", "active"),
             last_touched=last_touched,

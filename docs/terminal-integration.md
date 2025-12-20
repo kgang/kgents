@@ -1,4 +1,8 @@
-# HYDRATE.md — Terminal Integration Learnings
+---
+context: self
+---
+
+# Terminal Integration Learnings
 
 > *Synthesized from tmux mouse event audit (2025-12-19)*
 

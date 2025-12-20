@@ -10,68 +10,49 @@
  * - Crown Jewel shortcuts
  * - Current path highlighting
  * - Density-adaptive (sidebar vs drawer vs hamburger)
+ * - Keyboard navigation (arrows, enter, escape)
+ * - Persistent state with reset
  *
  * @see spec/protocols/os-shell.md
  * @see spec/protocols/agentese.md
+ * @see plans/navtree-refinement.md
  */
 
-import { useEffect, useState, useCallback, useMemo, memo, useRef } from 'react';
+import {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  useDeferredValue,
+  startTransition,
+} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronRight,
-  X,
-  Globe,
-  User,
-  BookOpen,
-  Sparkles,
-  Clock,
-  Brain,
-  Network,
-  Leaf,
-  Palette,
-  Users,
-  Theater,
-  Layers,
-  GitBranch,
-  type LucideIcon,
-} from 'lucide-react';
+import { ChevronRight, X, RotateCcw, Globe, User, BookOpen, Sparkles, Clock } from 'lucide-react';
 import { useShell } from './ShellProvider';
-import { getJewelColor, type JewelName } from '@/constants/jewels';
 import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
 import { apiClient } from '@/api/client';
 import { parseAgentesePath } from '@/utils/parseAgentesePath';
 import type { PathInfo, Density } from './types';
+
+// Extracted modules
+import { useNavigationState } from './hooks';
+import {
+  TreeNodeItem,
+  CrownJewelsSection,
+  ToolsSection,
+  GallerySection,
+  type TreeNode,
+  type ContextInfo,
+} from './components';
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface NavigationTreeProps {
-  /** Additional CSS classes */
   className?: string;
-}
-
-interface TreeNode {
-  /** Node path segment */
-  segment: string;
-  /** Full AGENTESE path */
-  path: string;
-  /** Child nodes */
-  children: Map<string, TreeNode>;
-  /** Is this a registered path (not just an intermediate segment) */
-  isRegistered: boolean;
-  /** Description from discovery */
-  description?: string;
-  /** Available aspects (affordances) - stored for reference, shown in ReferencePanel */
-  aspects?: string[];
-}
-
-interface ContextInfo {
-  icon: LucideIcon;
-  label: string;
-  color: string;
-  description: string;
 }
 
 // =============================================================================
@@ -112,75 +93,22 @@ const CONTEXT_INFO: Record<string, ContextInfo> = {
   },
 };
 
-/**
- * Crown Jewel shortcuts - navigate via AGENTESE path.
- *
- * IMPORTANT: All paths MUST be registered in the AGENTESE registry.
- * The registry (@node decorator) is the single source of truth.
- * Run `scripts/validate_path_alignment.py` to check alignment.
- */
-const CROWN_JEWELS: Array<{
-  name: JewelName;
-  label: string;
-  path: string;
-  icon: LucideIcon;
-  children?: Array<{ label: string; path: string }>;
-}> = [
-  { name: 'brain', label: 'Brain', path: 'self.memory', icon: Brain },
-  { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', icon: Network },
-  { name: 'gardener', label: 'Gardener', path: 'concept.gardener', icon: Leaf },
-  { name: 'forge', label: 'Forge', path: 'world.forge', icon: Palette },
-  {
-    name: 'coalition',
-    label: 'Coalition',
-    path: 'world.town',
-    icon: Users,
-    children: [
-      { label: 'Overview', path: 'world.town' },
-      { label: 'Citizens', path: 'world.town.citizen' },
-      { label: 'Coalitions', path: 'world.town.coalition' },
-      { label: 'Inhabit', path: 'world.town.inhabit' },
-    ],
-  },
-  { name: 'park', label: 'Park', path: 'world.park', icon: Theater },
-  // Domain is not yet implemented - no @node registered
-];
+const VALID_CONTEXTS = Object.keys(CONTEXT_INFO);
 
 /** Sidebar width by density */
 const SIDEBAR_WIDTH: Record<Density, number | null> = {
   spacious: 280,
   comfortable: 240,
-  compact: null, // Full-screen drawer
+  compact: null,
 };
 
 // =============================================================================
-// Hooks
+// Discovery Hook
 // =============================================================================
 
-/**
- * Exponential backoff delay calculator.
- * @param attempt - The current attempt number (0-indexed)
- * @param baseDelay - Base delay in milliseconds (default: 1000ms)
- * @param maxDelay - Maximum delay cap in milliseconds (default: 30000ms)
- */
-function getBackoffDelay(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
-  const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-  // Add jitter (0-25% of delay) to prevent thundering herd
-  const jitter = delay * Math.random() * 0.25;
-  return delay + jitter;
-}
-
-/** Maximum retry attempts for discovery */
 const MAX_DISCOVERY_RETRIES = 3;
-
-/** Cache expiry time in milliseconds (5 minutes) */
 const DISCOVERY_CACHE_TTL = 5 * 60 * 1000;
 
-/** localStorage keys for persisting nav tree state */
-const STORAGE_KEY_EXPANDED_PATHS = 'kgents:navtree:expandedPaths';
-const STORAGE_KEY_EXPANDED_JEWELS = 'kgents:navtree:expandedJewels';
-
-/** Cached discovery result */
 interface DiscoveryCache {
   paths: PathInfo[];
   timestamp: number;
@@ -188,53 +116,33 @@ interface DiscoveryCache {
 
 let discoveryCache: DiscoveryCache | null = null;
 
-/**
- * Clear the discovery cache (for testing).
- * @internal
- */
 export function __clearDiscoveryCache(): void {
   discoveryCache = null;
 }
 
-/**
- * Hook to fetch AGENTESE paths from discovery endpoint.
- * Features:
- * - Retry with exponential backoff
- * - Local caching with TTL
- * - Graceful fallback to hardcoded paths
- * - Preloads affordances for all paths (for 3-level navigation)
- */
+function getBackoffDelay(attempt: number, baseDelay = 1000, maxDelay = 30000): number {
+  const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
+  const jitter = delay * Math.random() * 0.25;
+  return delay + jitter;
+}
+
 function useDiscovery() {
   const [paths, setPaths] = useState<PathInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAspects, setLoadingAspects] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
 
-  // Check if cache is valid
+  // Check cache validity without causing re-renders
   const isCacheValid = useCallback(() => {
     if (!discoveryCache) return false;
     return Date.now() - discoveryCache.timestamp < DISCOVERY_CACHE_TTL;
   }, []);
 
-  // Fetch affordances for a single path
-  const fetchAffordances = async (path: string): Promise<string[]> => {
-    try {
-      const pathSegments = path.replace(/\./g, '/');
-      const response = await apiClient.get<{
-        path: string;
-        affordances: string[];
-      }>(`/agentese/${pathSegments}/affordances`);
-      return response.data.affordances || [];
-    } catch {
-      return ['manifest']; // Fallback
-    }
-  };
-
   const fetchPaths = useCallback(
     async (attempt = 0): Promise<void> => {
-      // Use cache if valid
+      // Use cached data immediately if valid (non-blocking)
       if (attempt === 0 && isCacheValid() && discoveryCache) {
         setPaths(discoveryCache.paths);
         setLoading(false);
@@ -245,108 +153,87 @@ function useDiscovery() {
       try {
         const response = await apiClient.get<{
           paths: string[];
-          stats: {
-            registered_nodes: number;
-            contexts: string[];
-          };
+          stats: { registered_nodes: number; contexts: string[] };
         }>('/agentese/discover');
 
-        // Transform flat paths to PathInfo (initially without aspects)
+        if (!mountedRef.current) return;
+
         const pathInfos: PathInfo[] = response.data.paths.map((p) => ({
           path: p,
           context: p.split('.')[0] as PathInfo['context'],
-          aspects: ['manifest'], // Placeholder
+          aspects: ['manifest'],
         }));
 
-        // Set paths immediately so tree renders
+        // Set paths immediately so tree is interactive
         setPaths(pathInfos);
         setLoading(false);
         setError(null);
-        setRetryCount(0);
 
-        // Now fetch affordances for all paths in parallel (background)
+        // Fetch affordances in background without blocking
+        // Use startTransition to mark this as non-urgent
         setLoadingAspects(true);
-        const affordancePromises = pathInfos.map(async (info) => {
-          const aspects = await fetchAffordances(info.path);
-          return { ...info, aspects };
-        });
 
-        // Wait for all affordances (with a reasonable timeout per batch)
-        const pathsWithAspects = await Promise.all(affordancePromises);
-
-        // Update cache with full data
-        // eslint-disable-next-line require-atomic-updates
-        discoveryCache = {
-          paths: pathsWithAspects,
-          timestamp: Date.now(),
+        // Fire off affordance fetches but don't await them all at once
+        // Instead, update as each one completes (streaming pattern)
+        const fetchAndUpdateAffordance = async (info: PathInfo) => {
+          try {
+            const pathSegments = info.path.replace(/\./g, '/');
+            const resp = await apiClient.get<{ path: string; affordances: string[] }>(
+              `/agentese/${pathSegments}/affordances`
+            );
+            return { ...info, aspects: resp.data.affordances || ['manifest'] };
+          } catch {
+            return { ...info, aspects: ['manifest'] };
+          }
         };
 
-        setPaths(pathsWithAspects);
-        setLoadingAspects(false);
+        // Process affordances and update cache when done
+        // This happens in background - UI is already interactive
+        Promise.all(pathInfos.map(fetchAndUpdateAffordance)).then((pathsWithAspects) => {
+          if (!mountedRef.current) return;
+          // Use startTransition to avoid blocking urgent updates
+          startTransition(() => {
+            discoveryCache = { paths: pathsWithAspects, timestamp: Date.now() };
+            setPaths(pathsWithAspects);
+            setLoadingAspects(false);
+          });
+        });
       } catch (e) {
+        if (!mountedRef.current) return;
         const err = e as Error;
         setError(err);
         setLoading(false);
 
-        // Retry with exponential backoff if we haven't exceeded max retries
         if (attempt < MAX_DISCOVERY_RETRIES) {
           const delay = getBackoffDelay(attempt);
-          console.warn(
-            `[NavigationTree] Discovery failed, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${MAX_DISCOVERY_RETRIES})`
-          );
-
           retryTimeoutRef.current = setTimeout(() => {
-            setRetryCount(attempt + 1);
             fetchPaths(attempt + 1);
           }, delay);
-        } else {
-          // Use fallback paths after all retries exhausted
-          console.warn('[NavigationTree] Discovery failed after max retries, using fallback paths');
-          const fallbackPaths = CROWN_JEWELS.map((j) => ({
-            path: j.path,
-            context: j.path.split('.')[0] as PathInfo['context'],
-            aspects: ['manifest'],
-          }));
-          setPaths(fallbackPaths);
         }
       }
     },
     [isCacheValid]
   );
 
-  // Cleanup retry timeout on unmount
   useEffect(() => {
+    mountedRef.current = true;
+    fetchPaths();
+
     return () => {
+      mountedRef.current = false;
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, []);
-
-  useEffect(() => {
-    fetchPaths();
   }, [fetchPaths]);
 
-  return { paths, loading, loadingAspects, error, retryCount, refetch: () => fetchPaths(0) };
+  return { paths, loading, loadingAspects, error };
 }
 
-/**
- * Build tree structure from flat paths.
- *
- * DESIGN DECISION (AD-012: Aspect Projection Protocol):
- * Aspects are NOT added as navigable children. The navtree shows PATHS only.
- *
- * Semantic distinction:
- * - PATHS (world.town, self.memory) are PLACES you can GO TO → navigable
- * - ASPECTS (manifest, polynomial, witness) are ACTIONS you DO → invocable
- *
- * You can GO TO a town. You can't GO TO a "greeting"—you DO a greeting.
- * Aspects are shown in the ReferencePanel as clickable buttons that POST,
- * not in the navtree as navigable destinations that GET.
- *
- * @see plans/aspect-projection-protocol.md
- * @see spec/principles.md AD-012
- */
+// =============================================================================
+// Tree Building
+// =============================================================================
+
 function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
   const root = new Map<string, TreeNode>();
 
@@ -369,15 +256,12 @@ function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
       }
 
       const node = currentLevel.get(segment);
-      if (!node) continue; // Should never happen due to set above, but satisfies TS
+      if (!node) continue;
 
-      // Mark as registered and add metadata for final segment
       if (i === segments.length - 1) {
         node.isRegistered = true;
         node.description = pathInfo.description;
         node.aspects = pathInfo.aspects;
-        // Aspects are NOT added as children - they're actions, not destinations
-        // See AD-012: Aspect Projection Protocol
       }
 
       currentLevel = node.children;
@@ -387,433 +271,61 @@ function buildTree(paths: PathInfo[]): Map<string, TreeNode> {
   return root;
 }
 
-// =============================================================================
-// Subcomponents
-// =============================================================================
+/** Collect all visible paths for keyboard navigation */
+function collectVisiblePaths(tree: Map<string, TreeNode>, expandedPaths: Set<string>): string[] {
+  const result: string[] = [];
 
-/** Tree node item with split click zones */
-const TreeNodeItem = memo(function TreeNodeItem({
-  node,
-  level,
-  expandedPaths,
-  currentPath,
-  ancestorPaths,
-  onToggle,
-  onNavigate,
-}: {
-  node: TreeNode;
-  level: number;
-  expandedPaths: Set<string>;
-  currentPath: string;
-  ancestorPaths: Set<string>;
-  onToggle: (path: string) => void;
-  onNavigate: (path: string) => void;
-}) {
-  const hasChildren = node.children.size > 0;
-  const isExpanded = expandedPaths.has(node.path);
-  const isExactMatch = currentPath === node.path;
-  const isAncestor = ancestorPaths.has(node.path);
-  const canNavigate = node.isRegistered; // Only registered paths are navigable
-
-  // Context info for top-level nodes
-  const contextInfo = level === 0 ? CONTEXT_INFO[node.segment] : null;
-  const Icon = contextInfo?.icon || null;
-
-  // Handle expand/collapse (chevron click)
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggle(node.path);
-  };
-
-  // Handle navigation (label click)
-  const handleNavigate = () => {
-    if (canNavigate) {
-      onNavigate(node.path);
-    } else if (hasChildren) {
-      // If not navigable, toggle instead
-      onToggle(node.path);
-    }
-  };
-
-  return (
-    <div>
-      <div
-        className={`
-          flex items-center text-sm rounded-md transition-colors
-          ${isExactMatch ? 'bg-cyan-900/40 text-white font-medium ring-1 ring-cyan-500/30' : ''}
-          ${isAncestor && !isExactMatch ? 'text-cyan-300 bg-gray-700/30' : ''}
-          ${!isExactMatch && !isAncestor ? 'text-gray-300' : ''}
-        `}
-        style={{ paddingLeft: `${8 + level * 14}px` }}
-      >
-        {/* Expand/collapse button (separate click zone) */}
-        {hasChildren ? (
-          <button
-            onClick={handleToggle}
-            className="p-1.5 hover:bg-gray-600/50 rounded transition-colors flex-shrink-0"
-            aria-label={isExpanded ? 'Collapse' : 'Expand'}
-          >
-            <motion.span
-              animate={{ rotate: isExpanded ? 90 : 0 }}
-              transition={{ duration: 0.15 }}
-              className="block"
-            >
-              <ChevronRight className="w-3 h-3 text-gray-500" />
-            </motion.span>
-          </button>
-        ) : (
-          <span className="w-6" /> // Spacer to align with expandable nodes
-        )}
-
-        {/* Navigable label area */}
-        <button
-          onClick={handleNavigate}
-          className={`
-            flex-1 flex items-center gap-2 py-1.5 pr-2 text-left
-            ${canNavigate ? 'hover:text-white cursor-pointer' : 'cursor-default opacity-60'}
-            transition-colors truncate
-          `}
-        >
-          {/* Icon for contexts */}
-          {Icon && <Icon className={`w-4 h-4 flex-shrink-0 ${contextInfo?.color}`} />}
-
-          {/* Destination indicator - small dot for navigable paths */}
-          {canNavigate && !Icon && (
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-cyan-400/70" />
-          )}
-
-          {/* Label */}
-          <span className="truncate">{node.segment}</span>
-
-          {/* Child count for nodes with children */}
-          {hasChildren && (
-            <span className="ml-auto text-xs text-gray-500 flex-shrink-0">
-              {node.children.size}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Children */}
-      <AnimatePresence>
-        {hasChildren && isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden"
-          >
-            {Array.from(node.children.values()).map((child) => (
-              <TreeNodeItem
-                key={child.path}
-                node={child}
-                level={level + 1}
-                expandedPaths={expandedPaths}
-                currentPath={currentPath}
-                ancestorPaths={ancestorPaths}
-                onToggle={onToggle}
-                onNavigate={onNavigate}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-});
-
-/** Crown Jewels shortcuts section */
-function CrownJewelsSection({
-  currentPath,
-  onNavigate,
-}: {
-  currentPath: string;
-  onNavigate: (path: string) => void;
-}) {
-  // Track expanded jewels - persisted to localStorage
-  const [expandedJewels, setExpandedJewels] = useState<Set<string>>(() => {
-    // Load from localStorage, default to collapsed
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY_EXPANDED_JEWELS);
-      if (stored) {
-        return new Set(JSON.parse(stored));
+  function traverse(nodes: Map<string, TreeNode>) {
+    for (const node of nodes.values()) {
+      result.push(node.path);
+      if (node.children.size > 0 && expandedPaths.has(node.path)) {
+        traverse(node.children);
       }
-    } catch {
-      // Ignore parse errors
     }
-    return new Set(); // Default: collapsed
-  });
+  }
 
-  // Persist expandedJewels to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_EXPANDED_JEWELS, JSON.stringify([...expandedJewels]));
-    } catch {
-      // Ignore storage errors
-    }
-  }, [expandedJewels]);
-
-  const toggleJewel = (name: string) => {
-    setExpandedJewels((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) {
-        next.delete(name);
-      } else {
-        next.add(name);
-      }
-      return next;
-    });
-  };
-
-  return (
-    <div className="border-t border-gray-700/50 pt-3">
-      <h3 className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Crown Jewels
-      </h3>
-      <div className="space-y-0.5">
-        {CROWN_JEWELS.map((jewel) => {
-          // Check if current path matches or starts with this jewel's path
-          const isActive = currentPath === jewel.path || currentPath.startsWith(`${jewel.path}.`);
-          const isExpanded = expandedJewels.has(jewel.name);
-          const hasChildren = jewel.children && jewel.children.length > 0;
-          const color = getJewelColor(jewel.name);
-          const Icon = jewel.icon;
-
-          return (
-            <div key={jewel.name}>
-              <button
-                onClick={() => {
-                  if (hasChildren) {
-                    toggleJewel(jewel.name);
-                  } else {
-                    onNavigate(jewel.path);
-                  }
-                }}
-                className={`
-                  w-full flex items-center gap-2 px-3 py-1.5 text-sm
-                  hover:bg-gray-700/50 transition-colors rounded-md
-                  ${isActive ? 'bg-gray-700/70' : ''}
-                `}
-              >
-                {hasChildren && (
-                  <motion.span
-                    animate={{ rotate: isExpanded ? 90 : 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="flex-shrink-0"
-                  >
-                    <ChevronRight className="w-3 h-3 text-gray-500" />
-                  </motion.span>
-                )}
-                <Icon className="w-4 h-4" style={{ color: color.primary }} />
-                <span className={isActive ? 'text-white' : 'text-gray-300'}>{jewel.label}</span>
-                <span className="ml-auto text-xs text-gray-500 font-mono">{jewel.path}</span>
-              </button>
-
-              {/* Children */}
-              <AnimatePresence>
-                {hasChildren && isExpanded && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className="overflow-hidden"
-                  >
-                    {jewel.children?.map((child) => {
-                      // Check if current path matches this child
-                      const childActive =
-                        currentPath === child.path || currentPath.startsWith(`${child.path}.`);
-
-                      return (
-                        <button
-                          key={child.path}
-                          onClick={() => onNavigate(child.path)}
-                          className={`
-                            w-full flex items-center gap-2 pl-10 pr-3 py-1 text-sm
-                            hover:bg-gray-700/30 transition-colors rounded-md
-                            ${childActive ? 'bg-gray-700/50 text-white' : 'text-gray-400'}
-                          `}
-                        >
-                          <span>{child.label}</span>
-                          <span className="ml-auto text-xs text-gray-600 font-mono">
-                            {child.path.split('.').pop()}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Gallery shortcuts section - uses system routes (/_/) not AGENTESE */
-function GallerySection({
-  currentRoute,
-  onNavigate,
-}: {
-  currentRoute: string;
-  onNavigate: (route: string) => void;
-}) {
-  const galleries = [
-    { route: '/_/gallery', label: 'Projection Gallery' },
-    { route: '/_/gallery/layout', label: 'Layout Gallery' },
-    { route: '/_/docs/agentese', label: 'AGENTESE Explorer' },
-  ];
-
-  return (
-    <div className="border-t border-gray-700/50 pt-3">
-      <h3 className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Gallery
-      </h3>
-      <div className="space-y-0.5">
-        {galleries.map((gallery) => {
-          const isActive = currentRoute === gallery.route;
-          return (
-            <button
-              key={gallery.route}
-              onClick={() => onNavigate(gallery.route)}
-              className={`
-                w-full flex items-center gap-2 px-3 py-1.5 text-sm
-                hover:bg-gray-700/50 transition-colors rounded-md
-                ${isActive ? 'bg-gray-700/70 text-white' : 'text-gray-300'}
-              `}
-            >
-              <Layers className="w-4 h-4 text-gray-400" />
-              <span>{gallery.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Tools section - uses AGENTESE paths */
-function ToolsSection({
-  currentPath,
-  onNavigate,
-}: {
-  currentPath: string;
-  onNavigate: (path: string) => void;
-}) {
-  const tools = [{ path: 'time.differance', label: 'Différance', icon: GitBranch }];
-
-  return (
-    <div className="border-t border-gray-700/50 pt-3">
-      <h3 className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
-        Tools
-      </h3>
-      <div className="space-y-0.5">
-        {tools.map((tool) => {
-          const isActive = currentPath === tool.path || currentPath.startsWith(`${tool.path}.`);
-          const Icon = tool.icon;
-          return (
-            <button
-              key={tool.path}
-              onClick={() => onNavigate(tool.path)}
-              className={`
-                w-full flex items-center gap-2 px-3 py-1.5 text-sm
-                hover:bg-gray-700/50 transition-colors rounded-md
-                ${isActive ? 'bg-gray-700/70 text-white' : 'text-gray-300'}
-              `}
-            >
-              <Icon className="w-4 h-4 text-amber-400" />
-              <span>{tool.label}</span>
-              <span className="ml-auto text-xs text-gray-500 font-mono">{tool.path}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
+  traverse(tree);
+  return result;
 }
 
 // =============================================================================
 // Main Component
 // =============================================================================
 
-/**
- * NavigationTree - Sidebar tree navigation for AGENTESE ontology.
- *
- * Adapts to density:
- * - spacious: Full sidebar, always visible
- * - comfortable: Collapsible sidebar, toggle button
- * - compact: Hamburger menu, bottom drawer
- *
- * @example
- * ```tsx
- * // In Shell layout
- * <NavigationTree />
- * ```
- */
 export function NavigationTree({ className = '' }: NavigationTreeProps) {
   const {
     density,
     navigationTreeExpanded,
     setNavigationTreeExpanded,
-    // Use animated offsets for smooth coordination
     observerHeight,
     terminalHeight,
   } = useShell();
 
-  // Use animated offsets from shell context (temporal coherence)
-  // When observer collapses: nav.top slides up smoothly
-  // When terminal expands: nav.bottom slides up smoothly
-  const getTopOffset = () => {
-    if (density === 'compact') return '0'; // Mobile uses drawer, no conflict
-    return `${observerHeight}px`;
-  };
-
-  const getBottomOffset = () => {
-    if (density === 'compact') return '0'; // Mobile uses drawer, no conflict
-    return `${terminalHeight}px`;
-  };
   const navigate = useNavigate();
   const location = useLocation();
   const { shouldAnimate } = useMotionPreferences();
   const { paths, loading, loadingAspects } = useDiscovery();
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Build tree from paths - aspects are now preloaded by useDiscovery
-  const tree = useMemo(() => buildTree(paths), [paths]);
-
-  // Track expanded paths in tree - persisted to localStorage
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(() => {
-    // Load from localStorage, default to collapsed
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY_EXPANDED_PATHS);
-      if (stored) {
-        return new Set(JSON.parse(stored));
-      }
-    } catch {
-      // Ignore parse errors
-    }
-    return new Set(); // Default: collapsed
+  // Navigation state with persistence
+  const [navState, navActions] = useNavigationState({
+    persist: true,
+    validContexts: VALID_CONTEXTS,
   });
 
-  // Persist expandedPaths to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY_EXPANDED_PATHS, JSON.stringify([...expandedPaths]));
-    } catch {
-      // Ignore storage errors
-    }
-  }, [expandedPaths]);
+  // Defer paths so tree building doesn't block urgent updates
+  const deferredPaths = useDeferredValue(paths);
 
-  // Current AGENTESE path (derived from URL)
-  // Now that URLs ARE AGENTESE paths, we parse directly
+  // Build tree from deferred paths (non-blocking)
+  const tree = useMemo(() => buildTree(deferredPaths), [deferredPaths]);
+
+  // Current AGENTESE path from URL
   const currentPath = useMemo(() => {
     const parsed = parseAgentesePath(location.pathname);
     return parsed.isValid ? parsed.path : '';
   }, [location.pathname]);
 
-  // Compute ancestor paths for current path (for highlighting)
+  // Ancestor paths for highlighting
   const ancestorPaths = useMemo(() => {
     if (!currentPath) return new Set<string>();
     const segments = currentPath.split('.');
@@ -824,51 +336,100 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     return ancestors;
   }, [currentPath]);
 
-  // Auto-expand tree to reveal current path when it changes
+  // Visible paths for keyboard navigation
+  const visiblePaths = useMemo(
+    () => collectVisiblePaths(tree, navState.expandedPaths),
+    [tree, navState.expandedPaths]
+  );
+
+  // Auto-expand tree to reveal current path
+  // Use a ref to track previous path and avoid infinite loops
+  const prevPathRef = useRef<string>('');
+
   useEffect(() => {
-    if (!currentPath) return;
+    // Only run when currentPath actually changes
+    if (!currentPath || currentPath === prevPathRef.current) return;
+    prevPathRef.current = currentPath;
 
-    // Expand all ancestors of the current path
     const segments = currentPath.split('.');
-    const pathsToExpand: string[] = [];
-    for (let i = 1; i <= segments.length; i++) {
-      pathsToExpand.push(segments.slice(0, i).join('.'));
-    }
+    const context = segments[0];
 
-    // Only expand if there are paths to expand that aren't already expanded
-    const needsExpanding = pathsToExpand.some((p) => !expandedPaths.has(p));
-    if (needsExpanding) {
-      setExpandedPaths((prev) => {
-        const next = new Set(prev);
-        pathsToExpand.forEach((p) => next.add(p));
-        return next;
+    if (context && CONTEXT_INFO[context]) {
+      // Mark as non-urgent so main panel renders first
+      startTransition(() => {
+        navActions.setActiveSection(context);
+
+        const pathsToExpand: string[] = [];
+        for (let i = 1; i <= segments.length; i++) {
+          pathsToExpand.push(segments.slice(0, i).join('.'));
+        }
+        navActions.expandPathsInSection(context, pathsToExpand);
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- expandedPaths excluded to prevent infinite loops
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally only react to currentPath changes
   }, [currentPath]);
 
-  // Toggle tree node expansion
-  const handleToggle = useCallback((path: string) => {
-    setExpandedPaths((prev) => {
-      const next = new Set(prev);
-      if (next.has(path)) {
-        next.delete(path);
-      } else {
-        next.add(path);
-      }
-      return next;
-    });
-  }, []);
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const { focusedPath, expandedPaths } = navState;
 
-  // Navigate to AGENTESE path
-  // The URL IS the AGENTESE path - no mapping needed
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          navActions.moveFocus('down', visiblePaths);
+          break;
+
+        case 'ArrowUp':
+          e.preventDefault();
+          navActions.moveFocus('up', visiblePaths);
+          break;
+
+        case 'ArrowRight':
+          e.preventDefault();
+          if (focusedPath && !expandedPaths.has(focusedPath)) {
+            navActions.toggle(focusedPath);
+          }
+          break;
+
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (focusedPath) {
+            if (expandedPaths.has(focusedPath)) {
+              navActions.toggle(focusedPath);
+            } else {
+              // Go to parent
+              const segments = focusedPath.split('.');
+              if (segments.length > 1) {
+                const parentPath = segments.slice(0, -1).join('.');
+                navActions.setFocusedPath(parentPath);
+              }
+            }
+          }
+          break;
+
+        case 'Enter':
+          e.preventDefault();
+          if (focusedPath) {
+            handleNavigateToPath(focusedPath);
+          }
+          break;
+
+        case 'Escape':
+          e.preventDefault();
+          if (navState.activeSection) {
+            navActions.setActiveSection(null);
+          }
+          break;
+      }
+    },
+    [navState, navActions, visiblePaths]
+  );
+
+  // Navigation handlers
   const handleNavigateToPath = useCallback(
     (path: string) => {
-      // Navigate directly to AGENTESE path
-      // UniversalProjection handles rendering and legacy redirects
       navigate(`/${path}`);
-
-      // Close on mobile after navigation
       if (density === 'compact') {
         setNavigationTreeExpanded(false);
       }
@@ -876,11 +437,9 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     [navigate, density, setNavigationTreeExpanded]
   );
 
-  // Navigate to route directly
   const handleNavigateToRoute = useCallback(
     (route: string) => {
       navigate(route);
-      // Close on mobile after navigation
       if (density === 'compact') {
         setNavigationTreeExpanded(false);
       }
@@ -888,111 +447,137 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     [navigate, density, setNavigationTreeExpanded]
   );
 
-  // Sidebar width
+  // Layout calculations
   const width = SIDEBAR_WIDTH[density];
+  const getTopOffset = () => (density === 'compact' ? '0' : `${observerHeight}px`);
+  const getBottomOffset = () => (density === 'compact' ? '0' : `${terminalHeight}px`);
 
-  // Compact: Bottom drawer only (hamburger button is rendered in Shell header)
+  // ==========================================================================
+  // Tree Content (shared across density modes)
+  // ==========================================================================
+
+  const TreeContent = (
+    <div
+      ref={containerRef}
+      className="space-y-1 outline-none"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      role="tree"
+      aria-label="AGENTESE navigation tree"
+    >
+      {Array.from(tree.values()).map((node) => (
+        <TreeNodeItem
+          key={node.path}
+          node={node}
+          level={0}
+          expandedPaths={navState.expandedPaths}
+          currentPath={currentPath}
+          ancestorPaths={ancestorPaths}
+          focusedPath={navState.focusedPath}
+          onToggle={navActions.toggle}
+          onNavigate={handleNavigateToPath}
+          onFocus={navActions.setFocusedPath}
+          contextInfo={CONTEXT_INFO}
+        />
+      ))}
+    </div>
+  );
+
+  const HeaderWithReset = (
+    <div className="flex items-center gap-2">
+      <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">AGENTESE Paths</h2>
+      {loadingAspects && (
+        <span
+          className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+          title="Loading aspects..."
+        />
+      )}
+      <button
+        onClick={navActions.reset}
+        className="ml-auto p-1 hover:bg-gray-700 rounded transition-colors opacity-50 hover:opacity-100"
+        title="Reset tree"
+        aria-label="Reset navigation tree"
+      >
+        <RotateCcw className="w-3 h-3 text-gray-400" />
+      </button>
+    </div>
+  );
+
+  // ==========================================================================
+  // Compact: Bottom drawer
+  // ==========================================================================
+
   if (density === 'compact') {
     return (
-      <>
-        {/* Bottom drawer */}
-        <AnimatePresence>
-          {navigationTreeExpanded && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: shouldAnimate ? 0.2 : 0 }}
-                className="fixed inset-0 z-40 bg-black/50"
+      <AnimatePresence>
+        {navigationTreeExpanded && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: shouldAnimate ? 0.2 : 0 }}
+              className="fixed inset-0 z-40 bg-black/50"
+              onClick={() => setNavigationTreeExpanded(false)}
+            />
+
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{
+                type: 'spring',
+                damping: 25,
+                stiffness: 300,
+                duration: shouldAnimate ? undefined : 0,
+              }}
+              className={`
+                fixed bottom-0 left-0 right-0 z-50
+                bg-gray-800 rounded-t-2xl shadow-xl
+                max-h-[80vh] overflow-auto
+                ${className}
+              `}
+            >
+              <div className="sticky top-0 flex justify-center pt-2 pb-1 bg-gray-800">
+                <div className="w-10 h-1 rounded-full bg-gray-600" />
+              </div>
+
+              <button
                 onClick={() => setNavigationTreeExpanded(false)}
-              />
-
-              {/* Drawer */}
-              <motion.div
-                initial={{ y: '100%' }}
-                animate={{ y: 0 }}
-                exit={{ y: '100%' }}
-                transition={{
-                  type: 'spring',
-                  damping: 25,
-                  stiffness: 300,
-                  duration: shouldAnimate ? undefined : 0,
-                }}
-                className={`
-                  fixed bottom-0 left-0 right-0 z-50
-                  bg-gray-800 rounded-t-2xl shadow-xl
-                  max-h-[80vh] overflow-auto
-                  ${className}
-                `}
+                className="absolute top-2 right-2 p-2 hover:bg-gray-700 rounded-full"
+                aria-label="Close navigation"
               >
-                {/* Handle */}
-                <div className="sticky top-0 flex justify-center pt-2 pb-1 bg-gray-800">
-                  <div className="w-10 h-1 rounded-full bg-gray-600" />
-                </div>
+                <X className="w-5 h-5 text-gray-400" />
+              </button>
 
-                {/* Close button */}
-                <button
-                  onClick={() => setNavigationTreeExpanded(false)}
-                  className="absolute top-2 right-2 p-2 hover:bg-gray-700 rounded-full"
-                  aria-label="Close navigation"
-                >
-                  <X className="w-5 h-5 text-gray-400" />
-                </button>
-
-                {/* Content */}
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold text-white">AGENTESE Paths</h2>
-                    {loadingAspects && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
-                        title="Loading aspects..."
-                      />
-                    )}
-                  </div>
-                  {loading ? (
-                    <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
-                  ) : (
-                    <div className="space-y-1">
-                      {Array.from(tree.values()).map((node) => (
-                        <TreeNodeItem
-                          key={node.path}
-                          node={node}
-                          level={0}
-                          expandedPaths={expandedPaths}
-                          currentPath={currentPath}
-                          ancestorPaths={ancestorPaths}
-                          onToggle={handleToggle}
-                          onNavigate={handleNavigateToPath}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
-                  <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
-                  <GallerySection
-                    currentRoute={location.pathname}
-                    onNavigate={handleNavigateToRoute}
-                  />
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </>
+              <div className="p-4 space-y-4">
+                {HeaderWithReset}
+                {loading ? (
+                  <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
+                ) : (
+                  TreeContent
+                )}
+                <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
+                <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
+                <GallerySection
+                  currentRoute={location.pathname}
+                  onNavigate={handleNavigateToRoute}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     );
   }
 
+  // ==========================================================================
   // Comfortable: Collapsible sidebar
+  // ==========================================================================
+
   if (density === 'comfortable') {
     return (
       <>
-        {/* Toggle button */}
         {!navigationTreeExpanded && (
           <button
             onClick={() => setNavigationTreeExpanded(true)}
@@ -1003,7 +588,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
           </button>
         )}
 
-        {/* Sidebar */}
         <AnimatePresence>
           {navigationTreeExpanded && (
             <motion.aside
@@ -1020,7 +604,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 ${className}
               `}
             >
-              {/* Close button */}
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
                 className="absolute top-2 right-2 p-1 hover:bg-gray-700 rounded"
@@ -1029,42 +612,15 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 <X className="w-4 h-4 text-gray-400" />
               </button>
 
-              {/* Content */}
               <div className="p-3 pt-8 space-y-4">
-                <div className="flex items-center gap-2 px-3">
-                  <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    AGENTESE Paths
-                  </h2>
-                  {loadingAspects && (
-                    <span
-                      className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
-                      title="Loading aspects..."
-                    />
-                  )}
-                </div>
+                <div className="px-3">{HeaderWithReset}</div>
                 {loading ? (
                   <div className="py-4 text-center text-gray-500 text-sm">Loading...</div>
                 ) : (
-                  <div className="space-y-1">
-                    {Array.from(tree.values()).map((node) => (
-                      <TreeNodeItem
-                        key={node.path}
-                        node={node}
-                        level={0}
-                        expandedPaths={expandedPaths}
-                        currentPath={currentPath}
-                        ancestorPaths={ancestorPaths}
-                        onToggle={handleToggle}
-                        onNavigate={handleNavigateToPath}
-                      />
-                    ))}
-                  </div>
+                  TreeContent
                 )}
-
                 <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
                 <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
                 <GallerySection
                   currentRoute={location.pathname}
                   onNavigate={handleNavigateToRoute}
@@ -1077,10 +633,12 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
     );
   }
 
-  // Spacious: Floating collapsible sidebar (same behavior as comfortable but always visible toggle)
+  // ==========================================================================
+  // Spacious: Floating collapsible sidebar
+  // ==========================================================================
+
   return (
     <>
-      {/* Toggle button - always visible */}
       <button
         onClick={() => setNavigationTreeExpanded(!navigationTreeExpanded)}
         className={`
@@ -1101,7 +659,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
         </motion.span>
       </button>
 
-      {/* Floating sidebar */}
       <AnimatePresence>
         {navigationTreeExpanded && (
           <motion.aside
@@ -1119,19 +676,8 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               ${className}
             `}
           >
-            {/* Close button in header */}
             <div className="sticky top-0 bg-gray-800/[0.825] backdrop-blur-md border-b border-gray-700/50 px-3 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  AGENTESE Paths
-                </h2>
-                {loadingAspects && (
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
-                    title="Loading aspects..."
-                  />
-                )}
-              </div>
+              {HeaderWithReset}
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
                 className="p-1 hover:bg-gray-700 rounded transition-colors"
@@ -1141,31 +687,14 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               </button>
             </div>
 
-            {/* Content */}
             <div className="p-3 space-y-4">
               {loading ? (
                 <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
               ) : (
-                <div className="space-y-1">
-                  {Array.from(tree.values()).map((node) => (
-                    <TreeNodeItem
-                      key={node.path}
-                      node={node}
-                      level={0}
-                      expandedPaths={expandedPaths}
-                      currentPath={currentPath}
-                      ancestorPaths={ancestorPaths}
-                      onToggle={handleToggle}
-                      onNavigate={handleNavigateToPath}
-                    />
-                  ))}
-                </div>
+                TreeContent
               )}
-
               <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
               <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-
               <GallerySection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
             </div>
           </motion.aside>

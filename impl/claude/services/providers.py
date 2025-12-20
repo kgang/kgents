@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from services.chat import ChatPersistence, ChatServiceFactory, ChatSessionFactory
     from services.coalition import CoalitionPersistence
     from services.conductor import Summarizer, WindowPersistence
+    from services.conductor.file_guard import FileEditGuard
     from services.forge import ForgePersistence
     from services.forge.commission import CommissionService
     from services.gardener import GardenerPersistence
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
     from services.park import ParkPersistence
     from services.park.scenario_service import ScenarioService
     from services.principles import PrincipleLoader
+    from services.tooling import ToolExecutor, ToolRegistry
     from services.town import TownPersistence
     from services.town.bus_wiring import TownBusManager
     from services.town.coalition_service import CoalitionService
@@ -198,8 +200,22 @@ async def get_chat_factory() -> "ChatServiceFactory":
 
     Uses ChatServiceFactory which properly wires the Morpheus composer
     for real LLM responses instead of stub fallbacks.
+
+    IMPORTANT: This function is idempotent - if a factory already exists
+    in the global singleton, it returns that instead of creating a new one.
+    This prevents session lookup failures from multiple factory instances.
     """
-    from services.chat import ChatServiceFactory, set_chat_factory
+    from services.chat import (
+        ChatServiceFactory,
+        get_chat_factory as get_global_factory,
+        set_chat_factory,
+    )
+
+    # Check if factory already exists in global singleton
+    # This prevents race conditions where multiple factories are created
+    existing = get_global_factory()
+    if isinstance(existing, ChatServiceFactory):
+        return existing
 
     # Get morpheus_persistence from bootstrap - it has ClaudeCLIAdapter registered
     morpheus = await get_service("morpheus_persistence")
@@ -350,6 +366,66 @@ async def get_summarizer() -> "Summarizer":
     return create_summarizer(morpheus=morpheus)
 
 
+async def get_file_guard() -> "FileEditGuard":
+    """
+    Get the FileEditGuard for safe file manipulation.
+
+    CLI v7 Phase 1: Enforces Claude Code's read-before-edit pattern.
+    Used by world.file AGENTESE node for agent-safe file I/O.
+    """
+    from services.conductor.file_guard import get_file_guard as get_guard
+
+    return get_guard()
+
+
+# =============================================================================
+# U-gent Tool Infrastructure (Phase 0)
+# =============================================================================
+
+
+async def get_tool_registry() -> "ToolRegistry":
+    """
+    Get the ToolRegistry singleton for tool discovery.
+
+    Used by ToolsNode for tool listing and trust-gated discovery.
+    """
+    from services.tooling import get_registry
+
+    return get_registry()
+
+
+async def get_tool_executor() -> "ToolExecutor":
+    """
+    Get the ToolExecutor with full integration.
+
+    Wires:
+    - WitnessPersistence for trust gating
+    - DifferanceStore for trace recording
+    - SynergyBus for event emission
+
+    Used by ToolsNode for executing tools with observability.
+    """
+    from services.tooling import ToolExecutor
+
+    # Get integrations (optional - graceful degradation)
+    try:
+        witness = await get_service("witness_persistence")
+    except Exception:
+        witness = None
+
+    try:
+        differance = await get_service("differance_store")
+    except Exception:
+        differance = None
+
+    # SynergyBus is accessed at emission time, not here
+
+    return ToolExecutor(
+        witness=witness,
+        differance=differance,
+    )
+
+
 async def get_workshop_service() -> "WorkshopService":
     """
     Get the WorkshopService for Agent Town builder coordination.
@@ -474,12 +550,17 @@ async def setup_providers() -> None:
     # Conductor Crown Jewel (CLI v7 Phase 2: Deep Conversation)
     container.register("window_persistence", get_window_persistence, singleton=True)
     container.register("summarizer", get_summarizer, singleton=True)
+    container.register("file_guard", get_file_guard, singleton=True)
 
     # Logos (cross-jewel invocation)
     container.register("logos", get_logos, singleton=True)
 
+    # U-gent Tool Infrastructure (Phase 0)
+    container.register("tool_registry", get_tool_registry, singleton=True)
+    container.register("tool_executor", get_tool_executor, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles + Conductor)"
+        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling)"
     )
 
     # Import Witness nodes to trigger @node registration
@@ -564,7 +645,9 @@ async def setup_providers() -> None:
         logger.warning(f"CommissionNode not available: {e}")
 
     try:
-        from protocols.agentese.contexts.concept_principles import PrinciplesNode  # noqa: F401
+        from protocols.agentese.contexts.concept_principles import (
+            PrinciplesNode,  # noqa: F401
+        )
 
         logger.info("PrinciplesNode registered with AGENTESE registry")
     except ImportError as e:
@@ -572,11 +655,21 @@ async def setup_providers() -> None:
 
     # CLI v7 Phase 2: Conductor Node (Deep Conversation)
     try:
-        from protocols.agentese.contexts.self_conductor import ConductorNode  # noqa: F401
+        from protocols.agentese.contexts.self_conductor import (
+            ConductorNode,  # noqa: F401
+        )
 
         logger.info("ConductorNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"ConductorNode not available: {e}")
+
+    # CLI v7 Phase 1: File Node (Safe File I/O)
+    try:
+        from protocols.agentese.contexts.world_file import FileNode  # noqa: F401
+
+        logger.info("FileNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"FileNode not available: {e}")
 
     # Wire DifferanceStore to DifferanceTraceNode
     try:
@@ -670,9 +763,10 @@ __all__ = [
     "get_scenario_service",
     # Principles
     "get_principle_loader",
-    # Conductor (CLI v7 Phase 2)
+    # Conductor (CLI v7 Phase 1 & 2)
     "get_window_persistence",
     "get_summarizer",
+    "get_file_guard",
     # K-gent Soul
     "get_kgent_soul",
     # Differance Engine
@@ -689,4 +783,7 @@ __all__ = [
     "get_muse_node",
     # Logos (cross-jewel invocation)
     "get_logos",
+    # U-gent Tool Infrastructure
+    "get_tool_registry",
+    "get_tool_executor",
 ]

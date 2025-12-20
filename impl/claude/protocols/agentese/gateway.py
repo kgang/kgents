@@ -70,6 +70,7 @@ def _import_node_modules() -> None:
 
         # Import specific context node modules (legacy/fallback)
         from .contexts import (
+            brain_terrace,  # noqa: F401 - WARP Phase 2: Knowledge layer (brain.terrace.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
             forest,  # noqa: F401 - Forest Protocol (self.forest.*)
             garden,  # noqa: F401 - Garden State (self.garden.*)
@@ -78,9 +79,11 @@ def _import_node_modules() -> None:
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)
             self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
+            self_presence,  # noqa: F401 - CLI v7 Phase 4: Collaborative Canvas (self.presence.*)
             self_repl,  # noqa: F401 - CLI v7 Phase 4: REPL state (self.repl.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
+            self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)

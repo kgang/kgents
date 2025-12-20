@@ -42,15 +42,20 @@ from protocols.agentese.registry import node
 
 from .contracts import (
     ChatManifestResponse,
+    ContextBreakdownRequest,
+    ContextBreakdownResponse,
     CreateSessionRequest,
     CreateSessionResponse,
     DeleteSessionRequest,
     DeleteSessionResponse,
+    GetModelsRequest,
+    GetModelsResponse,
     GetSessionRequest,
     HistoryRequest,
     HistoryResponse,
     MetricsRequest,
     MetricsResponse,
+    ModelOption,
     ResetSessionRequest,
     ResetSessionResponse,
     ResumeSessionRequest,
@@ -62,10 +67,13 @@ from .contracts import (
     SendMessageResponse,
     SessionDetailResponse,
     SessionsResponse,
+    SetModelRequest,
+    SetModelResponse,
     StreamChunk,
     StreamMessageRequest,
 )
 from .factory import ChatSessionFactory, get_chat_factory
+from .model_selector import MODEL_OPTIONS, can_switch_model
 from .persistence import (
     ChatPersistence,
     PersistedSession,
@@ -227,6 +235,11 @@ class ChatResponseRendering:
         "metrics": Contract(MetricsRequest, MetricsResponse),
         "delete": Contract(DeleteSessionRequest, DeleteSessionResponse),
         "reset": Contract(ResetSessionRequest, ResetSessionResponse),
+        # Model selection
+        "models": Contract(GetModelsRequest, GetModelsResponse),
+        "set_model": Contract(SetModelRequest, SetModelResponse),
+        # Context breakdown (Teaching Mode)
+        "context": Contract(ContextBreakdownRequest, ContextBreakdownResponse),
     },
 )
 class ChatNode(BaseLogosNode):
@@ -286,6 +299,9 @@ class ChatNode(BaseLogosNode):
             "resume",
             "metrics",
             "search",
+            "models",
+            "set_model",
+            "context",  # Teaching mode - available to all
         )
 
         if archetype in ("developer", "admin", "system"):
@@ -360,6 +376,12 @@ class ChatNode(BaseLogosNode):
             return await self._delete_session(observer, **kwargs)
         elif aspect == "reset":
             return await self._reset_session(observer, **kwargs)
+        elif aspect == "models":
+            return await self._get_models(observer, **kwargs)
+        elif aspect == "set_model":
+            return await self._set_model(observer, **kwargs)
+        elif aspect == "context":
+            return await self._get_context_breakdown(observer, **kwargs)
         else:
             return {"error": f"Unknown aspect: {aspect}"}
 
@@ -772,6 +794,232 @@ class ChatNode(BaseLogosNode):
             "reset": True,
             "session_id": session.session_id,
             "state": session.state.value,
+        }
+
+    async def _get_models(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get available models for a session.
+
+        Returns the list of models that can be selected and whether
+        the current user is allowed to switch models.
+        """
+        session_id = kwargs.get("session_id")
+
+        # Get session if provided
+        session = self._factory.get_session_by_id(session_id) if session_id else None
+
+        # Check if model switching is allowed
+        can_switch = False
+        current_model = None
+
+        if session is not None:
+            can_switch = can_switch_model(session, observer)
+            current_model = session.get_effective_model()
+
+        # Convert MODEL_OPTIONS to contract format
+        models = [
+            {
+                "id": opt.id,
+                "name": opt.name,
+                "description": opt.description,
+                "tier": opt.tier,
+            }
+            for opt in MODEL_OPTIONS
+        ]
+
+        return {
+            "models": models,
+            "current_model": current_model,
+            "can_switch": can_switch,
+        }
+
+    async def _set_model(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Set the model for a session.
+
+        Validates that the observer is allowed to switch models
+        and that the requested model is valid.
+        """
+        session_id = kwargs.get("session_id")
+        model = kwargs.get("model")
+
+        if not session_id:
+            return {
+                "success": False,
+                "session_id": "",
+                "model": model or "",
+                "message": "session_id is required",
+            }
+
+        if not model:
+            return {
+                "success": False,
+                "session_id": session_id,
+                "model": "",
+                "message": "model is required",
+            }
+
+        # Get session
+        session = self._factory.get_session_by_id(session_id)
+
+        if session is None:
+            return {
+                "success": False,
+                "session_id": session_id,
+                "model": model,
+                "message": "Session not found",
+            }
+
+        # Check if switching is allowed
+        if not can_switch_model(session, observer):
+            return {
+                "success": False,
+                "session_id": session_id,
+                "model": model,
+                "message": "Model switching not allowed for this session or user",
+            }
+
+        # Get previous model for response
+        previous_model = session.get_effective_model()
+
+        # Attempt to set the model
+        success, error = session.set_model(model)
+
+        if not success:
+            return {
+                "success": False,
+                "session_id": session_id,
+                "model": model,
+                "previous_model": previous_model,
+                "message": error,
+            }
+
+        return {
+            "success": True,
+            "session_id": session_id,
+            "model": model,
+            "previous_model": previous_model,
+            "message": None,
+        }
+
+    async def _get_context_breakdown(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get context breakdown for teaching mode.
+
+        Shows how the context window is being used:
+        - System prompt tokens
+        - Summary tokens (compressed history)
+        - Working memory tokens (recent turns)
+        - Available headroom
+
+        AGENTESE: self.chat.context
+        """
+        session_id = kwargs.get("session_id")
+
+        if not session_id:
+            return {"error": "session_id required"}
+
+        # Get session
+        session = self._factory.get_session_by_id(session_id)
+
+        if session is None:
+            return {"error": "session not found", "session_id": session_id}
+
+        # Get context breakdown from composer's window
+        if session.has_composer and session._composer is not None:
+            try:
+                window = session._composer.get_or_create_window(session)
+                breakdown = window.get_context_breakdown()
+
+                return {
+                    "segments": [
+                        {
+                            "name": seg.name,
+                            "tokens": seg.tokens,
+                            "color": seg.color,
+                            "description": seg.description,
+                        }
+                        for seg in breakdown.segments
+                    ],
+                    "total_tokens": breakdown.total_tokens,
+                    "context_window": breakdown.context_window,
+                    "utilization": round(breakdown.utilization, 4),
+                    "strategy": breakdown.strategy,
+                    "has_summary": breakdown.has_summary,
+                }
+            except Exception:
+                # Fallback to estimate from session
+                return self._estimate_context_breakdown(session)
+        else:
+            # No composer - use session estimate
+            return self._estimate_context_breakdown(session)
+
+    def _estimate_context_breakdown(self, session: ChatSession) -> dict[str, Any]:
+        """
+        Estimate context breakdown from session data when no composer is available.
+
+        Fallback for sessions without an active composer/window.
+        """
+        # Estimate from session turns
+        working_tokens = sum(t.tokens_in + t.tokens_out for t in session._turns)
+
+        # System prompt estimate (if config has one)
+        system_tokens = 0
+        if session.config.system_prompt:
+            system_tokens = len(session.config.system_prompt) // 4
+
+        # Total used
+        total_used = system_tokens + working_tokens
+        context_window = session.config.context_window
+        available = max(0, context_window - total_used)
+
+        segments = []
+        if system_tokens > 0:
+            segments.append(
+                {
+                    "name": "System",
+                    "tokens": system_tokens,
+                    "color": "bg-violet-500",
+                    "description": "System prompt and personality",
+                }
+            )
+        if working_tokens > 0:
+            segments.append(
+                {
+                    "name": "Working",
+                    "tokens": working_tokens,
+                    "color": "bg-cyan-500",
+                    "description": f"Recent {len(session._turns)} turns",
+                }
+            )
+        segments.append(
+            {
+                "name": "Available",
+                "tokens": available,
+                "color": "bg-gray-700",
+                "description": "Remaining context space",
+            }
+        )
+
+        return {
+            "segments": segments,
+            "total_tokens": total_used,
+            "context_window": context_window,
+            "utilization": round(total_used / context_window, 4) if context_window > 0 else 0,
+            "strategy": session.config.context_strategy.value,
+            "has_summary": False,
         }
 
 

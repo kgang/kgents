@@ -237,10 +237,51 @@ class RichAgent:
 # → Full CLI, full API, rich Web UI, streaming, budget tracking
 ```
 
+## Prompt Ownership: The Voice Lives with the Soul
+
+**Agent prompts belong to the agent, not the service layer.**
+
+The system prompt IS the agent's voice—it should live in the agent's directory, not in generic service code.
+
+```python
+# ❌ WRONG: Prompts in service layer
+# services/chat/factory.py
+SOUL_SYSTEM_PROMPT = """You are K-gent..."""  # Service doesn't own this!
+
+# ✅ RIGHT: Prompts in agent directory
+# agents/k/prompts.py
+SOUL_SYSTEM_PROMPT = """You are K-gent..."""  # K-gent owns its own voice
+
+# services/chat/factory.py
+from agents.k.prompts import SOUL_SYSTEM_PROMPT  # Service imports from agent
+```
+
+### Why This Matters
+
+1. **Cohesion**: The prompt defines personality, voice anchors, behavioral examples—all agent-specific
+2. **Discoverability**: Looking for K-gent's prompt? It's in `agents/k/`
+3. **Ownership**: Changes to K-gent's voice should happen in K-gent's code
+4. **Consistency**: All K-gent-related prompts (modes, intercept, etc.) live together
+
+### Prompt Directory Structure
+
+```
+agents/k/
+├── prompts.py          # System prompts (SOUL_SYSTEM_PROMPT, etc.)
+├── templates.py        # Zero-token template responses (DORMANT tier)
+├── starters.py         # Mode-specific conversation starters
+├── eigenvectors.py     # Personality coordinates (to_system_prompt_section())
+├── persona.py          # Mode prompts (REFLECT, ADVISE, CHALLENGE, EXPLORE)
+└── soul.py             # Intercept prompts (Semantic Gatekeeper)
+```
+
+---
+
 ## Checklist: Making an Agent Fullstack
 
-- [ ] **Service Module** (`agents/<name>/`)
+- [ ] **Agent Directory** (`agents/<name>/`)
   - [ ] Core business logic
+  - [ ] Prompts (system prompts, mode prompts)
   - [ ] Persistence layer (TableAdapter + D-gent)
   - [ ] Frontend components (if needed)
   - [ ] Tests
@@ -287,6 +328,11 @@ export default function BrainPage() {
 # ❌ Service in agents/ directory
 agents/brain/  # Wrong - services/ is for Crown Jewels
                # agents/ is for categorical primitives (PolyAgent, Operad, etc.)
+
+# ❌ Agent prompts in service layer
+# services/chat/factory.py
+SOUL_SYSTEM_PROMPT = """..."""  # Wrong - K-gent owns its voice
+                                # Move to agents/k/prompts.py
 ```
 
 ## Directory Structure

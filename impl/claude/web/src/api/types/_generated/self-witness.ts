@@ -151,3 +151,53 @@ export interface SelfWitnessEscalateResponse {
   reason: string;
   timestamp: string | null;
 }
+
+/**
+ * Request for invoke aspect (cross-jewel invocation).
+ */
+export interface SelfWitnessInvokeRequest {
+  path: string;
+  kwargs?: Record<string, unknown>;
+}
+
+/**
+ * Response for invoke aspect.
+ */
+export interface SelfWitnessInvokeResponse {
+  path: string;
+  success: boolean;
+  result: unknown;
+  error: string | null;
+  gate_decision: string | null;
+  timestamp: string | null;
+}
+
+/**
+ * Request for pipeline aspect (cross-jewel pipeline).
+ */
+export interface SelfWitnessPipelineRequest {
+  steps?: {
+    path: string;
+    kwargs?: Record<string, unknown>;
+  }[];
+}
+
+/**
+ * Response for pipeline aspect.
+ */
+export interface SelfWitnessPipelineResponse {
+  status: string;
+  success: boolean;
+  step_results?: {
+    step_index: number;
+    path: string;
+    success: boolean;
+    result: unknown;
+    error: string | null;
+    duration_ms: number;
+  }[];
+  final_result?: unknown;
+  error?: string | null;
+  total_duration_ms?: number;
+  aborted_at_step?: number | null;
+}

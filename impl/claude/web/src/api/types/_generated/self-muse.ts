@@ -63,10 +63,8 @@ export interface SelfMuseTensionResponse {
 
 /**
  * Request for whisper aspect - get current whisper if any.
- * No parameters required - this is a parameterless request.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface SelfMuseWhisperRequest {}
+export type SelfMuseWhisperRequest = Record<string, never>;
 
 /**
  * Response for whisper aspect.

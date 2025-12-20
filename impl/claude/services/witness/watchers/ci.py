@@ -257,10 +257,7 @@ class CIWatcher(BaseWatcher[CIEvent]):
         """Execute a single poll cycle."""
         # Check rate limit
         if self._rate_limit_remaining < self.config.rate_limit_floor:
-            logger.warning(
-                f"Rate limit low ({self._rate_limit_remaining}), "
-                f"waiting until reset"
-            )
+            logger.warning(f"Rate limit low ({self._rate_limit_remaining}), waiting until reset")
             return
 
         # Fetch runs

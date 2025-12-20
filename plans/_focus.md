@@ -11,14 +11,10 @@
 
 ---
 ## KENT's WISHES
-* INDIVIDUALLY TAILORED YET HIGHLY REFINED
-* Fully leverage our category theory foundation
+* Thoughtful, manual, contemplative interactions with ideas
+* kgents is a metatheory for agents
 * An app-builder building app-builder for app-building app-builders
-* Daring, bold, creative, opinionated but not gaudy
 * Make it easy for kent and kgents to do the correct, enlightened things
-* Beautiful and coherent for all ages
-* Mad scientist feel yet clean
-* elegant systems!!!!!
 
 ## KENT's NEVERS
 * FEEL OBLIGED TO NOT DO SOMETHING YOU THINK WILL HELP. IT IS OK TO MAKE KENT THE USER UPSET, HE CARES ABOUT THE QUALITY OF THE PROJECT AND PRINCIPLES ALL ELSE!!!!
@@ -27,14 +23,6 @@
 * Whenever you write a prompt, it'll always be executed with /hydrate
 * Being/having fun is free :)
 ---
-
-## Current Intent (2025-12-12 evening)
-
-* VISUAL UIs/Refined interactions *
-* MONEY GENERATING (planning) *
-* FUN YET TECHNICAL*
-* KGENTS SELF-INTERFACING, AUTOPOESIS-DRIVEN DEVELOPMENT, AND REGENERATION OF AGENTESE
-
 
 **Constraints**:
 - Depth over breadth (category theory, not feature sprawl)

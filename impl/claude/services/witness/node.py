@@ -26,10 +26,12 @@ See: plans/kgentsd-crown-jewel.md
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, AsyncGenerator
 
+from protocols.agentese.affordances import AspectCategory, aspect
 from protocols.agentese.contract import Contract, Response
 from protocols.agentese.node import (
     BaseLogosNode,
@@ -46,6 +48,10 @@ from .contracts import (
     CaptureThoughtResponse,
     EscalateRequest,
     EscalateResponse,
+    InvokeRequest,
+    InvokeResponse,
+    PipelineRequest,
+    PipelineResponse,
     RollbackWindowRequest,
     RollbackWindowResponse,
     ThoughtsRequest,
@@ -54,8 +60,11 @@ from .contracts import (
     TrustResponse,
     WitnessManifestResponse,
 )
+from .invoke import JewelInvoker, create_invoker
 from .persistence import WitnessPersistence, WitnessStatus
+from .pipeline import Pipeline, PipelineRunner, Step
 from .polynomial import ActionResult, Thought, TrustLevel
+from .trust import ActionGate
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -130,7 +139,7 @@ class ThoughtStreamRendering:
 @node(
     "self.witness",
     description="Witness Crown Jewel - The ghost that watches, learns, and acts",
-    dependencies=("witness_persistence",),
+    dependencies=("witness_persistence", "logos"),
     contracts={
         # Perception aspects (Response only - no request needed)
         "manifest": Response(WitnessManifestResponse),
@@ -141,6 +150,9 @@ class ThoughtStreamRendering:
         "action": Contract(ActionRecordRequest, ActionRecordResponse),
         "rollback": Contract(RollbackWindowRequest, RollbackWindowResponse),
         "escalate": Contract(EscalateRequest, EscalateResponse),
+        # Cross-jewel invocation (L3 only)
+        "invoke": Contract(InvokeRequest, InvokeResponse),
+        "pipeline": Contract(PipelineRequest, PipelineResponse),
     },
     examples=[
         ("thoughts", {"limit": 20}, "Show recent thoughts"),
@@ -151,6 +163,16 @@ class ThoughtStreamRendering:
             "Capture a thought",
         ),
         ("rollback", {"hours": 24}, "Get actions from last 24 hours"),
+        (
+            "invoke",
+            {"path": "world.gestalt.manifest"},
+            "Invoke another jewel (L3 only)",
+        ),
+        (
+            "pipeline",
+            {"steps": [{"path": "world.gestalt.manifest"}, {"path": "self.memory.capture"}]},
+            "Run a pipeline across jewels (L3 only)",
+        ),
     ],
 )
 class WitnessNode(BaseLogosNode):
@@ -172,7 +194,11 @@ class WitnessNode(BaseLogosNode):
         kgents witness thoughts --limit 20
     """
 
-    def __init__(self, witness_persistence: WitnessPersistence) -> None:
+    def __init__(
+        self,
+        witness_persistence: WitnessPersistence,
+        logos: Any = None,
+    ) -> None:
         """
         Initialize WitnessNode.
 
@@ -182,11 +208,35 @@ class WitnessNode(BaseLogosNode):
 
         Args:
             witness_persistence: The persistence layer (injected by container)
+            logos: The Logos instance for cross-jewel invocation (optional)
 
         Raises:
             TypeError: If witness_persistence is not provided
         """
         self._persistence = witness_persistence
+        self._logos = logos
+        self._invoker: JewelInvoker | None = None
+        self._current_trust_level = TrustLevel.READ_ONLY  # Default, updated via trust aspect
+
+    def _get_invoker(self, trust_level: TrustLevel | None = None) -> JewelInvoker | None:
+        """
+        Get or create a JewelInvoker for cross-jewel invocation.
+
+        Args:
+            trust_level: Optional trust level override
+
+        Returns:
+            JewelInvoker or None if logos not configured
+        """
+        if self._logos is None:
+            return None
+
+        level = trust_level or self._current_trust_level
+        # Create or update invoker with current trust level
+        if self._invoker is None or self._invoker.trust_level != level:
+            self._invoker = create_invoker(self._logos, level)
+
+        return self._invoker
 
     @property
     def handle(self) -> str:
@@ -197,33 +247,42 @@ class WitnessNode(BaseLogosNode):
         Return archetype-specific affordances.
 
         Trust-gated access follows the Witness trust model:
-        - developer/operator: Full access including escalation
+        - developer/operator: Full access including escalation and cross-jewel invocation
         - architect: Can view and capture, no escalation
         - newcomer: Read-only (thoughts, trust, manifest)
         - guest: Manifest only
 
         The Witness has stricter access than other jewels because
         it can invoke all other Crown Jewels at L3.
+
+        Cross-jewel invocation (invoke, pipeline) requires:
+        - Archetype: developer, operator, admin, system
+        - Trust Level: L3 AUTONOMOUS (checked at runtime)
         """
         archetype_lower = archetype.lower() if archetype else "guest"
 
         # Full access: developers, operators (Kent's trusted proxies)
+        # Includes cross-jewel invocation (invoke, pipeline)
         if archetype_lower in ("developer", "operator", "admin", "system"):
             return (
                 "manifest",
                 "thoughts",
+                "stream",  # SSE streaming
                 "trust",
                 "capture",
                 "action",
                 "rollback",
                 "escalate",
+                "invoke",  # Cross-jewel invocation (L3 only)
+                "pipeline",  # Cross-jewel pipeline (L3 only)
             )
 
-        # Architects: can observe and capture, no escalation/rollback
+        # Architects: can observe and capture, no escalation/rollback/invoke
         if archetype_lower in ("architect", "artist", "researcher", "technical"):
             return (
                 "manifest",
                 "thoughts",
+                "stream",  # SSE streaming
                 "trust",
                 "capture",
             )
@@ -233,6 +292,7 @@ class WitnessNode(BaseLogosNode):
             return (
                 "manifest",
                 "thoughts",
+                "stream",  # SSE streaming
                 "trust",
             )
 
@@ -254,6 +314,63 @@ class WitnessNode(BaseLogosNode):
 
         status = await self._persistence.manifest()
         return WitnessManifestRendering(status=status)
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        streaming=True,
+        help="Stream thoughts in real-time via SSE",
+        examples=["self.witness.stream", "self.witness.stream[sources='gardener,git']"],
+    )
+    async def stream(
+        self,
+        observer: "Observer | Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """
+        Stream thoughts in real-time via Server-Sent Events.
+
+        AGENTESE: self.witness.stream
+
+        Yields thoughts as they are captured, with optional source filtering.
+        Initial batch yields most recent thoughts, then polls for new ones.
+
+        Args:
+            limit: Maximum thoughts in initial batch (default 50)
+            sources: Comma-separated sources to filter (e.g., 'gardener,git')
+            poll_interval: Seconds between polls (default 2.0)
+
+        Yields:
+            Thought dicts as they become available
+        """
+        if self._persistence is None:
+            yield {"error": "Witness persistence not configured"}
+            return
+
+        # Parse kwargs (may be strings from query params)
+        limit = int(kwargs.get("limit", 50))
+        sources_str = kwargs.get("sources")
+        poll_interval = float(kwargs.get("poll_interval", 2.0))
+
+        sources: list[str] | None = None
+        if sources_str:
+            sources = [s.strip() for s in sources_str.split(",") if s.strip()]
+
+        try:
+            async for thought in self._persistence.thought_stream(
+                limit=limit,
+                sources=sources,
+                poll_interval=poll_interval,
+            ):
+                yield {
+                    "type": "thought",
+                    "content": thought.content,
+                    "source": thought.source,
+                    "tags": list(thought.tags),
+                    "timestamp": thought.timestamp.isoformat() if thought.timestamp else None,
+                }
+        except asyncio.CancelledError:
+            # Clean shutdown on disconnect
+            pass
 
     async def _invoke_aspect(
         self,
@@ -433,6 +550,125 @@ class WitnessNode(BaseLogosNode):
                 "reason": esc_result.reason,
                 "timestamp": esc_result.timestamp.isoformat() if esc_result.timestamp else None,
             }
+
+        elif aspect == "invoke":
+            # Cross-jewel invocation (L3 only)
+            path = kwargs.get("path", "")
+            invoke_kwargs = kwargs.get("kwargs", {})
+            trust_level_value = kwargs.get("trust_level", 3)  # Default L3 for testing
+
+            if not path:
+                return {"error": "path required"}
+
+            if self._logos is None:
+                return {"error": "Logos not configured for cross-jewel invocation"}
+
+            # Get trust level
+            try:
+                trust_level = TrustLevel(trust_level_value)
+            except ValueError:
+                trust_level = TrustLevel.READ_ONLY
+
+            # Get or create invoker with appropriate trust level
+            invoker = self._get_invoker(trust_level)
+            if invoker is None:
+                return {"error": "Failed to create invoker"}
+
+            # Perform invocation
+            # Convert observer to Observer type for invoker
+            from protocols.agentese.node import Observer as ObserverType
+
+            obs = observer if isinstance(observer, ObserverType) else ObserverType.guest()
+            invoke_result = await invoker.invoke(path, obs, **invoke_kwargs)
+
+            return {
+                "path": invoke_result.path,
+                "success": invoke_result.success,
+                "result": invoke_result.result,
+                "error": invoke_result.error,
+                "gate_decision": invoke_result.gate_decision.name
+                if invoke_result.gate_decision
+                else None,
+                "timestamp": invoke_result.timestamp.isoformat(),
+            }
+
+        elif aspect == "pipeline":
+            # Cross-jewel pipeline (L3 only)
+            steps_data = kwargs.get("steps", [])
+            trust_level_value = kwargs.get("trust_level", 3)  # Default L3 for testing
+
+            if not steps_data:
+                return {"error": "steps required (list of {path, kwargs})"}
+
+            if self._logos is None:
+                return {"error": "Logos not configured for cross-jewel pipeline"}
+
+            # Get trust level
+            try:
+                trust_level = TrustLevel(trust_level_value)
+            except ValueError:
+                trust_level = TrustLevel.READ_ONLY
+
+            # Get or create invoker with appropriate trust level
+            invoker = self._get_invoker(trust_level)
+            if invoker is None:
+                return {"error": "Failed to create invoker"}
+
+            # Build pipeline from steps
+            steps = [
+                Step(
+                    path=s.get("path", ""),
+                    kwargs=s.get("kwargs", {}),
+                )
+                for s in steps_data
+                if s.get("path")
+            ]
+
+            if not steps:
+                return {"error": "No valid steps provided"}
+
+            # Create pipeline - cast to list[Step | Branch] for type checker
+            from services.witness.pipeline import Branch
+
+            pipeline_steps: list[Step | Branch] = list(steps)
+            pipeline = Pipeline(steps=pipeline_steps)
+
+            # Create runner and execute
+            # Convert observer to Observer type for runner
+            from protocols.agentese.node import Observer as ObserverType
+
+            obs = observer if isinstance(observer, ObserverType) else ObserverType.guest()
+            runner = PipelineRunner(
+                invoker=invoker,
+                observer=obs,
+                abort_on_failure=kwargs.get("abort_on_failure", True),
+            )
+
+            pipeline_result = await runner.run(pipeline)
+
+            return {
+                "status": pipeline_result.status.name,
+                "success": pipeline_result.success,
+                "step_results": [
+                    {
+                        "step_index": sr.step_index,
+                        "path": sr.path,
+                        "success": sr.success,
+                        "result": sr.result,
+                        "error": sr.error,
+                        "duration_ms": sr.duration_ms,
+                    }
+                    for sr in pipeline_result.step_results
+                ],
+                "final_result": pipeline_result.final_result,
+                "error": pipeline_result.error,
+                "total_duration_ms": pipeline_result.total_duration_ms,
+                "aborted_at_step": pipeline_result.aborted_at_step,
+            }
+
+        elif aspect == "stream":
+            # Return the async generator directly - gateway will handle SSE conversion
+            return self.stream(observer, **kwargs)
 
         else:
             return {"error": f"Unknown aspect: {aspect}"}

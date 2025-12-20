@@ -249,6 +249,8 @@ class TrustPersistence:
             state = PersistedTrustState()
             state.first_observed_iso = datetime.now().isoformat()
             state.touch()
+            # Save initial state so file exists
+            self._save_sync(state)
             return state
 
         try:
@@ -262,6 +264,17 @@ class TrustPersistence:
             logger.error(f"Failed to load trust state: {e}")
             # Return fresh state on error
             return PersistedTrustState()
+
+    def _save_sync(self, state: PersistedTrustState) -> bool:
+        """Synchronous save for initialization."""
+        try:
+            self.state_file.parent.mkdir(parents=True, exist_ok=True)
+            self.state_file.write_text(json.dumps(state.to_dict(), indent=2))
+            logger.info(f"Initial trust state saved to {self.state_file}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save initial trust state: {e}")
+            return False
 
     async def save(self, state: PersistedTrustState | None = None) -> bool:
         """

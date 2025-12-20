@@ -275,6 +275,86 @@ class MetricsResponse:
     avg_turn_tokens: float | None = None
 
 
+# === Model Selection ===
+
+
+@dataclass(frozen=True)
+class ModelOption:
+    """A selectable model option with metadata."""
+
+    id: str  # e.g., "claude-sonnet-4-20250514"
+    name: str  # e.g., "Sonnet"
+    description: str  # e.g., "Balanced speed and capability"
+    tier: str  # "fast", "balanced", "powerful"
+
+
+@dataclass(frozen=True)
+class SetModelRequest:
+    """Request to set the model for a session."""
+
+    session_id: str
+    model: str  # Model ID to use
+
+
+@dataclass(frozen=True)
+class SetModelResponse:
+    """Response after setting the model."""
+
+    success: bool
+    session_id: str
+    model: str
+    previous_model: str | None = None
+    message: str | None = None  # Error or info message
+
+
+@dataclass(frozen=True)
+class GetModelsRequest:
+    """Request to get available models for a session."""
+
+    session_id: str | None = None
+
+
+@dataclass(frozen=True)
+class GetModelsResponse:
+    """Response with available models."""
+
+    models: list[ModelOption]
+    current_model: str | None = None
+    can_switch: bool = False  # Whether user can switch models
+
+
+# === Context Breakdown (Teaching Mode) ===
+
+
+@dataclass(frozen=True)
+class ContextSegmentResponse:
+    """A segment of the context window for visualization."""
+
+    name: str  # "System", "Summary", "Working", "Available"
+    tokens: int
+    color: str  # Tailwind CSS class
+    description: str
+
+
+@dataclass(frozen=True)
+class ContextBreakdownRequest:
+    """Request for context breakdown (teaching mode)."""
+
+    session_id: str
+
+
+@dataclass(frozen=True)
+class ContextBreakdownResponse:
+    """Context window breakdown for teaching mode visualization."""
+
+    segments: list[ContextSegmentResponse]
+    total_tokens: int
+    context_window: int
+    utilization: float
+    strategy: str
+    has_summary: bool
+
+
 # === Streaming ===
 
 
@@ -356,6 +436,16 @@ __all__ = [
     # Metrics
     "MetricsRequest",
     "MetricsResponse",
+    # Model Selection
+    "ModelOption",
+    "SetModelRequest",
+    "SetModelResponse",
+    "GetModelsRequest",
+    "GetModelsResponse",
+    # Context Breakdown (Teaching Mode)
+    "ContextSegmentResponse",
+    "ContextBreakdownRequest",
+    "ContextBreakdownResponse",
     # Streaming
     "StreamMessageRequest",
     "StreamChunk",

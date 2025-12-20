@@ -36,7 +36,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, AsyncGenerator
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -292,6 +292,79 @@ class WitnessPersistence:
                 )
                 for row in rows
             ]
+
+    async def thought_stream(
+        self,
+        limit: int = 50,
+        sources: list[str] | None = None,
+        poll_interval: float = 2.0,
+    ) -> AsyncGenerator[Thought, None]:
+        """
+        Stream thoughts in real-time via async generator.
+
+        AGENTESE: self.witness.thoughts.stream (SSE)
+
+        Yields thoughts as they are captured, with polling for new thoughts.
+        Initial batch yields most recent thoughts, then polls for new ones.
+
+        Args:
+            limit: Maximum thoughts in initial batch (default 50)
+            sources: Optional filter by sources (e.g., ['gardener', 'git'])
+            poll_interval: Seconds between polls (default 2.0)
+
+        Yields:
+            Thought objects as they become available
+        """
+        last_seen_time: datetime | None = None
+
+        # Initial batch: yield recent thoughts
+        initial_thoughts = await self.get_thoughts(limit=limit, source=None)
+
+        # Filter by sources if specified
+        if sources:
+            initial_thoughts = [t for t in initial_thoughts if t.source in sources]
+
+        # Yield initial batch (oldest first for chronological streaming)
+        for thought in reversed(initial_thoughts):
+            yield thought
+            if thought.timestamp and (last_seen_time is None or thought.timestamp > last_seen_time):
+                last_seen_time = thought.timestamp
+
+        # Poll for new thoughts
+        while True:
+            await asyncio.sleep(poll_interval)
+
+            try:
+                new_thoughts = await self.get_thoughts(
+                    limit=20,
+                    source=None,
+                    since=last_seen_time,
+                )
+
+                # Filter by sources if specified
+                if sources:
+                    new_thoughts = [t for t in new_thoughts if t.source in sources]
+
+                # Yield new thoughts (oldest first)
+                for thought in reversed(new_thoughts):
+                    yield thought
+                    if thought.timestamp and (
+                        last_seen_time is None or thought.timestamp > last_seen_time
+                    ):
+                        last_seen_time = thought.timestamp
+
+            except asyncio.CancelledError:
+                logger.debug("Thought stream cancelled")
+                break
+            except Exception as e:
+                logger.error(f"Error polling thoughts: {e}")
+                # Yield error as special thought
+                yield Thought(
+                    content=f"[Stream error: {e}]",
+                    source="system",
+                    tags=("error",),
+                    timestamp=datetime.now(UTC),
+                )
 
     # =========================================================================
     # Trust Operations

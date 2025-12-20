@@ -23,6 +23,9 @@ Wave 4 handlers (Gardener-Logos Phase 6):
 Witness handlers (8th Crown Jewel):
 - WitnessToBrainHandler: Captures thoughts and commits to Brain
 - WitnessToGardenHandler: Updates plots when commits detected
+
+Self.Garden Phase 2:
+- GardenToWitnessHandler: Forwards garden gestures to Witness thought stream
 """
 
 from .atelier_brain import AtelierToBrainHandler
@@ -30,6 +33,7 @@ from .base import BaseSynergyHandler
 from .coalition_brain import BrainToCoalitionHandler, CoalitionToBrainHandler
 from .domain_brain import DomainToBrainHandler, ParkToBrainHandler
 from .garden_brain import GardenToBrainHandler
+from .garden_witness import GardenToWitnessHandler
 from .gestalt_brain import GestaltToBrainHandler
 from .gestalt_garden import GestaltToGardenHandler
 from .witness_brain import WitnessToBrainHandler
@@ -53,4 +57,6 @@ __all__ = [
     # Witness (8th Crown Jewel)
     "WitnessToBrainHandler",
     "WitnessToGardenHandler",
+    # Self.Garden Phase 2
+    "GardenToWitnessHandler",
 ]

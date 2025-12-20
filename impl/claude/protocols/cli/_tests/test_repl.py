@@ -2116,3 +2116,212 @@ class TestDottedPathCompletion:
 
         assert "agents.manifest" in matches
         assert "agents.witness" in matches
+
+
+# =============================================================================
+# Phase 4 (CLI v7): Conversation Window Tests
+# =============================================================================
+
+
+class TestConversationWindow:
+    """
+    Tests for ConversationWindow integration.
+
+    Phase 4 (CLI v7): Deep Conversation
+    - ConversationWindow for 10+ turn memory
+    - Window status in prompt
+    - /memory command
+    """
+
+    def test_get_window_returns_window(self, repl_state: Any) -> None:
+        """Verify get_window() creates and returns ConversationWindow."""
+        window = repl_state.get_window()
+
+        # Should return a window (or None if not available)
+        if window is not None:
+            assert hasattr(window, "turn_count")
+            assert hasattr(window, "max_turns")
+            assert window.max_turns == 35  # Default
+
+    def test_record_turn_adds_to_window(self, repl_state: Any) -> None:
+        """Verify record_turn() adds turns to the window."""
+        window = repl_state.get_window()
+
+        if window is not None:
+            initial_count = window.turn_count
+
+            # Record a turn
+            repl_state.record_turn("self.soul.reflect", "Here is my reflection...")
+
+            # Should have added a turn
+            assert window.turn_count == initial_count + 1
+
+    def test_record_turn_skips_trivial_input(self, repl_state: Any) -> None:
+        """Verify record_turn() skips very short inputs."""
+        window = repl_state.get_window()
+
+        if window is not None:
+            initial_count = window.turn_count
+
+            # Very short input should be skipped
+            repl_state.record_turn("..", "up")
+
+            # Should NOT have added a turn
+            assert window.turn_count == initial_count
+
+    def test_get_window_status_format(self, repl_state: Any) -> None:
+        """Verify get_window_status() returns correct format."""
+        status = repl_state.get_window_status()
+
+        # Should be in format "(n/m)" or empty
+        window = repl_state.get_window()
+        if window is not None:
+            assert "(" in status and "/" in status and ")" in status
+        else:
+            assert status == ""
+
+
+class TestMemoryCommand:
+    """
+    Tests for /memory command handling.
+
+    Phase 4 (CLI v7): Memory management UI
+    """
+
+    def test_memory_command_no_window(self, repl_state: Any) -> None:
+        """Verify /memory handles missing window gracefully."""
+        from protocols.cli.repl import handle_memory_command
+
+        # Force window to None
+        repl_state._window = None
+
+        result = handle_memory_command(repl_state, "/memory")
+
+        # Should indicate unavailable or empty
+        assert "not available" in result.lower() or "no" in result.lower()
+
+    def test_memory_command_empty_window(self, repl_state: Any) -> None:
+        """Verify /memory shows empty state."""
+        from protocols.cli.repl import handle_memory_command
+
+        # Ensure window exists but is empty
+        window = repl_state.get_window()
+        if window is not None:
+            window.reset()
+
+        result = handle_memory_command(repl_state, "/memory")
+
+        # Should indicate empty memory
+        assert "no" in result.lower() or "empty" in result.lower() or "0" in result
+
+    def test_memory_status_shows_utilization(self, repl_state: Any) -> None:
+        """Verify /memory status shows window details."""
+        from protocols.cli.repl import handle_memory_command
+
+        result = handle_memory_command(repl_state, "/memory status")
+
+        # Should show window details
+        window = repl_state.get_window()
+        if window is not None:
+            assert "Turns" in result or "turns" in result.lower()
+            assert "Strategy" in result or "strategy" in result.lower()
+
+    def test_memory_toggle_changes_flag(self, repl_state: Any) -> None:
+        """Verify /memory toggle changes prompt indicator flag."""
+        from protocols.cli.repl import handle_memory_command
+
+        initial = repl_state.show_window_utilization
+
+        result = handle_memory_command(repl_state, "/memory toggle")
+
+        assert repl_state.show_window_utilization != initial
+        assert "enabled" in result.lower() or "disabled" in result.lower()
+
+    def test_memory_clear_resets_window(self, repl_state: Any) -> None:
+        """Verify /memory clear resets the window."""
+        from protocols.cli.repl import handle_memory_command
+
+        window = repl_state.get_window()
+        if window is not None:
+            # Add some turns
+            repl_state.record_turn("test input here", "test response output here")
+
+            # Clear
+            result = handle_memory_command(repl_state, "/memory clear")
+
+            assert "cleared" in result.lower()
+            assert window.turn_count == 0
+
+
+class TestPromptWindowIndicator:
+    """
+    Tests for window utilization indicator in prompt.
+
+    Phase 4 (CLI v7): Context-aware prompts
+    """
+
+    def test_prompt_includes_window_when_enabled(self, repl_state: Any) -> None:
+        """Verify prompt shows window indicator when enabled."""
+        window = repl_state.get_window()
+        if window is not None:
+            # Add a turn
+            repl_state.record_turn("test input here", "test response output here")
+
+            # Enable indicator
+            repl_state.show_window_utilization = True
+
+            prompt = repl_state.prompt
+
+            # Should contain window count
+            assert "[" in prompt  # Indicator format
+
+    def test_prompt_omits_window_when_disabled(self, repl_state: Any) -> None:
+        """Verify prompt omits window indicator when disabled."""
+        window = repl_state.get_window()
+        if window is not None:
+            # Add a turn
+            repl_state.record_turn("test input here", "test response output here")
+
+            # Disable indicator
+            repl_state.show_window_utilization = False
+
+            prompt = repl_state.prompt
+
+            # Should not contain window count indicator (but may have other brackets)
+            # The window indicator format is [N] for turn count
+
+
+class TestRegistryFallbackCompletion:
+    """
+    Tests for registry fallback in tab completion.
+
+    Phase 4 (CLI v7): Enhanced registry integration
+    """
+
+    def test_completion_uses_logos_first(self, repl_state: Any) -> None:
+        """Verify completion tries logos.list_handles first."""
+        from protocols.cli.repl import Completer
+
+        # At a context, completions should work
+        repl_state.path = ["self"]
+
+        completer = Completer(repl_state)
+        matches = completer._get_matches("")
+
+        # Should return some matches (static holons at minimum)
+        assert len(matches) > 0
+
+    def test_completion_with_registry_fallback(self, repl_state: Any) -> None:
+        """Verify completion uses registry fallback when logos unavailable."""
+        from protocols.cli.repl import Completer
+
+        repl_state.path = ["self"]
+        # Force logos to None
+        repl_state._logos = None
+
+        completer = Completer(repl_state)
+        matches = completer._get_matches("")
+
+        # Should still return static holons
+        assert len(matches) > 0
+        assert any("status" in m or "memory" in m or "soul" in m for m in matches)

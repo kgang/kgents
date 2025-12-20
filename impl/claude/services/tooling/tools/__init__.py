@@ -17,27 +17,52 @@ Phase 2 - System Tools (4 tools):
 - WebFetchTool: URL fetch with caching (L1)
 - WebSearchTool: Web search with citations (L1)
 
+Phase 3 - Orchestration Tools (6 tools):
+- TodoListTool: List tasks with optional filter (L0)
+- TodoCreateTool: Create/replace task list (L0)
+- TodoUpdateTool: Update task status (L0)
+- EnterPlanModeTool: Enter plan mode (L0)
+- ExitPlanModeTool: Exit plan mode with approval (L0)
+- ClarifyTool: Structured human-in-the-loop questions (L0)
+
 Registration:
-    from services.tooling.tools import register_core_tools, register_system_tools
-    register_core_tools(registry)
-    register_system_tools(registry)
+    from services.tooling.tools import register_all_tools
+    register_all_tools(registry)
 
 Composition:
     from services.tooling.tools import ReadTool, GrepTool
     pipeline = ReadTool() >> GrepTool()
 
 See: spec/services/tooling.md §3 (Tools)
-See: plans/ugent-tooling-phase1-handoff.md
-See: plans/ugent-tooling-phase2-handoff.md
+See: plans/ugent-tooling-phase3-handoff.md
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .clarify import ClarifyTool, QuestionBuilder
 from .file import EditTool, ReadTool, WriteTool, create_read_proof
+from .mode import (
+    EnterPlanModeTool,
+    ExitPlanModeTool,
+    ModeQueryTool,
+    get_mode_state,
+    reset_mode_state,
+    set_approval_handler,
+    set_mode_state,
+)
 from .search import GlobTool, GrepTool
 from .system import BashTool, KillShellTool
+from .task import (
+    TodoCreateTool,
+    TodoListTool,
+    TodoTool,
+    TodoUpdateTool,
+    get_task_store,
+    reset_task_store,
+    set_task_store,
+)
 from .web import WebFetchTool, WebSearchTool
 
 if TYPE_CHECKING:
@@ -83,17 +108,42 @@ def register_system_tools(registry: "ToolRegistry") -> None:
     registry.register(WebSearchTool())
 
 
+def register_orchestration_tools(registry: "ToolRegistry") -> None:
+    """
+    Register all orchestration tools with the registry.
+
+    This is the single registration point for Phase 3 tools.
+    Called during application bootstrap.
+
+    Args:
+        registry: ToolRegistry to register with
+    """
+    # Task tools
+    registry.register(TodoListTool())
+    registry.register(TodoCreateTool())
+    registry.register(TodoUpdateTool())
+
+    # Mode tools
+    registry.register(EnterPlanModeTool())
+    registry.register(ExitPlanModeTool())
+    registry.register(ModeQueryTool())
+
+    # Clarify tool
+    registry.register(ClarifyTool())
+
+
 def register_all_tools(registry: "ToolRegistry") -> None:
     """
     Register all available tools.
 
-    Convenience function that registers both core and system tools.
+    Convenience function that registers all tool phases.
 
     Args:
         registry: ToolRegistry to register with
     """
     register_core_tools(registry)
     register_system_tools(registry)
+    register_orchestration_tools(registry)
 
 
 __all__ = [
@@ -111,8 +161,28 @@ __all__ = [
     # Web tools
     "WebFetchTool",
     "WebSearchTool",
+    # Task tools
+    "TodoTool",
+    "TodoListTool",
+    "TodoCreateTool",
+    "TodoUpdateTool",
+    "get_task_store",
+    "set_task_store",
+    "reset_task_store",
+    # Mode tools
+    "EnterPlanModeTool",
+    "ExitPlanModeTool",
+    "ModeQueryTool",
+    "get_mode_state",
+    "set_mode_state",
+    "reset_mode_state",
+    "set_approval_handler",
+    # Clarify tool
+    "ClarifyTool",
+    "QuestionBuilder",
     # Registration
     "register_core_tools",
     "register_system_tools",
+    "register_orchestration_tools",
     "register_all_tools",
 ]

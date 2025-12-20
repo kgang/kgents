@@ -244,3 +244,67 @@ export interface SelfChatResetResponse {
   session_id: string;
   state: string;
 }
+
+/**
+ * Request to get available models for a session.
+ */
+export interface SelfChatModelsRequest {
+  session_id?: string | null;
+}
+
+/**
+ * Response with available models.
+ */
+export interface SelfChatModelsResponse {
+  models: {
+    id: string;
+    name: string;
+    description: string;
+    tier: string;
+  }[];
+  current_model?: string | null;
+  can_switch?: boolean;
+}
+
+/**
+ * Request to set the model for a session.
+ */
+export interface SelfChatSet_modelRequest {
+  session_id: string;
+  model: string;
+}
+
+/**
+ * Response after setting the model.
+ */
+export interface SelfChatSet_modelResponse {
+  success: boolean;
+  session_id: string;
+  model: string;
+  previous_model?: string | null;
+  message?: string | null;
+}
+
+/**
+ * Request for context breakdown (teaching mode).
+ */
+export interface SelfChatContextRequest {
+  session_id: string;
+}
+
+/**
+ * Context window breakdown for teaching mode visualization.
+ */
+export interface SelfChatContextResponse {
+  segments: {
+    name: string;
+    tokens: number;
+    color: string;
+    description: string;
+  }[];
+  total_tokens: number;
+  context_window: number;
+  utilization: number;
+  strategy: string;
+  has_summary: boolean;
+}

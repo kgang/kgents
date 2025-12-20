@@ -237,12 +237,21 @@ class TendNode(BaseLogosNode):
     @aspect(
         category=AspectCategory.MUTATION,
         effects=[Effect.WRITES("garden_state")],
-        help="Nurture via TextGRAD (requires feedback)",
-        examples=["kg tend water concept.prompt --feedback 'Add more specificity'"],
+        help="Nurture via TextGRAD (with feedback) or refresh plot data (without)",
+        examples=[
+            "kg tend water concept.prompt --feedback 'Add more specificity'",
+            "kg tend water world.atelier  # Refresh from disk",
+        ],
     )
     async def _water(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> dict[str, Any]:
-        """WATER gesture - nurture via TextGRAD."""
-        from protocols.gardener_logos import create_crown_jewel_plots, create_garden
+        """
+        WATER gesture - nurture via TextGRAD or refresh from disk.
+
+        Phase 5 Enhancement:
+        - With feedback: Original TextGRAD-based nurturing
+        - Without feedback: Refresh plot data from plan files (git/fs refresh)
+        """
+        from protocols.api.gardener import _get_or_create_garden, refresh_garden_plots
         from protocols.gardener_logos.tending import apply_gesture, water
 
         target = kwargs.get("target")
@@ -251,11 +260,34 @@ class TendNode(BaseLogosNode):
 
         if not target:
             return {"status": "error", "message": "water requires target"}
-        if not feedback:
-            return {"status": "error", "message": "water requires feedback"}
 
-        garden = create_garden(name="kgents")
-        garden.plots = create_crown_jewel_plots()
+        # Phase 5: No feedback = refresh from disk
+        if not feedback:
+            await refresh_garden_plots()
+            garden = await _get_or_create_garden()
+
+            # Find the target plot
+            target_plot = None
+            target_name = str(target).replace(".", "_").replace("-", "_")
+            for name, plot in garden.plots.items():
+                if name == target or name == target_name or plot.path == target:
+                    target_plot = plot
+                    break
+
+            return {
+                "verb": "water",
+                "target": target,
+                "mode": "refresh",
+                "refreshed": True,
+                "progress": target_plot.progress if target_plot else None,
+                "plan_path": target_plot.plan_path if target_plot else None,
+                "last_tended": (target_plot.last_tended.isoformat() if target_plot else None),
+                "message": f"Refreshed {target} from plan files",
+                "success": True,
+            }
+
+        # Original TextGRAD behavior with feedback
+        garden = await _get_or_create_garden()
 
         gesture = water(target, feedback, float(tone))
         result = await apply_gesture(garden, gesture)
@@ -266,6 +298,7 @@ class TendNode(BaseLogosNode):
         return {
             "verb": "water",
             "target": target,
+            "mode": "textgrad",
             "feedback": feedback,
             "tone": tone,
             "learning_rate": learning_rate,

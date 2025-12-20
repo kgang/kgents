@@ -273,16 +273,27 @@ async def discover_plots_from_forest(
     """
     Discover plots from Forest Protocol plan files.
 
+    Phase 5: Batteries Included - Now extracts real progress from:
+    1. _forest.md table (source of truth for progress percentages)
+    2. Individual plan file headers for status
+
     Scans the plans/ directory for active plan files and
-    creates corresponding plots.
+    creates corresponding plots with real progress data.
 
     Args:
         forest_path: Path to plans directory
 
     Returns:
-        List of discovered plots
+        List of discovered plots with real progress
     """
     from pathlib import Path
+
+    from services.gardener.plan_parser import (
+        infer_agentese_path,
+        infer_crown_jewel,
+        parse_forest_table,
+        parse_plan_progress,
+    )
 
     plots: list[PlotState] = []
     plans_dir = Path(forest_path)
@@ -290,35 +301,83 @@ async def discover_plots_from_forest(
     if not plans_dir.exists():
         return plots
 
-    # Look for .md files in plans/
+    # 1. Parse _forest.md for authoritative progress data
+    forest_file = plans_dir / "_forest.md"
+    forest_progress = parse_forest_table(forest_file)
+
+    # 2. Scan for plan files
     for plan_file in plans_dir.glob("**/*.md"):
-        # Skip underscore-prefixed (meta files)
+        # Skip underscore-prefixed (meta files like _forest.md, _focus.md)
         if plan_file.name.startswith("_"):
             continue
 
         # Parse plan name from file
         name = plan_file.stem
 
-        # Infer AGENTESE path from directory structure
-        relative = plan_file.relative_to(plans_dir)
-        if relative.parent.name == "core-apps":
-            # Crown jewel plans
-            path = f"world.{name.replace('-', '_')}"
+        # 3. Get progress: forest table is authoritative, fallback to file parse
+        if name in forest_progress:
+            metadata = forest_progress[name]
+            progress = metadata.progress
+            status = metadata.status
+            notes = metadata.notes
         else:
-            # Generic plans
-            path = f"concept.plan.{name.replace('-', '_')}"
+            # Parse individual file
+            metadata = await parse_plan_progress(plan_file)
+            progress = metadata.progress
+            status = metadata.status
+            notes = metadata.notes
+
+        # 4. Infer AGENTESE path
+        path = infer_agentese_path(plan_file)
+
+        # 5. Check if this links to a Crown Jewel
+        crown_jewel = infer_crown_jewel(name)
+
+        # 6. Infer rigidity from status
+        rigidity = _status_to_rigidity(status)
+
+        # 7. Build tags from status and crown jewel
+        tags = ["plan", "forest"]
+        if status:
+            tags.append(status)
+        if crown_jewel:
+            tags.append("crown-jewel")
 
         plot = PlotState(
             name=name,
             path=path,
-            description=f"Plan: {plan_file}",
+            description=notes or f"Plan: {plan_file.name}",
             plan_path=str(plan_file),
-            rigidity=0.5,
-            tags=["plan", "forest"],
+            crown_jewel=crown_jewel,
+            rigidity=rigidity,
+            progress=progress,
+            tags=tags,
         )
         plots.append(plot)
 
     return plots
+
+
+def _status_to_rigidity(status: str) -> float:
+    """
+    Map plan status to rigidity value.
+
+    Active plans are more plastic, complete plans are rigid.
+    """
+    status = status.lower() if status else "active"
+
+    rigidity_map = {
+        "planning": 0.3,  # Very plastic - still exploring
+        "seedling": 0.35,
+        "active": 0.4,  # Moderate plasticity
+        "executing": 0.45,
+        "priority": 0.5,
+        "complete": 0.8,  # Rigid - done
+        "dormant": 0.6,  # Somewhat rigid - inactive
+        "superseded": 0.7,  # Rigid - replaced
+    }
+
+    return rigidity_map.get(status, 0.5)
 
 
 __all__ = [

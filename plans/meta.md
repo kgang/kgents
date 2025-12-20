@@ -75,6 +75,8 @@ Property-based tests catch edge cases: Hypothesis found boundary issues humans m
 Performance baselines as assertions: `assert elapsed < 1.0` catches regressions
 Registry singleton + xdist: session-scoped fixtures in ROOT conftest.py ensure workers populated
 Contract tests bridge type gaps: Python validators mirror TypeScript interfaces
+Eager evaluation trap: header.get("path", fallback()) evaluates fallback even if key exists; use if/else
+Test isolation via DI: _get_project_root() override > filesystem monkeypatch for temp fixture paths
 ```
 
 ### Infrastructure

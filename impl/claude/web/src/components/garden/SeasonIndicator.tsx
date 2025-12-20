@@ -23,36 +23,34 @@ interface SeasonIndicatorProps {
 }
 
 /** Season visual configuration (using Lucide icons per visual-system.md) */
-const SEASON_CONFIG: Record<
-  GardenSeason,
-  { color: string; bgColor: string; description: string }
-> = {
-  DORMANT: {
-    color: 'text-gray-400',
-    bgColor: 'bg-gray-800',
-    description: 'Garden is resting',
-  },
-  SPROUTING: {
-    color: 'text-green-400',
-    bgColor: 'bg-green-900/30',
-    description: 'New ideas emerging',
-  },
-  BLOOMING: {
-    color: 'text-pink-400',
-    bgColor: 'bg-pink-900/30',
-    description: 'Ideas crystallizing',
-  },
-  HARVEST: {
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-900/30',
-    description: 'Time to gather',
-  },
-  COMPOSTING: {
-    color: 'text-orange-400',
-    bgColor: 'bg-orange-900/30',
-    description: 'Breaking down patterns',
-  },
-};
+const SEASON_CONFIG: Record<GardenSeason, { color: string; bgColor: string; description: string }> =
+  {
+    DORMANT: {
+      color: 'text-gray-400',
+      bgColor: 'bg-gray-800',
+      description: 'Garden is resting',
+    },
+    SPROUTING: {
+      color: 'text-green-400',
+      bgColor: 'bg-green-900/30',
+      description: 'New ideas emerging',
+    },
+    BLOOMING: {
+      color: 'text-pink-400',
+      bgColor: 'bg-pink-900/30',
+      description: 'Ideas crystallizing',
+    },
+    HARVEST: {
+      color: 'text-amber-400',
+      bgColor: 'bg-amber-900/30',
+      description: 'Time to gather',
+    },
+    COMPOSTING: {
+      color: 'text-orange-400',
+      bgColor: 'bg-orange-900/30',
+      description: 'Breaking down patterns',
+    },
+  };
 
 export function SeasonIndicator({
   season,
@@ -129,6 +127,27 @@ export function SeasonBadge({
     >
       <SeasonIcon className="w-3.5 h-3.5" />
       <span>{season}</span>
+    </span>
+  );
+}
+
+/** Ultra-compact season badge - icon only for very tight spaces */
+export function SeasonBadgeCompact({
+  season,
+  className = '',
+}: {
+  season: GardenSeason;
+  className?: string;
+}) {
+  const config = SEASON_CONFIG[season];
+  const SeasonIcon = getSeasonIcon(season);
+
+  return (
+    <span
+      className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${config.bgColor} ${className}`}
+      title={`${season}: ${config.description}`}
+    >
+      <SeasonIcon className={`w-4 h-4 ${config.color}`} />
     </span>
   );
 }

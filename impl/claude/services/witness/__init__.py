@@ -69,6 +69,23 @@ from .contracts import (
     TrustResponse,
     WitnessManifestResponse,
 )
+from .covenant import (
+    Covenant,
+    CovenantEnforcer,
+    CovenantError,
+    CovenantId,
+    CovenantNotGranted,
+    CovenantRevoked,
+    CovenantStatus,
+    CovenantStore,
+    GateFallback,
+    GateOccurrence,
+    GateTriggered,
+    ReviewGate,
+    generate_covenant_id,
+    get_covenant_store,
+    reset_covenant_store,
+)
 from .crystal import (
     ExperienceCrystal,
     MoodVector,
@@ -79,6 +96,17 @@ from .crystallization_node import (
     TimeWitnessManifestRendering,
     TimeWitnessManifestResponse,
     TimeWitnessNode,
+)
+from .intent import (
+    CyclicDependencyError,
+    Intent,
+    IntentId,
+    IntentStatus,
+    IntentTree,
+    IntentType,
+    generate_intent_id,
+    get_intent_tree,
+    reset_intent_tree,
 )
 from .invoke import (
     InvocationResult,
@@ -91,6 +119,22 @@ from .node import (
     ThoughtStreamRendering,
     WitnessManifestRendering,
     WitnessNode,
+)
+
+# WARP Phase 1 - Chunks 3-6
+from .offering import (
+    Budget,
+    BudgetExceeded,
+    HandleNotInScope,
+    Offering,
+    OfferingError,
+    OfferingExpired,
+    OfferingId,
+    OfferingStatus,
+    OfferingStore,
+    generate_offering_id,
+    get_offering_store,
+    reset_offering_store,
 )
 from .operad import (
     WITNESS_OPERAD,
@@ -156,6 +200,25 @@ from .reactor import (
     pr_opened_event,
     session_start_event,
 )
+from .ritual import (
+    GuardEvaluation,
+    GuardFailed,
+    GuardResult,
+    InvalidPhaseTransition,
+    MissingCovenant,
+    MissingOffering,
+    Ritual,
+    RitualError,
+    RitualId,
+    RitualNotActive,
+    RitualPhase,
+    RitualStatus,
+    RitualStore,
+    SentinelGuard,
+    generate_ritual_id,
+    get_ritual_store,
+    reset_ritual_store,
+)
 from .schedule import (
     ScheduledTask,
     ScheduleStatus,
@@ -175,6 +238,42 @@ from .sheaf import (
     verify_associativity_law,
     verify_identity_law,
 )
+from .terrace import (
+    Terrace,
+    TerraceId,
+    TerraceStatus,
+    TerraceStore,
+    generate_terrace_id,
+    get_terrace_store,
+    reset_terrace_store,
+    set_terrace_store,
+)
+
+# WARP Primitives (Phase 1)
+from .trace_node import (
+    LinkRelation,
+    NPhase,
+    PlanPath,
+    Response,
+    Stimulus,
+    TraceLink,
+    TraceNode,
+    TraceNodeId,
+    UmweltSnapshot,
+    WalkId,
+    generate_trace_id,
+)
+from .trace_store import (
+    CausalityViolation,
+    DuplicateTraceError,
+    TraceNodeStore,
+    TraceNotFoundError,
+    TraceQuery,
+    TraceStoreError,
+    get_trace_store,
+    reset_trace_store,
+    set_trace_store,
+)
 from .trust import (
     ActionGate,
     BoundaryChecker,
@@ -193,6 +292,30 @@ from .trust import (
     PendingSuggestion,
     SuggestionStats,
     check_escalation,
+)
+
+# WARP Phase 1 - Chunks 7-8
+from .voice_gate import (
+    DENYLIST_PATTERNS,
+    HEDGE_PATTERNS,
+    VOICE_ANCHORS,
+    VoiceAction,
+    VoiceCheckResult,
+    VoiceGate,
+    VoiceRule,
+    VoiceViolation,
+    get_voice_gate,
+    reset_voice_gate,
+    set_voice_gate,
+)
+from .walk import (
+    Participant,
+    Walk,
+    WalkIntent,
+    WalkStatus,
+    WalkStore,
+    get_walk_store,
+    reset_walk_store,
 )
 from .watchers import (
     GitWatcher,
@@ -219,6 +342,114 @@ from .workflows import (
 )
 
 __all__ = [
+    # WARP Primitives (Phase 1)
+    "TraceNode",
+    "TraceNodeId",
+    "TraceLink",
+    "LinkRelation",
+    "NPhase",
+    "PlanPath",
+    "WalkId",
+    "Stimulus",
+    "Response",
+    "UmweltSnapshot",
+    "generate_trace_id",
+    # TraceNodeStore
+    "TraceNodeStore",
+    "TraceQuery",
+    "TraceStoreError",
+    "CausalityViolation",
+    "DuplicateTraceError",
+    "TraceNotFoundError",
+    "get_trace_store",
+    "set_trace_store",
+    "reset_trace_store",
+    # Walk
+    "Walk",
+    "WalkStatus",
+    "WalkIntent",
+    "Participant",
+    "WalkStore",
+    "get_walk_store",
+    "reset_walk_store",
+    # Offering (Chunk 3)
+    "OfferingId",
+    "generate_offering_id",
+    "Budget",
+    "OfferingStatus",
+    "OfferingError",
+    "BudgetExceeded",
+    "OfferingExpired",
+    "HandleNotInScope",
+    "Offering",
+    "OfferingStore",
+    "get_offering_store",
+    "reset_offering_store",
+    # Covenant (Chunk 4)
+    "CovenantId",
+    "generate_covenant_id",
+    "CovenantStatus",
+    "GateFallback",
+    "ReviewGate",
+    "GateOccurrence",
+    "CovenantError",
+    "CovenantNotGranted",
+    "CovenantRevoked",
+    "GateTriggered",
+    "Covenant",
+    "CovenantEnforcer",
+    "CovenantStore",
+    "get_covenant_store",
+    "reset_covenant_store",
+    # Ritual (Chunk 5)
+    "RitualId",
+    "generate_ritual_id",
+    "RitualStatus",
+    "GuardResult",
+    "SentinelGuard",
+    "GuardEvaluation",
+    "RitualPhase",
+    "RitualError",
+    "RitualNotActive",
+    "InvalidPhaseTransition",
+    "GuardFailed",
+    "MissingCovenant",
+    "MissingOffering",
+    "Ritual",
+    "RitualStore",
+    "get_ritual_store",
+    "reset_ritual_store",
+    # Intent (Chunk 6)
+    "IntentId",
+    "generate_intent_id",
+    "IntentType",
+    "IntentStatus",
+    "CyclicDependencyError",
+    "Intent",
+    "IntentTree",
+    "get_intent_tree",
+    "reset_intent_tree",
+    # VoiceGate (Chunk 7)
+    "VOICE_ANCHORS",
+    "DENYLIST_PATTERNS",
+    "HEDGE_PATTERNS",
+    "VoiceAction",
+    "VoiceRule",
+    "VoiceViolation",
+    "VoiceCheckResult",
+    "VoiceGate",
+    "get_voice_gate",
+    "set_voice_gate",
+    "reset_voice_gate",
+    # Terrace (Chunk 8)
+    "TerraceId",
+    "generate_terrace_id",
+    "TerraceStatus",
+    "Terrace",
+    "TerraceStore",
+    "get_terrace_store",
+    "set_terrace_store",
+    "reset_terrace_store",
     # State machine
     "TrustLevel",
     "WitnessPhase",

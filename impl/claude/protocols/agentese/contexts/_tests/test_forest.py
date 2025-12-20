@@ -224,45 +224,106 @@ async def test_sip_returns_single_plan(forest_node: ForestNode) -> None:
 
 
 @pytest.mark.asyncio
-async def test_sip_selects_longest_dormant(forest_node: ForestNode) -> None:
-    """_sip() should select the plan with highest days_since (if dormant plans exist)."""
-    observer = MockUmwelt(archetype="meta")
-    result = await forest_node._sip(observer)
+async def test_sip_selects_longest_dormant(tmp_path: Path) -> None:
+    """_sip() should select the plan with highest days_since (if dormant plans exist).
 
-    # If dormant plans exist, should select longest dormant
-    # agents/t-gent has 2 days_since, ideas/session-01 has 1
-    if result["selected_plan"] is not None:
-        assert result["selected_plan"] == "agents/t-gent"
-        assert result.get("days_dormant", 0) >= 0
-    # Status should always be present
-    assert "status" in result
+    Uses isolated test fixtures with controlled plan data.
+    DI pattern: _get_project_root() is overridden to return tmp_path.
+    """
+    # Create isolated plans directory with YAML-header plans
+    plans_dir = tmp_path / "plans"
+    plans_dir.mkdir()
+
+    # Create dormant plan (longest dormant - 5 days)
+    (plans_dir / "agents-t-gent.md").write_text("""---
+path: agents/t-gent
+status: dormant
+progress: 90
+last_touched: 2025-12-10
+session_notes: |
+  Test plan - longest dormant.
+---
+
+# T-gent Plan
+
+Content.
+""")
+
+    # Create another dormant plan (shorter dormant - 2 days)
+    (plans_dir / "ideas-session-01.md").write_text("""---
+path: ideas/session-01
+status: dormant
+progress: 0
+last_touched: 2025-12-13
+session_notes: |
+  Another dormant plan.
+---
+
+# Session 01
+
+Content.
+""")
+
+    # Create active plan (should be ignored by sip)
+    (plans_dir / "agents-k-gent.md").write_text("""---
+path: agents/k-gent
+status: active
+progress: 97
+last_touched: 2025-12-15
+---
+
+# K-gent Plan
+
+Active plan.
+""")
+
+    # Create node with isolated project root
+    node = create_forest_node(
+        forest_path=str(plans_dir / "_forest.md"),
+        plans_root="plans",
+    )
+    node._get_project_root = lambda: tmp_path  # type: ignore[method-assign]
+
+    observer = MockUmwelt(archetype="meta")
+    result = await node._sip(observer)
+
+    # Should select longest dormant (agents/t-gent with 5 days)
+    assert result["selected_plan"] == "agents/t-gent"
+    assert result.get("days_dormant", 0) >= 5
+    assert result["status"] == "live"
 
 
 @pytest.mark.asyncio
 async def test_sip_empty_dormant(tmp_path: Path) -> None:
-    """_sip() should handle no dormant plans gracefully."""
-    # Create forest with no dormant section
-    forest_content = """# Forest Health: 2025-12-14
+    """_sip() should handle no dormant plans gracefully.
 
-## Active Trees
+    Uses isolated test fixtures with YAML-header plans (no dormant).
+    DI pattern: _get_project_root() is overridden to return tmp_path.
+    """
+    # Create isolated plans directory with only active plans (no dormant)
+    plans_dir = tmp_path / "plans"
+    plans_dir.mkdir()
 
-| Plan | Progress | Last Touched | Status | Notes |
-|------|----------|--------------|--------|-------|
-| agents/k-gent | 97% | 2025-12-12 | active | Done |
-
+    # Create only active plans
+    (plans_dir / "agents-k-gent.md").write_text("""---
+path: agents/k-gent
+status: active
+progress: 97
+last_touched: 2025-12-15
 ---
 
-## Dormant Trees (Awaiting Accursed Share)
+# K-gent Plan
 
-| Plan | Progress | Last Touched | Days Since | Suggested Action |
-|------|----------|--------------|------------|------------------|
+Active plan.
+""")
 
----
-"""
-    forest_path = tmp_path / "_forest.md"
-    forest_path.write_text(forest_content)
+    # Create node with isolated project root
+    node = create_forest_node(
+        forest_path=str(plans_dir / "_forest.md"),
+        plans_root="plans",
+    )
+    node._get_project_root = lambda: tmp_path  # type: ignore[method-assign]
 
-    node = create_forest_node(forest_path=str(forest_path))
     observer = MockUmwelt(archetype="meta")
     result = await node._sip(observer)
 

@@ -1,10 +1,14 @@
+---
+context: self
+---
+
 # Local Development Setup
 
 Complete guide to running kgents locally, including the Agent Town web UI and backend API.
 
 ## Prerequisites
 
-- **Python 3.11+** with [uv](https://github.com/astral-sh/uv) package manager
+- **Python 3.12+** with [uv](https://github.com/astral-sh/uv) package manager
 - **Node.js 18+** with npm
 - **Git**
 

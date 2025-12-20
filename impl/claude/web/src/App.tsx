@@ -21,6 +21,7 @@ import { PageTransition, PersonalityLoading } from './components/joy';
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
+const Canvas = lazy(() => import('./pages/Canvas'));
 
 // Town simulation and Inhabit now handled via UniversalProjection
 // (see registry.tsx for world.town.simulation and world.town.inhabit projections)
@@ -59,6 +60,9 @@ function App() {
 
                 {/* AGENTESE Docs Explorer - Phase 3 OpenAPI projection */}
                 <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
+
+                {/* Collaborative Canvas - CLI v7 Phase 5 */}
+                <Route path="/_/canvas" element={<Canvas />} />
 
                 {/*
                  * Universal AGENTESE Projection (catch-all)

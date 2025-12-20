@@ -97,6 +97,22 @@ class SynergyEventType(Enum):
     WITNESS_DAEMON_STARTED = "witness.daemon.started"  # Daemon started watching
     WITNESS_DAEMON_STOPPED = "witness.daemon.stopped"  # Daemon stopped
 
+    # Conductor events (CLI v7 Phase 1: File I/O Primitives)
+    FILE_READ = "file.read"  # File read (cached for edit guard)
+    FILE_EDITED = "file.edited"  # File edited via exact string replacement
+    FILE_CREATED = "file.created"  # New file created
+
+    # Presence events (CLI v7 Phase 3: Agent Cursors)
+    CURSOR_UPDATED = "cursor.updated"  # Agent cursor state changed
+    CURSOR_JOINED = "cursor.joined"  # Agent joined the collaborative space
+    CURSOR_LEFT = "cursor.left"  # Agent left the collaborative space
+
+    # Tooling events (U-gent Tool Infrastructure)
+    TOOL_INVOKED = "tool.invoked"  # Tool execution started
+    TOOL_COMPLETED = "tool.completed"  # Tool execution succeeded
+    TOOL_FAILED = "tool.failed"  # Tool execution failed
+    TOOL_TRUST_DENIED = "tool.trust_denied"  # Trust gate denied invocation
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -109,6 +125,8 @@ class Jewel(Enum):
     PARK = "park"
     DOMAIN = "domain"
     WITNESS = "witness"  # 8th Crown Jewel - The Witnessing Ghost
+    CONDUCTOR = "conductor"  # 9th Crown Jewel - Conversation & File I/O
+    TOOLING = "tooling"  # 10th Crown Jewel - Tool Infrastructure
 
     # Infrastructure jewels
     DGENT = "dgent"  # Data layer (D-gent)
@@ -1584,6 +1602,359 @@ def create_witness_daemon_stopped_event(
     )
 
 
+# =============================================================================
+# Conductor Events (CLI v7 Phase 1: File I/O Primitives)
+# =============================================================================
+
+
+def create_file_read_event(
+    path: str,
+    size: int,
+    lines: int,
+    agent_id: str = "unknown",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a file read event.
+
+    Emitted when a file is read and cached for subsequent edits.
+
+    Args:
+        path: File path that was read
+        size: File size in bytes
+        lines: Number of lines in file
+        agent_id: ID of agent that performed the read
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.FILE_READ,
+        source_id=path,
+        payload={
+            "path": path,
+            "size": size,
+            "lines": lines,
+            "agent_id": agent_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_file_edited_event(
+    path: str,
+    old_size: int,
+    new_size: int,
+    replacements: int,
+    agent_id: str = "unknown",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a file edited event.
+
+    Emitted when a file is successfully edited via exact string replacement.
+
+    Args:
+        path: File path that was edited
+        old_size: File size before edit
+        new_size: File size after edit
+        replacements: Number of replacements made
+        agent_id: ID of agent that performed the edit
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.FILE_EDITED,
+        source_id=path,
+        payload={
+            "path": path,
+            "old_size": old_size,
+            "new_size": new_size,
+            "replacements": replacements,
+            "size_delta": new_size - old_size,
+            "agent_id": agent_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_file_created_event(
+    path: str,
+    size: int,
+    agent_id: str = "unknown",
+    artifact_type: str | None = None,
+    committed: bool = False,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a file created event.
+
+    Emitted when a new file is written to disk.
+
+    Args:
+        path: File path that was created
+        size: File size in bytes
+        agent_id: ID of agent that created the file
+        artifact_type: Optional artifact type (code, doc, plan, test, config)
+        committed: Whether the file was committed to git
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.FILE_CREATED,
+        source_id=path,
+        payload={
+            "path": path,
+            "size": size,
+            "agent_id": agent_id,
+            "artifact_type": artifact_type,
+            "committed": committed,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Presence Events (CLI v7 Phase 3: Agent Cursors)
+# =============================================================================
+
+
+def create_cursor_updated_event(
+    agent_id: str,
+    display_name: str,
+    state: str,
+    focus_path: str | None = None,
+    activity: str = "",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a cursor updated event.
+
+    Emitted when an agent's cursor state changes (exploring, working, etc.).
+
+    Args:
+        agent_id: Unique agent identifier
+        display_name: Human-readable agent name
+        state: Cursor state (following, exploring, working, suggesting, waiting)
+        focus_path: AGENTESE path being focused
+        activity: Brief description of current activity
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,  # Broadcast to all UIs
+        event_type=SynergyEventType.CURSOR_UPDATED,
+        source_id=agent_id,
+        payload={
+            "agent_id": agent_id,
+            "display_name": display_name,
+            "state": state,
+            "focus_path": focus_path,
+            "activity": activity,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_cursor_joined_event(
+    agent_id: str,
+    display_name: str,
+    behavior: str = "assistant",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a cursor joined event.
+
+    Emitted when an agent joins the collaborative space.
+
+    Args:
+        agent_id: Unique agent identifier
+        display_name: Human-readable agent name
+        behavior: Agent behavior pattern (follower, explorer, assistant, autonomous)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CURSOR_JOINED,
+        source_id=agent_id,
+        payload={
+            "agent_id": agent_id,
+            "display_name": display_name,
+            "behavior": behavior,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_cursor_left_event(
+    agent_id: str,
+    display_name: str,
+    reason: str = "disconnected",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a cursor left event.
+
+    Emitted when an agent leaves the collaborative space.
+
+    Args:
+        agent_id: Unique agent identifier
+        display_name: Human-readable agent name
+        reason: Why the agent left (disconnected, completed, error)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CURSOR_LEFT,
+        source_id=agent_id,
+        payload={
+            "agent_id": agent_id,
+            "display_name": display_name,
+            "reason": reason,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Tooling Events (U-gent Tool Infrastructure)
+# =============================================================================
+
+
+def create_tool_invoked_event(
+    execution_id: str,
+    tool_name: str,
+    observer_id: str | None = None,
+    trust_level: int = 0,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a tool invoked event.
+
+    Emitted when a tool execution begins.
+
+    Args:
+        execution_id: Unique execution identifier
+        tool_name: Name of tool being invoked
+        observer_id: Optional observer/agent ID
+        trust_level: Current trust level
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.TOOLING,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.TOOL_INVOKED,
+        source_id=execution_id,
+        payload={
+            "tool_name": tool_name,
+            "observer_id": observer_id,
+            "trust_level": trust_level,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_tool_completed_event(
+    execution_id: str,
+    tool_name: str,
+    duration_ms: float,
+    observer_id: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a tool completed event.
+
+    Emitted when a tool execution succeeds.
+
+    Args:
+        execution_id: Unique execution identifier
+        tool_name: Name of tool that completed
+        duration_ms: Execution duration in milliseconds
+        observer_id: Optional observer/agent ID
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.TOOLING,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.TOOL_COMPLETED,
+        source_id=execution_id,
+        payload={
+            "tool_name": tool_name,
+            "duration_ms": duration_ms,
+            "observer_id": observer_id,
+            "success": True,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_tool_failed_event(
+    execution_id: str,
+    tool_name: str,
+    error: str,
+    duration_ms: float = 0.0,
+    observer_id: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a tool failed event.
+
+    Emitted when a tool execution fails.
+
+    Args:
+        execution_id: Unique execution identifier
+        tool_name: Name of tool that failed
+        error: Error message
+        duration_ms: Execution duration before failure
+        observer_id: Optional observer/agent ID
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.TOOLING,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.TOOL_FAILED,
+        source_id=execution_id,
+        payload={
+            "tool_name": tool_name,
+            "error": error,
+            "duration_ms": duration_ms,
+            "observer_id": observer_id,
+            "success": False,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_tool_trust_denied_event(
+    execution_id: str,
+    tool_name: str,
+    required_trust: int,
+    current_trust: int,
+    observer_id: str | None = None,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a tool trust denied event.
+
+    Emitted when a tool invocation is blocked by trust gate.
+
+    Args:
+        execution_id: Unique execution identifier
+        tool_name: Name of tool that was denied
+        required_trust: Trust level required by tool
+        current_trust: Observer's current trust level
+        observer_id: Optional observer/agent ID
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.TOOLING,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.TOOL_TRUST_DENIED,
+        source_id=execution_id,
+        payload={
+            "tool_name": tool_name,
+            "required_trust": required_trust,
+            "current_trust": current_trust,
+            "observer_id": observer_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -1639,4 +2010,17 @@ __all__ = [
     "create_witness_git_push_event",
     "create_witness_daemon_started_event",
     "create_witness_daemon_stopped_event",
+    # Factory functions - Conductor (CLI v7 Phase 1)
+    "create_file_read_event",
+    "create_file_edited_event",
+    "create_file_created_event",
+    # Factory functions - Presence (CLI v7 Phase 3)
+    "create_cursor_updated_event",
+    "create_cursor_joined_event",
+    "create_cursor_left_event",
+    # Factory functions - Tooling (U-gent Tool Infrastructure)
+    "create_tool_invoked_event",
+    "create_tool_completed_event",
+    "create_tool_failed_event",
+    "create_tool_trust_denied_event",
 ]

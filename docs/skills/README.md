@@ -1,3 +1,7 @@
+---
+context: self
+---
+
 # Agent Skills Directory
 
 > *"13 skills are necessary and sufficient to build any kgents component."*

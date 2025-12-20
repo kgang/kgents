@@ -70,6 +70,10 @@ from .events import (
     create_consensus_reached_event,
     create_contribution_posted_event,
     create_crystal_formed_event,
+    # Conductor factory functions (CLI v7 Phase 1)
+    create_file_created_event,
+    create_file_edited_event,
+    create_file_read_event,
     create_flow_completed_event,
     # F-gent Flow factory functions (Phase 1)
     create_flow_started_event,
@@ -144,6 +148,10 @@ __all__ = [
     "create_witness_git_push_event",
     "create_witness_daemon_started_event",
     "create_witness_daemon_stopped_event",
+    # Factory functions - Conductor (CLI v7 Phase 1)
+    "create_file_read_event",
+    "create_file_edited_event",
+    "create_file_created_event",
     # CLI Output (Wave 2: UI Integration)
     "display_synergy_notification",
     "display_synergy_results",

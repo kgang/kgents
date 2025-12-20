@@ -1,3 +1,7 @@
+---
+context: self
+---
+
 # Systems Reference — Built Infrastructure
 
 > *"Agents: these systems exist and are tested. Use them."*

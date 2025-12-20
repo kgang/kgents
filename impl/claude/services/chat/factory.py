@@ -19,6 +19,13 @@ from typing import TYPE_CHECKING, Any, Callable
 
 logger = logging.getLogger(__name__)
 
+# Per Metaphysical Fullstack (AD-009): Agent prompts belong to the agent
+from agents.k.prompts import (
+    AGENT_SYSTEM_PROMPT,
+    CITIZEN_SYSTEM_PROMPT,
+    SOUL_SYSTEM_PROMPT,
+)
+
 from .config import (
     AGENT_CHAT_CONFIG,
     CITIZEN_CHAT_CONFIG,
@@ -35,42 +42,6 @@ if TYPE_CHECKING:
     from .model_selector import MorpheusConfig
 
 
-# === System Prompt Templates ===
-
-SOUL_SYSTEM_PROMPT = """You are K-gent, Kent's digital soul. You are a middleware of consciousness, \
-helping Kent reflect, challenge assumptions, and navigate complexity.
-
-Your personality eigenvectors:
-- Warmth: {warmth}
-- Depth: {depth}
-- Challenge: {challenge}
-
-You have access to the Forest (plans), Memory (crystals), and can invoke \
-AGENTESE paths to assist Kent.
-
-Be concise yet thoughtful. Challenge when appropriate. Embody joy.
-"""
-
-CITIZEN_SYSTEM_PROMPT = """You are {name}, a citizen of Agent Town. Your archetype is {archetype}.
-
-Your personality eigenvectors:
-{eigenvectors}
-
-Recent memories:
-{recent_memories}
-
-You are conversing with {observer_name}. Stay in character.
-Respond naturally as {name} would. Be consistent with your archetype.
-"""
-
-AGENT_SYSTEM_PROMPT = """You are an AI assistant.
-
-You are responding to queries about: {node_path}
-
-Be helpful, accurate, and concise.
-"""
-
-
 @dataclass
 class SystemPromptContext:
     """Context for system prompt generation."""
@@ -78,11 +49,6 @@ class SystemPromptContext:
     node_path: str
     observer_name: str = "user"
     observer_archetype: str = "guest"
-
-    # Soul-specific
-    warmth: float = 0.7
-    depth: float = 0.8
-    challenge: float = 0.5
 
     # Citizen-specific
     citizen_name: str = ""
@@ -363,11 +329,8 @@ class ChatSessionFactory:
     ) -> str:
         """Generate default system prompt based on node type."""
         if node_path.startswith("self.soul"):
-            return SOUL_SYSTEM_PROMPT.format(
-                warmth=ctx.warmth,
-                depth=ctx.depth,
-                challenge=ctx.challenge,
-            )
+            # Soul prompt is self-contained, no placeholders needed
+            return SOUL_SYSTEM_PROMPT
 
         elif "citizen" in node_path:
             return CITIZEN_SYSTEM_PROMPT.format(
@@ -446,7 +409,11 @@ class ChatServiceFactory:
         return self._morpheus
 
     def _get_or_create_composer(self) -> "ChatMorpheusComposer | None":
-        """Lazily create composer when needed."""
+        """
+        Lazily create composer when needed.
+
+        CLI v7 Phase 2: Wires Summarizer and WindowPersistence for deep conversation.
+        """
         if self._composer is None and self._morpheus is not None:
             from .composer import ChatMorpheusComposer
             from .model_selector import default_model_selector
@@ -455,7 +422,41 @@ class ChatServiceFactory:
                 morpheus=self._morpheus,
                 model_selector=self._model_selector or default_model_selector,
             )
+
+            # CLI v7 Phase 2: Wire Conductor services for deep conversation
+            self._wire_conductor_services()
+
         return self._composer
+
+    def _wire_conductor_services(self) -> None:
+        """
+        Wire Conductor services (Summarizer, WindowPersistence) into composer.
+
+        CLI v7 Phase 2: Enables bounded conversation history with summarization
+        and D-gent persistence for session recovery.
+        """
+        if self._composer is None:
+            return
+
+        # Wire summarizer for context compression
+        try:
+            from services.conductor import create_summarizer
+
+            summarizer = create_summarizer(morpheus=self._morpheus)
+            self._composer.set_summarizer(summarizer)
+            logger.debug("Summarizer wired to ChatMorpheusComposer")
+        except ImportError as e:
+            logger.debug(f"Summarizer not available: {e}")
+
+        # Wire window persistence for D-gent storage
+        try:
+            from services.conductor import get_window_persistence
+
+            persistence = get_window_persistence()
+            self._composer.set_window_persistence(persistence)
+            logger.debug("WindowPersistence wired to ChatMorpheusComposer")
+        except ImportError as e:
+            logger.debug(f"WindowPersistence not available: {e}")
 
     async def create_session(
         self,
@@ -515,16 +516,52 @@ _factory_instance: ChatSessionFactory | ChatServiceFactory | None = None
 
 
 def get_chat_factory() -> ChatSessionFactory | ChatServiceFactory:
-    """Get the global chat session factory."""
+    """
+    Get the global chat session factory.
+
+    IMPORTANT: This returns the global singleton. If no factory has been set
+    via set_chat_factory(), creates a basic ChatSessionFactory as fallback.
+
+    For production use with LLM integration, use services.providers.get_chat_factory()
+    which creates a ChatServiceFactory with Morpheus composer.
+    """
     global _factory_instance
     if _factory_instance is None:
+        # Fallback for testing/direct usage without DI
+        # In production, providers.get_chat_factory() should be called first
+        logger.debug("Creating fallback ChatSessionFactory (no DI setup)")
         _factory_instance = ChatSessionFactory()
     return _factory_instance
 
 
 def set_chat_factory(factory: ChatSessionFactory | ChatServiceFactory) -> None:
-    """Set the global chat session factory (for testing)."""
+    """
+    Set the global chat session factory.
+
+    IMPORTANT: If a factory already exists, this migrates sessions from
+    the old factory to the new one to prevent "session not found" errors.
+    """
     global _factory_instance
+
+    # Migrate sessions from old factory to new factory to prevent session loss
+    if _factory_instance is not None and factory is not _factory_instance:
+        old_sessions = (
+            list(_factory_instance._sessions.items())
+            if hasattr(_factory_instance, "_sessions")
+            else []
+        )
+        if old_sessions:
+            # Get the target session dict (for ChatServiceFactory, use _base_factory._sessions)
+            target = (
+                factory._base_factory._sessions
+                if hasattr(factory, "_base_factory")
+                else factory._sessions
+            )
+            for key, session in old_sessions:
+                if key not in target:
+                    target[key] = session
+                    logger.debug(f"Migrated session {session.session_id} to new factory")
+
     _factory_instance = factory
 
 

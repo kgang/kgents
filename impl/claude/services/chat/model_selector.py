@@ -17,6 +17,86 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
+    from .session import ChatSession
+
+
+# === Model Options (for UI) ===
+
+
+@dataclass(frozen=True)
+class ModelOption:
+    """A selectable model option with metadata."""
+
+    id: str
+    name: str
+    description: str
+    tier: str  # "fast", "balanced", "powerful"
+
+
+# Available models for user selection
+MODEL_OPTIONS: list[ModelOption] = [
+    ModelOption(
+        id="claude-3-haiku-20240307",
+        name="Haiku",
+        description="Fast responses, lower cost",
+        tier="fast",
+    ),
+    ModelOption(
+        id="claude-sonnet-4-20250514",
+        name="Sonnet",
+        description="Balanced speed and capability",
+        tier="balanced",
+    ),
+    ModelOption(
+        id="claude-opus-4-20250514",
+        name="Opus",
+        description="Most capable, highest quality",
+        tier="powerful",
+    ),
+]
+
+
+def can_switch_model(session: "ChatSession", observer: "Umwelt") -> bool:
+    """
+    Check if model switching is allowed for this session.
+
+    Model switching is allowed when:
+    1. It's a one-on-one session (single observer)
+    2. Observer is not a guest (has permissions)
+
+    Args:
+        session: The chat session
+        observer: The current observer
+
+    Returns:
+        True if model switching is allowed
+    """
+    archetype = _get_archetype(observer)
+
+    # Guests can't switch models
+    if archetype == "guest":
+        return False
+
+    # For now, allow model switching for self.* paths and citizen paths
+    # (citizen paths are allowed since user specified "any one-on-one session")
+    node_path = session.node_path
+
+    # Personal sessions always allowed
+    if node_path.startswith("self."):
+        return True
+
+    # Citizen conversations allowed (user is sole observer)
+    if "citizen" in node_path:
+        return True
+
+    # Default: allow if not a guest
+    return True
+
+
+def get_model_options() -> list[ModelOption]:
+    """Get the list of available model options."""
+    return MODEL_OPTIONS
+
 
 # === Configuration Types ===
 
@@ -168,8 +248,12 @@ def _get_tier(observer: "Umwelt") -> str:
 __all__ = [
     "MorpheusConfig",
     "ModelSelector",
+    "ModelOption",
+    "MODEL_OPTIONS",
     "default_model_selector",
     "budget_aware_selector",
+    "can_switch_model",
+    "get_model_options",
     "TokenBudget",
     "TIER_BUDGETS",
 ]

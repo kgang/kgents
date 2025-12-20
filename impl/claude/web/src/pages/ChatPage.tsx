@@ -14,10 +14,19 @@
 
 import { useState, useCallback, useRef, useEffect, forwardRef, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, MessageSquare, Trash2, RotateCcw, ChevronDown } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  MessageSquare,
+  Trash2,
+  RotateCcw,
+  ChevronDown,
+  GraduationCap,
+} from 'lucide-react';
 import { useAgenteseMutation } from '@/hooks/useAgentesePath';
 import { useShell } from '@/shell/ShellProvider';
 import { Breathe } from '@/components/joy';
+import { ModelSwitcher, ContextGauge, ContextBreakdown } from '@/components/chat';
 import type {
   SelfChatSendResponse,
   SelfChatCreateResponse,
@@ -39,6 +48,8 @@ interface ChatState {
   messages: ChatMessage[];
   nodePath: string;
   turnCount: number;
+  tokensUsed: number;
+  currentModel: string | null;
 }
 
 // =============================================================================
@@ -49,46 +60,99 @@ function ChatHeader({
   sessionId,
   turnCount,
   nodePath,
+  tokensUsed,
+  currentModel,
+  isTeachingMode,
   onReset,
   onClear,
+  onModelChange,
+  onToggleTeachingMode,
 }: {
   sessionId: string | null;
   turnCount: number;
   nodePath: string;
+  tokensUsed: number;
+  currentModel: string | null;
+  isTeachingMode: boolean;
   onReset: () => void;
   onClear: () => void;
+  onModelChange: (model: string) => void;
+  onToggleTeachingMode: () => void;
 }) {
+  const { density } = useShell();
+  const isCompact = density === 'compact';
+
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/50 bg-gray-800/40">
-      <div className="flex items-center gap-3">
-        <Breathe intensity={0.2} speed="slow">
-          <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
-            <MessageSquare className="w-5 h-5 text-cyan-400" />
+    <div className="border-b border-gray-700/50 bg-gray-800/40">
+      {/* Main header row */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Breathe intensity={0.2} speed="slow">
+            <div className="p-2 rounded-lg bg-cyan-500/10 border border-cyan-500/20">
+              <MessageSquare className="w-5 h-5 text-cyan-400" />
+            </div>
+          </Breathe>
+          <div>
+            <h1 className="font-semibold text-white">Chat</h1>
+            <p className="text-xs text-gray-500">
+              {nodePath} {sessionId ? `• ${turnCount} turns` : '• New session'}
+            </p>
           </div>
-        </Breathe>
-        <div>
-          <h1 className="font-semibold text-white">Chat</h1>
-          <p className="text-xs text-gray-500">
-            {nodePath} {sessionId ? `• ${turnCount} turns` : '• New session'}
-          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Model Switcher - shows when session is active */}
+          {sessionId && (
+            <ModelSwitcher
+              sessionId={sessionId}
+              currentModel={currentModel}
+              canSwitch={true}
+              onModelChange={onModelChange}
+              variant={isCompact ? 'compact' : 'dropdown'}
+              size="sm"
+            />
+          )}
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1">
+            {/* Teaching Mode Toggle */}
+            <button
+              onClick={onToggleTeachingMode}
+              title={isTeachingMode ? 'Hide context breakdown' : 'Show context breakdown'}
+              className={`p-2 rounded-lg transition-colors ${
+                isTeachingMode
+                  ? 'text-purple-400 bg-purple-500/20 hover:bg-purple-500/30'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-700/50'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onClear}
+              title="Clear messages"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onReset}
+              title="Reset session"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onClear}
-          title="Clear messages"
-          className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
-        <button
-          onClick={onReset}
-          title="Reset session"
-          className="p-2 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 transition-colors"
-        >
-          <RotateCcw className="w-4 h-4" />
-        </button>
-      </div>
+
+      {/* Context gauge row - shows on desktop, hidden on compact */}
+      {sessionId && !isCompact && (
+        <div className="px-4 pb-3 space-y-2">
+          <ContextGauge sessionId={sessionId} tokensUsed={tokensUsed} variant="compact" />
+          {/* Teaching Mode Context Breakdown */}
+          <ContextBreakdown sessionId={sessionId} isTeachingMode={isTeachingMode} />
+        </div>
+      )}
     </div>
   );
 }
@@ -98,46 +162,43 @@ interface MessageBubbleProps {
   isUser: boolean;
 }
 
-const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(
-  function MessageBubble({ message, isUser }, ref) {
-    return (
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+const MessageBubble = forwardRef<HTMLDivElement, MessageBubbleProps>(function MessageBubble(
+  { message, isUser },
+  ref
+) {
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+    >
+      <div
+        className={`max-w-[80%] px-4 py-2.5 rounded-2xl ${
+          isUser
+            ? 'bg-cyan-600/80 text-white rounded-br-sm'
+            : 'bg-gray-700/60 text-gray-100 rounded-bl-sm'
+        }`}
       >
+        <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
         <div
-          className={`max-w-[80%] px-4 py-2.5 rounded-2xl ${
-            isUser
-              ? 'bg-cyan-600/80 text-white rounded-br-sm'
-              : 'bg-gray-700/60 text-gray-100 rounded-bl-sm'
+          className={`flex items-center gap-2 mt-1.5 text-xs ${
+            isUser ? 'text-cyan-200/70' : 'text-gray-500'
           }`}
         >
-          <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-          <div
-            className={`flex items-center gap-2 mt-1.5 text-xs ${
-              isUser ? 'text-cyan-200/70' : 'text-gray-500'
-            }`}
-          >
-            <span>
-              {message.timestamp.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </span>
-            {message.tokens && (
-              <span>
-                • {message.tokens.in + message.tokens.out} tokens
-              </span>
-            )}
-          </div>
+          <span>
+            {message.timestamp.toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+          {message.tokens && <span>• {message.tokens.in + message.tokens.out} tokens</span>}
         </div>
-      </motion.div>
-    );
-  }
-);
+      </div>
+    </motion.div>
+  );
+});
 
 const TypingIndicator = forwardRef<HTMLDivElement>(function TypingIndicator(_props, ref) {
   return (
@@ -192,8 +253,8 @@ function WelcomeScreen({ onStart }: { onStart: () => void }) {
       </Breathe>
       <h2 className="text-xl font-semibold text-white mb-2">Welcome to Chat</h2>
       <p className="text-gray-400 max-w-md mb-6">
-        Converse with K-gent. Ask questions, explore ideas, or just say hello.
-        Every conversation is a new garden to tend.
+        Converse with K-gent. Ask questions, explore ideas, or just say hello. Every conversation is
+        a new garden to tend.
       </p>
       <button
         onClick={onStart}
@@ -255,11 +316,7 @@ function InputArea({
           disabled={disabled || !value.trim()}
           className="p-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-cyan-600 transition-colors"
         >
-          {disabled ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <Send className="w-5 h-5" />
-          )}
+          {disabled ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
         </button>
       </div>
       <p className="text-xs text-gray-600 mt-2 text-center">
@@ -284,10 +341,13 @@ export default function ChatPage() {
     messages: [],
     nodePath: 'self.soul',
     turnCount: 0,
+    tokensUsed: 0,
+    currentModel: null,
   });
   const [input, setInput] = useState('');
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [started, setStarted] = useState(false);
+  const [isTeachingMode, setIsTeachingMode] = useState(false);
 
   // Create session mutation
   const { mutate: createSession, isLoading: isCreating } = useAgenteseMutation<
@@ -364,15 +424,7 @@ export default function ChatPage() {
     });
 
     if (response) {
-      // Update session ID if this was first message
-      if (!state.sessionId) {
-        setState((prev) => ({
-          ...prev,
-          sessionId: response.session_id,
-        }));
-      }
-
-      // Add assistant response
+      // Add assistant response and update metrics
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: response.response,
@@ -384,8 +436,10 @@ export default function ChatPage() {
       };
       setState((prev) => ({
         ...prev,
+        sessionId: response.session_id,
         messages: [...prev.messages, assistantMessage],
         turnCount: response.turn_number,
+        tokensUsed: prev.tokensUsed + response.tokens_in + response.tokens_out,
       }));
     }
   }, [input, isSending, sendMessage, state.sessionId, state.nodePath]);
@@ -403,9 +457,24 @@ export default function ChatPage() {
         messages: [],
         nodePath: state.nodePath,
         turnCount: 0,
+        tokensUsed: 0,
+        currentModel: null,
       });
     }
   }, [createSession, state.nodePath]);
+
+  // Handle model change
+  const handleModelChange = useCallback((model: string) => {
+    setState((prev) => ({
+      ...prev,
+      currentModel: model,
+    }));
+  }, []);
+
+  // Toggle teaching mode
+  const handleToggleTeachingMode = useCallback(() => {
+    setIsTeachingMode((prev) => !prev);
+  }, []);
 
   // Clear messages (keep session)
   const handleClear = useCallback(() => {
@@ -433,8 +502,13 @@ export default function ChatPage() {
         sessionId={state.sessionId}
         turnCount={state.turnCount}
         nodePath={state.nodePath}
+        tokensUsed={state.tokensUsed}
+        currentModel={state.currentModel}
+        isTeachingMode={isTeachingMode}
         onReset={handleReset}
         onClear={handleClear}
+        onModelChange={handleModelChange}
+        onToggleTeachingMode={handleToggleTeachingMode}
       />
 
       {/* Messages Area */}
@@ -468,11 +542,7 @@ export default function ChatPage() {
           onSend={handleSend}
           disabled={isSending || isCreating}
           placeholder={
-            isCreating
-              ? 'Creating session...'
-              : isSending
-              ? 'Thinking...'
-              : 'Type your message...'
+            isCreating ? 'Creating session...' : isSending ? 'Thinking...' : 'Type your message...'
           }
         />
       </div>

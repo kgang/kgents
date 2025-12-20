@@ -27,7 +27,6 @@ from services.witness.watchers.ci import (
     create_ci_watcher,
 )
 
-
 # =============================================================================
 # Configuration Tests
 # =============================================================================
@@ -328,16 +327,31 @@ class TestCIWatcherFiltering:
         # Mock fetch to return runs with different names
         runs = [
             WorkflowRun(
-                id=1, name="CI", status="completed", conclusion="success",
-                created_at=now, updated_at=now, head_branch="main",
+                id=1,
+                name="CI",
+                status="completed",
+                conclusion="success",
+                created_at=now,
+                updated_at=now,
+                head_branch="main",
             ),
             WorkflowRun(
-                id=2, name="Lint", status="completed", conclusion="success",  # Not in filter
-                created_at=now, updated_at=now, head_branch="main",
+                id=2,
+                name="Lint",
+                status="completed",
+                conclusion="success",  # Not in filter
+                created_at=now,
+                updated_at=now,
+                head_branch="main",
             ),
             WorkflowRun(
-                id=3, name="Deploy", status="completed", conclusion="success",
-                created_at=now, updated_at=now, head_branch="main",
+                id=3,
+                name="Deploy",
+                status="completed",
+                conclusion="success",
+                created_at=now,
+                updated_at=now,
+                head_branch="main",
             ),
         ]
 
@@ -445,8 +459,13 @@ class TestCIWatcherLifecycle:
 
         now = datetime.now(timezone.utc)
         run = WorkflowRun(
-            id=1, name="CI", status="completed", conclusion="success",
-            created_at=now, updated_at=now, head_branch="main",
+            id=1,
+            name="CI",
+            status="completed",
+            conclusion="success",
+            created_at=now,
+            updated_at=now,
+            head_branch="main",
         )
 
         watcher._process_run(run)

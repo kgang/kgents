@@ -318,6 +318,10 @@ HELP_TEXT = """\
   clear                    Clear screen
   history                  Show command history
   /history <query>         Search command history
+  /memory                  Show conversation memory (Phase 4)
+  /memory toggle           Toggle memory indicator in prompt
+  /presence                Show agent presence (Phase 3)
+  /presence toggle         Toggle presence display
 """
 
 
@@ -454,6 +458,16 @@ class ReplState:
     # Wave 6: Learning mode enabled
     learning_mode: bool = False
 
+    # Phase 4 (CLI v7): Conversation window for 10+ turn memory
+    _window: Any = field(default=None, repr=False)
+
+    # Phase 4: Show window utilization in prompt
+    show_window_utilization: bool = False
+
+    # Phase 3 (CLI v7): Agent presence
+    show_presence: bool = True  # Show agent presence status
+    _kgent_cursor: Any = field(default=None, repr=False)
+
     @property
     def current_path(self) -> str:
         """Get the current path as a dotted string."""
@@ -465,6 +479,8 @@ class ReplState:
 
         ANSI escape codes are wrapped with \\001 and \\002 markers so
         readline correctly calculates prompt width for cursor positioning.
+
+        Phase 4 (CLI v7): Optionally shows window utilization when active.
         """
 
         # Helper to wrap ANSI codes for readline
@@ -486,8 +502,15 @@ class ReplState:
         cyan = rl("\033[36m")
         yellow = rl("\033[33m")
 
+        # Phase 4: Window utilization indicator (when enabled and has turns)
+        window_indicator = ""
+        if self.show_window_utilization:
+            window = self.get_window()
+            if window is not None and window.turn_count > 0:
+                window_indicator = f"{gray}[{window.turn_count}]{reset} "
+
         if not self.path:
-            return f"{gray}({obs}){reset} {cyan}[root]{reset} {yellow}»{reset} "
+            return f"{gray}({obs}){reset} {window_indicator}{cyan}[root]{reset} {yellow}»{reset} "
 
         # Color the context differently
         context = self.path[0]
@@ -506,12 +529,12 @@ class ReplState:
         # Special indicator for soul dialogue mode
         magenta = rl("\033[35m")
         if context == "self" and rest == "soul":
-            return f"{gray}({obs}){reset} {color}[{context}{reset}.{rest}{color}]{reset} {magenta}💬{reset} "
+            return f"{gray}({obs}){reset} {window_indicator}{color}[{context}{reset}.{rest}{color}]{reset} {magenta}💬{reset} "
 
         if rest:
-            return f"{gray}({obs}){reset} {color}[{context}{reset}.{rest}{color}]{reset} {yellow}»{reset} "
+            return f"{gray}({obs}){reset} {window_indicator}{color}[{context}{reset}.{rest}{color}]{reset} {yellow}»{reset} "
         else:
-            return f"{gray}({obs}){reset} {color}[{context}]{reset} {yellow}»{reset} "
+            return f"{gray}({obs}){reset} {window_indicator}{color}[{context}]{reset} {yellow}»{reset} "
 
     def get_logos(self) -> Any:
         """Get or create the Logos resolver (lazy initialization).
@@ -608,6 +631,136 @@ class ReplState:
             except ImportError:
                 pass  # Guide not available
         return self._guide
+
+    def get_window(self) -> Any:
+        """
+        Get or create the ConversationWindow (lazy initialization).
+
+        Phase 4 (CLI v7): Deep Conversation
+        - Bounded history with configurable max_turns (default 35)
+        - Summarization when window fills (requires LLM)
+        - 10+ turn memory for context-aware REPL
+
+        The window tracks user inputs and REPL responses as turns,
+        enabling the REPL to remember earlier context.
+        """
+        if self._window is None:
+            try:
+                from services.conductor.window import ConversationWindow
+
+                self._window = ConversationWindow(
+                    max_turns=35,  # Keep last 35 turns in full
+                    strategy="hybrid",  # Sliding + summarization
+                    context_window_tokens=8000,
+                )
+            except ImportError:
+                pass  # ConversationWindow not available
+        return self._window
+
+    def record_turn(self, user_input: str, response: str) -> None:
+        """
+        Record a conversation turn in the window.
+
+        Phase 4 (CLI v7): This enables 10+ turn memory by tracking
+        user inputs and REPL responses as turns.
+
+        Args:
+            user_input: What the user typed
+            response: The REPL's response (output)
+        """
+        window = self.get_window()
+        if window is not None:
+            # Only record non-trivial turns (not navigation, not help)
+            if len(user_input) > 2 and len(response) > 10:
+                window.add_turn(user_input, response)
+
+    def get_window_status(self) -> str:
+        """
+        Get a compact status string for the window.
+
+        Returns format: "(7/35)" showing turns used / max turns
+        """
+        window = self.get_window()
+        if window is None:
+            return ""
+        return f"({window.turn_count}/{window.max_turns})"
+
+    def get_kgent_cursor(self) -> Any:
+        """
+        Get or create the K-gent cursor (lazy initialization).
+
+        Phase 3 (CLI v7): Agent Cursors
+        - K-gent is the primary agent presence
+        - Shows activity in the CLI footer
+        - Updates as invocations are processed
+        """
+        if self._kgent_cursor is None:
+            try:
+                from protocols.agentese.presence import create_kgent_cursor
+
+                self._kgent_cursor = create_kgent_cursor()
+            except ImportError:
+                pass  # Presence not available
+        return self._kgent_cursor
+
+    def update_presence(self, state: str, path: str | None = None, activity: str = "") -> None:
+        """
+        Update K-gent cursor presence state and broadcast to channel.
+
+        Phase 3 (CLI v7): Updates the cursor and optionally prints status.
+        Phase 5 (CLI v7): Now broadcasts to PresenceChannel for web canvas.
+
+        Args:
+            state: Cursor state (exploring, working, suggesting, waiting)
+            path: AGENTESE path being focused
+            activity: Brief description of activity
+        """
+        cursor = self.get_kgent_cursor()
+        if cursor is None:
+            return
+
+        try:
+            from protocols.agentese.presence import CursorState, get_presence_channel
+
+            state_enum = CursorState(state.lower())
+            cursor.transition(state_enum, path, activity)
+
+            # Phase 5: Broadcast to channel for web canvas integration
+            channel = get_presence_channel()
+            try:
+                # Try to get running loop (Python 3.10+ preferred method)
+                try:
+                    loop = asyncio.get_running_loop()
+                    # Create task for broadcast (non-blocking)
+                    loop.create_task(channel.broadcast(cursor))
+                except RuntimeError:
+                    # No running loop - run synchronously
+                    asyncio.run(channel.broadcast(cursor))
+            except RuntimeError:
+                # Fallback: create new loop
+                asyncio.run(channel.broadcast(cursor))
+        except (ImportError, ValueError):
+            pass  # Invalid state or presence not available
+
+    def get_presence_status(self) -> str:
+        """
+        Get the current presence status text.
+
+        Returns formatted status like "K-gent is exploring self.memory..."
+        """
+        cursor = self.get_kgent_cursor()
+        if cursor is None:
+            return ""
+
+        try:
+            from protocols.agentese.presence import CursorState
+
+            # Don't show waiting state (too noisy)
+            if cursor.state == CursorState.WAITING:
+                return ""
+            return cursor.format_status_text()
+        except ImportError:
+            return ""
 
 
 # =============================================================================
@@ -735,6 +888,8 @@ def handle_navigation(state: ReplState, parts: list[str]) -> str | None:
         if cmd in CONTEXTS:
             if not state.path or state.path[0] != cmd:
                 state.path = [cmd]
+                # Phase 5: Broadcast exploring state
+                state.update_presence("exploring", cmd, f"Exploring {cmd}...")
                 return f"\033[90m→ {cmd}\033[0m"
             # Already in this context - no-op
             return f"\033[90m(already in {cmd})\033[0m"
@@ -745,6 +900,9 @@ def handle_navigation(state: ReplState, parts: list[str]) -> str | None:
             holons = CONTEXT_HOLONS.get(context, [])
             if cmd in holons:
                 state.path.append(cmd)
+                full_path = f"{context}.{cmd}"
+                # Phase 5: Broadcast exploring state
+                state.update_presence("exploring", full_path, f"Exploring {full_path}...")
                 # Special message for soul dialogue mode
                 if context == "self" and cmd == "soul":
                     return (
@@ -768,6 +926,9 @@ def handle_navigation(state: ReplState, parts: list[str]) -> str | None:
             if holon in holons:
                 # Valid fast-forward path - navigate there
                 state.path = [context, holon]
+                full_path = f"{context}.{holon}"
+                # Phase 5: Broadcast exploring state
+                state.update_presence("exploring", full_path, f"Exploring {full_path}...")
                 # Special message for soul dialogue mode
                 if context == "self" and holon == "soul":
                     return (
@@ -1021,6 +1182,7 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
     """
     Handle path invocation.
 
+    Phase 3 (CLI v7): Updates K-gent presence during invocation.
     Wave 3: Adds fuzzy matching for typo correction.
     Wave 2: Tries async Logos first, falls back to CLI routing.
     """
@@ -1030,6 +1192,9 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
             "No path specified",
             suggestion="Navigate to a context first: self, world, concept, void, time",
         )
+
+    # Phase 3 (CLI v7): Update K-gent cursor to "working" state
+    state.update_presence("working", ".".join(parts), "Processing...")
 
     # Wave 3: Try fuzzy correction for context typos
     first_part = parts[0].lower()
@@ -1061,6 +1226,11 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
     logos = state.get_logos()
     umwelt = state.get_umwelt()
 
+    def _complete_invocation(output: str) -> str:
+        """Wrapper to reset presence to waiting after invocation."""
+        state.update_presence("waiting", None, "Ready")
+        return output
+
     if logos is not None and umwelt is not None:
         # Check if path has an aspect (3+ parts) or needs .manifest
         if len(full_path) >= 3:
@@ -1068,7 +1238,7 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
             try:
                 result = asyncio.run(logos.invoke(path_str, umwelt))
                 state.last_result = result
-                return _render_result(result, state)
+                return _complete_invocation(_render_result(result, state))
             except Exception:
                 # Fall back to CLI on any Logos error
                 pass
@@ -1077,7 +1247,7 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
             try:
                 result = asyncio.run(logos.invoke(f"{path_str}.manifest", umwelt))
                 state.last_result = result
-                return _render_result(result, state)
+                return _complete_invocation(_render_result(result, state))
             except Exception:
                 # Fall back to CLI
                 pass
@@ -1086,11 +1256,13 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
     try:
         result = _invoke_path(full_path)
         state.last_result = result
-        return result
+        return _complete_invocation(result)
     except Exception as e:
-        return _error_with_sympathy(
-            str(e),
-            suggestion=_suggest_for_path(full_path, state),
+        return _complete_invocation(
+            _error_with_sympathy(
+                str(e),
+                suggestion=_suggest_for_path(full_path, state),
+            )
         )
 
 
@@ -1451,6 +1623,123 @@ def handle_history_search(state: ReplState, line: str) -> str:
             return "\n".join(lines)
 
     return f"\033[90mNo history matching '{query}'\033[0m"
+
+
+def handle_memory_command(state: ReplState, line: str) -> str:
+    """
+    Handle /memory command for viewing ConversationWindow state.
+
+    Phase 4 (CLI v7): Deep Conversation
+
+    Commands:
+        /memory           - Show window status and recent turns
+        /memory status    - Show window utilization
+        /memory toggle    - Toggle window indicator in prompt
+        /memory clear     - Clear conversation memory
+    """
+    parts = line.strip().split()
+    subcommand = parts[1].lower() if len(parts) > 1 else ""
+
+    window = state.get_window()
+
+    if window is None:
+        return "\033[90m(ConversationWindow not available)\033[0m"
+
+    if subcommand == "status":
+        # Show detailed window status
+        lines = [
+            "\033[1mConversation Memory:\033[0m",
+            "",
+            f"  Turns:       {window.turn_count} / {window.max_turns}",
+            f"  Strategy:    {window.strategy}",
+            f"  Utilization: {window.utilization:.1%}",
+            f"  Has Summary: {window.has_summary}",
+        ]
+        return "\n".join(lines)
+
+    if subcommand == "toggle":
+        # Toggle window indicator in prompt
+        state.show_window_utilization = not state.show_window_utilization
+        status = "enabled" if state.show_window_utilization else "disabled"
+        return f"\033[90mWindow indicator in prompt: {status}\033[0m"
+
+    if subcommand == "clear":
+        # Clear the window
+        window.reset()
+        return "\033[90mConversation memory cleared.\033[0m"
+
+    # Default: show recent turns summary
+    if window.turn_count == 0:
+        return "\033[90m(no conversation memory yet)\033[0m"
+
+    lines = [
+        "\033[1mConversation Memory:\033[0m",
+        f"\033[90m{window.turn_count} turns recorded, {window.utilization:.0%} capacity\033[0m",
+        "",
+    ]
+
+    # Show last few turns (truncated)
+    messages = window.get_context_messages()
+    recent = messages[-6:]  # Last 3 exchanges
+    for msg in recent:
+        role = msg.role
+        content = msg.content[:80] + "..." if len(msg.content) > 80 else msg.content
+        if role == "user":
+            lines.append(f"  \033[33m»\033[0m {content}")
+        else:
+            lines.append(f"  \033[36m←\033[0m {content}")
+
+    lines.append("")
+    lines.append("\033[90mCommands: /memory status, /memory toggle, /memory clear\033[0m")
+    return "\n".join(lines)
+
+
+def handle_presence_command(state: ReplState, line: str) -> str:
+    """
+    Handle /presence command for viewing agent cursor state.
+
+    Phase 3 (CLI v7): Agent Cursors
+
+    Commands:
+        /presence           - Show all active cursors
+        /presence toggle    - Toggle presence display
+        /presence kgent     - Show K-gent cursor state
+    """
+    parts = line.strip().split()
+    subcommand = parts[1].lower() if len(parts) > 1 else ""
+
+    cursor = state.get_kgent_cursor()
+
+    if cursor is None:
+        return "\033[90m(Agent presence not available)\033[0m"
+
+    if subcommand == "toggle":
+        state.show_presence = not state.show_presence
+        status = "enabled" if state.show_presence else "disabled"
+        return f"\033[90mAgent presence display: {status}\033[0m"
+
+    if subcommand == "kgent":
+        # Show K-gent cursor details
+        lines = [
+            "\033[1mK-gent Cursor:\033[0m",
+            "",
+            f"  State:       {cursor.state.value}",
+            f"  Behavior:    {cursor.behavior.value}",
+            f"  Focus:       {cursor.focus_path or '(none)'}",
+            f"  Activity:    {cursor.activity or '(idle)'}",
+            f"  Last Update: {cursor.last_updated.strftime('%H:%M:%S')}",
+        ]
+        return "\n".join(lines)
+
+    # Default: show current presence status
+    status_text = cursor.format_status_text()
+    lines = [
+        "\033[1mAgent Presence:\033[0m",
+        f"  \033[90m│\033[0m {status_text}",
+        "",
+        "\033[90mCommands: /presence toggle, /presence kgent\033[0m",
+    ]
+    return "\n".join(lines)
 
 
 def handle_observer_command(state: ReplState, line: str) -> str:
@@ -2373,22 +2662,33 @@ class Completer:
             else:
                 matches = [h for h in holons if h.startswith(text.lower())]
 
-            # Wave 3: Add dynamic completions from Logos registry
+            # Wave 3 + Phase 4: Add dynamic completions from registry
+            # Try logos first, then fall back to direct registry access
+            registry_handles: list[str] = []
             logos = self.state.get_logos()
             if logos is not None:
                 try:
                     registry_handles = logos.list_handles(context)
-                    for handle in registry_handles:
-                        # Extract just the holon part (e.g., "self.soul" -> "soul")
-                        parts = handle.split(".")
-                        if len(parts) >= 2:
-                            holon = parts[1]
-                            if (
-                                not text or holon.startswith(text.lower())
-                            ) and holon not in matches:
-                                matches.append(holon)
+                except Exception:
+                    pass  # Fall through to registry fallback
+
+            # Phase 4: Direct registry fallback for robustness
+            if not registry_handles:
+                try:
+                    from protocols.agentese.registry import get_registry
+
+                    registry = get_registry()
+                    registry_handles = registry.list_by_context(context)
                 except Exception:
                     pass  # Graceful degradation
+
+            for handle in registry_handles:
+                # Extract just the holon part (e.g., "self.soul" -> "soul")
+                parts = handle.split(".")
+                if len(parts) >= 2:
+                    holon = parts[1]
+                    if (not text or holon.startswith(text.lower())) and holon not in matches:
+                        matches.append(holon)
 
         # In holon, complete aspects
         else:
@@ -2421,6 +2721,7 @@ class Completer:
             "/observer",
             "/observers",
             "/history",  # Wave 3
+            "/memory",  # Phase 4
             # Wave 4: Joy-inducing shortcuts
             "/oblique",
             "/constrain",
@@ -2496,19 +2797,31 @@ class Completer:
             holons = CONTEXT_HOLONS.get(context, [])
             candidates = list(holons)
 
-            # Wave 3: Add dynamic completions from Logos registry
+            # Wave 3 + Phase 4: Add dynamic completions from registry
+            registry_handles: list[str] = []
             logos = self.state.get_logos()
             if logos is not None:
                 try:
                     registry_handles = logos.list_handles(context)
-                    for handle in registry_handles:
-                        handle_parts = handle.split(".")
-                        if len(handle_parts) >= 2:
-                            holon = handle_parts[1]
-                            if holon not in candidates:
-                                candidates.append(holon)
+                except Exception:
+                    pass  # Fall through to registry fallback
+
+            # Phase 4: Direct registry fallback for robustness
+            if not registry_handles:
+                try:
+                    from protocols.agentese.registry import get_registry
+
+                    registry = get_registry()
+                    registry_handles = registry.list_by_context(context)
                 except Exception:
                     pass  # Graceful degradation
+
+            for handle in registry_handles:
+                handle_parts = handle.split(".")
+                if len(handle_parts) >= 2:
+                    holon = handle_parts[1]
+                    if holon not in candidates:
+                        candidates.append(holon)
 
             # Filter by completing prefix and add input prefix
             matches = [f"{prefix}{h}" for h in candidates if h.lower().startswith(completing)]
@@ -2770,6 +3083,18 @@ def run_repl(
                 print(history_result)
                 continue
 
+            # Phase 4: Check for /memory commands (conversation window)
+            if line.startswith("/memory"):
+                memory_result = handle_memory_command(state, line)
+                print(memory_result)
+                continue
+
+            # Phase 3 (CLI v7): Check for /presence commands (agent cursors)
+            if line.startswith("/presence"):
+                presence_result = handle_presence_command(state, line)
+                print(presence_result)
+                continue
+
             # Check for /observer commands (Wave 2)
             if line.startswith("/observer") or line == "/observers":
                 observer_result = handle_observer_command(state, line)
@@ -2890,6 +3215,13 @@ def run_repl(
                         newly_mastered, msg = guide.on_command(line, state.path)
                         if msg:
                             print(f"\033[32m{msg}\033[0m")
+                    # Phase 4 (CLI v7): Record turn for 10+ message memory
+                    state.record_turn(line, result)
+                    # Phase 4 (CLI v7): Show presence footer if enabled
+                    if state.show_presence:
+                        presence_status = state.get_presence_status()
+                        if presence_status:
+                            print(f"\n\033[90m{presence_status}\033[0m")
 
         except KeyboardInterrupt:
             print("\n\033[90m(use 'exit' to leave)\033[0m")

@@ -487,3 +487,33 @@ export {
   type UseChatStreamOptions,
   type UseChatStreamResult,
 } from './useChatStream';
+
+// Presence channel (CLI v7 Phase 4: Collaborative Canvas)
+export {
+  usePresenceChannel,
+  getCursorColor,
+  getCursorEmoji,
+  formatCursorStatus,
+  type CursorState,
+  type CursorBehavior,
+  type AgentCursor,
+  type PresenceEvent,
+  type PresenceStatus,
+  type UsePresenceChannelOptions,
+  type UsePresenceChannelReturn,
+} from './usePresenceChannel';
+
+// Canvas nodes (CLI v7 Phase 5: Integration & Polish)
+export {
+  useCanvasNodes,
+  type UseCanvasNodesOptions,
+  type UseCanvasNodesReturn,
+} from './useCanvasNodes';
+
+// User focus tracking (CLI v7 Phase 5: Agent cursor following)
+export {
+  useUserFocus,
+  type MousePosition,
+  type UseUserFocusOptions,
+  type UseUserFocusReturn,
+} from './useUserFocus';

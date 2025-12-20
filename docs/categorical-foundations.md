@@ -1,3 +1,7 @@
+---
+context: concept
+---
+
 # Categorical Foundations of kgents
 
 > *"The noun is a lie. There is only the rate of change."*

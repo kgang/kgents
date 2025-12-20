@@ -221,6 +221,9 @@ class ChatSession:
         # Morpheus composition hook (injected by ChatServiceFactory)
         self._composer: "ChatMorpheusComposer | None" = None
 
+        # Model override (user-selected model for this session)
+        self._model_override: str | None = None
+
     # === Properties ===
 
     @property
@@ -262,6 +265,11 @@ class ChatSession:
         """Whether a Morpheus composer is attached."""
         return self._composer is not None
 
+    @property
+    def model_override(self) -> str | None:
+        """User-selected model override for this session."""
+        return self._model_override
+
     # === Composer Injection ===
 
     def set_composer(self, composer: "ChatMorpheusComposer") -> None:
@@ -274,6 +282,55 @@ class ChatSession:
             composer: The ChatMorpheusComposer to use for turns
         """
         self._composer = composer
+
+    # === Model Selection ===
+
+    # Valid models that can be selected
+    VALID_MODELS = {
+        "claude-3-haiku-20240307",
+        "claude-sonnet-4-20250514",
+        "claude-opus-4-20250514",
+    }
+
+    def set_model(self, model: str) -> tuple[bool, str | None]:
+        """
+        Set the model for this session.
+
+        Args:
+            model: Model ID to use (e.g., "claude-sonnet-4-20250514")
+
+        Returns:
+            Tuple of (success, error_message)
+        """
+        if model not in self.VALID_MODELS:
+            return False, f"Invalid model: {model}. Valid: {', '.join(sorted(self.VALID_MODELS))}"
+
+        previous = self._model_override
+        self._model_override = model
+        self._updated_at = datetime.now()
+
+        return True, None
+
+    def clear_model_override(self) -> None:
+        """Clear the model override, reverting to default selection."""
+        self._model_override = None
+        self._updated_at = datetime.now()
+
+    def get_effective_model(self) -> str:
+        """
+        Get the effective model for this session.
+
+        Returns the override if set, otherwise returns a sensible default.
+        """
+        if self._model_override:
+            return self._model_override
+
+        # Default to config model if set
+        if self.config.model:
+            return self.config.model
+
+        # Fallback to sonnet
+        return "claude-sonnet-4-20250514"
 
     # === State Transitions ===
 
@@ -509,6 +566,11 @@ class ChatSession:
             # Transition to waiting
             self._streaming = False
             self._transition(ChatSessionState.WAITING)
+
+            # CLI v7 Phase 2: Update composer's window after streaming
+            # The window maintains bounded context for LLM calls
+            if self._composer is not None:
+                self._composer.update_window(self, message, self._partial_response)
 
             # Check if entropy depleted after turn
             if self._entropy <= 0:

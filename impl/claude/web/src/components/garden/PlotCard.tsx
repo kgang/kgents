@@ -164,6 +164,82 @@ export function PlotListItem({
   );
 }
 
+/**
+ * PlotCardCompact: Simplified card for mobile/compact density.
+ *
+ * Content degradation ladder (per elastic-ui-patterns.md):
+ * - Icon + name + progress bar (essential gesture for mobile: quick selection)
+ * - Tap opens details in BottomDrawer
+ */
+export function PlotCardCompact({
+  plot,
+  isActive,
+  onSelect,
+}: {
+  plot: PlotJSON;
+  isActive: boolean;
+  onSelect?: (plotName: string) => void;
+}) {
+  const { icon: PlotIcon, color: iconColor } = getJewelIconForPlot(plot.crown_jewel);
+  const isActiveRecently = isPlotActiveRecently(plot.last_tended);
+
+  return (
+    <button
+      onClick={() => onSelect?.(plot.name)}
+      className={`
+        w-full text-left p-3 rounded-lg border transition-all
+        ${
+          isActive
+            ? 'border-green-500 bg-green-900/20'
+            : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+        }
+      `}
+      // Touch-friendly: 48px minimum height per physical constraints
+      style={{ minHeight: 48 }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Icon with activity indicator */}
+        <div className="relative">
+          <PlotIcon className="w-5 h-5" style={{ color: iconColor }} />
+          {isActiveRecently && (
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full" />
+          )}
+        </div>
+
+        {/* Name + Progress */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium text-sm text-white truncate">
+              {formatPlotName(plot.name)}
+            </span>
+            <span className="text-xs text-gray-400 flex-shrink-0">
+              {(plot.progress * 100).toFixed(0)}%
+            </span>
+          </div>
+
+          {/* Compact progress bar */}
+          <div className="h-1 bg-gray-700 rounded-full mt-1.5 overflow-hidden">
+            <div
+              className="h-full bg-green-500 transition-all duration-300"
+              style={{ width: `${plot.progress * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Chevron hint for tap-to-expand */}
+        <svg
+          className="w-4 h-4 text-gray-500 flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </button>
+  );
+}
+
 // =============================================================================
 // Sub-components
 // =============================================================================

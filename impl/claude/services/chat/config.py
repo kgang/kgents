@@ -44,7 +44,7 @@ class ChatConfig:
 
     # Turn limits
     turn_timeout: float = 60.0
-    max_turns: int | None = None
+    max_turns: int = 35  # CLI v7: 35 turns default for deep conversation
 
     # System prompt
     system_prompt: str | None = None

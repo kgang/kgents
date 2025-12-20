@@ -7,8 +7,15 @@
  * - Gesture history
  * - Tending actions
  * - Auto-Inducer transition suggestions (Phase 8)
+ * - Live Witness thoughts + Muse whispers (Phase 2-3)
  *
- * @see plans/gardener-logos-enactment.md Phase 7, Phase 8
+ * ELASTIC UI (Phase 4):
+ * - Compact (mobile): Single-column, bottom drawer, floating quick-tend
+ * - Comfortable (tablet): Two-column with collapsible details
+ * - Spacious (desktop): Full layout with persistent overlays
+ *
+ * @see plans/melodic-toasting-octopus.md Phase 4
+ * @see docs/skills/elastic-ui-patterns.md
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -16,6 +23,16 @@ import { gardenerApi, GardenStateResponse, TransitionSuggestion } from '@/api/cl
 import { GardenVisualization } from '@/components/garden';
 import type { GardenJSON, TendingVerb, TransitionSuggestionJSON } from '@/reactive/types';
 import { PersonalityLoading, EmpathyError, Breathe, PopOnMount, celebrate } from '@/components/joy';
+import {
+  useWindowLayout,
+  BottomDrawer,
+  FloatingActions,
+  type FloatingAction,
+} from '@/components/elastic';
+import { WitnessOverlay } from '@/components/witness/WitnessOverlay';
+import { MuseWhisper } from '@/components/muse/MuseWhisper';
+import { useWitnessStream } from '@/hooks/useWitnessStream';
+import { useMuseStream } from '@/hooks/useMuseStream';
 
 type LoadingState = 'loading' | 'loaded' | 'error';
 
@@ -30,6 +47,23 @@ export default function Garden() {
     null
   );
   const [isTransitionLoading, setIsTransitionLoading] = useState(false);
+
+  // Phase 4: Elastic UI - layout awareness
+  const { density, isMobile } = useWindowLayout();
+
+  // Phase 4: Mobile drawer state for details panel
+  const [detailsDrawerOpen, setDetailsDrawerOpen] = useState(false);
+  const [selectedPlotForDrawer, setSelectedPlotForDrawer] = useState<string | null>(null);
+
+  // Phase 2-3: Witness and Muse streams
+  const witnessStream = useWitnessStream({
+    sources: ['gardener', 'git', 'system'],
+    enabled: loadingState === 'loaded',
+  });
+
+  const museStream = useMuseStream({
+    enabled: loadingState === 'loaded',
+  });
 
   // Load garden state
   const loadGarden = useCallback(async () => {
@@ -128,18 +162,62 @@ export default function Garden() {
     }
   }, [transitionSuggestion, isTransitionLoading]);
 
-  // Handle plot selection
+  // Handle plot selection - adapts to density
   const handlePlotSelect = useCallback(
     async (plotName: string) => {
       try {
         await gardenerApi.focusPlot(plotName);
         await loadGarden();
+
+        // On mobile, open the details drawer
+        if (isMobile) {
+          setSelectedPlotForDrawer(plotName);
+          setDetailsDrawerOpen(true);
+        }
       } catch (err) {
         console.error('[Garden] Failed to focus plot:', err);
       }
     },
-    [loadGarden]
+    [loadGarden, isMobile]
   );
+
+  // Phase 4: Floating action handlers for mobile quick-tending
+  const quickTendActions: FloatingAction[] = [
+    {
+      id: 'observe',
+      icon: '👁️',
+      label: 'Observe',
+      onClick: () => handleTend('OBSERVE', 'concept.gardener'),
+      variant: 'default',
+    },
+    {
+      id: 'water',
+      icon: '💧',
+      label: 'Water',
+      onClick: () => handleTend('WATER', 'concept.gardener'),
+      variant: 'primary',
+    },
+    {
+      id: 'prune',
+      icon: '✂️',
+      label: 'Prune',
+      onClick: () => handleTend('PRUNE', 'concept.gardener'),
+      variant: 'default',
+    },
+  ];
+
+  // Phase 3: Muse whisper handlers
+  const handleMuseDismiss = useCallback(() => {
+    if (museStream.currentWhisper) {
+      museStream.dismiss(museStream.currentWhisper.whisper_id, 'user_dismissed');
+    }
+  }, [museStream]);
+
+  const handleMuseAccept = useCallback(() => {
+    if (museStream.currentWhisper) {
+      museStream.accept(museStream.currentWhisper.whisper_id, 'acknowledged');
+    }
+  }, [museStream]);
 
   // Loading state - Foundation 5: PersonalityLoading for gardener
   if (loadingState === 'loading') {
@@ -199,8 +277,11 @@ export default function Garden() {
     computed: garden.computed,
   };
 
+  // Get selected plot data for mobile drawer
+  const selectedDrawerPlotData = selectedPlotForDrawer ? garden.plots[selectedPlotForDrawer] : null;
+
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-900">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-900 relative">
       {/* Tending indicator - Foundation 5: Breathe animation */}
       {tending && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50">
@@ -215,18 +296,119 @@ export default function Garden() {
         </div>
       )}
 
-      {/* Main visualization */}
+      {/* Main visualization with density awareness */}
       <GardenVisualization
         garden={gardenJSON}
         onTend={handleTend}
         onPlotSelect={handlePlotSelect}
         className="flex-1"
+        density={density}
         // Phase 8: Auto-Inducer props
         transitionSuggestion={transitionSuggestion as TransitionSuggestionJSON | null}
         onAcceptTransition={handleAcceptTransition}
         onDismissTransition={handleDismissTransition}
         isTransitionLoading={isTransitionLoading}
       />
+
+      {/* Phase 4: Mobile floating actions for quick tending */}
+      {isMobile && (
+        <FloatingActions
+          actions={quickTendActions}
+          position="bottom-right"
+          direction="vertical"
+          className="z-30"
+        />
+      )}
+
+      {/* Phase 4: Mobile bottom drawer for plot details */}
+      <BottomDrawer
+        isOpen={detailsDrawerOpen && isMobile}
+        onClose={() => setDetailsDrawerOpen(false)}
+        title={
+          selectedDrawerPlotData ? formatPlotName(selectedDrawerPlotData.name) : 'Plot Details'
+        }
+        maxHeightPercent={60}
+      >
+        {selectedDrawerPlotData && (
+          <div className="p-4 space-y-4">
+            {/* Description */}
+            {selectedDrawerPlotData.description && (
+              <p className="text-sm text-gray-400">{selectedDrawerPlotData.description}</p>
+            )}
+
+            {/* Progress */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-500">Progress</span>
+                <span className="text-gray-400">
+                  {(selectedDrawerPlotData.progress * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 transition-all"
+                  style={{ width: `${selectedDrawerPlotData.progress * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Quick tending actions */}
+            <div>
+              <h4 className="text-xs font-semibold text-gray-500 mb-2">Tend this plot</h4>
+              <div className="grid grid-cols-3 gap-2">
+                {(['OBSERVE', 'WATER', 'PRUNE'] as const).map((verb) => (
+                  <button
+                    key={verb}
+                    onClick={() => {
+                      handleTend(verb, selectedDrawerPlotData.path);
+                      setDetailsDrawerOpen(false);
+                    }}
+                    className="flex flex-col items-center gap-1 p-3 rounded bg-gray-800 hover:bg-gray-700 transition-colors"
+                  >
+                    <span className="text-xl">
+                      {verb === 'OBSERVE' ? '👁️' : verb === 'WATER' ? '💧' : '✂️'}
+                    </span>
+                    <span className="text-[10px] text-gray-400">{verb}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </BottomDrawer>
+
+      {/* Phase 2: Witness Overlay - adapts to density */}
+      {!isMobile && (
+        <WitnessOverlay
+          thoughts={witnessStream.thoughts}
+          isWitnessing={witnessStream.isWitnessing}
+          status={witnessStream.status}
+          density={density}
+          onMarkMoment={() => console.log('[Garden] Mark moment')}
+          onCrystallize={() => console.log('[Garden] Crystallize')}
+        />
+      )}
+
+      {/* Phase 3: Muse Whisper - hide on mobile, show on tablet/desktop */}
+      {!isMobile && museStream.currentWhisper && (
+        <MuseWhisper
+          whisper={museStream.currentWhisper}
+          onDismiss={handleMuseDismiss}
+          onAccept={handleMuseAccept}
+          autoHideTimeout={30000}
+        />
+      )}
     </div>
   );
+}
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function formatPlotName(name: string): string {
+  return name
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }

@@ -354,6 +354,18 @@ def _register_default_handlers(bus: SynergyEventBus) -> None:
         GestaltToGardenHandler(),
     )
 
+    # ==========================================================================
+    # Self.Garden Phase 2: Garden → Witness integration
+    # ==========================================================================
+
+    from .handlers import GardenToWitnessHandler
+
+    # Garden → Witness: Forward gestures to witness thought stream
+    bus.register(
+        SynergyEventType.GESTURE_APPLIED,
+        GardenToWitnessHandler(),
+    )
+
 
 __all__ = [
     # Main class
