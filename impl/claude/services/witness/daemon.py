@@ -43,6 +43,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from services.witness.reactor import (
+    Event,
+    EventSource,
+    WitnessReactor,
+    create_reactor,
+    create_test_failure_event,
+)
+from services.witness.trust.confirmation import ConfirmationManager, PendingSuggestion
 from services.witness.watchers.base import BaseWatcher
 
 # Setup logging before other imports
@@ -268,7 +276,9 @@ def event_to_thought(event: Any) -> Any:
 
     elif isinstance(event, TestEvent):
         if event.event_type == "session_complete":
-            content = f"Tests: {event.passed} passed, {event.failed} failed, {event.skipped} skipped"
+            content = (
+                f"Tests: {event.passed} passed, {event.failed} failed, {event.skipped} skipped"
+            )
             tags = ("tests", "session")
         elif event.event_type == "failed":
             content = f"Test failed: {event.test_id}"
@@ -316,19 +326,48 @@ class WitnessDaemon:
 
     Manages multiple watchers, routes events through the polynomial,
     and sends thoughts to the AGENTESE gateway.
+
+    Phase 4B Enhancement:
+    - Integrates WitnessReactor for Event → Workflow mapping
+    - Integrates ConfirmationManager for L2 suggestion flow
+    - Provides callbacks for TUI to display and handle suggestions
     """
 
-    def __init__(self, config: DaemonConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: DaemonConfig | None = None,
+        reactor: WitnessReactor | None = None,
+        confirmation_manager: ConfirmationManager | None = None,
+    ) -> None:
         self.config = config or DaemonConfig()
         self._stop_event = asyncio.Event()
         self._watchers: dict[str, BaseWatcher[Any]] = {}
         self._running = False
+
+        # Reactor for Event → Workflow mapping
+        self.reactor = reactor or create_reactor()
+
+        # Confirmation manager for L2 suggestions
+        self.confirmation_manager = confirmation_manager or ConfirmationManager(
+            notification_handler=self._on_suggestion_created,
+        )
+
+        # Phase 4C: Pipeline runner for workflow execution (initialized on start)
+        self._pipeline_runner: Any = None
+
+        # Phase 4C: Trust persistence (initialized on start)
+        self._trust_persistence: Any = None
+
+        # Callback for TUI/CLI to receive suggestions
+        self._suggestion_callback: Any = None  # Async callable
 
         # Stats
         self.started_at: datetime | None = None
         self.thoughts_sent: int = 0
         self.errors: int = 0
         self.events_by_watcher: dict[str, int] = {}
+        self.reactions_triggered: int = 0
+        self.suggestions_shown: int = 0
 
     async def start(self) -> None:
         """Start the daemon and begin watching."""
@@ -354,6 +393,12 @@ class WitnessDaemon:
         self._running = True
         self.started_at = datetime.now()
 
+        # Phase 4C: Initialize trust persistence and load state
+        await self._init_trust_persistence()
+
+        # Phase 4C: Initialize pipeline runner for workflow execution
+        await self._init_pipeline_runner()
+
         logger.info(f"Witness daemon starting (PID: {os.getpid()})")
         logger.info(f"Gateway: {self.config.gateway_url}")
         logger.info(f"Watchers: {', '.join(self.config.enabled_watchers)}")
@@ -362,6 +407,92 @@ class WitnessDaemon:
             await self._run()
         finally:
             await self._cleanup()
+
+    async def _init_trust_persistence(self) -> None:
+        """
+        Initialize trust persistence and load existing state (Phase 4C).
+
+        Loads trust state from ~/.kgents/witness.json
+        Applies decay if inactive for >24h.
+        """
+        try:
+            from services.witness.trust_persistence import TrustPersistence
+
+            self._trust_persistence = TrustPersistence()
+            state = await self._trust_persistence.load(apply_decay=True)
+
+            logger.info(
+                f"Trust state loaded: L{state.trust_level} "
+                f"({state.observation_count} observations, "
+                f"{state.successful_operations} operations)"
+            )
+
+        except Exception as e:
+            logger.warning(f"Could not load trust persistence: {e}")
+            logger.warning("Trust state will not be persisted")
+
+    @property
+    def trust_level(self) -> Any:
+        """Get current trust level from persistence."""
+        from services.witness.polynomial import TrustLevel
+
+        if self._trust_persistence is None:
+            return TrustLevel.READ_ONLY
+        return self._trust_persistence.current_state.trust
+
+    @property
+    def trust_status(self) -> dict[str, Any]:
+        """Get current trust status for display."""
+        if self._trust_persistence is None:
+            return {
+                "trust_level": "READ_ONLY",
+                "trust_level_value": 0,
+                "observation_count": 0,
+            }
+        result: dict[str, Any] = self._trust_persistence.get_status()
+        return result
+
+    async def _init_pipeline_runner(self) -> None:
+        """
+        Initialize the pipeline runner for workflow execution (Phase 4C).
+
+        Creates a PipelineRunner with JewelInvoker and Observer.
+        This enables workflow execution when suggestions are confirmed.
+        """
+        try:
+            from protocols.agentese.logos import Logos
+            from protocols.agentese.node import Observer
+            from services.witness.invoke import create_invoker
+            from services.witness.pipeline import PipelineRunner
+            from services.witness.polynomial import TrustLevel
+
+            # Create Logos and Observer for cross-jewel invocations
+            logos = Logos()
+            # Use guest observer for daemon (could add daemon archetype later)
+            observer = Observer(archetype="daemon", capabilities=frozenset({"invoke"}))
+
+            # Create invoker at L3 (AUTONOMOUS) for workflow execution
+            # Note: This is the daemon's invoker, not the user's trust level
+            invoker = create_invoker(logos, TrustLevel.AUTONOMOUS)
+
+            # Create pipeline runner
+            self._pipeline_runner = PipelineRunner(
+                invoker=invoker,
+                observer=observer,
+            )
+
+            # Wire it to the confirmation manager
+            self.confirmation_manager.set_pipeline_runner(self._pipeline_runner)
+
+            # Also wire to reactor
+            self.reactor.invoker = invoker
+            self.reactor.observer = observer
+
+            logger.info("Pipeline runner initialized for workflow execution")
+
+        except Exception as e:
+            logger.warning(f"Could not initialize pipeline runner: {e}")
+            logger.warning("Workflow execution will not be available")
 
     async def _run(self) -> None:
         """Main daemon loop."""
@@ -383,6 +514,7 @@ class WitnessDaemon:
         def make_handler(wtype: str) -> Callable[[Any], None]:
             def handler(event: Any) -> None:
                 asyncio.create_task(self._handle_event(wtype, event))
+
             return handler
 
         for watcher_type, watcher in self._watchers.items():
@@ -399,13 +531,114 @@ class WitnessDaemon:
     async def _handle_event(self, watcher_type: str, event: Any) -> None:
         """Handle an event from any watcher."""
         try:
+            # Convert to thought and send
             thought = event_to_thought(event)
             await self._send_thought(thought)
             self.events_by_watcher[watcher_type] += 1
             logger.info(f"[{watcher_type}] {thought.content[:60]}...")
+
+            # Phase 4C: Record observation for trust metrics
+            if self._trust_persistence:
+                await self._trust_persistence.record_observation()
+
+            # Route event through reactor for workflow matching
+            reactor_event = self._watcher_event_to_reactor_event(watcher_type, event)
+            if reactor_event:
+                reaction = await self.reactor.react(reactor_event)
+                if reaction:
+                    self.reactions_triggered += 1
+                    logger.info(
+                        f"Reaction triggered: {reaction.workflow_name} "
+                        f"(trust required: {reaction.required_trust.name})"
+                    )
+
+                    # If reaction requires L2 confirmation, create suggestion
+                    if not reaction.can_run and reaction.workflow:
+                        await self._create_suggestion_from_reaction(reaction)
+
         except Exception as e:
             logger.error(f"Error handling {watcher_type} event: {e}")
             self.errors += 1
+
+    def _watcher_event_to_reactor_event(self, watcher_type: str, event: Any) -> Event | None:
+        """Convert watcher-specific events to reactor Events."""
+        from services.witness.polynomial import (
+            CIEvent as PolyCIEvent,
+            GitEvent as PolyGitEvent,
+            TestEvent as PolyTestEvent,
+        )
+        from services.witness.reactor import (
+            ci_status_event,
+            git_commit_event,
+        )
+
+        if watcher_type == "test" and isinstance(event, PolyTestEvent):
+            if event.event_type == "failed":
+                return create_test_failure_event(
+                    test_file=event.test_id or "unknown",
+                    test_name=event.test_id or "unknown",
+                    error_message=event.error or "",
+                )
+        elif watcher_type == "git" and isinstance(event, PolyGitEvent):
+            if event.event_type == "commit":
+                return git_commit_event(
+                    sha=event.sha or "",
+                    message=event.message or "",
+                    author=event.author or "",
+                )
+        elif watcher_type == "ci" and isinstance(event, PolyCIEvent):
+            return ci_status_event(
+                status=event.status or "unknown",
+                pipeline_name=event.workflow or "",
+            )
+
+        return None
+
+    async def _create_suggestion_from_reaction(self, reaction: Any) -> None:
+        """Create an L2 suggestion from a pending reaction."""
+        from services.witness.trust.confirmation import ActionPreview
+
+        # Create suggestion with workflow context AND pipeline (Phase 4C)
+        suggestion = await self.confirmation_manager.submit(
+            action=reaction.workflow_name,
+            rationale=f"Triggered by {reaction.event.event_type} event",
+            confidence=0.8,  # Default confidence
+            target=str(reaction.event.data),
+            preview=ActionPreview(
+                description=reaction.workflow.description
+                if reaction.workflow
+                else "Execute workflow",
+                reversible=True,
+                risk_level="medium" if reaction.required_trust.value >= 2 else "low",
+            ),
+            # Phase 4C: Attach pipeline for execution on confirmation
+            pipeline=reaction.workflow.pipeline if reaction.workflow else None,
+            initial_kwargs=reaction.event.data,
+        )
+
+        logger.info(f"Suggestion created: {suggestion.id} for {reaction.workflow_name}")
+
+    async def _on_suggestion_created(self, suggestion: PendingSuggestion) -> None:
+        """Callback when a new suggestion is created."""
+        self.suggestions_shown += 1
+
+        # Forward to TUI/CLI callback if registered
+        if self._suggestion_callback:
+            try:
+                await self._suggestion_callback(suggestion)
+            except Exception as e:
+                logger.error(f"Error in suggestion callback: {e}")
+
+    def set_suggestion_callback(self, callback: Any) -> None:
+        """
+        Register a callback for new suggestions.
+
+        This is used by TUI to receive suggestions for display.
+
+        Args:
+            callback: Async function that receives PendingSuggestion
+        """
+        self._suggestion_callback = callback
 
     async def _send_thought(self, thought: Any) -> None:
         """Send a thought to the AGENTESE gateway."""
@@ -648,4 +881,7 @@ __all__ = [
     "is_process_running",
     "create_watcher",
     "event_to_thought",
+    # Phase 4B exports
+    "WitnessReactor",
+    "ConfirmationManager",
 ]
