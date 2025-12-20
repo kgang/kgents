@@ -30,7 +30,7 @@ import logging
 import re
 from dataclasses import dataclass, field
 from queue import Empty, Queue
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from services.witness.polynomial import AgenteseEvent
 from services.witness.watchers.base import BaseWatcher
@@ -167,16 +167,16 @@ class AgenteseWatcher(BaseWatcher[AgenteseEvent]):
         self._queue: Queue[AgenteseEvent] = Queue()
 
         # Track unsubscribe functions for cleanup
-        self._unsubscribes: list[callable] = []
+        self._unsubscribes: list[Callable[[], None]] = []
 
     async def _on_start(self) -> None:
         """Subscribe to SynergyBus topics."""
         if self._bus is None:
-            # Try to get the global bus
+            # Try to get the global bus from the bus manager
             try:
-                from services.witness.bus import get_witness_synergy_bus
+                from services.witness.bus import get_witness_bus_manager
 
-                self._bus = get_witness_synergy_bus()
+                self._bus = get_witness_bus_manager().synergy_bus
             except Exception as e:
                 logger.warning(f"Could not get global SynergyBus: {e}")
                 return

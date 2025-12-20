@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
     Any,
+    ClassVar,
     Protocol,
     TypeVar,
     runtime_checkable,
@@ -341,7 +342,8 @@ class BaseLogosNode(ABC):
 
     # Aspect hints for Ghost Integration (v3.2)
     # Override in subclasses to provide domain-specific hints
-    ASPECT_HINTS: dict[str, str] = {
+    # ClassVar ensures dataclass subclasses treat this as class-level, not instance field
+    ASPECT_HINTS: ClassVar[dict[str, str]] = {
         "manifest": "Collapse to observer's view—see the entity as it appears to you",
         "witness": "View historical traces—see what happened before",
         "affordances": "List available aspects—discover what you can do here",

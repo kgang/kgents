@@ -22,20 +22,19 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 from protocols.agentese.affordances import AspectCategory, Effect, aspect
 from protocols.agentese.node import AgentMeta, BaseLogosNode, BasicRendering, Renderable
 from protocols.agentese.registry import node
-
 from services.principles import (
-    PrincipleLoader,
     PrincipleChecker,
     PrincipleHealer,
+    PrincipleLoader,
+    PrincipleProjection,
     PrincipleTeacher,
-    create_principle_loader,
+    Stance,
     create_principle_checker,
     create_principle_healer,
+    create_principle_loader,
     create_principle_teacher,
     detect_stance,
     get_stance_slices,
-    PrincipleProjection,
-    Stance,
 )
 
 if TYPE_CHECKING:
@@ -145,7 +144,7 @@ class PrinciplesNode(BaseLogosNode):
             except ValueError:
                 detected_stance = Stance.GENESIS
         else:
-            detected_stance = detect_stance(observer=observer, task=task)  # type: ignore[arg-type]
+            detected_stance = detect_stance(observer=observer, task=task)
 
         # Load slices for this stance
         slices = get_stance_slices(detected_stance)
@@ -371,7 +370,7 @@ class PrinciplesNode(BaseLogosNode):
         **kwargs: Any,
     ) -> Any:
         """Route aspect invocations to methods."""
-        aspect_map = {
+        aspect_map: dict[str, Any] = {
             "constitution": self.constitution,
             "meta": self.meta,
             "operational": self.operational,
@@ -382,7 +381,7 @@ class PrinciplesNode(BaseLogosNode):
         }
 
         handler = aspect_map.get(aspect)
-        if handler:
+        if handler is not None:
             return await handler(observer, **kwargs)
 
         raise ValueError(f"Unknown aspect: {aspect}")

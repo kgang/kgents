@@ -292,10 +292,11 @@ class FileSystemWatcher(BaseWatcher[FileEvent]):
         """Stop watchdog observer."""
         if self._observer is not None:
             try:
-                # Observer is actually watchdog.observers.Observer
-                observer = self._observer  # type: ignore
-                observer.stop()
-                observer.join(timeout=2.0)
+                # Observer has stop() and join() methods; use duck typing
+                observer = self._observer
+                if hasattr(observer, "stop") and hasattr(observer, "join"):
+                    observer.stop()
+                    observer.join(timeout=2.0)
             except Exception as e:
                 logger.warning(f"Error stopping observer: {e}")
             finally:
