@@ -195,7 +195,7 @@ class ListProjectionFunctor(ProjectionFunctor[list[str]]):
 
 
 @st.composite
-def test_token_strategy(draw: st.DrawFn) -> TestToken:
+def token_strategy(draw: st.DrawFn) -> TestToken:
     """Generate random test tokens."""
     token_type = draw(st.sampled_from([
         "agentese_path",
@@ -229,7 +229,7 @@ def test_token_strategy(draw: st.DrawFn) -> TestToken:
 def token_list_strategy(draw: st.DrawFn, min_size: int = 1, max_size: int = 5) -> list[TestToken]:
     """Generate a list of test tokens."""
     return draw(st.lists(
-        test_token_strategy(),
+        token_strategy(),
         min_size=min_size,
         max_size=max_size,
     ))
@@ -437,7 +437,7 @@ class TestProperty4ProjectionNaturalityCondition:
     """
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         observer=observer_strategy(),
         new_value=st.text(
             alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
@@ -484,7 +484,7 @@ class TestProperty4ProjectionNaturalityCondition:
         assert projection_after_change == projection_after_change_2
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         observer1=observer_strategy(),
         observer2=observer_strategy(),
     )
@@ -515,7 +515,7 @@ class TestProperty4ProjectionNaturalityCondition:
         assert projection1 == projection2
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         observer=observer_strategy(),
     )
     @settings(
@@ -555,7 +555,7 @@ __all__ = [
     "StringProjectionFunctor",
     "ListProjectionFunctor",
     # Strategies
-    "test_token_strategy",
+    "token_strategy",
     "token_list_strategy",
     "observer_strategy",
     "composition_type_strategy",
@@ -580,7 +580,7 @@ class TestProperty5DensityParameterizedProjection:
     """
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
     )
     @settings(
         max_examples=100,
@@ -631,7 +631,7 @@ class TestProperty5DensityParameterizedProjection:
         assert token._token_type in spacious_result or token._value in spacious_result
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         density=st.sampled_from(list(ObserverDensity)),
     )
     @settings(
@@ -669,7 +669,7 @@ class TestProperty5DensityParameterizedProjection:
         assert actual_params.truncate_length == expected_params.truncate_length
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
     )
     @settings(
         max_examples=100,
@@ -715,7 +715,7 @@ class TestProperty5DensityParameterizedProjection:
             assert "a" * 50 in spacious_result  # At least half the content
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         density=st.sampled_from(list(ObserverDensity)),
     )
     @settings(
@@ -757,7 +757,7 @@ class TestProperty5DensityParameterizedProjection:
         assert result.props.get("density") == density.value
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         density=st.sampled_from(list(ObserverDensity)),
     )
     @settings(
@@ -817,7 +817,7 @@ class TestProperty18ObserverDependentProjection:
     """
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         observer1=observer_strategy(),
         observer2=observer_strategy(),
     )
@@ -852,7 +852,7 @@ class TestProperty18ObserverDependentProjection:
         assert token._token_type in result2 or token._value in result2
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
     )
     @settings(
         max_examples=100,
@@ -937,7 +937,7 @@ class TestProperty18ObserverDependentProjection:
         assert len(full_result.props["affordances"]) == 3
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
     )
     @settings(
         max_examples=100,
@@ -1020,7 +1020,7 @@ class TestProperty18ObserverDependentProjection:
         assert admin_result["metadata"]["role"] == "admin"
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
         observer=observer_strategy(),
     )
     @settings(
@@ -1079,7 +1079,7 @@ class TestProperty18ObserverDependentProjection:
         assert json_result["tokenId"] == token.token_id
 
     @given(
-        token=test_token_strategy(),
+        token=token_strategy(),
     )
     @settings(
         max_examples=100,
