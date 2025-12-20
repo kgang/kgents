@@ -37,7 +37,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, AsyncIterator, Callable
 
 if TYPE_CHECKING:
-    pass
+    from .behaviors import CursorBehavior, Position
 
 logger = logging.getLogger(__name__)
 
@@ -275,8 +275,14 @@ class AgentCursor:
     Think of it as a Figma cursor for AI agents:
     - Position (focus_path): where the agent is looking
     - State: what the agent is doing
+    - Behavior: how the agent moves (Phase 5B)
     - Activity: human-readable description
     - Visual properties: emoji, color, animation
+
+    Phase 5B Enhancement:
+    - behavior: CursorBehavior defines personality
+    - canvas_position: 2D position for canvas rendering
+    - velocity: Movement direction for smooth animation
     """
 
     agent_id: str
@@ -285,6 +291,11 @@ class AgentCursor:
     activity: str  # "Reading self.memory...", "Planning next step..."
     focus_path: str | None = None  # AGENTESE path being focused on
     last_update: datetime = field(default_factory=datetime.now)
+
+    # Phase 5B: Behavior-driven movement
+    behavior: "CursorBehavior | None" = None  # Import at runtime to avoid circular
+    canvas_position: tuple[float, float] | None = None  # (x, y) for canvas
+    velocity: tuple[float, float] = (0.0, 0.0)  # Movement direction
 
     # Optional metadata
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -335,13 +346,27 @@ class AgentCursor:
             self.focus_path = focus_path
         self.last_update = datetime.now()
 
+    @property
+    def behavior_emoji(self) -> str:
+        """
+        Get emoji combining state and behavior.
+
+        Phase 5B: Behavior adds personality overlay.
+        """
+        if self.behavior is not None:
+            return f"{self.behavior.emoji}{self.state.emoji}"
+        return self.state.emoji
+
     def to_cli(self, teaching_mode: bool = False) -> str:
         """
         Render for CLI output.
 
         Pattern #14: Teaching Mode adds state transition info.
+        Phase 5B: Includes behavior when present.
         """
-        base = f"  {self.emoji} {self.display_name} is {self.activity}"
+        # Use behavior emoji if available
+        emoji = self.behavior_emoji if self.behavior else self.emoji
+        base = f"  {emoji} {self.display_name} is {self.activity}"
 
         if self.focus_path:
             base += f" [{self.focus_path}]"
@@ -349,12 +374,15 @@ class AgentCursor:
         if teaching_mode:
             transitions = ", ".join(s.name for s in self.state.can_transition_to)
             base += f"\n     └─ State: {self.state.name} → can transition to: {transitions}"
+            if self.behavior is not None:
+                phase = CircadianPhase.current()
+                base += f"\n     └─ Behavior: {self.behavior.describe_for_phase(phase)}"
 
         return base
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize for persistence/API."""
-        return {
+        result = {
             "agent_id": self.agent_id,
             "display_name": self.display_name,
             "state": self.state.name,
@@ -367,9 +395,41 @@ class AgentCursor:
             "metadata": self.metadata,
         }
 
+        # Phase 5B: Include behavior fields
+        if self.behavior is not None:
+            result["behavior"] = self.behavior.name
+            result["behavior_emoji"] = self.behavior_emoji
+        if self.canvas_position is not None:
+            result["canvas_position"] = {
+                "x": self.canvas_position[0],
+                "y": self.canvas_position[1],
+            }
+        result["velocity"] = {"x": self.velocity[0], "y": self.velocity[1]}
+
+        return result
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "AgentCursor":
         """Deserialize from dict."""
+        # Phase 5B: Parse behavior if present
+        behavior = None
+        if "behavior" in data:
+            # Lazy import to avoid circular dependency
+            from .behaviors import CursorBehavior
+            behavior = CursorBehavior[data["behavior"]]
+
+        # Parse canvas position
+        canvas_position = None
+        if "canvas_position" in data:
+            cp = data["canvas_position"]
+            canvas_position = (cp["x"], cp["y"])
+
+        # Parse velocity
+        velocity = (0.0, 0.0)
+        if "velocity" in data:
+            v = data["velocity"]
+            velocity = (v["x"], v["y"])
+
         return cls(
             agent_id=data["agent_id"],
             display_name=data["display_name"],
@@ -377,6 +437,9 @@ class AgentCursor:
             activity=data["activity"],
             focus_path=data.get("focus_path"),
             last_update=datetime.fromisoformat(data["last_update"]),
+            behavior=behavior,
+            canvas_position=canvas_position,
+            velocity=velocity,
             metadata=data.get("metadata", {}),
         )
 

@@ -69,6 +69,8 @@ from .events import (
     create_coalition_formed_event,
     create_consensus_reached_event,
     create_contribution_posted_event,
+    # Conversation factory functions (CLI v7 Phase 2)
+    create_conversation_turn_event,
     create_crystal_formed_event,
     # Conductor factory functions (CLI v7 Phase 1)
     create_file_created_event,
@@ -81,6 +83,11 @@ from .events import (
     create_hypothesis_synthesized_event,
     create_piece_created_event,
     create_session_complete_event,
+    create_swarm_a2a_message_event,
+    create_swarm_despawned_event,
+    create_swarm_handoff_event,
+    # Swarm factory functions (CLI v7 Phase 6)
+    create_swarm_spawned_event,
     create_task_complete_event,
     create_turn_completed_event,
     # Witness factory functions (8th Crown Jewel)
@@ -89,6 +96,10 @@ from .events import (
     create_witness_git_commit_event,
     create_witness_git_push_event,
     create_witness_thought_event,
+    # Cursor/Presence factory functions (CLI v7 Phase 3)
+    create_cursor_joined_event,
+    create_cursor_left_event,
+    create_cursor_updated_event,
 )
 from .handlers import (
     AtelierToBrainHandler,
@@ -152,6 +163,17 @@ __all__ = [
     "create_file_read_event",
     "create_file_edited_event",
     "create_file_created_event",
+    # Factory functions - Conversation (CLI v7 Phase 2)
+    "create_conversation_turn_event",
+    # Factory functions - Swarm (CLI v7 Phase 6)
+    "create_swarm_spawned_event",
+    "create_swarm_despawned_event",
+    "create_swarm_a2a_message_event",
+    "create_swarm_handoff_event",
+    # Factory functions - Cursor/Presence (CLI v7 Phase 3)
+    "create_cursor_joined_event",
+    "create_cursor_left_event",
+    "create_cursor_updated_event",
     # CLI Output (Wave 2: UI Integration)
     "display_synergy_notification",
     "display_synergy_results",

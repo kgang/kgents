@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from services.coalition import CoalitionPersistence
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
+    from services.conductor.swarm import SwarmSpawner
     from services.forge import ForgePersistence
     from services.forge.commission import CommissionService
     from services.gardener import GardenerPersistence
@@ -62,8 +63,10 @@ if TYPE_CHECKING:
     from services.town.coalition_service import CoalitionService
     from services.town.inhabit_service import InhabitService
     from services.town.workshop_service import WorkshopService
+    from services.verification import VerificationPersistence
     from services.witness.crystallization_node import TimeWitnessNode
     from services.witness.persistence import WitnessPersistence
+    from services.witness.trace_store import TraceNodeStore
 
 logger = logging.getLogger(__name__)
 
@@ -297,6 +300,20 @@ async def get_time_witness_node() -> "TimeWitnessNode":
     return TimeWitnessNode(witness_persistence=persistence)
 
 
+async def get_trace_store() -> "TraceNodeStore":
+    """
+    Get the TraceNodeStore for AGENTESE invocation tracing.
+
+    Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode.
+    This store is the append-only ledger for all TraceNodes.
+
+    Used by AgenteseGateway to record all invocations.
+    """
+    from services.witness.trace_store import get_trace_store as get_store
+
+    return get_store()
+
+
 async def get_logos() -> "Logos":
     """
     Get the Logos resolver for cross-jewel invocation.
@@ -378,6 +395,18 @@ async def get_file_guard() -> "FileEditGuard":
     return get_guard()
 
 
+async def get_swarm_spawner() -> "SwarmSpawner":
+    """
+    Get the SwarmSpawner for agent swarm coordination.
+
+    CLI v7 Phase 6: Multi-agent collaboration.
+    Used by self.conductor.swarm AGENTESE node for spawning agents.
+    """
+    from services.conductor.swarm import SwarmSpawner
+
+    return SwarmSpawner()
+
+
 # =============================================================================
 # U-gent Tool Infrastructure (Phase 0)
 # =============================================================================
@@ -424,6 +453,11 @@ async def get_tool_executor() -> "ToolExecutor":
         witness=witness,
         differance=differance,
     )
+
+
+async def get_verification_persistence() -> "VerificationPersistence":
+    """Get the VerificationPersistence service (Formal Verification Crown Jewel)."""
+    return await get_service("verification_persistence")
 
 
 async def get_workshop_service() -> "WorkshopService":
@@ -520,6 +554,7 @@ async def setup_providers() -> None:
     container.register("witness_persistence", get_witness_persistence, singleton=True)
     container.register("muse_node", get_muse_node, singleton=True)
     container.register("time_witness_node", get_time_witness_node, singleton=True)
+    container.register("trace_store", get_trace_store, singleton=True)
 
     # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
@@ -547,10 +582,11 @@ async def setup_providers() -> None:
     # Principles Service (concept.principles node)
     container.register("principle_loader", get_principle_loader, singleton=True)
 
-    # Conductor Crown Jewel (CLI v7 Phase 2: Deep Conversation)
+    # Conductor Crown Jewel (CLI v7 Phase 2: Deep Conversation, Phase 6: Swarms)
     container.register("window_persistence", get_window_persistence, singleton=True)
     container.register("summarizer", get_summarizer, singleton=True)
     container.register("file_guard", get_file_guard, singleton=True)
+    container.register("swarm_spawner", get_swarm_spawner, singleton=True)
 
     # Logos (cross-jewel invocation)
     container.register("logos", get_logos, singleton=True)
@@ -559,8 +595,11 @@ async def setup_providers() -> None:
     container.register("tool_registry", get_tool_registry, singleton=True)
     container.register("tool_executor", get_tool_executor, singleton=True)
 
+    # Verification Crown Jewel (Formal Verification Metatheory)
+    container.register("verification_persistence", get_verification_persistence, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (8 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling)"
+        "All Crown Jewel services registered (9 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling + Verification)"
     )
 
     # Import Witness nodes to trigger @node registration
@@ -671,6 +710,14 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.warning(f"FileNode not available: {e}")
 
+    # CLI v7 Phase 6: Swarm Node (Multi-Agent Coordination)
+    try:
+        from protocols.agentese.contexts.self_swarm import SwarmNode  # noqa: F401
+
+        logger.info("SwarmNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"SwarmNode not available: {e}")
+
     # Wire DifferanceStore to DifferanceTraceNode
     try:
         from agents.differance import DifferanceStore
@@ -763,10 +810,11 @@ __all__ = [
     "get_scenario_service",
     # Principles
     "get_principle_loader",
-    # Conductor (CLI v7 Phase 1 & 2)
+    # Conductor (CLI v7 Phase 1, 2 & 6)
     "get_window_persistence",
     "get_summarizer",
     "get_file_guard",
+    "get_swarm_spawner",
     # K-gent Soul
     "get_kgent_soul",
     # Differance Engine
@@ -779,6 +827,8 @@ __all__ = [
     "get_witness_persistence",
     # 9th Crown Jewel (Time Witness - Crystallization)
     "get_time_witness_node",
+    # TraceNodeStore (Law 3: Every AGENTESE invocation emits TraceNode)
+    "get_trace_store",
     # 10th Crown Jewel (Muse - Pattern Detection)
     "get_muse_node",
     # Logos (cross-jewel invocation)
@@ -786,4 +836,6 @@ __all__ = [
     # U-gent Tool Infrastructure
     "get_tool_registry",
     "get_tool_executor",
+    # Verification Crown Jewel
+    "get_verification_persistence",
 ]

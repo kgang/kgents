@@ -457,3 +457,173 @@ class TestBrainNodeUnknownAspect:
 
         assert "error" in result
         assert "unknown_aspect" in result["error"].lower()
+
+
+# === WARP Integration: TraceNode Emission (Law 3) ===
+
+
+@pytest.fixture
+def clean_trace_store():
+    """Reset trace store before and after each test."""
+    from services.witness.trace_store import reset_trace_store
+
+    reset_trace_store()
+    yield
+    reset_trace_store()
+
+
+class TestBrainWARPIntegration:
+    """
+    Tests for WARP integration: Law 3 TraceNode emission.
+
+    These tests verify that Brain operations emit TraceNodes when
+    invoked through the AGENTESE gateway, per WARP Law 3:
+    "Every AGENTESE invocation emits exactly one TraceNode."
+
+    See: spec/protocols/warp-primitives.md
+    See: plans/continuation-warp-servo-session4.md
+    """
+
+    @pytest.mark.asyncio
+    async def test_brain_terrace_manifest_emits_trace_node(
+        self, clean_trace_store
+    ):
+        """
+        Brain Terrace manifest operation emits a TraceNode.
+
+        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        This test verifies that brain.terrace.manifest is traced.
+
+        NOTE: Uses brain.terrace (not self.memory) because it doesn't
+        require external persistence, making the test self-contained.
+
+        NOTE: Does not use clean_registry fixture because we need
+        brain.terrace to remain registered from module import.
+        """
+        from protocols.agentese.gateway import _import_node_modules, create_gateway
+        from services.witness.trace_store import get_trace_store
+
+        # Import all nodes (including brain.terrace)
+        # This triggers @node registration if not already done
+        _import_node_modules()
+        # Re-populate registry in case it was reset by another test
+        repopulate_registry()
+
+        # Create gateway
+        gateway = create_gateway(prefix="/agentese")
+
+        observer = Observer.test()
+
+        # Invoke manifest through gateway
+        await gateway._invoke_path("brain.terrace", "manifest", observer)
+
+        # Verify TraceNode was emitted (Law 3)
+        store = get_trace_store()
+        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for manifest"
+
+        # Verify trace content
+        trace = list(store.all())[-1]
+        assert trace.origin == "gateway"
+        assert trace.stimulus.kind == "agentese"
+        assert "brain.terrace" in trace.stimulus.content
+        assert "manifest" in trace.stimulus.content
+        assert trace.response.success is True
+
+    @pytest.mark.asyncio
+    async def test_brain_terrace_create_emits_trace_node(
+        self, clean_trace_store
+    ):
+        """
+        Brain Terrace create operation emits a TraceNode.
+
+        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        This test verifies that brain.terrace.create is traced.
+        """
+        from protocols.agentese.gateway import _import_node_modules, create_gateway
+        from services.witness.trace_store import get_trace_store
+
+        _import_node_modules()
+        repopulate_registry()
+        gateway = create_gateway(prefix="/agentese")
+        observer = Observer.test()
+
+        # Invoke create through gateway
+        await gateway._invoke_path(
+            "brain.terrace",
+            "create",
+            observer,
+            topic="warp-test",
+            content="Test knowledge for WARP integration",
+        )
+
+        # Verify TraceNode was emitted
+        store = get_trace_store()
+        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for create"
+
+        trace = list(store.all())[-1]
+        assert "brain.terrace" in trace.stimulus.content
+        assert "create" in trace.stimulus.content
+
+    @pytest.mark.asyncio
+    async def test_brain_terrace_search_emits_trace_node(
+        self, clean_trace_store
+    ):
+        """
+        Brain Terrace search operation emits a TraceNode.
+
+        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        This test verifies that brain.terrace.search is traced.
+        """
+        from protocols.agentese.gateway import _import_node_modules, create_gateway
+        from services.witness.trace_store import get_trace_store
+
+        _import_node_modules()
+        repopulate_registry()
+        gateway = create_gateway(prefix="/agentese")
+        observer = Observer.test()
+
+        # Invoke search through gateway
+        await gateway._invoke_path(
+            "brain.terrace", "search", observer, query="test"
+        )
+
+        # Verify TraceNode was emitted
+        store = get_trace_store()
+        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for search"
+
+        trace = list(store.all())[-1]
+        assert "brain.terrace" in trace.stimulus.content
+        assert "search" in trace.stimulus.content
+
+    @pytest.mark.asyncio
+    async def test_multiple_operations_emit_multiple_traces(
+        self, clean_trace_store
+    ):
+        """
+        Multiple Brain operations emit distinct TraceNodes.
+
+        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        This test verifies that N invocations produce N traces.
+        """
+        from protocols.agentese.gateway import _import_node_modules, create_gateway
+        from services.witness.trace_store import get_trace_store
+
+        _import_node_modules()
+        repopulate_registry()
+        gateway = create_gateway(prefix="/agentese")
+        observer = Observer.test()
+
+        # Invoke multiple operations
+        await gateway._invoke_path("brain.terrace", "manifest", observer)
+        await gateway._invoke_path(
+            "brain.terrace", "create", observer, topic="test1", content="Content 1"
+        )
+        await gateway._invoke_path("brain.terrace", "search", observer, query="test")
+
+        # Verify 3 TraceNodes were emitted
+        store = get_trace_store()
+        assert len(store) >= 3, f"Expected 3+ traces, got {len(store)}"
+
+        # Verify all traces are unique
+        trace_ids = [t.id for t in store.all()]
+        assert len(set(trace_ids)) == len(trace_ids), "Trace IDs should be unique"

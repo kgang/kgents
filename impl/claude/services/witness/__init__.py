@@ -228,6 +228,12 @@ from .schedule import (
     delay,
     every,
 )
+from .session_walk import (
+    SessionWalkBinding,
+    SessionWalkBridge,
+    get_session_walk_bridge,
+    reset_session_walk_bridge,
+)
 from .sheaf import (
     SOURCE_CAPABILITIES,
     EventSource,
@@ -372,6 +378,11 @@ __all__ = [
     "WalkStore",
     "get_walk_store",
     "reset_walk_store",
+    # Session-Walk Bridge (Session 7)
+    "SessionWalkBinding",
+    "SessionWalkBridge",
+    "get_session_walk_bridge",
+    "reset_session_walk_bridge",
     # Offering (Chunk 3)
     "OfferingId",
     "generate_offering_id",

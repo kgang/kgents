@@ -113,6 +113,15 @@ class SynergyEventType(Enum):
     TOOL_FAILED = "tool.failed"  # Tool execution failed
     TOOL_TRUST_DENIED = "tool.trust_denied"  # Trust gate denied invocation
 
+    # Conversation events (CLI v7 Phase 2: Deep Conversation)
+    CONVERSATION_TURN = "conversation.turn"  # Turn added to conversation
+
+    # Swarm events (CLI v7 Phase 6: Agent Swarms)
+    SWARM_SPAWNED = "swarm.spawned"  # Agent spawned into swarm
+    SWARM_DESPAWNED = "swarm.despawned"  # Agent removed from swarm
+    SWARM_A2A_MESSAGE = "swarm.a2a_message"  # A2A message sent
+    SWARM_HANDOFF = "swarm.handoff"  # Agent handoff occurred
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -1955,6 +1964,190 @@ def create_tool_trust_denied_event(
     )
 
 
+# =============================================================================
+# Conversation Events (CLI v7 Phase 2: Deep Conversation)
+# =============================================================================
+
+
+def create_conversation_turn_event(
+    session_id: str,
+    turn_number: int,
+    role: str,
+    content_preview: str,
+    agent_id: str = "unknown",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a conversation turn event.
+
+    Emitted when a message is added to the conversation window.
+
+    Args:
+        session_id: Unique session identifier
+        turn_number: Current turn count
+        role: Message role (user, assistant)
+        content_preview: First 100 chars of message
+        agent_id: ID of agent involved
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONVERSATION_TURN,
+        source_id=session_id,
+        payload={
+            "session_id": session_id,
+            "turn_number": turn_number,
+            "role": role,
+            "content_preview": content_preview[:100],
+            "agent_id": agent_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+# =============================================================================
+# Swarm Events (CLI v7 Phase 6: Agent Swarms)
+# =============================================================================
+
+
+def create_swarm_spawned_event(
+    agent_id: str,
+    task: str,
+    behavior: str,
+    autonomy_level: int,
+    spawner_id: str = "coordinator",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a swarm agent spawned event.
+
+    Emitted when a new agent is spawned into the swarm.
+
+    Args:
+        agent_id: Unique agent identifier
+        task: Task assigned to the agent
+        behavior: Agent behavior pattern (FOLLOWER, EXPLORER, ASSISTANT, AUTONOMOUS)
+        autonomy_level: Autonomy level (0-3)
+        spawner_id: ID of spawning coordinator
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.SWARM_SPAWNED,
+        source_id=agent_id,
+        payload={
+            "agent_id": agent_id,
+            "task": task[:200],
+            "behavior": behavior,
+            "autonomy_level": autonomy_level,
+            "spawner_id": spawner_id,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_swarm_despawned_event(
+    agent_id: str,
+    reason: str = "completed",
+    work_summary: str = "",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a swarm agent despawned event.
+
+    Emitted when an agent is removed from the swarm.
+
+    Args:
+        agent_id: Unique agent identifier
+        reason: Why the agent was despawned (completed, error, timeout, handoff)
+        work_summary: Brief summary of work completed
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.SWARM_DESPAWNED,
+        source_id=agent_id,
+        payload={
+            "agent_id": agent_id,
+            "reason": reason,
+            "work_summary": work_summary[:200],
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_swarm_a2a_message_event(
+    message_id: str,
+    from_agent: str,
+    to_agent: str,
+    message_type: str,
+    payload_preview: str = "",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a swarm A2A message event.
+
+    Emitted when agents communicate via A2A protocol.
+
+    Args:
+        message_id: Unique message identifier
+        from_agent: Sending agent ID
+        to_agent: Receiving agent ID (or "*" for broadcast)
+        message_type: Type of message (NOTIFY, REQUEST, RESPONSE, HANDOFF)
+        payload_preview: Brief preview of payload
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.SWARM_A2A_MESSAGE,
+        source_id=message_id,
+        payload={
+            "message_id": message_id,
+            "from_agent": from_agent,
+            "to_agent": to_agent,
+            "message_type": message_type,
+            "payload_preview": payload_preview[:100],
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_swarm_handoff_event(
+    handoff_id: str,
+    from_agent: str,
+    to_agent: str,
+    context_keys: list[str],
+    conversation_turns: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a swarm handoff event.
+
+    Emitted when one agent hands off work to another.
+
+    Args:
+        handoff_id: Unique handoff identifier
+        from_agent: Agent handing off
+        to_agent: Agent receiving handoff
+        context_keys: Keys of context data transferred
+        conversation_turns: Number of conversation turns transferred
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.SWARM_HANDOFF,
+        source_id=handoff_id,
+        payload={
+            "handoff_id": handoff_id,
+            "from_agent": from_agent,
+            "to_agent": to_agent,
+            "context_keys": context_keys,
+            "conversation_turns": conversation_turns,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -2023,4 +2216,11 @@ __all__ = [
     "create_tool_completed_event",
     "create_tool_failed_event",
     "create_tool_trust_denied_event",
+    # Factory functions - Conversation (CLI v7 Phase 2)
+    "create_conversation_turn_event",
+    # Factory functions - Swarm (CLI v7 Phase 6)
+    "create_swarm_spawned_event",
+    "create_swarm_despawned_event",
+    "create_swarm_a2a_message_event",
+    "create_swarm_handoff_event",
 ]

@@ -64,11 +64,17 @@ class WitnessTopics:
     DAEMON_STARTED = "witness.daemon.started"
     DAEMON_STOPPED = "witness.daemon.stopped"
 
+    # AGENTESE events (Law 3: Every invocation emits TraceNode)
+    AGENTESE_INVOKED = "witness.agentese.invoked"
+    AGENTESE_COMPLETED = "witness.agentese.completed"
+    AGENTESE_ERROR = "witness.agentese.error"
+
     # Wildcards
     ALL = "witness.*"
     GIT_ALL = "witness.git.*"
     THOUGHT_ALL = "witness.thought.*"
     DAEMON_ALL = "witness.daemon.*"
+    AGENTESE_ALL = "witness.agentese.*"
 
 
 # =============================================================================
@@ -505,6 +511,18 @@ def reset_witness_bus_manager() -> None:
     _witness_bus_manager = None
 
 
+def get_synergy_bus() -> WitnessSynergyBus:
+    """
+    Get the global WitnessSynergyBus.
+
+    Convenience function for code that needs to publish to the bus
+    without managing the full WitnessBusManager lifecycle.
+
+    Used by AgenteseGateway for TraceNode event publishing.
+    """
+    return get_witness_bus_manager().synergy_bus
+
+
 # =============================================================================
 # Exports
 # =============================================================================
@@ -524,6 +542,7 @@ __all__ = [
     "WitnessBusManager",
     "get_witness_bus_manager",
     "reset_witness_bus_manager",
+    "get_synergy_bus",
     # Types
     "WitnessEventHandler",
     "SynergyHandler",
