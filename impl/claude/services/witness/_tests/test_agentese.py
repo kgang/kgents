@@ -83,9 +83,7 @@ class TestAgentesePathParsing:
                 "custom.new": "CustomJewel",
             }
         )
-        path, aspect, jewel = parse_agentese_path_with_config(
-            "custom.new.action", config
-        )
+        path, aspect, jewel = parse_agentese_path_with_config("custom.new.action", config)
 
         assert path == "custom.new"
         assert aspect == "action"
