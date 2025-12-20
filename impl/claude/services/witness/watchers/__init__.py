@@ -8,19 +8,25 @@ Available Watchers:
 - GitWatcher: React to git operations (commits, pushes, checkouts)
 - FileSystemWatcher: React to file changes (create, modify, delete)
 - TestWatcher: React to pytest results (pass, fail, skip, session)
-- AgenteseWatcher: React to cross-jewel events via SynergyBus (placeholder)
+- AgenteseWatcher: React to cross-jewel events via SynergyBus
 - CIWatcher: React to GitHub Actions events (placeholder)
 
 See: docs/skills/data-bus-integration.md
 """
 
 # Re-export event types from polynomial (canonical location)
-from services.witness.polynomial import FileEvent, GitEvent, TestEvent
+from services.witness.polynomial import AgenteseEvent, FileEvent, GitEvent, TestEvent
 
 # Base classes
 from .base import BaseWatcher, WatcherState, WatcherStats
 
 # Concrete watchers
+from .agentese import (
+    AgenteseConfig,
+    AgenteseWatcher,
+    create_agentese_watcher,
+    parse_agentese_path,
+)
 from .filesystem import (
     Debouncer,
     FileSystemConfig,
@@ -63,4 +69,10 @@ __all__ = [
     "TestEvent",
     "create_test_watcher",
     "create_test_plugin",
+    # AGENTESE
+    "AgenteseWatcher",
+    "AgenteseConfig",
+    "AgenteseEvent",
+    "parse_agentese_path",
+    "create_agentese_watcher",
 ]
