@@ -30,6 +30,7 @@ Principle Alignment:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from datetime import datetime
@@ -56,6 +57,8 @@ from .presence_contracts import (
     CursorGetResponse,
     CursorUpdateRequest,
     CursorUpdateResponse,
+    DemoRequest,
+    DemoResponse,
     JoinRequest,
     JoinResponse,
     LeaveRequest,
@@ -83,7 +86,30 @@ PRESENCE_AFFORDANCES: tuple[str, ...] = (
     "states",
     "circadian",
     "stream",
+    "demo",
 )
+
+# Demo agent personalities for realistic simulation
+DEMO_AGENTS = [
+    {"id": "kgent-alpha", "name": "K-gent α", "personality": "explorer"},
+    {"id": "kgent-beta", "name": "K-gent β", "personality": "worker"},
+    {"id": "kgent-gamma", "name": "K-gent γ", "personality": "suggester"},
+]
+
+# Focus paths for demo exploration
+DEMO_FOCUS_PATHS = [
+    "self.memory",
+    "self.soul",
+    "world.town",
+    "world.codebase",
+    "concept.design",
+    "self.garden",
+    "world.morpheus",
+    "self.witness",
+]
+
+# Active demo tasks (module-level to persist across instances)
+_demo_tasks: dict[str, "asyncio.Task[None]"] = {}
 
 
 @node(
@@ -102,6 +128,7 @@ PRESENCE_AFFORDANCES: tuple[str, ...] = (
         "join": Contract(JoinRequest, JoinResponse),
         "leave": Contract(LeaveRequest, LeaveResponse),
         "update": Contract(CursorUpdateRequest, CursorUpdateResponse),
+        "demo": Contract(DemoRequest, DemoResponse),
     },
     examples=[
         ("manifest", {}, "Get all active cursors"),
@@ -243,6 +270,8 @@ class PresenceNode(BaseLogosNode):
                 return await self._get_circadian(observer, **kwargs)
             case "stream":
                 return self._stream(observer, **kwargs)
+            case "demo":
+                return await self._demo(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -530,6 +559,177 @@ class PresenceNode(BaseLogosNode):
             yield {
                 "type": "heartbeat",
                 "timestamp": datetime.now().isoformat(),
+            }
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.WRITES("presence")],
+        help="Start/stop demo mode with simulated agent cursors",
+        examples=[
+            "self.presence.demo",
+            "self.presence.demo[action='start', agent_count=3]",
+            "self.presence.demo[action='stop']",
+        ],
+    )
+    async def _demo(
+        self,
+        observer: "Observer",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Start or stop demo mode with simulated agent cursors.
+
+        Demo agents explore AGENTESE paths and transition through states,
+        simulating the "coworking" feel of multiple agents present.
+
+        Voice Anchor: "Agents pretending to be there with their cursors moving,
+        kinda following my cursor, kinda doing its own thing."
+        """
+        import asyncio
+        import random
+
+        action = kwargs.get("action", "start")
+        agent_count = min(int(kwargs.get("agent_count", 2)), 3)  # Max 3
+        update_interval = float(kwargs.get("update_interval", 3.0))
+
+        if action == "stop":
+            # Stop all demo tasks
+            stopped_ids = []
+            for agent_id, task in list(_demo_tasks.items()):
+                task.cancel()
+                await self.channel.leave(agent_id)
+                stopped_ids.append(agent_id)
+                del _demo_tasks[agent_id]
+
+            return {
+                "success": True,
+                "action": "stop",
+                "message": f"Stopped {len(stopped_ids)} demo agents",
+                "agent_ids": stopped_ids,
+            }
+
+        elif action == "start":
+            # Stop any existing demos first
+            for agent_id, task in list(_demo_tasks.items()):
+                task.cancel()
+                await self.channel.leave(agent_id)
+            _demo_tasks.clear()
+
+            started_ids = []
+
+            async def demo_loop(agent_info: dict[str, str]) -> None:
+                """Background task simulating agent behavior."""
+                agent_id = agent_info["id"]
+                display_name = agent_info["name"]
+                personality = agent_info["personality"]
+
+                # Join with initial state
+                cursor = AgentCursor(
+                    agent_id=agent_id,
+                    display_name=display_name,
+                    state=CursorState.WAITING,
+                    activity="Starting up...",
+                )
+                await self.channel.join(cursor)
+
+                # Personality-based behavior
+                if personality == "explorer":
+                    preferred_states = [
+                        CursorState.EXPLORING,
+                        CursorState.FOLLOWING,
+                        CursorState.EXPLORING,
+                    ]
+                elif personality == "worker":
+                    preferred_states = [
+                        CursorState.WORKING,
+                        CursorState.WORKING,
+                        CursorState.FOLLOWING,
+                    ]
+                else:  # suggester
+                    preferred_states = [
+                        CursorState.SUGGESTING,
+                        CursorState.EXPLORING,
+                        CursorState.FOLLOWING,
+                    ]
+
+                try:
+                    while True:
+                        await asyncio.sleep(update_interval + random.random() * 2)
+
+                        # Pick a state based on personality
+                        target_state = random.choice(preferred_states)
+
+                        # Ensure valid transition
+                        if target_state not in cursor.state.can_transition_to:
+                            # Find a valid intermediate state
+                            for s in CursorState:
+                                if s in cursor.state.can_transition_to:
+                                    cursor.transition_to(s)
+                                    break
+
+                        cursor.transition_to(target_state)
+
+                        # Update activity based on state
+                        focus_path = random.choice(DEMO_FOCUS_PATHS)
+                        activities = {
+                            CursorState.EXPLORING: [
+                                f"Exploring {focus_path}...",
+                                f"Investigating {focus_path}",
+                                f"Looking at {focus_path}",
+                            ],
+                            CursorState.WORKING: [
+                                f"Processing in {focus_path}",
+                                "Computing...",
+                                f"Analyzing {focus_path}",
+                            ],
+                            CursorState.SUGGESTING: [
+                                f"Found something in {focus_path}",
+                                "I have an idea...",
+                                f"Consider looking at {focus_path}",
+                            ],
+                            CursorState.FOLLOWING: [
+                                "Following your lead...",
+                                "Watching...",
+                                "Standing by...",
+                            ],
+                            CursorState.WAITING: [
+                                "Ready",
+                                "Idle",
+                                "Standing by",
+                            ],
+                        }
+                        activity = random.choice(
+                            activities.get(cursor.state, ["Active..."])
+                        )
+                        cursor.update_activity(activity, focus_path)
+
+                        # Broadcast update
+                        await self.channel.broadcast(cursor)
+
+                except asyncio.CancelledError:
+                    # Clean exit
+                    pass
+
+            # Start demo agents
+            for i in range(agent_count):
+                agent_info = DEMO_AGENTS[i]
+                task = asyncio.create_task(demo_loop(agent_info))
+                _demo_tasks[agent_info["id"]] = task
+                started_ids.append(agent_info["id"])
+
+            return {
+                "success": True,
+                "action": "start",
+                "message": f"Started {len(started_ids)} demo agents",
+                "agent_ids": started_ids,
+            }
+
+        else:
+            return {
+                "success": False,
+                "action": action,
+                "message": f"Unknown action: {action}. Use 'start' or 'stop'.",
+                "agent_ids": [],
             }
 
 

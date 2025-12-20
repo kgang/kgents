@@ -1,7 +1,8 @@
 """
-AGENTESE Self Conductor Context: Conversation Window Management
+AGENTESE Self Conductor Context: Conversation Window Management + Live Flux
 
 CLI v7 Phase 2: Deep Conversation
+CLI v7 Phase 7: Live Flux
 
 The self.conductor context provides access to ConversationWindow state:
 - self.conductor.manifest - View current window status
@@ -10,6 +11,11 @@ The self.conductor context provides access to ConversationWindow state:
 - self.conductor.summary - Get/set conversation summary
 - self.conductor.reset - Reset conversation window
 - self.conductor.sessions - List active conversation sessions
+
+Phase 7 additions:
+- self.conductor.flux - View flux event integration status
+- self.conductor.flux_start - Start event integration
+- self.conductor.flux_stop - Stop event integration
 
 The Conductor manages bounded conversation history with:
 - Sliding window: Evict oldest turns at capacity
@@ -20,7 +26,7 @@ The Conductor manages bounded conversation history with:
 AGENTESE: self.conductor.*
 
 Principle Alignment:
-- Composable: Windows compose with ChatSession
+- Composable: Windows compose with ChatSession; Events compose through buses
 - Ethical: Bounded history prevents resource exhaustion
 - Joy-Inducing: "What did we discuss?" should work after 10+ turns
 """
@@ -39,6 +45,12 @@ from .conductor_contracts import (
     ConductorManifestResponse,
     ConfigRequest,
     ConfigResponse,
+    FluxStartRequest,
+    FluxStartResponse,
+    FluxStatusRequest,
+    FluxStatusResponse,
+    FluxStopRequest,
+    FluxStopResponse,
     HistoryRequest,
     HistoryResponse,
     ResetRequest,
@@ -67,12 +79,16 @@ CONDUCTOR_AFFORDANCES: tuple[str, ...] = (
     "reset",
     "sessions",
     "config",
+    # Phase 7: Live Flux
+    "flux",
+    "flux_start",
+    "flux_stop",
 )
 
 
 @node(
     "self.conductor",
-    description="Conversation window management - bounded history with summarization",
+    description="Conversation window management - bounded history with summarization + live flux",
     singleton=True,
     contracts={
         # Perception aspects (Response only)
@@ -85,6 +101,10 @@ CONDUCTOR_AFFORDANCES: tuple[str, ...] = (
         "sessions": Contract(SessionsListRequest, SessionsListResponse),
         # Mutation aspects
         "reset": Contract(ResetRequest, ResetResponse),
+        # Phase 7: Live Flux contracts
+        "flux": Contract(FluxStatusRequest, FluxStatusResponse),
+        "flux_start": Contract(FluxStartRequest, FluxStartResponse),
+        "flux_stop": Contract(FluxStopRequest, FluxStopResponse),
         # Note: summary aspect handles both GET and SET via kwargs detection
         # When content is provided, it uses SummarySetRequest/Response
     },
@@ -197,6 +217,13 @@ class ConductorNode(BaseLogosNode):
                 return await self._list_sessions(observer, **kwargs)
             case "config":
                 return await self._get_config(observer, **kwargs)
+            # Phase 7: Live Flux
+            case "flux":
+                return await self._get_flux_status(observer, **kwargs)
+            case "flux_start":
+                return await self._start_flux(observer, **kwargs)
+            case "flux_stop":
+                return await self._stop_flux(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -510,6 +537,126 @@ class ConductorNode(BaseLogosNode):
             "summarization_threshold": window.summarization_threshold,
             "has_summarizer": window._summarizer is not None,
         }
+
+    # === Phase 7: Live Flux Methods ===
+
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[Effect.READS("flux")],
+        help="Get ConductorFlux event integration status",
+        examples=["self.conductor.flux"],
+    )
+    async def _get_flux_status(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Get status of ConductorFlux event integration.
+
+        Returns flux running state, subscriber count, monitored event types.
+        """
+        try:
+            from services.conductor.flux import get_conductor_flux
+            from services.conductor.bus_bridge import is_bridge_active
+            from protocols.synergy import SynergyEventType
+
+            flux = get_conductor_flux()
+
+            # Event types monitored by flux
+            event_types = [
+                SynergyEventType.FILE_READ.value,
+                SynergyEventType.FILE_EDITED.value,
+                SynergyEventType.FILE_CREATED.value,
+                SynergyEventType.CONVERSATION_TURN.value,
+                SynergyEventType.CURSOR_UPDATED.value,
+                SynergyEventType.CURSOR_JOINED.value,
+                SynergyEventType.CURSOR_LEFT.value,
+                SynergyEventType.SWARM_SPAWNED.value,
+                SynergyEventType.SWARM_DESPAWNED.value,
+                SynergyEventType.SWARM_A2A_MESSAGE.value,
+                SynergyEventType.SWARM_HANDOFF.value,
+            ]
+
+            return {
+                "running": flux.running,
+                "subscriber_count": len(flux._subscribers),
+                "event_types_monitored": event_types,
+                "bridge_active": is_bridge_active(),
+            }
+        except Exception as e:
+            logger.warning(f"Failed to get flux status: {e}")
+            return {"error": str(e), "running": False}
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.WRITES("flux")],
+        help="Start ConductorFlux event integration",
+        examples=["self.conductor.flux_start"],
+    )
+    async def _start_flux(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Start ConductorFlux event integration.
+
+        Enables real-time event routing across all CLI v7 phases.
+        """
+        try:
+            from services.conductor.flux import get_conductor_flux
+            from services.conductor.bus_bridge import wire_a2a_to_global_synergy
+
+            flux = get_conductor_flux()
+            was_running = flux.running
+
+            if not was_running:
+                flux.start()
+                wire_a2a_to_global_synergy()
+
+            return {
+                "success": True,
+                "was_already_running": was_running,
+            }
+        except Exception as e:
+            logger.warning(f"Failed to start flux: {e}")
+            return {"success": False, "error": str(e)}
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        effects=[Effect.WRITES("flux")],
+        help="Stop ConductorFlux event integration",
+        examples=["self.conductor.flux_stop"],
+    )
+    async def _stop_flux(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        Stop ConductorFlux event integration.
+
+        Disables real-time event routing.
+        """
+        try:
+            from services.conductor.flux import get_conductor_flux
+            from services.conductor.bus_bridge import unwire_a2a_bridge
+
+            flux = get_conductor_flux()
+            was_running = flux.running
+
+            if was_running:
+                flux.stop()
+                unwire_a2a_bridge()
+
+            return {
+                "success": True,
+                "was_running": was_running,
+            }
+        except Exception as e:
+            logger.warning(f"Failed to stop flux: {e}")
+            return {"success": False, "error": str(e)}
 
     # === Helper Methods ===
 

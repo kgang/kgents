@@ -8,11 +8,13 @@ This node provides AGENTESE access to the Terrace primitive for
 curated, versioned knowledge that evolves across sessions.
 
 AGENTESE Paths:
-    brain.terrace.manifest  - Show all current knowledge
-    brain.terrace.create    - Create new knowledge entry
-    brain.terrace.evolve    - Evolve existing knowledge
-    brain.terrace.search    - Search knowledge by topic/content
-    brain.terrace.history   - Get evolution history of a topic
+    brain.terrace.manifest    - Show all current knowledge
+    brain.terrace.create      - Create new knowledge entry
+    brain.terrace.evolve      - Evolve existing knowledge
+    brain.terrace.search      - Search knowledge by topic/content
+    brain.terrace.history     - Get evolution history of a topic
+    brain.terrace.curate      - Human curation: elevate trust to L3
+    brain.terrace.crystallize - Bridge: crystallize Brain memory to Terrace
 
 See: services/witness/terrace.py
 See: spec/protocols/warp-primitives.md
@@ -61,7 +63,15 @@ def _get_store() -> Any:
 
 
 # Terrace affordances
-TERRACE_AFFORDANCES: tuple[str, ...] = ("manifest", "create", "evolve", "search", "history")
+TERRACE_AFFORDANCES: tuple[str, ...] = (
+    "manifest",
+    "create",
+    "evolve",
+    "search",
+    "history",
+    "curate",
+    "crystallize",
+)
 
 
 @node(
@@ -163,6 +173,10 @@ class TerraceNode(BaseLogosNode):
                 return self._search_entries(**kwargs)
             case "history":
                 return self._get_history(**kwargs)
+            case "curate":
+                return self._curate_entry(**kwargs)
+            case "crystallize":
+                return await self._crystallize_from_brain(**kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -177,8 +191,22 @@ class TerraceNode(BaseLogosNode):
         tags: list[str] | None = None,
         source: str = "",
         confidence: float = 1.0,
+        voice_check: bool = True,
     ) -> dict[str, Any]:
-        """Create a new knowledge entry (internal)."""
+        """
+        Create a new knowledge entry (internal).
+
+        Args:
+            topic: Topic name for the entry
+            content: Knowledge content
+            tags: Optional tags for categorization
+            source: Where this knowledge came from
+            confidence: Trust level (0.0-1.0)
+            voice_check: If True, run VoiceGate check on content
+
+        Returns:
+            Result dict with created terrace or error
+        """
         from services.witness.terrace import Terrace
 
         store = _get_store()
@@ -193,6 +221,21 @@ class TerraceNode(BaseLogosNode):
                 "existing_version": existing.version,
             }
 
+        # Optional VoiceGate check (Anti-Sausage Protocol)
+        voice_result = None
+        if voice_check:
+            from services.witness.voice_gate import VoiceGate
+
+            gate = VoiceGate()
+            check = gate.check(content)
+            voice_result = {
+                "passed": check.passed,
+                "warnings": check.warning_count,
+                "anchors": list(check.anchors_referenced),
+            }
+            # Note: We don't block on voice check failure in permissive mode
+            # This allows creating content but flags it for review
+
         # Create new terrace
         terrace = Terrace.create(
             topic=topic,
@@ -205,10 +248,14 @@ class TerraceNode(BaseLogosNode):
         # Add to store
         store.add(terrace)
 
-        return {
+        result: dict[str, Any] = {
             "created": True,
             "terrace": terrace.to_dict(),
         }
+        if voice_result:
+            result["voice_check"] = voice_result
+
+        return result
 
     def _evolve_entry(
         self,
@@ -303,6 +350,177 @@ class TerraceNode(BaseLogosNode):
             "count": len(entries),
             "versions": entries,
         }
+
+    def _curate_entry(
+        self,
+        topic: str = "",
+        curator: str = "human",
+        notes: str = "",
+    ) -> dict[str, Any]:
+        """
+        Curate a knowledge entry, elevating it to trust L3 (internal).
+
+        Human curation is a stamp of approval. When a human curates
+        a Terrace entry, it becomes authoritative knowledge.
+
+        Law: Human override = trust L3 on that crystal.
+
+        Args:
+            topic: The topic to curate
+            curator: Who is curating (default: "human")
+            notes: Optional curation notes
+
+        Returns:
+            Result with curated terrace and trust elevation
+        """
+        store = _get_store()
+
+        # Get current version
+        current = store.current(topic)
+        if not current:
+            return {
+                "error": "topic_not_found",
+                "message": f"Topic '{topic}' not found.",
+            }
+
+        # Evolve with curation metadata (creates new version)
+        curated = current.evolve(
+            content=current.content,  # Content unchanged
+            reason=f"Curated by {curator}" + (f": {notes}" if notes else ""),
+            confidence=1.0,  # L3 trust = full confidence
+        )
+
+        # Add curation metadata
+        from services.witness.terrace import Terrace
+
+        curated_with_meta = Terrace(
+            id=curated.id,
+            topic=curated.topic,
+            content=curated.content,
+            version=curated.version,
+            supersedes=curated.supersedes,
+            status=curated.status,
+            created_at=curated.created_at,
+            evolution_reason=curated.evolution_reason,
+            tags=(*curated.tags, "curated"),
+            source=curated.source,
+            confidence=1.0,
+            metadata={
+                **curated.metadata,
+                "curated": True,
+                "curator": curator,
+                "curation_notes": notes,
+                "trust_level": "L3",  # WARP trust level 3 = human-approved
+            },
+        )
+
+        # Add to store (marks old as superseded)
+        store.add(curated_with_meta)
+
+        return {
+            "curated": True,
+            "topic": topic,
+            "old_version": current.version,
+            "new_version": curated_with_meta.version,
+            "trust_level": "L3",
+            "curator": curator,
+            "terrace": curated_with_meta.to_dict(),
+        }
+
+    async def _crystallize_from_brain(
+        self,
+        crystal_id: str = "",
+        topic: str = "",
+        source: str = "brain",
+    ) -> dict[str, Any]:
+        """
+        Crystallize a Brain memory into a Terrace entry (internal).
+
+        This is the bridge between Brain (ephemeral memory) and Terrace
+        (curated knowledge). When an insight from Brain is worth preserving,
+        crystallize it to Terrace.
+
+        Philosophy: "Knowledge crystallizes over time."
+
+        Args:
+            crystal_id: The Brain crystal ID to crystallize
+            topic: Topic name for the Terrace entry (required)
+            source: Source attribution (default: "brain")
+
+        Returns:
+            Result with created terrace
+        """
+        if not crystal_id:
+            return {
+                "error": "missing_crystal_id",
+                "message": "crystal_id is required to crystallize from Brain.",
+            }
+
+        if not topic:
+            return {
+                "error": "missing_topic",
+                "message": "topic is required for Terrace entry.",
+            }
+
+        # Try to get the Brain crystal via AGENTESE gateway
+        try:
+            from protocols.agentese.gateway import create_gateway
+            from protocols.agentese.node import Observer
+
+            gateway = create_gateway(prefix="/agentese")
+            observer = Observer.test()
+
+            # Invoke Brain's get aspect via gateway
+            result = await gateway._invoke_path(
+                "self.memory",
+                "get",
+                observer,
+                crystal_id=crystal_id,
+            )
+
+            # Check for error response
+            if isinstance(result, dict) and "error" in result:
+                return {
+                    "error": "crystal_not_found",
+                    "message": f"Brain crystal '{crystal_id}' not found.",
+                }
+
+            # Extract content from result
+            content = result.get("content", "") if isinstance(result, dict) else ""
+            if not content:
+                return {
+                    "error": "crystal_empty",
+                    "message": f"Brain crystal '{crystal_id}' has no content.",
+                }
+
+            # Create Terrace entry from Brain crystal
+            create_result = self._create_entry(
+                topic=topic,
+                content=content,
+                tags=["crystallized"],
+                source=f"{source}:{crystal_id}",
+                confidence=0.8,  # L2 trust: machine-sourced, needs curation for L3
+                voice_check=True,
+            )
+
+            if "error" in create_result:
+                return create_result
+
+            return {
+                "crystallized": True,
+                "source_crystal": crystal_id,
+                "topic": topic,
+                "trust_level": "L2",  # Machine-sourced = L2
+                "message": "Use 'curate' to elevate to L3",
+                "terrace": create_result.get("terrace"),
+            }
+
+        except Exception as e:
+            # Graceful degradation
+            return {
+                "error": "crystallization_failed",
+                "message": f"Could not crystallize: {e}. Create entry directly with 'create'.",
+            }
 
     # ==========================================================================
     # Public Interface (for direct calls / testing)
@@ -444,6 +662,90 @@ class TerraceNode(BaseLogosNode):
             metadata=data,
         )
 
+    @aspect(
+        category=AspectCategory.MUTATION,
+        help="Curate entry: human approval elevates to trust L3",
+    )
+    def curate(
+        self,
+        topic: str,
+        curator: str = "human",
+        notes: str = "",
+    ) -> BasicRendering:
+        """
+        Curate a knowledge entry (public API).
+
+        Human curation elevates trust to L3 (maximum).
+        This is the stamp of approval that transforms
+        machine-generated insight into authoritative knowledge.
+
+        Args:
+            topic: The topic to curate
+            curator: Who is curating (default: "human")
+            notes: Optional curation notes
+
+        Returns:
+            BasicRendering with curation result
+        """
+        data = self._curate_entry(topic=topic, curator=curator, notes=notes)
+
+        if "error" in data:
+            return BasicRendering(
+                summary=f"Error: {data['message']}",
+                content=f"Could not curate '{topic}'.",
+                metadata=data,
+            )
+
+        return BasicRendering(
+            summary=f"✓ Curated '{topic}': v{data['old_version']} → v{data['new_version']} (Trust: L3)",
+            content=self._format_curate_cli(data),
+            metadata=data,
+        )
+
+    @aspect(
+        category=AspectCategory.MUTATION,
+        help="Crystallize Brain memory to Terrace entry",
+    )
+    async def crystallize(
+        self,
+        crystal_id: str,
+        topic: str,
+        source: str = "brain",
+    ) -> BasicRendering:
+        """
+        Crystallize a Brain memory into a Terrace entry (public API).
+
+        This bridges ephemeral Brain memories to curated Terrace knowledge.
+        Crystallized entries start at trust L2 (machine-sourced).
+        Use 'curate' afterward to elevate to L3.
+
+        Args:
+            crystal_id: The Brain crystal ID to crystallize
+            topic: Topic name for the Terrace entry
+            source: Source attribution (default: "brain")
+
+        Returns:
+            BasicRendering with crystallization result
+        """
+        data = await self._crystallize_from_brain(
+            crystal_id=crystal_id,
+            topic=topic,
+            source=source,
+        )
+
+        if "error" in data:
+            return BasicRendering(
+                summary=f"Error: {data['message']}",
+                content=f"Could not crystallize '{crystal_id}' to '{topic}'.",
+                metadata=data,
+            )
+
+        return BasicRendering(
+            summary=f"✓ Crystallized '{crystal_id}' → '{topic}' (Trust: L2)",
+            content=self._format_crystallize_cli(data),
+            metadata=data,
+        )
+
     def _format_evolve_cli(self, data: dict[str, Any]) -> str:
         """Format evolve result for CLI output."""
         return f"Evolved to version {data['new_version']}"
@@ -506,6 +808,33 @@ class TerraceNode(BaseLogosNode):
             lines.append(f"  Created: {version['created_at'][:19]}")
             lines.append("")
 
+        return "\n".join(lines)
+
+    def _format_curate_cli(self, data: dict[str, Any]) -> str:
+        """Format curate result for CLI output."""
+        lines = [
+            f"✓ Curated: '{data['topic']}'",
+            "=" * 40,
+            "",
+            f"Version: {data['old_version']} → {data['new_version']}",
+            f"Trust Level: {data['trust_level']}",
+            f"Curator: {data['curator']}",
+            "",
+            "This knowledge is now authoritative.",
+        ]
+        return "\n".join(lines)
+
+    def _format_crystallize_cli(self, data: dict[str, Any]) -> str:
+        """Format crystallize result for CLI output."""
+        lines = [
+            f"✓ Crystallized: '{data['topic']}'",
+            "=" * 40,
+            "",
+            f"Source Crystal: {data['source_crystal']}",
+            f"Trust Level: {data['trust_level']}",
+            "",
+            data.get("message", ""),
+        ]
         return "\n".join(lines)
 
 

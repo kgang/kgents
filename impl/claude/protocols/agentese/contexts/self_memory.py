@@ -130,7 +130,51 @@ class MemoryNode(BaseLogosNode):
     )
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View current memory state."""
-        # Try AssociativeMemory first
+        # Try Brain Crown Jewel first (preferred path)
+        try:
+            from agents.brain import get_brain_crystal
+
+            brain = await get_brain_crystal()
+            status = await brain.status()
+
+            backend_icon = "🐘" if status.storage_backend == "postgres" else "📦"
+            backend_label = "PostgreSQL" if status.storage_backend == "postgres" else "SQLite"
+
+            content_lines = [
+                "🧠 Brain Status (D-gent Triad)",
+                "━" * 40,
+                f"  Captures:     {status.total_captures}",
+                f"  Vectors:      {status.vector_count}",
+                f"  Semantic:     {'✓ L-gent embeddings' if status.has_semantic else '○ hash-based'}",
+                f"  Coherency:    {status.coherency_rate:.1%}",
+                f"  Ghosts healed: {status.ghosts_healed}",
+                "━" * 40,
+                "  Status: ✓ Healthy",
+                f"  Backend: {backend_icon} {backend_label}",
+            ]
+
+            if status.storage_backend == "sqlite":
+                content_lines.append(f"  Storage: {status.storage_path}/brain.db")
+            else:
+                content_lines.append("  Storage: PostgreSQL (KGENTS_DATABASE_URL)")
+
+            return BasicRendering(
+                summary="Brain Status",
+                content="\n".join(content_lines),
+                metadata={
+                    "total_captures": status.total_captures,
+                    "vector_count": status.vector_count,
+                    "has_semantic": status.has_semantic,
+                    "coherency_rate": status.coherency_rate,
+                    "ghosts_healed": status.ghosts_healed,
+                    "storage_backend": status.storage_backend,
+                    "storage_path": status.storage_path,
+                },
+            )
+        except Exception:
+            pass
+
+        # Try AssociativeMemory as fallback
         if self._associative_memory is not None:
             try:
                 status = await self._associative_memory.status()

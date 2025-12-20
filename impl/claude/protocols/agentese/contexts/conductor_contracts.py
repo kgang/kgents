@@ -214,6 +214,61 @@ class ConfigResponse:
 
 
 # =============================================================================
+# Flux Aspect (Phase 7: Live Flux)
+# =============================================================================
+
+
+@dataclass
+class FluxStatusRequest:
+    """Request for flux status."""
+
+    pass  # No parameters needed
+
+
+@dataclass
+class FluxStatusResponse:
+    """Response for flux status - event integration state."""
+
+    running: bool
+    subscriber_count: int
+    event_types_monitored: list[str]
+    bridge_active: bool
+    error: str | None = None
+
+
+@dataclass
+class FluxStartRequest:
+    """Request to start flux event integration."""
+
+    pass  # No parameters needed
+
+
+@dataclass
+class FluxStartResponse:
+    """Response for starting flux."""
+
+    success: bool
+    was_already_running: bool
+    error: str | None = None
+
+
+@dataclass
+class FluxStopRequest:
+    """Request to stop flux event integration."""
+
+    pass  # No parameters needed
+
+
+@dataclass
+class FluxStopResponse:
+    """Response for stopping flux."""
+
+    success: bool
+    was_running: bool
+    error: str | None = None
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -243,4 +298,11 @@ __all__ = [
     # Config
     "ConfigRequest",
     "ConfigResponse",
+    # Flux (Phase 7)
+    "FluxStatusRequest",
+    "FluxStatusResponse",
+    "FluxStartRequest",
+    "FluxStartResponse",
+    "FluxStopRequest",
+    "FluxStopResponse",
 ]

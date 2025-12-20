@@ -155,6 +155,30 @@ class StatesResponse:
 
 
 # =============================================================================
+# Demo Mode
+# =============================================================================
+
+
+@dataclass
+class DemoRequest:
+    """Request to start/stop demo mode with simulated cursors."""
+
+    action: str = "start"  # "start" or "stop"
+    agent_count: int = 2  # Number of demo agents
+    update_interval: float = 3.0  # Seconds between updates
+
+
+@dataclass
+class DemoResponse:
+    """Response for demo mode."""
+
+    success: bool
+    action: str
+    message: str
+    agent_ids: list[str] = field(default_factory=list)
+
+
+# =============================================================================
 # Exports
 # =============================================================================
 
@@ -178,4 +202,7 @@ __all__ = [
     "CircadianResponse",
     # States
     "StatesResponse",
+    # Demo
+    "DemoRequest",
+    "DemoResponse",
 ]

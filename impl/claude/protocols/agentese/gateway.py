@@ -71,21 +71,26 @@ def _import_node_modules() -> None:
         # Import specific context node modules (legacy/fallback)
         from .contexts import (
             brain_terrace,  # noqa: F401 - WARP Phase 2: Knowledge layer (brain.terrace.*)
+            concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
+            concept_offering,  # noqa: F401 - WARP Phase 1: Context contracts (concept.offering.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
             forest,  # noqa: F401 - Forest Protocol (self.forest.*)
             garden,  # noqa: F401 - Garden State (self.garden.*)
             gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
             self_conductor,  # noqa: F401 - CLI v7 Phase 2: Conversation Window (self.conductor.*)
+            self_covenant,  # noqa: F401 - WARP Phase 1: Permission contracts (self.covenant.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)
             self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
             self_presence,  # noqa: F401 - CLI v7 Phase 4: Collaborative Canvas (self.presence.*)
             self_repl,  # noqa: F401 - CLI v7 Phase 4: REPL state (self.repl.*)
+            self_ritual,  # noqa: F401 - WARP Phase 1: Lawful workflows (self.ritual.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
+            time_trace_warp,  # noqa: F401 - WARP Phase 1: TraceNode/Walk (time.trace.*, time.walk.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_file,  # noqa: F401 - CLI v7 Phase 1: File I/O (world.file.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
@@ -767,6 +772,9 @@ class AgenteseGateway:
         1. Check NodeRegistry for @node registered class
         2. Fall back to Logos for context resolver paths
 
+        Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode.
+        This method instruments all invocations with TraceNode emission.
+
         Args:
             path: AGENTESE path (e.g., "self.memory")
             aspect: Aspect to invoke (e.g., "capture")
@@ -780,34 +788,166 @@ class AgenteseGateway:
             HTTPException: If path cannot be resolved
         """
         registry = get_registry()
+        result: Any = None
+        error: Exception | None = None
+        is_streaming = False
 
-        # Try registry first
-        if registry.has(path):
-            node = await registry.resolve(path, self.container)
-            if node is not None:
-                # Observer is compatible with Umwelt for node.invoke
-                return await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
+        try:
+            # Try registry first
+            if registry.has(path):
+                node = await registry.resolve(path, self.container)
+                if node is not None:
+                    # Observer is compatible with Umwelt for node.invoke
+                    result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
+                    # Check if result is async generator (streaming)
+                    is_streaming = hasattr(result, "__aiter__")
+                    # Emit TraceNode for successful invocation
+                    self._emit_trace(path, aspect, observer, result, is_streaming=is_streaming)
+                    return result
 
-        # Fall back to Logos
-        if self.fallback_to_logos:
-            logos = self._get_logos()
-            if logos is not None:
-                try:
-                    return await logos.invoke(f"{path}.{aspect}", observer, **kwargs)
-                except Exception as e:
-                    logger.debug(f"Logos fallback failed for {path}.{aspect}: {e}")
+            # Fall back to Logos
+            if self.fallback_to_logos:
+                logos = self._get_logos()
+                if logos is not None:
+                    try:
+                        result = await logos.invoke(f"{path}.{aspect}", observer, **kwargs)
+                        is_streaming = hasattr(result, "__aiter__")
+                        self._emit_trace(path, aspect, observer, result, is_streaming=is_streaming)
+                        return result
+                    except Exception as e:
+                        logger.debug(f"Logos fallback failed for {path}.{aspect}: {e}")
 
-        # Path not found - raise without catching
-        from fastapi import HTTPException as FastAPIHTTPException
+            # Path not found - raise without catching
+            from fastapi import HTTPException as FastAPIHTTPException
 
-        raise FastAPIHTTPException(
-            status_code=404,
-            detail={
-                "error": f"Path not found: {path}",
-                "suggestion": "Check /agentese/discover for available paths",
-                "available_contexts": list(VALID_CONTEXTS),
-            },
-        )
+            error = FastAPIHTTPException(
+                status_code=404,
+                detail={
+                    "error": f"Path not found: {path}",
+                    "suggestion": "Check /agentese/discover for available paths",
+                    "available_contexts": list(VALID_CONTEXTS),
+                },
+            )
+            raise error
+
+        except Exception as e:
+            # Emit TraceNode for error
+            self._emit_trace(path, aspect, observer, None, error=e)
+            raise
+
+    def _emit_trace(
+        self,
+        path: str,
+        aspect: str,
+        observer: Observer,
+        result: Any,
+        *,
+        is_streaming: bool = False,
+        error: Exception | None = None,
+    ) -> None:
+        """
+        Emit a TraceNode for an AGENTESE invocation.
+
+        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+
+        This method:
+        1. Creates a TraceNode with stimulus and response
+        2. Appends to the global TraceNodeStore
+        3. Publishes to WitnessSynergyBus for cross-jewel awareness
+        """
+        try:
+            from services.witness.trace_node import (
+                Response,
+                Stimulus,
+                TraceNode,
+                UmweltSnapshot,
+            )
+            from services.witness.trace_store import get_trace_store
+
+            # Create stimulus from AGENTESE invocation
+            stimulus = Stimulus.from_agentese(path, aspect)
+
+            # Create response based on outcome
+            if error is not None:
+                response = Response.error(str(error))
+            elif is_streaming:
+                response = Response(
+                    kind="stream",
+                    content=f"Streaming {path}.{aspect}",
+                    success=True,
+                    metadata={"streaming": True},
+                )
+            else:
+                # Summarize result for response
+                result_summary = self._summarize_result(result)
+                response = Response(
+                    kind="projection",
+                    content=result_summary,
+                    success=True,
+                )
+
+            # Create umwelt from observer
+            umwelt = UmweltSnapshot(
+                observer_id=observer.archetype,
+                role=observer.archetype,
+                capabilities=observer.capabilities,
+                trust_level=0,  # Default trust level
+            )
+
+            # Create the TraceNode
+            trace_node = TraceNode(
+                origin="gateway",
+                stimulus=stimulus,
+                response=response,
+                umwelt=umwelt,
+                tags=("agentese", path.split(".")[0]),  # e.g., ("agentese", "self")
+            )
+
+            # Append to store (Law 3 enforcement)
+            store = get_trace_store()
+            store.append(trace_node)
+
+            # Publish to SynergyBus for cross-jewel awareness
+            self._publish_trace_event(trace_node, error)
+
+            logger.debug(f"TraceNode emitted for {path}.{aspect}: {trace_node.id}")
+
+        except Exception as e:
+            # Don't let trace emission failure break the gateway
+            logger.warning(f"TraceNode emission failed for {path}.{aspect}: {e}")
+
+    def _summarize_result(self, result: Any) -> str:
+        """Summarize a result for TraceNode response content."""
+        if result is None:
+            return "null"
+        if isinstance(result, str):
+            return result[:100] + "..." if len(result) > 100 else result
+        if isinstance(result, (dict, list)):
+            return f"{type(result).__name__}[{len(result)} items]"
+        if hasattr(result, "to_dict"):
+            return f"{type(result).__name__}"
+        return str(result)[:100]
+
+    def _publish_trace_event(self, trace_node: Any, error: Exception | None) -> None:
+        """Publish trace event to WitnessSynergyBus."""
+        try:
+            from services.witness.bus import WitnessTopics, get_synergy_bus
+
+            bus = get_synergy_bus()
+            if bus is not None:
+                import asyncio
+
+                topic = (
+                    WitnessTopics.AGENTESE_ERROR
+                    if error
+                    else WitnessTopics.AGENTESE_INVOKED
+                )
+                # Non-blocking publish (fire and forget)
+                asyncio.create_task(bus.publish(topic, trace_node.to_dict()))
+
+        except Exception as e:
+            # Don't let bus failure break the gateway
+            logger.debug(f"SynergyBus publish failed: {e}")
 
 
 # === Factory Functions ===

@@ -36,6 +36,7 @@ from ..node import (
     BasicRendering,
     Renderable,
 )
+from ..registry import node
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
@@ -46,6 +47,10 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
+@node(
+    "time.trace.node",
+    description="WARP TraceNode operations - atomic execution artifacts",
+)
 @dataclass
 class TraceNodeLogosNode(BaseLogosNode):
     """
@@ -350,6 +355,10 @@ class TraceNodeLogosNode(BaseLogosNode):
 # =============================================================================
 
 
+@node(
+    "time.walk",
+    description="WARP Walk operations - durable work streams tied to Forest plans",
+)
 @dataclass
 class WalkLogosNode(BaseLogosNode):
     """
@@ -376,7 +385,7 @@ class WalkLogosNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Walk affordances."""
-        return ("manifest", "create", "get", "advance", "transition", "pause", "resume", "complete")
+        return ("manifest", "list", "create", "get", "advance", "transition", "pause", "resume", "complete")
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View active Walks."""
@@ -414,6 +423,8 @@ class WalkLogosNode(BaseLogosNode):
     ) -> Any:
         """Handle Walk aspects."""
         match aspect:
+            case "list":
+                return await self._list(observer, **kwargs)
             case "create":
                 return await self._create(observer, **kwargs)
             case "get":
@@ -430,6 +441,38 @@ class WalkLogosNode(BaseLogosNode):
                 return await self._complete(observer, **kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
+
+    async def _list(
+        self,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """
+        List Walks as SceneGraph for React rendering.
+
+        Args:
+            limit: Max walks to return (default: 20)
+            active_only: Only return active walks (default: False)
+
+        Returns:
+            SceneGraph JSON for ServoSceneRenderer
+        """
+        from protocols.agentese.projection.warp_converters import walk_dashboard_to_scene
+        from services.witness import get_walk_store
+
+        limit = kwargs.get("limit", 20)
+        active_only = kwargs.get("active_only", False)
+
+        store = get_walk_store()
+
+        if active_only:
+            walks = store.active_walks()[:limit]
+        else:
+            walks = store.recent_walks(limit=limit)
+
+        # Convert to SceneGraph and serialize
+        scene = walk_dashboard_to_scene(walks, title="Witness Dashboard")
+        return scene.to_dict()
 
     async def _create(
         self,
