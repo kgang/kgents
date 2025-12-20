@@ -55,6 +55,11 @@ async def client() -> AsyncIterator["AsyncClient"]:
     IMPORTANT: ASGITransport does NOT trigger FastAPI lifespan events.
     We must manually call setup_providers() to register DI dependencies
     before the app handles requests.
+
+    CI FIX: Unlike production (which uses Alembic migrations), E2E tests
+    need to explicitly create database tables via init_db(). Without this,
+    tests fail with "no such table" errors for Crown Jewel tables like
+    brain_crystals, atelier_workshops, town_citizens, park_hosts.
     """
     from httpx import ASGITransport, AsyncClient
 
@@ -68,11 +73,28 @@ async def client() -> AsyncIterator["AsyncClient"]:
         from services.providers import setup_providers
 
         await setup_providers()
+
+        # CI FIX: Create database tables (production uses Alembic migrations instead)
+        # This ensures Crown Jewel tables exist before E2E tests run.
+        #
+        # IMPORTANT: We must use the same engine that ServiceRegistry created,
+        # not create a new one via init_db(). ServiceRegistry stores the session_factory,
+        # and we can get the engine from it to run create_all.
+        from models.base import Base
+        from services.bootstrap import get_registry
+
+        registry = get_registry()
+        session_factory = registry.session_factory
+        # Get the engine from the session factory's bind
+        engine = session_factory.kw.get("bind")
+        if engine is not None:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         # Log but don't fail - some tests may not need full bootstrap
         import logging
 
-        logging.getLogger(__name__).warning(f"setup_providers failed: {e}")
+        logging.getLogger(__name__).warning(f"setup_providers/init_db failed: {e}")
 
     app = create_app()
     transport = ASGITransport(app=app)
