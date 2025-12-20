@@ -28,7 +28,7 @@ import { useDesignPolynomial } from '@/hooks';
 import { ElasticSplit } from '@/components/elastic';
 import { BottomDrawer } from '@/components/elastic/BottomDrawer';
 import { FloatingActions } from '@/components/elastic/FloatingActions';
-import { useMotionPreferences, celebrateQuick } from '@/components/joy';
+import { useMotionPreferences } from '@/components/joy';
 
 import { PathExplorer } from '@/components/docs/PathExplorer';
 import { ObserverPicker, type Observer } from '@/components/docs/ObserverPicker';
@@ -171,8 +171,6 @@ function AgenteseDocsInner() {
             elapsed,
             status: 'success',
           });
-          // Joy-inducing celebration on successful response!
-          celebrateQuick();
         }
       } catch (err) {
         const elapsed = performance.now() - startTime;
