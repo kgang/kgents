@@ -65,6 +65,26 @@ Every kgents agent follows a vertical slice architecture where **completeness of
 - Business rules
 - How to compose adapters
 
+<details>
+<summary>🌫️ Ghost: Adapters in Infrastructure</summary>
+
+The first implementation put `CrystalAdapter` in `models/` alongside SQLAlchemy tables. Clean separation of concerns, right?
+
+Wrong. The adapter needed Brain-specific logic: *when* to crystallize, *how* to index for semantic search, *what* metadata to surface. Generic infrastructure can't know these things.
+
+We tried injecting callbacks:
+```python
+# The path not taken
+class CrystalAdapter:
+    on_create: Callable[[Crystal], Awaitable[None]]  # Callback injection
+```
+
+This scattered domain logic across callback definitions. The adapter became a puppet with strings everywhere.
+
+The ghost was laid to rest when we moved adapters to service modules. **Domain logic lives with domain knowledge.**
+
+</details>
+
 ```python
 # ❌ WRONG: Adapter in infrastructure
 # models/brain.py or agents/d/adapters/
@@ -157,6 +177,31 @@ POST /agentese/self.memory.capture
 
 **Key Insight**: Backend routes are NOT declared. The AGENTESE protocol auto-exposes all registered nodes through a universal gateway. Transport is an implementation detail.
 
+<details>
+<summary>🌫️ Ghost: The Express.js Pattern</summary>
+
+The familiar path beckoned:
+
+```python
+# The ghost that haunted us
+@router.post("/brain/capture")
+async def capture_crystal(request: CaptureRequest):
+    crystal = await brain_service.capture(request.content)
+    return {"id": crystal.id}
+
+@router.get("/brain/crystals/{id}")
+async def get_crystal(id: str):
+    ...
+```
+
+Every service would have a `routes.py`. We'd document endpoints in OpenAPI. The frontend would call explicit URLs.
+
+The problem: **semantic paths and API paths would drift**. AGENTESE says `self.memory.capture`; the API says `/brain/crystals`. Two sources of truth, inevitable divergence.
+
+The ghost was exorcised by AD-009: AGENTESE paths ARE the API. `logos.invoke("self.memory.capture", ...)` works over HTTP, WebSocket, CLI, gRPC—any transport. No routes to maintain because the protocol IS the route.
+
+</details>
+
 ### 4. Frontend (Lives with Service)
 
 ```typescript
@@ -184,6 +229,26 @@ export default function BrainPage() {
     );
 }
 ```
+
+<details>
+<summary>🌫️ Ghost: The Frontend/Backend Split</summary>
+
+Convention said: `impl/claude/web/` for all frontend, `impl/claude/` for all backend. Clean. Familiar.
+
+But then: where does `CrystalViewer` live? It's Brain-specific React code. Under the split:
+
+```
+impl/claude/web/components/brain/CrystalViewer.tsx  # Frontend location
+impl/claude/services/brain/crystal.py               # Backend location
+```
+
+The component and its domain logic are separated by directory structure. Change the Brain domain model? Hunt through two trees.
+
+The resolution: **frontend lives with its service**. `services/brain/web/` contains Brain's React components. The main website is a shallow container that imports and composes. When you need to understand Brain, everything is in `services/brain/`.
+
+*"The persona is a garden, not a museum"* — and gardens keep related things together.
+
+</details>
 
 ## Intelligent Resolution
 

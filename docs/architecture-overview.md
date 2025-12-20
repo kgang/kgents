@@ -42,6 +42,21 @@ This document provides a comprehensive overview of the kgents architecture.
 └─────────────────┴─────────────────┴─────────────────────────────┘
 ```
 
+<details>
+<summary>🌫️ Ghost: Why not microservices?</summary>
+
+The obvious path was distributed services—each agent genus as its own deployable unit with REST APIs, message queues, service mesh. We had the K8s expertise. The architecture diagrams were drawn.
+
+We chose AGENTESE + monorepo instead because:
+
+1. **Composition breaks at network boundaries**. The `>>` operator can't cross HTTP without losing its categorical guarantees.
+2. **Microservices optimize for team boundaries**, not semantic boundaries. Agents compose by meaning, not by org chart.
+3. **The protocol IS the API**. AGENTESE paths work whether the agent is in-process or remote—deployment is an implementation detail, not an architectural one.
+
+*"Tasteful > feature-complete"* — Microservices would have been feature-complete. AGENTESE is tasteful.
+
+</details>
+
 ### 1. Nucleus (Pure Logic)
 
 The irreducible transform. Every agent has a nucleus—the `invoke(a) → b` function that defines what it does.
@@ -118,6 +133,30 @@ stack = compose_functors(LoggedFunctor, FixFunctor, SoulFunctor)
 resilient_agent = stack(my_agent)
 ```
 
+<details>
+<summary>🌫️ Ghost: The Original Functor Zoo</summary>
+
+Before AD-001 (Universal Functor Mandate), we had a zoo:
+
+- `MaybeAgent` with its own `lift()`
+- `EitherAgent` with a different `lift()` signature
+- `FluxWrapper` that wasn't even called a functor
+- K-gent's `intercept()` pretending it wasn't a functor
+- Five different law verification approaches
+
+The isomorphism crisis: everything was secretly the same pattern, implemented five different ways. The zoo was eventually unified into `UniversalFunctor`, and now:
+
+```python
+# All functors derive from the same protocol
+class UniversalFunctor(Generic[F]):
+    @staticmethod
+    def lift(agent: Agent[A, B]) -> Agent[F[A], F[B]]: ...
+```
+
+The ghost teaches: **find the isomorphism, collapse the complexity**.
+
+</details>
+
 ---
 
 ## Polynomial Architecture
@@ -134,6 +173,23 @@ Traditional agents are functions: given input A, produce output B. But real agen
 Traditional:  Agent[A, B] ≅ A → B           (stateless function)
 Polynomial:   PolyAgent[S, A, B] ≅ S → (A → (S, B))  (state machine)
 ```
+
+<details>
+<summary>🌫️ Ghost: Agent[A,B] was almost enough</summary>
+
+For months, `Agent[A, B]` seemed sufficient. Clean, simple, categorical. We built composition, functors, the whole algebra on it.
+
+Then K-gent broke the model. K-gent in REFLECT mode accepts different inputs than K-gent in CHALLENGE mode. Same agent, different valid operations based on internal state. The fix attempts:
+
+1. **Union types**: `Agent[ReflectInput | ChallengeInput, Output]` — Ugly, loses mode information
+2. **Separate agents**: `ReflectAgent`, `ChallengeAgent` — Loses the unity of K-gent
+3. **Runtime validation**: Check mode in invoke — Throws away type safety
+
+The real answer was in Spivak's polynomial functors: `PolyAgent[S, A, B]` where S is the state space and `directions(s)` gives valid inputs per state. The mode isn't hidden—it's the first type parameter.
+
+*"The noun is a lie. There is only the rate of change."* — And sometimes the rate of change depends on where you are.
+
+</details>
 
 ### PolyAgent Protocol
 

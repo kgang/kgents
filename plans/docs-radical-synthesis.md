@@ -156,9 +156,9 @@ All examples:
 - Print meaningful, joy-inducing output
 - Demonstrate unique kgents philosophy
 
-### Phase 5: Ghost Layer (Future Session)
+### Phase 5: Ghost Layer (Complete)
 
-Add `<details>` blocks showing alternatives and ghosts
+Added `<details>` blocks showing alternatives and "roads not taken" to three key docs.
 
 ---
 
@@ -205,7 +205,39 @@ Key decisions:
 
 Learning: Examples that demonstrate philosophy > examples that demonstrate syntax.
 
+### Session 5 (2025-12-20) — Ghost Layer
+
+Added 8 ghosts across 3 documents using `<details>` blocks:
+
+**architecture-overview.md** (3 ghosts):
+| Ghost | What It Reveals |
+|-------|-----------------|
+| Why not microservices? | Composition breaks at network boundaries |
+| The Original Functor Zoo | Before AD-001 unified everything |
+| Agent[A,B] was almost enough | Why we needed PolyAgent |
+
+**metaphysical-fullstack.md** (3 ghosts):
+| Ghost | What It Reveals |
+|-------|-----------------|
+| Adapters in Infrastructure | Domain logic needs domain knowledge |
+| The Express.js Pattern | Explicit routes create drift |
+| The Frontend/Backend Split | Components live with services |
+
+**quickstart.md** (2 ghosts):
+| Ghost | What It Reveals |
+|-------|-----------------|
+| Why not start with K-gent? | Pedagogy requires foundations first |
+| The Fifth Context | void.* holds everything we chose not to choose |
+
+Key decisions:
+- 🌫️ emoji for ethereal, not heavy
+- Each ghost is short (discovery, not lecture)
+- Voice anchors quoted where relevant
+- Ghosts reveal taste, not just history
+
+Learning: *"The persona is a garden, not a museum"* — ghosts show that the garden was cultivated, not found.
+
 ---
 
-*Created: 2025-12-20 | Sessions: 4 complete*
+*Created: 2025-12-20 | Sessions: 5 complete*
 *Grounded in: "Daring, bold, creative, opinionated but not gaudy"*

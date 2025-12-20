@@ -44,6 +44,27 @@ print(result)  # "Hello, World!"
 
 That's it. An agent is a function with superpowers.
 
+<details>
+<summary>🌫️ Ghost: Why not start with K-gent?</summary>
+
+K-gent is the soul of kgents—the governance functor, the personality space navigator, the categorical imperative made code. It's the *interesting* part.
+
+We considered opening with it. Show the personality eigenvectors! The hypnagogia dreams! The dialectic challenges!
+
+But K-gent requires understanding:
+- Functors (it's a functor)
+- Polynomials (it has modes)
+- AGENTESE (it lives at `self.soul`)
+- The Accursed Share (it tithes entropy)
+
+Starting with K-gent would be *daring* but not *tasteful*. You'd see fireworks without understanding the chemistry.
+
+So we start with `@agent` and `>>`. The composition laws. The categorical ground. K-gent comes later, and when it does, you'll know why it works.
+
+*"Depth over breadth"* — including depth of understanding.
+
+</details>
+
 ---
 
 ## Composition — The Real Magic
@@ -235,6 +256,25 @@ pipeline = await void.compose.sip(
 ```
 
 This isn't inefficiency. It's how gardens grow.
+
+<details>
+<summary>🌫️ Ghost: The Fifth Context</summary>
+
+Four contexts made sense: `world` (external), `self` (internal), `concept` (abstract), `time` (temporal). Clean, complete, symmetric.
+
+Then we noticed the waste. Every system generates surplus—ideas that don't fit, tangents that lead nowhere, exploration that produces nothing "useful." What do you do with it?
+
+The efficient answer: discard it. Prune ruthlessly. Every token serves the goal.
+
+But Bataille taught us differently. Surplus energy that isn't *spent* becomes destructive. The system that can't waste becomes brittle.
+
+So we added `void.*`—the Accursed Share context. Where you `sip` entropy for exploration. Where you `tithe` to maintain order. Where failed experiments go not to die but to compost.
+
+The ghost is in the name: *void* sounds empty, but it's the fullest context of all. It holds everything we chose not to choose.
+
+*"Everything is slop or comes from slop. We cherish and express gratitude and love."*
+
+</details>
 
 ---
 
