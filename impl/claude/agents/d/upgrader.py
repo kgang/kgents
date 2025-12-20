@@ -156,19 +156,13 @@ class AutoUpgrader:
         self._unsubscribe: Callable[[], None] | None = None
 
         # Callbacks
-        self._on_upgrade: list[
-            Callable[[Datum, Backend, Backend], Awaitable[None]]
-        ] = []
+        self._on_upgrade: list[Callable[[Datum, Backend, Backend], Awaitable[None]]] = []
 
-    def on_upgrade(
-        self, callback: Callable[[Datum, Backend, Backend], Awaitable[None]]
-    ) -> None:
+    def on_upgrade(self, callback: Callable[[Datum, Backend, Backend], Awaitable[None]]) -> None:
         """Register callback for upgrade events."""
         self._on_upgrade.append(callback)
 
-    async def _notify_upgrade(
-        self, datum: Datum, from_tier: Backend, to_tier: Backend
-    ) -> None:
+    async def _notify_upgrade(self, datum: Datum, from_tier: Backend, to_tier: Backend) -> None:
         """Notify listeners of an upgrade."""
         for callback in self._on_upgrade:
             try:
@@ -261,9 +255,7 @@ class AutoUpgrader:
 
         return None
 
-    async def _upgrade_datum(
-        self, datum_id: str, from_tier: Backend, to_tier: Backend
-    ) -> bool:
+    async def _upgrade_datum(self, datum_id: str, from_tier: Backend, to_tier: Backend) -> bool:
         """
         Upgrade a single datum from one tier to another.
 

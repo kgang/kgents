@@ -202,9 +202,7 @@ def cmd_wipe(args: list[str]) -> int:
         if scope == "local":
             print("         No .kgents directory found in current project.")
         elif scope == "global":
-            print(
-                f"         Global data directory does not exist: {_get_global_path()}"
-            )
+            print(f"         Global data directory does not exist: {_get_global_path()}")
         return 0
 
     # Confirm unless --force

@@ -26,7 +26,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ class StigmergyStore:
             target='agent-b',
             intensity=0.8,
             payload={'message': 'look here'},
-            emitted_at=datetime.utcnow(),
+            emitted_at=datetime.now(UTC),
         )
         key = await store.emit(p)
 
@@ -159,8 +159,7 @@ class StigmergyStore:
         Returns the key under which it was stored.
         """
         key = (
-            f"stigmergy:{pheromone.type}:{pheromone.source}:"
-            f"{pheromone.emitted_at.timestamp():.6f}"
+            f"stigmergy:{pheromone.type}:{pheromone.source}:{pheromone.emitted_at.timestamp():.6f}"
         )
         value = json.dumps(pheromone.to_dict())
 
@@ -173,9 +172,7 @@ class StigmergyStore:
             # Note: In-memory doesn't have automatic TTL cleanup
             # Call cleanup() periodically in fallback mode
 
-        logger.debug(
-            f"Emitted ephemeral pheromone: {key} (TTL={pheromone.ttl_seconds}s)"
-        )
+        logger.debug(f"Emitted ephemeral pheromone: {key} (TTL={pheromone.ttl_seconds}s)")
         return key
 
     async def sense(

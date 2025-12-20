@@ -204,17 +204,11 @@ async def _async_tend(
             case "observe":
                 return await _handle_observe(target, observer, json_mode, ctx)
             case "prune":
-                return await _handle_prune(
-                    target, reason, tone, observer, json_mode, ctx
-                )
+                return await _handle_prune(target, reason, tone, observer, json_mode, ctx)
             case "graft":
-                return await _handle_graft(
-                    target, reason, tone, observer, json_mode, ctx
-                )
+                return await _handle_graft(target, reason, tone, observer, json_mode, ctx)
             case "water":
-                return await _handle_water(
-                    target, reason, tone, observer, json_mode, ctx
-                )
+                return await _handle_water(target, reason, tone, observer, json_mode, ctx)
             case "rotate":
                 return await _handle_rotate(target, reason, observer, json_mode, ctx)
             case "wait":

@@ -312,11 +312,7 @@ class LawVerificationResult:
     @property
     def all_passed(self) -> bool:
         """True if all tested laws passed."""
-        return (
-            self.identity
-            and self.determinism
-            and (self.composition is None or self.composition)
-        )
+        return self.identity and self.determinism and (self.composition is None or self.composition)
 
 
 def verify_all_laws(

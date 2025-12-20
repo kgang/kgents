@@ -272,9 +272,7 @@ class WitnessCLI(CLICapable):
             },
             "voi": {
                 "observations": voi_history[0].observations if voi_history else 42,
-                "disasters_prevented": voi_history[0].anomalies_detected
-                if voi_history
-                else 3,
+                "disasters_prevented": voi_history[0].anomalies_detected if voi_history else 3,
                 "rovi": voi_history[0].rovi if voi_history else 1.2,
             },
             "roc": {

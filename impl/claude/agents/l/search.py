@@ -230,9 +230,7 @@ class Search:
                 matches = False
 
             if matches:
-                explanation = (
-                    f"Type signature: {entry.input_type} → {entry.output_type}"
-                )
+                explanation = f"Type signature: {entry.input_type} → {entry.output_type}"
 
                 # Boost score for high success rate
                 score *= entry.success_rate

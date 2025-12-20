@@ -208,9 +208,7 @@ PHASE_TEMPLATES: dict[str, PhaseTemplate] = {
 def get_template(phase: str) -> PhaseTemplate:
     """Get template for a phase."""
     if phase not in PHASE_TEMPLATES:
-        raise ValueError(
-            f"Unknown phase: {phase}. Valid: {list(PHASE_TEMPLATES.keys())}"
-        )
+        raise ValueError(f"Unknown phase: {phase}. Valid: {list(PHASE_TEMPLATES.keys())}")
     return PHASE_TEMPLATES[phase]
 
 

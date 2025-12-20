@@ -120,17 +120,13 @@ class TraceFilter:
 
         # If include patterns specified, file must match one
         if self.include_patterns:
-            matched = any(
-                self._matches_pattern(filename, p) for p in self.include_patterns
-            )
+            matched = any(self._matches_pattern(filename, p) for p in self.include_patterns)
             if not matched:
                 return False
 
         # If include functions specified, function must match one
         if self.include_functions:
-            matched = any(
-                self._matches_func_pattern(func_name, p) for p in self.include_functions
-            )
+            matched = any(self._matches_func_pattern(func_name, p) for p in self.include_functions)
             if not matched:
                 return False
 
@@ -234,9 +230,7 @@ class TraceCollector:
             # Initialize OTEL tracer if enabled
             if self.enable_otel:
                 try:
-                    self._otel_tracer = otel_trace.get_tracer(
-                        "kgents.weave.runtime", "0.1.0"
-                    )
+                    self._otel_tracer = otel_trace.get_tracer("kgents.weave.runtime", "0.1.0")
                 except Exception:
                     self._otel_tracer = None
 

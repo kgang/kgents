@@ -272,17 +272,13 @@ class TestCmdRun:
         assert output["success"] is True
         assert "intent" in output["output"]
 
-    def test_classification_deterministic(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_classification_deterministic(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["lint code", "--format=json", "--dry-run"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)
         assert output["output"]["classification"] == "DETERMINISTIC"
 
-    def test_classification_probabilistic(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_classification_probabilistic(self, capsys: pytest.CaptureFixture[str]) -> None:
         result = cmd_run(["review code for issues", "--format=json", "--dry-run"])
         assert result == 0
         output = json.loads(capsys.readouterr().out)

@@ -508,9 +508,7 @@ class DensityField(Widget):
 
             # Sinusoidal pulse
             pulse = math.sin(phase) * amplitude
-            _ = max(
-                0.0, min(1.0, self.activity + pulse)
-            )  # Calculate but use pulse directly
+            _ = max(0.0, min(1.0, self.activity + pulse))  # Calculate but use pulse directly
 
             # Update rendering (without changing the base activity)
             self._pulse_offset = pulse

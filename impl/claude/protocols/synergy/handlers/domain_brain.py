@@ -102,9 +102,7 @@ class DomainToBrainHandler(BaseSynergyHandler):
 
         # Actually capture to Brain
         try:
-            crystal_id = await self._capture_to_brain(
-                content, drill_type, drill_name, event
-            )
+            crystal_id = await self._capture_to_brain(content, drill_type, drill_name, event)
             self._logger.info(f"Captured drill results: {crystal_id}")
             return self.success(
                 message="Drill results captured to Brain",
@@ -149,9 +147,7 @@ class DomainToBrainHandler(BaseSynergyHandler):
             elapsed = timer_data.get("elapsed_seconds", 0)
             timer_lines.append(f"  - {timer_name}: {status} ({int(elapsed)}s elapsed)")
 
-        timer_section = (
-            "\n".join(timer_lines) if timer_lines else "  No compliance timers"
-        )
+        timer_section = "\n".join(timer_lines) if timer_lines else "  No compliance timers"
 
         # Format key decisions
         decision_lines = []
@@ -167,9 +163,7 @@ class DomainToBrainHandler(BaseSynergyHandler):
 
         # Format recommendations
         rec_lines = [f"  • {rec}" for rec in recommendations[:5]]  # Limit to 5
-        rec_section = (
-            "\n".join(rec_lines) if rec_lines else "  No recommendations"
-        )
+        rec_section = "\n".join(rec_lines) if rec_lines else "  No recommendations"
 
         return f"""Domain Drill Results: {drill_name}
 
@@ -209,11 +203,11 @@ Use this for compliance reporting, training records, and performance tracking.
     ) -> str:
         """Capture content to Brain and return crystal ID."""
         # Import here to avoid circular imports
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
         # Create a minimal logos for capture
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Create concept ID based on drill and date
@@ -339,9 +333,7 @@ class ParkToBrainHandler(BaseSynergyHandler):
             marker = moment.get("marker", "")
             moment_lines.append(f"  [{time_str}] {desc} {marker}")
 
-        moment_section = (
-            "\n".join(moment_lines) if moment_lines else "  No key moments recorded"
-        )
+        moment_section = "\n".join(moment_lines) if moment_lines else "  No key moments recorded"
 
         # Format feedback
         strengths = feedback.get("strengths", [])
@@ -349,9 +341,7 @@ class ParkToBrainHandler(BaseSynergyHandler):
         suggestions = feedback.get("suggestions", [])
 
         strength_section = (
-            "\n".join([f"  ✓ {s}" for s in strengths[:3]])
-            if strengths
-            else "  No strengths noted"
+            "\n".join([f"  ✓ {s}" for s in strengths[:3]]) if strengths else "  No strengths noted"
         )
         growth_section = (
             "\n".join([f"  △ {g}" for g in growth_areas[:3]])
@@ -359,9 +349,7 @@ class ParkToBrainHandler(BaseSynergyHandler):
             else "  No growth areas noted"
         )
         suggestion_section = (
-            "\n".join([f"  → {s}" for s in suggestions[:3]])
-            if suggestions
-            else "  No suggestions"
+            "\n".join([f"  → {s}" for s in suggestions[:3]]) if suggestions else "  No suggestions"
         )
 
         # Format skill changes
@@ -372,9 +360,7 @@ class ParkToBrainHandler(BaseSynergyHandler):
             if before != after:
                 skill_lines.append(f"  {skill}: {before} → {after}")
 
-        skill_section = (
-            "\n".join(skill_lines) if skill_lines else "  No skill changes"
-        )
+        skill_section = "\n".join(skill_lines) if skill_lines else "  No skill changes"
 
         return f"""Park Scenario Results: {scenario_name}
 
@@ -414,10 +400,10 @@ Use this for tracking your practice progress and reviewing key learning moments.
         event: SynergyEvent,
     ) -> str:
         """Capture content to Brain and return crystal ID."""
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         date_str = event.timestamp.strftime("%Y-%m-%d")

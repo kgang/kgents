@@ -314,8 +314,6 @@ class SparklineWidget(ComposableMixin, KgentsWidget[SparklineState]):
         if state.bg:
             result["bg"] = state.bg
         if state.entropy > 0.1:
-            result["distortion"] = entropy_to_distortion(
-                state.entropy, state.seed, state.t
-            )
+            result["distortion"] = entropy_to_distortion(state.entropy, state.seed, state.t)
 
         return result

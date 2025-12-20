@@ -134,9 +134,7 @@ class TensionReport:
     def to_dict(self) -> "dict[str, Any]":
         return {
             "tensions": [t.to_dict() for t in self.tensions],
-            "dominant_tension": self.dominant_tension.to_dict()
-            if self.dominant_tension
-            else None,
+            "dominant_tension": self.dominant_tension.to_dict() if self.dominant_tension else None,
             "synthesis_hints": self.synthesis_hints,
             "source": self.source,
             "count": len(self.tensions),
@@ -408,9 +406,7 @@ def cmd_tension(args: list[str], ctx: "InvocationContext | None" = None) -> int:
 
         for i, tension in enumerate(report.tensions, 1):
             bar = _severity_bar(tension.severity)
-            print(
-                f"  {i}. \033[33m{tension.pole_a}\033[0m vs \033[33m{tension.pole_b}\033[0m"
-            )
+            print(f"  {i}. \033[33m{tension.pole_a}\033[0m vs \033[33m{tension.pole_b}\033[0m")
             print(f"     {tension.context}")
             print(f"     Severity: {bar} {tension.severity:.1f}")
             print()

@@ -168,9 +168,7 @@ class GardenerNode(BaseLogosNode):
         ]
 
         if state.intent:
-            intent_dict = (
-                state.intent.to_dict() if hasattr(state.intent, "to_dict") else {}
-            )
+            intent_dict = state.intent.to_dict() if hasattr(state.intent, "to_dict") else {}
             lines.extend(
                 [
                     "",
@@ -195,9 +193,7 @@ class GardenerNode(BaseLogosNode):
             "ACT": "advance or rollback",
             "REFLECT": "cycle",
         }
-        lines.append(
-            f"\nNext: kg gardener {valid_next.get(session.phase.name, 'advance')}"
-        )
+        lines.append(f"\nNext: kg gardener {valid_next.get(session.phase.name, 'advance')}")
         lines.append("")
         lines.append(_format_garden_stats(stats))
 
@@ -339,9 +335,7 @@ class GardenerNode(BaseLogosNode):
         help="Show polynomial visualization in detail",
         examples=["kg gardener polynomial", "kg gardener poly"],
     )
-    async def polynomial(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def polynomial(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Show polynomial state machine visualization."""
         ctx = await self._get_context()
 
@@ -421,11 +415,7 @@ class GardenerNode(BaseLogosNode):
         return BasicRendering(
             summary=f"Sessions: {len(recent)} found",
             content="\n".join(lines),
-            metadata={
-                "sessions": [
-                    {"id": s.id, "name": s.name, "phase": s.phase} for s in recent
-                ]
-            },
+            metadata={"sessions": [{"id": s.id, "name": s.name, "phase": s.phase} for s in recent]},
         )
 
     @aspect(
@@ -585,9 +575,7 @@ class GardenNode(BaseLogosNode):
                 for entry in by_confidence:
                     icon = lifecycle_icons.get(entry.lifecycle.value, " ")
                     short_id = entry.id[:16] if len(entry.id) > 16 else entry.id
-                    lines.append(
-                        f"  {icon} {entry.content[:40]} ({entry.confidence:.0%})"
-                    )
+                    lines.append(f"  {icon} {entry.content[:40]} ({entry.confidence:.0%})")
                     lines.append(f"     ID: {short_id}")
 
         return BasicRendering(
@@ -808,9 +796,7 @@ class GardenNode(BaseLogosNode):
         help="Harvest flower ideas and capture them as Brain crystals",
         examples=["kg gardener harvest-to-brain", "kg gardener reap"],
     )
-    async def harvest_to_brain(
-        self, observer: "Umwelt[Any, Any]", **kwargs: Any
-    ) -> Renderable:
+    async def harvest_to_brain(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Harvest flowers to Brain crystals."""
         garden = await _get_garden()
         flowers = await garden.flowers()
@@ -880,11 +866,7 @@ class GardenNode(BaseLogosNode):
         return BasicRendering(
             summary=f"Harvested: {len(harvested)} ideas",
             content="\n".join(lines),
-            metadata={
-                "harvested": [
-                    {"flower_id": f.id, "crystal_id": c} for f, c in harvested
-                ]
-            },
+            metadata={"harvested": [{"flower_id": f.id, "crystal_id": c} for f, c in harvested]},
         )
 
     async def _invoke_aspect(
@@ -972,9 +954,7 @@ class VoidGardenNode(BaseLogosNode):
                 metadata={"error": "empty"},
             )
 
-        entries = [
-            e for e in garden.entries.values() if e.lifecycle != GardenLifecycle.COMPOST
-        ]
+        entries = [e for e in garden.entries.values() if e.lifecycle != GardenLifecycle.COMPOST]
 
         if not entries:
             return BasicRendering(

@@ -167,9 +167,7 @@ class MeteringInterceptor(BaseInterceptor):
 
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         cost = msg.get_context("token_cost")
         deficit = msg.get_context("token_deficit", False)
 
@@ -223,9 +221,7 @@ class SimpleEntropyChecker:
     """
 
     # Targets with higher entropy risk
-    high_entropy_targets: set[str] = field(
-        default_factory=lambda: {"psi", "creative", "mutate"}
-    )
+    high_entropy_targets: set[str] = field(default_factory=lambda: {"psi", "creative", "mutate"})
 
     def check_entropy(self, msg: BusMessage[Any, Any]) -> float:
         if msg.target in self.high_entropy_targets:
@@ -265,9 +261,7 @@ class SafetyInterceptor(BaseInterceptor):
 
         if entropy > self.thresholds.max_entropy:
             self.blocked_count += 1
-            msg.block(
-                f"Entropy too high: {entropy:.2f} > {self.thresholds.max_entropy:.2f}"
-            )
+            msg.block(f"Entropy too high: {entropy:.2f} > {self.thresholds.max_entropy:.2f}")
             return msg
 
         # Check reality grounding
@@ -286,24 +280,18 @@ class SafetyInterceptor(BaseInterceptor):
         current_depth = self.recursion_depths.get(chain_key, 0)
         if current_depth >= self.thresholds.max_depth:
             self.blocked_count += 1
-            msg.block(
-                f"Recursion depth exceeded: {current_depth} >= {self.thresholds.max_depth}"
-            )
+            msg.block(f"Recursion depth exceeded: {current_depth} >= {self.thresholds.max_depth}")
             return msg
 
         self.recursion_depths[chain_key] = current_depth + 1
 
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         # Decrement recursion depth
         chain_key = f"{msg.source}->{msg.target}"
         if chain_key in self.recursion_depths:
-            self.recursion_depths[chain_key] = max(
-                0, self.recursion_depths[chain_key] - 1
-            )
+            self.recursion_depths[chain_key] = max(0, self.recursion_depths[chain_key] - 1)
 
         return InterceptorResult(
             value=result,
@@ -397,9 +385,7 @@ class TelemetryInterceptor(BaseInterceptor):
 
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         # Calculate duration
         start = self._start_times.pop(msg.message_id, None)
         duration_ms = 0.0
@@ -495,9 +481,7 @@ class PersonaInterceptor(BaseInterceptor):
 
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         return InterceptorResult(
             value=result,
             metadata={

@@ -117,9 +117,7 @@ class TestAudit:
         assert isinstance(audit.gaps, list)
         assert isinstance(audit.aligned, list)
 
-    def test_audit_reports_alignment_score(
-        self, spec_root: Path, impl_root: Path
-    ) -> None:
+    def test_audit_reports_alignment_score(self, spec_root: Path, impl_root: Path) -> None:
         """Audit should report alignment score."""
         if not spec_root.exists() or not impl_root.exists():
             pytest.skip("Spec or impl directory not found")
@@ -197,8 +195,7 @@ class TestCIGate:
         if minor_gaps:
             # Warn but don't fail
             gap_details = "\n".join(
-                f"  - {g.spec_path}.{g.component.value}: {g.message}"
-                for g in minor_gaps[:5]
+                f"  - {g.spec_path}.{g.component.value}: {g.message}" for g in minor_gaps[:5]
             )
             pytest.warns(
                 UserWarning,

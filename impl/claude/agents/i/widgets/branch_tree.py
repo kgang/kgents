@@ -128,18 +128,14 @@ class BranchTree(Widget):
             line = f"{prefix}{connector}{LOOM_CHARS['arrow']}{glyph} [bold]{content}[/bold]"
         elif not node.selected:
             # Ghost branch
-            line = (
-                f"{prefix}{connector}{LOOM_CHARS['arrow']}{glyph} [dim]{content}[/dim]"
-            )
+            line = f"{prefix}{connector}{LOOM_CHARS['arrow']}{glyph} [dim]{content}[/dim]"
         else:
             line = f"{prefix}{connector}{LOOM_CHARS['arrow']}{glyph} {content}"
 
         # Add reasoning if it's a significant branch point or ghost
         if node.reasoning and (not node.selected or len(node.children) > 1):
             reason_preview = (
-                node.reasoning[:40] + "..."
-                if len(node.reasoning) > 40
-                else node.reasoning
+                node.reasoning[:40] + "..." if len(node.reasoning) > 40 else node.reasoning
             )
             if not node.selected:
                 line += f" [dim]({reason_preview})[/dim]"

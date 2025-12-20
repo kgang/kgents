@@ -190,9 +190,7 @@ class MetricsCollector:
         key = self._make_key(name, labels)
         return self._counters.get(key, 0.0)
 
-    def get_gauge(
-        self, name: str, labels: dict[str, str] | None = None
-    ) -> float | None:
+    def get_gauge(self, name: str, labels: dict[str, str] | None = None) -> float | None:
         """Get current gauge value."""
         key = self._make_key(name, labels)
         return self._gauges.get(key)
@@ -453,9 +451,7 @@ class TopologyMapper:
     def get_topology(self) -> CompositionGraph:
         """Return the current composition topology."""
         nodes = list(self._nodes.keys())
-        edges = [
-            (edge.source, edge.target, edge.count) for edge in self._edges.values()
-        ]
+        edges = [(edge.source, edge.target, edge.count) for edge in self._edges.values()]
 
         return CompositionGraph(
             nodes=nodes,

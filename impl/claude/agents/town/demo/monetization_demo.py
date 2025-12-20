@@ -58,14 +58,10 @@ async def main() -> None:
         print(f"  Upgrade options available: {len(result.upgrade_options)}")
         for i, option in enumerate(result.upgrade_options, 1):
             if option.type == "subscription":
-                print(
-                    f"    {i}. Subscribe to {option.tier} - ${option.price_usd:.2f}/month"
-                )
+                print(f"    {i}. Subscribe to {option.tier} - ${option.price_usd:.2f}/month")
                 print(f"       Unlocks: {option.unlocks}")
             else:
-                print(
-                    f"    {i}. Buy {option.credits} credits - ${option.price_usd:.2f}"
-                )
+                print(f"    {i}. Buy {option.credits} credits - ${option.price_usd:.2f}")
     print()
 
     # Step 2: User upgrades to RESIDENT tier
@@ -95,9 +91,7 @@ async def main() -> None:
                 "user_id": user_id,
                 "tier": "RESIDENT",
             },
-            "current_period_end": int(
-                (datetime.now() + timedelta(days=30)).timestamp()
-            ),
+            "current_period_end": int((datetime.now() + timedelta(days=30)).timestamp()),
         }
     }
 

@@ -348,9 +348,7 @@ class GrowthEngine:
         self._time += dt
 
         # Collect forces for each node
-        forces: dict[str, tuple[float, float, float]] = {
-            nid: (0.0, 0.0, 0.0) for nid in self.nodes
-        }
+        forces: dict[str, tuple[float, float, float]] = {nid: (0.0, 0.0, 0.0) for nid in self.nodes}
 
         # Apply attraction toward targets
         for nid, node in self.nodes.items():

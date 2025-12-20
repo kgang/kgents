@@ -164,12 +164,8 @@ class TestResonanceSelectivity:
         field = HolographicField(dimensions=TEST_DIMENSIONS)
 
         # Learn about two different topics
-        auth_pattern = field.encode_structure(
-            {"topic": "authentication", "detail": "jwt_tokens"}
-        )
-        db_pattern = field.encode_structure(
-            {"topic": "database", "detail": "query_optimization"}
-        )
+        auth_pattern = field.encode_structure({"topic": "authentication", "detail": "jwt_tokens"})
+        db_pattern = field.encode_structure({"topic": "database", "detail": "query_optimization"})
 
         field.imprint(auth_pattern)
         field.imprint(db_pattern)
@@ -244,9 +240,7 @@ class TestResonancePatterns:
         field.imprint(king_queen)
 
         # Query with analogous pattern
-        man_woman = field.encode_structure(
-            {"relation": "gender", "male": "man", "female": "woman"}
-        )
+        man_woman = field.encode_structure({"relation": "gender", "male": "man", "female": "woman"})
 
         # Some resonance expected due to structural similarity
         resonance = field.resonate(man_woman)

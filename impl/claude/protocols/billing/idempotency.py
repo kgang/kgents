@@ -103,8 +103,7 @@ class RedisIdempotencyStore(IdempotencyStoreBase):
             import redis.asyncio as aioredis
         except ImportError:
             raise ImportError(
-                "redis package required for RedisIdempotencyStore. "
-                "Install with: pip install redis"
+                "redis package required for RedisIdempotencyStore. Install with: pip install redis"
             )
 
         self._client = aioredis.from_url(
@@ -128,9 +127,7 @@ class RedisIdempotencyStore(IdempotencyStoreBase):
         Returns True if key was set (event is new), False if key existed (duplicate).
         """
         if not self._connected:
-            raise RuntimeError(
-                "RedisIdempotencyStore not connected. Call connect() first."
-            )
+            raise RuntimeError("RedisIdempotencyStore not connected. Call connect() first.")
 
         key = f"{self.prefix}{event_id}"
         # SET NX returns True if key was set (new), None if key existed (duplicate)

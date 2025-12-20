@@ -261,9 +261,7 @@ class Capability:
         return SoulfulCapability(persona=persona, mode=mode)
 
     @staticmethod
-    def Observable(
-        *, mirror: bool = True, metrics: bool = True
-    ) -> ObservableCapability:
+    def Observable(*, mirror: bool = True, metrics: bool = True) -> ObservableCapability:
         """
         Declare that this agent should emit observability data.
 
@@ -277,9 +275,7 @@ class Capability:
         return ObservableCapability(mirror=mirror, metrics=metrics)
 
     @staticmethod
-    def Streamable(
-        *, budget: float = 10.0, feedback: float = 0.0
-    ) -> StreamableCapability:
+    def Streamable(*, budget: float = 10.0, feedback: float = 0.0) -> StreamableCapability:
         """
         Declare that this agent can be lifted to Flux domain.
 
@@ -392,9 +388,7 @@ def get_capability(agent_cls: type, cap_type: type[T]) -> T | None: ...
 def get_capability(agent_cls: type, cap_type: type[T], default: T) -> T: ...
 
 
-def get_capability(
-    agent_cls: type, cap_type: type[T], default: T | None = None
-) -> T | None:
+def get_capability(agent_cls: type, cap_type: type[T], default: T | None = None) -> T | None:
     """
     Get a specific capability instance from the Halo.
 

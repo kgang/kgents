@@ -70,9 +70,7 @@ class Fix(Agent[tuple[Callable[[A], Awaitable[A]], A], FixResult[A]], Generic[A]
     def name(self) -> str:
         return "Fix"
 
-    async def invoke(
-        self, input: tuple[Callable[[A], Awaitable[A]], A]
-    ) -> FixResult[A]:
+    async def invoke(self, input: tuple[Callable[[A], Awaitable[A]], A]) -> FixResult[A]:
         """
         Find fixed point of transform starting from initial value.
 
@@ -274,9 +272,7 @@ async def poll_until_stable(
 
     # Initial poll
     initial_value = await poll_fn()
-    initial_state = PollState(
-        value=initial_value, required_stability=required_stability
-    )
+    initial_state = PollState(value=initial_value, required_stability=required_stability)
 
     async def poll_transform(state: PollState[A]) -> PollState[A]:
         new_value = await poll_fn()

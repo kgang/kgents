@@ -103,7 +103,7 @@ def robust_json_parse(response: str, allow_partial: bool = True) -> dict[str, An
         elif char == closer:
             depth -= 1
             if depth == 0 and start_pos >= 0:
-                candidate = text[start_pos:i+1]
+                candidate = text[start_pos : i + 1]
                 try:
                     result = json.loads(candidate)
                     return result
@@ -124,7 +124,7 @@ def _repair_json(text: str, opener: str, closer: str) -> str:
     - Handle embedded code with unescaped characters
     """
     # Remove trailing commas before closers
-    text = re.sub(r',\s*([}\]])', r'\1', text)
+    text = re.sub(r",\s*([}\]])", r"\1", text)
 
     # Try to find and fix unterminated strings containing code
     # This is tricky - we need to find the last properly escaped string
@@ -140,7 +140,7 @@ def _repair_json(text: str, opener: str, closer: str) -> str:
         if escaped:
             escaped = False
             continue
-        if char == '\\':
+        if char == "\\":
             escaped = True
             continue
         if char == '"':
@@ -182,13 +182,13 @@ def _extract_field_values(text: str, fields: list[str]) -> dict[str, Any]:
             # Try to parse the value
             if value.startswith('"') and value.endswith('"'):
                 result[field] = value[1:-1]  # Remove quotes
-            elif value.lower() in ('true', 'false'):
-                result[field] = value.lower() == 'true'
-            elif value.lower() == 'null':
+            elif value.lower() in ("true", "false"):
+                result[field] = value.lower() == "true"
+            elif value.lower() == "null":
                 result[field] = None
             else:
                 try:
-                    result[field] = float(value) if '.' in value else int(value)
+                    result[field] = float(value) if "." in value else int(value)
                 except ValueError:
                     result[field] = value
 
@@ -200,10 +200,7 @@ def json_response_parser(response: str) -> dict[str, Any]:
     return robust_json_parse(response, allow_partial=True)
 
 
-def parse_structured_sections(
-    response: str,
-    section_names: list[str]
-) -> dict[str, list[str]]:
+def parse_structured_sections(response: str, section_names: list[str]) -> dict[str, list[str]]:
     """
     Parse structured sections from LLM response.
 
@@ -232,15 +229,15 @@ def parse_structured_sections(
          'follow-ups': ['First question?', 'Second question?']}
     """
     result: dict[str, list[str]] = {}
-    lines = response.split('\n')
+    lines = response.split("\n")
 
     # Build regex patterns for section headers (case-insensitive)
     # Match "SECTION_NAME:" or "SECTION-NAME:" or "SECTION NAME:"
     section_patterns = {}
     for name in section_names:
         # Normalize name for pattern matching (replace underscores/hyphens with flexible pattern)
-        pattern_name = name.replace('_', r'[\s_-]').replace('-', r'[\s_-]')
-        pattern = re.compile(rf'^{pattern_name}\s*:\s*$', re.IGNORECASE)
+        pattern_name = name.replace("_", r"[\s_-]").replace("-", r"[\s_-]")
+        pattern = re.compile(rf"^{pattern_name}\s*:\s*$", re.IGNORECASE)
         section_patterns[name] = pattern
 
     current_section: str | None = None
@@ -269,13 +266,13 @@ def parse_structured_sections(
         # If we're in a section, try to extract list items
         if current_section:
             # Match numbered lists: "1. item" or "1) item"
-            numbered_match = re.match(r'^\d+[\.\)]\s+(.+)$', stripped)
+            numbered_match = re.match(r"^\d+[\.\)]\s+(.+)$", stripped)
             if numbered_match:
                 current_items.append(numbered_match.group(1))
                 continue
 
             # Match bullet lists: "- item" or "* item"
-            bullet_match = re.match(r'^[-\*]\s+(.+)$', stripped)
+            bullet_match = re.match(r"^[-\*]\s+(.+)$", stripped)
             if bullet_match:
                 current_items.append(bullet_match.group(1))
                 continue

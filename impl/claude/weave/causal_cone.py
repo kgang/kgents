@@ -227,9 +227,7 @@ class CausalConeStats:
         from .turn import TurnType
 
         cone_size = len(context)
-        compression = (
-            1.0 - (cone_size / total_weave_size) if total_weave_size > 0 else 0.0
-        )
+        compression = 1.0 - (cone_size / total_weave_size) if total_weave_size > 0 else 0.0
 
         # Count turn types (only for Turn instances)
         speech = action = thought = yield_t = silence = 0

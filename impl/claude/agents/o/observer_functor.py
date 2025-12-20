@@ -148,9 +148,7 @@ class ObserverSinkAdapter(ObservationSink):
         )
 
         # Create O-gent result
-        status = (
-            ObservationStatus.COMPLETED if event.success else ObservationStatus.FAILED
-        )
+        status = ObservationStatus.COMPLETED if event.success else ObservationStatus.FAILED
         result = ObservationResult(
             context=context,
             status=status,
@@ -206,9 +204,7 @@ class HistorianSinkAdapter(ObservationSink):
                 inputs={"data": event.input_data},
                 outputs={"result": event.output_data},
                 input_hash=str(hash(str(event.input_data)))[:16],
-                output_hash=str(hash(str(event.output_data)))[:16]
-                if event.output_data
-                else "",
+                output_hash=str(hash(str(event.output_data)))[:16] if event.output_data else "",
                 input_snapshot=b"",  # Required field, empty for unified observation
                 gas_consumed=0,
                 duration_ms=int(event.duration_ms),  # Must be int
@@ -421,18 +417,14 @@ class UnifiedObserverFunctor(UniversalFunctor[ObservedAgent[Any, Any]]):
             ObservedAgent wrapping the input agent
         """
         actual_sink = sink or UnifiedObserverFunctor._default_sink or ListSink()
-        observed = ObservedAgent(
-            inner=agent, sink=actual_sink, non_blocking=non_blocking
-        )
+        observed = ObservedAgent(inner=agent, sink=actual_sink, non_blocking=non_blocking)
         return observed  # type: ignore[return-value]
 
     @staticmethod
     def unlift(agent: Agent[Any, Any]) -> Agent[Any, Any]:
         """Extract inner agent from ObservedAgent."""
         if not isinstance(agent, ObservedAgent):
-            raise TypeError(
-                f"Cannot unlift {type(agent).__name__} - not an ObservedAgent"
-            )
+            raise TypeError(f"Cannot unlift {type(agent).__name__} - not an ObservedAgent")
         return agent.inner
 
     @staticmethod

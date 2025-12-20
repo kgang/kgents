@@ -223,13 +223,9 @@ def director_directions(phase: DirectorPhase) -> FrozenSet[Any]:
     """
     match phase:
         case DirectorPhase.OBSERVING:
-            return frozenset(
-                {ObserveInput, BuildTensionInput, InterveneInput, type, Any}
-            )
+            return frozenset({ObserveInput, BuildTensionInput, InterveneInput, type, Any})
         case DirectorPhase.BUILDING:
-            return frozenset(
-                {BuildTensionInput, InjectInput, AbortInput, ObserveInput, type, Any}
-            )
+            return frozenset({BuildTensionInput, InjectInput, AbortInput, ObserveInput, type, Any})
         case DirectorPhase.INJECTING:
             return frozenset({CooldownInput, AbortInput, type, Any})
         case DirectorPhase.COOLING:
@@ -245,9 +241,7 @@ def director_directions(phase: DirectorPhase) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def director_transition(
-    phase: DirectorPhase, input: Any
-) -> tuple[DirectorPhase, DirectorOutput]:
+def director_transition(phase: DirectorPhase, input: Any) -> tuple[DirectorPhase, DirectorOutput]:
     """
     Director state transition function.
 

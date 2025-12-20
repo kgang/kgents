@@ -98,9 +98,7 @@ class HintRegistry:
             return factory(hint)
 
         # Fallback for unknown hint types
-        return Static(
-            f"[dim]Unknown hint type: {hint.type!r}[/dim]\n[dim]Data: {hint.data}[/dim]"
-        )
+        return Static(f"[dim]Unknown hint type: {hint.type!r}[/dim]\n[dim]Data: {hint.data}[/dim]")
 
     def render_many(
         self,
@@ -284,9 +282,7 @@ class HintRegistry:
         show_ghosts = hint.data.get("show_ghosts", True)
 
         if tree is None:
-            return Static(
-                "[bold]Cognitive Loom[/bold]\n[dim]No cognitive tree provided[/dim]"
-            )
+            return Static("[bold]Cognitive Loom[/bold]\n[dim]No cognitive tree provided[/dim]")
 
         # If tree is a CognitiveTree, use it directly
         if isinstance(tree, CognitiveTree):
@@ -294,8 +290,7 @@ class HintRegistry:
 
         # Otherwise return error
         return Static(
-            "[bold]Cognitive Loom[/bold]\n"
-            f"[dim]Invalid tree type: {type(tree).__name__}[/dim]"
+            f"[bold]Cognitive Loom[/bold]\n[dim]Invalid tree type: {type(tree).__name__}[/dim]"
         )
 
 

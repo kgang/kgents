@@ -247,9 +247,7 @@ def record_turn(
     """
     labels = {
         "node_path": node_path,
-        "observer_archetype": observer_id.split(":")[0]
-        if ":" in observer_id
-        else "user",
+        "observer_archetype": observer_id.split(":")[0] if ":" in observer_id else "user",
     }
 
     # Get instruments
@@ -295,9 +293,7 @@ def record_turn(
 
         if not success:
             _state.total_errors += 1
-            _state.errors_by_node[node_path] = (
-                _state.errors_by_node.get(node_path, 0) + 1
-            )
+            _state.errors_by_node[node_path] = _state.errors_by_node.get(node_path, 0) + 1
 
 
 def record_session_event(
@@ -329,9 +325,7 @@ def record_session_event(
 
         with _state._lock:
             _state.total_sessions += 1
-            _state.sessions_by_node[node_path] = (
-                _state.sessions_by_node.get(node_path, 0) + 1
-            )
+            _state.sessions_by_node[node_path] = _state.sessions_by_node.get(node_path, 0) + 1
             _state.active_sessions_by_node[node_path] = (
                 _state.active_sessions_by_node.get(node_path, 0) + 1
             )
@@ -519,9 +513,7 @@ class ChatTelemetry:
                 span.set_attribute(ATTR_TOKENS_TOTAL, tokens_in + tokens_out)
                 span.set_attribute(ATTR_RESPONSE_LENGTH, response_length)
                 span.set_attribute(ATTR_ENTROPY_AFTER, session.entropy)
-                span.set_attribute(
-                    ATTR_CONTEXT_UTILIZATION, session.get_context_utilization()
-                )
+                span.set_attribute(ATTR_CONTEXT_UTILIZATION, session.get_context_utilization())
                 span.set_attribute(ATTR_TURN_DURATION_MS, duration_s * 1000)
 
                 # Record metrics
@@ -588,9 +580,7 @@ class ChatTelemetry:
             try:
                 yield span
                 span.set_status(Status(StatusCode.OK))
-                span.set_attribute(
-                    ATTR_CONTEXT_UTILIZATION, session.get_context_utilization()
-                )
+                span.set_attribute(ATTR_CONTEXT_UTILIZATION, session.get_context_utilization())
 
             except Exception as e:
                 span.set_status(Status(StatusCode.ERROR, str(e)))
@@ -729,9 +719,7 @@ def get_chat_metrics_summary() -> dict[str, Any]:
     """
     with _state._lock:
         avg_duration = (
-            _state.total_duration_s / _state.total_turns
-            if _state.total_turns > 0
-            else 0.0
+            _state.total_duration_s / _state.total_turns if _state.total_turns > 0 else 0.0
         )
 
         avg_tokens_per_turn = (

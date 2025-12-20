@@ -205,9 +205,7 @@ class CrisisAuditStore:
 
         return candidates[-limit:]
 
-    def export_compliance_report(
-        self, simulation_id: str, format: str = "json"
-    ) -> dict[str, Any]:
+    def export_compliance_report(self, simulation_id: str, format: str = "json") -> dict[str, Any]:
         """Export compliance report for a simulation."""
         events = self.query(simulation_id=simulation_id)
         total_tokens = sum(e.tokens_used for e in events)
@@ -517,9 +515,7 @@ class CrisisPreconditionChecker:
                 message="Containment must be confirmed before transitioning to recovery",
                 precondition="containment_before_recovery",
             )
-        return PreconditionResult(
-            passed=True, precondition="containment_before_recovery"
-        )
+        return PreconditionResult(passed=True, precondition="containment_before_recovery")
 
     def check_communication_compliance(
         self, message_type: str, approved_by: str | None
@@ -534,9 +530,7 @@ class CrisisPreconditionChecker:
             )
         return PreconditionResult(passed=True, precondition="communication_compliance")
 
-    def check_closure_requirements(
-        self, postmortem_scheduled: bool
-    ) -> PreconditionResult:
+    def check_closure_requirements(self, postmortem_scheduled: bool) -> PreconditionResult:
         """Check that postmortem is scheduled before closure."""
         if not postmortem_scheduled:
             return PreconditionResult(
@@ -544,9 +538,7 @@ class CrisisPreconditionChecker:
                 message="Postmortem must be scheduled before incident closure",
                 precondition="closure_requires_postmortem",
             )
-        return PreconditionResult(
-            passed=True, precondition="closure_requires_postmortem"
-        )
+        return PreconditionResult(passed=True, precondition="closure_requires_postmortem")
 
     def validate_operation(
         self,
@@ -564,17 +556,13 @@ class CrisisPreconditionChecker:
         # Recovery transition checks
         if operation == "recover" and phase == CrisisPhase.RESPONSE:
             containment_confirmed = kwargs.get("containment_confirmed", False)
-            results.append(
-                self.check_containment_before_recovery(phase, containment_confirmed)
-            )
+            results.append(self.check_containment_before_recovery(phase, containment_confirmed))
 
         # Communication compliance
         if operation == "communicate":
             message_type = kwargs.get("message_type", "internal")
             approved_by = kwargs.get("approved_by")
-            results.append(
-                self.check_communication_compliance(message_type, approved_by)
-            )
+            results.append(self.check_communication_compliance(message_type, approved_by))
 
         # Closure requirements
         if operation == "close":

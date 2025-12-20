@@ -120,9 +120,7 @@ class PredictionMarket:
         ] = {}  # phage_id → {"success": tokens, "failure": tokens}
 
         # Historical data for pricing
-        self.schema_success_rates: dict[
-            str, float
-        ] = {}  # schema_signature → success_rate
+        self.schema_success_rates: dict[str, float] = {}  # schema_signature → success_rate
         self.recent_outcomes: list[tuple[str, bool]] = []  # (phage_id, succeeded)
 
     def quote(
@@ -310,9 +308,7 @@ class PredictionMarket:
 
         return results
 
-    def update_schema_success_rate(
-        self, schema_signature: str, succeeded: bool
-    ) -> None:
+    def update_schema_success_rate(self, schema_signature: str, succeeded: bool) -> None:
         """
         Update historical success rate for a schema.
 
@@ -322,9 +318,7 @@ class PredictionMarket:
         # Exponential moving average
         alpha = 0.1
         new_value = 1.0 if succeeded else 0.0
-        self.schema_success_rates[schema_signature] = (
-            1 - alpha
-        ) * current + alpha * new_value
+        self.schema_success_rates[schema_signature] = (1 - alpha) * current + alpha * new_value
 
 
 # =============================================================================
@@ -394,9 +388,7 @@ class Sun:
     > willingness to invest compute in uncertain outcomes.
     """
 
-    def __init__(
-        self, bank: CentralBank, default_grant_duration: timedelta = timedelta(hours=24)
-    ):
+    def __init__(self, bank: CentralBank, default_grant_duration: timedelta = timedelta(hours=24)):
         self.bank = bank
         self.default_grant_duration = default_grant_duration
         self.grants: dict[str, Grant] = {}
@@ -588,9 +580,7 @@ class StakingPool:
         self.stakes: dict[str, PhageStake] = {}
         self.pool_balance: int = 0
 
-    def calculate_required_stake(
-        self, lines_changed: int, complexity_score: float = 1.0
-    ) -> int:
+    def calculate_required_stake(self, lines_changed: int, complexity_score: float = 1.0) -> int:
         """
         Calculate required stake for a mutation.
 

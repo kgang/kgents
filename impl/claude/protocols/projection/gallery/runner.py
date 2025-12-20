@@ -84,9 +84,7 @@ class Gallery:
         If no overrides provided, reads from environment variables.
         """
         env_overrides = get_overrides_from_env()
-        self.overrides = (
-            merge_overrides(env_overrides, overrides) if overrides else env_overrides
-        )
+        self.overrides = merge_overrides(env_overrides, overrides) if overrides else env_overrides
 
     def _get_target(self, target: RenderTarget | None) -> RenderTarget:
         """Get target from argument, overrides, or default to CLI."""
@@ -250,9 +248,7 @@ class Gallery:
                 if result.success:
                     sections.append(f"\n[{pilot.name}] {pilot.description}")
                     if target == RenderTarget.JSON:
-                        sections.append(
-                            json.dumps(result.output, indent=2, default=str)
-                        )
+                        sections.append(json.dumps(result.output, indent=2, default=str))
                     else:
                         sections.append(str(result.output))
                 else:
@@ -262,9 +258,7 @@ class Gallery:
 
         return "\n".join(sections)
 
-    def show_category(
-        self, category: PilotCategory, target: RenderTarget | None = None
-    ) -> str:
+    def show_category(self, category: PilotCategory, target: RenderTarget | None = None) -> str:
         """Render all pilots in a specific category."""
         target = self._get_target(target)
         pilots = get_pilots_by_category(category)

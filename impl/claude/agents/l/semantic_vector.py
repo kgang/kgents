@@ -149,9 +149,7 @@ class VectorSemanticBrain:
         for backend_result in backend_results:
             # Create minimal entry from metadata
             # In real usage, this would fetch from registry
-            entry = self._entry_from_metadata(
-                backend_result.id, backend_result.metadata
-            )
+            entry = self._entry_from_metadata(backend_result.id, backend_result.metadata)
 
             results.append(
                 SemanticResult(
@@ -196,9 +194,7 @@ class VectorSemanticBrain:
 
         return " ".join(parts)
 
-    def _entry_from_metadata(
-        self, entry_id: str, metadata: dict[str, Any]
-    ) -> CatalogEntry:
+    def _entry_from_metadata(self, entry_id: str, metadata: dict[str, Any]) -> CatalogEntry:
         """Create minimal CatalogEntry from backend metadata.
 
         In production, this should fetch the full entry from the registry.

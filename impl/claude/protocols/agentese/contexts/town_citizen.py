@@ -190,7 +190,9 @@ def build_citizen_system_prompt(
     # Build opacity statement
     opacity_statement = ""
     if citizen.cosmotechnics.opacity_statement:
-        opacity_statement = f"\nYour opacity (what remains yours alone): {citizen.cosmotechnics.opacity_statement}"
+        opacity_statement = (
+            f"\nYour opacity (what remains yours alone): {citizen.cosmotechnics.opacity_statement}"
+        )
 
     return prompt_template.format(
         name=citizen.name,

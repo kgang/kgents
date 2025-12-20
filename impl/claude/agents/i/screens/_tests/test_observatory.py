@@ -206,9 +206,7 @@ class TestObservatoryScreen:
 
         class TestApp(App[None]):
             def on_mount(self) -> None:
-                self.push_screen(
-                    ObservatoryScreen(gardens=demo_gardens, demo_mode=True)
-                )
+                self.push_screen(ObservatoryScreen(gardens=demo_gardens, demo_mode=True))
 
         app = TestApp()
         async with app.run_test() as pilot:

@@ -216,9 +216,7 @@ class Turn:
             Short string summary
         """
         content_preview = (
-            self.content[:max_length] + "..."
-            if len(self.content) > max_length
-            else self.content
+            self.content[:max_length] + "..." if len(self.content) > max_length else self.content
         )
         return f"[{self.speaker}]: {content_preview}"
 

@@ -287,11 +287,7 @@ class TestsHeuristic:
 
     def matches(self, path: str, content: str | None = None) -> bool:
         """Check non-test Python files."""
-        return (
-            path.endswith(".py")
-            and "_tests" not in path
-            and "test_" not in Path(path).name
-        )
+        return path.endswith(".py") and "_tests" not in path and "test_" not in Path(path).name
 
     def check(self, path: str, content: str | None = None) -> HeuristicResult:
         """Check for untested code."""
@@ -631,8 +627,7 @@ class KgentWatcher:
 
         except ImportError:
             logger.warning(
-                "watchdog not installed. Using polling fallback. "
-                "Install with: pip install watchdog"
+                "watchdog not installed. Using polling fallback. Install with: pip install watchdog"
             )
             # Could implement polling fallback here
             self._running = True

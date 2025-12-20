@@ -245,9 +245,7 @@ class TestNavigation:
         result = handle_navigation(repl_state, ["self", "invalid_holon"])
         assert result is None  # Not a valid navigation path
 
-    def test_fast_forward_soul_shows_dialogue_mode_message(
-        self, repl_state: Any
-    ) -> None:
+    def test_fast_forward_soul_shows_dialogue_mode_message(self, repl_state: Any) -> None:
         """Verify fast-forward to self.soul shows dialogue mode message."""
         from protocols.cli.repl import handle_navigation
 
@@ -271,11 +269,7 @@ class TestPipelineExecution:
 
         result = handle_composition(repl_state, "self.status")
         # Should be an error or handle gracefully
-        assert (
-            "Error" in result
-            or "error" in result.lower()
-            or "requires" in result.lower()
-        )
+        assert "Error" in result or "error" in result.lower() or "requires" in result.lower()
 
     def test_pipeline_cli_fallback(self, repl_state: Any) -> None:
         """Verify pipeline falls back to CLI execution."""
@@ -337,11 +331,7 @@ class TestErrorSympathy:
 
         suggestion = _suggest_for_path(["self"])
         assert suggestion is not None
-        assert (
-            "status" in suggestion
-            or "memory" in suggestion
-            or "Available" in suggestion
-        )
+        assert "status" in suggestion or "memory" in suggestion or "Available" in suggestion
 
 
 # =============================================================================
@@ -433,9 +423,7 @@ class TestTabCompletion:
         matches = completer._get_matches("/observer d")
         assert any("developer" in m for m in matches)
 
-    def test_complete_empty_input_at_root_shows_all_contexts(
-        self, repl_state: Any
-    ) -> None:
+    def test_complete_empty_input_at_root_shows_all_contexts(self, repl_state: Any) -> None:
         """Verify empty tab press at root shows all contexts (Wave 5)."""
         from protocols.cli.repl import Completer
 
@@ -452,9 +440,7 @@ class TestTabCompletion:
         assert "help" in matches
         assert "exit" in matches
 
-    def test_complete_empty_input_in_context_shows_holons(
-        self, repl_state: Any
-    ) -> None:
+    def test_complete_empty_input_in_context_shows_holons(self, repl_state: Any) -> None:
         """Verify empty tab press in context shows all holons (Wave 5)."""
         from protocols.cli.repl import Completer
 
@@ -902,9 +888,7 @@ class TestRecovery:
         from protocols.cli.repl import handle_composition
 
         # Pipeline with invalid middle step
-        result = handle_composition(
-            repl_state, "self status >> invalid.path >> world agents"
-        )
+        result = handle_composition(repl_state, "self status >> invalid.path >> world agents")
 
         # Should show partial execution, not crash
         assert result is not None
@@ -940,9 +924,7 @@ class TestSecurity:
         for attempt in injection_attempts:
             result = handle_invocation(repl_state, attempt)
             # Marker file should NOT exist (shell not executed)
-            assert not os.path.exists(marker_file), (
-                f"Shell injection executed: {attempt}"
-            )
+            assert not os.path.exists(marker_file), f"Shell injection executed: {attempt}"
             # Result should be an error or normal output, not crash
             assert result is not None
 
@@ -1442,9 +1424,7 @@ class TestLLMSuggester:
         suggester = LLMSuggester(entropy_cost=0.01)
 
         # Low entropy budget should return None
-        result = asyncio.run(
-            suggester.suggest("slef", "self", ["self", "world"], 0.001)
-        )
+        result = asyncio.run(suggester.suggest("slef", "self", ["self", "world"], 0.001))
         assert result is None
 
     def test_llm_suggester_no_options(self) -> None:
@@ -1526,8 +1506,7 @@ class TestWelcomeVariations:
         with patch("protocols.cli.repl._get_hour", return_value=9):
             msg = get_welcome_message(repl_state)
             assert any(
-                word in msg.lower()
-                for word in ["morning", "dawn", "day", "forest", "awaits"]
+                word in msg.lower() for word in ["morning", "dawn", "day", "forest", "awaits"]
             )
 
     def test_welcome_varies_by_evening(self, repl_state: Any) -> None:
@@ -1539,8 +1518,7 @@ class TestWelcomeVariations:
         with patch("protocols.cli.repl._get_hour", return_value=21):
             msg = get_welcome_message(repl_state)
             assert any(
-                word in msg.lower()
-                for word in ["evening", "night", "stars", "void", "falls"]
+                word in msg.lower() for word in ["evening", "night", "stars", "void", "falls"]
             )
 
     def test_welcome_for_returning_user(self, repl_state: Any) -> None:
@@ -1552,8 +1530,7 @@ class TestWelcomeVariations:
         msg = get_welcome_message(repl_state)
         # Should mention returning or previous context
         assert any(
-            word in msg.lower()
-            for word in ["back", "resum", "self", "soul", "continue", "river"]
+            word in msg.lower() for word in ["back", "resum", "self", "soul", "continue", "river"]
         )
 
 
@@ -1568,9 +1545,7 @@ class TestKgentIntegration:
         assert "wisdom" in KGENT_TRIGGERS
         assert len(KGENT_TRIGGERS) >= 5
 
-    def test_maybe_invoke_kgent_returns_none_for_non_trigger(
-        self, repl_state: Any
-    ) -> None:
+    def test_maybe_invoke_kgent_returns_none_for_non_trigger(self, repl_state: Any) -> None:
         """Verify non-triggers don't invoke K-gent."""
         import asyncio
 
@@ -1602,9 +1577,7 @@ class TestEasterEggs:
         from protocols.cli.repl import EASTER_EGGS
 
         assert len(EASTER_EGGS) >= 5
-        assert "void.entropy.dance" in EASTER_EGGS or any(
-            "dance" in k for k in EASTER_EGGS
-        )
+        assert "void.entropy.dance" in EASTER_EGGS or any("dance" in k for k in EASTER_EGGS)
 
     def test_void_entropy_dance(self, repl_state: Any) -> None:
         """Verify void.entropy.dance easter egg works."""
@@ -2089,9 +2062,7 @@ class TestDottedPathCompletion:
         matches = completer._get_matches("self.SO")
         assert "self.soul" in matches
 
-    def test_dotted_completion_absolute_path_from_any_state(
-        self, repl_state: Any
-    ) -> None:
+    def test_dotted_completion_absolute_path_from_any_state(self, repl_state: Any) -> None:
         """Verify absolute dotted paths work regardless of current navigation state."""
         from protocols.cli.repl import Completer
 

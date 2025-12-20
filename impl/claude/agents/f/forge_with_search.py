@@ -168,9 +168,7 @@ async def forge_with_registration(
         'PaperSummarizer'
     """
     # Step 1: Search before forge
-    search_result = await search_before_forge(
-        intent_text, registry, similarity_threshold
-    )
+    search_result = await search_before_forge(intent_text, registry, similarity_threshold)
 
     # Step 2: Check decision
     if search_result.decision == ForgeDecision.REUSE_EXISTING:
@@ -248,9 +246,7 @@ async def register_forged_artifact(
     # Extract dependencies from raw intent (if available)
     relationships = {}
     if contract.raw_intent and contract.raw_intent.dependencies:
-        relationships["depends_on"] = [
-            dep.name for dep in contract.raw_intent.dependencies
-        ]
+        relationships["depends_on"] = [dep.name for dep in contract.raw_intent.dependencies]
 
     catalog_entry = CatalogEntry(
         id=agent_name,  # Use name as ID (unique identifier)

@@ -139,9 +139,7 @@ def _fitness_landscape_compose() -> PolyAgent[Any, Any, Any]:
     def landscape_fn(population: Any) -> dict[str, Any]:
         return {
             "landscape": "fitness distribution",
-            "population_size": 1
-            if not isinstance(population, (list, tuple))
-            else len(population),
+            "population_size": 1 if not isinstance(population, (list, tuple)) else len(population),
             "topology": "single-peak",
         }
 

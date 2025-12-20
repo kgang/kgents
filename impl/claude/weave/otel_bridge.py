@@ -151,10 +151,7 @@ def events_to_spans(
         status = "OK"
         if isinstance(content, dict) and content.get("type") == "exception":
             status = "ERROR"
-        elif (
-            hasattr(content, "event_type")
-            and getattr(content, "event_type") == "exception"
-        ):
+        elif hasattr(content, "event_type") and getattr(content, "event_type") == "exception":
             status = "ERROR"
 
         # Convert timestamp to nanoseconds

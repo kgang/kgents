@@ -139,9 +139,7 @@ class EventBus:
 
         Note: Use EventBus.get() instead of direct instantiation.
         """
-        self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = (
-            defaultdict(list)
-        )
+        self._subscribers: dict[type[Event], list[Callable[[Event], None]]] = defaultdict(list)
 
     @classmethod
     def get(cls) -> "EventBus":
@@ -208,9 +206,7 @@ class EventBus:
                 # In production, this should use proper logging
                 import sys
 
-                print(
-                    f"Error in event handler {handler.__name__}: {e}", file=sys.stderr
-                )
+                print(f"Error in event handler {handler.__name__}: {e}", file=sys.stderr)
 
     def unsubscribe(self, event_type: type[E], handler: Callable[[E], None]) -> None:
         """Unsubscribe a handler from an event type.

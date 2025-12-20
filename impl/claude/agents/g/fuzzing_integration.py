@@ -284,18 +284,14 @@ class TongueInputGenerator:
 
         return inputs
 
-    def _generate_sexpr(
-        self, operators: list[str], atoms: list[str], depth: int
-    ) -> str:
+    def _generate_sexpr(self, operators: list[str], atoms: list[str], depth: int) -> str:
         """Generate random S-expression."""
         if depth <= 0:
             return self.rng.choice(atoms)
 
         op = self.rng.choice(operators)
         num_args = self.rng.randint(1, 3)
-        args = [
-            self._generate_sexpr(operators, atoms, depth - 1) for _ in range(num_args)
-        ]
+        args = [self._generate_sexpr(operators, atoms, depth - 1) for _ in range(num_args)]
         return f"({op} {' '.join(args)})"
 
     def generate_invalid(self, count: int) -> list[str]:
@@ -512,9 +508,7 @@ class TongueFuzzer:
         # Generate and test invalid inputs
         invalid_inputs = self.generator.generate_invalid(self.invalid_count)
         for text in invalid_inputs:
-            result = self._test_input(
-                text, FuzzInputType.INVALID, expected_success=False
-            )
+            result = self._test_input(text, FuzzInputType.INVALID, expected_success=False)
             results.append(result)
             if result.passed:
                 invalid_passed += 1
@@ -525,18 +519,14 @@ class TongueFuzzer:
         boundary_inputs = self.generator.generate_boundary(self.boundary_count)
         for text in boundary_inputs:
             # Boundary inputs: we don't know if they should pass, so just record
-            result = self._test_input(
-                text, FuzzInputType.BOUNDARY, expected_success=None
-            )
+            result = self._test_input(text, FuzzInputType.BOUNDARY, expected_success=None)
             results.append(result)
             boundary_passed += 1  # Boundaries always "pass" (we're observing)
 
         # Generate and test adversarial inputs
         adversarial_inputs = self.generator.generate_adversarial(self.adversarial_count)
         for text in adversarial_inputs:
-            result = self._test_input(
-                text, FuzzInputType.ADVERSARIAL, expected_success=False
-            )
+            result = self._test_input(text, FuzzInputType.ADVERSARIAL, expected_success=False)
             results.append(result)
             if result.passed:
                 adversarial_passed += 1
@@ -586,9 +576,7 @@ class TongueFuzzer:
             return FuzzResult(
                 input_text=text,
                 input_type=input_type,
-                expected_success=expected_success
-                if expected_success is not None
-                else False,
+                expected_success=expected_success if expected_success is not None else False,
                 actual_success=False,
                 error=str(e),
             )
@@ -611,9 +599,7 @@ class TonguePropertyTester:
     5. Completeness: all examples parse
     """
 
-    def __init__(
-        self, tongue: Tongue, seed: int | None = None, cases_per_property: int = 50
-    ):
+    def __init__(self, tongue: Tongue, seed: int | None = None, cases_per_property: int = 50):
         self.tongue = tongue
         self.seed = seed
         self.cases_per_property = cases_per_property
@@ -684,9 +670,7 @@ class TonguePropertyTester:
                     passed_cases += 1
                 else:
                     failed_cases += 1
-                    failures.append(
-                        (text, f"AST mismatch: {result1.ast} != {result2.ast}")
-                    )
+                    failures.append((text, f"AST mismatch: {result1.ast} != {result2.ast}"))
             except Exception as e:
                 failed_cases += 1
                 failures.append((text, str(e)))
@@ -741,9 +725,7 @@ class TonguePropertyTester:
                     passed_cases += 1
                 else:
                     failed_cases += 1
-                    failures.append(
-                        (text, f"Render not stable: {rendered} != {rendered2}")
-                    )
+                    failures.append((text, f"Render not stable: {rendered} != {rendered2}"))
             except Exception as e:
                 failed_cases += 1
                 failures.append((text, str(e)))
@@ -793,9 +775,7 @@ class TonguePropertyTester:
                 else:
                     # Bad - constraint violation was accepted
                     failed_cases += 1
-                    failures.append(
-                        (text, f"Constraint violation should not parse: {result.ast}")
-                    )
+                    failures.append((text, f"Constraint violation should not parse: {result.ast}"))
             except Exception:
                 # Exception counts as rejection (good)
                 passed_cases += 1
@@ -897,9 +877,7 @@ class TonguePropertyTester:
                     passed_cases += 1
                 else:
                     failed_cases += 1
-                    failures.append(
-                        (example.text, f"Example failed to parse: {result.error}")
-                    )
+                    failures.append((example.text, f"Example failed to parse: {result.error}"))
             except Exception as e:
                 failed_cases += 1
                 failures.append((example.text, str(e)))

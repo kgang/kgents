@@ -211,9 +211,7 @@ class K8sResourceProvider:
     async def _read_agents(self) -> MCPResourceContent:
         """List all Agent CRs."""
         # Try to get Agent CRs
-        result = self._run_kubectl(
-            "get", "agents.kgents.io", "-n", self.config.namespace
-        )
+        result = self._run_kubectl("get", "agents.kgents.io", "-n", self.config.namespace)
 
         if result is None:
             # Fallback: get pods with kgents labels
@@ -257,9 +255,7 @@ class K8sResourceProvider:
             # If this is a pod (fallback), extract from labels
             if "containerStatuses" in status:
                 agent_info["phase"] = (
-                    "Running"
-                    if status.get("phase") == "Running"
-                    else status.get("phase")
+                    "Running" if status.get("phase") == "Running" else status.get("phase")
                 )
                 agent_info["ready"] = all(
                     cs.get("ready", False) for cs in status.get("containerStatuses", [])
@@ -284,21 +280,15 @@ class K8sResourceProvider:
         uri = f"kgents://agents/{name}"
 
         # Try Agent CR first
-        result = self._run_kubectl(
-            "get", f"agents.kgents.io/{name}", "-n", self.config.namespace
-        )
+        result = self._run_kubectl("get", f"agents.kgents.io/{name}", "-n", self.config.namespace)
 
         if result is None:
             # Fallback: try to get pod
-            result = self._run_kubectl(
-                "get", f"pod/{name}", "-n", self.config.namespace
-            )
+            result = self._run_kubectl("get", f"pod/{name}", "-n", self.config.namespace)
 
         if result is None:
             # Try deployment
-            result = self._run_kubectl(
-                "get", f"deployment/{name}", "-n", self.config.namespace
-            )
+            result = self._run_kubectl("get", f"deployment/{name}", "-n", self.config.namespace)
 
         if result is None:
             return MCPResourceContent(
@@ -352,9 +342,7 @@ class K8sResourceProvider:
         decay function, not stored in status.
         """
         # Try to get Pheromone CRs
-        result = self._run_kubectl(
-            "get", "pheromones.kgents.io", "-n", self.config.namespace
-        )
+        result = self._run_kubectl("get", "pheromones.kgents.io", "-n", self.config.namespace)
 
         if result is None:
             # Pheromones might be stored in ConfigMaps (legacy)
@@ -385,9 +373,7 @@ class K8sResourceProvider:
                     # Current intensity calculated on read
                     "intensity": current_intensity,
                     # Also include decay parameters for transparency
-                    "initialIntensity": spec.get(
-                        "initialIntensity", spec.get("intensity")
-                    ),
+                    "initialIntensity": spec.get("initialIntensity", spec.get("intensity")),
                     "halfLifeMinutes": spec.get("halfLifeMinutes"),
                     "emittedAt": spec.get("emittedAt"),
                     "created": metadata.get("creationTimestamp"),
@@ -453,9 +439,7 @@ class K8sResourceProvider:
         from datetime import timezone as tz
 
         now = datetime.now(tz.utc)
-        elapsed_minutes = (
-            now - emitted_at.replace(tzinfo=tz.utc)
-        ).total_seconds() / 60.0
+        elapsed_minutes = (now - emitted_at.replace(tzinfo=tz.utc)).total_seconds() / 60.0
 
         # Exponential decay: intensity = initial * (0.5 ^ (elapsed / half_life))
         intensity = float(initial) * (0.5 ** (elapsed_minutes / half_life))
@@ -485,9 +469,7 @@ class K8sResourceProvider:
         pods_result = self._run_kubectl("get", "pods", "-n", self.config.namespace)
         if pods_result:
             pods = pods_result.get("items", [])
-            running = sum(
-                1 for p in pods if p.get("status", {}).get("phase") == "Running"
-            )
+            running = sum(1 for p in pods if p.get("status", {}).get("phase") == "Running")
             total = len(pods)
             status["components"]["pods"] = {
                 "running": running,

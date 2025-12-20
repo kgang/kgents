@@ -84,6 +84,12 @@ class SynergyEventType(Enum):
     CONSENSUS_REACHED = "consensus_reached"  # Collaboration consensus
     CONTRIBUTION_POSTED = "contribution_posted"  # Blackboard contribution
 
+    # Concept Nursery events (JIT → Garden integration)
+    CONCEPT_SEEDED = "concept_seeded"  # New concept planted in nursery
+    CONCEPT_GREW = "concept_grew"  # Concept advanced to new growth stage
+    CONCEPT_READY = "concept_ready"  # Concept ready for promotion (UI prompt)
+    CONCEPT_PROMOTED = "concept_promoted"  # Concept accepted into permanent impl
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -1294,6 +1300,156 @@ def create_contribution_posted_event(
     )
 
 
+# =============================================================================
+# Concept Nursery Events (JIT → Garden Integration)
+# =============================================================================
+
+
+def create_concept_seeded_event(
+    handle: str,
+    nursery_id: str = "default",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Concept Nursery seed planted event.
+
+    When a new JIT concept is created, this event adds it to the nursery
+    for tracking and visualization in the Gardener UI.
+
+    Args:
+        handle: AGENTESE path (e.g., "world.garden.concept")
+        nursery_id: Nursery identifier (default for global nursery)
+
+    Returns:
+        SynergyEvent for CONCEPT_SEEDED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONCEPT_SEEDED,
+        source_id=handle,
+        payload={
+            "nursery_id": nursery_id,
+            "stage": "SEED",
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_concept_grew_event(
+    handle: str,
+    old_stage: str,
+    new_stage: str,
+    usage_count: int,
+    success_rate: float,
+    nursery_id: str = "default",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Concept Nursery growth event.
+
+    When a concept advances to a new stage (SEED → SPROUTING → GROWING → READY),
+    this event notifies the UI to update the nursery visualization.
+
+    Args:
+        handle: AGENTESE path
+        old_stage: Previous stage name
+        new_stage: New stage name
+        usage_count: Total invocations
+        success_rate: Success rate (0-1)
+        nursery_id: Nursery identifier
+
+    Returns:
+        SynergyEvent for CONCEPT_GREW
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONCEPT_GREW,
+        source_id=handle,
+        payload={
+            "nursery_id": nursery_id,
+            "old_stage": old_stage,
+            "new_stage": new_stage,
+            "usage_count": usage_count,
+            "success_rate": success_rate,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_concept_ready_event(
+    handle: str,
+    usage_count: int,
+    success_rate: float,
+    nursery_id: str = "default",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Concept Nursery ready-for-promotion event.
+
+    When a concept reaches READY stage, this event triggers the UI prompt
+    asking the user to accept or dismiss promotion.
+
+    Args:
+        handle: AGENTESE path
+        usage_count: Total invocations (should be >= threshold)
+        success_rate: Success rate (should be >= threshold)
+        nursery_id: Nursery identifier
+
+    Returns:
+        SynergyEvent for CONCEPT_READY (broadcast for UI)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.ALL,  # UI needs to see this
+        event_type=SynergyEventType.CONCEPT_READY,
+        source_id=handle,
+        payload={
+            "nursery_id": nursery_id,
+            "usage_count": usage_count,
+            "success_rate": success_rate,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_concept_promoted_event(
+    handle: str,
+    usage_count: int,
+    success_rate: float,
+    nursery_id: str = "default",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a Concept Nursery promotion accepted event.
+
+    When a user accepts promotion, this event notifies other jewels
+    that the concept is now permanent.
+
+    Args:
+        handle: AGENTESE path
+        usage_count: Final invocation count
+        success_rate: Final success rate
+        nursery_id: Nursery identifier
+
+    Returns:
+        SynergyEvent for CONCEPT_PROMOTED (to Brain for capture)
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.GARDENER,
+        target_jewel=Jewel.BRAIN,  # Brain should capture this milestone
+        event_type=SynergyEventType.CONCEPT_PROMOTED,
+        source_id=handle,
+        payload={
+            "nursery_id": nursery_id,
+            "usage_count": usage_count,
+            "success_rate": success_rate,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -1338,4 +1494,9 @@ __all__ = [
     "create_hypothesis_synthesized_event",
     "create_consensus_reached_event",
     "create_contribution_posted_event",
+    # Factory functions - Concept Nursery (JIT → Garden)
+    "create_concept_seeded_event",
+    "create_concept_grew_event",
+    "create_concept_ready_event",
+    "create_concept_promoted_event",
 ]

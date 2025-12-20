@@ -234,9 +234,7 @@ class KentEigenvectors:
                     # Update value and confidence from persisted data
                     if isinstance(eigen_data, dict):
                         eigen.value = eigen_data.get("value", eigen.value)
-                        eigen.confidence = eigen_data.get(
-                            "confidence", eigen.confidence
-                        )
+                        eigen.confidence = eigen_data.get("confidence", eigen.confidence)
                     elif isinstance(eigen_data, (int, float)):
                         # Legacy format: just value
                         eigen.value = float(eigen_data)

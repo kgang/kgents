@@ -99,8 +99,7 @@ def graft_coalition(
         target=f"world.coalition.form:{task_template}",
         tone=tone,
         reasoning=reasoning or f"Spawning coalition for: {task_description[:50]}",
-        entropy_cost=TendingVerb.GRAFT.base_entropy_cost
-        * 1.5,  # Extra cost for coalition
+        entropy_cost=TendingVerb.GRAFT.base_entropy_cost * 1.5,  # Extra cost for coalition
         session_id=garden_session_id,
         result_summary=task_description[:100],
     )
@@ -140,10 +139,10 @@ async def spawn_coalition_from_garden(
 
     # Query for relevant context from Brain (optional, graceful degradation)
     try:
-        from protocols.agentese import create_brain_logos
+        from protocols.agentese import create_logos
         from protocols.agentese.node import Observer
 
-        logos = create_brain_logos(embedder_type="auto")
+        logos = create_logos()
         observer = Observer.guest()
 
         # Query for past tasks with same template

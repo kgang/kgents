@@ -319,9 +319,7 @@ class Flowfile:
         return result
 
     @classmethod
-    def from_dict(
-        cls, data: dict[str, Any], source_path: str | None = None
-    ) -> Flowfile:
+    def from_dict(cls, data: dict[str, Any], source_path: str | None = None) -> Flowfile:
         # Parse input
         input_data = data.get("input", {})
         if isinstance(input_data, str):
@@ -507,9 +505,7 @@ class FlowValidationError(FlowError):
 class FlowExecutionError(FlowError):
     """Error executing a flowfile."""
 
-    def __init__(
-        self, message: str, step_id: str | None = None, cause: Exception | None = None
-    ):
+    def __init__(self, message: str, step_id: str | None = None, cause: Exception | None = None):
         super().__init__(message)
         self.step_id = step_id
         self.cause = cause

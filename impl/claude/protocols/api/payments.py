@@ -124,9 +124,7 @@ class PaymentClient:
             webhook_secret: Webhook signing secret (defaults to env var)
         """
         if not HAS_STRIPE:
-            raise ImportError(
-                "stripe package not installed. Install with: pip install stripe"
-            )
+            raise ImportError("stripe package not installed. Install with: pip install stripe")
 
         self.api_key = api_key or STRIPE_SECRET_KEY
         self.webhook_secret = webhook_secret or STRIPE_WEBHOOK_SECRET
@@ -285,15 +283,15 @@ class PaymentClient:
                     subscription_id,
                     cancel_at_period_end=True,
                 )
-                message = f"Subscription will cancel at {datetime.fromtimestamp(sub.current_period_end)}"
+                message = (
+                    f"Subscription will cancel at {datetime.fromtimestamp(sub.current_period_end)}"
+                )
             else:
                 # Cancel immediately
                 sub = stripe.Subscription.delete(subscription_id)
                 message = "Subscription canceled immediately"
 
-            logger.info(
-                f"Canceled subscription {subscription_id} (at_period_end={at_period_end})"
-            )
+            logger.info(f"Canceled subscription {subscription_id} (at_period_end={at_period_end})")
 
             return PaymentResult(
                 success=True,
@@ -397,17 +395,13 @@ class PaymentClient:
             ValueError: If signature verification fails
         """
         if not self.webhook_secret:
-            logger.warning(
-                "STRIPE_WEBHOOK_SECRET not set, skipping signature verification"
-            )
+            logger.warning("STRIPE_WEBHOOK_SECRET not set, skipping signature verification")
             import json
 
             return json.loads(payload)
 
         try:
-            event = stripe.Webhook.construct_event(
-                payload, sig_header, self.webhook_secret
-            )
+            event = stripe.Webhook.construct_event(payload, sig_header, self.webhook_secret)
             return event
         except ValueError as e:
             logger.error(f"Invalid webhook payload: {e}")
@@ -434,9 +428,7 @@ def handle_subscription_created(event_data: dict[str, Any]) -> dict[str, Any]:
     subscription_id = subscription["id"]
     current_period_end = subscription["current_period_end"]
 
-    logger.info(
-        f"Subscription created: {subscription_id} for user {user_id}, tier {tier}"
-    )
+    logger.info(f"Subscription created: {subscription_id} for user {user_id}, tier {tier}")
 
     return {
         "user_id": user_id,
@@ -458,9 +450,7 @@ def handle_subscription_updated(event_data: dict[str, Any]) -> dict[str, Any]:
     status = subscription["status"]
     current_period_end = subscription["current_period_end"]
 
-    logger.info(
-        f"Subscription updated: {subscription['id']} for user {user_id}, status={status}"
-    )
+    logger.info(f"Subscription updated: {subscription['id']} for user {user_id}, status={status}")
 
     return {
         "user_id": user_id,

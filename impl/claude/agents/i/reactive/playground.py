@@ -175,7 +175,7 @@ def launch() -> None:
     try:
         from IPython import embed
 
-        embed(user_ns=namespace, colors="neutral")  # type: ignore[no-untyped-call]
+        embed(user_ns=namespace, colors="neutral")
     except ImportError:
         # Fall back to standard library REPL
         code.interact(

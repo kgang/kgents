@@ -37,9 +37,7 @@ class ParallelConfig:
         if self.max_concurrent < 1:
             raise ValueError(f"max_concurrent must be >= 1, got {self.max_concurrent}")
         if self.timeout_per_agent is not None and self.timeout_per_agent <= 0:
-            raise ValueError(
-                f"timeout_per_agent must be > 0, got {self.timeout_per_agent}"
-            )
+            raise ValueError(f"timeout_per_agent must be > 0, got {self.timeout_per_agent}")
         if self.total_timeout is not None and self.total_timeout <= 0:
             raise ValueError(f"total_timeout must be > 0, got {self.total_timeout}")
 
@@ -245,9 +243,7 @@ class RaceAgent(Agent[A, B]):
         tasks = [asyncio.create_task(agent.invoke(input)) for agent in self._agents]
 
         try:
-            done, pending = await asyncio.wait(
-                tasks, return_when=asyncio.FIRST_COMPLETED
-            )
+            done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
 
             # Cancel pending tasks
             for task in pending:
@@ -271,9 +267,7 @@ class RaceAgent(Agent[A, B]):
 # --- Convenience functions ---
 
 
-def parallel(
-    *agents: Agent[A, B], config: Optional[ParallelConfig] = None
-) -> ParallelAgent[A, B]:
+def parallel(*agents: Agent[A, B], config: Optional[ParallelConfig] = None) -> ParallelAgent[A, B]:
     """
     Create a parallel agent from multiple agents.
 

@@ -507,10 +507,7 @@ class TestSQLiteTelemetryStore:
         """Should respect limit."""
         store = SQLiteTelemetryStore(temp_db)
 
-        events = [
-            TelemetryEvent("test", f"2025-12-10T12:{i:02d}:00", {"n": i})
-            for i in range(10)
-        ]
+        events = [TelemetryEvent("test", f"2025-12-10T12:{i:02d}:00", {"n": i}) for i in range(10)]
         await store.append(events)
 
         results = await store.query(limit=3)

@@ -37,6 +37,9 @@ export type { TendingPaletteProps } from './TendingPalette';
 export { TransitionSuggester } from './TransitionSuggester';
 export type { TransitionSuggesterProps } from './TransitionSuggester';
 
+export { NurseryBed } from './NurseryBed';
+export type { NurseryBedProps } from './NurseryBed';
+
 // =============================================================================
 // Legacy Components (kept for backward compatibility)
 // =============================================================================

@@ -12,19 +12,17 @@ dependencies = [
     "traitlets>=5.14.3",
 ]
 
-[tool.uv]
-# Define the workspace members
-# uv will automatically link these as editable installs
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pytest>=7.0",
-    "pytest-asyncio>=0.21",
-    "ruff>=0.1.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
     "mypy>=1.19.0",
     "types-pyyaml",
     "kopf>=1.39.0",
     "kubernetes>=34.1.0",
     "textual>=6.8.0",
-    "hypothesis>=6.148.7",
+    "hypothesis>=6.100",
 ]
 
 [tool.uv.workspace]

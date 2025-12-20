@@ -17,7 +17,12 @@ import { useShell } from '@/shell';
 import { ElasticSplit } from '@/components/elastic/ElasticSplit';
 import { BottomDrawer } from '@/components/elastic/BottomDrawer';
 import { Breathe } from '@/components/joy';
-import type { GardenJSON, TendingVerb, TransitionSuggestionJSON } from '@/reactive/types';
+import type {
+  GardenJSON,
+  TendingVerb,
+  TransitionSuggestionJSON,
+  ConceptSeedJSON,
+} from '@/reactive/types';
 import type { GardenerSessionState, GardenerPhase } from '@/api/types';
 
 // Sub-components
@@ -27,6 +32,7 @@ import { GestureStream } from './GestureStream';
 import { SessionPolynomial } from './SessionPolynomial';
 import { TendingPalette } from './TendingPalette';
 import { TransitionSuggester } from './TransitionSuggester';
+import { NurseryBed } from './NurseryBed';
 
 // =============================================================================
 // Types
@@ -51,6 +57,12 @@ export interface Gardener2DProps {
   onDismissTransition?: () => void;
   /** Transition loading state */
   isTransitionLoading?: boolean;
+  /** Concept seeds from nursery */
+  nurserySeeds?: ConceptSeedJSON[];
+  /** Callback when user promotes a concept */
+  onPromoteConcept?: (handle: string) => void;
+  /** Callback when user dismisses a concept */
+  onDismissConcept?: (handle: string) => void;
   /** Custom class name */
   className?: string;
 }
@@ -69,6 +81,9 @@ export function Gardener2D({
   onAcceptTransition,
   onDismissTransition,
   isTransitionLoading = false,
+  nurserySeeds = [],
+  onPromoteConcept,
+  onDismissConcept,
   className = '',
 }: Gardener2DProps) {
   const { density, isMobile } = useShell();
@@ -144,6 +159,14 @@ export function Gardener2D({
 
           {/* Session State Machine (inline) */}
           <SessionPolynomial session={session} onPhaseChange={onPhaseChange} compact />
+
+          {/* Concept Nursery (compact, if seeds exist) */}
+          <NurseryBed
+            seeds={nurserySeeds}
+            onPromote={onPromoteConcept}
+            onDismiss={onDismissConcept}
+            compact
+          />
 
           {/* Plot Tiles */}
           <div>
@@ -272,6 +295,13 @@ export function Gardener2D({
           <div className="h-full overflow-y-auto p-4 space-y-4 border-l border-[#4A3728]">
             {/* Session Polynomial */}
             <SessionPolynomial session={session} onPhaseChange={onPhaseChange} />
+
+            {/* Concept Nursery (if seeds exist) */}
+            <NurseryBed
+              seeds={nurserySeeds}
+              onPromote={onPromoteConcept}
+              onDismiss={onDismissConcept}
+            />
 
             {/* Selected Plot Detail or Tending Palette */}
             {selectedPlotData ? (

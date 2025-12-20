@@ -13,6 +13,7 @@ See: spec/protocols/metaphysical-forge.md (Phase 2)
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -22,6 +23,18 @@ from protocols.agentese.node import Observer
 from services.forge.node import ForgeNode
 from services.forge.persistence import ForgePersistence
 from services.forge.soul_node import ForgeSoulNode, SoulManifestRendering
+
+
+# === Helper for xdist compatibility ===
+def is_type(obj: Any, type_name: str) -> bool:
+    """
+    Check if obj is an instance of type by name.
+
+    Used for xdist compatibility where class identity may differ
+    across workers due to module reimport.
+    """
+    return type(obj).__name__ == type_name
+
 
 # === Fixtures ===
 
@@ -200,7 +213,8 @@ class TestForgeSoulNode:
         node = ForgeSoulNode(kgent_soul=kgent_soul)
         result = await node.manifest(observer)
 
-        assert isinstance(result, SoulManifestRendering)
+        # Use type name comparison for xdist compatibility
+        assert is_type(result, "SoulManifestRendering")
         assert result.mode is not None
         assert isinstance(result.eigenvectors, dict)
         assert "aesthetic" in result.eigenvectors or len(result.eigenvectors) >= 0

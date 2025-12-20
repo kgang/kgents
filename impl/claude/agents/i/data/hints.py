@@ -92,8 +92,7 @@ class VisualHint:
         """Validate hint parameters."""
         if self.type not in self.VALID_TYPES:
             raise ValueError(
-                f"Unknown hint type: {self.type!r}. "
-                f"Valid types: {sorted(self.VALID_TYPES)}"
+                f"Unknown hint type: {self.type!r}. Valid types: {sorted(self.VALID_TYPES)}"
             )
 
         if self.position not in self.VALID_POSITIONS:

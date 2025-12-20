@@ -524,12 +524,8 @@ class FluencyTracker:
     skills: dict[str, Skill] = field(default_factory=dict)
     session_count: int = 0
     total_commands: int = 0
-    first_session: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    last_session: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    first_session: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_session: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def __post_init__(self) -> None:
         """Initialize skills from skill tree."""
@@ -755,12 +751,8 @@ class FluencyTracker:
             demos=set(data.get("demos", [])),
             session_count=data.get("session_count", 0),
             total_commands=data.get("total_commands", 0),
-            first_session=data.get(
-                "first_session", datetime.now(timezone.utc).isoformat()
-            ),
-            last_session=data.get(
-                "last_session", datetime.now(timezone.utc).isoformat()
-            ),
+            first_session=data.get("first_session", datetime.now(timezone.utc).isoformat()),
+            last_session=data.get("last_session", datetime.now(timezone.utc).isoformat()),
         )
         # Rebuild skill progress from demos
         for demo in tracker.demos:
@@ -877,9 +869,7 @@ class AdaptiveGuide:
             topics.add(ctx)
         return sorted(topics)
 
-    def contextual_hint(
-        self, context: list[str], last_error: bool = False
-    ) -> str | None:
+    def contextual_hint(self, context: list[str], last_error: bool = False) -> str | None:
         """
         Generate a contextual hint based on current location and fluency.
 
@@ -896,13 +886,8 @@ class AdaptiveGuide:
         # Novice: Always offer guidance
         if level == FluencyLevel.NOVICE:
             if not context:
-                return (
-                    "Hint: Type 'self' to begin exploring, or '?' to see all contexts."
-                )
-            elif (
-                context_str == "self"
-                and "introspect_basic" not in self.tracker.mastered_skills
-            ):
+                return "Hint: Type 'self' to begin exploring, or '?' to see all contexts."
+            elif context_str == "self" and "introspect_basic" not in self.tracker.mastered_skills:
                 return "Hint: Type '?' to see what you can do here."
             elif context_str == "void":
                 return "Hint: Try 'entropy sip' to draw from the Accursed Share."
@@ -910,9 +895,7 @@ class AdaptiveGuide:
         # Beginner: Occasional hints
         elif level == FluencyLevel.BEGINNER:
             if last_error:
-                return (
-                    "Hint: Type '?' for available commands, or '/learn' for guidance."
-                )
+                return "Hint: Type '?' for available commands, or '/learn' for guidance."
             next_skill = self.tracker.next_skill()
             if next_skill and next_skill == "compose_basic":
                 return "Hint: Try composing paths with >>. Example: self.status >> concept.count"
@@ -949,9 +932,7 @@ class AdaptiveGuide:
         else:
             return "Welcome back. You're fluent in AGENTESE. Learning mode is here if you need it."
 
-    def on_command(
-        self, command: str, context: list[str]
-    ) -> tuple[list[str], str | None]:
+    def on_command(self, command: str, context: list[str]) -> tuple[list[str], str | None]:
         """
         Process a command and return (newly_mastered_skills, optional_message).
         """
@@ -959,11 +940,7 @@ class AdaptiveGuide:
 
         # Check for mastery_achieved unlock (special case)
         mastery_skill = self.tracker.skills.get("mastery_achieved")
-        if (
-            mastery_skill
-            and mastery_skill.is_mastered
-            and "mastery_achieved" not in newly_mastered
-        ):
+        if mastery_skill and mastery_skill.is_mastered and "mastery_achieved" not in newly_mastered:
             # Check if all 4 prerequisites were just completed
             prereqs = [
                 "master_composition",
@@ -986,9 +963,7 @@ class AdaptiveGuide:
                 message = self._mastery_celebration()
             else:
                 skill_names = [
-                    self.tracker.skills[s].name
-                    for s in newly_mastered
-                    if s in self.tracker.skills
+                    self.tracker.skills[s].name for s in newly_mastered if s in self.tracker.skills
                 ]
                 if skill_names:
                     message = f"Skill unlocked: {', '.join(skill_names)}"
@@ -1040,13 +1015,9 @@ class AdaptiveGuide:
             )
 
         if level == FluencyLevel.FLUENT:
-            return (
-                "You've mastered AGENTESE! Explore freely or type '/fluency' to review."
-            )
+            return "You've mastered AGENTESE! Explore freely or type '/fluency' to review."
 
-        return "Type '?' to explore, or pick a topic: " + ", ".join(
-            self.list_topics()[:5]
-        )
+        return "Type '?' to explore, or pick a topic: " + ", ".join(self.list_topics()[:5])
 
 
 # =============================================================================
@@ -1203,12 +1174,8 @@ def handle_fluency_command(guide: AdaptiveGuide) -> str:
     if locked:
         lines.append(f"\n  {GRAY}Locked:{RESET}")
         for s in locked[:3]:  # Show only first 3 locked
-            prereq_names = [
-                tracker.skills[p].name for p in s.prerequisites if p in tracker.skills
-            ]
-            lines.append(
-                f"    {GRAY}🔒 {s.name} (needs: {', '.join(prereq_names)}){RESET}"
-            )
+            prereq_names = [tracker.skills[p].name for p in s.prerequisites if p in tracker.skills]
+            lines.append(f"    {GRAY}🔒 {s.name} (needs: {', '.join(prereq_names)}){RESET}")
         if len(locked) > 3:
             lines.append(f"    {GRAY}... and {len(locked) - 3} more{RESET}")
 

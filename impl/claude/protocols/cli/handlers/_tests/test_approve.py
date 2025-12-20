@@ -207,9 +207,7 @@ class TestYieldHandlerIntegration:
     """Tests with actual YieldHandler."""
 
     @pytest.mark.asyncio
-    async def test_request_approval_flow(
-        self, yield_handler: Any, pending_yield_turn: Any
-    ) -> None:
+    async def test_request_approval_flow(self, yield_handler: Any, pending_yield_turn: Any) -> None:
         """Full approval flow works."""
         from weave import ApprovalStatus
 
@@ -230,18 +228,14 @@ class TestYieldHandlerIntegration:
         assert result.status == ApprovalStatus.APPROVED
 
     @pytest.mark.asyncio
-    async def test_rejection_flow(
-        self, yield_handler: Any, pending_yield_turn: Any
-    ) -> None:
+    async def test_rejection_flow(self, yield_handler: Any, pending_yield_turn: Any) -> None:
         """Rejection flow works."""
         from weave import ApprovalStatus
 
         # Start approval request in background
         async def reject_after_delay() -> None:
             await asyncio.sleep(0.1)
-            await yield_handler.reject(
-                pending_yield_turn.id, "human", "Not safe to deploy"
-            )
+            await yield_handler.reject(pending_yield_turn.id, "human", "Not safe to deploy")
 
         # Create task for delayed rejection
         reject_task = asyncio.create_task(reject_after_delay())
@@ -256,9 +250,7 @@ class TestYieldHandlerIntegration:
         assert result.rejection_reason == "Not safe to deploy"
 
     @pytest.mark.asyncio
-    async def test_timeout_flow(
-        self, yield_handler: Any, pending_yield_turn: Any
-    ) -> None:
+    async def test_timeout_flow(self, yield_handler: Any, pending_yield_turn: Any) -> None:
         """Timeout is handled correctly."""
         from weave import ApprovalStatus
 
@@ -317,9 +309,7 @@ class TestIdResolution:
 
         assert resolved == pending_yield_turn.id
 
-    def test_resolve_partial_id(
-        self, yield_handler: Any, pending_yield_turn: Any
-    ) -> None:
+    def test_resolve_partial_id(self, yield_handler: Any, pending_yield_turn: Any) -> None:
         """Partial ID resolves to full ID."""
         from protocols.cli.handlers.approve import _resolve_turn_id
         from weave.yield_handler import PendingApproval

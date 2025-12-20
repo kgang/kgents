@@ -50,8 +50,7 @@ class PhaseOutput:
         d: dict[str, Any] = {
             "phase": self.phase,
             "handles": [
-                {"name": h.name, "location": h.location, "phase": h.phase}
-                for h in self.handles
+                {"name": h.name, "location": h.location, "phase": h.phase} for h in self.handles
             ],
             "entropy_spent": self.entropy_spent,
         }
@@ -90,8 +89,7 @@ class CumulativeState:
     def to_dict(self) -> dict[str, Any]:
         return {
             "handles": [
-                {"name": h.name, "location": h.location, "phase": h.phase}
-                for h in self.handles
+                {"name": h.name, "location": h.location, "phase": h.phase} for h in self.handles
             ],
             "entropy_spent": self.entropy_spent,
             "phase_outputs": [o.to_dict() for o in self.phase_outputs],
@@ -105,9 +103,7 @@ class CumulativeState:
                 for h in data.get("handles", [])
             ],
             entropy_spent=data.get("entropy_spent", {}),
-            phase_outputs=[
-                PhaseOutput.from_dict(o) for o in data.get("phase_outputs", [])
-            ],
+            phase_outputs=[PhaseOutput.from_dict(o) for o in data.get("phase_outputs", [])],
         )
 
     def save(self, path: str | Path) -> None:

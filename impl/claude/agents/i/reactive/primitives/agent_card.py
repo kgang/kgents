@@ -110,9 +110,7 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
                 entropy=state.entropy,
                 seed=state.seed,
                 t=state.t,
-                animate="breathe"
-                if state.breathing and state.phase == "active"
-                else "none",
+                animate="breathe" if state.breathing and state.phase == "active" else "none",
             )
         )
 
@@ -157,9 +155,7 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
             )
         )
 
-    def with_activity(
-        self, activity: tuple[float, ...] | list[float]
-    ) -> AgentCardWidget:
+    def with_activity(self, activity: tuple[float, ...] | list[float]) -> AgentCardWidget:
         """Return new card with updated activity history. Immutable."""
         current = self.state.value
         normalized = tuple(max(0.0, min(1.0, v)) for v in activity)
@@ -364,7 +360,9 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
         if state.breathing and state.phase == "active":
             card_style += " animation: breathe 2s ease-in-out infinite;"
 
-        html = f'<div class="kgents-agent-card" data-agent-id="{state.agent_id}" style="{card_style}">'
+        html = (
+            f'<div class="kgents-agent-card" data-agent-id="{state.agent_id}" style="{card_style}">'
+        )
 
         # Header
         html += '<div class="kgents-card-header" style="margin-bottom: 4px;">'
@@ -408,9 +406,7 @@ class AgentCardWidget(CompositeWidget[AgentCardState]):
         }
 
         if state.entropy > 0.1:
-            result["distortion"] = entropy_to_distortion(
-                state.entropy, state.seed, state.t
-            )
+            result["distortion"] = entropy_to_distortion(state.entropy, state.seed, state.t)
 
         return result
 

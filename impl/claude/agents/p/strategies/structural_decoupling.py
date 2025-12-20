@@ -125,9 +125,7 @@ class StructuralDecouplingParser:
 
                 # Validate if validator provided
                 if field_def.validator and not field_def.validator(coerced_value):
-                    repairs.append(
-                        f"Field '{field_name}' failed validation, using default"
-                    )
+                    repairs.append(f"Field '{field_name}' failed validation, using default")
                     coerced_value = self._get_default_value(field_def.type)
                     field_confidence *= 0.5
 
@@ -193,9 +191,7 @@ class StructuralDecouplingParser:
                 match = re.search(r"-?\d+\.?\d*", raw_value)
                 if match:
                     num_str = match.group()
-                    extracted_num: float | int = (
-                        float(num_str) if "." in num_str else int(num_str)
-                    )
+                    extracted_num: float | int = float(num_str) if "." in num_str else int(num_str)
                     return extracted_num, 0.7
                 else:
                     # Default to 0
@@ -230,9 +226,7 @@ class StructuralDecouplingParser:
                 return items, 0.7
             elif "\n" in raw_value:
                 items = [
-                    item.strip().strip("\"'")
-                    for item in raw_value.split("\n")
-                    if item.strip()
+                    item.strip().strip("\"'") for item in raw_value.split("\n") if item.strip()
                 ]
                 return items, 0.7
             else:
@@ -268,17 +262,13 @@ class StructuralDecouplingParser:
         }
         return defaults.get(field_type, None)
 
-    def parse_stream(
-        self, tokens: Iterator[str]
-    ) -> Iterator[ParseResult[dict[str, Any]]]:
+    def parse_stream(self, tokens: Iterator[str]) -> Iterator[ParseResult[dict[str, Any]]]:
         """
         Stream parsing not applicable for structural decoupling.
 
         Structural decoupling generates data, doesn't parse streams.
         """
-        raise NotImplementedError(
-            "Structural decoupling doesn't support streaming input"
-        )
+        raise NotImplementedError("Structural decoupling doesn't support streaming input")
 
     def configure(self, **config: Any) -> "StructuralDecouplingParser":
         """Return new parser with updated configuration."""
@@ -353,10 +343,7 @@ def simple_schema(
         ...     active="boolean",
         ... )
     """
-    return {
-        name: StructuredField(name=name, type=type_)
-        for name, type_ in field_types.items()
-    }
+    return {name: StructuredField(name=name, type=type_) for name, type_ in field_types.items()}
 
 
 def field_with_prompt(

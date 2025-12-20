@@ -284,7 +284,7 @@ class TestEpisodeManagement:
         self, mock_host_adapter, mock_episode_adapter, mock_dgent, mock_session
     ):
         """Should mark episode as completed."""
-        from datetime import datetime
+        from datetime import UTC, datetime
 
         from services.park import ParkPersistence
 
@@ -298,7 +298,7 @@ class TestEpisodeManagement:
             interaction_count: int = 5
             hosts_met: list = field(default_factory=list)
             locations_visited: list = field(default_factory=list)
-            started_at = datetime.utcnow()
+            started_at = datetime.now(UTC)
             ended_at = None
             duration_seconds: int | None = None
             summary: str | None = None

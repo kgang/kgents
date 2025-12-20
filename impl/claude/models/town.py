@@ -46,9 +46,7 @@ class Citizen(TimestampMixin, Base):
     __tablename__ = "town_citizens"
 
     id: Mapped[str] = mapped_column(String(64), primary_key=True)
-    name: Mapped[str] = mapped_column(
-        String(128), nullable=False, index=True, unique=True
-    )
+    name: Mapped[str] = mapped_column(String(128), nullable=False, index=True, unique=True)
     archetype: Mapped[str] = mapped_column(
         String(64), nullable=False
     )  # "dialectic", "empiric", "artistic", etc.
@@ -139,9 +137,7 @@ class ConversationTurn(TimestampMixin, CausalMixin, Base):
         nullable=False,
     )
     turn_number: Mapped[int] = mapped_column(Integer, nullable=False)
-    role: Mapped[str] = mapped_column(
-        String(16), nullable=False
-    )  # "user" | "citizen" | "system"
+    role: Mapped[str] = mapped_column(String(16), nullable=False)  # "user" | "citizen" | "system"
     content: Mapped[str] = mapped_column(Text, nullable=False)
 
     # Sentiment/emotion analysis (optional)
@@ -149,13 +145,9 @@ class ConversationTurn(TimestampMixin, CausalMixin, Base):
     emotion: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     # Relationship
-    conversation: Mapped["Conversation"] = relationship(
-        "Conversation", back_populates="turns"
-    )
+    conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="turns")
 
-    __table_args__ = (
-        Index("idx_town_turns_conversation", "conversation_id", "turn_number"),
-    )
+    __table_args__ = (Index("idx_town_turns_conversation", "conversation_id", "turn_number"),)
 
 
 class CitizenRelationship(TimestampMixin, Base):
@@ -188,6 +180,4 @@ class CitizenRelationship(TimestampMixin, Base):
     interaction_count: Mapped[int] = mapped_column(Integer, default=0)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    __table_args__ = (
-        Index("idx_relationships_citizens", "citizen_a_id", "citizen_b_id"),
-    )
+    __table_args__ = (Index("idx_relationships_citizens", "citizen_a_id", "citizen_b_id"),)

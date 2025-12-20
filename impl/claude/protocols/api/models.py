@@ -73,9 +73,7 @@ class GovernanceResponse(BaseModel):
     reasoning: str = Field(
         ...,
         description="LLM-generated reasoning for the decision",
-        examples=[
-            "This operation aligns with minimalism principles - removing unused data."
-        ],
+        examples=["This operation aligns with minimalism principles - removing unused data."],
     )
     alternatives: list[str] = Field(
         default_factory=list,
@@ -139,9 +137,7 @@ class DialogueResponse(BaseModel):
     response: str = Field(
         ...,
         description="K-gent's response",
-        examples=[
-            "You're avoiding the hard decision by focusing on implementation details."
-        ],
+        examples=["You're avoiding the hard decision by focusing on implementation details."],
     )
     mode: str = Field(
         ...,
@@ -647,9 +643,7 @@ class GardenerIntentRequest(BaseModel):
     """Intent for a gardener session."""
 
     description: str = Field(..., description="What the session aims to accomplish")
-    priority: str = Field(
-        default="normal", description="Priority level: low, normal, high"
-    )
+    priority: str = Field(default="normal", description="Priority level: low, normal, high")
 
 
 class GardenerSessionResponse(BaseModel):
@@ -658,12 +652,8 @@ class GardenerSessionResponse(BaseModel):
     session_id: str = Field(..., description="Unique session identifier")
     name: str = Field(..., description="Human-readable session name")
     phase: GardenerPhase = Field(..., description="Current session phase")
-    plan_path: Optional[str] = Field(
-        default=None, description="Path to associated plan file"
-    )
-    intent: Optional[GardenerIntentRequest] = Field(
-        default=None, description="Session intent"
-    )
+    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
+    intent: Optional[GardenerIntentRequest] = Field(default=None, description="Session intent")
     artifacts_count: int = Field(default=0, description="Number of artifacts created")
     learnings_count: int = Field(default=0, description="Number of learnings recorded")
     sense_count: int = Field(default=0, description="Times entered SENSE phase")
@@ -677,9 +667,7 @@ class GardenerCreateRequest(BaseModel):
     name: Optional[str] = Field(
         default=None, description="Session name (auto-generated if not provided)"
     )
-    plan_path: Optional[str] = Field(
-        default=None, description="Path to associated plan file"
-    )
+    plan_path: Optional[str] = Field(default=None, description="Path to associated plan file")
     intent: Optional[GardenerIntentRequest] = Field(
         default=None, description="Initial session intent"
     )
@@ -874,16 +862,12 @@ class TransitionSignalsResponse(BaseModel):
         ..., ge=0.0, le=1.0, description="Progress change since season start"
     )
     artifacts_created: int = Field(..., ge=0, description="Session artifacts count")
-    time_in_season_hours: float = Field(
-        ..., ge=0.0, description="Hours in current season"
-    )
+    time_in_season_hours: float = Field(..., ge=0.0, description="Hours in current season")
     entropy_spent_ratio: float = Field(
         ..., ge=0.0, le=1.0, description="Entropy spent / budget ratio"
     )
     reflect_count: int = Field(default=0, ge=0, description="Number of REFLECT cycles")
-    session_active: bool = Field(
-        default=False, description="Whether there's an active session"
-    )
+    session_active: bool = Field(default=False, description="Whether there's an active session")
 
 
 class TransitionSuggestionResponse(BaseModel):
@@ -900,12 +884,8 @@ class TransitionSuggestionResponse(BaseModel):
         ..., ge=0.0, le=1.0, description="Confidence score (0.7+ triggers suggestion)"
     )
     reason: str = Field(..., description="Human-readable reason for suggestion")
-    signals: TransitionSignalsResponse = Field(
-        ..., description="Signals that triggered suggestion"
-    )
-    triggered_at: str = Field(
-        ..., description="ISO timestamp when suggestion was generated"
-    )
+    signals: TransitionSignalsResponse = Field(..., description="Signals that triggered suggestion")
+    triggered_at: str = Field(..., description="ISO timestamp when suggestion was generated")
 
 
 class TendResponseWithSuggestion(BaseModel):
@@ -940,9 +920,7 @@ class TransitionAcceptRequest(BaseModel):
 class TransitionDismissRequest(BaseModel):
     """Request to dismiss a suggested season transition."""
 
-    from_season: GardenSeason = Field(
-        ..., description="The season being transitioned from"
-    )
+    from_season: GardenSeason = Field(..., description="The season being transitioned from")
     to_season: GardenSeason = Field(..., description="The dismissed target season")
 
 

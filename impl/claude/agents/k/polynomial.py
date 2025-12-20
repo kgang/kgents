@@ -148,9 +148,7 @@ def eigenvector_directions(state: EigenvectorContext) -> FrozenSet[Any]:
 # =============================================================================
 
 
-def eigenvector_transition(
-    state: EigenvectorContext, input: Any
-) -> tuple[EigenvectorContext, Any]:
+def eigenvector_transition(state: EigenvectorContext, input: Any) -> tuple[EigenvectorContext, Any]:
     """
     Eigenvector state transition function.
 
@@ -212,11 +210,7 @@ def eigenvector_transition(
                 return next_state, (query, judgments)
 
     # Handle synthesis input
-    if (
-        isinstance(input, tuple)
-        and state == EigenvectorContext.SYNTHESIZING
-        and len(input) == 2
-    ):
+    if isinstance(input, tuple) and state == EigenvectorContext.SYNTHESIZING and len(input) == 2:
         query, judgments = input
         synthesis = _synthesize(judgments)
         response = SoulResponse(

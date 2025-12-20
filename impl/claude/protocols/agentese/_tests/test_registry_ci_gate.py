@@ -220,10 +220,18 @@ class TestManifestAspect:
         """Manifest aspect works for all resolvable nodes."""
         paths = populated_registry.list_paths()
 
+        # Skip paths that require slow codebase scanning (tested separately with @slow marker)
+        slow_paths = {"world.codebase"}
+
         manifest_failures = []
         skipped = []
+        skipped_slow = []
 
         for path in paths:
+            if path in slow_paths:
+                skipped_slow.append(path)
+                continue
+
             node = await populated_registry.resolve(path, container=None)
             if node is None:
                 skipped.append(path)
@@ -235,14 +243,15 @@ class TestManifestAspect:
                 if result is None:
                     manifest_failures.append(f"{path}: manifest returned None")
             except Exception as e:
-                manifest_failures.append(f"{path}: {e}")
+                manifest_failures.append(f"{path}: {str(e)}")
 
         assert not manifest_failures, "Manifest aspect failures:\n" + "\n".join(manifest_failures)
 
         # Report how many were actually tested
-        tested = len(paths) - len(skipped)
+        tested = len(paths) - len(skipped) - len(skipped_slow)
         print(f"\nManifest tested: {tested}/{len(paths)} paths")
         print(f"Skipped (need container): {len(skipped)}")
+        print(f"Skipped (slow, tested separately): {len(skipped_slow)}")
 
 
 class TestNoOrphanContextFiles:

@@ -76,9 +76,7 @@ class JitCLI(CLICapable):
         from agents.j import ArchitectConstraints, compile_agent
 
         # Parse constraints (reserved for future user-defined constraints)
-        _constraint_list = (
-            [c.strip() for c in constraints.split(",")] if constraints else []
-        )
+        _constraint_list = [c.strip() for c in constraints.split(",")] if constraints else []
 
         arch_constraints = ArchitectConstraints(
             max_cyclomatic_complexity=10,

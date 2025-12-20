@@ -216,9 +216,7 @@ def validate_tongue(tongue: Tongue) -> tuple[bool, list[str]]:
 
     # Check constraints have proofs
     if tongue.constraints and not tongue.constraint_proofs:
-        errors.append(
-            f"Constraints specified but no proofs provided: {tongue.constraints}"
-        )
+        errors.append(f"Constraints specified but no proofs provided: {tongue.constraints}")
 
     # Check constraint proofs are structural
     for proof in tongue.constraint_proofs:
@@ -228,10 +226,7 @@ def validate_tongue(tongue: Tongue) -> tuple[bool, list[str]]:
             )
 
     # Check parser/interpreter config compatibility
-    if (
-        tongue.format == GrammarFormat.PYDANTIC
-        and tongue.parser_config.strategy != "pydantic"
-    ):
+    if tongue.format == GrammarFormat.PYDANTIC and tongue.parser_config.strategy != "pydantic":
         errors.append(
             f"PYDANTIC format requires 'pydantic' parser strategy, got '{tongue.parser_config.strategy}'"
         )
@@ -323,9 +318,7 @@ def evolve_tongue(
 # ============================================================================
 
 
-def create_schema_tongue(
-    name: str, domain: str, grammar: str, version: str = "1.0.0"
-) -> Tongue:
+def create_schema_tongue(name: str, domain: str, grammar: str, version: str = "1.0.0") -> Tongue:
     """
     Create a Schema-level tongue (Level 1: Pydantic).
 
@@ -417,9 +410,7 @@ def create_command_tongue(
     return builder.build()
 
 
-def create_recursive_tongue(
-    name: str, domain: str, grammar: str, version: str = "1.0.0"
-) -> Tongue:
+def create_recursive_tongue(name: str, domain: str, grammar: str, version: str = "1.0.0") -> Tongue:
     """
     Create a Recursive-level tongue (Level 3: Lark S-expressions).
 

@@ -433,9 +433,7 @@ class TestFunctorLaws:
         via_sequential = g(f(state))
         via_composed = (lambda s: g(f(s)))(state)
 
-        assert (
-            via_sequential.projection == via_composed.projection == ProjectionMethod.PCA
-        )
+        assert via_sequential.projection == via_composed.projection == ProjectionMethod.PCA
         assert via_sequential.show_evolving_only is True
         assert via_composed.show_evolving_only is True
 
@@ -1161,9 +1159,7 @@ class TestEigenvectorScatterWidgetImpl:
         # Composed
         via_composed = widget.map(lambda s: g(f(s)))
 
-        assert (
-            via_sequential.state.value.projection == via_composed.state.value.projection
-        )
+        assert via_sequential.state.value.projection == via_composed.state.value.projection
         assert (
             via_sequential.state.value.selected_citizen_id
             == via_composed.state.value.selected_citizen_id
@@ -1863,14 +1859,8 @@ class TestDegradedModeTests:
         # All fields preserved
         assert mapped.state.value.points == widget.state.value.points
         assert mapped.state.value.projection == widget.state.value.projection
-        assert (
-            mapped.state.value.selected_citizen_id
-            == widget.state.value.selected_citizen_id
-        )
-        assert (
-            mapped.state.value.show_evolving_only
-            == widget.state.value.show_evolving_only
-        )
+        assert mapped.state.value.selected_citizen_id == widget.state.value.selected_citizen_id
+        assert mapped.state.value.show_evolving_only == widget.state.value.show_evolving_only
 
     @pytest.mark.asyncio
     async def test_sse_handles_empty_data(self) -> None:

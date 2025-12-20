@@ -63,9 +63,7 @@ def estimate_branching_factor(tree: ast.AST) -> int:
 
         elif isinstance(node, ast.FunctionDef):
             # Count return statements as potential branches
-            return_count = sum(
-                1 for n in ast.walk(node) if isinstance(n, ast.Return)
-            )
+            return_count = sum(1 for n in ast.walk(node) if isinstance(n, ast.Return))
             if return_count > 1:
                 max_branches = max(max_branches, return_count)
 

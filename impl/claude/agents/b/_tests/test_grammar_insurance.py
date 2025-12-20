@@ -579,9 +579,7 @@ class TestPremiumCalculator:
 
         # Record high failure rate for one grammar
         for _ in range(20):
-            monitor.record_parse(
-                ParseEvent.failure_event("volatile_grammar", "t", 1.0, "Error")
-            )
+            monitor.record_parse(ParseEvent.failure_event("volatile_grammar", "t", 1.0, "Error"))
 
         # Record low failure rate for another
         for _ in range(20):
@@ -1006,9 +1004,7 @@ class TestPortfolioAnalyzer:
         # Use grammar specs that clearly classify into different Chomsky levels
         insurance.create_policy("regex", "[a-z]+", "a", HedgeStrategy.FALLBACK, 1000)
         insurance.create_policy("bnf", "A ::= B | C", "a", HedgeStrategy.FALLBACK, 2000)
-        insurance.create_policy(
-            "turing", "while loop recursive", "a", HedgeStrategy.FALLBACK, 3000
-        )
+        insurance.create_policy("turing", "while loop recursive", "a", HedgeStrategy.FALLBACK, 3000)
 
         analyzer = PortfolioAnalyzer(insurance)
         specs = {
@@ -1193,15 +1189,11 @@ class TestIntegration:
 
         # Record high volatility for a grammar
         for _ in range(30):
-            monitor.record_parse(
-                ParseEvent.failure_event("volatile_parser", "test", 10.0, "Error")
-            )
+            monitor.record_parse(ParseEvent.failure_event("volatile_parser", "test", 10.0, "Error"))
 
         # Record low volatility for another
         for _ in range(30):
-            monitor.record_parse(
-                ParseEvent.success_event("stable_parser", "test", 10.0)
-            )
+            monitor.record_parse(ParseEvent.success_event("stable_parser", "test", 10.0))
 
         # Quote both
         volatile_quote = insurance.quote_policy(
@@ -1237,9 +1229,7 @@ class TestIntegration:
         ]
 
         for gid, spec, coverage in grammars:
-            insurance.create_policy(
-                gid, spec, "portfolio_holder", HedgeStrategy.FALLBACK, coverage
-            )
+            insurance.create_policy(gid, spec, "portfolio_holder", HedgeStrategy.FALLBACK, coverage)
 
         analyzer = PortfolioAnalyzer(insurance)
         specs = {gid: spec for gid, spec, _ in grammars}

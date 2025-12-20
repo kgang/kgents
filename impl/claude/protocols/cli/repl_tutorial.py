@@ -164,12 +164,8 @@ class TutorialState:
     lessons: list[TutorialLesson]
     current_lesson: int = 0
     completed: list[str] = field(default_factory=list)
-    started_at: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
-    last_session: str = field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    started_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_session: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     @property
     def is_complete(self) -> bool:
@@ -227,9 +223,7 @@ def generate_lessons(
     lessons: list[TutorialLesson] = []
 
     # Phase 1: Introduce the first context (self - most relatable)
-    lessons.append(
-        TutorialLesson.from_context("self", CONTEXT_DESCRIPTIONS.get("self", "self"))
-    )
+    lessons.append(TutorialLesson.from_context("self", CONTEXT_DESCRIPTIONS.get("self", "self")))
 
     # Phase 2: Teach introspection early
     lessons.append(TutorialLesson.introspection())
@@ -242,9 +236,7 @@ def generate_lessons(
     context_order = ["world", "concept", "void", "time"]
     for ctx in context_order:
         if ctx in contexts:
-            lessons.append(
-                TutorialLesson.from_context(ctx, CONTEXT_DESCRIPTIONS.get(ctx, ctx))
-            )
+            lessons.append(TutorialLesson.from_context(ctx, CONTEXT_DESCRIPTIONS.get(ctx, ctx)))
 
     # Phase 5: Teach composition (advanced)
     lessons.append(TutorialLesson.composition())
@@ -656,9 +648,7 @@ def cmd_tutorial(args: list[str], ctx: Any = None) -> int:
 
     if subcommand == "reset":
         clear_progress()
-        print(
-            f"{GREEN}✓{RESET} Tutorial progress cleared. Start fresh with: kg -i --tutorial"
-        )
+        print(f"{GREEN}✓{RESET} Tutorial progress cleared. Start fresh with: kg -i --tutorial")
         return 0
 
     if subcommand == "status":

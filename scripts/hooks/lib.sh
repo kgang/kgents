@@ -77,38 +77,59 @@ info() {
     echo -e "${CYAN}$1${NC}"
 }
 
-# Run ruff format on files (auto-fix)
+# Run ruff format on files (auto-fix) - BATCHED for performance
 run_ruff_format() {
     local files="$1"
-    local failed=0
 
+    # Filter to existing files
+    local existing_files=""
     for file in $files; do
         if [ -f "$file" ]; then
-            if ! uv run ruff format "$file" 2>&1 | grep -v "files left unchanged"; then
-                :  # Silence "unchanged" messages
-            fi
-            # Re-stage formatted file
-            git add "$file" 2>/dev/null || true
+            existing_files="$existing_files $file"
         fi
     done
 
-    return $failed
+    if [ -z "$existing_files" ]; then
+        return 0
+    fi
+
+    # Run ruff format on all files at once (single process spawn)
+    uv run ruff format $existing_files 2>&1 | grep -v "files left unchanged" || true
+
+    # Re-stage all formatted files
+    for file in $existing_files; do
+        git add "$file" 2>/dev/null || true
+    done
+
+    return 0
 }
 
-# Run ruff lint on files (with auto-fix)
+# Run ruff lint on files (with auto-fix) - BATCHED for performance
 run_ruff_lint() {
     local files="$1"
     local strict="${2:-false}"
-    local failed=0
 
+    # Filter to existing files
+    local existing_files=""
     for file in $files; do
         if [ -f "$file" ]; then
-            if ! uv run ruff check "$file" --fix 2>&1; then
-                failed=1
-            else
-                git add "$file" 2>/dev/null || true
-            fi
+            existing_files="$existing_files $file"
         fi
+    done
+
+    if [ -z "$existing_files" ]; then
+        return 0
+    fi
+
+    # Run ruff check on all files at once (single process spawn)
+    local failed=0
+    if ! uv run ruff check $existing_files --fix 2>&1; then
+        failed=1
+    fi
+
+    # Re-stage all files
+    for file in $existing_files; do
+        git add "$file" 2>/dev/null || true
     done
 
     if [ "$strict" = "true" ] && [ $failed -eq 1 ]; then

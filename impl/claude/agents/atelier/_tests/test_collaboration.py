@@ -122,9 +122,7 @@ class MockArtisan(Artisan):
             provenance=Provenance(
                 interpretation=self.current_commission.request,
                 considerations=["mock consideration"],
-                choices=[
-                    Choice(decision="mock choice", reason="mock", alternatives=[])
-                ],
+                choices=[Choice(decision="mock choice", reason="mock", alternatives=[])],
                 inspirations=[],
             ),
         )
@@ -164,9 +162,7 @@ class TestCollaboration:
         assert "Bob" in artisan_names
 
         # Should have piece complete
-        complete_events = [
-            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
-        ]
+        complete_events = [e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE]
         assert len(complete_events) >= 1
 
     @pytest.mark.asyncio
@@ -190,9 +186,7 @@ class TestCollaboration:
             MockArtisan("C", "content C"),
         ]
 
-        collab = Collaboration(
-            cast(list[Artisan], artisans), CollaborationMode.ENSEMBLE
-        )
+        collab = Collaboration(cast(list[Artisan], artisans), CollaborationMode.ENSEMBLE)
         commission = Commission(request="test ensemble")
 
         events = []
@@ -200,9 +194,7 @@ class TestCollaboration:
             events.append(event)
 
         # Final piece should be from "Ensemble"
-        complete_events = [
-            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
-        ]
+        complete_events = [e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE]
         final = complete_events[-1]
         assert final.artisan == "Ensemble"
 
@@ -228,9 +220,7 @@ class TestCollaboration:
             events.append(event)
 
         # Should have refinement in provenance
-        complete_events = [
-            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
-        ]
+        complete_events = [e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE]
         final = complete_events[-1]
         choices = final.data["piece"]["provenance"]["choices"]
         assert any("Refined" in c.get("decision", "") for c in choices)
@@ -252,9 +242,7 @@ class TestCollaboration:
             events.append(event)
 
         # Should have piece complete events from all artisans
-        complete_events = [
-            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
-        ]
+        complete_events = [e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE]
         assert len(complete_events) == 3
 
     @pytest.mark.asyncio
@@ -363,9 +351,7 @@ class TestExquisiteCorpse:
             MockArtisan("Third", "ending"),
         ]
 
-        collab = Collaboration(
-            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
-        )
+        collab = Collaboration(cast(list[Artisan], artisans), CollaborationMode.EXQUISITE)
         commission = Commission(request="create something")
 
         events = []
@@ -373,9 +359,7 @@ class TestExquisiteCorpse:
             events.append(event)
 
         # Should have final piece from "Exquisite Corpse"
-        complete_events = [
-            e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE
-        ]
+        complete_events = [e for e in events if e.event_type == AtelierEventType.PIECE_COMPLETE]
         final = complete_events[-1]
         assert final.artisan == "Exquisite Corpse"
 
@@ -390,9 +374,7 @@ class TestExquisiteCorpse:
         """Exquisite corpse respects visibility_ratio in context."""
         artisans = [MockArtisan("A"), MockArtisan("B")]
 
-        collab = Collaboration(
-            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
-        )
+        collab = Collaboration(cast(list[Artisan], artisans), CollaborationMode.EXQUISITE)
         commission = Commission(request="test", context={"visibility_ratio": 0.5})
 
         events = []
@@ -406,9 +388,7 @@ class TestExquisiteCorpse:
     async def test_exquisite_contemplating_message(self) -> None:
         """Exquisite corpse emits informative contemplating message."""
         artisans = [MockArtisan("A"), MockArtisan("B")]
-        collab = Collaboration(
-            cast(list[Artisan], artisans), CollaborationMode.EXQUISITE
-        )
+        collab = Collaboration(cast(list[Artisan], artisans), CollaborationMode.EXQUISITE)
         commission = Commission(request="test")
 
         events = []
@@ -416,8 +396,6 @@ class TestExquisiteCorpse:
             events.append(event)
 
         # Should have contemplating event with visibility info
-        contemplating_events = [
-            e for e in events if e.event_type == AtelierEventType.CONTEMPLATING
-        ]
+        contemplating_events = [e for e in events if e.event_type == AtelierEventType.CONTEMPLATING]
         assert len(contemplating_events) >= 1
         assert "visibility" in (contemplating_events[0].message or "").lower()

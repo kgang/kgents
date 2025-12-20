@@ -158,9 +158,7 @@ class FluxOperator(Protocol[T, U]):
     laziness and metadata passthrough.
     """
 
-    def __call__(
-        self, source: AsyncIterator[FluxEvent[T]]
-    ) -> AsyncIterator[FluxEvent[U]]:
+    def __call__(self, source: AsyncIterator[FluxEvent[T]]) -> AsyncIterator[FluxEvent[U]]:
         """Apply the operator to a source stream."""
         ...
 
@@ -383,9 +381,7 @@ class FluxStream(Generic[T]):
 
             # Create tasks for each source
             pending: dict[asyncio.Task[tuple[int, FluxEvent[T] | None]], int] = {}
-            source_iters: list[AsyncIterator[FluxEvent[T]]] = [
-                s.__aiter__() for s in sources
-            ]
+            source_iters: list[AsyncIterator[FluxEvent[T]]] = [s.__aiter__() for s in sources]
             exhausted: set[int] = set()
 
             def create_task(idx: int) -> asyncio.Task[tuple[int, FluxEvent[T] | None]]:
@@ -406,9 +402,7 @@ class FluxStream(Generic[T]):
 
             # Process until all sources exhausted
             while pending:
-                done, _ = await asyncio.wait(
-                    pending.keys(), return_when=asyncio.FIRST_COMPLETED
-                )
+                done, _ = await asyncio.wait(pending.keys(), return_when=asyncio.FIRST_COMPLETED)
 
                 for task in done:
                     _ = pending.pop(task)  # Remove from tracking
@@ -656,9 +650,7 @@ class LLMStreamSource:
         self._buffer_size = buffer_size or DEFAULT_STREAM_BUFFER_SIZE
 
         # Internal state
-        self._queue: asyncio.Queue[FluxEvent[str] | None] = asyncio.Queue(
-            maxsize=self._buffer_size
-        )
+        self._queue: asyncio.Queue[FluxEvent[str] | None] = asyncio.Queue(maxsize=self._buffer_size)
         self._producer_task: Optional[asyncio.Task[None]] = None
         self._started = False
         self._completed = False
@@ -701,9 +693,7 @@ class LLMStreamSource:
         """Get next event from the stream."""
         if not self._started:
             self._started = True
-            self._producer_task = asyncio.create_task(
-                self._produce(), name="llm-stream-producer"
-            )
+            self._producer_task = asyncio.create_task(self._produce(), name="llm-stream-producer")
 
         if self._completed:
             raise StopAsyncIteration
@@ -788,9 +778,7 @@ class KgentFlux:
     _id: str = field(init=False)
 
     # Queues
-    _perturbation_queue: asyncio.PriorityQueue[tuple[int, str, SoulEvent]] = field(
-        init=False
-    )
+    _perturbation_queue: asyncio.PriorityQueue[tuple[int, str, SoulEvent]] = field(init=False)
     _output_queue: asyncio.Queue[SoulEvent] = field(init=False)
 
     # Task handles

@@ -70,9 +70,7 @@ class RateLimitState:
 
         with self._lock:
             # Clean old entries
-            self._windows[archetype] = [
-                t for t in self._windows[archetype] if t > window_start
-            ]
+            self._windows[archetype] = [t for t in self._windows[archetype] if t > window_start]
 
             current_count = len(self._windows[archetype])
             if current_count >= limit:
@@ -87,9 +85,7 @@ class RateLimitState:
         window_start = now - 60.0
 
         with self._lock:
-            self._windows[archetype] = [
-                t for t in self._windows[archetype] if t > window_start
-            ]
+            self._windows[archetype] = [t for t in self._windows[archetype] if t > window_start]
             return len(self._windows[archetype])
 
 
@@ -100,9 +96,7 @@ class RateLimitError(Exception):
         self.archetype = archetype
         self.limit = limit
         self.retry_after = retry_after
-        super().__init__(
-            f"Rate limit exceeded for '{archetype}': {limit} requests/minute"
-        )
+        super().__init__(f"Rate limit exceeded for '{archetype}': {limit} requests/minute")
 
 
 class MorpheusGateway:
@@ -171,9 +165,7 @@ class MorpheusGateway:
 
     def _get_rate_limit(self, archetype: str) -> int:
         """Get rate limit for an archetype."""
-        return self._config.rate_limit_by_archetype.get(
-            archetype, self._config.rate_limit_rpm
-        )
+        return self._config.rate_limit_by_archetype.get(archetype, self._config.rate_limit_rpm)
 
     def _check_rate_limit(self, archetype: str) -> None:
         """Check rate limit, raising RateLimitError if exceeded."""
@@ -182,9 +174,7 @@ class MorpheusGateway:
         if not allowed:
             raise RateLimitError(archetype, limit)
 
-    async def complete(
-        self, request: "ChatRequest", archetype: str = "guest"
-    ) -> "ChatResponse":
+    async def complete(self, request: "ChatRequest", archetype: str = "guest") -> "ChatResponse":
         """
         Process a chat completion request.
 
@@ -211,8 +201,7 @@ class MorpheusGateway:
             self._error_count += 1
             available = [p.prefix for p in self._providers.values() if p.enabled]
             raise ValueError(
-                f"No provider found for model: {request.model}. "
-                f"Available prefixes: {available}"
+                f"No provider found for model: {request.model}. Available prefixes: {available}"
             )
 
         logger.debug(f"Routing {request.model} to provider {provider.name}")
@@ -333,9 +322,7 @@ class MorpheusGateway:
             return {
                 "model": model,
                 "routed": False,
-                "available_prefixes": [
-                    p.prefix for p in self._providers.values() if p.enabled
-                ],
+                "available_prefixes": [p.prefix for p in self._providers.values() if p.enabled],
             }
         return {
             "model": model,
@@ -358,8 +345,7 @@ class MorpheusGateway:
     def health_check(self) -> dict[str, Any]:
         """Return comprehensive health status."""
         provider_health = {
-            name: config.adapter.health_check()
-            for name, config in self._providers.items()
+            name: config.adapter.health_check() for name, config in self._providers.items()
         }
 
         healthy_providers = sum(

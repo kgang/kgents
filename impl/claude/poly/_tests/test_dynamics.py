@@ -237,18 +237,14 @@ class TestCustomDynamics:
             def scope(self, s: StackState) -> Type[StackInput]:
                 return StackInput
 
-            def dynamics(
-                self, s: StackState, input: StackInput
-            ) -> tuple[StackState, StackOutput]:
+            def dynamics(self, s: StackState, input: StackInput) -> tuple[StackState, StackOutput]:
                 if isinstance(input, Push):
                     new_items = s.items + (input.value,)
                     return StackState(new_items), StackOutput(None, len(new_items))
                 elif isinstance(input, Pop):
                     if s.items:
                         new_items = s.items[:-1]
-                        return StackState(new_items), StackOutput(
-                            s.items[-1], len(new_items)
-                        )
+                        return StackState(new_items), StackOutput(s.items[-1], len(new_items))
                     return s, StackOutput(None, 0)
                 return s, StackOutput(None, len(s.items))
 

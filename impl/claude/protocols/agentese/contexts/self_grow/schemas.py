@@ -357,9 +357,7 @@ class ValidationResult:
     abuse_check: AbuseCheckResult = field(default_factory=AbuseCheckResult)
 
     # Duplication check
-    duplication_check: DuplicationCheckResult = field(
-        default_factory=DuplicationCheckResult
-    )
+    duplication_check: DuplicationCheckResult = field(default_factory=DuplicationCheckResult)
 
     # Summary
     blockers: list[str] = field(default_factory=list)
@@ -445,10 +443,7 @@ class GerminatingHolon:
             return True
 
         # Too many failures after sufficient usage
-        if (
-            self.usage_count >= 20
-            and self.success_rate < config.min_success_rate_for_survival
-        ):
+        if self.usage_count >= 20 and self.success_rate < config.min_success_rate_for_survival:
             return True
 
         return False
@@ -592,9 +587,7 @@ class GrowthBudget:
 
         self.remaining -= cost
         self.spent_this_run += cost
-        self.spent_by_operation[operation] = (
-            self.spent_by_operation.get(operation, 0.0) + cost
-        )
+        self.spent_by_operation[operation] = self.spent_by_operation.get(operation, 0.0) + cost
         return cost
 
     def regenerate(self) -> float:

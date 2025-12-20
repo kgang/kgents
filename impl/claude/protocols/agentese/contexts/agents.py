@@ -241,9 +241,7 @@ class AgentNode(BaseLogosNode):
                         "location": f"impl/claude/agents/{self.agent_letter}/",
                         "theme": info.get("theme", ""),
                     },
-                    build_status="active"
-                    if info.get("status") == "active"
-                    else "unknown",
+                    build_status="active" if info.get("status") == "active" else "unknown",
                     test_coverage=0.0,
                     issues=(),
                 )
@@ -259,9 +257,7 @@ class AgentNode(BaseLogosNode):
             case _:
                 return BasicRendering(
                     summary=f"{info.get('name', self.agent_letter)}: {info.get('theme', '')}",
-                    content=info.get(
-                        "description", "An agent in the kgents ecosystem."
-                    ),
+                    content=info.get("description", "An agent in the kgents ecosystem."),
                     metadata={
                         "letter": self.agent_letter,
                         "status": info.get("status", "unknown"),
@@ -427,9 +423,7 @@ class AgentListNode(BaseLogosNode):
         query = kwargs.get("query", "").lower()
         results = []
         for letter, info in self._registry.items():
-            searchable = (
-                f"{info['name']} {info['theme']} {info.get('description', '')}".lower()
-            )
+            searchable = f"{info['name']} {info['theme']} {info.get('description', '')}".lower()
             if query in searchable:
                 results.append(
                     {
@@ -498,8 +492,7 @@ class AgentContextResolver:
 
         # Shouldn't reach here via normal resolution
         raise PathNotFoundError(
-            "Invalid world.agent path. "
-            "Try: world.agent.manifest or world.agent.{letter}.manifest"
+            "Invalid world.agent path. Try: world.agent.manifest or world.agent.{letter}.manifest"
         )
 
     def _resolve_agent(self, letter: str) -> AgentNode:

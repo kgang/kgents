@@ -83,9 +83,7 @@ class RunnerConfig:
             batch_size=int(os.environ.get("SYNAPSE_BATCH_SIZE", "100")),
             poll_interval_ms=int(os.environ.get("SYNAPSE_POLL_INTERVAL_MS", "1000")),
             max_retries=int(os.environ.get("SYNAPSE_MAX_RETRIES", "5")),
-            use_circuit_breaker=os.environ.get(
-                "SYNAPSE_USE_CIRCUIT_BREAKER", "true"
-            ).lower()
+            use_circuit_breaker=os.environ.get("SYNAPSE_USE_CIRCUIT_BREAKER", "true").lower()
             == "true",
             use_dlq=os.environ.get("SYNAPSE_USE_DLQ", "true").lower() == "true",
         )
@@ -205,9 +203,7 @@ class QdrantClient:
             logger.warning("qdrant-client not installed, using mock mode")
             self._client = None
 
-    async def upsert(
-        self, id: str, vector: list[float], payload: dict[str, Any]
-    ) -> None:
+    async def upsert(self, id: str, vector: list[float], payload: dict[str, Any]) -> None:
         """Upsert vector to collection."""
         if self._client is None:
             return
@@ -420,11 +416,7 @@ class SynapseRunner:
 
     def _print_metrics(self) -> None:
         """Print Prometheus-compatible metrics to stdout."""
-        avg_lag = (
-            self._total_lag_ms / self._events_processed
-            if self._events_processed > 0
-            else 0
-        )
+        avg_lag = self._total_lag_ms / self._events_processed if self._events_processed > 0 else 0
 
         print()
         print("# HELP synapse_events_processed_total Total CDC events processed")

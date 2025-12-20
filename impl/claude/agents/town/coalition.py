@@ -190,9 +190,7 @@ def find_k_cliques(
         return cliques
 
     # For k>=3, use recursive extension
-    def extend_clique(
-        current: set[str], candidates: set[str]
-    ) -> Iterator[frozenset[str]]:
+    def extend_clique(current: set[str], candidates: set[str]) -> Iterator[frozenset[str]]:
         if len(current) == k:
             yield frozenset(current)
             return
@@ -405,10 +403,7 @@ class ReputationGraph:
         # Normalize local trust per truster
         normalized: dict[str, dict[str, float]] = {cid: {} for cid in citizen_ids}
         for truster in citizen_ids:
-            total = sum(
-                self._local_trust.get((truster, trustee), 0.0)
-                for trustee in citizen_ids
-            )
+            total = sum(self._local_trust.get((truster, trustee), 0.0) for trustee in citizen_ids)
             if total > 0:
                 for trustee in citizen_ids:
                     trust = self._local_trust.get((truster, trustee), 0.0)
@@ -430,9 +425,7 @@ class ReputationGraph:
                 new_reputation[i] = (1 - alpha) * trust_sum + alpha * pretrust[i]
 
             # Check convergence
-            max_diff = max(
-                abs(new_reputation[cid] - reputation[cid]) for cid in citizen_ids
-            )
+            max_diff = max(abs(new_reputation[cid] - reputation[cid]) for cid in citizen_ids)
             reputation = new_reputation
 
             if max_diff < epsilon:
@@ -461,8 +454,7 @@ class ReputationGraph:
         """Serialize to dictionary."""
         return {
             "local_trust": [
-                {"truster": k[0], "trustee": k[1], "value": v}
-                for k, v in self._local_trust.items()
+                {"truster": k[0], "trustee": k[1], "value": v} for k, v in self._local_trust.items()
             ],
             "reputation": dict(self._reputation),
             "pretrusted": list(self._pretrusted),
@@ -583,14 +575,11 @@ class CoalitionManager:
         """Get summary statistics."""
         return {
             "total_coalitions": len(self._coalitions),
-            "alive_coalitions": sum(
-                1 for c in self._coalitions.values() if c.is_alive()
-            ),
+            "alive_coalitions": sum(1 for c in self._coalitions.values() if c.is_alive()),
             "total_members": sum(c.size for c in self._coalitions.values()),
             "bridge_citizens": len(self.get_bridge_citizens()),
             "avg_strength": (
-                sum(c.strength for c in self._coalitions.values())
-                / len(self._coalitions)
+                sum(c.strength for c in self._coalitions.values()) / len(self._coalitions)
                 if self._coalitions
                 else 0.0
             ),

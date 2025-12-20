@@ -281,21 +281,15 @@ class ThemeColors:
             # Surface
             background=ColorToken("background", Colors.WHITE, Colors.GRAY_900),
             surface=ColorToken("surface", Colors.GRAY_50, Colors.GRAY_800),
-            surface_variant=ColorToken(
-                "surface_variant", Colors.GRAY_100, Colors.GRAY_700
-            ),
+            surface_variant=ColorToken("surface_variant", Colors.GRAY_100, Colors.GRAY_700),
             # Text
             text_primary=ColorToken("text_primary", Colors.GRAY_900, Colors.GRAY_50),
-            text_secondary=ColorToken(
-                "text_secondary", Colors.GRAY_700, Colors.GRAY_300
-            ),
+            text_secondary=ColorToken("text_secondary", Colors.GRAY_700, Colors.GRAY_300),
             text_muted=ColorToken("text_muted", Colors.GRAY_500, Colors.GRAY_500),
             text_inverse=ColorToken("text_inverse", Colors.WHITE, Colors.GRAY_900),
             # Border
             border=ColorToken("border", Colors.GRAY_200, Colors.GRAY_700),
-            border_focus=ColorToken(
-                "border_focus", Colors.PRIMARY_500, Colors.PRIMARY_400
-            ),
+            border_focus=ColorToken("border_focus", Colors.PRIMARY_500, Colors.PRIMARY_400),
             # Interactive
             hover=ColorToken("hover", Colors.GRAY_100, Colors.GRAY_700),
             active=ColorToken("active", Colors.GRAY_200, Colors.GRAY_600),

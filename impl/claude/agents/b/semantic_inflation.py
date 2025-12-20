@@ -128,9 +128,7 @@ class ComplexityVector:
         }
         return max(values, key=lambda d: values[d])
 
-    def weighted_sum(
-        self, weights: dict[ComplexityDimension, float] | None = None
-    ) -> float:
+    def weighted_sum(self, weights: dict[ComplexityDimension, float] | None = None) -> float:
         """
         Calculate weighted sum of complexity dimensions.
 
@@ -356,24 +354,16 @@ class InflationReport:
             pressure.audience.level == AudienceLevel.LAYPERSON
             and pressure.complexity.magnitude > 0.7
         ):
-            warnings.append(
-                "Complex operation for lay audience: consider staged explanation."
-            )
+            warnings.append("Complex operation for lay audience: consider staged explanation.")
 
         # Generate recommendations
         if category in (InflationCategory.HIGH, InflationCategory.HYPERINFLATION):
             if dominant == ComplexityDimension.CONCEPTUAL:
-                recommendations.append(
-                    "Define key abstractions upfront to reduce conceptual load."
-                )
+                recommendations.append("Define key abstractions upfront to reduce conceptual load.")
             elif dominant == ComplexityDimension.TEMPORAL:
-                recommendations.append(
-                    "Use step-by-step breakdown with clear state transitions."
-                )
+                recommendations.append("Use step-by-step breakdown with clear state transitions.")
             elif dominant == ComplexityDimension.STRUCTURAL:
-                recommendations.append(
-                    "Consider diagram or structural overview before details."
-                )
+                recommendations.append("Consider diagram or structural overview before details.")
             elif dominant == ComplexityDimension.NOVELTY:
                 recommendations.append("Anchor novel concepts to familiar analogies.")
 
@@ -431,9 +421,7 @@ class AllocationDecision:
     inflation_report: InflationReport
     deficit: int = 0  # How many tokens short if not approved
     deflation_required: bool = False  # If compression is needed
-    suggested_audience_level: AudienceLevel | None = (
-        None  # If audience adjustment recommended
-    )
+    suggested_audience_level: AudienceLevel | None = None  # If audience adjustment recommended
 
 
 class InflationBudget:
@@ -553,20 +541,14 @@ class InflationBudget:
 
         # Risk floor: high-risk operations need more explanation
         if complexity.risk > 0.7:
-            min_explanation = max(
-                min_explanation, int(base_tokens * self.risk_floor_ratio)
-            )
+            min_explanation = max(min_explanation, int(base_tokens * self.risk_floor_ratio))
 
         # Clamp to constraints
-        explanation_tokens = max(
-            min_explanation, min(max_explanation, ideal_explanation)
-        )
+        explanation_tokens = max(min_explanation, min(max_explanation, ideal_explanation))
 
         # Add buffer for hyperinflation cases
         buffer = (
-            int(base_tokens * 0.1)
-            if report.category == InflationCategory.HYPERINFLATION
-            else 0
+            int(base_tokens * 0.1) if report.category == InflationCategory.HYPERINFLATION else 0
         )
 
         total_needed = base_tokens + explanation_tokens + buffer
@@ -610,9 +592,7 @@ class InflationBudget:
 
         # Cannot fit even with minimal explanation
         # Suggest different audience level
-        suggested_level = self._find_affordable_audience(
-            complexity, base_tokens, available_budget
-        )
+        suggested_level = self._find_affordable_audience(complexity, base_tokens, available_budget)
 
         allocation = TokenAllocation(
             content_tokens=base_tokens,
@@ -875,27 +855,17 @@ class DeflationNegotiator:
 
         for proposal in proposals:
             # Check constraints
-            if (
-                constraints.get("no_pidgin")
-                and proposal.strategy == DeflationStrategy.COMPRESS
-            ):
+            if constraints.get("no_pidgin") and proposal.strategy == DeflationStrategy.COMPRESS:
                 continue
-            if (
-                constraints.get("no_defer")
-                and proposal.strategy == DeflationStrategy.DEFER
-            ):
+            if constraints.get("no_defer") and proposal.strategy == DeflationStrategy.DEFER:
                 continue
-            if (
-                constraints.get("no_reference")
-                and proposal.strategy == DeflationStrategy.REFERENCE
-            ):
+            if constraints.get("no_reference") and proposal.strategy == DeflationStrategy.REFERENCE:
                 continue
 
             # Check if strategy is viable for this risk level
-            if (
-                inflation_report.pressure.complexity.risk > 0.8
-                and proposal.strategy
-                in (DeflationStrategy.SUMMARIZE, DeflationStrategy.AUDIENCE_SHIFT)
+            if inflation_report.pressure.complexity.risk > 0.8 and proposal.strategy in (
+                DeflationStrategy.SUMMARIZE,
+                DeflationStrategy.AUDIENCE_SHIFT,
             ):
                 continue  # Can't skimp on explanation for high-risk ops
 

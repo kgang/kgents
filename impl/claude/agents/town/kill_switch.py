@@ -170,9 +170,7 @@ class MetricCalculator:
         self._snapshots.append(snapshot)
         logger.info(f"Recorded metric {metric_type.value} = {value}")
 
-    def calculate_cac_ltv_ratio(
-        self, total_cac: float, total_ltv: float
-    ) -> MetricSnapshot:
+    def calculate_cac_ltv_ratio(self, total_cac: float, total_ltv: float) -> MetricSnapshot:
         """
         Calculate CAC/LTV ratio.
 
@@ -202,9 +200,7 @@ class MetricCalculator:
         self._snapshots.append(snapshot)
         return snapshot
 
-    def calculate_m1_churn(
-        self, churned_users: int, total_new_users: int
-    ) -> MetricSnapshot:
+    def calculate_m1_churn(self, churned_users: int, total_new_users: int) -> MetricSnapshot:
         """
         Calculate month 1 churn rate.
 
@@ -232,9 +228,7 @@ class MetricCalculator:
         self._snapshots.append(snapshot)
         return snapshot
 
-    def calculate_conversion_rate(
-        self, paid_users: int, total_users: int
-    ) -> MetricSnapshot:
+    def calculate_conversion_rate(self, paid_users: int, total_users: int) -> MetricSnapshot:
         """
         Calculate free-to-paid conversion rate.
 
@@ -410,9 +404,7 @@ class KillSwitchMonitor:
             f"Action required: {condition.action}"
         )
 
-    def get_active_alerts(
-        self, severity: AlertSeverity | None = None
-    ) -> list[KillSwitchAlert]:
+    def get_active_alerts(self, severity: AlertSeverity | None = None) -> list[KillSwitchAlert]:
         """Get unacknowledged alerts, optionally filtered by severity."""
         alerts = [a for a in self.alerts if not a.acknowledged]
         if severity:
@@ -438,9 +430,7 @@ class KillSwitchMonitor:
         return {
             "safe_to_operate": self.is_safe_to_operate(),
             "active_alerts": len(self.get_active_alerts()),
-            "kill_switch_alerts": len(
-                self.get_active_alerts(AlertSeverity.KILL_SWITCH)
-            ),
+            "kill_switch_alerts": len(self.get_active_alerts(AlertSeverity.KILL_SWITCH)),
             "critical_alerts": len(self.get_active_alerts(AlertSeverity.CRITICAL)),
             "warning_alerts": len(self.get_active_alerts(AlertSeverity.WARNING)),
             "total_alerts": len(self.alerts),

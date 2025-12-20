@@ -72,9 +72,7 @@ class LogosCell:
             return {"handle": self.handle, "observer": str(observer), "status": "mock"}
 
         # Create cache key from observer identity
-        observer_id = (
-            getattr(observer, "id", str(id(observer))) if observer else "default"
-        )
+        observer_id = getattr(observer, "id", str(id(observer))) if observer else "default"
         cache_key = f"{self.handle}:{observer_id}"
 
         # Check cache (same observer = same result in reactive model)
@@ -295,7 +293,9 @@ async def invoke_with_marimo_output(
     """
     mo_module: Any = None
     try:
-        import marimo as mo_module  # noqa: F811
+        import marimo as _mo
+
+        mo_module = _mo
     except ImportError:
         pass
 

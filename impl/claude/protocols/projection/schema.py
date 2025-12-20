@@ -123,9 +123,7 @@ class CacheMeta:
 # Error Information
 # =============================================================================
 
-ErrorCategory = Literal[
-    "network", "notFound", "permission", "timeout", "validation", "unknown"
-]
+ErrorCategory = Literal["network", "notFound", "permission", "timeout", "validation", "unknown"]
 
 
 @dataclass(frozen=True)
@@ -403,9 +401,7 @@ class WidgetEnvelope(Generic[T]):
             result["meta"]["cache"] = {
                 "isCached": self.meta.cache.is_cached,
                 "cachedAt": (
-                    self.meta.cache.cached_at.isoformat()
-                    if self.meta.cache.cached_at
-                    else None
+                    self.meta.cache.cached_at.isoformat() if self.meta.cache.cached_at else None
                 ),
                 "ttlSeconds": self.meta.cache.ttl_seconds,
                 "cacheKey": self.meta.cache.cache_key,
@@ -435,9 +431,7 @@ class WidgetEnvelope(Generic[T]):
                 "totalExpected": self.meta.stream.total_expected,
                 "received": self.meta.stream.received,
                 "startedAt": (
-                    self.meta.stream.started_at.isoformat()
-                    if self.meta.stream.started_at
-                    else None
+                    self.meta.stream.started_at.isoformat() if self.meta.stream.started_at else None
                 ),
                 "lastChunkAt": (
                     self.meta.stream.last_chunk_at.isoformat()

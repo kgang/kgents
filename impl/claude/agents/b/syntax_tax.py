@@ -588,9 +588,7 @@ class SyntaxTaxBudget:
 
         if not can_afford_base:
             # Check if downgrade would help
-            downgrade_level = self._find_affordable_downgrade(
-                agent_id, estimated_tokens
-            )
+            downgrade_level = self._find_affordable_downgrade(agent_id, estimated_tokens)
             if downgrade_level:
                 downgrade_gas, _, _ = self.schedule.calculate_cost(
                     downgrade_level, estimated_tokens
@@ -656,9 +654,7 @@ class SyntaxTaxBudget:
                 return level
         return None
 
-    async def hold_escrow(
-        self, agent_id: str, amount: int, level: ChomskyLevel
-    ) -> EscrowLease:
+    async def hold_escrow(self, agent_id: str, amount: int, level: ChomskyLevel) -> EscrowLease:
         """
         Hold escrow deposit for high-risk grammar execution.
 
@@ -846,9 +842,7 @@ class DowngradeNegotiator:
             DowngradeProposal if downgrade possible, None otherwise
         """
         if target_level is None:
-            target_level = self.budget._find_affordable_downgrade(
-                agent_id, estimated_tokens
-            )
+            target_level = self.budget._find_affordable_downgrade(agent_id, estimated_tokens)
 
         if target_level is None:
             return None
@@ -860,16 +854,10 @@ class DowngradeNegotiator:
             return None  # Not a downgrade (target is same or more complex)
 
         # Calculate costs
-        original_gas, _, _ = self.budget.schedule.calculate_cost(
-            current_level, estimated_tokens
-        )
-        proposed_gas, _, _ = self.budget.schedule.calculate_cost(
-            target_level, estimated_tokens
-        )
+        original_gas, _, _ = self.budget.schedule.calculate_cost(current_level, estimated_tokens)
+        proposed_gas, _, _ = self.budget.schedule.calculate_cost(target_level, estimated_tokens)
 
-        savings = (original_gas.tokens - proposed_gas.tokens) / max(
-            original_gas.tokens, 1
-        )
+        savings = (original_gas.tokens - proposed_gas.tokens) / max(original_gas.tokens, 1)
 
         # Collect constraints and capability loss for all levels between current and target
         # We're downgrading from current (more complex, lower value) to target (simpler, higher value)

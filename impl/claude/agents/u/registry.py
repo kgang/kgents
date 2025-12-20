@@ -315,9 +315,7 @@ class ToolRegistry:
         from collections import deque
 
         # Queue: (current_type, path_so_far)
-        queue: deque[tuple[Type[Any], list[Tool[Any, Any]]]] = deque(
-            [(source_type, [])]
-        )
+        queue: deque[tuple[Type[Any], list[Tool[Any, Any]]]] = deque([(source_type, [])])
         visited: set[Type[Any]] = {source_type}
 
         while queue:
@@ -345,9 +343,7 @@ class ToolRegistry:
         # No path found
         return None
 
-    async def _find_tools_with_input(
-        self, input_type: Type[Any]
-    ) -> list[Tool[Any, Any]]:
+    async def _find_tools_with_input(self, input_type: Type[Any]) -> list[Tool[Any, Any]]:
         """Find all tools that accept given input type."""
         matching_tools: list[Tool[Any, Any]] = []
 
@@ -398,9 +394,7 @@ class ToolRegistry:
         if entry.avg_latency_ms is None:
             entry.avg_latency_ms = latency_ms
         else:
-            entry.avg_latency_ms = (
-                alpha * latency_ms + (1 - alpha) * entry.avg_latency_ms
-            )
+            entry.avg_latency_ms = alpha * latency_ms + (1 - alpha) * entry.avg_latency_ms
 
         entry.updated_at = datetime.now()
 

@@ -94,9 +94,7 @@ class BreathCycle:
         for i in range(width):
             cell_pos = i / width
             # Distance from current breath position
-            dist = min(
-                abs(cell_pos - pos), abs(cell_pos - pos + 1), abs(cell_pos - pos - 1)
-            )
+            dist = min(abs(cell_pos - pos), abs(cell_pos - pos + 1), abs(cell_pos - pos - 1))
             # Intensity based on distance and overall breath intensity
             cell_intensity = max(0, 1 - dist * 5) * intensity
 

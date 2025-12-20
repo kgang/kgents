@@ -278,9 +278,7 @@ class YieldQueuePanel(Static):
             self.yields = [
                 YieldTurn(
                     id=t.id,
-                    content=t.yield_reason or t.content[:50]
-                    if hasattr(t, "content")
-                    else "",
+                    content=t.yield_reason or t.content[:50] if hasattr(t, "content") else "",
                     turn_type=f"YIELD:{getattr(t, 'original_type', 'ACTION')}",
                     timestamp=t.timestamp,
                     is_approved=False,
@@ -369,9 +367,7 @@ class YieldQueuePanel(Static):
                 if len(yield_turn.content) > 35
                 else yield_turn.content
             )
-            turn_type = (
-                f"[dim]{yield_turn.turn_type}[/] " if yield_turn.turn_type else ""
-            )
+            turn_type = f"[dim]{yield_turn.turn_type}[/] " if yield_turn.turn_type else ""
             lines.append(f'{selected}{status} [{i}] {turn_type}"{content}"')
 
         lines.append("")
@@ -546,9 +542,7 @@ class CockpitScreen(KgentsScreen):
         # Demo data for semaphores and thoughts
         self._semaphores = self._create_demo_semaphores() if demo_mode else []
         self._thoughts = self._create_demo_thoughts() if demo_mode else []
-        self._activity_history = (
-            self._create_demo_activity_history() if demo_mode else []
-        )
+        self._activity_history = self._create_demo_activity_history() if demo_mode else []
 
         # Polynomial state and yield queue (new panels)
         self._polynomial_state = create_demo_polynomial_state() if demo_mode else None
@@ -621,9 +615,7 @@ class CockpitScreen(KgentsScreen):
 
         # Header info
         with Container(id="header-info"):
-            phase_str = (
-                self.agent_snapshot.phase.value if self.agent_snapshot else "UNKNOWN"
-            )
+            phase_str = self.agent_snapshot.phase.value if self.agent_snapshot else "UNKNOWN"
             yield Static(
                 f"[bold #f5d08a]COCKPIT: {self.agent_name or self.agent_id or 'Unknown'}[/]  │  "
                 f"[#b3a89a]Phase: {phase_str}[/]"
@@ -644,8 +636,7 @@ class CockpitScreen(KgentsScreen):
                                 agent_name=self.agent_snapshot.name,
                                 activity=self.agent_snapshot.activity,
                                 phase=self.agent_snapshot.phase,
-                                entropy=self.temperature
-                                * 0.5,  # Derive entropy from temp
+                                entropy=self.temperature * 0.5,  # Derive entropy from temp
                             )
                             yield self._density_field
 
@@ -711,9 +702,7 @@ class CockpitScreen(KgentsScreen):
                     if self._yield_queue:
                         with Container(classes="panel yield-panel"):
                             yield Static("[Yield Queue]", classes="panel-title")
-                            self._yield_panel = YieldQueuePanel(
-                                yields=self._yield_queue
-                            )
+                            self._yield_panel = YieldQueuePanel(yields=self._yield_queue)
                             yield self._yield_panel
 
                     # Mini connection graph
@@ -721,15 +710,11 @@ class CockpitScreen(KgentsScreen):
                         yield Static("[Connections]", classes="panel-title")
                         if self.agent_snapshot and self.agent_snapshot.connections:
                             # Build nodes from agent + connections
-                            agent_name = (
-                                self.agent_snapshot.name or self.agent_snapshot.id
-                            )
+                            agent_name = self.agent_snapshot.name or self.agent_snapshot.id
                             nodes = [agent_name]
                             edges: list[tuple[str, str]] = []
                             # connections is dict[str, float] - take first 5 by key
-                            conn_items = list(self.agent_snapshot.connections.items())[
-                                :5
-                            ]
+                            conn_items = list(self.agent_snapshot.connections.items())[:5]
                             for conn_name, _ in conn_items:
                                 nodes.append(conn_name)
                                 edges.append((agent_name, conn_name))

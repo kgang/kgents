@@ -137,9 +137,7 @@ class Checkpoint:
         Factory method that handles ID generation and diff computation.
         """
         timestamp = datetime.now()
-        checkpoint_id = cls.generate_id(
-            before_content, after_content, reason, timestamp
-        )
+        checkpoint_id = cls.generate_id(before_content, after_content, reason, timestamp)
         diff = cls.compute_diff(before_content, after_content)
 
         return cls(
@@ -164,9 +162,7 @@ class Checkpoint:
             sorted(
                 (before_set - after_set)
                 | (after_set - before_set)
-                | {
-                    s for s in before_set & after_set
-                }  # Simplified: report all sections for now
+                | {s for s in before_set & after_set}  # Simplified: report all sections for now
             )
         )
 
@@ -207,9 +203,7 @@ class Checkpoint:
             diff=data["diff"],
             reason=data["reason"],
             reasoning_traces=tuple(data.get("reasoning_traces", [])),
-            parent_id=CheckpointId(data["parent_id"])
-            if data.get("parent_id")
-            else None,
+            parent_id=CheckpointId(data["parent_id"]) if data.get("parent_id") else None,
         )
 
 

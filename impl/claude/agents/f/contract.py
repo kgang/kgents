@@ -46,12 +46,8 @@ class Contract:
     agent_name: str  # Derived from intent purpose
     input_type: str  # Type signature for input (e.g., "str", "dict", "Path")
     output_type: str  # Type signature for output
-    invariants: list[Invariant] = field(
-        default_factory=list
-    )  # Testable behavioral guarantees
-    composition_rules: list[CompositionRule] = field(
-        default_factory=list
-    )  # How agent composes
+    invariants: list[Invariant] = field(default_factory=list)  # Testable behavioral guarantees
+    composition_rules: list[CompositionRule] = field(default_factory=list)  # How agent composes
     semantic_intent: str = ""  # Human-readable "why" (from intent.purpose)
 
     # Metadata
@@ -137,9 +133,7 @@ def _infer_input_type(intent: Intent) -> str:
             return "str"  # Typically query string
 
     # Check behavior patterns
-    if any(
-        keyword in lower_purpose for keyword in ["summarize", "analyze", "process text"]
-    ):
+    if any(keyword in lower_purpose for keyword in ["summarize", "analyze", "process text"]):
         return "str"
 
     if any(keyword in lower_purpose for keyword in ["parse", "read"]):
@@ -268,15 +262,11 @@ def _extract_invariants(intent: Intent) -> list[Invariant]:
 
     for keyword, desc, prop, category in invariant_patterns:
         if keyword in lower_text or keyword in intent.purpose.lower():
-            invariants.append(
-                Invariant(description=desc, property=prop, category=category)
-            )
+            invariants.append(Invariant(description=desc, property=prop, category=category))
 
     # Extract constraints that mention "must", "should", "require"
     for constraint in intent.constraints:
-        if any(
-            word in constraint.lower() for word in ["must", "should", "require", "no "]
-        ):
+        if any(word in constraint.lower() for word in ["must", "should", "require", "no "]):
             invariants.append(
                 Invariant(
                     description=constraint,
@@ -286,10 +276,7 @@ def _extract_invariants(intent: Intent) -> list[Invariant]:
             )
 
     # Categorical invariants (composition-level)
-    if any(
-        keyword in lower_text
-        for keyword in ["compose", "pipeline", "chain", "sequence"]
-    ):
+    if any(keyword in lower_text for keyword in ["compose", "pipeline", "chain", "sequence"]):
         invariants.append(
             Invariant(
                 description="Associativity",
@@ -358,10 +345,7 @@ def _determine_composition_rules(intent: Intent) -> list[CompositionRule]:
             )
 
     # Conditional composition
-    if any(
-        keyword in lower_text
-        for keyword in ["if", "when", "conditional", "either", "or"]
-    ):
+    if any(keyword in lower_text for keyword in ["if", "when", "conditional", "either", "or"]):
         rules.append(
             CompositionRule(
                 mode="conditional",

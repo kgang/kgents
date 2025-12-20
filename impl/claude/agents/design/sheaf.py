@@ -190,9 +190,7 @@ class DesignSheaf:
                      Defaults to just the viewport context.
         """
         self.contexts = contexts or {VIEWPORT_CONTEXT}
-        self._context_map: dict[str, DesignContext] = {
-            ctx.name: ctx for ctx in self.contexts
-        }
+        self._context_map: dict[str, DesignContext] = {ctx.name: ctx for ctx in self.contexts}
 
     def add_context(self, context: DesignContext) -> None:
         """Add a context to the sheaf."""
@@ -291,9 +289,7 @@ class DesignSheaf:
             sync_strategy=self._infer_sync_strategy(phase1, phase2),
         )
 
-    def _infer_sync_strategy(
-        self, phase1: AnimationPhase, phase2: AnimationPhase
-    ) -> SyncStrategy:
+    def _infer_sync_strategy(self, phase1: AnimationPhase, phase2: AnimationPhase) -> SyncStrategy:
         """
         Infer appropriate sync strategy from animation phases.
 
@@ -307,9 +303,7 @@ class DesignSheaf:
         p1, p2 = phase1.phase, phase2.phase
 
         # Entering + exiting: stagger them
-        if (p1 == "entering" and p2 == "exiting") or (
-            p1 == "exiting" and p2 == "entering"
-        ):
+        if (p1 == "entering" and p2 == "exiting") or (p1 == "exiting" and p2 == "entering"):
             return SyncStrategy.STAGGER
 
         # Same phase: lock step
@@ -425,10 +419,7 @@ class DesignSheaf:
                     # For now, we just check that neither is in an impossible state
                     if state1.density != state2.density:
                         # Check if the difference is explained by overrides
-                        if (
-                            ctx1.density_override is None
-                            and ctx2.density_override is None
-                        ):
+                        if ctx1.density_override is None and ctx2.density_override is None:
                             # Different densities without override = incompatible
                             return False
 
@@ -498,9 +489,7 @@ class DesignSheaf:
         return DesignState(
             density=viewport_state.density,
             content_level=viewport_state.content_level,
-            motion=viewport_state.motion
-            if viewport_state.should_animate
-            else MotionType.IDENTITY,
+            motion=viewport_state.motion if viewport_state.should_animate else MotionType.IDENTITY,
             should_animate=viewport_state.should_animate,
         )
 

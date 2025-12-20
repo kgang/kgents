@@ -190,9 +190,7 @@ def _dispatch(
                     ctx,
                 )
                 return 1
-            return execute_manifest(
-                agent_name, namespace, json_mode, validate_mode, ctx
-            )
+            return execute_manifest(agent_name, namespace, json_mode, validate_mode, ctx)
 
         case "run":
             if not agent_name:

@@ -177,9 +177,7 @@ class TestMarket:
         # Update pass rate (exponential moving average)
         alpha = 0.1  # Learning rate
         new_outcome = 1.0 if passed else 0.0
-        asset.historical_pass_rate = (
-            alpha * new_outcome + (1 - alpha) * asset.historical_pass_rate
-        )
+        asset.historical_pass_rate = alpha * new_outcome + (1 - alpha) * asset.historical_pass_rate
 
         # Update last failure
         if not passed:
@@ -237,9 +235,7 @@ class TestMarket:
         total_fraction = sum(allocations.values())
         if total_fraction > 0:
             for test_id in allocations:
-                allocations[test_id] = (
-                    allocations[test_id] / total_fraction
-                ) * total_budget
+                allocations[test_id] = (allocations[test_id] / total_fraction) * total_budget
 
         self._allocations = allocations
         return allocations
@@ -396,9 +392,7 @@ class BudgetManager:
     """
 
     def __init__(self) -> None:
-        self._markets: dict[str, TestMarket] = {
-            tier: TestMarket(tier) for tier in BUDGET_TIERS
-        }
+        self._markets: dict[str, TestMarket] = {tier: TestMarket(tier) for tier in BUDGET_TIERS}
         self._current_tier = "dev"
 
     def set_tier(self, tier: str) -> None:
@@ -494,9 +488,7 @@ def format_market_report(report: MarketReport) -> str:
     ]
 
     # Show top 10 allocations
-    sorted_allocs = sorted(
-        report.allocations.items(), key=lambda x: x[1], reverse=True
-    )[:10]
+    sorted_allocs = sorted(report.allocations.items(), key=lambda x: x[1], reverse=True)[:10]
 
     for test_id, joules in sorted_allocs:
         pct = joules / report.total_budget * 100 if report.total_budget > 0 else 0

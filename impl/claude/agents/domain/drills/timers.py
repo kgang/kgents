@@ -223,9 +223,7 @@ class TimerState:
 
         if progress >= 1.0:
             self.status = TimerStatus.EXPIRED
-            self.stopped_at = (
-                self.started_at + self.config.duration if self.started_at else None
-            )
+            self.stopped_at = self.started_at + self.config.duration if self.started_at else None
         elif progress >= self.config.critical_threshold:
             self.status = TimerStatus.CRITICAL
         elif progress >= self.config.warning_threshold:

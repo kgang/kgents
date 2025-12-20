@@ -365,9 +365,7 @@ class Festival:
             "status": self.status.value,
             "starts_at": self.starts_at.isoformat(),
             "ends_at": self.ends_at.isoformat(),
-            "voting_ends_at": self.voting_ends_at.isoformat()
-            if self.voting_ends_at
-            else None,
+            "voting_ends_at": self.voting_ends_at.isoformat() if self.voting_ends_at else None,
             "entries": [e.to_dict() for e in self.entries],
             "constraints": self.constraints,
             "created_at": self.created_at.isoformat(),

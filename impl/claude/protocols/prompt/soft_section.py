@@ -111,9 +111,7 @@ class SoftSection:
 
         # Try each source in priority order
         for source in self.sources:
-            traces.append(
-                f"Trying source: {source.name} (priority={source.priority.name})"
-            )
+            traces.append(f"Trying source: {source.name} (priority={source.priority.name})")
             result = await source.fetch(context)
             results.append(result)
 
@@ -154,16 +152,12 @@ class SoftSection:
         if len(candidates) == 1:
             content = candidates[0].content
             effective_rigidity = candidates[0].rigidity
-            source_paths = (
-                (candidates[0].source_path,) if candidates[0].source_path else ()
-            )
+            source_paths = (candidates[0].source_path,) if candidates[0].source_path else ()
         else:
             content, effective_rigidity = await self._merge(candidates, context, traces)
             source_paths = tuple(r.source_path for r in candidates if r.source_path)
 
-        traces.append(
-            f"Final content: {len(content)} chars, rigidity={effective_rigidity:.2f}"
-        )
+        traces.append(f"Final content: {len(content)} chars, rigidity={effective_rigidity:.2f}")
 
         return CrystallizationResult(
             section=Section(
@@ -189,19 +183,13 @@ class SoftSection:
 
         Returns (content, effective_rigidity).
         """
-        traces.append(
-            f"Merging {len(candidates)} candidates via {self.merge_strategy.name}"
-        )
+        traces.append(f"Merging {len(candidates)} candidates via {self.merge_strategy.name}")
 
         if self.merge_strategy == MergeStrategy.HIGHEST_RIGIDITY:
             # Sort by rigidity (highest first) and take first
-            sorted_candidates = sorted(
-                candidates, key=lambda r: r.rigidity, reverse=True
-            )
+            sorted_candidates = sorted(candidates, key=lambda r: r.rigidity, reverse=True)
             winner = sorted_candidates[0]
-            traces.append(
-                f"Highest rigidity: {winner.source_name} ({winner.rigidity:.2f})"
-            )
+            traces.append(f"Highest rigidity: {winner.source_name} ({winner.rigidity:.2f})")
             return winner.content, winner.rigidity
 
         elif self.merge_strategy == MergeStrategy.CONCAT:
@@ -210,9 +198,7 @@ class SoftSection:
             content = "\n\n".join(parts)
             # Average rigidity
             avg_rigidity = sum(r.rigidity for r in candidates) / len(candidates)
-            traces.append(
-                f"Concatenated {len(parts)} parts, avg rigidity={avg_rigidity:.2f}"
-            )
+            traces.append(f"Concatenated {len(parts)} parts, avg rigidity={avg_rigidity:.2f}")
             return content, avg_rigidity
 
         elif self.merge_strategy == MergeStrategy.SEMANTIC_FUSION:

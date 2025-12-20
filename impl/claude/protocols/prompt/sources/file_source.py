@@ -47,9 +47,7 @@ class FileSource(SectionSource):
         max_file_size: Maximum file size in bytes (default 1MB)
     """
 
-    path_resolver: Callable[["CompilationContext"], Path | None] = field(
-        default=lambda ctx: None
-    )
+    path_resolver: Callable[["CompilationContext"], Path | None] = field(default=lambda ctx: None)
     section_heading: str | None = None
     section_level: int = 2
     include_heading: bool = False
@@ -92,9 +90,7 @@ class FileSource(SectionSource):
         # Check file size before reading (prevent OOM)
         file_size = path.stat().st_size
         if file_size > self.max_file_size:
-            traces.append(
-                f"File too large: {file_size:,} bytes > {self.max_file_size:,} bytes max"
-            )
+            traces.append(f"File too large: {file_size:,} bytes > {self.max_file_size:,} bytes max")
             return SourceResult(
                 content=None,
                 success=False,

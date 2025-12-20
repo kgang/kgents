@@ -388,9 +388,7 @@ def test_composition_compatibility_valid() -> None:
         agent_name="Agent1",
         input_type="str",
         output_type="int",
-        composition_rules=[
-            MockCompositionRule(mode="sequential", description="Sequential")
-        ],
+        composition_rules=[MockCompositionRule(mode="sequential", description="Sequential")],
     )
 
     contract2 = MockContract(
@@ -450,9 +448,7 @@ def test_composition_compatibility_no_sequential_rule() -> None:
         agent_name="Agent1",
         input_type="str",
         output_type="int",
-        composition_rules=[
-            MockCompositionRule(mode="parallel", description="Parallel only")
-        ],
+        composition_rules=[MockCompositionRule(mode="parallel", description="Parallel only")],
     )
 
     contract2 = MockContract(

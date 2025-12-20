@@ -202,9 +202,7 @@ class CompositionRequest(BaseModel):
         ...,
         min_length=1,
         description="AGENTESE paths to compose in order",
-        examples=[
-            ["world.document.manifest", "concept.summary.refine", "self.memory.engram"]
-        ],
+        examples=[["world.document.manifest", "concept.summary.refine", "self.memory.engram"]],
     )
     initial_input: Any = Field(
         default=None,

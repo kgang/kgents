@@ -273,9 +273,7 @@ class TestObserverHierarchy:
         assert len(concrete_observers) == 1
 
         # Get observers that can observe concrete level
-        observers_for_concrete = hierarchy.get_observers_for_level(
-            ObserverLevel.CONCRETE
-        )
+        observers_for_concrete = hierarchy.get_observers_for_level(ObserverLevel.CONCRETE)
         assert len(observers_for_concrete) == 1  # Only domain observer
 
 
@@ -375,9 +373,7 @@ class TestTelemetryObserver:
         await asyncio.sleep(0.06)  # Simulate delay
         await observer.post_invoke(ctx, "result", 50.0)
 
-        hist = observer.metrics.get_histogram(
-            "agent.latency_ms", labels={"agent": "MockAgent"}
-        )
+        hist = observer.metrics.get_histogram("agent.latency_ms", labels={"agent": "MockAgent"})
         assert hist is not None
         assert hist.count == 1
 
@@ -476,15 +472,11 @@ class TestDriftDetection:
         measurer = SimpleDriftMeasurer()
 
         # Very similar text (same key words) should have lower drift
-        drift = await measurer.measure(
-            "calculate sum numbers", "calculate sum numbers result"
-        )
+        drift = await measurer.measure("calculate sum numbers", "calculate sum numbers result")
         assert drift < 0.5
 
         # Different text should have high drift
-        drift = await measurer.measure(
-            "Calculate the sum of numbers", "The weather is nice today"
-        )
+        drift = await measurer.measure("Calculate the sum of numbers", "The weather is nice today")
         assert drift > 0.5
 
     @pytest.mark.asyncio
@@ -934,9 +926,7 @@ class TestIntegration:
         agent: MockAgent = MockAgent(id="test_agent", result="important result")
 
         # Observe with budget
-        result = await voi_observer.observe_with_budget(
-            agent, "query", "important result", 100.0
-        )
+        result = await voi_observer.observe_with_budget(agent, "query", "important result", 100.0)
 
         assert result.was_skipped is False
         assert result.voi >= 0
@@ -1859,9 +1849,7 @@ class TestSystemStatusDetermination:
 
         # Add some economic activity so net_roc > 0.5
         if panopticon.axiological:
-            panopticon.axiological.ledger.record_transaction(
-                "test", gas=100, impact=200
-            )
+            panopticon.axiological.ledger.record_transaction("test", gas=100, impact=200)
 
         status = panopticon.get_status()
         # Should be HOMEOSTATIC now with economic activity
@@ -1885,9 +1873,7 @@ class TestPanopticonPhase3Integration:
 
         # Add economic activity so status is HOMEOSTATIC
         if panopticon.axiological:
-            panopticon.axiological.ledger.record_transaction(
-                "test", gas=100, impact=200
-            )
+            panopticon.axiological.ledger.record_transaction("test", gas=100, impact=200)
 
         # Get status
         status = panopticon.get_status()

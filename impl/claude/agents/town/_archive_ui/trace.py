@@ -47,11 +47,7 @@ class Span:
     @property
     def total_tokens(self) -> int:
         """Total tokens for this span and children."""
-        return (
-            self.tokens_in
-            + self.tokens_out
-            + sum(c.total_tokens for c in self.children)
-        )
+        return self.tokens_in + self.tokens_out + sum(c.total_tokens for c in self.children)
 
     @property
     def total_duration_ms(self) -> float:

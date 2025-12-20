@@ -184,9 +184,7 @@ class PheromoneField:
             # Find dominant depositor
             depositor_counts: dict[str, float] = {}
             for t in traces:
-                depositor_counts[t.depositor] = (
-                    depositor_counts.get(t.depositor, 0) + t.intensity
-                )
+                depositor_counts[t.depositor] = depositor_counts.get(t.depositor, 0) + t.intensity
             dominant = max(depositor_counts.keys(), key=lambda k: depositor_counts[k])
 
             if total > self._evaporation_threshold:

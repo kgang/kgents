@@ -33,9 +33,7 @@ class DependencyGraph:
     _dependencies: dict[str, set[str]] = field(default_factory=dict)
 
     # Cache for transitive closure
-    _transitive_closure: dict[str, set[str]] | None = field(
-        default=None, repr=False, compare=False
-    )
+    _transitive_closure: dict[str, set[str]] | None = field(default=None, repr=False, compare=False)
 
     def add_node(self, event_id: str, depends_on: set[str] | None = None) -> None:
         """

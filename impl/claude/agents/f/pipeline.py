@@ -55,9 +55,7 @@ class FlowPipeline(Generic[A, C]):
                 async for event in stage.start(current):
                     yield event
 
-    async def _extract_values(
-        self, events: AsyncIterator[FlowEvent[Any]]
-    ) -> AsyncIterator[Any]:
+    async def _extract_values(self, events: AsyncIterator[FlowEvent[Any]]) -> AsyncIterator[Any]:
         """Extract values from events for the next stage."""
         async for event in events:
             if event.event_type == "output":
@@ -99,9 +97,7 @@ def _flow_agent_or(self: FlowAgent[A, B], other: FlowAgent[B, C]) -> FlowPipelin
     return FlowPipeline([self, other])
 
 
-def _flow_agent_ror(
-    self: FlowAgent[B, C], other: FlowAgent[A, B]
-) -> FlowPipeline[A, C]:
+def _flow_agent_ror(self: FlowAgent[B, C], other: FlowAgent[A, B]) -> FlowPipeline[A, C]:
     """Enable right | operator on FlowAgent."""
     return FlowPipeline([other, self])
 

@@ -151,9 +151,7 @@ class Registry:
             # Exact keyword matching
             if keywords:
                 matched_keywords = [
-                    kw
-                    for kw in keywords
-                    if kw.lower() in [k.lower() for k in entry.keywords]
+                    kw for kw in keywords if kw.lower() in [k.lower() for k in entry.keywords]
                 ]
                 if matched_keywords:
                     score += len(matched_keywords) / len(keywords) * 0.5
@@ -174,21 +172,13 @@ class Registry:
 
                 # Check tongue-specific fields for TONGUE entities
                 if entry.entity_type == EntityType.TONGUE:
-                    if (
-                        entry.tongue_domain
-                        and query_lower in entry.tongue_domain.lower()
-                    ):
+                    if entry.tongue_domain and query_lower in entry.tongue_domain.lower():
                         score += 0.3
                         match_type = "hybrid"
                         explanation += f" | Domain match: '{query}'"
 
             # If only entity_type filter was provided (no query/keywords), give default score
-            if (
-                score == 0.0
-                and entity_type is not None
-                and query is None
-                and not keywords
-            ):
+            if score == 0.0 and entity_type is not None and query is None and not keywords:
                 score = 1.0
                 match_type = "exact"
                 explanation = f"Entity type: {entity_type.value}"
@@ -223,9 +213,7 @@ class Registry:
             return True
         return False
 
-    async def update_usage(
-        self, id: str, success: bool = True, error: str | None = None
-    ) -> None:
+    async def update_usage(self, id: str, success: bool = True, error: str | None = None) -> None:
         """
         Update usage metrics for an entry.
 
@@ -346,11 +334,7 @@ class Registry:
             return []
 
         related_ids = source.relationships.get(relationship_type, [])
-        return [
-            e
-            for e in [self.catalog.entries.get(rid) for rid in related_ids]
-            if e is not None
-        ]
+        return [e for e in [self.catalog.entries.get(rid) for rid in related_ids] if e is not None]
 
     def to_dict(self) -> dict[str, Any]:
         """Export catalog as dictionary."""

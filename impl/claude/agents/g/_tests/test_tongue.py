@@ -267,10 +267,7 @@ def test_validate_tongue_format_strategy_mismatch() -> None:
 
     is_valid, errors = validate_tongue(tongue)
     assert not is_valid
-    assert any(
-        "PYDANTIC format requires 'pydantic' parser strategy" in error
-        for error in errors
-    )
+    assert any("PYDANTIC format requires 'pydantic' parser strategy" in error for error in errors)
 
 
 # ============================================================================
@@ -280,12 +277,7 @@ def test_validate_tongue_format_strategy_mismatch() -> None:
 
 def test_save_load_json() -> None:
     """Test saving and loading Tongue from JSON."""
-    tongue = (
-        TongueBuilder("TestTongue", "1.0.0")
-        .with_domain("Test")
-        .with_grammar("TEST")
-        .build()
-    )
+    tongue = TongueBuilder("TestTongue", "1.0.0").with_domain("Test").with_grammar("TEST").build()
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         filepath = f.name
@@ -407,10 +399,7 @@ def test_create_recursive_tongue() -> None:
 def test_evolve_tongue_version() -> None:
     """Test evolving a Tongue with new version."""
     tongue_v1 = (
-        TongueBuilder("TestTongue", "1.0.0")
-        .with_domain("Test")
-        .with_grammar("TEST")
-        .build()
+        TongueBuilder("TestTongue", "1.0.0").with_domain("Test").with_grammar("TEST").build()
     )
 
     tongue_v2 = evolve_tongue(tongue_v1, version="2.0.0")
@@ -462,10 +451,7 @@ def test_evolve_tongue_constraints() -> None:
 def test_evolve_tongue_immutability() -> None:
     """Test that evolving creates a new Tongue (immutable)."""
     tongue_v1 = (
-        TongueBuilder("TestTongue", "1.0.0")
-        .with_domain("Test")
-        .with_grammar("TEST")
-        .build()
+        TongueBuilder("TestTongue", "1.0.0").with_domain("Test").with_grammar("TEST").build()
     )
 
     tongue_v2 = evolve_tongue(tongue_v1, version="2.0.0")

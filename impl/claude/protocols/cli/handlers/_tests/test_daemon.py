@@ -149,9 +149,7 @@ class TestDaemonCommands:
         assert result == 0
         assert "Daemon Handler" in captured.out or "start" in captured.out.lower()
 
-    def test_cmd_daemon_unknown_subcommand(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_cmd_daemon_unknown_subcommand(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test unknown subcommand error."""
         result = cmd_daemon(["unknown"])
         captured = capsys.readouterr()
@@ -221,6 +219,7 @@ class TestDaemonCommands:
         assert "not running" in captured.out
 
 
+@pytest.mark.skipif(sys.platform != "darwin", reason="launchd tests require macOS")
 class TestLaunchdInstallation:
     """Test launchd service installation."""
 
@@ -272,9 +271,7 @@ class TestLaunchdInstallation:
         mock_launchctl.return_value = 0
 
         # Use temp directories
-        with patch(
-            "protocols.cli.handlers.daemon.LAUNCH_AGENTS_DIR", tmp_path / "LaunchAgents"
-        ):
+        with patch("protocols.cli.handlers.daemon.LAUNCH_AGENTS_DIR", tmp_path / "LaunchAgents"):
             with patch("protocols.cli.handlers.daemon.LOGS_DIR", tmp_path / "Logs"):
                 result = cmd_daemon(["install"])
                 captured = capsys.readouterr()

@@ -128,9 +128,7 @@ class WireStatusSnapshot:
         }
 
     @classmethod
-    def from_panopticon_status(
-        cls, status: UnifiedPanopticonStatus
-    ) -> "WireStatusSnapshot":
+    def from_panopticon_status(cls, status: UnifiedPanopticonStatus) -> "WireStatusSnapshot":
         """Create snapshot from full Panopticon status."""
         recent_alert = None
         if status.alerts:
@@ -393,9 +391,7 @@ class ObservablePanopticon(WireObservable):
         self._on_status_change.append(callback)
         return lambda: self._on_status_change.remove(callback)
 
-    def on_alert(
-        self, callback: Callable[[PanopticonAlert], None]
-    ) -> Callable[[], None]:
+    def on_alert(self, callback: Callable[[PanopticonAlert], None]) -> Callable[[], None]:
         """
         Register callback for alerts.
 
@@ -542,9 +538,7 @@ class WireObserver(BaseObserver):
 
         return obs_result
 
-    def record_entropy(
-        self, context: ObservationContext, error: Exception
-    ) -> EntropyEvent:
+    def record_entropy(self, context: ObservationContext, error: Exception) -> EntropyEvent:
         """Record entropy (error) event."""
         self._error_count += 1
 

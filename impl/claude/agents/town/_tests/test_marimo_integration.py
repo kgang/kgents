@@ -30,6 +30,9 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
+# Skip all tests in this module if anywidget is not installed
+pytest.importorskip("anywidget", reason="anywidget required for marimo widget tests")
+
 if TYPE_CHECKING:
     pass
 
@@ -131,9 +134,7 @@ class TestWidgetRendersScatterPoints:
         esm = EigenvectorScatterWidgetMarimo._esm
 
         # anywidget wraps Path in FileContents, but we can check the original
-        esm_path = (
-            Path(__file__).parent.parent.parent / "i/marimo/widgets/js/scatter.js"
-        )
+        esm_path = Path(__file__).parent.parent.parent / "i/marimo/widgets/js/scatter.js"
         assert esm_path.exists(), f"ESM file should exist at {esm_path}"
 
 

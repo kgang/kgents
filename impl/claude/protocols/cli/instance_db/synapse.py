@@ -166,16 +166,12 @@ class PredictiveModel:
 
         # Step 3: Update prediction (exponential smoothing)
         # new_pred = α × actual + (1 - α) × old_pred
-        self._predictions[signal_type] = float(
-            self._alpha * actual + (1 - self._alpha) * predicted
-        )
+        self._predictions[signal_type] = float(self._alpha * actual + (1 - self._alpha) * predicted)
 
         # Step 4: Update variance estimate for normalization
         # Using exponential smoothing on squared error
         old_var = self._variances.get(signal_type, 0.25)  # Prior variance
-        self._variances[signal_type] = (
-            self._alpha * (raw_surprise**2) + (1 - self._alpha) * old_var
-        )
+        self._variances[signal_type] = self._alpha * (raw_surprise**2) + (1 - self._alpha) * old_var
 
         # Step 5: Normalize surprise (optional, but helps with thresholding)
         # Use Z-score-ish normalization: surprise / (1 + σ)
@@ -304,9 +300,7 @@ class Synapse:
         self._flashbulb_handlers: list[ISynapseHandler | Callable[..., Any]] = []
 
         # Recent signals for interrupt checking (sliding window)
-        self._recent: deque[tuple[Signal, float]] = deque(
-            maxlen=self._config.history_size
-        )
+        self._recent: deque[tuple[Signal, float]] = deque(maxlen=self._config.history_size)
 
     @property
     def config(self) -> SynapseConfig:
@@ -387,9 +381,7 @@ class Synapse:
         else:
             return await self._dispatch_batch(signal, surprise)
 
-    async def _dispatch_flashbulb(
-        self, signal: Signal, surprise: float
-    ) -> DispatchResult:
+    async def _dispatch_flashbulb(self, signal: Signal, surprise: float) -> DispatchResult:
         """Dispatch flashbulb signal (highest priority)."""
         signal.priority = SignalPriority.FLASHBULB
         self._metrics.flashbulb_count += 1

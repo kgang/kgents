@@ -89,9 +89,7 @@ class PlotState:
             "plan_path": self.plan_path,
             "crown_jewel": self.crown_jewel,
             "prompts": self.prompts,
-            "season_override": self.season_override.name
-            if self.season_override
-            else None,
+            "season_override": self.season_override.name if self.season_override else None,
             "momentum": [g.to_dict() for g in self.momentum[-10:]],
             "rigidity": self.rigidity,
             "progress": self.progress,

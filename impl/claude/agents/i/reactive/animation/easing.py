@@ -184,17 +184,10 @@ def ease_elastic(t: float, amplitude: float = 1.0, period: float = 0.3) -> float
     if t == 1.0:
         return 1.0
 
-    s = (
-        period / 4.0
-        if amplitude < 1.0
-        else period / (2 * math.pi) * math.asin(1.0 / amplitude)
-    )
+    s = period / 4.0 if amplitude < 1.0 else period / (2 * math.pi) * math.asin(1.0 / amplitude)
 
     amplitude = max(amplitude, 1.0)
-    return float(
-        amplitude * (2.0 ** (-10 * t)) * math.sin((t - s) * (2 * math.pi) / period)
-        + 1.0
-    )
+    return float(amplitude * (2.0 ** (-10 * t)) * math.sin((t - s) * (2 * math.pi) / period) + 1.0)
 
 
 def ease_sine_in(t: float) -> float:

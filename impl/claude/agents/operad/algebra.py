@@ -105,9 +105,7 @@ class CLIAlgebra:
             agent_names = [a for a in args if not a.startswith("-")]
 
             if len(agent_names) != op.arity:
-                print(
-                    f"Error: {op.name} requires {op.arity} agent(s), got {len(agent_names)}"
-                )
+                print(f"Error: {op.name} requires {op.arity} agent(s), got {len(agent_names)}")
                 return 1
 
             # Resolve agents

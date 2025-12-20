@@ -126,9 +126,7 @@ class SemaphoreNode(BaseLogosNode):
             return [
                 {
                     "id": t.id,
-                    "reason": t.reason.value
-                    if hasattr(t.reason, "value")
-                    else str(t.reason),
+                    "reason": t.reason.value if hasattr(t.reason, "value") else str(t.reason),
                     "prompt": t.prompt,
                     "options": t.options,
                     "severity": t.severity,
@@ -254,15 +252,9 @@ class SemaphoreNode(BaseLogosNode):
                 else str(token.reason),
                 "prompt": token.prompt,
                 "severity": token.severity,
-                "created_at": token.created_at.isoformat()
-                if token.created_at
-                else None,
-                "resolved_at": token.resolved_at.isoformat()
-                if token.resolved_at
-                else None,
-                "cancelled_at": token.cancelled_at.isoformat()
-                if token.cancelled_at
-                else None,
+                "created_at": token.created_at.isoformat() if token.created_at else None,
+                "resolved_at": token.resolved_at.isoformat() if token.resolved_at else None,
+                "cancelled_at": token.cancelled_at.isoformat() if token.cancelled_at else None,
                 "voided_at": token.voided_at.isoformat() if token.voided_at else None,
             }
         except Exception as e:

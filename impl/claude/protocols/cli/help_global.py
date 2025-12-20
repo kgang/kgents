@@ -198,6 +198,7 @@ def _can_use_rich() -> bool:
 
     try:
         import rich  # noqa: F401
+
         return True
     except ImportError:
         return False

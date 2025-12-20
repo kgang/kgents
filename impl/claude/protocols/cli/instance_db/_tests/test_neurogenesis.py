@@ -33,9 +33,7 @@ from ..neurogenesis import (
 @pytest.fixture
 def introspector() -> MockSchemaIntrospector:
     """Create a mock introspector for testing."""
-    return MockSchemaIntrospector(
-        json_columns=[("events", "data"), ("users", "preferences")]
-    )
+    return MockSchemaIntrospector(json_columns=[("events", "data"), ("users", "preferences")])
 
 
 @pytest.fixture
@@ -311,9 +309,7 @@ class TestMockSchemaIntrospector:
 class TestSchemaNeurogenesisBasic:
     """Basic tests for SchemaNeurogenesis."""
 
-    def test_creates_with_introspector(
-        self, introspector: MockSchemaIntrospector
-    ) -> None:
+    def test_creates_with_introspector(self, introspector: MockSchemaIntrospector) -> None:
         """Creates with introspector."""
         ng = SchemaNeurogenesis(introspector=introspector)
         assert ng.proposals == []
@@ -345,9 +341,7 @@ class TestAnalysis:
     """Tests for JSON analysis and proposal generation."""
 
     @pytest.mark.asyncio
-    async def test_analyze_finds_patterns(
-        self, introspector: MockSchemaIntrospector
-    ) -> None:
+    async def test_analyze_finds_patterns(self, introspector: MockSchemaIntrospector) -> None:
         """Analyze finds consistent patterns."""
         # Add samples with consistent keys
         samples = [
@@ -372,9 +366,7 @@ class TestAnalysis:
         assert "user_id" in column_names
 
     @pytest.mark.asyncio
-    async def test_analyze_skips_sparse_keys(
-        self, introspector: MockSchemaIntrospector
-    ) -> None:
+    async def test_analyze_skips_sparse_keys(self, introspector: MockSchemaIntrospector) -> None:
         """Analyze skips keys that appear in few samples."""
         samples = [{"user_id": f"u{i}"} for i in range(10)]
         # Add rare key to only 2 samples
@@ -396,9 +388,7 @@ class TestAnalysis:
         assert "rare_key" not in column_names
 
     @pytest.mark.asyncio
-    async def test_analyze_insufficient_samples(
-        self, introspector: MockSchemaIntrospector
-    ) -> None:
+    async def test_analyze_insufficient_samples(self, introspector: MockSchemaIntrospector) -> None:
         """Analyze returns empty for insufficient samples."""
         samples = [{"a": 1}, {"a": 2}]  # Only 2 samples
         introspector.add_samples("events", "data", samples)
@@ -412,9 +402,7 @@ class TestAnalysis:
         assert len(proposals) == 0
 
     @pytest.mark.asyncio
-    async def test_analyze_skips_complex_blobs(
-        self, introspector: MockSchemaIntrospector
-    ) -> None:
+    async def test_analyze_skips_complex_blobs(self, introspector: MockSchemaIntrospector) -> None:
         """Analyze skips blobs with too many keys."""
         # Create samples with many keys
         samples = [
@@ -521,9 +509,7 @@ class TestExecution:
             assert len(introspector.executed_migrations) == 1
 
     @pytest.mark.asyncio
-    async def test_execute_nothing_approved(
-        self, neurogenesis: SchemaNeurogenesis
-    ) -> None:
+    async def test_execute_nothing_approved(self, neurogenesis: SchemaNeurogenesis) -> None:
         """Execute with nothing approved returns empty."""
         executed = await neurogenesis.execute_approved()
         assert len(executed) == 0

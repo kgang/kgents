@@ -85,14 +85,10 @@ def evaluate_tasteful(proposal: HolonProposal) -> tuple[float, str]:
     # Evidence from gap recognition
     if proposal.gap and proposal.gap.evidence_count >= 10:
         score += 0.2
-        reasons.append(
-            f"+: Strong evidence ({proposal.gap.evidence_count} occurrences)"
-        )
+        reasons.append(f"+: Strong evidence ({proposal.gap.evidence_count} occurrences)")
     elif proposal.gap and proposal.gap.evidence_count >= 5:
         score += 0.1
-        reasons.append(
-            f"+: Moderate evidence ({proposal.gap.evidence_count} occurrences)"
-        )
+        reasons.append(f"+: Moderate evidence ({proposal.gap.evidence_count} occurrences)")
 
     final_score = max(0.0, min(1.0, 0.4 + score))
     return final_score, "; ".join(reasons) if reasons else "Neutral"
@@ -243,9 +239,7 @@ def evaluate_ethical(proposal: HolonProposal) -> tuple[float, str]:
             for archetype, verbs in proposal.affordances.items():
                 if aff in verbs and archetype not in ("gardener", "admin"):
                     score -= 0.15
-                    reasons.append(
-                        f"-: '{aff}' available to non-admin archetype '{archetype}'"
-                    )
+                    reasons.append(f"-: '{aff}' available to non-admin archetype '{archetype}'")
 
     final_score = max(0.0, min(1.0, score))
     return final_score, "; ".join(reasons) if reasons else "No concerns"
@@ -494,9 +488,7 @@ def evaluate_generative(proposal: HolonProposal) -> tuple[float, str]:
     score = 0.5  # Neutral baseline
     reasons = []
 
-    all_text = (
-        proposal.why_exists + " " + " ".join(proposal.behaviors.values())
-    ).lower()
+    all_text = (proposal.why_exists + " " + " ".join(proposal.behaviors.values())).lower()
 
     # Generative patterns
     generative_patterns = [
@@ -601,8 +593,6 @@ def check_validation_gates(
     # Check high score count
     high_count = sum(1 for s in scores.values() if s >= high_threshold)
     if high_count < min_high_count:
-        blockers.append(
-            f"High scores: {high_count} < {min_high_count} (need >= {high_threshold})"
-        )
+        blockers.append(f"High scores: {high_count} < {min_high_count} (need >= {high_threshold})")
 
     return len(blockers) == 0, blockers

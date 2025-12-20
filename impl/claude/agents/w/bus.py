@@ -58,9 +58,7 @@ class BusMessage(Generic[A, B]):
     payload: A  # The input to the target agent
 
     # Unique message identifier
-    message_id: str = field(
-        default_factory=lambda: f"msg-{datetime.now(timezone.utc).timestamp()}"
-    )
+    message_id: str = field(default_factory=lambda: f"msg-{datetime.now(timezone.utc).timestamp()}")
 
     # Routing metadata
     priority: MessagePriority = MessagePriority.NORMAL
@@ -153,9 +151,7 @@ class Interceptor(Protocol):
         """
         ...
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         """
         Transform result after dispatch.
 
@@ -192,9 +188,7 @@ class BaseInterceptor(ABC):
         """Default: pass through unchanged."""
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         """Default: wrap result unchanged."""
         return InterceptorResult(value=result)
 
@@ -360,9 +354,7 @@ class MiddlewareBus:
 
             if current_msg.blocked:
                 # Message blocked - try fallback
-                duration_ms = (
-                    datetime.now(timezone.utc) - start_time
-                ).total_seconds() * 1000
+                duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
                 fallback = self._fallbacks.get(msg.target)
                 if fallback:
@@ -389,9 +381,7 @@ class MiddlewareBus:
         try:
             result = await self.registry.invoke(current_msg.target, current_msg.payload)
         except KeyError as e:
-            duration_ms = (
-                datetime.now(timezone.utc) - start_time
-            ).total_seconds() * 1000
+            duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             return DispatchResult(
                 value=None,
                 blocked=True,
@@ -401,9 +391,7 @@ class MiddlewareBus:
                 interceptors_run=interceptors_run,
             )
         except Exception as e:
-            duration_ms = (
-                datetime.now(timezone.utc) - start_time
-            ).total_seconds() * 1000
+            duration_ms = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
             return DispatchResult(
                 value=None,
                 blocked=True,
@@ -500,9 +488,7 @@ class LoggingInterceptor(BaseInterceptor):
         )
         return msg
 
-    async def after(
-        self, msg: BusMessage[Any, Any], result: Any
-    ) -> InterceptorResult[Any]:
+    async def after(self, msg: BusMessage[Any, Any], result: Any) -> InterceptorResult[Any]:
         self.log.append(
             {
                 "phase": "after",

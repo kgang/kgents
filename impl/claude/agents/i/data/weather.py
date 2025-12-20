@@ -251,9 +251,7 @@ class WeatherEngine:
         """Initialize the weather engine."""
         self._last_weather: Weather | None = None
         self._history: list[Weather] = []
-        self._external_trend: float = (
-            0.0  # Trend from external sources (e.g., pressure history)
-        )
+        self._external_trend: float = 0.0  # Trend from external sources (e.g., pressure history)
 
     def set_trend(self, trend: float) -> None:
         """Set external trend value from metabolism pressure history.

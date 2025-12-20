@@ -80,30 +80,20 @@ class RuminationConfig:
 
     # Entropy budget (ruminations before rest)
     max_ruminations: int = 100
-    rest_after_exhaustion: timedelta = field(
-        default_factory=lambda: timedelta(minutes=5)
-    )
+    rest_after_exhaustion: timedelta = field(default_factory=lambda: timedelta(minutes=5))
 
     # Eigenvector tension threshold (triggers self-challenge)
     eigenvector_tension_threshold: float = 0.3
 
     def __post_init__(self) -> None:
         """Validate and clamp probabilities."""
-        self.thought_probability = _clamp_probability(
-            self.thought_probability, "thought"
-        )
-        self.feeling_probability = _clamp_probability(
-            self.feeling_probability, "feeling"
-        )
+        self.thought_probability = _clamp_probability(self.thought_probability, "thought")
+        self.feeling_probability = _clamp_probability(self.feeling_probability, "feeling")
         self.observation_probability = _clamp_probability(
             self.observation_probability, "observation"
         )
-        self.challenge_probability = _clamp_probability(
-            self.challenge_probability, "challenge"
-        )
-        self.gratitude_probability = _clamp_probability(
-            self.gratitude_probability, "gratitude"
-        )
+        self.challenge_probability = _clamp_probability(self.challenge_probability, "challenge")
+        self.gratitude_probability = _clamp_probability(self.gratitude_probability, "gratitude")
 
         # Ensure max_ruminations is positive
         if self.max_ruminations < 1:
@@ -452,10 +442,7 @@ async def ruminate(
                 )
 
             elif (
-                r
-                < cfg.thought_probability
-                + cfg.feeling_probability
-                + cfg.observation_probability
+                r < cfg.thought_probability + cfg.feeling_probability + cfg.observation_probability
             ):
                 pattern, confidence, domain = generate_observation()
                 event = observation_event(
@@ -472,9 +459,7 @@ async def ruminate(
                 + cfg.observation_probability
                 + cfg.challenge_probability
             ):
-                thesis, antithesis, synthesis, eigenvector = generate_self_challenge(
-                    eigenvectors
-                )
+                thesis, antithesis, synthesis, eigenvector = generate_self_challenge(eigenvectors)
                 event = self_challenge_event(
                     thesis=thesis,
                     antithesis=antithesis,

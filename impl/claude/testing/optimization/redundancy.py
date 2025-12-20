@@ -59,18 +59,12 @@ class CoverageOverlap:
     @property
     def is_superset(self) -> bool:
         """True if test_a covers everything test_b covers."""
-        return (
-            self.shared_lines == self.total_lines_b
-            and self.total_lines_a > self.total_lines_b
-        )
+        return self.shared_lines == self.total_lines_b and self.total_lines_a > self.total_lines_b
 
     @property
     def is_subset(self) -> bool:
         """True if test_b covers everything test_a covers."""
-        return (
-            self.shared_lines == self.total_lines_a
-            and self.total_lines_b > self.total_lines_a
-        )
+        return self.shared_lines == self.total_lines_a and self.total_lines_b > self.total_lines_a
 
     @property
     def is_equivalent(self) -> bool:
@@ -99,9 +93,7 @@ class RedundancyReport:
 
     overlaps: list[CoverageOverlap] = field(default_factory=list)
     equivalent_pairs: list[tuple[str, str]] = field(default_factory=list)
-    superset_pairs: list[tuple[str, str]] = field(
-        default_factory=list
-    )  # (larger, smaller)
+    superset_pairs: list[tuple[str, str]] = field(default_factory=list)  # (larger, smaller)
     total_tests: int = 0
 
     @property

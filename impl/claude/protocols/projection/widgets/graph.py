@@ -278,12 +278,8 @@ class GraphWidget(KgentsWidget[GraphWidgetState]):
                     },
                 },
                 "scales": {
-                    "x": {
-                        "title": {"display": bool(s.x_label), "text": s.x_label or ""}
-                    },
-                    "y": {
-                        "title": {"display": bool(s.y_label), "text": s.y_label or ""}
-                    },
+                    "x": {"title": {"display": bool(s.x_label), "text": s.x_label or ""}},
+                    "y": {"title": {"display": bool(s.y_label), "text": s.y_label or ""}},
                 }
                 if chart_type not in ("pie", "radar")
                 else {},

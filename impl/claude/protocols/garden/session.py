@@ -595,9 +595,7 @@ class SessionNode(BaseLogosNode):
 
             if session.plans_tended:
                 for name, info in session.plans_tended.items():
-                    lines.append(
-                        f"- **{name}**: {info.get('gesture_count', 0)} gestures"
-                    )
+                    lines.append(f"- **{name}**: {info.get('gesture_count', 0)} gestures")
             else:
                 lines.append("*No plans tended yet*")
 
@@ -808,8 +806,7 @@ class SessionNode(BaseLogosNode):
         if not plan_name:
             return BasicRendering(
                 summary="Plan Required",
-                content="A plan name is required for gestures.\n\n"
-                "Specify with `--plan <name>`",
+                content="A plan name is required for gestures.\n\nSpecify with `--plan <name>`",
                 metadata={
                     "status": "error",
                     "error": "plan_required",

@@ -255,9 +255,7 @@ class MemoryStore:
         max_temp_value = temp_order[max_temp]
 
         results = [
-            m
-            for m in self._memories.values()
-            if temp_order[m.temperature] <= max_temp_value
+            m for m in self._memories.values() if temp_order[m.temperature] <= max_temp_value
         ]
 
         # Sort by coldest first
@@ -351,11 +349,7 @@ class OptimizationEngine:
                 if stripped.startswith("#") and len(stripped) < 50:
                     continue
                 # Skip empty lines in sequence
-                if (
-                    not stripped
-                    and compressed_lines
-                    and not compressed_lines[-1].strip()
-                ):
+                if not stripped and compressed_lines and not compressed_lines[-1].strip():
                     continue
                 compressed_lines.append(line.rstrip())
 

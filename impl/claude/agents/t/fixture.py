@@ -117,6 +117,4 @@ def fixture_agent(
     Returns:
         Configured FixtureAgent
     """
-    return FixtureAgent(
-        FixtureConfig(fixtures=fixtures, default=default, strict=strict)
-    )
+    return FixtureAgent(FixtureConfig(fixtures=fixtures, default=default, strict=strict))

@@ -172,9 +172,7 @@ class ErrorPanel(KgentsWidget[ErrorPanelState]):
 
         fallback_html = ""
         if error.fallback_action:
-            fallback_html = (
-                f'<p class="kgents-error-fallback">💡 {error.fallback_action}</p>'
-            )
+            fallback_html = f'<p class="kgents-error-fallback">💡 {error.fallback_action}</p>'
 
         trace_html = ""
         if error.trace_id:

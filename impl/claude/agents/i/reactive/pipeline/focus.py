@@ -160,9 +160,7 @@ class FocusTransition:
 
         # Start position transition
         if style in (FocusTransitionStyle.SLIDE, FocusTransitionStyle.SPRING):
-            from_pos = (
-                self._positions.get(from_id, (0.0, 0.0)) if from_id else (0.0, 0.0)
-            )
+            from_pos = self._positions.get(from_id, (0.0, 0.0)) if from_id else (0.0, 0.0)
             to_pos = self._positions.get(to_id, from_pos) if to_id else from_pos
 
             if from_id:
@@ -359,9 +357,7 @@ class AnimatedFocus:
             group: Logical grouping
             position: Screen position for slide/spring transitions
         """
-        self.focus_state.register(
-            element_id, tab_index=tab_index, focusable=focusable, group=group
-        )
+        self.focus_state.register(element_id, tab_index=tab_index, focusable=focusable, group=group)
 
         if position:
             self.transition.register_position(element_id, position[0], position[1])

@@ -862,13 +862,15 @@ class TestKgentFluxStreaming:
     async def test_streaming_chunks_match_fixture_format(self) -> None:
         """Streaming chunks should follow the fixture format."""
         import json
+        from pathlib import Path
 
         from agents.k.llm import MockLLMClient
         from agents.k.soul import BudgetTier, KgentSoul
 
-        # Load fixture for expected format
+        # Load fixture for expected format (path relative to this test file)
+        test_dir = Path(__file__).parent
         fixture_path = (
-            "/Users/kentgang/git/kgents/impl/claude/fixtures/soul_dialogue/streaming_chunks.json"
+            test_dir.parent.parent.parent / "fixtures" / "soul_dialogue" / "streaming_chunks.json"
         )
         with open(fixture_path) as f:
             fixture = json.load(f)

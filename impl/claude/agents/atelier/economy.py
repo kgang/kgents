@@ -237,9 +237,7 @@ class UserBalance:
             "total_spent": str(self.total_spent),
             "total_refunded": str(self.total_refunded),
             "created_at": self.created_at.isoformat(),
-            "last_accrual_at": (
-                self.last_accrual_at.isoformat() if self.last_accrual_at else None
-            ),
+            "last_accrual_at": (self.last_accrual_at.isoformat() if self.last_accrual_at else None),
             "watching": self.watch_session_start is not None,
             "current_session_id": self.current_session_id,
             "session_watch_seconds": self.session_watch_seconds,
@@ -440,18 +438,14 @@ class TokenPool:
             "user_id": user_id,
             "session_id": balance.current_session_id,
             "started_at": balance.watch_session_start.isoformat(),
-            "elapsed_seconds": (
-                datetime.now() - balance.watch_session_start
-            ).total_seconds(),
+            "elapsed_seconds": (datetime.now() - balance.watch_session_start).total_seconds(),
         }
 
     # -------------------------------------------------------------------------
     # Token Accrual
     # -------------------------------------------------------------------------
 
-    def accrue(
-        self, user_id: str, timestamp: Optional[datetime] = None
-    ) -> Optional[AccrualResult]:
+    def accrue(self, user_id: str, timestamp: Optional[datetime] = None) -> Optional[AccrualResult]:
         """
         Accrue tokens for a watching user without stopping the session.
 
@@ -554,9 +548,7 @@ class TokenPool:
     # Token Spending
     # -------------------------------------------------------------------------
 
-    def spend(
-        self, user_id: str, amount: Decimal, reason: str = "spend"
-    ) -> SpendResult:
+    def spend(self, user_id: str, amount: Decimal, reason: str = "spend") -> SpendResult:
         """
         Spend tokens from a user's balance.
 
@@ -596,9 +588,7 @@ class TokenPool:
             new_balance=balance.balance,
         )
 
-    def spend_or_raise(
-        self, user_id: str, amount: Decimal, reason: str = "spend"
-    ) -> Decimal:
+    def spend_or_raise(self, user_id: str, amount: Decimal, reason: str = "spend") -> Decimal:
         """
         Spend tokens, raising exception on failure.
 
@@ -617,9 +607,7 @@ class TokenPool:
             raise InsufficientBalanceError(user_id, amount, result.new_balance)
         return result.new_balance
 
-    def refund(
-        self, user_id: str, amount: Decimal, reason: str = "refund"
-    ) -> RefundResult:
+    def refund(self, user_id: str, amount: Decimal, reason: str = "refund") -> RefundResult:
         """
         Refund tokens to a user (e.g., from rejected/acknowledged bid).
 
@@ -770,26 +758,16 @@ class TokenPool:
 
     def get_leaderboard(self, limit: int = 10) -> list[UserBalance]:
         """Get top users by balance."""
-        sorted_balances = sorted(
-            self._balances.values(), key=lambda b: b.balance, reverse=True
-        )
+        sorted_balances = sorted(self._balances.values(), key=lambda b: b.balance, reverse=True)
         return sorted_balances[:limit]
 
     def get_active_watchers(self) -> list[str]:
         """Get list of currently watching users."""
-        return [
-            uid
-            for uid, b in self._balances.items()
-            if b.watch_session_start is not None
-        ]
+        return [uid for uid, b in self._balances.items() if b.watch_session_start is not None]
 
     def get_session_watchers(self, session_id: str) -> list[str]:
         """Get users watching a specific session."""
-        return [
-            uid
-            for uid, b in self._balances.items()
-            if b.current_session_id == session_id
-        ]
+        return [uid for uid, b in self._balances.items() if b.current_session_id == session_id]
 
     # -------------------------------------------------------------------------
     # AGENTESE Integration
@@ -886,21 +864,15 @@ class AsyncTokenPool:
         async with self._lock:
             return self._pool.accrue(user_id, timestamp)
 
-    async def spend(
-        self, user_id: str, amount: Decimal, reason: str = "spend"
-    ) -> SpendResult:
+    async def spend(self, user_id: str, amount: Decimal, reason: str = "spend") -> SpendResult:
         async with self._lock:
             return self._pool.spend(user_id, amount, reason)
 
-    async def grant(
-        self, user_id: str, amount: Decimal, reason: str = "grant"
-    ) -> Decimal:
+    async def grant(self, user_id: str, amount: Decimal, reason: str = "grant") -> Decimal:
         async with self._lock:
             return self._pool.grant(user_id, amount, reason)
 
-    async def refund(
-        self, user_id: str, amount: Decimal, reason: str = "refund"
-    ) -> RefundResult:
+    async def refund(self, user_id: str, amount: Decimal, reason: str = "refund") -> RefundResult:
         async with self._lock:
             return self._pool.refund(user_id, amount, reason)
 

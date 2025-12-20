@@ -407,9 +407,7 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Glass Terminal Demo: CLI Hollowing Showcase"
-    )
+    parser = argparse.ArgumentParser(description="Glass Terminal Demo: CLI Hollowing Showcase")
     parser.add_argument(
         "--test",
         choices=["all", "status", "dream", "map", "signal", "ghost", "client", "grpc"],

@@ -330,9 +330,7 @@ async def test_oracle_agent_majority() -> None:
     assert result.majority_output == test_input  # Identity wins (3/5)
     assert len(result.deviants) == 2  # Two uppercase agents
     assert result.agreement_rate == 0.6  # 3/5 = 60%
-    print(
-        f"✓ OracleAgent: Majority voting works (agreement={result.agreement_rate:.0%})"
-    )
+    print(f"✓ OracleAgent: Majority voting works (agreement={result.agreement_rate:.0%})")
 
 
 async def test_regression_oracle() -> None:
@@ -373,9 +371,7 @@ async def test_semantic_equality() -> None:
     # Create oracle with semantic equality
     agent1: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="Hello World"))
     agent2: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="hello world"))
-    agent3: MockAgent[Any, Any] = MockAgent[Any, Any](
-        MockConfig(output="  HELLO WORLD  ")
-    )
+    agent3: MockAgent[Any, Any] = MockAgent[Any, Any](MockConfig(output="  HELLO WORLD  "))
 
     oracle: OracleAgent[Any, Any] = OracleAgent(
         agents=[agent1, agent2, agent3],
@@ -409,9 +405,7 @@ async def test_phase3_composition() -> None:
     _increment: IncrementAgent = IncrementAgent()
 
     # Create oracle to test consistency
-    oracle: OracleAgent[Any, Any] = OracleAgent(
-        agents=[double, double]
-    )  # Same agent twice
+    oracle: OracleAgent[Any, Any] = OracleAgent(agents=[double, double])  # Same agent twice
 
     # Property: oracle should always agree with itself
     def oracle_consistency(input_val: int, result: DiffResult[Any]) -> bool:

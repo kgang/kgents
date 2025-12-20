@@ -87,9 +87,7 @@ class TestIsSemaphoreToken:
 
     def test_detects_semaphore_token(self) -> None:
         """SemaphoreToken is detected."""
-        token: SemaphoreToken[Any] = SemaphoreToken(
-            reason=SemaphoreReason.CONTEXT_REQUIRED
-        )
+        token: SemaphoreToken[Any] = SemaphoreToken(reason=SemaphoreReason.CONTEXT_REQUIRED)
         assert is_semaphore_token(token) is True
 
     def test_rejects_string(self) -> None:
@@ -123,9 +121,7 @@ class TestIsReentryContext:
 
     def test_rejects_semaphore_token(self) -> None:
         """SemaphoreToken is not a ReentryContext."""
-        token: SemaphoreToken[Any] = SemaphoreToken(
-            reason=SemaphoreReason.CONTEXT_REQUIRED
-        )
+        token: SemaphoreToken[Any] = SemaphoreToken(reason=SemaphoreReason.CONTEXT_REQUIRED)
         assert is_reentry_context(token) is False
 
     def test_rejects_string(self) -> None:
@@ -378,9 +374,7 @@ class TestInjectReentry:
         # Create a mock flux with perturbation queue
         class MockFlux:
             def __init__(self) -> None:
-                self._perturbation_queue: asyncio.PriorityQueue[Any] = (
-                    asyncio.PriorityQueue()
-                )
+                self._perturbation_queue: asyncio.PriorityQueue[Any] = asyncio.PriorityQueue()
 
         flux = MockFlux()
 
@@ -404,9 +398,7 @@ class TestInjectReentry:
 
         class MockFlux:
             def __init__(self) -> None:
-                self._perturbation_queue: asyncio.PriorityQueue[Any] = (
-                    asyncio.PriorityQueue()
-                )
+                self._perturbation_queue: asyncio.PriorityQueue[Any] = asyncio.PriorityQueue()
 
         flux = MockFlux()
 

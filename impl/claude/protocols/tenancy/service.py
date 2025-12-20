@@ -311,9 +311,7 @@ class TenantService:
         """Get user by ID."""
         return self._users.get(user_id)
 
-    async def get_user_by_email(
-        self, tenant_id: UUID, email: str
-    ) -> Optional[TenantUser]:
+    async def get_user_by_email(self, tenant_id: UUID, email: str) -> Optional[TenantUser]:
         """Get user by email within a tenant."""
         for user in self._users.values():
             if user.tenant_id == tenant_id and user.email == email:
@@ -359,16 +357,12 @@ class TenantService:
         """Get session by ID."""
         return self._sessions.get(session_id)
 
-    async def list_sessions(
-        self, tenant_id: UUID, user_id: UUID | None = None
-    ) -> list[Session]:
+    async def list_sessions(self, tenant_id: UUID, user_id: UUID | None = None) -> list[Session]:
         """List sessions for a tenant, optionally filtered by user."""
         sessions = [s for s in self._sessions.values() if s.tenant_id == tenant_id]
         if user_id:
             sessions = [s for s in sessions if s.user_id == user_id]
-        return sorted(
-            sessions, key=lambda s: s.created_at or datetime.min, reverse=True
-        )
+        return sorted(sessions, key=lambda s: s.created_at or datetime.min, reverse=True)
 
     async def update_session(
         self,
@@ -389,12 +383,8 @@ class TenantService:
             agent_type=session.agent_type,
             status=session.status,
             context=session.context,
-            message_count=(
-                message_count if message_count is not None else session.message_count
-            ),
-            tokens_used=(
-                tokens_used if tokens_used is not None else session.tokens_used
-            ),
+            message_count=(message_count if message_count is not None else session.message_count),
+            tokens_used=(tokens_used if tokens_used is not None else session.tokens_used),
             last_message_at=datetime.now(UTC),
             created_at=session.created_at,
         )

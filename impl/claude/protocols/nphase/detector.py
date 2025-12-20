@@ -296,9 +296,7 @@ class PhaseDetector:
             )
         return None
 
-    def _detect_heuristic(
-        self, output: str, current_phase: NPhase
-    ) -> PhaseSignal:
+    def _detect_heuristic(self, output: str, current_phase: NPhase) -> PhaseSignal:
         """
         Detect phase from activity patterns.
 
@@ -314,9 +312,7 @@ class PhaseDetector:
         """
         # Count pattern matches for each phase
         scores: dict[NPhase, int] = {
-            NPhase.UNDERSTAND: sum(
-                1 for p in self.UNDERSTAND_PATTERNS if p.search(output)
-            ),
+            NPhase.UNDERSTAND: sum(1 for p in self.UNDERSTAND_PATTERNS if p.search(output)),
             NPhase.ACT: sum(1 for p in self.ACT_PATTERNS if p.search(output)),
             NPhase.REFLECT: sum(1 for p in self.REFLECT_PATTERNS if p.search(output)),
         }

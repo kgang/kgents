@@ -115,9 +115,7 @@ class CommandExecutor(ExecutionStrategy):
         noun = ast.get("noun")
 
         if not verb:
-            return ExecutionResult(
-                success=False, error="No verb found in AST", side_effects=[]
-            )
+            return ExecutionResult(success=False, error="No verb found in AST", side_effects=[])
 
         # Look up handler
         handler = self.handlers.get(verb.upper())
@@ -196,9 +194,7 @@ class RecursiveInterpreter(ExecutionStrategy):
         # For Phase 3, just extract structure
         return {
             "type": node_type,
-            "evaluated_children": [
-                self._interpret_node(child, context) for child in children
-            ],
+            "evaluated_children": [self._interpret_node(child, context) for child in children],
         }
 
 

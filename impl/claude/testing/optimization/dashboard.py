@@ -115,8 +115,7 @@ async def collect_test_health_metrics(
             tier_counts[profile.tier.value] += 1
 
         tier_pcts = {
-            tier: (count / total * 100) if total > 0 else 0
-            for tier, count in tier_counts.items()
+            tier: (count / total * 100) if total > 0 else 0 for tier, count in tier_counts.items()
         }
 
         # Recommendations
@@ -186,9 +185,7 @@ def create_demo_test_metrics() -> TestHealthMetrics:
         total_time_s=85.2,
         failure_count=random.randint(0, 3),
         tier_counts=tier_counts,
-        tier_percentages={
-            tier: count / total * 100 for tier, count in tier_counts.items()
-        },
+        tier_percentages={tier: count / total * 100 for tier, count in tier_counts.items()},
         recommendation_count=5,
         top_recommendations=[
             {
@@ -278,9 +275,7 @@ def create_test_health_panel_class() -> type:
 
         def render(self) -> str:
             if not self.is_online:
-                return (
-                    "TEST HEALTH\n├─ [no profile data]\n└─ Run: pytest --profile-tests"
-                )
+                return "TEST HEALTH\n├─ [no profile data]\n└─ Run: pytest --profile-tests"
 
             lines = [f"TEST HEALTH ({self.status})"]
 
@@ -297,19 +292,13 @@ def create_test_health_panel_class() -> type:
                 for tier in ["instant", "fast", "medium", "slow", "expensive"]:
                     count = self.tier_counts.get(tier, 0)
                     if count > 0:
-                        pct = (
-                            (count / self.total_tests * 100)
-                            if self.total_tests > 0
-                            else 0
-                        )
+                        pct = (count / self.total_tests * 100) if self.total_tests > 0 else 0
                         bar = self._render_tier_bar(tier, pct, width=15)
                         lines.append(f"│  {bar}")
 
             # Recommendations summary
             if self.recommendation_count > 0:
-                lines.append(
-                    f"└─ ⚠ {self.recommendation_count} optimizations available"
-                )
+                lines.append(f"└─ ⚠ {self.recommendation_count} optimizations available")
             elif self.expensive_count > 0:
                 lines.append(f"└─ ⚠ {self.expensive_count} expensive tests")
             else:

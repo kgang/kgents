@@ -68,9 +68,7 @@ def agent(fn: Callable[[A], Awaitable[B]]) -> FunctionAgent[A, B]: ...
 
 
 @overload
-def agent(
-    *, name: str
-) -> Callable[[Callable[[A], Awaitable[B]]], FunctionAgent[A, B]]: ...
+def agent(*, name: str) -> Callable[[Callable[[A], Awaitable[B]]], FunctionAgent[A, B]]: ...
 
 
 def agent(

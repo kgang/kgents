@@ -246,9 +246,7 @@ class CortexDashboard:
 
         # Add hippocampus
         if snapshot.hippocampus.available:
-            parts.append(
-                f"H:{snapshot.hippocampus.memory_count}/{snapshot.hippocampus.max_size}"
-            )
+            parts.append(f"H:{snapshot.hippocampus.memory_count}/{snapshot.hippocampus.max_size}")
 
         # Add synapse
         if snapshot.synapse.available:
@@ -319,9 +317,7 @@ class CortexDashboard:
         ]
         return "\n".join(lines)
 
-    def _render_panel(
-        self, panel: DashboardPanel, snapshot: CortexHealthSnapshot
-    ) -> list[str]:
+    def _render_panel(self, panel: DashboardPanel, snapshot: CortexHealthSnapshot) -> list[str]:
         """Render a single dashboard panel."""
         renderers = {
             DashboardPanel.HEMISPHERE_STATUS: self._render_hemisphere_panel,
@@ -392,8 +388,7 @@ class CortexDashboard:
             f"  Available: {'OK' if s.available else 'XX'} | "
             f"Signals: {s.signals_total} | "
             f"Pending: {s.batch_pending}",
-            f"  Surprise Avg: {s.surprise_avg:.3f} | "
-            f"Flashbulb: {s.has_flashbulb_pending}",
+            f"  Surprise Avg: {s.surprise_avg:.3f} | Flashbulb: {s.has_flashbulb_pending}",
             f"  Routes [!>..]: [{route_bar}] "
             f"(!:{s.flashbulb_rate:.0%} >:{s.fast_path_rate:.0%} .:{s.batch_path_rate:.0%})",
             f"  Surprise Trend: [{self._surprise_sparkline.render(20)}]",
@@ -418,8 +413,7 @@ class CortexDashboard:
 
         lines = [
             "-- Hippocampus (Short-Term Memory) --",
-            f"  Available: {'OK' if h.available else 'XX'} | "
-            f"Size: {h.memory_count}/{h.max_size}",
+            f"  Available: {'OK' if h.available else 'XX'} | Size: {h.memory_count}/{h.max_size}",
             f"  Utilization: [{bar}] {h.utilization:.1%} {color_indicator}",
             f"  Flushes: {h.flushes_total} | Last: {h.last_flush or 'never'}",
             f"  Trend: [{self._hippocampus_sparkline.render(20)}]",
@@ -518,9 +512,7 @@ def create_cortex_dashboard(
         Configured CortexDashboard
     """
     config = (
-        CortexDashboardConfig.from_dict(config_dict)
-        if config_dict
-        else CortexDashboardConfig()
+        CortexDashboardConfig.from_dict(config_dict) if config_dict else CortexDashboardConfig()
     )
 
     return CortexDashboard(observer=observer, config=config)

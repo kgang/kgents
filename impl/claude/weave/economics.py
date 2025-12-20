@@ -269,12 +269,8 @@ class TurnBudgetTracker:
         Returns:
             BudgetStats with current state
         """
-        order_util = (
-            self._order_spent / self.order_budget if self.order_budget > 0 else 0
-        )
-        surplus_util = (
-            self._surplus_spent / self.surplus_budget if self.surplus_budget > 0 else 0
-        )
+        order_util = self._order_spent / self.order_budget if self.order_budget > 0 else 0
+        surplus_util = self._surplus_spent / self.surplus_budget if self.surplus_budget > 0 else 0
 
         return BudgetStats(
             order_total=self.order_budget,

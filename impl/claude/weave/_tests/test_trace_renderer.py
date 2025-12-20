@@ -221,9 +221,7 @@ class TestRenderCallGraph:
         assert "C" in result
         assert "D" in result
 
-    def test_force_layout(
-        self, renderer: TraceRenderer, simple_graph: DependencyGraph
-    ) -> None:
+    def test_force_layout(self, renderer: TraceRenderer, simple_graph: DependencyGraph) -> None:
         """Force layout renders all nodes with connections."""
         result = renderer.render_call_graph(simple_graph, layout="force")
 
@@ -237,9 +235,7 @@ class TestRenderCallGraph:
         self, renderer: TraceRenderer, simple_graph: DependencyGraph
     ) -> None:
         """Ghost nodes are marked appropriately."""
-        result = renderer.render_call_graph(
-            simple_graph, layout="tree", ghost_nodes={"B"}
-        )
+        result = renderer.render_call_graph(simple_graph, layout="tree", ghost_nodes={"B"})
 
         assert "[ghost]" in result
         assert CHARS["ghost"] in result
@@ -249,15 +245,11 @@ class TestRenderCallGraph:
         config = RenderConfig(show_ghosts=False)
         renderer = TraceRenderer(config)
 
-        result = renderer.render_call_graph(
-            simple_graph, layout="tree", ghost_nodes={"B"}
-        )
+        result = renderer.render_call_graph(simple_graph, layout="tree", ghost_nodes={"B"})
 
         assert "[ghost]" not in result
 
-    def test_specific_root(
-        self, renderer: TraceRenderer, diamond_graph: DependencyGraph
-    ) -> None:
+    def test_specific_root(self, renderer: TraceRenderer, diamond_graph: DependencyGraph) -> None:
         """Can specify a specific root node."""
         result = renderer.render_call_graph(diamond_graph, layout="tree", root="A")
 
@@ -532,23 +524,17 @@ class TestConvenienceFunctions:
         assert "A" in result
         assert "B" in result
 
-    def test_render_trace_timeline(
-        self, simple_trace: TraceMonoid[dict[str, object]]
-    ) -> None:
+    def test_render_trace_timeline(self, simple_trace: TraceMonoid[dict[str, object]]) -> None:
         """render_trace with timeline mode."""
         result = render_trace(simple_trace, mode="timeline")
         assert "thread-1" in result
 
-    def test_render_trace_flame(
-        self, simple_trace: TraceMonoid[dict[str, object]]
-    ) -> None:
+    def test_render_trace_flame(self, simple_trace: TraceMonoid[dict[str, object]]) -> None:
         """render_trace with flame mode."""
         result = render_trace(simple_trace, mode="flame")
         assert "Flame Graph" in result
 
-    def test_render_trace_tree(
-        self, simple_trace: TraceMonoid[dict[str, object]]
-    ) -> None:
+    def test_render_trace_tree(self, simple_trace: TraceMonoid[dict[str, object]]) -> None:
         """render_trace with tree mode."""
         result = render_trace(simple_trace, mode="tree")
         assert "main" in result

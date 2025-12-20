@@ -34,9 +34,7 @@ try:
 except ImportError:
     REDIS_AVAILABLE = False
 
-requires_redis = pytest.mark.skipif(
-    not REDIS_AVAILABLE, reason="redis package not installed"
-)
+requires_redis = pytest.mark.skipif(not REDIS_AVAILABLE, reason="redis package not installed")
 
 
 class TestInMemoryIdempotencyStore:
@@ -48,26 +46,20 @@ class TestInMemoryIdempotencyStore:
         return InMemoryIdempotencyStore()
 
     @pytest.mark.asyncio
-    async def test_new_event_returns_true(
-        self, store: InMemoryIdempotencyStore
-    ) -> None:
+    async def test_new_event_returns_true(self, store: InMemoryIdempotencyStore) -> None:
         """First time seeing an event should return True."""
         result = await store.check_and_set("event-1")
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_duplicate_event_returns_false(
-        self, store: InMemoryIdempotencyStore
-    ) -> None:
+    async def test_duplicate_event_returns_false(self, store: InMemoryIdempotencyStore) -> None:
         """Second time seeing same event should return False."""
         await store.check_and_set("event-1")
         result = await store.check_and_set("event-1")
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_different_events_return_true(
-        self, store: InMemoryIdempotencyStore
-    ) -> None:
+    async def test_different_events_return_true(self, store: InMemoryIdempotencyStore) -> None:
         """Different events should all return True on first check."""
         assert await store.check_and_set("event-1") is True
         assert await store.check_and_set("event-2") is True
@@ -75,9 +67,7 @@ class TestInMemoryIdempotencyStore:
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_cleanup_removes_expired(
-        self, store: InMemoryIdempotencyStore
-    ) -> None:
+    async def test_cleanup_removes_expired(self, store: InMemoryIdempotencyStore) -> None:
         """Cleanup should remove entries older than max_age_seconds."""
         store.max_age_seconds = 1  # 1 second for testing
 
@@ -140,9 +130,7 @@ class TestRedisIdempotencyStore:
             result = await store.check_and_set("event-1")
 
             assert result is True
-            mock_redis.set.assert_called_once_with(
-                "test:event-1", "1", nx=True, ex=3600
-            )
+            mock_redis.set.assert_called_once_with("test:event-1", "1", nx=True, ex=3600)
 
     @pytest.mark.asyncio
     async def test_check_and_set_duplicate_event(
@@ -158,9 +146,7 @@ class TestRedisIdempotencyStore:
             assert result is False
 
     @pytest.mark.asyncio
-    async def test_check_and_set_without_connect_raises(
-        self, store: RedisIdempotencyStore
-    ) -> None:
+    async def test_check_and_set_without_connect_raises(self, store: RedisIdempotencyStore) -> None:
         """Using store without connect should raise RuntimeError."""
         with pytest.raises(RuntimeError, match="not connected"):
             await store.check_and_set("event-1")
@@ -202,9 +188,7 @@ class TestGetIdempotencyStore:
         mock_redis = AsyncMock()
         mock_redis.ping = AsyncMock(side_effect=ConnectionError("Cannot connect"))
 
-        with patch.dict(
-            "os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False
-        ):
+        with patch.dict("os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False):
             with patch("redis.asyncio.from_url", return_value=mock_redis):
                 store = await get_idempotency_store()
                 assert isinstance(store, InMemoryIdempotencyStore)
@@ -214,9 +198,7 @@ class TestGetIdempotencyStore:
         """Should fall back to in-memory when redis package not installed."""
         # This test verifies that when redis is not installed, we get in-memory store
         # If redis IS installed but connect fails, same result
-        with patch.dict(
-            "os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False
-        ):
+        with patch.dict("os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False):
             # Mock the RedisIdempotencyStore.connect to raise ImportError
             original_connect = RedisIdempotencyStore.connect
 
@@ -243,9 +225,7 @@ class TestGetIdempotencyStore:
         mock_redis.ping = AsyncMock(return_value=True)
         mock_redis.close = AsyncMock()
 
-        with patch.dict(
-            "os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False
-        ):
+        with patch.dict("os.environ", {"REDIS_URL": "redis://localhost:6379"}, clear=False):
             with patch("redis.asyncio.from_url", return_value=mock_redis):
                 store = await get_idempotency_store()
                 assert isinstance(store, RedisIdempotencyStore)

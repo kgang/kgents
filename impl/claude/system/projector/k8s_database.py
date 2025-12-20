@@ -63,9 +63,7 @@ class CNPGClusterConfig:
     storage: str = "1Gi"
     storage_class: str | None = None
     pg_version: int = 16
-    shared_preload_libraries: list[str] = field(
-        default_factory=lambda: ["pg_stat_statements"]
-    )
+    shared_preload_libraries: list[str] = field(default_factory=lambda: ["pg_stat_statements"])
     enable_monitoring: bool = True
     backup_enabled: bool = False
 
@@ -394,6 +392,4 @@ def to_yaml(projection: DatabaseProjection, separator: str = "---\n") -> str:
         # Fallback to JSON
         import json
 
-        return separator.join(
-            json.dumps(m, indent=2) for m in projection.to_manifests()
-        )
+        return separator.join(json.dumps(m, indent=2) for m in projection.to_manifests())

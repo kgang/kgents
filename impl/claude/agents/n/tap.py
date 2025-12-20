@@ -166,11 +166,7 @@ class HistorianTap:
             determinism = Action.classify_determinism(frame.action)
 
         # Complete the trace
-        outputs = (
-            frame.payload
-            if isinstance(frame.payload, dict)
-            else {"result": frame.payload}
-        )
+        outputs = frame.payload if isinstance(frame.payload, dict) else {"result": frame.payload}
         self.historian.end_trace(
             ctx=ctx,
             action=frame.action,
@@ -274,9 +270,7 @@ class WireIntegration:
                         timestamp=datetime.now(timezone.utc),
                         agent_id=agent_id,
                         agent_genus=agent_genus,
-                        payload=result
-                        if isinstance(result, dict)
-                        else {"result": result},
+                        payload=result if isinstance(result, dict) else {"result": result},
                         metadata={"action": action},
                     )
                     await self.tap.on_frame(end_frame)

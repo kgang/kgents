@@ -118,9 +118,7 @@ class TestRateLimitError:
 class TestGatewayRateLimiting:
     """Tests for MorpheusGateway rate limiting."""
 
-    async def test_complete_respects_rate_limit(
-        self, gateway_with_limits: MorpheusGateway
-    ):
+    async def test_complete_respects_rate_limit(self, gateway_with_limits: MorpheusGateway):
         """Completions should respect rate limits."""
         request = ChatRequest(
             model="mock-test",
@@ -139,9 +137,7 @@ class TestGatewayRateLimiting:
         assert exc_info.value.archetype == "guest"
         assert exc_info.value.limit == 2
 
-    async def test_admin_has_higher_limit(
-        self, gateway_with_limits: MorpheusGateway
-    ):
+    async def test_admin_has_higher_limit(self, gateway_with_limits: MorpheusGateway):
         """Admins should have higher rate limits."""
         request = ChatRequest(
             model="mock-test",
@@ -156,9 +152,7 @@ class TestGatewayRateLimiting:
         status = gateway_with_limits.rate_limit_status("admin")
         assert status["remaining"] > 0
 
-    async def test_stream_respects_rate_limit(
-        self, gateway_with_limits: MorpheusGateway
-    ):
+    async def test_stream_respects_rate_limit(self, gateway_with_limits: MorpheusGateway):
         """Streaming should respect rate limits."""
         request = ChatRequest(
             model="mock-test",

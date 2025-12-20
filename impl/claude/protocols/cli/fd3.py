@@ -69,9 +69,7 @@ class FD3Message:
         correlation_id: Optional ID for tracking related messages
     """
 
-    type: Literal[
-        "agent_update", "health", "agentese_invoke", "error", "status", "event"
-    ]
+    type: Literal["agent_update", "health", "agentese_invoke", "error", "status", "event"]
     payload: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.now)
     source: str = ""

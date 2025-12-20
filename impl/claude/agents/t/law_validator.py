@@ -610,8 +610,6 @@ async def validate_evolution_pipeline_laws(
     await validator.validate_identity_laws(ground_stage, test_input)
 
     report = validator.get_report()
-    logger.info(
-        f"Law validation complete: {report.passed_count}/{report.total_laws} passed"
-    )
+    logger.info(f"Law validation complete: {report.passed_count}/{report.total_laws} passed")
 
     return report

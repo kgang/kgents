@@ -102,9 +102,7 @@ async def create_providers(
             ),
         )
     elif config.vector.type == "memory":
-        vector = cast(
-            IVectorStore, InMemoryVectorStore(dimensions=config.vector.dimensions)
-        )
+        vector = cast(IVectorStore, InMemoryVectorStore(dimensions=config.vector.dimensions))
     else:
         raise ValueError(f"Unknown vector provider: {config.vector.type}")
 
@@ -121,12 +119,8 @@ async def create_providers(
     # Telemetry provider
     telemetry: ITelemetryStore
     if config.telemetry.type == "sqlite":
-        telemetry_connection = config.telemetry.connection or str(
-            paths.data / "telemetry.db"
-        )
-        telemetry = cast(
-            ITelemetryStore, SQLiteTelemetryStore(db_path=Path(telemetry_connection))
-        )
+        telemetry_connection = config.telemetry.connection or str(paths.data / "telemetry.db")
+        telemetry = cast(ITelemetryStore, SQLiteTelemetryStore(db_path=Path(telemetry_connection)))
     elif config.telemetry.type == "memory":
         telemetry = cast(ITelemetryStore, InMemoryTelemetryStore())
     else:

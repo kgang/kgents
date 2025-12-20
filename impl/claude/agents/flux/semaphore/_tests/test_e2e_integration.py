@@ -345,9 +345,7 @@ class TestE2EPerturbationInjection:
         # Mock flux with perturbation queue
         class MockFlux:
             def __init__(self) -> None:
-                self._perturbation_queue: asyncio.PriorityQueue[Any] = (
-                    asyncio.PriorityQueue()
-                )
+                self._perturbation_queue: asyncio.PriorityQueue[Any] = asyncio.PriorityQueue()
 
         flux = MockFlux()
 

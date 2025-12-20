@@ -35,9 +35,7 @@ class Customer:
         """
         email = stripe_customer.get("email")
         if not email:
-            raise ValueError(
-                f"Customer {stripe_customer.get('id', 'unknown')} has no email"
-            )
+            raise ValueError(f"Customer {stripe_customer.get('id', 'unknown')} has no email")
         return cls(
             id=stripe_customer["id"],
             email=email,
@@ -91,9 +89,7 @@ class CustomerManager:
     def __init__(self) -> None:
         """Initialize customer manager."""
         if not STRIPE_AVAILABLE:
-            raise RuntimeError(
-                "stripe package not installed. Install with: pip install stripe"
-            )
+            raise RuntimeError("stripe package not installed. Install with: pip install stripe")
 
     def create_customer(
         self,

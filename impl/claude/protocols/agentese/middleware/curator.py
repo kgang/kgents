@@ -90,9 +90,7 @@ def structural_surprise(output: Any, prior: Any) -> float:
         chars_out = set(output.lower())
         chars_prior = set(prior.lower())
         if chars_out or chars_prior:
-            overlap = len(chars_out & chars_prior) / max(
-                len(chars_out | chars_prior), 1
-            )
+            overlap = len(chars_out & chars_prior) / max(len(chars_out | chars_prior), 1)
             char_surprise = 1.0 - overlap
         else:
             char_surprise = 0.0
@@ -582,6 +580,5 @@ def _dict_depth(d: dict[str, Any], current: int = 0) -> int:
     if not isinstance(d, dict) or not d:
         return current
     return (
-        max(_dict_depth(v, current + 1) for v in d.values() if isinstance(v, dict))
-        or current + 1
+        max(_dict_depth(v, current + 1) for v in d.values() if isinstance(v, dict)) or current + 1
     )

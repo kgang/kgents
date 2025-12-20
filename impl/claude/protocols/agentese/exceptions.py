@@ -271,10 +271,7 @@ class AffordanceError(AgentesError):
         self.available = available or []
 
         if not why and observer_archetype:
-            why = (
-                f"The '{observer_archetype}' archetype does not have "
-                f"the '{aspect}' affordance"
-            )
+            why = f"The '{observer_archetype}' archetype does not have the '{aspect}' affordance"
 
         if not suggestion and available:
             suggestion = f"Your affordances: {', '.join(available)}"

@@ -190,9 +190,7 @@ def setup_production_telemetry(
     """
     from .exporters import configure_for_production
 
-    endpoint = otlp_endpoint or os.environ.get(
-        "OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"
-    )
+    endpoint = otlp_endpoint or os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317")
     configure_for_production(endpoint, service_name, sampling_rate)
 
 

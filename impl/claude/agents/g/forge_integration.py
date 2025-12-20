@@ -69,9 +69,7 @@ class InterfaceTongue:
         """Parse a DSL command using the embedded tongue."""
         return parse_with_tongue(command, self.tongue.parser_config)
 
-    def execute(
-        self, command: str, context: Optional[dict[str, Any]] = None
-    ) -> ExecutionResult:
+    def execute(self, command: str, context: Optional[dict[str, Any]] = None) -> ExecutionResult:
         """Parse and execute a DSL command."""
         parse_result = self.parse(command)
         if not parse_result.success:
@@ -453,9 +451,7 @@ async def forge_with_interface(
         >>> result = interface.invoke("CHECK 2024-12-15")
     """
     if not FGENT_AVAILABLE:
-        raise ValueError(
-            "F-gent is not available. Cannot create artifact with interface."
-        )
+        raise ValueError("F-gent is not available. Cannot create artifact with interface.")
 
     from agents.f.contract import synthesize_contract
     from agents.f.intent import parse_intent

@@ -61,9 +61,7 @@ class ClientMessageType(str, Enum):
     PAUSE = "pause"
     STEP = "step"
     SPEED = "speed"  # {"type": "speed", "value": 2.0}
-    PERTURB = (
-        "perturb"  # {"type": "perturb", "operation": "trade", "participants": [...]}
-    )
+    PERTURB = "perturb"  # {"type": "perturb", "operation": "trade", "participants": [...]}
     PING = "ping"
 
 
@@ -195,9 +193,7 @@ def register_session(town_id: str, session: TownWebSocketSession) -> None:
 def unregister_session(town_id: str, session: TownWebSocketSession) -> None:
     """Unregister a WebSocket session."""
     if town_id in _active_sessions:
-        _active_sessions[town_id] = [
-            s for s in _active_sessions[town_id] if s != session
-        ]
+        _active_sessions[town_id] = [s for s in _active_sessions[town_id] if s != session]
         if not _active_sessions[town_id]:
             del _active_sessions[town_id]
 

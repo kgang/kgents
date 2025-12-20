@@ -332,11 +332,7 @@ class LedgerState:
         """Get transaction history, optionally filtered by account."""
         txs = self.transaction_log
         if account_id:
-            txs = [
-                tx
-                for tx in txs
-                if tx.from_account == account_id or tx.to_account == account_id
-            ]
+            txs = [tx for tx in txs if tx.from_account == account_id or tx.to_account == account_id]
         return txs[-limit:]
 
 

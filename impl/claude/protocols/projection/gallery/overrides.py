@@ -116,9 +116,7 @@ class GalleryOverrides:
             widget_overrides=self.widget_overrides,
         )
 
-    def with_widget_override(
-        self, widget_name: str, props: dict[str, Any]
-    ) -> GalleryOverrides:
+    def with_widget_override(self, widget_name: str, props: dict[str, Any]) -> GalleryOverrides:
         """Return new overrides with widget-specific override."""
         new_widget_overrides = dict(self.widget_overrides)
         existing = new_widget_overrides.get(widget_name, {})

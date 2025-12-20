@@ -118,9 +118,7 @@ class WiredLogos:
 
     # === Core Operations (delegated with integration) ===
 
-    def resolve(
-        self, path: str, observer: "Umwelt[Any, Any] | None" = None
-    ) -> LogosNode:
+    def resolve(self, path: str, observer: "Umwelt[Any, Any] | None" = None) -> LogosNode:
         """
         Resolve an AGENTESE path with G-gent validation and L-gent lookup.
 
@@ -195,9 +193,7 @@ class WiredLogos:
         # Skip if observer is an Observer or None
         if observer is not None and hasattr(observer, "dna"):
             # hasattr check ensures this is Umwelt, not Observer
-            _meta = self.integrations.umwelt.extract_meta(
-                cast("Umwelt[Any, Any]", observer)
-            )
+            _meta = self.integrations.umwelt.extract_meta(cast("Umwelt[Any, Any]", observer))
 
         # Step 3 & 4: Invoke via Logos (uses our resolve() which is enhanced)
         success = True
@@ -264,8 +260,7 @@ class WiredLogos:
         """
         if self.integrations.membrane is None:
             raise RuntimeError(
-                "Membrane bridge not available. "
-                "Create WiredLogos with membrane integration."
+                "Membrane bridge not available. Create WiredLogos with membrane integration."
             )
         return await self.integrations.membrane.execute(command, observer, **kwargs)
 

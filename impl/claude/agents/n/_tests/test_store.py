@@ -171,9 +171,7 @@ class TestMemoryCrystalStore:
         """Query respects offset."""
         for i in range(10):
             store.store(
-                make_trace(
-                    f"t{i}", timestamp=datetime.now(timezone.utc) + timedelta(seconds=i)
-                )
+                make_trace(f"t{i}", timestamp=datetime.now(timezone.utc) + timedelta(seconds=i))
             )
 
         results = store.query(offset=3, limit=3)
@@ -236,9 +234,7 @@ class TestMemoryCrystalStore:
         assert len(tree["children"]) == 2
 
         # Find child1 in children
-        child1_tree = next(
-            c for c in tree["children"] if c["trace"].trace_id == "child1"
-        )
+        child1_tree = next(c for c in tree["children"] if c["trace"].trace_id == "child1")
         assert len(child1_tree["children"]) == 1
         assert child1_tree["children"][0]["trace"].trace_id == "grandchild"
 
@@ -275,16 +271,8 @@ class TestCrystalStats:
         now = datetime.now(timezone.utc)
 
         store.store(make_trace("t1", agent_id="a1", gas=100, timestamp=now))
-        store.store(
-            make_trace(
-                "t2", agent_id="a2", gas=200, timestamp=now + timedelta(seconds=1)
-            )
-        )
-        store.store(
-            make_trace(
-                "t3", agent_id="a1", gas=50, timestamp=now + timedelta(seconds=2)
-            )
-        )
+        store.store(make_trace("t2", agent_id="a2", gas=200, timestamp=now + timedelta(seconds=1)))
+        store.store(make_trace("t3", agent_id="a1", gas=50, timestamp=now + timedelta(seconds=2)))
 
         stats = compute_stats(store)
 

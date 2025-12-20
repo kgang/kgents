@@ -139,9 +139,7 @@ class TestInfrastructureConfig:
         assert config.vector.dimensions == 256
         assert config.blob.path == "/tmp/blobs"
 
-    def test_default_config(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_default_config(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should create default local-first config."""
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
         paths = XDGPaths.resolve()
@@ -248,9 +246,7 @@ class TestStorageProvider:
         await provider.close()
 
     @pytest.mark.asyncio
-    async def test_env_var_expansion(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    async def test_env_var_expansion(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should expand environment variables in config."""
         monkeypatch.setenv("TEST_DB_PATH", str(tmp_path / "from_env.db"))
 

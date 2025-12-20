@@ -142,16 +142,12 @@ class WitnessReport:
     @property
     def favorable_count(self) -> int:
         """Count of favorable observations."""
-        return sum(
-            1 for o in self.observations if o.disposition == Disposition.FAVORABLE
-        )
+        return sum(1 for o in self.observations if o.disposition == Disposition.FAVORABLE)
 
     @property
     def unfavorable_count(self) -> int:
         """Count of unfavorable observations."""
-        return sum(
-            1 for o in self.observations if o.disposition == Disposition.UNFAVORABLE
-        )
+        return sum(1 for o in self.observations if o.disposition == Disposition.UNFAVORABLE)
 
     @property
     def total_count(self) -> int:

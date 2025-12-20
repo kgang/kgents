@@ -513,12 +513,86 @@ def reset_registry() -> None:
     Reset the global registry (for testing).
 
     Clears all registrations and cached instances.
+
+    WARNING: After calling this, the registry will be EMPTY!
+    Call repopulate_registry() to re-register all @node decorated classes.
+
+    In pytest-xdist, tests on the same worker share Python state.
+    If you reset the registry and don't repopulate it, subsequent tests
+    that rely on node registration will FAIL.
+
+    Recommended pattern for autouse fixtures:
+        @pytest.fixture(autouse=True)
+        def clean_registry():
+            reset_registry()
+            yield
+            repopulate_registry()  # CRITICAL for xdist!
     """
     global _registry
     with _registry_lock:
         if _registry is not None:
             _registry.clear()
         _registry = None
+
+
+def repopulate_registry() -> None:
+    """
+    Re-register all @node decorated classes found in sys.modules.
+
+    This scans all loaded Python modules for classes that have the
+    NODE_MARKER attribute (set by @node decorator) and re-registers
+    them with the global registry.
+
+    Use this after reset_registry() in test fixtures to restore
+    the registry state for subsequent tests on the same worker.
+
+    Example:
+        @pytest.fixture(autouse=True)
+        def clean_registry():
+            reset_registry()
+            yield
+            repopulate_registry()  # Re-register all nodes
+    """
+    import sys
+
+    registry = _get_registry()
+    registered_count = 0
+
+    # Modules to skip during scan (to avoid deprecation warnings)
+    # - typing.io deprecated in Python 3.12+, triggers warning on getattr
+    # - starlette.status deprecated HTTP constants (HTTP_413_REQUEST_ENTITY_TOO_LARGE etc.)
+    skip_prefixes = ("typing.", "starlette.")
+    skip_exact = {"typing", "starlette.status"}
+
+    # Scan all loaded modules
+    for module in list(sys.modules.values()):
+        if module is None:
+            continue
+
+        # Skip modules that trigger deprecation warnings
+        module_name = getattr(module, "__name__", "")
+        if module_name in skip_exact or any(module_name.startswith(p) for p in skip_prefixes):
+            continue
+
+        # Check all attributes in the module
+        try:
+            for name in dir(module):
+                try:
+                    obj = getattr(module, name)
+                    # Check if it's a class with NODE_MARKER
+                    if isinstance(obj, type) and hasattr(obj, NODE_MARKER):
+                        meta = getattr(obj, NODE_MARKER)
+                        if isinstance(meta, NodeMetadata):
+                            registry._register_class(meta.path, obj, meta)
+                            registered_count += 1
+                except Exception:
+                    # Some attributes may not be accessible
+                    continue
+        except Exception:
+            # Some modules may not support dir()
+            continue
+
+    logger.debug(f"Repopulated NodeRegistry with {registered_count} nodes")
 
 
 # === Exports ===
@@ -536,4 +610,5 @@ __all__ = [
     "NodeRegistry",
     "get_registry",
     "reset_registry",
+    "repopulate_registry",
 ]

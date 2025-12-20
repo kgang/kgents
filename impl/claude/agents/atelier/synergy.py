@@ -54,7 +54,9 @@ async def emit_piece_created(
     event = create_piece_created_event(
         piece_id=piece.id,
         piece_type=piece.form,
-        title=piece.provenance.interpretation[:50] if piece.provenance.interpretation else "Untitled",
+        title=piece.provenance.interpretation[:50]
+        if piece.provenance.interpretation
+        else "Untitled",
         builder_id=piece.artisan,
         session_id=session_id,
         spectator_count=spectator_count,

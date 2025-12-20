@@ -177,9 +177,7 @@ async def _execute_repl(
                     output = await agent.dialogue(user_input, mode=current_mode)
                 else:
                     output = await agent.dialogue(user_input)
-                response = (
-                    output.response if hasattr(output, "response") else str(output)
-                )
+                response = output.response if hasattr(output, "response") else str(output)
             else:
                 output = await agent.invoke(user_input)
                 response = str(output)

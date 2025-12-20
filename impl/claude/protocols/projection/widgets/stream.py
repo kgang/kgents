@@ -129,18 +129,12 @@ class StreamWidget(KgentsWidget[StreamWidgetState]):
         content = s.content
 
         # Escape HTML entities
-        content = (
-            content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        )
+        content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
         # Preserve newlines
         content = content.replace("\n", "<br>")
 
-        cursor_class = (
-            "kgents-cursor-visible" if s.cursor_visible and not s.complete else ""
-        )
-        complete_class = (
-            "kgents-stream-complete" if s.complete else "kgents-stream-active"
-        )
+        cursor_class = "kgents-cursor-visible" if s.cursor_visible and not s.complete else ""
+        complete_class = "kgents-stream-complete" if s.complete else "kgents-stream-active"
 
         cursor_html = ""
         if s.cursor_visible and not s.complete:

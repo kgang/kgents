@@ -322,17 +322,12 @@ class VoILedger:
         # Retroactively update VoI based on actual outcome
         self.update_voi_retrospectively(observation_id, outcome)
 
-    def update_voi_retrospectively(
-        self, observation_id: str, outcome: InterventionOutcome
-    ) -> None:
+    def update_voi_retrospectively(self, observation_id: str, outcome: InterventionOutcome) -> None:
         """Update VoI based on actual intervention outcome."""
         # Find the observation record
         for records in self.observations.values():
             for record in records:
-                if (
-                    f"{record.observer_id}_{record.timestamp.isoformat()}"
-                    == observation_id
-                ):
+                if f"{record.observer_id}_{record.timestamp.isoformat()}" == observation_id:
                     # Update with actual value saved
                     old_voi = record.voi
                     record.voi = outcome.value_saved
@@ -382,12 +377,8 @@ class VoILedger:
 
     def system_rovi(self) -> float:
         """System-wide Return on Value of Information."""
-        total_voi = sum(
-            cap.total_voi_generated for cap in self.epistemic_capital.values()
-        )
-        total_gas = sum(
-            cap.total_gas_consumed for cap in self.epistemic_capital.values()
-        )
+        total_voi = sum(cap.total_voi_generated for cap in self.epistemic_capital.values())
+        total_gas = sum(cap.total_gas_consumed for cap in self.epistemic_capital.values())
         return total_voi / total_gas if total_gas > 0 else 0.0
 
     def total_gas(self) -> float:
@@ -396,17 +387,9 @@ class VoILedger:
 
     def false_positive_rate(self) -> float:
         """System-wide false positive rate."""
-        total_observations = sum(
-            cap.observations for cap in self.epistemic_capital.values()
-        )
-        total_false_positives = sum(
-            cap.false_positives for cap in self.epistemic_capital.values()
-        )
-        return (
-            total_false_positives / total_observations
-            if total_observations > 0
-            else 0.0
-        )
+        total_observations = sum(cap.observations for cap in self.epistemic_capital.values())
+        total_false_positives = sum(cap.false_positives for cap in self.epistemic_capital.values())
+        return total_false_positives / total_observations if total_observations > 0 else 0.0
 
 
 # =============================================================================
@@ -498,9 +481,7 @@ class VoIOptimizer:
         if not agents:
             return {}
 
-        priorities = {
-            agent_id: self.compute_observation_priority(agent_id) for agent_id in agents
-        }
+        priorities = {agent_id: self.compute_observation_priority(agent_id) for agent_id in agents}
 
         total_priority = sum(priorities.values())
         if total_priority == 0:
@@ -770,9 +751,7 @@ class UnifiedValueAccounting:
         total_observation_gas = self.voi.total_gas()
         total_gas = total_production_gas + total_observation_gas
 
-        observation_fraction = (
-            total_observation_gas / total_gas if total_gas > 0 else 0.0
-        )
+        observation_fraction = total_observation_gas / total_gas if total_gas > 0 else 0.0
 
         is_healthy = (
             production_roc >= self.min_roc
@@ -800,9 +779,7 @@ class UnifiedValueAccounting:
 
         # Check observation RoVI
         if self.voi.system_rovi() < self.min_rovi:
-            recs.append(
-                "Observation RoVI below threshold; reduce observation frequency or depth"
-            )
+            recs.append("Observation RoVI below threshold; reduce observation frequency or depth")
 
         # Check false positive rate
         if self.voi.false_positive_rate() > self.max_false_positive_rate:
@@ -837,17 +814,14 @@ class UnifiedValueAccounting:
             "impact": {
                 "total": self.value.treasury.total_impact(),
                 "debt": self.value.treasury.total_debt(),
-                "net": self.value.treasury.total_impact()
-                - self.value.treasury.total_debt(),
+                "net": self.value.treasury.total_impact() - self.value.treasury.total_debt(),
             },
             "epistemic_capital": {
                 "total_voi": sum(
-                    cap.total_voi_generated
-                    for cap in self.voi.epistemic_capital.values()
+                    cap.total_voi_generated for cap in self.voi.epistemic_capital.values()
                 ),
                 "disasters_prevented": sum(
-                    cap.disasters_prevented
-                    for cap in self.voi.epistemic_capital.values()
+                    cap.disasters_prevented for cap in self.voi.epistemic_capital.values()
                 ),
                 "false_positives": sum(
                     cap.false_positives for cap in self.voi.epistemic_capital.values()

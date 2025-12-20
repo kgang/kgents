@@ -171,11 +171,7 @@ class TableWidget(KgentsWidget[TableWidgetState]):
         for i, row in enumerate(s.page_rows):
             cells = []
             prefix = (
-                "[x] "
-                if i in s.selected_rows and s.selectable
-                else "    "
-                if s.selectable
-                else ""
+                "[x] " if i in s.selected_rows and s.selectable else "    " if s.selectable else ""
             )
             for col in s.columns:
                 w = widths[col.key]
@@ -243,8 +239,7 @@ class TableWidget(KgentsWidget[TableWidgetState]):
             if col.key == s.sort_by:
                 sort_indicator = " ▲" if s.sort_direction == "asc" else " ▼"
             header_cells.append(
-                f'<th class="{sort_class}" data-key="{col.key}">'
-                f"{col.label}{sort_indicator}</th>"
+                f'<th class="{sort_class}" data-key="{col.key}">{col.label}{sort_indicator}</th>'
             )
 
         # Body rows

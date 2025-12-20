@@ -326,9 +326,7 @@ def _show_status(ctx: "InvocationContext | None") -> int:
         # Build dashboard content
         lines = []
         lines.append("")
-        lines.append(
-            f"  [bold]Budget:[/] [{bar_style}]{budget_bar}[/] {budget_pct}% {tier}"
-        )
+        lines.append(f"  [bold]Budget:[/] [{bar_style}]{budget_bar}[/] {budget_pct}% {tier}")
         lines.append(f"  [bold]Nursery:[/] {nursery_count}/{nursery_capacity} holons")
         lines.append("")
         lines.append("  [bold]Pipeline Activity:[/]")
@@ -382,9 +380,7 @@ def _show_status(ctx: "InvocationContext | None") -> int:
                 f"[cyan]kg grow promote {holon.germination_id[:8]}[/]"
             )
         elif ready_to_prune > 0:
-            console.print(
-                "\n[yellow]Suggested:[/] Clean up failed holons: [cyan]kg grow prune[/]"
-            )
+            console.print("\n[yellow]Suggested:[/] Clean up failed holons: [cyan]kg grow prune[/]")
         elif draft_count > 0:
             console.print(
                 "\n[dim]Tip: Validate your drafts with [cyan]kg grow list[/] → [cyan]kg grow validate <id>[/][/]"
@@ -397,9 +393,7 @@ def _show_status(ctx: "InvocationContext | None") -> int:
     else:
         # Plain text fallback
         print("\n=== self.grow Status ===")
-        print(
-            f"Budget: {budget_pct}% ({budget.remaining:.2f}/{budget.config.max_entropy_per_run})"
-        )
+        print(f"Budget: {budget_pct}% ({budget.remaining:.2f}/{budget.config.max_entropy_per_run})")
         print(f"Nursery: {nursery_count}/{nursery_capacity}")
         print("\nPipeline:")
         print(f"  Drafts: {draft_count}")
@@ -497,9 +491,7 @@ def _show_budget(ctx: "InvocationContext | None") -> int:
         # Plain text fallback
         _emit(f"Budget: {tier} ({pct}%)", status, ctx)
         _emit(f"Remaining: {remaining:.2f}/{max_budget}", {}, ctx)
-        _emit(
-            f"Regeneration: +{budget.config.regeneration_rate_per_hour}/hour", {}, ctx
-        )
+        _emit(f"Regeneration: +{budget.config.regeneration_rate_per_hour}/hour", {}, ctx)
 
         if status["spent_by_operation"]:
             _emit("\nSpending breakdown:", {}, ctx)
@@ -608,9 +600,7 @@ def _propose(args: list[str], ctx: "InvocationContext | None") -> int:
     from protocols.agentese.contexts.self_grow.propose import generate_proposal_from_gap
 
     if len(args) < 2:
-        _emit(
-            "Usage: kg grow propose <context> <entity> [--why <justification>]", {}, ctx
-        )
+        _emit("Usage: kg grow propose <context> <entity> [--why <justification>]", {}, ctx)
         _emit(
             "Example: kg grow propose world garden --why 'Agents need botanical exploration'",
             {},
@@ -696,9 +686,7 @@ def _propose(args: list[str], ctx: "InvocationContext | None") -> int:
                 beh_branch.add(f"[cyan]{aspect}[/]: {desc}")
 
         console.print(Panel(tree, title="Proposal Created", border_style="green"))
-        console.print(
-            f"\n[dim]Next: [cyan]kg grow validate {proposal.proposal_id[:8]}[/][/]"
-        )
+        console.print(f"\n[dim]Next: [cyan]kg grow validate {proposal.proposal_id[:8]}[/][/]")
     else:
         _emit(
             f"Created proposal: {proposal.proposal_id}",
@@ -786,14 +774,10 @@ def _validate(args: list[str], ctx: "InvocationContext | None") -> int:
         if result.passed:
             status = f"[bold green]PASSED[/] ({high_count}/{required_high} high scores)"
         else:
-            status = (
-                f"[bold red]FAILED[/] ({high_count}/{required_high} high scores needed)"
-            )
+            status = f"[bold red]FAILED[/] ({high_count}/{required_high} high scores needed)"
 
         console.print(f"\nValidation: {status}")
-        console.print(
-            f"[dim]Overall: {result.overall_score:.2f} | Threshold: {threshold}[/]"
-        )
+        console.print(f"[dim]Overall: {result.overall_score:.2f} | Threshold: {threshold}[/]")
 
         # Scores table with visual bars
         table = Table(title="Seven Gates", show_header=True, show_lines=False)
@@ -843,9 +827,7 @@ def _validate(args: list[str], ctx: "InvocationContext | None") -> int:
         # Law checks
         console.print("\n[bold]Law Checks:[/]")
         console.print(f"  Identity: {'✓' if result.law_checks.identity_holds else '✗'}")
-        console.print(
-            f"  Associativity: {'✓' if result.law_checks.associativity_holds else '✗'}"
-        )
+        console.print(f"  Associativity: {'✓' if result.law_checks.associativity_holds else '✗'}")
         if result.law_checks.errors:
             console.print(f"  [dim]Notes: {', '.join(result.law_checks.errors[:2])}[/]")
 
@@ -895,9 +877,7 @@ def _validate(args: list[str], ctx: "InvocationContext | None") -> int:
         # Show next step based on result
         if result.passed:
             console.print("\n[green]✓[/] Ready for germination!")
-            console.print(
-                f"[dim]Next: [cyan]kg grow germinate {proposal.proposal_id[:8]}[/][/]"
-            )
+            console.print(f"[dim]Next: [cyan]kg grow germinate {proposal.proposal_id[:8]}[/][/]")
         else:
             console.print("\n[yellow]![/] Fix the issues above and re-validate.")
             console.print(
@@ -962,14 +942,10 @@ def _show_nursery(ctx: "InvocationContext | None") -> int:
                 germ_id = holon.germination_id[:8] + "..."
 
                 # Usage progress bar toward promotion threshold
-                usage_pct = min(
-                    100, int(holon.usage_count / config.min_usage_for_promotion * 100)
-                )
+                usage_pct = min(100, int(holon.usage_count / config.min_usage_for_promotion * 100))
                 usage_filled = usage_pct // 10
                 usage_bar = "█" * usage_filled + "░" * (10 - usage_filled)
-                usage_str = (
-                    f"{usage_bar} {holon.usage_count}/{config.min_usage_for_promotion}"
-                )
+                usage_str = f"{usage_bar} {holon.usage_count}/{config.min_usage_for_promotion}"
 
                 # Success rate with color
                 if holon.usage_count > 0:
@@ -1021,9 +997,7 @@ def _show_nursery(ctx: "InvocationContext | None") -> int:
                     f"[cyan]kg grow promote {holon.germination_id[:8]}[/]"
                 )
             if ready_to_prune:
-                console.print(
-                    "\n[yellow]Action:[/] Prune failing holons: [cyan]kg grow prune[/]"
-                )
+                console.print("\n[yellow]Action:[/] Prune failing holons: [cyan]kg grow prune[/]")
     else:
         _emit(f"Nursery: {len(active)}/{config.max_capacity}", {}, ctx)
         for holon in active:
@@ -1129,9 +1103,7 @@ def _germinate(args: list[str], ctx: "InvocationContext | None") -> int:
             )
             console.print("\n[dim]Use [cyan]kg grow nursery[/] to track usage.[/]")
         else:
-            _emit(
-                f"Germinated: {holon.germination_id}", {"id": holon.germination_id}, ctx
-            )
+            _emit(f"Germinated: {holon.germination_id}", {"id": holon.germination_id}, ctx)
 
     except Exception as e:
         _emit(f"Germination failed: {e}", {"error": str(e)}, ctx)
@@ -1185,9 +1157,7 @@ def _wizard(ctx: "InvocationContext | None") -> int:
 
     # Step 3: Justification
     console.print("\n[bold]Step 3: Justify Its Existence[/]")
-    console.print(
-        f"[dim]Why does this holon need to exist? (min {MIN_WHY_LENGTH} chars)[/]"
-    )
+    console.print(f"[dim]Why does this holon need to exist? (min {MIN_WHY_LENGTH} chars)[/]")
 
     why_exists = Prompt.ask("Justification")
     why_exists = why_exists.strip() if why_exists else ""
@@ -1205,9 +1175,7 @@ def _wizard(ctx: "InvocationContext | None") -> int:
     console.print(f"Default: {', '.join(default_affordances)}")
 
     extra = Prompt.ask("Additional affordances (comma-separated)", default="")
-    affordances = default_affordances + [
-        a.strip() for a in extra.split(",") if a.strip()
-    ]
+    affordances = default_affordances + [a.strip() for a in extra.split(",") if a.strip()]
 
     # Create proposal
     from protocols.agentese.contexts.self_grow import GapRecognition, HolonProposal
@@ -1318,19 +1286,13 @@ def _demo(ctx: "InvocationContext | None") -> int:
 
         # Step 3: Create proposal
         task = progress.add_task("Creating proposal...", total=None)
-        gap = (
-            gaps[0]
-            if gaps
-            else GapRecognition.create(context="world", holon="botanical_garden")
-        )
+        gap = gaps[0] if gaps else GapRecognition.create(context="world", holon="botanical_garden")
         proposal = generate_proposal_from_gap(
             gap,
             proposed_by="demo",
             why_exists="Agents frequently need world.botanical_garden for exploring plant species and ecosystems.",
         )
-        progress.update(
-            task, description="Proposal: world.botanical_garden", completed=True
-        )
+        progress.update(task, description="Proposal: world.botanical_garden", completed=True)
 
         # Step 4: Validate
         task = progress.add_task("Validating (7 gates + laws + abuse)...", total=None)
@@ -1367,9 +1329,7 @@ def _demo(ctx: "InvocationContext | None") -> int:
                 completed=True,
             )
         else:
-            progress.update(
-                task, description="Skipped (validation failed)", completed=True
-            )
+            progress.update(task, description="Skipped (validation failed)", completed=True)
 
     console.print()
 
@@ -1382,9 +1342,7 @@ def _demo(ctx: "InvocationContext | None") -> int:
     table.add_row("2. Propose", f"world.botanical_garden ({proposal.proposal_id[:8]})")
     table.add_row("3. Validate", f"{status} ({validation.overall_score:.2f})")
     table.add_row("4. JIT Compile", f"{len(jit_source.splitlines())} lines")
-    table.add_row(
-        "5. Germinate", f"Nursery: {nursery.count}/{nursery._config.max_capacity}"
-    )
+    table.add_row("5. Germinate", f"Nursery: {nursery.count}/{nursery._config.max_capacity}")
 
     console.print(table)
 
@@ -1395,9 +1353,7 @@ def _demo(ctx: "InvocationContext | None") -> int:
     )
 
     console.print("\n[bold]Demo complete![/] The holon is now in the nursery.")
-    console.print(
-        "[dim]In production, it would be tested until ready for promotion.[/]"
-    )
+    console.print("[dim]In production, it would be tested until ready for promotion.[/]")
 
     return 0
 
@@ -1660,18 +1616,12 @@ def _show_proposal(args: list[str], ctx: "InvocationContext | None") -> int:
                     f"\n[yellow]Needs work.[/] [cyan]kg grow validate {proposal.proposal_id[:8]}[/]"
                 )
         else:
-            console.print(
-                "\n[dim]Tip: Add [cyan]--scores[/] for validation breakdown[/]"
-            )
+            console.print("\n[dim]Tip: Add [cyan]--scores[/] for validation breakdown[/]")
 
         # Show next actions
         console.print("\n[dim]Actions:[/]")
-        console.print(
-            f"  [cyan]kg grow validate {proposal.proposal_id[:8]}[/]  Full validation"
-        )
-        console.print(
-            f"  [cyan]kg grow germinate {proposal.proposal_id[:8]}[/]  Add to nursery"
-        )
+        console.print(f"  [cyan]kg grow validate {proposal.proposal_id[:8]}[/]  Full validation")
+        console.print(f"  [cyan]kg grow germinate {proposal.proposal_id[:8]}[/]  Add to nursery")
     else:
         _emit(f"Proposal: {proposal.context}.{proposal.entity}", {}, ctx)
         _emit(f"ID: {proposal.proposal_id}", {}, ctx)

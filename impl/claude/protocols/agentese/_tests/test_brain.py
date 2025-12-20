@@ -75,9 +75,7 @@ class TestBrainCapture:
         return create_mock_umwelt()
 
     @pytest.mark.asyncio
-    async def test_capture_stores_content(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_capture_stores_content(self, brain_logos: Any, observer: Any) -> None:
         """self.memory.capture stores content in brain."""
         result = await brain_logos.invoke(
             "self.memory.capture", observer, content="Machine learning tutorial"
@@ -88,9 +86,7 @@ class TestBrainCapture:
         assert result.get("concept_id") is not None
 
     @pytest.mark.asyncio
-    async def test_capture_multiple_items(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_capture_multiple_items(self, brain_logos: Any, observer: Any) -> None:
         """Multiple captures store multiple items."""
         # Capture multiple items
         r1 = await brain_logos.invoke(
@@ -113,9 +109,7 @@ class TestBrainCapture:
         assert len(ids) == 3
 
     @pytest.mark.asyncio
-    async def test_capture_requires_content(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_capture_requires_content(self, brain_logos: Any, observer: Any) -> None:
         """self.memory.capture requires content parameter."""
         result = await brain_logos.invoke("self.memory.capture", observer)
 
@@ -143,9 +137,7 @@ class TestBrainGhostSurfacing:
         return create_mock_umwelt()
 
     @pytest.mark.asyncio
-    async def test_ghost_surface_returns_results(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_ghost_surface_returns_results(self, brain_logos: Any, observer: Any) -> None:
         """ghost.surface returns results for captured content."""
         # Capture identical content - hash-based embedding will find exact match
         await brain_logos.invoke(
@@ -172,16 +164,12 @@ class TestBrainGhostSurfacing:
 
         fresh_logos = create_brain_logos(embedder_type="simple")
 
-        result = await fresh_logos.invoke(
-            "self.memory.ghost.surface", observer, context="anything"
-        )
+        result = await fresh_logos.invoke("self.memory.ghost.surface", observer, context="anything")
 
         assert result.get("count", 0) == 0
 
     @pytest.mark.asyncio
-    async def test_ghost_surface_respects_limit(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_ghost_surface_respects_limit(self, brain_logos: Any, observer: Any) -> None:
         """ghost.surface respects limit parameter."""
         # Capture many items
         for i in range(10):
@@ -221,19 +209,13 @@ class TestBrainCartography:
         return create_mock_umwelt()
 
     @pytest.mark.asyncio
-    async def test_cartography_manifest_works(
-        self, brain_logos: Any, observer: Any
-    ) -> None:
+    async def test_cartography_manifest_works(self, brain_logos: Any, observer: Any) -> None:
         """self.memory.cartography.manifest returns topology info."""
         from protocols.agentese.node import BasicRendering
 
         # Capture some content
-        await brain_logos.invoke(
-            "self.memory.capture", observer, content="Category theory basics"
-        )
-        await brain_logos.invoke(
-            "self.memory.capture", observer, content="Functor composition"
-        )
+        await brain_logos.invoke("self.memory.capture", observer, content="Category theory basics")
+        await brain_logos.invoke("self.memory.capture", observer, content="Functor composition")
 
         result = await brain_logos.invoke("self.memory.cartography.manifest", observer)
 
@@ -276,9 +258,7 @@ class TestBrainFullWorkflow:
         assert r2.get("status") == "captured"
 
         # 2. Ghost surface - verify pipeline works
-        result = await logos.invoke(
-            "self.memory.ghost.surface", observer, context="anything"
-        )
+        result = await logos.invoke("self.memory.ghost.surface", observer, context="anything")
 
         # 3. Verify surface returns proper structure (not semantic similarity)
         assert "surfaced" in result
@@ -313,9 +293,7 @@ class TestBrainFullWorkflow:
             assert r.get("concept_id") is not None
 
         # Ghost surface should work (returns structure, not testing semantic similarity)
-        result = await logos.invoke(
-            "self.memory.ghost.surface", observer, context="any query"
-        )
+        result = await logos.invoke("self.memory.ghost.surface", observer, context="any query")
 
         assert "surfaced" in result
         assert "count" in result
@@ -331,14 +309,10 @@ class TestBrainFullWorkflow:
         observer: Any = create_mock_umwelt()
 
         # Capture in logos1
-        await logos1.invoke(
-            "self.memory.capture", observer, content="Content only in logos1"
-        )
+        await logos1.invoke("self.memory.capture", observer, content="Content only in logos1")
 
         # Search in logos2 should find nothing
-        result = await logos2.invoke(
-            "self.memory.ghost.surface", observer, context="logos1"
-        )
+        result = await logos2.invoke("self.memory.ghost.surface", observer, context="logos1")
 
         assert result.get("count", 0) == 0
 
@@ -424,9 +398,7 @@ class TestSemanticSearchQuality:
         assert "Python" in first_content or "code" in first_content.lower()
 
     @pytest.mark.asyncio
-    async def test_ml_finds_ai_content(
-        self, semantic_logos: Any, observer: Any
-    ) -> None:
+    async def test_ml_finds_ai_content(self, semantic_logos: Any, observer: Any) -> None:
         """Searching 'machine learning' should find AI-related content."""
         # Capture various content
         await semantic_logos.invoke(
@@ -461,9 +433,7 @@ class TestSemanticSearchQuality:
         assert any(word in first_content for word in ["neural", "deep", "ai", "learn"])
 
     @pytest.mark.asyncio
-    async def test_semantic_similarity_ordering(
-        self, semantic_logos: Any, observer: Any
-    ) -> None:
+    async def test_semantic_similarity_ordering(self, semantic_logos: Any, observer: Any) -> None:
         """Results should be ordered by semantic similarity."""
         # Capture content with varying relevance to "cat"
         await semantic_logos.invoke(
@@ -498,9 +468,7 @@ class TestSemanticSearchQuality:
         assert "cat" in first_content or "purr" in first_content
 
     @pytest.mark.asyncio
-    async def test_embeddings_are_consistent(
-        self, semantic_logos: Any, observer: Any
-    ) -> None:
+    async def test_embeddings_are_consistent(self, semantic_logos: Any, observer: Any) -> None:
         """Same query should give consistent results."""
         # Capture content
         await semantic_logos.invoke(
@@ -536,9 +504,7 @@ class TestSemanticSearchQuality:
             assert s1.get("content") == s2.get("content")
 
     @pytest.mark.asyncio
-    async def test_semantic_vs_keyword_search(
-        self, semantic_logos: Any, observer: Any
-    ) -> None:
+    async def test_semantic_vs_keyword_search(self, semantic_logos: Any, observer: Any) -> None:
         """Semantic search should find related content even without keyword overlap."""
         # Capture content about programming without saying "code"
         await semantic_logos.invoke(
@@ -568,9 +534,7 @@ class TestSemanticSearchQuality:
         assert "software" in first_content or "application" in first_content
 
     @pytest.mark.asyncio
-    async def test_empty_context_returns_results(
-        self, semantic_logos: Any, observer: Any
-    ) -> None:
+    async def test_empty_context_returns_results(self, semantic_logos: Any, observer: Any) -> None:
         """Even vague context should return something if content exists."""
         await semantic_logos.invoke(
             "self.memory.capture",
@@ -617,9 +581,7 @@ class TestBrainPerformance:
         return create_mock_umwelt()
 
     @pytest.mark.asyncio
-    async def test_capture_100_items_performance(
-        self, perf_logos: Any, observer: Any
-    ) -> None:
+    async def test_capture_100_items_performance(self, perf_logos: Any, observer: Any) -> None:
         """Test capturing 100 items completes in reasonable time."""
         import time
 
@@ -652,15 +614,11 @@ class TestBrainPerformance:
         elapsed = time.time() - start_time
 
         # Should complete in under 10 seconds (100ms average per item)
-        assert elapsed < 10.0, (
-            f"Capturing 100 items took {elapsed:.2f}s (expected <10s)"
-        )
+        assert elapsed < 10.0, f"Capturing 100 items took {elapsed:.2f}s (expected <10s)"
 
     @pytest.mark.skip(reason="Ghost infrastructure removed in data-architecture-rewrite")
     @pytest.mark.asyncio
-    async def test_ghost_surfacing_stays_fast(
-        self, perf_logos: Any, observer: Any
-    ) -> None:
+    async def test_ghost_surfacing_stays_fast(self, perf_logos: Any, observer: Any) -> None:
         """Test that ghost surfacing stays fast (<100ms) with 100 items."""
         import time
 
@@ -694,15 +652,11 @@ class TestBrainPerformance:
             elapsed_ms = (time.time() - start_time) * 1000
 
             # Should complete in under 100ms
-            assert elapsed_ms < 100, (
-                f"Ghost surfacing took {elapsed_ms:.1f}ms (expected <100ms)"
-            )
+            assert elapsed_ms < 100, f"Ghost surfacing took {elapsed_ms:.1f}ms (expected <100ms)"
             assert result.get("count", 0) > 0, "Should find some results"
 
     @pytest.mark.asyncio
-    async def test_cartography_with_large_dataset(
-        self, perf_logos: Any, observer: Any
-    ) -> None:
+    async def test_cartography_with_large_dataset(self, perf_logos: Any, observer: Any) -> None:
         """Test cartography works with 100+ items."""
         import time
 
@@ -725,9 +679,7 @@ class TestBrainPerformance:
         elapsed_ms = (time.time() - start_time) * 1000
 
         # Should complete quickly
-        assert elapsed_ms < 200, (
-            f"Cartography took {elapsed_ms:.1f}ms (expected <200ms)"
-        )
+        assert elapsed_ms < 200, f"Cartography took {elapsed_ms:.1f}ms (expected <200ms)"
 
     @pytest.mark.asyncio
     async def test_memory_usage_bounded(self, perf_logos: Any, observer: Any) -> None:

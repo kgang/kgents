@@ -333,15 +333,11 @@ class DocumentarianAdapter(FidelityAdapter):
         html = re.sub(r"\*(.+?)\*", r"<em>\1</em>", html)
 
         # Code blocks
-        html = re.sub(
-            r"```(\w*)\n(.*?)```", r"<pre><code>\2</code></pre>", html, flags=re.DOTALL
-        )
+        html = re.sub(r"```(\w*)\n(.*?)```", r"<pre><code>\2</code></pre>", html, flags=re.DOTALL)
         html = re.sub(r"`(.+?)`", r"<code>\1</code>", html)
 
         # Blockquotes
-        html = re.sub(
-            r"^> (.+)$", r"<blockquote>\1</blockquote>", html, flags=re.MULTILINE
-        )
+        html = re.sub(r"^> (.+)$", r"<blockquote>\1</blockquote>", html, flags=re.MULTILINE)
 
         # Lists
         html = re.sub(r"^- (.+)$", r"<li>\1</li>", html, flags=re.MULTILINE)
@@ -423,9 +419,7 @@ class LiveWireAdapter(FidelityAdapter):
                 f"{event.message}</div>"
             )
         events_html = (
-            "\n".join(event_lines)
-            if event_lines
-            else "<div class='event'>No events yet</div>"
+            "\n".join(event_lines) if event_lines else "<div class='event'>No events yet</div>"
         )
 
         # Metrics HTML
@@ -435,9 +429,7 @@ class LiveWireAdapter(FidelityAdapter):
             uptime_str = f"{uptime_min:02d}:{uptime_sec:02d}"
             memory_str = f"{metrics.memory_mb:.0f} MB" if metrics.memory_mb else "—"
             api_str = str(metrics.api_calls) if metrics.api_calls else "—"
-            tokens_str = (
-                f"{metrics.tokens_processed:,}" if metrics.tokens_processed else "—"
-            )
+            tokens_str = f"{metrics.tokens_processed:,}" if metrics.tokens_processed else "—"
         else:
             uptime_str = "—"
             memory_str = "—"
@@ -620,9 +612,7 @@ class LiveWireAdapter(FidelityAdapter):
         return json.dumps(event.to_dict())
 
 
-def get_adapter(
-    reader: WireReader, fidelity: Optional[Fidelity] = None
-) -> FidelityAdapter:
+def get_adapter(reader: WireReader, fidelity: Optional[Fidelity] = None) -> FidelityAdapter:
     """
     Get the appropriate adapter for a wire reader.
 

@@ -319,9 +319,7 @@ class ColonyDashboard(ComposableMixin, KgentsWidget[ColonyState]):
         lines.append("┌" + "─" * (width - 2) + "┐")
         title = "AGENT TOWN DASHBOARD"
         padding = (width - 2 - len(title)) // 2
-        lines.append(
-            "│" + " " * padding + title + " " * (width - 2 - padding - len(title)) + "│"
-        )
+        lines.append("│" + " " * padding + title + " " * (width - 2 - padding - len(title)) + "│")
         lines.append("├" + "─" * (width - 2) + "┤")
 
         # Status line
@@ -332,10 +330,7 @@ class ColonyDashboard(ComposableMixin, KgentsWidget[ColonyState]):
             f"Day: {state.day}"
         )
         lines.append(
-            "│ "
-            + status[: width - 4]
-            + " " * (width - 4 - len(status[: width - 4]))
-            + " │"
+            "│ " + status[: width - 4] + " " * (width - 4 - len(status[: width - 4])) + " │"
         )
         lines.append("├" + "─" * (width - 2) + "┤")
 
@@ -358,10 +353,7 @@ class ColonyDashboard(ComposableMixin, KgentsWidget[ColonyState]):
             f"Tokens: {state.total_tokens}"
         )
         lines.append(
-            "│ "
-            + footer[: width - 4]
-            + " " * (width - 4 - len(footer[: width - 4]))
-            + " │"
+            "│ " + footer[: width - 4] + " " * (width - 4 - len(footer[: width - 4])) + " │"
         )
         lines.append("└" + "─" * (width - 2) + "┘")
 

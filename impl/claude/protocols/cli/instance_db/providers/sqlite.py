@@ -158,9 +158,7 @@ class SQLiteRelationalStore(IRelationalStore):
         names = pattern.findall(query)
 
         # Convert all param sets to positional
-        positional_list = [
-            tuple(params.get(name) for name in names) for params in params_list
-        ]
+        positional_list = [tuple(params.get(name) for name in names) for params in params_list]
 
         async with self._lock:
             await conn.executemany(converted_query, positional_list)
@@ -194,9 +192,7 @@ class SQLiteRelationalStore(IRelationalStore):
 class _SQLiteTransaction:
     """Transaction-scoped store for nested operations."""
 
-    def __init__(
-        self, conn: aiosqlite.Connection, lock: asyncio.Lock, convert_params: Any
-    ) -> None:
+    def __init__(self, conn: aiosqlite.Connection, lock: asyncio.Lock, convert_params: Any) -> None:
         self._conn = conn
         self._lock = lock
         self._convert_params = convert_params
@@ -228,9 +224,7 @@ class _SQLiteTransaction:
         converted_query, _ = self._convert_params(query, params_list[0])
         pattern = re.compile(r":(\w+)")
         names = pattern.findall(query)
-        positional_list = [
-            tuple(params.get(name) for name in names) for params in params_list
-        ]
+        positional_list = [tuple(params.get(name) for name in names) for params in params_list]
         await self._conn.executemany(converted_query, positional_list)
         return len(params_list)
 
@@ -705,9 +699,7 @@ class InMemoryVectorStore(IVectorStore):
     def dimensions(self) -> int:
         return self._dimensions
 
-    async def upsert(
-        self, id: str, vector: list[float], metadata: dict[str, Any]
-    ) -> None:
+    async def upsert(self, id: str, vector: list[float], metadata: dict[str, Any]) -> None:
         self._vectors[id] = (vector, metadata)
 
     async def search(

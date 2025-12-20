@@ -66,9 +66,7 @@ class MorpheusConfig:
                 ),
             ),
             api_key=os.environ.get("MORPHEUS_API_KEY", "morpheus-internal"),
-            default_model=os.environ.get(
-                "MORPHEUS_DEFAULT_MODEL", "claude-sonnet-4-20250514"
-            ),
+            default_model=os.environ.get("MORPHEUS_DEFAULT_MODEL", "claude-sonnet-4-20250514"),
             timeout=float(os.environ.get("MORPHEUS_TIMEOUT", "120")),
         )
 
@@ -97,9 +95,7 @@ class MorpheusRuntime(Runtime):
             try:
                 from openai import AsyncOpenAI
             except ImportError:
-                raise ImportError(
-                    "openai package not installed. Install with: pip install openai"
-                )
+                raise ImportError("openai package not installed. Install with: pip install openai")
 
             self._client = AsyncOpenAI(
                 base_url=self._config.base_url,
@@ -173,9 +169,7 @@ class MorpheusRuntime(Runtime):
             "model": response.model,
             "usage": {
                 "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
-                "completion_tokens": response.usage.completion_tokens
-                if response.usage
-                else 0,
+                "completion_tokens": response.usage.completion_tokens if response.usage else 0,
                 "total_tokens": response.usage.total_tokens if response.usage else 0,
             },
             "finish_reason": response.choices[0].finish_reason,

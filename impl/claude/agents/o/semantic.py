@@ -408,11 +408,7 @@ class RealHealth:
     @property
     def valid(self) -> bool:
         """Overall real validity."""
-        return (
-            self.executes_without_error
-            and self.terminates_in_budget
-            and self.memory_bounded
-        )
+        return self.executes_without_error and self.terminates_in_budget and self.memory_bounded
 
 
 @dataclass
@@ -662,9 +658,7 @@ class SemanticObserver(BaseObserver):
 
         # Add semantic context
         event.data["semantic_observer"] = True
-        event.data["recent_drift_avg"] = self.drift_detector.get_average_drift(
-            context.agent_id
-        )
+        event.data["recent_drift_avg"] = self.drift_detector.get_average_drift(context.agent_id)
 
         return event
 
@@ -748,10 +742,7 @@ class HallucinationDetector:
                 fact_lower = fact.lower()
                 output_lower = output.lower()
                 # Very simple contradiction check
-                if (
-                    "not " in fact_lower
-                    and fact_lower.replace("not ", "") in output_lower
-                ):
+                if "not " in fact_lower and fact_lower.replace("not ", "") in output_lower:
                     grounding_failures.append(f"Contradicts known fact: {fact}")
                     hallucination_score += 0.25
 

@@ -291,9 +291,7 @@ async def _show_status(ctx: "InvocationContext | None") -> int:
         if state.intent:
             console.print("\n[bold]Intent:[/]")
             console.print(f"  {state.intent.get('description', 'No description')}")
-            console.print(
-                f"  [dim]Priority: {state.intent.get('priority', 'normal')}[/]"
-            )
+            console.print(f"  [dim]Priority: {state.intent.get('priority', 'normal')}[/]")
 
         # Plan
         if state.plan_path:
@@ -467,9 +465,7 @@ async def _show_manifest(ctx: "InvocationContext | None") -> int:
         }
 
         console.print(f"[bold]Current:[/] {current}")
-        console.print(
-            f"[bold]Valid transitions:[/] {', '.join(valid.get(current, []))}"
-        )
+        console.print(f"[bold]Valid transitions:[/] {', '.join(valid.get(current, []))}")
 
         # History
         console.print("\n[bold]Session History:[/]")
@@ -586,14 +582,11 @@ async def _show_garden_status(ctx: "InvocationContext | None") -> int:
                     # Truncate ID for display
                     short_id = entry.id[:16] if len(entry.id) > 16 else entry.id
                     console.print(
-                        f"    {icon} [cyan]{entry.content[:40]}[/] "
-                        f"[dim]({entry.confidence:.0%})[/]"
+                        f"    {icon} [cyan]{entry.content[:40]}[/] [dim]({entry.confidence:.0%})[/]"
                     )
                     console.print(f"       [dim]ID: {short_id}[/]")
 
-            console.print(
-                '\n  [dim]Water an idea: kg gardener water <id> "evidence"[/]'
-            )
+            console.print('\n  [dim]Water an idea: kg gardener water <id> "evidence"[/]')
     else:
         _emit("Garden Status:", {}, ctx)
         for lc in ["seed", "sapling", "tree", "flower", "compost"]:
@@ -676,12 +669,8 @@ async def _harvest_ideas(ctx: "InvocationContext | None") -> int:
     if not flowers:
         if RICH_AVAILABLE:
             console.print("\n[dim]No flowers ready for harvest yet.[/]")
-            console.print(
-                "\n[dim]Ideas need to reach high confidence (90%+) to bloom.[/]"
-            )
-            console.print(
-                "[dim]Nurture them with evidence or wait for time to work.[/]"
-            )
+            console.print("\n[dim]Ideas need to reach high confidence (90%+) to bloom.[/]")
+            console.print("[dim]Nurture them with evidence or wait for time to work.[/]")
 
             # Show what's closest to blooming
             trees = await garden.trees()
@@ -763,9 +752,7 @@ async def _water_idea(args: list[str], ctx: "InvocationContext | None") -> int:
     if target_entry is None:
         if RICH_AVAILABLE:
             console.print(f"\n[red]Error:[/] No idea found matching '{idea_ref}'")
-            console.print(
-                "\n[dim]Use 'kg gardener garden' to list ideas with their IDs.[/]"
-            )
+            console.print("\n[dim]Use 'kg gardener garden' to list ideas with their IDs.[/]")
         else:
             _emit(f"Error: No idea found matching '{idea_ref}'", {}, ctx)
         return 1
@@ -901,17 +888,13 @@ async def _surprise(ctx: "InvocationContext | None") -> int:
     if stats.total_entries == 0:
         if RICH_AVAILABLE:
             console.print("\n[dim]The void echoes... the garden is empty.[/]")
-            console.print(
-                '[dim]Plant some ideas first: [cyan]kg gardener plant "idea"[/][/]'
-            )
+            console.print('[dim]Plant some ideas first: [cyan]kg gardener plant "idea"[/][/]')
         else:
             _emit("Garden is empty. Plant ideas first.", {}, ctx)
         return 0
 
     # Collect all non-composted entries
-    entries = [
-        e for e in garden.entries.values() if e.lifecycle != GardenLifecycle.COMPOST
-    ]
+    entries = [e for e in garden.entries.values() if e.lifecycle != GardenLifecycle.COMPOST]
 
     if not entries:
         _emit("No active entries to surface.", {}, ctx)
@@ -1146,9 +1129,7 @@ def _print_gesture_response(gesture: str, target: str, session_info: str) -> Non
         console.print(f"  [dim]Gesture: {gesture} | Target: {target}[/]")
         # Add contextual suggestions
         if gesture == "OBSERVE":
-            console.print(
-                "  [dim]💡 Try: 'prune stale plans' or 'water blocked tasks'[/]"
-            )
+            console.print("  [dim]💡 Try: 'prune stale plans' or 'water blocked tasks'[/]")
         elif gesture == "WATER":
             console.print(
                 "  [dim]💡 Progress nurtured. Run 'kg gardener manifest' to see state.[/]"

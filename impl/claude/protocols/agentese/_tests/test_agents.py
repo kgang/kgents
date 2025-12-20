@@ -180,9 +180,7 @@ class TestAgentListNode:
     """Test the AgentListNode for listing agents."""
 
     @pytest.mark.asyncio
-    async def test_manifest(
-        self, resolver: AgentContextResolver, mock_umwelt: MagicMock
-    ) -> None:
+    async def test_manifest(self, resolver: AgentContextResolver, mock_umwelt: MagicMock) -> None:
         """manifest returns agent list rendering."""
         node = resolver.resolve("agent", [])
         rendering = await node.manifest(mock_umwelt)

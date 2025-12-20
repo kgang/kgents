@@ -201,14 +201,10 @@ class TongueParser:
         # Extract name: "integration name {" or "integration name"
         match = re.match(r"integration\s+(\w+)\s*\{?", line)
         if not match:
-            raise TongueParseError(
-                "Invalid integration declaration", self._current_line + 1
-            )
+            raise TongueParseError("Invalid integration declaration", self._current_line + 1)
 
         name = match.group(1)
-        integration = TongueIntegration(
-            name=name, emitter="", receiver="", pheromone=""
-        )
+        integration = TongueIntegration(name=name, emitter="", receiver="", pheromone="")
 
         # If no opening brace on this line, expect it on next
         if "{" not in line:
@@ -271,9 +267,7 @@ class TongueParser:
         if "{" not in line:
             self._current_line += 1
             if self._current_stripped_line() != "{":
-                raise TongueParseError(
-                    "Expected '{' after context", self._current_line + 1
-                )
+                raise TongueParseError("Expected '{' after context", self._current_line + 1)
 
         self._current_line += 1
 
@@ -309,9 +303,7 @@ class TongueParser:
         if "{" not in line:
             self._current_line += 1
             if self._current_stripped_line() != "{":
-                raise TongueParseError(
-                    "Expected '{' after trigger", self._current_line + 1
-                )
+                raise TongueParseError("Expected '{' after trigger", self._current_line + 1)
 
         self._current_line += 1
 

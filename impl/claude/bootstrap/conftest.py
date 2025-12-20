@@ -94,9 +94,7 @@ def law_verifier(id_agent: Any, compose_fn: Callable[[Any, Any], Any]) -> Any:
             self.id = id_agent
             self.compose = compose_fn
 
-        async def check_left_identity(
-            self, agent: Any, test_input: Any
-        ) -> dict[str, Any]:
+        async def check_left_identity(self, agent: Any, test_input: Any) -> dict[str, Any]:
             """Check Id >> f == f."""
             composed = self.compose(self.id, agent)
             composed_result = await composed.invoke(test_input)
@@ -110,9 +108,7 @@ def law_verifier(id_agent: Any, compose_fn: Callable[[Any, Any], Any]) -> Any:
                 "input": test_input,
             }
 
-        async def check_right_identity(
-            self, agent: Any, test_input: Any
-        ) -> dict[str, Any]:
+        async def check_right_identity(self, agent: Any, test_input: Any) -> dict[str, Any]:
             """Check f >> Id == f."""
             composed = self.compose(agent, self.id)
             composed_result = await composed.invoke(test_input)
