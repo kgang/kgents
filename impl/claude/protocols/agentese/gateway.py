@@ -92,6 +92,7 @@ def _import_node_modules() -> None:
             world_gallery_api,  # noqa: F401 - Gallery REST API (world.gallery.*)
             world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
             world_park,  # noqa: F401 - Park scenarios (world.park.scenario/mask/force.*)
+            world_scenery,  # noqa: F401 - WARP Phase 2: SceneGraph projection (world.scenery.*)
             world_workshop,  # noqa: F401 - Builder's Workshop (world.workshop.*)
         )
 

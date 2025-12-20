@@ -27,3 +27,4 @@ export * from './self-chat';
 export * from './self-muse';
 export * from './self-repl';
 export * from './self-soul';
+export * from './world-scenery';

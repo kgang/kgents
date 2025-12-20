@@ -517,3 +517,40 @@ export {
   type UseUserFocusOptions,
   type UseUserFocusReturn,
 } from './useUserFocus';
+
+// =============================================================================
+// WARP Phase 2: React Projection Layer
+// =============================================================================
+
+// SceneGraph SSE streaming (world.scenery.*)
+export {
+  useSceneGraph,
+  type UseSceneGraphOptions,
+  type UseSceneGraphReturn,
+} from './useSceneGraph';
+
+// TerrariumView lens + selection management
+export {
+  useTerrariumView,
+  type UseTerrariumViewOptions,
+  type UseTerrariumViewReturn,
+} from './useTerrariumView';
+
+// VoiceGate Anti-Sausage checking (self.voice.gate.*)
+export {
+  useVoiceGate,
+  type VoiceViolation,
+  type VoiceCheckResult,
+  type VoiceReportResult,
+  type UseVoiceGateOptions,
+  type UseVoiceGateReturn,
+} from './useVoiceGate';
+
+// Terrace knowledge CRUD (brain.terrace.*)
+export {
+  useTerrace,
+  type TerraceEntry,
+  type TerraceManifest,
+  type UseTerraceOptions,
+  type UseTerraceReturn,
+} from './useTerrace';
