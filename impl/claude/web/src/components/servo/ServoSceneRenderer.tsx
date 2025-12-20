@@ -154,22 +154,13 @@ export function ServoSceneRenderer({
 }: ServoSceneRendererProps) {
   void _onNodeAction; // Silence unused warning
 
-  // Graceful degradation: handle missing/malformed scene
-  if (!scene) {
-    return (
-      <div className="flex items-center justify-center text-gray-500 py-8">
-        <div className="text-center">
-          <div className="text-2xl mb-2">🌿</div>
-          <div>Scene not available</div>
-        </div>
-      </div>
-    );
-  }
+  // Extract values with defaults - must be before any hooks
+  const nodes = scene?.nodes ?? [];
+  const edges = scene?.edges ?? [];
+  const layout = scene?.layout ?? { direction: 'vertical', mode: 'COMFORTABLE', gap: 1, padding: 1, align: 'start', wrap: false };
+  const title = scene?.title ?? '';
 
-  const nodes = scene.nodes ?? [];
-  const edges = scene.edges ?? [];
-  const layout = scene.layout ?? { direction: 'vertical', mode: 'COMFORTABLE', gap: 1, padding: 1, align: 'start', wrap: false };
-  const title = scene.title ?? '';
+  // All hooks must be called unconditionally before any early returns
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
 
   // Calculate positions
@@ -233,6 +224,18 @@ export function ServoSceneRenderer({
         return base;
     }
   }, [layout, nodes.length]);
+
+  // Graceful degradation: handle missing/malformed scene (after all hooks)
+  if (!scene) {
+    return (
+      <div className="flex items-center justify-center text-gray-500 py-8">
+        <div className="text-center">
+          <div className="text-2xl mb-2">🌿</div>
+          <div>Scene not available</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

@@ -64,9 +64,8 @@ export interface SelfMuseTensionResponse {
 /**
  * Request for whisper aspect - get current whisper if any.
  */
-export interface SelfMuseWhisperRequest {
-
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SelfMuseWhisperRequest {}
 
 /**
  * Response for whisper aspect.
