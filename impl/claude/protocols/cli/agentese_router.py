@@ -328,51 +328,12 @@ class AgentesRouter:
         ctx: "InvocationContext | None",
     ) -> Any:
         """
-        Handle interactive chat paths.
+        Handle interactive chat paths (deprecated).
 
-        Routes to ChatProjection REPL for paths like:
-        - self.soul.chat
-        - world.town.citizen.elara.chat
-        - self.soul.chat.send (with message kwarg for one-shot)
+        Chat functionality has been removed in the Crown Jewel Cleanup.
         """
-        from protocols.cli.chat_projection import run_chat_one_shot, run_chat_repl
-
-        # Extract parent path (remove .chat.* suffix)
-        parent_path = path
-        if ".chat." in path:
-            parent_path = path.split(".chat.")[0]
-        elif path.endswith(".chat"):
-            parent_path = path[:-5]
-
-        # Check for one-shot message
-        message = kwargs.get("message")
-
-        # Derive entity name from path
-        parts = parent_path.split(".")
-        if "soul" in parts:
-            entity_name = "K-gent"
-        elif "citizen" in parts and len(parts) > 3:
-            entity_name = parts[3].title()
-        else:
-            entity_name = parts[-1].title()
-
-        # One-shot mode
-        if message:
-            run_chat_one_shot(
-                node_path=parent_path,
-                message=message,
-                observer=self.observer,
-                json_output=self._config.json_output,
-            )
-            return None  # Output handled by chat projection
-
-        # Interactive REPL mode
-        run_chat_repl(
-            node_path=parent_path,
-            observer=self.observer,
-            entity_name=entity_name,
-        )
-        return None  # Output handled by chat projection
+        print("Chat functionality is not available in this version.")
+        return None
 
     async def _handle_query(
         self,

@@ -69,13 +69,12 @@ def _import_node_modules() -> None:
         from . import contexts  # noqa: F401
 
         # Import specific context node modules (legacy/fallback)
-        # Note: time_trace_warp, world_gestalt_live, world_park removed 2025-12-21 (Crown Jewel Cleanup)
+        # Note: removed 2025-12-21 (Crown Jewel Cleanup):
+        #   time_trace_warp, world_gestalt_live, world_park, self_archaeology, self_conductor
         from .contexts import (
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
             concept_scope,  # noqa: F401 - WARP Phase 1: Context contracts (concept.scope.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
-            self_archaeology,  # noqa: F401 - Repo archaeology (self.memory.archaeology.*)
-            self_conductor,  # noqa: F401 - CLI v7 Phase 2: Conversation Window (self.conductor.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_grant,  # noqa: F401 - WARP Phase 1: Permission contracts (self.grant.*)
             self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)

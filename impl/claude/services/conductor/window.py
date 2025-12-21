@@ -25,10 +25,16 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Callable
+from typing import Any, Callable
 
-if TYPE_CHECKING:
-    from services.chat.config import ContextStrategy
+# Local ContextStrategy enum (previously in services.chat.config)
+class ContextStrategy(Enum):
+    """Context management strategy for conversation windows."""
+
+    SLIDING = "sliding"  # Keep last N turns
+    SUMMARIZE = "summarize"  # Summarize old context
+    HYBRID = "hybrid"  # Sliding + periodic summary
+    FORGET = "forget"  # Simple truncation
 
 logger = logging.getLogger(__name__)
 
@@ -577,24 +583,21 @@ class ConversationWindow:
 
 
 def create_window_from_config(
-    config: "ContextStrategy",
+    config: ContextStrategy,
     max_turns: int = 35,
     context_window_tokens: int = 8000,
 ) -> ConversationWindow:
     """
-    Create a ConversationWindow from ChatConfig strategy.
+    Create a ConversationWindow from ContextStrategy.
 
     Args:
-        config: ContextStrategy enum from chat config
+        config: ContextStrategy enum
         max_turns: Maximum turns
         context_window_tokens: Context window size
 
     Returns:
         Configured ConversationWindow
     """
-    # Import here to avoid circular dependency
-    from services.chat.config import ContextStrategy
-
     strategy_map = {
         ContextStrategy.SLIDING: "sliding",
         ContextStrategy.SUMMARIZE: "summarize",

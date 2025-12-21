@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from agents.k.soul import KgentSoul
     from models.brain import Crystal
     from protocols.agentese.logos import Logos
+    from services.ashc.persistence import PostgresLemmaDatabase
     from services.brain import BrainPersistence
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
@@ -69,7 +70,6 @@ if TYPE_CHECKING:
     from services.tooling import ToolExecutor, ToolRegistry
     from services.verification import VerificationPersistence
     from services.witness import WitnessPersistence
-    from services.ashc.persistence import PostgresLemmaDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -483,15 +483,7 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.warning(f"PrinciplesNode not available: {e}")
 
-    # CLI v7 Phase 2: Conductor Node (Deep Conversation)
-    try:
-        from protocols.agentese.contexts.self_conductor import (
-            ConductorNode,  # noqa: F401
-        )
-
-        logger.info("ConductorNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"ConductorNode not available: {e}")
+    # Note: ConductorNode removed 2025-12-21 (Crown Jewel Cleanup)
 
     # CLI v7 Phase 1: File Node (Safe File I/O)
     try:

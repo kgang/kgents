@@ -59,7 +59,7 @@ class CrystallizationStats:
     by_severity: dict[str, int] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, object]:
         return {
             "total_found": self.total_found,
             "newly_crystallized": self.newly_crystallized,
@@ -140,9 +140,13 @@ class TeachingCrystallizer:
 
     async def _crystallize_one(self, result: TeachingResult) -> "CrystallizeResult":
         """Crystallize a single teaching moment."""
+        # Cast severity to the expected Literal type
+        severity = result.moment.severity
+        if severity not in ("info", "warning", "critical"):
+            severity = "info"
         return await self.brain.crystallize_teaching(
             insight=result.moment.insight,
-            severity=result.moment.severity,  # type: ignore[arg-type]
+            severity=severity,  # Validated above
             source_module=result.module,
             source_symbol=result.symbol,
             evidence=result.moment.evidence,
@@ -182,19 +186,22 @@ async def crystallize_all_teaching(
         # Crystallize only critical
         stats = asyncio.run(crystallize_all_teaching(severity="critical"))
     """
+    resolved_brain: "BrainPersistence"
     if brain is None:
         # Try to get from DI container or create
         try:
             from protocols.agentese.container import get_container
 
             container = get_container()
-            brain = container.resolve("brain_persistence")
+            resolved_brain = await container.resolve("brain_persistence")
         except Exception as e:
             raise RuntimeError(
                 f"No BrainPersistence provided and couldn't resolve from container: {e}"
             )
+    else:
+        resolved_brain = brain
 
-    crystallizer = TeachingCrystallizer(brain)
+    crystallizer = TeachingCrystallizer(resolved_brain)
     return await crystallizer.crystallize_all(
         module_pattern=module_pattern,
         severity=severity,

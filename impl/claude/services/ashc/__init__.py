@@ -39,14 +39,14 @@ See: spec/protocols/proof-generation.md
 from .checker import (
     # Exceptions
     CheckerError,
+    # Registry
+    CheckerRegistry,
     CheckerUnavailable,
-    # Protocol
-    ProofChecker,
     # Implementations
     DafnyChecker,
     MockChecker,
-    # Registry
-    CheckerRegistry,
+    # Protocol
+    ProofChecker,
     available_checkers,
     get_checker,
 )
@@ -69,26 +69,26 @@ from .contracts import (
     VerifiedLemma,
 )
 from .obligation import (
+    MAX_CONTEXT_LINE_LENGTH,
     # Constants
     MAX_CONTEXT_LINES,
-    MAX_CONTEXT_LINE_LENGTH,
     # Extractor
     ObligationExtractor,
     # Convenience function
     extract_from_pytest_report,
 )
-from .search import (
-    # Protocol
-    LemmaDatabase,
-    # Stub implementation
-    InMemoryLemmaDatabase,
-    # Searcher
-    ProofSearcher,
-)
 from .persistence import (
+    LemmaStats,
     # Postgres implementation (Phase 4)
     PostgresLemmaDatabase,
-    LemmaStats,
+)
+from .search import (
+    # Stub implementation
+    InMemoryLemmaDatabase,
+    # Protocol
+    LemmaDatabase,
+    # Searcher
+    ProofSearcher,
 )
 
 __all__ = [

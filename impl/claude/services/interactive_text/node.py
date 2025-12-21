@@ -51,7 +51,6 @@ from .service import (
 
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
-
     from protocols.agentese.node import AgentMeta, Observer
 
 
@@ -220,8 +219,8 @@ class InteractiveTextNode(BaseLogosNode):
                 )
 
                 # Extract observer for trace witness
-                from services.interactive_text.contracts import Observer as ITObserver
                 from services.interactive_text.contracts import (
+                    Observer as ITObserver,
                     ObserverDensity,
                     ObserverRole,
                 )

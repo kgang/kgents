@@ -18,10 +18,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from sqlalchemy import (
+    JSON,
     DateTime,
     Index,
     Integer,
-    JSON,
     String,
     Text,
 )

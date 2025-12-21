@@ -416,34 +416,12 @@ def _project_chat(
     json_output: bool = False,
 ) -> int:
     """
-    Project to ChatProjection for INTERACTIVE paths.
+    Project to ChatProjection for INTERACTIVE paths (deprecated).
 
-    This routes .chat.* paths to the interactive chat REPL.
+    Chat functionality has been removed in the Crown Jewel Cleanup.
     """
-    from .chat_projection import run_chat_one_shot, run_chat_repl
-
-    # Extract parent path (remove .chat.* suffix)
-    parent_path = path
-    if ".chat." in path:
-        parent_path = path.split(".chat.")[0]
-    elif path.endswith(".chat"):
-        parent_path = path[:-5]
-
-    # One-shot mode
-    if one_shot_message:
-        return run_chat_one_shot(
-            node_path=parent_path,
-            message=one_shot_message,
-            observer=observer,
-            json_output=json_output,
-        )
-
-    # Interactive REPL
-    return run_chat_repl(
-        node_path=parent_path,
-        observer=observer,
-        entity_name=entity_name,
-    )
+    print("Chat functionality is not available in this version.")
+    return 1
 
 
 def _parse_kwargs_from_args(args: list[str], path: str) -> dict[str, Any]:

@@ -36,7 +36,6 @@ from typing import (
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
-    from .chat.config import ChatConfig
     from .node import AgentMeta, Observer
 
 P = ParamSpec("P")
@@ -1180,39 +1179,6 @@ def get_chatty_config(node: Any) -> ChattyConfig | None:
     """
     cls = node if isinstance(node, type) else type(node)
     return getattr(cls, CHATTY_MARKER, None)
-
-
-def to_chat_config(chatty_config: ChattyConfig) -> "ChatConfig":
-    """
-    Convert ChattyConfig to a full ChatConfig for session creation.
-
-    Args:
-        chatty_config: The @chatty decorator config
-
-    Returns:
-        ChatConfig for use with ChatSessionFactory
-    """
-    from .chat.config import ChatConfig, ContextStrategy
-
-    strategy_map = {
-        "sliding": ContextStrategy.SLIDING,
-        "summarize": ContextStrategy.SUMMARIZE,
-        "forget": ContextStrategy.FORGET,
-        "hybrid": ContextStrategy.HYBRID,
-    }
-
-    return ChatConfig(
-        context_window=chatty_config.context_window,
-        context_strategy=strategy_map.get(
-            chatty_config.context_strategy, ContextStrategy.SUMMARIZE
-        ),
-        persist_history=chatty_config.persist_history,
-        memory_key=chatty_config.memory_key,
-        inject_memories=chatty_config.inject_memories,
-        memory_recall_limit=chatty_config.memory_recall_limit,
-        entropy_budget=chatty_config.entropy_budget,
-        entropy_decay_per_turn=chatty_config.entropy_decay_per_turn,
-    )
 
 
 __all__ = [

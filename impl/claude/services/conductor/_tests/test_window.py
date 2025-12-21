@@ -367,7 +367,7 @@ class TestWindowFactory:
 
     def test_create_window_from_config_enum(self) -> None:
         """Factory creates window from ContextStrategy enum."""
-        from services.chat.config import ContextStrategy
+        from services.conductor.window import ContextStrategy
 
         for strategy in ContextStrategy:
             window = create_window_from_config(

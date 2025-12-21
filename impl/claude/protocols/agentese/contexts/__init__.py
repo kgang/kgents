@@ -180,7 +180,6 @@ from .time_differance import (
     get_differance_node,
     set_differance_node,
 )
-
 from .void import (
     CapitalNode,
     EntropyNode,

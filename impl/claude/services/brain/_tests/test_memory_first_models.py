@@ -31,7 +31,6 @@ from models import (
 )
 from models.base import get_engine
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -511,7 +510,7 @@ class TestValidation:
         # SQLAlchemy will raise IntegrityError on commit
         crystal = TeachingCrystal(
             id="no-insight",
-            insight=None,  # type: ignore - testing invalid input
+            insight=None,  # type: ignore[arg-type]
             severity="warning",
             source_module="test",
             source_symbol="test",
@@ -528,7 +527,7 @@ class TestValidation:
         event = ExtinctionEvent(
             id="no-commit",
             reason="Test",
-            commit=None,  # type: ignore - testing invalid input
+            commit=None,  # type: ignore[arg-type]
         )
 
         db_session.add(event)

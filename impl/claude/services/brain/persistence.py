@@ -683,10 +683,14 @@ class BrainPersistence:
 
             if existing is not None:
                 # Already crystallized - return existing
+                # Cast severity to Literal (DB stores as string)
+                sev = existing.severity
+                if sev not in ("info", "warning", "critical"):
+                    sev = "info"
                 return CrystallizeResult(
                     teaching_id=teaching_id,
                     insight=existing.insight,
-                    severity=existing.severity,  # type: ignore[arg-type]
+                    severity=sev,  # Validated above
                     source_module=existing.source_module,
                     source_symbol=existing.source_symbol,
                     is_new=False,

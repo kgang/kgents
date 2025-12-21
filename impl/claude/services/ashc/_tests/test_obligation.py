@@ -24,12 +24,11 @@ import pytest
 
 from ..contracts import ObligationId, ObligationSource, ProofObligation
 from ..obligation import (
-    MAX_CONTEXT_LINES,
     MAX_CONTEXT_LINE_LENGTH,
+    MAX_CONTEXT_LINES,
     ObligationExtractor,
     extract_from_pytest_report,
 )
-
 
 # =============================================================================
 # ObligationExtractor Basic Tests

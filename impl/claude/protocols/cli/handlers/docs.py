@@ -58,6 +58,8 @@ def cmd_docs(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         return _handle_hydrate(args)
     elif subcommand == "relevant":
         return _handle_relevant(args)
+    elif subcommand == "crystallize":
+        return _handle_crystallize(args)
     else:
         return _handle_manifest(args)
 
@@ -467,6 +469,106 @@ def _handle_relevant(args: list[str]) -> int:
         return 1
 
 
+def _handle_crystallize(args: list[str]) -> int:
+    """Crystallize teaching moments to Brain persistence.
+
+    This implements the Memory-First Documentation protocol:
+    Teaching moments extracted from code are persisted to Brain,
+    where they can survive code deletion.
+    """
+    try:
+        from services.living_docs.crystallizer import crystallize_all_teaching_sync
+
+        # Parse filters
+        module_pattern = None
+        severity = None
+
+        for i, arg in enumerate(args):
+            if arg == "--module" and i + 1 < len(args):
+                module_pattern = args[i + 1]
+            elif arg.startswith("--module="):
+                module_pattern = arg.split("=", 1)[1]
+            elif arg == "--severity" and i + 1 < len(args):
+                severity = args[i + 1]
+            elif arg.startswith("--severity="):
+                severity = arg.split("=", 1)[1]
+
+        # Check for dry run
+        dry_run = "--dry-run" in args
+
+        if dry_run:
+            # Just count, don't persist
+            from services.living_docs import query_teaching
+
+            results = query_teaching(
+                severity=severity,  # type: ignore[arg-type]
+                module_pattern=module_pattern,
+            )
+
+            if "--json" in args:
+                print(
+                    json.dumps(
+                        {
+                            "mode": "dry_run",
+                            "would_crystallize": len(results),
+                            "by_severity": {
+                                "critical": len([r for r in results if r.moment.severity == "critical"]),
+                                "warning": len([r for r in results if r.moment.severity == "warning"]),
+                                "info": len([r for r in results if r.moment.severity == "info"]),
+                            },
+                        }
+                    )
+                )
+            else:
+                print("Crystallization Dry Run")
+                print("=" * 40)
+                print(f"Would crystallize: {len(results)} teaching moments")
+                print(f"  Critical: {len([r for r in results if r.moment.severity == 'critical'])}")
+                print(f"  Warning:  {len([r for r in results if r.moment.severity == 'warning'])}")
+                print(f"  Info:     {len([r for r in results if r.moment.severity == 'info'])}")
+                print()
+                print("Run without --dry-run to persist to Brain.")
+
+            return 0
+
+        # Actual crystallization
+        print("Crystallizing teaching moments to Brain...")
+
+        stats = crystallize_all_teaching_sync(
+            module_pattern=module_pattern,
+            severity=severity,
+        )
+
+        if "--json" in args:
+            print(json.dumps(stats.to_dict(), indent=2))
+        else:
+            print()
+            print("Crystallization Complete")
+            print("=" * 40)
+            print(f"Total found:        {stats.total_found}")
+            print(f"Newly crystallized: {stats.newly_crystallized}")
+            print(f"Already existed:    {stats.already_existed}")
+            print(f"With evidence:      {stats.with_evidence}")
+            print()
+            print("By Severity:")
+            print(f"  Critical: {stats.by_severity.get('critical', 0)}")
+            print(f"  Warning:  {stats.by_severity.get('warning', 0)}")
+            print(f"  Info:     {stats.by_severity.get('info', 0)}")
+
+            if stats.errors:
+                print()
+                print(f"\u26a0\ufe0f Errors ({len(stats.errors)}):")
+                for error in stats.errors[:5]:
+                    print(f"  - {error}")
+                if len(stats.errors) > 5:
+                    print(f"  ... and {len(stats.errors) - 5} more")
+
+        return 0
+    except Exception as e:
+        print(f"Error crystallizing teaching: {e}")
+        return 1
+
+
 def _print_help() -> None:
     """Print docs command help."""
     help_text = """
@@ -480,6 +582,7 @@ Commands:
   kg docs lint                    Lint for missing docstrings (CI enforcement)
   kg docs hydrate <task>          Generate context for a task (Claude-friendly)
   kg docs relevant <file>         Show gotchas relevant to a file
+  kg docs crystallize             Persist teaching moments to Brain (Memory-First)
 
 Options:
   --output <dir>                  Output directory (default: docs/reference/)
@@ -488,6 +591,7 @@ Options:
   --module <pattern>              Filter by module pattern
   --strict                        Exit 1 if verify/lint finds issues
   --changed                       Lint only git-changed files
+  --dry-run                       Preview crystallization without persisting
   --json                          Output as JSON
   --help, -h                      Show this help message
 
@@ -501,6 +605,8 @@ Examples:
   kg docs lint path/to/file.py
   kg docs hydrate "implement wasm projector"
   kg docs relevant services/brain/persistence.py
+  kg docs crystallize --dry-run
+  kg docs crystallize --severity critical
 
 AGENTESE Paths:
   concept.docs.manifest           Documentation status
@@ -508,6 +614,7 @@ AGENTESE Paths:
   concept.docs.teaching           Query teaching moments
   concept.docs.lint               Lint documentation
   concept.docs.hydrate            Task-focused context
+  self.memory.crystallize_teaching  Persist teaching to Brain
 """
     print(help_text.strip())
 

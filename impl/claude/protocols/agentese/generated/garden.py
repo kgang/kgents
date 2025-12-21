@@ -8,12 +8,14 @@ A space for growing things.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from bootstrap.umwelt import Umwelt
     from impl.claude.protocols.agentese.node import AgentMeta, Renderable
+
+    from bootstrap.umwelt import Umwelt
 
 # Archetype -> affordances mapping
 AFFORDANCES: dict[str, tuple[str, ...]] = {

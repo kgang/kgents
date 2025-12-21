@@ -20,6 +20,8 @@ Crown Jewel Tables:
 """
 
 # Atelier Crown Jewel
+# ASHC Crown Jewel
+from .ashc import VerifiedLemmaModel
 from .atelier import ArtifactContribution, Artisan, Exhibition, GalleryItem, Workshop
 from .base import (
     Base,
@@ -67,9 +69,6 @@ from .park import Episode, Host, HostMemory, Interaction, ParkLocation
 
 # Town Crown Jewel
 from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
-
-# ASHC Crown Jewel
-from .ashc import VerifiedLemmaModel
 
 __all__ = [
     # Base infrastructure

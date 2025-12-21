@@ -31,7 +31,6 @@ from ..contracts import LemmaId, ObligationId, VerifiedLemma
 from ..persistence import LemmaStats, PostgresLemmaDatabase
 from ..search import LemmaDatabase
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

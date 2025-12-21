@@ -17,10 +17,11 @@ Heritage: "The LLM can hallucinate all it wants. The proof checker is the gateke
 
 from __future__ import annotations
 
-import pytest
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ..checker import CheckerResult, MockChecker, ProofChecker
 from ..contracts import (
@@ -40,7 +41,6 @@ from ..search import (
     LemmaDatabase,
     ProofSearcher,
 )
-
 
 # =============================================================================
 # Fixtures
