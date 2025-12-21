@@ -49,6 +49,16 @@ class PolyAgentProtocol(Protocol[S, A, B]):
     - positions: The set of valid states
     - directions: A function from state to valid inputs
     - transition: The state × input → (state, output) function
+
+    Teaching:
+        gotcha: This is a typing.Protocol, not ABC. Use isinstance() checks
+                with @runtime_checkable, not inheritance verification.
+                (Evidence: test_protocol.py::TestPolyAgentConstruction)
+
+        gotcha: The directions function returns valid inputs for each state.
+                This enables MODE-DEPENDENT behavior—the key polynomial insight.
+                Different states accept different inputs.
+                (Evidence: test_protocol.py::TestStateDependentBehavior)
     """
 
     @property
@@ -96,6 +106,20 @@ class PolyAgent(Generic[S, A, B]):
         ...     _directions=lambda s: frozenset({Any}),
         ...     _transition=lambda s, x: ("ready", x)
         ... )
+
+    Teaching:
+        gotcha: PolyAgent[S,A,B] > Agent[A,B] because state enables mode-dependent
+                behavior. A stateless agent is just PolyAgent[str, A, B] with
+                positions={"ready"}.
+                (Evidence: test_protocol.py::test_stateless_agent_type_alias)
+
+        gotcha: Use frozenset({Any}) in _directions to accept any input.
+                The _accepts_input helper checks for Any type marker.
+                (Evidence: test_protocol.py::test_identity_construction)
+
+        gotcha: invoke() validates state and input BEFORE calling transition.
+                Invalid state/input raises ValueError, not silent failure.
+                (Evidence: test_protocol.py::test_invoke_invalid_state_raises)
     """
 
     name: str
@@ -186,6 +210,15 @@ class WiringDiagram(Generic[S, S2, A, B, C]):
     how to connect agents together.
 
     See: Spivak et al., "Wiring diagrams as organizing principle"
+
+    Teaching:
+        gotcha: compose() creates a new PolyAgent with PRODUCT state space.
+                If left has 3 states and right has 4, composed has 12 states.
+                (Evidence: test_protocol.py::TestWiringDiagram)
+
+        gotcha: Output of left feeds into input of right. This is sequential
+                composition. For parallel (same input to both), use parallel().
+                (Evidence: test_protocol.py::TestSequentialComposition)
     """
 
     name: str
@@ -415,7 +448,15 @@ def to_bootstrap_agent(poly: PolyAgent[S, A, B]) -> Any:
     from .types import Agent as BootstrapAgent
 
     class PolyAgentWrapper(BootstrapAgent[A, B]):
-        """Wrapper that adapts PolyAgent to bootstrap Agent interface."""
+        """
+        Wrapper that adapts PolyAgent to bootstrap Agent interface.
+
+        Teaching:
+            gotcha: State is MUTABLE in the wrapper (via self._state). The
+                    underlying PolyAgent is immutable, but the wrapper tracks
+                    current state across invocations.
+                    (Evidence: test_protocol.py::test_to_bootstrap_agent_stateful)
+        """
 
         def __init__(self, poly_agent: PolyAgent[S, A, B], initial_state: S) -> None:
             self._poly = poly_agent

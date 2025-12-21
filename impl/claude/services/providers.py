@@ -50,9 +50,11 @@ if TYPE_CHECKING:
     from services.conductor.swarm import SwarmSpawner
     from services.forge import ForgePersistence
     from services.forge.commission import CommissionService
+    from services.foundry import AgentFoundry
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
     from services.liminal.coffee.core import CoffeeService
+    from services.metabolism.persistence import MetabolismPersistence
     from services.morpheus.persistence import MorpheusPersistence
     from services.muse.node import MuseNode
     from services.park import ParkPersistence
@@ -473,6 +475,39 @@ async def get_coffee_service() -> "CoffeeService":
     return CoffeeService()
 
 
+async def get_foundry_service() -> "AgentFoundry":
+    """
+    Get the AgentFoundry service (JIT Agent Synthesis Crown Jewel).
+
+    The Foundry synthesizes J-gent JIT intelligence with Alethic Projection.
+    Used by FoundryNode for agent forging, inspection, and caching.
+    """
+    from services.foundry import AgentFoundry
+
+    return AgentFoundry()
+
+
+async def get_metabolism_persistence() -> "MetabolismPersistence":
+    """
+    Get the MetabolismPersistence service for metabolic state.
+
+    This wires the persistence layer for:
+    - BackgroundEvidencing (evidence patterns, causal insights)
+    - VoiceStigmergy (pheromone traces)
+
+    Falls back to JSON files if D-gent is unavailable.
+    """
+    from services.metabolism.persistence import MetabolismPersistence
+
+    try:
+        dgent = await get_dgent_router()
+        return MetabolismPersistence(dgent=dgent)
+    except Exception as e:
+        logger.debug(f"D-gent unavailable for metabolism persistence: {e}")
+        # Graceful fallback to JSON-only persistence
+        return MetabolismPersistence()
+
+
 async def get_workshop_service() -> "WorkshopService":
     """
     Get the WorkshopService for Agent Town builder coordination.
@@ -614,8 +649,14 @@ async def setup_providers() -> None:
     # Liminal Protocols (Morning Coffee, etc.)
     container.register("coffee_service", get_coffee_service, singleton=True)
 
+    # Agent Foundry Crown Jewel (JIT Agent Synthesis + Alethic Projection)
+    container.register("foundry_service", get_foundry_service, singleton=True)
+
+    # Metabolism Persistence (Evidence + Stigmergy)
+    container.register("metabolism_persistence", get_metabolism_persistence, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (9 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling + Verification)"
+        "All Crown Jewel services registered (9 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling + Verification + Foundry)"
     )
 
     # Import Witness nodes to trigger @node registration
@@ -733,6 +774,14 @@ async def setup_providers() -> None:
         logger.info("SwarmNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"SwarmNode not available: {e}")
+
+    # Agent Foundry Crown Jewel (JIT Agent Synthesis)
+    try:
+        from services.foundry import FoundryNode  # noqa: F401
+
+        logger.info("FoundryNode registered with AGENTESE registry")
+    except ImportError as e:
+        logger.warning(f"FoundryNode not available: {e}")
 
     # Wire DifferanceStore to DifferanceMark
     try:
@@ -856,4 +905,6 @@ __all__ = [
     "get_verification_persistence",
     # Liminal Protocols
     "get_coffee_service",
+    # Metabolism Persistence
+    "get_metabolism_persistence",
 ]

@@ -31,19 +31,19 @@ See: docs/skills/crown-jewel-patterns.md (Pattern 9: Directed Cycle)
 Teaching:
     gotcha: Always verify Grant is GRANTED status before creating Playbook.
             Passing a PENDING or REVOKED Grant raises MissingGrant.
-            (Evidence: test_playbook.py::test_grant_required)
+            (Evidence: test_ritual.py::test_ritual_requires_grant)
 
     gotcha: Phase transitions are DIRECTED—you cannot skip phases.
             SENSE → ACT → REFLECT → SENSE (cycle). InvalidPhaseTransition if wrong.
-            (Evidence: test_playbook.py::test_phase_ordering)
+            (Evidence: test_ritual.py::test_invalid_transitions_blocked)
 
     gotcha: Guards evaluate at phase boundaries, not during phase.
             Budget exhaustion during ACT phase only fails at ACT → REFLECT.
-            (Evidence: test_playbook.py::test_guard_evaluation)
+            (Evidence: test_ritual.py::test_guard_evaluation_recorded)
 
     gotcha: from_dict() does NOT restore _grant and _scope objects.
             You must reattach them manually after deserialization.
-            (Evidence: test_playbook.py::test_serialization_roundtrip)
+            (Evidence: test_ritual.py::test_ritual_roundtrip)
 """
 
 from __future__ import annotations

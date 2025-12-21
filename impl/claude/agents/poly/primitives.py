@@ -12,6 +12,20 @@ Categories:
 - Teleological (2): E-gent evolution + N-gent narrative primitives
 
 See: plans/ideas/impl/meta-construction.md
+
+Teaching:
+    gotcha: All state Enums follow the pattern: initial state, intermediate
+            states, terminal state(s). The directions function uses this
+            to control valid inputs per state.
+            (Evidence: test_primitives.py tests show state transitions)
+
+    gotcha: PRIMITIVES is a registry dict, not a list. Use get_primitive("id")
+            to retrieve by name, not PRIMITIVES[0].
+            (Evidence: primitives.py PRIMITIVES definition)
+
+    gotcha: The primitive module imports from .protocol—if you see circular
+            import errors, check that protocol.py doesn't import primitives.
+            (Evidence: primitives.py imports PolyAgent, from_function)
 """
 
 from __future__ import annotations

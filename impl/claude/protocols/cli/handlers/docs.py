@@ -9,12 +9,14 @@ AGENTESE Path Mapping:
     kg docs generate        -> concept.docs.generate
     kg docs teaching        -> concept.docs.teaching
     kg docs verify          -> concept.docs.verify
+    kg docs lint            -> concept.docs.lint
 
 Usage:
     kg docs generate --output docs/reference/
     kg docs generate --overwrite
     kg docs teaching --severity critical
     kg docs verify
+    kg docs lint --strict
 
 See: spec/protocols/living-docs.md
 """
@@ -50,6 +52,12 @@ def cmd_docs(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         return _handle_teaching(args)
     elif subcommand == "verify":
         return _handle_verify(args)
+    elif subcommand == "lint":
+        return _handle_lint(args)
+    elif subcommand == "hydrate":
+        return _handle_hydrate(args)
+    elif subcommand == "relevant":
+        return _handle_relevant(args)
     else:
         return _handle_manifest(args)
 
@@ -274,6 +282,191 @@ def _handle_verify(args: list[str]) -> int:
         return 1
 
 
+def _handle_lint(args: list[str]) -> int:
+    """Lint documentation for missing docstrings."""
+    try:
+        from pathlib import Path
+
+        from services.living_docs import get_changed_files, lint_directory
+
+        # Determine path to lint
+        lint_path = Path(".")
+        for i, arg in enumerate(args):
+            if arg == "lint":
+                continue
+            if arg.startswith("-"):
+                continue
+            # Remaining non-flag arg is the path
+            lint_path = Path(arg)
+            break
+
+        # Parse flags
+        strict = "--strict" in args
+        changed_only = "--changed" in args
+
+        # Get changed files if needed
+        changed_files = None
+        if changed_only:
+            repo_root = Path(".").resolve()
+            # Walk up to find .git
+            while repo_root != repo_root.parent:
+                if (repo_root / ".git").exists():
+                    break
+                repo_root = repo_root.parent
+            changed_files = get_changed_files(repo_root)
+            if not changed_files:
+                print("No changed Python files found.")
+                return 0
+
+        # Run linter
+        stats = lint_directory(lint_path, changed_only=changed_only, changed_files=changed_files)
+
+        if "--json" in args:
+            print(json.dumps(stats.to_dict(), indent=2))
+        else:
+            print("Documentation Lint")
+            print("=" * 40)
+            print(f"Files checked:   {stats.files_checked}")
+            print(f"Symbols checked: {stats.symbols_checked}")
+            print(f"Errors:          {stats.errors}")
+            print(f"Warnings:        {stats.warnings}")
+
+            if stats.results:
+                print()
+
+                # Group by severity
+                errors = [r for r in stats.results if r.severity == "error"]
+                warnings = [r for r in stats.results if r.severity == "warning"]
+
+                if errors:
+                    print("\U0001f6a8 ERRORS:")
+                    for r in errors[:20]:
+                        print(f"  {r.module}:{r.line} - {r.symbol}: {r.message}")
+                    if len(errors) > 20:
+                        print(f"  ... and {len(errors) - 20} more errors")
+
+                if warnings:
+                    print("\n\u26a0\ufe0f WARNINGS:")
+                    for r in warnings[:10]:
+                        print(f"  {r.module}:{r.line} - {r.symbol}: {r.message}")
+                    if len(warnings) > 10:
+                        print(f"  ... and {len(warnings) - 10} more warnings")
+
+            if stats.errors == 0 and stats.warnings == 0:
+                print()
+                print("\u2705 All documentation checks passed!")
+
+        # Return 1 if strict mode and any errors
+        if strict and stats.errors > 0:
+            return 1
+
+        return 0
+    except Exception as e:
+        print(f"Error linting documentation: {e}")
+        return 1
+
+
+def _handle_hydrate(args: list[str]) -> int:
+    """Generate hydration context for a task."""
+    try:
+        from services.living_docs import hydrate_context
+
+        # Extract task from args (everything after "hydrate" that's not a flag)
+        task_parts = []
+        skip_next = False
+        for i, arg in enumerate(args):
+            if skip_next:
+                skip_next = False
+                continue
+            if arg == "hydrate":
+                continue
+            if arg.startswith("-"):
+                if arg in ("--output", "--severity", "--module"):
+                    skip_next = True
+                continue
+            task_parts.append(arg)
+
+        if not task_parts:
+            print("Usage: kg docs hydrate <task description>")
+            print("")
+            print("Examples:")
+            print('  kg docs hydrate "implement wasm projector"')
+            print('  kg docs hydrate "fix brain persistence"')
+            return 1
+
+        task = " ".join(task_parts)
+        context = hydrate_context(task)
+
+        if "--json" in args:
+            print(json.dumps(context.to_dict(), indent=2))
+        else:
+            print(context.to_markdown())
+
+        return 0
+    except Exception as e:
+        print(f"Error generating hydration context: {e}")
+        return 1
+
+
+def _handle_relevant(args: list[str]) -> int:
+    """Show relevant context for a specific file."""
+    try:
+        from services.living_docs import relevant_for_file
+
+        # Extract file path from args
+        file_path = None
+        for i, arg in enumerate(args):
+            if arg == "relevant":
+                continue
+            if arg.startswith("-"):
+                continue
+            file_path = arg
+            break
+
+        if not file_path:
+            print("Usage: kg docs relevant <file_path>")
+            print("")
+            print("Examples:")
+            print("  kg docs relevant services/brain/persistence.py")
+            print("  kg docs relevant protocols/agentese/logos.py")
+            return 1
+
+        context = relevant_for_file(file_path)
+
+        if "--json" in args:
+            print(json.dumps(context.to_dict(), indent=2))
+        else:
+            # Compact output for pre-edit context
+            if context.relevant_teaching:
+                print("Relevant Gotchas:")
+                print("-" * 40)
+                for t in context.relevant_teaching:
+                    icon = {
+                        "critical": "\U0001f6a8",
+                        "warning": "\u26a0\ufe0f",
+                        "info": "\u2139\ufe0f",
+                    }.get(t.moment.severity, "\u2022")
+                    print(f"{icon} {t.symbol}: {t.moment.insight[:60]}...")
+                    if t.moment.evidence:
+                        print(f"   Evidence: {t.moment.evidence}")
+                print()
+
+            if context.related_modules:
+                print("Related Modules:")
+                for module in context.related_modules[:5]:
+                    print(f"  - {module}")
+                print()
+
+            if not context.relevant_teaching and not context.related_modules:
+                print(f"No specific gotchas found for: {file_path}")
+                print("(This might be a simple module or new code)")
+
+        return 0
+    except Exception as e:
+        print(f"Error finding relevant context: {e}")
+        return 1
+
+
 def _print_help() -> None:
     """Print docs command help."""
     help_text = """
@@ -284,13 +477,17 @@ Commands:
   kg docs generate                Generate reference documentation
   kg docs teaching                Query teaching moments (gotchas)
   kg docs verify                  Verify evidence links exist
+  kg docs lint                    Lint for missing docstrings (CI enforcement)
+  kg docs hydrate <task>          Generate context for a task (Claude-friendly)
+  kg docs relevant <file>         Show gotchas relevant to a file
 
 Options:
   --output <dir>                  Output directory (default: docs/reference/)
   --overwrite                     Overwrite existing files
   --severity <level>              Filter by severity (critical, warning, info)
   --module <pattern>              Filter by module pattern
-  --strict                        Exit 1 if verify finds missing links
+  --strict                        Exit 1 if verify/lint finds issues
+  --changed                       Lint only git-changed files
   --json                          Output as JSON
   --help, -h                      Show this help message
 
@@ -299,11 +496,18 @@ Examples:
   kg docs teaching --severity critical
   kg docs teaching --module services.brain
   kg docs verify --strict
+  kg docs lint --strict
+  kg docs lint --changed
+  kg docs lint path/to/file.py
+  kg docs hydrate "implement wasm projector"
+  kg docs relevant services/brain/persistence.py
 
 AGENTESE Paths:
   concept.docs.manifest           Documentation status
   concept.docs.generate           Generate reference docs
   concept.docs.teaching           Query teaching moments
+  concept.docs.lint               Lint documentation
+  concept.docs.hydrate            Task-focused context
 """
     print(help_text.strip())
 
