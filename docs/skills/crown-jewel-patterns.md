@@ -935,10 +935,9 @@ async def verify_services():
 
 ## Related
 
-- `gardener-logos.md` — Source implementation
-- `polynomial-agent.md` — State machine fundamentals
-- `handler-patterns.md` — CLI handler patterns
-- `test-patterns.md` — Testing these patterns
+- [polynomial-agent](polynomial-agent.md) — State machine fundamentals
+- [test-patterns](test-patterns.md) — Testing these patterns
+- [data-bus-integration](data-bus-integration.md) — Event-driven patterns
 
 ---
 

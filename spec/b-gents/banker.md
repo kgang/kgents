@@ -272,4 +272,3 @@ UnifiedValueAccounting: UVP + VoI integration
 - [../g-gents/README.md](../g-gents/README.md) - Grammarian (structural partner)
 - [../bootstrap.md](../bootstrap.md) - Entropy Budget (related constraint)
 - [../o-gents/README.md](../o-gents/README.md) - ValueLedger observability
-- [../e-gents/README.md](../e-gents/README.md) - Ethical regulator integration

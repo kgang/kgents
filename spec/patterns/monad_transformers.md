@@ -298,54 +298,6 @@ class ForgeAgent(Agent[str, Agent], Generic[I, O]):
 
 ---
 
-### E-gents (Evolution) - Genetic Monad Transformer
-
-**Hypothesis**: E-gents evolve agent populations over time.
-
-**Infrastructure Layer**: `Population[Agent]` + `FitnessFunction`
-- Population storage, mutation operators, selection
-- NOT agents (evolutionary primitives)
-- Category: $\mathcal{C}_{Evolution}$
-
-**Composition Layer**: `EvolutionAgent[Fitness, BestAgent]`
-- Takes fitness criteria
-- Returns evolved agent
-- IS a bootstrap agent
-- Category: $\mathcal{C}_{Agent}$
-
-**Monad**: List Monad (non-deterministic computation)
-```haskell
-ListT m a = m [a]
-```
-
-**Effect**: Explores multiple solutions in parallel
-
-**Pattern**:
-```python
-@dataclass
-class EvolutionAgent(Agent[FitnessCriteria, Agent], Generic[I, O]):
-    """
-    Evolves agents via selection + mutation.
-
-    Infrastructure: Population + GeneticOps
-    Composition: Agent[Fitness, EvolvedAgent]
-    """
-    population: Population[Agent[I, O]]
-    mutate: Callable[[Agent], Agent]
-    select: Callable[[list[Agent], FitnessCriteria], Agent]
-
-    async def invoke(self, fitness: FitnessCriteria) -> Agent[I, O]:
-        # Evolve over generations
-        for generation in range(max_generations):
-            scored = [(a, fitness(a)) for a in self.population]
-            best = self.select(scored, fitness)
-            self.population = [self.mutate(best) for _ in range(pop_size)]
-
-        return best
-```
-
----
-
 ## Benefits of the Pattern
 
 ### 1. Separation of Concerns
@@ -450,7 +402,7 @@ For each monad transformer:
 
 ## Future Work
 
-1. Formalize remaining transformers (F-gents, E-gents)
+1. Formalize remaining transformers (F-gents)
 2. Prove category laws for each transformer
 3. Implement property-based tests for monad laws
 4. Document composition of multiple transformers (monad transformer stacks)

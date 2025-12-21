@@ -30,17 +30,13 @@
 | `kgentsd-presence.md` | planning | TUI presence daemon |
 | `kgentsd-phase4b-prompt.md` | handoff | Reactive workflow continuation |
 
-### 3. WARP + Servo Integration
+### 3. Witness Primitives (née WARP)
 | Plan | Status | Notes |
 |------|--------|-------|
-| `warp-servo-master.md` | **active** | Master plan: trace-first, law-enforced |
-| `warp-servo-phase0-research.md` | complete | Servo embedding viability |
-| `warp-servo-phase1-core-primitives.md` | **active** | TraceNode, Walk, Ritual, Terrace |
-| `warp-servo-phase2-servo-integration.md` | pending | Servo webview embedding |
+| `spec/protocols/witness-primitives.md` | **approved** | Canonical spec: Mark, Walk, Playbook, Grant, Scope |
+| `warp-servo-phase1-core-primitives.md` | **impl done** | TraceNode→Mark, Ritual→Playbook (rename pending) |
+| `warp-servo-phase2-servo-integration.md` | pending | Servo webview → Surface |
 | `warp-servo-phase3-jewel-refinement.md` | pending | Crown Jewel uplift |
-| `warp-phase1-continuation.md` | handoff | Implementation continuation |
-| `warp-phase1-reflection.md` | reflection | Session learnings |
-| `warp-terrace-design-decision.md` | design | Terrace architecture |
 
 ### 4. Witness/Muse: Oblique Jewels
 | Plan | Status | Notes |

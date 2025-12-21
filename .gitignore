@@ -162,6 +162,17 @@ venv.bak/
 
 # mkdocs documentation
 /site
+site/
+
+# Generated/compiled outputs (regenerable from spec)
+compiled/
+reflected/
+notebooks/
+metrics/
+CLAUDE.compiled.md
+
+# Stray virtual environments
+activate/
 
 # mypy
 .mypy_cache/

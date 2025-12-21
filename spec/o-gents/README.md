@@ -117,7 +117,6 @@ Standard metrics collection. O-gents integrate with OpenTelemetry for infrastruc
 | **Bootstrap** | Id, Compose, Judge, Ground, Contradict, Sublate, Fix | BootstrapWitness |
 | **W-gent** | Process observation, pheromone fields | Wire protocol hooks |
 | **I-gent** | Visualization state, render cycles | Widget observation |
-| **E-gent** | Evolution trajectories, reliability metrics | Layer instrumentation |
 | **L-gent** | Knowledge graph, query patterns | Index observability |
 | **N-gent** | Narrative logs, trace streams | Story observation |
 

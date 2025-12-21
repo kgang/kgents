@@ -168,33 +168,7 @@ else:
 Observation → H-gent → Hypothesis → J-gent → Experiment → Judge → Synthesis
 ```
 
-### 2.2 J-gents + E-gents (Evolution)
-
-E-gents evolve code; J-gents can JIT-compile specialized improvement agents.
-
-```python
-# E-gent proposes improvement
-improvement = await ExperimentAgent().invoke(hypothesis)
-
-# J-gent generates test for improvement
-jgent = JGent[str](ground="")
-test_code = await jgent.invoke(
-    f"Generate pytest test validating: {improvement.change_description}"
-)
-
-# Run test before accepting improvement
-if await run_test(test_code):
-    apply_improvement(improvement)
-else:
-    collapse_to_ground()
-```
-
-**Flow**:
-```
-Hypothesis → E-gent → Improvement → J-gent → Test → Validate → Apply
-```
-
-### 2.3 J-gents + T-gents (Testing)
+### 2.2 J-gents + T-gents (Testing)
 
 T-gents attack code; J-gents generate defenders.
 
@@ -436,7 +410,6 @@ class DistributedJGent(JGent):
 ### 6.4 Integration Tests Needed
 
 - [ ] J-gent + H-gent composition test
-- [ ] J-gent + E-gent evolution test
 - [ ] J-gent + T-gent adversarial test
 - [ ] Agent cache hit/miss behavior test
 - [ ] Entropy budget enforcement test

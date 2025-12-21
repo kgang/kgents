@@ -32,10 +32,10 @@ The system operates as a **reflective tower** where each level can critique, imp
 #### Acceptance Criteria
 
 1. WHEN a mind-map is imported, THE Mind_Map_Topology SHALL construct a topological space where nodes are open sets and edges are continuous maps
-2. WHEN clusters are identified in the mind-map, THE System SHALL treat them as covers and verify the sheaf gluing condition
-3. WHEN local perspectives conflict, THE System SHALL identify where the sheaf condition fails and suggest coherence repairs
-4. THE System SHALL support import from Obsidian, Muse, and other mind-mapping tools
-5. WHEN the mind-map topology is well-formed, THE System SHALL provide interactive visualization showing the topological structure
+2. WHEN clusters are identified in the mind-map, THE Mind_Map_Topology SHALL treat them as covers and verify the sheaf gluing condition
+3. WHEN local perspectives conflict, THE Mind_Map_Topology SHALL identify where the sheaf condition fails and suggest coherence repairs
+4. THE Mind_Map_Topology SHALL support import from Obsidian, Muse, and other mind-mapping tools
+5. WHEN the mind-map topology is well-formed, THE Mind_Map_Topology SHALL provide interactive visualization showing the topological structure
 
 ### Requirement 2: The Generative Loop
 
@@ -56,13 +56,13 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. THE System SHALL implement Level 0 (Code) as Python and TypeScript implementations
-2. THE System SHALL implement Level 1 (Spec) as AGENTESE paths and Operad definitions
-3. THE System SHALL implement Level 2 (Meta-Spec) as Category Theory patterns
-4. THE System SHALL implement Level 3 (Meta-Meta-Spec) as HoTT/Topos Theory foundations
-5. THE System SHALL implement Level ∞ (Intent) as Mind-Map topology
-6. WHEN a level is modified, THE System SHALL verify consistency with adjacent levels
-7. WHEN inconsistencies are found, THE System SHALL propose corrections that maintain tower coherence
+1. THE Reflective_Tower SHALL implement Level 0 (Code) as Python and TypeScript implementations
+2. THE Reflective_Tower SHALL implement Level 1 (Spec) as AGENTESE paths and Operad definitions
+3. THE Reflective_Tower SHALL implement Level 2 (Meta-Spec) as Category Theory patterns
+4. THE Reflective_Tower SHALL implement Level 3 (Meta-Meta-Spec) as HoTT/Topos Theory foundations
+5. THE Reflective_Tower SHALL implement Level ∞ (Intent) as Mind-Map topology
+6. WHEN a level is modified, THE Reflective_Tower SHALL verify consistency with adjacent levels
+7. WHEN inconsistencies are found, THE Reflective_Tower SHALL propose corrections that maintain tower coherence
 
 ### Requirement 4: HoTT as Unifying Foundation
 
@@ -70,12 +70,12 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN specifications are equivalent up to isomorphism, THE System SHALL treat them as identical (univalence axiom)
-2. THE System SHALL represent agent types as homotopy types with natural equivalence structure
-3. WHEN composition laws are verified, THE System SHALL use path composition from HoTT
-4. THE System SHALL support higher inductive types for defining agent structures by their introduction/elimination rules
-5. WHEN proofs are generated, THE System SHALL produce constructive proofs that are also programs (witnesses)
-6. THE System SHALL bridge to Lean/Agda for formal theorem proving when needed
+1. WHEN specifications are equivalent up to isomorphism, THE HoTT_Foundation SHALL treat them as identical (univalence axiom)
+2. THE HoTT_Foundation SHALL represent agent types as homotopy types with natural equivalence structure
+3. WHEN composition laws are verified, THE HoTT_Foundation SHALL use path composition from HoTT
+4. THE HoTT_Foundation SHALL support higher inductive types for defining agent structures by their introduction/elimination rules
+5. WHEN proofs are generated, THE HoTT_Foundation SHALL produce constructive proofs that are also programs (witnesses)
+6. THE HoTT_Foundation SHALL bridge to Lean/Agda for formal theorem proving when needed
 
 ### Requirement 5: Category-Theoretic Law Verification
 
@@ -83,12 +83,12 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN agent compositions are defined, THE System SHALL verify composition associativity: (f ∘ g) ∘ h = f ∘ (g ∘ h)
-2. WHEN identity morphisms are claimed, THE System SHALL verify identity laws: f ∘ id = f and id ∘ f = f
-3. WHEN functors are defined, THE System SHALL verify functor laws preserve composition and identity
-4. WHEN operads are specified, THE System SHALL verify operad coherence conditions
-5. WHEN sheaf conditions are claimed, THE System SHALL verify local-to-global gluing properties
-6. IF categorical laws are violated, THEN THE System SHALL generate counter-examples and suggest corrections
+1. WHEN agent compositions are defined, THE Categorical_Law SHALL verify composition associativity: (f ∘ g) ∘ h = f ∘ (g ∘ h)
+2. WHEN identity morphisms are claimed, THE Categorical_Law SHALL verify identity laws: f ∘ id = f and id ∘ f = f
+3. WHEN functors are defined, THE Categorical_Law SHALL verify functor laws preserve composition and identity
+4. WHEN operads are specified, THE Categorical_Law SHALL verify operad coherence conditions
+5. WHEN sheaf conditions are claimed, THE Categorical_Law SHALL verify local-to-global gluing properties
+6. IF categorical laws are violated, THEN THE Categorical_Law SHALL generate counter-examples and suggest corrections
 
 ### Requirement 6: Behavioral Correctness Through Trace Witnesses
 
@@ -96,11 +96,11 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN agents execute, THE System SHALL capture Trace_Witnesses as constructive proofs of behavior
-2. WHEN traces are collected, THE System SHALL verify they satisfy the corresponding specification properties
-3. WHEN behavioral violations are detected, THE System SHALL generate concrete counter-examples with remediation suggestions
-4. THE System SHALL maintain a corpus of verified traces for specification refinement
-5. WHEN trace patterns emerge, THE System SHALL suggest specification improvements based on observed behavior
+1. WHEN agents execute, THE Trace_Witness SHALL capture execution traces as constructive proofs of behavior
+2. WHEN traces are collected, THE Trace_Witness SHALL verify they satisfy the corresponding specification properties
+3. WHEN behavioral violations are detected, THE Trace_Witness SHALL generate concrete counter-examples with remediation suggestions
+4. THE Trace_Witness SHALL maintain a corpus of verified traces for specification refinement
+5. WHEN trace patterns emerge, THE Trace_Witness SHALL suggest specification improvements based on observed behavior
 
 ### Requirement 7: Semantic Consistency Verification
 
@@ -108,11 +108,11 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN multiple specification documents reference the same concepts, THE System SHALL verify semantic consistency
-2. WHEN contradictory statements are found, THE System SHALL identify the specific conflict and suggest resolution
-3. WHEN specifications evolve, THE System SHALL verify backward compatibility and flag breaking changes
-4. THE System SHALL support cross-reference analysis between requirements, design, and implementation documents
-5. WHEN semantic gaps are detected, THE System SHALL suggest missing specifications or clarifications
+1. WHEN multiple specification documents reference the same concepts, THE Metatheory SHALL verify semantic consistency
+2. WHEN contradictory statements are found, THE Metatheory SHALL identify the specific conflict and suggest resolution
+3. WHEN specifications evolve, THE Metatheory SHALL verify backward compatibility and flag breaking changes
+4. THE Metatheory SHALL support cross-reference analysis between requirements, design, and implementation documents
+5. WHEN semantic gaps are detected, THE Metatheory SHALL suggest missing specifications or clarifications
 
 ### Requirement 8: Self-Improvement Through Spec Critique
 
@@ -120,11 +120,11 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN operational data accumulates, THE System SHALL identify patterns that suggest specification improvements
-2. WHEN improvements are identified, THE System SHALL generate formal proposals with justification
-3. WHEN spec changes are proposed, THE System SHALL verify they maintain categorical law compliance
-4. THE System SHALL support automated A/B testing of specification variants
-5. WHEN improvements are validated, THE System SHALL automatically update specifications with proper versioning
+1. WHEN operational data accumulates, THE Metatheory SHALL identify patterns that suggest specification improvements
+2. WHEN improvements are identified, THE Metatheory SHALL generate formal proposals with justification
+3. WHEN spec changes are proposed, THE Metatheory SHALL verify they maintain categorical law compliance
+4. THE Metatheory SHALL support automated A/B testing of specification variants
+5. WHEN improvements are validated, THE Metatheory SHALL automatically update specifications with proper versioning
 
 ### Requirement 9: Autopilot Operating System Foundation
 
@@ -132,11 +132,11 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN agent societies are deployed, THE System SHALL continuously verify their behavioral correctness
-2. WHEN anomalies are detected, THE System SHALL automatically trigger corrective actions
-3. WHEN new agents join the society, THE System SHALL verify their compatibility with existing specifications
-4. THE System SHALL support dynamic reconfiguration while maintaining formal guarantees
-5. WHEN system load changes, THE System SHALL adapt orchestration strategies while preserving correctness
+1. WHEN agent societies are deployed, THE Autopilot_OS SHALL continuously verify their behavioral correctness
+2. WHEN anomalies are detected, THE Autopilot_OS SHALL automatically trigger corrective actions
+3. WHEN new agents join the society, THE Autopilot_OS SHALL verify their compatibility with existing specifications
+4. THE Autopilot_OS SHALL support dynamic reconfiguration while maintaining formal guarantees
+5. WHEN system load changes, THE Autopilot_OS SHALL adapt orchestration strategies while preserving correctness
 
 ### Requirement 10: Native kgents Integration
 
@@ -144,11 +144,11 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. THE System SHALL integrate with the ~/.kgents directory structure for configuration and data storage
-2. WHEN AGENTESE paths are defined, THE System SHALL automatically verify their categorical properties
-3. WHEN PolyAgent compositions are created, THE System SHALL verify polynomial coherence
-4. THE System SHALL integrate with the existing witness and trace infrastructure
-5. WHEN specifications are updated, THE System SHALL trigger automatic re-verification
+1. THE Metatheory SHALL integrate with the ~/.kgents directory structure for configuration and data storage
+2. WHEN AGENTESE paths are defined, THE Metatheory SHALL automatically verify their categorical properties
+3. WHEN PolyAgent compositions are created, THE Metatheory SHALL verify polynomial coherence
+4. THE Metatheory SHALL integrate with the existing witness and trace infrastructure
+5. WHEN specifications are updated, THE Metatheory SHALL trigger automatic re-verification
 
 ### Requirement 11: Alive Workshop Aesthetic
 
@@ -156,12 +156,12 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN verification results are presented, THE System SHALL use clear, sympathetic language with Studio Ghibli warmth
-2. WHEN errors are found, THE System SHALL provide constructive suggestions with examples, not cold technical jargon
-3. THE System SHALL provide beautiful visualizations where graphs breathe, data flows like water through vines, and panels unfurl like leaves
-4. WHEN verification succeeds, THE System SHALL celebrate success with appropriate feedback
-5. THE System SHALL provide progressive disclosure, showing simple results by default with detailed analysis available on demand
-6. THE System SHALL use the Living Earth color palette (warm earth tones, living greens, Ghibli glow accents)
+1. WHEN verification results are presented, THE Alive_Workshop SHALL use clear, sympathetic language with Studio Ghibli warmth
+2. WHEN errors are found, THE Alive_Workshop SHALL provide constructive suggestions with examples, not cold technical jargon
+3. THE Alive_Workshop SHALL provide beautiful visualizations where graphs breathe, data flows like water through vines, and panels unfurl like leaves
+4. WHEN verification succeeds, THE Alive_Workshop SHALL celebrate success with appropriate feedback
+5. THE Alive_Workshop SHALL provide progressive disclosure, showing simple results by default with detailed analysis available on demand
+6. THE Alive_Workshop SHALL use the Living Earth color palette (warm earth tones, living greens, Ghibli glow accents)
 
 ### Requirement 12: Revolutionary Transformation Capability
 
@@ -169,12 +169,12 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. THE System SHALL enable specification-driven agent generation where agents are derived from formal specifications
-2. WHEN specifications change, THE System SHALL automatically regenerate affected implementations
-3. THE System SHALL support formal verification of emergent behaviors in multi-agent systems
-4. THE System SHALL enable provably correct agent composition at arbitrary scales
-5. WHEN system evolution is needed, THE System SHALL propose and verify evolutionary paths automatically
-6. THE System SHALL support the Generative Principle: delete implementation, regenerate from spec, result is isomorphic to original
+1. THE Metatheory SHALL enable specification-driven agent generation where agents are derived from formal specifications
+2. WHEN specifications change, THE Metatheory SHALL automatically regenerate affected implementations
+3. THE Metatheory SHALL support formal verification of emergent behaviors in multi-agent systems
+4. THE Metatheory SHALL enable provably correct agent composition at arbitrary scales
+5. WHEN system evolution is needed, THE Metatheory SHALL propose and verify evolutionary paths automatically
+6. THE Metatheory SHALL support the Generative Principle: delete implementation, regenerate from spec, result is isomorphic to original
 
 ### Requirement 13: Graph-Based Specification Analysis
 
@@ -183,10 +183,10 @@ The system operates as a **reflective tower** where each level can critique, imp
 #### Acceptance Criteria
 
 1. WHEN a specification is analyzed, THE Verification_Graph SHALL construct a directed graph showing derivation paths from principles to implementation
-2. WHEN principles conflict, THE System SHALL identify contradiction nodes and suggest resolution strategies
-3. WHEN implementation details lack principled derivation, THE System SHALL flag orphaned nodes and suggest connections
+2. WHEN principles conflict, THE Verification_Graph SHALL identify contradiction nodes and suggest resolution strategies
+3. WHEN implementation details lack principled derivation, THE Verification_Graph SHALL flag orphaned nodes and suggest connections
 4. THE Verification_Graph SHALL support multiple data types including agents, artifacts, narration, and operational data
-5. WHEN graph analysis completes, THE System SHALL provide interactive visualization of the derivation structure with breathing animations
+5. WHEN graph analysis completes, THE Verification_Graph SHALL provide interactive visualization of the derivation structure with breathing animations
 
 ### Requirement 14: Lean/Agda Bridge for Formal Proofs
 
@@ -194,8 +194,8 @@ The system operates as a **reflective tower** where each level can critique, imp
 
 #### Acceptance Criteria
 
-1. WHEN formal proof is required, THE System SHALL export Operad laws as Lean theorems
-2. THE System SHALL use LLM to assist proof search in Lean/Agda
-3. WHEN proofs are completed in Lean/Agda, THE System SHALL import verification results back to Python
-4. THE System SHALL support incremental proof development with partial verification
-5. WHEN proof fails, THE System SHALL provide diagnostic information to guide proof repair
+1. WHEN formal proof is required, THE Metatheory SHALL export Operad laws as Lean theorems
+2. THE Metatheory SHALL use LLM to assist proof search in Lean/Agda
+3. WHEN proofs are completed in Lean/Agda, THE Metatheory SHALL import verification results back to Python
+4. THE Metatheory SHALL support incremental proof development with partial verification
+5. WHEN proof fails, THE Metatheory SHALL provide diagnostic information to guide proof repair

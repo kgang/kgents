@@ -212,11 +212,13 @@ class TestCorrectionProposals:
             source_level=TowerLevel.CODE,
             target_level=TowerLevel.SPEC,
             is_consistent=False,
-            violations=[{
-                "type": "unimplemented_spec_path",
-                "description": "Missing implementation",
-                "severity": "error",
-            }],
+            violations=[
+                {
+                    "type": "unimplemented_spec_path",
+                    "description": "Missing implementation",
+                    "severity": "error",
+                }
+            ],
             suggestions=["Implement the missing spec path"],
             verification_time_ms=10.0,
         )
@@ -321,24 +323,30 @@ class TestTowerSummary:
         tower = ReflectiveTower()
 
         # Add artifacts at different levels
-        await tower.add_artifact(LevelArtifact(
-            artifact_id="a1",
-            level=TowerLevel.CODE,
-            name="Code 1",
-            content={},
-        ))
-        await tower.add_artifact(LevelArtifact(
-            artifact_id="a2",
-            level=TowerLevel.CODE,
-            name="Code 2",
-            content={},
-        ))
-        await tower.add_artifact(LevelArtifact(
-            artifact_id="a3",
-            level=TowerLevel.SPEC,
-            name="Spec 1",
-            content={},
-        ))
+        await tower.add_artifact(
+            LevelArtifact(
+                artifact_id="a1",
+                level=TowerLevel.CODE,
+                name="Code 1",
+                content={},
+            )
+        )
+        await tower.add_artifact(
+            LevelArtifact(
+                artifact_id="a2",
+                level=TowerLevel.CODE,
+                name="Code 2",
+                content={},
+            )
+        )
+        await tower.add_artifact(
+            LevelArtifact(
+                artifact_id="a3",
+                level=TowerLevel.SPEC,
+                name="Spec 1",
+                content={},
+            )
+        )
 
         summary = await tower.get_tower_summary()
 
@@ -374,3 +382,253 @@ class TestConvenienceFunctions:
         assert "consistent" in result
         assert "inconsistent" in result
         assert "consistency_ratio" in result
+
+
+# =============================================================================
+# Property 8: Reflective Tower Consistency (Property-Based Tests)
+# =============================================================================
+
+
+from hypothesis import given, settings, strategies as st
+
+
+@st.composite
+def level_artifact_strategy(draw: st.DrawFn) -> LevelArtifact:
+    """Generate random level artifacts."""
+    level = draw(st.sampled_from(list(TowerLevel)))
+    artifact_id = f"artifact_{draw(st.integers(min_value=1, max_value=1000))}"
+
+    # Generate level-appropriate content
+    if level == TowerLevel.BEHAVIORAL_PATTERNS:
+        content = {
+            "pattern_type": draw(st.sampled_from(["flow", "performance", "verification"])),
+            "frequency": draw(st.integers(min_value=1, max_value=100)),
+            "example_traces": [
+                f"trace_{i}" for i in range(draw(st.integers(min_value=1, max_value=3)))
+            ],
+        }
+    elif level == TowerLevel.TRACE_WITNESSES:
+        content = {
+            "agent_path": f"self.test.{draw(st.sampled_from(['manifest', 'witness', 'refine']))}",
+            "verification_status": draw(st.sampled_from(["success", "failure", "pending"])),
+            "witness_id": f"witness_{draw(st.integers(min_value=1, max_value=100))}",
+        }
+    elif level == TowerLevel.CODE:
+        content = {
+            "module_path": f"services/{draw(st.sampled_from(['brain', 'town', 'forge']))}/service.py",
+            "functions": [draw(st.sampled_from(["manifest", "witness", "refine", "capture"]))],
+            "classes": [draw(st.sampled_from(["Service", "Agent", "Handler"]))],
+        }
+    elif level == TowerLevel.SPEC:
+        content = {
+            "paths": [f"self.test.{draw(st.sampled_from(['manifest', 'witness']))}"],
+            "operads": [{"name": "TestOperad", "operations": ["op1", "op2"]}]
+            if draw(st.booleans())
+            else [],
+            "constraints": [],
+        }
+    elif level == TowerLevel.META_SPEC:
+        content = {
+            "categories": [draw(st.sampled_from(["Agent", "Morphism", "Functor"]))],
+            "functors": [draw(st.sampled_from(["F", "G", "Id"]))] if draw(st.booleans()) else [],
+            "natural_transformations": [],
+        }
+    elif level == TowerLevel.FOUNDATIONS:
+        content = {
+            "types": [draw(st.sampled_from(["AgentType", "MorphismType", "PathType"]))],
+            "paths": [],
+            "universe_level": draw(st.integers(min_value=0, max_value=3)),
+        }
+    else:  # INTENT
+        content = {
+            "nodes": [f"node_{i}" for i in range(draw(st.integers(min_value=1, max_value=5)))],
+            "edges": [],
+            "covers": [],
+        }
+
+    return LevelArtifact(
+        artifact_id=artifact_id,
+        level=level,
+        name=f"Test {level.name} Artifact",
+        content=content,
+    )
+
+
+class TestReflectiveTowerConsistencyProperty:
+    """
+    Property 8: Reflective Tower Consistency
+
+    For any modification to a level in the reflective tower, consistency
+    with adjacent levels SHALL be verified.
+
+    Validates: Requirements 3.6, 3.7
+    """
+
+    @pytest.mark.asyncio
+    @given(artifact=level_artifact_strategy())
+    @settings(max_examples=100, deadline=None)
+    async def test_artifact_added_to_correct_level(self, artifact: LevelArtifact) -> None:
+        """Artifacts are added to their correct level."""
+        tower = ReflectiveTower()
+
+        await tower.add_artifact(artifact)
+
+        retrieved = await tower.get_artifact(artifact.level, artifact.artifact_id)
+        assert retrieved is not None
+        assert retrieved.level == artifact.level
+
+    @pytest.mark.asyncio
+    @given(artifact=level_artifact_strategy())
+    @settings(max_examples=50, deadline=None)
+    async def test_adjacent_level_verification_available(self, artifact: LevelArtifact) -> None:
+        """Adjacent level verification is available for any artifact."""
+        tower = ReflectiveTower()
+
+        await tower.add_artifact(artifact)
+
+        # Should be able to verify adjacent levels
+        results = await tower.verify_adjacent_levels(artifact.level)
+
+        # Results should be a list (may be empty if no artifacts at adjacent levels)
+        assert isinstance(results, list)
+
+    @pytest.mark.asyncio
+    @given(
+        artifact1=level_artifact_strategy(),
+        artifact2=level_artifact_strategy(),
+    )
+    @settings(max_examples=50, deadline=None)
+    async def test_consistency_verification_returns_result(
+        self,
+        artifact1: LevelArtifact,
+        artifact2: LevelArtifact,
+    ) -> None:
+        """Consistency verification returns valid results."""
+        tower = ReflectiveTower()
+
+        await tower.add_artifact(artifact1)
+        await tower.add_artifact(artifact2)
+
+        results = await tower.verify_consistency(artifact1.level, artifact2.level)
+
+        # Should return list of ConsistencyResult
+        assert isinstance(results, list)
+        for result in results:
+            assert isinstance(result, ConsistencyResult)
+            assert result.source_level == artifact1.level
+            assert result.target_level == artifact2.level
+
+    @pytest.mark.asyncio
+    @given(artifact=level_artifact_strategy())
+    @settings(max_examples=50, deadline=None)
+    async def test_compression_preserves_level_relationship(
+        self,
+        artifact: LevelArtifact,
+    ) -> None:
+        """Compression maintains proper level relationships."""
+        tower = ReflectiveTower()
+
+        await tower.add_artifact(artifact)
+
+        # Try to compress to adjacent lower level
+        level_value = int(artifact.level)
+
+        # Find a valid target level
+        target_level = None
+        for level in TowerLevel:
+            if int(level) == level_value - 1:
+                target_level = level
+                break
+
+        if target_level is not None:
+            compressed = await tower.compress(artifact, target_level)
+
+            if compressed is not None:
+                assert compressed.level == target_level
+                assert int(compressed.level) < int(artifact.level)
+
+    @pytest.mark.asyncio
+    async def test_tower_maintains_level_hierarchy(self) -> None:
+        """Tower maintains proper level hierarchy."""
+        tower = ReflectiveTower()
+
+        # Add artifacts at multiple levels
+        artifacts = [
+            LevelArtifact(
+                artifact_id="code_1",
+                level=TowerLevel.CODE,
+                name="Code",
+                content={"module_path": "test.py", "functions": ["test"]},
+            ),
+            LevelArtifact(
+                artifact_id="spec_1",
+                level=TowerLevel.SPEC,
+                name="Spec",
+                content={"paths": ["self.test"], "operads": []},
+            ),
+            LevelArtifact(
+                artifact_id="meta_1",
+                level=TowerLevel.META_SPEC,
+                name="Meta",
+                content={"categories": ["Agent"], "functors": []},
+            ),
+        ]
+
+        for artifact in artifacts:
+            await tower.add_artifact(artifact)
+
+        summary = await tower.get_tower_summary()
+
+        # All levels should be tracked
+        assert summary["total_artifacts"] == 3
+        assert summary["levels"]["CODE"]["artifact_count"] == 1
+        assert summary["levels"]["SPEC"]["artifact_count"] == 1
+        assert summary["levels"]["META_SPEC"]["artifact_count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_inconsistency_generates_proposals(self) -> None:
+        """Inconsistencies generate correction proposals."""
+        tower = ReflectiveTower()
+
+        # Create inconsistent artifacts
+        code_artifact = LevelArtifact(
+            artifact_id="code_inconsistent",
+            level=TowerLevel.CODE,
+            name="Code",
+            content={"module_path": "test.py", "functions": []},  # No functions
+        )
+        spec_artifact = LevelArtifact(
+            artifact_id="spec_inconsistent",
+            level=TowerLevel.SPEC,
+            name="Spec",
+            content={"paths": ["self.test.missing"], "operads": []},  # Path not in code
+        )
+
+        await tower.add_artifact(code_artifact)
+        await tower.add_artifact(spec_artifact)
+
+        results = await tower.verify_consistency(TowerLevel.CODE, TowerLevel.SPEC)
+
+        # Find inconsistent results
+        inconsistent = [r for r in results if not r.is_consistent]
+
+        if inconsistent:
+            proposals = await tower.propose_corrections(inconsistent[0])
+            assert isinstance(proposals, list)
+
+    @pytest.mark.asyncio
+    @given(artifact=level_artifact_strategy())
+    @settings(max_examples=30, deadline=None)
+    async def test_tower_summary_reflects_artifacts(self, artifact: LevelArtifact) -> None:
+        """Tower summary accurately reflects added artifacts."""
+        tower = ReflectiveTower()
+
+        initial_summary = await tower.get_tower_summary()
+        initial_count = initial_summary["total_artifacts"]
+
+        await tower.add_artifact(artifact)
+
+        final_summary = await tower.get_tower_summary()
+
+        assert final_summary["total_artifacts"] == initial_count + 1
+        assert final_summary["levels"][artifact.level.name]["artifact_count"] >= 1

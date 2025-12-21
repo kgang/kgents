@@ -3,7 +3,7 @@
 > *"I am the membrane between event and meaning. Through me, experience becomes memory."*
 
 **Status:** Proposal
-**Implementation:** `impl/claude/services/witness/` (0 tests)
+**Implementation:** `impl/claude/services/witness/` (32 tests)
 
 ---
 

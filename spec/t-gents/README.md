@@ -142,7 +142,6 @@ T-gents are categorized by their effect on the computational stream into **five 
 - Discover unknown failure modes before production
 - Regression testing: verify resilience after refactors
 - Property discovery: empirically find algebraic properties
-- Evolution fitness: Gym as fitness function for E-gents
 
 **The Gym Principle**: Testing is not validation—it's discovery. The Adversarial Gym discovers what breaks agents before production does.
 
@@ -287,7 +286,6 @@ A T-gent is well-designed if:
 | Genus | Relationship |
 |-------|-------------|
 | **C-gents** | T-gents verify C-gents' composition laws |
-| **E-gents** | T-gents test evolution pipelines for reliability |
 | **J-gents** | T-gents validate Promise collapse and entropy budgets |
 | **B-gents** | T-gents evaluate hypothesis quality |
 | **K-gent** | T-gents ensure persona consistency |

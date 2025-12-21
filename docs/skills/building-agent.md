@@ -947,11 +947,10 @@ partition = lm.partition()
 
 ## Related Skills
 
-- [cli-command](cli-command.md) - Exposing agent via CLI
 - [agentese-path](agentese-path.md) - Registering AGENTESE paths
-- [flux-agent](flux-agent.md) - Creating streaming agents
+- [polynomial-agent](polynomial-agent.md) - State machine patterns
 - [test-patterns](test-patterns.md) - T-gent Types I-V testing
-- [agent-observability](agent-observability.md) - Metrics, mirrors, pheromones
+- [data-bus-integration](data-bus-integration.md) - Event-driven patterns
 
 ---
 

@@ -50,7 +50,7 @@ If the answer to any is "yes," revise before ending.
 
 ## 📚 SKILLS: Your First Stop
 
-> *"13 skills are necessary and sufficient to build any kgents component."*
+> *"17 skills are necessary and sufficient to build any kgents component."*
 
 **Before doing ANYTHING, consult the relevant skill** in `docs/skills/`. Every task—from adding a state machine to building a responsive UI—has a corresponding skill that will save you hours.
 
@@ -165,7 +165,7 @@ This is the core architectural insight—understand this, understand everything:
 
 ## Built Infrastructure (CHECK FIRST!)
 
-**17 production systems** exist. Check `docs/systems-reference.md` before building anything new.
+**20 production systems** exist. Check `docs/systems-reference.md` before building anything new.
 
 | Category | Systems |
 |----------|---------|
@@ -243,7 +243,7 @@ NOW.md          - THE LIVING DOCUMENT (what's happening now)
 spec/           - The specification (conceptual, implementation-agnostic)
 impl/           - Reference implementations
 impl/claude/    - Python backend + React frontend
-docs/skills/    - THE 13 SKILLS (read these!)
+docs/skills/    - THE 17 SKILLS (read these!)
 plans/          - Meta files only (_focus.md, _forest.md, meta.md)
 ```
 
@@ -251,7 +251,7 @@ plans/          - Meta files only (_focus.md, _forest.md, meta.md)
 
 ## Session Context
 
-**Branch**: `main` | **Session**: 2025-12-18
+**Branch**: `main` | **Session**: 2025-12-20
 
 ### What's Happening Now
 
@@ -324,4 +324,4 @@ Context dumping: large payloads tax every turn
 
 ---
 
-*Compiled: 2025-12-18 | Version: 3 | Skills-First Edition*
+*Compiled: 2025-12-20 | Version: 4 | Docs Renaissance Edition*

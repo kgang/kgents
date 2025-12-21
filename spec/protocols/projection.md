@@ -692,10 +692,9 @@ The Projection Gallery demonstrates the protocol by rendering **every widget** t
 - Target registry: `impl/claude/agents/i/reactive/targets.py`
 - Projectors: `impl/claude/system/projector/` (local, k8s)
 - Gallery: `impl/claude/protocols/projection/gallery/`
-- 3D primitives: `impl/claude/web/src/components/three/primitives/`
-- 3D themes: `impl/claude/web/src/components/three/primitives/themes/`
-- LOD system: `impl/claude/web/src/components/three/primitives/useLOD.tsx`
-- Touch hooks: `impl/claude/web/src/components/three/primitives/useTouch.ts`
+- Widget primitives: `impl/claude/web/src/widgets/primitives/`
+- Three.js utils: `impl/claude/web/src/utils/three/`
+- Touch gestures: `impl/claude/web/src/hooks/useTouchGestures.ts`
 - Quality detection: `impl/claude/web/src/hooks/useIlluminationQuality.ts`
 - Skill guide: `docs/skills/3d-projection-patterns.md`
 

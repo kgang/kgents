@@ -236,15 +236,6 @@ I-gent Page View → [observe] → Spawns W-gent → Opens browser
                           [export note] → Saved to I-gent margin notes
 ```
 
-### E-gents (Evolution)
-**W-gents visualize evolution pipeline execution.**
-
-Observe evolution stages:
-- Hypothesis generation (what ideas considered)
-- Experiment execution (code validation in progress)
-- Judgment verdicts (why accepted/rejected)
-- Convergence metrics (similarity scores across iterations)
-
 ### J-gents (JIT)
 **W-gents render promise trees.**
 

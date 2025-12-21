@@ -318,8 +318,9 @@ if isinstance(widget, ComposableWidget):
 
 ## Related Skills
 
-- [projection-gallery](projection-gallery.md) - Building showcase galleries
 - [building-agent](building-agent.md) - Creating agents with projectable state
+- [elastic-ui-patterns](elastic-ui-patterns.md) - Responsive UI patterns
+- [3d-projection-patterns](3d-projection-patterns.md) - 3D visualization patterns
 
 ---
 

@@ -75,4 +75,4 @@ If f: A → B and g: B → C, then (f ∘ g): A → C
 ## See Also
 
 - [composition.md](composition.md) - How agents combine
-- [../a-agents/abstract/skeleton.md](../a-agents/abstract/skeleton.md) - Base agent structure
+- [../a-gents/abstract/skeleton.md](../a-gents/abstract/skeleton.md) - Base agent structure

@@ -181,7 +181,6 @@ D-gents aren't isolated - they enhance every other genus:
 | **J-gents** | D-gents enable promise tree branching; entropy budgets constrain state size |
 | **H-gents** | Dialectic history stored in D-gents |
 | **K-gent** | Personality and preferences persist via D-gents |
-| **E-gents** | Evolutionary populations and fitness stored in D-gents |
 
 ---
 

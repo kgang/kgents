@@ -539,5 +539,4 @@ were originally Y-gent concepts. They now live in F-gent as the unified flow sub
 - `collaboration.md` - Multi-agent blackboard pattern
 - `spec/protocols/turn.md` - Turn Protocol (fixed-point semantics)
 - `spec/y-gents-archived/` - Archived Y-gent spec (historical reference)
-- `spec/e-gents/evolution-agent.md` - Evolutionary exploration
 - Papers: "Tree of Thoughts" (Yao et al., 2023)

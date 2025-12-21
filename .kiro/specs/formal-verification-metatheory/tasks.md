@@ -321,76 +321,132 @@ Ensure all components work together and all tests pass.
 
 ---
 
-## Task 15: Remaining Property Tests 🚧 NOT STARTED
+## Task 15: Remaining Property Tests ✅ COMPLETE
 
 ### Description
-Implement property-based tests for remaining correctness properties (4-6, 8, 18, 20-25).
+Implement property-based tests for remaining correctness properties (4-6, 8, 18, 25).
 
 ### Acceptance Criteria
-- [ ] 15.1 Write property test for Generative Loop Round-Trip
+- [x] 15.1 Write property test for Generative Loop Round-Trip
   - **Property 4: Generative Loop Round-Trip**
   - Test that roundtrip Mind-Map → Spec → Impl → Mind-Map' preserves essential structure
   - **Validates: Requirements 2.6, 12.6**
 
-- [ ] 15.2 Write property test for Compression Morphism Preservation
+- [x] 15.2 Write property test for Compression Morphism Preservation
   - **Property 5: Compression Morphism Preservation**
   - Test that essential decisions are preserved in AGENTESE specification
   - **Validates: Requirements 2.1**
 
-- [ ] 15.3 Write property test for Implementation Structure Preservation
+- [x] 15.3 Write property test for Implementation Structure Preservation
   - **Property 6: Implementation Structure Preservation**
   - Test that generated implementation preserves composition structure
   - **Validates: Requirements 2.2**
 
-- [ ] 15.4 Write property test for Reflective Tower Consistency
+- [x] 15.4 Write property test for Reflective Tower Consistency
   - **Property 8: Reflective Tower Consistency**
   - Test that modifications to tower levels maintain adjacent level consistency
   - **Validates: Requirements 3.6, 3.7**
 
-- [ ] 15.5 Write property test for Semantic Consistency
+- [x] 15.5 Write property test for Semantic Consistency
   - **Property 18: Semantic Consistency**
   - Test cross-document semantic consistency verification
   - **Validates: Requirements 7.1, 7.2, 7.3, 7.5**
 
-- [ ] 15.6 Write property test for Verification Graph Correctness
+- [x] 15.6 Write property test for Verification Graph Correctness
   - **Property 25: Verification Graph Correctness**
   - Test derivation path construction, contradiction detection, orphan flagging
   - **Validates: Requirements 13.1, 13.2, 13.3**
 
-### Files to Create
-- `impl/claude/services/verification/_tests/test_generative_loop.py` (new)
-- `impl/claude/services/verification/_tests/test_semantic_consistency.py` (new)
-- `impl/claude/services/verification/_tests/test_graph_engine.py` (new)
+### Files Created
+- `impl/claude/services/verification/_tests/test_generative_loop.py` ✅
+- `impl/claude/services/verification/_tests/test_semantic_consistency.py` ✅
+- `impl/claude/services/verification/_tests/test_graph_engine.py` ✅
 
 ### Dependencies
 - Tasks 4, 6, 7, 12 (functionality to test)
 
 ---
 
-## Task 16: Interactive Visualization 🚧 NOT STARTED
+## Task 16: Fix Failing Property Tests 🚧 IN PROGRESS
+
+### Description
+Fix the 15 failing property tests in the verification test suite.
+
+### Current Test Status
+- **149 passing**, **15 failing** (out of 164 tests)
+
+### Acceptance Criteria
+- [ ] 16.1 Fix generative loop roundtrip tests (3 failures)
+  - `test_roundtrip_preserves_node_count`
+  - `test_roundtrip_preserves_structure`
+  - `test_roundtrip_generates_traces`
+  - _Requirements: 2.6, 12.6_
+
+- [ ] 16.2 Fix compression morphism tests (5 failures)
+  - `test_compression_preserves_nodes`
+  - `test_compression_preserves_covers_as_operads`
+  - `test_compression_preserves_edges_as_constraints`
+  - `test_compression_assigns_contexts`
+  - `test_compression_assigns_aspects`
+  - _Requirements: 2.1_
+
+- [ ] 16.3 Fix pattern synthesis tests (2 failures)
+  - `test_synthesize_extracts_flow_patterns`
+  - `test_synthesize_extracts_performance_patterns`
+  - _Requirements: 2.4_
+
+- [ ] 16.4 Fix spec diff tests (2 failures)
+  - `test_diff_with_no_patterns`
+  - `test_diff_detects_drift`
+  - _Requirements: 2.5_
+
+- [ ] 16.5 Fix graph engine path finding test (1 failure)
+  - `test_path_finding`
+  - _Requirements: 13.1_
+
+- [ ] 16.6 Fix semantic consistency tests (2 failures)
+  - `test_identical_documents_are_consistent`
+  - `test_contradictory_requirements_detected`
+  - _Requirements: 7.1, 7.2_
+
+### Files to Modify
+- `impl/claude/services/verification/generative_loop.py`
+- `impl/claude/services/verification/graph_engine.py`
+- `impl/claude/services/verification/semantic_consistency.py`
+- `impl/claude/services/verification/_tests/test_generative_loop.py`
+- `impl/claude/services/verification/_tests/test_graph_engine.py`
+- `impl/claude/services/verification/_tests/test_semantic_consistency.py`
+
+### Dependencies
+- Task 15 (tests to fix)
+
+---
+
+## Task 17: Interactive Visualization 🚧 NOT STARTED
 
 ### Description
 Implement interactive visualization data generation for verification graphs and topology.
 
 ### Acceptance Criteria
-- [ ] 16.1 Implement visualization data generation for verification graphs
+- [ ] 17.1 Implement visualization data generation for verification graphs
   - Generate node/edge data for D3.js or similar
   - Include derivation path highlighting
   - Support contradiction and orphan visualization
   - _Requirements: 13.5_
 
-- [ ] 16.2 Implement breathing animations data for Alive Workshop aesthetic
+- [ ] 17.2 Implement breathing animations data for Alive Workshop aesthetic
   - Generate animation parameters for graph nodes
   - Support "data flows like water through vines" effect
   - _Requirements: 11.3_
 
-- [ ] 16.3 Integrate with existing Gestalt service
+- [ ] 17.3 Integrate with existing Gestalt service
   - Export visualization data in Gestalt-compatible format
   - Support real-time updates via streaming
   - _Requirements: 11.3, 13.5_
 
 ### Files to Create
 - `impl/claude/services/verification/visualization.py` (new)
+- `impl/claude/services/verification/web/components/VerificationGraph.tsx` (new)
 
 ### Dependencies
 - Task 6 (graph engine)
@@ -398,37 +454,37 @@ Implement interactive visualization data generation for verification graphs and 
 
 ---
 
-## Task 17: Lean/Agda Bridge 🚧 NOT STARTED
+## Task 18: Lean/Agda Bridge 🚧 NOT STARTED
 
 ### Description
 Implement export to Lean theorem prover for formal proof of critical properties.
 
 ### Acceptance Criteria
-- [ ] 17.1 Create `LeanBridge` class with `export_operad_laws()` method
+- [ ] 18.1 Create `LeanBridge` class with `export_operad_laws()` method
   - Define Lean theorem syntax generation for operad laws
   - Support export of categorical law verification conditions
   - _Requirements: 14.1_
 
-- [ ] 17.2 Implement `assist_proof_search()` with LLM integration
+- [ ] 18.2 Implement `assist_proof_search()` with LLM integration
   - Use LLM to suggest proof tactics
   - Generate proof sketches for common patterns
   - _Requirements: 14.2_
 
-- [ ] 17.3 Implement `import_verification()` for completed proofs
+- [ ] 18.3 Implement `import_verification()` for completed proofs
   - Parse Lean proof results
   - Map back to Python verification status
   - _Requirements: 14.3_
 
-- [ ] 17.4 Add incremental proof development support
+- [ ] 18.4 Add incremental proof development support
   - Support partial proofs with holes
   - Track proof progress across sessions
   - _Requirements: 14.4_
 
-- [ ] 17.5 Write property tests for Lean export validity
+- [ ]* 18.5 Write property tests for Lean export validity
   - **Property 26: Lean Export Validity**
   - **Validates: Requirements 14.1**
 
-- [ ] 17.6 Write property tests for Lean import correctness
+- [ ]* 18.6 Write property tests for Lean import correctness
   - **Property 27: Lean Import Correctness**
   - **Validates: Requirements 14.3**
 
@@ -438,6 +494,75 @@ Implement export to Lean theorem prover for formal proof of critical properties.
 
 ### Dependencies
 - Task 3 (categorical laws to export)
+
+---
+
+## Task 19: Autopilot Orchestration Engine 🚧 NOT STARTED
+
+### Description
+Implement autonomous multi-agent orchestration with continuous verification and anomaly detection.
+
+### Acceptance Criteria
+- [ ] 19.1 Create `AutopilotOrchestrationEngine` class
+  - Implement `deploy_society()` for agent society deployment
+  - Implement `verify_behavioral_correctness()` for continuous verification
+  - _Requirements: 9.1_
+
+- [ ] 19.2 Implement anomaly detection
+  - Implement `detect_anomalies()` for behavioral anomaly detection
+  - Implement `trigger_correction()` for automatic corrective actions
+  - _Requirements: 9.2_
+
+- [ ] 19.3 Implement agent compatibility verification
+  - Implement `verify_agent_compatibility()` for new agent integration
+  - _Requirements: 9.3_
+
+- [ ] 19.4 Implement dynamic reconfiguration
+  - Implement `reconfigure_dynamically()` while maintaining guarantees
+  - Support load-adaptive orchestration strategies
+  - _Requirements: 9.4, 9.5_
+
+- [ ] 19.5 Add `AgentSociety` and `Anomaly` data models
+  - Define data structures for society management
+  - _Requirements: 9.1-9.5_
+
+- [ ]* 19.6 Write property test for Autonomous Orchestration
+  - **Property 20: Autonomous Orchestration**
+  - Test continuous behavioral verification and anomaly detection
+  - **Validates: Requirements 9.1, 9.2, 9.3, 9.5**
+
+### Files to Create
+- `impl/claude/services/verification/autopilot.py` (new)
+- `impl/claude/services/verification/_tests/test_autopilot.py` (new)
+
+### Dependencies
+- Task 3 (categorical checker)
+- Task 5 (trace witness system)
+- Task 12 (semantic consistency)
+
+---
+
+## Task 20: Final Integration Checkpoint 🚧 NOT STARTED
+
+### Description
+Final validation that all components work together with all tests passing.
+
+### Acceptance Criteria
+- [ ] 20.1 Run full test suite and ensure all tests pass
+  - All property-based tests pass
+  - All integration tests pass
+  - No regressions in existing functionality
+
+- [ ] 20.2 Verify AGENTESE nodes are accessible
+  - Test all registered nodes via CLI
+  - Verify response formats
+
+- [ ] 20.3 Documentation review
+  - Ensure README.md is up to date
+  - Verify all public APIs are documented
+
+### Dependencies
+- Tasks 16-19 (all previous tasks)
 
 ---
 
@@ -461,9 +586,11 @@ Phase 3 (Integration) ✅ COMPLETE:
 Phase 4 (Validation & Polish) 🚧 IN PROGRESS:
   Task 11: Property Tests ✅ ─┐
   Task 13: Fix Integration ✅ ┼──→ Task 14: Integration Checkpoint ✅
-  Task 15: Remaining Tests 🚧 ┤
-  Task 16: Visualization 🚧 ──┼──→ Final Polish
-  Task 17: Lean Bridge 🚧 ────┘
+  Task 15: Remaining Tests ✅ ┤
+  Task 16: Fix Failing Tests 🚧 ──→ Task 20: Final Checkpoint 🚧
+  Task 17: Visualization 🚧 ──┤
+  Task 18: Lean Bridge 🚧 ────┤
+  Task 19: Autopilot 🚧 ──────┘
 ```
 
 ## Summary
@@ -484,18 +611,23 @@ Phase 4 (Validation & Polish) 🚧 IN PROGRESS:
 | 12. Semantic Consistency | ✅ Complete | - |
 | 13. Fix Integration Test | ✅ Complete | - |
 | 14. Integration Checkpoint | ✅ Complete | - |
-| 15. Remaining Property Tests | 🚧 Not Started | Medium |
-| 16. Interactive Visualization | 🚧 Not Started | Low |
-| 17. Lean Bridge | 🚧 Not Started | Low |
+| 15. Remaining Property Tests | ✅ Complete | - |
+| 16. Fix Failing Tests | 🚧 In Progress | High |
+| 17. Interactive Visualization | 🚧 Not Started | Low |
+| 18. Lean Bridge | 🚧 Not Started | Low |
+| 19. Autopilot Orchestration | 🚧 Not Started | Medium |
+| 20. Final Integration Checkpoint | 🚧 Not Started | High |
 
-**Completed**: 14/17 tasks (82%)
+**Completed**: 15/20 tasks (75%)
 
-**Test Status**: 95 tests passing (88 property-based + 7 integration)
+**Test Status**: 149 passing, 15 failing (out of 164 tests)
 
 **Remaining Priority**:
-1. Task 15: Remaining Property Tests (Medium) - Complete test coverage for Properties 4-6, 8, 18, 25
-2. Task 16: Interactive Visualization (Low) - UI enhancements for Gestalt integration
-3. Task 17: Lean Bridge (Low) - Formal theorem prover integration
+1. Task 16: Fix Failing Tests (High) - Fix 15 failing property tests
+2. Task 19: Autopilot Orchestration (Medium) - Autonomous multi-agent orchestration (Requirement 9)
+3. Task 20: Final Integration Checkpoint (High) - Ensure all tests pass
+4. Task 17: Interactive Visualization (Low) - UI enhancements for Gestalt integration
+5. Task 18: Lean Bridge (Low) - Formal theorem prover integration
 
 ---
 

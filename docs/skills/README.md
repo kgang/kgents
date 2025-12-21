@@ -101,4 +101,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-18 | Skills: 13 active | Skills-First Edition*
+*Consolidated: 2025-12-20 | Skills: 17 active | Docs Renaissance Edition*

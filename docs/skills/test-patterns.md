@@ -1288,11 +1288,8 @@ npm run test:e2e -- --update-snapshots # Update screenshots
 ## Related Skills
 
 - [building-agent](building-agent.md) - Creating well-formed agents
-- [flux-agent](flux-agent.md) - Testing async streaming agents
-- [handler-patterns](handler-patterns.md) - Testing CLI handlers
-- [agent-observability](agent-observability.md) - Metrics and debugging
-- [reactive-primitives](reactive-primitives.md) - Signal/Computed/Effect
-- [modal-scope-branching](modal-scope-branching.md) - Context branching
+- [polynomial-agent](polynomial-agent.md) - State machine patterns
+- [crown-jewel-patterns](crown-jewel-patterns.md) - Service patterns to test
 
 ---
 

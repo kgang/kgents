@@ -211,7 +211,6 @@ Standard actions:
 - `[invoke]` — Execute with input
 - `[compose]` — Connect to another agent
 - `[rest]` — Transition to dormant
-- `[evolve]` — Trigger E-gent improvement
 - `[timeline]` — Switch to timeline view
 
 ---

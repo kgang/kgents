@@ -375,7 +375,7 @@ class FailureAnalysis:
 
 1. **Test**: Gym discovers failure modes
 2. **Analyze**: Categorize failures
-3. **Hypothesize**: Generate fix hypotheses (using E-gents)
+3. **Hypothesize**: Generate fix hypotheses
 4. **Experiment**: Test fixes in the Gym
 5. **Apply**: Auto-apply validated improvements
 
@@ -416,45 +416,6 @@ class SelfImprovingGym(AdversarialGym):
 
 ---
 
-## Integration with E-gents
-
-The Gym is a natural testing ground for **E-gents** (evolution agents).
-
-### Workflow
-
-```
-E-gent generates hypothesis → Gym stress tests hypothesis → Gym returns success rate
-```
-
-### Example
-
-```python
-async def evolution_with_gym():
-    """Use Gym as fitness function for evolution."""
-
-    gym = AdversarialGym(seed=42)
-
-    # Evolution loop
-    for generation in range(10):
-        # E-gent: Generate hypotheses
-        hypotheses = await generate_hypotheses(current_agent)
-
-        # Gym: Evaluate fitness
-        fitness_scores = []
-        for hypothesis in hypotheses:
-            experiment_agent = await apply_hypothesis(current_agent, hypothesis)
-            report = await gym.stress_test(experiment_agent, iterations=50)
-            fitness_scores.append(report.success_rate)
-
-        # Select best
-        best_idx = fitness_scores.index(max(fitness_scores))
-        current_agent = await apply_hypothesis(current_agent, hypotheses[best_idx])
-
-        print(f"Generation {generation}: Best fitness = {fitness_scores[best_idx]:.2%}")
-```
-
----
-
 ## Anti-patterns
 
 ### 1. Over-Fitting to the Gym
@@ -490,7 +451,7 @@ async def evolution_with_gym():
 - [ ] Find breaking point automatically
 
 ### Phase 3: Self-Improvement
-- [ ] Integrate with E-gents for hypothesis generation
+- [ ] Implement hypothesis generation
 - [ ] Implement auto-fix suggestions
 - [ ] Validate improvements in Gym before applying
 
@@ -518,7 +479,6 @@ The Adversarial Gym is successful if:
 - [README.md](README.md) - T-gents overview
 - [taxonomy.md](taxonomy.md) - Individual T-gent specifications
 - [algebra.md](algebra.md) - Category Theory foundations
-- [../e-gents/](../e-gents/) - Evolution agents (hypothesis generation)
 - [../j-gents/stability.md](../j-gents/stability.md) - Entropy budgets and collapse
 
 ---

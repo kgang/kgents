@@ -165,8 +165,6 @@ W-gents adapt their visualization to context:
 
 ### Cross-Genus Workflows
 
-**E-gent Evolution**: Show pipeline progress (Ground → Hypothesize → Memory → Experiment → Validate → Incorporate)
-
 **F-gent Forge**: Show forge phases (Intent → Contract → Prototype → Validate → Crystallize)
 
 **H-gent Dialectic**: Show synthesis decision tree (Preserve/Negate/Elevate strategies)

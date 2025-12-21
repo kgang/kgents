@@ -485,12 +485,6 @@ D-gents are **derivable** from bootstrap agents:
 - **Long-term memory**: User interactions accumulate over time
 - **Identity continuity**: D-gents make K-gent feel like "the same person"
 
-### E-gents (Evolution - Future)
-
-- **Evolutionary state**: Population of agent variants stored in D-gent
-- **Fitness history**: Performance metrics persisted across generations
-- **Genetic memory**: Successful mutations preserved
-
 ---
 
 ## Success Criteria
@@ -524,15 +518,13 @@ A D-gent is well-designed if:
 | Document | Description |
 |----------|-------------|
 | [architecture.md](architecture.md) | Core Datum/DgentProtocol architecture |
-| [dual-track.md](dual-track.md) | **NEW**: Dual-track (Agent Memory + Application State) |
+| [dual-track.md](dual-track.md) | Dual-track (Agent Memory + Application State) |
 | [persistence.md](persistence.md) | Volatile vs. Persistent state management |
 | [lenses.md](lenses.md) | Lens laws, composition, and traversals |
 | [protocols.md](protocols.md) | The DataAgent protocol and implementations |
 | [symbiont.md](symbiont.md) | Endosymbiotic pattern (S >> D composition) |
 | [vision.md](vision.md) | Memory as Landscape + Noosphere Layer |
-| [vector.md](vector.md) | Semantic memory with embeddings |
-| [graph.md](graph.md) | Knowledge graphs as state |
-| [streams.md](streams.md) | Event sourcing and temporal state |
+| [noosphere.md](noosphere.md) | Semantic memory and knowledge graphs |
 
 ---
 

@@ -245,26 +245,6 @@ class Librarian:
 
 L-gent is a **higher-order D-gent consumer**—it orchestrates multiple D-gent types into a unified knowledge service.
 
-### E-gents (Evolution)
-
-**L-gent tracks evolutionary lineage**:
-- When E-gent evolves an artifact, L-gent records the transition
-- L-gent can query "what improvements worked for similar code?"
-- Success patterns are indexed for future evolution guidance
-
-```python
-# E-gent improvement cycle
-improved = await evolution_agent.invoke(original)
-
-# L-gent records lineage
-await l_gent.record_evolution(
-    parent=original.id,
-    child=improved.id,
-    improvement_type="complexity_reduction",
-    success=True
-)
-```
-
 ### C-gents (Category Theory)
 
 **L-gent enables compositional planning**:
@@ -495,7 +475,6 @@ L-gent transforms the ecosystem from a **"Box of Parts"** into a **"Supply Chain
 - **For the User**: A search engine that understands code and intent
 - **For F-gent**: A publisher that catalogs new creations and prevents duplication
 - **For C-gent**: A compatibility oracle that validates compositions
-- **For E-gent**: A memory of what improvements worked where
 - **For the Ecosystem**: The connective tissue ensuring that as the system grows, it becomes *smarter*, not more chaotic
 
 The ultimate test: Can someone new to the ecosystem find what they need? Can they discover compositions they didn't know to ask for? Can they trace the history of any artifact?

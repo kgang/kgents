@@ -191,11 +191,6 @@ Different agent genera emphasize different phases:
 - **Active** manages in-memory state
 - **Waning** is critical for data integrity
 
-### E-gents (Evolution)
-- Cycles through all phases repeatedly
-- Each evolution pass: Dormant → Active → Waning → Dormant
-- **Empty** indicates failed evolution (rollback)
-
 ### F-gents (Forge)
 - **Waking** analyzes intent
 - **Active** during generation

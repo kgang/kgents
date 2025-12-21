@@ -15,7 +15,6 @@ The Morphic Engine integrates with several other gent types:
 | D-gent | State persistence | Learning memory |
 | N-gent | Tracing | Forensics |
 | G-gent | Prompt structure | LLM calls |
-| E-gent | Evolution | Metaphor creation |
 
 ---
 
@@ -422,73 +421,6 @@ def project_with_grammar(
 
 ---
 
-## E-gent: Metaphor Evolution
-
-E-gent provides the dialectical process for creating new metaphors.
-
-### Metaphor Blending
-
-```python
-def evolve_metaphor(
-    successful_metaphors: list[Metaphor],
-    problem_type: str,
-    e_gent: EvolutionEngine
-) -> Metaphor | None:
-    """Create new metaphor by blending successful ones."""
-
-    if len(successful_metaphors) < 2:
-        return None
-
-    # E-gent dialectical process
-    thesis = successful_metaphors[0]
-    antithesis = successful_metaphors[1]
-
-    synthesis = e_gent.synthesize(
-        thesis=thesis,
-        antithesis=antithesis,
-        context=f"Creating metaphor for {problem_type} problems"
-    )
-
-    if synthesis.verdict == Verdict.ACCEPT:
-        # Convert to Metaphor
-        return Metaphor(
-            id=f"evolved_{thesis.id}_{antithesis.id}",
-            name=synthesis.name,
-            domain="evolved",
-            description=synthesis.description,
-            operations=tuple(synthesis.operations),
-            examples=()
-        )
-
-    return None
-```
-
-### Shadow Integration
-
-When a metaphor fails CHALLENGE, E-gent can help integrate the shadow:
-
-```python
-def integrate_shadow(
-    metaphor: Metaphor,
-    counterexamples: list[str],
-    e_gent: EvolutionEngine
-) -> Metaphor:
-    """Evolve metaphor to handle its shadows."""
-
-    # The counterexamples are the antithesis
-    shadow_metaphor = e_gent.crystallize_shadow(counterexamples)
-
-    synthesis = e_gent.synthesize(
-        thesis=metaphor,
-        antithesis=shadow_metaphor,
-        context="Integrating shadow aspects"
-    )
-
-    return synthesis.evolved_metaphor or metaphor
-```
-
----
-
 ## Integration Configuration
 
 ```python
@@ -516,9 +448,6 @@ class IntegrationConfig:
     grammar_validation: bool = True
     strict_parsing: bool = False
 
-    # E-gent
-    evolution_enabled: bool = True
-    min_samples_for_evolution: int = 10
 ```
 
 ---

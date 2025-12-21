@@ -108,15 +108,14 @@ Bounded Trace: append + trim(50) = trajectory analysis without unbounded growth
 Habitat Guarantee: ∀ path p: Habitat(p) ≠ ∅; no blank pages, no 404 behavior
 ```
 
-### WARP Primitives (2025-12-20)
+### Witness Primitives (2025-12-20)
 ```
-TraceNode = atomic unit: every action auditable, replayable
-Walk = session trace: anchored to Forest plans
-Ritual = lawful workflow: gated by Covenant, verified by laws
-Terrace = presentation layer: observer-dependent rendering
+Vocabulary: TraceNode→Mark, Walk (unchanged), Ritual→Playbook, Covenant→Grant, Offering→Scope, Terrace→Lesson
+Mark = atomic unit: every action auditable, replayable
+Walk = session trace: anchored to Forest plans (kept for intuitive "going for a walk" feeling)
+Playbook = lawful workflow: gated by Grant, verified by laws
 VoiceGate = trust-gated output: L0-L3 determines expression
-Law 3 at gateway: _invoke_path() emits TraceNode—all AGENTESE paths traced automatically
-TraceNode after invocation: create frozen after completion, not mutable during—simpler
+Law 3 at gateway: _invoke_path() emits Mark—all AGENTESE paths traced automatically
 Fire-and-forget bus: asyncio.create_task for non-blocking SynergyBus events
 ```
 
@@ -155,6 +154,14 @@ Edge case tests (unicode, empty, long content) found no bugs—converters robust
 WalkStatus styling lookup: fallback to ACTIVE if status unknown
 ```
 
+### Witness Spec Cleanup (2025-12-20)
+```
+Keep TerrariumView, LensMode: established metaphor, tests passing—don't rename unnecessarily
+Walk≠Arc: spec had backwards compat alias error; Walk stays Walk per rename map
+Domain laws vs Category laws: Lesson laws are domain-specific (immutability, versioning), not category laws (identity, associativity)
+Rename scope: Phase 1 core = TraceNode→Mark, Ritual→Playbook, Covenant→Grant, Offering→Scope, Terrace→Lesson
+```
+
 ---
 
 ## Anti-Patterns
@@ -180,4 +187,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~212/200 | Last updated: 2025-12-20 | Session 7 complete: TerrariumView foundation*
+*Lines: ~220/200 | Last updated: 2025-12-20 | Witness spec cleanup complete*

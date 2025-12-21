@@ -272,13 +272,6 @@ All fit the W-gent philosophy.
 
 ## Composability with Other Gents
 
-### With E-gents (Evolution)
-W-gent can observe evolution process:
-- Watch hypothesis generation
-- Track experiment execution
-- Display judgment verdicts
-- Show convergence metrics
-
 ### With J-gents (JIT)
 W-gent can render promise trees:
 - Visualize lazy promise expansion

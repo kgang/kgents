@@ -6,7 +6,7 @@
 
 ## Philosophy
 
-LLM-based agents fail in novel ways: hallucinations, format errors, context overflow, semantic drift. Traditional retry logic is insufficient. The E-gents reliability stack provides **defense in depth**.
+LLM-based agents fail in novel ways: hallucinations, format errors, context overflow, semantic drift. Traditional retry logic is insufficient. The kgents reliability stack provides **defense in depth**.
 
 **The Insight**: Each layer addresses a different failure mode. Composition creates antifragile systems.
 
@@ -402,5 +402,4 @@ Track these to measure reliability:
 ## See Also
 
 - [testing.md](testing.md) - T-gents for reliability testing
-- [e-gents/](e-gents/) - Evolution agents (reliability context)
 - [bootstrap.md](bootstrap.md) - Fix idiom for iteration

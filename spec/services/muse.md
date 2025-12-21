@@ -3,7 +3,7 @@
 > *"I see the arc of your work. I know when you're rising, when you're stuck, when you're about to break through. I whisper—never shout."*
 
 **Status:** Proposal
-**Implementation:** `impl/claude/services/muse/` (0 tests)
+**Implementation:** `impl/claude/services/muse/` (2 tests)
 
 ---
 

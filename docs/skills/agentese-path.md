@@ -605,10 +605,9 @@ The semaphore path was added in this order:
 
 ## Related Skills
 
-- [cli-command](cli-command.md) - Adding CLI commands
-- [handler-patterns](handler-patterns.md) - Common handler patterns
 - [test-patterns](test-patterns.md) - Testing patterns
 - [polynomial-agent](polynomial-agent.md) - Operads and law checks
+- [agentese-node-registration](agentese-node-registration.md) - @node decorator patterns
 
 ---
 

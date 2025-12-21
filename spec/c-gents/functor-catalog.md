@@ -177,7 +177,7 @@ K(agent, AESTHETIC) = SOUL_SHEAF.restrict(agent, AESTHETIC)
 
 **Key Insight:** Unique among all kgents functors—preserves entire polynomial structure, operates on "implementation" not "interface."
 
-**Status:** 🔄 Implicit (described in `spec/r-gents/README.md`)
+**Status:** 🔄 Implicit (see Refine functor pattern)
 
 ---
 

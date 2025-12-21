@@ -287,7 +287,6 @@ STANDARD_CORPUS = [
 Add metaphors from:
 - Generative retrieval (after validation)
 - User contributions
-- E-gent evolution (blending successful metaphors)
 
 ```python
 class MetaphorCorpus:
