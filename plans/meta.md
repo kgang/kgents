@@ -162,6 +162,54 @@ Domain laws vs Category laws: Lesson laws are domain-specific (immutability, ver
 Rename scope: Phase 1 core = TraceNode→Mark, Ritual→Playbook, Covenant→Grant, Offering→Scope, Terrace→Lesson
 ```
 
+### Layout Sheaf (2025-12-20)
+```
+UI layout stability = sheaf gluing: local state (hover) → global constraint (fixed height)
+Reserve space > conditional render: always render container, toggle content opacity
+Maximum claim wins: if A claims 16px and B claims 24px, slot = 24px (all content must fit)
+Transient claims reserve on mount, not activation: prevents layout shift when content appears
+```
+
+### ASHC Phase 5: Bootstrap Regeneration (2025-12-21)
+```
+Behavioral isomorphism > textual: compare behavior (laws, tests), not code text
+SpecParser extracts laws via pattern matching: "Laws:" headers + math symbols (= ≡)
+check_isomorphism must be async: instance.invoke() is async, can't use run_until_complete()
+Regeneration n_variations > 1: LLM variance means multiple samples needed for confidence
+```
+
+### ResizeObserver Mock Fix (2025-12-21)
+```
+Empty ResizeObserver mock breaks layout-dependent components: callback never fires → context never updates
+Global mock MUST call callback with dimensions: setup.ts mock fires synchronously with 1280x800
+Context-dependent rendering needs deterministic context: useLayoutContext() returns DEFAULT_CONTEXT until ResizeObserver fires
+Test isolation via TestLayoutProvider: explicit context injection > mocked globals (tests/utils/testProviders.tsx)
+```
+
+### Foundry Phase 1: Projector Composition (2025-12-21)
+```
+Monkey-patch >> operator via setattr: avoids modifying base.py, clean separation of compose.py
+DockerArtifact struct carries metadata: downstream projectors need image_name, ports, volumes
+Composed projector injects upstream artifact: K8s manifest gets Docker image reference automatically
+IdentityProjector satisfies composition laws: Id >> P ≡ P for testing and pipelines
+```
+
+### Living Docs Reference Generation (2025-12-21)
+```
+Teaching: section with gotcha: keyword enables extraction: pattern match, not section parsing
+AGENTESE: path in docstrings enables navigation: cross-reference to protocol invocation
+_tests/ exclusion critical: without it, test files inflate doc count 2x
+Tier determination expanded: agents/ and protocols/ now RICH tier (not just services/)
+_parse_docstring returns 4-tuple: (summary, examples, teaching, agentese_path)
+SpecExtractor for markdown: ## headers as symbols, code blocks as examples
+Anti-patterns → warning severity, Laws → critical severity: semantic mapping matters
+Spec categories integrate via _extract_spec_category: separate iteration for markdown files
+Combined docs: 8,243 DocNodes (7,609 code + 634 spec), 937 examples, 79 teaching moments
+Phase 3 generate_to_directory: GenerationManifest tracks all files + totals
+Category pages group by module: by_module dict → ## headers for each module
+No-overwrite default: check filepath.exists() before writing—prevents clobbering
+```
+
 ---
 
 ## Anti-Patterns
@@ -187,4 +235,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~220/200 | Last updated: 2025-12-20 | Witness spec cleanup complete*
+*Lines: ~243/200 | Last updated: 2025-12-21 | Living Docs Phase 3 Complete*
