@@ -859,7 +859,8 @@ class TestPropertyBased:
         }
         assume(title.strip() not in yaml_special)
         # Skip titles with problematic YAML characters
-        assume(not any(c in title for c in [":", "\n", "---", "'", "#"]))
+        # Note: "!" is YAML tag prefix, e.g., `title: !` parses to None
+        assume(not any(c in title for c in [":", "\n", "---", "'", "#", "!"]))
 
         content = f"---\ntitle: {title}\n---\n{body}"
         fm, _ = extract_frontmatter(content)
