@@ -15,12 +15,14 @@
 #   ./scripts/validate.sh --help   # Show options
 #
 # Checks (in order):
-#   1. Ruff lint (strict)
-#   2. Ruff format check
+#   1. Ruff format check
+#   2. Ruff lint (strict)
 #   3. Mypy type check (strict)
-#   4. TypeScript type check (frontend)
-#   5. Pytest (unit + law + property, parallel)
-#   6. Contract sync check (optional, requires backend)
+#   4. Living Docs evidence verification
+#   4.5. Documentation lint
+#   5. TypeScript type check (frontend)
+#   6. Pytest (unit + law + property, parallel)
+#   7. Contract sync check (optional, requires backend)
 #
 # Exit codes:
 #   0 - All checks passed
@@ -116,7 +118,7 @@ warn() {
 }
 
 # Count steps
-TOTAL=4
+TOTAL=6
 [ $SKIP_TESTS -eq 0 ] && TOTAL=$((TOTAL + 1))
 [ $SKIP_TS -eq 0 ] && TOTAL=$((TOTAL + 1))
 [ $INCLUDE_CONTRACT -eq 1 ] && TOTAL=$((TOTAL + 1))
@@ -193,7 +195,51 @@ else
 fi
 
 # =============================================================================
-# Step 4: TypeScript type check (frontend)
+# Step 4: Living Docs evidence verification
+# =============================================================================
+STEP=$((STEP + 1))
+section $STEP "Living Docs evidence"
+
+cd "$REPO_ROOT/impl/claude"
+DOCS_OUTPUT=$(uv run kg docs verify --strict 2>&1) || true
+DOCS_EXIT=$?
+if [ $DOCS_EXIT -eq 0 ]; then
+    success "Evidence links verified"
+else
+    MISSING=$(echo "$DOCS_OUTPUT" | grep -c "Missing:" || echo "0")
+    error "Evidence: $MISSING missing links"
+    if [ $VERBOSE -eq 1 ]; then
+        echo "$DOCS_OUTPUT"
+    else
+        echo "$DOCS_OUTPUT" | grep -A5 "Missing Evidence" | head -10
+    fi
+    FAILED=1
+fi
+
+# =============================================================================
+# Step 4.5: Documentation lint
+# =============================================================================
+STEP=$((STEP + 1))
+section $STEP "Documentation lint"
+
+cd "$REPO_ROOT/impl/claude"
+LINT_DOCS_OUTPUT=$(uv run kg docs lint --strict 2>&1) || true
+LINT_DOCS_EXIT=$?
+if [ $LINT_DOCS_EXIT -eq 0 ]; then
+    success "Documentation lint passed"
+else
+    LINT_ERRORS=$(echo "$LINT_DOCS_OUTPUT" | grep -c "ERRORS:" || echo "0")
+    error "Documentation lint: issues found"
+    if [ $VERBOSE -eq 1 ]; then
+        echo "$LINT_DOCS_OUTPUT"
+    else
+        echo "$LINT_DOCS_OUTPUT" | tail -20
+    fi
+    FAILED=1
+fi
+
+# =============================================================================
+# Step 5: TypeScript type check (frontend)
 # =============================================================================
 if [ $SKIP_TS -eq 0 ]; then
     STEP=$((STEP + 1))
@@ -209,7 +255,7 @@ if [ $SKIP_TS -eq 0 ]; then
 fi
 
 # =============================================================================
-# Step 5: ESLint (frontend)
+# Step 6: ESLint (frontend)
 # =============================================================================
 STEP=$((STEP + 1))
 section $STEP "ESLint (frontend)"
@@ -227,7 +273,7 @@ else
 fi
 
 # =============================================================================
-# Step 6: Python tests
+# Step 7: Python tests
 # =============================================================================
 if [ $SKIP_TESTS -eq 0 ]; then
     STEP=$((STEP + 1))
@@ -263,7 +309,7 @@ if [ $SKIP_TESTS -eq 0 ]; then
 fi
 
 # =============================================================================
-# Step 7: Contract sync (optional)
+# Step 8: Contract sync (optional)
 # =============================================================================
 if [ $INCLUDE_CONTRACT -eq 1 ]; then
     STEP=$((STEP + 1))

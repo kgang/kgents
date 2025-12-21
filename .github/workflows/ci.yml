@@ -175,6 +175,58 @@ jobs:
         run: cd impl/claude && uv run python scripts/validate_path_alignment.py
 
   # ===========================================================================
+  # Tier 1.7: Living Docs Evidence Verification (< 1 min)
+  # Ensures all teaching moments have valid evidence links
+  # ===========================================================================
+  verify-docs:
+    name: Verify Living Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          prune-cache: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Verify evidence links
+        run: cd impl/claude && uv run kg docs verify --strict
+
+  # ===========================================================================
+  # Tier 1.8: Documentation Lint (< 1 min)
+  # Ensures public symbols have proper docstrings
+  # ===========================================================================
+  lint-docs:
+    name: Lint Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Need git history for --changed mode
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          prune-cache: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: cd impl/claude && uv sync --dev
+
+      - name: Lint documentation
+        run: cd impl/claude && uv run kg docs lint --strict
+
+  # ===========================================================================
   # Tier 2: Domain-Parallel Unit Tests
   # ===========================================================================
   # Design Philosophy:
