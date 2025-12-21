@@ -10,6 +10,14 @@ There is no canonical "documentation" - only projections.
 See: spec/protocols/living-docs.md
 """
 
+from .brain_adapter import (
+    ASHCEvidence,
+    HydrationBrainAdapter,
+    ScoredTeachingResult,
+    get_hydration_brain_adapter,
+    reset_hydration_brain_adapter,
+    set_hydration_brain_adapter,
+)
 from .extractor import DocstringExtractor
 from .generator import (
     GeneratedFile,
@@ -18,6 +26,20 @@ from .generator import (
     generate_gotchas,
     generate_reference,
     generate_to_directory,
+)
+from .hydrator import (
+    HydrationContext,
+    Hydrator,
+    hydrate_context,
+    relevant_for_file,
+)
+from .linter import (
+    DocstringLinter,
+    LintResult,
+    LintStats,
+    get_changed_files,
+    lint_directory,
+    lint_file,
 )
 from .projector import LivingDocsProjector, project
 from .spec_extractor import SpecExtractor
@@ -70,4 +92,23 @@ __all__ = [
     "query_teaching",
     "verify_evidence",
     "get_teaching_stats",
+    # Hydration (Phase 6)
+    "HydrationContext",
+    "Hydrator",
+    "hydrate_context",
+    "relevant_for_file",
+    # Brain Adapter (Metabolic Checkpoint 0.2)
+    "HydrationBrainAdapter",
+    "ScoredTeachingResult",
+    "ASHCEvidence",
+    "get_hydration_brain_adapter",
+    "set_hydration_brain_adapter",
+    "reset_hydration_brain_adapter",
+    # Linter (Documentation Enforcement)
+    "DocstringLinter",
+    "LintResult",
+    "LintStats",
+    "lint_file",
+    "lint_directory",
+    "get_changed_files",
 ]
