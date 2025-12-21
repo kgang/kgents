@@ -49,9 +49,6 @@ def _force_reload_node_modules():
     # List of node modules to reload (order matters for dependencies)
     node_modules = [
         "protocols.agentese.contexts.design",
-        "protocols.agentese.contexts.forest",
-        "protocols.agentese.contexts.garden",
-        "protocols.agentese.contexts.gardener",
         "protocols.agentese.contexts.self_differance",
         "protocols.agentese.contexts.self_kgent",
         "protocols.agentese.contexts.self_nphase",
@@ -76,8 +73,6 @@ def _force_reload_node_modules():
         "services.town.coalition_node",
         "services.town.inhabit_node",
         "services.town.workshop_node",
-        "protocols.garden.node",
-        "protocols.garden.session",
     ]
 
     for mod_name in node_modules:
@@ -132,15 +127,15 @@ class TestPathDiscoverability:
         )
 
     def test_crown_jewel_paths_exist(self, populated_registry):
-        """All 7 Crown Jewel paths are registered."""
+        """All 6 Crown Jewel paths are registered."""
         expected_jewels = [
             "self.memory",  # Brain
-            "concept.gardener",  # Gardener
             "world.codebase",  # Gestalt
             "world.forge",  # Forge (was Atelier)
             "world.town",  # Town
             "world.park",  # Park
             # Domain is dormant - no path expected
+            # Gardener deprecated - removed
         ]
 
         paths = populated_registry.list_paths()

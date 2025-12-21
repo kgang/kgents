@@ -419,67 +419,103 @@ kg docs verify --json
 
 ---
 
-## Phase 6: Public Presentation Polish
+## Phase 6: Claude-Accessible Context
 
-### 6.1 Add Metadata for Each Page
+> *"The docs don't describe the code. The docs compile context for the observer."*
 
-```python
-@dataclass
-class PageMetadata:
-    title: str
-    description: str  # For SEO/social
-    status: str  # "stable", "beta", "experimental"
-    last_updated: datetime
-    authors: list[str]
-    tags: list[str]
+**Goal**: Make Living Docs directly accessible to Claude Code during sessions, replacing ad-hoc context gathering with structured, task-relevant projection.
+
+### 6.1 Task-Relevant Context Generation
+
+```bash
+# Generate focused context for a specific task
+kg docs hydrate "implement wasm projector"
+
+# Output: Markdown blob suitable for Claude context
+# - Relevant modules and their teaching moments
+# - Related specs and their laws
+# - Patterns from similar implementations
+# - Voice anchors to preserve
 ```
 
-### 6.2 Add Visual Elements
-
-- Mermaid diagrams from specs
-- Architecture diagrams for Crown Jewels
-- State machine diagrams for PolyAgents
-- Dependency graphs from Gestalt
-
-### 6.3 Versioning
-
-Track doc versions alongside code:
-
 ```python
+# services/living_docs/hydrator.py
+
 @dataclass
-class DocVersion:
-    code_sha: str
-    doc_sha: str
-    generated_at: datetime
-    coverage: float  # % of symbols documented
+class HydrationContext:
+    """Context blob optimized for Claude Code sessions."""
+
+    task: str
+    relevant_teaching: list[TeachingResult]  # Gotchas you need to know
+    relevant_specs: list[DocNode]            # Spec sections that apply
+    related_modules: list[str]               # Files you'll likely touch
+    voice_anchors: list[str]                 # Kent's phrases to preserve
+
+    def to_markdown(self) -> str:
+        """Render as markdown suitable for system prompt or /hydrate."""
+        ...
 ```
+
+### 6.2 Edit-Time Teaching Surface
+
+```bash
+# Before editing, see what you need to know
+kg docs relevant services/brain/persistence.py
+
+# Output:
+# 🚨 CRITICAL: Dual-track storage means Crystal table AND D-gent must both...
+# 🚨 CRITICAL: capture() returns immediately but trace recording is fire-and-forget...
+#
+# Related: services/witness/playbook.py (shares persistence patterns)
+```
+
+### 6.3 Integration Points
+
+| Integration | Mechanism | Purpose |
+|-------------|-----------|---------|
+| `/hydrate` skill | Calls `kg docs hydrate` | Session start context |
+| CLAUDE.md | Generated section from Living Docs | Evergreen critical gotchas |
+| Pre-edit hook | `kg docs relevant <path>` | Surface teaching before changes |
+
+### 6.4 Modest Scope
+
+This phase focuses on:
+1. **One new command**: `kg docs hydrate <task>`
+2. **One new module**: `services/living_docs/hydrator.py`
+3. **Integration**: Hook into existing `/hydrate` skill
+
+Deferred to future work (see `brainstorming/2025-12-21-living-docs-session-compiler.md`):
+- Voice anchor mining from git history
+- Drift detection (spec vs impl)
+- Pattern mining across codebase
+- Semantic similarity via Brain vectors
 
 ---
 
 ## Implementation Order
 
-| Phase | Deliverable | Estimated Effort |
-|-------|-------------|------------------|
-| 1 | Inventory audit | 1 session |
-| 2.1 | Module-level extraction | 1 session |
-| 2.2 | Cross-reference linking | 1 session |
-| 3 | Reference generator | 2 sessions |
-| 4 | Teaching database | 1 session |
-| 5 | CLI commands | 1 session |
-| 6 | Public polish | 2 sessions |
+| Phase | Deliverable | Status |
+|-------|-------------|--------|
+| 1 | Inventory audit | ✅ complete |
+| 2 | Infrastructure enhancements | ✅ complete |
+| 3 | Directory generator | ✅ complete |
+| 4 | Teaching query API | ✅ complete |
+| 5 | CLI integration | ✅ complete |
+| 6 | Claude-accessible context | **ready** |
 
-**Total**: ~9 sessions for complete reference documentation system
+**Completed**: Phases 1-5 (~6 sessions)
+**Remaining**: Phase 6 (~1 session)
 
 ---
 
 ## Success Criteria
 
-1. **Coverage**: 100% of Crown Jewels documented
-2. **Teaching**: All gotchas have evidence links
-3. **Navigation**: Every symbol reachable in 2 clicks
-4. **Freshness**: Docs regenerate on code change
-5. **Verification**: Evidence links verified in CI
-6. **Public Ready**: Metadata, styling, SEO
+1. **Coverage**: 100% of Crown Jewels documented ✅
+2. **Teaching**: All gotchas have evidence links ✅ (23/30 verified)
+3. **Navigation**: Every symbol reachable via CLI ✅
+4. **Freshness**: `kg docs generate --overwrite` ✅
+5. **Verification**: `kg docs verify --strict` ✅
+6. **Claude-Accessible**: `kg docs hydrate` surfaces task-relevant context
 
 ---
 

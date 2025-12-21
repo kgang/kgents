@@ -32,14 +32,12 @@ import pytest
 # They are the Crown Jewels - users should get rich experiences, not JSON dumps
 REQUIRED_PROJECTIONS = [
     "self.memory",  # Brain - spatial cathedral of memory
-    "self.garden",  # Garden - cultivation practice for ideas
     "self.chat",  # Chat - conversational interface
     "self.soul",  # Soul - K-gent personality and dialogue
     "world.codebase",  # Gestalt - living garden where code breathes
     "world.forge",  # Forge - developer's workshop
     "world.town",  # Town - agent simulation
     "world.park",  # Park - Westworld where hosts can say no
-    "concept.gardener",  # Gardener orchestrator
     "concept.design",  # Design Language System
 ]
 

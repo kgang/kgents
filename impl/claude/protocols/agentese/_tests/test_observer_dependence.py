@@ -255,39 +255,21 @@ class TestForceObserverDependence:
 # =============================================================================
 
 
+@pytest.mark.skip(reason="Gardener deprecated - removed in cleanup")
 class TestGardenerObserverDependence:
     """Test concept.gardener observer-dependent affordances."""
 
     def test_developer_has_polynomial(self):
         """Developer should have polynomial session control."""
-        from protocols.agentese.contexts.gardener import GardenerNode
-
-        node = GardenerNode()
-        affordances = node._get_affordances_for_archetype("developer")
-
-        assert "session.polynomial" in affordances
-        assert "session.define" in affordances
-        assert "session.advance" in affordances
+        pass
 
     def test_guest_route_only(self):
         """Guest should only have route (discovery)."""
-        from protocols.agentese.contexts.gardener import GardenerNode
-
-        node = GardenerNode()
-        affordances = node._get_affordances_for_archetype("guest")
-
-        assert "manifest" in affordances
-        assert "route" in affordances
-        assert "session.define" not in affordances
+        pass
 
     def test_newcomer_gets_propose(self):
         """Newcomer should get suggestions via propose."""
-        from protocols.agentese.contexts.gardener import GardenerNode
-
-        node = GardenerNode()
-        affordances = node._get_affordances_for_archetype("newcomer")
-
-        assert "propose" in affordances
+        pass
 
 
 # =============================================================================
