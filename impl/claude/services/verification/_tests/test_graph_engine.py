@@ -92,11 +92,13 @@ def verification_graph_strategy(draw: st.DrawFn) -> tuple[list[GraphNode], list[
 
     # Generate edges
     edges = []
-    num_edges = draw(st.integers(min_value=1, max_value=min(5, len(unique_nodes) - 1)))
-    for _ in range(num_edges):
-        edge = draw(graph_edge_strategy(unique_nodes))
-        if edge:
-            edges.append(edge)
+    max_edges = max(0, min(5, len(unique_nodes) - 1))
+    if max_edges > 0:
+        num_edges = draw(st.integers(min_value=1, max_value=max_edges))
+        for _ in range(num_edges):
+            edge = draw(graph_edge_strategy(unique_nodes))
+            if edge:
+                edges.append(edge)
 
     return unique_nodes, edges
 

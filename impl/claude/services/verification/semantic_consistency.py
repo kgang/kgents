@@ -633,10 +633,10 @@ class SemanticConsistencyEngine:
 
         for concept_name in external_concepts:
             if concept_name.lower() in doc_text:
-                # Find which document defines this concept
+                # Find which document defines this concept (must be external)
                 defining_doc = None
                 for other_doc, other_concepts in all_document_concepts.items():
-                    if concept_name in other_concepts.get("definitions", {}):
+                    if other_doc != doc_path and concept_name in other_concepts.get("definitions", {}):
                         defining_doc = other_doc
                         break
 

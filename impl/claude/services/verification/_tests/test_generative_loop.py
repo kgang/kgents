@@ -341,13 +341,17 @@ class TestCompressionMorphismPreservation:
     async def test_compression_preserves_edges_as_constraints(
         self, topology: MindMapTopology
     ) -> None:
-        """Compression preserves edges as constraints."""
+        """Compression preserves INCLUSION and PROJECTION edges as constraints."""
         compressor = CompressionMorphism()
 
         spec = await compressor.compress(topology)
 
-        # Edges should become constraints
-        if topology.edges:
+        # Only INCLUSION and PROJECTION edges become constraints
+        constrainable_edges = [
+            e for e in topology.edges.values()
+            if e.mapping_type in (MappingType.INCLUSION, MappingType.PROJECTION)
+        ]
+        if constrainable_edges:
             assert len(spec.constraints) >= 1
 
     @pytest.mark.asyncio
@@ -490,11 +494,14 @@ class TestPatternSynthesis:
     @pytest.mark.asyncio
     async def test_synthesize_extracts_flow_patterns(self) -> None:
         """Synthesis extracts execution flow patterns."""
+        from datetime import datetime, timezone
+
+        from services.verification.contracts import ExecutionStep
+
         synthesizer = PatternSynthesizer()
 
         # Create traces with similar flows
-        from services.verification.contracts import IntermediateStep
-
+        now = datetime.now(timezone.utc)
         traces = [
             TraceWitnessResult(
                 witness_id=f"trace_{i}",
@@ -502,11 +509,29 @@ class TestPatternSynthesis:
                 input_data={},
                 output_data={},
                 intermediate_steps=[
-                    IntermediateStep(operation="step1", data={}),
-                    IntermediateStep(operation="step2", data={}),
+                    ExecutionStep(
+                        step_id="step1",
+                        timestamp=now,
+                        operation="step1",
+                        input_state={},
+                        output_state={},
+                        side_effects=[],
+                    ),
+                    ExecutionStep(
+                        step_id="step2",
+                        timestamp=now,
+                        operation="step2",
+                        input_state={},
+                        output_state={},
+                        side_effects=[],
+                    ),
                 ],
+                specification_id=None,
+                properties_verified=[],
+                violations_found=[],
                 verification_status=VerificationStatus.SUCCESS,
                 execution_time_ms=50.0,
+                created_at=now,
             )
             for i in range(3)
         ]
@@ -520,8 +545,11 @@ class TestPatternSynthesis:
     @pytest.mark.asyncio
     async def test_synthesize_extracts_performance_patterns(self) -> None:
         """Synthesis extracts performance patterns."""
+        from datetime import datetime, timezone
+
         synthesizer = PatternSynthesizer()
 
+        now = datetime.now(timezone.utc)
         traces = [
             TraceWitnessResult(
                 witness_id=f"trace_{i}",
@@ -529,8 +557,12 @@ class TestPatternSynthesis:
                 input_data={},
                 output_data={},
                 intermediate_steps=[],
+                specification_id=None,
+                properties_verified=[],
+                violations_found=[],
                 verification_status=VerificationStatus.SUCCESS,
                 execution_time_ms=50.0 if i < 2 else 150.0,
+                created_at=now,
             )
             for i in range(4)
         ]
