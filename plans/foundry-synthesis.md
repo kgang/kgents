@@ -4,7 +4,7 @@
 
 **Source**: `brainstorming/2025-12-21-jgent-alethic-projection-synthesis.md`
 **Spec**: `spec/services/foundry.md`
-**Status**: Phases 1-3 Complete (366 tests, Phase 4: Foundry Service next)
+**Status**: Phases 1-4 Complete (414 tests, Phase 5: Promotion next)
 
 ---
 
@@ -199,50 +199,60 @@ uv run python demos/wasm_sandbox_demo.py
 
 ---
 
-## Phase 4: Agent Foundry Service (Week 3)
+## Phase 4: Agent Foundry Service (Week 3) — ✅ COMPLETE
 
 **Goal**: Create the AgentFoundry Crown Jewel that orchestrates J-gent + Alethic Projection.
+
+**Completed**: 2025-12-21 | **Tests**: 48 new foundry tests (414 total)
 
 ### Tasks
 
 ```
-[ ] Create services/foundry/ Crown Jewel structure
+[x] Create services/foundry/ Crown Jewel structure
     Directory: impl/claude/services/foundry/ (NEW)
-    ├── __init__.py
-    ├── core.py           # AgentFoundry service
-    ├── polynomial.py     # FOUNDRY_POLYNOMIAL
-    ├── operad.py         # FOUNDRY_OPERAD
-    ├── classifier.py     # RealityClassifier with target selection
-    ├── promotion.py      # PromotionPolicy, PromotionOptimizer
-    ├── cache.py          # EphemeralAgentCache
-    ├── node.py           # @node registration
+    ├── __init__.py        # Exports
+    ├── contracts.py       # Request/Response dataclasses
+    ├── polynomial.py      # FOUNDRY_POLYNOMIAL (8 states)
+    ├── operad.py          # FOUNDRY_OPERAD (composition grammar)
+    ├── cache.py           # EphemeralAgentCache (LRU + TTL + metrics)
+    ├── core.py            # AgentFoundry orchestrator
+    ├── node.py            # @node("self.foundry") registration
     └── _tests/
+        ├── test_core.py       # 22 tests
+        ├── test_cache.py      # 15 tests
+        └── test_polynomial.py # 11 tests
 
-[ ] Implement AgentFoundry orchestrator
+[x] Implement AgentFoundry orchestrator
     File: impl/claude/services/foundry/core.py
-    - forge() method: classify → generate → validate → project
-    - Integration with RealityClassifier, MetaArchitect, Chaosmonger, ProjectorRegistry
+    - forge() method: check cache → classify → generate → validate → select → project → cache
+    - Integration with RealityClassifier, MetaArchitect, Chaosmonger, TargetSelector
+    - manifest() returns FoundryManifestResponse with stats
 
-[ ] Wire to AGENTESE (self.foundry.*)
+[x] Wire to AGENTESE (self.foundry.*)
     File: impl/claude/services/foundry/node.py
     - Register @node("self.foundry") with aspects:
-      - manifest, forge, inspect, promote, history, cache
+      - manifest, forge, inspect, cache, promote
+    - Rendering classes for each aspect
 
-[ ] Integrate RealityClassifier with Projector selection
-    File: impl/claude/services/foundry/classifier.py
-    - Extend J-gent's RealityClassifier with _select_target()
-    - Implement Reality → Target mapping
+[x] Integrate RealityClassifier with Projector selection
+    File: impl/claude/services/foundry/core.py
+    - Uses J-gent's RealityClassifier for reality classification
+    - Uses TargetSelector for target selection
+    - Maps Target → Projector for artifact generation
 
-[ ] Revitalize J-gent impl
-    File: impl/claude/agents/j/
-    - Update MetaArchitect to produce (Nucleus, Halo)
-    - Connect to Foundry service
+[x] Wire to providers.py
+    File: impl/claude/services/providers.py
+    - Added get_foundry_service() async function
+    - Registered foundry_service in container
+    - Import FoundryNode for @node registration
 ```
 
-### Success Criteria
-- `await logos.invoke("self.foundry.forge", umwelt, intent="...")` produces compiled agent
-- Reality classification correctly determines target
-- Ephemeral agents cached by (intent, context) hash
+### Success Criteria ✅ (All Met)
+- ✅ `await logos.invoke("self.foundry.forge", umwelt, intent="...")` produces compiled agent
+- ✅ Reality classification correctly determines target
+- ✅ CHAOTIC reality or unstable code → forces WASM target
+- ✅ Ephemeral agents cached by (intent, context) hash
+- ✅ All 48 tests pass, mypy clean
 
 ---
 
@@ -330,11 +340,30 @@ impl/claude/system/projector/__init__.py             # Export Marimo, MarimoArti
 impl/claude/protocols/cli/commands/agent/manifest.py # Added marimo target routing
 ```
 
+### Created (Phase 4) ✅
+```
+impl/claude/services/foundry/__init__.py        # Exports
+impl/claude/services/foundry/contracts.py       # Request/Response dataclasses
+impl/claude/services/foundry/polynomial.py      # FOUNDRY_POLYNOMIAL (8 states)
+impl/claude/services/foundry/operad.py          # FOUNDRY_OPERAD (composition grammar)
+impl/claude/services/foundry/cache.py           # EphemeralAgentCache (LRU + TTL + metrics)
+impl/claude/services/foundry/core.py            # AgentFoundry orchestrator
+impl/claude/services/foundry/node.py            # @node("self.foundry") registration
+impl/claude/services/foundry/_tests/__init__.py
+impl/claude/services/foundry/_tests/test_core.py      # 22 tests
+impl/claude/services/foundry/_tests/test_cache.py     # 15 tests
+impl/claude/services/foundry/_tests/test_polynomial.py # 11 tests
+```
+
+### Modified (Phase 4) ✅
+```
+impl/claude/services/providers.py               # Added get_foundry_service(), registered foundry_service
+```
+
 ### Planned (Future Phases)
 ```
-impl/claude/services/foundry/                   # AgentFoundry Crown Jewel (Phase 4)
+impl/claude/services/foundry/promotion.py       # PromotionPolicy, PromotionOptimizer (Phase 5)
 impl/claude/templates/agent_exploration.marimo  # Marimo template (optional future)
-impl/claude/agents/j/meta_architect.py          # Produce (Nucleus, Halo) (Phase 4)
 ```
 
 ---
@@ -367,6 +396,10 @@ impl/claude/agents/j/meta_architect.py          # Produce (Nucleus, Halo) (Phase
 | Target in J-gent not Projector | Target selection is classification (J-gent's job), not projection | 2025-12-21 |
 | Forced flag for safety targets | Distinguishes "safety required" from "user preference" | 2025-12-21 |
 | CHAOTIC before UNSTABLE check | Reality classification is cheaper than Chaosmonger analysis | 2025-12-21 |
+| EphemeralAgentCache as LRU | Bounded memory, oldest evicted, metrics for promotion decisions | 2025-12-21 |
+| TTL expiration in cache | Agents stale after 24h unless accessed; prevents cruft accumulation | 2025-12-21 |
+| Foundry returns cache_key | Enables later inspection, promotion, and cache coherence | 2025-12-21 |
+| Unique var names per match case | Mypy requires this to track types correctly in match statements | 2025-12-21 |
 
 ---
 

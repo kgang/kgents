@@ -4,7 +4,7 @@ context: self
 
 # Agent Skills Directory
 
-> *"13 skills are necessary and sufficient to build any kgents component."*
+> *"18 skills are necessary and sufficient to build any kgents component."*
 
 **READ SKILLS FIRST.** Every task has a corresponding skill. Before writing code, find the right skill—it will save you hours.
 
@@ -32,6 +32,7 @@ These four skills apply to virtually ANY work you'll do:
 | **Service/Crown Jewel** | `crown-jewel-patterns.md`, `metaphysical-fullstack.md` |
 | **Event-driven feature** | `data-bus-integration.md` |
 | **Multi-target rendering** | `projection-target.md`, `elastic-ui-patterns.md` |
+| **marimo notebooks** | `marimo-projection.md` |
 | **Writing specs** | `spec-template.md`, `spec-hygiene.md` |
 | **Planning work** | `plan-file.md` |
 
@@ -74,6 +75,7 @@ These four skills apply to virtually ANY work you'll do:
 | Skill | Purpose |
 |-------|---------|
 | [projection-target](projection-target.md) | Custom targets (CLI/TUI/JSON/marimo/WebGL) |
+| [marimo-projection](marimo-projection.md) | marimo notebooks: state, callbacks, late-binding closure traps |
 | [test-patterns](test-patterns.md) | T-gent Types I-V, Hypothesis, chaos testing, performance baselines |
 | [elastic-ui-patterns](elastic-ui-patterns.md) | Three-mode (Compact/Comfortable/Spacious), content degradation |
 
@@ -87,7 +89,7 @@ Component = Foundation ∘ Protocol ∘ Architecture ∘ Process ∘ Projection
           ∘ (agentese-path + agentese-node-registration)
           ∘ (crown-jewel-patterns + metaphysical-fullstack + data-bus-integration)
           ∘ (plan-file + spec-template + spec-hygiene)
-          ∘ (projection-target + test-patterns + elastic-ui-patterns)
+          ∘ (projection-target + marimo-projection + test-patterns + elastic-ui-patterns)
 ```
 
 ---
@@ -101,4 +103,4 @@ Extended skills archived to `docs/_archive/2025-12-18-consolidation/`. Restore i
 
 ---
 
-*Consolidated: 2025-12-20 | Skills: 17 active | Docs Renaissance Edition*
+*Consolidated: 2025-12-21 | Skills: 18 active | Docs Renaissance Edition*

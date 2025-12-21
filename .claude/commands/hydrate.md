@@ -43,3 +43,29 @@ Include suggested phase in hydration output when pattern is clear.
 ## Arguments
 
 If user provides arguments, treat them as focus guidance for the session.
+
+**Task-Focused Hydration**: When arguments describe a specific task (e.g., "implement wasm projector"):
+1. Run `kg docs hydrate "<task>"` to get task-relevant gotchas
+2. Surface critical gotchas at the start of your response
+3. Keep the relevant modules in mind when exploring code
+
+**File-Focused Hydration**: When arguments reference a file path (e.g., "edit services/brain/persistence.py"):
+1. Run `kg docs relevant <path>` to get file-specific gotchas
+2. Warn about critical gotchas before making changes
+
+## Task Context (Living Docs Integration)
+
+When hydrating for a task, include output from Living Docs:
+
+```bash
+# For task-focused work
+kg docs hydrate "<arguments>"
+
+# For file-specific work
+kg docs relevant <file_path>
+```
+
+This surfaces:
+- **Relevant Gotchas**: Mistakes to avoid for this task
+- **Related Modules**: Files you'll likely touch
+- **Voice Anchors**: Kent's phrases to preserve

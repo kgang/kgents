@@ -419,7 +419,7 @@ kg docs verify --json
 
 ---
 
-## Phase 6: Claude-Accessible Context
+## Phase 6: Claude-Accessible Context ✅ COMPLETE (2025-12-21)
 
 > *"The docs don't describe the code. The docs compile context for the observer."*
 
@@ -477,12 +477,13 @@ kg docs relevant services/brain/persistence.py
 | CLAUDE.md | Generated section from Living Docs | Evergreen critical gotchas |
 | Pre-edit hook | `kg docs relevant <path>` | Surface teaching before changes |
 
-### 6.4 Modest Scope
+### 6.4 Modest Scope ✅ DONE
 
-This phase focuses on:
-1. **One new command**: `kg docs hydrate <task>`
-2. **One new module**: `services/living_docs/hydrator.py`
-3. **Integration**: Hook into existing `/hydrate` skill
+Delivered:
+1. **Two commands**: `kg docs hydrate <task>` and `kg docs relevant <file>`
+2. **One new module**: `services/living_docs/hydrator.py` (300 lines)
+3. **Integration**: Updated `/hydrate` skill to use Living Docs
+4. **Tests**: 25 tests in `test_hydrator.py`
 
 Deferred to future work (see `brainstorming/2025-12-21-living-docs-session-compiler.md`):
 - Voice anchor mining from git history
@@ -501,10 +502,9 @@ Deferred to future work (see `brainstorming/2025-12-21-living-docs-session-compi
 | 3 | Directory generator | ✅ complete |
 | 4 | Teaching query API | ✅ complete |
 | 5 | CLI integration | ✅ complete |
-| 6 | Claude-accessible context | **ready** |
+| 6 | Claude-accessible context | ✅ complete |
 
-**Completed**: Phases 1-5 (~6 sessions)
-**Remaining**: Phase 6 (~1 session)
+**Completed**: All 6 phases (~7 sessions)
 
 ---
 
@@ -515,13 +515,24 @@ Deferred to future work (see `brainstorming/2025-12-21-living-docs-session-compi
 3. **Navigation**: Every symbol reachable via CLI ✅
 4. **Freshness**: `kg docs generate --overwrite` ✅
 5. **Verification**: `kg docs verify --strict` ✅
-6. **Claude-Accessible**: `kg docs hydrate` surfaces task-relevant context
+6. **Claude-Accessible**: `kg docs hydrate` surfaces task-relevant context ✅
 
 ---
 
-## Immediate Next Step
+## Summary
 
-Run the inventory audit to see current coverage:
+Living Docs Reference Generation is **COMPLETE**. All 6 phases delivered:
+
+- **119 tests** across the living_docs module
+- **8,243 DocNodes** extracted (code + spec)
+- **79 teaching moments** with evidence links
+- **Claude-accessible context** via `kg docs hydrate` and `kg docs relevant`
+
+The `/hydrate` skill now integrates with Living Docs for task-focused sessions.
+
+---
+
+## Appendix: Original Audit Script
 
 ```bash
 uv run python -c "

@@ -211,6 +211,10 @@ No-overwrite default: check filepath.exists() before writing—prevents clobberi
 Phase 4-5: Iterator-based TeachingCollector > database—lightweight, composes with extractors
 Evidence verification: resolve test_file.py::test_name by globbing _tests/**/<file>.py
 CLI thin routing: docs.py routes to teaching.py—follows brain_thin.py pattern
+Phase 6 hydrator: keyword-based matching now, semantic via Brain vectors is future work
+HydrationContext.to_markdown() optimized for Claude: gotchas → modules → voice anchors
+Voice anchors curated from _focus.md: don't mine from git, preserve authentic Kent voice
+relevant_for_file() extracts keywords from path parts: services/brain/core → ["brain", "core"]
 ```
 
 ### Foundry Phase 3: Marimo Projector (2025-12-21)
@@ -220,6 +224,37 @@ mo.ui.text_area + mo.ui.run_button: minimal interactive pattern for agent explor
 Decorator stripping mandatory: @Capability.* not available in marimo runtime, strip before embed
 asyncio.run() for sync marimo cells: marimo cells are sync, wrap async agent.invoke()
 Capability badge pattern: stateful • streaming • observable or "minimal" for plain agents
+```
+
+### Foundry Phase 4: Agent Foundry Service (2025-12-21)
+```
+Crown Jewel Pattern: core.py (orchestrator), node.py (@node), polynomial.py (state), operad.py (grammar), contracts.py (types)
+Forge pipeline: cache check → classify → generate → validate → select → project → cache → return
+LRU cache with TTL: bounded memory, metrics tracking for promotion decisions
+Mypy match-case quirk: unique variable names per case required (request1, request2 not request, request)
+Safety forcing is unconditional: CHAOTIC reality OR unstable code → WASM (no exceptions, no overrides)
+Cache key = SHA256(normalized(intent, context)): deterministic, collision-resistant, enables later inspection
+Lazy-load dependencies: _get_classifier() pattern defers import until first use → faster startup
+Frozen dataclasses for contracts: immutable boundaries between layers, enables safe composition
+Rendering classes separate concerns: ForgeRendering.to_text() for CLI, to_dict() for JSON
+Polynomial defines direction sets: _foundry_directions(state) returns valid events per state → type-safe FSM
+```
+
+### Metabolic Development (2025-12-21)
+```
+Diversity > Count: 10 diverse runs > 100 identical runs for evidence confidence
+DiversityScore = unique_inputs / total_runs: prevents confidence inflation
+InputSignature hashes (file_content, test_focus, context): deduplication across runs
+BackgroundEvidencing fire-and-forget: asyncio.create_task for non-blocking verification
+Critical failure = >50% test failure rate: only surface regressions, not minor issues
+Stratigraphy layers: SURFACE (0-1d), SHALLOW (2-14d), FOSSIL (>14d)—age determines wisdom value
+Circadian resonance: same weekday > adjacent day for morning matching (Monday Kent ≠ Friday Kent)
+Serendipity from FOSSIL only: >14 days old = unexpected, not familiar
+10% serendipity trigger: random.random() > 0.9 for accursed share wisdom
+Pattern detection without ML: key phrase matching + occurrence counting across voices
+brain_adapter.find_prior_evidence() wired to BackgroundEvidencing: stub → real implementation
+MetabolismPersistence: single D-gent layer for evidence + insights + stigmergy traces
+Persistence param injection: BackgroundEvidencing(persistence=...) + fallback to JSON if None
 ```
 
 ---
@@ -234,6 +269,10 @@ Bypassing running loops causes state schizophrenia
 Context dumping: large payloads tax every turn
 Full ouroboros (feedback=1.0) → solipsism
 Inline object props in useEffect: body={{ x }} creates new ref every render → infinite loop
+Bypassing cache check: classification is expensive; always check cache FIRST
+Caching by intent alone: context affects behavior; hash (intent, context) together
+Force LOCAL for CHAOTIC: security violation; CHAOTIC → WASM unconditionally
+Mutable contracts: Request/Response should be frozen dataclasses; prevents cross-layer mutation
 ```
 
 ---
@@ -247,4 +286,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~250/200 | Last updated: 2025-12-21 | Foundry Phase 3 Complete*
+*Lines: ~285/200 | Last updated: 2025-12-21 | Metabolic Development Phase 0-2.1*

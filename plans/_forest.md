@@ -6,15 +6,25 @@
 
 ## Summary
 
-- **Active Plans**: 14 (pruned from 28)
-- **Test Count**: 20,700+ (Projector 223, Witness 461+, Garden 789, Brain 212+)
+- **Active Plans**: 16 (pruned from 28)
+- **Test Count**: 20,800+ (Foundry 48, Projector 223, Witness 461+, Garden 789, Brain 212+, Metabolic 53)
 - **Hero Path**: Brain 100% + Gardener 100% + Gestalt 100%
 
 ---
 
 ## Active Plans
 
-### ASHC: Agentic Self-Hosting Compiler (Primary Workstream)
+### Metabolic Development (Primary Workstream)
+| Plan | Status | Notes |
+|------|--------|-------|
+| `metabolic.md` | **ACTIVE** | Phase 0 ✅, Phase 1 ✅ (partial), Phase 2.1 ✅ |
+| Phase 0: Foundation | ✅ complete | Stigmergy, Brain adapter, Session polynomial |
+| Phase 1.1-1.2: Circadian | ✅ complete | Resonance, Archaeology, Serendipity (24 tests) |
+| Phase 1.3: Morning Flow | pending | Wire to `kg coffee begin` CLI |
+| Phase 2.1: ASHC Continuous | ✅ complete | BackgroundEvidencing, DiversityScore (29 tests) |
+| D-gent Persistence | 📋 handoff | `HANDOFF_DGENT_PERSISTENCE.md` written |
+
+### ASHC: Agentic Self-Hosting Compiler
 | Plan | Status | Notes |
 |------|--------|-------|
 | `ashc-master.md` | **IMPLEMENT** | Phases 1-5 complete, 408 tests |
@@ -30,12 +40,13 @@
 |------|--------|-------|
 | `repo-archaeology-implementation.md` | **active** | Codebase understanding |
 | `morning-coffee-implementation.md` | **active** | Liminal Protocol — Phase 2 complete (224 tests) |
+| `interactive-text-implementation.md` | **fresh** | Spec→Interface protocol, 4 phases |
 | `a-gent-alethic-refactor.md` | planning | A-gent categorical cleanup |
 
 ### Foundry Synthesis
 | Plan | Status | Notes |
 |------|--------|-------|
-| `foundry-synthesis.md` | **Phase 3 ✅** | Marimo Integration complete, 366 tests (Phase 4: Foundry Service next) |
+| `foundry-synthesis.md` | **Phase 4 ✅** | Agent Foundry Service complete, 414 tests, Living Docs enhanced (Phase 5: Promotion next) |
 
 ### Research
 | Plan | Status | Notes |
@@ -70,4 +81,4 @@
 
 ---
 
-*Last verified: 2025-12-21 | Foundry Phase 2 Complete (Target Selection)*
+*Last verified: 2025-12-21 | Metabolic Phase 0-1.2, 2.1 complete*
