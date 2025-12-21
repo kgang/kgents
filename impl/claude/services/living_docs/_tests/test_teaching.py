@@ -2,6 +2,9 @@
 Tests for Teaching Moments Query API
 
 Tests the teaching module's query and verification capabilities.
+
+Note: Tests that scan the entire codebase are marked @pytest.mark.slow.
+Run fast tests only: pytest -m "not slow"
 """
 
 from __future__ import annotations
@@ -78,8 +81,9 @@ class TestTeachingQuery:
         assert query.with_evidence is True
 
 
+@pytest.mark.slow
 class TestTeachingCollector:
-    """Tests for TeachingCollector class."""
+    """Tests for TeachingCollector class (scans entire codebase)."""
 
     @pytest.fixture
     def collector(self) -> TeachingCollector:
@@ -171,8 +175,9 @@ class TestTeachingCollector:
         assert "info" in stats.by_severity
 
 
+@pytest.mark.slow
 class TestEvidenceResolution:
-    """Tests for evidence path resolution."""
+    """Tests for evidence path resolution (scans entire codebase)."""
 
     def test_evidence_path_resolution(self) -> None:
         """
@@ -205,8 +210,9 @@ class TestEvidenceResolution:
             assert isinstance(existing[0].resolved_path, Path)
 
 
+@pytest.mark.slow
 class TestConvenienceFunctions:
-    """Tests for convenience functions."""
+    """Tests for convenience functions (scan entire codebase)."""
 
     def test_query_teaching_all(self) -> None:
         """query_teaching() with no args returns all moments."""
@@ -261,8 +267,9 @@ class TestTeachingStats:
         assert stats.without_evidence == 0
         assert stats.verified_evidence == 0
 
+    @pytest.mark.slow
     def test_stats_from_codebase(self) -> None:
-        """Stats from actual codebase are sensible."""
+        """Stats from actual codebase are sensible (scans entire codebase)."""
         stats = get_teaching_stats()
 
         # Total should equal sum of severities
@@ -276,8 +283,10 @@ class TestTeachingStats:
         assert stats.verified_evidence <= stats.with_evidence
 
 
+@pytest.mark.slow
+@pytest.mark.integration
 class TestIntegration:
-    """Integration tests for teaching module."""
+    """Integration tests for teaching module (scan entire codebase)."""
 
     def test_find_missing_evidence(self) -> None:
         """Can identify teaching moments with broken evidence links."""

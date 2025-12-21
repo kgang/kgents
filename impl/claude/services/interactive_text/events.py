@@ -10,8 +10,27 @@ Events are emitted on state transitions to enable:
 - Witness service for observability
 - UI projections to update in real-time
 
+AGENTESE: self.document.events
+
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 3.6, 11.1, 11.2, 11.3, 11.4, 11.5
+
+Teaching:
+    gotcha: DocumentEventBus.emit() uses asyncio.create_task—fire-and-forget.
+            Handlers run in background; emit() returns immediately.
+            (Evidence: test_properties.py::test_event_emission_non_blocking)
+
+    gotcha: _safe_notify() swallows exceptions—handlers must not rely on error propagation.
+            Errors increment _error_count but don't fail emission or other handlers.
+            (Evidence: test_properties.py::test_handler_exception_isolation)
+
+    gotcha: Buffer is bounded (DEFAULT_BUFFER_SIZE=1000)—old events are dropped.
+            replay() only sees events still in buffer; don't rely on full history.
+            (Evidence: test_properties.py::test_buffer_eviction)
+
+    gotcha: get_document_event_bus() returns global singleton—reset between tests.
+            Call reset_document_event_bus() in test fixtures to avoid state leakage.
+            (Evidence: test_properties.py::test_global_bus_reset)
 """
 
 from __future__ import annotations

@@ -12,6 +12,7 @@ from typing import Any
 import pytest
 
 from protocols.agentese.container import (
+    DependencyNotFoundError,
     ProviderEntry,
     ServiceContainer,
     create_container,
@@ -296,13 +297,51 @@ class TestNodeCreation:
 
     @pytest.mark.asyncio
     async def test_create_node_with_some_deps_registered(self, container):
-        """Create node with only some deps registered."""
+        """Create node with only some deps registered fails immediately."""
         container.register("service", lambda: MockService(name="partial"))
         # config not registered
 
-        # This should fail because config is required
-        with pytest.raises(TypeError):
+        # This should fail immediately with DependencyNotFoundError
+        # (Enlightened Resolution: required deps fail fast)
+        with pytest.raises(DependencyNotFoundError) as exc_info:
             await container.create_node(NodeWithDeps)
+
+        # Error message should be helpful
+        assert "config" in str(exc_info.value)
+        assert "NodeWithDeps" in str(exc_info.value)
+        assert "providers.py" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_required_deps_fail_immediately(self, container):
+        """Required dependencies (no default) fail immediately if missing."""
+        # NodeWithDeps requires both 'service' and 'config'
+        # Register neither
+
+        with pytest.raises(DependencyNotFoundError) as exc_info:
+            await container.create_node(NodeWithDeps)
+
+        # Should mention the first missing required dep
+        assert "service" in str(exc_info.value) or "config" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_optional_deps_skipped_gracefully(self, container):
+        """Optional dependencies (with default) are skipped if missing."""
+        # NodeWithDefaults has: service: MockService | None = None
+        # Don't register anything - should use the default
+
+        node = await container.create_node(NodeWithDefaults)
+        assert node is not None
+        assert node._service is None  # Used default
+
+    @pytest.mark.asyncio
+    async def test_optional_deps_resolved_when_available(self, container):
+        """Optional dependencies are resolved when registered."""
+        container.register("service", lambda: MockService(name="optional_but_present"))
+
+        node = await container.create_node(NodeWithDefaults)
+        assert node is not None
+        assert node._service is not None
+        assert node._service.name == "optional_but_present"
 
     @pytest.mark.asyncio
     async def test_create_node_invocation(self, container):

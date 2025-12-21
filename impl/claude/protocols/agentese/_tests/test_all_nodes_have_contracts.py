@@ -49,14 +49,10 @@ def registry():
 # These are the core service nodes that MUST have contract declarations
 # Context resolvers (design.py, gardener.py, etc.) use @aspect decorators
 # and are exempt from this requirement.
+# Note: Town, Park, Forge, Gestalt, Chat removed 2025-12-21 (Crown Jewel Cleanup)
 CROWN_JEWEL_PATHS = [
     "self.memory",  # Brain
-    "self.chat",  # Chat
     "world.morpheus",  # Morpheus (dream weaver)
-    "world.codebase",  # Gestalt
-    "world.forge",  # Forge (artisans)
-    "world.town",  # Town
-    "world.park",  # Park
     # Note: self.soul uses context resolver pattern
     # Note: concept.gardener uses context resolver pattern
 ]
@@ -91,8 +87,9 @@ class TestCrownJewelContractCoverage:
             f"Add Response/Contract entries for each aspect."
         )
 
-    def test_at_least_6_jewels_have_contracts(self, registry):
-        """At least 6 Crown Jewels must have contracts (sanity check)."""
+    def test_all_jewels_have_contracts(self, registry):
+        """All Crown Jewels must have contracts (after cleanup)."""
+        # Note: Reduced from 6 after Crown Jewel Cleanup 2025-12-21
         with_contracts = []
         for path in CROWN_JEWEL_PATHS:
             if registry.has(path):
@@ -100,9 +97,9 @@ class TestCrownJewelContractCoverage:
                 if contracts and len(contracts) > 0:
                     with_contracts.append(path)
 
-        assert len(with_contracts) >= 6, (
+        assert len(with_contracts) >= 1, (
             f"Only {len(with_contracts)} Crown Jewels have contracts. "
-            f"Expected at least 6. Missing: {set(CROWN_JEWEL_PATHS) - set(with_contracts)}"
+            f"Expected at least 1. Missing: {set(CROWN_JEWEL_PATHS) - set(with_contracts)}"
         )
 
 

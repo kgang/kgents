@@ -17,6 +17,17 @@ Philosophy:
 
 See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 7: Append-Only History)
+
+Teaching:
+    gotcha: Marks are IMMUTABLE (frozen=True). You cannot modify a Mark after
+            creation. To "update" metadata, create a new Mark linked via CONTINUES
+            relation to the original.
+            (Evidence: test_trace_node.py::test_mark_immutability)
+
+    gotcha: MarkLink.source can be MarkId OR PlanPath. This allows linking marks
+            to Forest plan files directly. When traversing links, check the type
+            before assuming you have a MarkId.
+            (Evidence: test_session_walk.py::TestForestIntegration::test_walk_with_root_plan)
 """
 
 from __future__ import annotations

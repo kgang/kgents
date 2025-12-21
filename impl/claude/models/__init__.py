@@ -32,7 +32,14 @@ from .base import (
 )
 
 # Brain Crown Jewel
-from .brain import BrainSettings, Crystal, CrystalTag
+from .brain import (
+    BrainSettings,
+    Crystal,
+    CrystalTag,
+    ExtinctionEvent,
+    ExtinctionTeaching,
+    TeachingCrystal,
+)
 
 # Coalition Crown Jewel
 from .coalition import (
@@ -61,6 +68,9 @@ from .park import Episode, Host, HostMemory, Interaction, ParkLocation
 # Town Crown Jewel
 from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
+# ASHC Crown Jewel
+from .ashc import VerifiedLemmaModel
+
 __all__ = [
     # Base infrastructure
     "Base",
@@ -74,6 +84,9 @@ __all__ = [
     "Crystal",
     "CrystalTag",
     "BrainSettings",
+    "TeachingCrystal",
+    "ExtinctionEvent",
+    "ExtinctionTeaching",
     # Town
     "Citizen",
     "Conversation",
@@ -108,4 +121,6 @@ __all__ = [
     "Episode",
     "Interaction",
     "ParkLocation",
+    # ASHC
+    "VerifiedLemmaModel",
 ]

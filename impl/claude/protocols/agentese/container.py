@@ -22,6 +22,29 @@ Example:
 
     # Node gets dependencies injected
     node = await container.create_node(BrainNode, meta)
+
+Teaching:
+    gotcha: Dependencies are REQUIRED by default (no default in __init__).
+            Missing required deps raise DependencyNotFoundError immediately.
+            To make a dependency optional, add a default: `brain: Brain | None = None`
+            (Evidence: test_container.py::TestNodeCreation::test_required_deps_fail_immediately)
+
+    gotcha: Optional dependencies are skipped gracefully if not registered.
+            The node's __init__ default is used. This is intentional for
+            graceful degradation (e.g., SoulNode without LLM).
+            (Evidence: test_container.py::TestNodeCreation::test_optional_deps_skipped_gracefully)
+
+    gotcha: Singleton is the DEFAULT. Every register() call creates a cached singleton
+            unless singleton=False is explicitly passed. This means provider functions
+            are called ONCE and the result is reused forever.
+            (Evidence: test_container.py::TestDependencyResolution::test_singleton_caching)
+
+    gotcha: Dependency names are CASE-SENSITIVE and EXACT-MATCH. If your @node
+            declares dependencies=("brain_Crystal",) but you register "brain_crystal",
+            the dependency silently fails to resolve.
+            (Evidence: test_container.py::TestProviderRegistration::test_has_unregistered)
+
+AGENTESE: protocols.agentese.container
 """
 
 from __future__ import annotations
@@ -29,7 +52,6 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-import os
 from collections.abc import Coroutine
 from dataclasses import dataclass, field
 from threading import Lock
@@ -232,9 +254,14 @@ class ServiceContainer:
         """
         Create a node instance with injected dependencies.
 
+        Enlightened Resolution (2025-12-21):
+        - Required deps (no default in __init__) → fail immediately if missing
+        - Optional deps (has default in __init__) → skip gracefully if missing
+        - Declared deps via @node(dependencies=(...)) → ALL treated as required
+
         Resolution order:
-        1. Check meta.dependencies for declared dependencies
-        2. Inspect __init__ signature for parameter names
+        1. Check meta.dependencies for declared dependencies (all required)
+        2. If no declared deps, inspect __init__ signature for required/optional
         3. Resolve each dependency via registered providers
         4. Instantiate node with resolved dependencies
 
@@ -245,79 +272,103 @@ class ServiceContainer:
         Returns:
             Instantiated node with dependencies
 
+        Raises:
+            DependencyNotFoundError: If a required dependency is not registered
+
         Example:
             node = await container.create_node(BrainNode, meta)
         """
         # Determine dependencies
-        dep_names: tuple[str, ...] = ()
+        required_deps: tuple[str, ...]
+        optional_deps: tuple[str, ...]
 
         if meta and meta.dependencies:
-            # Use declared dependencies
-            dep_names = meta.dependencies
+            # Declared deps are ALL required (per decision in plan)
+            required_deps = meta.dependencies
+            optional_deps = ()
         else:
-            # Inspect __init__ signature
-            dep_names = self._inspect_dependencies(cls)
+            # Inspect __init__ signature for required vs optional
+            required_deps, optional_deps = self._inspect_dependencies(cls)
 
         # Resolve dependencies
         kwargs: dict[str, Any] = {}
-        for name in dep_names:
+
+        # Required: fail immediately if missing
+        for name in required_deps:
+            if not self.has(name):
+                raise DependencyNotFoundError(
+                    f"Missing required dependency '{name}' for {cls.__name__}.\n\n"
+                    f"This usually means the provider wasn't registered during startup.\n\n"
+                    f"Fix: In services/providers.py, add:\n"
+                    f"    container.register(\"{name}\", get_{name}, singleton=True)\n\n"
+                    f"If this dependency should be optional, update the node's __init__:\n"
+                    f"    def __init__(self, {name}: ... | None = None): ..."
+                )
+            try:
+                kwargs[name] = await self.resolve(name)
+            except Exception as e:
+                raise DependencyNotFoundError(
+                    f"Failed to resolve required dependency '{name}' for {cls.__name__}: {e}"
+                ) from e
+
+        # Optional: skip gracefully if missing (DEBUG level, not WARNING)
+        for name in optional_deps:
             if self.has(name):
                 try:
                     kwargs[name] = await self.resolve(name)
                 except Exception as e:
-                    logger.warning(f"Failed to resolve dependency {name}: {e}")
-            else:
-                # FAIL-FAST: Missing dependencies should be visible!
-                # This is the #1 cause of "TypeError: unsupported operand type 'NoneType'" errors.
-                # Fix: Add get_{name}() to services/providers.py and register it.
-                logger.warning(
-                    f"Node '{cls.__name__}' missing dependency '{name}'. "
-                    f"Add get_{name}() to services/providers.py and register with container."
-                )
-                # In strict mode (tests), fail immediately
-                if os.environ.get("AGENTESE_STRICT", "0") == "1":
-                    raise DependencyNotFoundError(
-                        f"Missing dependency: {name}. "
-                        f"Set AGENTESE_STRICT=0 to continue with degraded mode."
+                    logger.debug(
+                        f"Failed to resolve optional dependency {name}: {e}"
                     )
+            else:
+                logger.debug(
+                    f"Optional dependency '{name}' not registered for {cls.__name__}, "
+                    f"using default"
+                )
 
-        # Try to instantiate
-        try:
-            return cls(**kwargs)
-        except TypeError as e:
-            logger.error(f"Failed to instantiate {cls.__name__}: {e}")
-            # Try without arguments (maybe defaults work)
-            try:
-                return cls()
-            except TypeError:
-                raise
+        # Instantiate with resolved dependencies
+        return cls(**kwargs)
 
-    def _inspect_dependencies(self, cls: type[T]) -> tuple[str, ...]:
+    def _inspect_dependencies(
+        self, cls: type[T]
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
         """
         Inspect __init__ to find dependency parameter names.
 
-        Skips 'self' and parameters with defaults.
+        Separates required (no default) from optional (has default).
+        Skips *args, **kwargs, and 'self'.
 
         Args:
             cls: Class to inspect
 
         Returns:
-            Tuple of parameter names that need injection
+            Tuple of (required_deps, optional_deps) based on whether
+            parameters have defaults in the signature.
         """
         try:
             sig = inspect.signature(cls.__init__)
         except (ValueError, TypeError):
-            return ()
+            return ((), ())
 
-        deps = []
+        required: list[str] = []
+        optional: list[str] = []
+
         for name, param in sig.parameters.items():
+            # Skip 'self' and *args/**kwargs style parameters
             if name == "self":
                 continue
-            # Include parameters that need values (no default)
-            if param.default is inspect.Parameter.empty:
-                deps.append(name)
+            if param.kind in (
+                inspect.Parameter.VAR_POSITIONAL,  # *args
+                inspect.Parameter.VAR_KEYWORD,  # **kwargs
+            ):
+                continue
 
-        return tuple(deps)
+            if param.default is inspect.Parameter.empty:
+                required.append(name)
+            else:
+                optional.append(name)
+
+        return (tuple(required), tuple(optional))
 
     def list_providers(self) -> list[str]:
         """List all registered provider names."""

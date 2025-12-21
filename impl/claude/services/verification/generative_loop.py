@@ -5,6 +5,17 @@ Implements the core generative loop:
 Mind-Map → Spec → Impl → Traces → Patterns → Refined Spec → Mind-Map
 
 > "Delete implementation, regenerate from spec, result is isomorphic to original."
+
+Teaching:
+    gotcha: Roundtrip may LOSE nodes during compression if node count is small.
+            The compression allows up to 50% node loss for small topologies (<=2 nodes).
+            This is intentional - consolidation is valid compression.
+            (Evidence: test_generative_loop.py::TestGenerativeLoopRoundTrip::test_roundtrip_preserves_node_count)
+
+    gotcha: Refinement increments the PATCH version, not major/minor.
+            Version goes from 1.0.0 to 1.0.1 after refinement. This is semantic
+            versioning for specs - refinements are backwards compatible.
+            (Evidence: test_generative_loop.py::TestSpecRefinement::test_refine_increments_version)
 """
 
 from __future__ import annotations

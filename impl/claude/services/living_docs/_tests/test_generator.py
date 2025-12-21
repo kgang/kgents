@@ -6,6 +6,9 @@ These tests verify the new directory output functionality:
 - Category pages are generated correctly
 - Index with navigation is created
 - Overwrite behavior works as expected
+
+Note: Tests that scan the entire codebase are marked @pytest.mark.slow.
+Run fast tests only: pytest -m "not slow"
 """
 
 from __future__ import annotations
@@ -88,8 +91,9 @@ class TestCategoryNaming:
         assert gen._category_to_filename("AGENTESE Protocol") == "agentese-protocol.md"
 
 
+@pytest.mark.slow
 class TestDirectoryGeneration:
-    """Tests for generate_to_directory functionality."""
+    """Tests for generate_to_directory functionality (scans entire codebase)."""
 
     @pytest.fixture
     def temp_output_dir(self, tmp_path: Path) -> Path:
@@ -306,8 +310,9 @@ class TestCategoryPageGeneration:
         assert result.teaching_count == 1  # One teaching moment in sample_nodes
 
 
+@pytest.mark.slow
 class TestConvenienceFunction:
-    """Tests for the generate_to_directory convenience function."""
+    """Tests for the generate_to_directory convenience function (scans entire codebase)."""
 
     def test_convenience_function_works(self, tmp_path: Path) -> None:
         """generate_to_directory() convenience function works."""

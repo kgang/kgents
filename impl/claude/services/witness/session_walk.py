@@ -25,6 +25,17 @@ Laws:
 
 See: protocols/cli/instance_db/cli_session.py
 See: services/witness/walk.py
+
+Teaching:
+    gotcha: Starting a second Walk for a session with active Walk raises ValueError.
+            Complete or abandon the current Walk first. Check has_walk() before
+            calling start_walk_for_session().
+            (Evidence: test_session_walk.py::TestLaw1SessionOwnsWalk::test_cannot_start_second_walk_when_active)
+
+    gotcha: advance_walk() returns False silently for sessions without Walk.
+            It does NOT raise an exception. Always check has_walk() first if you
+            need to know whether the Walk exists.
+            (Evidence: test_session_walk.py::TestLaw3OptionalBinding::test_advance_walk_returns_false_without_walk)
 """
 
 from __future__ import annotations

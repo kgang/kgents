@@ -4,6 +4,22 @@ Flux lifecycle states.
 The FluxState enum represents all possible states in a FluxAgent's lifecycle.
 State transitions follow a specific machine that ensures proper lifecycle
 management and enables the Perturbation Principle.
+
+Teaching:
+    gotcha: COLLAPSED is TERMINAL - no transitions out. Unlike STOPPED (which
+            allows restart via start()), COLLAPSED requires explicit reset()
+            to return to DORMANT. Entropy exhaustion = permanent death.
+            (Evidence: can_transition_to returns empty set for COLLAPSED)
+
+    gotcha: allows_perturbation() is only True for FLOWING state. DORMANT uses
+            direct invoke (not perturbation), PERTURBED rejects (already handling
+            one), and terminal states reject entirely. Check state first.
+            (Evidence: Structural - allows_perturbation implementation)
+
+    gotcha: DRAINING is a transient state between source exhaustion and STOPPED.
+            is_processing() returns True for DRAINING because output buffer may
+            still have items. Wait for STOPPED before assuming completion.
+            (Evidence: Structural - is_processing includes DRAINING)
 """
 
 from enum import Enum

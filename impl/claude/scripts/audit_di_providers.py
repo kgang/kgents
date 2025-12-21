@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 """
-DI Provider Audit Script: Prevent the Silent Skip Problem
+DI Provider Audit Script: Verify Enlightened Resolution
 
 This script validates that every @node dependency declaration has a matching
-provider registered in the container. The container SILENTLY SKIPS unregistered
-dependencies at DEBUG level, causing cryptic TypeError messages at runtime.
+provider registered in the container. With Enlightened Resolution (2025-12-21),
+missing required dependencies now raise DependencyNotFoundError immediately
+with actionable fix suggestions.
 
-The Silent Skip Problem:
-------------------------
-1. @node(dependencies=("foo",)) declares a dependency
-2. Container checks has("foo") → False (not registered!)
-3. Container logs at DEBUG and SKIPS (silent!)
-4. cls() called without the dependency → TypeError: missing argument
+How Enlightened Resolution Works:
+---------------------------------
+1. @node(dependencies=("foo",)) declares deps → ALL treated as required
+2. Required deps (no __init__ default) → DependencyNotFoundError if missing
+3. Optional deps (with `= None` default) → Skip gracefully if missing
+
+This script is still useful for catching missing providers BEFORE runtime.
 
 Usage:
     cd impl/claude
@@ -21,7 +23,7 @@ Exit codes:
     0 - All dependencies have matching providers
     1 - Missing providers found (lists them)
 
-See: docs/skills/agentese-node-registration.md → "The Silent Skip Problem"
+See: docs/skills/agentese-node-registration.md → "Enlightened Resolution"
 """
 
 from __future__ import annotations
@@ -226,20 +228,20 @@ def main() -> int:
     root = Path(__file__).parent.parent  # impl/claude
 
     print("=" * 60)
-    print("DI Provider Audit: Checking for Silent Skip Problems")
+    print("DI Provider Audit: Verifying Enlightened Resolution")
     print("=" * 60)
     print()
 
     missing, warnings = audit_di_providers(root)
 
     if missing:
-        print("❌ MISSING PROVIDERS (will cause TypeError at runtime):")
+        print("❌ MISSING PROVIDERS (will cause DependencyNotFoundError):")
         print()
         for m in missing:
             print(m)
         print()
-        print("The container SILENTLY SKIPS these at DEBUG level!")
-        print("See: docs/skills/agentese-node-registration.md")
+        print("Enlightened Resolution catches these at startup with helpful errors!")
+        print("See: docs/skills/agentese-node-registration.md → 'Enlightened Resolution'")
         print()
         return 1
     else:

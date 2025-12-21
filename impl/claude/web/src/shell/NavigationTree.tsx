@@ -41,7 +41,6 @@ import { useNavigationState } from './hooks';
 import {
   TreeNodeItem,
   CrownJewelsSection,
-  ToolsSection,
   GallerySection,
   type TreeNode,
   type ContextInfo,
@@ -558,7 +557,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   TreeContent
                 )}
                 <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-                <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
                 <GallerySection
                   currentRoute={location.pathname}
                   onNavigate={handleNavigateToRoute}
@@ -620,7 +618,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                   TreeContent
                 )}
                 <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-                <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
                 <GallerySection
                   currentRoute={location.pathname}
                   onNavigate={handleNavigateToRoute}
@@ -694,7 +691,6 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
                 TreeContent
               )}
               <CrownJewelsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
-              <ToolsSection currentPath={currentPath} onNavigate={handleNavigateToPath} />
               <GallerySection currentRoute={location.pathname} onNavigate={handleNavigateToRoute} />
             </div>
           </motion.aside>

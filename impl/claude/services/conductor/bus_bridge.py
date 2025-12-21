@@ -16,6 +16,18 @@ Architecture:
            │                              EventBus (fan-out)
            ▼                                      │
     A2AChannel receive                    CLI/TUI/Web/Canvas
+
+Teaching:
+    gotcha: wire_a2a_to_global_synergy() is idempotent - calling it twice
+            returns the SAME unsubscribe function. This prevents duplicate
+            bridging but means you cannot create multiple independent bridges.
+            (Evidence: test_bus_bridge.py::TestBusBridgeLifecycle::test_double_wire_is_idempotent)
+
+    gotcha: Malformed A2A events do NOT crash the bridge - graceful degradation.
+            Missing fields like from_agent/to_agent are replaced with "unknown".
+            The bridge continues processing after errors, so a bad event won't
+            break the entire A2A visibility pipeline.
+            (Evidence: test_bus_bridge.py::TestBridgeErrorHandling::test_malformed_event_doesnt_crash_bridge)
 """
 
 from __future__ import annotations

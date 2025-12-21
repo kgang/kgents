@@ -393,6 +393,10 @@ class ProofSearchConfig:
     Teaching:
         gotcha: Tactic progressions are tuples (immutable). Quick phase
                 uses simple tactics; deeper phases add more sophisticated ones.
+
+        gotcha: Temperature is a hyper-parameter for LLM proof generation.
+                Lower (0.1-0.3) for deterministic proofs, higher (0.5-0.7)
+                for creative exploration. Not hardcoded per Kent's decision.
     """
 
     # Budget per phase
@@ -402,6 +406,9 @@ class ProofSearchConfig:
 
     # Timeout per individual proof attempt
     timeout_per_attempt_ms: int = 30000
+
+    # LLM temperature for proof generation (hyper-parameter)
+    temperature: float = 0.3
 
     # Tactic progressions (immutable tuples)
     quick_tactics: tuple[str, ...] = ("simp", "auto", "trivial")

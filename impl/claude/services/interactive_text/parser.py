@@ -15,6 +15,28 @@ Key Features:
 
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6
+
+Teaching:
+    gotcha: Token priority determines winner on overlap. When two patterns match
+            overlapping text (e.g., nested backticks with AGENTESE path inside),
+            _remove_overlapping_matches() keeps the match with HIGHER priority.
+            Sort order is: (start_pos, -priority) so higher priority wins at same position.
+            (Evidence: test_parser.py::TestEdgeCases::test_nested_backticks)
+
+    gotcha: Roundtrip fidelity is THE invariant. parse(text).render() MUST equal text
+            exactly—byte-for-byte, including all whitespace, tabs, and newlines.
+            If rendering changes even one character, you've broken the contract.
+            (Evidence: test_parser.py::TestRoundtripFidelity::test_roundtrip_preserves_whitespace)
+
+    gotcha: Empty documents are valid. parse("") returns ParsedDocument with empty spans
+            tuple, not None. Always check token_count, not truthiness of document.
+            (Evidence: test_parser.py::TestRoundtripFidelity::test_roundtrip_empty_document)
+
+    gotcha: IncrementalParser expands affected region to line boundaries. When applying
+            edits, _find_affected_region() extends start backward to previous newline
+            and end forward to next newline. This prevents partial token corruption
+            but means even small edits may re-parse entire lines.
+            (Evidence: test_parser.py::TestIncrementalParser::test_edit_preserves_tokens_before)
 """
 
 from __future__ import annotations

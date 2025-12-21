@@ -17,13 +17,29 @@ The Metaphysical Fullstack Pattern (AD-009):
 - Toggles capture constructive proofs
 
 See: spec/protocols/interactive-text.md
+
+Teaching:
+    gotcha: Toggle requires EITHER file_path OR text, not both. When using file mode,
+            you need file_path + (task_id OR line_number). Text mode needs text + line_number.
+            Mixing modes or missing required params returns error response with success=False.
+            (Evidence: test_properties.py::TestProperty6DocumentPolynomialStateValidity)
+
+    gotcha: Line numbers are 1-indexed for human ergonomics. The toggle_task_at_line()
+            method converts to 0-indexed internally. Off-by-one errors are common when
+            directly manipulating the lines list—always use (line_number - 1).
+            (Evidence: test_parser.py::TestTokenRecognition::test_task_checkbox_checked)
+
+    gotcha: TraceWitness is ALWAYS captured on successful toggle, even in text mode where
+            no file is modified. The trace captures previous_state → new_state for audit.
+            If you need to skip trace capture, you must use the internal _toggle_task_at_line()
+            method directly (not recommended for production use).
+            (Evidence: test_tokens_base.py::TestTraceWitness::test_create_witness)
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
@@ -372,7 +388,6 @@ class InteractiveTextService:
         witness = TraceWitness(
             id=str(uuid4()),
             trace=trace,
-            timestamp=datetime.now(),
         )
 
         return TaskToggleResponse(
@@ -418,7 +433,6 @@ class InteractiveTextService:
         witness = TraceWitness(
             id=str(uuid4()),
             trace=trace,
-            timestamp=datetime.now(),
         )
 
         return TaskToggleResponse(

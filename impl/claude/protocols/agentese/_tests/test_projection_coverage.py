@@ -30,25 +30,19 @@ import pytest
 
 # These high-value paths MUST have dedicated frontend projections
 # They are the Crown Jewels - users should get rich experiences, not JSON dumps
+#
+# NOTE: After the Crown Jewel Cleanup (2025-12-21), only Brain remains
+# as a fully-featured projection. Other jewels were pruned; the remaining
+# AGENTESE paths use ConceptHome fallback (AD-010 Habitat Guarantee).
 REQUIRED_PROJECTIONS = [
-    "self.memory",  # Brain - spatial cathedral of memory
-    "self.chat",  # Chat - conversational interface
-    "self.soul",  # Soul - K-gent personality and dialogue
-    "world.codebase",  # Gestalt - living garden where code breathes
-    "world.forge",  # Forge - developer's workshop
-    "world.town",  # Town - agent simulation
-    "world.park",  # Park - Westworld where hosts can say no
-    "concept.design",  # Design Language System
+    "self.memory",  # Brain - spatial cathedral of memory (the ONE Crown Jewel)
 ]
 
 # Optional but recommended projections
+# NOTE: Most were pruned in Crown Jewel Cleanup (2025-12-21)
+# Only keeping gallery since it has an active route
 RECOMMENDED_PROJECTIONS = [
-    "time.differance",  # Differance traces
-    "self.differance",  # Self-context differance
-    "world.gallery",  # Categorical showcase
-    "world.workshop",  # Event-driven builder
-    "world.emergence",  # Cymatics design experience
-    "self.forest",  # Forest Protocol
+    "world.gallery",  # Categorical showcase (has /_/gallery route)
 ]
 
 
@@ -123,7 +117,7 @@ class TestRequiredProjectionCoverage:
         )
 
     def test_all_required_projections_exist(self, registry_tsx_content: str):
-        """Sanity check: at least 8 of 10 required projections must exist."""
+        """Sanity check: all required projections must exist."""
         found_count = 0
         missing = []
 
@@ -136,7 +130,9 @@ class TestRequiredProjectionCoverage:
 
         coverage = found_count / len(REQUIRED_PROJECTIONS) * 100
 
-        assert found_count >= 8, (
+        # After Crown Jewel Cleanup, we only have Brain (self.memory)
+        # All required projections must be found
+        assert found_count == len(REQUIRED_PROJECTIONS), (
             f"Only {found_count}/{len(REQUIRED_PROJECTIONS)} required projections found "
             f"({coverage:.0f}%). Missing: {missing}"
         )

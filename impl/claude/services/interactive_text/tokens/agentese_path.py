@@ -15,8 +15,23 @@ Ghost Tokens:
 When an AGENTESEPath references a non-existent node, it renders as a
 "ghost token" with reduced affordances (no invoke, no state display).
 
+AGENTESE: self.document.token.agentese
+
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6
+
+Teaching:
+    gotcha: Ghost tokens (non-existent paths) still render but with reduced affordances.
+            is_ghost=True disables invoke/navigate; shows "not yet implemented".
+            (Evidence: test_agentese_path.py::test_ghost_token_affordances)
+
+    gotcha: Path validation uses regex matching context (world|self|concept|void|time).
+            Invalid context prefix won't match—token won't be recognized.
+            (Evidence: test_agentese_path.py::test_path_validation)
+
+    gotcha: _check_path_exists() is async and may hit registry—cache results.
+            Repeated hover events should not repeatedly query path existence.
+            (Evidence: test_agentese_path.py::test_path_check_caching)
 """
 
 from __future__ import annotations

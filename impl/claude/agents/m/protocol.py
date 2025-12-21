@@ -18,6 +18,36 @@ The Protocol:
 Relationship to D-gent:
     M-gent builds ON D-gent. Every Memory references an underlying Datum.
     M-gent NEVER bypasses D-gent - all data flows through D-gent's projection lattice.
+
+Teaching:
+    gotcha: forget() returns False for cherished memories - they're protected
+            Call cherish() to pin important memories from the forgetting cycle.
+            This is intentional: cherished memories have relevance=1.0 and can't compost.
+            (Evidence: test_associative.py::TestForget::test_forget_cherished_returns_false)
+
+    gotcha: recall() reinforces accessed memories (increases access_count)
+            Every recall is a touch - relevance increases through repeated access.
+            This is the stigmergy pattern: use strengthens memory.
+            (Evidence: test_associative.py::TestRecall::test_recall_reinforces_memory)
+
+    gotcha: ACTIVE -> COMPOSTING is INVALID transition (must go through DORMANT)
+            Lifecycle transitions have strict rules. Memory must be DORMANT
+            before it can be demoted to COMPOSTING during consolidation.
+            (Evidence: test_lifecycle.py::TestValidTransitions::test_active_to_composting_invalid)
+
+    gotcha: Consolidation applies relevance decay to non-cherished memories only
+            Cherished memories keep relevance=1.0 through sleep cycles.
+            Use cherish() sparingly - it's a commitment to preserve.
+            (Evidence: test_consolidation_engine.py::TestConsolidationBasic::test_consolidate_protects_cherished)
+
+    gotcha: similarity() returns 0.0 for mismatched embedding dimensions
+            If you mix embeddings of different sizes, comparisons silently fail.
+            Ensure all embeddings use consistent dimension (e.g., 64 for HashEmbedder).
+            (Evidence: test_memory.py::TestSimilarity::test_similarity_mismatched_dimensions)
+
+    gotcha: Memory.embedding is a tuple, not list (converted on creation)
+            Pass list to create(), get tuple back. This ensures hashability.
+            (Evidence: test_memory.py::TestMemoryCreation::test_embedding_list_to_tuple)
 """
 
 from __future__ import annotations

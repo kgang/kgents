@@ -5,6 +5,16 @@ Categorical Checker: Practical categorical law verification with LLM assistance.
 Implements verification of categorical laws (composition, identity, functors)
 using concrete test execution combined with LLM analysis for edge cases
 and violation explanation.
+
+Teaching:
+    gotcha: Empty counter-example list returns {"strategies": [], "analysis": "No violations found"}.
+            Always check the analysis message - an empty list is success, not an error.
+            (Evidence: test_categorical_checker.py::TestCounterExampleGeneration::test_empty_counter_examples_handled)
+
+    gotcha: Functor verification may return DIFFERENT law names for different checks.
+            Check for law_name in ["functor_laws", "functor_identity", "functor_composition"]
+            rather than exact equality.
+            (Evidence: test_categorical_checker.py::TestFunctorLaws::test_functor_verification_returns_result)
 """
 
 from __future__ import annotations

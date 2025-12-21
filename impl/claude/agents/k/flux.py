@@ -35,6 +35,18 @@ Usage:
     # DORMANT mode: direct invoke
     event = dialogue_turn_event("What should I focus on?", is_request=True)
     result = await flux.invoke(event)
+
+Teaching:
+    gotcha: FluxStream is single-use. Once consumed (iterated), _consumed=True
+            and re-iteration raises StopAsyncIteration immediately. Create a
+            new FluxStream for each consumption via factory function.
+            (Evidence: test_soul_streaming_integration.py::TestPipeAssociativity
+            uses create_stream() factory to avoid reuse)
+
+    gotcha: Metadata events ALWAYS pass through filter(), take(), map() unchanged.
+            Only data events are filtered/transformed. This preserves token counts
+            and completion signals. Don't filter expecting metadata to be blocked.
+            (Evidence: test_soul_streaming_integration.py::test_pipeline_preserves_metadata)
 """
 
 from __future__ import annotations

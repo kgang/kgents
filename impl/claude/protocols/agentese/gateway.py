@@ -69,6 +69,7 @@ def _import_node_modules() -> None:
         from . import contexts  # noqa: F401
 
         # Import specific context node modules (legacy/fallback)
+        # Note: time_trace_warp, world_gestalt_live, world_park removed 2025-12-21 (Crown Jewel Cleanup)
         from .contexts import (
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
             concept_scope,  # noqa: F401 - WARP Phase 1: Context contracts (concept.scope.*)
@@ -87,39 +88,22 @@ def _import_node_modules() -> None:
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
-            time_trace_warp,  # noqa: F401 - WARP Phase 1: Mark/Walk (time.trace.*, time.walk.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_file,  # noqa: F401 - CLI v7 Phase 1: File I/O (world.file.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
             world_gallery_api,  # noqa: F401 - Gallery REST API (world.gallery.*)
-            world_gestalt_live,  # noqa: F401 - Infrastructure viz (world.gestalt.live.*)
-            world_park,  # noqa: F401 - Park scenarios (world.park.scenario/mask/force.*)
             world_scenery,  # noqa: F401 - WARP Phase 2: SceneGraph projection (world.scenery.*)
             world_workshop,  # noqa: F401 - Builder's Workshop (world.workshop.*)
         )
 
         # === Service-level nodes (AD-009 Metaphysical Fullstack) ===
         # These are the authoritative implementations with persistence layers
-        try:
-            from services.town import (
-                citizen_node,  # noqa: F401  # world.town.citizen.*
-                coalition_node,  # noqa: F401  # world.town.coalition.*
-                inhabit_node,  # noqa: F401  # world.town.inhabit.*
-                node as town_node,  # noqa: F401  # world.town.*
-                workshop_node,  # noqa: F401  # world.town.workshop.*
-            )
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (town): {e}")
+        # Note: town, chat, forge, gestalt, park removed 2025-12-21 (Crown Jewel Cleanup)
 
         try:
             from services.brain import node as brain_node  # noqa: F401  # self.memory.*
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (brain): {e}")
-
-        try:
-            from services.chat import node as chat_node  # noqa: F401  # self.chat.*
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (chat): {e}")
 
         try:
             from services.morpheus import (
@@ -128,38 +112,14 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (morpheus): {e}")
 
-        try:
-            from services.forge import (
-                node as forge_node,  # noqa: F401  # world.forge.*
-                soul_node as forge_soul_node,  # noqa: F401  # world.forge.soul.*
-            )
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (forge): {e}")
-
-        try:
-            from services.gestalt import (
-                node as gestalt_node,  # noqa: F401  # world.codebase.*
-            )
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (gestalt): {e}")
-
-        try:
-            from services.park import node as park_node  # noqa: F401  # world.park.*
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (park): {e}")
-
         # === Witness Crown Jewel nodes ===
+        # Note: world_witness context removed 2025-12-21 (Crown Jewel Cleanup)
         try:
             from services.witness import (
                 node as witness_node,  # noqa: F401  # self.witness.*
             )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (witness): {e}")
-
-        try:
-            from .contexts import world_witness  # noqa: F401  # world.witness.*
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (world.witness): {e}")
 
         # === Concept context nodes ===
         try:
@@ -180,6 +140,12 @@ def _import_node_modules() -> None:
             from services.liminal.coffee import node as coffee_node  # noqa: F401
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (coffee): {e}")
+
+        # === Interactive Text Crown Jewel (self.document.*) ===
+        try:
+            from services.interactive_text import node as interactive_text_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (interactive_text): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
@@ -210,7 +176,7 @@ except ImportError:
         Teaching:
             gotcha: This stub exists for graceful degradation—gateway.py can
                     be imported even without FastAPI for type checking.
-                    (Evidence: test_gateway.py::test_no_fastapi_graceful)
+                    (Evidence: test_gateway.py::TestGatewayMounting::test_gateway_mounts_successfully)
         """
 
         def __init__(self, status_code: int, detail: str | dict[str, Any]) -> None:
@@ -342,12 +308,12 @@ class AgenteseGateway:
         gotcha: Discovery endpoints MUST be defined BEFORE catch-all routes.
                 FastAPI matches routes in definition order, so /discover
                 must come before /{path:path}/* or it gets swallowed.
-                (Evidence: test_gateway.py::test_discover_endpoint)
+                (Evidence: test_gateway.py::TestGatewayDiscovery)
 
         gotcha: Law 3 (Completeness)—every AGENTESE invocation emits exactly
                 one Mark via _emit_trace(). This happens in _invoke_path(),
                 not at the endpoint level, ensuring consistent tracing.
-                (Evidence: test_gateway.py::test_mark_emission)
+                (Evidence: test_gateway.py::TestGatewayMarkEmission)
     """
 
     prefix: str = "/agentese"

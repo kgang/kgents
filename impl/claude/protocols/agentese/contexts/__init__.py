@@ -78,12 +78,10 @@ from .design import (
 
 # Note: Forest, Gardener, and Prompt contexts were deprecated 2025-12-21
 # See: spec/protocols/_archive/gardener-evergreen-heritage.md
+# Note: Chat, Citizen, Town, Park, Forge, Gestalt, Witness removed 2025-12-21
+# See: plans/crown-jewel-cleanup.md
 from .self_ import (
     BUS_AFFORDANCES,
-    # Town Citizen integration (Phase 3 Crown Jewels)
-    CITIZEN_AFFORDANCES,
-    CITIZEN_MEMORY_AFFORDANCES,
-    CITIZEN_PERSONALITY_AFFORDANCES,
     # Data architecture rewrite (Phase 2)
     DATA_AFFORDANCES,
     SELF_AFFORDANCES,
@@ -94,12 +92,6 @@ from .self_ import (
     VECTOR_AFFORDANCES,
     BusNode,
     CapabilitiesNode,
-    # Chat resolver (Chat Protocol - Phase 2)
-    ChatNode,
-    ChatResolver,
-    CitizenMemoryNode,
-    CitizenNode,
-    CitizenPersonalityNode,
     DataNode,
     IdentityNode,
     JudgmentNode,
@@ -111,14 +103,9 @@ from .self_ import (
     StateNode,
     VectorNode,
     create_bus_resolver,
-    create_chat_node,
-    create_citizen_memory_node,
-    create_citizen_node,
-    create_citizen_personality_node,
     create_data_resolver,
     create_self_resolver,
     create_soul_node,
-    get_chat_resolver,
 )
 
 # Self Différance navigation (spec/impl traversal)
@@ -137,20 +124,12 @@ from .self_jewel_flow import (
     BRAIN_FLOW_AFFORDANCES,
     # Path registries
     BRAIN_FLOW_PATHS,
-    GARDENER_FLOW_AFFORDANCES,
-    GARDENER_FLOW_PATHS,
-    GESTALT_FLOW_AFFORDANCES,
-    GESTALT_FLOW_PATHS,
     HERO_PATH_FLOW_PATHS,
     BrainFlowNode,
-    GardenerFlowNode,
-    GestaltFlowNode,
     # Nodes
     JewelFlowNode,
     # Factories
     create_brain_flow_node,
-    create_gardener_flow_node,
-    create_gestalt_flow_node,
 )
 from .self_judgment import (
     CriticsLoop,
@@ -202,19 +181,6 @@ from .time_differance import (
     set_differance_node,
 )
 
-# Town Citizen integration (Chat Protocol - Phase 2.5)
-from .town_citizen import (
-    ARCHETYPE_PROMPTS,
-    CITIZEN_CHAT_AFFORDANCES,
-    DEFAULT_CITIZEN_PROMPT,
-    TownCitizenNode,
-    TownCitizenResolver,
-    build_citizen_system_prompt,
-    create_citizen_chat_node,
-    create_town_citizen_node,
-    get_citizen_resolver,
-    set_citizen_resolver,
-)
 from .void import (
     CapitalNode,
     EntropyNode,
@@ -265,37 +231,7 @@ from .world_gallery import (
     set_gallery_node,
 )
 
-# Gestalt Live Node integration (Real-time Infrastructure Visualizer)
-from .world_gestalt_live import (
-    ENTITY_KINDS,
-    GESTALT_LIVE_AFFORDANCES,
-    GestaltLiveNode,
-    create_gestalt_live_node,
-    get_gestalt_live_node,
-    set_gestalt_live_node,
-)
-
-# Park Node integration (Crisis Practice Scenarios)
-from .world_park import (
-    PARK_AFFORDANCES,
-    ForceNode,
-    MaskNode,
-    ParkNode,
-    ScenarioNode,
-    get_force_node,
-    get_mask_node,
-    get_park_node,
-    get_scenario_node,
-)
-
-# Town Node integration (Crown Jewels Metaphysical Upgrade)
-from .world_town import (
-    TOWN_AFFORDANCES,
-    TownNode,
-    create_town_node,
-    get_town_node,
-    set_town_node,
-)
+# Note: Gestalt, Park, Town removed 2025-12-21 (Crown Jewel Cleanup)
 
 # === Unified Resolver Factory ===
 
@@ -408,21 +344,6 @@ __all__ = [
     # V-gent Vector integration (Phase 7)
     "VECTOR_AFFORDANCES",
     "VectorNode",
-    # Town Citizen integration (Phase 3 Crown Jewels)
-    "CITIZEN_AFFORDANCES",
-    "CITIZEN_MEMORY_AFFORDANCES",
-    "CITIZEN_PERSONALITY_AFFORDANCES",
-    "CitizenNode",
-    "CitizenMemoryNode",
-    "CitizenPersonalityNode",
-    "create_citizen_node",
-    "create_citizen_memory_node",
-    "create_citizen_personality_node",
-    # Chat resolver (Chat Protocol - Phase 2)
-    "ChatNode",
-    "ChatResolver",
-    "create_chat_node",
-    "get_chat_resolver",
     # Soul integration (Chat Protocol - Phase 2)
     "SOUL_AFFORDANCES",
     "SOUL_CHAT_AFFORDANCES",
@@ -515,54 +436,19 @@ __all__ = [
     "create_design_node",
     # Jewel-Flow integration (F-gent Flow + Crown Jewels)
     "BRAIN_FLOW_PATHS",
-    "GARDENER_FLOW_PATHS",
-    "GESTALT_FLOW_PATHS",
     "HERO_PATH_FLOW_PATHS",
     "ALL_JEWEL_FLOW_PATHS",
     "BRAIN_FLOW_AFFORDANCES",
-    "GARDENER_FLOW_AFFORDANCES",
-    "GESTALT_FLOW_AFFORDANCES",
     "JewelFlowNode",
     "BrainFlowNode",
-    "GardenerFlowNode",
-    "GestaltFlowNode",
     "create_brain_flow_node",
-    "create_gardener_flow_node",
-    "create_gestalt_flow_node",
-    # Note: Prompt context deprecated 2025-12-21
-    # Town Citizen integration (Chat Protocol - Phase 2.5)
-    "ARCHETYPE_PROMPTS",
-    "CITIZEN_CHAT_AFFORDANCES",
-    "DEFAULT_CITIZEN_PROMPT",
-    "TownCitizenNode",
-    "TownCitizenResolver",
-    "build_citizen_system_prompt",
-    "create_citizen_chat_node",
-    "create_town_citizen_node",
-    "get_citizen_resolver",
-    "set_citizen_resolver",
-    # Town Node integration (Crown Jewels Metaphysical Upgrade)
-    "TOWN_AFFORDANCES",
-    "TownNode",
-    "create_town_node",
-    "get_town_node",
-    "set_town_node",
+    # Note: Town, Park, Gestalt, Gardener Flow, Chat removed 2025-12-21 (Crown Jewel Cleanup)
     # Atelier Node integration (Crown Jewels Metaphysical Upgrade)
     "ATELIER_AFFORDANCES",
     "AtelierNode",
     "create_atelier_node",
     "get_atelier_node",
     "set_atelier_node",
-    # Park Node integration (Crisis Practice Scenarios)
-    "PARK_AFFORDANCES",
-    "ParkNode",
-    "ScenarioNode",
-    "MaskNode",
-    "ForceNode",
-    "get_park_node",
-    "get_scenario_node",
-    "get_mask_node",
-    "get_force_node",
     # Emergence Node integration (Cymatics Design Sampler)
     "EMERGENCE_AFFORDANCES",
     "PATTERN_FAMILIES",
@@ -570,13 +456,6 @@ __all__ = [
     "create_emergence_node",
     "get_emergence_node",
     "set_emergence_node",
-    # Gestalt Live Node integration (Real-time Infrastructure Visualizer)
-    "ENTITY_KINDS",
-    "GESTALT_LIVE_AFFORDANCES",
-    "GestaltLiveNode",
-    "create_gestalt_live_node",
-    "get_gestalt_live_node",
-    "set_gestalt_live_node",
     # Gallery Node integration (Living Autopoietic Showcase)
     "GALLERY_AFFORDANCES",
     "GALLERY_CATEGORIES",

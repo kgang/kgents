@@ -2,7 +2,32 @@
 AGENTESE Phase 7: Wire to Logos
 
 This module connects the Phase 6 integration layer to the Logos resolver,
-completing the AGENTESE architecture:
+completing the AGENTESE architecture.
+
+Teaching:
+    gotcha: WiredLogos validates paths by DEFAULT. Invalid paths raise PathSyntaxError
+            before ever reaching resolution. To debug, check context (world/self/concept/
+            void/time), then holon, then aspect. Use validate_paths=False if you need
+            to bypass validation (e.g., during testing or spec evolution).
+            (Evidence: test_wiring.py::TestPathValidation::test_invalid_context_raises_error)
+
+    gotcha: Graceful degradation without L-gent registry. If create_wired_logos() is
+            called without lgent_registry, tracking is silently disabled (track_usage=False
+            is the default for create_minimal_wired_logos). Check integration_status()
+            to see what's available.
+            (Evidence: test_wiring.py::TestLgentIntegration::test_graceful_degradation_without_registry)
+
+    gotcha: Membrane bridge is AUTO-CREATED if not provided. The bridge connects CLI
+            commands to AGENTESE paths. If you need to customize command mapping,
+            pass your own MembraneAgenteseBridge to create_agentese_integrations().
+            (Evidence: test_wiring.py::TestWiredLogosCreation::test_membrane_bridge_auto_created)
+
+    gotcha: invoke() accepts None observer (v3 API). Missing observer defaults to
+            guest archetype. This won't raise ObserverRequiredError, but the guest
+            may lack affordances for the requested aspect.
+            (Evidence: test_wiring.py::TestInvoke::test_invoke_accepts_none_observer)
+
+AGENTESE: protocols.agentese.wiring
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           WIRING ARCHITECTURE                                │

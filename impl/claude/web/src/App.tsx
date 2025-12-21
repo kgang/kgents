@@ -21,7 +21,6 @@ import { PageTransition, PersonalityLoading } from './components/joy';
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
-const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
 
 function LoadingFallback() {
   return (
@@ -52,9 +51,6 @@ function App() {
                 <Route path="/_/gallery" element={<GalleryPage />} />
                 <Route path="/_/gallery/layout" element={<LayoutGallery />} />
                 <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
-
-                {/* AGENTESE Docs Explorer - Phase 3 OpenAPI projection */}
-                <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
 
                 {/*
                  * Universal AGENTESE Projection (catch-all)

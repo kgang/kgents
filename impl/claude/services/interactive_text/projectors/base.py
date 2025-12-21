@@ -12,8 +12,23 @@ Key Properties:
   equals applying change then projecting
 - Density Parameterization: Output adapts to observer density preference
 
+AGENTESE: self.document.project
+
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 2.1, 2.6
+
+Teaching:
+    gotcha: ProjectionFunctor must satisfy functor laws: P(id) = id, P(f∘g) = P(f)∘P(g).
+            project_composition() relies on _compose() to preserve associativity.
+            (Evidence: test_projectors.py::test_composition_law)
+
+    gotcha: DensityParams.for_density() is the canonical way to get parameters.
+            Don't hardcode padding/font_size—use DENSITY_PARAMS lookup.
+            (Evidence: test_projectors.py::test_density_params_lookup)
+
+    gotcha: _compose() is abstract and target-specific: CLI joins with newlines,
+            JSON wraps in arrays, Web nests components. Override per target.
+            (Evidence: test_projectors.py::test_cli_compose_newlines)
 """
 
 from __future__ import annotations

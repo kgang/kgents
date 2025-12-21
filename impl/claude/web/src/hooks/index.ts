@@ -402,21 +402,6 @@ export {
   type BranchCompareResponse,
 } from './useDifferanceQuery';
 
-// Soul AGENTESE queries (K-gent governance)
-export {
-  // Soul manifest
-  useSoulManifest,
-  useSoulVibe,
-  // Utilities
-  isSoulActive,
-  getSoulModeIcon,
-  getSoulModeLabel,
-  // Type re-exports
-  type SoulManifestResponse,
-  type SoulVibeResponse,
-} from './useSoulQuery';
-
-
 // Simple toast notifications (general-purpose feedback)
 export {
   useSimpleToast,
@@ -449,26 +434,8 @@ export {
   type UsePresenceChannelReturn,
 } from './usePresenceChannel';
 
-// Canvas nodes (CLI v7 Phase 5: Integration & Polish)
-export {
-  useCanvasNodes,
-  type UseCanvasNodesOptions,
-  type UseCanvasNodesReturn,
-} from './useCanvasNodes';
-
-// User focus tracking (CLI v7 Phase 5: Agent cursor following)
-export {
-  useUserFocus,
-  type MousePosition,
-  type UseUserFocusOptions,
-  type UseUserFocusReturn,
-} from './useUserFocus';
-
 // Circadian phase and warmth (CLI v7 Phase 5: Coworking Canvas)
 export { useCircadian, type CircadianData, type UseCircadianReturn } from './useCircadian';
-
-// Canvas layout with force-directed positioning and drag (CLI v7 Phase 5)
-export { useCanvasLayout, type LayoutOptions, type UseCanvasLayoutReturn } from './useCanvasLayout';
 
 // =============================================================================
 // WARP Phase 2: React Projection Layer

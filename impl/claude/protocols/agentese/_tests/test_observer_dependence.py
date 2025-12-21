@@ -138,116 +138,37 @@ class TestSoulObserverDependence:
 # =============================================================================
 
 
+# =============================================================================
+# Park Node Tests - Removed 2025-12-21 (Crown Jewel Cleanup)
+# =============================================================================
+
+
+@pytest.mark.skip(reason="Park removed in Crown Jewel Cleanup 2025-12-21")
 class TestParkObserverDependence:
     """Test world.park observer-dependent affordances."""
 
-    def test_developer_has_force(self):
-        """Developer should have force mechanic access."""
-        from protocols.agentese.contexts.world_park import ParkNode
-
-        node = ParkNode()
-        affordances = node._get_affordances_for_archetype("developer")
-
-        assert "force" in affordances
-        assert "scenario" in affordances
-
-    def test_guest_only_manifest(self):
-        """Guest should only see park overview."""
-        from protocols.agentese.contexts.world_park import ParkNode
-
-        node = ParkNode()
-        affordances = node._get_affordances_for_archetype("guest")
-
-        assert affordances == ("manifest",)
-
-    def test_architect_no_force(self):
-        """Architect can observe but not use force."""
-        from protocols.agentese.contexts.world_park import ParkNode
-
-        node = ParkNode()
-        affordances = node._get_affordances_for_archetype("architect")
-
-        assert "scenario" in affordances
-        assert "mask" in affordances
-        assert "force" not in affordances
+    pass
 
 
+@pytest.mark.skip(reason="Park removed in Crown Jewel Cleanup 2025-12-21")
 class TestScenarioObserverDependence:
     """Test world.park.scenario observer-dependent affordances."""
 
-    def test_operator_can_start_scenarios(self):
-        """Operator should have full scenario control."""
-        from protocols.agentese.contexts.world_park import ScenarioNode
-
-        node = ScenarioNode()
-        affordances = node._get_affordances_for_archetype("operator")
-
-        assert "start" in affordances
-        assert "tick" in affordances
-        assert "phase" in affordances
-        assert "complete" in affordances
-
-    def test_guest_read_only(self):
-        """Guest can only view scenarios."""
-        from protocols.agentese.contexts.world_park import ScenarioNode
-
-        node = ScenarioNode()
-        affordances = node._get_affordances_for_archetype("guest")
-
-        assert affordances == ("manifest",)
-
-    def test_reviewer_can_tick_not_phase(self):
-        """Reviewer can advance time but not change phases."""
-        from protocols.agentese.contexts.world_park import ScenarioNode
-
-        node = ScenarioNode()
-        affordances = node._get_affordances_for_archetype("reviewer")
-
-        assert "tick" in affordances
-        assert "phase" not in affordances
+    pass
 
 
+@pytest.mark.skip(reason="Park removed in Crown Jewel Cleanup 2025-12-21")
 class TestMaskObserverDependence:
     """Test world.park.mask observer-dependent affordances."""
 
-    def test_creative_can_wear_masks(self):
-        """Creative archetype should be able to don/doff masks."""
-        from protocols.agentese.contexts.world_park import MaskNode
-
-        node = MaskNode()
-        affordances = node._get_affordances_for_archetype("creative")
-
-        assert "don" in affordances
-        assert "doff" in affordances
-
-    def test_guest_no_mask_access(self):
-        """Guest should have no mask access."""
-        from protocols.agentese.contexts.world_park import MaskNode
-
-        node = MaskNode()
-        affordances = node._get_affordances_for_archetype("guest")
-
-        assert len(affordances) == 0
+    pass
 
 
+@pytest.mark.skip(reason="Park removed in Crown Jewel Cleanup 2025-12-21")
 class TestForceObserverDependence:
     """Test world.park.force observer-dependent affordances."""
 
-    def test_only_operators_can_use_force(self):
-        """Only operators/developers can use force."""
-        from protocols.agentese.contexts.world_park import ForceNode
-
-        node = ForceNode()
-
-        # Operators can use force
-        for archetype in ["developer", "operator", "admin"]:
-            affordances = node._get_affordances_for_archetype(archetype)
-            assert "use" in affordances, f"{archetype} should have force.use"
-
-        # Others cannot
-        for archetype in ["guest", "newcomer", "reviewer"]:
-            affordances = node._get_affordances_for_archetype(archetype)
-            assert "use" not in affordances, f"{archetype} should NOT have force.use"
+    pass
 
 
 # =============================================================================
@@ -277,46 +198,11 @@ class TestGardenerObserverDependence:
 # =============================================================================
 
 
+@pytest.mark.skip(reason="Forge removed in Crown Jewel Cleanup 2025-12-21")
 class TestForgeObserverDependence:
     """Test world.forge observer-dependent affordances."""
 
-    @pytest.fixture
-    def forge_node(self):
-        """Create a minimal ForgeNode for testing."""
-        from unittest.mock import MagicMock
-
-        from services.forge.node import ForgeNode
-
-        # Create with mocked persistence
-        mock_persistence = MagicMock()
-        node = ForgeNode(forge_persistence=mock_persistence)
-        return node
-
-    def test_spectator_read_only(self, forge_node):
-        """Spectator should have read-only access."""
-        affordances = forge_node._get_affordances_for_archetype("spectator")
-
-        # Should have view access
-        assert "workshop.list" in affordances
-        assert "gallery.list" in affordances
-        # Should NOT have mutation access
-        assert "workshop.create" not in affordances
-        assert "contribute" not in affordances
-
-    def test_creative_can_contribute(self, forge_node):
-        """Creative archetype should be able to contribute."""
-        affordances = forge_node._get_affordances_for_archetype("creative")
-
-        assert "contribute" in affordances
-        assert "workshop.join" in affordances
-
-    def test_developer_has_all(self, forge_node):
-        """Developer should have full forge access."""
-        affordances = forge_node._get_affordances_for_archetype("developer")
-
-        assert "workshop.create" in affordances
-        assert "exhibition.create" in affordances
-        assert "gallery.add" in affordances
+    pass
 
 
 # =============================================================================
@@ -342,19 +228,10 @@ class TestPrivilegeGradation:
         assert len(newcomer_affs) >= len(guest_affs)
         assert len(developer_affs) >= len(newcomer_affs)
 
+    @pytest.mark.skip(reason="Park removed in Crown Jewel Cleanup 2025-12-21")
     def test_park_privilege_gradation(self):
         """Higher privilege archetypes should have more park affordances."""
-        from protocols.agentese.contexts.world_park import ParkNode
-
-        node = ParkNode()
-
-        guest_affs = set(node._get_affordances_for_archetype("guest"))
-        architect_affs = set(node._get_affordances_for_archetype("architect"))
-        developer_affs = set(node._get_affordances_for_archetype("developer"))
-
-        # Each level should be a superset of lower levels
-        assert guest_affs <= architect_affs
-        assert architect_affs <= developer_affs
+        pass
 
     @given(
         st.sampled_from(["developer", "operator", "architect"]),

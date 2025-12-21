@@ -3,6 +3,17 @@ Flux-specific exceptions.
 
 These exceptions provide structured error information for flux operations,
 enabling proper error handling and debugging in flux pipelines.
+
+Teaching:
+    gotcha: All Flux exceptions carry a `context` dict with structured data.
+            Don't just catch and log the message - check context for state info,
+            buffer sizes, stage indices, etc. Useful for debugging pipelines.
+            (Evidence: Structural - FluxError.__init__ stores context)
+
+    gotcha: FluxStateError contains current_state and attempted_operation fields.
+            When debugging "cannot X from state Y" errors, these tell you exactly
+            what the flux was doing and what you tried to do.
+            (Evidence: Structural - FluxStateError stores these fields)
 """
 
 from typing import Any

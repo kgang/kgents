@@ -78,7 +78,7 @@ class NodeExample:
     Teaching:
         gotcha: Examples are defined in @node decorator, not in node class.
                 Pass examples=[(aspect, kwargs, label), ...] to @node().
-                (Evidence: test_registry.py::test_node_examples)
+                (Evidence: test_registry.py::TestNodeExamples)
     """
 
     aspect: str
@@ -112,7 +112,7 @@ class NodeMetadata:
         gotcha: Dependencies are resolved by ServiceContainer at instantiation.
                 If a dependency isn't registered, the node SILENTLY SKIPS!
                 Always verify deps exist in providers.py.
-                (Evidence: test_registry.py::test_missing_dependency)
+                (Evidence: test_registry.py::test_resolve_dependent_node_fails_without_container)
     """
 
     path: str
@@ -303,11 +303,11 @@ class NodeRegistry:
         gotcha: @node decorator runs at import time. If a module isn't imported,
                 its node won't be registered. Call _import_node_modules() first
                 (done automatically by gateway.mount_on()).
-                (Evidence: test_registry.py::test_node_import_order)
+                (Evidence: test_registry.py::test_auto_registration)
 
         gotcha: After reset_registry() in tests, call repopulate_registry()
                 to restore nodes for subsequent tests on the same xdist worker.
-                (Evidence: test_registry.py::test_registry_reset)
+                (Evidence: test_registry.py::TestNodeRegistry::test_clear + fixture pattern)
     """
 
     # Path -> node class

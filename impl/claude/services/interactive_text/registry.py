@@ -11,7 +11,26 @@ Key Responsibilities:
 - Provide token definitions by name
 - Maintain priority ordering for overlapping patterns
 
+AGENTESE: concept.document.token
+
 See: .kiro/specs/meaning-token-frontend/design.md
+
+Teaching:
+    gotcha: TokenRegistry uses ClassVar—singleton pattern with class-level state.
+            All instances share _tokens dict. Use clear() between tests.
+            (Evidence: test_registry.py::test_register_duplicate_raises)
+
+    gotcha: _ensure_initialized() is lazy—core tokens not registered until first get().
+            Call get_all() or recognize() to trigger initialization.
+            (Evidence: test_registry.py::test_core_tokens_lazy_init)
+
+    gotcha: recognize() returns sorted by (position, -priority)—priority breaks ties.
+            Higher priority wins when patterns overlap at same position.
+            (Evidence: test_registry.py::test_priority_ordering)
+
+    gotcha: register() raises ValueError on duplicate; use register_or_replace() for updates.
+            This prevents accidental token definition clobbering.
+            (Evidence: test_registry.py::test_register_or_replace)
 """
 
 from __future__ import annotations

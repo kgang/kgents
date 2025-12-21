@@ -1016,3 +1016,73 @@ export const parkApi = {
     return unwrapAgentese(response);
   },
 };
+
+// =============================================================================
+// Interactive Text API (Documents as Control Surfaces) - AGENTESE Universal Protocol
+// Routes:
+//   self.document.manifest - Service status and capabilities
+//   self.document.parse - Parse markdown to SceneGraph
+//   self.document.task_toggle - Toggle task checkbox with TraceWitness
+// =============================================================================
+
+/**
+ * Response from document parsing.
+ */
+export interface DocumentParseResponse {
+  scene_graph: unknown;
+  token_count: number;
+  token_types: Record<string, number>;
+}
+
+/**
+ * Response from task toggle operation.
+ */
+export interface TaskToggleResponse {
+  success: boolean;
+  new_state: boolean;
+  task_description: string;
+  trace_witness_id: string | null;
+  file_updated: boolean;
+  error: string | null;
+}
+
+/**
+ * Response from document manifest (status).
+ */
+export interface DocumentManifestResponse {
+  status: string;
+  token_types: string[];
+  features: string[];
+}
+
+export const documentApi = {
+  /** Get service status via AGENTESE: self.document.manifest */
+  getStatus: async (): Promise<DocumentManifestResponse> => {
+    const response = await apiClient.get<AgenteseResponse<DocumentManifestResponse>>(
+      '/agentese/self/document/manifest'
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Parse markdown text to SceneGraph via AGENTESE: self.document.parse */
+  parse: async (text: string, layoutMode = 'COMFORTABLE'): Promise<DocumentParseResponse> => {
+    const response = await apiClient.post<AgenteseResponse<DocumentParseResponse>>(
+      '/agentese/self/document/parse',
+      { text, layout_mode: layoutMode }
+    );
+    return unwrapAgentese(response);
+  },
+
+  /** Toggle task checkbox via AGENTESE: self.document.task_toggle */
+  toggleTask: async (
+    options:
+      | { file_path: string; task_id?: string; line_number?: number }
+      | { text: string; line_number: number }
+  ): Promise<TaskToggleResponse> => {
+    const response = await apiClient.post<AgenteseResponse<TaskToggleResponse>>(
+      '/agentese/self/document/task_toggle',
+      options
+    );
+    return unwrapAgentese(response);
+  },
+};

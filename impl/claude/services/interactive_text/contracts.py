@@ -15,7 +15,26 @@ Contract Protocol (Phase 7: Autopoietic Architecture):
 - Response() for perception aspects (manifest, hover)
 - Contract() for mutation aspects (toggle, navigate)
 
+AGENTESE: concept.document.contracts
+
 See: .kiro/specs/meaning-token-frontend/design.md
+
+Teaching:
+    gotcha: Observer.capabilities is frozenset—immutable by design.
+            Create new Observer with updated capabilities, don't mutate.
+            (Evidence: test_contracts.py::test_observer_immutability)
+
+    gotcha: TokenPattern validates on __post_init__—empty name raises ValueError.
+            Always provide a non-empty name when constructing TokenPattern.
+            (Evidence: test_contracts.py::test_token_pattern_validation)
+
+    gotcha: MeaningToken.token_id default uses position (type:start:end).
+            Custom implementations may override but must remain unique per doc.
+            (Evidence: test_contracts.py::test_token_id_uniqueness)
+
+    gotcha: InteractionResult.not_available() vs failure()—semantic difference.
+            not_available = affordance disabled; failure = execution error.
+            (Evidence: test_contracts.py::test_interaction_result_types)
 """
 
 from __future__ import annotations
@@ -139,6 +158,7 @@ class Observer:
 
     Attributes:
         id: Unique identifier for this observer
+        archetype: Observer archetype (developer, guest, etc.)
         capabilities: Set of available capabilities (llm, verification, network)
         density: Display density preference
         role: Access control role
@@ -146,6 +166,7 @@ class Observer:
     """
 
     id: str
+    archetype: str = "guest"
     capabilities: frozenset[str] = field(default_factory=frozenset)
     density: ObserverDensity = ObserverDensity.COMFORTABLE
     role: ObserverRole = ObserverRole.VIEWER
@@ -154,6 +175,7 @@ class Observer:
     @classmethod
     def create(
         cls,
+        archetype: str = "guest",
         capabilities: frozenset[str] | None = None,
         density: ObserverDensity = ObserverDensity.COMFORTABLE,
         role: ObserverRole = ObserverRole.VIEWER,
@@ -162,6 +184,7 @@ class Observer:
         """Create a new observer with a generated ID."""
         return cls(
             id=uuid4().hex,
+            archetype=archetype,
             capabilities=capabilities or frozenset(),
             density=density,
             role=role,
@@ -176,6 +199,7 @@ class Observer:
         """Convert to dictionary for serialization."""
         return {
             "id": self.id,
+            "archetype": self.archetype,
             "capabilities": list(self.capabilities),
             "density": self.density.value,
             "role": self.role.value,

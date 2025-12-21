@@ -9,8 +9,27 @@ MeaningTokens are the atomic unit of interface in the projection-based
 architecture. They carry meaning independent of how they are rendered,
 and project to different observer surfaces through projection functors.
 
+AGENTESE: self.document.token
+
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 1.2, 6.3, 12.1
+
+Teaching:
+    gotcha: on_interact() validates affordances BEFORE calling _execute_action.
+            Order matters: check enabled + action match, THEN execute.
+            (Evidence: test_tokens_base.py::test_on_interact_validates_affordance)
+
+    gotcha: capture_trace defaults to True—every interaction creates a TraceWitness.
+            Set capture_trace=False for high-frequency operations (hover spam).
+            (Evidence: test_tokens_base.py::test_capture_trace_default)
+
+    gotcha: token_id uses source_position (start:end), NOT content hash.
+            Renumbering or editing document invalidates existing token IDs.
+            (Evidence: test_tokens_base.py::test_token_id_format)
+
+    gotcha: filter_affordances_by_observer returns DISABLED affordances, not empty.
+            UI can show "locked" affordances with capability requirements.
+            (Evidence: test_tokens_base.py::test_filter_affordances_disabled)
 """
 
 from __future__ import annotations

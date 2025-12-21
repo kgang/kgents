@@ -61,13 +61,9 @@ class TestXdistNodeRegistryCanary:
     """
 
     # Crown Jewel paths that should always be present
+    # Note: Town, Park, Forge, Gestalt, Chat removed 2025-12-21 (Crown Jewel Cleanup)
     CROWN_JEWEL_PATHS = [
         "self.memory",  # Brain
-        "self.chat",  # Chat
-        "world.codebase",  # Gestalt
-        "world.town",  # Town
-        "world.park",  # Park
-        "world.forge",  # Forge
         "world.morpheus",  # Morpheus
     ]
 
@@ -121,17 +117,17 @@ class TestXdistNodeRegistryCanary:
         # Sanity upper bound
         assert count < 200, f"Unusually high path count: {count}. Possible test pollution."
 
-    def test_gestalt_node_present(self) -> None:
+    def test_brain_node_canary(self) -> None:
         """
-        CANARY: world.codebase (GestaltNode) must be registered.
+        CANARY: self.memory (BrainNode) must be registered.
 
-        This was the specific path that failed in the original issue.
+        BrainNode is the core memory Crown Jewel.
         """
         registry = get_registry()
-        assert registry.has("world.codebase"), (
-            "world.codebase not registered! "
-            "GestaltNode failed to register. "
-            "Check that ensure_all_nodes_imported() imports services.gestalt"
+        assert registry.has("self.memory"), (
+            "self.memory not registered! "
+            "BrainNode failed to register. "
+            "Check that ensure_all_nodes_imported() imports services.brain"
         )
 
 
@@ -172,53 +168,32 @@ class TestXdistNodeRegistryDiagnostics:
 class TestNodeRegistryRegressionGuard:
     """Regression guards for specific xdist issues."""
 
-    def test_gestalt_not_lost(self) -> None:
+    def test_brain_not_lost(self) -> None:
         """
-        Regression: world.codebase was missing in some workers.
+        Regression: Verify core nodes stay registered.
 
-        Root cause: GestaltNode only imported when running gestalt tests.
-        Other workers never imported services.gestalt.node.
+        Root cause: Nodes only imported when running their tests.
+        Other workers never imported service node modules.
 
         Fix: ensure_all_nodes_imported() calls _import_node_modules()
         which imports all service node modules.
         """
         registry = get_registry()
-        assert registry.has("world.codebase"), (
-            "world.codebase missing! Fixed by ensure_all_nodes_imported() "
+        assert registry.has("self.memory"), (
+            "self.memory missing! Fixed by ensure_all_nodes_imported() "
             "in protocols/agentese/_tests/conftest.py"
         )
 
-    def test_brain_node_present(self) -> None:
+    def test_morpheus_node_present(self) -> None:
         """
-        Regression guard: self.memory (BrainNode) should be present.
+        Regression guard: world.morpheus (Morpheus) should be present.
 
-        BrainNode is imported via services.brain.node.
+        Morpheus is the LLM gateway infrastructure.
         """
         registry = get_registry()
-        assert registry.has("self.memory"), "self.memory (BrainNode) missing"
+        assert registry.has("world.morpheus"), "world.morpheus (Morpheus) missing"
 
-    def test_all_town_nodes_present(self) -> None:
-        """
-        Regression: Town nodes were partially present.
-
-        Town has multiple nodes (town, citizen, coalition, etc.).
-        If one is present, all should be present.
-        """
-        town_paths = [
-            "world.town",
-            "world.town.citizen",
-            "world.town.coalition",
-        ]
-
-        registry = get_registry()
-        present = [p for p in town_paths if registry.has(p)]
-        missing = [p for p in town_paths if not registry.has(p)]
-
-        # Either all or none (partial is the bug)
-        if present and missing:
-            pytest.fail(f"Partial Town node registration! Present: {present}, Missing: {missing}")
-
-        assert len(present) == len(town_paths), f"Missing Town nodes: {missing}"
+    # Note: Town, Park, Forge, Gestalt tests removed 2025-12-21 (Crown Jewel Cleanup)
 
 
 # =============================================================================

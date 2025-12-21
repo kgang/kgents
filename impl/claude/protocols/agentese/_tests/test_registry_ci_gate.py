@@ -47,6 +47,7 @@ def _force_reload_node_modules():
     import sys
 
     # List of node modules to reload (order matters for dependencies)
+    # Note: Town, Park, Forge, Gestalt, Chat removed 2025-12-21 (Crown Jewel Cleanup)
     node_modules = [
         "protocols.agentese.contexts.design",
         "protocols.agentese.contexts.self_differance",
@@ -58,21 +59,8 @@ def _force_reload_node_modules():
         "protocols.agentese.contexts.world_emergence",
         "protocols.agentese.contexts.world_gallery",
         "protocols.agentese.contexts.world_gallery_api",
-        "protocols.agentese.contexts.world_gestalt_live",
-        "protocols.agentese.contexts.world_park",
-        "protocols.agentese.contexts.world_workshop",
         "services.brain.node",
-        "services.chat.node",
-        "services.forge.node",
-        "services.forge.soul_node",
-        "services.gestalt.node",
         "services.morpheus.node",
-        "services.park.node",
-        "services.town.node",
-        "services.town.citizen_node",
-        "services.town.coalition_node",
-        "services.town.inhabit_node",
-        "services.town.workshop_node",
     ]
 
     for mod_name in node_modules:
@@ -127,15 +115,11 @@ class TestPathDiscoverability:
         )
 
     def test_crown_jewel_paths_exist(self, populated_registry):
-        """All 6 Crown Jewel paths are registered."""
+        """Core Crown Jewel paths are registered."""
+        # Note: Town, Park, Forge, Gestalt removed 2025-12-21 (Crown Jewel Cleanup)
         expected_jewels = [
             "self.memory",  # Brain
-            "world.codebase",  # Gestalt
-            "world.forge",  # Forge (was Atelier)
-            "world.town",  # Town
-            "world.park",  # Park
-            # Domain is dormant - no path expected
-            # Gardener deprecated - removed
+            # Other crown jewels removed in cleanup
         ]
 
         paths = populated_registry.list_paths()

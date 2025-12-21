@@ -15,7 +15,8 @@
  * @see components/servo/MeaningTokenRenderer.tsx - Token renderer
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { documentApi, type TaskToggleResponse, type DocumentParseResponse } from '@/api/client';
 import { BreathingContainer } from '@/components/genesis/BreathingContainer';
 import {
   MeaningTokenRenderer,
@@ -247,39 +248,100 @@ function AGENTESEPortalPilot() {
 }
 
 /**
- * Pilot 2: Task Toggle - Interactive checkboxes
+ * Pilot 2: Task Toggle - Backend-wired checkboxes
+ *
+ * Now calls documentApi.toggleTask() to demonstrate:
+ * - Real backend mutation (in-memory for this demo)
+ * - TraceWitness capture for each toggle
+ * - File update status
  */
 function TaskTogglePilot() {
   const [tasks, setTasks] = useState(SAMPLE_TASKS);
+  const [lastToggle, setLastToggle] = useState<TaskToggleResponse | null>(null);
+  const [isToggling, setIsToggling] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleToggle = useCallback((tokenId: string) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.token_id === tokenId
-          ? {
-              ...task,
-              token_data: {
-                ...task.token_data,
-                checked: !task.token_data?.checked,
-              },
-            }
-          : task
-      )
-    );
-  }, []);
+  const handleToggle = useCallback(
+    async (tokenId: string, lineNumber: number) => {
+      setIsToggling(tokenId);
+      setError(null);
+
+      // Build markdown text from current tasks for backend toggle
+      const taskText = tasks
+        .map((t) => {
+          const checked = t.token_data?.checked ? 'x' : ' ';
+          return `- [${checked}] ${t.token_data?.description}`;
+        })
+        .join('\n');
+
+      try {
+        // Call backend - uses in-memory text mode
+        const result = await documentApi.toggleTask({
+          text: taskText,
+          line_number: lineNumber,
+        });
+
+        setLastToggle(result);
+
+        if (result.success) {
+          // Update local state to match backend
+          setTasks((prev) =>
+            prev.map((task) =>
+              task.token_id === tokenId
+                ? {
+                    ...task,
+                    token_data: {
+                      ...task.token_data,
+                      checked: result.new_state,
+                    },
+                  }
+                : task
+            )
+          );
+        } else {
+          setError(result.error ?? 'Toggle failed');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Backend unavailable');
+        // Fallback to local toggle for demo
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.token_id === tokenId
+              ? {
+                  ...task,
+                  token_data: {
+                    ...task.token_data,
+                    checked: !task.token_data?.checked,
+                  },
+                }
+              : task
+          )
+        );
+      } finally {
+        setIsToggling(null);
+      }
+    },
+    [tasks]
+  );
 
   const completedCount = tasks.filter((t) => t.token_data?.checked).length;
 
   return (
-    <PilotContainer title="Task Toggle" subtitle="Checkbox tokens with toggle interaction">
+    <PilotContainer title="Task Toggle" subtitle="Backend-wired with TraceWitness">
       <div className="space-y-3">
-        {tasks.map((task) => (
-          <TaskToggle
-            key={task.token_id}
-            content={task}
-            isSelected={false}
-            onClick={() => handleToggle(task.token_id)}
-          />
+        {tasks.map((task, idx) => (
+          <div key={task.token_id} className="relative">
+            <TaskToggle
+              content={task}
+              isSelected={false}
+              onClick={() => handleToggle(task.token_id, idx + 1)}
+            />
+            {isToggling === task.token_id && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                <div className="w-3 h-3 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
         ))}
 
         {/* Progress indicator */}
@@ -294,6 +356,43 @@ function TaskTogglePilot() {
             {completedCount}/{tasks.length}
           </span>
         </div>
+
+        {/* Backend response display */}
+        {(lastToggle || error) && (
+          <div className="pt-3 border-t border-gray-800 mt-3 space-y-2">
+            <div className="text-xs text-gray-400 font-medium">Last Toggle Result:</div>
+            {error ? (
+              <div className="text-xs text-amber-400 bg-amber-900/20 px-2 py-1 rounded">
+                ⚠️ {error} (local fallback)
+              </div>
+            ) : lastToggle ? (
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-500">Task: </span>
+                  <span className="text-gray-300">{lastToggle.task_description}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">State: </span>
+                  <span className={lastToggle.new_state ? 'text-emerald-400' : 'text-gray-400'}>
+                    {lastToggle.new_state ? '✓ checked' : '○ unchecked'}
+                  </span>
+                </div>
+                <div className="col-span-2">
+                  <span className="text-gray-500">TraceWitness: </span>
+                  <code className="text-purple-400 text-[10px]">
+                    {lastToggle.trace_witness_id ?? 'none'}
+                  </code>
+                </div>
+                <div>
+                  <span className="text-gray-500">File Updated: </span>
+                  <span className={lastToggle.file_updated ? 'text-emerald-400' : 'text-gray-500'}>
+                    {lastToggle.file_updated ? 'yes' : 'no (in-memory)'}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        )}
       </div>
     </PilotContainer>
   );
@@ -563,49 +662,115 @@ function DensityComparisonPilot() {
 }
 
 /**
- * Live Parse Demo - Type markdown and see tokens in real-time
+ * Live Parse Demo - Backend-powered token detection
+ *
+ * Now calls documentApi.parse() to demonstrate:
+ * - Real backend parsing (not client-side regex)
+ * - Token type breakdown from backend
+ * - Debounced input for performance
  */
 function LiveParsePilot() {
   const [input, setInput] = useState(
     'Check `self.brain.capture` and see [P1] (Tasteful).\n\n- [x] First task done\n- [ ] Second task pending'
   );
+  const [parseResult, setParseResult] = useState<DocumentParseResponse | null>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [useBackend, setUseBackend] = useState(true);
 
-  // Simple client-side token detection (in production, would call backend)
-  const detectedTokens = useMemo(() => {
+  // Client-side fallback detection (for when backend unavailable)
+  const clientDetectedTokens = useMemo(() => {
     const tokens: { type: string; text: string; start: number }[] = [];
-
-    // AGENTESE paths
     const pathRegex = /`([a-z]+\.[a-z.]+)`/g;
     let match;
     while ((match = pathRegex.exec(input)) !== null) {
-      tokens.push({ type: 'AGENTESE', text: match[0], start: match.index });
+      tokens.push({ type: 'agentese_path', text: match[0], start: match.index });
     }
-
-    // Principle refs
     const principleRegex = /\[P(\d+)\]/g;
     while ((match = principleRegex.exec(input)) !== null) {
-      tokens.push({ type: 'PRINCIPLE', text: match[0], start: match.index });
+      tokens.push({ type: 'principle_ref', text: match[0], start: match.index });
     }
-
-    // Task checkboxes
     const taskRegex = /- \[([ xX])\] (.+?)(?:\n|$)/g;
     while ((match = taskRegex.exec(input)) !== null) {
-      tokens.push({ type: 'TASK', text: match[0], start: match.index });
+      tokens.push({ type: 'task_checkbox', text: match[0], start: match.index });
     }
-
     return tokens.sort((a, b) => a.start - b.start);
   }, [input]);
+
+  // Debounced backend parse
+  const parseWithBackend = useCallback(async (text: string) => {
+    if (!useBackend || !text.trim()) {
+      setParseResult(null);
+      return;
+    }
+    setIsParsing(true);
+    setError(null);
+    try {
+      const result = await documentApi.parse(text);
+      setParseResult(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Parse failed');
+      setParseResult(null);
+    } finally {
+      setIsParsing(false);
+    }
+  }, [useBackend]);
+
+  // Debounce input changes (300ms)
+  const [debouncedInput, setDebouncedInput] = useState(input);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedInput(input), 300);
+    return () => clearTimeout(timer);
+  }, [input]);
+
+  // Parse when debounced input changes
+  useEffect(() => {
+    if (useBackend) {
+      parseWithBackend(debouncedInput);
+    }
+  }, [debouncedInput, useBackend, parseWithBackend]);
+
+  // Use backend results or client fallback
+  const tokenTypes = parseResult?.token_types ?? {};
+  const tokenCount = parseResult?.token_count ?? clientDetectedTokens.length;
+
+  // Map token_types to display format
+  const displayTokens = useBackend && parseResult
+    ? Object.entries(tokenTypes).map(([type, count]) => ({ type, count: count as number }))
+    : Object.entries(
+        clientDetectedTokens.reduce((acc, t) => ({ ...acc, [t.type]: (acc[t.type] || 0) + 1 }), {} as Record<string, number>)
+      ).map(([type, count]) => ({ type, count }));
+
+  const tokenColorClass = (type: string) => {
+    if (type.includes('agentese')) return 'bg-emerald-800 text-emerald-200';
+    if (type.includes('principle')) return 'bg-amber-800 text-amber-200';
+    if (type.includes('task')) return 'bg-stone-700 text-stone-200';
+    if (type.includes('code')) return 'bg-blue-800 text-blue-200';
+    return 'bg-gray-700 text-gray-200';
+  };
 
   return (
     <PilotContainer
       title="Live Parse"
-      subtitle="Type markdown to see tokens detected in real-time"
+      subtitle={useBackend ? 'Backend-powered via self.document.parse' : 'Client-side regex fallback'}
       fullWidth
     >
       <div className="grid md:grid-cols-2 gap-4">
         {/* Input */}
         <div>
-          <label className="text-xs text-gray-400 block mb-2">Markdown Input</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-gray-400">Markdown Input</label>
+            <button
+              onClick={() => setUseBackend(!useBackend)}
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
+                useBackend
+                  ? 'bg-emerald-800/50 text-emerald-300'
+                  : 'bg-gray-700 text-gray-400'
+              }`}
+            >
+              {useBackend ? '✓ Backend' : '○ Client'}
+            </button>
+          </div>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -616,28 +781,25 @@ function LiveParsePilot() {
 
         {/* Output */}
         <div>
-          <label className="text-xs text-gray-400 block mb-2">
-            Detected Tokens ({detectedTokens.length})
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs text-gray-400">
+              Tokens ({tokenCount})
+              {isParsing && <span className="ml-2 text-emerald-400">parsing...</span>}
+            </label>
+          </div>
           <div className="h-40 p-3 rounded bg-stone-800/50 border border-stone-700/50 overflow-auto">
-            {detectedTokens.length === 0 ? (
+            {error ? (
+              <div className="text-amber-400 text-sm">⚠️ {error}</div>
+            ) : displayTokens.length === 0 ? (
               <div className="text-gray-500 text-sm">No tokens detected...</div>
             ) : (
               <div className="space-y-2">
-                {detectedTokens.map((token, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm">
-                    <span
-                      className={`px-2 py-0.5 rounded text-xs font-medium ${
-                        token.type === 'AGENTESE'
-                          ? 'bg-emerald-800 text-emerald-200'
-                          : token.type === 'PRINCIPLE'
-                            ? 'bg-amber-800 text-amber-200'
-                            : 'bg-stone-700 text-stone-200'
-                      }`}
-                    >
-                      {token.type}
+                {displayTokens.map(({ type, count }, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm">
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${tokenColorClass(type)}`}>
+                      {type}
                     </span>
-                    <code className="text-gray-400">{token.text.slice(0, 30)}</code>
+                    <span className="text-gray-400 font-mono">×{count}</span>
                   </div>
                 ))}
               </div>
@@ -645,6 +807,17 @@ function LiveParsePilot() {
           </div>
         </div>
       </div>
+
+      {/* Backend status */}
+      {useBackend && parseResult && (
+        <div className="mt-3 pt-3 border-t border-gray-800 text-xs text-gray-500">
+          <span className="text-gray-400">Scene nodes: </span>
+          <span className="text-emerald-400 font-mono">{parseResult.token_count}</span>
+          <span className="mx-2">|</span>
+          <span className="text-gray-400">Source: </span>
+          <code className="text-purple-400">self.document.parse</code>
+        </div>
+      )}
     </PilotContainer>
   );
 }

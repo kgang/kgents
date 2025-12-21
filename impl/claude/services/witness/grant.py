@@ -25,6 +25,17 @@ Rename History:
 
 See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 9: Directed Cycle)
+
+Teaching:
+    gotcha: Grant status lifecycle is DIRECTIONAL. EXPIRED is terminal unless
+            explicitly renewed. REVOKED can be re-granted, but EXPIRED cannot.
+            Check is_active property rather than status == GRANTED for safety.
+            (Evidence: test_ritual.py::test_grant_revocation_invalidates_ritual)
+
+    gotcha: GateFallback.DENY is the SAFE DEFAULT for timeout. If a ReviewGate
+            times out, the fallback determines behavior. DENY blocks, ALLOW_LIMITED
+            reduces scope, ESCALATE delegates. Always set explicit fallback.
+            (Evidence: test_covenant.py::test_covenant_gate_fallback)
 """
 
 from __future__ import annotations

@@ -44,7 +44,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -52,7 +52,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from agents.d import Datum, DgentProtocol, TableAdapter
 from agents.differance.alternatives import get_alternatives
 from agents.differance.integration import DifferanceIntegration
-from models.brain import Crystal, CrystalTag
+from models.brain import Crystal, CrystalTag, TeachingCrystal
 
 if TYPE_CHECKING:
     pass
@@ -106,6 +106,19 @@ class BrainStatus:
     ghosts_healed: int
     storage_path: str
     storage_backend: str  # "sqlite" | "postgres"
+
+
+@dataclass
+class CrystallizeResult:
+    """Result of crystallizing a teaching moment."""
+
+    teaching_id: str
+    insight: str
+    severity: Literal["info", "warning", "critical"]
+    source_module: str
+    source_symbol: str
+    is_new: bool  # True if newly created, False if already existed
+    evidence_verified: bool
 
 
 class BrainPersistence:
@@ -623,5 +636,239 @@ class BrainPersistence:
         self._ghosts_healed += healed
         return healed
 
+    # =========================================================================
+    # Teaching Crystal Crystallization (Memory-First Docs)
+    # =========================================================================
 
-__all__ = ["BrainPersistence", "CaptureResult", "SearchResult", "BrainStatus"]
+    async def crystallize_teaching(
+        self,
+        insight: str,
+        severity: Literal["info", "warning", "critical"],
+        source_module: str,
+        source_symbol: str,
+        evidence: str | None = None,
+        source_commit: str | None = None,
+    ) -> CrystallizeResult:
+        """
+        Crystallize a teaching moment for persistence.
+
+        AGENTESE: self.memory.crystallize_teaching
+
+        The Persistence Law: Teaching moments extracted from code
+        MUST be crystallized in Brain.
+
+        Args:
+            insight: The gotcha text
+            severity: "info" | "warning" | "critical"
+            source_module: Module path (e.g., "services.brain.persistence")
+            source_symbol: Symbol name (e.g., "BrainPersistence.capture")
+            evidence: Test reference (e.g., "test_persistence.py::test_capture")
+            source_commit: Git SHA where learned
+
+        Returns:
+            CrystallizeResult with teaching_id and status
+
+        Teaching:
+            gotcha: Deduplication is by (source_module, source_symbol, insight hash).
+                    Same gotcha from same symbol won't create duplicates.
+                    (Evidence: test_crystallization.py::test_deduplication)
+        """
+        # Generate deterministic ID for deduplication
+        insight_hash = hashlib.sha256(insight.encode()).hexdigest()[:12]
+        teaching_id = f"teach-{source_module.replace('.', '-')}-{source_symbol.replace('.', '-')}-{insight_hash}"
+
+        # Check for existing crystal (deduplication)
+        async with self.table.session_factory() as session:
+            existing = await session.get(TeachingCrystal, teaching_id)
+
+            if existing is not None:
+                # Already crystallized - return existing
+                return CrystallizeResult(
+                    teaching_id=teaching_id,
+                    insight=existing.insight,
+                    severity=existing.severity,  # type: ignore[arg-type]
+                    source_module=existing.source_module,
+                    source_symbol=existing.source_symbol,
+                    is_new=False,
+                    evidence_verified=existing.evidence is not None,
+                )
+
+            # Create new teaching crystal
+            teaching = TeachingCrystal(
+                id=teaching_id,
+                insight=insight,
+                severity=severity,
+                evidence=evidence,
+                source_module=source_module,
+                source_symbol=source_symbol,
+                source_commit=source_commit,
+                born_at=datetime.now(UTC),
+                died_at=None,
+                successor_module=None,
+                successor_symbol=None,
+                applies_to=[],
+            )
+            session.add(teaching)
+            await session.commit()
+
+            return CrystallizeResult(
+                teaching_id=teaching_id,
+                insight=insight,
+                severity=severity,
+                source_module=source_module,
+                source_symbol=source_symbol,
+                is_new=True,
+                evidence_verified=evidence is not None,
+            )
+
+    async def get_alive_teaching(
+        self,
+        limit: int = 100,
+        severity: Literal["info", "warning", "critical"] | None = None,
+    ) -> list[TeachingCrystal]:
+        """
+        Get all alive (non-extinct) teaching crystals.
+
+        AGENTESE: self.memory.teaching.list
+
+        Args:
+            limit: Maximum results
+            severity: Filter by severity (optional)
+
+        Returns:
+            List of TeachingCrystal ordered by creation date
+        """
+        async with self.table.session_factory() as session:
+            stmt = (
+                select(TeachingCrystal)
+                .where(TeachingCrystal.died_at.is_(None))
+                .order_by(TeachingCrystal.born_at.desc())
+                .limit(limit)
+            )
+
+            if severity is not None:
+                stmt = stmt.where(TeachingCrystal.severity == severity)
+
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def get_teaching_by_module(
+        self,
+        module_prefix: str,
+        include_extinct: bool = False,
+    ) -> list[TeachingCrystal]:
+        """
+        Get teaching crystals for a module and its children.
+
+        AGENTESE: self.memory.teaching.by_module
+
+        Args:
+            module_prefix: Module path prefix (e.g., "services.brain")
+            include_extinct: Include teaching from deleted code
+
+        Returns:
+            List of TeachingCrystal for the module
+        """
+        async with self.table.session_factory() as session:
+            stmt = select(TeachingCrystal).where(
+                TeachingCrystal.source_module.startswith(module_prefix)
+            )
+
+            if not include_extinct:
+                stmt = stmt.where(TeachingCrystal.died_at.is_(None))
+
+            stmt = stmt.order_by(TeachingCrystal.severity.desc(), TeachingCrystal.born_at.desc())
+
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def get_ancestral_wisdom(
+        self,
+        module_prefix: str | None = None,
+        limit: int = 50,
+    ) -> list[TeachingCrystal]:
+        """
+        Get wisdom from extinct (deleted) code.
+
+        AGENTESE: void.extinct.wisdom
+
+        The Ghost Hydration Law: Hydration MUST surface wisdom
+        from extinct code when relevant.
+
+        Args:
+            module_prefix: Filter by original module (optional)
+            limit: Maximum results
+
+        Returns:
+            List of TeachingCrystal from deleted code
+        """
+        async with self.table.session_factory() as session:
+            stmt = (
+                select(TeachingCrystal)
+                .where(TeachingCrystal.died_at.isnot(None))
+                .order_by(TeachingCrystal.died_at.desc())
+                .limit(limit)
+            )
+
+            if module_prefix is not None:
+                stmt = stmt.where(TeachingCrystal.source_module.startswith(module_prefix))
+
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def count_teaching_crystals(self) -> dict[str, int]:
+        """
+        Count teaching crystals by status.
+
+        Returns:
+            Dict with counts: alive, extinct, total, by severity
+        """
+        async with self.table.session_factory() as session:
+            # Total count
+            total_result = await session.execute(
+                select(func.count()).select_from(TeachingCrystal)
+            )
+            total = total_result.scalar() or 0
+
+            # Alive count
+            alive_result = await session.execute(
+                select(func.count())
+                .select_from(TeachingCrystal)
+                .where(TeachingCrystal.died_at.is_(None))
+            )
+            alive = alive_result.scalar() or 0
+
+            # By severity (alive only)
+            critical_result = await session.execute(
+                select(func.count())
+                .select_from(TeachingCrystal)
+                .where(TeachingCrystal.died_at.is_(None))
+                .where(TeachingCrystal.severity == "critical")
+            )
+            critical = critical_result.scalar() or 0
+
+            warning_result = await session.execute(
+                select(func.count())
+                .select_from(TeachingCrystal)
+                .where(TeachingCrystal.died_at.is_(None))
+                .where(TeachingCrystal.severity == "warning")
+            )
+            warning = warning_result.scalar() or 0
+
+            return {
+                "total": total,
+                "alive": alive,
+                "extinct": total - alive,
+                "critical": critical,
+                "warning": warning,
+                "info": alive - critical - warning,
+            }
+
+
+__all__ = [
+    "BrainPersistence",
+    "CaptureResult",
+    "SearchResult",
+    "BrainStatus",
+    "CrystallizeResult",
+]

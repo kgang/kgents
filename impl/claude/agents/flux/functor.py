@@ -17,6 +17,25 @@ Universal Functor Integration (Alethic Algebra Phase 3):
     - Law verification via verify_functor()
     - Registry integration with other functors
     - Functor composition: compose_functors(FluxFunctor, MaybeFunctor)
+
+Teaching:
+    gotcha: Flux.lift() creates a NEW FluxAgent each time. Lifting the same
+            agent twice gives two independent flux instances with separate state.
+            If you need shared state, lift once and reuse the FluxAgent.
+            (Evidence: Structural - lift() calls FluxAgent constructor)
+
+    gotcha: Flux.unlift() does NOT stop a running flux. It just returns the
+            inner agent. Always call flux.stop() first if the flux is running.
+            (Evidence: Structural - unlift docstring explicitly warns)
+
+    gotcha: Functor law verification is complex for FluxFunctor because it
+            operates on streams. Identity law holds per-element, not for the
+            whole stream. Composition law requires collecting stream outputs.
+            (Evidence: test_integration.py::TestFluxFunctorLaws)
+
+    gotcha: FluxFunctor.pure() returns a single-element AsyncIterator, not a
+            FluxAgent. Use it for stream-level identity, not agent lifting.
+            (Evidence: Structural - pure returns async generator)
 """
 
 from typing import Any, AsyncIterator, TypeVar

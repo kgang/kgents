@@ -18,11 +18,11 @@ enabling "what did I learn about X?" style queries.
 Teaching:
     gotcha: Brain requires async session; Hydrator is sync.
             Use asyncio.run() or async API for integration.
-            (Evidence: test_brain_adapter.py::test_async_sync_bridge)
+            (Evidence: test_brain_adapter.py::TestSemanticTeaching::test_returns_teaching_from_brain_results)
 
     gotcha: Brain may return empty if no crystals exist.
             Fall back to keyword matching gracefully.
-            (Evidence: test_brain_adapter.py::test_empty_brain_fallback)
+            (Evidence: test_brain_adapter.py::TestSemanticTeaching::test_returns_empty_without_brain)
 
 AGENTESE: concept.docs.hydrate (enhanced with semantic matching)
 """

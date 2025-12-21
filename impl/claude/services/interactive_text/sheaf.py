@@ -18,6 +18,32 @@ Sheaf Theory Background:
 
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6
+
+Teaching:
+    gotcha: glue() RAISES SheafConditionError if views are incompatible. Always call
+            verify_sheaf_condition() first if you want to handle conflicts gracefully.
+            Don't assume glue() will merge conflicts—it refuses to produce invalid state.
+            (Evidence: test_properties.py::TestProperty8DocumentSheafCoherence::test_incompatible_views_cannot_be_glued)
+
+    gotcha: TokenState equality compares (token_id, token_type, content, position) but
+            IGNORES metadata. Two tokens with different metadata but same core fields
+            are considered equal. This is intentional—metadata is view-local decoration.
+            (Evidence: test_properties.py::TestProperty8DocumentSheafCoherence::test_token_state_equality)
+
+    gotcha: compatible() is SYMMETRIC: compatible(v1, v2) == compatible(v2, v1). Same
+            for overlap(). But verify_sheaf_condition() checks ALL pairs, not just
+            the ones you pass in. Adding a third view requires checking 3 pairs.
+            (Evidence: test_properties.py::TestProperty8DocumentSheafCoherence::test_compatible_is_symmetric)
+
+    gotcha: A single view is ALWAYS coherent with itself. verify_sheaf_condition() on
+            a sheaf with one view returns success with checked_pairs=0. The sheaf
+            condition is about agreement between views, not internal consistency.
+            (Evidence: test_properties.py::TestProperty8DocumentSheafCoherence::test_single_view_always_coherent)
+
+    gotcha: Views for DIFFERENT documents cannot be added to the same sheaf. add_view()
+            raises ValueError if view.document_path != sheaf.document_path. Create
+            separate sheafs per document.
+            (Evidence: sheaf.py::DocumentSheaf::add_view validation)
 """
 
 from __future__ import annotations

@@ -31,6 +31,35 @@ Phase 1 Improvements:
 - LLM-backed dialogue (DIALOGUE/DEEP tiers)
 - Deep intercept with principle reasoning
 - Audit trail for all mediations
+
+Teaching:
+    gotcha: Budget tiers are NOT just token limits - they gate LLM access entirely.
+            DORMANT and WHISPER never call the LLM; they use templates.
+            Set budget=BudgetTier.DIALOGUE to actually invoke the LLM.
+            (Evidence: test_soul.py::test_soul_dialogue_template - templates bypass LLM)
+
+    gotcha: Auto-LLM creation spawns subprocesses which are SLOW in tests.
+            Set KGENTS_NO_AUTO_LLM=1 or pass auto_llm=False in test fixtures.
+            The test suite does this via environment variable.
+            (Evidence: test_soul.py::TestLLMDialogue - uses auto_llm=False)
+
+    gotcha: Empty/whitespace messages return templates, NOT errors.
+            This is intentional graceful degradation - "What's on your mind?"
+            Do not rely on dialogue() to validate user input.
+            (Evidence: test_soul.py::test_soul_dialogue_empty_message)
+
+    gotcha: intercept_deep() ALWAYS escalates dangerous operations regardless
+            of LLM recommendations. The DANGEROUS_KEYWORDS set is hardcoded and
+            cannot be overridden. This is a safety invariant.
+            (Evidence: test_soul.py::test_deep_intercept_dangerous_operation)
+
+    gotcha: Low LLM confidence (< 0.7) forces escalation even if LLM says "approve".
+            This prevents overconfident auto-approval of ambiguous operations.
+            (Evidence: test_soul.py::test_deep_intercept_low_confidence_escalates)
+
+    gotcha: Without LLM, intercept_deep() silently falls back to shallow intercept.
+            Check result.was_deep to know which path was taken.
+            (Evidence: test_soul.py::test_deep_intercept_fallback_without_llm)
 """
 
 from __future__ import annotations

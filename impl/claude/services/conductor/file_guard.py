@@ -27,6 +27,17 @@ Usage:
         old_string="def foo",
         new_string="def bar",
     )
+
+Teaching:
+    gotcha: Edits without prior read fail with EditError.NOT_READ.
+            The guard returns a structured error response rather than raising,
+            so you MUST check response.success before assuming the edit worked.
+            (Evidence: test_file_guard.py::TestEditOperations::test_edit_requires_prior_read)
+
+    gotcha: Non-unique old_string returns EditError.NOT_UNIQUE, not an exception.
+            Use replace_all=True when you intentionally want to replace all
+            occurrences. The error response includes a suggestion to help the user.
+            (Evidence: test_file_guard.py::TestEditOperations::test_edit_string_not_unique)
 """
 
 from __future__ import annotations

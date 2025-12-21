@@ -32,30 +32,10 @@ if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
 # Import from submodules
-# Chat resolver for <node>.chat.* paths
-from .chat_resolver import (
-    ChatNode,
-    ChatResolver,
-    create_chat_node,
-    get_chat_resolver,
-)
 from .self_bus import (
     BUS_AFFORDANCES,
     BusNode,
     create_bus_resolver,
-)
-
-# Town Citizen integration (Phase 3 Crown Jewels)
-from .self_citizen import (
-    CITIZEN_AFFORDANCES,
-    CITIZEN_MEMORY_AFFORDANCES,
-    CITIZEN_PERSONALITY_AFFORDANCES,
-    CitizenMemoryNode,
-    CitizenNode,
-    CitizenPersonalityNode,
-    create_citizen_memory_node,
-    create_citizen_node,
-    create_citizen_personality_node,
 )
 
 # Data architecture rewrite (Phase 2)
@@ -137,21 +117,6 @@ __all__ = [
     # V-gent Vector integration (Phase 7)
     "VectorNode",
     "VECTOR_AFFORDANCES",
-    # Town Citizen integration (Phase 3 Crown Jewels)
-    "CitizenNode",
-    "CitizenMemoryNode",
-    "CitizenPersonalityNode",
-    "CITIZEN_AFFORDANCES",
-    "CITIZEN_MEMORY_AFFORDANCES",
-    "CITIZEN_PERSONALITY_AFFORDANCES",
-    "create_citizen_node",
-    "create_citizen_memory_node",
-    "create_citizen_personality_node",
-    # Chat resolver (Chat Protocol - Phase 2)
-    "ChatNode",
-    "ChatResolver",
-    "create_chat_node",
-    "get_chat_resolver",
     # Soul integration (Chat Protocol - Phase 2)
     "SoulNode",
     "SOUL_AFFORDANCES",
@@ -208,8 +173,6 @@ SELF_AFFORDANCES: dict[str, tuple[str, ...]] = {
     "flow": FLOW_AFFORDANCES,
     # V-gent Vector integration (Phase 7)
     "vector": VECTOR_AFFORDANCES,
-    # Town Citizen integration (Phase 3 Crown Jewels)
-    "citizen": CITIZEN_AFFORDANCES,
     # Soul integration (Chat Protocol - Phase 2)
     "soul": SOUL_CHAT_AFFORDANCES,
     # Autopoietic kernel (AD-009)
@@ -1002,16 +965,7 @@ class SelfContextResolver:
             # Soul integration (Chat Protocol - Phase 2)
             case "soul":
                 # self.soul.* → SoulNode for K-gent dialogue
-                soul_node = self._soul or create_soul_node()
-                if rest:
-                    sub_holon = rest[0]
-                    if sub_holon == "chat":
-                        # self.soul.chat.* → ChatNode for chat protocol
-                        return create_chat_node(
-                            parent_path="self.soul",
-                            parent_node=soul_node,
-                        )
-                return soul_node
+                return self._soul or create_soul_node()
             # Forest Protocol integration (Wave 2)
             case "forest":
                 # self.forest.* → ForestNode for plan management

@@ -16,6 +16,28 @@ transitions to new states with associated outputs.
 
 See: .kiro/specs/meaning-token-frontend/design.md
 Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 11.1
+
+Teaching:
+    gotcha: Invalid inputs return (same_state, NoOp), NOT an exception. The polynomial
+            is total—every (state, input) pair produces a valid output. Check the
+            output type to detect invalid transitions: isinstance(output, NoOp).
+            (Evidence: test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_invalid_inputs_produce_noop)
+
+    gotcha: The polynomial is STATELESS—it defines the transition function, not current
+            state. DocumentSheaf or your own state holder tracks actual document state.
+            DocumentPolynomial.transition(state, input) is a pure function.
+            (Evidence: test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_transitions_are_deterministic)
+
+    gotcha: Each state has a FIXED set of valid directions. VIEWING accepts {edit, refresh,
+            hover, click, drag}. EDITING accepts {save, cancel, continue_edit, hover}.
+            SYNCING accepts {wait, force_local, force_remote}. CONFLICTING accepts
+            {resolve, abort, view_diff}. Sending wrong input to wrong state → NoOp.
+            (Evidence: test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_viewing_state_accepts_correct_inputs)
+
+    gotcha: TransitionOutput subclasses are FROZEN dataclasses. Once created, they're
+            immutable. This enables safe composition and prevents state corruption
+            when outputs are passed between components.
+            (Evidence: test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_transition_outputs_are_serializable)
 """
 
 from __future__ import annotations

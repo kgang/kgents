@@ -47,6 +47,7 @@ class CategoryConfig:
 
 
 # Documentation categories for kgents
+# Note: town, gestalt, park, gardener removed 2025-12-21 (Crown Jewel Cleanup)
 CATEGORIES: list[CategoryConfig] = [
     CategoryConfig(
         name="Crown Jewels",
@@ -55,11 +56,11 @@ CATEGORIES: list[CategoryConfig] = [
             "services/witness/",
             "services/conductor/",
             "services/living_docs/",
-            "services/town/",
-            "services/gestalt/",
-            "services/park/",
-            "services/gardener/",
+            "services/interactive_text/",
+            "services/liminal/",
             "services/verification/",
+            "services/morpheus/",
+            "services/ashc/",
         ],
         description="The showcase features of kgents.",
     ),

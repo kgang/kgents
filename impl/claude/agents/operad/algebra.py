@@ -13,6 +13,17 @@ Key insight:
     F(law) = test that verifies the law
 
 See: plans/ideas/impl/meta-construction.md
+
+Teaching:
+    gotcha: CLIAlgebra.to_cli() requires an agent_resolver to map names to agents.
+            The default resolver uses poly.get_primitive(). If your agents aren't
+            registered primitives, provide a custom resolver or you'll get None.
+            (Evidence: Structural - _default_resolver calls get_primitive)
+
+    gotcha: Command names are auto-generated from operad name + operation name.
+            The operad name is lowercased and "operad" is stripped, so
+            "SoulOperad" + "introspect" becomes "kg soul introspect".
+            (Evidence: Structural - to_cli() line 133)
 """
 
 from __future__ import annotations

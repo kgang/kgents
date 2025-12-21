@@ -42,8 +42,13 @@ class DocstringExtractor:
 
     # Pattern to match teaching moments in docstrings
     # Matches: gotcha: insight text (Evidence: test_path)
+    # Note: The insight can span multiple lines with indentation. The regex
+    # captures everything up to (Evidence:...) or the next gotcha/end.
     TEACHING_PATTERN = re.compile(
-        r"gotcha:\s*(.+?)(?:\n\s*\(Evidence:\s*([^)]+)\))?(?=\n\s*(?:gotcha:|$)|\Z)",
+        r"gotcha:\s*"  # Start with gotcha:
+        r"(.*?)"  # Capture insight (non-greedy, across lines)
+        r"(?:\(Evidence:\s*([^)]+)\))?"  # Optional evidence in parens
+        r"(?=\n\s*(?:gotcha:|AGENTESE:|See:|$)|\Z)",  # Stop at next gotcha, AGENTESE, See, empty line, or end
         re.IGNORECASE | re.DOTALL,
     )
 

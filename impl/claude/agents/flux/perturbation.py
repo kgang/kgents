@@ -8,6 +8,22 @@ The Perturbation Principle:
 This preserves State Integrity for Symbiont agents. A perturbation
 flows through the same processing path as normal events, ensuring
 state is loaded/saved correctly with no race conditions.
+
+Teaching:
+    gotcha: Perturbation priority ordering is REVERSED for asyncio.PriorityQueue.
+            Higher priority values come FIRST (e.g., priority=100 before priority=10).
+            This is because PriorityQueue is a min-heap, so we flip comparison.
+            (Evidence: test_perturbation.py::TestPerturbationOrdering::test_higher_priority_comes_first)
+
+    gotcha: set_result/set_exception/cancel are IDEMPOTENT. Calling them on
+            an already-done Future is safe (no-op). This prevents race conditions
+            between flux processing and caller cancellation.
+            (Evidence: test_perturbation.py::TestPerturbationResult::test_set_result_idempotent)
+
+    gotcha: create_perturbation() uses priority=100 by default, not 0. This means
+            helper-created perturbations are HIGH priority. If you want normal
+            priority, explicitly pass priority=0.
+            (Evidence: test_perturbation.py::TestCreatePerturbation::test_create_with_data)
 """
 
 import asyncio

@@ -336,7 +336,8 @@ class TestDiscoveryE2E:
         else:
             path_strings = paths
 
-        expected = ["self.memory", "world.codebase", "world.forge", "world.town", "world.park"]
+        # Note: Town, Park, Forge, Gestalt removed 2025-12-21 (Crown Jewel Cleanup)
+        expected = ["self.memory"]
 
         for expected_path in expected:
             assert any(expected_path in p for p in path_strings), (

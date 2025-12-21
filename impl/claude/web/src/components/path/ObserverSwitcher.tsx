@@ -15,11 +15,6 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  useLayoutClaim,
-  ReservedSlot,
-  FadeTransition,
-} from '@/components/layout-sheaf';
 
 // =============================================================================
 // Types
@@ -150,9 +145,6 @@ export function ObserverSwitcher({
 }: ObserverSwitcherProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  // Reserve 16px for description slot - prevents layout shift on hover
-  useLayoutClaim('observer-description', 16, true);
-
   const handleChange = useCallback(
     (id: string) => {
       if (!disabled && id !== current) {
@@ -178,18 +170,10 @@ export function ObserverSwitcher({
           <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
             Observer
           </span>
-          {showDescriptions && (
-            <ReservedSlot
-              id="observer-description"
-              className="flex-1 min-w-0"
-              constraints={{ minHeight: 16, maxHeight: 16 }}
-            >
-              <FadeTransition show={!!hoveredId}>
-                <span className="text-[10px] text-gray-400 truncate block">
-                  {hoveredId && available.find((o) => o.id === hoveredId)?.description}
-                </span>
-              </FadeTransition>
-            </ReservedSlot>
+          {showDescriptions && hoveredId && (
+            <span className="flex-1 min-w-0 text-[10px] text-gray-400 truncate block transition-opacity duration-150">
+              {available.find((o) => o.id === hoveredId)?.description}
+            </span>
           )}
         </div>
 

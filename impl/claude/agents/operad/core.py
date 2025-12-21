@@ -15,6 +15,29 @@ The Agent Operad provides:
 - Runtime verification of laws
 
 See: plans/ideas/impl/meta-construction.md
+
+Teaching:
+    gotcha: Operations require EXACT arity. An Operation with arity=2 rejects
+            1 or 3 arguments with ValueError, even if semantically valid.
+            (Evidence: test_core.py::TestOperation::test_operation_wrong_arity_raises)
+
+    gotcha: Operad.compose() raises KeyError for unknown operations, not None.
+            Always check `operad.get(op_name)` first if unsure.
+            (Evidence: test_core.py::TestOperad::test_operad_compose_unknown_op_raises)
+
+    gotcha: State composition via seq/par creates NESTED tuple states. Left-assoc
+            seq(seq(a,b),c) gives state ((s_a,s_b),s_c), right-assoc gives (s_a,(s_b,s_c)).
+            Results are equivalent but state shapes differ.
+            (Evidence: test_core.py::TestCompositionLaws::test_seq_associativity_behavioral)
+
+    gotcha: OperadRegistry uses class-level state. For parallel test execution (xdist),
+            call OperadRegistry.reset() + re-import in conftest to ensure clean state.
+            (Evidence: test_xdist_registry_canary.py)
+
+    gotcha: Law verification is STRUCTURAL, not behavioral. verify_law() checks
+            composition structure but doesn't execute with test inputs by default.
+            For behavioral verification, pass agents AND invoke the result.
+            (Evidence: test_core.py::TestLawVerification::test_verify_law_by_name)
 """
 
 from __future__ import annotations

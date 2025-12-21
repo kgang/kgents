@@ -17,6 +17,31 @@ For agents, this means:
 - The global agent has capabilities no single local agent has
 
 See: plans/ideas/impl/meta-construction.md
+
+Teaching:
+    gotcha: restrict() raises RestrictionError if no positions valid in subcontext
+            Position filter must match at least one position, or restriction fails.
+            Check your filter predicate before calling restrict().
+            (Evidence: test_emergence.py::TestSheafRestriction::test_restrict_to_context)
+
+    gotcha: glue() raises GluingError if locals fail compatibility check
+            Compatible means: agents on overlapping contexts produce equivalent
+            outputs on the overlap. Call compatible() first to diagnose issues.
+            (Evidence: test_emergence.py::TestSheafGluing::test_glue_local_souls)
+
+    gotcha: Context is hashable - use as dict key or in sets
+            Context uses frozen capabilities, so it's safe for hash-based containers.
+            (Evidence: test_emergence.py::TestContext::test_context_hashable)
+
+    gotcha: eigenvector_overlap() returns None for non-overlapping contexts
+            No shared capabilities = no overlap. This is expected for disjoint contexts.
+            Use this to detect when gluing is unnecessary.
+            (Evidence: test_emergence.py::TestEigenvectorOverlap::test_no_overlap)
+
+    gotcha: Glued agent positions are UNION of local positions
+            Position "ready" appearing in multiple locals appears once in glued agent.
+            The first-registered local handles dispatch for shared positions.
+            (Evidence: test_emergence.py::TestSheafGluing::test_glued_has_union_positions)
 """
 
 from __future__ import annotations

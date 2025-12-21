@@ -17,15 +17,15 @@ Teaching:
     gotcha: All state Enums follow the pattern: initial state, intermediate
             states, terminal state(s). The directions function uses this
             to control valid inputs per state.
-            (Evidence: test_primitives.py tests show state transitions)
+            (Evidence: test_primitives.py::TestPrimitiveProperties::test_all_primitives_have_directions)
 
     gotcha: PRIMITIVES is a registry dict, not a list. Use get_primitive("id")
             to retrieve by name, not PRIMITIVES[0].
-            (Evidence: primitives.py PRIMITIVES definition)
+            (Evidence: test_primitives.py::TestPrimitiveRegistry::test_get_primitive_by_name)
 
     gotcha: The primitive module imports from .protocol—if you see circular
             import errors, check that protocol.py doesn't import primitives.
-            (Evidence: primitives.py imports PolyAgent, from_function)
+            (Evidence: test_primitives.py::TestPrimitiveRegistry::test_all_17_primitives_registered)
 """
 
 from __future__ import annotations

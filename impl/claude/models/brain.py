@@ -128,3 +128,192 @@ class BrainSettings(TimestampMixin, Base):
     retention_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_crystals: Mapped[int | None] = mapped_column(Integer, nullable=True)
     config: Mapped[dict] = mapped_column(JSON, default=dict)
+
+
+# =============================================================================
+# Memory-First Documentation: Teaching Crystals & Extinction
+# =============================================================================
+#
+# "Teaching moments don't die; they become ancestors."
+#
+# These tables implement the Memory-First Documentation spec:
+# - TeachingCrystal: Wisdom persisted beyond code deletion
+# - ExtinctionEvent: Mass deletion events with salvaged wisdom
+# - ExtinctionTeaching: Links extinction events to preserved teaching
+#
+# See: spec/protocols/memory-first-docs.md
+# =============================================================================
+
+
+class TeachingCrystal(TimestampMixin, Base):
+    """
+    A teaching moment crystallized in Brain.
+
+    Persists beyond the death of source code.
+    Links to successors when source is deleted.
+
+    Laws (from spec):
+    - Persistence Law: Teaching moments extracted from code MUST be crystallized
+    - Extinction Law: Teaching from deleted code marked died_at, NOT deleted
+    - Successor Chain Law: Successor mappings form a DAG
+
+    AGENTESE: self.memory.crystallize_teaching, void.extinct.wisdom
+    """
+
+    __tablename__ = "brain_teaching_crystals"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+    # The teaching
+    insight: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(
+        String(16), nullable=False
+    )  # "info" | "warning" | "critical"
+    evidence: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # test_file.py::test_name
+
+    # Provenance
+    source_module: Mapped[str] = mapped_column(
+        String(256), nullable=False, index=True
+    )  # "services.town.dialogue_service"
+    source_symbol: Mapped[str] = mapped_column(
+        String(256), nullable=False
+    )  # "DialogueService.process_turn"
+    source_commit: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # Git SHA where learned
+
+    # Temporal
+    born_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), nullable=False)
+    died_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # Lineage (Successor Chain)
+    successor_module: Mapped[str | None] = mapped_column(
+        String(256), nullable=True
+    )  # What replaced the source
+    successor_symbol: Mapped[str | None] = mapped_column(
+        String(256), nullable=True
+    )  # Symbol in successor
+    applies_to: Mapped[list[str]] = mapped_column(
+        JSON, default=list
+    )  # AGENTESE paths still relevant
+
+    # Link to full crystal content (optional, for rich teaching)
+    crystal_id: Mapped[str | None] = mapped_column(
+        String(64),
+        ForeignKey("brain_crystals.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    # Relationship to full crystal
+    crystal: Mapped["Crystal | None"] = relationship(
+        "Crystal", foreign_keys=[crystal_id]
+    )
+
+    # Relationship to extinction events (many-to-many via join table)
+    extinction_links: Mapped[list["ExtinctionTeaching"]] = relationship(
+        "ExtinctionTeaching",
+        back_populates="teaching_crystal",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        # Find all alive teaching crystals
+        Index("idx_teaching_crystals_alive", "died_at", postgresql_where="died_at IS NULL"),
+        # Find teaching by module (for hydration)
+        Index("idx_teaching_crystals_module", "source_module"),
+        # Find teaching by severity (for prioritization)
+        Index("idx_teaching_crystals_severity", "severity"),
+    )
+
+    @property
+    def is_alive(self) -> bool:
+        """Check if this teaching crystal's source code still exists."""
+        return self.died_at is None
+
+    @property
+    def is_ancestor(self) -> bool:
+        """Check if this teaching is ancestral wisdom (from deleted code)."""
+        return self.died_at is not None
+
+
+class ExtinctionEvent(TimestampMixin, Base):
+    """
+    A mass deletion event with salvaged wisdom.
+
+    Records architectural decisions that removed code
+    while preserving the teaching moments learned.
+
+    The soil remembers what the garden forgets.
+
+    AGENTESE: self.memory.prepare_extinction, void.extinct.list
+    """
+
+    __tablename__ = "brain_extinction_events"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+
+    # What happened
+    reason: Mapped[str] = mapped_column(Text, nullable=False)  # "Crown Jewel Cleanup - AD-009"
+    decision_doc: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )  # "spec/decisions/AD-009.md"
+    commit: Mapped[str] = mapped_column(String(64), nullable=False)  # Git SHA of deletion
+
+    # What was deleted
+    deleted_paths: Mapped[list[str]] = mapped_column(JSON, default=list)  # ["services/town/", ...]
+
+    # Successor mapping (DAG)
+    successor_map: Mapped[dict] = mapped_column(JSON, default=dict)  # {"town": "brain", ...}
+
+    # How many teaching crystals were preserved
+    preserved_count: Mapped[int] = mapped_column(Integer, default=0)
+
+    # Relationship to preserved teaching crystals (many-to-many via join table)
+    teaching_links: Mapped[list["ExtinctionTeaching"]] = relationship(
+        "ExtinctionTeaching",
+        back_populates="extinction_event",
+        cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        # Find extinctions by date (for archaeology)
+        Index("idx_extinction_events_date", "created_at"),
+    )
+
+
+class ExtinctionTeaching(Base):
+    """
+    Join table linking extinction events to preserved teaching crystals.
+
+    When code is deleted, this tracks which teaching moments were
+    salvaged during that extinction event.
+    """
+
+    __tablename__ = "brain_extinction_teaching"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+
+    extinction_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("brain_extinction_events.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    teaching_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("brain_teaching_crystals.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # Relationships
+    extinction_event: Mapped["ExtinctionEvent"] = relationship(
+        "ExtinctionEvent", back_populates="teaching_links"
+    )
+    teaching_crystal: Mapped["TeachingCrystal"] = relationship(
+        "TeachingCrystal", back_populates="extinction_links"
+    )
+
+    __table_args__ = (
+        Index("idx_extinction_teaching_lookup", "extinction_id", "teaching_id", unique=True),
+    )

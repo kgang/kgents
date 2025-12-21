@@ -9,6 +9,24 @@ returns AsyncIterator[B], pipelines are possible:
         ...
 
 Output of each stage flows to input of next stage.
+
+Teaching:
+    gotcha: Empty pipelines raise FluxPipelineError immediately in __post_init__.
+            You cannot create FluxPipeline([]). Always have at least one stage.
+            (Evidence: test_pipeline.py::TestPipelineValidation::test_empty_pipeline_raises)
+
+    gotcha: Pipeline can only be started ONCE. Re-calling start() on a running
+            pipeline raises FluxPipelineError. Create a new pipeline or stop first.
+            (Evidence: Structural - start() checks self._started flag)
+
+    gotcha: stop() stops stages in REVERSE order (last to first). This allows
+            proper draining of intermediate data. If any stage fails to stop,
+            errors are collected and raised as a combined FluxPipelineError.
+            (Evidence: test_pipeline.py::TestPipelineStop::test_stop_all_stages)
+
+    gotcha: Piping a pipeline into another pipeline MERGES them into a single
+            pipeline, not a nested structure. (p1 | p2) has len(p1)+len(p2) stages.
+            (Evidence: test_pipeline.py::TestPipelineCombination::test_pipeline_or_pipeline)
 """
 
 from dataclasses import dataclass, field

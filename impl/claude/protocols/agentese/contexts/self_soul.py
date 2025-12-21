@@ -37,7 +37,6 @@ from ..affordances import (
 from ..contract import Contract, Response
 from ..node import BaseLogosNode, BasicRendering, Renderable
 from ..registry import node
-from .chat_resolver import ChatNode, create_chat_node
 from .soul_contracts import (
     ChallengeRequest,
     ChallengeResponse,
@@ -308,9 +307,6 @@ class SoulNode(BaseLogosNode):
     # K-gent Soul instance (injected)
     _soul: "KgentSoul | None" = None
 
-    # Chat node (lazy-initialized)
-    _chat_node: ChatNode | None = None
-
     @property
     def handle(self) -> str:
         return self._handle
@@ -446,19 +442,10 @@ class SoulNode(BaseLogosNode):
             case "mode":
                 return await self._get_or_set_mode(observer, **kwargs)
             case "chat":
-                # Return the chat node for sub-resolution
-                return self._get_chat_node()
+                # Chat subsystem removed in refactor
+                return {"error": "chat subsystem removed", "hint": "use dialogue instead"}
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
-
-    def _get_chat_node(self) -> ChatNode:
-        """Get or create the chat node for this soul."""
-        if self._chat_node is None:
-            self._chat_node = create_chat_node(
-                parent_path="self.soul",
-                parent_node=self,
-            )
-        return self._chat_node
 
     @aspect(
         category=AspectCategory.MUTATION,

@@ -25,6 +25,16 @@ Usage:
 
     # Broadcast to all subscribers
     await presence_channel.broadcast(cursor)
+
+Teaching:
+    gotcha: Invalid state transitions are REJECTED silently (return False).
+            WAITING cannot go directly to SUGGESTING - it must pass through
+            WORKING or FOLLOWING first. Always check transition_to() return value.
+            (Evidence: test_presence.py::TestAgentCursor::test_transition_to_invalid)
+
+    gotcha: States cannot transition to themselves - no self-loops allowed.
+            The directed graph enforces this constraint to prevent infinite loops.
+            (Evidence: test_presence.py::TestCursorStateTransitions::test_no_self_transitions)
 """
 
 from __future__ import annotations

@@ -13,6 +13,30 @@ Key Design Decisions:
 2. invoke() on FLOWING = perturbation (The Bypass Problem solved)
 3. No asyncio.sleep() in core (Event-driven, NOT timer-driven)
 4. Ouroboric feedback via feedback_fraction config
+
+Teaching:
+    gotcha: start() returns AsyncIterator[B], NOT None. You MUST consume
+            the iterator with `async for`. Just calling start() does nothing.
+            (Evidence: test_agent.py::TestFluxAgentStartReturnsAsyncIterator)
+
+    gotcha: invoke() behavior changes based on state. DORMANT = direct call,
+            FLOWING = perturbation injected into stream. Same method, different
+            semantics. Check flux.state before assuming behavior.
+            (Evidence: test_agent.py::TestFluxAgentInvokeOnDormant)
+
+    gotcha: Cannot start() a FLOWING flux. You'll get FluxStateError. The
+            flux must be DORMANT or STOPPED first. Use flux.stop() to reset.
+            (Evidence: test_agent.py::TestFluxAgentStateTransitions::test_cannot_start_while_flowing)
+
+    gotcha: Entropy exhaustion causes COLLAPSED state, which is TERMINAL.
+            Unlike STOPPED, you cannot restart from COLLAPSED. Call reset()
+            first, which restores entropy_budget and clears counters.
+            (Evidence: test_agent.py::TestFluxAgentEntropyManagement::test_entropy_collapse)
+
+    gotcha: Core processing is EVENT-DRIVEN, not timer-driven. No asyncio.sleep()
+            in _process_flux. If you add polling loops, you're fighting the design.
+            Use event sources and let the stream drive execution.
+            (Evidence: test_agent.py::TestNoAsyncSleepInCore)
 """
 
 from __future__ import annotations

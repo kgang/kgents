@@ -26,6 +26,23 @@ The Metaphysical Fullstack Pattern (AD-009):
 - Coherence is mathematical (sheaf theory)
 
 See: .kiro/specs/meaning-token-frontend/design.md
+
+Teaching:
+    gotcha: Six core token types are lazy-registered via TokenRegistry._ensure_initialized().
+            First call to get()/recognize() triggers registration of CORE_TOKEN_DEFINITIONS.
+            (Evidence: test_registry.py::test_core_tokens_registered)
+
+    gotcha: DocumentPolynomial is stateless—state lives in caller, not polynomial.
+            Each transition() call takes state as input, returns (new_state, output).
+            (Evidence: test_properties.py::test_polynomial_stateless)
+
+    gotcha: Observer.density affects projection output—COMPACT truncates, SPACIOUS shows all.
+            Always pass observer to projection; don't assume COMFORTABLE default.
+            (Evidence: test_projectors.py::test_density_affects_output)
+
+    gotcha: DocumentSheaf.glue() requires compatible local views—SheafConditionError if conflict.
+            Verify sheaf conditions before attempting multi-view merge.
+            (Evidence: test_properties.py::test_sheaf_conflict_detection)
 """
 
 from .contracts import (

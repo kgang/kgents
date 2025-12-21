@@ -3,6 +3,16 @@ Base protocols and types for flux sources.
 
 A Source is anything that can produce an asynchronous stream of values.
 Sources should be EVENT-DRIVEN whenever possible.
+
+Teaching:
+    gotcha: Sources should be EVENT-DRIVEN, not timer-driven. If your __anext__()
+            uses asyncio.sleep() in a loop to poll, you're doing it wrong. Await
+            the actual event (file watcher, message queue, etc.) instead.
+            (Evidence: Structural - module docstring emphasizes event-driven)
+
+    gotcha: close() is NOT async. If your source needs async cleanup, do it in
+            __aexit__ (the async context manager exit) instead.
+            (Evidence: Structural - close signature is sync)
 """
 
 from typing import AsyncIterator, Protocol, TypeVar, runtime_checkable

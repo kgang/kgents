@@ -9,6 +9,17 @@ The Soul Operad extends AGENT_OPERAD with K-gent specific operations:
 These operations compose to create soul-aware pipelines.
 
 See: plans/ideas/impl/meta-construction.md
+
+Teaching:
+    gotcha: Domain operads EXTEND the universal AGENT_OPERAD, not replace it.
+            SOUL_OPERAD includes all 5 universal operations (seq, par, branch,
+            fix, trace) PLUS the soul-specific ones. Check for duplicates.
+            (Evidence: test_domains.py::TestSoulOperad::test_has_universal_operations)
+
+    gotcha: dialectic uses parallel() then sequential(sublate). The input goes
+            to BOTH thesis and antithesis agents, then their pair output goes
+            to sublation. Don't assume thesis runs before antithesis.
+            (Evidence: test_domains.py::TestSoulOperad::test_dialectic_composes_parallel_then_sublate)
 """
 
 from __future__ import annotations

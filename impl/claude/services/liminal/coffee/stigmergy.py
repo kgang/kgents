@@ -24,6 +24,7 @@ Teaching:
 
     gotcha: Decay rate is 5% per day (0.002 per hour).
             This matches the spec's "reinforcement vs decay" balance.
+            (Evidence: test_voice_stigmergy.py::TestPheromoneDecay::test_daily_decay_reduces_intensity)
 
 AGENTESE: void.metabolism.stigmergy
 """

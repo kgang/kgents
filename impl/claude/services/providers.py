@@ -21,6 +21,25 @@ Usage:
 
     async def on_startup():
         await setup_providers()
+
+Teaching:
+    gotcha: setup_providers() MUST be called before any AGENTESE invocation.
+            Nodes that declare dependencies will get None injected if the
+            container isn't populated. Call in startup (FastAPI lifespan, main).
+            (Evidence: test_bootstrap.py::TestBootstrapServices::test_get_service_after_bootstrap)
+
+    gotcha: Services are CACHED after first instantiation. If you inject a mock,
+            it replaces the cached instance. To restore original behavior, call
+            reset_services() in test teardown.
+            (Evidence: test_bootstrap.py::TestAllSevenServices::test_services_are_cached)
+
+    gotcha: Provider function naming convention: get_{service_name}() where
+            {service_name} matches EXACTLY what's passed to @node(dependencies=(...)).
+            Example: @node(dependencies=("brain_persistence",)) requires
+            get_brain_persistence() in this file.
+            (Evidence: test_bootstrap.py::TestBackwardCompatibleProviders::test_provider_getters)
+
+AGENTESE: services.providers
 """
 
 from __future__ import annotations
@@ -31,45 +50,26 @@ from typing import TYPE_CHECKING
 from protocols.agentese.container import get_container
 
 if TYPE_CHECKING:
-    from typing import Callable
-
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
     from agents.d import DgentProtocol, TableAdapter
-    from agents.differance import DifferanceStore
     from agents.k.soul import KgentSoul
-    from agents.town.sheaf import TownSheaf
     from models.brain import Crystal
-    from models.town import CitizenView
     from protocols.agentese.logos import Logos
     from services.brain import BrainPersistence
-    from services.chat import ChatPersistence, ChatServiceFactory, ChatSessionFactory
-    from services.coalition import CoalitionPersistence
     from services.conductor import Summarizer, WindowPersistence
     from services.conductor.file_guard import FileEditGuard
     from services.conductor.swarm import SwarmSpawner
-    from services.forge import ForgePersistence
-    from services.forge.commission import CommissionService
     from services.foundry import AgentFoundry
-    from services.gardener import GardenerPersistence
-    from services.gestalt import GestaltPersistence
+    from services.interactive_text.service import InteractiveTextService
     from services.liminal.coffee.core import CoffeeService
     from services.metabolism.persistence import MetabolismPersistence
     from services.morpheus.persistence import MorpheusPersistence
-    from services.muse.node import MuseNode
-    from services.park import ParkPersistence
-    from services.park.scenario_service import ScenarioService
     from services.principles import PrincipleLoader
     from services.tooling import ToolExecutor, ToolRegistry
-    from services.town import TownPersistence
-    from services.town.bus_wiring import TownBusManager
-    from services.town.coalition_service import CoalitionService
-    from services.town.inhabit_service import InhabitService
-    from services.town.workshop_service import WorkshopService
     from services.verification import VerificationPersistence
-    from services.witness.crystallization_node import TimeWitnessNode
-    from services.witness.persistence import WitnessPersistence
-    from services.witness.trace_store import MarkStore
+    from services.witness import WitnessPersistence
+    from services.ashc.persistence import PostgresLemmaDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -139,110 +139,9 @@ async def get_brain_persistence() -> "BrainPersistence":
     return await get_service("brain_persistence")
 
 
-async def get_town_persistence() -> "TownPersistence":
-    """Get the TownPersistence service."""
-    return await get_service("town_persistence")
-
-
-async def get_gardener_persistence() -> "GardenerPersistence":
-    """Get the GardenerPersistence service."""
-    return await get_service("gardener_persistence")
-
-
-async def get_gestalt_persistence() -> "GestaltPersistence":
-    """Get the GestaltPersistence service."""
-    return await get_service("gestalt_persistence")
-
-
-async def get_forge_persistence() -> "ForgePersistence":
-    """Get the ForgePersistence service."""
-    return await get_service("forge_persistence")
-
-
-async def get_coalition_persistence() -> "CoalitionPersistence":
-    """Get the CoalitionPersistence service."""
-    return await get_service("coalition_persistence")
-
-
-async def get_park_persistence() -> "ParkPersistence":
-    """Get the ParkPersistence service."""
-    return await get_service("park_persistence")
-
-
-async def get_coalition_service() -> "CoalitionService":
-    """
-    Get the CoalitionService for coalition detection and reputation.
-
-    This is separate from CoalitionPersistence - it's the in-memory
-    service used by CoalitionNode for detection algorithms.
-    """
-    from services.town.coalition_service import CoalitionService
-
-    return CoalitionService()
-
-
-async def get_inhabit_service() -> "InhabitService":
-    """
-    Get the InhabitService for INHABIT mode session management.
-
-    Used by InhabitNode to manage user-citizen merge sessions with
-    consent tracking and force mechanics.
-    """
-    from services.town.inhabit_service import InhabitService
-
-    return InhabitService()
-
-
-async def get_chat_persistence() -> "ChatPersistence":
-    """Get the ChatPersistence service."""
-    from services.chat import get_persistence
-
-    return get_persistence()
-
-
-async def get_chat_factory() -> "ChatServiceFactory":
-    """
-    Get the ChatSessionFactory service with Morpheus integration.
-
-    Uses ChatServiceFactory which properly wires the Morpheus composer
-    for real LLM responses instead of stub fallbacks.
-
-    IMPORTANT: This function is idempotent - if a factory already exists
-    in the global singleton, it returns that instead of creating a new one.
-    This prevents session lookup failures from multiple factory instances.
-    """
-    from services.chat import (
-        ChatServiceFactory,
-        get_chat_factory as get_global_factory,
-        set_chat_factory,
-    )
-
-    # Check if factory already exists in global singleton
-    # This prevents race conditions where multiple factories are created
-    existing = get_global_factory()
-    if isinstance(existing, ChatServiceFactory):
-        return existing
-
-    # Get morpheus_persistence from bootstrap - it has ClaudeCLIAdapter registered
-    morpheus = await get_service("morpheus_persistence")
-    factory = ChatServiceFactory(morpheus=morpheus)
-
-    # Set as global factory so ChatNode uses it too
-    set_chat_factory(factory)
-
-    return factory
-
-
 async def get_kgent_soul() -> "KgentSoul":
     """Get the KgentSoul service (Middleware of Consciousness)."""
     return await get_service("kgent_soul")
-
-
-async def get_differance_store() -> "DifferanceStore":
-    """Get the DifferanceStore service (trace heritage persistence)."""
-    from agents.differance import DifferanceStore
-
-    return await get_service("differance_store")
 
 
 async def get_morpheus_persistence() -> "MorpheusPersistence":
@@ -256,65 +155,8 @@ async def get_morpheus_persistence() -> "MorpheusPersistence":
     return MorpheusPersistence()
 
 
-async def get_commission_service() -> "CommissionService":
-    """
-    Get the CommissionService for the Metaphysical Forge.
-
-    Optionally injects KgentSoul for governance if available.
-    """
-    from services.forge.commission import CommissionService
-
-    # Try to get KgentSoul for governance
-    try:
-        soul = await get_service("kgent_soul")
-    except Exception:
-        soul = None
-
-    return CommissionService(kgent_soul=soul)
-
-
-async def get_witness_persistence() -> "WitnessPersistence":
-    """Get the WitnessPersistence service (8th Crown Jewel)."""
-    return await get_service("witness_persistence")
-
-
-async def get_muse_node() -> "MuseNode":
-    """
-    Get the MuseNode for pattern detection and contextual whispers.
-
-    The Muse observes Experience Crystals from The Witness and
-    whispers contextual suggestions. It runs passively via kgentsd.
-    """
-    from services.muse import MuseNode
-
-    return MuseNode()
-
-
-async def get_time_witness_node() -> "TimeWitnessNode":
-    """
-    Get the TimeWitnessNode for experience crystallization.
-
-    Complements self.witness (trust-gated agency) with time.witness
-    (experience crystallization).
-    """
-    from services.witness import TimeWitnessNode
-
-    persistence = await get_witness_persistence()
-    return TimeWitnessNode(witness_persistence=persistence)
-
-
-async def get_mark_store() -> "MarkStore":
-    """
-    Get the MarkStore for AGENTESE invocation tracing.
-
-    Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark.
-    This store is the append-only ledger for all Marks.
-
-    Used by AgenteseGateway to record all invocations.
-    """
-    from services.witness.trace_store import get_mark_store as get_store
-
-    return get_store()
+# Note: get_mark_store removed in Crown Jewel Cleanup 2025-12-21
+# Tracing infrastructure (witness service) was pruned
 
 
 async def get_logos() -> "Logos":
@@ -327,17 +169,6 @@ async def get_logos() -> "Logos":
     from protocols.agentese.logos import create_logos
 
     return create_logos()
-
-
-async def get_scenario_service() -> "ScenarioService":
-    """
-    Get the ScenarioService for Punchdrunk Park.
-
-    Used by ParkNode for scenario template management and session orchestration.
-    """
-    from services.park.scenario_service import ScenarioService
-
-    return ScenarioService()
 
 
 async def get_principle_loader() -> "PrincipleLoader":
@@ -439,23 +270,9 @@ async def get_tool_executor() -> "ToolExecutor":
     """
     from services.tooling import ToolExecutor
 
-    # Get integrations (optional - graceful degradation)
-    try:
-        witness = await get_service("witness_persistence")
-    except Exception:
-        witness = None
+    # Note: witness and differance integrations removed in Crown Jewel Cleanup 2025-12-21
 
-    try:
-        differance = await get_service("differance_store")
-    except Exception:
-        differance = None
-
-    # SynergyBus is accessed at emission time, not here
-
-    return ToolExecutor(
-        witness=witness,
-        differance=differance,
-    )
+    return ToolExecutor()
 
 
 async def get_verification_persistence() -> "VerificationPersistence":
@@ -508,65 +325,66 @@ async def get_metabolism_persistence() -> "MetabolismPersistence":
         return MetabolismPersistence()
 
 
-async def get_workshop_service() -> "WorkshopService":
+async def get_witness_persistence() -> "WitnessPersistence":
     """
-    Get the WorkshopService for Agent Town builder coordination.
+    Get the WitnessPersistence service for Witness Crown Jewel.
 
-    Used by WorkshopNode for task assignment and builder collaboration.
+    Wires the dual-track storage:
+    - TableAdapter for fast queries (thoughts, actions, trust)
+    - D-gent for semantic search
+
+    Used by WitnessNode for self.witness.* AGENTESE paths.
     """
-    from services.town.workshop_service import WorkshopService
+    from services.witness import WitnessPersistence
 
-    return WorkshopService()
+    session_factory = await get_session_factory()
+    dgent = await get_dgent_router()
+
+    return WitnessPersistence(
+        session_factory=session_factory,
+        dgent=dgent,
+    )
 
 
-async def get_town_sheaf() -> "TownSheaf":
+# =============================================================================
+# Interactive Text Crown Jewel (Phase 2.2: Documents as Control Surfaces)
+# =============================================================================
+
+
+async def get_interactive_text_service() -> "InteractiveTextService":
     """
-    Get the TownSheaf for collective emergence detection.
+    Get the InteractiveTextService for document parsing and task toggling.
 
-    Used by CollectiveNode for gossip propagation and emergence metrics.
-    Creates a fresh sheaf with all region contexts.
+    Phase 2.2: Interactive Text as live control surfaces.
+    Used by InteractiveTextNode for self.document.* AGENTESE paths.
     """
-    from agents.town.sheaf import create_town_sheaf
+    from services.interactive_text.service import InteractiveTextService
 
-    return create_town_sheaf()
+    return InteractiveTextService()
 
 
-async def get_bus_manager() -> "TownBusManager":
+# =============================================================================
+# ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
+# =============================================================================
+
+
+async def get_lemma_database() -> "PostgresLemmaDatabase":
     """
-    Get the TownBusManager for cross-jewel event coordination.
+    Get the PostgresLemmaDatabase for verified lemma storage.
 
-    Used by CollectiveNode for DataBus → SynergyBus → EventBus wiring.
-    Wires all buses on creation.
+    Phase 4: Postgres-backed lemma database with stigmergic reinforcement.
+    Used by ProofSearcher for hint retrieval and by proof verification
+    pipeline for storing verified lemmas.
+
+    The lemma database implements stigmergic cognition:
+    - pheromone = usage_count (more-used lemmas rank higher)
+    - find_related() increments usage for returned lemmas
+    - emergent paths form as proofs reuse successful hints
     """
-    from services.town.bus_wiring import TownBusManager
+    from services.ashc.persistence import PostgresLemmaDatabase
 
-    manager = TownBusManager()
-    manager.wire_all()
-    return manager
-
-
-async def get_citizen_resolver() -> "Callable[..., CitizenView | None]":
-    """
-    Get the citizen resolver callable for InhabitNode.
-
-    Returns a function that can resolve citizens by ID or name using TownPersistence.
-    Used by InhabitNode to find citizens for INHABIT sessions.
-    """
-    # Get TownPersistence to create the resolver
-    persistence = await get_service("town_persistence")
-
-    async def resolve_citizen(
-        citizen_id: str | None = None,
-        name: str | None = None,
-    ) -> "CitizenView | None":
-        """Resolve citizen by ID or name."""
-        if citizen_id:
-            return await persistence.get_citizen(citizen_id)
-        elif name:
-            return await persistence.get_citizen_by_name(name)
-        return None
-
-    return resolve_citizen
+    session_factory = await get_session_factory()
+    return PostgresLemmaDatabase(session_factory)
 
 
 # =============================================================================
@@ -587,45 +405,17 @@ async def setup_providers() -> None:
     # Register with AGENTESE container for backward compatibility
     container = get_container()
 
-    # Register all 7 Crown Jewel persistence services
+    # Register core infrastructure services
     container.register("session_factory", get_session_factory, singleton=True)
     container.register("dgent", get_dgent_router, singleton=True)
     container.register("brain_persistence", get_brain_persistence, singleton=True)
-    container.register("town_persistence", get_town_persistence, singleton=True)
-    container.register("gardener_persistence", get_gardener_persistence, singleton=True)
-    container.register("gestalt_persistence", get_gestalt_persistence, singleton=True)
-    container.register("forge_persistence", get_forge_persistence, singleton=True)
-    container.register("coalition_persistence", get_coalition_persistence, singleton=True)
-    container.register("park_persistence", get_park_persistence, singleton=True)
-    container.register("chat_persistence", get_chat_persistence, singleton=True)
-    container.register("chat_factory", get_chat_factory, singleton=True)
-    container.register("witness_persistence", get_witness_persistence, singleton=True)
-    container.register("muse_node", get_muse_node, singleton=True)
-    container.register("time_witness_node", get_time_witness_node, singleton=True)
-    container.register("trace_store", get_mark_store, singleton=True)
-
-    # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
-    container.register("coalition_service", get_coalition_service, singleton=True)
-    container.register("inhabit_service", get_inhabit_service, singleton=True)
-    container.register("workshop_service", get_workshop_service, singleton=True)
-    container.register("citizen_resolver", get_citizen_resolver, singleton=True)
-    container.register("town_sheaf", get_town_sheaf, singleton=True)
-    container.register("bus_manager", get_bus_manager, singleton=True)
+    # Note: trace_store removed in Crown Jewel Cleanup 2025-12-21
 
     # K-gent Soul (Middleware of Consciousness)
     container.register("kgent_soul", get_kgent_soul, singleton=True)
 
-    # Differance Store (trace heritage persistence)
-    container.register("differance_store", get_differance_store, singleton=True)
-
     # Morpheus LLM Gateway
     container.register("morpheus_persistence", get_morpheus_persistence, singleton=True)
-
-    # Commission Service (Metaphysical Forge)
-    container.register("commission_service", get_commission_service, singleton=True)
-
-    # Park Services (Punchdrunk Park scenarios)
-    container.register("scenario_service", get_scenario_service, singleton=True)
 
     # Principles Service (concept.principles node)
     container.register("principle_loader", get_principle_loader, singleton=True)
@@ -646,6 +436,9 @@ async def setup_providers() -> None:
     # Verification Crown Jewel (Formal Verification Metatheory)
     container.register("verification_persistence", get_verification_persistence, singleton=True)
 
+    # Witness Crown Jewel (8th Jewel - The Ghost That Watches)
+    container.register("witness_persistence", get_witness_persistence, singleton=True)
+
     # Liminal Protocols (Morning Coffee, etc.)
     container.register("coffee_service", get_coffee_service, singleton=True)
 
@@ -655,32 +448,15 @@ async def setup_providers() -> None:
     # Metabolism Persistence (Evidence + Stigmergy)
     container.register("metabolism_persistence", get_metabolism_persistence, singleton=True)
 
+    # Interactive Text Crown Jewel (Documents as Control Surfaces)
+    container.register("interactive_text_service", get_interactive_text_service, singleton=True)
+
+    # ASHC Crown Jewel (Proof-Generating Self-Hosting Compiler)
+    container.register("lemma_database", get_lemma_database, singleton=True)
+
     logger.info(
-        "All Crown Jewel services registered (9 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling + Verification + Foundry)"
+        "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + ASHC)"
     )
-
-    # Import Witness nodes to trigger @node registration
-    try:
-        from services.witness import WitnessNode  # noqa: F401
-
-        logger.info("WitnessNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"WitnessNode not available: {e}")
-
-    try:
-        from services.witness import TimeWitnessNode  # noqa: F401
-
-        logger.info("TimeWitnessNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"TimeWitnessNode not available: {e}")
-
-    # Import Muse node to trigger @node registration
-    try:
-        from services.muse import MuseNode  # noqa: F401
-
-        logger.info("MuseNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"MuseNode not available: {e}")
 
     # Import service nodes to trigger @node registration
     # FAIL-FAST: Crown Jewel import failures are WARNING level (visible)
@@ -692,53 +468,11 @@ async def setup_providers() -> None:
         logger.warning(f"BrainNode not available: {e}")
 
     try:
-        from services.town import TownNode  # noqa: F401
-
-        logger.info("TownNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"TownNode not available: {e}")
-
-    try:
-        from services.chat import ChatNode  # noqa: F401
-
-        logger.info("ChatNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"ChatNode not available: {e}")
-
-    try:
-        from services.park import ParkNode  # noqa: F401
-
-        logger.info("ParkNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"ParkNode not available: {e}")
-
-    try:
-        from services.forge import ForgeNode  # noqa: F401
-
-        logger.info("ForgeNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"ForgeNode not available: {e}")
-
-    try:
-        from services.gestalt import GestaltNode  # noqa: F401
-
-        logger.info("GestaltNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"GestaltNode not available: {e}")
-
-    try:
         from services.morpheus.node import MorpheusNode  # noqa: F401
 
         logger.info("MorpheusNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"MorpheusNode not available: {e}")
-
-    try:
-        from services.forge.commission_node import CommissionNode  # noqa: F401
-
-        logger.info("CommissionNode registered with AGENTESE registry")
-    except ImportError as e:
-        logger.warning(f"CommissionNode not available: {e}")
 
     try:
         from protocols.agentese.contexts.concept_principles import (
@@ -782,25 +516,6 @@ async def setup_providers() -> None:
         logger.info("FoundryNode registered with AGENTESE registry")
     except ImportError as e:
         logger.warning(f"FoundryNode not available: {e}")
-
-    # Wire DifferanceStore to DifferanceMark
-    try:
-        from agents.differance import DifferanceStore
-        from agents.differance.integration import set_differance_store
-        from protocols.agentese.contexts.time_differance import get_differance_node
-
-        store = await get_service("differance_store")
-        if isinstance(store, DifferanceStore):
-            # Wire to the AGENTESE node
-            differance_node = get_differance_node()
-            differance_node.set_store(store)
-
-            # Also set global integration store
-            set_differance_store(store)
-
-            logger.info("DifferanceStore wired to DifferanceMark")
-    except Exception as e:
-        logger.debug(f"DifferanceStore wiring skipped: {e}")
 
     # Wire KgentSoul to SoulNode
     try:
@@ -851,28 +566,9 @@ __all__ = [
     # Infrastructure
     "get_session_factory",
     "get_dgent_router",
-    # Primary Crown Jewels
+    # Brain Crown Jewel
     "get_brain_table_adapter",
     "get_brain_persistence",
-    "get_town_persistence",
-    "get_gardener_persistence",
-    # Secondary Crown Jewels
-    "get_gestalt_persistence",
-    "get_forge_persistence",
-    "get_coalition_persistence",
-    "get_park_persistence",
-    # Chat Crown Jewel
-    "get_chat_persistence",
-    "get_chat_factory",
-    # Town sub-services
-    "get_coalition_service",
-    "get_inhabit_service",
-    "get_workshop_service",
-    "get_citizen_resolver",
-    "get_town_sheaf",
-    "get_bus_manager",
-    # Park services
-    "get_scenario_service",
     # Principles
     "get_principle_loader",
     # Conductor (CLI v7 Phase 1, 2 & 6)
@@ -882,20 +578,9 @@ __all__ = [
     "get_swarm_spawner",
     # K-gent Soul
     "get_kgent_soul",
-    # Differance Engine
-    "get_differance_store",
     # Morpheus LLM Gateway
     "get_morpheus_persistence",
-    # Metaphysical Forge
-    "get_commission_service",
-    # 8th Crown Jewel (Witness)
-    "get_witness_persistence",
-    # 9th Crown Jewel (Time Witness - Crystallization)
-    "get_time_witness_node",
-    # MarkStore (Law 3: Every AGENTESE invocation emits Mark)
-    "get_mark_store",
-    # 10th Crown Jewel (Muse - Pattern Detection)
-    "get_muse_node",
+    # Note: get_mark_store removed in Crown Jewel Cleanup 2025-12-21
     # Logos (cross-jewel invocation)
     "get_logos",
     # U-gent Tool Infrastructure
@@ -905,6 +590,12 @@ __all__ = [
     "get_verification_persistence",
     # Liminal Protocols
     "get_coffee_service",
+    # Foundry Crown Jewel
+    "get_foundry_service",
     # Metabolism Persistence
     "get_metabolism_persistence",
+    # Interactive Text Crown Jewel
+    "get_interactive_text_service",
+    # ASHC Crown Jewel
+    "get_lemma_database",
 ]

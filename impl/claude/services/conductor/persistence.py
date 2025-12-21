@@ -16,6 +16,17 @@ Storage pattern:
 - ID: conductor:window:{session_id}
 - Content: JSON-serialized window.to_dict()
 - Metadata: strategy, turn_count, has_summary
+
+Teaching:
+    gotcha: Corrupted JSON data returns None from load_window(), not an exception.
+            Always handle the None case when loading - the user may have edited
+            the underlying storage or the data may be from an incompatible version.
+            (Evidence: test_persistence.py::TestWindowPersistenceLoad::test_load_window_handles_corrupted_data)
+
+    gotcha: Window persistence is independent from ChatSession lifecycle.
+            A window can exist in D-gent even after its session is gone.
+            Use exists() to check before assuming a load will succeed.
+            (Evidence: test_persistence.py::TestWindowPersistenceIntegration::test_exists_check)
 """
 
 from __future__ import annotations

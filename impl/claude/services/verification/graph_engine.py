@@ -4,6 +4,18 @@ Graph Engine: Derivation graph construction from specifications.
 Builds verification graphs showing logical dependencies and derivations
 from high-level principles to operational implementation, with support
 for contradiction detection and orphaned node identification.
+
+Teaching:
+    gotcha: Contradictions use HEURISTIC detection, not formal logic.
+            The engine looks for keyword pairs like "synchronous/asynchronous" or
+            "must/must not" in descriptions. A contradiction may be a false positive
+            if context disambiguates the usage.
+            (Evidence: test_graph_engine.py::TestContradictionDetection::test_detect_exclusive_conflicts)
+
+    gotcha: Principle nodes are ALWAYS created (7 kgents principles) regardless of spec content.
+            They are the roots of the derivation graph. Implementation nodes without
+            paths to these principles are flagged as orphaned.
+            (Evidence: test_graph_engine.py::TestVerificationGraphCorrectness::test_principle_nodes_created)
 """
 
 from __future__ import annotations

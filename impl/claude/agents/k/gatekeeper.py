@@ -22,6 +22,17 @@ Usage:
 
     # Or quick check
     violations = await validate_file("path/to/file.py")
+
+Teaching:
+    gotcha: Only ERROR and CRITICAL severities cause result.passed=False.
+            INFO and WARNING violations are informational and DO NOT fail validation.
+            Check by_severity counts if you need warning-level enforcement.
+            (Evidence: test_gatekeeper.py::TestSeverity::test_pass_fail_threshold)
+
+    gotcha: LLM failures in semantic analysis are SILENT - they return empty list.
+            The gatekeeper gracefully degrades to heuristic-only validation.
+            Check if self._llm is set AND use_llm=True to confirm LLM is active.
+            (Evidence: gatekeeper.py::_check_semantic catches all exceptions)
 """
 
 from __future__ import annotations

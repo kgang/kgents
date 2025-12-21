@@ -14,6 +14,36 @@ Two complementary protocols:
    - Use for: Symbiont state threading, typed agents, state machines
 
 These serve different purposes and both are actively used.
+
+Teaching:
+    gotcha: put() overwrites existing datum with same ID
+            This is intentional for graceful degradation updates, not a bug.
+            Use content-addressed IDs (SHA-256) if you need immutability.
+            (Evidence: test_backends.py::TestPut::test_put_overwrites_existing)
+
+    gotcha: causal_chain() returns empty list for missing parent, not error
+            If a datum has causal_parent pointing to a deleted datum, you get
+            just the child in the chain. Handle orphaned data gracefully.
+            (Evidence: test_backends.py::TestCausalChain::test_causal_chain_orphaned_datum)
+
+    gotcha: list() returns newest first (sorted by created_at descending)
+            This affects pagination. Use `after` param for time-based filtering.
+            (Evidence: test_backends.py::TestList::test_list_sorted_by_created_at_desc)
+
+    gotcha: DgentRouter silently falls back to memory backend
+            If preferred backend unavailable (e.g., Postgres URL missing),
+            it uses MEMORY without error. Check selected_backend after put().
+            (Evidence: test_router.py::TestBackendSelection::test_falls_back_to_memory)
+
+    gotcha: DataBus subscriber errors don't block other subscribers
+            A failing handler is logged but doesn't prevent event delivery.
+            Check bus.stats["total_errors"] for silent failures.
+            (Evidence: test_bus.py::TestErrorHandling::test_subscriber_error_does_not_block)
+
+    gotcha: get() and list() are silent reads - no DataBus events emitted
+            Only put() and delete() emit events. If you need read tracking,
+            instrument at a higher layer (e.g., M-gent reinforcement).
+            (Evidence: test_bus.py::TestBusEnabledDgent::test_get_does_not_emit)
 """
 
 from __future__ import annotations
