@@ -253,8 +253,8 @@ class TestScopeScope:
         assert offering.can_access("self.witness.thoughts")
 
         # Other contexts don't match
-        assert not offering.can_access("brain.terrace.manifest")
-        assert not offering.can_access("concept.offering.create")
+        assert not offering.can_access("self.lesson.manifest")
+        assert not offering.can_access("concept.scope.create")
 
     def test_empty_scope_denies_all(self) -> None:
         """Empty scope denies all access."""
@@ -278,9 +278,9 @@ class TestScopeScope:
 
         # Denied
         with pytest.raises(HandleNotInScope) as exc_info:
-            offering.check_access("brain.terrace.manifest")
+            offering.check_access("self.lesson.manifest")
 
-        assert "brain.terrace.manifest" in str(exc_info.value)
+        assert "self.lesson.manifest" in str(exc_info.value)
 
 
 # =============================================================================
@@ -526,11 +526,11 @@ class TestEdgeCases:
         """Multiple wildcard patterns work correctly."""
         offering = Scope.create(
             description="Multi-scope",
-            scoped_handles=("time.*", "self.*", "concept.offering.*"),
+            scoped_handles=("time.*", "self.*", "concept.scope.*"),
         )
 
         assert offering.can_access("time.trace.node.manifest")
         assert offering.can_access("self.witness.thoughts")
-        assert offering.can_access("concept.offering.create")
-        assert not offering.can_access("brain.terrace.manifest")
+        assert offering.can_access("concept.scope.create")
+        assert not offering.can_access("world.gallery.manifest")
         assert not offering.can_access("world.file.read")

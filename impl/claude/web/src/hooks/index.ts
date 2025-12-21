@@ -519,18 +519,10 @@ export {
 } from './useUserFocus';
 
 // Circadian phase and warmth (CLI v7 Phase 5: Coworking Canvas)
-export {
-  useCircadian,
-  type CircadianData,
-  type UseCircadianReturn,
-} from './useCircadian';
+export { useCircadian, type CircadianData, type UseCircadianReturn } from './useCircadian';
 
 // Canvas layout with force-directed positioning and drag (CLI v7 Phase 5)
-export {
-  useCanvasLayout,
-  type LayoutOptions,
-  type UseCanvasLayoutReturn,
-} from './useCanvasLayout';
+export { useCanvasLayout, type LayoutOptions, type UseCanvasLayoutReturn } from './useCanvasLayout';
 
 // =============================================================================
 // WARP Phase 2: React Projection Layer
@@ -560,7 +552,7 @@ export {
   type UseVoiceGateReturn,
 } from './useVoiceGate';
 
-// Terrace knowledge CRUD (brain.terrace.*)
+// Lesson knowledge CRUD (self.lesson.*)
 export {
   useTerrace,
   type TerraceEntry,

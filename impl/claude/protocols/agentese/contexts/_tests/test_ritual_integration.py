@@ -1,11 +1,11 @@
 """
 Integration tests for Playbook AGENTESE node with real stores.
 
-Tests the self.ritual.* AGENTESE paths using the actual
+Tests the self.playbook.* AGENTESE paths using the actual
 GrantStore, ScopeStore, and PlaybookStore.
 
-See: protocols/agentese/contexts/self_ritual.py
-See: services/witness/ritual.py
+See: protocols/agentese/contexts/self_playbook.py
+See: services/witness/playbook.py
 """
 
 from __future__ import annotations
@@ -42,11 +42,11 @@ def reset_stores() -> None:
 
 
 @pytest.fixture
-def ritual_node():
-    """Create a fresh RitualNode instance."""
-    from protocols.agentese.contexts.self_ritual import RitualNode
+def playbook_node():
+    """Create a fresh PlaybookNode instance."""
+    from protocols.agentese.contexts.self_playbook import PlaybookNode
 
-    return RitualNode()
+    return PlaybookNode()
 
 
 @pytest.fixture
@@ -78,17 +78,17 @@ def valid_offering():
 # =============================================================================
 
 
-class TestBeginRitualWithStores:
-    """Tests for self.ritual.begin using real stores."""
+class TestBeginPlaybookWithStores:
+    """Tests for self.playbook.begin using real stores."""
 
     def test_begin_with_existing_covenant_and_offering(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Begin ritual with pre-existing Grant and Scope from stores."""
-        result = ritual_node._begin_ritual(
+        result = playbook_node._begin_playbook(
             name="Test Playbook",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
@@ -103,7 +103,7 @@ class TestBeginRitualWithStores:
 
     def test_begin_with_ungranted_covenant_fails(
         self,
-        ritual_node,
+        playbook_node,
         valid_offering,
     ) -> None:
         """Begin fails if Grant is not GRANTED."""
@@ -115,7 +115,7 @@ class TestBeginRitualWithStores:
         )
         store.add(proposed)
 
-        result = ritual_node._begin_ritual(
+        result = playbook_node._begin_playbook(
             name="Test",
             grant_id=str(proposed.id),
             scope_id=str(valid_offering.id),
@@ -126,12 +126,12 @@ class TestBeginRitualWithStores:
 
     def test_begin_creates_ritual_in_store(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Begin adds ritual to PlaybookStore."""
-        result = ritual_node._begin_ritual(
+        result = playbook_node._begin_playbook(
             name="Stored Playbook",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
@@ -148,9 +148,9 @@ class TestBeginRitualWithStores:
         assert ritual is not None
         assert ritual.name == "Stored Playbook"
 
-    def test_begin_with_unknown_ids_creates_stubs(self, ritual_node) -> None:
+    def test_begin_with_unknown_ids_creates_stubs(self, playbook_node) -> None:
         """Begin creates stub Grant/Scope if not found (for testing)."""
-        result = ritual_node._begin_ritual(
+        result = playbook_node._begin_playbook(
             name="Stub Test",
             grant_id="unknown-covenant-123",
             scope_id="unknown-offering-456",
@@ -166,27 +166,27 @@ class TestBeginRitualWithStores:
 # =============================================================================
 
 
-class TestAdvanceRitualWithStores:
-    """Tests for self.ritual.advance using real stores."""
+class TestAdvancePlaybookWithStores:
+    """Tests for self.playbook.advance using real stores."""
 
     def test_advance_phase_sense_to_act(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Advance from SENSE to ACT phase."""
         # Create ritual
-        create_result = ritual_node._begin_ritual(
+        create_result = playbook_node._begin_playbook(
             name="Advance Test",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
-        ritual_id = create_result["id"]
+        playbook_id = create_result["id"]
 
         # Advance to ACT
-        result = ritual_node._advance_ritual(
-            ritual_id=ritual_id,
+        result = playbook_node._advance_playbook(
+            playbook_id=playbook_id,
             target_phase="ACT",
         )
 
@@ -195,10 +195,10 @@ class TestAdvanceRitualWithStores:
         assert result["to_phase"] == "ACT"
         assert result["success"] is True
 
-    def test_advance_nonexistent_ritual_fails(self, ritual_node) -> None:
+    def test_advance_nonexistent_ritual_fails(self, playbook_node) -> None:
         """Advance fails for unknown ritual ID."""
-        result = ritual_node._advance_ritual(
-            ritual_id="nonexistent-ritual",
+        result = playbook_node._advance_playbook(
+            playbook_id="nonexistent-ritual",
             target_phase="ACT",
         )
 
@@ -207,19 +207,19 @@ class TestAdvanceRitualWithStores:
 
     def test_advance_invalid_phase_fails(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Advance fails for invalid phase name."""
-        create_result = ritual_node._begin_ritual(
+        create_result = playbook_node._begin_playbook(
             name="Phase Test",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
 
-        result = ritual_node._advance_ritual(
-            ritual_id=create_result["id"],
+        result = playbook_node._advance_playbook(
+            playbook_id=create_result["id"],
             target_phase="INVALID_PHASE",
         )
 
@@ -232,32 +232,32 @@ class TestAdvanceRitualWithStores:
 # =============================================================================
 
 
-class TestCompleteRitualWithStores:
-    """Tests for self.ritual.complete using real stores."""
+class TestCompletePlaybookWithStores:
+    """Tests for self.playbook.complete using real stores."""
 
     def test_complete_active_ritual(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Complete an active ritual."""
-        create_result = ritual_node._begin_ritual(
+        create_result = playbook_node._begin_playbook(
             name="Complete Test",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
-        ritual_id = create_result["id"]
+        playbook_id = create_result["id"]
 
-        result = ritual_node._complete_ritual(ritual_id=ritual_id)
+        result = playbook_node._complete_playbook(playbook_id=playbook_id)
 
         assert "error" not in result
         assert result["status"] == "COMPLETE"
         assert result["ended_at"] is not None
 
-    def test_complete_nonexistent_fails(self, ritual_node) -> None:
+    def test_complete_nonexistent_fails(self, playbook_node) -> None:
         """Complete fails for unknown ritual ID."""
-        result = ritual_node._complete_ritual(ritual_id="nonexistent")
+        result = playbook_node._complete_playbook(playbook_id="nonexistent")
 
         assert "error" in result
         assert "not found" in result["error"]
@@ -269,37 +269,37 @@ class TestCompleteRitualWithStores:
 
 
 class TestManifestWithStores:
-    """Tests for self.ritual.manifest using real stores."""
+    """Tests for self.playbook.manifest using real stores."""
 
-    def test_manifest_empty_store(self, ritual_node) -> None:
+    def test_manifest_empty_store(self, playbook_node) -> None:
         """Manifest shows empty state when no rituals exist."""
         result = asyncio.get_event_loop().run_until_complete(
-            ritual_node.manifest(None)  # type: ignore[arg-type]
+            playbook_node.manifest(None)  # type: ignore[arg-type]
         )
 
-        assert result.metadata["total_rituals"] == 0
+        assert result.metadata["total_playbooks"] == 0
         assert result.metadata["active_count"] == 0
         assert result.metadata["recent"] == []
 
     def test_manifest_shows_rituals(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Manifest shows active rituals."""
         # Create a ritual
-        ritual_node._begin_ritual(
+        playbook_node._begin_playbook(
             name="Visible Playbook",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
 
         result = asyncio.get_event_loop().run_until_complete(
-            ritual_node.manifest(None)  # type: ignore[arg-type]
+            playbook_node.manifest(None)  # type: ignore[arg-type]
         )
 
-        assert result.metadata["total_rituals"] == 1
+        assert result.metadata["total_playbooks"] == 1
         assert result.metadata["active_count"] == 1
         assert len(result.metadata["recent"]) == 1
         assert result.metadata["recent"][0]["name"] == "Visible Playbook"
@@ -311,24 +311,24 @@ class TestManifestWithStores:
 
 
 class TestGuardEvaluationWithStores:
-    """Tests for self.ritual.guard using real stores."""
+    """Tests for self.playbook.guard using real stores."""
 
     def test_evaluate_guard(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Evaluate a guard on a ritual."""
-        create_result = ritual_node._begin_ritual(
+        create_result = playbook_node._begin_playbook(
             name="Guard Test",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
-        ritual_id = create_result["id"]
+        playbook_id = create_result["id"]
 
-        result = ritual_node._evaluate_guard(
-            ritual_id=ritual_id,
+        result = playbook_node._evaluate_guard(
+            playbook_id=playbook_id,
             guard_id="test-guard",
         )
 
@@ -345,45 +345,45 @@ class TestGuardEvaluationWithStores:
 class TestFullWorkflowWithStores:
     """End-to-end workflow tests."""
 
-    def test_complete_ritual_lifecycle(
+    def test_complete_playbook_lifecycle(
         self,
-        ritual_node,
+        playbook_node,
         granted_covenant,
         valid_offering,
     ) -> None:
         """Test full ritual lifecycle: begin → advance → complete."""
         # 1. Begin ritual
-        begin_result = ritual_node._begin_ritual(
+        begin_result = playbook_node._begin_playbook(
             name="Lifecycle Test",
             grant_id=str(granted_covenant.id),
             scope_id=str(valid_offering.id),
         )
         assert begin_result["phase"] == "SENSE"
-        ritual_id = begin_result["id"]
+        playbook_id = begin_result["id"]
 
         # 2. Advance to ACT
-        act_result = ritual_node._advance_ritual(
-            ritual_id=ritual_id,
+        act_result = playbook_node._advance_playbook(
+            playbook_id=playbook_id,
             target_phase="ACT",
         )
         assert act_result["success"] is True
 
         # 3. Advance to REFLECT
-        reflect_result = ritual_node._advance_ritual(
-            ritual_id=ritual_id,
+        reflect_result = playbook_node._advance_playbook(
+            playbook_id=playbook_id,
             target_phase="REFLECT",
         )
         assert reflect_result["success"] is True
 
         # 4. Complete
-        complete_result = ritual_node._complete_ritual(ritual_id=ritual_id)
+        complete_result = playbook_node._complete_playbook(playbook_id=playbook_id)
         assert complete_result["status"] == "COMPLETE"
 
         # 5. Verify in store
         from services.witness.playbook import PlaybookId, PlaybookStatus
 
         store = get_playbook_store()
-        ritual = store.get(PlaybookId(ritual_id))
+        ritual = store.get(PlaybookId(playbook_id))
 
         assert ritual is not None
         assert ritual.status == PlaybookStatus.COMPLETE

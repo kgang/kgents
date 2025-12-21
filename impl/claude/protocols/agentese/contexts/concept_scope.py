@@ -1,20 +1,20 @@
 """
 AGENTESE Concept Scope Context: Explicit Context Contract.
 
-Context-related nodes for concept.offering.* paths:
-- OfferingNode: Budget-constrained context management
+Context-related nodes for concept.scope.* paths:
+- ScopeNode: Budget-constrained context management
 
 This node provides AGENTESE access to the Scope primitive for
 explicit, priced context contracts.
 
 AGENTESE Paths:
-    concept.offering.manifest  - Show active offerings
-    concept.offering.create    - Create a new offering
-    concept.offering.consume   - Consume resources from an offering
-    concept.offering.extend    - Extend an offering's budget/expiry
-    concept.offering.status    - Check offering validity
+    concept.scope.manifest  - Show active scopes
+    concept.scope.create    - Create a new scope
+    concept.scope.consume   - Consume resources from a scope
+    concept.scope.extend    - Extend a scope's budget/expiry
+    concept.scope.status    - Check scope validity
 
-See: services/witness/offering.py
+See: services/witness/scope.py
 See: spec/protocols/warp-primitives.md
 """
 
@@ -42,55 +42,55 @@ if TYPE_CHECKING:
 # Global Store Instance
 # =============================================================================
 
-_offering_store: dict[str, Any] = {}
+_scope_store: dict[str, Any] = {}
 
 
-def _get_offering(scope_id: str) -> Any | None:
-    """Get offering by ID."""
-    return _offering_store.get(scope_id)
+def _get_scope(scope_id: str) -> Any | None:
+    """Get scope by ID."""
+    return _scope_store.get(scope_id)
 
 
-def _add_offering(offering: Any) -> None:
-    """Add offering to store."""
-    _offering_store[str(offering.id)] = offering
+def _add_scope(scope: Any) -> None:
+    """Add scope to store."""
+    _scope_store[str(scope.id)] = scope
 
 
-def _update_offering(scope_id: str, new_offering: Any) -> None:
-    """Update offering in store."""
-    _offering_store[scope_id] = new_offering
+def _update_scope(scope_id: str, new_scope: Any) -> None:
+    """Update scope in store."""
+    _scope_store[scope_id] = new_scope
 
 
 # =============================================================================
-# OfferingNode: AGENTESE Interface to Scope
+# ScopeNode: AGENTESE Interface to Scope
 # =============================================================================
 
 
-OFFERING_AFFORDANCES: tuple[str, ...] = ("manifest", "create", "consume", "extend", "status")
+SCOPE_AFFORDANCES: tuple[str, ...] = ("manifest", "create", "consume", "extend", "status")
 
 
 @node(
-    "concept.offering",
+    "concept.scope",
     description="Explicit context contracts with budget constraints",
 )
 @dataclass
-class OfferingNode(BaseLogosNode):
+class ScopeNode(BaseLogosNode):
     """
-    concept.offering - Explicit context contracts.
+    concept.scope - Explicit context contracts.
 
-    An Scope defines:
+    A Scope defines:
     - What handles are accessible (scope)
     - What resources can be consumed (budget)
     - When access expires (expiry)
 
-    Laws (from offering.py):
+    Laws (from scope.py):
     - Law 1 (Budget Enforcement): Exceeding budget triggers review
-    - Law 2 (Immutability): Offerings are frozen after creation
-    - Law 3 (Expiry Honored): Expired Offerings deny access
+    - Law 2 (Immutability): Scopes are frozen after creation
+    - Law 3 (Expiry Honored): Expired Scopes deny access
 
-    AGENTESE: concept.offering.*
+    AGENTESE: concept.scope.*
     """
 
-    _handle: str = "concept.offering"
+    _handle: str = "concept.scope"
 
     @property
     def handle(self) -> str:
@@ -98,7 +98,7 @@ class OfferingNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Scope affordances available to all archetypes."""
-        return OFFERING_AFFORDANCES
+        return SCOPE_AFFORDANCES
 
     # ==========================================================================
     # Core Protocol Methods
@@ -106,18 +106,18 @@ class OfferingNode(BaseLogosNode):
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """
-        Show active offerings.
+        Show active scopes.
 
         Returns:
-            List of offerings with budget status
+            List of scopes with budget status
         """
         # Collect stats
-        total = len(_offering_store)
-        valid = sum(1 for o in _offering_store.values() if o.is_valid())
-        exhausted = sum(1 for o in _offering_store.values() if o.budget.is_exhausted)
+        total = len(_scope_store)
+        valid = sum(1 for o in _scope_store.values() if o.is_valid())
+        exhausted = sum(1 for o in _scope_store.values() if o.budget.is_exhausted)
 
         recent = sorted(
-            _offering_store.values(),
+            _scope_store.values(),
             key=lambda o: o.created_at,
             reverse=True,
         )[:5]
@@ -125,7 +125,7 @@ class OfferingNode(BaseLogosNode):
         manifest_data = {
             "path": self.handle,
             "description": "Explicit context contracts with budget",
-            "total_offerings": total,
+            "total_scopes": total,
             "valid_count": valid,
             "exhausted_count": exhausted,
             "recent": [
@@ -143,13 +143,13 @@ class OfferingNode(BaseLogosNode):
             ],
             "laws": [
                 "Law 1: Exceeding budget triggers review (not silent failure)",
-                "Law 2: Offerings are frozen after creation",
-                "Law 3: Expired Offerings deny access",
+                "Law 2: Scopes are frozen after creation",
+                "Law 3: Expired Scopes deny access",
             ],
         }
 
         return BasicRendering(
-            summary="Offerings (Context Contracts)",
+            summary="Scopes (Context Contracts)",
             content=self._format_manifest_cli(manifest_data),
             metadata=manifest_data,
         )
@@ -163,11 +163,11 @@ class OfferingNode(BaseLogosNode):
         """Handle Scope-specific aspects."""
         match aspect:
             case "create":
-                return self._create_offering(**kwargs)
+                return self._create_scope(**kwargs)
             case "consume":
-                return self._consume_offering(**kwargs)
+                return self._consume_scope(**kwargs)
             case "extend":
-                return self._extend_offering(**kwargs)
+                return self._extend_scope(**kwargs)
             case "status":
                 return self._check_status(**kwargs)
             case _:
@@ -179,9 +179,9 @@ class OfferingNode(BaseLogosNode):
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Create a new offering with budget constraints",
+        help="Create a new scope with budget constraints",
     )
-    def _create_offering(
+    def _create_scope(
         self,
         tokens: int | None = None,
         operations: int | None = None,
@@ -196,8 +196,8 @@ class OfferingNode(BaseLogosNode):
             tokens: Max LLM tokens to consume
             operations: Max discrete operations
             time_seconds: Max wall-clock time
-            expires_in_minutes: When this offering expires
-            scoped_handles: AGENTESE handles this offering provides access to
+            expires_in_minutes: When this scope expires
+            scoped_handles: AGENTESE handles this scope provides access to
 
         Returns:
             Created Scope info
@@ -216,19 +216,19 @@ class OfferingNode(BaseLogosNode):
         if expires_in_minutes:
             expires_at = datetime.now() + timedelta(minutes=expires_in_minutes)
 
-        # Create offering
-        offering = Scope.create(
-            description="AGENTESE offering",
+        # Create scope
+        scope = Scope.create(
+            description="AGENTESE scope",
             budget=budget,
             scoped_handles=tuple(scoped_handles) if scoped_handles else (),
             expires_at=expires_at,
         )
 
         # Store
-        _add_offering(offering)
+        _add_scope(scope)
 
         return {
-            "id": str(offering.id),
+            "id": str(scope.id),
             "budget": {
                 "tokens": tokens,
                 "operations": operations,
@@ -236,14 +236,14 @@ class OfferingNode(BaseLogosNode):
             },
             "scoped_handles": list(scoped_handles) if scoped_handles else [],
             "expires_at": expires_at.isoformat() if expires_at else None,
-            "is_valid": offering.is_valid(),
+            "is_valid": scope.is_valid(),
         }
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Consume resources from an offering (Law 1: exceeding triggers review)",
+        help="Consume resources from a scope (Law 1: exceeding triggers review)",
     )
-    def _consume_offering(
+    def _consume_scope(
         self,
         scope_id: str = "",
         tokens: int = 0,
@@ -251,7 +251,7 @@ class OfferingNode(BaseLogosNode):
         time_seconds: float = 0.0,
     ) -> dict[str, Any]:
         """
-        Consume resources from an Scope.
+        Consume resources from a Scope.
 
         Law 1: Exceeding budget triggers review, not silent failure.
         Law 2: Returns a new Scope (immutability).
@@ -259,27 +259,27 @@ class OfferingNode(BaseLogosNode):
         if not scope_id:
             return {"error": "scope_id is required"}
 
-        offering = _get_offering(scope_id)
-        if offering is None:
+        scope = _get_scope(scope_id)
+        if scope is None:
             return {"error": f"Scope {scope_id} not found"}
 
         # Check validity
-        if not offering.is_valid():
+        if not scope.is_valid():
             return {
                 "error": "Scope is no longer valid",
-                "is_expired": offering.is_expired if hasattr(offering, "is_expired") else None,
-                "is_exhausted": offering.budget.is_exhausted,
+                "is_expired": scope.is_expired if hasattr(scope, "is_expired") else None,
+                "is_exhausted": scope.budget.is_exhausted,
             }
 
         # Try to consume
         try:
-            new_offering = offering.consume(
+            new_scope = scope.consume(
                 tokens=tokens,
                 operations=operations,
                 time_seconds=time_seconds,
             )
-            # Update store with new offering (Law 2: immutability)
-            _update_offering(scope_id, new_offering)
+            # Update store with new scope (Law 2: immutability)
+            _update_scope(scope_id, new_scope)
 
             return {
                 "scope_id": scope_id,
@@ -289,25 +289,25 @@ class OfferingNode(BaseLogosNode):
                     "time_seconds": time_seconds,
                 },
                 "remaining": {
-                    "tokens": new_offering.budget.tokens,
-                    "operations": new_offering.budget.operations,
-                    "time_seconds": new_offering.budget.time_seconds,
+                    "tokens": new_scope.budget.tokens,
+                    "operations": new_scope.budget.operations,
+                    "time_seconds": new_scope.budget.time_seconds,
                 },
-                "is_valid": new_offering.is_valid(),
+                "is_valid": new_scope.is_valid(),
             }
         except Exception as e:
             # Law 1: Budget exceeded triggers review
             return {
                 "error": "budget_exceeded",
                 "message": str(e),
-                "action_required": "Review and extend offering, or create new one",
+                "action_required": "Review and extend scope, or create new one",
             }
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Extend an offering's budget or expiry",
+        help="Extend a scope's budget or expiry",
     )
-    def _extend_offering(
+    def _extend_scope(
         self,
         scope_id: str = "",
         add_tokens: int = 0,
@@ -316,19 +316,19 @@ class OfferingNode(BaseLogosNode):
         extend_expiry_minutes: int = 0,
     ) -> dict[str, Any]:
         """
-        Extend an Scope's budget or expiry.
+        Extend a Scope's budget or expiry.
 
         Creates a new Scope with extended limits (Law 2: immutability).
         """
         if not scope_id:
             return {"error": "scope_id is required"}
 
-        offering = _get_offering(scope_id)
-        if offering is None:
+        scope = _get_scope(scope_id)
+        if scope is None:
             return {"error": f"Scope {scope_id} not found"}
 
-        # Create extended offering
-        new_offering = offering.extend(
+        # Create extended scope
+        new_scope = scope.extend(
             add_tokens=add_tokens,
             add_operations=add_operations,
             add_time_seconds=add_time_seconds,
@@ -336,7 +336,7 @@ class OfferingNode(BaseLogosNode):
         )
 
         # Update store
-        _update_offering(scope_id, new_offering)
+        _update_scope(scope_id, new_scope)
 
         return {
             "scope_id": scope_id,
@@ -347,46 +347,46 @@ class OfferingNode(BaseLogosNode):
                 "expiry_minutes": extend_expiry_minutes,
             },
             "new_budget": {
-                "tokens": new_offering.budget.tokens,
-                "operations": new_offering.budget.operations,
-                "time_seconds": new_offering.budget.time_seconds,
+                "tokens": new_scope.budget.tokens,
+                "operations": new_scope.budget.operations,
+                "time_seconds": new_scope.budget.time_seconds,
             },
-            "expires_at": new_offering.expires_at.isoformat() if new_offering.expires_at else None,
+            "expires_at": new_scope.expires_at.isoformat() if new_scope.expires_at else None,
         }
 
     @aspect(
         category=AspectCategory.PERCEPTION,
         idempotent=True,
-        help="Check offering validity and remaining budget",
+        help="Check scope validity and remaining budget",
     )
     def _check_status(
         self,
         scope_id: str = "",
     ) -> dict[str, Any]:
         """
-        Check status of an Scope.
+        Check status of a Scope.
 
-        Law 3: Expired Offerings deny access.
+        Law 3: Expired Scopes deny access.
         """
         if not scope_id:
             return {"error": "scope_id is required"}
 
-        offering = _get_offering(scope_id)
-        if offering is None:
+        scope = _get_scope(scope_id)
+        if scope is None:
             return {"error": f"Scope {scope_id} not found"}
 
         return {
             "scope_id": scope_id,
-            "is_valid": offering.is_valid(),
-            "is_exhausted": offering.budget.is_exhausted,
+            "is_valid": scope.is_valid(),
+            "is_exhausted": scope.budget.is_exhausted,
             "budget": {
-                "tokens": offering.budget.tokens,
-                "operations": offering.budget.operations,
-                "time_seconds": offering.budget.time_seconds,
+                "tokens": scope.budget.tokens,
+                "operations": scope.budget.operations,
+                "time_seconds": scope.budget.time_seconds,
             },
-            "expires_at": offering.expires_at.isoformat() if offering.expires_at else None,
-            "scoped_handles": list(offering.scoped_handles)
-            if hasattr(offering, "scoped_handles")
+            "expires_at": scope.expires_at.isoformat() if scope.expires_at else None,
+            "scoped_handles": list(scope.scoped_handles)
+            if hasattr(scope, "scoped_handles")
             else [],
         }
 
@@ -397,32 +397,40 @@ class OfferingNode(BaseLogosNode):
     def _format_manifest_cli(self, data: dict[str, Any]) -> str:
         """Format manifest for CLI output."""
         lines = [
-            "Offerings (Context Contracts)",
+            "Scopes (Context Contracts)",
             "=" * 40,
             "",
-            f"Total: {data['total_offerings']}",
+            f"Total: {data['total_scopes']}",
             f"Valid: {data['valid_count']}",
             f"Exhausted: {data['exhausted_count']}",
             "",
         ]
 
         if data["recent"]:
-            lines.append("Recent Offerings:")
+            lines.append("Recent Scopes:")
             for o in data["recent"]:
                 status_icon = "o" if o["is_valid"] else "x"
                 budget = o["budget"]
                 budget_str = f"T:{budget['tokens'] or '?'} O:{budget['operations'] or '?'}"
                 lines.append(f"  {status_icon} {o['id'][:20]} [{budget_str}]")
         else:
-            lines.append("No offerings yet. Use create to make one.")
+            lines.append("No scopes yet. Use create to make one.")
 
         return "\n".join(lines)
 
+
+# =============================================================================
+# Backwards Compatibility Aliases
+# =============================================================================
+
+# Old name → new name (for gradual migration)
+OfferingNode = ScopeNode
 
 # =============================================================================
 # Module Exports
 # =============================================================================
 
 __all__ = [
-    "OfferingNode",
+    "ScopeNode",
+    "OfferingNode",  # Backwards compat
 ]

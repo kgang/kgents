@@ -3,7 +3,7 @@ Tests for WARP Phase 2 AGENTESE Nodes.
 
 These tests verify:
 1. VoiceGateNode (self.voice.gate.*)
-2. TerraceNode (brain.terrace.*)
+2. LessonNode (self.lesson.*)
 
 Both are "dark matter" primitives from Phase 1 that needed AGENTESE access.
 """
@@ -14,8 +14,8 @@ import uuid
 
 import pytest
 
-import protocols.agentese.contexts.brain_terrace as terrace_module
-from protocols.agentese.contexts.brain_terrace import TerraceNode
+import protocols.agentese.contexts.self_lesson as lesson_module
+from protocols.agentese.contexts.self_lesson import LessonNode
 from protocols.agentese.contexts.self_voice import VoiceGateNode
 from protocols.agentese.node import BasicRendering
 
@@ -120,12 +120,12 @@ class TestVoiceGateNode:
 
 
 # =============================================================================
-# TerraceNode Tests
+# LessonNode Tests
 # =============================================================================
 
 
-class TestTerraceNode:
-    """Tests for brain.terrace.* AGENTESE node."""
+class TestLessonNode:
+    """Tests for self.lesson.* AGENTESE node."""
 
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -134,18 +134,18 @@ class TestTerraceNode:
 
         # Use monkeypatch to ensure complete isolation even across parallel workers
         fresh_store = LessonStore()
-        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+        monkeypatch.setattr(lesson_module, "_lesson_store", fresh_store)
 
     @pytest.fixture
-    def node(self) -> TerraceNode:
-        """Create TerraceNode instance."""
-        return TerraceNode()
+    def node(self) -> LessonNode:
+        """Create LessonNode instance."""
+        return LessonNode()
 
-    def test_node_path(self, node: TerraceNode) -> None:
+    def test_node_path(self, node: LessonNode) -> None:
         """Node has correct AGENTESE path."""
-        assert node.handle == "brain.terrace"
+        assert node.handle == "self.lesson"
 
-    def test_node_affordances(self, node: TerraceNode) -> None:
+    def test_node_affordances(self, node: LessonNode) -> None:
         """Node has expected affordances."""
         from protocols.agentese.node import AgentMeta
 
@@ -157,7 +157,7 @@ class TestTerraceNode:
         assert "search" in affordances
         assert "history" in affordances
 
-    def test_manifest_empty_store(self, node: TerraceNode) -> None:
+    def test_manifest_empty_store(self, node: LessonNode) -> None:
         """Manifest works with empty store."""
         import asyncio
 
@@ -167,7 +167,7 @@ class TestTerraceNode:
         assert result.metadata["total_entries"] == 0
         assert result.metadata["topics"] == []
 
-    def test_create_new_entry(self, node: TerraceNode) -> None:
+    def test_create_new_entry(self, node: LessonNode) -> None:
         """Can create new knowledge entry."""
         result = node.create(
             topic="Testing patterns",
@@ -176,10 +176,10 @@ class TestTerraceNode:
         )
 
         assert result.metadata["created"] is True
-        assert result.metadata["terrace"]["topic"] == "Testing patterns"
-        assert result.metadata["terrace"]["version"] == 1
+        assert result.metadata["lesson"]["topic"] == "Testing patterns"
+        assert result.metadata["lesson"]["version"] == 1
 
-    def test_create_duplicate_topic_fails(self, node: TerraceNode) -> None:
+    def test_create_duplicate_topic_fails(self, node: LessonNode) -> None:
         """Creating duplicate topic returns error."""
         # Create first
         node.create(topic="Duplicate", content="First")
@@ -190,7 +190,7 @@ class TestTerraceNode:
         assert "error" in result.metadata
         assert result.metadata["error"] == "topic_exists"
 
-    def test_evolve_updates_version(self, node: TerraceNode) -> None:
+    def test_evolve_updates_version(self, node: LessonNode) -> None:
         """Evolving a topic creates new version."""
         # Create initial
         node.create(topic="Evolving", content="Version 1")
@@ -206,14 +206,14 @@ class TestTerraceNode:
         assert result.metadata["old_version"] == 1
         assert result.metadata["new_version"] == 2
 
-    def test_evolve_missing_topic_fails(self, node: TerraceNode) -> None:
+    def test_evolve_missing_topic_fails(self, node: LessonNode) -> None:
         """Evolving non-existent topic returns error."""
         result = node.evolve(topic="Missing", content="New content")
 
         assert "error" in result.metadata
         assert result.metadata["error"] == "topic_not_found"
 
-    def test_search_finds_matching(self, node: TerraceNode) -> None:
+    def test_search_finds_matching(self, node: LessonNode) -> None:
         """Search finds matching entries."""
         node.create(topic="AGENTESE patterns", content="Use @node decorator")
         node.create(topic="Testing basics", content="Use pytest")
@@ -223,7 +223,7 @@ class TestTerraceNode:
         assert result.metadata["count"] == 1
         assert result.metadata["results"][0]["topic"] == "AGENTESE patterns"
 
-    def test_search_case_insensitive(self, node: TerraceNode) -> None:
+    def test_search_case_insensitive(self, node: LessonNode) -> None:
         """Search is case-insensitive."""
         node.create(topic="Important", content="Test content")
 
@@ -231,7 +231,7 @@ class TestTerraceNode:
 
         assert result.metadata["count"] == 1
 
-    def test_history_shows_versions(self, node: TerraceNode) -> None:
+    def test_history_shows_versions(self, node: LessonNode) -> None:
         """History shows all versions of a topic."""
         # Create and evolve
         node.create(topic="Versioned", content="V1")
@@ -244,14 +244,14 @@ class TestTerraceNode:
         versions = [v["version"] for v in result.metadata["versions"]]
         assert versions == [1, 2, 3]
 
-    def test_history_missing_topic(self, node: TerraceNode) -> None:
+    def test_history_missing_topic(self, node: LessonNode) -> None:
         """History for missing topic returns empty."""
         result = node.history("NonExistent")
 
         assert result.metadata["count"] == 0
         assert result.metadata["versions"] == []
 
-    def test_manifest_after_creates(self, node: TerraceNode) -> None:
+    def test_manifest_after_creates(self, node: LessonNode) -> None:
         """Manifest reflects created entries."""
         node.create(topic="Topic A", content="Content A")
         node.create(topic="Topic B", content="Content B")
@@ -280,11 +280,11 @@ class TestWarpNodesIntegration:
 
         # Use monkeypatch to ensure complete isolation even across parallel workers
         fresh_store = LessonStore()
-        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+        monkeypatch.setattr(lesson_module, "_lesson_store", fresh_store)
 
     def test_voice_gate_can_check_terrace_content(self) -> None:
         """VoiceGate can validate Lesson content."""
-        terrace_node = TerraceNode()
+        terrace_node = LessonNode()
         voice_node = VoiceGateNode()
 
         # Create knowledge
@@ -305,8 +305,8 @@ class TestWarpNodesIntegration:
         import asyncio
 
         # Create two node instances
-        node1 = TerraceNode()
-        node2 = TerraceNode()
+        node1 = LessonNode()
+        node2 = LessonNode()
 
         # Create via node1
         node1.create(topic="Shared", content="Test")
@@ -320,7 +320,7 @@ class TestWarpNodesIntegration:
         import asyncio
 
         voice_node = VoiceGateNode()
-        terrace_node = TerraceNode()
+        terrace_node = LessonNode()
 
         voice_result = asyncio.get_event_loop().run_until_complete(voice_node.manifest(None))  # type: ignore[arg-type]
         terrace_result = asyncio.get_event_loop().run_until_complete(terrace_node.manifest(None))  # type: ignore[arg-type]
@@ -337,8 +337,8 @@ class TestWarpNodesIntegration:
 # =============================================================================
 
 
-class TestTerraceNodeCurate:
-    """Tests for brain.terrace.curate aspect (human curation → trust L3)."""
+class TestLessonNodeCurate:
+    """Tests for self.lesson.curate aspect (human curation → trust L3)."""
 
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -346,14 +346,14 @@ class TestTerraceNodeCurate:
         from services.witness.lesson import LessonStore
 
         fresh_store = LessonStore()
-        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+        monkeypatch.setattr(lesson_module, "_lesson_store", fresh_store)
 
     @pytest.fixture
-    def node(self) -> TerraceNode:
-        """Create TerraceNode instance."""
-        return TerraceNode()
+    def node(self) -> LessonNode:
+        """Create LessonNode instance."""
+        return LessonNode()
 
-    def test_curate_elevates_trust(self, node: TerraceNode) -> None:
+    def test_curate_elevates_trust(self, node: LessonNode) -> None:
         """Curating a topic elevates trust to L3."""
         # Create initial entry
         node.create(topic="Testing Pattern", content="DI > mocking")
@@ -367,46 +367,46 @@ class TestTerraceNodeCurate:
         assert result.metadata["old_version"] == 1
         assert result.metadata["new_version"] == 2
 
-    def test_curate_adds_curated_tag(self, node: TerraceNode) -> None:
+    def test_curate_adds_curated_tag(self, node: LessonNode) -> None:
         """Curating adds 'curated' tag to the entry."""
         node.create(topic="Tagged", content="Content", tags=["original"])
         result = node.curate(topic="Tagged")
 
-        terrace = result.metadata["terrace"]
+        terrace = result.metadata["lesson"]
         assert "curated" in terrace["tags"]
         assert "original" in terrace["tags"]
 
-    def test_curate_preserves_content(self, node: TerraceNode) -> None:
+    def test_curate_preserves_content(self, node: LessonNode) -> None:
         """Curating preserves the original content."""
         original_content = "Important learning about composition"
         node.create(topic="Preserved", content=original_content)
 
         result = node.curate(topic="Preserved")
 
-        assert result.metadata["terrace"]["content"] == original_content
+        assert result.metadata["lesson"]["content"] == original_content
 
-    def test_curate_missing_topic_returns_error(self, node: TerraceNode) -> None:
+    def test_curate_missing_topic_returns_error(self, node: LessonNode) -> None:
         """Curating non-existent topic returns error."""
         result = node.curate(topic="NonExistent")
 
         assert "error" in result.metadata
         assert result.metadata["error"] == "topic_not_found"
 
-    def test_curate_sets_full_confidence(self, node: TerraceNode) -> None:
+    def test_curate_sets_full_confidence(self, node: LessonNode) -> None:
         """Curating sets confidence to 1.0 (full trust)."""
         # Create with lower confidence
         node.create(topic="LowConf", content="Test", confidence=0.5)
 
         result = node.curate(topic="LowConf")
 
-        assert result.metadata["terrace"]["confidence"] == 1.0
+        assert result.metadata["lesson"]["confidence"] == 1.0
 
-    def test_curate_adds_metadata(self, node: TerraceNode) -> None:
+    def test_curate_adds_metadata(self, node: LessonNode) -> None:
         """Curating adds curation metadata."""
         node.create(topic="MetadataTest", content="Test")
         result = node.curate(topic="MetadataTest", curator="alice", notes="Looks good!")
 
-        metadata = result.metadata["terrace"]["metadata"]
+        metadata = result.metadata["lesson"]["metadata"]
         assert metadata["curated"] is True
         assert metadata["curator"] == "alice"
         assert metadata["curation_notes"] == "Looks good!"
@@ -418,8 +418,8 @@ class TestTerraceNodeCurate:
 # =============================================================================
 
 
-class TestTerraceNodeCrystallize:
-    """Tests for brain.terrace.crystallize aspect (Brain → Lesson bridge)."""
+class TestLessonNodeCrystallize:
+    """Tests for self.lesson.crystallize aspect (Brain → Lesson bridge)."""
 
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -427,15 +427,15 @@ class TestTerraceNodeCrystallize:
         from services.witness.lesson import LessonStore
 
         fresh_store = LessonStore()
-        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+        monkeypatch.setattr(lesson_module, "_lesson_store", fresh_store)
 
     @pytest.fixture
-    def node(self) -> TerraceNode:
-        """Create TerraceNode instance."""
-        return TerraceNode()
+    def node(self) -> LessonNode:
+        """Create LessonNode instance."""
+        return LessonNode()
 
     @pytest.mark.asyncio
-    async def test_crystallize_missing_crystal_id_returns_error(self, node: TerraceNode) -> None:
+    async def test_crystallize_missing_crystal_id_returns_error(self, node: LessonNode) -> None:
         """Crystallize without crystal_id returns error."""
         result = await node.crystallize(crystal_id="", topic="Test")
 
@@ -443,7 +443,7 @@ class TestTerraceNodeCrystallize:
         assert result.metadata["error"] == "missing_crystal_id"
 
     @pytest.mark.asyncio
-    async def test_crystallize_missing_topic_returns_error(self, node: TerraceNode) -> None:
+    async def test_crystallize_missing_topic_returns_error(self, node: LessonNode) -> None:
         """Crystallize without topic returns error."""
         result = await node.crystallize(crystal_id="crystal-123", topic="")
 
@@ -451,7 +451,7 @@ class TestTerraceNodeCrystallize:
         assert result.metadata["error"] == "missing_topic"
 
     @pytest.mark.asyncio
-    async def test_crystallize_handles_brain_not_found(self, node: TerraceNode) -> None:
+    async def test_crystallize_handles_brain_not_found(self, node: LessonNode) -> None:
         """Crystallize handles crystal not found gracefully."""
         # This will fail because the crystal doesn't exist
         result = await node.crystallize(crystal_id="nonexistent-123", topic="Test")
@@ -474,14 +474,14 @@ class TestTerraceVoiceGateIntegration:
         from services.witness.lesson import LessonStore
 
         fresh_store = LessonStore()
-        monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
+        monkeypatch.setattr(lesson_module, "_lesson_store", fresh_store)
 
     @pytest.fixture
-    def node(self) -> TerraceNode:
-        """Create TerraceNode instance."""
-        return TerraceNode()
+    def node(self) -> LessonNode:
+        """Create LessonNode instance."""
+        return LessonNode()
 
-    def test_create_includes_voice_check(self, node: TerraceNode) -> None:
+    def test_create_includes_voice_check(self, node: LessonNode) -> None:
         """Create includes voice check result in metadata."""
         result = node.create(
             topic="Voice Checked",
@@ -494,7 +494,7 @@ class TestTerraceVoiceGateIntegration:
         # Should detect the anchor
         assert len(result.metadata["voice_check"]["anchors"]) > 0
 
-    def test_create_flags_corporate_speak(self, node: TerraceNode) -> None:
+    def test_create_flags_corporate_speak(self, node: LessonNode) -> None:
         """Create flags corporate speak in voice check."""
         result = node.create(
             topic="Corporate",
@@ -506,7 +506,7 @@ class TestTerraceVoiceGateIntegration:
         assert "voice_check" in result.metadata
         assert result.metadata["voice_check"]["warnings"] > 0
 
-    def test_curate_then_check_voice(self, node: TerraceNode) -> None:
+    def test_curate_then_check_voice(self, node: LessonNode) -> None:
         """Curated content can be voice-checked separately."""
         voice_node = VoiceGateNode()
 
@@ -527,14 +527,14 @@ class TestTerraceVoiceGateIntegration:
 
 
 class TestTerraceAffordances:
-    """Tests for new affordances in TerraceNode."""
+    """Tests for new affordances in LessonNode."""
 
     @pytest.fixture
-    def node(self) -> TerraceNode:
-        """Create TerraceNode instance."""
-        return TerraceNode()
+    def node(self) -> LessonNode:
+        """Create LessonNode instance."""
+        return LessonNode()
 
-    def test_curate_in_affordances(self, node: TerraceNode) -> None:
+    def test_curate_in_affordances(self, node: LessonNode) -> None:
         """Curate is included in affordances."""
         from protocols.agentese.node import AgentMeta
 
@@ -543,7 +543,7 @@ class TestTerraceAffordances:
 
         assert "curate" in affordances
 
-    def test_crystallize_in_affordances(self, node: TerraceNode) -> None:
+    def test_crystallize_in_affordances(self, node: LessonNode) -> None:
         """Crystallize is included in affordances."""
         from protocols.agentese.node import AgentMeta
 

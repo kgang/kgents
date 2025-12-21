@@ -292,7 +292,7 @@ class Scope:
         ... )
         >>> scope.is_valid()  # True
         >>> scope.can_access("time.trace.node.manifest")  # True
-        >>> scope.can_access("brain.terrace.manifest")  # False (not in scope)
+        >>> scope.can_access("self.lesson.manifest")  # False (not in scope)
     """
 
     # Identity

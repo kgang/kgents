@@ -1,31 +1,31 @@
 """
 AGENTESE Self Playbook Context: Lawful Workflow Orchestration.
 
-Workflow-related nodes for self.ritual.* paths:
-- RitualNode: Phase-gated workflow management
+Workflow-related nodes for self.playbook.* paths:
+- PlaybookNode: Phase-gated workflow management
 
 This node provides AGENTESE access to the Playbook primitive for
 lawful, auditable workflow orchestration.
 
 AGENTESE Paths:
-    self.ritual.manifest  - Show active rituals
-    self.ritual.begin     - Start a new ritual (requires Grant + Scope)
-    self.ritual.advance   - Transition ritual phase
-    self.ritual.guard     - Evaluate a guard
-    self.ritual.complete  - Complete a ritual
+    self.playbook.manifest  - Show active playbooks
+    self.playbook.begin     - Start a new playbook (requires Grant + Scope)
+    self.playbook.advance   - Transition playbook phase
+    self.playbook.guard     - Evaluate a guard
+    self.playbook.complete  - Complete a playbook
 
 Integration (Session 7):
     Uses real GrantStore and ScopeStore instead of stubs.
-    Rituals are stored in the global PlaybookStore.
+    Playbooks are stored in the global PlaybookStore.
 
-See: services/witness/ritual.py
+See: services/witness/playbook.py
 See: spec/protocols/warp-primitives.md
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ..affordances import (
@@ -42,7 +42,7 @@ from ..registry import node
 if TYPE_CHECKING:
     from bootstrap.umwelt import Umwelt
 
-logger = logging.getLogger("kgents.agentese.self_ritual")
+logger = logging.getLogger("kgents.agentese.self_playbook")
 
 
 # =============================================================================
@@ -50,60 +50,60 @@ logger = logging.getLogger("kgents.agentese.self_ritual")
 # =============================================================================
 
 
-def _get_ritual_store() -> Any:
-    """Get the global ritual store."""
+def _get_playbook_store() -> Any:
+    """Get the global playbook store."""
     from services.witness.playbook import get_playbook_store
 
     return get_playbook_store()
 
 
-def _get_covenant_store() -> Any:
-    """Get the global covenant store."""
+def _get_grant_store() -> Any:
+    """Get the global grant store."""
     from services.witness.grant import get_grant_store
 
     return get_grant_store()
 
 
-def _get_offering_store() -> Any:
-    """Get the global offering store."""
+def _get_scope_store() -> Any:
+    """Get the global scope store."""
     from services.witness.scope import get_scope_store
 
     return get_scope_store()
 
 
 # =============================================================================
-# RitualNode: AGENTESE Interface to Playbook
+# PlaybookNode: AGENTESE Interface to Playbook
 # =============================================================================
 
 
-RITUAL_AFFORDANCES: tuple[str, ...] = ("manifest", "begin", "advance", "guard", "complete")
+PLAYBOOK_AFFORDANCES: tuple[str, ...] = ("manifest", "begin", "advance", "guard", "complete")
 
 
 @node(
-    "self.ritual",
+    "self.playbook",
     description="Lawful workflow orchestration with Grant and Scope gates",
 )
 @dataclass
-class RitualNode(BaseLogosNode):
+class PlaybookNode(BaseLogosNode):
     """
-    self.ritual - Lawful workflow orchestration.
+    self.playbook - Lawful workflow orchestration.
 
     A Playbook is a curator-orchestrated workflow that:
     - Requires a Grant (permission contract)
-    - Requires an Scope (resource contract)
+    - Requires a Scope (resource contract)
     - Follows N-Phase directed cycle
     - Emits Marks for all actions
 
-    Laws (from ritual.py):
+    Laws (from playbook.py):
     - Law 1 (Grant Required): Every Playbook has exactly one Grant
     - Law 2 (Scope Required): Every Playbook has exactly one Scope
     - Law 3 (Guard Transparency): Guards emit Marks on evaluation
     - Law 4 (Phase Ordering): Phase transitions follow directed cycle
 
-    AGENTESE: self.ritual.*
+    AGENTESE: self.playbook.*
     """
 
-    _handle: str = "self.ritual"
+    _handle: str = "self.playbook"
 
     @property
     def handle(self) -> str:
@@ -111,7 +111,7 @@ class RitualNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Playbook affordances available to all archetypes."""
-        return RITUAL_AFFORDANCES
+        return PLAYBOOK_AFFORDANCES
 
     # ==========================================================================
     # Core Protocol Methods
@@ -119,14 +119,14 @@ class RitualNode(BaseLogosNode):
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """
-        Show active and recent rituals.
+        Show active and recent playbooks.
 
         Returns:
-            List of rituals with status and phase
+            List of playbooks with status and phase
         """
         from services.witness.playbook import PlaybookStatus
 
-        store = _get_ritual_store()
+        store = _get_playbook_store()
 
         # Collect stats
         total = len(store)
@@ -138,7 +138,7 @@ class RitualNode(BaseLogosNode):
         manifest_data = {
             "path": self.handle,
             "description": "Lawful workflow orchestration",
-            "total_rituals": total,
+            "total_playbooks": total,
             "active_count": active,
             "complete_count": complete,
             "recent": [
@@ -161,7 +161,7 @@ class RitualNode(BaseLogosNode):
         }
 
         return BasicRendering(
-            summary="Rituals (Lawful Workflows)",
+            summary="Playbooks (Lawful Workflows)",
             content=self._format_manifest_cli(manifest_data),
             metadata=manifest_data,
         )
@@ -175,13 +175,13 @@ class RitualNode(BaseLogosNode):
         """Handle Playbook-specific aspects."""
         match aspect:
             case "begin":
-                return self._begin_ritual(**kwargs)
+                return self._begin_playbook(**kwargs)
             case "advance":
-                return self._advance_ritual(**kwargs)
+                return self._advance_playbook(**kwargs)
             case "guard":
                 return self._evaluate_guard(**kwargs)
             case "complete":
-                return self._complete_ritual(**kwargs)
+                return self._complete_playbook(**kwargs)
             case _:
                 return {"aspect": aspect, "status": "not implemented"}
 
@@ -191,9 +191,9 @@ class RitualNode(BaseLogosNode):
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Begin a new ritual (requires Grant + Scope)",
+        help="Begin a new playbook (requires Grant + Scope)",
     )
-    def _begin_ritual(
+    def _begin_playbook(
         self,
         name: str = "",
         grant_id: str = "",
@@ -227,40 +227,40 @@ class RitualNode(BaseLogosNode):
             return {"error": "scope_id is required (Law 2)"}
 
         # Look up from real stores
-        covenant_store = _get_covenant_store()
-        offering_store = _get_offering_store()
+        grant_store = _get_grant_store()
+        scope_store = _get_scope_store()
 
-        covenant = covenant_store.get(GrantId(grant_id))
-        offering = offering_store.get(ScopeId(scope_id))
+        grant = grant_store.get(GrantId(grant_id))
+        scope = scope_store.get(ScopeId(scope_id))
 
         # Graceful fallback for development/testing
-        if covenant is None:
+        if grant is None:
             logger.debug(f"Grant {grant_id} not found in store, creating granted stub")
-            covenant = Grant(
+            grant = Grant(
                 id=GrantId(grant_id),
                 status=GrantStatus.GRANTED,
             )
-            covenant_store.add(covenant)
+            grant_store.add(grant)
 
-        if offering is None:
+        if scope is None:
             logger.debug(f"Scope {scope_id} not found in store, creating standard stub")
-            offering = Scope.create(
-                description="Auto-created for ritual",
+            scope = Scope.create(
+                description="Auto-created for playbook",
                 budget=Budget.standard(),
             )
-            offering = Scope(
+            scope = Scope(
                 id=ScopeId(scope_id),
-                description="Auto-created for ritual",
+                description="Auto-created for playbook",
                 budget=Budget(tokens=10000),
             )
-            offering_store.add(offering)
+            scope_store.add(scope)
 
         # Validate Grant is granted
-        if covenant.status != GrantStatus.GRANTED:
-            return {"error": f"Grant {grant_id} not granted (status: {covenant.status.name})"}
+        if grant.status != GrantStatus.GRANTED:
+            return {"error": f"Grant {grant_id} not granted (status: {grant.status.name})"}
 
         # Validate Scope is valid
-        if not offering.is_valid():
+        if not scope.is_valid():
             return {"error": f"Scope {scope_id} is not valid (expired or exhausted)"}
 
         # Validate phase
@@ -269,14 +269,14 @@ class RitualNode(BaseLogosNode):
         except ValueError:
             return {"error": f"Invalid phase: {phase}"}
 
-        # Create ritual (using new parameter names: grant, scope)
+        # Create playbook (using new parameter names: grant, scope)
         try:
-            ritual = Playbook.create(
+            playbook = Playbook.create(
                 name=name,
-                grant=covenant,  # backwards compat: covenant → grant
-                scope=offering,  # backwards compat: offering → scope
+                grant=grant,  # backwards compat: covenant -> grant
+                scope=scope,  # backwards compat: offering -> scope
             )
-            ritual.begin()
+            playbook.begin()
         except MissingCovenant as e:
             return {"error": f"Grant error: {e}"}
         except MissingOffering as e:
@@ -286,59 +286,59 @@ class RitualNode(BaseLogosNode):
         if initial_phase != NPhase.SENSE:
             # SENSE is default, transition if needed
             if initial_phase == NPhase.ACT:
-                ritual.advance_phase(NPhase.ACT)
+                playbook.advance_phase(NPhase.ACT)
             # For other phases, follow the directed cycle
 
         # Store
-        ritual_store = _get_ritual_store()
-        ritual_store.add(ritual)
+        playbook_store = _get_playbook_store()
+        playbook_store.add(playbook)
 
         return {
-            "id": str(ritual.id),
-            "name": ritual.name,
-            "phase": ritual.current_phase.value,
-            "status": ritual.status.name,
-            "grant_id": str(ritual.grant_id),
-            "scope_id": str(ritual.scope_id),
-            "started_at": ritual.started_at.isoformat() if ritual.started_at else None,
+            "id": str(playbook.id),
+            "name": playbook.name,
+            "phase": playbook.current_phase.value,
+            "status": playbook.status.name,
+            "grant_id": str(playbook.grant_id),
+            "scope_id": str(playbook.scope_id),
+            "started_at": playbook.started_at.isoformat() if playbook.started_at else None,
         }
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Advance ritual to next phase",
+        help="Advance playbook to next phase",
     )
-    def _advance_ritual(
+    def _advance_playbook(
         self,
-        ritual_id: str = "",
+        playbook_id: str = "",
         target_phase: str = "",
     ) -> dict[str, Any]:
         """
-        Advance ritual to a new phase.
+        Advance playbook to a new phase.
 
         Law 4: Phase transitions follow directed cycle.
         """
         from services.witness.mark import NPhase
         from services.witness.playbook import GuardFailed, PlaybookId, PlaybookNotActive
 
-        if not ritual_id:
-            return {"error": "ritual_id is required"}
+        if not playbook_id:
+            return {"error": "playbook_id is required"}
         if not target_phase:
             return {"error": "target_phase is required"}
 
-        store = _get_ritual_store()
-        ritual = store.get(PlaybookId(ritual_id))
-        if ritual is None:
-            return {"error": f"Playbook {ritual_id} not found"}
+        store = _get_playbook_store()
+        playbook = store.get(PlaybookId(playbook_id))
+        if playbook is None:
+            return {"error": f"Playbook {playbook_id} not found"}
 
         try:
             phase = NPhase(target_phase)
         except ValueError:
             return {"error": f"Invalid phase: {target_phase}"}
 
-        old_phase = ritual.current_phase
+        old_phase = playbook.current_phase
 
         try:
-            success = ritual.advance_phase(phase)
+            success = playbook.advance_phase(phase)
         except PlaybookNotActive as e:
             return {"error": f"Playbook not active: {e}"}
         except GuardFailed as e:
@@ -348,11 +348,11 @@ class RitualNode(BaseLogosNode):
             }
 
         return {
-            "ritual_id": ritual_id,
+            "playbook_id": playbook_id,
             "from_phase": old_phase.value,
             "to_phase": phase.value,
             "success": success,
-            "status": ritual.status.name,
+            "status": playbook.status.name,
         }
 
     @aspect(
@@ -362,68 +362,68 @@ class RitualNode(BaseLogosNode):
     )
     def _evaluate_guard(
         self,
-        ritual_id: str = "",
+        playbook_id: str = "",
         guard_id: str = "",
     ) -> dict[str, Any]:
         """
-        Evaluate a guard on a ritual.
+        Evaluate a guard on a playbook.
 
         Law 3: Guards emit Marks on evaluation.
         """
         from services.witness.playbook import PlaybookId
 
-        if not ritual_id:
-            return {"error": "ritual_id is required"}
+        if not playbook_id:
+            return {"error": "playbook_id is required"}
 
-        store = _get_ritual_store()
-        ritual = store.get(PlaybookId(ritual_id))
-        if ritual is None:
-            return {"error": f"Playbook {ritual_id} not found"}
+        store = _get_playbook_store()
+        playbook = store.get(PlaybookId(playbook_id))
+        if playbook is None:
+            return {"error": f"Playbook {playbook_id} not found"}
 
         # Count guards from phases and entry guards
-        guards_count = len(ritual.entry_guards)
-        for phase in ritual.phases:
+        guards_count = len(playbook.entry_guards)
+        for phase in playbook.phases:
             guards_count += len(phase.entry_guards) + len(phase.exit_guards)
 
         return {
-            "ritual_id": ritual_id,
+            "playbook_id": playbook_id,
             "guard_id": guard_id,
             "guards_count": guards_count,
-            "phase": ritual.current_phase.value,
-            "guard_evaluations": len(ritual.guard_evaluations),
+            "phase": playbook.current_phase.value,
+            "guard_evaluations": len(playbook.guard_evaluations),
             "status": "evaluated",
         }
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Complete a ritual",
+        help="Complete a playbook",
     )
-    def _complete_ritual(
+    def _complete_playbook(
         self,
-        ritual_id: str = "",
+        playbook_id: str = "",
     ) -> dict[str, Any]:
-        """Complete a ritual."""
+        """Complete a playbook."""
         from services.witness.playbook import PlaybookId, PlaybookNotActive
 
-        if not ritual_id:
-            return {"error": "ritual_id is required"}
+        if not playbook_id:
+            return {"error": "playbook_id is required"}
 
-        store = _get_ritual_store()
-        ritual = store.get(PlaybookId(ritual_id))
-        if ritual is None:
-            return {"error": f"Playbook {ritual_id} not found"}
+        store = _get_playbook_store()
+        playbook = store.get(PlaybookId(playbook_id))
+        if playbook is None:
+            return {"error": f"Playbook {playbook_id} not found"}
 
         try:
-            ritual.complete()
+            playbook.complete()
         except PlaybookNotActive as e:
-            return {"error": f"Cannot complete ritual: {e}"}
+            return {"error": f"Cannot complete playbook: {e}"}
 
         return {
-            "ritual_id": ritual_id,
-            "status": ritual.status.name,
-            "phase": ritual.current_phase.value,
-            "ended_at": ritual.ended_at.isoformat() if ritual.ended_at else None,
-            "mark_count": ritual.mark_count,
+            "playbook_id": playbook_id,
+            "status": playbook.status.name,
+            "phase": playbook.current_phase.value,
+            "ended_at": playbook.ended_at.isoformat() if playbook.ended_at else None,
+            "mark_count": playbook.mark_count,
         }
 
     # ==========================================================================
@@ -433,30 +433,38 @@ class RitualNode(BaseLogosNode):
     def _format_manifest_cli(self, data: dict[str, Any]) -> str:
         """Format manifest for CLI output."""
         lines = [
-            "Rituals (Lawful Workflows)",
+            "Playbooks (Lawful Workflows)",
             "=" * 40,
             "",
-            f"Total: {data['total_rituals']}",
+            f"Total: {data['total_playbooks']}",
             f"Active: {data['active_count']}",
             f"Complete: {data['complete_count']}",
             "",
         ]
 
         if data["recent"]:
-            lines.append("Recent Rituals:")
+            lines.append("Recent Playbooks:")
             for r in data["recent"]:
                 status_icon = ">" if r["status"] == "ACTIVE" else "o"
                 lines.append(f"  {status_icon} {r['name']} [{r['phase']}] - {r['status']}")
         else:
-            lines.append("No rituals yet. Use begin to start one.")
+            lines.append("No playbooks yet. Use begin to start one.")
 
         return "\n".join(lines)
 
+
+# =============================================================================
+# Backwards Compatibility Aliases
+# =============================================================================
+
+# Old name -> new name (for gradual migration)
+RitualNode = PlaybookNode
 
 # =============================================================================
 # Module Exports
 # =============================================================================
 
 __all__ = [
-    "RitualNode",
+    "PlaybookNode",
+    "RitualNode",  # Backwards compat
 ]

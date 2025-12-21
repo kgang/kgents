@@ -490,18 +490,18 @@ class TestBrainWARPIntegration:
         Brain Lesson manifest operation emits a Mark.
 
         Law 3: Every AGENTESE invocation emits exactly one Mark.
-        This test verifies that brain.terrace.manifest is traced.
+        This test verifies that self.lesson.manifest is traced.
 
-        NOTE: Uses brain.terrace (not self.memory) because it doesn't
+        NOTE: Uses self.lesson (not self.memory) because it doesn't
         require external persistence, making the test self-contained.
 
         NOTE: Does not use clean_registry fixture because we need
-        brain.terrace to remain registered from module import.
+        self.lesson to remain registered from module import.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
         from services.witness.trace_store import get_mark_store
 
-        # Import all nodes (including brain.terrace)
+        # Import all nodes (including self.lesson)
         # This triggers @node registration if not already done
         _import_node_modules()
         # Re-populate registry in case it was reset by another test
@@ -513,7 +513,7 @@ class TestBrainWARPIntegration:
         observer = Observer.test()
 
         # Invoke manifest through gateway
-        await gateway._invoke_path("brain.terrace", "manifest", observer)
+        await gateway._invoke_path("self.lesson", "manifest", observer)
 
         # Verify Mark was emitted (Law 3)
         store = get_mark_store()
@@ -523,7 +523,7 @@ class TestBrainWARPIntegration:
         trace = list(store.all())[-1]
         assert trace.origin == "gateway"
         assert trace.stimulus.kind == "agentese"
-        assert "brain.terrace" in trace.stimulus.content
+        assert "self.lesson" in trace.stimulus.content
         assert "manifest" in trace.stimulus.content
         assert trace.response.success is True
 
@@ -533,7 +533,7 @@ class TestBrainWARPIntegration:
         Brain Lesson create operation emits a Mark.
 
         Law 3: Every AGENTESE invocation emits exactly one Mark.
-        This test verifies that brain.terrace.create is traced.
+        This test verifies that self.lesson.create is traced.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
         from services.witness.trace_store import get_mark_store
@@ -545,7 +545,7 @@ class TestBrainWARPIntegration:
 
         # Invoke create through gateway
         await gateway._invoke_path(
-            "brain.terrace",
+            "self.lesson",
             "create",
             observer,
             topic="warp-test",
@@ -557,7 +557,7 @@ class TestBrainWARPIntegration:
         assert len(store) >= 1, "Law 3 violation: No Mark emitted for create"
 
         trace = list(store.all())[-1]
-        assert "brain.terrace" in trace.stimulus.content
+        assert "self.lesson" in trace.stimulus.content
         assert "create" in trace.stimulus.content
 
     @pytest.mark.asyncio
@@ -566,7 +566,7 @@ class TestBrainWARPIntegration:
         Brain Lesson search operation emits a Mark.
 
         Law 3: Every AGENTESE invocation emits exactly one Mark.
-        This test verifies that brain.terrace.search is traced.
+        This test verifies that self.lesson.search is traced.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
         from services.witness.trace_store import get_mark_store
@@ -577,14 +577,14 @@ class TestBrainWARPIntegration:
         observer = Observer.test()
 
         # Invoke search through gateway
-        await gateway._invoke_path("brain.terrace", "search", observer, query="test")
+        await gateway._invoke_path("self.lesson", "search", observer, query="test")
 
         # Verify Mark was emitted
         store = get_mark_store()
         assert len(store) >= 1, "Law 3 violation: No Mark emitted for search"
 
         trace = list(store.all())[-1]
-        assert "brain.terrace" in trace.stimulus.content
+        assert "self.lesson" in trace.stimulus.content
         assert "search" in trace.stimulus.content
 
     @pytest.mark.asyncio
@@ -604,11 +604,11 @@ class TestBrainWARPIntegration:
         observer = Observer.test()
 
         # Invoke multiple operations
-        await gateway._invoke_path("brain.terrace", "manifest", observer)
+        await gateway._invoke_path("self.lesson", "manifest", observer)
         await gateway._invoke_path(
-            "brain.terrace", "create", observer, topic="test1", content="Content 1"
+            "self.lesson", "create", observer, topic="test1", content="Content 1"
         )
-        await gateway._invoke_path("brain.terrace", "search", observer, query="test")
+        await gateway._invoke_path("self.lesson", "search", observer, query="test")
 
         # Verify 3 Marks were emitted
         store = get_mark_store()

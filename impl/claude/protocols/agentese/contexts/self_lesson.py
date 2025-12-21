@@ -1,28 +1,28 @@
 """
-AGENTESE Brain Lesson Context: Curated Knowledge Layer.
+AGENTESE Self Lesson Context: Curated Knowledge Layer.
 
-Knowledge-related nodes for brain.terrace.* paths:
-- TerraceNode: Versioned knowledge management
+Knowledge-related nodes for self.lesson.* paths:
+- LessonNode: Versioned knowledge management
 
 This node provides AGENTESE access to the Lesson primitive for
 curated, versioned knowledge that evolves across sessions.
 
 AGENTESE Paths:
-    brain.terrace.manifest    - Show all current knowledge
-    brain.terrace.create      - Create new knowledge entry
-    brain.terrace.evolve      - Evolve existing knowledge
-    brain.terrace.search      - Search knowledge by topic/content
-    brain.terrace.history     - Get evolution history of a topic
-    brain.terrace.curate      - Human curation: elevate trust to L3
-    brain.terrace.crystallize - Bridge: crystallize Brain memory to Lesson
+    self.lesson.manifest    - Show all current knowledge
+    self.lesson.create      - Create new knowledge entry
+    self.lesson.evolve      - Evolve existing knowledge
+    self.lesson.search      - Search knowledge by topic/content
+    self.lesson.history     - Get evolution history of a topic
+    self.lesson.curate      - Human curation: elevate trust to L3
+    self.lesson.crystallize - Bridge: crystallize Brain memory to Lesson
 
-See: services/witness/terrace.py
+See: services/witness/lesson.py
 See: spec/protocols/warp-primitives.md
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from ..affordances import (
@@ -44,26 +44,26 @@ if TYPE_CHECKING:
 # =============================================================================
 
 # Module-level store for persistence across invocations
-_terrace_store: Any = None
+_lesson_store: Any = None
 
 
 def _get_store() -> Any:
     """Get or create the global LessonStore."""
-    global _terrace_store
-    if _terrace_store is None:
+    global _lesson_store
+    if _lesson_store is None:
         from services.witness.lesson import LessonStore
 
-        _terrace_store = LessonStore()
-    return _terrace_store
+        _lesson_store = LessonStore()
+    return _lesson_store
 
 
 # =============================================================================
-# TerraceNode: AGENTESE Interface to Lesson
+# LessonNode: AGENTESE Interface to Lesson
 # =============================================================================
 
 
 # Lesson affordances
-TERRACE_AFFORDANCES: tuple[str, ...] = (
+LESSON_AFFORDANCES: tuple[str, ...] = (
     "manifest",
     "create",
     "evolve",
@@ -75,28 +75,28 @@ TERRACE_AFFORDANCES: tuple[str, ...] = (
 
 
 @node(
-    "brain.terrace",
+    "self.lesson",
     description="Curated knowledge layer with versioning",
 )
 @dataclass
-class TerraceNode(BaseLogosNode):
+class LessonNode(BaseLogosNode):
     """
-    brain.terrace - Curated knowledge layer with versioning.
+    self.lesson - Curated knowledge layer with versioning.
 
     A Lesson is a piece of crystallized knowledge that evolves over time.
     Like geological terraces, each version builds on the last while
     preserving history.
 
-    Laws (from terrace.py):
-    - Law 1 (Immutability): Terraces are frozen after creation
+    Laws (from lesson.py):
+    - Law 1 (Immutability): Lessons are frozen after creation
     - Law 2 (Supersession): New versions explicitly supersede old
     - Law 3 (History Preserved): All versions are kept for reference
     - Law 4 (Topic Uniqueness): One current version per topic
 
-    AGENTESE: brain.terrace.*
+    AGENTESE: self.lesson.*
     """
 
-    _handle: str = "brain.terrace"
+    _handle: str = "self.lesson"
 
     @property
     def handle(self) -> str:
@@ -104,7 +104,7 @@ class TerraceNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Lesson affordances available to all archetypes."""
-        return TERRACE_AFFORDANCES
+        return LESSON_AFFORDANCES
 
     # ==========================================================================
     # Core Protocol Methods
@@ -115,25 +115,25 @@ class TerraceNode(BaseLogosNode):
         Show all current knowledge entries.
 
         Returns:
-            List of all CURRENT Terraces with topics and summaries
+            List of all CURRENT Lessons with topics and summaries
         """
         store = _get_store()
-        current_terraces = store.all_current()
+        current_lessons = store.all_current()
 
         # Build manifest
         entries = []
-        for terrace in sorted(current_terraces, key=lambda t: t.topic):
+        for lesson in sorted(current_lessons, key=lambda t: t.topic):
             entries.append(
                 {
-                    "id": str(terrace.id),
-                    "topic": terrace.topic,
-                    "version": terrace.version,
-                    "confidence": terrace.confidence,
-                    "tags": list(terrace.tags),
-                    "age_days": round(terrace.age_days, 1),
-                    "content_preview": terrace.content[:100] + "..."
-                    if len(terrace.content) > 100
-                    else terrace.content,
+                    "id": str(lesson.id),
+                    "topic": lesson.topic,
+                    "version": lesson.version,
+                    "confidence": lesson.confidence,
+                    "tags": list(lesson.tags),
+                    "age_days": round(lesson.age_days, 1),
+                    "content_preview": lesson.content[:100] + "..."
+                    if len(lesson.content) > 100
+                    else lesson.content,
                 }
             )
 
@@ -144,7 +144,7 @@ class TerraceNode(BaseLogosNode):
             "topics": store.all_topics(),
             "entries": entries,
             "laws": [
-                "Law 1: Terraces are immutable after creation",
+                "Law 1: Lessons are immutable after creation",
                 "Law 2: New versions explicitly supersede old",
                 "Law 3: All versions are kept for reference",
                 "Law 4: One current version per topic",
@@ -152,7 +152,7 @@ class TerraceNode(BaseLogosNode):
         }
 
         return BasicRendering(
-            summary="Brain Lesson (Knowledge Layer)",
+            summary="Lessons (Knowledge Layer)",
             content=self._format_manifest_cli(manifest_data),
             metadata=manifest_data,
         )
@@ -205,7 +205,7 @@ class TerraceNode(BaseLogosNode):
             voice_check: If True, run VoiceGate check on content
 
         Returns:
-            Result dict with created terrace or error
+            Result dict with created lesson or error
         """
         from services.witness.lesson import Lesson
 
@@ -236,8 +236,8 @@ class TerraceNode(BaseLogosNode):
             # Note: We don't block on voice check failure in permissive mode
             # This allows creating content but flags it for review
 
-        # Create new terrace
-        terrace = Lesson.create(
+        # Create new lesson
+        lesson = Lesson.create(
             topic=topic,
             content=content,
             tags=tuple(tags) if tags else (),
@@ -246,11 +246,11 @@ class TerraceNode(BaseLogosNode):
         )
 
         # Add to store
-        store.add(terrace)
+        store.add(lesson)
 
         result: dict[str, Any] = {
             "created": True,
-            "terrace": terrace.to_dict(),
+            "lesson": lesson.to_dict(),
         }
         if voice_result:
             result["voice_check"] = voice_result
@@ -277,7 +277,7 @@ class TerraceNode(BaseLogosNode):
             }
 
         # Evolve to new version
-        new_terrace = current.evolve(
+        new_lesson = current.evolve(
             content=content,
             reason=reason,
             tags=tuple(tags) if tags is not None else None,
@@ -285,13 +285,13 @@ class TerraceNode(BaseLogosNode):
         )
 
         # Add to store (marks old as superseded)
-        store.add(new_terrace)
+        store.add(new_lesson)
 
         return {
             "evolved": True,
             "old_version": current.version,
-            "new_version": new_terrace.version,
-            "terrace": new_terrace.to_dict(),
+            "new_version": new_lesson.version,
+            "lesson": new_lesson.to_dict(),
         }
 
     def _search_entries(self, query: str = "") -> dict[str, Any]:
@@ -300,16 +300,16 @@ class TerraceNode(BaseLogosNode):
         results = store.search(query)
 
         entries = []
-        for terrace in results:
+        for lesson in results:
             entries.append(
                 {
-                    "id": str(terrace.id),
-                    "topic": terrace.topic,
-                    "version": terrace.version,
-                    "confidence": terrace.confidence,
-                    "content_preview": terrace.content[:150] + "..."
-                    if len(terrace.content) > 150
-                    else terrace.content,
+                    "id": str(lesson.id),
+                    "topic": lesson.topic,
+                    "version": lesson.version,
+                    "confidence": lesson.confidence,
+                    "content_preview": lesson.content[:150] + "..."
+                    if len(lesson.content) > 150
+                    else lesson.content,
                 }
             )
 
@@ -332,16 +332,16 @@ class TerraceNode(BaseLogosNode):
             }
 
         entries = []
-        for terrace in versions:
+        for lesson in versions:
             entries.append(
                 {
-                    "version": terrace.version,
-                    "status": terrace.status.name,
-                    "created_at": terrace.created_at.isoformat(),
-                    "evolution_reason": terrace.evolution_reason,
-                    "content_preview": terrace.content[:100] + "..."
-                    if len(terrace.content) > 100
-                    else terrace.content,
+                    "version": lesson.version,
+                    "status": lesson.status.name,
+                    "created_at": lesson.created_at.isoformat(),
+                    "evolution_reason": lesson.evolution_reason,
+                    "content_preview": lesson.content[:100] + "..."
+                    if len(lesson.content) > 100
+                    else lesson.content,
                 }
             )
 
@@ -371,7 +371,7 @@ class TerraceNode(BaseLogosNode):
             notes: Optional curation notes
 
         Returns:
-            Result with curated terrace and trust elevation
+            Result with curated lesson and trust elevation
         """
         store = _get_store()
 
@@ -424,7 +424,7 @@ class TerraceNode(BaseLogosNode):
             "new_version": curated_with_meta.version,
             "trust_level": "L3",
             "curator": curator,
-            "terrace": curated_with_meta.to_dict(),
+            "lesson": curated_with_meta.to_dict(),
         }
 
     async def _crystallize_from_brain(
@@ -448,7 +448,7 @@ class TerraceNode(BaseLogosNode):
             source: Source attribution (default: "brain")
 
         Returns:
-            Result with created terrace
+            Result with created lesson
         """
         if not crystal_id:
             return {
@@ -512,7 +512,7 @@ class TerraceNode(BaseLogosNode):
                 "topic": topic,
                 "trust_level": "L2",  # Machine-sourced = L2
                 "message": "Use 'curate' to elevate to L3",
-                "terrace": create_result.get("terrace"),
+                "lesson": create_result.get("lesson"),
             }
 
         except Exception as e:
@@ -613,7 +613,7 @@ class TerraceNode(BaseLogosNode):
             )
 
         return BasicRendering(
-            summary=f"Evolved '{topic}': v{data['old_version']} → v{data['new_version']}",
+            summary=f"Evolved '{topic}': v{data['old_version']} -> v{data['new_version']}",
             content=self._format_evolve_cli(data),
             metadata=data,
         )
@@ -697,7 +697,7 @@ class TerraceNode(BaseLogosNode):
             )
 
         return BasicRendering(
-            summary=f"✓ Curated '{topic}': v{data['old_version']} → v{data['new_version']} (Trust: L3)",
+            summary=f"Curated '{topic}': v{data['old_version']} -> v{data['new_version']} (Trust: L3)",
             content=self._format_curate_cli(data),
             metadata=data,
         )
@@ -741,7 +741,7 @@ class TerraceNode(BaseLogosNode):
             )
 
         return BasicRendering(
-            summary=f"✓ Crystallized '{crystal_id}' → '{topic}' (Trust: L2)",
+            summary=f"Crystallized '{crystal_id}' -> '{topic}' (Trust: L2)",
             content=self._format_crystallize_cli(data),
             metadata=data,
         )
@@ -757,7 +757,7 @@ class TerraceNode(BaseLogosNode):
     def _format_manifest_cli(self, data: dict[str, Any]) -> str:
         """Format manifest for CLI output."""
         lines = [
-            "Brain Lesson (Knowledge Layer)",
+            "Lessons (Knowledge Layer)",
             "=" * 40,
             "",
             f"Total entries: {data['total_entries']}",
@@ -769,7 +769,7 @@ class TerraceNode(BaseLogosNode):
             lines.append("Current Knowledge:")
             for entry in data["entries"]:
                 conf_str = f" [{entry['confidence']:.0%}]" if entry["confidence"] < 1.0 else ""
-                lines.append(f"  • {entry['topic']} (v{entry['version']}){conf_str}")
+                lines.append(f"  - {entry['topic']} (v{entry['version']}){conf_str}")
                 if entry["tags"]:
                     lines.append(f"    Tags: {', '.join(entry['tags'])}")
         else:
@@ -786,7 +786,7 @@ class TerraceNode(BaseLogosNode):
         ]
 
         for result in data["results"]:
-            lines.append(f"• {result['topic']} (v{result['version']})")
+            lines.append(f"- {result['topic']} (v{result['version']})")
             lines.append(f"  {result['content_preview']}")
             lines.append("")
 
@@ -801,7 +801,7 @@ class TerraceNode(BaseLogosNode):
         ]
 
         for version in data["versions"]:
-            status_icon = "✓" if version["status"] == "CURRENT" else "○"
+            status_icon = "o" if version["status"] == "CURRENT" else "-"
             lines.append(f"{status_icon} v{version['version']} [{version['status']}]")
             if version["evolution_reason"]:
                 lines.append(f"  Reason: {version['evolution_reason']}")
@@ -813,10 +813,10 @@ class TerraceNode(BaseLogosNode):
     def _format_curate_cli(self, data: dict[str, Any]) -> str:
         """Format curate result for CLI output."""
         lines = [
-            f"✓ Curated: '{data['topic']}'",
+            f"Curated: '{data['topic']}'",
             "=" * 40,
             "",
-            f"Version: {data['old_version']} → {data['new_version']}",
+            f"Version: {data['old_version']} -> {data['new_version']}",
             f"Trust Level: {data['trust_level']}",
             f"Curator: {data['curator']}",
             "",
@@ -827,7 +827,7 @@ class TerraceNode(BaseLogosNode):
     def _format_crystallize_cli(self, data: dict[str, Any]) -> str:
         """Format crystallize result for CLI output."""
         lines = [
-            f"✓ Crystallized: '{data['topic']}'",
+            f"Crystallized: '{data['topic']}'",
             "=" * 40,
             "",
             f"Source Crystal: {data['source_crystal']}",
@@ -839,9 +839,17 @@ class TerraceNode(BaseLogosNode):
 
 
 # =============================================================================
+# Backwards Compatibility Aliases
+# =============================================================================
+
+# Old name -> new name (for gradual migration)
+TerraceNode = LessonNode
+
+# =============================================================================
 # Module Exports
 # =============================================================================
 
 __all__ = [
-    "TerraceNode",
+    "LessonNode",
+    "TerraceNode",  # Backwards compat
 ]
