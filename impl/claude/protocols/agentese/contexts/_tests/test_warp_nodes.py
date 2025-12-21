@@ -155,11 +155,10 @@ class TestLessonNode:
         assert "search" in affordances
         assert "history" in affordances
 
-    def test_manifest_empty_store(self, node: LessonNode) -> None:
+    @pytest.mark.asyncio
+    async def test_manifest_empty_store(self, node: LessonNode) -> None:
         """Manifest works with empty store."""
-        import asyncio
-
-        result = asyncio.get_event_loop().run_until_complete(node.manifest(None))  # type: ignore[arg-type]
+        result = await node.manifest(None)  # type: ignore[arg-type]
 
         assert isinstance(result, BasicRendering)
         assert result.metadata["total_entries"] == 0
@@ -249,14 +248,13 @@ class TestLessonNode:
         assert result.metadata["count"] == 0
         assert result.metadata["versions"] == []
 
-    def test_manifest_after_creates(self, node: LessonNode) -> None:
+    @pytest.mark.asyncio
+    async def test_manifest_after_creates(self, node: LessonNode) -> None:
         """Manifest reflects created entries."""
         node.create(topic="Topic A", content="Content A")
         node.create(topic="Topic B", content="Content B")
 
-        import asyncio
-
-        result = asyncio.get_event_loop().run_until_complete(node.manifest(None))  # type: ignore[arg-type]
+        result = await node.manifest(None)  # type: ignore[arg-type]
 
         assert result.metadata["total_entries"] == 2
         assert "Topic A" in result.metadata["topics"]
@@ -298,10 +296,9 @@ class TestWarpNodesIntegration:
         # Should detect anchor
         assert len(result.metadata["anchors_referenced"]) > 0
 
-    def test_nodes_are_stateless(self) -> None:
+    @pytest.mark.asyncio
+    async def test_nodes_are_stateless(self) -> None:
         """Nodes are stateless (Symbiont pattern)."""
-        import asyncio
-
         # Create two node instances
         node1 = LessonNode()
         node2 = LessonNode()
@@ -310,18 +307,17 @@ class TestWarpNodesIntegration:
         node1.create(topic="Shared", content="Test")
 
         # Should be visible via node2 (shared store)
-        result = asyncio.get_event_loop().run_until_complete(node2.manifest(None))  # type: ignore[arg-type]
+        result = await node2.manifest(None)  # type: ignore[arg-type]
         assert result.metadata["total_entries"] == 1
 
-    def test_cli_rendering_exists(self) -> None:
+    @pytest.mark.asyncio
+    async def test_cli_rendering_exists(self) -> None:
         """Nodes provide CLI rendering."""
-        import asyncio
-
         voice_node = VoiceGateNode()
         terrace_node = LessonNode()
 
-        voice_result = asyncio.get_event_loop().run_until_complete(voice_node.manifest(None))  # type: ignore[arg-type]
-        terrace_result = asyncio.get_event_loop().run_until_complete(terrace_node.manifest(None))  # type: ignore[arg-type]
+        voice_result = await voice_node.manifest(None)  # type: ignore[arg-type]
+        terrace_result = await terrace_node.manifest(None)  # type: ignore[arg-type]
 
         # Both should have content output
         assert voice_result.content is not None
