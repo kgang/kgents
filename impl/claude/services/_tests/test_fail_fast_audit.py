@@ -116,18 +116,24 @@ class TestImportLogging:
 class TestExceptionException:
     """Ensure Exception handling is visible."""
 
-    def test_container_warns_on_missing_deps(self):
-        """DI container should warn on missing dependencies."""
+    def test_container_fails_fast_on_missing_required_deps(self):
+        """DI container should fail fast on missing REQUIRED dependencies.
+
+        Design decision (Enlightened Resolution):
+        - REQUIRED deps (no default in __init__) → DependencyNotFoundError immediately
+        - OPTIONAL deps (= None default) → skip gracefully, use default (DEBUG level)
+
+        This is intentional for:
+        - Required deps: Fail fast with actionable error message
+        - Optional deps: Graceful degradation (e.g., SoulNode without LLM)
+        """
         container_path = IMPL_CLAUDE / "protocols" / "agentese" / "container.py"
         content = container_path.read_text()
 
-        # The container should log missing dependencies at WARNING level
-        assert "logger.warning" in content, "Container should use WARNING for missing deps"
+        # The container should raise DependencyNotFoundError for missing required deps
+        assert "DependencyNotFoundError" in content, \
+            "Container should define DependencyNotFoundError for missing required deps"
 
-        # And should NOT silently skip at DEBUG level for missing deps
-        # (resolved deps failing is different - that's OK at debug)
-        if 'logger.debug(f"No provider for dependency' in content:
-            pytest.fail(
-                "Container silently skips missing dependencies at DEBUG level. "
-                "Should use logger.warning."
-            )
+        # The error should include actionable guidance
+        assert "Fix:" in content, \
+            "Container error messages should include actionable Fix guidance"
