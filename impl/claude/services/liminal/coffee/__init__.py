@@ -28,6 +28,18 @@ from .capture import (
     save_voice,
     voice_to_anchor,
 )
+from .circadian import (
+    ArchaeologicalVoice,
+    CircadianContext,
+    CircadianResonance,
+    PatternOccurrence,
+    ResonanceMatch,
+    SerendipityWisdom,
+    StratigraphyLayer,
+    get_circadian_resonance,
+    reset_circadian_resonance,
+    set_circadian_resonance,
+)
 from .core import (
     CoffeeMovementCompleted,
     CoffeeRitualCompleted,
@@ -62,6 +74,15 @@ from .polynomial import (
     COFFEE_POLYNOMIAL,
     coffee_directions,
     coffee_transition,
+)
+from .stigmergy import (
+    ACCOMPLISHED_REINFORCEMENT,
+    PARTIAL_REINFORCEMENT,
+    PheromoneDeposit,
+    VoiceStigmergy,
+    get_voice_stigmergy,
+    reset_voice_stigmergy,
+    set_voice_stigmergy,
 )
 from .types import (
     MOVEMENTS,
@@ -156,4 +177,23 @@ __all__ = [
     "get_coffee_node",
     "set_coffee_node",
     "COFFEE_AFFORDANCES",
+    # Stigmergy
+    "VoiceStigmergy",
+    "PheromoneDeposit",
+    "get_voice_stigmergy",
+    "set_voice_stigmergy",
+    "reset_voice_stigmergy",
+    "ACCOMPLISHED_REINFORCEMENT",
+    "PARTIAL_REINFORCEMENT",
+    # Circadian (Phase 1 Metabolic)
+    "StratigraphyLayer",
+    "ArchaeologicalVoice",
+    "ResonanceMatch",
+    "PatternOccurrence",
+    "SerendipityWisdom",
+    "CircadianContext",
+    "CircadianResonance",
+    "get_circadian_resonance",
+    "set_circadian_resonance",
+    "reset_circadian_resonance",
 ]

@@ -38,6 +38,7 @@ from .capture import (
 from .garden import generate_garden_view, generate_garden_view_async
 from .menu import generate_menu, generate_menu_async
 from .polynomial import COFFEE_POLYNOMIAL, coffee_transition
+from .stigmergy import PheromoneDeposit, VoiceStigmergy, get_voice_stigmergy
 from .types import (
     MOVEMENTS,
     ChallengeLevel,
@@ -157,6 +158,7 @@ class CoffeeService:
         voice_store_path: Path | str | None = None,
         synergy_bus: "SynergyEventBus | None" = None,
         brain_persistence: "BrainPersistence | None" = None,
+        voice_stigmergy: VoiceStigmergy | None = None,
     ) -> None:
         """
         Initialize CoffeeService.
@@ -169,6 +171,7 @@ class CoffeeService:
             voice_store_path: Path for voice capture persistence
             synergy_bus: Optional SynergyBus for event emission
             brain_persistence: Optional Brain for voice archaeology
+            voice_stigmergy: Optional VoiceStigmergy for pattern tracking
         """
         self.repo_path = Path(repo_path) if repo_path else None
         self.now_md_path = Path(now_md_path) if now_md_path else None
@@ -177,12 +180,14 @@ class CoffeeService:
         self.voice_store_path = Path(voice_store_path) if voice_store_path else None
         self.synergy_bus = synergy_bus
         self.brain_persistence = brain_persistence
+        self.voice_stigmergy = voice_stigmergy
 
         # State
         self._state: CoffeeState = CoffeeState.DORMANT
         self._session_id: str | None = None
         self._started_at: datetime | None = None
         self._capture_session: CaptureSession | None = None
+        self._current_deposit: PheromoneDeposit | None = None
 
         # Cached views (regenerated per ritual)
         self._garden_view: GardenView | None = None
@@ -309,6 +314,7 @@ class CoffeeService:
         Saves to:
         1. Local JSON file (primary storage)
         2. Brain crystal if brain_persistence is available (voice archaeology)
+        3. Pheromone field if voice_stigmergy is available (pattern tracking)
 
         Args:
             voice: MorningVoice to save
@@ -323,7 +329,78 @@ class CoffeeService:
         if self.brain_persistence:
             await self._capture_to_brain(voice)
 
+        # Deposit pheromones for stigmergic pattern tracking
+        if self.voice_stigmergy:
+            self._current_deposit = await self._deposit_to_stigmergy(voice)
+
         return path
+
+    async def _deposit_to_stigmergy(self, voice: MorningVoice) -> PheromoneDeposit:
+        """
+        Deposit pheromones from voice capture to stigmergy field.
+
+        This enables pattern emergence: repeated themes in morning
+        voice will accumulate intensity over time.
+
+        Args:
+            voice: The MorningVoice to extract concepts from
+
+        Returns:
+            PheromoneDeposit record
+        """
+        if not self.voice_stigmergy:
+            raise ValueError("VoiceStigmergy not configured")
+
+        deposit = await self.voice_stigmergy.deposit_from_voice(voice)
+        logger.debug(f"Deposited {len(deposit.concepts)} concepts to stigmergy field")
+
+        return deposit
+
+    async def reinforce_on_accomplishment(
+        self,
+        accomplished: bool = True,
+    ) -> int:
+        """
+        Reinforce pheromones when session ends with accomplishment.
+
+        This is the celebration loop: success strengthens patterns.
+
+        Args:
+            accomplished: True for full accomplishment, False for partial
+
+        Returns:
+            Number of traces reinforced
+        """
+        if not self.voice_stigmergy or not self._current_deposit:
+            return 0
+
+        if accomplished:
+            count = await self.voice_stigmergy.reinforce_accomplished(self._current_deposit)
+        else:
+            count = await self.voice_stigmergy.reinforce_partial(self._current_deposit)
+
+        logger.debug(f"Reinforced {count} traces (accomplished={accomplished})")
+        return count
+
+    async def get_stigmergy_patterns(
+        self,
+        context: str | None = None,
+        limit: int = 5,
+    ) -> list[tuple[str, float]]:
+        """
+        Get current stigmergy patterns for display.
+
+        Args:
+            context: Optional context to boost relevant patterns
+            limit: Maximum patterns to return
+
+        Returns:
+            List of (concept, intensity) tuples
+        """
+        if not self.voice_stigmergy:
+            return []
+
+        return await self.voice_stigmergy.sense_patterns(context, limit)
 
     async def _capture_to_brain(self, voice: MorningVoice) -> None:
         """
@@ -621,6 +698,7 @@ class CoffeeService:
         self._session_id = None
         self._started_at = None
         self._capture_session = None
+        self._current_deposit = None
         self._garden_view = None
         self._weather = None
         self._menu = None
