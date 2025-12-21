@@ -46,10 +46,10 @@ def observer() -> Any:
 
 @pytest.fixture
 def trace_node() -> Any:
-    """Create a TraceNode for testing."""
-    from protocols.agentese.contexts.time import TraceNode
+    """Create a Mark for testing."""
+    from protocols.agentese.contexts.time import Mark
 
-    return TraceNode()
+    return Mark()
 
 
 # === Affordance Tests ===
@@ -96,7 +96,7 @@ class TestAnalyze:
         result = await trace_node._invoke_aspect(
             "analyze",
             observer,
-            target="TraceNode",
+            target="Mark",
             path="impl/claude/protocols/agentese",
         )
 
@@ -112,7 +112,7 @@ class TestAnalyze:
         result = await trace_node._invoke_aspect(
             "analyze",
             observer,
-            target="TraceNode",
+            target="Mark",
             callees=True,
             path="impl/claude/protocols/agentese",
         )
@@ -126,7 +126,7 @@ class TestAnalyze:
         result = await trace_node._invoke_aspect(
             "analyze",
             observer,
-            target="TraceNode",
+            target="Mark",
             depth=2,
             path="impl/claude/protocols/agentese",
         )
@@ -214,7 +214,7 @@ class TestRender:
             "render",
             observer,
             source="static",
-            target="TraceNode",
+            target="Mark",
             mode="tree",
             path="impl/claude/protocols/agentese",
         )
@@ -279,7 +279,7 @@ class TestDiff:
 
 
 class TestHelperMethods:
-    """Tests for TraceNode helper methods."""
+    """Tests for Mark helper methods."""
 
     def test_set_runtime_trace(self, trace_node: Any) -> None:
         """set_runtime_trace caches the trace."""
@@ -313,10 +313,10 @@ class TestIntegration:
 
     @pytest.mark.asyncio
     async def test_resolver_returns_trace_node(self) -> None:
-        """TimeContextResolver returns TraceNode for trace."""
+        """TimeContextResolver returns Mark for trace."""
         from protocols.agentese.contexts.time import (
+            Mark,
             TimeContextResolver,
-            TraceNode,
         )
 
         resolver = TimeContextResolver()
@@ -324,7 +324,7 @@ class TestIntegration:
 
         node = resolver.resolve("trace", [])
 
-        assert isinstance(node, TraceNode)
+        assert isinstance(node, Mark)
 
     @pytest.mark.asyncio
     async def test_manifest_shows_cache_status(self, trace_node: Any, observer: Any) -> None:

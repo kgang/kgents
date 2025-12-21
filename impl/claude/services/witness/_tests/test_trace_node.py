@@ -1,10 +1,10 @@
 """
-Tests for TraceNode, TraceLink, and TraceNodeStore.
+Tests for Mark, MarkLink, and MarkStore.
 
-Verifies the three TraceNode laws:
-- Law 1 (Immutability): TraceNodes are frozen after creation
+Verifies the three Mark laws:
+- Law 1 (Immutability): Marks are frozen after creation
 - Law 2 (Causality): link.target.timestamp > link.source.timestamp
-- Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode
+- Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark
 
 See: spec/protocols/warp-primitives.md
 """
@@ -19,25 +19,25 @@ import pytest
 
 from services.witness import (
     CausalityViolation,
-    DuplicateTraceError,
+    DuplicateMarkError,
     LinkRelation,
+    Mark,
+    MarkId,
+    MarkLink,
+    MarkNotFoundError,
+    MarkQuery,
+    MarkStore,
     NPhase,
     Participant,
     PlanPath,
     Response,
     Stimulus,
-    TraceLink,
-    TraceNode,
-    TraceNodeId,
-    TraceNodeStore,
-    TraceNotFoundError,
-    TraceQuery,
     UmweltSnapshot,
     Walk,
     WalkId,
     WalkStatus,
-    get_trace_store,
-    reset_trace_store,
+    get_mark_store,
+    reset_mark_store,
 )
 
 # =============================================================================
@@ -46,35 +46,35 @@ from services.witness import (
 
 
 class TestLaw1Immutability:
-    """Law 1: TraceNodes are frozen after creation."""
+    """Law 1: Marks are frozen after creation."""
 
     def test_tracenode_is_frozen(self) -> None:
-        """TraceNodes cannot be modified after creation."""
-        node = TraceNode.from_thought("Test thought", "git", ("test",))
+        """Marks cannot be modified after creation."""
+        node = Mark.from_thought("Test thought", "git", ("test",))
 
         with pytest.raises(FrozenInstanceError):
             node.origin = "modified"  # type: ignore[misc]
 
     def test_tracenode_timestamp_immutable(self) -> None:
         """Timestamp cannot be modified."""
-        node = TraceNode.from_thought("Test", "git")
+        node = Mark.from_thought("Test", "git")
 
         with pytest.raises(FrozenInstanceError):
             node.timestamp = datetime.now()  # type: ignore[misc]
 
     def test_tracenode_links_immutable(self) -> None:
         """Links tuple cannot be modified."""
-        node = TraceNode.from_thought("Test", "git")
+        node = Mark.from_thought("Test", "git")
 
         # Cannot reassign links
         with pytest.raises(FrozenInstanceError):
             node.links = ()  # type: ignore[misc]
 
     def test_tracelink_is_frozen(self) -> None:
-        """TraceLinks are frozen."""
-        link = TraceLink(
-            source=TraceNodeId("trace-abc"),
-            target=TraceNodeId("trace-def"),
+        """MarkLinks are frozen."""
+        link = MarkLink(
+            source=MarkId("trace-abc"),
+            target=MarkId("trace-def"),
             relation=LinkRelation.CAUSES,
         )
 
@@ -113,44 +113,42 @@ class TestLaw2Causality:
 
     def setup_method(self) -> None:
         """Reset trace store before each test."""
-        reset_trace_store()
+        reset_mark_store()
 
     def test_valid_causal_link(self) -> None:
         """Valid links have target after source."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Create source node
-        source = TraceNode.from_thought("Source", "git")
+        source = Mark.from_thought("Source", "git")
         store.append(source)
 
         # Small delay to ensure different timestamps
         time.sleep(0.01)
 
         # Create target with link to source
-        link = TraceLink(
+        link = MarkLink(
             source=source.id,
-            target=TraceNodeId("placeholder"),  # Will be replaced
+            target=MarkId("placeholder"),  # Will be replaced
             relation=LinkRelation.CAUSES,
         )
 
-        target = TraceNode(
+        target = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Target event", "git"),
             response=Response.thought("Target thought"),
             links=(
-                TraceLink(
-                    source=source.id, target=TraceNodeId("self"), relation=LinkRelation.CAUSES
-                ),
+                MarkLink(source=source.id, target=MarkId("self"), relation=LinkRelation.CAUSES),
             ),
         )
 
         # Need to create link properly with actual target ID
-        target = TraceNode(
+        target = Mark(
             id=target.id,
             origin="witness",
             stimulus=Stimulus.from_event("git", "Target event", "git"),
             response=Response.thought("Target thought"),
-            links=(TraceLink(source=source.id, target=target.id, relation=LinkRelation.CAUSES),),
+            links=(MarkLink(source=source.id, target=target.id, relation=LinkRelation.CAUSES),),
         )
 
         # Should not raise
@@ -159,35 +157,35 @@ class TestLaw2Causality:
 
     def test_causality_violation_raises(self) -> None:
         """Links violating causality raise CausalityViolation."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Create "future" node first (but we'll try to link back to it)
-        future_node = TraceNode.from_thought("Future", "git")
+        future_node = Mark.from_thought("Future", "git")
         store.append(future_node)
 
         # Create "past" node that tries to claim future_node caused it
         # But with an earlier timestamp (impossible)
         past_timestamp = future_node.timestamp - timedelta(seconds=1)
-        past_node = TraceNode(
+        past_node = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Past event", "git"),
             response=Response.thought("Past thought"),
             links=(
-                TraceLink(
-                    source=future_node.id, target=TraceNodeId("past"), relation=LinkRelation.CAUSES
+                MarkLink(
+                    source=future_node.id, target=MarkId("past"), relation=LinkRelation.CAUSES
                 ),
             ),
             timestamp=past_timestamp,
         )
 
         # Update with correct target ID
-        past_node = TraceNode(
+        past_node = Mark(
             id=past_node.id,
             origin="witness",
             stimulus=past_node.stimulus,
             response=past_node.response,
             links=(
-                TraceLink(source=future_node.id, target=past_node.id, relation=LinkRelation.CAUSES),
+                MarkLink(source=future_node.id, target=past_node.id, relation=LinkRelation.CAUSES),
             ),
             timestamp=past_timestamp,
         )
@@ -197,30 +195,30 @@ class TestLaw2Causality:
 
     def test_plan_links_skip_causality_check(self) -> None:
         """Links to plan paths don't require timestamp validation."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Create node linking to a plan (no timestamp to check)
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Event", "git"),
             response=Response.thought("Thought"),
             links=(
-                TraceLink(
+                MarkLink(
                     source=PlanPath("plans/warp-servo-phase1.md"),
-                    target=TraceNodeId("placeholder"),
+                    target=MarkId("placeholder"),
                     relation=LinkRelation.FULFILLS,
                 ),
             ),
         )
 
         # Update with correct target ID
-        node = TraceNode(
+        node = Mark(
             id=node.id,
             origin=node.origin,
             stimulus=node.stimulus,
             response=node.response,
             links=(
-                TraceLink(
+                MarkLink(
                     source=PlanPath("plans/warp-servo-phase1.md"),
                     target=node.id,
                     relation=LinkRelation.FULFILLS,
@@ -233,58 +231,58 @@ class TestLaw2Causality:
         assert len(store) == 1
 
     def test_link_to_nonexistent_node_raises(self) -> None:
-        """Links to non-existent nodes raise TraceNotFoundError."""
-        store = TraceNodeStore()
+        """Links to non-existent nodes raise MarkNotFoundError."""
+        store = MarkStore()
 
         # Create node with link to non-existent source
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Event", "git"),
             response=Response.thought("Thought"),
             links=(
-                TraceLink(
-                    source=TraceNodeId("trace-nonexistent"),
-                    target=TraceNodeId("placeholder"),
+                MarkLink(
+                    source=MarkId("trace-nonexistent"),
+                    target=MarkId("placeholder"),
                     relation=LinkRelation.CAUSES,
                 ),
             ),
         )
 
         # Update with correct target ID
-        node = TraceNode(
+        node = Mark(
             id=node.id,
             origin=node.origin,
             stimulus=node.stimulus,
             response=node.response,
             links=(
-                TraceLink(
-                    source=TraceNodeId("trace-nonexistent"),
+                MarkLink(
+                    source=MarkId("trace-nonexistent"),
                     target=node.id,
                     relation=LinkRelation.CAUSES,
                 ),
             ),
         )
 
-        with pytest.raises(TraceNotFoundError):
+        with pytest.raises(MarkNotFoundError):
             store.append(node)
 
 
 # =============================================================================
-# TraceNodeStore Tests
+# MarkStore Tests
 # =============================================================================
 
 
-class TestTraceNodeStore:
-    """Tests for TraceNodeStore append-only semantics."""
+class TestMarkStore:
+    """Tests for MarkStore append-only semantics."""
 
     def setup_method(self) -> None:
         """Reset trace store before each test."""
-        reset_trace_store()
+        reset_mark_store()
 
     def test_append_and_get(self) -> None:
         """Basic append and retrieval."""
-        store = TraceNodeStore()
-        node = TraceNode.from_thought("Test", "git")
+        store = MarkStore()
+        node = Mark.from_thought("Test", "git")
 
         store.append(node)
         retrieved = store.get(node.id)
@@ -293,41 +291,41 @@ class TestTraceNodeStore:
         assert retrieved.id == node.id
 
     def test_duplicate_raises(self) -> None:
-        """Appending duplicate ID raises DuplicateTraceError."""
-        store = TraceNodeStore()
-        node = TraceNode.from_thought("Test", "git")
+        """Appending duplicate ID raises DuplicateMarkError."""
+        store = MarkStore()
+        node = Mark.from_thought("Test", "git")
 
         store.append(node)
 
-        with pytest.raises(DuplicateTraceError):
+        with pytest.raises(DuplicateMarkError):
             store.append(node)
 
     def test_query_by_origin(self) -> None:
         """Query filters by origin."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
-        git_node = TraceNode.from_thought("Git event", "git")
-        file_node = TraceNode.from_thought("File event", "filesystem")
+        git_node = Mark.from_thought("Git event", "git")
+        file_node = Mark.from_thought("File event", "filesystem")
 
         store.append(git_node)
         store.append(file_node)
 
-        query = TraceQuery(origins=("witness",))  # Default origin from from_thought
+        query = MarkQuery(origins=("witness",))  # Default origin from from_thought
         results = list(store.query(query))
 
         assert len(results) == 2  # Both have origin "witness"
 
     def test_query_by_phase(self) -> None:
         """Query filters by N-Phase."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
-        sense_node = TraceNode.from_thought("Sense", "git", phase=NPhase.SENSE)
-        act_node = TraceNode.from_thought("Act", "git", phase=NPhase.ACT)
+        sense_node = Mark.from_thought("Sense", "git", phase=NPhase.SENSE)
+        act_node = Mark.from_thought("Act", "git", phase=NPhase.ACT)
 
         store.append(sense_node)
         store.append(act_node)
 
-        query = TraceQuery(phases=(NPhase.SENSE,))
+        query = MarkQuery(phases=(NPhase.SENSE,))
         results = list(store.query(query))
 
         assert len(results) == 1
@@ -335,38 +333,38 @@ class TestTraceNodeStore:
 
     def test_query_by_time_range(self) -> None:
         """Query filters by time range."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
-        old_node = TraceNode(
+        old_node = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Old", "git"),
             response=Response.thought("Old"),
             timestamp=datetime.now() - timedelta(hours=2),
         )
-        new_node = TraceNode.from_thought("New", "git")
+        new_node = Mark.from_thought("New", "git")
 
         store.append(old_node)
         store.append(new_node)
 
         # Query for recent nodes only
-        query = TraceQuery(after=datetime.now() - timedelta(hours=1))
+        query = MarkQuery(after=datetime.now() - timedelta(hours=1))
         results = list(store.query(query))
 
         assert len(results) == 1
 
     def test_get_walk_traces(self) -> None:
         """Get traces belonging to a Walk."""
-        store = TraceNodeStore()
+        store = MarkStore()
         walk_id = WalkId("walk-test123")
 
         # Create nodes with and without walk_id
-        walk_node = TraceNode(
+        walk_node = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Walk event", "git"),
             response=Response.thought("Walk thought"),
             walk_id=walk_id,
         )
-        other_node = TraceNode.from_thought("Other", "git")
+        other_node = Mark.from_thought("Other", "git")
 
         store.append(walk_node)
         store.append(other_node)
@@ -378,11 +376,11 @@ class TestTraceNodeStore:
 
     def test_stats(self) -> None:
         """Store statistics are accurate."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
-        store.append(TraceNode.from_thought("A", "git", phase=NPhase.SENSE))
-        store.append(TraceNode.from_thought("B", "git", phase=NPhase.ACT))
-        store.append(TraceNode.from_thought("C", "test", phase=NPhase.SENSE))
+        store.append(Mark.from_thought("A", "git", phase=NPhase.SENSE))
+        store.append(Mark.from_thought("B", "git", phase=NPhase.ACT))
+        store.append(Mark.from_thought("C", "test", phase=NPhase.SENSE))
 
         stats = store.stats()
 
@@ -402,12 +400,12 @@ class TestWalk:
     def test_walk_creation(self) -> None:
         """Walk creation with goal and plan."""
         walk = Walk.create(
-            goal="Implement TraceNode",
+            goal="Implement Mark",
             root_plan=PlanPath("plans/warp-servo-phase1.md"),
         )
 
         assert walk.goal is not None
-        assert walk.goal.description == "Implement TraceNode"
+        assert walk.goal.description == "Implement Mark"
         assert walk.root_plan == PlanPath("plans/warp-servo-phase1.md")
         assert walk.status == WalkStatus.ACTIVE
         assert walk.phase == NPhase.SENSE
@@ -416,14 +414,14 @@ class TestWalk:
         """Law 1: trace_nodes only grows."""
         walk = Walk.create(goal="Test")
 
-        node1 = TraceNode.from_thought("First", "git")
-        node2 = TraceNode.from_thought("Second", "git")
+        node1 = Mark.from_thought("First", "git")
+        node2 = Mark.from_thought("Second", "git")
 
         walk.advance(node1)
-        assert walk.trace_count() == 1
+        assert walk.mark_count == 1
 
         walk.advance(node2)
-        assert walk.trace_count() == 2
+        assert walk.mark_count == 2
 
         # Cannot remove (no method for it - monotonicity enforced by design)
 
@@ -497,8 +495,8 @@ class TestSerialization:
     """Tests for to_dict/from_dict roundtrip."""
 
     def test_tracenode_roundtrip(self) -> None:
-        """TraceNode serializes and deserializes correctly."""
-        original = TraceNode(
+        """Mark serializes and deserializes correctly."""
+        original = Mark(
             origin="witness",
             stimulus=Stimulus.from_agentese("world.house", "manifest"),
             response=Response.projection("world.house.manifest"),
@@ -508,7 +506,7 @@ class TestSerialization:
         )
 
         data = original.to_dict()
-        restored = TraceNode.from_dict(data)
+        restored = Mark.from_dict(data)
 
         assert restored.id == original.id
         assert restored.origin == original.origin
@@ -534,16 +532,16 @@ class TestSerialization:
         assert len(restored.participants) == 1
 
     def test_tracelink_roundtrip(self) -> None:
-        """TraceLink serializes and deserializes correctly."""
-        original = TraceLink(
-            source=TraceNodeId("trace-abc"),
-            target=TraceNodeId("trace-def"),
+        """MarkLink serializes and deserializes correctly."""
+        original = MarkLink(
+            source=MarkId("trace-abc"),
+            target=MarkId("trace-def"),
             relation=LinkRelation.CAUSES,
             metadata={"reason": "test"},
         )
 
         data = original.to_dict()
-        restored = TraceLink.from_dict(data)
+        restored = MarkLink.from_dict(data)
 
         assert str(restored.source) == str(original.source)
         assert str(restored.target) == str(original.target)
@@ -620,17 +618,17 @@ class TestEdgeCases:
 
     def setup_method(self) -> None:
         """Reset stores before each test."""
-        reset_trace_store()
+        reset_mark_store()
         from services.witness import reset_walk_store
 
         reset_walk_store()
 
     def test_empty_store_query(self) -> None:
         """Empty store returns empty results."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Query on empty store
-        query = TraceQuery(origins=("witness",))
+        query = MarkQuery(origins=("witness",))
         results = list(store.query(query))
         assert results == []
 
@@ -644,11 +642,11 @@ class TestEdgeCases:
     def test_walk_with_zero_traces_complete(self) -> None:
         """Walk with no traces can complete successfully."""
         walk = Walk.create(goal="Empty walk test")
-        assert walk.trace_count() == 0
+        assert walk.mark_count == 0
 
         walk.complete()
         assert walk.status == WalkStatus.COMPLETE
-        assert walk.trace_count() == 0
+        assert walk.mark_count == 0
         assert walk.ended_at is not None
 
     def test_walk_phase_same_phase_no_op(self) -> None:
@@ -678,29 +676,29 @@ class TestEdgeCases:
         assert walk.phase == NPhase.REFLECT
 
     def test_tracelink_with_planpath_source(self) -> None:
-        """TraceLink can have PlanPath as source."""
-        link = TraceLink(
+        """MarkLink can have PlanPath as source."""
+        link = MarkLink(
             source=PlanPath("plans/warp-servo-phase1.md"),
-            target=TraceNodeId("trace-abc123"),
+            target=MarkId("trace-abc123"),
             relation=LinkRelation.FULFILLS,
             metadata={"plan_chunk": "1.1"},
         )
 
         # Roundtrip
         data = link.to_dict()
-        restored = TraceLink.from_dict(data)
+        restored = MarkLink.from_dict(data)
 
         assert isinstance(restored.source, str)
         assert restored.source == "plans/warp-servo-phase1.md"
         assert restored.relation == LinkRelation.FULFILLS
 
-    def test_large_trace_count_performance(self) -> None:
+    def test_large_mark_count_performance(self) -> None:
         """Store handles 100+ traces efficiently."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Add 100 traces
         for i in range(100):
-            node = TraceNode.from_thought(
+            node = Mark.from_thought(
                 f"Trace {i}",
                 "git",
                 tags=(f"batch-{i // 10}",),
@@ -713,7 +711,7 @@ class TestEdgeCases:
 
         # Query should be reasonably fast
         start = time.time()
-        query = TraceQuery(phases=(NPhase.SENSE,), limit=50)
+        query = MarkQuery(phases=(NPhase.SENSE,), limit=50)
         results = list(store.query(query))
         elapsed = time.time() - start
 
@@ -734,7 +732,7 @@ class TestSerializationEdgeCases:
         """Datetime microseconds are preserved in roundtrip."""
         # Create with specific microseconds
         specific_time = datetime(2025, 12, 20, 12, 34, 56, 789012)
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus.from_prompt("Test"),
             response=Response.thought("Test"),
@@ -742,7 +740,7 @@ class TestSerializationEdgeCases:
         )
 
         data = node.to_dict()
-        restored = TraceNode.from_dict(data)
+        restored = Mark.from_dict(data)
 
         assert restored.timestamp == specific_time
         assert restored.timestamp.microsecond == 789012
@@ -771,7 +769,7 @@ class TestSerializationEdgeCases:
 
     def test_nested_metadata_preserved(self) -> None:
         """Nested metadata dicts are preserved."""
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus(
                 kind="agentese",
@@ -783,14 +781,14 @@ class TestSerializationEdgeCases:
         )
 
         data = node.to_dict()
-        restored = TraceNode.from_dict(data)
+        restored = Mark.from_dict(data)
 
         assert restored.stimulus.metadata["nested"]["deep"]["value"] == 42
         assert restored.metadata["top_level"]["inner"] == [1, 2, 3]
 
     def test_empty_collections_preserved(self) -> None:
         """Empty tags and links are preserved correctly."""
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus.from_prompt("Test"),
             response=Response.thought("Test"),
@@ -799,7 +797,7 @@ class TestSerializationEdgeCases:
         )
 
         data = node.to_dict()
-        restored = TraceNode.from_dict(data)
+        restored = Mark.from_dict(data)
 
         assert restored.tags == ()
         assert restored.links == ()
@@ -880,7 +878,7 @@ class TestMetadataMutability:
         For true immutability, consider using types.MappingProxyType or
         similar in a future refactor.
         """
-        node = TraceNode(
+        node = Mark(
             origin="witness",
             stimulus=Stimulus.from_prompt("Test"),
             response=Response.thought("Test"),
@@ -901,35 +899,33 @@ class TestCausalGraphNavigation:
 
     def setup_method(self) -> None:
         """Reset trace store before each test."""
-        reset_trace_store()
+        reset_mark_store()
 
     def test_get_causes_and_effects(self) -> None:
         """Navigate causal relationships."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
         # Create a causal chain: source → target
-        source = TraceNode.from_thought("Source event", "git")
+        source = Mark.from_thought("Source event", "git")
         store.append(source)
 
         time.sleep(0.01)
 
-        target = TraceNode(
+        target = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Target event", "git"),
             response=Response.thought("Target thought"),
             links=(
-                TraceLink(
-                    source=source.id, target=TraceNodeId("temp"), relation=LinkRelation.CAUSES
-                ),
+                MarkLink(source=source.id, target=MarkId("temp"), relation=LinkRelation.CAUSES),
             ),
         )
         # Fix target ID in link
-        target = TraceNode(
+        target = Mark(
             id=target.id,
             origin=target.origin,
             stimulus=target.stimulus,
             response=target.response,
-            links=(TraceLink(source=source.id, target=target.id, relation=LinkRelation.CAUSES),),
+            links=(MarkLink(source=source.id, target=target.id, relation=LinkRelation.CAUSES),),
             timestamp=target.timestamp,
         )
         store.append(target)
@@ -945,32 +941,28 @@ class TestCausalGraphNavigation:
 
     def test_get_continuation_and_branches(self) -> None:
         """Navigate continuation and branch relationships."""
-        store = TraceNodeStore()
+        store = MarkStore()
 
-        source = TraceNode.from_thought("Source", "git")
+        source = Mark.from_thought("Source", "git")
         store.append(source)
 
         time.sleep(0.01)
 
-        continuation = TraceNode(
+        continuation = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Continuation", "git"),
             response=Response.thought("Continuation"),
             links=(
-                TraceLink(
-                    source=source.id, target=TraceNodeId("temp"), relation=LinkRelation.CONTINUES
-                ),
+                MarkLink(source=source.id, target=MarkId("temp"), relation=LinkRelation.CONTINUES),
             ),
         )
-        continuation = TraceNode(
+        continuation = Mark(
             id=continuation.id,
             origin=continuation.origin,
             stimulus=continuation.stimulus,
             response=continuation.response,
             links=(
-                TraceLink(
-                    source=source.id, target=continuation.id, relation=LinkRelation.CONTINUES
-                ),
+                MarkLink(source=source.id, target=continuation.id, relation=LinkRelation.CONTINUES),
             ),
             timestamp=continuation.timestamp,
         )
@@ -978,22 +970,20 @@ class TestCausalGraphNavigation:
 
         time.sleep(0.01)
 
-        branch = TraceNode(
+        branch = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("git", "Branch", "git"),
             response=Response.thought("Branch"),
             links=(
-                TraceLink(
-                    source=source.id, target=TraceNodeId("temp"), relation=LinkRelation.BRANCHES
-                ),
+                MarkLink(source=source.id, target=MarkId("temp"), relation=LinkRelation.BRANCHES),
             ),
         )
-        branch = TraceNode(
+        branch = Mark(
             id=branch.id,
             origin=branch.origin,
             stimulus=branch.stimulus,
             response=branch.response,
-            links=(TraceLink(source=source.id, target=branch.id, relation=LinkRelation.BRANCHES),),
+            links=(MarkLink(source=source.id, target=branch.id, relation=LinkRelation.BRANCHES),),
             timestamp=branch.timestamp,
         )
         store.append(branch)
@@ -1006,8 +996,8 @@ class TestCausalGraphNavigation:
 
     def test_empty_navigation_results(self) -> None:
         """Navigation on node with no relationships returns empty."""
-        store = TraceNodeStore()
-        node = TraceNode.from_thought("Isolated", "git")
+        store = MarkStore()
+        node = Mark.from_thought("Isolated", "git")
         store.append(node)
 
         assert store.get_causes(node.id) == []

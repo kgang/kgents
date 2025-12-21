@@ -13,12 +13,12 @@ from __future__ import annotations
 
 import pytest
 
+from services.witness.mark import Mark, NPhase
 from services.witness.session_walk import (
     SessionWalkBridge,
     get_session_walk_bridge,
     reset_session_walk_bridge,
 )
-from services.witness.trace_node import NPhase, TraceNode
 from services.witness.walk import WalkStatus, WalkStore, reset_walk_store
 
 # =============================================================================
@@ -116,7 +116,7 @@ class TestLaw2WalkOutlivesSession:
         walk_id = walk.id
 
         # Add some traces
-        trace = TraceNode.from_thought("Test thought", "test")
+        trace = Mark.from_thought("Test thought", "test")
         bridge.advance_walk("cli_test123", trace)
 
         # End session
@@ -125,7 +125,7 @@ class TestLaw2WalkOutlivesSession:
         assert ended_walk is not None
         assert ended_walk.id == walk_id
         assert ended_walk.is_complete
-        assert ended_walk.trace_count() == 1
+        assert ended_walk.mark_count == 1
 
     def test_walk_marked_complete_on_session_end(self, bridge: SessionWalkBridge) -> None:
         """Walk is marked COMPLETE when session ends successfully."""
@@ -171,7 +171,7 @@ class TestLaw3OptionalBinding:
 
     def test_advance_walk_returns_false_without_walk(self, bridge: SessionWalkBridge) -> None:
         """advance_walk returns False gracefully for sessions without Walk."""
-        trace = TraceNode.from_thought("Test", "test")
+        trace = Mark.from_thought("Test", "test")
         result = bridge.advance_walk("no_walk_session", trace)
         assert result is False
 
@@ -190,19 +190,19 @@ class TestWalkOperations:
     """Tests for Walk operations via bridge."""
 
     def test_advance_walk_adds_trace(self, bridge: SessionWalkBridge) -> None:
-        """advance_walk adds TraceNode to Walk."""
+        """advance_walk adds Mark to Walk."""
         walk = bridge.start_walk_for_session(
             cli_session_id="cli_test123",
             goal="Test goal",
         )
-        assert walk.trace_count() == 0
+        assert walk.mark_count == 0
 
-        trace = TraceNode.from_thought("Test thought", "git")
+        trace = Mark.from_thought("Test thought", "git")
         result = bridge.advance_walk("cli_test123", trace)
 
         assert result is True
-        assert walk.trace_count() == 1
-        assert trace.id in walk.trace_node_ids
+        assert walk.mark_count == 1
+        assert trace.id in walk.mark_ids
 
     def test_transition_phase_works(self, bridge: SessionWalkBridge) -> None:
         """transition_phase_for_session changes Walk phase."""

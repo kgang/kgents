@@ -28,13 +28,13 @@ from ..contexts import (
     FutureNode,
     GratitudeNode,
     IdentityNode,
+    # Time
+    Mark,
     MemoryNode,
     PastNode,
     ScheduleNode,
     SerendipityNode,
     StateNode,
-    # Time
-    TraceNode,
     # World
     WorldNode,
     create_concept_node,
@@ -747,12 +747,12 @@ class TestCapitalLogosIntegration:
 # ============================================================
 
 
-class TestTraceNode:
-    """Tests for TraceNode."""
+class TestMark:
+    """Tests for Mark."""
 
     @pytest.fixture
-    def trace_node(self) -> TraceNode:
-        node = TraceNode()
+    def trace_node(self) -> Mark:
+        node = Mark()
         # Add some test traces
         node.record({"event": "created", "data": "test1"})
         node.record({"event": "modified", "data": "test2"})
@@ -763,14 +763,14 @@ class TestTraceNode:
         return MockUmwelt(archetype="default")
 
     @pytest.mark.asyncio
-    async def test_witness(self, trace_node: TraceNode, observer: MockUmwelt) -> None:
+    async def test_witness(self, trace_node: Mark, observer: MockUmwelt) -> None:
         """Witness returns traces."""
         result = await trace_node.invoke("witness", as_umwelt(observer), limit=10)
         assert "traces" in result
         assert len(result["traces"]) == 2
 
     @pytest.mark.asyncio
-    async def test_query(self, trace_node: TraceNode, observer: MockUmwelt) -> None:
+    async def test_query(self, trace_node: Mark, observer: MockUmwelt) -> None:
         """Query filters traces."""
         result = await trace_node.invoke("query", as_umwelt(observer), query="created")
         assert len(result["results"]) == 1
@@ -893,7 +893,7 @@ class TestTimeContextResolver:
     def test_resolve_trace(self, resolver: WorldContextResolver) -> None:
         """Resolves time.trace."""
         node = resolver.resolve("trace", [])
-        assert isinstance(node, TraceNode)
+        assert isinstance(node, Mark)
 
     def test_resolve_past(self, resolver: WorldContextResolver) -> None:
         """Resolves time.past."""

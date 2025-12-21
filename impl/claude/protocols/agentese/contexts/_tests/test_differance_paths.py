@@ -97,10 +97,10 @@ def trace_monoid() -> Any:
 
 @pytest.fixture
 def differance_node(trace_monoid: Any) -> Any:
-    """Create a DifferanceTraceNode with test data."""
-    from protocols.agentese.contexts.time_differance import DifferanceTraceNode
+    """Create a DifferanceMark with test data."""
+    from protocols.agentese.contexts.time_differance import DifferanceMark
 
-    node = DifferanceTraceNode()
+    node = DifferanceMark()
     node.set_monoid(trace_monoid)
     return node
 
@@ -123,7 +123,7 @@ def self_differance_node(differance_node: Any) -> Any:
     return node
 
 
-# === DifferanceTraceNode Tests ===
+# === DifferanceMark Tests ===
 
 
 class TestDifferanceTraceAffordances:
@@ -145,11 +145,11 @@ class TestDifferanceManifest:
     """Tests for time.differance.manifest."""
 
     @pytest.mark.asyncio
-    async def test_manifest_shows_trace_count(self, differance_node: Any, observer: Any) -> None:
+    async def test_manifest_shows_mark_count(self, differance_node: Any, observer: Any) -> None:
         """Manifest shows trace count."""
         rendering = await differance_node.manifest(observer)
 
-        assert rendering.metadata["trace_count"] == 2
+        assert rendering.metadata["mark_count"] == 2
         assert rendering.metadata["monoid_available"] is True
 
 
@@ -367,10 +367,10 @@ class TestDifferanceRecent:
 
     @pytest.fixture
     def recent_node(self) -> Any:
-        """Create a DifferanceTraceNode for recent tests."""
-        from protocols.agentese.contexts.time_differance import DifferanceTraceNode
+        """Create a DifferanceMark for recent tests."""
+        from protocols.agentese.contexts.time_differance import DifferanceMark
 
-        return DifferanceTraceNode()
+        return DifferanceMark()
 
     @pytest.mark.asyncio
     async def test_recent_returns_traces_from_buffer(
@@ -659,16 +659,16 @@ class TestTimeContextResolverIntegration:
     """Integration tests with TimeContextResolver."""
 
     def test_resolver_returns_differance_node(self) -> None:
-        """TimeContextResolver returns DifferanceTraceNode for differance."""
+        """TimeContextResolver returns DifferanceMark for differance."""
         from protocols.agentese.contexts.time import TimeContextResolver
-        from protocols.agentese.contexts.time_differance import DifferanceTraceNode
+        from protocols.agentese.contexts.time_differance import DifferanceMark
 
         resolver = TimeContextResolver()
         resolver.__post_init__()
 
         node = resolver.resolve("differance", [])
 
-        assert isinstance(node, DifferanceTraceNode)
+        assert isinstance(node, DifferanceMark)
 
     def test_resolver_returns_branch_node(self) -> None:
         """TimeContextResolver returns BranchNode for branch."""
@@ -687,12 +687,12 @@ class TestNodeRegistration:
     """Tests for @node registration."""
 
     def test_differance_node_registered(self) -> None:
-        """DifferanceTraceNode is registered with @node."""
-        from protocols.agentese.contexts.time_differance import DifferanceTraceNode
+        """DifferanceMark is registered with @node."""
+        from protocols.agentese.contexts.time_differance import DifferanceMark
         from protocols.agentese.registry import get_node_metadata, is_node
 
-        assert is_node(DifferanceTraceNode)
-        meta = get_node_metadata(DifferanceTraceNode)
+        assert is_node(DifferanceMark)
+        meta = get_node_metadata(DifferanceMark)
         assert meta is not None
         assert meta.path == "time.differance"
 

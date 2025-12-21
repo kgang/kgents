@@ -64,7 +64,7 @@ class WitnessTopics:
     DAEMON_STARTED = "witness.daemon.started"
     DAEMON_STOPPED = "witness.daemon.stopped"
 
-    # AGENTESE events (Law 3: Every invocation emits TraceNode)
+    # AGENTESE events (Law 3: Every invocation emits Mark)
     AGENTESE_INVOKED = "witness.agentese.invoked"
     AGENTESE_COMPLETED = "witness.agentese.completed"
     AGENTESE_ERROR = "witness.agentese.error"
@@ -518,7 +518,7 @@ def get_synergy_bus() -> WitnessSynergyBus:
     Convenience function for code that needs to publish to the bus
     without managing the full WitnessBusManager lifecycle.
 
-    Used by AgenteseGateway for TraceNode event publishing.
+    Used by AgenteseGateway for Mark event publishing.
     """
     return get_witness_bus_manager().synergy_bus
 

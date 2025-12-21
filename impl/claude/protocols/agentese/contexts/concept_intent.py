@@ -110,8 +110,8 @@ class IntentNode(BaseLogosNode):
 
         # Collect stats
         total = len(_intent_store)
-        by_type = {}
-        by_status = {}
+        by_type: dict[str, int] = {}
+        by_status: dict[str, int] = {}
 
         for intent in _intent_store.values():
             type_name = intent.intent_type.value
@@ -132,7 +132,9 @@ class IntentNode(BaseLogosNode):
             "root_intents": [
                 {
                     "id": str(i.id),
-                    "description": i.description[:50] + "..." if len(i.description) > 50 else i.description,
+                    "description": i.description[:50] + "..."
+                    if len(i.description) > 50
+                    else i.description,
                     "type": i.intent_type.value,
                     "status": i.status.name,
                     "children_count": len(i.children_ids),

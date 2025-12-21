@@ -1,10 +1,10 @@
 """
-AGENTESE Brain Terrace Context: Curated Knowledge Layer.
+AGENTESE Brain Lesson Context: Curated Knowledge Layer.
 
 Knowledge-related nodes for brain.terrace.* paths:
 - TerraceNode: Versioned knowledge management
 
-This node provides AGENTESE access to the Terrace primitive for
+This node provides AGENTESE access to the Lesson primitive for
 curated, versioned knowledge that evolves across sessions.
 
 AGENTESE Paths:
@@ -14,7 +14,7 @@ AGENTESE Paths:
     brain.terrace.search      - Search knowledge by topic/content
     brain.terrace.history     - Get evolution history of a topic
     brain.terrace.curate      - Human curation: elevate trust to L3
-    brain.terrace.crystallize - Bridge: crystallize Brain memory to Terrace
+    brain.terrace.crystallize - Bridge: crystallize Brain memory to Lesson
 
 See: services/witness/terrace.py
 See: spec/protocols/warp-primitives.md
@@ -48,21 +48,21 @@ _terrace_store: Any = None
 
 
 def _get_store() -> Any:
-    """Get or create the global TerraceStore."""
+    """Get or create the global LessonStore."""
     global _terrace_store
     if _terrace_store is None:
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
-        _terrace_store = TerraceStore()
+        _terrace_store = LessonStore()
     return _terrace_store
 
 
 # =============================================================================
-# TerraceNode: AGENTESE Interface to Terrace
+# TerraceNode: AGENTESE Interface to Lesson
 # =============================================================================
 
 
-# Terrace affordances
+# Lesson affordances
 TERRACE_AFFORDANCES: tuple[str, ...] = (
     "manifest",
     "create",
@@ -83,7 +83,7 @@ class TerraceNode(BaseLogosNode):
     """
     brain.terrace - Curated knowledge layer with versioning.
 
-    A Terrace is a piece of crystallized knowledge that evolves over time.
+    A Lesson is a piece of crystallized knowledge that evolves over time.
     Like geological terraces, each version builds on the last while
     preserving history.
 
@@ -103,7 +103,7 @@ class TerraceNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Terrace affordances available to all archetypes."""
+        """Lesson affordances available to all archetypes."""
         return TERRACE_AFFORDANCES
 
     # ==========================================================================
@@ -152,7 +152,7 @@ class TerraceNode(BaseLogosNode):
         }
 
         return BasicRendering(
-            summary="Brain Terrace (Knowledge Layer)",
+            summary="Brain Lesson (Knowledge Layer)",
             content=self._format_manifest_cli(manifest_data),
             metadata=manifest_data,
         )
@@ -163,7 +163,7 @@ class TerraceNode(BaseLogosNode):
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
-        """Handle Terrace-specific aspects."""
+        """Handle Lesson-specific aspects."""
         match aspect:
             case "create":
                 return self._create_entry(**kwargs)
@@ -207,7 +207,7 @@ class TerraceNode(BaseLogosNode):
         Returns:
             Result dict with created terrace or error
         """
-        from services.witness.terrace import Terrace
+        from services.witness.lesson import Lesson
 
         store = _get_store()
 
@@ -237,7 +237,7 @@ class TerraceNode(BaseLogosNode):
             # This allows creating content but flags it for review
 
         # Create new terrace
-        terrace = Terrace.create(
+        terrace = Lesson.create(
             topic=topic,
             content=content,
             tags=tuple(tags) if tags else (),
@@ -361,7 +361,7 @@ class TerraceNode(BaseLogosNode):
         Curate a knowledge entry, elevating it to trust L3 (internal).
 
         Human curation is a stamp of approval. When a human curates
-        a Terrace entry, it becomes authoritative knowledge.
+        a Lesson entry, it becomes authoritative knowledge.
 
         Law: Human override = trust L3 on that crystal.
 
@@ -391,9 +391,9 @@ class TerraceNode(BaseLogosNode):
         )
 
         # Add curation metadata
-        from services.witness.terrace import Terrace
+        from services.witness.lesson import Lesson
 
-        curated_with_meta = Terrace(
+        curated_with_meta = Lesson(
             id=curated.id,
             topic=curated.topic,
             content=curated.content,
@@ -434,17 +434,17 @@ class TerraceNode(BaseLogosNode):
         source: str = "brain",
     ) -> dict[str, Any]:
         """
-        Crystallize a Brain memory into a Terrace entry (internal).
+        Crystallize a Brain memory into a Lesson entry (internal).
 
-        This is the bridge between Brain (ephemeral memory) and Terrace
+        This is the bridge between Brain (ephemeral memory) and Lesson
         (curated knowledge). When an insight from Brain is worth preserving,
-        crystallize it to Terrace.
+        crystallize it to Lesson.
 
         Philosophy: "Knowledge crystallizes over time."
 
         Args:
             crystal_id: The Brain crystal ID to crystallize
-            topic: Topic name for the Terrace entry (required)
+            topic: Topic name for the Lesson entry (required)
             source: Source attribution (default: "brain")
 
         Returns:
@@ -459,7 +459,7 @@ class TerraceNode(BaseLogosNode):
         if not topic:
             return {
                 "error": "missing_topic",
-                "message": "topic is required for Terrace entry.",
+                "message": "topic is required for Lesson entry.",
             }
 
         # Try to get the Brain crystal via AGENTESE gateway
@@ -493,7 +493,7 @@ class TerraceNode(BaseLogosNode):
                     "message": f"Brain crystal '{crystal_id}' has no content.",
                 }
 
-            # Create Terrace entry from Brain crystal
+            # Create Lesson entry from Brain crystal
             create_result = self._create_entry(
                 topic=topic,
                 content=content,
@@ -704,7 +704,7 @@ class TerraceNode(BaseLogosNode):
 
     @aspect(
         category=AspectCategory.MUTATION,
-        help="Crystallize Brain memory to Terrace entry",
+        help="Crystallize Brain memory to Lesson entry",
     )
     async def crystallize(
         self,
@@ -713,15 +713,15 @@ class TerraceNode(BaseLogosNode):
         source: str = "brain",
     ) -> BasicRendering:
         """
-        Crystallize a Brain memory into a Terrace entry (public API).
+        Crystallize a Brain memory into a Lesson entry (public API).
 
-        This bridges ephemeral Brain memories to curated Terrace knowledge.
+        This bridges ephemeral Brain memories to curated Lesson knowledge.
         Crystallized entries start at trust L2 (machine-sourced).
         Use 'curate' afterward to elevate to L3.
 
         Args:
             crystal_id: The Brain crystal ID to crystallize
-            topic: Topic name for the Terrace entry
+            topic: Topic name for the Lesson entry
             source: Source attribution (default: "brain")
 
         Returns:
@@ -757,7 +757,7 @@ class TerraceNode(BaseLogosNode):
     def _format_manifest_cli(self, data: dict[str, Any]) -> str:
         """Format manifest for CLI output."""
         lines = [
-            "Brain Terrace (Knowledge Layer)",
+            "Brain Lesson (Knowledge Layer)",
             "=" * 40,
             "",
             f"Total entries: {data['total_entries']}",

@@ -1,5 +1,5 @@
 """
-Tests for TerrariumView: Observer-Dependent Lens Over TraceNode Streams.
+Tests for TerrariumView: Observer-Dependent Lens Over Mark Streams.
 
 These tests verify:
 1. TerrariumView laws (fault isolation, observer dependence, selection monotonicity)

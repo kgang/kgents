@@ -356,7 +356,7 @@ def create_self_differance_node(
     Create a SelfDifferanceNode with optional integration.
 
     Args:
-        time_differance_node: DifferanceTraceNode for heritage queries
+        time_differance_node: DifferanceMark for heritage queries
 
     Returns:
         Configured SelfDifferanceNode

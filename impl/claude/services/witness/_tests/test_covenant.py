@@ -1,9 +1,9 @@
 """
-Tests for Covenant.
+Tests for Grant.
 
 Verifies laws:
-- Law 1 (Required): Sensitive operations require granted Covenant
-- Law 2 (Revocable): Covenants can be revoked at any time
+- Law 1 (Required): Sensitive operations require granted Grant
+- Law 2 (Revocable): Grants can be revoked at any time
 - Law 3 (Gated): Review gates trigger on threshold
 
 See: spec/protocols/warp-primitives.md
@@ -16,65 +16,65 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from services.witness.covenant import (
-    Covenant,
-    CovenantEnforcer,
-    CovenantError,
-    CovenantId,
-    CovenantNotGranted,
-    CovenantRevoked,
-    CovenantStatus,
-    CovenantStore,
+from services.witness.grant import (
     GateFallback,
     GateTriggered,
+    Grant,
+    GrantEnforcer,
+    GrantError,
+    GrantId,
+    GrantNotGranted,
+    GrantRevoked,
+    GrantStatus,
+    GrantStore,
     ReviewGate,
-    get_covenant_store,
-    reset_covenant_store,
+    get_grant_store,
+    reset_grant_store,
 )
 
 # =============================================================================
-# Law 1: Covenant Required Tests
+# Law 1: Grant Required Tests
 # =============================================================================
 
 
-class TestLaw1CovenantRequired:
-    """Law 1: Sensitive operations require granted Covenant."""
+class TestLaw1GrantRequired:
+    """Law 1: Sensitive operations require granted Grant."""
 
     def test_proposed_covenant_not_active(self) -> None:
-        """Proposed Covenant is not active."""
-        covenant = Covenant.propose(
+        """Proposed Grant is not active."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
             reason="Test",
         )
 
-        assert covenant.status == CovenantStatus.PROPOSED
+        assert covenant.status == GrantStatus.PROPOSED
         assert not covenant.is_active
 
     def test_granted_covenant_is_active(self) -> None:
-        """Granted Covenant is active."""
-        covenant = Covenant.propose(
+        """Granted Grant is active."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         ).grant("kent")
 
-        assert covenant.status == CovenantStatus.GRANTED
+        assert covenant.status == GrantStatus.GRANTED
         assert covenant.is_active
         assert covenant.granted_by == "kent"
         assert covenant.granted_at is not None
 
     def test_check_permission_requires_granted(self) -> None:
-        """check_permission raises for non-granted Covenant."""
-        covenant = Covenant.propose(
+        """check_permission raises for non-granted Grant."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
 
-        with pytest.raises(CovenantNotGranted) as exc_info:
+        with pytest.raises(GrantNotGranted) as exc_info:
             covenant.check_permission("file_read")
 
         assert "not granted" in str(exc_info.value)
 
     def test_check_permission_succeeds_when_granted(self) -> None:
-        """check_permission succeeds for granted Covenant."""
-        covenant = Covenant.propose(
+        """check_permission succeeds for granted Grant."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read", "file_write"}),
         ).grant("kent")
 
@@ -83,19 +83,19 @@ class TestLaw1CovenantRequired:
         covenant.check_permission("file_write")
 
     def test_check_permission_fails_for_missing(self) -> None:
-        """check_permission fails for permissions not in Covenant."""
-        covenant = Covenant.propose(
+        """check_permission fails for permissions not in Grant."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         ).grant("kent")
 
-        with pytest.raises(CovenantNotGranted) as exc_info:
+        with pytest.raises(GrantNotGranted) as exc_info:
             covenant.check_permission("git_push")
 
         assert "git_push" in str(exc_info.value)
 
     def test_has_permission_check(self) -> None:
         """has_permission returns correct boolean."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read", "file_write"}),
         ).grant("kent")
 
@@ -110,57 +110,57 @@ class TestLaw1CovenantRequired:
 
 
 class TestLaw2Revocable:
-    """Law 2: Covenants can be revoked at any time."""
+    """Law 2: Grants can be revoked at any time."""
 
     def test_covenant_can_be_revoked(self) -> None:
-        """Granted Covenant can be revoked."""
-        covenant = Covenant.propose(
+        """Granted Grant can be revoked."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         ).grant("kent")
 
         revoked = covenant.revoke("kent", reason="No longer needed")
 
-        assert revoked.status == CovenantStatus.REVOKED
+        assert revoked.status == GrantStatus.REVOKED
         assert revoked.revoked_by == "kent"
         assert revoked.revoked_at is not None
         assert revoked.revoke_reason == "No longer needed"
         assert not revoked.is_active
 
     def test_revoked_covenant_check_raises(self) -> None:
-        """Revoked Covenant raises on permission check."""
+        """Revoked Grant raises on permission check."""
         covenant = (
-            Covenant.propose(
+            Grant.propose(
                 permissions=frozenset({"file_read"}),
             )
             .grant("kent")
             .revoke("kent")
         )
 
-        with pytest.raises(CovenantRevoked) as exc_info:
+        with pytest.raises(GrantRevoked) as exc_info:
             covenant.check_permission("file_read")
 
         assert "revoked" in str(exc_info.value)
 
     def test_proposed_can_be_revoked(self) -> None:
-        """Proposed Covenant can also be revoked (cancelled)."""
-        covenant = Covenant.propose(
+        """Proposed Grant can also be revoked (cancelled)."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
 
         revoked = covenant.revoke("kent", reason="Changed mind")
-        assert revoked.status == CovenantStatus.REVOKED
+        assert revoked.status == GrantStatus.REVOKED
 
     def test_cannot_revoke_already_revoked(self) -> None:
-        """Cannot revoke an already revoked Covenant."""
+        """Cannot revoke an already revoked Grant."""
         covenant = (
-            Covenant.propose(
+            Grant.propose(
                 permissions=frozenset({"file_read"}),
             )
             .grant("kent")
             .revoke("kent")
         )
 
-        with pytest.raises(CovenantError) as exc_info:
+        with pytest.raises(GrantError) as exc_info:
             covenant.revoke("kent")
 
         assert "Cannot revoke from REVOKED" in str(exc_info.value)
@@ -176,12 +176,12 @@ class TestLaw3Gated:
 
     def test_gate_triggers_at_threshold(self) -> None:
         """Review gate triggers when threshold reached."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"git_push"}),
             review_gates=(ReviewGate("git_push", threshold=3),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         # First two pushes OK
         enforcer.check("git_push")
@@ -195,24 +195,24 @@ class TestLaw3Gated:
 
     def test_gate_threshold_one(self) -> None:
         """Gate with threshold=1 triggers on first use."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_delete"}),
             review_gates=(ReviewGate("file_delete", threshold=1),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         with pytest.raises(GateTriggered):
             enforcer.check("file_delete")
 
     def test_gate_reset_after_approval(self) -> None:
         """Gate counter resets after approval."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"git_push"}),
             review_gates=(ReviewGate("git_push", threshold=2),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         # Trigger gate
         enforcer.check("git_push")
@@ -229,12 +229,12 @@ class TestLaw3Gated:
 
     def test_no_gate_for_ungated_operations(self) -> None:
         """Operations without gates don't trigger."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read", "git_push"}),
             review_gates=(ReviewGate("git_push", threshold=1),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         # file_read has no gate, unlimited uses
         for _ in range(100):
@@ -242,12 +242,12 @@ class TestLaw3Gated:
 
     def test_gate_pending_status(self) -> None:
         """is_gate_pending returns correct status."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"git_push"}),
             review_gates=(ReviewGate("git_push", threshold=1),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         assert not enforcer.is_gate_pending("git_push")
 
@@ -268,44 +268,44 @@ class TestLaw3Gated:
 
 
 class TestStatusTransitions:
-    """Tests for Covenant status transitions."""
+    """Tests for Grant status transitions."""
 
     def test_propose_to_grant(self) -> None:
         """PROPOSED → GRANTED transition."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
-        assert covenant.status == CovenantStatus.PROPOSED
+        assert covenant.status == GrantStatus.PROPOSED
 
         granted = covenant.grant("kent")
-        assert granted.status == CovenantStatus.GRANTED
+        assert granted.status == GrantStatus.GRANTED
 
     def test_propose_to_negotiate_to_grant(self) -> None:
         """PROPOSED → NEGOTIATING → GRANTED transition."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
 
         negotiating = covenant.negotiate()
-        assert negotiating.status == CovenantStatus.NEGOTIATING
+        assert negotiating.status == GrantStatus.NEGOTIATING
 
         granted = negotiating.grant("kent")
-        assert granted.status == CovenantStatus.GRANTED
+        assert granted.status == GrantStatus.GRANTED
 
     def test_cannot_grant_from_revoked(self) -> None:
         """Cannot grant from REVOKED status."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         ).revoke("kent")
 
-        with pytest.raises(CovenantError) as exc_info:
+        with pytest.raises(GrantError) as exc_info:
             covenant.grant("kent")
 
         assert "Cannot grant from REVOKED" in str(exc_info.value)
 
     def test_amend_creates_new_proposed(self) -> None:
-        """amend() creates a new PROPOSED Covenant."""
-        original = Covenant.propose(
+        """amend() creates a new PROPOSED Grant."""
+        original = Grant.propose(
             permissions=frozenset({"file_read"}),
         ).grant("kent")
 
@@ -313,9 +313,9 @@ class TestStatusTransitions:
             permissions=frozenset({"file_read", "file_write"}),
         )
 
-        # New Covenant
+        # New Grant
         assert amended.id != original.id
-        assert amended.status == CovenantStatus.PROPOSED
+        assert amended.status == GrantStatus.PROPOSED
 
         # Updated permissions
         assert "file_write" in amended.permissions
@@ -330,16 +330,16 @@ class TestStatusTransitions:
 
 
 class TestImmutability:
-    """Tests for Covenant immutability."""
+    """Tests for Grant immutability."""
 
     def test_covenant_is_frozen(self) -> None:
-        """Covenant is frozen dataclass."""
-        covenant = Covenant.propose(
+        """Grant is frozen dataclass."""
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
 
         with pytest.raises(FrozenInstanceError):
-            covenant.status = CovenantStatus.GRANTED  # type: ignore[misc]
+            covenant.status = GrantStatus.GRANTED  # type: ignore[misc]
 
     def test_review_gate_is_frozen(self) -> None:
         """ReviewGate is frozen."""
@@ -354,15 +354,15 @@ class TestImmutability:
 # =============================================================================
 
 
-class TestCovenantExpiry:
-    """Tests for Covenant expiry."""
+class TestGrantExpiry:
+    """Tests for Grant expiry."""
 
     def test_expired_covenant_not_active(self) -> None:
-        """Expired Covenant is not active."""
+        """Expired Grant is not active."""
         past = datetime.now() - timedelta(hours=1)
-        covenant = Covenant(
+        covenant = Grant(
             permissions=frozenset({"file_read"}),
-            status=CovenantStatus.GRANTED,
+            status=GrantStatus.GRANTED,
             granted_by="kent",
             granted_at=datetime.now() - timedelta(hours=2),
             expires_at=past,
@@ -371,37 +371,37 @@ class TestCovenantExpiry:
         assert not covenant.is_active
 
     def test_expired_check_raises(self) -> None:
-        """Expired Covenant check raises CovenantError."""
+        """Expired Grant check raises GrantError."""
         past = datetime.now() - timedelta(hours=1)
-        covenant = Covenant(
+        covenant = Grant(
             permissions=frozenset({"file_read"}),
-            status=CovenantStatus.GRANTED,
+            status=GrantStatus.GRANTED,
             granted_by="kent",
             expires_at=past,
         )
 
-        with pytest.raises(CovenantError) as exc_info:
+        with pytest.raises(GrantError) as exc_info:
             covenant.check_active()
 
         assert "expired" in str(exc_info.value)
 
 
 # =============================================================================
-# CovenantStore Tests
+# GrantStore Tests
 # =============================================================================
 
 
-class TestCovenantStore:
-    """Tests for CovenantStore."""
+class TestGrantStore:
+    """Tests for GrantStore."""
 
     def setup_method(self) -> None:
         """Reset store before each test."""
-        reset_covenant_store()
+        reset_grant_store()
 
     def test_add_and_get(self) -> None:
         """Basic add and get operations."""
-        store = get_covenant_store()
-        covenant = Covenant.propose(permissions=frozenset({"file_read"}))
+        store = get_grant_store()
+        covenant = Grant.propose(permissions=frozenset({"file_read"}))
 
         store.add(covenant)
         retrieved = store.get(covenant.id)
@@ -410,12 +410,12 @@ class TestCovenantStore:
         assert retrieved.id == covenant.id
 
     def test_active_filter(self) -> None:
-        """active() returns only active Covenants."""
-        store = CovenantStore()
+        """active() returns only active Grants."""
+        store = GrantStore()
 
-        active = Covenant.propose(permissions=frozenset({"file_read"})).grant("kent")
-        proposed = Covenant.propose(permissions=frozenset({"file_write"}))
-        revoked = Covenant.propose(permissions=frozenset({"git_push"})).grant("kent").revoke("kent")
+        active = Grant.propose(permissions=frozenset({"file_read"})).grant("kent")
+        proposed = Grant.propose(permissions=frozenset({"file_write"}))
+        revoked = Grant.propose(permissions=frozenset({"git_push"})).grant("kent").revoke("kent")
 
         store.add(active)
         store.add(proposed)
@@ -426,12 +426,12 @@ class TestCovenantStore:
         assert active_list[0].id == active.id
 
     def test_pending_filter(self) -> None:
-        """pending() returns PROPOSED and NEGOTIATING Covenants."""
-        store = CovenantStore()
+        """pending() returns PROPOSED and NEGOTIATING Grants."""
+        store = GrantStore()
 
-        proposed = Covenant.propose(permissions=frozenset({"file_read"}))
-        negotiating = Covenant.propose(permissions=frozenset({"file_write"})).negotiate()
-        granted = Covenant.propose(permissions=frozenset({"git_push"})).grant("kent")
+        proposed = Grant.propose(permissions=frozenset({"file_read"}))
+        negotiating = Grant.propose(permissions=frozenset({"file_write"})).negotiate()
+        granted = Grant.propose(permissions=frozenset({"git_push"})).grant("kent")
 
         store.add(proposed)
         store.add(negotiating)
@@ -441,11 +441,11 @@ class TestCovenantStore:
         assert len(pending) == 2
 
     def test_revoked_filter(self) -> None:
-        """revoked() returns revoked Covenants."""
-        store = CovenantStore()
+        """revoked() returns revoked Grants."""
+        store = GrantStore()
 
-        active = Covenant.propose(permissions=frozenset({"file_read"})).grant("kent")
-        revoked = Covenant.propose(permissions=frozenset({"git_push"})).grant("kent").revoke("kent")
+        active = Grant.propose(permissions=frozenset({"file_read"})).grant("kent")
+        revoked = Grant.propose(permissions=frozenset({"git_push"})).grant("kent").revoke("kent")
 
         store.add(active)
         store.add(revoked)
@@ -483,8 +483,8 @@ class TestSerialization:
         assert restored.fallback == original.fallback
 
     def test_covenant_roundtrip(self) -> None:
-        """Covenant serializes and deserializes correctly."""
-        original = Covenant.propose(
+        """Grant serializes and deserializes correctly."""
+        original = Grant.propose(
             permissions=frozenset({"file_read", "file_write", "git_commit"}),
             review_gates=(
                 ReviewGate("git_push", threshold=1),
@@ -494,7 +494,7 @@ class TestSerialization:
         ).grant("kent")
 
         data = original.to_dict()
-        restored = Covenant.from_dict(data)
+        restored = Grant.from_dict(data)
 
         assert restored.id == original.id
         assert restored.permissions == original.permissions
@@ -503,9 +503,9 @@ class TestSerialization:
         assert len(restored.review_gates) == 2
 
     def test_revoked_covenant_roundtrip(self) -> None:
-        """Revoked Covenant preserves revocation info."""
+        """Revoked Grant preserves revocation info."""
         original = (
-            Covenant.propose(
+            Grant.propose(
                 permissions=frozenset({"file_read"}),
             )
             .grant("kent")
@@ -513,9 +513,9 @@ class TestSerialization:
         )
 
         data = original.to_dict()
-        restored = Covenant.from_dict(data)
+        restored = Grant.from_dict(data)
 
-        assert restored.status == CovenantStatus.REVOKED
+        assert restored.status == GrantStatus.REVOKED
         assert restored.revoked_by == "kent"
         assert restored.revoke_reason == "Security concern"
 
@@ -529,19 +529,19 @@ class TestEdgeCases:
     """Edge cases for robustness."""
 
     def test_empty_permissions(self) -> None:
-        """Covenant with empty permissions grants nothing."""
-        covenant = Covenant.propose(
+        """Grant with empty permissions grants nothing."""
+        covenant = Grant.propose(
             permissions=frozenset(),
         ).grant("kent")
 
         assert covenant.is_active
 
-        with pytest.raises(CovenantNotGranted):
+        with pytest.raises(GrantNotGranted):
             covenant.check_permission("anything")
 
     def test_multiple_gates_same_operation(self) -> None:
         """Multiple gates can exist (first wins)."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"git_push"}),
             review_gates=(ReviewGate("git_push", threshold=2),),
         ).grant("kent")
@@ -552,12 +552,12 @@ class TestEdgeCases:
 
     def test_enforcer_without_gates(self) -> None:
         """Enforcer works with no gates."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read", "file_write"}),
             review_gates=(),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         # All permitted operations work without limit
         for _ in range(100):
@@ -566,13 +566,13 @@ class TestEdgeCases:
 
     def test_enforcer_permission_check_before_gate(self) -> None:
         """Enforcer checks permission before gate count."""
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=frozenset({"file_read"}),
             review_gates=(ReviewGate("git_push", threshold=1),),
         ).grant("kent")
 
-        enforcer = CovenantEnforcer(covenant)
+        enforcer = GrantEnforcer(covenant)
 
         # git_push not in permissions
-        with pytest.raises(CovenantNotGranted):
+        with pytest.raises(GrantNotGranted):
             enforcer.check("git_push")

@@ -130,10 +130,10 @@ class TestTerraceNode:
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create isolated store per test using monkeypatch for true isolation."""
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
         # Use monkeypatch to ensure complete isolation even across parallel workers
-        fresh_store = TerraceStore()
+        fresh_store = LessonStore()
         monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
 
     @pytest.fixture
@@ -276,14 +276,14 @@ class TestWarpNodesIntegration:
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create isolated store per test using monkeypatch for true isolation."""
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
         # Use monkeypatch to ensure complete isolation even across parallel workers
-        fresh_store = TerraceStore()
+        fresh_store = LessonStore()
         monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
 
     def test_voice_gate_can_check_terrace_content(self) -> None:
-        """VoiceGate can validate Terrace content."""
+        """VoiceGate can validate Lesson content."""
         terrace_node = TerraceNode()
         voice_node = VoiceGateNode()
 
@@ -329,7 +329,7 @@ class TestWarpNodesIntegration:
         assert voice_result.content is not None
         assert terrace_result.content is not None
         assert "Voice Gate" in voice_result.content
-        assert "Terrace" in terrace_result.content
+        assert "Lesson" in terrace_result.content
 
 
 # =============================================================================
@@ -343,9 +343,9 @@ class TestTerraceNodeCurate:
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create isolated store per test."""
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
-        fresh_store = TerraceStore()
+        fresh_store = LessonStore()
         monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
 
     @pytest.fixture
@@ -419,14 +419,14 @@ class TestTerraceNodeCurate:
 
 
 class TestTerraceNodeCrystallize:
-    """Tests for brain.terrace.crystallize aspect (Brain → Terrace bridge)."""
+    """Tests for brain.terrace.crystallize aspect (Brain → Lesson bridge)."""
 
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create isolated store per test."""
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
-        fresh_store = TerraceStore()
+        fresh_store = LessonStore()
         monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
 
     @pytest.fixture
@@ -466,14 +466,14 @@ class TestTerraceNodeCrystallize:
 
 
 class TestTerraceVoiceGateIntegration:
-    """Tests for VoiceGate integration in Terrace."""
+    """Tests for VoiceGate integration in Lesson."""
 
     @pytest.fixture(autouse=True)
     def isolated_store(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Create isolated store per test."""
-        from services.witness.terrace import TerraceStore
+        from services.witness.lesson import LessonStore
 
-        fresh_store = TerraceStore()
+        fresh_store = LessonStore()
         monkeypatch.setattr(terrace_module, "_terrace_store", fresh_store)
 
     @pytest.fixture

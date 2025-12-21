@@ -8,7 +8,7 @@ Architecture:
     SceneNode - Atomic visual element (PANEL, TRACE, INTENT, etc.)
     SceneGraph - Composable scene structure with category laws
     LayoutDirective - Elastic layout specification
-    TerrariumView - Observer-dependent lens over TraceNode streams
+    TerrariumView - Observer-dependent lens over Mark streams
 
 Key Insight (from spec/protocols/servo-substrate.md):
     "Servo is not 'a browser' inside kgents. It is the projection substrate

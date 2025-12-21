@@ -218,11 +218,11 @@ from .three import (
 from .time import (
     TIME_AFFORDANCES,
     FutureNode,
+    Mark,
     PastNode,
     ScheduledAction,
     ScheduleNode,
     TimeContextResolver,
-    TraceNode,
     create_time_resolver,
 )
 
@@ -231,7 +231,7 @@ from .time_differance import (
     DIFFERANCE_BRANCH_AFFORDANCES,
     DIFFERANCE_TRACE_AFFORDANCES,
     BranchNode,
-    DifferanceTraceNode,
+    DifferanceMark,
     create_differance_node,
     get_branch_node,
     get_differance_node,
@@ -495,7 +495,7 @@ __all__ = [
     "create_entropy_pool",
     # Time context
     "TimeContextResolver",
-    "TraceNode",
+    "Mark",
     "PastNode",
     "FutureNode",
     "ScheduleNode",
@@ -504,7 +504,7 @@ __all__ = [
     # Différance Engine (time.differance.* - Ghost Heritage DAG)
     "DIFFERANCE_TRACE_AFFORDANCES",
     "DIFFERANCE_BRANCH_AFFORDANCES",
-    "DifferanceTraceNode",
+    "DifferanceMark",
     "BranchNode",
     "create_differance_node",
     "get_differance_node",

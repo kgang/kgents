@@ -1,8 +1,8 @@
 """
-Tests for Terrace: Curated Knowledge Layer with Versioning.
+Tests for Lesson: Curated Knowledge Layer with Versioning.
 
-Terrace Laws:
-- Law 1 (Immutability): Terraces are frozen after creation
+Lesson Laws:
+- Law 1 (Immutability): Lessons are frozen after creation
 - Law 2 (Supersession): New versions explicitly supersede old
 - Law 3 (History Preserved): All versions are kept for reference
 - Law 4 (Topic Uniqueness): One current version per topic
@@ -12,15 +12,15 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from ..terrace import (
-    Terrace,
-    TerraceId,
-    TerraceStatus,
-    TerraceStore,
-    generate_terrace_id,
-    get_terrace_store,
-    reset_terrace_store,
-    set_terrace_store,
+from ..lesson import (
+    Lesson,
+    LessonId,
+    LessonStatus,
+    LessonStore,
+    generate_lesson_id,
+    get_lesson_store,
+    reset_lesson_store,
+    set_lesson_store,
 )
 
 # =============================================================================
@@ -31,21 +31,21 @@ from ..terrace import (
 @pytest.fixture(autouse=True)
 def reset_global_store():
     """Reset global terrace store before each test."""
-    reset_terrace_store()
+    reset_lesson_store()
     yield
-    reset_terrace_store()
+    reset_lesson_store()
 
 
 @pytest.fixture
-def store() -> TerraceStore:
-    """Create a fresh TerraceStore."""
-    return TerraceStore()
+def store() -> LessonStore:
+    """Create a fresh LessonStore."""
+    return LessonStore()
 
 
 @pytest.fixture
-def sample_terrace() -> Terrace:
-    """Create a sample Terrace."""
-    return Terrace.create(
+def sample_terrace() -> Lesson:
+    """Create a sample Lesson."""
+    return Lesson.create(
         topic="AGENTESE registration",
         content="Use @node decorator. Register in gateway.py.",
         tags=("agentese", "patterns"),
@@ -54,39 +54,39 @@ def sample_terrace() -> Terrace:
 
 
 # =============================================================================
-# Basic Terrace Tests
+# Basic Lesson Tests
 # =============================================================================
 
 
-class TestTerraceBasics:
-    """Test basic Terrace functionality."""
+class TestLessonBasics:
+    """Test basic Lesson functionality."""
 
-    def test_create_terrace(self, sample_terrace: Terrace):
-        """Terrace can be created."""
+    def test_create_terrace(self, sample_terrace: Lesson):
+        """Lesson can be created."""
         assert sample_terrace.topic == "AGENTESE registration"
         assert sample_terrace.version == 1
-        assert sample_terrace.status == TerraceStatus.CURRENT
+        assert sample_terrace.status == LessonStatus.CURRENT
         assert sample_terrace.supersedes is None
 
-    def test_terrace_id_generated(self, sample_terrace: Terrace):
-        """Terrace IDs are generated."""
-        assert sample_terrace.id.startswith("terrace-")
-        assert len(str(sample_terrace.id)) == 20  # "terrace-" + 12 hex chars
+    def test_terrace_id_generated(self, sample_terrace: Lesson):
+        """Lesson IDs are generated."""
+        assert sample_terrace.id.startswith("lesson-")
+        assert len(str(sample_terrace.id)) == 19  # "lesson-" + 12 hex chars
 
-    def test_generate_terrace_id(self):
+    def test_generate_lesson_id(self):
         """IDs can be generated independently."""
-        id1 = generate_terrace_id()
-        id2 = generate_terrace_id()
+        id1 = generate_lesson_id()
+        id2 = generate_lesson_id()
         assert id1 != id2
-        assert id1.startswith("terrace-")
+        assert id1.startswith("lesson-")
 
-    def test_terrace_has_tags(self, sample_terrace: Terrace):
-        """Terrace preserves tags."""
+    def test_terrace_has_tags(self, sample_terrace: Lesson):
+        """Lesson preserves tags."""
         assert "agentese" in sample_terrace.tags
         assert "patterns" in sample_terrace.tags
 
-    def test_terrace_has_source(self, sample_terrace: Terrace):
-        """Terrace preserves source."""
+    def test_terrace_has_source(self, sample_terrace: Lesson):
+        """Lesson preserves source."""
         assert sample_terrace.source == "debugging session"
 
 
@@ -96,15 +96,15 @@ class TestTerraceBasics:
 
 
 class TestImmutability:
-    """Test Law 1: Terraces are frozen after creation."""
+    """Test Law 1: Lessons are frozen after creation."""
 
-    def test_terrace_is_frozen(self, sample_terrace: Terrace):
-        """Terrace cannot be mutated."""
+    def test_terrace_is_frozen(self, sample_terrace: Lesson):
+        """Lesson cannot be mutated."""
         with pytest.raises(Exception):  # FrozenInstanceError
             sample_terrace.content = "new content"  # type: ignore
 
-    def test_evolve_returns_new_terrace(self, sample_terrace: Terrace):
-        """evolve() returns a new Terrace, not mutating original."""
+    def test_evolve_returns_new_terrace(self, sample_terrace: Lesson):
+        """evolve() returns a new Lesson, not mutating original."""
         evolved = sample_terrace.evolve(
             content="Updated content",
             reason="Test evolution",
@@ -127,13 +127,13 @@ class TestImmutability:
 class TestSupersession:
     """Test Law 2: New versions explicitly supersede old."""
 
-    def test_evolve_sets_supersedes(self, sample_terrace: Terrace):
+    def test_evolve_sets_supersedes(self, sample_terrace: Lesson):
         """evolve() sets supersedes to previous ID."""
         evolved = sample_terrace.evolve(content="New content")
 
         assert evolved.supersedes == sample_terrace.id
 
-    def test_evolve_increments_version(self, sample_terrace: Terrace):
+    def test_evolve_increments_version(self, sample_terrace: Lesson):
         """evolve() increments version number."""
         v1 = sample_terrace
         v2 = v1.evolve(content="Version 2")
@@ -143,19 +143,19 @@ class TestSupersession:
         assert v2.version == 2
         assert v3.version == 3
 
-    def test_evolve_preserves_topic(self, sample_terrace: Terrace):
+    def test_evolve_preserves_topic(self, sample_terrace: Lesson):
         """evolve() preserves the topic."""
         evolved = sample_terrace.evolve(content="New content")
 
         assert evolved.topic == sample_terrace.topic
 
-    def test_evolve_inherits_tags(self, sample_terrace: Terrace):
+    def test_evolve_inherits_tags(self, sample_terrace: Lesson):
         """evolve() inherits tags if not specified."""
         evolved = sample_terrace.evolve(content="New content")
 
         assert evolved.tags == sample_terrace.tags
 
-    def test_evolve_can_change_tags(self, sample_terrace: Terrace):
+    def test_evolve_can_change_tags(self, sample_terrace: Lesson):
         """evolve() can update tags."""
         evolved = sample_terrace.evolve(
             content="New content",
@@ -165,7 +165,7 @@ class TestSupersession:
         assert "new-tag" in evolved.tags
         assert "agentese" not in evolved.tags
 
-    def test_evolve_records_reason(self, sample_terrace: Terrace):
+    def test_evolve_records_reason(self, sample_terrace: Lesson):
         """evolve() records evolution reason."""
         evolved = sample_terrace.evolve(
             content="New content",
@@ -174,7 +174,7 @@ class TestSupersession:
 
         assert evolved.evolution_reason == "Found a bug in the pattern"
 
-    def test_has_supersedes_property(self, sample_terrace: Terrace):
+    def test_has_supersedes_property(self, sample_terrace: Lesson):
         """has_supersedes property works correctly."""
         v1 = sample_terrace
         v2 = v1.evolve(content="V2")
@@ -191,9 +191,9 @@ class TestSupersession:
 class TestHistoryPreserved:
     """Test Law 3: All versions are kept for reference."""
 
-    def test_store_keeps_all_versions(self, store: TerraceStore):
+    def test_store_keeps_all_versions(self, store: LessonStore):
         """Store keeps all versions of a topic."""
-        v1 = Terrace.create(topic="Test", content="Version 1")
+        v1 = Lesson.create(topic="Test", content="Version 1")
         store.add(v1)
 
         v2 = v1.evolve(content="Version 2")
@@ -209,9 +209,9 @@ class TestHistoryPreserved:
         assert history[1].version == 2
         assert history[2].version == 3
 
-    def test_original_still_retrievable(self, store: TerraceStore):
+    def test_original_still_retrievable(self, store: LessonStore):
         """Original version can still be retrieved by ID."""
-        v1 = Terrace.create(topic="Test", content="Version 1")
+        v1 = Lesson.create(topic="Test", content="Version 1")
         store.add(v1)
 
         v2 = v1.evolve(content="Version 2")
@@ -231,9 +231,9 @@ class TestHistoryPreserved:
 class TestTopicUniqueness:
     """Test Law 4: One current version per topic."""
 
-    def test_current_returns_latest(self, store: TerraceStore):
+    def test_current_returns_latest(self, store: LessonStore):
         """current() returns the latest CURRENT version."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         v2 = v1.evolve(content="V2")
@@ -243,9 +243,9 @@ class TestTopicUniqueness:
         assert current is not None
         assert current.version == 2
 
-    def test_add_marks_previous_superseded(self, store: TerraceStore):
+    def test_add_marks_previous_superseded(self, store: LessonStore):
         """Adding evolved version marks previous as SUPERSEDED."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         v2 = v1.evolve(content="V2")
@@ -254,11 +254,11 @@ class TestTopicUniqueness:
         # Check v1 is now superseded
         v1_updated = store.get(v1.id)
         assert v1_updated is not None
-        assert v1_updated.status == TerraceStatus.SUPERSEDED
+        assert v1_updated.status == LessonStatus.SUPERSEDED
 
-    def test_only_one_current_per_topic(self, store: TerraceStore):
+    def test_only_one_current_per_topic(self, store: LessonStore):
         """Only one CURRENT per topic."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         v2 = v1.evolve(content="V2")
@@ -280,64 +280,64 @@ class TestTopicUniqueness:
 class TestStatusTransitions:
     """Test status transitions."""
 
-    def test_deprecate(self, sample_terrace: Terrace):
-        """Terrace can be deprecated."""
+    def test_deprecate(self, sample_terrace: Lesson):
+        """Lesson can be deprecated."""
         deprecated = sample_terrace.deprecate(reason="No longer recommended")
 
-        assert deprecated.status == TerraceStatus.DEPRECATED
+        assert deprecated.status == LessonStatus.DEPRECATED
         assert deprecated.is_deprecated is True
         assert "deprecated_at" in deprecated.metadata
 
-    def test_archive(self, sample_terrace: Terrace):
-        """Terrace can be archived."""
+    def test_archive(self, sample_terrace: Lesson):
+        """Lesson can be archived."""
         archived = sample_terrace.archive()
 
-        assert archived.status == TerraceStatus.ARCHIVED
+        assert archived.status == LessonStatus.ARCHIVED
         assert "archived_at" in archived.metadata
 
     def test_status_properties(self):
         """Status properties work correctly."""
-        current = Terrace.create(topic="Test", content="Content")
+        current = Lesson.create(topic="Test", content="Content")
         assert current.is_current is True
         assert current.is_superseded is False
         assert current.is_deprecated is False
 
 
 # =============================================================================
-# TerraceStore Tests
+# LessonStore Tests
 # =============================================================================
 
 
-class TestTerraceStore:
-    """Test TerraceStore functionality."""
+class TestLessonStore:
+    """Test LessonStore functionality."""
 
-    def test_add_and_get(self, store: TerraceStore):
-        """Terraces can be added and retrieved."""
-        terrace = Terrace.create(topic="Test", content="Content")
+    def test_add_and_get(self, store: LessonStore):
+        """Lessons can be added and retrieved."""
+        terrace = Lesson.create(topic="Test", content="Content")
         store.add(terrace)
 
         retrieved = store.get(terrace.id)
         assert retrieved is not None
         assert retrieved.topic == "Test"
 
-    def test_get_nonexistent(self, store: TerraceStore):
+    def test_get_nonexistent(self, store: LessonStore):
         """Getting nonexistent ID returns None."""
-        result = store.get(TerraceId("nonexistent"))
+        result = store.get(LessonId("nonexistent"))
         assert result is None
 
-    def test_current_returns_none_for_unknown_topic(self, store: TerraceStore):
+    def test_current_returns_none_for_unknown_topic(self, store: LessonStore):
         """current() returns None for unknown topic."""
         result = store.current("Unknown Topic")
         assert result is None
 
-    def test_history_returns_empty_for_unknown(self, store: TerraceStore):
+    def test_history_returns_empty_for_unknown(self, store: LessonStore):
         """history() returns empty list for unknown topic."""
         result = store.history("Unknown Topic")
         assert result == []
 
-    def test_latest_vs_current(self, store: TerraceStore):
+    def test_latest_vs_current(self, store: LessonStore):
         """latest() returns latest regardless of status."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         # Deprecate it (no longer CURRENT)
@@ -361,11 +361,11 @@ class TestTerraceStore:
 class TestSearchAndFiltering:
     """Test search and filtering capabilities."""
 
-    def test_by_tag(self, store: TerraceStore):
+    def test_by_tag(self, store: LessonStore):
         """Filter by tag works."""
-        t1 = Terrace.create(topic="A", content="C1", tags=("python",))
-        t2 = Terrace.create(topic="B", content="C2", tags=("rust",))
-        t3 = Terrace.create(topic="C", content="C3", tags=("python", "testing"))
+        t1 = Lesson.create(topic="A", content="C1", tags=("python",))
+        t2 = Lesson.create(topic="B", content="C2", tags=("rust",))
+        t3 = Lesson.create(topic="C", content="C3", tags=("python", "testing"))
         store.add(t1)
         store.add(t2)
         store.add(t3)
@@ -373,10 +373,10 @@ class TestSearchAndFiltering:
         python_terraces = store.by_tag("python")
         assert len(python_terraces) == 2
 
-    def test_by_source(self, store: TerraceStore):
+    def test_by_source(self, store: LessonStore):
         """Filter by source works."""
-        t1 = Terrace.create(topic="A", content="C1", source="debugging")
-        t2 = Terrace.create(topic="B", content="C2", source="review")
+        t1 = Lesson.create(topic="A", content="C1", source="debugging")
+        t2 = Lesson.create(topic="B", content="C2", source="review")
         store.add(t1)
         store.add(t2)
 
@@ -384,10 +384,10 @@ class TestSearchAndFiltering:
         assert len(debugging) == 1
         assert debugging[0].topic == "A"
 
-    def test_search_by_topic(self, store: TerraceStore):
+    def test_search_by_topic(self, store: LessonStore):
         """Search matches topics."""
-        t1 = Terrace.create(topic="AGENTESE patterns", content="...")
-        t2 = Terrace.create(topic="Testing patterns", content="...")
+        t1 = Lesson.create(topic="AGENTESE patterns", content="...")
+        t2 = Lesson.create(topic="Testing patterns", content="...")
         store.add(t1)
         store.add(t2)
 
@@ -395,10 +395,10 @@ class TestSearchAndFiltering:
         assert len(results) == 1
         assert results[0].topic == "AGENTESE patterns"
 
-    def test_search_by_content(self, store: TerraceStore):
+    def test_search_by_content(self, store: LessonStore):
         """Search matches content."""
-        t1 = Terrace.create(topic="A", content="Use the @node decorator")
-        t2 = Terrace.create(topic="B", content="Use pytest fixtures")
+        t1 = Lesson.create(topic="A", content="Use the @node decorator")
+        t2 = Lesson.create(topic="B", content="Use pytest fixtures")
         store.add(t1)
         store.add(t2)
 
@@ -406,9 +406,9 @@ class TestSearchAndFiltering:
         assert len(results) == 1
         assert results[0].topic == "A"
 
-    def test_search_case_insensitive(self, store: TerraceStore):
+    def test_search_case_insensitive(self, store: LessonStore):
         """Search is case insensitive."""
-        t1 = Terrace.create(topic="AGENTESE", content="...")
+        t1 = Lesson.create(topic="AGENTESE", content="...")
         store.add(t1)
 
         results = store.search("agentese")
@@ -423,23 +423,23 @@ class TestSearchAndFiltering:
 class TestListingMethods:
     """Test listing methods."""
 
-    def test_all_current(self, store: TerraceStore):
+    def test_all_current(self, store: LessonStore):
         """all_current() returns only CURRENT terraces."""
-        t1 = Terrace.create(topic="A", content="V1")
+        t1 = Lesson.create(topic="A", content="V1")
         store.add(t1)
         t2 = t1.evolve(content="V2")
         store.add(t2)
 
-        t3 = Terrace.create(topic="B", content="V1")
+        t3 = Lesson.create(topic="B", content="V1")
         store.add(t3)
 
         current = store.all_current()
         assert len(current) == 2  # t2 (topic A) and t3 (topic B)
 
-    def test_all_topics(self, store: TerraceStore):
+    def test_all_topics(self, store: LessonStore):
         """all_topics() returns all topic names."""
-        t1 = Terrace.create(topic="Topic A", content="...")
-        t2 = Terrace.create(topic="Topic B", content="...")
+        t1 = Lesson.create(topic="Topic A", content="...")
+        t2 = Lesson.create(topic="Topic B", content="...")
         store.add(t1)
         store.add(t2)
 
@@ -447,9 +447,9 @@ class TestListingMethods:
         assert "Topic A" in topics
         assert "Topic B" in topics
 
-    def test_deprecated(self, store: TerraceStore):
+    def test_deprecated(self, store: LessonStore):
         """deprecated() returns deprecated terraces."""
-        t1 = Terrace.create(topic="A", content="...")
+        t1 = Lesson.create(topic="A", content="...")
         store.add(t1)
         t1_deprecated = t1.deprecate()
         store.update(t1_deprecated)
@@ -457,11 +457,11 @@ class TestListingMethods:
         deprecated = store.deprecated()
         assert len(deprecated) == 1
 
-    def test_recent(self, store: TerraceStore):
+    def test_recent(self, store: LessonStore):
         """recent() returns most recent terraces."""
-        t1 = Terrace.create(topic="A", content="...")
-        t2 = Terrace.create(topic="B", content="...")
-        t3 = Terrace.create(topic="C", content="...")
+        t1 = Lesson.create(topic="A", content="...")
+        t2 = Lesson.create(topic="B", content="...")
+        t3 = Lesson.create(topic="C", content="...")
         store.add(t1)
         store.add(t2)
         store.add(t3)
@@ -478,9 +478,9 @@ class TestListingMethods:
 class TestVersionTraversal:
     """Test version traversal methods."""
 
-    def test_predecessor(self, store: TerraceStore):
+    def test_predecessor(self, store: LessonStore):
         """predecessor() returns previous version."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
         v2 = v1.evolve(content="V2")
         store.add(v2)
@@ -489,17 +489,17 @@ class TestVersionTraversal:
         assert pred is not None
         assert pred.id == v1.id
 
-    def test_predecessor_none_for_first(self, store: TerraceStore):
+    def test_predecessor_none_for_first(self, store: LessonStore):
         """predecessor() returns None for first version."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         pred = store.predecessor(v1)
         assert pred is None
 
-    def test_successor(self, store: TerraceStore):
+    def test_successor(self, store: LessonStore):
         """successor() returns next version."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
         v2 = v1.evolve(content="V2")
         store.add(v2)
@@ -508,17 +508,17 @@ class TestVersionTraversal:
         assert succ is not None
         assert succ.id == v2.id
 
-    def test_successor_none_for_latest(self, store: TerraceStore):
+    def test_successor_none_for_latest(self, store: LessonStore):
         """successor() returns None for latest version."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
 
         succ = store.successor(v1)
         assert succ is None
 
-    def test_full_chain(self, store: TerraceStore):
+    def test_full_chain(self, store: LessonStore):
         """full_chain() returns complete version history."""
-        v1 = Terrace.create(topic="Test", content="V1")
+        v1 = Lesson.create(topic="Test", content="V1")
         store.add(v1)
         v2 = v1.evolve(content="V2")
         store.add(v2)
@@ -538,14 +538,14 @@ class TestVersionTraversal:
 class TestStatistics:
     """Test statistics methods."""
 
-    def test_stats(self, store: TerraceStore):
+    def test_stats(self, store: LessonStore):
         """stats() returns store statistics."""
-        v1 = Terrace.create(topic="A", content="V1")
+        v1 = Lesson.create(topic="A", content="V1")
         store.add(v1)
         v2 = v1.evolve(content="V2")
         store.add(v2)
 
-        t2 = Terrace.create(topic="B", content="V1")
+        t2 = Lesson.create(topic="B", content="V1")
         store.add(t2)
         t2_deprecated = t2.deprecate()
         store.update(t2_deprecated)
@@ -557,10 +557,10 @@ class TestStatistics:
         assert stats["superseded"] == 1  # v1
         assert stats["deprecated"] == 1  # t2
 
-    def test_len(self, store: TerraceStore):
+    def test_len(self, store: LessonStore):
         """len() returns total terrace count."""
-        t1 = Terrace.create(topic="A", content="...")
-        t2 = Terrace.create(topic="B", content="...")
+        t1 = Lesson.create(topic="A", content="...")
+        t2 = Lesson.create(topic="B", content="...")
         store.add(t1)
         store.add(t2)
 
@@ -575,8 +575,8 @@ class TestStatistics:
 class TestSerialization:
     """Test serialization."""
 
-    def test_to_dict(self, sample_terrace: Terrace):
-        """Terrace can be converted to dict."""
+    def test_to_dict(self, sample_terrace: Lesson):
+        """Lesson can be converted to dict."""
         data = sample_terrace.to_dict()
 
         assert data["topic"] == "AGENTESE registration"
@@ -584,17 +584,17 @@ class TestSerialization:
         assert data["status"] == "CURRENT"
         assert "agentese" in data["tags"]
 
-    def test_from_dict(self, sample_terrace: Terrace):
-        """Terrace can be restored from dict."""
+    def test_from_dict(self, sample_terrace: Lesson):
+        """Lesson can be restored from dict."""
         data = sample_terrace.to_dict()
-        restored = Terrace.from_dict(data)
+        restored = Lesson.from_dict(data)
 
         assert restored.topic == sample_terrace.topic
         assert restored.content == sample_terrace.content
         assert restored.version == sample_terrace.version
         assert restored.tags == sample_terrace.tags
 
-    def test_round_trip(self, sample_terrace: Terrace):
+    def test_round_trip(self, sample_terrace: Lesson):
         """Serialization round-trips correctly."""
         evolved = sample_terrace.evolve(
             content="New content",
@@ -602,7 +602,7 @@ class TestSerialization:
         )
 
         data = evolved.to_dict()
-        restored = Terrace.from_dict(data)
+        restored = Lesson.from_dict(data)
 
         assert restored.version == 2
         assert restored.supersedes is not None
@@ -619,27 +619,27 @@ class TestGlobalInstance:
 
     def test_get_global(self):
         """Global store can be retrieved."""
-        store = get_terrace_store()
-        assert isinstance(store, TerraceStore)
+        store = get_lesson_store()
+        assert isinstance(store, LessonStore)
 
     def test_global_is_singleton(self):
         """Global store is a singleton."""
-        store1 = get_terrace_store()
-        store2 = get_terrace_store()
+        store1 = get_lesson_store()
+        store2 = get_lesson_store()
         assert store1 is store2
 
     def test_set_global(self):
         """Global store can be set."""
-        custom = TerraceStore()
-        set_terrace_store(custom)
+        custom = LessonStore()
+        set_lesson_store(custom)
 
-        assert get_terrace_store() is custom
+        assert get_lesson_store() is custom
 
     def test_reset_global(self):
         """Global store can be reset."""
-        store1 = get_terrace_store()
-        reset_terrace_store()
-        store2 = get_terrace_store()
+        store1 = get_lesson_store()
+        reset_lesson_store()
+        store2 = get_lesson_store()
 
         assert store1 is not store2
 
@@ -650,9 +650,9 @@ class TestGlobalInstance:
 
 
 class TestProperties:
-    """Test Terrace properties."""
+    """Test Lesson properties."""
 
-    def test_age_days(self, sample_terrace: Terrace):
+    def test_age_days(self, sample_terrace: Lesson):
         """age_days returns positive value."""
         # Just created, should be very close to 0
         assert sample_terrace.age_days >= 0
@@ -660,15 +660,15 @@ class TestProperties:
 
     def test_confidence(self):
         """Confidence is preserved and defaults to 1.0."""
-        t1 = Terrace.create(topic="A", content="...", confidence=0.8)
+        t1 = Lesson.create(topic="A", content="...", confidence=0.8)
         assert t1.confidence == 0.8
 
-        t2 = Terrace.create(topic="B", content="...")
+        t2 = Lesson.create(topic="B", content="...")
         assert t2.confidence == 1.0
 
     def test_evolve_updates_confidence(self):
         """evolve() can update confidence."""
-        t1 = Terrace.create(topic="A", content="...", confidence=0.5)
+        t1 = Lesson.create(topic="A", content="...", confidence=0.5)
         t2 = t1.evolve(content="...", confidence=0.9)
 
         assert t2.confidence == 0.9
@@ -684,33 +684,33 @@ class TestEdgeCases:
 
     def test_empty_content(self):
         """Empty content is allowed."""
-        terrace = Terrace.create(topic="Empty", content="")
+        terrace = Lesson.create(topic="Empty", content="")
         assert terrace.content == ""
 
     def test_empty_tags(self):
         """Empty tags tuple is valid."""
-        terrace = Terrace.create(topic="NoTags", content="...")
+        terrace = Lesson.create(topic="NoTags", content="...")
         assert terrace.tags == ()
 
     def test_long_content(self):
         """Long content is handled."""
         content = "x" * 100000
-        terrace = Terrace.create(topic="Long", content=content)
+        terrace = Lesson.create(topic="Long", content=content)
         assert len(terrace.content) == 100000
 
     def test_unicode_content(self):
         """Unicode content is handled."""
-        terrace = Terrace.create(topic="Unicode", content="Hello, World!")
+        terrace = Lesson.create(topic="Unicode", content="Hello, World!")
         assert terrace.content == "Hello, World!"
 
-    def test_multiple_topics_independent(self, store: TerraceStore):
+    def test_multiple_topics_independent(self, store: LessonStore):
         """Multiple topics evolve independently."""
-        a1 = Terrace.create(topic="A", content="A1")
+        a1 = Lesson.create(topic="A", content="A1")
         store.add(a1)
         a2 = a1.evolve(content="A2")
         store.add(a2)
 
-        b1 = Terrace.create(topic="B", content="B1")
+        b1 = Lesson.create(topic="B", content="B1")
         store.add(b1)
 
         # A has 2 versions, B has 1

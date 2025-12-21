@@ -1,22 +1,22 @@
 """
-AGENTESE Time Trace WARP Context: TraceNode and Walk Primitives.
+AGENTESE Time Trace WARP Context: Mark and Walk Primitives.
 
 Provides AGENTESE paths for WARP Phase 1 primitives:
-- time.trace.node.* - TraceNode operations
+- time.trace.node.* - Mark operations
 - time.walk.* - Walk (durable work stream) operations
 
 The Insight (from spec/protocols/warp-primitives.md):
-    "Every action is a TraceNode. Every session is a Walk. Every workflow is a Ritual."
+    "Every action is a Mark. Every session is a Walk. Every workflow is a Playbook."
 
 AGENTESE Paths:
-    time.trace.node.manifest - View TraceNode store status
-    time.trace.node.capture - Emit a new TraceNode
+    time.trace.node.manifest - View Mark store status
+    time.trace.node.capture - Emit a new Mark
     time.trace.node.query - Query traces by criteria
     time.trace.node.get - Get a specific trace by ID
 
     time.walk.manifest - View active Walks
     time.walk.create - Create a new Walk
-    time.walk.advance - Add a TraceNode to a Walk
+    time.walk.advance - Add a Mark to a Walk
     time.walk.transition - Transition Walk phase
     time.walk.complete - Mark Walk complete
 
@@ -43,24 +43,24 @@ if TYPE_CHECKING:
 
 
 # =============================================================================
-# TraceNode AGENTESE Node
+# Mark AGENTESE Node
 # =============================================================================
 
 
 @node(
     "time.trace.node",
-    description="WARP TraceNode operations - atomic execution artifacts",
+    description="WARP Mark operations - atomic execution artifacts",
 )
 @dataclass
-class TraceNodeLogosNode(BaseLogosNode):
+class MarkLogosNode(BaseLogosNode):
     """
-    time.trace.node - WARP TraceNode operations.
+    time.trace.node - WARP Mark operations.
 
-    Provides AGENTESE access to the TraceNodeStore.
+    Provides AGENTESE access to the MarkStore.
 
     Aspects:
         manifest - View store status
-        capture - Emit a new TraceNode
+        capture - Emit a new Mark
         query - Query traces by criteria
         get - Get a specific trace by ID
         replay - Replay a sequence of traces
@@ -73,18 +73,18 @@ class TraceNodeLogosNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """TraceNode affordances."""
+        """Mark affordances."""
         return ("manifest", "capture", "query", "get", "replay")
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
-        """View TraceNode store status."""
-        from services.witness import get_trace_store
+        """View Mark store status."""
+        from services.witness import get_mark_store
 
-        store = get_trace_store()
+        store = get_mark_store()
         stats = store.stats()
 
         return BasicRendering(
-            summary="TraceNode Store (WARP)",
+            summary="Mark Store (WARP)",
             content=f"Total traces: {stats['total_nodes']}, Links: {stats['total_links']}",
             metadata={
                 "total_nodes": stats["total_nodes"],
@@ -101,7 +101,7 @@ class TraceNodeLogosNode(BaseLogosNode):
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
-        """Handle TraceNode aspects."""
+        """Handle Mark aspects."""
         match aspect:
             case "capture":
                 return await self._capture(observer, **kwargs)
@@ -120,7 +120,7 @@ class TraceNodeLogosNode(BaseLogosNode):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """
-        Capture (emit) a new TraceNode.
+        Capture (emit) a new Mark.
 
         Args:
             content: The thought/event content
@@ -131,13 +131,13 @@ class TraceNodeLogosNode(BaseLogosNode):
             walk_id: Optional Walk to attach to
 
         Returns:
-            Created TraceNode info
+            Created Mark info
         """
         from services.witness import (
+            Mark,
             NPhase,
-            TraceNode,
             WalkId,
-            get_trace_store,
+            get_mark_store,
             get_walk_store,
         )
 
@@ -151,8 +151,8 @@ class TraceNodeLogosNode(BaseLogosNode):
         # Parse phase
         phase = NPhase(phase_str) if phase_str else None
 
-        # Create TraceNode
-        node = TraceNode.from_thought(
+        # Create Mark
+        node = Mark.from_thought(
             content=content,
             source=source,
             tags=tags,
@@ -164,7 +164,7 @@ class TraceNodeLogosNode(BaseLogosNode):
         if walk_id_str:
             walk_id = WalkId(walk_id_str)
             # Re-create with walk_id (frozen dataclass)
-            node = TraceNode(
+            node = Mark(
                 id=node.id,
                 origin=node.origin,
                 stimulus=node.stimulus,
@@ -185,7 +185,7 @@ class TraceNodeLogosNode(BaseLogosNode):
                 walk.advance(node)
 
         # Append to store
-        store = get_trace_store()
+        store = get_mark_store()
         store.append(node)
 
         return {
@@ -220,9 +220,9 @@ class TraceNodeLogosNode(BaseLogosNode):
         Returns:
             Matching traces
         """
-        from services.witness import NPhase, TraceQuery, WalkId, get_trace_store
+        from services.witness import MarkQuery, NPhase, WalkId, get_mark_store
 
-        store = get_trace_store()
+        store = get_mark_store()
 
         # Build query
         origins = tuple(kwargs.get("origins", [])) or None
@@ -240,7 +240,7 @@ class TraceNodeLogosNode(BaseLogosNode):
         limit = kwargs.get("limit", 50)
         offset = kwargs.get("offset", 0)
 
-        query = TraceQuery(
+        query = MarkQuery(
             origins=origins,
             phases=phases,
             tags=tags,
@@ -277,22 +277,22 @@ class TraceNodeLogosNode(BaseLogosNode):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """
-        Get a specific TraceNode by ID.
+        Get a specific Mark by ID.
 
         Args:
-            id: TraceNode ID
+            id: Mark ID
 
         Returns:
-            Full TraceNode data
+            Full Mark data
         """
-        from services.witness import TraceNodeId, get_trace_store
+        from services.witness import MarkId, get_mark_store
 
         trace_id = kwargs.get("id", "")
         if not trace_id:
             return {"error": "id is required"}
 
-        store = get_trace_store()
-        node = store.get(TraceNodeId(trace_id))
+        store = get_mark_store()
+        node = store.get(MarkId(trace_id))
 
         if node is None:
             return {"error": f"Trace {trace_id} not found"}
@@ -315,9 +315,9 @@ class TraceNodeLogosNode(BaseLogosNode):
         Returns:
             Ordered traces for replay
         """
-        from services.witness import WalkId, get_trace_store
+        from services.witness import WalkId, get_mark_store
 
-        store = get_trace_store()
+        store = get_mark_store()
         walk_id_str = kwargs.get("walk_id")
         start = kwargs.get("start", 0)
         end = kwargs.get("end")
@@ -370,7 +370,7 @@ class WalkLogosNode(BaseLogosNode):
         manifest - View active Walks
         create - Create a new Walk
         get - Get a specific Walk
-        advance - Add a TraceNode to a Walk
+        advance - Add a Mark to a Walk
         transition - Transition Walk phase
         pause - Pause a Walk
         resume - Resume a Walk
@@ -385,7 +385,17 @@ class WalkLogosNode(BaseLogosNode):
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         """Walk affordances."""
-        return ("manifest", "list", "create", "get", "advance", "transition", "pause", "resume", "complete")
+        return (
+            "manifest",
+            "list",
+            "create",
+            "get",
+            "advance",
+            "transition",
+            "pause",
+            "resume",
+            "complete",
+        )
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View active Walks."""
@@ -408,7 +418,7 @@ class WalkLogosNode(BaseLogosNode):
                         "goal": w.goal.description if w.goal else None,
                         "phase": w.phase.value,
                         "status": w.status.name,
-                        "trace_count": w.trace_count(),
+                        "mark_count": w.mark_count,
                     }
                     for w in recent
                 ],
@@ -558,16 +568,16 @@ class WalkLogosNode(BaseLogosNode):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """
-        Add a TraceNode to a Walk.
+        Add a Mark to a Walk.
 
         Args:
             walk_id: Walk ID
-            trace_id: TraceNode ID to add
+            trace_id: Mark ID to add
 
         Returns:
             Updated Walk info
         """
-        from services.witness import TraceNodeId, WalkId, get_trace_store, get_walk_store
+        from services.witness import MarkId, WalkId, get_mark_store, get_walk_store
 
         walk_id_str = kwargs.get("walk_id", "")
         trace_id_str = kwargs.get("trace_id", "")
@@ -576,13 +586,13 @@ class WalkLogosNode(BaseLogosNode):
             return {"error": "walk_id and trace_id are required"}
 
         walk_store = get_walk_store()
-        trace_store = get_trace_store()
+        trace_store = get_mark_store()
 
         walk = walk_store.get(WalkId(walk_id_str))
         if walk is None:
             return {"error": f"Walk {walk_id_str} not found"}
 
-        trace = trace_store.get(TraceNodeId(trace_id_str))
+        trace = trace_store.get(MarkId(trace_id_str))
         if trace is None:
             return {"error": f"Trace {trace_id_str} not found"}
 
@@ -591,7 +601,7 @@ class WalkLogosNode(BaseLogosNode):
         return {
             "walk_id": walk_id_str,
             "trace_id": trace_id_str,
-            "trace_count": walk.trace_count(),
+            "mark_count": walk.mark_count,
             "status": "advanced",
         }
 
@@ -702,7 +712,7 @@ class WalkLogosNode(BaseLogosNode):
         return {
             "walk_id": walk_id_str,
             "status": walk.status.name,
-            "trace_count": walk.trace_count(),
+            "mark_count": walk.mark_count,
             "duration_seconds": walk.duration_seconds,
         }
 
@@ -712,9 +722,9 @@ class WalkLogosNode(BaseLogosNode):
 # =============================================================================
 
 
-def create_trace_node_logos() -> TraceNodeLogosNode:
-    """Create a TraceNodeLogosNode instance."""
-    return TraceNodeLogosNode()
+def create_trace_node_logos() -> MarkLogosNode:
+    """Create a MarkLogosNode instance."""
+    return MarkLogosNode()
 
 
 def create_walk_logos() -> WalkLogosNode:
@@ -727,7 +737,7 @@ def create_walk_logos() -> WalkLogosNode:
 # =============================================================================
 
 __all__ = [
-    "TraceNodeLogosNode",
+    "MarkLogosNode",
     "WalkLogosNode",
     "create_trace_node_logos",
     "create_walk_logos",

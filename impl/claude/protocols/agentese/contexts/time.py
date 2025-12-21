@@ -65,7 +65,7 @@ class ScheduledAction:
 
 
 @dataclass
-class TraceNode(BaseLogosNode):
+class Mark(BaseLogosNode):
     """
     time.trace - View temporal traces and call graph analysis.
 
@@ -107,15 +107,15 @@ class TraceNode(BaseLogosNode):
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View trace summary."""
-        trace_count = len(self._traces)
+        mark_count = len(self._traces)
         has_static = self._static_graph is not None
         has_runtime = self._last_runtime_trace is not None
 
         return BasicRendering(
             summary="Temporal Traces",
-            content=f"Recorded traces: {trace_count}",
+            content=f"Recorded traces: {mark_count}",
             metadata={
-                "trace_count": trace_count,
+                "mark_count": mark_count,
                 "n_gent_connected": self._narrator is not None,
                 "static_graph_loaded": has_static,
                 "runtime_trace_available": has_runtime,
@@ -993,16 +993,16 @@ class TimeContextResolver:
     _differance_store: Any = None  # DifferanceStore for heritage
 
     # Singleton nodes
-    _trace: TraceNode | None = None
+    _trace: Mark | None = None
     _past: PastNode | None = None
     _future: FutureNode | None = None
     _schedule: ScheduleNode | None = None
-    _differance: Any | None = None  # DifferanceTraceNode
+    _differance: Any | None = None  # DifferanceMark
     _branch: Any | None = None  # BranchNode
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes."""
-        self._trace = TraceNode(_narrator=self._narrator)
+        self._trace = Mark(_narrator=self._narrator)
         self._past = PastNode(_d_gent=self._d_gent)
         self._future = FutureNode(_b_gent=self._b_gent)
         self._schedule = ScheduleNode()
@@ -1011,10 +1011,10 @@ class TimeContextResolver:
         try:
             from .time_differance import (
                 BranchNode,
-                DifferanceTraceNode,
+                DifferanceMark,
             )
 
-            self._differance = DifferanceTraceNode()
+            self._differance = DifferanceMark()
             if self._differance_store:
                 self._differance.set_store(self._differance_store)
             self._branch = BranchNode()
@@ -1034,7 +1034,7 @@ class TimeContextResolver:
         """
         match holon:
             case "trace":
-                return self._trace or TraceNode()
+                return self._trace or Mark()
             case "past":
                 return self._past or PastNode()
             case "future":
@@ -1047,9 +1047,9 @@ class TimeContextResolver:
                     return cast(BaseLogosNode, self._differance)
                 # Fallback to lazy import
                 try:
-                    from .time_differance import DifferanceTraceNode
+                    from .time_differance import DifferanceMark
 
-                    node: BaseLogosNode = DifferanceTraceNode()
+                    node: BaseLogosNode = DifferanceMark()
                     return node
                 except ImportError:
                     return GenericTimeNode(holon)

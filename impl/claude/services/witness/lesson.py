@@ -1,29 +1,28 @@
 """
-Terrace: Curated Knowledge Layer with Versioning.
+Lesson: Curated Knowledge Layer with Versioning.
 
-A Terrace is a curated piece of knowledge that:
+A Lesson is a curated piece of knowledge that:
 - Is immutable once created
 - Has versions that supersede previous ones
 - Maintains full history for evolution tracking
 - Serves as the source of truth for patterns and learnings
 
 Philosophy:
-    "Knowledge crystallizes over time. A Terrace captures what we've
-    learned, versioned for evolution. Like geological terraces, each
-    layer builds on the last."
+    "Knowledge crystallizes over time. A Lesson captures what we've
+    learned, versioned for evolution. Like lessons learned, each
+    builds on the last."
 
-    The name evokes:
-    - Rice terraces: Carefully cultivated, layered knowledge
-    - Geological strata: History preserved in layers
-    - Garden terraces: Curated, intentional arrangement
+Rename History:
+    Lesson → Lesson (spec/protocols/witness-primitives.md)
+    "Lessons learned" - clearer than geological metaphor
 
 Laws:
-- Law 1 (Immutability): Terraces are frozen after creation
+- Law 1 (Immutability): Lessons are frozen after creation
 - Law 2 (Supersession): New versions explicitly supersede old
 - Law 3 (History Preserved): All versions are kept for reference
 - Law 4 (Topic Uniqueness): One current version per topic
 
-See: spec/protocols/warp-primitives.md
+See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 7: Append-Only History)
 """
 
@@ -39,21 +38,28 @@ from uuid import uuid4
 # Type Aliases
 # =============================================================================
 
-TerraceId = NewType("TerraceId", str)
+LessonId = NewType("LessonId", str)
+
+# Backwards compatibility alias
+LessonId = LessonId
 
 
-def generate_terrace_id() -> TerraceId:
-    """Generate a unique Terrace ID."""
-    return TerraceId(f"terrace-{uuid4().hex[:12]}")
+def generate_lesson_id() -> LessonId:
+    """Generate a unique Lesson ID."""
+    return LessonId(f"lesson-{uuid4().hex[:12]}")
+
+
+# Backwards compatibility alias
+generate_lesson_id = generate_lesson_id
 
 
 # =============================================================================
-# Terrace Status
+# Lesson Status
 # =============================================================================
 
 
-class TerraceStatus(Enum):
-    """Status of a Terrace."""
+class LessonStatus(Enum):
+    """Status of a Lesson."""
 
     CURRENT = auto()  # The current version for its topic
     SUPERSEDED = auto()  # Replaced by a newer version
@@ -61,13 +67,17 @@ class TerraceStatus(Enum):
     ARCHIVED = auto()  # Kept for historical reference only
 
 
+# Backwards compatibility alias
+LessonStatus = LessonStatus
+
+
 # =============================================================================
-# Terrace: The Core Primitive
+# Lesson: The Core Primitive
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class Terrace:
+class Lesson:
     """
     Curated knowledge with versioning.
 
@@ -77,12 +87,12 @@ class Terrace:
     - Law 3 (History Preserved): All versions kept
     - Law 4 (Topic Uniqueness): One CURRENT per topic
 
-    A Terrace represents crystallized knowledge about a topic.
-    When knowledge evolves, a new Terrace is created that supersedes
+    A Lesson represents crystallized knowledge about a topic.
+    When knowledge evolves, a new Lesson is created that supersedes
     the old one, preserving the history of understanding.
 
     Example:
-        >>> v1 = Terrace.create(
+        >>> v1 = Lesson.create(
         ...     topic="AGENTESE registration",
         ...     content="Use @node decorator. Register in gateway.",
         ... )
@@ -95,7 +105,7 @@ class Terrace:
     """
 
     # Identity
-    id: TerraceId = field(default_factory=generate_terrace_id)
+    id: LessonId = field(default_factory=generate_lesson_id)
 
     # Content
     topic: str = ""  # e.g., "AGENTESE registration", "Testing patterns"
@@ -103,10 +113,10 @@ class Terrace:
 
     # Versioning (Law 2)
     version: int = 1
-    supersedes: TerraceId | None = None  # ID of version this replaces
+    supersedes: LessonId | None = None  # ID of version this replaces
 
     # Status
-    status: TerraceStatus = TerraceStatus.CURRENT
+    status: LessonStatus = LessonStatus.CURRENT
 
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
@@ -132,11 +142,11 @@ class Terrace:
         tags: tuple[str, ...] = (),
         source: str = "",
         confidence: float = 1.0,
-    ) -> Terrace:
+    ) -> Lesson:
         """
-        Create a new Terrace (version 1).
+        Create a new Lesson (version 1).
 
-        Law 1: The Terrace is immutable from creation.
+        Law 1: The Lesson is immutable from creation.
         """
         return cls(
             topic=topic,
@@ -157,12 +167,12 @@ class Terrace:
         reason: str = "",
         tags: tuple[str, ...] | None = None,
         confidence: float | None = None,
-    ) -> Terrace:
+    ) -> Lesson:
         """
         Create a new version that supersedes this one.
 
         Law 2: New versions explicitly supersede old.
-        Law 3: Old version is preserved (this returns a NEW Terrace).
+        Law 3: Old version is preserved (this returns a NEW Lesson).
 
         Args:
             content: Updated content
@@ -171,14 +181,14 @@ class Terrace:
             confidence: New confidence (or inherit)
 
         Returns:
-            New Terrace with incremented version
+            New Lesson with incremented version
         """
-        return Terrace(
+        return Lesson(
             topic=self.topic,
             content=content,
             version=self.version + 1,
             supersedes=self.id,
-            status=TerraceStatus.CURRENT,
+            status=LessonStatus.CURRENT,
             evolution_reason=reason,
             tags=tags if tags is not None else self.tags,
             source=self.source,
@@ -186,19 +196,19 @@ class Terrace:
             metadata={**self.metadata, "evolved_from": str(self.id)},
         )
 
-    def deprecate(self, reason: str = "") -> Terrace:
+    def deprecate(self, reason: str = "") -> Lesson:
         """
-        Mark this Terrace as deprecated.
+        Mark this Lesson as deprecated.
 
-        Creates a new Terrace with DEPRECATED status.
+        Creates a new Lesson with DEPRECATED status.
         """
-        return Terrace(
+        return Lesson(
             id=self.id,
             topic=self.topic,
             content=self.content,
             version=self.version,
             supersedes=self.supersedes,
-            status=TerraceStatus.DEPRECATED,
+            status=LessonStatus.DEPRECATED,
             created_at=self.created_at,
             evolution_reason=reason or "Deprecated",
             tags=self.tags,
@@ -207,15 +217,15 @@ class Terrace:
             metadata={**self.metadata, "deprecated_at": datetime.now().isoformat()},
         )
 
-    def archive(self) -> Terrace:
-        """Mark this Terrace as archived."""
-        return Terrace(
+    def archive(self) -> Lesson:
+        """Mark this Lesson as archived."""
+        return Lesson(
             id=self.id,
             topic=self.topic,
             content=self.content,
             version=self.version,
             supersedes=self.supersedes,
-            status=TerraceStatus.ARCHIVED,
+            status=LessonStatus.ARCHIVED,
             created_at=self.created_at,
             evolution_reason=self.evolution_reason,
             tags=self.tags,
@@ -231,17 +241,17 @@ class Terrace:
     @property
     def is_current(self) -> bool:
         """Check if this is the current version."""
-        return self.status == TerraceStatus.CURRENT
+        return self.status == LessonStatus.CURRENT
 
     @property
     def is_superseded(self) -> bool:
         """Check if this has been superseded."""
-        return self.status == TerraceStatus.SUPERSEDED
+        return self.status == LessonStatus.SUPERSEDED
 
     @property
     def is_deprecated(self) -> bool:
         """Check if this is deprecated."""
-        return self.status == TerraceStatus.DEPRECATED
+        return self.status == LessonStatus.DEPRECATED
 
     @property
     def has_supersedes(self) -> bool:
@@ -250,7 +260,7 @@ class Terrace:
 
     @property
     def age_days(self) -> float:
-        """Get the age of this Terrace in days."""
+        """Get the age of this Lesson in days."""
         delta = datetime.now() - self.created_at
         return delta.total_seconds() / (24 * 3600)
 
@@ -276,15 +286,15 @@ class Terrace:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Terrace:
+    def from_dict(cls, data: dict[str, Any]) -> Lesson:
         """Create from dictionary."""
         return cls(
-            id=TerraceId(data["id"]),
+            id=LessonId(data["id"]),
             topic=data.get("topic", ""),
             content=data.get("content", ""),
             version=data.get("version", 1),
-            supersedes=TerraceId(data["supersedes"]) if data.get("supersedes") else None,
-            status=TerraceStatus[data.get("status", "CURRENT")],
+            supersedes=LessonId(data["supersedes"]) if data.get("supersedes") else None,
+            status=LessonStatus[data.get("status", "CURRENT")],
             created_at=datetime.fromisoformat(data["created_at"])
             if data.get("created_at")
             else datetime.now(),
@@ -299,22 +309,26 @@ class Terrace:
         """Concise representation."""
         topic = self.topic[:25] + "..." if len(self.topic) > 25 else self.topic
         return (
-            f"Terrace(id={str(self.id)[:16]}..., "
+            f"Lesson(id={str(self.id)[:16]}..., "
             f"topic='{topic}', "
             f"v{self.version}, "
             f"status={self.status.name})"
         )
 
 
+# Backwards compatibility alias
+Lesson = Lesson
+
+
 # =============================================================================
-# TerraceStore: Persistent Storage
+# LessonStore: Persistent Storage
 # =============================================================================
 
 
 @dataclass
-class TerraceStore:
+class LessonStore:
     """
-    Persistent storage for Terraces.
+    Persistent storage for Lessons.
 
     Enforces Law 4: One current version per topic.
 
@@ -325,60 +339,60 @@ class TerraceStore:
     - Version traversal
     """
 
-    _terraces: dict[TerraceId, Terrace] = field(default_factory=dict)
-    _topic_index: dict[str, list[TerraceId]] = field(default_factory=dict)
+    _lessons: dict[LessonId, Lesson] = field(default_factory=dict)
+    _topic_index: dict[str, list[LessonId]] = field(default_factory=dict)
 
     # =========================================================================
     # Add/Update
     # =========================================================================
 
-    def add(self, terrace: Terrace) -> None:
+    def add(self, lesson: Lesson) -> None:
         """
-        Add a Terrace to the store.
+        Add a Lesson to the store.
 
         Law 4: Marks previous version as SUPERSEDED if exists.
         """
         # If this supersedes another, mark that one as superseded
-        if terrace.supersedes and terrace.supersedes in self._terraces:
-            old = self._terraces[terrace.supersedes]
-            superseded = Terrace(
+        if lesson.supersedes and lesson.supersedes in self._lessons:
+            old = self._lessons[lesson.supersedes]
+            superseded = Lesson(
                 id=old.id,
                 topic=old.topic,
                 content=old.content,
                 version=old.version,
                 supersedes=old.supersedes,
-                status=TerraceStatus.SUPERSEDED,
+                status=LessonStatus.SUPERSEDED,
                 created_at=old.created_at,
                 evolution_reason=old.evolution_reason,
                 tags=old.tags,
                 source=old.source,
                 confidence=old.confidence,
-                metadata={**old.metadata, "superseded_by": str(terrace.id)},
+                metadata={**old.metadata, "superseded_by": str(lesson.id)},
             )
-            self._terraces[old.id] = superseded
+            self._lessons[old.id] = superseded
 
         # Add to main storage
-        self._terraces[terrace.id] = terrace
+        self._lessons[lesson.id] = lesson
 
         # Update topic index
-        if terrace.topic not in self._topic_index:
-            self._topic_index[terrace.topic] = []
-        if terrace.id not in self._topic_index[terrace.topic]:
-            self._topic_index[terrace.topic].append(terrace.id)
+        if lesson.topic not in self._topic_index:
+            self._topic_index[lesson.topic] = []
+        if lesson.id not in self._topic_index[lesson.topic]:
+            self._topic_index[lesson.topic].append(lesson.id)
 
-    def update(self, terrace: Terrace) -> None:
-        """Update an existing Terrace (for status changes)."""
-        self._terraces[terrace.id] = terrace
+    def update(self, lesson: Lesson) -> None:
+        """Update an existing Lesson (for status changes)."""
+        self._lessons[lesson.id] = lesson
 
     # =========================================================================
     # Retrieval
     # =========================================================================
 
-    def get(self, terrace_id: TerraceId) -> Terrace | None:
-        """Get a Terrace by ID."""
-        return self._terraces.get(terrace_id)
+    def get(self, lesson_id: LessonId) -> Lesson | None:
+        """Get a Lesson by ID."""
+        return self._lessons.get(lesson_id)
 
-    def current(self, topic: str) -> Terrace | None:
+    def current(self, topic: str) -> Lesson | None:
         """
         Get the current (latest) version for a topic.
 
@@ -387,14 +401,14 @@ class TerraceStore:
         if topic not in self._topic_index:
             return None
 
-        for tid in reversed(self._topic_index[topic]):
-            terrace = self._terraces.get(tid)
-            if terrace and terrace.is_current:
-                return terrace
+        for lid in reversed(self._topic_index[topic]):
+            lesson = self._lessons.get(lid)
+            if lesson and lesson.is_current:
+                return lesson
 
         return None
 
-    def history(self, topic: str) -> list[Terrace]:
+    def history(self, topic: str) -> list[Lesson]:
         """
         Get version history for a topic.
 
@@ -405,15 +419,15 @@ class TerraceStore:
         if topic not in self._topic_index:
             return []
 
-        terraces = []
-        for tid in self._topic_index[topic]:
-            terrace = self._terraces.get(tid)
-            if terrace:
-                terraces.append(terrace)
+        lessons = []
+        for lid in self._topic_index[topic]:
+            lesson = self._lessons.get(lid)
+            if lesson:
+                lessons.append(lesson)
 
-        return sorted(terraces, key=lambda t: t.version)
+        return sorted(lessons, key=lambda l: l.version)
 
-    def latest(self, topic: str) -> Terrace | None:
+    def latest(self, topic: str) -> Lesson | None:
         """Get the latest version for a topic (regardless of status)."""
         history = self.history(topic)
         return history[-1] if history else None
@@ -422,70 +436,70 @@ class TerraceStore:
     # Search
     # =========================================================================
 
-    def by_tag(self, tag: str) -> list[Terrace]:
-        """Get all CURRENT Terraces with a specific tag."""
-        return [t for t in self._terraces.values() if t.is_current and tag in t.tags]
+    def by_tag(self, tag: str) -> list[Lesson]:
+        """Get all CURRENT Lessons with a specific tag."""
+        return [l for l in self._lessons.values() if l.is_current and tag in l.tags]
 
-    def by_source(self, source: str) -> list[Terrace]:
-        """Get all CURRENT Terraces from a specific source."""
-        return [t for t in self._terraces.values() if t.is_current and t.source == source]
+    def by_source(self, source: str) -> list[Lesson]:
+        """Get all CURRENT Lessons from a specific source."""
+        return [l for l in self._lessons.values() if l.is_current and l.source == source]
 
-    def search(self, query: str) -> list[Terrace]:
+    def search(self, query: str) -> list[Lesson]:
         """
-        Search CURRENT Terraces by topic or content.
+        Search CURRENT Lessons by topic or content.
 
         Case-insensitive substring match.
         """
         query_lower = query.lower()
         return [
-            t
-            for t in self._terraces.values()
-            if t.is_current and (query_lower in t.topic.lower() or query_lower in t.content.lower())
+            l
+            for l in self._lessons.values()
+            if l.is_current and (query_lower in l.topic.lower() or query_lower in l.content.lower())
         ]
 
     # =========================================================================
     # Listing
     # =========================================================================
 
-    def all_current(self) -> list[Terrace]:
-        """Get all CURRENT Terraces."""
-        return [t for t in self._terraces.values() if t.is_current]
+    def all_current(self) -> list[Lesson]:
+        """Get all CURRENT Lessons."""
+        return [l for l in self._lessons.values() if l.is_current]
 
     def all_topics(self) -> list[str]:
         """Get all topics."""
         return list(self._topic_index.keys())
 
-    def deprecated(self) -> list[Terrace]:
-        """Get all deprecated Terraces."""
-        return [t for t in self._terraces.values() if t.is_deprecated]
+    def deprecated(self) -> list[Lesson]:
+        """Get all deprecated Lessons."""
+        return [l for l in self._lessons.values() if l.is_deprecated]
 
-    def recent(self, limit: int = 10) -> list[Terrace]:
-        """Get most recently created Terraces."""
-        sorted_terraces = sorted(
-            self._terraces.values(),
-            key=lambda t: t.created_at,
+    def recent(self, limit: int = 10) -> list[Lesson]:
+        """Get most recently created Lessons."""
+        sorted_lessons = sorted(
+            self._lessons.values(),
+            key=lambda l: l.created_at,
             reverse=True,
         )
-        return sorted_terraces[:limit]
+        return sorted_lessons[:limit]
 
     # =========================================================================
     # Version Traversal
     # =========================================================================
 
-    def predecessor(self, terrace: Terrace) -> Terrace | None:
-        """Get the version this Terrace supersedes."""
-        if terrace.supersedes:
-            return self._terraces.get(terrace.supersedes)
+    def predecessor(self, lesson: Lesson) -> Lesson | None:
+        """Get the version this Lesson supersedes."""
+        if lesson.supersedes:
+            return self._lessons.get(lesson.supersedes)
         return None
 
-    def successor(self, terrace: Terrace) -> Terrace | None:
+    def successor(self, lesson: Lesson) -> Lesson | None:
         """Get the version that superseded this one (if any)."""
-        for t in self._terraces.values():
-            if t.supersedes == terrace.id:
-                return t
+        for l in self._lessons.values():
+            if l.supersedes == lesson.id:
+                return l
         return None
 
-    def full_chain(self, topic: str) -> list[Terrace]:
+    def full_chain(self, topic: str) -> list[Lesson]:
         """Get the full version chain for a topic, ordered by version."""
         return self.history(topic)
 
@@ -495,12 +509,12 @@ class TerraceStore:
 
     def stats(self) -> dict[str, int]:
         """Get store statistics."""
-        current = sum(1 for t in self._terraces.values() if t.is_current)
-        superseded = sum(1 for t in self._terraces.values() if t.is_superseded)
-        deprecated = sum(1 for t in self._terraces.values() if t.is_deprecated)
+        current = sum(1 for l in self._lessons.values() if l.is_current)
+        superseded = sum(1 for l in self._lessons.values() if l.is_superseded)
+        deprecated = sum(1 for l in self._lessons.values() if l.is_deprecated)
 
         return {
-            "total": len(self._terraces),
+            "total": len(self._lessons),
             "topics": len(self._topic_index),
             "current": current,
             "superseded": superseded,
@@ -508,34 +522,50 @@ class TerraceStore:
         }
 
     def __len__(self) -> int:
-        return len(self._terraces)
+        return len(self._lessons)
+
+
+# Backwards compatibility alias
+LessonStore = LessonStore
 
 
 # =============================================================================
 # Global Store
 # =============================================================================
 
-_global_terrace_store: TerraceStore | None = None
+_global_lesson_store: LessonStore | None = None
 
 
-def get_terrace_store() -> TerraceStore:
-    """Get the global terrace store."""
-    global _global_terrace_store
-    if _global_terrace_store is None:
-        _global_terrace_store = TerraceStore()
-    return _global_terrace_store
+def get_lesson_store() -> LessonStore:
+    """Get the global lesson store."""
+    global _global_lesson_store
+    if _global_lesson_store is None:
+        _global_lesson_store = LessonStore()
+    return _global_lesson_store
 
 
-def set_terrace_store(store: TerraceStore) -> None:
-    """Set the global terrace store."""
-    global _global_terrace_store
-    _global_terrace_store = store
+# Backwards compatibility alias
+get_lesson_store = get_lesson_store
 
 
-def reset_terrace_store() -> None:
-    """Reset the global terrace store (for testing)."""
-    global _global_terrace_store
-    _global_terrace_store = None
+def set_lesson_store(store: LessonStore) -> None:
+    """Set the global lesson store."""
+    global _global_lesson_store
+    _global_lesson_store = store
+
+
+# Backwards compatibility alias
+set_lesson_store = set_lesson_store
+
+
+def reset_lesson_store() -> None:
+    """Reset the global lesson store (for testing)."""
+    global _global_lesson_store
+    _global_lesson_store = None
+
+
+# Backwards compatibility alias
+reset_lesson_store = reset_lesson_store
 
 
 # =============================================================================
@@ -543,16 +573,28 @@ def reset_terrace_store() -> None:
 # =============================================================================
 
 __all__ = [
-    # Type aliases
-    "TerraceId",
-    "generate_terrace_id",
-    # Status
-    "TerraceStatus",
-    # Core
-    "Terrace",
-    # Store
-    "TerraceStore",
-    "get_terrace_store",
-    "set_terrace_store",
-    "reset_terrace_store",
+    # Type aliases (new names)
+    "LessonId",
+    "generate_lesson_id",
+    # Backwards compatibility
+    "LessonId",
+    "generate_lesson_id",
+    # Status (new name)
+    "LessonStatus",
+    # Backwards compatibility
+    "LessonStatus",
+    # Core (new name)
+    "Lesson",
+    # Backwards compatibility
+    "Lesson",
+    # Store (new name)
+    "LessonStore",
+    "get_lesson_store",
+    "set_lesson_store",
+    "reset_lesson_store",
+    # Backwards compatibility
+    "LessonStore",
+    "get_lesson_store",
+    "set_lesson_store",
+    "reset_lesson_store",
 ]

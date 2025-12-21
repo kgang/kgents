@@ -1,21 +1,21 @@
 """
-TraceNode: The Atomic Unit of Execution Artifact.
+Mark: The Atomic Unit of Execution Artifact.
 
-Every action in kgents emits a TraceNode. TraceNodes are:
+Every action in kgents emits a Mark. Marks are:
 - Immutable (frozen=True) — Law 1
 - Causally linked — Law 2: target.timestamp > source.timestamp
-- Complete — Law 3: Every AGENTESE invocation emits exactly one TraceNode
+- Complete — Law 3: Every AGENTESE invocation emits exactly one Mark
 
-The Insight (from spec/protocols/warp-primitives.md):
-    "Every action is a TraceNode. Every session is a Walk. Every workflow is a Ritual."
+The Insight (from spec/protocols/witness-primitives.md):
+    "Every action leaves a mark. Every mark joins a walk. Every walk follows a playbook."
 
 Philosophy:
-    TraceNodes extend the Thought pattern from polynomial.py with:
-    - Causal links (TraceLink) for tracing execution flow
+    Marks extend the Thought pattern from polynomial.py with:
+    - Causal links (MarkLink) for tracing execution flow
     - N-Phase binding for workflow context
     - Umwelt snapshots for observer-dependent perception
 
-See: spec/protocols/warp-primitives.md
+See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 7: Append-Only History)
 """
 
@@ -34,14 +34,21 @@ if TYPE_CHECKING:
 # Type Aliases
 # =============================================================================
 
-TraceNodeId = NewType("TraceNodeId", str)
-PlanPath = NewType("PlanPath", str)  # e.g., "plans/warp-servo-phase1.md"
+MarkId = NewType("MarkId", str)
+PlanPath = NewType("PlanPath", str)  # e.g., "plans/witness-phase1.md"
 WalkId = NewType("WalkId", str)
 
+# Backwards compatibility aliases (remove after migration complete)
+MarkId = MarkId
 
-def generate_trace_id() -> TraceNodeId:
-    """Generate a unique TraceNode ID."""
-    return TraceNodeId(f"trace-{uuid4().hex[:12]}")
+
+def generate_mark_id() -> MarkId:
+    """Generate a unique Mark ID."""
+    return MarkId(f"mark-{uuid4().hex[:12]}")
+
+
+# Backwards compatibility alias
+generate_mark_id = generate_mark_id
 
 
 # =============================================================================
@@ -51,13 +58,13 @@ def generate_trace_id() -> TraceNodeId:
 
 class LinkRelation(Enum):
     """
-    Types of causal relationships between TraceNodes.
+    Types of causal relationships between Marks.
 
     The four relations:
-    - CAUSES: This node directly caused the target (stimulus → response)
-    - CONTINUES: This node continues work started by source (continuation)
-    - BRANCHES: This node branches from source (parallel exploration)
-    - FULFILLS: This node fulfills an intent declared in source (completion)
+    - CAUSES: This mark directly caused the target (stimulus → response)
+    - CONTINUES: This mark continues work started by source (continuation)
+    - BRANCHES: This mark branches from source (parallel exploration)
+    - FULFILLS: This mark fulfills an intent declared in source (completion)
     """
 
     CAUSES = auto()  # Direct causation: A caused B
@@ -67,24 +74,24 @@ class LinkRelation(Enum):
 
 
 @dataclass(frozen=True)
-class TraceLink:
+class MarkLink:
     """
-    Causal edge between TraceNodes or to plans.
+    Causal edge between Marks or to plans.
 
     Laws:
-    - Law 2 (Causality): If source is TraceNode, target.timestamp > source.timestamp
+    - Law 2 (Causality): If source is Mark, target.timestamp > source.timestamp
     - Links are immutable once created
 
     Example:
-        >>> link = TraceLink(
-        ...     source=TraceNodeId("trace-abc"),
-        ...     target=TraceNodeId("trace-def"),
+        >>> link = MarkLink(
+        ...     source=MarkId("mark-abc"),
+        ...     target=MarkId("mark-def"),
         ...     relation=LinkRelation.CAUSES,
         ... )
     """
 
-    source: TraceNodeId | PlanPath  # Can link from node or plan
-    target: TraceNodeId
+    source: MarkId | PlanPath  # Can link from mark or plan
+    target: MarkId
     relation: LinkRelation
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -98,21 +105,25 @@ class TraceLink:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> TraceLink:
+    def from_dict(cls, data: dict[str, Any]) -> MarkLink:
         """Create from dictionary."""
         source_str = data["source"]
-        # Detect if source is a plan path (ends with .md) or trace ID
+        # Detect if source is a plan path (ends with .md) or mark ID
         if source_str.endswith(".md") or source_str.startswith("plans/"):
-            source: TraceNodeId | PlanPath = PlanPath(source_str)
+            source: MarkId | PlanPath = PlanPath(source_str)
         else:
-            source = TraceNodeId(source_str)
+            source = MarkId(source_str)
 
         return cls(
             source=source,
-            target=TraceNodeId(data["target"]),
+            target=MarkId(data["target"]),
             relation=LinkRelation[data["relation"]],
             metadata=data.get("metadata", {}),
         )
+
+
+# Backwards compatibility alias
+MarkLink = MarkLink
 
 
 # =============================================================================
@@ -131,7 +142,7 @@ class NPhase(Enum):
         PLAN → RESEARCH → DEVELOP → STRATEGIZE → CROSS_SYNERGIZE
         → IMPLEMENT → QA → TEST → EDUCATE → MEASURE → REFLECT
 
-    TraceNodes can reference which phase they were emitted during.
+    Marks can reference which phase they were emitted during.
     """
 
     # Compressed (3-phase)
@@ -183,9 +194,9 @@ class NPhase(Enum):
 @dataclass(frozen=True)
 class UmweltSnapshot:
     """
-    Snapshot of observer capabilities at TraceNode emission time.
+    Snapshot of observer capabilities at Mark emission time.
 
-    Captures what the observer could perceive and do when this trace was created.
+    Captures what the observer could perceive and do when this mark was created.
     This enables replay with context: "What did the agent know at this moment?"
 
     Fields:
@@ -262,7 +273,7 @@ class UmweltSnapshot:
 @dataclass(frozen=True)
 class Stimulus:
     """
-    What triggered the TraceNode.
+    What triggered the Mark.
 
     Can be:
     - User prompt
@@ -319,7 +330,7 @@ class Stimulus:
 @dataclass(frozen=True)
 class Response:
     """
-    What the TraceNode produced.
+    What the Mark produced.
 
     Can be:
     - Text output
@@ -379,21 +390,21 @@ class Response:
 
 
 # =============================================================================
-# TraceNode: The Atomic Unit
+# Mark: The Atomic Unit
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class TraceNode:
+class Mark:
     """
     Atomic unit of execution artifact.
 
     Laws:
-    - Law 1 (Immutability): TraceNodes are frozen after creation
+    - Law 1 (Immutability): Marks are frozen after creation
     - Law 2 (Causality): link.target.timestamp > link.source.timestamp
-    - Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode
+    - Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark
 
-    A TraceNode captures:
+    A Mark captures:
     - WHAT triggered it (stimulus)
     - WHAT it produced (response)
     - WHO observed it (umwelt)
@@ -402,17 +413,17 @@ class TraceNode:
     - HOW it connects (links)
 
     Example:
-        >>> node = TraceNode(
+        >>> mark = Mark(
         ...     origin="witness",
         ...     stimulus=Stimulus.from_event("git", "Commit abc123", "git"),
         ...     response=Response.thought("Noticed commit abc123", ("git", "commit")),
         ...     umwelt=UmweltSnapshot.witness(trust_level=1),
         ... )
-        >>> node.id  # "trace-abc123def456"
+        >>> mark.id  # "mark-abc123def456"
     """
 
     # Identity
-    id: TraceNodeId = field(default_factory=generate_trace_id)
+    id: MarkId = field(default_factory=generate_mark_id)
 
     # Origin (what/who emitted it)
     origin: str = "unknown"  # Jewel or agent name: "witness", "brain", "gardener", etc.
@@ -424,8 +435,8 @@ class TraceNode:
     # Observer context
     umwelt: UmweltSnapshot = field(default_factory=UmweltSnapshot.system)
 
-    # Causal links (to other nodes or plans)
-    links: tuple[TraceLink, ...] = ()
+    # Causal links (to other marks or plans)
+    links: tuple[MarkLink, ...] = ()
 
     # Temporal
     timestamp: datetime = field(default_factory=datetime.now)
@@ -441,7 +452,7 @@ class TraceNode:
     def __post_init__(self) -> None:
         """Validate causal links (Law 2 check deferred to store)."""
         # Note: We can't fully validate Law 2 here because we don't have
-        # access to source node timestamps. The TraceNodeStore enforces this.
+        # access to source mark timestamps. The MarkStore enforces this.
         pass
 
     @classmethod
@@ -453,9 +464,9 @@ class TraceNode:
         origin: str = "witness",
         trust_level: int = 0,
         phase: NPhase | None = None,
-    ) -> TraceNode:
+    ) -> Mark:
         """
-        Create TraceNode from Witness Thought pattern.
+        Create Mark from Witness Thought pattern.
 
         This is the primary upgrade path from the existing Thought type.
         """
@@ -478,8 +489,8 @@ class TraceNode:
         umwelt: UmweltSnapshot | None = None,
         phase: NPhase | None = None,
         **kwargs: Any,
-    ) -> TraceNode:
-        """Create TraceNode from AGENTESE invocation."""
+    ) -> Mark:
+        """Create Mark from AGENTESE invocation."""
         return cls(
             origin=origin,
             stimulus=Stimulus.from_agentese(path, aspect, **kwargs),
@@ -489,10 +500,10 @@ class TraceNode:
             metadata={"agentese_path": path, "aspect": aspect, **kwargs},
         )
 
-    def with_link(self, link: TraceLink) -> TraceNode:
-        """Return new TraceNode with added link (immutable pattern)."""
+    def with_link(self, link: MarkLink) -> Mark:
+        """Return new Mark with added link (immutable pattern)."""
         # Create new frozen instance with updated links
-        return TraceNode(
+        return Mark(
             id=self.id,
             origin=self.origin,
             stimulus=self.stimulus,
@@ -523,17 +534,17 @@ class TraceNode:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> TraceNode:
+    def from_dict(cls, data: dict[str, Any]) -> Mark:
         """Create from dictionary."""
         phase = NPhase(data["phase"]) if data.get("phase") else None
 
         return cls(
-            id=TraceNodeId(data["id"]),
+            id=MarkId(data["id"]),
             origin=data.get("origin", "unknown"),
             stimulus=Stimulus.from_dict(data.get("stimulus", {})),
             response=Response.from_dict(data.get("response", {})),
             umwelt=UmweltSnapshot.from_dict(data.get("umwelt", {})),
-            links=tuple(TraceLink.from_dict(link) for link in data.get("links", [])),
+            links=tuple(MarkLink.from_dict(link) for link in data.get("links", [])),
             timestamp=datetime.fromisoformat(data["timestamp"]),
             phase=phase,
             walk_id=WalkId(data["walk_id"]) if data.get("walk_id") else None,
@@ -545,10 +556,14 @@ class TraceNode:
         """Concise representation."""
         phase_str = f", phase={self.phase.value}" if self.phase else ""
         return (
-            f"TraceNode(id={str(self.id)[:8]}..., "
+            f"Mark(id={str(self.id)[:8]}..., "
             f"origin={self.origin}, "
             f"stimulus={self.stimulus.kind}{phase_str})"
         )
+
+
+# Backwards compatibility alias
+Mark = Mark
 
 
 # =============================================================================
@@ -556,14 +571,19 @@ class TraceNode:
 # =============================================================================
 
 __all__ = [
-    # Type aliases
-    "TraceNodeId",
+    # Type aliases (new names)
+    "MarkId",
     "PlanPath",
     "WalkId",
-    "generate_trace_id",
-    # Link types
+    "generate_mark_id",
+    # Backwards compatibility aliases
+    "MarkId",
+    "generate_mark_id",
+    # Link types (new names)
     "LinkRelation",
-    "TraceLink",
+    "MarkLink",
+    # Backwards compatibility
+    "MarkLink",
     # Phase
     "NPhase",
     # Umwelt
@@ -571,6 +591,8 @@ __all__ = [
     # Stimulus/Response
     "Stimulus",
     "Response",
-    # Core
-    "TraceNode",
+    # Core (new name)
+    "Mark",
+    # Backwards compatibility
+    "Mark",
 ]

@@ -1,10 +1,10 @@
 """
-AGENTESE Concept Offering Context: Explicit Context Contract.
+AGENTESE Concept Scope Context: Explicit Context Contract.
 
 Context-related nodes for concept.offering.* paths:
 - OfferingNode: Budget-constrained context management
 
-This node provides AGENTESE access to the Offering primitive for
+This node provides AGENTESE access to the Scope primitive for
 explicit, priced context contracts.
 
 AGENTESE Paths:
@@ -45,9 +45,9 @@ if TYPE_CHECKING:
 _offering_store: dict[str, Any] = {}
 
 
-def _get_offering(offering_id: str) -> Any | None:
+def _get_offering(scope_id: str) -> Any | None:
     """Get offering by ID."""
-    return _offering_store.get(offering_id)
+    return _offering_store.get(scope_id)
 
 
 def _add_offering(offering: Any) -> None:
@@ -55,13 +55,13 @@ def _add_offering(offering: Any) -> None:
     _offering_store[str(offering.id)] = offering
 
 
-def _update_offering(offering_id: str, new_offering: Any) -> None:
+def _update_offering(scope_id: str, new_offering: Any) -> None:
     """Update offering in store."""
-    _offering_store[offering_id] = new_offering
+    _offering_store[scope_id] = new_offering
 
 
 # =============================================================================
-# OfferingNode: AGENTESE Interface to Offering
+# OfferingNode: AGENTESE Interface to Scope
 # =============================================================================
 
 
@@ -77,7 +77,7 @@ class OfferingNode(BaseLogosNode):
     """
     concept.offering - Explicit context contracts.
 
-    An Offering defines:
+    An Scope defines:
     - What handles are accessible (scope)
     - What resources can be consumed (budget)
     - When access expires (expiry)
@@ -97,7 +97,7 @@ class OfferingNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Offering affordances available to all archetypes."""
+        """Scope affordances available to all archetypes."""
         return OFFERING_AFFORDANCES
 
     # ==========================================================================
@@ -160,7 +160,7 @@ class OfferingNode(BaseLogosNode):
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
-        """Handle Offering-specific aspects."""
+        """Handle Scope-specific aspects."""
         match aspect:
             case "create":
                 return self._create_offering(**kwargs)
@@ -190,7 +190,7 @@ class OfferingNode(BaseLogosNode):
         scoped_handles: list[str] | None = None,
     ) -> dict[str, Any]:
         """
-        Create a new Offering.
+        Create a new Scope.
 
         Args:
             tokens: Max LLM tokens to consume
@@ -200,9 +200,9 @@ class OfferingNode(BaseLogosNode):
             scoped_handles: AGENTESE handles this offering provides access to
 
         Returns:
-            Created Offering info
+            Created Scope info
         """
-        from services.witness.offering import Budget, Offering
+        from services.witness.scope import Budget, Scope
 
         # Create budget
         budget = Budget(
@@ -217,7 +217,8 @@ class OfferingNode(BaseLogosNode):
             expires_at = datetime.now() + timedelta(minutes=expires_in_minutes)
 
         # Create offering
-        offering = Offering.create(
+        offering = Scope.create(
+            description="AGENTESE offering",
             budget=budget,
             scoped_handles=tuple(scoped_handles) if scoped_handles else (),
             expires_at=expires_at,
@@ -244,28 +245,28 @@ class OfferingNode(BaseLogosNode):
     )
     def _consume_offering(
         self,
-        offering_id: str = "",
+        scope_id: str = "",
         tokens: int = 0,
         operations: int = 0,
         time_seconds: float = 0.0,
     ) -> dict[str, Any]:
         """
-        Consume resources from an Offering.
+        Consume resources from an Scope.
 
         Law 1: Exceeding budget triggers review, not silent failure.
-        Law 2: Returns a new Offering (immutability).
+        Law 2: Returns a new Scope (immutability).
         """
-        if not offering_id:
-            return {"error": "offering_id is required"}
+        if not scope_id:
+            return {"error": "scope_id is required"}
 
-        offering = _get_offering(offering_id)
+        offering = _get_offering(scope_id)
         if offering is None:
-            return {"error": f"Offering {offering_id} not found"}
+            return {"error": f"Scope {scope_id} not found"}
 
         # Check validity
         if not offering.is_valid():
             return {
-                "error": "Offering is no longer valid",
+                "error": "Scope is no longer valid",
                 "is_expired": offering.is_expired if hasattr(offering, "is_expired") else None,
                 "is_exhausted": offering.budget.is_exhausted,
             }
@@ -278,10 +279,10 @@ class OfferingNode(BaseLogosNode):
                 time_seconds=time_seconds,
             )
             # Update store with new offering (Law 2: immutability)
-            _update_offering(offering_id, new_offering)
+            _update_offering(scope_id, new_offering)
 
             return {
-                "offering_id": offering_id,
+                "scope_id": scope_id,
                 "consumed": {
                     "tokens": tokens,
                     "operations": operations,
@@ -308,23 +309,23 @@ class OfferingNode(BaseLogosNode):
     )
     def _extend_offering(
         self,
-        offering_id: str = "",
+        scope_id: str = "",
         add_tokens: int = 0,
         add_operations: int = 0,
         add_time_seconds: float = 0.0,
         extend_expiry_minutes: int = 0,
     ) -> dict[str, Any]:
         """
-        Extend an Offering's budget or expiry.
+        Extend an Scope's budget or expiry.
 
-        Creates a new Offering with extended limits (Law 2: immutability).
+        Creates a new Scope with extended limits (Law 2: immutability).
         """
-        if not offering_id:
-            return {"error": "offering_id is required"}
+        if not scope_id:
+            return {"error": "scope_id is required"}
 
-        offering = _get_offering(offering_id)
+        offering = _get_offering(scope_id)
         if offering is None:
-            return {"error": f"Offering {offering_id} not found"}
+            return {"error": f"Scope {scope_id} not found"}
 
         # Create extended offering
         new_offering = offering.extend(
@@ -335,10 +336,10 @@ class OfferingNode(BaseLogosNode):
         )
 
         # Update store
-        _update_offering(offering_id, new_offering)
+        _update_offering(scope_id, new_offering)
 
         return {
-            "offering_id": offering_id,
+            "scope_id": scope_id,
             "extended": {
                 "tokens": add_tokens,
                 "operations": add_operations,
@@ -360,22 +361,22 @@ class OfferingNode(BaseLogosNode):
     )
     def _check_status(
         self,
-        offering_id: str = "",
+        scope_id: str = "",
     ) -> dict[str, Any]:
         """
-        Check status of an Offering.
+        Check status of an Scope.
 
         Law 3: Expired Offerings deny access.
         """
-        if not offering_id:
-            return {"error": "offering_id is required"}
+        if not scope_id:
+            return {"error": "scope_id is required"}
 
-        offering = _get_offering(offering_id)
+        offering = _get_offering(scope_id)
         if offering is None:
-            return {"error": f"Offering {offering_id} not found"}
+            return {"error": f"Scope {scope_id} not found"}
 
         return {
-            "offering_id": offering_id,
+            "scope_id": scope_id,
             "is_valid": offering.is_valid(),
             "is_exhausted": offering.budget.is_exhausted,
             "budget": {
@@ -384,7 +385,9 @@ class OfferingNode(BaseLogosNode):
                 "time_seconds": offering.budget.time_seconds,
             },
             "expires_at": offering.expires_at.isoformat() if offering.expires_at else None,
-            "scoped_handles": list(offering.scoped_handles) if hasattr(offering, "scoped_handles") else [],
+            "scoped_handles": list(offering.scoped_handles)
+            if hasattr(offering, "scoped_handles")
+            else [],
         }
 
     # ==========================================================================

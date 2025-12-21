@@ -2,7 +2,7 @@
 Tests for WARP Primitive → SceneGraph Converters.
 
 These tests verify:
-1. TraceNode → SceneNode conversion preserves semantics
+1. Mark → SceneNode conversion preserves semantics
 2. Walk → SceneGraph conversion includes all key data
 3. Timeline layout generates proper edges
 4. Palette colors are correctly applied
@@ -33,11 +33,11 @@ from protocols.agentese.projection.warp_converters import (
     walk_dashboard_to_scene,
     walk_to_scene,
 )
-from services.witness.trace_node import (
+from services.witness.mark import (
+    Mark,
     NPhase,
     Response,
     Stimulus,
-    TraceNode,
     UmweltSnapshot,
 )
 from services.witness.walk import Walk, WalkIntent, WalkStatus
@@ -48,9 +48,9 @@ from services.witness.walk import Walk, WalkIntent, WalkStatus
 
 
 @pytest.fixture
-def sample_trace() -> TraceNode:
-    """Create a sample TraceNode for testing."""
-    return TraceNode(
+def sample_trace() -> Mark:
+    """Create a sample Mark for testing."""
+    return Mark(
         origin="witness",
         stimulus=Stimulus.from_event("git", "Commit abc123", "git"),
         response=Response.thought("Noticed commit abc123", ("git", "commit")),
@@ -61,12 +61,12 @@ def sample_trace() -> TraceNode:
 
 
 @pytest.fixture
-def sample_traces() -> list[TraceNode]:
-    """Create a sequence of TraceNodes for timeline testing."""
+def sample_traces() -> list[Mark]:
+    """Create a sequence of Marks for timeline testing."""
     traces = []
     base_time = datetime.now()
     for i in range(5):
-        trace = TraceNode(
+        trace = Mark(
             origin="witness",
             stimulus=Stimulus.from_event("test", f"Event {i}", "test"),
             response=Response.thought(f"Response {i}", ("test",)),
@@ -119,15 +119,15 @@ class TestPalette:
 
 
 # =============================================================================
-# TraceNode Converter Tests
+# Mark Converter Tests
 # =============================================================================
 
 
-class TestTraceNodeConverter:
-    """Tests for TraceNode → SceneNode conversion."""
+class TestMarkConverter:
+    """Tests for Mark → SceneNode conversion."""
 
-    def test_trace_to_scene_basic(self, sample_trace: TraceNode) -> None:
-        """Basic TraceNode converts to SceneNode."""
+    def test_trace_to_scene_basic(self, sample_trace: Mark) -> None:
+        """Basic Mark converts to SceneNode."""
         node = trace_node_to_scene(sample_trace)
 
         assert node.kind == SceneNodeKind.TRACE
@@ -138,7 +138,7 @@ class TestTraceNodeConverter:
     def test_trace_to_scene_label_truncation(self) -> None:
         """Long stimulus content is truncated in label."""
         long_stimulus = "A" * 100
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content=long_stimulus),
             response=Response(kind="test", content="ok"),
@@ -149,21 +149,21 @@ class TestTraceNodeConverter:
         assert len(node.label) <= 43  # 40 chars + "..."
         assert node.label.endswith("...")
 
-    def test_trace_to_scene_style_applied(self, sample_trace: TraceNode) -> None:
+    def test_trace_to_scene_style_applied(self, sample_trace: Mark) -> None:
         """Sage background and paper grain applied."""
         node = trace_node_to_scene(sample_trace)
 
         assert node.style.background == PALETTE.SAGE
         assert node.style.paper_grain is True
 
-    def test_trace_to_scene_breathing_on_success(self, sample_trace: TraceNode) -> None:
+    def test_trace_to_scene_breathing_on_success(self, sample_trace: Mark) -> None:
         """Successful traces breathe."""
         node = trace_node_to_scene(sample_trace, animate=True)
         assert node.style.breathing is True
 
     def test_trace_to_scene_no_breathing_on_error(self) -> None:
         """Failed traces don't breathe."""
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content="test"),
             response=Response.error("Something went wrong"),
@@ -172,12 +172,12 @@ class TestTraceNodeConverter:
         node = trace_node_to_scene(trace, animate=True)
         assert node.style.breathing is False
 
-    def test_trace_to_scene_animation_disabled(self, sample_trace: TraceNode) -> None:
+    def test_trace_to_scene_animation_disabled(self, sample_trace: Mark) -> None:
         """Animation can be disabled."""
         node = trace_node_to_scene(sample_trace, animate=False)
         assert node.style.breathing is False
 
-    def test_trace_to_scene_metadata(self, sample_trace: TraceNode) -> None:
+    def test_trace_to_scene_metadata(self, sample_trace: Mark) -> None:
         """Metadata includes trace_id and origin."""
         node = trace_node_to_scene(sample_trace)
 
@@ -194,7 +194,7 @@ class TestTraceTimelineConverter:
         graph = trace_timeline_to_scene([])
         assert graph.is_empty()
 
-    def test_timeline_nodes_created(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_nodes_created(self, sample_traces: list[Mark]) -> None:
         """All traces become nodes."""
         graph = trace_timeline_to_scene(sample_traces)
 
@@ -202,7 +202,7 @@ class TestTraceTimelineConverter:
         for node in graph.nodes:
             assert node.kind == SceneNodeKind.TRACE
 
-    def test_timeline_edges_created(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_edges_created(self, sample_traces: list[Mark]) -> None:
         """Sequential traces have causal edges."""
         graph = trace_timeline_to_scene(sample_traces, show_edges=True)
 
@@ -210,17 +210,17 @@ class TestTraceTimelineConverter:
         for edge in graph.edges:
             assert edge.metadata.get("relation") == "causal"
 
-    def test_timeline_edges_disabled(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_edges_disabled(self, sample_traces: list[Mark]) -> None:
         """Edges can be disabled."""
         graph = trace_timeline_to_scene(sample_traces, show_edges=False)
         assert len(graph.edges) == 0
 
-    def test_timeline_horizontal_layout(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_horizontal_layout(self, sample_traces: list[Mark]) -> None:
         """Timeline uses horizontal layout."""
         graph = trace_timeline_to_scene(sample_traces)
         assert graph.layout.direction == "horizontal"
 
-    def test_timeline_title(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_title(self, sample_traces: list[Mark]) -> None:
         """Custom title is applied."""
         graph = trace_timeline_to_scene(sample_traces, title="My Timeline")
         assert graph.title == "My Timeline"
@@ -317,10 +317,7 @@ class TestWalkDashboardConverter:
 
     def test_dashboard_with_walks(self) -> None:
         """Dashboard displays multiple walks."""
-        walks = [
-            Walk.create(f"Walk {i}", name=f"Walk {i}")
-            for i in range(3)
-        ]
+        walks = [Walk.create(f"Walk {i}", name=f"Walk {i}") for i in range(3)]
 
         graph = walk_dashboard_to_scene(walks)
 
@@ -335,10 +332,7 @@ class TestWalkDashboardConverter:
         graph = walk_dashboard_to_scene(walks)
 
         # At least one node group should use grid
-        assert any(
-            isinstance(graph.layout, LayoutDirective)
-            for _ in [graph.layout]
-        )
+        assert any(isinstance(graph.layout, LayoutDirective) for _ in [graph.layout])
 
 
 # =============================================================================
@@ -349,7 +343,7 @@ class TestWalkDashboardConverter:
 class TestConverterComposition:
     """Tests for composing converted graphs."""
 
-    def test_trace_timeline_composition(self, sample_traces: list[TraceNode]) -> None:
+    def test_trace_timeline_composition(self, sample_traces: list[Mark]) -> None:
         """Trace timelines can be composed."""
         timeline1 = trace_timeline_to_scene(sample_traces[:2], title="Part 1")
         timeline2 = trace_timeline_to_scene(sample_traces[2:], title="Part 2")
@@ -361,7 +355,7 @@ class TestConverterComposition:
     def test_walk_with_trace_composition(
         self,
         sample_walk: Walk,
-        sample_traces: list[TraceNode],
+        sample_traces: list[Mark],
     ) -> None:
         """Walk and trace timeline can be composed."""
         walk_graph = walk_to_scene(sample_walk)
@@ -376,7 +370,7 @@ class TestConverterComposition:
     def test_composition_preserves_layout(
         self,
         sample_walk: Walk,
-        sample_traces: list[TraceNode],
+        sample_traces: list[Mark],
     ) -> None:
         """Left graph's layout is preserved (left-dominant)."""
         walk_graph = walk_to_scene(sample_walk)  # vertical
@@ -395,7 +389,7 @@ class TestConverterComposition:
 class TestConverterSerialization:
     """Tests for serializing converted graphs."""
 
-    def test_trace_scene_serializes(self, sample_trace: TraceNode) -> None:
+    def test_trace_scene_serializes(self, sample_trace: Mark) -> None:
         """Converted trace node serializes to dict."""
         node = trace_node_to_scene(sample_trace)
         data = node.to_dict()
@@ -413,7 +407,7 @@ class TestConverterSerialization:
         assert len(data["nodes"]) > 0
         assert data["nodes"][0]["kind"] == "WALK"
 
-    def test_timeline_serializes(self, sample_traces: list[TraceNode]) -> None:
+    def test_timeline_serializes(self, sample_traces: list[Mark]) -> None:
         """Timeline with edges serializes correctly."""
         graph = trace_timeline_to_scene(sample_traces)
         data = graph.to_dict()
@@ -433,7 +427,7 @@ class TestEdgeCases:
 
     def test_unicode_in_stimulus(self) -> None:
         """Unicode characters in stimulus content handled correctly."""
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content="🚀 日本語 émoji Ω∞"),
             response=Response(kind="test", content="ok"),
@@ -447,7 +441,7 @@ class TestEdgeCases:
 
     def test_empty_stimulus_content(self) -> None:
         """Empty stimulus content doesn't crash converter."""
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content=""),
             response=Response(kind="test", content="ok"),
@@ -460,7 +454,7 @@ class TestEdgeCases:
 
     def test_empty_response_content(self) -> None:
         """Empty response content doesn't crash converter."""
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content="test"),
             response=Response(kind="test", content=""),
@@ -473,7 +467,7 @@ class TestEdgeCases:
     def test_very_long_stimulus_truncated(self) -> None:
         """Very long stimulus (1000+ chars) truncates to reasonable label."""
         long_content = "A" * 1000
-        trace = TraceNode(
+        trace = Mark(
             origin="test",
             stimulus=Stimulus(kind="test", content=long_content),
             response=Response(kind="test", content="ok"),
@@ -493,7 +487,7 @@ class TestEdgeCases:
 
         walk_nodes = graph.nodes_by_kind(SceneNodeKind.WALK)
         assert len(walk_nodes) == 1
-        assert walk_nodes[0].content["trace_count"] == 0
+        assert walk_nodes[0].content["mark_count"] == 0
 
     def test_walk_with_empty_name_gets_default(self) -> None:
         """Walk with empty name gets auto-generated name."""
@@ -543,7 +537,7 @@ class TestEdgeCases:
 
     def test_special_characters_in_origin(self) -> None:
         """Origin with special characters handled correctly."""
-        trace = TraceNode(
+        trace = Mark(
             origin="test/path:special<chars>",
             stimulus=Stimulus(kind="test", content="test"),
             response=Response(kind="test", content="ok"),
@@ -600,9 +594,7 @@ class TestFullPipeline:
             assert "background" in style
             assert "breathing" in style
 
-    def test_trace_timeline_to_json_react_structure(
-        self, sample_traces: list[TraceNode]
-    ) -> None:
+    def test_trace_timeline_to_json_react_structure(self, sample_traces: list[Mark]) -> None:
         """Trace timeline JSON matches React ServoSceneRenderer expectations."""
         graph = trace_timeline_to_scene(sample_traces)
         json_data = graph.to_dict()
@@ -620,13 +612,13 @@ class TestFullPipeline:
             assert edge["source"] in node_ids
             assert edge["target"] in node_ids
 
-    def test_trace_content_matches_react_types(self, sample_trace: TraceNode) -> None:
-        """TraceNode content JSON matches TraceNodeCard TypeScript types."""
+    def test_trace_content_matches_react_types(self, sample_trace: Mark) -> None:
+        """Mark content JSON matches MarkCard TypeScript types."""
         node = trace_node_to_scene(sample_trace)
         data = node.to_dict()
         content = data["content"]
 
-        # Must match TraceNodeContent interface in TraceNodeCard.tsx
+        # Must match MarkContent interface in MarkCard.tsx
         assert "trace_id" in content
         assert isinstance(content["trace_id"], str)
 
@@ -672,8 +664,8 @@ class TestFullPipeline:
         assert "status" in content
         assert content["status"] in ("ACTIVE", "PAUSED", "COMPLETE", "ABANDONED")
 
-        assert "trace_count" in content
-        assert isinstance(content["trace_count"], int)
+        assert "mark_count" in content
+        assert isinstance(content["mark_count"], int)
 
         assert "participants" in content
         assert isinstance(content["participants"], list)

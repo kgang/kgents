@@ -1,5 +1,5 @@
 """
-TerrariumView: Observer-Dependent Lens Over TraceNode Streams.
+TerrariumView: Observer-Dependent Lens Over Mark Streams.
 
 A TerrariumView is:
 1. A selection query (what traces to show)
@@ -11,7 +11,7 @@ Philosophy (from spec/protocols/servo-substrate.md):
     "Servo is not 'a browser' inside kgents. It is the projection substrate
     that renders the ontology."
 
-TerrariumView is the compositional lens between TraceNodes and projection surfaces.
+TerrariumView is the compositional lens between Marks and projection surfaces.
 
 Laws:
     Law 1 (Fault Isolation): Crashed view doesn't affect other views
@@ -46,7 +46,7 @@ from protocols.agentese.projection.scene import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from services.witness.trace_node import NPhase, TraceNode, WalkId
+    from services.witness.mark import Mark, NPhase, WalkId
 
 # =============================================================================
 # Type Aliases
@@ -90,7 +90,7 @@ class SelectionPredicate:
         >>> pred.matches({"origin": "witness"})  # True
     """
 
-    field: str  # TraceNode field to match (e.g., "origin", "phase", "tags")
+    field: str  # Mark field to match (e.g., "origin", "phase", "tags")
     op: SelectionOperator
     value: Any  # Value to compare
 
@@ -128,7 +128,7 @@ class SelectionPredicate:
 @dataclass(frozen=True)
 class SelectionQuery:
     """
-    Query for selecting TraceNodes to display.
+    Query for selecting Marks to display.
 
     Predicates are ANDed together. For OR semantics, use multiple views.
 
@@ -322,7 +322,7 @@ class ViewStatus(Enum):
 @dataclass(frozen=True)
 class TerrariumView:
     """
-    Configured projection over TraceNode streams.
+    Configured projection over Mark streams.
 
     Laws:
         Law 1 (Fault Isolation): Crashed view doesn't affect other views
@@ -391,7 +391,7 @@ class TerrariumView:
             lens=LensConfig.summary(group_by=group_by),
         )
 
-    def project(self, traces: Iterable[TraceNode] | Iterable[dict[str, Any]]) -> SceneGraph:
+    def project(self, traces: Iterable[Mark] | Iterable[dict[str, Any]]) -> SceneGraph:
         """
         Project traces through this view's lens to produce a SceneGraph.
 

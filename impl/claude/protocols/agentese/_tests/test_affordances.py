@@ -546,7 +546,7 @@ class TestRenderings:
     def test_temporal_rendering(self) -> None:
         """TemporalRendering for time.trace."""
         r = TemporalRendering(
-            trace_count=50,
+            mark_count=50,
             scheduled_count=3,
         )
         assert "TEMPORAL" in r.to_text()

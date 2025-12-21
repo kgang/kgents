@@ -1,25 +1,29 @@
 """
-Covenant: Negotiated Permission Contract.
+Grant: Negotiated Permission Contract.
 
-A Covenant is a formal agreement between human and agent that:
+A Grant is a formal agreement between human and agent that:
 - Defines what operations are permitted (permissions)
 - Specifies review gates for sensitive operations
 - Can be proposed, negotiated, granted, and revoked
 
-Every Ritual requires a Covenant. Covenants make permissions
+Every Playbook requires a Grant. Grants make permissions
 explicit and revocable.
 
 Philosophy:
-    "Trust is earned, not assumed. A Covenant is the contract
+    "Trust is earned, not assumed. A Grant is the contract
     that makes trust explicit. It can be revoked at any time,
     ensuring human agency is always preserved."
 
 Laws:
-- Law 1 (Required): Sensitive operations require a granted Covenant
-- Law 2 (Revocable): Covenants can be revoked at any time
+- Law 1 (Required): Sensitive operations require a granted Grant
+- Law 2 (Revocable): Grants can be revoked at any time
 - Law 3 (Gated): Review gates trigger on threshold
 
-See: spec/protocols/warp-primitives.md
+Rename History:
+    Grant → Grant (spec/protocols/witness-primitives.md)
+    "A grant of permission" - clearer than religious connotation
+
+See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 9: Directed Cycle)
 """
 
@@ -35,22 +39,29 @@ from uuid import uuid4
 # Type Aliases
 # =============================================================================
 
-CovenantId = NewType("CovenantId", str)
+GrantId = NewType("GrantId", str)
+
+# Backwards compatibility alias
+GrantId = GrantId
 
 
-def generate_covenant_id() -> CovenantId:
-    """Generate a unique Covenant ID."""
-    return CovenantId(f"covenant-{uuid4().hex[:12]}")
+def generate_grant_id() -> GrantId:
+    """Generate a unique Grant ID."""
+    return GrantId(f"grant-{uuid4().hex[:12]}")
+
+
+# Backwards compatibility alias
+generate_grant_id = generate_grant_id
 
 
 # =============================================================================
-# Covenant Status
+# Grant Status
 # =============================================================================
 
 
-class CovenantStatus(Enum):
+class GrantStatus(Enum):
     """
-    Status of a Covenant.
+    Status of a Grant.
 
     Lifecycle:
         PROPOSED → NEGOTIATING → GRANTED ↔ REVOKED
@@ -70,6 +81,10 @@ class CovenantStatus(Enum):
     GRANTED = auto()  # Active and usable
     REVOKED = auto()  # Explicitly revoked
     EXPIRED = auto()  # Past expiry time
+
+
+# Backwards compatibility alias
+GrantStatus = GrantStatus
 
 
 # =============================================================================
@@ -148,7 +163,7 @@ class GateOccurrence:
     """
     Tracks occurrences of a gated operation.
 
-    Used by CovenantEnforcer to count operations and trigger gates.
+    Used by GrantEnforcer to count operations and trigger gates.
     """
 
     gate: ReviewGate
@@ -180,25 +195,37 @@ class GateOccurrence:
 # =============================================================================
 
 
-class CovenantError(Exception):
-    """Base exception for Covenant errors."""
+class GrantError(Exception):
+    """Base exception for Grant errors."""
 
     pass
 
 
-class CovenantNotGranted(CovenantError):
-    """Law 1: Attempted operation without granted Covenant."""
+# Backwards compatibility alias
+GrantError = GrantError
+
+
+class GrantNotGranted(GrantError):
+    """Law 1: Attempted operation without granted Grant."""
 
     pass
 
 
-class CovenantRevoked(CovenantError):
-    """Law 2: Covenant has been revoked."""
+# Backwards compatibility alias
+GrantNotGranted = GrantNotGranted
+
+
+class GrantRevoked(GrantError):
+    """Law 2: Grant has been revoked."""
 
     pass
 
 
-class GateTriggered(CovenantError):
+# Backwards compatibility alias
+GrantRevoked = GrantRevoked
+
+
+class GateTriggered(GrantError):
     """Law 3: Review gate threshold reached."""
 
     def __init__(self, gate: ReviewGate, message: str = ""):
@@ -207,40 +234,40 @@ class GateTriggered(CovenantError):
 
 
 # =============================================================================
-# Covenant: The Core Primitive
+# Grant: The Core Primitive
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class Covenant:
+class Grant:
     """
     Negotiated permission contract.
 
     Laws:
-    - Law 1 (Required): Sensitive operations require granted Covenant
+    - Law 1 (Required): Sensitive operations require granted Grant
     - Law 2 (Revocable): Can be revoked at any time
     - Law 3 (Gated): Review gates trigger on threshold
 
-    A Covenant defines:
+    A Grant defines:
     - What permissions are granted
     - What operations trigger review gates
     - Who granted it and when
 
     Example:
-        >>> covenant = Covenant.propose(
+        >>> grant = Grant.propose(
         ...     permissions=frozenset({"file_read", "file_write", "git_commit"}),
         ...     review_gates=(
         ...         ReviewGate("git_push", threshold=1),
         ...         ReviewGate("file_delete", threshold=3),
         ...     ),
-        ...     reason="Implement TraceNode feature",
+        ...     reason="Implement Mark feature",
         ... )
         >>> # Human reviews and grants
-        >>> granted = covenant.grant(granted_by="kent")
+        >>> granted = grant.grant(granted_by="kent")
     """
 
     # Identity
-    id: CovenantId = field(default_factory=generate_covenant_id)
+    id: GrantId = field(default_factory=generate_grant_id)
 
     # Permissions
     permissions: frozenset[str] = field(default_factory=frozenset)
@@ -249,7 +276,7 @@ class Covenant:
     review_gates: tuple[ReviewGate, ...] = ()
 
     # Status
-    status: CovenantStatus = CovenantStatus.PROPOSED
+    status: GrantStatus = GrantStatus.PROPOSED
 
     # Grant info
     granted_by: str | None = None
@@ -265,7 +292,7 @@ class Covenant:
     expires_at: datetime | None = None
 
     # Metadata
-    reason: str = ""  # Why this Covenant was requested
+    reason: str = ""  # Why this Grant was requested
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # =========================================================================
@@ -275,21 +302,27 @@ class Covenant:
     @classmethod
     def propose(
         cls,
-        permissions: frozenset[str],
+        permissions: frozenset[str] | tuple[str, ...] | list[str],
         review_gates: tuple[ReviewGate, ...] | None = None,
         reason: str = "",
         expires_at: datetime | None = None,
-    ) -> Covenant:
+        description: str = "",  # Backwards compat alias for reason
+    ) -> Grant:
         """
-        Propose a new Covenant.
+        Propose a new Grant.
 
-        This creates a Covenant in PROPOSED status awaiting human review.
+        This creates a Grant in PROPOSED status awaiting human review.
         """
+        # Accept tuple or list for backwards compat
+        if isinstance(permissions, (tuple, list)):
+            permissions = frozenset(permissions)
+        # description is backwards compat alias for reason
+        final_reason = reason or description
         return cls(
             permissions=permissions,
             review_gates=review_gates or (),
-            status=CovenantStatus.PROPOSED,
-            reason=reason,
+            status=GrantStatus.PROPOSED,
+            reason=final_reason,
             expires_at=expires_at,
         )
 
@@ -297,36 +330,36 @@ class Covenant:
     # Status Transitions
     # =========================================================================
 
-    def negotiate(self) -> Covenant:
+    def negotiate(self) -> Grant:
         """Move to NEGOTIATING status."""
-        if self.status != CovenantStatus.PROPOSED:
-            raise CovenantError(f"Cannot negotiate from {self.status.name}")
+        if self.status != GrantStatus.PROPOSED:
+            raise GrantError(f"Cannot negotiate from {self.status.name}")
 
-        return Covenant(
+        return Grant(
             id=self.id,
             permissions=self.permissions,
             review_gates=self.review_gates,
-            status=CovenantStatus.NEGOTIATING,
+            status=GrantStatus.NEGOTIATING,
             created_at=self.created_at,
             expires_at=self.expires_at,
             reason=self.reason,
             metadata=self.metadata,
         )
 
-    def grant(self, granted_by: str) -> Covenant:
+    def grant(self, granted_by: str) -> Grant:
         """
-        Grant the Covenant.
+        Grant the Grant.
 
-        Law 1: Only granted Covenants permit operations.
+        Law 1: Only granted Grants permit operations.
         """
-        if self.status not in {CovenantStatus.PROPOSED, CovenantStatus.NEGOTIATING}:
-            raise CovenantError(f"Cannot grant from {self.status.name}")
+        if self.status not in {GrantStatus.PROPOSED, GrantStatus.NEGOTIATING}:
+            raise GrantError(f"Cannot grant from {self.status.name}")
 
-        return Covenant(
+        return Grant(
             id=self.id,
             permissions=self.permissions,
             review_gates=self.review_gates,
-            status=CovenantStatus.GRANTED,
+            status=GrantStatus.GRANTED,
             granted_by=granted_by,
             granted_at=datetime.now(),
             created_at=self.created_at,
@@ -335,24 +368,24 @@ class Covenant:
             metadata=self.metadata,
         )
 
-    def revoke(self, revoked_by: str, reason: str = "") -> Covenant:
+    def revoke(self, revoked_by: str, reason: str = "") -> Grant:
         """
-        Revoke the Covenant.
+        Revoke the Grant.
 
-        Law 2: Covenants can be revoked at any time.
+        Law 2: Grants can be revoked at any time.
         """
         if self.status not in {
-            CovenantStatus.GRANTED,
-            CovenantStatus.PROPOSED,
-            CovenantStatus.NEGOTIATING,
+            GrantStatus.GRANTED,
+            GrantStatus.PROPOSED,
+            GrantStatus.NEGOTIATING,
         }:
-            raise CovenantError(f"Cannot revoke from {self.status.name}")
+            raise GrantError(f"Cannot revoke from {self.status.name}")
 
-        return Covenant(
+        return Grant(
             id=self.id,
             permissions=self.permissions,
             review_gates=self.review_gates,
-            status=CovenantStatus.REVOKED,
+            status=GrantStatus.REVOKED,
             granted_by=self.granted_by,
             granted_at=self.granted_at,
             revoked_by=revoked_by,
@@ -368,16 +401,16 @@ class Covenant:
         self,
         permissions: frozenset[str] | None = None,
         review_gates: tuple[ReviewGate, ...] | None = None,
-    ) -> Covenant:
+    ) -> Grant:
         """
-        Amend the Covenant with new terms.
+        Amend the Grant with new terms.
 
-        Returns a new PROPOSED Covenant with updated terms.
+        Returns a new PROPOSED Grant with updated terms.
         """
-        return Covenant(
+        return Grant(
             permissions=permissions if permissions is not None else self.permissions,
             review_gates=review_gates if review_gates is not None else self.review_gates,
-            status=CovenantStatus.PROPOSED,
+            status=GrantStatus.PROPOSED,
             reason=f"Amendment of {self.id}",
             expires_at=self.expires_at,
             metadata={**self.metadata, "amends": str(self.id)},
@@ -389,32 +422,32 @@ class Covenant:
 
     @property
     def is_active(self) -> bool:
-        """Check if Covenant is active and usable."""
-        if self.status != CovenantStatus.GRANTED:
+        """Check if Grant is active and usable."""
+        if self.status != GrantStatus.GRANTED:
             return False
         if self.expires_at is not None and datetime.now() > self.expires_at:
             return False
         return True
 
     def check_active(self) -> None:
-        """Raise if Covenant is not active."""
-        if self.status == CovenantStatus.REVOKED:
-            raise CovenantRevoked(f"Covenant {self.id} was revoked: {self.revoke_reason}")
-        if self.status != CovenantStatus.GRANTED:
-            raise CovenantNotGranted(f"Covenant {self.id} not granted (status: {self.status.name})")
+        """Raise if Grant is not active."""
+        if self.status == GrantStatus.REVOKED:
+            raise GrantRevoked(f"Grant {self.id} was revoked: {self.revoke_reason}")
+        if self.status != GrantStatus.GRANTED:
+            raise GrantNotGranted(f"Grant {self.id} not granted (status: {self.status.name})")
         if self.expires_at is not None and datetime.now() > self.expires_at:
-            raise CovenantError(f"Covenant {self.id} has expired")
+            raise GrantError(f"Grant {self.id} has expired")
 
     def has_permission(self, permission: str) -> bool:
         """Check if a permission is granted."""
         return permission in self.permissions
 
     def check_permission(self, permission: str) -> None:
-        """Check permission, raising if not granted or Covenant inactive."""
+        """Check permission, raising if not granted or Grant inactive."""
         self.check_active()
         if not self.has_permission(permission):
-            raise CovenantNotGranted(
-                f"Permission '{permission}' not in Covenant. Allowed: {self.permissions}"
+            raise GrantNotGranted(
+                f"Permission '{permission}' not in Grant. Allowed: {self.permissions}"
             )
 
     def get_gate(self, trigger: str) -> ReviewGate | None:
@@ -423,6 +456,24 @@ class Covenant:
             if gate.trigger == trigger:
                 return gate
         return None
+
+    # =========================================================================
+    # Backwards Compatibility Properties
+    # =========================================================================
+
+    @property
+    def trust_level(self) -> str:
+        """Backwards compat: derive from status."""
+        if self.status == GrantStatus.GRANTED:
+            return "high"
+        elif self.status == GrantStatus.NEGOTIATING:
+            return "medium"
+        return "low"
+
+    @property
+    def proposed_at(self) -> datetime:
+        """Backwards compat: alias for created_at."""
+        return self.created_at
 
     # =========================================================================
     # Serialization
@@ -447,13 +498,13 @@ class Covenant:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Covenant:
+    def from_dict(cls, data: dict[str, Any]) -> Grant:
         """Create from dictionary."""
         return cls(
-            id=CovenantId(data["id"]),
+            id=GrantId(data["id"]),
             permissions=frozenset(data.get("permissions", [])),
             review_gates=tuple(ReviewGate.from_dict(g) for g in data.get("review_gates", [])),
-            status=CovenantStatus[data.get("status", "PROPOSED")],
+            status=GrantStatus[data.get("status", "PROPOSED")],
             granted_by=data.get("granted_by"),
             granted_at=datetime.fromisoformat(data["granted_at"])
             if data.get("granted_at")
@@ -478,36 +529,40 @@ class Covenant:
         perms = len(self.permissions)
         gates = len(self.review_gates)
         return (
-            f"Covenant(id={str(self.id)[:16]}..., "
+            f"Grant(id={str(self.id)[:16]}..., "
             f"status={self.status.name}, "
             f"permissions={perms}, gates={gates})"
         )
 
 
+# Backwards compatibility alias
+Grant = Grant
+
+
 # =============================================================================
-# CovenantEnforcer
+# GrantEnforcer
 # =============================================================================
 
 
 @dataclass
-class CovenantEnforcer:
+class GrantEnforcer:
     """
-    Runtime enforcer for Covenant permissions and gates.
+    Runtime enforcer for Grant permissions and gates.
 
     Tracks operation counts and triggers review gates when thresholds reached.
 
     Example:
-        >>> enforcer = CovenantEnforcer(covenant)
+        >>> enforcer = GrantEnforcer(grant)
         >>> enforcer.check("file_read")  # OK
         >>> enforcer.check("git_push")   # Might trigger gate
     """
 
-    covenant: Covenant
+    grant: Grant
     _occurrences: dict[str, GateOccurrence] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Initialize gate occurrences."""
-        for gate in self.covenant.review_gates:
+        for gate in self.grant.review_gates:
             self._occurrences[gate.trigger] = GateOccurrence(gate)
 
     def check(self, operation: str) -> None:
@@ -515,11 +570,11 @@ class CovenantEnforcer:
         Check if operation is permitted.
 
         Raises:
-        - CovenantNotGranted: if operation not in permissions
-        - CovenantRevoked: if Covenant was revoked
+        - GrantNotGranted: if operation not in permissions
+        - GrantRevoked: if Grant was revoked
         - GateTriggered: if review gate threshold reached
         """
-        self.covenant.check_permission(operation)
+        self.grant.check_permission(operation)
 
         # Check if this operation has a gate
         if operation in self._occurrences:
@@ -539,70 +594,112 @@ class CovenantEnforcer:
         return False
 
 
+# Backwards compatibility alias
+GrantEnforcer = GrantEnforcer
+
+
 # =============================================================================
-# CovenantStore
+# GrantStore
 # =============================================================================
 
 
 @dataclass
-class CovenantStore:
+class GrantStore:
     """
-    Persistent storage for Covenants.
+    Persistent storage for Grants.
     """
 
-    _covenants: dict[CovenantId, Covenant] = field(default_factory=dict)
+    _grants: dict[GrantId, Grant] = field(default_factory=dict)
 
-    def add(self, covenant: Covenant) -> None:
-        """Add a Covenant to the store."""
-        self._covenants[covenant.id] = covenant
+    def add(self, grant: Grant) -> None:
+        """Add a Grant to the store."""
+        self._grants[grant.id] = grant
 
-    def get(self, covenant_id: CovenantId) -> Covenant | None:
-        """Get a Covenant by ID."""
-        return self._covenants.get(covenant_id)
+    def get(self, grant_id: GrantId) -> Grant | None:
+        """Get a Grant by ID."""
+        return self._grants.get(grant_id)
 
-    def update(self, covenant: Covenant) -> None:
-        """Update a Covenant (replace with new version)."""
-        self._covenants[covenant.id] = covenant
+    def update(self, grant: Grant) -> None:
+        """Update a Grant (replace with new version)."""
+        self._grants[grant.id] = grant
 
-    def active(self) -> list[Covenant]:
-        """Get all active Covenants."""
-        return [c for c in self._covenants.values() if c.is_active]
+    def active(self) -> list[Grant]:
+        """Get all active Grants."""
+        return [g for g in self._grants.values() if g.is_active]
 
-    def pending(self) -> list[Covenant]:
-        """Get Covenants awaiting approval."""
+    def pending(self) -> list[Grant]:
+        """Get Grants awaiting approval."""
         return [
-            c
-            for c in self._covenants.values()
-            if c.status in {CovenantStatus.PROPOSED, CovenantStatus.NEGOTIATING}
+            g
+            for g in self._grants.values()
+            if g.status in {GrantStatus.PROPOSED, GrantStatus.NEGOTIATING}
         ]
 
-    def revoked(self) -> list[Covenant]:
-        """Get revoked Covenants."""
-        return [c for c in self._covenants.values() if c.status == CovenantStatus.REVOKED]
+    def revoked(self) -> list[Grant]:
+        """Get revoked Grants."""
+        return [g for g in self._grants.values() if g.status == GrantStatus.REVOKED]
 
     def __len__(self) -> int:
-        return len(self._covenants)
+        return len(self._grants)
+
+
+# Backwards compatibility alias
+GrantStore = GrantStore
 
 
 # =============================================================================
 # Global Store
 # =============================================================================
 
-_global_covenant_store: CovenantStore | None = None
+_global_grant_store: GrantStore | None = None
 
 
-def get_covenant_store() -> CovenantStore:
-    """Get the global covenant store."""
-    global _global_covenant_store
-    if _global_covenant_store is None:
-        _global_covenant_store = CovenantStore()
-    return _global_covenant_store
+def get_grant_store() -> GrantStore:
+    """Get the global grant store."""
+    global _global_grant_store
+    if _global_grant_store is None:
+        _global_grant_store = GrantStore()
+    return _global_grant_store
 
 
-def reset_covenant_store() -> None:
-    """Reset the global covenant store (for testing)."""
-    global _global_covenant_store
-    _global_covenant_store = None
+# Backwards compatibility alias
+get_grant_store = get_grant_store
+
+
+def reset_grant_store() -> None:
+    """Reset the global grant store (for testing)."""
+    global _global_grant_store
+    _global_grant_store = None
+
+
+# Backwards compatibility alias
+reset_grant_store = reset_grant_store
+
+
+# =============================================================================
+# Backwards Compatibility Aliases (Covenant → Grant)
+# =============================================================================
+
+# Type aliases
+CovenantId = GrantId
+generate_covenant_id = generate_grant_id
+
+# Status
+CovenantStatus = GrantStatus
+
+# Exceptions
+CovenantError = GrantError
+CovenantNotGranted = GrantNotGranted
+CovenantRevoked = GrantRevoked
+
+# Core types
+Covenant = Grant
+CovenantEnforcer = GrantEnforcer
+
+# Store
+CovenantStore = GrantStore
+get_covenant_store = get_grant_store
+reset_covenant_store = reset_grant_store
 
 
 # =============================================================================
@@ -610,24 +707,31 @@ def reset_covenant_store() -> None:
 # =============================================================================
 
 __all__ = [
-    # Type aliases
-    "CovenantId",
-    "generate_covenant_id",
-    # Status
-    "CovenantStatus",
+    # New names (preferred)
+    "GrantId",
+    "generate_grant_id",
+    "GrantStatus",
     "GateFallback",
-    # Review gates
     "ReviewGate",
     "GateOccurrence",
-    # Exceptions
+    "GrantError",
+    "GrantNotGranted",
+    "GrantRevoked",
+    "GateTriggered",
+    "Grant",
+    "GrantEnforcer",
+    "GrantStore",
+    "get_grant_store",
+    "reset_grant_store",
+    # Backwards compatibility (Covenant → Grant)
+    "CovenantId",
+    "generate_covenant_id",
+    "CovenantStatus",
     "CovenantError",
     "CovenantNotGranted",
     "CovenantRevoked",
-    "GateTriggered",
-    # Core
     "Covenant",
     "CovenantEnforcer",
-    # Store
     "CovenantStore",
     "get_covenant_store",
     "reset_covenant_store",

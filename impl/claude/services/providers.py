@@ -66,7 +66,7 @@ if TYPE_CHECKING:
     from services.verification import VerificationPersistence
     from services.witness.crystallization_node import TimeWitnessNode
     from services.witness.persistence import WitnessPersistence
-    from services.witness.trace_store import TraceNodeStore
+    from services.witness.trace_store import MarkStore
 
 logger = logging.getLogger(__name__)
 
@@ -300,16 +300,16 @@ async def get_time_witness_node() -> "TimeWitnessNode":
     return TimeWitnessNode(witness_persistence=persistence)
 
 
-async def get_trace_store() -> "TraceNodeStore":
+async def get_mark_store() -> "MarkStore":
     """
-    Get the TraceNodeStore for AGENTESE invocation tracing.
+    Get the MarkStore for AGENTESE invocation tracing.
 
-    Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode.
-    This store is the append-only ledger for all TraceNodes.
+    Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark.
+    This store is the append-only ledger for all Marks.
 
     Used by AgenteseGateway to record all invocations.
     """
-    from services.witness.trace_store import get_trace_store as get_store
+    from services.witness.trace_store import get_mark_store as get_store
 
     return get_store()
 
@@ -554,7 +554,7 @@ async def setup_providers() -> None:
     container.register("witness_persistence", get_witness_persistence, singleton=True)
     container.register("muse_node", get_muse_node, singleton=True)
     container.register("time_witness_node", get_time_witness_node, singleton=True)
-    container.register("trace_store", get_trace_store, singleton=True)
+    container.register("trace_store", get_mark_store, singleton=True)
 
     # Town sub-services (for CoalitionNode, WorkshopNode, InhabitNode, etc.)
     container.register("coalition_service", get_coalition_service, singleton=True)
@@ -718,7 +718,7 @@ async def setup_providers() -> None:
     except ImportError as e:
         logger.warning(f"SwarmNode not available: {e}")
 
-    # Wire DifferanceStore to DifferanceTraceNode
+    # Wire DifferanceStore to DifferanceMark
     try:
         from agents.differance import DifferanceStore
         from agents.differance.integration import set_differance_store
@@ -733,7 +733,7 @@ async def setup_providers() -> None:
             # Also set global integration store
             set_differance_store(store)
 
-            logger.info("DifferanceStore wired to DifferanceTraceNode")
+            logger.info("DifferanceStore wired to DifferanceMark")
     except Exception as e:
         logger.debug(f"DifferanceStore wiring skipped: {e}")
 
@@ -827,8 +827,8 @@ __all__ = [
     "get_witness_persistence",
     # 9th Crown Jewel (Time Witness - Crystallization)
     "get_time_witness_node",
-    # TraceNodeStore (Law 3: Every AGENTESE invocation emits TraceNode)
-    "get_trace_store",
+    # MarkStore (Law 3: Every AGENTESE invocation emits Mark)
+    "get_mark_store",
     # 10th Crown Jewel (Muse - Pattern Detection)
     "get_muse_node",
     # Logos (cross-jewel invocation)

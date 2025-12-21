@@ -1,10 +1,10 @@
 """
-Tests for Ritual.
+Tests for Playbook.
 
 Verifies laws:
-- Law 1 (Covenant Required): Every Ritual has exactly one Covenant
-- Law 2 (Offering Required): Every Ritual has exactly one Offering
-- Law 3 (Guard Transparency): Guards emit TraceNodes on evaluation
+- Law 1 (Grant Required): Every Playbook has exactly one Grant
+- Law 2 (Scope Required): Every Playbook has exactly one Scope
+- Law 3 (Guard Transparency): Guards emit Marks on evaluation
 - Law 4 (Phase Ordering): Phase transitions follow directed cycle
 
 See: spec/protocols/warp-primitives.md
@@ -16,41 +16,41 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from services.witness.covenant import Covenant, CovenantStatus, ReviewGate
-from services.witness.offering import Budget, Offering
-from services.witness.ritual import (
+from services.witness.grant import Grant, GrantStatus, ReviewGate
+from services.witness.mark import Mark, NPhase
+from services.witness.playbook import (
     GuardFailed,
     GuardResult,
     InvalidPhaseTransition,
-    MissingCovenant,
-    MissingOffering,
-    Ritual,
-    RitualError,
-    RitualNotActive,
-    RitualPhase,
-    RitualStatus,
-    RitualStore,
+    MissingGrant,
+    MissingScope,
+    Playbook,
+    PlaybookError,
+    PlaybookNotActive,
+    PlaybookPhase,
+    PlaybookStatus,
+    PlaybookStore,
     SentinelGuard,
-    get_ritual_store,
-    reset_ritual_store,
+    get_playbook_store,
+    reset_playbook_store,
 )
-from services.witness.trace_node import NPhase, TraceNode
+from services.witness.scope import Budget, Scope
 
 # =============================================================================
 # Fixtures
 # =============================================================================
 
 
-def make_covenant(permissions: frozenset[str] | None = None) -> Covenant:
-    """Create a granted Covenant for testing."""
-    return Covenant.propose(
+def make_grant(permissions: frozenset[str] | None = None) -> Grant:
+    """Create a granted Grant for testing."""
+    return Grant.propose(
         permissions=permissions or frozenset({"file_read", "file_write"}),
     ).grant("kent")
 
 
-def make_offering(budget: Budget | None = None) -> Offering:
-    """Create a valid Offering for testing."""
-    return Offering.create(
+def make_scope(budget: Budget | None = None) -> Scope:
+    """Create a valid Scope for testing."""
+    return Scope.create(
         description="Test offering",
         scoped_handles=("time.*", "self.*"),
         budget=budget or Budget.standard(),
@@ -58,131 +58,131 @@ def make_offering(budget: Budget | None = None) -> Offering:
 
 
 # =============================================================================
-# Law 1: Covenant Required Tests
+# Law 1: Grant Required Tests
 # =============================================================================
 
 
-class TestLaw1CovenantRequired:
-    """Law 1: Every Ritual has exactly one Covenant."""
+class TestLaw1GrantRequired:
+    """Law 1: Every Playbook has exactly one Grant."""
 
-    def test_ritual_requires_covenant(self) -> None:
-        """Ritual.create requires a Covenant."""
-        offering = make_offering()
+    def test_ritual_requires_grant(self) -> None:
+        """Playbook.create requires a Grant."""
+        offering = make_scope()
 
-        # Without granted Covenant
-        proposed_covenant = Covenant.propose(
+        # Without granted Grant
+        proposed_grant = Grant.propose(
             permissions=frozenset({"file_read"}),
         )
 
-        with pytest.raises(MissingCovenant) as exc_info:
-            Ritual.create(
+        with pytest.raises(MissingGrant) as exc_info:
+            Playbook.create(
                 name="Test",
-                covenant=proposed_covenant,
-                offering=offering,
+                grant=proposed_grant,
+                scope=offering,
             )
 
         assert "must be granted" in str(exc_info.value)
 
-    def test_ritual_with_granted_covenant_succeeds(self) -> None:
-        """Ritual.create succeeds with granted Covenant."""
-        covenant = make_covenant()
-        offering = make_offering()
+    def test_ritual_with_granted_grant_succeeds(self) -> None:
+        """Playbook.create succeeds with granted Grant."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
-            name="Test Ritual",
-            covenant=covenant,
-            offering=offering,
+        ritual = Playbook.create(
+            name="Test Playbook",
+            grant=covenant,
+            scope=offering,
         )
 
-        assert ritual.covenant_id == covenant.id
-        assert ritual.covenant == covenant
+        assert ritual.grant_id == covenant.id
+        assert ritual.grant == covenant
 
-    def test_ritual_begin_checks_covenant(self) -> None:
-        """Ritual.begin checks Covenant is still active."""
-        covenant = make_covenant()
-        offering = make_offering()
+    def test_ritual_begin_checks_grant(self) -> None:
+        """Playbook.begin checks Grant is still active."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
-        # Revoke the Covenant
+        # Revoke the Grant
         revoked = covenant.revoke("kent", reason="Test")
-        ritual._covenant = revoked
+        ritual._grant = revoked
 
-        with pytest.raises(MissingCovenant) as exc_info:
+        with pytest.raises(MissingGrant) as exc_info:
             ritual.begin()
 
         assert "not active" in str(exc_info.value)
 
 
 # =============================================================================
-# Law 2: Offering Required Tests
+# Law 2: Scope Required Tests
 # =============================================================================
 
 
-class TestLaw2OfferingRequired:
-    """Law 2: Every Ritual has exactly one Offering."""
+class TestLaw2ScopeRequired:
+    """Law 2: Every Playbook has exactly one Scope."""
 
-    def test_ritual_requires_offering(self) -> None:
-        """Ritual.create requires a valid Offering."""
-        covenant = make_covenant()
+    def test_ritual_requires_scope(self) -> None:
+        """Playbook.create requires a valid Scope."""
+        covenant = make_grant()
 
         # Expired offering
         past = datetime.now() - timedelta(hours=1)
-        expired_offering = Offering(
+        expired_scope = Scope(
             description="Expired",
             scoped_handles=("time.*",),
             expires_at=past,
         )
 
-        with pytest.raises(MissingOffering) as exc_info:
-            Ritual.create(
+        with pytest.raises(MissingScope) as exc_info:
+            Playbook.create(
                 name="Test",
-                covenant=covenant,
-                offering=expired_offering,
+                grant=covenant,
+                scope=expired_scope,
             )
 
         assert "valid" in str(exc_info.value)
 
-    def test_ritual_with_valid_offering_succeeds(self) -> None:
-        """Ritual.create succeeds with valid Offering."""
-        covenant = make_covenant()
-        offering = make_offering()
+    def test_ritual_with_valid_scope_succeeds(self) -> None:
+        """Playbook.create succeeds with valid Scope."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
-        assert ritual.offering_id == offering.id
-        assert ritual.offering == offering
+        assert ritual.scope_id == offering.id
+        assert ritual.scope == offering
 
-    def test_ritual_begin_checks_offering(self) -> None:
-        """Ritual.begin checks Offering is still valid."""
-        covenant = make_covenant()
+    def test_ritual_begin_checks_scope(self) -> None:
+        """Playbook.begin checks Scope is still valid."""
+        covenant = make_grant()
         # Create offering with exhausted budget
-        exhausted_offering = Offering.create(
+        exhausted_scope = Scope.create(
             description="Exhausted",
             scoped_handles=("time.*",),
             budget=Budget(tokens=0),  # Exhausted
         )
 
         # Use valid offering to create, then swap
-        valid_offering = make_offering()
-        ritual = Ritual.create(
+        valid_scope = make_scope()
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=valid_offering,
+            grant=covenant,
+            scope=valid_scope,
         )
 
         # Swap to exhausted offering
-        ritual._offering = exhausted_offering
+        ritual._scope = exhausted_scope
 
-        with pytest.raises(MissingOffering):
+        with pytest.raises(MissingScope):
             ritual.begin()
 
 
@@ -192,12 +192,12 @@ class TestLaw2OfferingRequired:
 
 
 class TestLaw3GuardTransparency:
-    """Law 3: Guards emit TraceNodes on evaluation."""
+    """Law 3: Guards emit Marks on evaluation."""
 
     def test_guard_evaluation_recorded(self) -> None:
         """Guard evaluations are recorded."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
         guard = SentinelGuard(
             id="budget-guard",
@@ -205,21 +205,21 @@ class TestLaw3GuardTransparency:
             check_type="budget",
         )
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
             phases=[
-                RitualPhase(
+                PlaybookPhase(
                     name="Sense",
                     n_phase=NPhase.SENSE,
                     exit_guards=(guard,),
                 ),
-                RitualPhase(
+                PlaybookPhase(
                     name="Act",
                     n_phase=NPhase.ACT,
                 ),
-                RitualPhase(
+                PlaybookPhase(
                     name="Reflect",
                     n_phase=NPhase.REFLECT,
                 ),
@@ -237,41 +237,41 @@ class TestLaw3GuardTransparency:
 
     def test_guard_failure_prevents_transition(self) -> None:
         """Failed guard prevents phase transition."""
-        covenant = make_covenant()
+        covenant = make_grant()
         # Create exhausted offering
-        exhausted_offering = Offering.create(
+        exhausted_scope = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
             budget=Budget(tokens=0),
         )
 
         # Need valid offering to create ritual
-        valid_offering = make_offering()
+        valid_scope = make_scope()
         guard = SentinelGuard(
             id="budget-guard",
             name="Budget Check",
             check_type="budget",
         )
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=valid_offering,
+            grant=covenant,
+            scope=valid_scope,
             phases=[
-                RitualPhase(
+                PlaybookPhase(
                     name="Sense",
                     n_phase=NPhase.SENSE,
                     exit_guards=(guard,),
                 ),
-                RitualPhase(name="Act", n_phase=NPhase.ACT),
-                RitualPhase(name="Reflect", n_phase=NPhase.REFLECT),
+                PlaybookPhase(name="Act", n_phase=NPhase.ACT),
+                PlaybookPhase(name="Reflect", n_phase=NPhase.REFLECT),
             ],
         )
 
         ritual.begin()
 
         # Swap to exhausted offering
-        ritual._offering = exhausted_offering
+        ritual._scope = exhausted_scope
 
         # Transition should fail on exit guard
         with pytest.raises(GuardFailed) as exc_info:
@@ -281,8 +281,8 @@ class TestLaw3GuardTransparency:
 
     def test_time_guard_works(self) -> None:
         """Time guard checks elapsed time."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
         time_guard = SentinelGuard(
             id="time-guard",
@@ -291,18 +291,18 @@ class TestLaw3GuardTransparency:
             condition="0.001",  # 0.001 seconds - will fail immediately
         )
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
             phases=[
-                RitualPhase(
+                PlaybookPhase(
                     name="Sense",
                     n_phase=NPhase.SENSE,
                     exit_guards=(time_guard,),
                 ),
-                RitualPhase(name="Act", n_phase=NPhase.ACT),
-                RitualPhase(name="Reflect", n_phase=NPhase.REFLECT),
+                PlaybookPhase(name="Act", n_phase=NPhase.ACT),
+                PlaybookPhase(name="Reflect", n_phase=NPhase.REFLECT),
             ],
         )
 
@@ -329,13 +329,13 @@ class TestLaw4PhaseOrdering:
 
     def test_valid_transitions(self) -> None:
         """Valid phase transitions succeed."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
         ritual.begin()
@@ -358,13 +358,13 @@ class TestLaw4PhaseOrdering:
 
     def test_invalid_transitions_blocked(self) -> None:
         """Invalid phase transitions are blocked."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
         ritual.begin()
@@ -377,13 +377,13 @@ class TestLaw4PhaseOrdering:
 
     def test_same_phase_transition_allowed(self) -> None:
         """Same phase transition is a no-op."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
         ritual.begin()
@@ -395,13 +395,13 @@ class TestLaw4PhaseOrdering:
 
     def test_phase_history_tracked(self) -> None:
         """Phase transitions are recorded in history."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(
+        ritual = Playbook.create(
             name="Test",
-            covenant=covenant,
-            offering=offering,
+            grant=covenant,
+            scope=offering,
         )
 
         ritual.begin()
@@ -419,69 +419,69 @@ class TestLaw4PhaseOrdering:
 # =============================================================================
 
 
-class TestRitualLifecycle:
-    """Tests for Ritual lifecycle management."""
+class TestPlaybookLifecycle:
+    """Tests for Playbook lifecycle management."""
 
     def test_lifecycle_pending_to_active(self) -> None:
         """PENDING → ACTIVE transition."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
-        assert ritual.status == RitualStatus.PENDING
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
+        assert ritual.status == PlaybookStatus.PENDING
 
         ritual.begin()
-        assert ritual.status == RitualStatus.ACTIVE
+        assert ritual.status == PlaybookStatus.ACTIVE
         assert ritual.started_at is not None
 
     def test_lifecycle_active_to_complete(self) -> None:
         """ACTIVE → COMPLETE transition."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
         ritual.complete()
 
-        assert ritual.status == RitualStatus.COMPLETE
+        assert ritual.status == PlaybookStatus.COMPLETE
         assert ritual.ended_at is not None
 
     def test_lifecycle_active_to_failed(self) -> None:
         """ACTIVE → FAILED transition."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
         ritual.fail("Something went wrong")
 
-        assert ritual.status == RitualStatus.FAILED
+        assert ritual.status == PlaybookStatus.FAILED
         assert ritual.metadata["failure_reason"] == "Something went wrong"
 
     def test_lifecycle_cancel(self) -> None:
-        """Ritual can be cancelled."""
-        covenant = make_covenant()
-        offering = make_offering()
+        """Playbook can be cancelled."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
         ritual.cancel("User requested")
 
-        assert ritual.status == RitualStatus.CANCELLED
+        assert ritual.status == PlaybookStatus.CANCELLED
 
     def test_lifecycle_pause_resume(self) -> None:
-        """Ritual can be paused and resumed."""
-        covenant = make_covenant()
-        offering = make_offering()
+        """Playbook can be paused and resumed."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
 
         ritual.pause()
-        assert ritual.status == RitualStatus.PAUSED
+        assert ritual.status == PlaybookStatus.PAUSED
 
         ritual.resume()
-        assert ritual.status == RitualStatus.ACTIVE
+        assert ritual.status == PlaybookStatus.ACTIVE
 
 
 # =============================================================================
@@ -490,56 +490,56 @@ class TestRitualLifecycle:
 
 
 class TestTraceRecording:
-    """Tests for TraceNode recording."""
+    """Tests for Mark recording."""
 
-    def test_record_trace(self) -> None:
+    def test_record_mark(self) -> None:
         """Traces can be recorded."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
 
-        trace = TraceNode.from_thought("Test thought", "git")
-        ritual.record_trace(trace)
+        trace = Mark.from_thought("Test thought", "git")
+        ritual.record_mark(trace)
 
-        assert ritual.trace_count == 1
-        assert trace.id in ritual.trace_node_ids
+        assert ritual.mark_count == 1
+        assert trace.id in ritual.mark_ids
 
     def test_duplicate_trace_ignored(self) -> None:
         """Recording same trace twice is idempotent."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
 
-        trace = TraceNode.from_thought("Test", "git")
-        ritual.record_trace(trace)
-        ritual.record_trace(trace)  # Duplicate
+        trace = Mark.from_thought("Test", "git")
+        ritual.record_mark(trace)
+        ritual.record_mark(trace)  # Duplicate
 
-        assert ritual.trace_count == 1
+        assert ritual.mark_count == 1
 
 
 # =============================================================================
-# RitualStore Tests
+# PlaybookStore Tests
 # =============================================================================
 
 
-class TestRitualStore:
-    """Tests for RitualStore."""
+class TestPlaybookStore:
+    """Tests for PlaybookStore."""
 
     def setup_method(self) -> None:
         """Reset store before each test."""
-        reset_ritual_store()
+        reset_playbook_store()
 
     def test_add_and_get(self) -> None:
         """Basic add and get operations."""
-        store = get_ritual_store()
-        covenant = make_covenant()
-        offering = make_offering()
+        store = get_playbook_store()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         store.add(ritual)
 
         retrieved = store.get(ritual.id)
@@ -547,17 +547,17 @@ class TestRitualStore:
         assert retrieved.id == ritual.id
 
     def test_active_filter(self) -> None:
-        """active() returns only active Rituals."""
-        store = RitualStore()
-        covenant = make_covenant()
-        offering = make_offering()
+        """active() returns only active Playbooks."""
+        store = PlaybookStore()
+        covenant = make_grant()
+        offering = make_scope()
 
-        active = Ritual.create(name="Active", covenant=covenant, offering=offering)
+        active = Playbook.create(name="Active", grant=covenant, scope=offering)
         active.begin()
 
-        pending = Ritual.create(name="Pending", covenant=covenant, offering=offering)
+        pending = Playbook.create(name="Pending", grant=covenant, scope=offering)
 
-        complete = Ritual.create(name="Complete", covenant=covenant, offering=offering)
+        complete = Playbook.create(name="Complete", grant=covenant, scope=offering)
         complete.begin()
         complete.complete()
 
@@ -596,8 +596,8 @@ class TestSerialization:
         assert restored.check_type == original.check_type
 
     def test_ritual_phase_roundtrip(self) -> None:
-        """RitualPhase serializes correctly."""
-        original = RitualPhase(
+        """PlaybookPhase serializes correctly."""
+        original = PlaybookPhase(
             name="Act",
             n_phase=NPhase.ACT,
             allowed_actions=("file_write", "git_commit"),
@@ -605,33 +605,33 @@ class TestSerialization:
         )
 
         data = original.to_dict()
-        restored = RitualPhase.from_dict(data)
+        restored = PlaybookPhase.from_dict(data)
 
         assert restored.name == original.name
         assert restored.n_phase == original.n_phase
         assert restored.allowed_actions == original.allowed_actions
 
     def test_ritual_roundtrip(self) -> None:
-        """Ritual serializes correctly (without Covenant/Offering)."""
-        covenant = make_covenant()
-        offering = make_offering()
+        """Playbook serializes correctly (without Grant/Scope)."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        original = Ritual.create(
-            name="Test Ritual",
-            covenant=covenant,
-            offering=offering,
+        original = Playbook.create(
+            name="Test Playbook",
+            grant=covenant,
+            scope=offering,
             description="A test ritual",
         )
         original.begin()
         original.advance_phase(NPhase.ACT)
 
         data = original.to_dict()
-        restored = Ritual.from_dict(data)
+        restored = Playbook.from_dict(data)
 
         assert restored.id == original.id
         assert restored.name == original.name
         assert restored.current_phase == NPhase.ACT
-        assert restored.status == RitualStatus.ACTIVE
+        assert restored.status == PlaybookStatus.ACTIVE
         assert len(restored.phase_history) == 2
 
 
@@ -644,42 +644,42 @@ class TestEdgeCases:
     """Edge cases for robustness."""
 
     def test_cannot_begin_twice(self) -> None:
-        """Cannot begin an already active Ritual."""
-        covenant = make_covenant()
-        offering = make_offering()
+        """Cannot begin an already active Playbook."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         ritual.begin()
 
-        with pytest.raises(RitualError):
+        with pytest.raises(PlaybookError):
             ritual.begin()
 
     def test_cannot_complete_pending(self) -> None:
-        """Cannot complete a pending Ritual."""
-        covenant = make_covenant()
-        offering = make_offering()
+        """Cannot complete a pending Playbook."""
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
 
-        with pytest.raises(RitualNotActive):
+        with pytest.raises(PlaybookNotActive):
             ritual.complete()
 
     def test_cannot_advance_phase_when_pending(self) -> None:
         """Cannot advance phase when not active."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
 
-        with pytest.raises(RitualNotActive):
+        with pytest.raises(PlaybookNotActive):
             ritual.advance_phase(NPhase.ACT)
 
     def test_duration_calculation(self) -> None:
         """Duration is calculated correctly."""
-        covenant = make_covenant()
-        offering = make_offering()
+        covenant = make_grant()
+        offering = make_scope()
 
-        ritual = Ritual.create(name="Test", covenant=covenant, offering=offering)
+        ritual = Playbook.create(name="Test", grant=covenant, scope=offering)
         assert ritual.duration_seconds is None  # Not started
 
         ritual.begin()

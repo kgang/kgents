@@ -1,27 +1,31 @@
 """
-Ritual: Lawful Workflow Orchestration.
+Playbook: Lawful Workflow Orchestration.
 
-A Ritual is a curator-orchestrated workflow that:
-- Requires a Covenant (permission contract)
-- Requires an Offering (resource contract)
+A Playbook is a curator-orchestrated workflow that:
+- Requires a Grant (permission contract)
+- Requires a Scope (resource contract)
 - Follows N-Phase directed cycle
-- Emits TraceNodes for all actions
+- Emits Marks for all actions
 
-Every Ritual has a Covenant and an Offering. This makes workflows
+Every Playbook has a Grant and a Scope. This makes workflows
 explicit, auditable, and resource-aware.
 
 Philosophy:
-    "A Ritual is ceremony with purpose. It requires permission
-    (Covenant) and resources (Offering). It follows a directed
+    "A Playbook is ceremony with purpose. It requires permission
+    (Grant) and resources (Scope). It follows a directed
     cycle (N-Phase). Every action is traced."
 
+Rename History:
+    Playbook → Playbook (spec/protocols/witness-primitives.md)
+    "Following a playbook" - clearer than religious connotation
+
 Laws:
-- Law 1 (Covenant Required): Every Ritual has exactly one Covenant
-- Law 2 (Offering Required): Every Ritual has exactly one Offering
-- Law 3 (Guard Transparency): Guards emit TraceNodes on evaluation
+- Law 1 (Grant Required): Every Playbook has exactly one Grant
+- Law 2 (Scope Required): Every Playbook has exactly one Scope
+- Law 3 (Guard Transparency): Guards emit Marks on evaluation
 - Law 4 (Phase Ordering): Phase transitions follow directed cycle
 
-See: spec/protocols/warp-primitives.md
+See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 9: Directed Cycle)
 """
 
@@ -34,32 +38,39 @@ from enum import Enum, auto
 from typing import Any, NewType
 from uuid import uuid4
 
-from .covenant import Covenant, CovenantId, CovenantStatus
-from .offering import Budget, Offering, OfferingId
-from .trace_node import NPhase, TraceNode, TraceNodeId, WalkId
+from .grant import Grant, GrantId, GrantStatus
+from .scope import Budget, Scope, ScopeId
+from .mark import NPhase, Mark, MarkId, WalkId
 
-logger = logging.getLogger("kgents.witness.ritual")
+logger = logging.getLogger("kgents.witness.playbook")
 
 # =============================================================================
 # Type Aliases
 # =============================================================================
 
-RitualId = NewType("RitualId", str)
+PlaybookId = NewType("PlaybookId", str)
+
+# Backwards compatibility alias
+PlaybookId = PlaybookId
 
 
-def generate_ritual_id() -> RitualId:
-    """Generate a unique Ritual ID."""
-    return RitualId(f"ritual-{uuid4().hex[:12]}")
+def generate_playbook_id() -> PlaybookId:
+    """Generate a unique Playbook ID."""
+    return PlaybookId(f"playbook-{uuid4().hex[:12]}")
+
+
+# Backwards compatibility alias
+generate_playbook_id = generate_playbook_id
 
 
 # =============================================================================
-# Ritual Status
+# Playbook Status
 # =============================================================================
 
 
-class RitualStatus(Enum):
+class PlaybookStatus(Enum):
     """
-    Status of a Ritual.
+    Status of a Playbook.
 
     Lifecycle:
         PENDING → ACTIVE → COMPLETE
@@ -73,6 +84,10 @@ class RitualStatus(Enum):
     COMPLETE = auto()  # Successfully finished
     FAILED = auto()  # Failed with error
     CANCELLED = auto()  # Cancelled by user
+
+
+# Backwards compatibility alias
+PlaybookStatus = PlaybookStatus
 
 
 # =============================================================================
@@ -105,7 +120,7 @@ class SentinelGuard:
     """
     A check that must pass at phase boundaries.
 
-    Law 3: Guards emit TraceNodes on evaluation.
+    Law 3: Guards emit Marks on evaluation.
 
     Guards can check:
     - Resource budget remaining
@@ -150,7 +165,7 @@ class GuardEvaluation:
     """
     Result of evaluating a guard.
 
-    Law 3: Guards emit TraceNodes - this is the TraceNode content.
+    Law 3: Guards emit Marks - this is the Mark content.
     """
 
     guard: SentinelGuard
@@ -170,14 +185,14 @@ class GuardEvaluation:
 
 
 # =============================================================================
-# Ritual Phase
+# Playbook Phase
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class RitualPhase:
+class PlaybookPhase:
     """
-    Single phase in a Ritual state machine.
+    Single phase in a Playbook state machine.
 
     Each phase has:
     - Entry guards (must pass to enter)
@@ -207,7 +222,7 @@ class RitualPhase:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> RitualPhase:
+    def from_dict(cls, data: dict[str, Any]) -> PlaybookPhase:
         """Create from dictionary."""
         return cls(
             name=data["name"],
@@ -220,30 +235,42 @@ class RitualPhase:
         )
 
 
+# Backwards compatibility alias
+PlaybookPhase = PlaybookPhase
+
+
 # =============================================================================
 # Exceptions
 # =============================================================================
 
 
-class RitualError(Exception):
-    """Base exception for Ritual errors."""
+class PlaybookError(Exception):
+    """Base exception for Playbook errors."""
 
     pass
 
 
-class RitualNotActive(RitualError):
-    """Ritual is not in ACTIVE status."""
+# Backwards compatibility alias
+PlaybookError = PlaybookError
+
+
+class PlaybookNotActive(PlaybookError):
+    """Playbook is not in ACTIVE status."""
 
     pass
 
 
-class InvalidPhaseTransition(RitualError):
+# Backwards compatibility alias
+PlaybookNotActive = PlaybookNotActive
+
+
+class InvalidPhaseTransition(PlaybookError):
     """Law 4: Invalid phase transition attempted."""
 
     pass
 
 
-class GuardFailed(RitualError):
+class GuardFailed(PlaybookError):
     """Law 3: A guard check failed."""
 
     def __init__(self, evaluation: GuardEvaluation, message: str = ""):
@@ -251,65 +278,73 @@ class GuardFailed(RitualError):
         super().__init__(message or f"Guard {evaluation.guard.name} failed: {evaluation.message}")
 
 
-class MissingCovenant(RitualError):
-    """Law 1: Ritual requires a Covenant."""
+class MissingGrant(PlaybookError):
+    """Law 1: Playbook requires a Grant."""
 
     pass
 
 
-class MissingOffering(RitualError):
-    """Law 2: Ritual requires an Offering."""
+# Backwards compatibility alias
+MissingGrant = MissingGrant
+
+
+class MissingScope(PlaybookError):
+    """Law 2: Playbook requires a Scope."""
 
     pass
+
+
+# Backwards compatibility alias
+MissingScope = MissingScope
 
 
 # =============================================================================
-# Ritual: The Core Primitive
+# Playbook: The Core Primitive
 # =============================================================================
 
 
 @dataclass
-class Ritual:
+class Playbook:
     """
     Curator-orchestrated workflow with explicit gates.
 
     Laws:
-    - Law 1 (Covenant Required): Every Ritual has exactly one Covenant
-    - Law 2 (Offering Required): Every Ritual has exactly one Offering
-    - Law 3 (Guard Transparency): Guards emit TraceNodes
+    - Law 1 (Grant Required): Every Playbook has exactly one Grant
+    - Law 2 (Scope Required): Every Playbook has exactly one Scope
+    - Law 3 (Guard Transparency): Guards emit Marks
     - Law 4 (Phase Ordering): Transitions follow N-Phase directed cycle
 
-    A Ritual defines a workflow with:
-    - Covenant: What operations are permitted
-    - Offering: What resources can be consumed
+    A Playbook defines a workflow with:
+    - Grant: What operations are permitted
+    - Scope: What resources can be consumed
     - Phases: State machine following N-Phase cycle
     - Guards: Checks at phase boundaries
 
     Example:
-        >>> ritual = Ritual.create(
+        >>> playbook = Playbook.create(
         ...     name="Implement Feature",
-        ...     covenant=covenant,
-        ...     offering=offering,
+        ...     grant=grant,
+        ...     scope=scope,
         ... )
-        >>> ritual.begin()
-        >>> ritual.advance_phase(NPhase.ACT)
-        >>> ritual.complete()
+        >>> playbook.begin()
+        >>> playbook.advance_phase(NPhase.ACT)
+        >>> playbook.complete()
     """
 
     # Identity
-    id: RitualId = field(default_factory=generate_ritual_id)
+    id: PlaybookId = field(default_factory=generate_playbook_id)
     name: str = ""
 
-    # Law 1: Covenant Required
-    covenant_id: CovenantId | None = None
-    _covenant: Covenant | None = field(default=None, repr=False)
+    # Law 1: Grant Required
+    grant_id: GrantId | None = None
+    _grant: Grant | None = field(default=None, repr=False)
 
-    # Law 2: Offering Required
-    offering_id: OfferingId | None = None
-    _offering: Offering | None = field(default=None, repr=False)
+    # Law 2: Scope Required
+    scope_id: ScopeId | None = None
+    _scope: Scope | None = field(default=None, repr=False)
 
     # Phase management (Law 4)
-    phases: list[RitualPhase] = field(default_factory=list)
+    phases: list[PlaybookPhase] = field(default_factory=list)
     current_phase: NPhase = NPhase.SENSE
     phase_history: list[tuple[NPhase, datetime]] = field(default_factory=list)
 
@@ -318,13 +353,13 @@ class Ritual:
     guard_evaluations: list[GuardEvaluation] = field(default_factory=list)
 
     # Status
-    status: RitualStatus = RitualStatus.PENDING
+    status: PlaybookStatus = PlaybookStatus.PENDING
 
     # Walk binding
     walk_id: WalkId | None = None
 
     # Trace history (Law 3)
-    trace_node_ids: list[TraceNodeId] = field(default_factory=list)
+    mark_ids: list[MarkId] = field(default_factory=list)
 
     # Timing
     created_at: datetime = field(default_factory=datetime.now)
@@ -343,39 +378,39 @@ class Ritual:
     def create(
         cls,
         name: str,
-        covenant: Covenant,
-        offering: Offering,
-        phases: list[RitualPhase] | None = None,
+        grant: Grant,
+        scope: Scope,
+        phases: list[PlaybookPhase] | None = None,
         description: str = "",
-    ) -> Ritual:
+    ) -> Playbook:
         """
-        Create a new Ritual with Covenant and Offering.
+        Create a new Playbook with Grant and Scope.
 
-        Law 1: Covenant is required.
-        Law 2: Offering is required.
+        Law 1: Grant is required.
+        Law 2: Scope is required.
         """
-        # Law 1: Verify Covenant is granted
-        if covenant.status != CovenantStatus.GRANTED:
-            raise MissingCovenant(f"Covenant must be granted (status: {covenant.status.name})")
+        # Law 1: Verify Grant is granted
+        if grant.status != GrantStatus.GRANTED:
+            raise MissingGrant(f"Grant must be granted (status: {grant.status.name})")
 
-        # Law 2: Verify Offering is valid
-        if not offering.is_valid():
-            raise MissingOffering("Offering must be valid (not expired or exhausted)")
+        # Law 2: Verify Scope is valid
+        if not scope.is_valid():
+            raise MissingScope("Scope must be valid (not expired or exhausted)")
 
         # Default phases if not provided
         if phases is None:
             phases = [
-                RitualPhase(name="Sense", n_phase=NPhase.SENSE),
-                RitualPhase(name="Act", n_phase=NPhase.ACT),
-                RitualPhase(name="Reflect", n_phase=NPhase.REFLECT),
+                PlaybookPhase(name="Sense", n_phase=NPhase.SENSE),
+                PlaybookPhase(name="Act", n_phase=NPhase.ACT),
+                PlaybookPhase(name="Reflect", n_phase=NPhase.REFLECT),
             ]
 
         return cls(
             name=name,
-            covenant_id=covenant.id,
-            _covenant=covenant,
-            offering_id=offering.id,
-            _offering=offering,
+            grant_id=grant.id,
+            _grant=grant,
+            scope_id=scope.id,
+            _scope=scope,
             phases=phases,
             description=description,
         )
@@ -386,71 +421,71 @@ class Ritual:
 
     def begin(self) -> None:
         """
-        Begin the Ritual.
+        Begin the Playbook.
 
         Transitions from PENDING to ACTIVE, entering first phase.
         """
-        if self.status != RitualStatus.PENDING:
-            raise RitualError(f"Cannot begin Ritual in status {self.status.name}")
+        if self.status != PlaybookStatus.PENDING:
+            raise PlaybookError(f"Cannot begin Playbook in status {self.status.name}")
 
         # Verify requirements
         self._check_requirements()
 
-        self.status = RitualStatus.ACTIVE
+        self.status = PlaybookStatus.ACTIVE
         self.started_at = datetime.now()
         self.phase_history.append((self.current_phase, datetime.now()))
 
-        logger.info(f"Ritual {self.id} begun in phase {self.current_phase.value}")
+        logger.info(f"Playbook {self.id} begun in phase {self.current_phase.value}")
 
     def complete(self) -> None:
-        """Mark Ritual as successfully complete."""
-        if self.status != RitualStatus.ACTIVE:
-            raise RitualNotActive(f"Cannot complete Ritual in status {self.status.name}")
+        """Mark Playbook as successfully complete."""
+        if self.status != PlaybookStatus.ACTIVE:
+            raise PlaybookNotActive(f"Cannot complete Playbook in status {self.status.name}")
 
-        self.status = RitualStatus.COMPLETE
+        self.status = PlaybookStatus.COMPLETE
         self.ended_at = datetime.now()
 
-        logger.info(f"Ritual {self.id} completed with {len(self.trace_node_ids)} traces")
+        logger.info(f"Playbook {self.id} completed with {len(self.mark_ids)} marks")
 
     def fail(self, reason: str = "") -> None:
-        """Mark Ritual as failed."""
-        if self.status not in {RitualStatus.ACTIVE, RitualStatus.PAUSED}:
-            raise RitualError(f"Cannot fail Ritual in status {self.status.name}")
+        """Mark Playbook as failed."""
+        if self.status not in {PlaybookStatus.ACTIVE, PlaybookStatus.PAUSED}:
+            raise PlaybookError(f"Cannot fail Playbook in status {self.status.name}")
 
-        self.status = RitualStatus.FAILED
+        self.status = PlaybookStatus.FAILED
         self.ended_at = datetime.now()
         if reason:
             self.metadata["failure_reason"] = reason
 
-        logger.warning(f"Ritual {self.id} failed: {reason}")
+        logger.warning(f"Playbook {self.id} failed: {reason}")
 
     def cancel(self, reason: str = "") -> None:
-        """Cancel the Ritual."""
-        if self.status in {RitualStatus.COMPLETE, RitualStatus.FAILED, RitualStatus.CANCELLED}:
-            raise RitualError(f"Cannot cancel Ritual in status {self.status.name}")
+        """Cancel the Playbook."""
+        if self.status in {PlaybookStatus.COMPLETE, PlaybookStatus.FAILED, PlaybookStatus.CANCELLED}:
+            raise PlaybookError(f"Cannot cancel Playbook in status {self.status.name}")
 
-        self.status = RitualStatus.CANCELLED
+        self.status = PlaybookStatus.CANCELLED
         self.ended_at = datetime.now()
         if reason:
             self.metadata["cancel_reason"] = reason
 
-        logger.info(f"Ritual {self.id} cancelled: {reason}")
+        logger.info(f"Playbook {self.id} cancelled: {reason}")
 
     def pause(self) -> None:
-        """Pause the Ritual."""
-        if self.status != RitualStatus.ACTIVE:
-            raise RitualNotActive(f"Cannot pause Ritual in status {self.status.name}")
+        """Pause the Playbook."""
+        if self.status != PlaybookStatus.ACTIVE:
+            raise PlaybookNotActive(f"Cannot pause Playbook in status {self.status.name}")
 
-        self.status = RitualStatus.PAUSED
-        logger.info(f"Ritual {self.id} paused")
+        self.status = PlaybookStatus.PAUSED
+        logger.info(f"Playbook {self.id} paused")
 
     def resume(self) -> None:
-        """Resume a paused Ritual."""
-        if self.status != RitualStatus.PAUSED:
-            raise RitualError(f"Cannot resume Ritual in status {self.status.name}")
+        """Resume a paused Playbook."""
+        if self.status != PlaybookStatus.PAUSED:
+            raise PlaybookError(f"Cannot resume Playbook in status {self.status.name}")
 
-        self.status = RitualStatus.ACTIVE
-        logger.info(f"Ritual {self.id} resumed")
+        self.status = PlaybookStatus.ACTIVE
+        logger.info(f"Playbook {self.id} resumed")
 
     # =========================================================================
     # Phase Management (Law 4)
@@ -476,8 +511,8 @@ class Ritual:
 
         Returns True if transition succeeded.
         """
-        if self.status != RitualStatus.ACTIVE:
-            raise RitualNotActive(f"Cannot advance phase in status {self.status.name}")
+        if self.status != PlaybookStatus.ACTIVE:
+            raise PlaybookNotActive(f"Cannot advance phase in status {self.status.name}")
 
         if not self.can_transition(to_phase):
             logger.warning(
@@ -486,17 +521,17 @@ class Ritual:
             return False
 
         # Check exit guards for current phase
-        current_ritual_phase = self._get_ritual_phase(self.current_phase)
-        if current_ritual_phase:
-            for guard in current_ritual_phase.exit_guards:
+        current_playbook_phase = self._get_playbook_phase(self.current_phase)
+        if current_playbook_phase:
+            for guard in current_playbook_phase.exit_guards:
                 evaluation = self._evaluate_guard(guard)
                 if evaluation.result == GuardResult.FAIL:
                     raise GuardFailed(evaluation)
 
         # Check entry guards for new phase
-        new_ritual_phase = self._get_ritual_phase(to_phase)
-        if new_ritual_phase:
-            for guard in new_ritual_phase.entry_guards:
+        new_playbook_phase = self._get_playbook_phase(to_phase)
+        if new_playbook_phase:
+            for guard in new_playbook_phase.entry_guards:
                 evaluation = self._evaluate_guard(guard)
                 if evaluation.result == GuardResult.FAIL:
                     raise GuardFailed(evaluation)
@@ -505,11 +540,11 @@ class Ritual:
         self.current_phase = to_phase
         self.phase_history.append((to_phase, datetime.now()))
 
-        logger.info(f"Ritual {self.id}: {old_phase.value} → {to_phase.value}")
+        logger.info(f"Playbook {self.id}: {old_phase.value} → {to_phase.value}")
         return True
 
-    def _get_ritual_phase(self, n_phase: NPhase) -> RitualPhase | None:
-        """Get the RitualPhase for an NPhase."""
+    def _get_playbook_phase(self, n_phase: NPhase) -> PlaybookPhase | None:
+        """Get the PlaybookPhase for an NPhase."""
         for phase in self.phases:
             if phase.n_phase == n_phase:
                 return phase
@@ -523,14 +558,14 @@ class Ritual:
         """
         Evaluate a guard.
 
-        Law 3: Guards emit TraceNodes on evaluation.
+        Law 3: Guards emit Marks on evaluation.
         """
         # Basic guard evaluation (can be extended with custom checks)
         result = GuardResult.PASS
         message = f"Guard {guard.name} passed"
 
-        if guard.check_type == "budget" and self._offering:
-            if self._offering.budget.is_exhausted:
+        if guard.check_type == "budget" and self._scope:
+            if self._scope.budget.is_exhausted:
                 result = GuardResult.FAIL
                 message = "Budget exhausted"
         elif guard.check_type == "time":
@@ -554,22 +589,53 @@ class Ritual:
         return evaluation
 
     def add_guard(self, guard: SentinelGuard) -> None:
-        """Add an entry guard to the Ritual."""
+        """Add an entry guard to the Playbook."""
         self.entry_guards.append(guard)
 
     # =========================================================================
-    # Trace Recording (Law 3)
+    # Mark Recording (Law 3)
     # =========================================================================
 
-    def record_trace(self, trace: TraceNode) -> None:
-        """Record a TraceNode emitted during this Ritual."""
-        if trace.id not in self.trace_node_ids:
-            self.trace_node_ids.append(trace.id)
+    def record_mark(self, mark: Mark) -> None:
+        """Record a Mark emitted during this Playbook."""
+        if mark.id not in self.mark_ids:
+            self.mark_ids.append(mark.id)
+
+    # Backwards compatibility
+    def record_trace(self, trace: Mark) -> None:
+        """Record a Mark (backwards compat alias)."""
+        self.record_mark(trace)
 
     @property
+    def mark_count(self) -> int:
+        """Number of marks recorded."""
+        return len(self.mark_ids)
+
+    # Backwards compatibility
+    @property
     def trace_count(self) -> int:
-        """Number of traces recorded."""
-        return len(self.trace_node_ids)
+        """Number of marks recorded (backwards compat alias)."""
+        return self.mark_count
+
+    @property
+    def covenant_id(self) -> GrantId | None:
+        """Backwards compat alias for grant_id."""
+        return self.grant_id
+
+    @property
+    def offering_id(self) -> ScopeId | None:
+        """Backwards compat alias for scope_id."""
+        return self.scope_id
+
+    @property
+    def current_step(self) -> int:
+        """Backwards compat: phases are the new steps."""
+        return len(self.phase_history)
+
+    @property
+    def total_steps(self) -> int:
+        """Backwards compat: count of phases."""
+        return len(self.phases) if self.phases else 3  # Default N-Phase has 3
 
     # =========================================================================
     # Requirements Check
@@ -577,27 +643,39 @@ class Ritual:
 
     def _check_requirements(self) -> None:
         """Check Law 1 and Law 2 requirements."""
-        # Law 1: Covenant required
-        if self._covenant is None:
-            raise MissingCovenant("Ritual requires a Covenant")
-        if not self._covenant.is_active:
-            raise MissingCovenant(f"Covenant is not active (status: {self._covenant.status.name})")
+        # Law 1: Grant required
+        if self._grant is None:
+            raise MissingGrant("Playbook requires a Grant")
+        if not self._grant.is_active:
+            raise MissingGrant(f"Grant is not active (status: {self._grant.status.name})")
 
-        # Law 2: Offering required
-        if self._offering is None:
-            raise MissingOffering("Ritual requires an Offering")
-        if not self._offering.is_valid():
-            raise MissingOffering("Offering is not valid")
-
-    @property
-    def covenant(self) -> Covenant | None:
-        """Get the associated Covenant."""
-        return self._covenant
+        # Law 2: Scope required
+        if self._scope is None:
+            raise MissingScope("Playbook requires a Scope")
+        if not self._scope.is_valid():
+            raise MissingScope("Scope is not valid")
 
     @property
-    def offering(self) -> Offering | None:
-        """Get the associated Offering."""
-        return self._offering
+    def grant(self) -> Grant | None:
+        """Get the associated Grant."""
+        return self._grant
+
+    # Backwards compatibility
+    @property
+    def covenant(self) -> Grant | None:
+        """Get the associated Grant (backwards compat alias)."""
+        return self._grant
+
+    @property
+    def scope(self) -> Scope | None:
+        """Get the associated Scope."""
+        return self._scope
+
+    # Backwards compatibility
+    @property
+    def offering(self) -> Scope | None:
+        """Get the associated Scope (backwards compat alias)."""
+        return self._scope
 
     # =========================================================================
     # Properties
@@ -605,17 +683,17 @@ class Ritual:
 
     @property
     def is_active(self) -> bool:
-        """Check if Ritual is active."""
-        return self.status == RitualStatus.ACTIVE
+        """Check if Playbook is active."""
+        return self.status == PlaybookStatus.ACTIVE
 
     @property
     def is_complete(self) -> bool:
-        """Check if Ritual is complete."""
-        return self.status == RitualStatus.COMPLETE
+        """Check if Playbook is complete."""
+        return self.status == PlaybookStatus.COMPLETE
 
     @property
     def duration_seconds(self) -> float | None:
-        """Duration of the Ritual in seconds."""
+        """Duration of the Playbook in seconds."""
         if self.started_at is None:
             return None
         end = self.ended_at or datetime.now()
@@ -630,8 +708,8 @@ class Ritual:
         return {
             "id": str(self.id),
             "name": self.name,
-            "covenant_id": str(self.covenant_id) if self.covenant_id else None,
-            "offering_id": str(self.offering_id) if self.offering_id else None,
+            "grant_id": str(self.grant_id) if self.grant_id else None,
+            "scope_id": str(self.scope_id) if self.scope_id else None,
             "phases": [p.to_dict() for p in self.phases],
             "current_phase": self.current_phase.value,
             "phase_history": [(p.value, ts.isoformat()) for p, ts in self.phase_history],
@@ -639,7 +717,7 @@ class Ritual:
             "guard_evaluations": [e.to_dict() for e in self.guard_evaluations],
             "status": self.status.name,
             "walk_id": str(self.walk_id) if self.walk_id else None,
-            "trace_node_ids": [str(tid) for tid in self.trace_node_ids],
+            "mark_ids": [str(mid) for mid in self.mark_ids],
             "created_at": self.created_at.isoformat(),
             "started_at": self.started_at.isoformat() if self.started_at else None,
             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
@@ -648,25 +726,25 @@ class Ritual:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Ritual:
-        """Create from dictionary (without Covenant/Offering - must be reattached)."""
+    def from_dict(cls, data: dict[str, Any]) -> Playbook:
+        """Create from dictionary (without Grant/Scope - must be reattached)."""
         phase_history = [
             (NPhase(p), datetime.fromisoformat(ts)) for p, ts in data.get("phase_history", [])
         ]
 
         return cls(
-            id=RitualId(data["id"]),
+            id=PlaybookId(data["id"]),
             name=data.get("name", ""),
-            covenant_id=CovenantId(data["covenant_id"]) if data.get("covenant_id") else None,
-            offering_id=OfferingId(data["offering_id"]) if data.get("offering_id") else None,
-            phases=[RitualPhase.from_dict(p) for p in data.get("phases", [])],
+            grant_id=GrantId(data["grant_id"]) if data.get("grant_id") else None,
+            scope_id=ScopeId(data["scope_id"]) if data.get("scope_id") else None,
+            phases=[PlaybookPhase.from_dict(p) for p in data.get("phases", [])],
             current_phase=NPhase(data.get("current_phase", "SENSE")),
             phase_history=phase_history,
             entry_guards=[SentinelGuard.from_dict(g) for g in data.get("entry_guards", [])],
             guard_evaluations=[],  # Not restored (ephemeral)
-            status=RitualStatus[data.get("status", "PENDING")],
+            status=PlaybookStatus[data.get("status", "PENDING")],
             walk_id=WalkId(data["walk_id"]) if data.get("walk_id") else None,
-            trace_node_ids=[TraceNodeId(tid) for tid in data.get("trace_node_ids", [])],
+            mark_ids=[MarkId(mid) for mid in data.get("mark_ids", [])],
             created_at=datetime.fromisoformat(data["created_at"])
             if data.get("created_at")
             else datetime.now(),
@@ -681,68 +759,113 @@ class Ritual:
     def __repr__(self) -> str:
         """Concise representation."""
         return (
-            f"Ritual(id={str(self.id)[:16]}..., "
+            f"Playbook(id={str(self.id)[:16]}..., "
             f"name='{self.name}', "
             f"phase={self.current_phase.value}, "
             f"status={self.status.name})"
         )
 
 
+# Backwards compatibility alias
+Playbook = Playbook
+
+
 # =============================================================================
-# RitualStore
+# PlaybookStore
 # =============================================================================
 
 
 @dataclass
-class RitualStore:
-    """Persistent storage for Rituals."""
+class PlaybookStore:
+    """Persistent storage for Playbooks."""
 
-    _rituals: dict[RitualId, Ritual] = field(default_factory=dict)
+    _playbooks: dict[PlaybookId, Playbook] = field(default_factory=dict)
 
-    def add(self, ritual: Ritual) -> None:
-        """Add a Ritual to the store."""
-        self._rituals[ritual.id] = ritual
+    def add(self, playbook: Playbook) -> None:
+        """Add a Playbook to the store."""
+        self._playbooks[playbook.id] = playbook
 
-    def get(self, ritual_id: RitualId) -> Ritual | None:
-        """Get a Ritual by ID."""
-        return self._rituals.get(ritual_id)
+    def get(self, playbook_id: PlaybookId) -> Playbook | None:
+        """Get a Playbook by ID."""
+        return self._playbooks.get(playbook_id)
 
-    def active(self) -> list[Ritual]:
-        """Get all active Rituals."""
-        return [r for r in self._rituals.values() if r.is_active]
+    def active(self) -> list[Playbook]:
+        """Get all active Playbooks."""
+        return [p for p in self._playbooks.values() if p.is_active]
 
-    def recent(self, limit: int = 10) -> list[Ritual]:
-        """Get most recent Rituals."""
-        sorted_rituals = sorted(
-            self._rituals.values(),
-            key=lambda r: r.created_at,
+    def recent(self, limit: int = 10) -> list[Playbook]:
+        """Get most recent Playbooks."""
+        sorted_playbooks = sorted(
+            self._playbooks.values(),
+            key=lambda p: p.created_at,
             reverse=True,
         )
-        return sorted_rituals[:limit]
+        return sorted_playbooks[:limit]
 
     def __len__(self) -> int:
-        return len(self._rituals)
+        return len(self._playbooks)
+
+
+# Backwards compatibility alias
+PlaybookStore = PlaybookStore
 
 
 # =============================================================================
 # Global Store
 # =============================================================================
 
-_global_ritual_store: RitualStore | None = None
+_global_playbook_store: PlaybookStore | None = None
 
 
-def get_ritual_store() -> RitualStore:
-    """Get the global ritual store."""
-    global _global_ritual_store
-    if _global_ritual_store is None:
-        _global_ritual_store = RitualStore()
-    return _global_ritual_store
+def get_playbook_store() -> PlaybookStore:
+    """Get the global playbook store."""
+    global _global_playbook_store
+    if _global_playbook_store is None:
+        _global_playbook_store = PlaybookStore()
+    return _global_playbook_store
 
 
-def reset_ritual_store() -> None:
-    """Reset the global ritual store (for testing)."""
-    global _global_ritual_store
-    _global_ritual_store = None
+# Backwards compatibility alias
+get_playbook_store = get_playbook_store
+
+
+def reset_playbook_store() -> None:
+    """Reset the global playbook store (for testing)."""
+    global _global_playbook_store
+    _global_playbook_store = None
+
+
+# Backwards compatibility alias
+reset_playbook_store = reset_playbook_store
+
+
+# =============================================================================
+# Backwards Compatibility Aliases (Ritual → Playbook)
+# =============================================================================
+
+# Type aliases
+RitualId = PlaybookId
+generate_ritual_id = generate_playbook_id
+
+# Status
+RitualStatus = PlaybookStatus
+
+# Phase
+RitualPhase = PlaybookPhase
+
+# Exceptions
+RitualError = PlaybookError
+RitualNotActive = PlaybookNotActive
+MissingCovenant = MissingGrant
+MissingOffering = MissingScope
+
+# Core types
+Ritual = Playbook
+
+# Store
+RitualStore = PlaybookStore
+get_ritual_store = get_playbook_store
+reset_ritual_store = reset_playbook_store
 
 
 # =============================================================================
@@ -750,27 +873,34 @@ def reset_ritual_store() -> None:
 # =============================================================================
 
 __all__ = [
-    # Type aliases
-    "RitualId",
-    "generate_ritual_id",
-    # Status
-    "RitualStatus",
-    # Guards
+    # New names (preferred)
+    "PlaybookId",
+    "generate_playbook_id",
+    "PlaybookStatus",
     "GuardResult",
     "SentinelGuard",
     "GuardEvaluation",
-    # Phase
-    "RitualPhase",
-    # Exceptions
-    "RitualError",
-    "RitualNotActive",
+    "PlaybookPhase",
+    "PlaybookError",
+    "PlaybookNotActive",
     "InvalidPhaseTransition",
     "GuardFailed",
+    "MissingGrant",
+    "MissingScope",
+    "Playbook",
+    "PlaybookStore",
+    "get_playbook_store",
+    "reset_playbook_store",
+    # Backwards compatibility (Ritual → Playbook)
+    "RitualId",
+    "generate_ritual_id",
+    "RitualStatus",
+    "RitualPhase",
+    "RitualError",
+    "RitualNotActive",
     "MissingCovenant",
     "MissingOffering",
-    # Core
     "Ritual",
-    # Store
     "RitualStore",
     "get_ritual_store",
     "reset_ritual_store",

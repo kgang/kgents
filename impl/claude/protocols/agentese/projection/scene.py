@@ -32,7 +32,7 @@ from typing import TYPE_CHECKING, Any, NewType
 from uuid import uuid4
 
 if TYPE_CHECKING:
-    from services.witness.trace_node import TraceNode
+    from services.witness.mark import Mark
 
 # =============================================================================
 # Type Aliases
@@ -63,23 +63,23 @@ class SceneNodeKind(Enum):
 
     Each kind maps to specific visual semantics:
     - PANEL: Container with borders and padding
-    - TRACE: TraceNode visualization (timeline item)
+    - TRACE: Mark visualization (timeline item)
     - INTENT: IntentTree node (task/goal)
-    - OFFERING: Offering badge (context indicator)
+    - OFFERING: Scope badge (context indicator)
     - COVENANT: Permission indicator (trust level)
     - WALK: Walk timeline (session progress)
-    - RITUAL: Ritual state (workflow phase)
+    - RITUAL: Playbook state (workflow phase)
     - TEXT: Plain text content
     - GROUP: Grouping container (no visual, just structure)
     """
 
     PANEL = auto()  # Container with borders
-    TRACE = auto()  # TraceNode visualization
+    TRACE = auto()  # Mark visualization
     INTENT = auto()  # IntentTree node
-    OFFERING = auto()  # Offering badge
+    OFFERING = auto()  # Scope badge
     COVENANT = auto()  # Permission indicator
     WALK = auto()  # Walk timeline
-    RITUAL = auto()  # Ritual state
+    RITUAL = auto()  # Playbook state
     TEXT = auto()  # Plain text
     GROUP = auto()  # Structural grouping
 
@@ -273,7 +273,7 @@ class SceneNode:
         >>> node = SceneNode(
         ...     kind=SceneNodeKind.TRACE,
         ...     content={"trace_id": "abc", "origin": "witness"},
-        ...     label="TraceNode #47",
+        ...     label="Mark #47",
         ...     style=NodeStyle.trace_item(),
         ... )
     """
@@ -285,7 +285,7 @@ class SceneNode:
     kind: SceneNodeKind = SceneNodeKind.TEXT
 
     # Content (kind-specific)
-    content: Any = None  # TraceNode, Intent, text, etc.
+    content: Any = None  # Mark, Intent, text, etc.
     label: str = ""  # Human-readable label
 
     # Visual
@@ -317,8 +317,8 @@ class SceneNode:
         )
 
     @classmethod
-    def from_trace(cls, trace_node: TraceNode, label: str = "") -> SceneNode:
-        """Create scene node from TraceNode."""
+    def from_trace(cls, trace_node: Mark, label: str = "") -> SceneNode:
+        """Create scene node from Mark."""
         return cls(
             kind=SceneNodeKind.TRACE,
             content=trace_node.to_dict() if hasattr(trace_node, "to_dict") else trace_node,
@@ -447,7 +447,7 @@ class SceneGraph:
     title: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    # Temporal (for Walk/Ritual views)
+    # Temporal (for Walk/Playbook views)
     created_at: datetime = field(default_factory=datetime.now)
 
     @classmethod

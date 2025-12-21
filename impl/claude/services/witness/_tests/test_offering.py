@@ -1,10 +1,10 @@
 """
-Tests for Offering.
+Tests for Scope.
 
 Verifies laws:
 - Law 1 (Budget Enforcement): Exceeding budget triggers review
-- Law 2 (Immutability): Offerings are frozen after creation
-- Law 3 (Expiry Honored): Expired Offerings deny access
+- Law 2 (Immutability): Scopes are frozen after creation
+- Law 3 (Expiry Honored): Expired Scopes deny access
 
 See: spec/protocols/warp-primitives.md
 """
@@ -16,16 +16,16 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from services.witness.offering import (
+from services.witness.scope import (
     Budget,
     BudgetExceeded,
     HandleNotInScope,
-    Offering,
-    OfferingExpired,
-    OfferingId,
-    OfferingStore,
-    get_offering_store,
-    reset_offering_store,
+    Scope,
+    ScopeExpired,
+    ScopeId,
+    ScopeStore,
+    get_scope_store,
+    reset_scope_store,
 )
 
 # =============================================================================
@@ -72,8 +72,8 @@ class TestLaw1BudgetEnforcement:
         assert "Token budget exceeded" in str(exc_info.value)
 
     def test_offering_consume_raises_on_exceed(self) -> None:
-        """Offering.consume raises BudgetExceeded when limit exceeded."""
-        offering = Offering.create(
+        """Scope.consume raises BudgetExceeded when limit exceeded."""
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
             budget=Budget(tokens=100),
@@ -83,8 +83,8 @@ class TestLaw1BudgetEnforcement:
             offering.consume(tokens=200)
 
     def test_offering_consume_returns_new_offering(self) -> None:
-        """Offering.consume returns new Offering with updated budget."""
-        offering = Offering.create(
+        """Scope.consume returns new Scope with updated budget."""
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
             budget=Budget(tokens=1000, operations=10),
@@ -118,18 +118,18 @@ class TestLaw1BudgetEnforcement:
 
 
 class TestLaw2Immutability:
-    """Law 2: Offerings are frozen after creation."""
+    """Law 2: Scopes are frozen after creation."""
 
     def test_offering_is_frozen(self) -> None:
-        """Offerings cannot be modified after creation."""
-        offering = Offering.create(description="Test", scoped_handles=("time.*",))
+        """Scopes cannot be modified after creation."""
+        offering = Scope.create(description="Test", scoped_handles=("time.*",))
 
         with pytest.raises(FrozenInstanceError):
             offering.description = "Modified"  # type: ignore[misc]
 
     def test_offering_budget_field_immutable(self) -> None:
         """Budget field cannot be reassigned."""
-        offering = Offering.create(description="Test", budget=Budget(tokens=1000))
+        offering = Scope.create(description="Test", budget=Budget(tokens=1000))
 
         with pytest.raises(FrozenInstanceError):
             offering.budget = Budget(tokens=2000)  # type: ignore[misc]
@@ -143,7 +143,7 @@ class TestLaw2Immutability:
 
     def test_offering_scoped_handles_immutable(self) -> None:
         """Scoped handles tuple cannot be reassigned."""
-        offering = Offering.create(description="Test", scoped_handles=("time.*",))
+        offering = Scope.create(description="Test", scoped_handles=("time.*",))
 
         with pytest.raises(FrozenInstanceError):
             offering.scoped_handles = ("brain.*",)  # type: ignore[misc]
@@ -155,11 +155,11 @@ class TestLaw2Immutability:
 
 
 class TestLaw3ExpiryHonored:
-    """Law 3: Expired Offerings deny access."""
+    """Law 3: Expired Scopes deny access."""
 
     def test_non_expired_offering_is_valid(self) -> None:
-        """Non-expired Offering is valid."""
-        offering = Offering.create(
+        """Non-expired Scope is valid."""
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
             duration=timedelta(hours=1),
@@ -170,10 +170,10 @@ class TestLaw3ExpiryHonored:
         assert offering.time_remaining > timedelta(0)
 
     def test_expired_offering_is_invalid(self) -> None:
-        """Expired Offering is invalid."""
+        """Expired Scope is invalid."""
         # Create offering that expired in the past
         past_expiry = datetime.now() - timedelta(hours=1)
-        offering = Offering(
+        offering = Scope(
             description="Test",
             scoped_handles=("time.*",),
             expires_at=past_expiry,
@@ -182,35 +182,35 @@ class TestLaw3ExpiryHonored:
         assert not offering.is_valid()
 
     def test_expired_offering_check_raises(self) -> None:
-        """check_valid raises OfferingExpired for expired Offerings."""
+        """check_valid raises ScopeExpired for expired Scopes."""
         past_expiry = datetime.now() - timedelta(hours=1)
-        offering = Offering(
+        offering = Scope(
             description="Test",
             scoped_handles=("time.*",),
             expires_at=past_expiry,
         )
 
-        with pytest.raises(OfferingExpired) as exc_info:
+        with pytest.raises(ScopeExpired) as exc_info:
             offering.check_valid()
 
         assert "expired" in str(exc_info.value)
 
     def test_expired_offering_blocks_consumption(self) -> None:
-        """Expired Offerings cannot be consumed."""
+        """Expired Scopes cannot be consumed."""
         past_expiry = datetime.now() - timedelta(hours=1)
-        offering = Offering(
+        offering = Scope(
             description="Test",
             scoped_handles=("time.*",),
             budget=Budget(tokens=1000),
             expires_at=past_expiry,
         )
 
-        with pytest.raises(OfferingExpired):
+        with pytest.raises(ScopeExpired):
             offering.consume(tokens=100)
 
     def test_no_expiry_is_valid(self) -> None:
-        """Offering without expiry is always valid (time-wise)."""
-        offering = Offering.create(
+        """Scope without expiry is always valid (time-wise)."""
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
         )
@@ -225,12 +225,12 @@ class TestLaw3ExpiryHonored:
 # =============================================================================
 
 
-class TestOfferingScope:
+class TestScopeScope:
     """Tests for handle scope matching."""
 
     def test_exact_handle_match(self) -> None:
         """Exact handle matches."""
-        offering = Offering.create(
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.trace.node.manifest",),
         )
@@ -240,7 +240,7 @@ class TestOfferingScope:
 
     def test_wildcard_match(self) -> None:
         """Wildcard patterns match correctly."""
-        offering = Offering.create(
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*", "self.witness.*"),
         )
@@ -258,7 +258,7 @@ class TestOfferingScope:
 
     def test_empty_scope_denies_all(self) -> None:
         """Empty scope denies all access."""
-        offering = Offering.create(
+        offering = Scope.create(
             description="Test",
             scoped_handles=(),
         )
@@ -268,7 +268,7 @@ class TestOfferingScope:
 
     def test_check_access_raises(self) -> None:
         """check_access raises HandleNotInScope for denied handles."""
-        offering = Offering.create(
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
         )
@@ -320,21 +320,21 @@ class TestBudgetPresets:
 
 
 # =============================================================================
-# OfferingStore Tests
+# ScopeStore Tests
 # =============================================================================
 
 
-class TestOfferingStore:
-    """Tests for OfferingStore."""
+class TestScopeStore:
+    """Tests for ScopeStore."""
 
     def setup_method(self) -> None:
         """Reset store before each test."""
-        reset_offering_store()
+        reset_scope_store()
 
     def test_add_and_get(self) -> None:
         """Basic add and get operations."""
-        store = get_offering_store()
-        offering = Offering.create(description="Test", scoped_handles=("time.*",))
+        store = get_scope_store()
+        offering = Scope.create(description="Test", scoped_handles=("time.*",))
 
         store.add(offering)
         retrieved = store.get(offering.id)
@@ -343,11 +343,11 @@ class TestOfferingStore:
         assert retrieved.id == offering.id
 
     def test_active_filter(self) -> None:
-        """active() returns only valid Offerings."""
-        store = OfferingStore()
+        """active() returns only valid Scopes."""
+        store = ScopeStore()
 
         # Add valid offering
-        valid = Offering.create(
+        valid = Scope.create(
             description="Valid",
             scoped_handles=("time.*",),
             duration=timedelta(hours=1),
@@ -355,7 +355,7 @@ class TestOfferingStore:
         store.add(valid)
 
         # Add expired offering
-        expired = Offering(
+        expired = Scope(
             description="Expired",
             scoped_handles=("time.*",),
             expires_at=datetime.now() - timedelta(hours=1),
@@ -367,18 +367,18 @@ class TestOfferingStore:
         assert active[0].id == valid.id
 
     def test_expired_filter(self) -> None:
-        """expired() returns only invalid Offerings."""
-        store = OfferingStore()
+        """expired() returns only invalid Scopes."""
+        store = ScopeStore()
 
         # Add valid offering
-        valid = Offering.create(
+        valid = Scope.create(
             description="Valid",
             scoped_handles=("time.*",),
         )
         store.add(valid)
 
         # Add expired offering
-        expired = Offering(
+        expired = Scope(
             description="Expired",
             scoped_handles=("time.*",),
             expires_at=datetime.now() - timedelta(hours=1),
@@ -390,10 +390,10 @@ class TestOfferingStore:
         assert exp_list[0].id == expired.id
 
     def test_update_offering(self) -> None:
-        """update() replaces existing Offering."""
-        store = OfferingStore()
+        """update() replaces existing Scope."""
+        store = ScopeStore()
 
-        original = Offering.create(
+        original = Scope.create(
             description="Original",
             scoped_handles=("time.*",),
             budget=Budget(tokens=1000),
@@ -437,8 +437,8 @@ class TestSerialization:
         assert restored.entropy == original.entropy
 
     def test_offering_roundtrip(self) -> None:
-        """Offering serializes and deserializes correctly."""
-        original = Offering.create(
+        """Scope serializes and deserializes correctly."""
+        original = Scope.create(
             description="Test roundtrip",
             scoped_handles=("time.*", "self.witness.*"),
             budget=Budget(tokens=5000, operations=20),
@@ -446,7 +446,7 @@ class TestSerialization:
         )
 
         data = original.to_dict()
-        restored = Offering.from_dict(data)
+        restored = Scope.from_dict(data)
 
         assert restored.id == original.id
         assert restored.description == original.description
@@ -455,14 +455,14 @@ class TestSerialization:
         assert restored.expires_at is not None
 
     def test_offering_no_expiry_roundtrip(self) -> None:
-        """Offering without expiry serializes correctly."""
-        original = Offering.create(
+        """Scope without expiry serializes correctly."""
+        original = Scope.create(
             description="No expiry",
             scoped_handles=("time.*",),
         )
 
         data = original.to_dict()
-        restored = Offering.from_dict(data)
+        restored = Scope.from_dict(data)
 
         assert restored.expires_at is None
 
@@ -488,8 +488,8 @@ class TestEdgeCases:
         assert remaining.tokens is None
 
     def test_offering_with_exhausted_budget_is_invalid(self) -> None:
-        """Offering with exhausted budget is invalid."""
-        offering = Offering.create(
+        """Scope with exhausted budget is invalid."""
+        offering = Scope.create(
             description="Test",
             scoped_handles=("time.*",),
             budget=Budget(tokens=0),
@@ -524,7 +524,7 @@ class TestEdgeCases:
 
     def test_multiple_wildcard_patterns(self) -> None:
         """Multiple wildcard patterns work correctly."""
-        offering = Offering.create(
+        offering = Scope.create(
             description="Multi-scope",
             scoped_handles=("time.*", "self.*", "concept.offering.*"),
         )

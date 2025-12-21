@@ -459,39 +459,37 @@ class TestBrainNodeUnknownAspect:
         assert "unknown_aspect" in result["error"].lower()
 
 
-# === WARP Integration: TraceNode Emission (Law 3) ===
+# === WARP Integration: Mark Emission (Law 3) ===
 
 
 @pytest.fixture
 def clean_trace_store():
     """Reset trace store before and after each test."""
-    from services.witness.trace_store import reset_trace_store
+    from services.witness.trace_store import reset_mark_store
 
-    reset_trace_store()
+    reset_mark_store()
     yield
-    reset_trace_store()
+    reset_mark_store()
 
 
 class TestBrainWARPIntegration:
     """
-    Tests for WARP integration: Law 3 TraceNode emission.
+    Tests for WARP integration: Law 3 Mark emission.
 
-    These tests verify that Brain operations emit TraceNodes when
+    These tests verify that Brain operations emit Marks when
     invoked through the AGENTESE gateway, per WARP Law 3:
-    "Every AGENTESE invocation emits exactly one TraceNode."
+    "Every AGENTESE invocation emits exactly one Mark."
 
     See: spec/protocols/warp-primitives.md
     See: plans/continuation-warp-servo-session4.md
     """
 
     @pytest.mark.asyncio
-    async def test_brain_terrace_manifest_emits_trace_node(
-        self, clean_trace_store
-    ):
+    async def test_brain_terrace_manifest_emits_trace_node(self, clean_trace_store):
         """
-        Brain Terrace manifest operation emits a TraceNode.
+        Brain Lesson manifest operation emits a Mark.
 
-        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        Law 3: Every AGENTESE invocation emits exactly one Mark.
         This test verifies that brain.terrace.manifest is traced.
 
         NOTE: Uses brain.terrace (not self.memory) because it doesn't
@@ -501,7 +499,7 @@ class TestBrainWARPIntegration:
         brain.terrace to remain registered from module import.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
-        from services.witness.trace_store import get_trace_store
+        from services.witness.trace_store import get_mark_store
 
         # Import all nodes (including brain.terrace)
         # This triggers @node registration if not already done
@@ -517,9 +515,9 @@ class TestBrainWARPIntegration:
         # Invoke manifest through gateway
         await gateway._invoke_path("brain.terrace", "manifest", observer)
 
-        # Verify TraceNode was emitted (Law 3)
-        store = get_trace_store()
-        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for manifest"
+        # Verify Mark was emitted (Law 3)
+        store = get_mark_store()
+        assert len(store) >= 1, "Law 3 violation: No Mark emitted for manifest"
 
         # Verify trace content
         trace = list(store.all())[-1]
@@ -530,17 +528,15 @@ class TestBrainWARPIntegration:
         assert trace.response.success is True
 
     @pytest.mark.asyncio
-    async def test_brain_terrace_create_emits_trace_node(
-        self, clean_trace_store
-    ):
+    async def test_brain_terrace_create_emits_trace_node(self, clean_trace_store):
         """
-        Brain Terrace create operation emits a TraceNode.
+        Brain Lesson create operation emits a Mark.
 
-        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        Law 3: Every AGENTESE invocation emits exactly one Mark.
         This test verifies that brain.terrace.create is traced.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
-        from services.witness.trace_store import get_trace_store
+        from services.witness.trace_store import get_mark_store
 
         _import_node_modules()
         repopulate_registry()
@@ -556,26 +552,24 @@ class TestBrainWARPIntegration:
             content="Test knowledge for WARP integration",
         )
 
-        # Verify TraceNode was emitted
-        store = get_trace_store()
-        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for create"
+        # Verify Mark was emitted
+        store = get_mark_store()
+        assert len(store) >= 1, "Law 3 violation: No Mark emitted for create"
 
         trace = list(store.all())[-1]
         assert "brain.terrace" in trace.stimulus.content
         assert "create" in trace.stimulus.content
 
     @pytest.mark.asyncio
-    async def test_brain_terrace_search_emits_trace_node(
-        self, clean_trace_store
-    ):
+    async def test_brain_terrace_search_emits_trace_node(self, clean_trace_store):
         """
-        Brain Terrace search operation emits a TraceNode.
+        Brain Lesson search operation emits a Mark.
 
-        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        Law 3: Every AGENTESE invocation emits exactly one Mark.
         This test verifies that brain.terrace.search is traced.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
-        from services.witness.trace_store import get_trace_store
+        from services.witness.trace_store import get_mark_store
 
         _import_node_modules()
         repopulate_registry()
@@ -583,30 +577,26 @@ class TestBrainWARPIntegration:
         observer = Observer.test()
 
         # Invoke search through gateway
-        await gateway._invoke_path(
-            "brain.terrace", "search", observer, query="test"
-        )
+        await gateway._invoke_path("brain.terrace", "search", observer, query="test")
 
-        # Verify TraceNode was emitted
-        store = get_trace_store()
-        assert len(store) >= 1, "Law 3 violation: No TraceNode emitted for search"
+        # Verify Mark was emitted
+        store = get_mark_store()
+        assert len(store) >= 1, "Law 3 violation: No Mark emitted for search"
 
         trace = list(store.all())[-1]
         assert "brain.terrace" in trace.stimulus.content
         assert "search" in trace.stimulus.content
 
     @pytest.mark.asyncio
-    async def test_multiple_operations_emit_multiple_traces(
-        self, clean_trace_store
-    ):
+    async def test_multiple_operations_emit_multiple_traces(self, clean_trace_store):
         """
-        Multiple Brain operations emit distinct TraceNodes.
+        Multiple Brain operations emit distinct Marks.
 
-        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        Law 3: Every AGENTESE invocation emits exactly one Mark.
         This test verifies that N invocations produce N traces.
         """
         from protocols.agentese.gateway import _import_node_modules, create_gateway
-        from services.witness.trace_store import get_trace_store
+        from services.witness.trace_store import get_mark_store
 
         _import_node_modules()
         repopulate_registry()
@@ -620,8 +610,8 @@ class TestBrainWARPIntegration:
         )
         await gateway._invoke_path("brain.terrace", "search", observer, query="test")
 
-        # Verify 3 TraceNodes were emitted
-        store = get_trace_store()
+        # Verify 3 Marks were emitted
+        store = get_mark_store()
         assert len(store) >= 3, f"Expected 3+ traces, got {len(store)}"
 
         # Verify all traces are unique

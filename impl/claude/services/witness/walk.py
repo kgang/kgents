@@ -4,21 +4,21 @@ Walk: Durable Work Stream Tied to Forest Plans.
 A Walk is a session-level abstraction that:
 - Binds to a Forest plan file (root_plan)
 - Tracks N-Phase workflow position
-- Accumulates TraceNodes over time
+- Accumulates Marks over time
 - Manages participant Umwelts
 
 The Insight (from spec/protocols/warp-primitives.md):
-    "Every action is a TraceNode. Every session is a Walk. Every workflow is a Ritual."
+    "Every action is a Mark. Every session is a Walk. Every workflow is a Playbook."
 
 Laws:
-- Law 1 (Monotonicity): trace_nodes only grows, never shrinks
+- Law 1 (Monotonicity): marks only grows, never shrinks
 - Law 2 (Phase Coherence): phase transitions follow N-Phase grammar
 - Law 3 (Plan Binding): root_plan must exist in Forest
 
 Philosophy:
     A Walk is like a GardenerSession (70% leverage) but with:
     - Explicit Forest binding (plans/*.md)
-    - TraceNode history instead of Gesture history
+    - Mark history instead of Gesture history
     - Participant Umwelts for multi-agent collaboration
 
 See: spec/protocols/warp-primitives.md
@@ -36,11 +36,11 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from .trace_node import (
+from .mark import (
+    Mark,
+    MarkId,
     NPhase,
     PlanPath,
-    TraceNode,
-    TraceNodeId,
     UmweltSnapshot,
     WalkId,
 )
@@ -228,21 +228,21 @@ class Walk:
     Durable work stream tied to Forest plans.
 
     Laws:
-    - Law 1 (Monotonicity): trace_nodes only grows
+    - Law 1 (Monotonicity): marks only grows
     - Law 2 (Phase Coherence): phase transitions follow N-Phase grammar
     - Law 3 (Plan Binding): root_plan must exist in Forest
 
     A Walk is similar to GardenState/GardenerSession but with:
     - Explicit Forest binding via root_plan
-    - TraceNode history for complete audit trail
+    - Mark history for complete audit trail
     - Multi-participant support with Umwelts
 
     Example:
         >>> walk = Walk.create(
-        ...     goal="Implement TraceNode primitive",
+        ...     goal="Implement Mark primitive",
         ...     root_plan=PlanPath("plans/warp-servo-phase1.md"),
         ... )
-        >>> walk.advance(trace_node)
+        >>> walk.advance(mark)
         >>> walk.transition_phase(NPhase.ACT)
     """
 
@@ -256,8 +256,8 @@ class Walk:
     # Forest binding (Law 3)
     root_plan: PlanPath | None = None
 
-    # TraceNode history (Law 1: only grows)
-    trace_node_ids: list[TraceNodeId] = field(default_factory=list)
+    # Mark history (Law 1: only grows)
+    mark_ids: list[MarkId] = field(default_factory=list)
 
     # Participants (agents + humans with their Umwelts)
     participants: list[Participant] = field(default_factory=list)
@@ -330,31 +330,36 @@ class Walk:
         )
 
     # =========================================================================
-    # TraceNode Management (Law 1: Monotonicity)
+    # Mark Management (Law 1: Monotonicity)
     # =========================================================================
 
-    def advance(self, trace_node: TraceNode) -> None:
+    def advance(self, mark: Mark) -> None:
         """
-        Add a TraceNode to this Walk.
+        Add a Mark to this Walk.
 
-        Law 1: trace_nodes only grows, never shrinks.
+        Law 1: marks only grows, never shrinks.
 
         Updates:
-        - trace_node_ids (append only)
+        - mark_ids (append only)
         - last_active timestamp
         """
-        if trace_node.id in self.trace_node_ids:
-            logger.warning(f"TraceNode {trace_node.id} already in Walk {self.id}")
+        if mark.id in self.mark_ids:
+            logger.warning(f"Mark {mark.id} already in Walk {self.id}")
             return
 
-        self.trace_node_ids.append(trace_node.id)
+        self.mark_ids.append(mark.id)
         self.last_active = datetime.now()
 
-        logger.debug(f"Walk {self.id} advanced with trace {trace_node.id}")
+        logger.debug(f"Walk {self.id} advanced with trace {mark.id}")
 
     def trace_count(self) -> int:
         """Get the number of traces in this Walk."""
-        return len(self.trace_node_ids)
+        return len(self.mark_ids)
+
+    @property
+    def mark_count(self) -> int:
+        """Backwards compat: alias for trace_count()."""
+        return self.trace_count()
 
     # =========================================================================
     # Phase Management (Law 2: Phase Coherence)
@@ -502,7 +507,7 @@ class Walk:
             "name": self.name,
             "goal": self.goal.to_dict() if self.goal else None,
             "root_plan": str(self.root_plan) if self.root_plan else None,
-            "trace_node_ids": [str(tid) for tid in self.trace_node_ids],
+            "mark_ids": [str(tid) for tid in self.mark_ids],
             "participants": [p.to_dict() for p in self.participants],
             "phase": self.phase.value,
             "phase_history": [(p.value, ts.isoformat()) for p, ts in self.phase_history],
@@ -526,7 +531,7 @@ class Walk:
             name=data.get("name", ""),
             goal=WalkIntent.from_dict(data["goal"]) if data.get("goal") else None,
             root_plan=PlanPath(data["root_plan"]) if data.get("root_plan") else None,
-            trace_node_ids=[TraceNodeId(tid) for tid in data.get("trace_node_ids", [])],
+            mark_ids=[MarkId(tid) for tid in data.get("mark_ids", [])],
             participants=[Participant.from_dict(p) for p in data.get("participants", [])],
             phase=NPhase(data.get("phase", "SENSE")),
             phase_history=phase_history,
@@ -583,7 +588,7 @@ class WalkStore:
     """
     Persistent storage for Walks.
 
-    Similar to TraceNodeStore but for Walk-level abstractions.
+    Similar to MarkStore but for Walk-level abstractions.
     """
 
     _walks: dict[WalkId, Walk] = field(default_factory=dict)

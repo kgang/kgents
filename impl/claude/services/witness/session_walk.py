@@ -3,13 +3,13 @@ Session-Walk Bridge: Connects CLI Sessions to WARP Walks.
 
 This module bridges two distinct primitives:
 - CLISession: Tracks CLI session state (interactive, flow, script)
-- Walk: Tracks WARP work stream with TraceNodes and N-Phase
+- Walk: Tracks WARP work stream with Marks and N-Phase
 
 Philosophy:
     Not every CLI session needs a Walk. A simple `kg check` doesn't need
     workflow tracking. But when a session involves sustained work (interactive
     REPL, flow execution, multi-step tasks), a Walk provides:
-    - TraceNode history for complete audit trail
+    - Mark history for complete audit trail
     - N-Phase tracking for workflow awareness
     - Forest binding for plan correlation
 
@@ -33,7 +33,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from .trace_node import PlanPath, TraceNode, WalkId
+from .mark import Mark, PlanPath, WalkId
 from .walk import Walk, WalkIntent, WalkStatus, WalkStore, get_walk_store
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class SessionWalkBridge:
         # Start session with Walk
         walk = bridge.start_walk_for_session(
             cli_session_id="cli_abc123",
-            goal="Implement TraceNode feature",
+            goal="Implement Mark feature",
             root_plan="plans/warp-servo.md",
         )
 
@@ -130,9 +130,7 @@ class SessionWalkBridge:
         # Check existing binding
         existing = self.get_walk_for_session(cli_session_id)
         if existing and existing.is_active:
-            raise ValueError(
-                f"Session {cli_session_id} already has active Walk {existing.id}"
-            )
+            raise ValueError(f"Session {cli_session_id} already has active Walk {existing.id}")
 
         # Create Walk
         plan_path = PlanPath(root_plan) if isinstance(root_plan, str) else root_plan
@@ -174,9 +172,9 @@ class SessionWalkBridge:
     # Walk Operations
     # =========================================================================
 
-    def advance_walk(self, cli_session_id: str, trace_node: TraceNode) -> bool:
+    def advance_walk(self, cli_session_id: str, trace_node: Mark) -> bool:
         """
-        Add a TraceNode to the session's Walk.
+        Add a Mark to the session's Walk.
 
         Returns False if session has no Walk (Law 3: optional binding).
         """
@@ -207,7 +205,7 @@ class SessionWalkBridge:
         Returns:
             True if transition succeeded, False if no Walk or invalid
         """
-        from .trace_node import NPhase
+        from .mark import NPhase
 
         walk = self.get_walk_for_session(cli_session_id)
         if walk is None:
@@ -270,6 +268,7 @@ class SessionWalkBridge:
 
         # Update binding
         from datetime import datetime
+
         binding = self._bindings.get(cli_session_id)
         if binding:
             self._bindings[cli_session_id] = SessionWalkBinding(
@@ -281,8 +280,7 @@ class SessionWalkBridge:
             )
 
         logger.info(
-            f"Ended session {cli_session_id} with Walk {walk.id} "
-            f"({walk.trace_count()} traces)"
+            f"Ended session {cli_session_id} with Walk {walk.id} ({walk.trace_count()} traces)"
         )
         return walk
 

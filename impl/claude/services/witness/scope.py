@@ -1,25 +1,29 @@
 """
-Offering: Explicit Context Contract with Budget Constraints.
+Scope: Explicit Context Contract with Budget Constraints.
 
-An Offering defines:
+A Scope defines:
 - What handles are accessible (scope)
 - What resources can be consumed (budget)
 - When access expires (expiry)
 
-Every AGENTESE invocation should eventually reference an Offering,
+Every AGENTESE invocation should eventually reference a Scope,
 making context contracts explicit and priced.
 
 Philosophy:
     "Context is not free. Every token, every second, every operation
-    has a cost. Offerings make this cost explicit, enabling resource-
+    has a cost. Scopes make this cost explicit, enabling resource-
     aware agent behavior."
+
+Rename History:
+    Scope → Scope (spec/protocols/witness-primitives.md)
+    "Scope of work" - clearer than religious connotation
 
 Laws:
 - Law 1 (Budget Enforcement): Exceeding budget triggers review (not silent failure)
-- Law 2 (Immutability): Offerings are frozen after creation
-- Law 3 (Expiry Honored): Expired Offerings deny access
+- Law 2 (Immutability): Scopes are frozen after creation
+- Law 3 (Expiry Honored): Expired Scopes deny access
 
-See: spec/protocols/warp-primitives.md
+See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 7: Append-Only History)
 """
 
@@ -35,12 +39,19 @@ from uuid import uuid4
 # Type Aliases
 # =============================================================================
 
-OfferingId = NewType("OfferingId", str)
+ScopeId = NewType("ScopeId", str)
+
+# Backwards compatibility alias
+ScopeId = ScopeId
 
 
-def generate_offering_id() -> OfferingId:
-    """Generate a unique Offering ID."""
-    return OfferingId(f"offering-{uuid4().hex[:12]}")
+def generate_scope_id() -> ScopeId:
+    """Generate a unique Scope ID."""
+    return ScopeId(f"scope-{uuid4().hex[:12]}")
+
+
+# Backwards compatibility alias
+generate_scope_id = generate_scope_id
 
 
 # =============================================================================
@@ -51,7 +62,7 @@ def generate_offering_id() -> OfferingId:
 @dataclass(frozen=True)
 class Budget:
     """
-    Resource constraints for an Offering.
+    Resource constraints for a Scope.
 
     All constraints are optional. None means unlimited.
 
@@ -203,37 +214,45 @@ class Budget:
 # =============================================================================
 
 
-class OfferingError(Exception):
-    """Base exception for Offering errors."""
+class ScopeError(Exception):
+    """Base exception for Scope errors."""
 
     pass
 
 
-class BudgetExceeded(OfferingError):
+# Backwards compatibility alias
+ScopeError = ScopeError
+
+
+class BudgetExceeded(ScopeError):
     """Law 1: Budget constraint exceeded - triggers review."""
 
     pass
 
 
-class OfferingExpired(OfferingError):
-    """Law 3: Offering has expired."""
+class ScopeExpired(ScopeError):
+    """Law 3: Scope has expired."""
 
     pass
 
 
-class HandleNotInScope(OfferingError):
-    """Attempted to access a handle not in the Offering's scope."""
+# Backwards compatibility alias
+ScopeExpired = ScopeExpired
+
+
+class HandleNotInScope(ScopeError):
+    """Attempted to access a handle not in the Scope's scope."""
 
     pass
 
 
 # =============================================================================
-# Offering Status
+# Scope Status
 # =============================================================================
 
 
-class OfferingStatus(Enum):
-    """Status of an Offering."""
+class ScopeStatus(Enum):
+    """Status of a Scope."""
 
     ACTIVE = auto()  # Currently valid
     EXHAUSTED = auto()  # Budget depleted
@@ -241,39 +260,43 @@ class OfferingStatus(Enum):
     REVOKED = auto()  # Manually revoked
 
 
+# Backwards compatibility alias
+ScopeStatus = ScopeStatus
+
+
 # =============================================================================
-# Offering: The Core Primitive
+# Scope: The Core Primitive
 # =============================================================================
 
 
 @dataclass(frozen=True)
-class Offering:
+class Scope:
     """
     Explicitly priced and scoped context contract.
 
     Laws:
     - Law 1 (Budget Enforcement): Exceeding budget triggers review
-    - Law 2 (Immutability): Offerings are frozen after creation
-    - Law 3 (Expiry Honored): Expired Offerings deny access
+    - Law 2 (Immutability): Scopes are frozen after creation
+    - Law 3 (Expiry Honored): Expired Scopes deny access
 
-    An Offering defines:
+    A Scope defines:
     - What AGENTESE handles can be accessed (scoped_handles)
     - What resources can be consumed (budget)
     - When access expires (expires_at)
 
     Example:
-        >>> offering = Offering.create(
-        ...     description="Implement TraceNode",
+        >>> scope = Scope.create(
+        ...     description="Implement Mark",
         ...     scoped_handles=("time.trace.*", "time.walk.*"),
         ...     budget=Budget.standard(),
         ... )
-        >>> offering.is_valid()  # True
-        >>> offering.can_access("time.trace.node.manifest")  # True
-        >>> offering.can_access("brain.terrace.manifest")  # False (not in scope)
+        >>> scope.is_valid()  # True
+        >>> scope.can_access("time.trace.node.manifest")  # True
+        >>> scope.can_access("brain.terrace.manifest")  # False (not in scope)
     """
 
     # Identity
-    id: OfferingId = field(default_factory=generate_offering_id)
+    id: ScopeId = field(default_factory=generate_scope_id)
 
     # Description
     description: str = ""
@@ -303,28 +326,31 @@ class Offering:
         scoped_handles: tuple[str, ...] | None = None,
         budget: Budget | None = None,
         duration: timedelta | None = None,
-    ) -> Offering:
+        expires_at: datetime | None = None,  # Backwards compat: direct expiry
+    ) -> Scope:
         """
-        Create a new Offering.
+        Create a new Scope.
 
         Args:
-            description: Human-readable description of what this Offering is for
+            description: Human-readable description of what this Scope is for
             scoped_handles: AGENTESE handle patterns that can be accessed
             budget: Resource constraints (default: unlimited)
-            duration: How long the Offering is valid (None = no expiry)
+            duration: How long the Scope is valid (None = no expiry)
+            expires_at: Direct expiry time (backwards compat, overrides duration)
 
         Returns:
-            New Offering instance
+            New Scope instance
         """
-        expires_at = None
-        if duration is not None:
-            expires_at = datetime.now() + duration
+        # Backwards compat: expires_at takes precedence over duration
+        final_expires_at = expires_at
+        if final_expires_at is None and duration is not None:
+            final_expires_at = datetime.now() + duration
 
         return cls(
             description=description,
             scoped_handles=scoped_handles or (),
             budget=budget or Budget.unlimited(),
-            expires_at=expires_at,
+            expires_at=final_expires_at,
         )
 
     # =========================================================================
@@ -333,9 +359,9 @@ class Offering:
 
     def is_valid(self) -> bool:
         """
-        Check if this Offering is currently valid.
+        Check if this Scope is currently valid.
 
-        Law 3: Expired Offerings deny access.
+        Law 3: Expired Scopes deny access.
         """
         if self.expires_at is not None and datetime.now() > self.expires_at:
             return False
@@ -344,11 +370,11 @@ class Offering:
         return True
 
     def check_valid(self) -> None:
-        """Raise OfferingExpired if not valid."""
+        """Raise ScopeExpired if not valid."""
         if self.expires_at is not None and datetime.now() > self.expires_at:
-            raise OfferingExpired(f"Offering {self.id} expired at {self.expires_at}")
+            raise ScopeExpired(f"Scope {self.id} expired at {self.expires_at}")
         if self.budget.is_exhausted:
-            raise BudgetExceeded(f"Offering {self.id} budget exhausted")
+            raise BudgetExceeded(f"Scope {self.id} budget exhausted")
 
     @property
     def time_remaining(self) -> timedelta | None:
@@ -422,12 +448,12 @@ class Offering:
         tokens: int = 0,
         time_seconds: float = 0.0,
         operations: int = 0,
-    ) -> Offering:
+    ) -> Scope:
         """
-        Return new Offering with consumption deducted.
+        Return new Scope with consumption deducted.
 
         Law 1: Exceeding budget triggers BudgetExceeded (review trigger).
-        Law 2: Returns a new Offering (original is immutable).
+        Law 2: Returns a new Scope (original is immutable).
         """
         self.check_valid()
 
@@ -437,8 +463,8 @@ class Offering:
             operations=operations,
         )
 
-        # Create new Offering with updated budget (Law 2: immutability)
-        return Offering(
+        # Create new Scope with updated budget (Law 2: immutability)
+        return Scope(
             id=self.id,
             description=self.description,
             scoped_handles=self.scoped_handles,
@@ -465,10 +491,10 @@ class Offering:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Offering:
+    def from_dict(cls, data: dict[str, Any]) -> Scope:
         """Create from dictionary."""
         return cls(
-            id=OfferingId(data["id"]),
+            id=ScopeId(data["id"]),
             description=data.get("description", ""),
             scoped_handles=tuple(data.get("scoped_handles", [])),
             budget=Budget.from_dict(data.get("budget", {})),
@@ -487,67 +513,121 @@ class Offering:
         scope_str = ", ".join(self.scoped_handles[:2]) + (
             "..." if len(self.scoped_handles) > 2 else ""
         )
-        return f"Offering(id={str(self.id)[:16]}..., scope=[{scope_str}], {valid})"
+        return f"Scope(id={str(self.id)[:16]}..., scope=[{scope_str}], {valid})"
+
+    # =========================================================================
+    # Backwards Compatibility Properties
+    # =========================================================================
+
+    @property
+    def kind(self) -> str:
+        """Backwards compat: all scopes are 'resource' kind."""
+        return "resource"
+
+    @property
+    def scope(self) -> tuple[str, ...]:
+        """Backwards compat: alias for scoped_handles."""
+        return self.scoped_handles
+
+
+# Backwards compatibility alias
+Scope = Scope
 
 
 # =============================================================================
-# OfferingStore: Persistence
+# ScopeStore: Persistence
 # =============================================================================
 
 
 @dataclass
-class OfferingStore:
+class ScopeStore:
     """
-    Persistent storage for Offerings.
+    Persistent storage for Scopes.
 
-    Tracks active Offerings and their consumption history.
+    Tracks active Scopes and their consumption history.
     """
 
-    _offerings: dict[OfferingId, Offering] = field(default_factory=dict)
+    _scopes: dict[ScopeId, Scope] = field(default_factory=dict)
 
-    def add(self, offering: Offering) -> None:
-        """Add an Offering to the store."""
-        self._offerings[offering.id] = offering
+    def add(self, scope: Scope) -> None:
+        """Add a Scope to the store."""
+        self._scopes[scope.id] = scope
 
-    def get(self, offering_id: OfferingId) -> Offering | None:
-        """Get an Offering by ID."""
-        return self._offerings.get(offering_id)
+    def get(self, scope_id: ScopeId) -> Scope | None:
+        """Get a Scope by ID."""
+        return self._scopes.get(scope_id)
 
-    def update(self, offering: Offering) -> None:
-        """Update an Offering (replace with new version)."""
-        self._offerings[offering.id] = offering
+    def update(self, scope: Scope) -> None:
+        """Update a Scope (replace with new version)."""
+        self._scopes[scope.id] = scope
 
-    def active(self) -> list[Offering]:
-        """Get all currently valid Offerings."""
-        return [o for o in self._offerings.values() if o.is_valid()]
+    def active(self) -> list[Scope]:
+        """Get all currently valid Scopes."""
+        return [s for s in self._scopes.values() if s.is_valid()]
 
-    def expired(self) -> list[Offering]:
-        """Get all expired Offerings."""
-        return [o for o in self._offerings.values() if not o.is_valid()]
+    def expired(self) -> list[Scope]:
+        """Get all expired Scopes."""
+        return [s for s in self._scopes.values() if not s.is_valid()]
 
     def __len__(self) -> int:
-        return len(self._offerings)
+        return len(self._scopes)
+
+
+# Backwards compatibility alias
+ScopeStore = ScopeStore
 
 
 # =============================================================================
 # Global Store
 # =============================================================================
 
-_global_offering_store: OfferingStore | None = None
+_global_scope_store: ScopeStore | None = None
 
 
-def get_offering_store() -> OfferingStore:
-    """Get the global offering store."""
-    global _global_offering_store
-    if _global_offering_store is None:
-        _global_offering_store = OfferingStore()
-    return _global_offering_store
+def get_scope_store() -> ScopeStore:
+    """Get the global scope store."""
+    global _global_scope_store
+    if _global_scope_store is None:
+        _global_scope_store = ScopeStore()
+    return _global_scope_store
 
 
-def reset_offering_store() -> None:
-    """Reset the global offering store (for testing)."""
-    global _global_offering_store
-    _global_offering_store = None
+# Backwards compatibility alias
+get_scope_store = get_scope_store
+
+
+def reset_scope_store() -> None:
+    """Reset the global scope store (for testing)."""
+    global _global_scope_store
+    _global_scope_store = None
+
+
+# Backwards compatibility alias
+reset_scope_store = reset_scope_store
+
+
+# =============================================================================
+# Backwards Compatibility Aliases (Offering → Scope)
+# =============================================================================
+
+# Type aliases
+OfferingId = ScopeId
+generate_offering_id = generate_scope_id
+
+# Status
+OfferingStatus = ScopeStatus
+
+# Exceptions
+OfferingError = ScopeError
+OfferingExpired = ScopeExpired
+
+# Core types
+Offering = Scope
+
+# Store
+OfferingStore = ScopeStore
+get_offering_store = get_scope_store
+reset_offering_store = reset_scope_store
 
 
 # =============================================================================
@@ -555,21 +635,26 @@ def reset_offering_store() -> None:
 # =============================================================================
 
 __all__ = [
-    # Type aliases
+    # New names (preferred)
+    "ScopeId",
+    "generate_scope_id",
+    "Budget",
+    "ScopeStatus",
+    "ScopeError",
+    "BudgetExceeded",
+    "ScopeExpired",
+    "HandleNotInScope",
+    "Scope",
+    "ScopeStore",
+    "get_scope_store",
+    "reset_scope_store",
+    # Backwards compatibility (Offering → Scope)
     "OfferingId",
     "generate_offering_id",
-    # Budget
-    "Budget",
-    # Status
     "OfferingStatus",
-    # Exceptions
     "OfferingError",
-    "BudgetExceeded",
     "OfferingExpired",
-    "HandleNotInScope",
-    # Core
     "Offering",
-    # Store
     "OfferingStore",
     "get_offering_store",
     "reset_offering_store",

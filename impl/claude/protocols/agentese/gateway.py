@@ -90,7 +90,7 @@ def _import_node_modules() -> None:
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
-            time_trace_warp,  # noqa: F401 - WARP Phase 1: TraceNode/Walk (time.trace.*, time.walk.*)
+            time_trace_warp,  # noqa: F401 - WARP Phase 1: Mark/Walk (time.trace.*, time.walk.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
             world_file,  # noqa: F401 - CLI v7 Phase 1: File I/O (world.file.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
@@ -772,8 +772,8 @@ class AgenteseGateway:
         1. Check NodeRegistry for @node registered class
         2. Fall back to Logos for context resolver paths
 
-        Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode.
-        This method instruments all invocations with TraceNode emission.
+        Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark.
+        This method instruments all invocations with Mark emission.
 
         Args:
             path: AGENTESE path (e.g., "self.memory")
@@ -801,7 +801,7 @@ class AgenteseGateway:
                     result = await node.invoke(aspect, observer, **kwargs)  # type: ignore[arg-type]
                     # Check if result is async generator (streaming)
                     is_streaming = hasattr(result, "__aiter__")
-                    # Emit TraceNode for successful invocation
+                    # Emit Mark for successful invocation
                     self._emit_trace(path, aspect, observer, result, is_streaming=is_streaming)
                     return result
 
@@ -831,7 +831,7 @@ class AgenteseGateway:
             raise error
 
         except Exception as e:
-            # Emit TraceNode for error
+            # Emit Mark for error
             self._emit_trace(path, aspect, observer, None, error=e)
             raise
 
@@ -846,23 +846,23 @@ class AgenteseGateway:
         error: Exception | None = None,
     ) -> None:
         """
-        Emit a TraceNode for an AGENTESE invocation.
+        Emit a Mark for an AGENTESE invocation.
 
-        Law 3: Every AGENTESE invocation emits exactly one TraceNode.
+        Law 3: Every AGENTESE invocation emits exactly one Mark.
 
         This method:
-        1. Creates a TraceNode with stimulus and response
-        2. Appends to the global TraceNodeStore
+        1. Creates a Mark with stimulus and response
+        2. Appends to the global MarkStore
         3. Publishes to WitnessSynergyBus for cross-jewel awareness
         """
         try:
-            from services.witness.trace_node import (
+            from services.witness.mark import (
+                Mark,
                 Response,
                 Stimulus,
-                TraceNode,
                 UmweltSnapshot,
             )
-            from services.witness.trace_store import get_trace_store
+            from services.witness.trace_store import get_mark_store
 
             # Create stimulus from AGENTESE invocation
             stimulus = Stimulus.from_agentese(path, aspect)
@@ -894,8 +894,8 @@ class AgenteseGateway:
                 trust_level=0,  # Default trust level
             )
 
-            # Create the TraceNode
-            trace_node = TraceNode(
+            # Create the Mark
+            trace_node = Mark(
                 origin="gateway",
                 stimulus=stimulus,
                 response=response,
@@ -904,20 +904,20 @@ class AgenteseGateway:
             )
 
             # Append to store (Law 3 enforcement)
-            store = get_trace_store()
+            store = get_mark_store()
             store.append(trace_node)
 
             # Publish to SynergyBus for cross-jewel awareness
             self._publish_trace_event(trace_node, error)
 
-            logger.debug(f"TraceNode emitted for {path}.{aspect}: {trace_node.id}")
+            logger.debug(f"Mark emitted for {path}.{aspect}: {trace_node.id}")
 
         except Exception as e:
             # Don't let trace emission failure break the gateway
-            logger.warning(f"TraceNode emission failed for {path}.{aspect}: {e}")
+            logger.warning(f"Mark emission failed for {path}.{aspect}: {e}")
 
     def _summarize_result(self, result: Any) -> str:
-        """Summarize a result for TraceNode response content."""
+        """Summarize a result for Mark response content."""
         if result is None:
             return "null"
         if isinstance(result, str):
@@ -937,11 +937,7 @@ class AgenteseGateway:
             if bus is not None:
                 import asyncio
 
-                topic = (
-                    WitnessTopics.AGENTESE_ERROR
-                    if error
-                    else WitnessTopics.AGENTESE_INVOKED
-                )
+                topic = WitnessTopics.AGENTESE_ERROR if error else WitnessTopics.AGENTESE_INVOKED
                 # Non-blocking publish (fire and forget)
                 asyncio.create_task(bus.publish(topic, trace_node.to_dict()))
 

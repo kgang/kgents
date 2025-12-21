@@ -1,10 +1,10 @@
 """
-AGENTESE Self Covenant Context: Negotiated Permission Contract.
+AGENTESE Self Grant Context: Negotiated Permission Contract.
 
 Permission-related nodes for self.covenant.* paths:
 - CovenantNode: Permission negotiation and management
 
-This node provides AGENTESE access to the Covenant primitive for
+This node provides AGENTESE access to the Grant primitive for
 explicit, revocable permission contracts.
 
 AGENTESE Paths:
@@ -44,9 +44,9 @@ if TYPE_CHECKING:
 _covenant_store: dict[str, Any] = {}
 
 
-def _get_covenant(covenant_id: str) -> Any | None:
+def _get_covenant(grant_id: str) -> Any | None:
     """Get covenant by ID."""
-    return _covenant_store.get(covenant_id)
+    return _covenant_store.get(grant_id)
 
 
 def _add_covenant(covenant: Any) -> None:
@@ -55,7 +55,7 @@ def _add_covenant(covenant: Any) -> None:
 
 
 # =============================================================================
-# CovenantNode: AGENTESE Interface to Covenant
+# CovenantNode: AGENTESE Interface to Grant
 # =============================================================================
 
 
@@ -71,13 +71,13 @@ class CovenantNode(BaseLogosNode):
     """
     self.covenant - Negotiated permission contracts.
 
-    A Covenant is a formal agreement between human and agent that:
+    A Grant is a formal agreement between human and agent that:
     - Defines what operations are permitted
     - Specifies review gates for sensitive operations
     - Can be proposed, granted, and revoked
 
     Laws (from covenant.py):
-    - Law 1 (Required): Sensitive operations require a granted Covenant
+    - Law 1 (Required): Sensitive operations require a granted Grant
     - Law 2 (Revocable): Covenants can be revoked at any time
     - Law 3 (Gated): Review gates trigger on threshold
 
@@ -91,7 +91,7 @@ class CovenantNode(BaseLogosNode):
         return self._handle
 
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
-        """Covenant affordances available to all archetypes."""
+        """Grant affordances available to all archetypes."""
         return COVENANT_AFFORDANCES
 
     # ==========================================================================
@@ -105,12 +105,12 @@ class CovenantNode(BaseLogosNode):
         Returns:
             List of covenants with status and permissions
         """
-        from services.witness.covenant import CovenantStatus
+        from services.witness.grant import GrantStatus
 
         # Collect stats
         total = len(_covenant_store)
-        granted = sum(1 for c in _covenant_store.values() if c.status == CovenantStatus.GRANTED)
-        revoked = sum(1 for c in _covenant_store.values() if c.status == CovenantStatus.REVOKED)
+        granted = sum(1 for c in _covenant_store.values() if c.status == GrantStatus.GRANTED)
+        revoked = sum(1 for c in _covenant_store.values() if c.status == GrantStatus.REVOKED)
 
         recent = sorted(
             _covenant_store.values(),
@@ -135,7 +135,7 @@ class CovenantNode(BaseLogosNode):
                 for c in recent
             ],
             "laws": [
-                "Law 1: Sensitive operations require a granted Covenant",
+                "Law 1: Sensitive operations require a granted Grant",
                 "Law 2: Covenants can be revoked at any time",
                 "Law 3: Review gates trigger on threshold",
             ],
@@ -153,7 +153,7 @@ class CovenantNode(BaseLogosNode):
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
-        """Handle Covenant-specific aspects."""
+        """Handle Grant-specific aspects."""
         match aspect:
             case "propose":
                 return self._propose_covenant(**kwargs)
@@ -181,7 +181,7 @@ class CovenantNode(BaseLogosNode):
         gates: list[dict[str, Any]] | None = None,
     ) -> dict[str, Any]:
         """
-        Propose a new Covenant for human review.
+        Propose a new Grant for human review.
 
         Args:
             permissions: List of permission patterns (e.g., ["file_read", "git_status"])
@@ -189,9 +189,9 @@ class CovenantNode(BaseLogosNode):
             gates: Review gates to add
 
         Returns:
-            Proposed Covenant info
+            Proposed Grant info
         """
-        from services.witness.covenant import Covenant, CovenantStatus, ReviewGate
+        from services.witness.grant import Grant, GrantStatus, ReviewGate
 
         # Parse gates
         review_gates: list[ReviewGate] = []
@@ -205,7 +205,7 @@ class CovenantNode(BaseLogosNode):
                 review_gates.append(gate)
 
         # Create covenant
-        covenant = Covenant.propose(
+        covenant = Grant.propose(
             permissions=tuple(permissions) if permissions else (),
             description=description,
             review_gates=tuple(review_gates),
@@ -221,7 +221,7 @@ class CovenantNode(BaseLogosNode):
             "description": description,
             "gates_count": len(review_gates),
             "proposed_at": covenant.proposed_at.isoformat(),
-            "message": "Covenant proposed. Awaiting human review to grant.",
+            "message": "Grant proposed. Awaiting human review to grant.",
         }
 
     @aspect(
@@ -230,34 +230,34 @@ class CovenantNode(BaseLogosNode):
     )
     def _grant_covenant(
         self,
-        covenant_id: str = "",
+        grant_id: str = "",
     ) -> dict[str, Any]:
         """
-        Grant a proposed Covenant.
+        Grant a proposed Grant.
 
         This is typically a human action - granting permission.
         """
-        if not covenant_id:
-            return {"error": "covenant_id is required"}
+        if not grant_id:
+            return {"error": "grant_id is required"}
 
-        covenant = _get_covenant(covenant_id)
+        covenant = _get_covenant(grant_id)
         if covenant is None:
-            return {"error": f"Covenant {covenant_id} not found"}
+            return {"error": f"Grant {grant_id} not found"}
 
-        from services.witness.covenant import CovenantStatus
+        from services.witness.grant import GrantStatus
 
-        if covenant.status != CovenantStatus.PROPOSED:
+        if covenant.status != GrantStatus.PROPOSED:
             return {
-                "error": f"Covenant must be PROPOSED to grant (current: {covenant.status.name})",
+                "error": f"Grant must be PROPOSED to grant (current: {covenant.status.name})",
             }
 
         covenant.grant()
 
         return {
-            "covenant_id": covenant_id,
+            "grant_id": grant_id,
             "status": covenant.status.name,
             "granted_at": covenant.granted_at.isoformat() if covenant.granted_at else None,
-            "message": "Covenant granted. Operations are now permitted.",
+            "message": "Grant granted. Operations are now permitted.",
         }
 
     @aspect(
@@ -266,29 +266,31 @@ class CovenantNode(BaseLogosNode):
     )
     def _revoke_covenant(
         self,
-        covenant_id: str = "",
+        grant_id: str = "",
         reason: str = "",
     ) -> dict[str, Any]:
         """
-        Revoke a Covenant.
+        Revoke a Grant.
 
         Law 2: Covenants can be revoked at any time.
         """
-        if not covenant_id:
-            return {"error": "covenant_id is required"}
+        if not grant_id:
+            return {"error": "grant_id is required"}
 
-        covenant = _get_covenant(covenant_id)
+        covenant = _get_covenant(grant_id)
         if covenant is None:
-            return {"error": f"Covenant {covenant_id} not found"}
+            return {"error": f"Grant {grant_id} not found"}
 
         covenant.revoke(reason=reason)
 
         return {
-            "covenant_id": covenant_id,
+            "grant_id": grant_id,
             "status": covenant.status.name,
-            "revoked_at": covenant.revoked_at.isoformat() if hasattr(covenant, "revoked_at") and covenant.revoked_at else None,
+            "revoked_at": covenant.revoked_at.isoformat()
+            if hasattr(covenant, "revoked_at") and covenant.revoked_at
+            else None,
             "reason": reason,
-            "message": "Covenant revoked. Operations are no longer permitted.",
+            "message": "Grant revoked. Operations are no longer permitted.",
         }
 
     @aspect(
@@ -298,29 +300,29 @@ class CovenantNode(BaseLogosNode):
     )
     def _check_permission(
         self,
-        covenant_id: str = "",
+        grant_id: str = "",
         operation: str = "",
     ) -> dict[str, Any]:
         """
-        Check if an operation is permitted by a Covenant.
+        Check if an operation is permitted by a Grant.
 
-        Law 1: Sensitive operations require a granted Covenant.
+        Law 1: Sensitive operations require a granted Grant.
         """
-        if not covenant_id:
-            return {"error": "covenant_id is required"}
+        if not grant_id:
+            return {"error": "grant_id is required"}
         if not operation:
             return {"error": "operation is required"}
 
-        covenant = _get_covenant(covenant_id)
+        covenant = _get_covenant(grant_id)
         if covenant is None:
-            return {"permitted": False, "reason": f"Covenant {covenant_id} not found"}
+            return {"permitted": False, "reason": f"Grant {grant_id} not found"}
 
-        from services.witness.covenant import CovenantStatus
+        from services.witness.grant import GrantStatus
 
-        if covenant.status != CovenantStatus.GRANTED:
+        if covenant.status != GrantStatus.GRANTED:
             return {
                 "permitted": False,
-                "reason": f"Covenant not granted (status: {covenant.status.name})",
+                "reason": f"Grant not granted (status: {covenant.status.name})",
             }
 
         # Check if operation matches any permission
@@ -330,10 +332,12 @@ class CovenantNode(BaseLogosNode):
         )
 
         return {
-            "covenant_id": covenant_id,
+            "grant_id": grant_id,
             "operation": operation,
             "permitted": permitted,
-            "reason": "Operation matches permission" if permitted else "Operation not in permissions",
+            "reason": "Operation matches permission"
+            if permitted
+            else "Operation not in permissions",
         }
 
     # ==========================================================================

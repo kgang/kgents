@@ -1,7 +1,7 @@
 """
 WARP Primitive → SceneGraph Converters.
 
-Converts WARP primitives (TraceNode, Walk, Ritual, etc.) into SceneGraph
+Converts WARP primitives (Mark, Walk, Playbook, etc.) into SceneGraph
 representations for projection to React, CLI, or future Servo targets.
 
 The Insight (from spec/protocols/warp-primitives.md):
@@ -15,7 +15,7 @@ Design Philosophy:
 
 See:
     - protocols/agentese/projection/scene.py (SceneGraph primitives)
-    - services/witness/trace_node.py (TraceNode)
+    - services/witness/trace_node.py (Mark)
     - services/witness/walk.py (Walk)
     - docs/skills/crown-jewel-patterns.md (Pattern 6: Dual-Channel Output)
 """
@@ -38,10 +38,10 @@ from .scene import (
 )
 
 if TYPE_CHECKING:
-    from services.witness.covenant import Covenant
-    from services.witness.offering import Offering
-    from services.witness.ritual import Ritual
-    from services.witness.trace_node import TraceNode
+    from services.witness.grant import Grant
+    from services.witness.mark import Mark
+    from services.witness.playbook import Playbook
+    from services.witness.scope import Scope
     from services.witness.walk import Walk
 
 
@@ -107,22 +107,22 @@ def palette_to_hex(color: str) -> str:
 
 
 # =============================================================================
-# TraceNode → SceneGraph
+# Mark → SceneGraph
 # =============================================================================
 
 
-def trace_node_to_scene(trace: TraceNode, *, animate: bool = True) -> SceneNode:
+def trace_node_to_scene(trace: Mark, *, animate: bool = True) -> SceneNode:
     """
-    Convert a TraceNode to a SceneNode.
+    Convert a Mark to a SceneNode.
 
-    The TraceNode becomes a TRACE-kind SceneNode with:
+    The Mark becomes a TRACE-kind SceneNode with:
     - Stimulus displayed as label
     - Response in content
     - Fade animation on appearance
     - Sage background (trace items live in the garden)
 
     Args:
-        trace: The TraceNode to convert
+        trace: The Mark to convert
         animate: Whether to include animation hints
 
     Returns:
@@ -161,13 +161,13 @@ def trace_node_to_scene(trace: TraceNode, *, animate: bool = True) -> SceneNode:
 
 
 def trace_timeline_to_scene(
-    traces: Sequence[TraceNode],
+    traces: Sequence[Mark],
     *,
     title: str = "Trace Timeline",
     show_edges: bool = True,
 ) -> SceneGraph:
     """
-    Convert a sequence of TraceNodes to a timeline SceneGraph.
+    Convert a sequence of Marks to a timeline SceneGraph.
 
     Creates a horizontal timeline with:
     - Each trace as a TRACE node
@@ -175,7 +175,7 @@ def trace_timeline_to_scene(
     - Timeline layout directive
 
     Args:
-        traces: Sequence of TraceNodes (ordered by time)
+        traces: Sequence of Marks (ordered by time)
         title: Title for the scene
         show_edges: Whether to include causal edges
 
@@ -252,7 +252,7 @@ def walk_to_scene(walk: Walk, *, include_traces: bool = False) -> SceneGraph:
         "goal": walk.goal.description if walk.goal else None,
         "phase": walk.phase.value,
         "status": walk.status.name,
-        "trace_count": walk.trace_count(),
+        "mark_count": walk.mark_count,
         "participants": [p.name for p in walk.participants],
         "duration_seconds": walk.duration_seconds,
         "started_at": walk.started_at.isoformat(),
@@ -331,13 +331,13 @@ def walk_dashboard_to_scene(walks: Sequence[Walk], *, title: str = "Walk Dashboa
 
 
 # =============================================================================
-# Offering → SceneGraph
+# Scope → SceneGraph
 # =============================================================================
 
 
-def offering_to_scene(offering: Offering) -> SceneNode:
+def offering_to_scene(offering: Scope) -> SceneNode:
     """
-    Convert an Offering to a SceneNode.
+    Convert an Scope to a SceneNode.
 
     Creates an OFFERING badge with:
     - Kind indicator (context, capability, information)
@@ -345,7 +345,7 @@ def offering_to_scene(offering: Offering) -> SceneNode:
     - Trust requirement
 
     Args:
-        offering: The Offering to convert
+        offering: The Scope to convert
 
     Returns:
         SceneNode badge
@@ -353,7 +353,7 @@ def offering_to_scene(offering: Offering) -> SceneNode:
     return SceneNode(
         kind=SceneNodeKind.OFFERING,
         content={
-            "offering_id": str(offering.id),
+            "scope_id": str(offering.id),
             "kind": offering.kind.value if hasattr(offering.kind, "value") else str(offering.kind),
             "description": offering.description,
             "scope": offering.scope,
@@ -363,18 +363,18 @@ def offering_to_scene(offering: Offering) -> SceneNode:
             background=PALETTE.AMBER_GLOW,
             paper_grain=True,
         ),
-        metadata={"offering_id": str(offering.id)},
+        metadata={"scope_id": str(offering.id)},
     )
 
 
 # =============================================================================
-# Covenant → SceneGraph
+# Grant → SceneGraph
 # =============================================================================
 
 
-def covenant_to_scene(covenant: Covenant) -> SceneNode:
+def covenant_to_scene(covenant: Grant) -> SceneNode:
     """
-    Convert a Covenant to a SceneNode.
+    Convert a Grant to a SceneNode.
 
     Creates a COVENANT indicator showing:
     - Permissions granted
@@ -382,7 +382,7 @@ def covenant_to_scene(covenant: Covenant) -> SceneNode:
     - Expiration if applicable
 
     Args:
-        covenant: The Covenant to convert
+        covenant: The Grant to convert
 
     Returns:
         SceneNode indicator
@@ -390,14 +390,14 @@ def covenant_to_scene(covenant: Covenant) -> SceneNode:
     return SceneNode(
         kind=SceneNodeKind.COVENANT,
         content={
-            "covenant_id": str(covenant.id),
+            "grant_id": str(covenant.id),
             "permissions": list(covenant.permissions),
             "trust_level": covenant.trust_level,
             "expires_at": covenant.expires_at.isoformat() if covenant.expires_at else None,
         },
-        label=f"Trust L{covenant.trust_level}",
+        label=f"Trust: {covenant.trust_level}",
         style=NodeStyle(
-            background=PALETTE.COPPER if covenant.trust_level >= 2 else PALETTE.TWILIGHT,
+            background=PALETTE.COPPER if covenant.trust_level == "high" else PALETTE.TWILIGHT,
         ),
         interactions=(
             Interaction(
@@ -407,30 +407,30 @@ def covenant_to_scene(covenant: Covenant) -> SceneNode:
                 metadata={"permissions": list(covenant.permissions)},
             ),
         ),
-        metadata={"covenant_id": str(covenant.id), "trust_level": covenant.trust_level},
+        metadata={"grant_id": str(covenant.id), "trust_level": covenant.trust_level},
     )
 
 
 # =============================================================================
-# Ritual → SceneGraph
+# Playbook → SceneGraph
 # =============================================================================
 
 
-def ritual_to_scene(ritual: Ritual, *, show_steps: bool = True) -> SceneGraph:
+def ritual_to_scene(ritual: Playbook, *, show_steps: bool = True) -> SceneGraph:
     """
-    Convert a Ritual to a SceneGraph.
+    Convert a Playbook to a SceneGraph.
 
     Creates a RITUAL visualization with:
-    - Ritual header (name, status)
+    - Playbook header (name, status)
     - Step progression
-    - Covenant requirements
+    - Grant requirements
 
     Args:
-        ritual: The Ritual to convert
+        ritual: The Playbook to convert
         show_steps: Whether to include step details
 
     Returns:
-        SceneGraph representing the Ritual workflow
+        SceneGraph representing the Playbook workflow
     """
     # Determine status style
     status_style = NodeStyle(
@@ -464,7 +464,9 @@ def ritual_to_scene(ritual: Ritual, *, show_steps: bool = True) -> SceneGraph:
             is_complete = i < ritual.current_step
 
             step_style = NodeStyle(
-                background=PALETTE.SAGE if is_complete else (PALETTE.AMBER_GLOW if is_current else PALETTE.PAPER),
+                background=PALETTE.SAGE
+                if is_complete
+                else (PALETTE.AMBER_GLOW if is_current else PALETTE.PAPER),
                 breathing=is_current,
             )
 
@@ -491,7 +493,7 @@ def ritual_to_scene(ritual: Ritual, *, show_steps: bool = True) -> SceneGraph:
 
 def witness_dashboard_to_scene(
     walks: Sequence[Walk],
-    traces: Sequence[TraceNode],
+    traces: Sequence[Mark],
     *,
     title: str = "Witness Dashboard",
 ) -> SceneGraph:
@@ -538,16 +540,16 @@ __all__ = [
     "PALETTE",
     "PALETTE_HEX",
     "palette_to_hex",
-    # TraceNode converters
+    # Mark converters
     "trace_node_to_scene",
     "trace_timeline_to_scene",
     # Walk converters
     "walk_to_scene",
     "walk_dashboard_to_scene",
-    # Offering/Covenant converters
+    # Scope/Grant converters
     "offering_to_scene",
     "covenant_to_scene",
-    # Ritual converters
+    # Playbook converters
     "ritual_to_scene",
     # Composite
     "witness_dashboard_to_scene",

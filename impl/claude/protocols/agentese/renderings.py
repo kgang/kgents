@@ -280,7 +280,7 @@ class TemporalRendering:
     Shows traces, scheduled actions, and temporal state.
     """
 
-    trace_count: int = 0
+    mark_count: int = 0
     scheduled_count: int = 0
     earliest_trace: datetime | None = None
     latest_trace: datetime | None = None
@@ -290,7 +290,7 @@ class TemporalRendering:
     def to_dict(self) -> dict[str, Any]:
         return {
             "type": "temporal",
-            "trace_count": self.trace_count,
+            "mark_count": self.mark_count,
             "scheduled_count": self.scheduled_count,
             "earliest_trace": self.earliest_trace.isoformat() if self.earliest_trace else None,
             "latest_trace": self.latest_trace.isoformat() if self.latest_trace else None,
@@ -300,7 +300,7 @@ class TemporalRendering:
 
     def to_text(self) -> str:
         lines = ["TEMPORAL STATE"]
-        lines.append(f"Traces: {self.trace_count} | Scheduled: {self.scheduled_count}")
+        lines.append(f"Traces: {self.mark_count} | Scheduled: {self.scheduled_count}")
         if self.earliest_trace and self.latest_trace:
             lines.append(f"Range: {self.earliest_trace} → {self.latest_trace}")
         if self.next_scheduled:
@@ -491,7 +491,7 @@ class TemporalRenderingFactory:
         next_sched = min((s["at"] for s in scheduled), default=None) if scheduled else None
 
         return TemporalRendering(
-            trace_count=len(traces),
+            mark_count=len(traces),
             scheduled_count=len(scheduled),
             earliest_trace=earliest,
             latest_trace=latest,

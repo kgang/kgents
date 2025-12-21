@@ -108,7 +108,7 @@ class Intent:
 
     Example:
         >>> root = Intent.create(
-        ...     description="Implement TraceNode",
+        ...     description="Implement Mark",
         ...     intent_type=IntentType.IMPLEMENT,
         ... )
         >>> child = Intent.create(

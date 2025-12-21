@@ -95,7 +95,7 @@ DIFFERANCE_BRANCH_AFFORDANCES: tuple[str, ...] = (
 )
 
 
-# === DifferanceTraceNode ===
+# === DifferanceMark ===
 
 
 @node(
@@ -114,7 +114,7 @@ DIFFERANCE_BRANCH_AFFORDANCES: tuple[str, ...] = (
     },
 )
 @dataclass
-class DifferanceTraceNode(BaseLogosNode):
+class DifferanceMark(BaseLogosNode):
     """
     time.differance - Ghost Heritage DAG operations.
 
@@ -152,15 +152,15 @@ class DifferanceTraceNode(BaseLogosNode):
     )
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View current trace state."""
-        trace_count = await self._get_trace_count()
+        mark_count = await self._get_mark_count()
         has_store = self._store is not None
         has_monoid = self._monoid is not None
 
         return BasicRendering(
             summary="Différance Engine",
-            content=f"Wiring traces: {trace_count}",
+            content=f"Wiring traces: {mark_count}",
             metadata={
-                "trace_count": trace_count,
+                "mark_count": mark_count,
                 "store_connected": has_store,
                 "monoid_available": has_monoid,
                 "route": "/differance",
@@ -643,7 +643,7 @@ class DifferanceTraceNode(BaseLogosNode):
 
     # === Helper Methods ===
 
-    async def _get_trace_count(self) -> int:
+    async def _get_mark_count(self) -> int:
         """Get count of traces."""
         if self._store:
             return await self._store.count()
@@ -898,20 +898,20 @@ class BranchNode(BaseLogosNode):
 
 # === Factory Functions ===
 
-_differance_node: DifferanceTraceNode | None = None
+_differance_node: DifferanceMark | None = None
 _branch_node: BranchNode | None = None
 
 
-def get_differance_node() -> DifferanceTraceNode:
-    """Get the singleton DifferanceTraceNode."""
+def get_differance_node() -> DifferanceMark:
+    """Get the singleton DifferanceMark."""
     global _differance_node
     if _differance_node is None:
-        _differance_node = DifferanceTraceNode()
+        _differance_node = DifferanceMark()
     return _differance_node
 
 
-def set_differance_node(node: DifferanceTraceNode | None) -> None:
-    """Set or clear the singleton DifferanceTraceNode."""
+def set_differance_node(node: DifferanceMark | None) -> None:
+    """Set or clear the singleton DifferanceMark."""
     global _differance_node
     _differance_node = node
 
@@ -927,18 +927,18 @@ def get_branch_node() -> BranchNode:
 def create_differance_node(
     store: DifferanceStore | None = None,
     monoid: TraceMonoid | None = None,
-) -> DifferanceTraceNode:
+) -> DifferanceMark:
     """
-    Create a DifferanceTraceNode with optional store.
+    Create a DifferanceMark with optional store.
 
     Args:
         store: DifferanceStore for persistence
         monoid: In-memory TraceMonoid
 
     Returns:
-        Configured DifferanceTraceNode
+        Configured DifferanceMark
     """
-    node = DifferanceTraceNode()
+    node = DifferanceMark()
     if store:
         node.set_store(store)
     if monoid:
@@ -951,7 +951,7 @@ __all__ = [
     "DIFFERANCE_TRACE_AFFORDANCES",
     "DIFFERANCE_BRANCH_AFFORDANCES",
     # Nodes
-    "DifferanceTraceNode",
+    "DifferanceMark",
     "BranchNode",
     # Factories
     "get_differance_node",

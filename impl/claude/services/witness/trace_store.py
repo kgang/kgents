@@ -1,16 +1,16 @@
 """
-TraceNodeStore: Append-Only Ledger for TraceNodes.
+MarkStore: Append-Only Ledger for Marks.
 
-The store enforces the three TraceNode laws:
-- Law 1 (Immutability): TraceNodes cannot be modified after creation
+The store enforces the three Mark laws:
+- Law 1 (Immutability): Marks cannot be modified after creation
 - Law 2 (Causality): link.target.timestamp > link.source.timestamp
-- Law 3 (Completeness): Every AGENTESE invocation emits exactly one TraceNode
+- Law 3 (Completeness): Every AGENTESE invocation emits exactly one Mark
 
 Pattern 7 from crown-jewel-patterns.md: Append-Only History
 "History is a ledger. Modifications are new entries, not edits."
 
 Philosophy:
-    The TraceNodeStore is an append-only ledger. You can add traces,
+    The MarkStore is an append-only ledger. You can add traces,
     but you cannot modify or delete them. This provides:
     - Complete audit trail
     - Causal integrity verification
@@ -29,13 +29,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-from .trace_node import (
+from .mark import (
     LinkRelation,
+    Mark,
+    MarkId,
+    MarkLink,
     NPhase,
     PlanPath,
-    TraceLink,
-    TraceNode,
-    TraceNodeId,
     WalkId,
 )
 
@@ -47,14 +47,14 @@ logger = logging.getLogger("kgents.witness.trace_store")
 # =============================================================================
 
 
-class TraceStoreError(Exception):
+class MarkStoreError(Exception):
     """Base exception for trace store errors."""
 
     pass
 
 
-class CausalityViolation(TraceStoreError):
-    """Raised when a TraceLink violates causality (Law 2)."""
+class CausalityViolation(MarkStoreError):
+    """Raised when a MarkLink violates causality (Law 2)."""
 
     def __init__(self, source_id: str, target_id: str, source_ts: datetime, target_ts: datetime):
         self.source_id = source_id
@@ -67,18 +67,18 @@ class CausalityViolation(TraceStoreError):
         )
 
 
-class DuplicateTraceError(TraceStoreError):
+class DuplicateMarkError(MarkStoreError):
     """Raised when attempting to add a trace with an existing ID."""
 
-    def __init__(self, trace_id: TraceNodeId):
+    def __init__(self, trace_id: MarkId):
         self.trace_id = trace_id
         super().__init__(f"Trace with ID {trace_id} already exists")
 
 
-class TraceNotFoundError(TraceStoreError):
+class MarkNotFoundError(MarkStoreError):
     """Raised when a referenced trace is not found."""
 
-    def __init__(self, trace_id: TraceNodeId):
+    def __init__(self, trace_id: MarkId):
         self.trace_id = trace_id
         super().__init__(f"Trace with ID {trace_id} not found")
 
@@ -89,7 +89,7 @@ class TraceNotFoundError(TraceStoreError):
 
 
 @dataclass(frozen=True)
-class TraceQuery:
+class MarkQuery:
     """
     Query parameters for trace retrieval.
 
@@ -113,14 +113,14 @@ class TraceQuery:
     tags: tuple[str, ...] | None = None
 
     # Link filter (traces with links to/from this ID)
-    links_to: TraceNodeId | None = None
-    links_from: TraceNodeId | None = None
+    links_to: MarkId | None = None
+    links_from: MarkId | None = None
 
     # Limit and offset for pagination
     limit: int | None = None
     offset: int = 0
 
-    def matches(self, node: TraceNode, store: TraceNodeStore) -> bool:
+    def matches(self, node: Mark, store: MarkStore) -> bool:
         """Check if a trace node matches this query."""
         # Time range
         if self.after and node.timestamp <= self.after:
@@ -163,17 +163,17 @@ class TraceQuery:
 
 
 # =============================================================================
-# TraceNodeStore: Append-Only Ledger
+# MarkStore: Append-Only Ledger
 # =============================================================================
 
 
 @dataclass
-class TraceNodeStore:
+class MarkStore:
     """
-    Append-only ledger for TraceNodes.
+    Append-only ledger for Marks.
 
-    Enforces all three TraceNode laws:
-    - Law 1: Immutability (TraceNodes are frozen dataclasses)
+    Enforces all three Mark laws:
+    - Law 1: Immutability (Marks are frozen dataclasses)
     - Law 2: Causality (append validates timestamp ordering)
     - Law 3: Completeness (no external enforcement, but tracked)
 
@@ -183,26 +183,26 @@ class TraceNodeStore:
     - Backlink index (target → sources) for causality traversal
 
     Example:
-        >>> store = TraceNodeStore()
-        >>> node = TraceNode.from_thought("Test", "git", ("test",))
+        >>> store = MarkStore()
+        >>> node = Mark.from_thought("Test", "git", ("test",))
         >>> store.append(node)
         >>> retrieved = store.get(node.id)
         >>> assert retrieved == node
     """
 
-    # Primary storage: ID → TraceNode
-    _nodes: dict[TraceNodeId, TraceNode] = field(default_factory=dict)
+    # Primary storage: ID → Mark
+    _nodes: dict[MarkId, Mark] = field(default_factory=dict)
 
     # Timestamp-ordered list of IDs (for range queries)
-    _timeline: list[TraceNodeId] = field(default_factory=list)
+    _timeline: list[MarkId] = field(default_factory=list)
 
     # Backlink index: target_id → list of (source_id, relation)
-    _backlinks: dict[TraceNodeId, list[tuple[TraceNodeId | PlanPath, LinkRelation]]] = field(
+    _backlinks: dict[MarkId, list[tuple[MarkId | PlanPath, LinkRelation]]] = field(
         default_factory=dict
     )
 
     # Walk index: walk_id → list of trace_ids
-    _walk_index: dict[WalkId, list[TraceNodeId]] = field(default_factory=dict)
+    _walk_index: dict[WalkId, list[MarkId]] = field(default_factory=dict)
 
     # Persistence path (if any)
     _persistence_path: Path | None = None
@@ -219,22 +219,22 @@ class TraceNodeStore:
     # Core Operations
     # =========================================================================
 
-    def append(self, node: TraceNode) -> None:
+    def append(self, node: Mark) -> None:
         """
-        Append a TraceNode to the ledger.
+        Append a Mark to the ledger.
 
         Validates:
         - No duplicate IDs
         - Causality (Law 2) for all links
 
         Raises:
-            DuplicateTraceError: If a trace with this ID exists
+            DuplicateMarkError: If a trace with this ID exists
             CausalityViolation: If any link violates causality
-            TraceNotFoundError: If a link references a non-existent trace
+            MarkNotFoundError: If a link references a non-existent trace
         """
         # Check for duplicate
         if node.id in self._nodes:
-            raise DuplicateTraceError(node.id)
+            raise DuplicateMarkError(node.id)
 
         # Validate links (Law 2: causality)
         for link in node.links:
@@ -261,18 +261,18 @@ class TraceNodeStore:
 
         logger.debug(f"Appended trace {node.id}: {node.origin} / {node.stimulus.kind}")
 
-    def get(self, trace_id: TraceNodeId) -> TraceNode | None:
-        """Get a TraceNode by ID."""
+    def get(self, trace_id: MarkId) -> Mark | None:
+        """Get a Mark by ID."""
         return self._nodes.get(trace_id)
 
-    def get_or_raise(self, trace_id: TraceNodeId) -> TraceNode:
-        """Get a TraceNode by ID, raising if not found."""
+    def get_or_raise(self, trace_id: MarkId) -> Mark:
+        """Get a Mark by ID, raising if not found."""
         node = self.get(trace_id)
         if node is None:
-            raise TraceNotFoundError(trace_id)
+            raise MarkNotFoundError(trace_id)
         return node
 
-    def query(self, query: TraceQuery) -> Iterator[TraceNode]:
+    def query(self, query: MarkQuery) -> Iterator[Mark]:
         """
         Query traces matching the given criteria.
 
@@ -299,18 +299,18 @@ class TraceNodeStore:
             yield node
             count += 1
 
-    def count(self, query: TraceQuery | None = None) -> int:
+    def count(self, query: MarkQuery | None = None) -> int:
         """Count traces matching the query (or all traces if no query)."""
         if query is None:
             return len(self._nodes)
         return sum(1 for _ in self.query(query))
 
-    def all(self) -> Iterator[TraceNode]:
+    def all(self) -> Iterator[Mark]:
         """Iterate over all traces in timestamp order."""
         for trace_id in self._timeline:
             yield self._nodes[trace_id]
 
-    def recent(self, limit: int = 10) -> list[TraceNode]:
+    def recent(self, limit: int = 10) -> list[Mark]:
         """Get the most recent traces."""
         return [self._nodes[tid] for tid in self._timeline[-limit:]]
 
@@ -318,20 +318,21 @@ class TraceNodeStore:
     # Causal Graph Navigation
     # =========================================================================
 
-    def get_causes(self, trace_id: TraceNodeId) -> list[TraceNode]:
+    def get_causes(self, trace_id: MarkId) -> list[Mark]:
         """Get all traces that caused this trace (incoming CAUSES links)."""
         backlinks = self._backlinks.get(trace_id, [])
         causes = []
         for source, relation in backlinks:
             if relation == LinkRelation.CAUSES:
-                if isinstance(source, str) and not source.startswith("trace-"):
-                    continue  # Skip plan paths
-                source_node = self.get(TraceNodeId(str(source)))
+                # Skip plan paths (they're not mark IDs)
+                if isinstance(source, str) and not source.startswith("mark-"):
+                    continue
+                source_node = self.get(MarkId(str(source)))
                 if source_node:
                     causes.append(source_node)
         return causes
 
-    def get_effects(self, trace_id: TraceNodeId) -> list[TraceNode]:
+    def get_effects(self, trace_id: MarkId) -> list[Mark]:
         """Get all traces caused by this trace (outgoing CAUSES links)."""
         effects = []
         for node in self.all():
@@ -340,7 +341,7 @@ class TraceNodeStore:
                     effects.append(node)
         return effects
 
-    def get_continuation(self, trace_id: TraceNodeId) -> list[TraceNode]:
+    def get_continuation(self, trace_id: MarkId) -> list[Mark]:
         """Get traces that continue this trace (CONTINUES relation)."""
         continuations = []
         for node in self.all():
@@ -349,7 +350,7 @@ class TraceNodeStore:
                     continuations.append(node)
         return continuations
 
-    def get_branches(self, trace_id: TraceNodeId) -> list[TraceNode]:
+    def get_branches(self, trace_id: MarkId) -> list[Mark]:
         """Get traces that branch from this trace (BRANCHES relation)."""
         branches = []
         for node in self.all():
@@ -358,7 +359,7 @@ class TraceNodeStore:
                     branches.append(node)
         return branches
 
-    def get_fulfillments(self, trace_id: TraceNodeId) -> list[TraceNode]:
+    def get_fulfillments(self, trace_id: MarkId) -> list[Mark]:
         """Get traces that fulfill intents in this trace (FULFILLS relation)."""
         fulfillments = []
         for node in self.all():
@@ -367,7 +368,7 @@ class TraceNodeStore:
                     fulfillments.append(node)
         return fulfillments
 
-    def get_walk_traces(self, walk_id: WalkId) -> list[TraceNode]:
+    def get_walk_traces(self, walk_id: WalkId) -> list[Mark]:
         """Get all traces in a specific Walk."""
         trace_ids = self._walk_index.get(walk_id, [])
         return [self._nodes[tid] for tid in trace_ids]
@@ -376,13 +377,13 @@ class TraceNodeStore:
     # Validation
     # =========================================================================
 
-    def _validate_link(self, node: TraceNode, link: TraceLink) -> None:
+    def _validate_link(self, node: Mark, link: MarkLink) -> None:
         """
-        Validate a TraceLink for causality (Law 2).
+        Validate a MarkLink for causality (Law 2).
 
         Raises:
             CausalityViolation: If target.timestamp <= source.timestamp
-            TraceNotFoundError: If source trace doesn't exist (for trace links)
+            MarkNotFoundError: If source trace doesn't exist (for trace links)
         """
         # Plan links don't need timestamp validation
         if isinstance(link.source, str) and (
@@ -391,11 +392,11 @@ class TraceNodeStore:
             return
 
         # Get source trace
-        source_id = TraceNodeId(str(link.source))
+        source_id = MarkId(str(link.source))
         source_node = self.get(source_id)
 
         if source_node is None:
-            raise TraceNotFoundError(source_id)
+            raise MarkNotFoundError(source_id)
 
         # Law 2: target.timestamp > source.timestamp
         if node.timestamp <= source_node.timestamp:
@@ -422,7 +423,7 @@ class TraceNodeStore:
         logger.info(f"Saved {len(self._nodes)} traces to {path}")
 
     @classmethod
-    def load(cls, path: Path | str) -> TraceNodeStore:
+    def load(cls, path: Path | str) -> MarkStore:
         """Load a store from a JSON file."""
         path = Path(path)
         data = json.loads(path.read_text())
@@ -431,7 +432,7 @@ class TraceNodeStore:
         store._persistence_path = path
 
         for node_data in data.get("nodes", []):
-            node = TraceNode.from_dict(node_data)
+            node = Mark.from_dict(node_data)
             # Skip validation on load (data was validated on append)
             store._nodes[node.id] = node
             store._timeline.append(node.id)
@@ -484,7 +485,7 @@ class TraceNodeStore:
         """Return the number of traces in the store."""
         return len(self._nodes)
 
-    def __contains__(self, trace_id: TraceNodeId) -> bool:
+    def __contains__(self, trace_id: MarkId) -> bool:
         """Check if a trace ID exists in the store."""
         return trace_id in self._nodes
 
@@ -493,24 +494,24 @@ class TraceNodeStore:
 # Global Store Factory
 # =============================================================================
 
-_global_store: TraceNodeStore | None = None
+_global_store: MarkStore | None = None
 
 
-def get_trace_store() -> TraceNodeStore:
+def get_mark_store() -> MarkStore:
     """Get the global trace store (singleton)."""
     global _global_store
     if _global_store is None:
-        _global_store = TraceNodeStore()
+        _global_store = MarkStore()
     return _global_store
 
 
-def set_trace_store(store: TraceNodeStore) -> None:
+def set_mark_store(store: MarkStore) -> None:
     """Set the global trace store (for testing)."""
     global _global_store
     _global_store = store
 
 
-def reset_trace_store() -> None:
+def reset_mark_store() -> None:
     """Reset the global trace store (for testing)."""
     global _global_store
     _global_store = None
@@ -522,16 +523,16 @@ def reset_trace_store() -> None:
 
 __all__ = [
     # Exceptions
-    "TraceStoreError",
+    "MarkStoreError",
     "CausalityViolation",
-    "DuplicateTraceError",
-    "TraceNotFoundError",
+    "DuplicateMarkError",
+    "MarkNotFoundError",
     # Query
-    "TraceQuery",
+    "MarkQuery",
     # Store
-    "TraceNodeStore",
+    "MarkStore",
     # Global factory
-    "get_trace_store",
-    "set_trace_store",
-    "reset_trace_store",
+    "get_mark_store",
+    "set_mark_store",
+    "reset_mark_store",
 ]
