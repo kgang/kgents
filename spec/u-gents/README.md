@@ -312,7 +312,7 @@ Every execution is traced via W-gent. Full visibility into tool call trees.
 
 ## Migration Note
 
-> **Former "Understudy" content**: The U-gent letter previously specified knowledge distillation ("The Understudy"). That content has been migrated to [B-gent/distillation.md](../b-gents/distillation.md) as it is fundamentally an *economic optimization*, not a core agent capability. U now represents **Utility** agents—the Tool Use framework.
+> **Former "Understudy" content**: The U-gent letter previously specified knowledge distillation ("The Understudy"). That content has been absorbed into [B-gent/banker.md](../b-gents/banker.md) (see Distillation Economics section) as it is fundamentally an *economic optimization*, not a core agent capability. U now represents **Utility** agents—the Tool Use framework.
 
 ---
 
@@ -324,7 +324,7 @@ Every execution is traced via W-gent. Full visibility into tool call trees.
 - [../d-gents/](../d-gents/) - D-gents: Caching integration
 - [../l-gents/](../l-gents/) - L-gents: Tool discovery
 - [../w-gents/](../w-gents/) - W-gents: Observability
-- [../b-gents/distillation.md](../b-gents/distillation.md) - Distillation (former Understudy)
+- [../b-gents/banker.md](../b-gents/banker.md) - Banker (includes distillation economics)
 
 ---
 

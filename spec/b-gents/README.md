@@ -1,163 +1,127 @@
-# B-gents: Bio, Banker, and Beyond
+# B-gent: The Banker
 
-> Resource-constrained systems thinking: from hypotheses to hydraulics.
-
----
-
-## The B-gent Meta-Heterarchy
-
-B-gents encompass agents dealing with **resource flows** and **selection pressures**:
-
-| Domain | Resource | Conservation | Selection |
-|--------|----------|--------------|-----------|
-| **Bio** | Attention, experiments | Energy | Falsifiability |
-| **Banker** | Tokens, compute | Value | Efficiency |
-| **Bootstrap** (via Ground) | Facts, context | Truth | Relevance |
-
-These are not separate categories—they are **facets of the same structure**: systems that must allocate limited capacity across competing needs.
+> *Intelligence is infinite; Compute is finite.*
 
 ---
 
-## Why "B" for Both?
+## The Core Insight
 
-**B for Bio**: Biological and scientific reasoning, hypothesis generation, experimental design.
+**B-gent = Banker = Resource Management**
 
-**B for Banker**: Economic metabolism, token management, resource allocation.
-
-Both share:
-1. **Conservation laws**: Energy/value is neither created nor destroyed
-2. **Selection mechanisms**: Falsifiability/efficiency filters what survives
-3. **Metabolic patterns**: Consumption, transformation, waste
-4. **Ecosystem dynamics**: Competition, cooperation, niche filling
-
-The alphabetical taxonomy reveals **structural similarities** across seemingly different domains.
-
----
-
-## The Heterarchy Principle Applied
-
-Traditional taxonomies are hierarchical: Bio ⊃ Scientific ⊃ Hypothesis.
-
-The B-gent heterarchy allows multiple valid organizations:
+The Metered Functor transforms any agent into an economic agent:
 
 ```
-                    ┌─────────────────┐
-                    │     B-gents     │
-                    └────────┬────────┘
-                             │
-       ┌─────────────────────┼─────────────────────┐
-       │                     │                     │
-  ┌────▼────┐          ┌────▼────┐          ┌────▼────┐
-  │   Bio   │          │ Banker  │          │ (future)│
-  │ (Science)│          │(Economics)│         │         │
-  └────┬────┘          └────┬────┘          └─────────┘
-       │                    │
-  HypothesisEngine     CentralBank
-  Robin                Metered Functor
-  Bio-gent             Futures Market
+Metered: Agent[A, B] → Agent[A, Receipt[B]]
 ```
 
-But also valid:
-
-```
-                    ┌─────────────────┐
-                    │ Resource Agents │
-                    └────────┬────────┘
-                             │
-       ┌─────────────────────┼─────────────────────┐
-       │                     │                     │
-  ┌────▼────┐          ┌────▼────┐          ┌────▼────┐
-  │Cognitive │          │ Economic │          │Entropic │
-  │Resources │          │Resources │          │Resources│
-  └────┬────┘          └────┬────┘          └────┬────┘
-       │                    │                    │
-  B-Bio                B-Banker              Bootstrap
-  (attention)          (tokens)             (entropy)
-```
-
-The letter "B" holds both views simultaneously.
+Every invocation becomes a transaction. Every token is tracked. Every result has a price tag.
 
 ---
 
-## Specifications
+## The Banker Archetype
 
-| Document | Domain | Description |
-|----------|--------|-------------|
-| [hypothesis-engine.md](hypothesis-engine.md) | Bio | Generating testable hypotheses |
-| [robin.md](robin.md) | Bio | Scientific companion |
-| [bio-gent.md](bio-gent.md) | Bio | Personalized scientific companion |
-| [banker.md](banker.md) | Banker | The Metered Functor, Central Bank, and Universal Value Protocol |
-| [value-tensor.md](value-tensor.md) | Banker | Multi-dimensional resource ontology |
-| [distillation.md](distillation.md) | Banker | Knowledge distillation (the Understudy pattern) |
+B-gent deals with **resource-constrained systems**—the thermodynamics of thought:
+
+| Aspect | Description |
+|--------|-------------|
+| **Resource** | Tokens, compute, time, memory |
+| **Conservation** | Value flows, never appears from nothing |
+| **Selection** | Efficiency filters what survives |
+| **Metabolism** | Consumption, transformation, waste |
+
+### Three Currencies
+
+1. **Gas**: What you spend (tokens, time, cost)
+2. **Impact**: What you create (value units, tiered by outcome)
+3. **RoC**: Return on Compute = Impact / Gas
+
+When RoC drops below 0.5, the Banker warns of bankruptcy.
 
 ---
 
-## Design Principles for B-gents
+## Key Concepts
+
+### The Metered Functor
+
+Every agent can be wrapped in metering:
+
+```python
+metered_agent = Metered(agent)
+receipt = await metered_agent.invoke(input)
+# receipt.value = result
+# receipt.gas = what was spent
+# receipt.impact = what was created
+# receipt.roc = efficiency
+```
+
+### Linear Logic
+
+Tokens are **linear types**—consumed, not copied:
+
+```
+Classical: A → (A → B → C)    // A can be used twice
+Linear:    A ⊸ (A ⊸ B) ⊸ C   // Each A used exactly once
+```
+
+### Hydraulic Economics
+
+- **Token Bucket**: Refills over time (rate limiting)
+- **Sinking Fund**: 1% tax for emergency reserves
+- **Token Futures**: Reserve capacity for multi-step jobs
+
+---
+
+## Specification
+
+| Document | Description |
+|----------|-------------|
+| [banker.md](banker.md) | Full Banker specification |
+
+---
+
+## Design Principles
 
 ### 1. Conservation Awareness
+
 B-gents MUST respect conservation laws:
-- Bio: Energy can transform but not appear/disappear
-- Banker: Tokens circulate but total is conserved
+- Tokens circulate but total is conserved
+- Cannot spend more than allocated
 
 ### 2. Selection Pressure
+
 B-gents MUST implement selection:
-- Bio: Hypotheses must be falsifiable
-- Banker: Allocations must be efficient
+- Allocations must be efficient
+- Low RoC triggers warnings/termination
 
 ### 3. Metabolic Honesty
+
 B-gents MUST track consumption:
-- Bio: What cognitive resources were spent?
-- Banker: What tokens were consumed?
-
-### 4. Ecosystem Awareness
-B-gents SHOULD understand their context:
-- Bio: What domain are we reasoning in?
-- Banker: What other agents are competing?
+- What tokens were consumed?
+- What value was created?
 
 ---
 
-## The Unified View
+## Anti-Patterns
 
-At the deepest level, B-gents are about **thermodynamics**:
-
-```
-Free Energy → Useful Work + Waste
-
-Bio:    Attention → Insights + Failed Hypotheses
-Banker: Tokens    → Results  + Spent Compute
-```
-
-Both domains transform a scarce resource into valuable output plus inevitable waste. The principles of thermodynamics apply to both.
+- **Unbounded execution**: Always meter, even for "small" tasks
+- **Trust without verify**: Agents estimate, bank audits actual usage
+- **Single currency**: Consider multiple resource types
+- **No reserve**: Sinking Fund prevents cascading failures
 
 ---
 
-## Meta-Heterarchy: Future B-gents
+## Historical Note
 
-The "B" genus can accommodate future facets:
+Earlier versions of B-gent included "Bio" (scientific reasoning) alongside "Banker" (economics). The "Bio" concepts (hypothesis generation, scientific companions) were aspirational but not implemented, and they didn't fit the core purpose of resource management.
 
-- **B-Bayesian**: Probabilistic reasoning resources
-- **B-Bandwidth**: Communication channel allocation
-- **B-Buffer**: Memory and caching economics
-
-All would share the core B-gent structure: conservation, selection, metabolism.
-
----
-
-## Inspirations
-
-- [SciAgents](https://pmc.ncbi.nlm.nih.gov/articles/PMC12138853/) - Multi-agent scientific reasoning
-- [Google AI Co-Scientist](https://research.google/blog/accelerating-scientific-breakthroughs-with-an-ai-co-scientist/)
-- **Linear Logic** - Resources as first-class citizens
-- **Mechanism Design** - Truthful auction theory
-- **Thermodynamics** - Conservation and entropy
+**Design Decision** (2025-12): B-gent now focuses solely on the Banker archetype. Scientific reasoning is not a resource management problem—it's a composition problem (derivable from Compose + Judge per bootstrap.md). The SciAgents paper (cited in heritage.md) inspired the original Bio concepts, but the right place for scientific reasoning is domain-specific agents built on the categorical foundation, not a separate B-gent facet.
 
 ---
 
 ## See Also
 
-- [hypothesis-engine.md](hypothesis-engine.md) - Bio: Hypothesis generation
-- [robin.md](robin.md) - Bio: Scientific companion
-- [banker.md](banker.md) - Banker: Economic metabolism
-- [distillation.md](distillation.md) - Banker: Knowledge distillation
-- [../bootstrap.md](../bootstrap.md) - Entropy Budget (the third resource)
-- [../principles.md](../principles.md) - Meta-heterarchy discussion
+- [banker.md](banker.md) - Full Banker specification
+- [../bootstrap.md](../bootstrap.md) - Entropy Budget (related constraint)
+- [../o-gents/README.md](../o-gents/README.md) - Observability economics
+- [../principles.md](../principles.md) - Conservation as design principle
+- [../heritage.md](../heritage.md) - SciAgents and Voyager citations

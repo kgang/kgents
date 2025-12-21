@@ -290,7 +290,7 @@ class DriftDetector:
 
 O-gents integrate with **B-gents** (Bankers) to ensure the system isn't just working, but is *profitable* (in terms of utility vs. compute).
 
-**Integrates with**: [B-gents ValueTensor](../b-gents/value-tensor.md) and [UVP](../b-gents/banker.md).
+**Integrates with**: [B-gent Banker](../b-gents/banker.md) (Gas/Impact/RoC).
 
 ### ValueLedgerObserver
 
@@ -805,7 +805,7 @@ class OGentEpistemicState:
 - [h-gents/lacan.md](../h-gents/lacan.md) - RSI primitives for Borromean validation
 - [b-gents/banker.md](../b-gents/banker.md) - UVP and economic substrate
 - [b-gents/banker.md#part-iii-value-of-information-voi](../b-gents/banker.md#part-iii-value-of-information-voi--economics-of-observation) - **VoI framework for observation economics**
-- [b-gents/value-tensor.md](../b-gents/value-tensor.md) - Multi-dimensional value accounting
+- [b-gents/banker.md](../b-gents/banker.md) - Gas/Impact/RoC value accounting
 - [w-gents/](../w-gents/) - Wire (visualization of O-gent data)
 - [n-gents/](../n-gents/) - Narrator (stories, not metrics)
 - [i-gents/](../i-gents/) - Interface (ecosystem visualization)
