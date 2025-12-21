@@ -528,18 +528,28 @@ A D-gent is well-designed if:
 
 ---
 
-## Relationship to S-gent
+## State Threading (The State Functor)
 
-D-gent and S-gent are **orthogonal but composable**:
+D-gent owns both **persistence** (WHERE state lives) and **state threading** (HOW state flows).
 
-| Concern | Agent | Responsibility |
-|---------|-------|----------------|
-| **WHERE** state lives | D-gent | Persistence substrate (backends, projection lattice) |
-| **HOW** state flows | S-gent | State threading through computation |
+| Concern | Mechanism | Documentation |
+|---------|-----------|---------------|
+| **WHERE** state lives | DgentProtocol, backends, projection lattice | This spec |
+| **HOW** state flows | State Functor, Symbiont pattern | `c-gents/functor-catalog.md` §14 |
 
-The Symbiont pattern is `S >> D`: state threading backed by persistence.
+The **Symbiont pattern** is the canonical composition of state threading backed by persistence:
 
-See: [../s-gents/README.md](../s-gents/README.md) for S-gent specification.
+```python
+Symbiont = StateFunctor[S].lift_logic(f) where backend is D-gent
+```
+
+**Why consolidated?** The State Functor is:
+1. A **functor** (belongs in functor catalog, not as separate genus)
+2. An **ergonomic pattern** (Symbiont, already documented here)
+
+State threading without persistence is incomplete. Persistence without state threading is just storage. They are one system.
+
+See: [symbiont.md](symbiont.md) for the ergonomic pattern, [../c-gents/functor-catalog.md](../c-gents/functor-catalog.md) §14 for the formal functor.
 
 ---
 

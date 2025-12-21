@@ -1,8 +1,9 @@
 """
 StateFunctor: The State Monad as a Universal Functor.
 
-This module implements S-gent's core abstraction: lifting agents into
-stateful computation where state is transparently loaded and saved.
+DEPRECATED: For most use cases, prefer Symbiont from agents.d which provides
+the same functionality with a simpler API. This module remains for backwards
+compatibility and advanced use cases (Flux composition, functor registry).
 
 Category-theoretic insight:
     StateFunctor[S]: Agent[A, B] → StatefulAgent[S, A, B]
@@ -19,7 +20,11 @@ Functor Laws:
 
 Relationship to Symbiont:
     StateFunctor.lift_logic(f) ≡ Symbiont(logic=f, memory=backend)
-    StateFunctor is the general form; Symbiont is the ergonomic pattern.
+    Symbiont is the ergonomic pattern; StateFunctor is the formal functor.
+
+See Also:
+    - spec/c-gents/functor-catalog.md §14 — State Functor specification
+    - agents.d.Symbiont — The preferred ergonomic pattern
 """
 
 from __future__ import annotations

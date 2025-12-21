@@ -53,7 +53,7 @@ Each functor transforms a polynomial agent `P(y) = Σ_{s ∈ S} y^{E(s)}` accord
 | **Trace** | `Agent[A,B] → Agent[A,B]` | W | 🔄 Implicit | Observability wrapping |
 | **Sandbox** | `Agent[A,B] → Agent[A,B]` | J | 🔄 Implicit | Safety isolation |
 | **Flux** | `Agent[A,B] → Agent[Flux[A], Flux[B]]` | C | 🔄 Planned | Discrete → Continuous flow |
-| **State** | `Agent[A,B] → StatefulAgent[S,A,B]` | S | ✅ Specified | State threading (monad) |
+| **State** | `Agent[A,B] → StatefulAgent[S,A,B]` | D | ✅ Specified | State threading (monad) |
 
 ---
 
@@ -348,27 +348,107 @@ where `LoadSave = { LOADING, READY, SAVING }`
 
 **Transform:** Adds monad fiber—state S flows through computation as monad, with load/save as effect handlers.
 
-**Description:** State is loaded before invocation, passed to inner agent as extended input `(A, S)`, saved after invocation.
+### Core Insight: State Threading
 
-**Laws:**
-- Identity: `State.lift(Id) ≅ Id`
-- Composition: `State.lift(f >> g) ≅ State.lift(f) >> State.lift(g)`
+State is orthogonal to persistence:
+- **D-gent**: WHERE state lives (memory, file, database)
+- **State Functor**: HOW state threads through computation
 
-**Relationship to Symbiont:**
+The State Functor lifts agents into stateful computation where state is:
+1. Loaded before each invocation
+2. Threaded through the computation
+3. Saved after each invocation
+
 ```python
-Symbiont = State[S].lift_logic(f) where backend is D-gent
+@dataclass
+class StateFunctor(Generic[S]):
+    """State Monad as first-class functor."""
+    state_type: type[S]
+    backend: DgentProtocol  # WHERE state lives
+    initial_state: S | None = None
+
+    def lift(self, agent: Agent[A, B]) -> StatefulAgent[S, A, B]:
+        """Lift agent into stateful computation."""
+        return StatefulAgent(inner=agent, backend=self.backend, ...)
+
+    def lift_logic(self, logic: Callable[[A, S], tuple[B, S]]) -> StatefulAgent[S, A, B]:
+        """Lift pure logic function directly (the Symbiont pattern)."""
+        return self.lift(_LogicAgent(logic))
 ```
 
-The Symbiont pattern is the canonical composition of S-gent (state threading) and D-gent (persistence).
+### Laws
 
-**Composition with Flux:**
-```
-Flux ∘ State: Agent[A, B] → FluxAgent[A, B] with state threading
-# Creates streaming agent where each event: load state → process → save → yield
+| Law | Statement | Verification |
+|-----|-----------|--------------|
+| Identity | `StateFunctor.lift(Id) ≅ Id` | `test_state_identity_law` |
+| Composition | `lift(f >> g) ≅ lift(f) >> lift(g)` | `test_state_composition_law` |
+
+**Proof Sketch (Identity):**
+1. `StateFunctor.lift(Id)` wraps identity in StatefulAgent
+2. `StatefulAgent.invoke(a)` loads S, calls `Id(a, S)` → `(a, S)`, saves S, returns a
+3. Net effect: input a → output a ≡ Id (modulo state I/O overhead)
+
+**Proof Sketch (Composition):**
+- LHS `lift(f >> g)`: Single load/save, sequential invoke
+- RHS `lift(f) >> lift(g)`: Two load/save cycles
+- Both produce same final state S₂ and output c
+- Behavioral equivalence (intermediate saves are implementation detail)
+
+### The Symbiont Pattern (Canonical Usage)
+
+**Symbiont IS StateFunctor.lift_logic with a D-gent backend:**
+
+```python
+# These are equivalent:
+symbiont = Symbiont(logic=chat_logic, memory=dgent_memory)
+
+stateful = StateFunctor(
+    state_type=ConversationState,
+    backend=dgent_memory,
+).lift_logic(chat_logic)
 ```
 
-**Status:** ✅ Specified in `spec/s-gents/`
-**Impl:** `impl/claude/agents/d/state_functor.py`
+Symbiont is the **ergonomic pattern**; StateFunctor is the **formal functor**.
+Use Symbiont for direct usage; use StateFunctor when you need:
+- Flux composition (`StateFunctor.compose_flux`)
+- Law verification
+- Functor registry integration
+
+### Composition with Flux
+
+```python
+FluxState = StateFunctor.compose_flux(state_functor)
+flux_stateful = FluxState(process_agent)
+
+async for result in flux_stateful.start(event_source):
+    # Each event: load state → process → save → yield
+    print(result)
+```
+
+**Composition Hierarchy:**
+```
+Flux ∘ State ∘ D-gent
+Level 3: Flux        — Continuous event processing
+Level 2: State       — State threading
+Level 1: D-gent      — Persistence substrate
+Level 0: Pure logic  — (I, S) → (O, S)
+```
+
+### State Threading Invariants
+
+1. **Load-Before-Invoke**: State always loaded before inner agent invocation
+2. **Save-After-Complete**: State saved only after successful invocation
+3. **State Isolation**: Each StatefulAgent has isolated state via namespace
+
+### Anti-Patterns
+
+- **State without persistence**: Use D-gent backend, not in-memory only
+- **Bypassing state loading**: Always go through StatefulAgent.invoke()
+- **Mutable state in logic**: Logic function must be pure `(A, S) → (B, S)`
+
+**Status:** ✅ Specified (formerly `spec/s-gents/`, now consolidated here)
+**Impl:** `impl/claude/agents/d/symbiont.py`
+**Ergonomic Pattern:** `spec/d-gents/symbiont.md`
 
 ---
 

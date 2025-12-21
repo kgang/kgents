@@ -5,10 +5,10 @@ The Symbiont pattern embodies endosymbiotic composition where pure logic
 (the "host") gains memory through integration with a D-gent (the "organelle").
 
 Category-theoretic insight:
-    Symbiont IS StateFunctor.lift_logic with a state backend.
-    It's the canonical composition of S-gent (state threading) and D-gent (persistence).
+    Symbiont IS StateFunctor.lift_logic with a D-gent backend.
+    It's the canonical composition of state threading and persistence.
 
-Relationship to S-gent:
+Relationship to State Functor:
     Symbiont(logic, memory) ≡ StateFunctor.create(backend=memory).lift_logic(logic)
 
     Symbiont is the ergonomic pattern; StateFunctor is the formal functor.
@@ -18,22 +18,19 @@ Relationship to S-gent:
     - Functor registry integration
 
 See Also:
-    - agents.s.StateFunctor — The formal State functor
-    - agents.s.StatefulAgent — The lifted agent type
-    - spec/s-gents/README.md — S-gent specification
+    - spec/c-gents/functor-catalog.md §14 — State Functor specification
+    - spec/d-gents/symbiont.md — Symbiont pattern documentation
 """
 
 from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Awaitable, Callable, Generic, TypeVar, Union, cast
+from typing import Awaitable, Callable, Generic, TypeVar, Union, cast
 
 from agents.poly.types import Agent
 
-if TYPE_CHECKING:
-    from agents.s.protocol import StateBackend
-
+# Note: StateBackend is a duck-typed protocol compatible with DataAgent
 from .protocol import DataAgent
 
 S = TypeVar("S")  # State
@@ -41,8 +38,8 @@ In = TypeVar("In")  # Input
 Out = TypeVar("Out")  # Output
 
 # Type alias: Symbiont accepts any object with load/save methods
-# This includes DataAgent[S], StateBackend[S], VolatileAgent, etc.
-MemoryProtocol = Union[DataAgent[S], "StateBackend[S]"]
+# This includes DataAgent[S], VolatileAgent, any StateBackend-compatible type, etc.
+MemoryProtocol = DataAgent[S]
 
 
 @dataclass
@@ -55,8 +52,8 @@ class Symbiont(Agent[In, Out], Generic[In, Out, S]):
 
     This makes Symbiont a valid bootstrap Agent, composable via >>.
 
-    Symbiont IS the canonical S >> D pattern:
-    - S-gent: State threading (via logic function)
+    Symbiont IS the canonical state threading + D-gent pattern:
+    - State threading: Via logic function signature (I, S) → (O, S)
     - D-gent: Persistence (via memory backend)
 
     Example:
@@ -70,11 +67,9 @@ class Symbiont(Agent[In, Out], Generic[In, Out, S]):
         >>> chatbot = Symbiont(logic=chat_logic, memory=memory)
         >>> await chatbot.invoke("Hello")  # Returns "Echo: Hello"
 
-    Equivalent to:
-        >>> from agents.s import StateFunctor, MemoryStateBackend
-        >>> backend = MemoryStateBackend(initial=[])
-        >>> functor = StateFunctor.create(backend=backend)
-        >>> chatbot = functor.lift_logic(chat_logic)
+    See Also:
+        - spec/c-gents/functor-catalog.md §14 for State Functor formalism
+        - spec/d-gents/symbiont.md for pattern documentation
     """
 
     logic: Union[

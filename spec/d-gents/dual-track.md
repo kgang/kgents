@@ -222,12 +222,12 @@ class CitizenConversation(Base):
 
 ---
 
-## Relationship to S-gent
+## State Threading (State Functor Integration)
 
 The dual-track architecture provides the **persistence substrate**.
-S-gent (StateFunctor) provides the **state threading**.
+The State Functor provides the **state threading**.
 
-Composition: `S >> D`
+Composition: `StateFunctor >> D-gent`
 
 ```python
 # StateFunctor backed by TableAdapter
@@ -236,8 +236,10 @@ state_functor = StateFunctor.from_table_adapter(
     initial_state=Crystal(id="default", tags=[]),
 )
 
-# Result: state threading (S-gent) + typed persistence (dual-track D-gent)
+# Result: state threading + typed persistence (dual-track D-gent)
 ```
+
+See `c-gents/functor-catalog.md` §14 for State Functor specification.
 
 ---
 
@@ -254,8 +256,8 @@ state_functor = StateFunctor.from_table_adapter(
 
 - [architecture.md](architecture.md) — D-gent core architecture
 - [protocols.md](protocols.md) — DgentProtocol interface
-- [symbiont.md](symbiont.md) — The S >> D composition pattern
-- [../s-gents/README.md](../s-gents/README.md) — S-gent (StateFunctor) specification
+- [symbiont.md](symbiont.md) — The Symbiont composition pattern
+- [../c-gents/functor-catalog.md](../c-gents/functor-catalog.md) — Functor catalog (§14: State Functor)
 
 ---
 
