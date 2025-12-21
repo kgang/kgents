@@ -196,7 +196,7 @@ Growing        Witness ███████████████▒▒▒ 75
 Read [CLAUDE.md](CLAUDE.md) first. It contains:
 - **Anti-Sausage Protocol**: Kent's voice gets diluted through LLM processing. Quote directly; don't paraphrase.
 - **Skills-First**: The 13 skills in `docs/skills/` cover every task. Read them before building.
-- **DI Silent Skip**: Container silently skips unregistered dependencies. Check `services/providers.py`.
+- **DI Enlightened Resolution**: Required deps fail fast with actionable errors. Optional deps (`= None`) degrade gracefully.
 - **Voice Anchors**: *"Daring, bold, creative, opinionated but not gaudy"*, *"Tasteful > feature-complete"*
 
 The Mirror Test: *"Does this feel like Kent on his best day?"*

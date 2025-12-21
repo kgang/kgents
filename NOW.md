@@ -7,54 +7,25 @@
 
 ## Current Work
 
-**KGENTSD: THE 8TH CROWN JEWEL** — Ghost→kgentsd transformation. Event-driven daemon with Trust Level 3 (full Kent autonomy). See `plans/kgentsd-crown-jewel.md`.
+**CROWN JEWEL CLEANUP** — Major pruning. Removing Town, Park, Forge, Gestalt, Witness, Differance, Chat, Cockpit, Workshop, Emergence UI. Keeping Brain, Galleries, OS-Shell. See `plans/crown-jewel-cleanup.md`.
 
-| Plan | Status | Key Focus |
-|------|--------|-----------|
-| `plans/kgentsd-crown-jewel.md` | **Phase 2 IN PROGRESS** | Cross-jewel handlers, bus wiring |
-
-**Phase 1 Complete** (Event-Driven Flux Integration):
-- ✅ `GitWatcherFlux` (DORMANT → FLOWING → STOPPED state machine, 9 tests)
-- ✅ `WitnessSynergyBus` + `WitnessEventBus` (three-bus architecture, 15 tests)
-- ✅ `WitnessBusManager` (orchestrator with cross-jewel wiring)
-- ✅ Daemon is now pure event publisher (no HTTP coupling)
-- ✅ 72 witness tests passing, mypy clean
-
-**Phase 2 Progress** (Cross-Jewel Awakening):
-- ✅ `Jewel.WITNESS` added to synergy events
-- ✅ 5 new event types: `WITNESS_THOUGHT_CAPTURED`, `WITNESS_GIT_COMMIT`, etc.
-- ✅ `WitnessToBrainHandler` (thoughts → crystals, auto-capture)
-- ✅ `WitnessToGardenHandler` (commits → plot updates)
-- ✅ `wire_witness_to_global_synergy()` bridge function
-- ✅ `register_witness_handlers()` for global bus
-- ✅ 18 new handler tests (90 total witness-related tests)
-- 🔲 CLI handler (`kg witness logs` command)
+| Status | Progress |
+|--------|----------|
+| Frontend pages | 17 pages deleted (Canvas, Chat, Cockpit, DesignSystem, Differance, Emergence, Forge, Gestalt, Inhabit, ParkScenario, Soul, Town×4, Witness, Workshop) |
+| Frontend components | ~100 component files deleted (17 directories) |
+| Shell updates | CrownJewelsSection → Brain only, ToolsSection removed, registry simplified |
+| Staged | ~5000 lines deleted, cleanup in progress |
 
 ---
 
-**UMWELT V2 EXPANSION** — Observer reality deepening. See `plans/umwelt-v2-expansion.md`.
+**ASHC WORK** — New ashc service with checker and obligation modules. Interactive text gallery added.
 
-| Phase | Status | Key Focus |
-|-------|--------|-----------|
-| Phase 0 | ✅ **COMPLETE** | Correctness foundation: registry-backed capabilities |
-| Phase 1 | NEXT | Education: PathExplorer dimming, Ghost interaction |
-
-**Phase 0 Deliverables** (2025-12-19):
-- ✅ `@aspect(required_capability=...)` decorator v3.3
-- ✅ `/discover` returns per-aspect `aspectMetadata` with `requiredCapability`
-- ✅ Frontend: `getRequiredCapability()` uses registry with heuristic fallback
-- ✅ Frontend: `hasContract` wired from aspect metadata
-- ✅ `useObserverPersistence` hook created
-
----
-
-**AGENTESE NODE OVERHAUL** — Sessions 1-6 + Phases 4-5 COMPLETE. See `plans/agentese-node-overhaul-strategy.md`.
-
-| Session | Status | Key Deliverables |
-|---------|--------|------------------|
-| Sessions 1-6 | ✅ | Projections, Gardener/Soul wiring, Park Scenarios, SSE Streaming |
-| **Session 7** | **NEXT** | **Neutral Error UX** — consistent errors, actionable hints |
-| Sessions 8-10 | Pending | Observer audit, CI gates, E2E tests |
+| Item | Status |
+|------|--------|
+| `services/ashc/checker.py` | NEW (untracked) |
+| `services/ashc/obligation.py` | NEW (untracked) |
+| `services/interactive_text/` | service.py added, node.py untracked |
+| Interactive Text Gallery | Page live at `/_/gallery/interactive-text` |
 
 ---
 
@@ -62,66 +33,54 @@
 
 | Jewel | % | One-liner |
 |-------|---|-----------|
-| Brain | 100 | Spatial cathedral of memory. Ship-ready. |
-| Gardener | 100 | Cultivation practice. Ship-ready. |
-| Gestalt | 85 | Living garden where code breathes. Gestalt2D complete. |
-| Forge | 85 | Phase 1-4 done. Four creative artisans do real work. |
-| Town/Coalition | 70 | Workshop where agents collaborate. Dialogue complete. |
-| Park | 60 | Westworld where hosts can say no. Scenarios + Consent Debt complete. |
-| **Witness** | 75 | **8TH JEWEL**. Phase 2: Cross-jewel handlers + bus wiring (90 tests). Just needs CLI. |
-| Domain | 0 | Enterprise. Dormant. |
+| Brain | 100 | Spatial cathedral of memory. Ship-ready. THE crown jewel. |
+| Interactive Text | 75 | Gallery showcase for text rendering. |
+| Living Docs | 90 | `concept.docs`, `self.docs`, `self.document` nodes. |
+| Liminal | 80 | `time.coffee` morning ritual personality. |
+| OS-Shell | 100 | Universal AGENTESE rendering. NavigationTree, projections. |
+| ~~Town~~ | — | *Removed* |
+| ~~Park~~ | — | *Removed* |
+| ~~Forge~~ | — | *Removed* |
+| ~~Gestalt~~ | — | *Removed* |
+| ~~Witness~~ | — | *Removed* |
 
 ---
 
-**MULTI-AGENT CI SAFETY** — Sentinel patterns for safe multi-agent development.
+## Quality Gates
 
-| Phase | Status | Key Focus |
-|-------|--------|-----------|
-| Phase 2 | ✅ **COMPLETE** | Blocking hooks, validation scripts, ci-parity-check |
-| Phase 3 | ✅ **COMPLETE** | Sentinel testing infrastructure (76 tests) |
-
-**Phase 2 Deliverables** (commit `d86b5b08`):
-- ✅ Make lint/mypy BLOCKING in pre-push hook
-- ✅ `scripts/validate.sh` — unified developer validation (Tier 2)
-- ✅ `scripts/ci-parity-check.sh` — environment functor checking
-- ✅ Gated contract sync (only when API files change)
-
-**Phase 3 Deliverables** (commit `42f97f40`):
-- ✅ `testing/sentinel/` module with signal aggregation, degradation tiers, isolation morphism
-- ✅ 76 tests: `evaluate_push_readiness()`, tier fallback, registry isolation
-- ✅ `@pytest.mark.sentinel` marker registered
+| Check | Status |
+|-------|--------|
+| Frontend typecheck | ✅ Clean |
+| Backend mypy | ✅ Notes only (async iterator hints) |
+| Backend tests (Brain, Living Docs) | ✅ 222 passing |
 
 ---
 
 ## What I'm Stuck On
 
-**Voice dilution** — The project is losing its edge through LLM processing. Each Claude session smooths a little. Added Anti-Sausage Protocol to CLAUDE.md to address this.
+Nothing right now. Cleanup is mechanical.
 
 ---
 
 ## What I Want Next
 
-**Metaphysical Forge Phase 5**: Sentinel (security review) and Witness (test generation) artisans. Plus SSE streaming for real-time progress and cross-jewel wiring (Brain capture, Gardener plots).
+1. Complete Crown Jewel cleanup (commit cleanup batch)
+2. ashc work: proof generation, session metabolism
+3. Build out interactive text capabilities
 
-*"The Forge is where we build ourselves."*
+*"Tasteful > feature-complete. Time to prune the garden."*
 
 ---
 
 ## Key Completions (Reference)
 
-These are DONE and documented elsewhere:
-
 | Feature | Completion | Documentation |
 |---------|------------|---------------|
-| **A-gent Alethic Refactor** | 2025-12-21 | `spec/a-gents/README.md`, `spec/a-gents/alethic.md` |
+| **Crown Jewel Cleanup** | 2025-12-21 IN PROGRESS | `plans/crown-jewel-cleanup.md` |
+| A-gent Alethic Refactor | 2025-12-21 | `spec/a-gents/README.md` |
 | 2D Renaissance | 2025-12-18 | `spec/protocols/2d-renaissance.md` |
 | AGENTESE-as-Route | 2025-12-18 | `spec/protocols/agentese-as-route.md` |
-| Différance Engine | 2025-12-18 | `docs/systems-reference.md` |
-| Metaphysical Forge Phase 1-4 | 2025-12-18 | `spec/protocols/metaphysical-forge.md` |
-| Habitat 2.0 (Ghost/Examples/Polynomial) | 2025-12-18 | `spec/principles.md` AD-010 |
-| AD-012 Aspect Projection Protocol | 2025-12-19 | `spec/principles.md` AD-012 |
-| Multi-Agent CI Safety Phase 2-3 | 2025-12-19 | `testing/sentinel/` |
 
 ---
 
-*Last: 2025-12-21 (A-gent Alethic Architecture Refactor)*
+*Last: 2025-12-21 (Crown Jewel Cleanup - Status Report)*

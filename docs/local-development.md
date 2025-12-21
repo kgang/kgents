@@ -4,7 +4,7 @@ context: self
 
 # Local Development Setup
 
-Complete guide to running kgents locally, including the Agent Town web UI and backend API.
+Complete guide to running kgents locally, including the Crown Jewels web UI and backend API.
 
 ## Prerequisites
 
@@ -29,10 +29,9 @@ cd impl/claude/web
 npm install && npm run dev
 
 # Visit:
-#   http://localhost:3000           - Agent Town
-#   http://localhost:3000/gallery   - Projection Gallery
-#   http://localhost:3000/atelier   - Atelier
-#   http://localhost:3000/crown     - Crown Jewels (Brain)
+#   http://localhost:3000           - Brain (Crown Jewel)
+#   http://localhost:3000/_/gallery - Projection Gallery
+#   http://localhost:3000/_/interactive-text - Interactive Text Gallery
 ```
 
 ## Detailed Setup
@@ -218,7 +217,7 @@ Once the backend is running, these endpoints are available:
 | GET | `/api/gallery/{name}` | Single pilot |
 | GET | `/api/gallery/categories` | Category metadata |
 
-**Web Gallery**: `http://localhost:3000/gallery`
+**Web Gallery**: `http://localhost:3000/_/gallery`
 
 ### System
 
@@ -315,6 +314,6 @@ kgents/
 
 - Read [AGENTESE specification](../spec/protocols/agentese.md)
 - Explore [Agent Town](../spec/agents/town.md)
-- Visit the [Projection Gallery](http://localhost:3000/gallery) to see all widgets
+- Visit the [Projection Gallery](http://localhost:3000/_/gallery) to see all widgets
 - Check [systems reference](systems-reference.md) for built infrastructure
 - Learn the [projection-gallery skill](skills/projection-gallery.md) pattern

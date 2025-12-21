@@ -1195,1050 +1195,6 @@ Get all registered aliases.
 
 ---
 
-## protocols.agentese.chat.__init__
-
-## __init__
-
-```python
-module __init__
-```
-
-AGENTESE Chat Protocol: Conversational Affordances
-
----
-
-## __getattr__
-
-```python
-def __getattr__(name: str) -> object
-```
-
-Emit deprecation warning for direct access.
-
----
-
-## protocols.agentese.chat.config
-
-## config
-
-```python
-module config
-```
-
-Chat Configuration
-
----
-
-## ContextStrategy
-
-```python
-class ContextStrategy(Enum)
-```
-
-Strategy for managing context window overflow.
-
----
-
-## InterruptionStrategy
-
-```python
-class InterruptionStrategy(Enum)
-```
-
-How to handle user interruption during streaming.
-
----
-
-## ChatConfig
-
-```python
-class ChatConfig
-```
-
-Chat session configuration.
-
----
-
-## to_fgent_config
-
-```python
-def to_fgent_config(self) -> Any
-```
-
-Convert to F-gent ChatConfig.
-
----
-
-## protocols.agentese.chat.context_projector
-
-## context_projector
-
-```python
-module context_projector
-```
-
-WorkingContextProjector: Functor from Session -> ContextWindow
-
----
-
-## ContextWindow
-
-```python
-class ContextWindow
-```
-
-The rendered context window for LLM consumption.
-
----
-
-## WorkingContextProjector
-
-```python
-class WorkingContextProjector
-```
-
-Projects a session's turn history into a working context window.
-
----
-
-## utilization
-
-```python
-def utilization(self) -> float
-```
-
-Context utilization as a ratio.
-
----
-
-## render_for_llm
-
-```python
-def render_for_llm(self) -> list[dict[str, str]]
-```
-
-Render messages in LLM format.
-
----
-
-## __init__
-
-```python
-def __init__(self, config: ChatConfig, summarizer: Any | None=None)
-```
-
-Initialize the projector.
-
----
-
-## project
-
-```python
-def project(self, turns: list[Turn], system_prompt: str | None=None, injected_memories: list[str] | None=None) -> ContextWindow
-```
-
-Project turn history to context window.
-
----
-
-## project_async
-
-```python
-async def project_async(self, turns: list[Turn], system_prompt: str | None=None, injected_memories: list[str] | None=None) -> ContextWindow
-```
-
-Project turn history to context window (async version).
-
----
-
-## reset
-
-```python
-def reset(self) -> None
-```
-
-Reset the projector state.
-
----
-
-## protocols.agentese.chat.factory
-
-## factory
-
-```python
-module factory
-```
-
-ChatSessionFactory: Factory for creating chat sessions with any AGENTESE node.
-
----
-
-## SystemPromptContext
-
-```python
-class SystemPromptContext
-```
-
-Context for system prompt generation.
-
----
-
-## generate_session_id
-
-```python
-def generate_session_id(node_path: str, observer_id: str) -> str
-```
-
-Generate a unique session ID.
-
----
-
-## ChatSessionFactory
-
-```python
-class ChatSessionFactory
-```
-
-Factory for creating chat sessions with any AGENTESE node.
-
----
-
-## get_chat_factory
-
-```python
-def get_chat_factory() -> ChatSessionFactory
-```
-
-Get the global chat session factory.
-
----
-
-## set_chat_factory
-
-```python
-def set_chat_factory(factory: ChatSessionFactory) -> None
-```
-
-Set the global chat session factory (for testing).
-
----
-
-## __init__
-
-```python
-def __init__(self, default_config: ChatConfig | None=None, system_prompt_factory: Callable[[SystemPromptContext], str] | None=None)
-```
-
-Initialize the factory.
-
----
-
-## create_session
-
-```python
-async def create_session(self, node_path: str, observer: 'Umwelt[Any, Any]', config: ChatConfig | None=None, force_new: bool=False) -> ChatSession
-```
-
-Create (or retrieve) a chat session for a node.
-
----
-
-## get_session
-
-```python
-def get_session(self, node_path: str, observer: 'Umwelt[Any, Any]') -> ChatSession | None
-```
-
-Get an existing session if available.
-
----
-
-## get_session_by_id
-
-```python
-def get_session_by_id(self, session_id: str) -> ChatSession | None
-```
-
-Get a session by its ID.
-
----
-
-## list_sessions
-
-```python
-def list_sessions(self, node_path: str | None=None, observer_id: str | None=None) -> list[ChatSession]
-```
-
-List sessions matching criteria.
-
----
-
-## close_session
-
-```python
-def close_session(self, session: ChatSession) -> None
-```
-
-Close and remove a session from cache.
-
----
-
-## EchoAgent
-
-```python
-class EchoAgent
-```
-
-Simple echo agent for testing.
-
----
-
-## invoke
-
-```python
-async def invoke(self, input: Any) -> str
-```
-
-Echo the input.
-
----
-
-## protocols.agentese.chat.observability
-
-## observability
-
-```python
-module observability
-```
-
-Chat Observability: OpenTelemetry spans and metrics for chat sessions.
-
----
-
-## get_chat_tracer
-
-```python
-def get_chat_tracer() -> Tracer
-```
-
-Get the chat tracer, creating if needed.
-
----
-
-## get_chat_meter
-
-```python
-def get_chat_meter() -> metrics.Meter
-```
-
-Get the chat meter, creating if needed.
-
----
-
-## ChatMetricsState
-
-```python
-class ChatMetricsState
-```
-
-Thread-safe in-memory metrics state for chat summaries.
-
----
-
-## record_turn
-
-```python
-def record_turn(node_path: str, turn_number: int, duration_s: float, tokens_in: int, tokens_out: int, success: bool, context_utilization: float=0.0, estimated_cost_usd: float=0.0, observer_id: str='anonymous') -> None
-```
-
-Record metrics for a completed chat turn.
-
----
-
-## record_session_event
-
-```python
-def record_session_event(node_path: str, event: str, observer_id: str='anonymous') -> None
-```
-
-Record a session lifecycle event.
-
----
-
-## record_error
-
-```python
-def record_error(node_path: str, error_type: str, observer_id: str='anonymous') -> None
-```
-
-Record a chat error.
-
----
-
-## ChatTelemetry
-
-```python
-class ChatTelemetry
-```
-
-Telemetry wrapper for ChatSession operations.
-
----
-
-## create_turn_span
-
-```python
-def create_turn_span(session_id: str, node_path: str, turn_number: int, **attributes: Any) -> Span
-```
-
-Create a child span for a chat turn.
-
----
-
-## add_turn_event
-
-```python
-def add_turn_event(name: str, attributes: dict[str, Any] | None=None) -> None
-```
-
-Add an event to the current turn span.
-
----
-
-## set_turn_attribute
-
-```python
-def set_turn_attribute(key: str, value: Any) -> None
-```
-
-Set an attribute on the current span.
-
----
-
-## get_chat_metrics_summary
-
-```python
-def get_chat_metrics_summary() -> dict[str, Any]
-```
-
-Get a summary of current chat metrics.
-
----
-
-## get_active_session_count
-
-```python
-def get_active_session_count(node_path: str | None=None) -> int
-```
-
-Get count of active sessions.
-
----
-
-## reset_chat_metrics
-
-```python
-def reset_chat_metrics() -> None
-```
-
-Reset in-memory chat metrics state.
-
----
-
-## trace_session
-
-```python
-async def trace_session(self, session: 'ChatSession', **extra_attributes: Any) -> AsyncIterator[Span]
-```
-
-Trace a full chat session.
-
----
-
-## trace_turn
-
-```python
-async def trace_turn(self, session: 'ChatSession', message: str, **extra_attributes: Any) -> AsyncIterator[Span]
-```
-
-Trace a single chat turn.
-
----
-
-## trace_context_render
-
-```python
-async def trace_context_render(self, session: 'ChatSession', **extra_attributes: Any) -> AsyncIterator[Span]
-```
-
-Trace context window rendering.
-
----
-
-## trace_llm_call
-
-```python
-async def trace_llm_call(self, session: 'ChatSession', model: str='unknown', **extra_attributes: Any) -> AsyncIterator[Span]
-```
-
-Trace an LLM API call within a turn.
-
----
-
-## protocols.agentese.chat.persistence
-
-## persistence
-
-```python
-module persistence
-```
-
-ChatSession Persistence: D-gent integration for chat session storage.
-
----
-
-## PersistedSession
-
-```python
-class PersistedSession
-```
-
-Session stored in D-gent memory.
-
----
-
-## ChatSessionPersistence
-
-```python
-class ChatSessionPersistence
-```
-
-Persistence layer for chat sessions using D-gent.
-
----
-
-## MemoryInjector
-
-```python
-class MemoryInjector
-```
-
-Injects relevant memories from past sessions into new session context.
-
----
-
-## get_persistence
-
-```python
-def get_persistence() -> ChatSessionPersistence
-```
-
-Get or create the singleton persistence instance.
-
----
-
-## get_memory_injector
-
-```python
-def get_memory_injector() -> MemoryInjector
-```
-
-Get or create the singleton memory injector.
-
----
-
-## reset_persistence
-
-```python
-def reset_persistence() -> None
-```
-
-Reset the singletons (for testing).
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize to JSON-compatible dict.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> PersistedSession
-```
-
-Deserialize from JSON-compatible dict.
-
----
-
-## from_session
-
-```python
-def from_session(cls, session: 'ChatSession') -> PersistedSession
-```
-
-Create a PersistedSession from a live ChatSession.
-
----
-
-## __init__
-
-```python
-def __init__(self, dgent: DgentRouter | None=None, namespace: str='chat_sessions')
-```
-
-Initialize persistence layer.
-
----
-
-## save_session
-
-```python
-async def save_session(self, session: 'ChatSession', *, name: str | None=None, summary: str | None=None) -> str
-```
-
-Save a chat session to D-gent storage.
-
----
-
-## load_session
-
-```python
-async def load_session(self, session_id: str) -> PersistedSession | None
-```
-
-Load a chat session from D-gent storage.
-
----
-
-## load_by_name
-
-```python
-async def load_by_name(self, name: str) -> PersistedSession | None
-```
-
-Load a chat session by user-assigned name.
-
----
-
-## list_sessions
-
-```python
-async def list_sessions(self, *, node_path: str | None=None, observer_id: str | None=None, after: datetime | None=None, limit: int=100) -> list[PersistedSession]
-```
-
-List persisted sessions with optional filters.
-
----
-
-## search_sessions
-
-```python
-async def search_sessions(self, query: str, *, limit: int=20) -> list[PersistedSession]
-```
-
-Search sessions by content.
-
----
-
-## delete_session
-
-```python
-async def delete_session(self, session_id: str) -> bool
-```
-
-Delete a persisted session.
-
----
-
-## session_exists
-
-```python
-async def session_exists(self, session_id: str) -> bool
-```
-
-Check if a session exists.
-
----
-
-## count_sessions
-
-```python
-async def count_sessions(self, *, node_path: str | None=None) -> int
-```
-
-Count persisted sessions.
-
----
-
-## get_recent_sessions
-
-```python
-async def get_recent_sessions(self, *, node_path: str | None=None, limit: int=10) -> list[PersistedSession]
-```
-
-Get most recently updated sessions.
-
----
-
-## __init__
-
-```python
-def __init__(self, persistence: ChatSessionPersistence | None=None)
-```
-
-Initialize memory injector.
-
----
-
-## persistence
-
-```python
-def persistence(self) -> ChatSessionPersistence
-```
-
-Get persistence instance (lazy).
-
----
-
-## inject_context
-
-```python
-async def inject_context(self, node_path: str, observer_id: str, current_message: str | None=None, *, max_sessions: int=3, max_turns_per_session: int=2) -> str
-```
-
-Build context string from relevant past sessions.
-
----
-
-## get_entity_memory
-
-```python
-async def get_entity_memory(self, node_path: str, *, limit: int=10) -> dict[str, Any]
-```
-
-Get memory summary for an entity (aggregated across sessions).
-
----
-
-## protocols.agentese.chat.session
-
-## session
-
-```python
-module session
-```
-
-ChatSession: Stateful conversation wrapper over F-gent ChatFlow.
-
----
-
-## ChatSessionState
-
-```python
-class ChatSessionState(Enum)
-```
-
-Chat session states.
-
----
-
-## Message
-
-```python
-class Message
-```
-
-A single message in the conversation.
-
----
-
-## Turn
-
-```python
-class Turn
-```
-
-A complete conversation turn.
-
----
-
-## SessionBudget
-
-```python
-class SessionBudget
-```
-
-Track conversation costs and token usage.
-
----
-
-## ChatSession
-
-```python
-class ChatSession
-```
-
-ChatSession: Stateful conversation wrapper over F-gent ChatFlow.
-
----
-
-## duration
-
-```python
-def duration(self) -> float
-```
-
-Turn duration in seconds.
-
----
-
-## total_tokens
-
-```python
-def total_tokens(self) -> int
-```
-
-Total tokens for this turn.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Convert to dictionary.
-
----
-
-## record_turn
-
-```python
-def record_turn(self, turn: Turn, model: str='default') -> None
-```
-
-Record a turn's token usage.
-
----
-
-## total_tokens
-
-```python
-def total_tokens(self) -> int
-```
-
-Total tokens used.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Convert to dictionary.
-
----
-
-## __init__
-
-```python
-def __init__(self, session_id: str, node_path: str, observer: 'Umwelt[Any, Any]', config: ChatConfig | None=None, flow: 'ChatFlow | None'=None)
-```
-
-Initialize a chat session.
-
----
-
-## state
-
-```python
-def state(self) -> ChatSessionState
-```
-
-Current session state.
-
----
-
-## turn_count
-
-```python
-def turn_count(self) -> int
-```
-
-Number of completed turns.
-
----
-
-## entropy
-
-```python
-def entropy(self) -> float
-```
-
-Remaining entropy budget (0.0 to 1.0).
-
----
-
-## is_active
-
-```python
-def is_active(self) -> bool
-```
-
-Whether the session is actively conversing.
-
----
-
-## is_collapsed
-
-```python
-def is_collapsed(self) -> bool
-```
-
-Whether the session has ended.
-
----
-
-## budget
-
-```python
-def budget(self) -> SessionBudget
-```
-
-Token budget tracking.
-
----
-
-## activate
-
-```python
-def activate(self) -> None
-```
-
-Activate the session (DORMANT -> READY).
-
----
-
-## collapse
-
-```python
-def collapse(self, reason: str='entropy_depleted') -> None
-```
-
-Collapse the session (terminal state).
-
----
-
-## send
-
-```python
-async def send(self, message: str) -> str
-```
-
-Send a message and get the complete response.
-
----
-
-## stream
-
-```python
-async def stream(self, message: str) -> AsyncIterator[str]
-```
-
-Stream response tokens as they're generated.
-
----
-
-## get_context_utilization
-
-```python
-def get_context_utilization(self) -> float
-```
-
-Get context utilization as a percentage.
-
----
-
-## get_history
-
-```python
-def get_history(self, limit: int | None=None) -> list[Turn]
-```
-
-Get conversation history.
-
----
-
-## get_messages
-
-```python
-def get_messages(self) -> list[Message]
-```
-
-Get all messages (flattened from turns).
-
----
-
-## get_metrics
-
-```python
-def get_metrics(self) -> dict[str, Any]
-```
-
-Get session metrics.
-
----
-
-## reset
-
-```python
-def reset(self) -> None
-```
-
-Reset the session to initial state.
-
----
-
-## set_name
-
-```python
-def set_name(self, name: str) -> None
-```
-
-Set session name for persistence.
-
----
-
-## add_tag
-
-```python
-def add_tag(self, tag: str) -> None
-```
-
-Add a tag to the session.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize session to dictionary.
-
----
-
 ## protocols.agentese.container
 
 ## container
@@ -2247,7 +1203,40 @@ Serialize session to dictionary.
 module container
 ```
 
+**AGENTESE:** `protocols.agentese.container`
+
 AGENTESE Service Container.
+
+### Examples
+```python
+>>> @node("self.memory", dependencies=("brain_crystal", "embedder"))
+```
+```python
+>>> class BrainNode(BaseLogosNode):
+```
+```python
+>>> def __init__(self, crystal: BrainCrystal, embedder: Embedder):
+```
+```python
+>>> self._crystal = crystal
+```
+```python
+>>> self._embedder = embedder
+```
+
+### Things to Know
+
+ℹ️ Dependencies are REQUIRED by default (no default in __init__). Missing required deps raise DependencyNotFoundError immediately. To make a dependency optional, add a default: `brain: Brain | None = None`
+  - *Verified in: `test_container.py::TestNodeCreation::test_required_deps_fail_immediately`*
+
+ℹ️ Optional dependencies are skipped gracefully if not registered. The node's __init__ default is used. This is intentional for graceful degradation (e.g., SoulNode without LLM).
+  - *Verified in: `test_container.py::TestNodeCreation::test_optional_deps_skipped_gracefully`*
+
+ℹ️ Singleton is the DEFAULT. Every register() call creates a cached singleton unless singleton=False is explicitly passed. This means provider functions are called ONCE and the result is reused forever.
+  - *Verified in: `test_container.py::TestDependencyResolution::test_singleton_caching`*
+
+ℹ️ Dependency names are CASE-SENSITIVE and EXACT-MATCH. If your @node declares dependencies=("brain_Crystal",) but you register "brain_crystal", the dependency silently fails to resolve.
+  - *Verified in: `test_container.py::TestProviderRegistration::test_has_unregistered`*
 
 ---
 
@@ -2522,108 +1511,6 @@ def list_agents(self) -> list[str]
 ```
 
 List all available agent letters.
-
----
-
-## protocols.agentese.contexts.chat_resolver
-
-## chat_resolver
-
-```python
-module chat_resolver
-```
-
-AGENTESE Chat Sub-Resolver
-
----
-
-## ChatNode
-
-```python
-class ChatNode(BaseLogosNode)
-```
-
-A node that handles chat affordances for a parent node.
-
----
-
-## ChatResolver
-
-```python
-class ChatResolver
-```
-
-Resolver for <node>.chat.* paths.
-
----
-
-## get_chat_resolver
-
-```python
-def get_chat_resolver() -> ChatResolver
-```
-
-Get the global chat resolver.
-
----
-
-## set_chat_resolver
-
-```python
-def set_chat_resolver(resolver: ChatResolver) -> None
-```
-
-Set the global chat resolver (for testing).
-
----
-
-## create_chat_node
-
-```python
-def create_chat_node(parent_path: str, parent_node: BaseLogosNode | None=None) -> ChatNode
-```
-
-Create a chat node for a parent path.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show chat session status.
-
----
-
-## resolve
-
-```python
-def resolve(self, parent_path: str, parent_node: BaseLogosNode | None=None) -> ChatNode
-```
-
-Resolve a chat node for a parent path.
-
----
-
-## get_session
-
-```python
-def get_session(self, parent_path: str, observer: 'Umwelt[Any, Any]') -> ChatSession | None
-```
-
-Get an existing session for a node and observer.
-
----
-
-## list_sessions
-
-```python
-def list_sessions(self, parent_path: str | None=None) -> list[ChatSession]
-```
-
-List active sessions, optionally filtered by parent path.
 
 ---
 
@@ -4522,114 +3409,6 @@ async def forward_event(event: Any) -> None
 ```
 
 Forward DataEvent to SynergyBus.
-
----
-
-## protocols.agentese.contexts.self_citizen
-
-## self_citizen
-
-```python
-module self_citizen
-```
-
-AGENTESE Self Citizen Context
-
----
-
-## CitizenMemoryNode
-
-```python
-class CitizenMemoryNode(BaseLogosNode)
-```
-
-**AGENTESE:** `self.citizen.`
-
-self.citizen.<name>.memory - Citizen's persistent memory.
-
----
-
-## CitizenPersonalityNode
-
-```python
-class CitizenPersonalityNode(BaseLogosNode)
-```
-
-**AGENTESE:** `self.citizen.`
-
-self.citizen.<name>.personality - Citizen's eigenvector personality.
-
----
-
-## CitizenNode
-
-```python
-class CitizenNode(BaseLogosNode)
-```
-
-**AGENTESE:** `self.citizen.`
-
-self.citizen.<name> - Access a specific citizen.
-
----
-
-## create_citizen_node
-
-```python
-def create_citizen_node(citizen_name: str) -> CitizenNode
-```
-
-Create a citizen node for a specific citizen.
-
----
-
-## create_citizen_memory_node
-
-```python
-def create_citizen_memory_node(citizen_name: str) -> CitizenMemoryNode
-```
-
-Create a citizen memory node.
-
----
-
-## create_citizen_personality_node
-
-```python
-def create_citizen_personality_node(citizen_name: str) -> CitizenPersonalityNode
-```
-
-Create a citizen personality node.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show citizen memory summary.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show citizen personality (eigenvectors + cosmotechnics).
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show citizen overview.
 
 ---
 
@@ -9259,212 +8038,6 @@ Get branch by ID.
 
 ---
 
-## protocols.agentese.contexts.time_trace_warp
-
-## time_trace_warp
-
-```python
-module time_trace_warp
-```
-
-AGENTESE Time Trace WARP Context: Mark and Walk Primitives.
-
----
-
-## MarkLogosNode
-
-```python
-class MarkLogosNode(BaseLogosNode)
-```
-
-time.trace.node - WARP Mark operations.
-
----
-
-## WalkLogosNode
-
-```python
-class WalkLogosNode(BaseLogosNode)
-```
-
-time.walk - WARP Walk (durable work stream) operations.
-
----
-
-## create_trace_node_logos
-
-```python
-def create_trace_node_logos() -> MarkLogosNode
-```
-
-Create a MarkLogosNode instance.
-
----
-
-## create_walk_logos
-
-```python
-def create_walk_logos() -> WalkLogosNode
-```
-
-Create a WalkLogosNode instance.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-View Mark store status.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-View active Walks.
-
----
-
-## protocols.agentese.contexts.town_citizen
-
-## town_citizen
-
-```python
-module town_citizen
-```
-
-**AGENTESE:** `world.town.citizen.`
-
-AGENTESE Town Citizen Context: Agent Town Citizen Integration
-
----
-
-## build_citizen_system_prompt
-
-```python
-def build_citizen_system_prompt(citizen: 'Citizen', observer_archetype: str='visitor') -> str
-```
-
-Build a system prompt for a citizen based on their archetype.
-
----
-
-## TownCitizenNode
-
-```python
-class TownCitizenNode(BaseLogosNode)
-```
-
-world.town.citizen.<name> - Individual Town Citizen interface.
-
----
-
-## TownCitizenResolver
-
-```python
-class TownCitizenResolver
-```
-
-Resolver for world.town.citizen.<name>.* paths.
-
----
-
-## get_citizen_resolver
-
-```python
-def get_citizen_resolver() -> TownCitizenResolver
-```
-
-Get the global citizen resolver.
-
----
-
-## set_citizen_resolver
-
-```python
-def set_citizen_resolver(resolver: TownCitizenResolver) -> None
-```
-
-Set the global citizen resolver (for testing).
-
----
-
-## create_citizen_chat_node
-
-```python
-def create_citizen_chat_node(citizen_name: str, citizen: 'Citizen | None'=None) -> TownCitizenNode
-```
-
-Create a citizen node for chat.
-
----
-
-## create_town_citizen_node
-
-```python
-def create_town_citizen_node(name: str, citizen: 'Citizen | None'=None) -> TownCitizenNode
-```
-
-Create a TownCitizenNode with optional Citizen injection.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-View citizen state.
-
----
-
-## get_system_prompt
-
-```python
-def get_system_prompt(self, observer_archetype: str='visitor') -> str
-```
-
-Get the system prompt for chat with this citizen.
-
----
-
-## resolve
-
-```python
-def resolve(self, citizen_name: str, citizen: 'Citizen | None'=None) -> TownCitizenNode
-```
-
-Resolve a citizen node by name.
-
----
-
-## list_citizens
-
-```python
-def list_citizens(self) -> list[str]
-```
-
-List cached citizen names.
-
----
-
-## clear_cache
-
-```python
-def clear_cache(self) -> None
-```
-
-Clear the node cache.
-
----
-
 ## protocols.agentese.contexts.vitals
 
 ## vitals
@@ -10667,374 +9240,6 @@ Get a single pilot with override support.
 
 ---
 
-## protocols.agentese.contexts.world_gestalt_live
-
-## world_gestalt_live
-
-```python
-module world_gestalt_live
-```
-
-**AGENTESE:** `world.gestalt.live.`
-
-AGENTESE Gestalt Live Context: Real-time Infrastructure Visualizer.
-
----
-
-## get_collector
-
-```python
-def get_collector() -> Any
-```
-
-Get or create the infrastructure collector.
-
----
-
-## reset_collector
-
-```python
-def reset_collector() -> None
-```
-
-Reset the collector instance.
-
----
-
-## GestaltLiveNode
-
-```python
-class GestaltLiveNode(BaseLogosNode)
-```
-
-world.gestalt.live - Real-time Infrastructure Visualizer interface.
-
----
-
-## get_gestalt_live_node
-
-```python
-def get_gestalt_live_node() -> GestaltLiveNode
-```
-
-Get the global GestaltLiveNode singleton.
-
----
-
-## set_gestalt_live_node
-
-```python
-def set_gestalt_live_node(node: GestaltLiveNode) -> None
-```
-
-Set the global GestaltLiveNode singleton (for testing).
-
----
-
-## create_gestalt_live_node
-
-```python
-def create_gestalt_live_node() -> GestaltLiveNode
-```
-
-Create a GestaltLiveNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Show Gestalt Live overview.
-
----
-
-## status
-
-```python
-async def status(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Get collector status.
-
----
-
-## connect
-
-```python
-async def connect(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Connect to infrastructure data source.
-
----
-
-## disconnect
-
-```python
-async def disconnect(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Disconnect from infrastructure data source.
-
----
-
-## topology
-
-```python
-async def topology(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Get current infrastructure topology.
-
----
-
-## topology_stream
-
-```python
-async def topology_stream(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]
-```
-
-Stream topology updates via Server-Sent Events.
-
----
-
-## events_stream
-
-```python
-async def events_stream(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> AsyncGenerator[dict[str, Any], None]
-```
-
-Stream infrastructure events via Server-Sent Events.
-
----
-
-## health
-
-```python
-async def health(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Get aggregate infrastructure health.
-
----
-
-## entity_detail
-
-```python
-async def entity_detail(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> dict[str, Any]
-```
-
-Get details for a specific entity.
-
----
-
-## protocols.agentese.contexts.world_park
-
-## world_park
-
-```python
-module world_park
-```
-
-**AGENTESE:** `world.park.`
-
-AGENTESE Park Context: Punchdrunk Westworld Where Hosts Can Say No.
-
----
-
-## ParkNode
-
-```python
-class ParkNode(BaseLogosNode)
-```
-
-world.park - Punchdrunk Park Crown Jewel.
-
----
-
-## ScenarioNode
-
-```python
-class ScenarioNode(BaseLogosNode)
-```
-
-world.park.scenario - Crisis practice scenario management.
-
----
-
-## MaskNode
-
-```python
-class MaskNode(BaseLogosNode)
-```
-
-world.park.mask - Dialogue mask management.
-
----
-
-## ForceNode
-
-```python
-class ForceNode(BaseLogosNode)
-```
-
-world.park.force - Force mechanic for consent debt.
-
----
-
-## get_park_node
-
-```python
-def get_park_node() -> ParkNode
-```
-
-Get the global ParkNode singleton.
-
----
-
-## get_scenario_node
-
-```python
-def get_scenario_node() -> ScenarioNode
-```
-
-Get the global ScenarioNode singleton.
-
----
-
-## get_mask_node
-
-```python
-def get_mask_node() -> MaskNode
-```
-
-Get the global MaskNode singleton.
-
----
-
-## get_force_node
-
-```python
-def get_force_node() -> ForceNode
-```
-
-Get the global ForceNode singleton.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show park status.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show scenario status.
-
----
-
-## start
-
-```python
-async def start(self, observer: 'Umwelt[Any, Any]', timer: str='sla', template: str | None=None, accelerated: bool=True, mask: str | None=None, **kwargs: Any) -> Renderable
-```
-
-Start a new crisis practice scenario.
-
----
-
-## tick
-
-```python
-async def tick(self, observer: 'Umwelt[Any, Any]', count: int=1, **kwargs: Any) -> Renderable
-```
-
-Advance scenario timers.
-
----
-
-## phase
-
-```python
-async def phase(self, observer: 'Umwelt[Any, Any]', target: str | None=None, phase: str | None=None, **kwargs: Any) -> Renderable
-```
-
-Transition to a new crisis phase.
-
----
-
-## complete
-
-```python
-async def complete(self, observer: 'Umwelt[Any, Any]', outcome: str='success', **kwargs: Any) -> Renderable
-```
-
-Complete the current scenario.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-List available masks.
-
----
-
-## don
-
-```python
-async def don(self, observer: 'Umwelt[Any, Any]', name: str, **kwargs: Any) -> Renderable
-```
-
-Don a dialogue mask.
-
----
-
-## doff
-
-```python
-async def doff(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Remove current mask.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show force mechanic status.
-
----
-
-## use
-
-```python
-async def use(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Use a force mechanic.
-
----
-
 ## protocols.agentese.contexts.world_scenery
 
 ## world_scenery
@@ -11066,312 +9271,6 @@ async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
 ```
 
 Get current SceneGraph state.
-
----
-
-## protocols.agentese.contexts.world_town
-
-## world_town
-
-```python
-module world_town
-```
-
-**AGENTESE:** `world.town.`
-
-AGENTESE Town Context: Agent Town Crown Jewel Integration.
-
----
-
-## TownNode
-
-```python
-class TownNode(BaseLogosNode)
-```
-
-world.town - Agent Town simulation interface.
-
----
-
-## get_town_node
-
-```python
-def get_town_node() -> TownNode
-```
-
-Get the global TownNode singleton.
-
----
-
-## set_town_node
-
-```python
-def set_town_node(node: TownNode) -> None
-```
-
-Set the global TownNode singleton (for testing).
-
----
-
-## create_town_node
-
-```python
-def create_town_node(environment: 'TownEnvironment | None'=None, flux: 'TownFlux | None'=None) -> TownNode
-```
-
-Create a TownNode with optional environment/flux injection.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
-```
-
-Show town status.
-
----
-
-## observe
-
-```python
-async def observe(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Show MESA view - citizens by region.
-
----
-
-## witness
-
-```python
-async def witness(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-View activity history.
-
----
-
-## start
-
-```python
-async def start(self, observer: 'Umwelt[Any, Any]', phase2: bool=False, seed: int | None=None, **kwargs: Any) -> Renderable
-```
-
-Start a new simulation.
-
----
-
-## step
-
-```python
-async def step(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Advance simulation by one phase.
-
----
-
-## metrics
-
-```python
-async def metrics(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Show emergence metrics.
-
----
-
-## budget
-
-```python
-async def budget(self, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Show budget status.
-
----
-
-## resolve_citizen
-
-```python
-def resolve_citizen(self, name: str) -> 'TownCitizenNode | None'
-```
-
-Resolve a citizen by name.
-
----
-
-## protocols.agentese.contexts.world_witness
-
-## world_witness
-
-```python
-module world_witness
-```
-
-AGENTESE World Witness Context: Cross-Jewel Orchestration.
-
----
-
-## WorldWitnessManifestResponse
-
-```python
-class WorldWitnessManifestResponse
-```
-
-Response for world.witness.manifest - orchestration status.
-
----
-
-## WorkflowListRequest
-
-```python
-class WorkflowListRequest
-```
-
-Request for listing available workflows.
-
----
-
-## WorkflowListItem
-
-```python
-class WorkflowListItem
-```
-
-A workflow template summary.
-
----
-
-## WorkflowListResponse
-
-```python
-class WorkflowListResponse
-```
-
-Response for workflow listing.
-
----
-
-## WorkflowRunRequest
-
-```python
-class WorkflowRunRequest
-```
-
-Request for running a workflow template.
-
----
-
-## WorkflowRunResponse
-
-```python
-class WorkflowRunResponse
-```
-
-Response for workflow execution.
-
----
-
-## ReactorStatusResponse
-
-```python
-class ReactorStatusResponse
-```
-
-Response for reactor status.
-
----
-
-## WorldWitnessNode
-
-```python
-class WorldWitnessNode(BaseLogosNode)
-```
-
-world.witness - Cross-jewel orchestration interface.
-
----
-
-## get_world_witness_node
-
-```python
-def get_world_witness_node() -> WorldWitnessNode
-```
-
-Get the global WorldWitnessNode singleton.
-
----
-
-## set_world_witness_node
-
-```python
-def set_world_witness_node(node: WorldWitnessNode) -> None
-```
-
-Set the global WorldWitnessNode singleton (for testing).
-
----
-
-## create_world_witness_node
-
-```python
-def create_world_witness_node(persistence: 'WitnessPersistence | None'=None, logos: 'Logos | None'=None) -> WorldWitnessNode
-```
-
-Create a WorldWitnessNode with dependency injection.
-
----
-
-## __init__
-
-```python
-def __init__(self, witness_persistence: 'WitnessPersistence | None'=None, logos: 'Logos | None'=None) -> None
-```
-
-Initialize WorldWitnessNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-Manifest orchestration status.
-
----
-
-## workflows
-
-```python
-async def workflows(self, observer: 'Observer | Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-List available workflow templates.
-
----
-
-## run
-
-```python
-async def run(self, observer: 'Observer | Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Execute a workflow template.
-
----
-
-## reactor
-
-```python
-async def reactor(self, observer: 'Observer | Umwelt[Any, Any]', **kwargs: Any) -> Renderable
-```
-
-Show reactor status.
 
 ---
 
@@ -12212,6 +10111,22 @@ class AgenteseGateway
 
 Universal gateway for AGENTESE protocol.
 
+### Examples
+```python
+>>> gateway = AgenteseGateway(prefix="/api/v1")
+```
+```python
+>>> gateway.mount_on(app)
+```
+
+### Things to Know
+
+🚨 **Critical:** Discovery endpoints MUST be defined BEFORE catch-all routes. FastAPI matches routes in definition order, so /discover must come before /{path:path}/* or it gets swallowed.
+  - *Verified in: `test_gateway.py::TestGatewayDiscovery`*
+
+ℹ️ Law 3 (Completeness)—every AGENTESE invocation emits exactly one Mark via _emit_trace(). This happens in _invoke_path(), not at the endpoint level, ensuring consistent tracing.
+  - *Verified in: `test_gateway.py::TestGatewayMarkEmission`*
+
 ---
 
 ## create_gateway
@@ -12250,7 +10165,12 @@ Mount gateway routes on FastAPI app.
 class HTTPException(Exception)
 ```
 
-Stub HTTPException.
+Stub HTTPException for when FastAPI is not installed.
+
+### Things to Know
+
+ℹ️ This stub exists for graceful degradation—gateway.py can be imported even without FastAPI for type checking.
+  - *Verified in: `test_gateway.py::TestGatewayMounting::test_gateway_mounts_successfully`*
 
 ---
 
@@ -12341,6 +10261,16 @@ async def websocket_handler(websocket: WebSocket, path: str) -> None
 ```
 
 WebSocket handler for bidirectional streaming.
+
+---
+
+## single_event
+
+```python
+async def single_event() -> AsyncGenerator[str, None]
+```
+
+Wrap single result as SSE event.
 
 ---
 
@@ -13823,6 +11753,28 @@ class AgentesePath
 
 Standalone path for string-based composition (v3 API).
 
+### Examples
+```python
+>>> pipeline = path("world.doc.manifest") >> "self.memory.engram"
+```
+```python
+>>> pipeline = (
+```
+```python
+>>> path("world.garden.manifest")
+```
+```python
+>>> >> "concept.summary.refine"
+```
+```python
+>>> >> "self.memory.engram"
+```
+
+### Things to Know
+
+🚨 **Critical:** AgentesePath creates UnboundComposedPath via >>. You must call .bind(logos) or .run(observer, logos) to execute.
+  - *Verified in: `test_logos.py::test_unbound_composition`*
+
 ---
 
 ## UnboundComposedPath
@@ -13832,6 +11784,11 @@ class UnboundComposedPath
 ```
 
 Composition of paths that hasn't been bound to a Logos yet (v3 API).
+
+### Things to Know
+
+ℹ️ UnboundComposedPath is lazy—no Logos, no execution. Call .bind(logos) to get ComposedPath, or .run() to execute.
+  - *Verified in: `test_logos.py::test_unbound_composition`*
 
 ---
 
@@ -13864,6 +11821,11 @@ class ComposedPath
 
 A composition of AGENTESE paths.
 
+### Things to Know
+
+ℹ️ ComposedPath.invoke() enforces Minimal Output Principle by default. Arrays break composition. Use .without_enforcement() if needed.
+  - *Verified in: `test_logos.py::test_minimal_output_enforcement`*
+
 ---
 
 ## IdentityPath
@@ -13873,6 +11835,11 @@ class IdentityPath
 ```
 
 Identity morphism for AGENTESE paths.
+
+### Things to Know
+
+ℹ️ IdentityPath is useful for conditional pipelines: base = logos.identity() if skip else logos.path("step1") pipeline = base >> "step2"
+  - *Verified in: `test_logos.py::test_identity_composition`*
 
 ---
 
@@ -13884,6 +11851,11 @@ class RegistryProtocol
 
 Protocol for L-gent registry lookup.
 
+### Things to Know
+
+ℹ️ This is a Protocol (structural typing). Any class with get/register/update methods satisfies it—no inheritance needed.
+  - *Verified in: `test_logos.py::test_registry_protocol`*
+
 ---
 
 ## SimpleRegistry
@@ -13894,6 +11866,11 @@ class SimpleRegistry
 
 Simple in-memory registry for testing and bootstrapping.
 
+### Things to Know
+
+ℹ️ SimpleRegistry is for testing. In production, NodeRegistry from registry.py is the authoritative source—Logos checks NodeRegistry BEFORE SimpleRegistry.
+  - *Verified in: `test_logos.py::test_resolution_order`*
+
 ---
 
 ## Logos
@@ -13903,6 +11880,14 @@ class Logos
 ```
 
 The bridge between String Theory and Agent Reality.
+
+### Things to Know
+
+ℹ️ Resolution checks NodeRegistry BEFORE SimpleRegistry. @node decorators in services/ override any manual registration.
+  - *Verified in: `test_logos.py::test_resolution_order`*
+
+ℹ️ Aliases are PREFIX expansion only. "me.challenge" → "self.soul.challenge". You cannot alias an aspect, only a path prefix.
+  - *Verified in: `test_logos.py::test_alias_expansion`*
 
 ---
 
@@ -13933,6 +11918,11 @@ class PlaceholderNode
 ```
 
 Placeholder node for testing resolver behavior.
+
+### Things to Know
+
+ℹ️ PlaceholderNode is for tests only. Production nodes should extend BaseLogosNode or use @node decorator.
+  - *Verified in: `test_logos.py::test_placeholder_node`*
 
 ---
 
@@ -14113,6 +12103,16 @@ def __eq__(self, other: object) -> bool
 ```
 
 Equality based on paths.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Return identity name for composition display.
 
 ---
 
@@ -15024,6 +13024,31 @@ class Observer
 
 Lightweight observer for simple AGENTESE invocations (v3 API).
 
+### Examples
+```python
+>>> await logos("world.garden.manifest")
+```
+```python
+>>> await logos("self.forest.manifest", Observer(archetype="developer"))
+```
+```python
+>>> await logos("self.soul.challenge", Observer(
+```
+```python
+>>> archetype="developer",
+```
+```python
+>>> capabilities=frozenset({"define", "refine"})
+```
+
+### Things to Know
+
+ℹ️ Observer can be None in v3 API—Logos.invoke() defaults to Observer.guest(). But guest observers have minimal affordances. Be explicit about archetype for non-trivial operations.
+  - *Verified in: `test_logos.py::test_guest_observer`*
+
+ℹ️ Observer is frozen (immutable). To change capabilities, create a new Observer instance. This enables safe sharing.
+  - *Verified in: `test_node.py::test_observer_immutable`*
+
 ---
 
 ## PolynomialManifest
@@ -15033,6 +13058,11 @@ class PolynomialManifest
 ```
 
 The polynomial functor structure of an agent.
+
+### Things to Know
+
+ℹ️ Default polynomial() returns single 'default' position with all affordances as directions. Override in PolyAgent subclasses (e.g., Gardener) to expose real state machine structure.
+  - *Verified in: `test_node.py::test_polynomial_default`*
 
 ---
 
@@ -15044,6 +13074,11 @@ class AgentMeta
 
 Metadata about an agent for affordance filtering.
 
+### Things to Know
+
+ℹ️ AgentMeta is the v1 affordance API. New code should use Observer directly—BaseLogosNode._umwelt_to_meta() bridges both for backward compatibility.
+  - *Verified in: `test_node.py::test_agentmeta_to_observer`*
+
 ---
 
 ## Renderable
@@ -15053,6 +13088,11 @@ class Renderable(Protocol)
 ```
 
 Protocol for objects that can be rendered to observers.
+
+### Things to Know
+
+ℹ️ Renderable is a Protocol (structural typing), not ABC. Any class with to_dict() and to_text() methods satisfies it.
+  - *Verified in: `test_node.py::test_renderable_protocol`*
 
 ---
 
@@ -15064,6 +13104,11 @@ class AffordanceSet
 
 Affordances available to a specific observer.
 
+### Things to Know
+
+ℹ️ AffordanceSet is observer-specific. Different observers get different verbs from the same node—this is intentional.
+  - *Verified in: `test_node.py::test_affordance_polymorphism`*
+
 ---
 
 ## LogosNode
@@ -15073,6 +13118,11 @@ class LogosNode(Protocol)
 ```
 
 A node in the AGENTESE graph.
+
+### Things to Know
+
+🚨 **Critical:** LogosNode must be stateless. Any state access must go through D-gent Lens (dependency injection). This enables composition.
+  - *Verified in: `test_node.py::test_logos_node_stateless`*
 
 ---
 
@@ -15084,6 +13134,11 @@ class BaseLogosNode(ABC)
 
 Abstract base class for LogosNode implementations.
 
+### Things to Know
+
+ℹ️ BaseLogosNode provides default implementations for help, alternatives, and polynomial aspects. Override polynomial() in PolyAgent subclasses to expose real state machine.
+  - *Verified in: `test_node.py::test_base_logos_node_defaults`*
+
 ---
 
 ## JITLogosNode
@@ -15093,6 +13148,11 @@ class JITLogosNode
 ```
 
 A LogosNode generated at runtime from a spec.
+
+### Things to Know
+
+ℹ️ JIT nodes track usage_count and success_rate for promotion. Use should_promote() to check if node is ready for permanent implementation in impl/.
+  - *Verified in: `test_jit.py::test_jit_promotion_threshold`*
 
 ---
 
@@ -15104,6 +13164,11 @@ class Ghost
 
 An alternative aspect that could have been invoked.
 
+### Things to Know
+
+ℹ️ Ghosts are limited to 5 per invocation. BaseLogosNode._get_alternatives() truncates to prevent UI overload.
+  - *Verified in: `test_node.py::test_ghost_limit`*
+
 ---
 
 ## BasicRendering
@@ -15113,6 +13178,11 @@ class BasicRendering
 ```
 
 Simple rendering with summary and optional content.
+
+### Things to Know
+
+ℹ️ BasicRendering is the fallback for nodes without specialized rendering. Use BlueprintRendering/PoeticRendering/EconomicRendering for archetype-specific output.
+  - *Verified in: `test_node.py::test_basic_rendering_fallback`*
 
 ---
 
@@ -15124,6 +13194,11 @@ class BlueprintRendering
 
 Technical rendering for architect archetypes.
 
+### Things to Know
+
+ℹ️ BlueprintRendering is returned when observer.archetype == "architect". Contains dimensions, materials, and structural analysis.
+  - *Verified in: `test_node.py::test_archetype_rendering`*
+
 ---
 
 ## PoeticRendering
@@ -15133,6 +13208,11 @@ class PoeticRendering
 ```
 
 Aesthetic rendering for poet archetypes.
+
+### Things to Know
+
+ℹ️ PoeticRendering is returned when observer.archetype == "poet". Contains metaphors and mood for aesthetic interpretation.
+  - *Verified in: `test_node.py::test_archetype_rendering`*
 
 ---
 
@@ -15144,6 +13224,11 @@ class EconomicRendering
 
 Financial rendering for economist archetypes.
 
+### Things to Know
+
+ℹ️ EconomicRendering is returned when observer.archetype == "economist". Contains market value, comparable sales, and forecasts.
+  - *Verified in: `test_node.py::test_archetype_rendering`*
+
 ---
 
 ## AspectAgent
@@ -15154,6 +13239,11 @@ class AspectAgent
 
 Wrapper that turns a LogosNode aspect into a composable Agent.
 
+### Things to Know
+
+ℹ️ AspectAgent enables >> composition of node aspects. a.lens("manifest") >> b.lens("refine") composes.
+  - *Verified in: `test_node.py::test_aspect_agent_composition`*
+
 ---
 
 ## ComposedAspectAgent
@@ -15163,6 +13253,11 @@ class ComposedAspectAgent
 ```
 
 Composition of AspectAgent with another Agent.
+
+### Things to Know
+
+ℹ️ ComposedAspectAgent preserves associativity: (a >> b) >> c == a >> (b >> c). This is enforced by the flattening logic in __rshift__.
+  - *Verified in: `test_node.py::test_composition_associativity`*
 
 ---
 
@@ -15203,6 +13298,16 @@ def from_umwelt(cls, umwelt: 'Umwelt[Any, Any]') -> 'Observer'
 ```
 
 Extract Observer from a full Umwelt.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to JSON-serializable dictionary.
 
 ---
 
@@ -15456,6 +13561,96 @@ Convert to dictionary for serialization.
 
 ---
 
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to JSON-serializable dictionary.
+
+---
+
+## to_text
+
+```python
+def to_text(self) -> str
+```
+
+Convert to human-readable text format.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to JSON-serializable dictionary.
+
+---
+
+## to_text
+
+```python
+def to_text(self) -> str
+```
+
+Convert to human-readable text format.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to JSON-serializable dictionary.
+
+---
+
+## to_text
+
+```python
+def to_text(self) -> str
+```
+
+Convert to human-readable text format.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to JSON-serializable dictionary.
+
+---
+
+## to_text
+
+```python
+def to_text(self) -> str
+```
+
+Convert to human-readable text format.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Return the fully-qualified aspect path.
+
+---
+
 ## invoke
 
 ```python
@@ -15476,6 +13671,16 @@ Compose with another agent.
 
 ---
 
+## name
+
+```python
+def name(self) -> str
+```
+
+Return the composition name showing the pipeline.
+
+---
+
 ## invoke
 
 ```python
@@ -15493,6 +13698,56 @@ def __rshift__(self, other: 'Agent[Any, Any]') -> 'ComposedAspectAgent'
 ```
 
 Compose with another agent.
+
+---
+
+## handle
+
+```python
+def handle(self) -> str
+```
+
+Return the agent's name as the AGENTESE handle.
+
+---
+
+## affordances
+
+```python
+def affordances(self, observer: AgentMeta) -> list[str]
+```
+
+Return minimal affordances for wrapped agents.
+
+---
+
+## lens
+
+```python
+def lens(self, aspect: str) -> 'Agent[Any, Any]'
+```
+
+Return the wrapped agent as a lens.
+
+---
+
+## manifest
+
+```python
+async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+Return basic rendering for wrapped agents.
+
+---
+
+## invoke
+
+```python
+async def invoke(self, aspect: str, observer: 'Umwelt[Any, Any]', **kwargs: Any) -> Any
+```
+
+Invoke the wrapped agent with observer as input.
 
 ---
 
@@ -17148,6 +15403,91 @@ Clear all views.
 
 ---
 
+## protocols.agentese.projection.tokens_to_scene
+
+## tokens_to_scene
+
+```python
+module tokens_to_scene
+```
+
+**AGENTESE:** `self.document.scene`
+
+Token-to-SceneGraph Bridge.
+
+---
+
+## MeaningTokenKind
+
+```python
+class MeaningTokenKind(str, Enum)
+```
+
+Extended node kinds for meaning tokens.
+
+---
+
+## MeaningTokenContent
+
+```python
+class MeaningTokenContent
+```
+
+Content payload for meaning token scene nodes.
+
+---
+
+## text_span_to_scene_node
+
+```python
+async def text_span_to_scene_node(span: 'TextSpan', observer: 'Observer | None'=None) -> SceneNode
+```
+
+Convert a TextSpan (from parser) to a SceneNode.
+
+---
+
+## tokens_to_scene_graph
+
+```python
+async def tokens_to_scene_graph(document: 'ParsedDocument', observer: 'Observer | None'=None, layout_mode: LayoutMode=LayoutMode.COMFORTABLE) -> SceneGraph
+```
+
+Convert a ParsedDocument to a SceneGraph.
+
+### Examples
+```python
+>>> doc = parse_markdown("Check `self.brain.capture`")
+```
+```python
+>>> scene = await tokens_to_scene_graph(doc)
+```
+```python
+>>> rendered = ServoSceneRenderer(scene)
+```
+
+---
+
+## markdown_to_scene_graph
+
+```python
+async def markdown_to_scene_graph(text: str, observer: 'Observer | None'=None, layout_mode: LayoutMode=LayoutMode.COMFORTABLE) -> SceneGraph
+```
+
+Convenience function: parse markdown and convert to SceneGraph.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
 ## protocols.agentese.projection.warp_converters
 
 ## warp_converters
@@ -17601,6 +15941,11 @@ class NodeExample
 
 A pre-seeded example invocation for a node.
 
+### Things to Know
+
+ℹ️ Examples are defined in @node decorator, not in node class. Pass examples=[(aspect, kwargs, label), ...] to @node().
+  - *Verified in: `test_registry.py::TestNodeExamples`*
+
 ---
 
 ## NodeMetadata
@@ -17610,6 +15955,11 @@ class NodeMetadata
 ```
 
 Metadata attached to a node class by @node decorator.
+
+### Things to Know
+
+🚨 **Critical:** Dependencies are resolved by ServiceContainer at instantiation. If a dependency isn't registered, the node SILENTLY SKIPS! Always verify deps exist in providers.py.
+  - *Verified in: `test_registry.py::test_resolve_dependent_node_fails_without_container`*
 
 ---
 
@@ -17668,6 +16018,31 @@ class NodeRegistry
 
 Central registry for AGENTESE nodes.
 
+### Examples
+```python
+>>> registry = get_registry()
+```
+```python
+>>> if registry.has("self.memory"):
+```
+```python
+>>> node_cls = registry.get("self.memory")
+```
+```python
+>>> node = await registry.resolve("self.memory", container)
+```
+```python
+>>> paths = registry.list_paths()
+```
+
+### Things to Know
+
+ℹ️ @node decorator runs at import time. If a module isn't imported, its node won't be registered. Call _import_node_modules() first (done automatically by gateway.mount_on()).
+  - *Verified in: `test_registry.py::test_auto_registration`*
+
+ℹ️ After reset_registry() in tests, call repopulate_registry() to restore nodes for subsequent tests on the same xdist worker.
+  - *Verified in: `test_registry.py::TestNodeRegistry::test_clear + fixture pattern`*
+
 ---
 
 ## get_registry
@@ -17707,6 +16082,16 @@ def to_dict(self) -> dict[str, Any]
 ```
 
 Convert to dictionary for JSON serialization.
+
+---
+
+## decorator
+
+```python
+def decorator(cls: type[T]) -> type[T]
+```
+
+Apply @node metadata to class and register with global registry.
 
 ---
 
@@ -19372,7 +17757,23 @@ Ensure ~/.kgents directory exists.
 module wiring
 ```
 
+**AGENTESE:** `protocols.agentese.wiring`
+
 AGENTESE Phase 7: Wire to Logos
+
+### Things to Know
+
+ℹ️ WiredLogos validates paths by DEFAULT. Invalid paths raise PathSyntaxError before ever reaching resolution. To debug, check context (world/self/concept/ void/time), then holon, then aspect. Use validate_paths=False if you need to bypass validation (e.g., during testing or spec evolution).
+  - *Verified in: `test_wiring.py::TestPathValidation::test_invalid_context_raises_error`*
+
+ℹ️ Graceful degradation without L-gent registry. If create_wired_logos() is called without lgent_registry, tracking is silently disabled (track_usage=False is the default for create_minimal_wired_logos). Check integration_status() to see what's available.
+  - *Verified in: `test_wiring.py::TestLgentIntegration::test_graceful_degradation_without_registry`*
+
+ℹ️ Membrane bridge is AUTO-CREATED if not provided. The bridge connects CLI commands to AGENTESE paths. If you need to customize command mapping, pass your own MembraneAgenteseBridge to create_agentese_integrations().
+  - *Verified in: `test_wiring.py::TestWiredLogosCreation::test_membrane_bridge_auto_created`*
+
+ℹ️ invoke() accepts None observer (v3 API). Missing observer defaults to guest archetype. This won't raise ObserverRequiredError, but the guest may lack affordances for the requested aspect.
+  - *Verified in: `test_wiring.py::TestInvoke::test_invoke_accepts_none_observer`*
 
 ---
 
@@ -19613,6 +18014,6 @@ Get status of all integrations.
 
 ---
 
-*1879 symbols, 5 teaching moments*
+*1696 symbols, 45 teaching moments*
 
 *Generated by Living Docs — 2025-12-21*

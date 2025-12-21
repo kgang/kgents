@@ -28,7 +28,7 @@ If you're thinking "I'll just figure it out"—don't. The skills exist because w
 | Build a feature | [skills/](skills/) | 30 min to skim |
 | Understand the math | [categorical-foundations.md](categorical-foundations.md) | 1 hr |
 | Add an AGENTESE path | [skills/agentese-node-registration.md](skills/agentese-node-registration.md) | 15 min |
-| Debug "silent failures" | [skills/agentese-node-registration.md](skills/agentese-node-registration.md) §The Silent Skip | 5 min |
+| Debug DI failures | [skills/agentese-node-registration.md](skills/agentese-node-registration.md) §Enlightened Resolution | 5 min |
 | Write tests | [skills/test-patterns.md](skills/test-patterns.md) | 20 min |
 | Check what's built | [systems-reference.md](systems-reference.md) | 10 min |
 
@@ -50,7 +50,7 @@ These are **necessary and sufficient** to build any kgents component. Organized 
 | Skill | When You Need It |
 |-------|------------------|
 | [agentese-path.md](skills/agentese-path.md) | Understanding `world.town.citizen` path structure |
-| [agentese-node-registration.md](skills/agentese-node-registration.md) | Exposing services via `@node` decorator (**read the Silent Skip warning**) |
+| [agentese-node-registration.md](skills/agentese-node-registration.md) | Exposing services via `@node` decorator (**read Enlightened Resolution**) |
 
 ### Architecture (The Crown Jewels)
 
@@ -86,12 +86,16 @@ These are **necessary and sufficient** to build any kgents component. Organized 
 
 ## Common Pitfalls (Read Before You Hit Them)
 
-### The Silent Skip Problem
+### DI Enlightened Resolution (2025-12-21)
 ```python
-@node(dependencies=("foo",))  # Container checks: has("foo")? NO → skip silently
-class MyNode: ...              # Result: TypeError at instantiation, cryptic error
+# Required deps (no default) → DependencyNotFoundError with helpful message
+@node(dependencies=("foo",))
+class MyNode: ...
 
-# THE FIX: Every dependency MUST be registered in services/providers.py
+# Optional deps (with default) → Skip gracefully
+def __init__(self, foo: Foo | None = None): ...  # Uses None if not registered
+
+# THE FIX for required: Register in services/providers.py
 container.register("foo", get_foo, singleton=True)
 ```
 
@@ -166,7 +170,7 @@ If you're an AI agent working in this codebase:
 3. **Check [systems-reference.md](systems-reference.md)** — Before building new, check what exists
 
 **Critical learnings**:
-- DI Container silently skips unregistered deps (check `services/providers.py`)
+- DI Enlightened Resolution: Required deps fail fast, optional deps (`= None`) skip gracefully
 - `@node` runs at import time (check `_import_node_modules()` in gateway.py)
 - Frontend TypeScript must typecheck (`npm run typecheck` catches real bugs)
 

@@ -1,7 +1,7 @@
 # AGENTESE Node Registration
 
 **Status:** Canonical Pattern
-**Last Updated:** 2025-12-19
+**Last Updated:** 2025-12-21
 
 ---
 
@@ -410,28 +410,29 @@ if TYPE_CHECKING:
 
 When a node requires dependencies (services, persistence layers, etc.), you must:
 
-### ⚠️ CRITICAL: The Silent Skip Problem
+### ✅ Enlightened Resolution (2025-12-21)
 
-**The container SILENTLY SKIPS unregistered dependencies.** This is the #1 cause of cryptic `TypeError` messages.
+The container respects Python's signature semantics:
+
+| Signature | Resolution | Behavior |
+|-----------|------------|----------|
+| `def __init__(self, service: SomeService):` | **Required** | Fails immediately with actionable error if not registered |
+| `def __init__(self, service: SomeService \| None = None):` | **Optional** | Skipped gracefully if not registered (uses default) |
+| `@node(dependencies=("service",))` | **All Required** | Declared deps are always required |
 
 ```python
-# In container.py create_node() - THE DANGEROUS CODE:
-for name in dep_names:
-    if self.has(name):
-        kwargs[name] = await self.resolve(name)
-    else:
-        logger.debug(f"No provider for dependency {name}, skipping")  # ← SILENT AT DEBUG LEVEL!
-
-# Then...
-return cls(**kwargs)  # ← TypeError: missing argument!
+# Missing REQUIRED dependency → DependencyNotFoundError with helpful message:
+#
+# DependencyNotFoundError: Missing required dependency 'inhabit_service' for InhabitNode.
+#
+# This usually means the provider wasn't registered during startup.
+#
+# Fix: In services/providers.py, add:
+#     container.register("inhabit_service", get_inhabit_service, singleton=True)
+#
+# If this dependency should be optional, update the node's __init__:
+#     def __init__(self, inhabit_service: InhabitService | None = None): ...
 ```
-
-**What happens:**
-1. Node declares `dependencies=("inhabit_service",)`
-2. Container checks `has("inhabit_service")` → `False` (not registered!)
-3. Container logs at DEBUG level and **moves on** (silent skip)
-4. Container calls `cls()` without the dependency
-5. You get: `TypeError: __init__() missing 1 required positional argument: 'inhabit_service'`
 
 **The fix is ALWAYS the same:**
 1. Every dependency in `@node(dependencies=(...))` MUST have a matching provider
@@ -476,39 +477,55 @@ async def setup_providers() -> None:
 │         ▼                                                        │
 │  container.create_node(cls, meta)                               │
 │         │                                                        │
-│         ├──→ Check meta.dependencies                            │
+│         ├──→ Check meta.dependencies (all REQUIRED)             │
 │         │         │                                              │
 │         │         ▼                                              │
-│         │    For each dep: container.has(name)?                 │
+│         │    For each REQUIRED dep:                              │
 │         │         │                                              │
+│         │    container.has(name)?                                │
 │         │    YES → container.resolve(name) → add to kwargs      │
-│         │    NO  → ⚠️ SKIP SILENTLY (debug log only!)           │
+│         │    NO  → ❌ DependencyNotFoundError (immediate!)       │
+│         │                                                        │
+│         ├──→ Check __init__ signature for OPTIONAL deps         │
+│         │         │                                              │
+│         │    container.has(name)?                                │
+│         │    YES → container.resolve(name) → add to kwargs      │
+│         │    NO  → ✓ skip gracefully (use __init__ default)     │
 │         │                                                        │
 │         ▼                                                        │
-│  cls(**resolved_kwargs) → Node instance                         │
-│         │                                                        │
-│         └──→ If required param missing → TypeError!             │
+│  cls(**resolved_kwargs) → Node instance ✓                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Common DI Error
 
 ```
-TypeError: InhabitNode.__init__() missing 1 required positional argument: 'inhabit_service'
+DependencyNotFoundError: Missing required dependency 'inhabit_service' for InhabitNode.
+
+This usually means the provider wasn't registered during startup.
+
+Fix: In services/providers.py, add:
+    container.register("inhabit_service", get_inhabit_service, singleton=True)
+
+If this dependency should be optional, update the node's __init__:
+    def __init__(self, inhabit_service: InhabitService | None = None): ...
 ```
 
 **Cause:** Node declares/requires a dependency that isn't registered in the container.
 
 **Debugging checklist:**
-1. ✓ Does `@node` have `dependencies=("inhabit_service",)`?
+1. ✓ Does `@node` have `dependencies=("inhabit_service",)` or does `__init__` require it?
 2. ✓ Does `services/providers.py` have `get_inhabit_service()`?
 3. ✓ Is it registered in `setup_providers()` with `container.register("inhabit_service", ...)`?
 4. ✓ Is the name EXACTLY the same (case-sensitive)?
 
-**Fix:**
-1. Add `dependencies=("service_name",)` to `@node` decorator
-2. Add provider function `get_service_name()` to `services/providers.py`
-3. Register: `container.register("service_name", get_service_name, singleton=True)`
+**Fix (if truly required):**
+1. Add provider function `get_service_name()` to `services/providers.py`
+2. Register: `container.register("service_name", get_service_name, singleton=True)`
+
+**Fix (if optional - graceful degradation is OK):**
+1. Update `__init__` signature: `def __init__(self, service: Service | None = None): ...`
+2. Handle `None` case in node code
 
 ### Quick Validation
 
@@ -543,7 +560,7 @@ asyncio.run(check())
 │    2. MUST register: container.register("foo", get_foo, ...)   │
 │    3. MUST match: Name in @node == Name in register()          │
 │                                                                 │
-│  If ANY of these are missing → silent skip → TypeError         │
+│  If ANY of these are missing → DependencyNotFoundError (fast!) │
 └────────────────────────────────────────────────────────────────┘
 ```
 
@@ -625,4 +642,4 @@ Add to `.github/workflows/ci.yml`:
 
 ---
 
-*Last updated: 2025-12-19*
+*Last updated: 2025-12-21*

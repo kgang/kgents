@@ -762,6 +762,164 @@ spec Chat-Morpheus Synergy: LLM Integration for Conversational Affordances: Appe
 
 ---
 
+## spec.protocols.checker-bridges
+
+## checker_bridges_the_gatekeeper_protocol
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol
+```
+
+LLM hallucinations don't matter for proofs because proof checkers reject invalid proofs.
+
+### Examples
+```python
+>>> ProofChecker : String → CheckerResult
+```
+```python
+>>> ProofChecker : Protocol
+  name : String
+  is_available : Bool
+  check : (source: String, timeout: Int) → Async CheckerResult
+
+Lean4Checker : ProofChecker
+Dafny Checker : ProofChecker  # (existing)
+VerusChecker : ProofChecker
+MockChecker : ProofChecker    # (existing, for testing)
+
+CheckerRegistry : Dict[String, ProofChecker]
+  register : (name, class) → ()
+  get : name → ProofChecker
+  available_checkers : () → [String]
+```
+```python
+>>> services/ashc/
+├── __init__.py          # Exports
+├── contracts.py         # ProofObligation, VerifiedLemma, CheckerResult
+├── obligation.py        # Extract obligations from pytest failures
+├── search.py            # LLM-assisted proof search
+├── persistence.py       # PostgresLemmaDatabase
+└── checker.py           # DafnyChecker, MockChecker, CheckerRegistry ← EXTEND HERE
+```
+```python
+>>> class NewChecker:
+    def __init__(self, binary_path: str | None = None, *, verify_on_init: bool = True):
+        self._binary_path = binary_path or "binary"
+        self._available: bool | None = None
+        if verify_on_init:
+            self._verify_installation()
+
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def is_available(self) -> bool: ...
+
+    def _verify_installation(self) -> None: ...  # subprocess --version check
+
+    async def check(self, proof_source: str, timeout_ms: int = 30000) -> CheckerResult: ...
+
+    def _parse_errors(self, output: str) -> list[str]: ...
+
+    def _parse_warnings(self, output: str) -> list[str]: ...
+```
+```python
+>>> @runtime_checkable
+class ProofChecker(Protocol):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def is_available(self) -> bool: ...
+
+    async def check(
+        self,
+        proof_source: str,
+        timeout_ms: int = 30000,
+    ) -> CheckerResult: ...
+```
+
+### Things to Know
+
+⚠️ **Note:** Anti-pattern: Blocking subprocess calls: Use asyncio.create_subprocess_exec, not subprocess.run
+
+⚠️ **Note:** Anti-pattern: Ignoring exit codes: Parse exit code, not output presence (Dafny outputs to stderr even on success)
+
+⚠️ **Note:** Anti-pattern: Silent failures: Raise CheckerUnavailable explicitly, don't return empty results
+
+⚠️ **Note:** Anti-pattern: Uncleaned temp files: Always use try/finally for cleanup
+
+⚠️ **Note:** Anti-pattern: Hardcoded timeouts: Accept timeout_ms parameter, respect it
+
+---
+
+## purpose
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol: Purpose
+```
+
+Extend the ASHC proof-checking infrastructure with Lean4 and Verus checker bridges.
+
+---
+
+## the_core_insight
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol: The Core Insight
+```
+
+Proof checkers are **interchangeable morphisms** with a common interface:
+
+### Examples
+```python
+>>> ProofChecker : String → CheckerResult
+```
+
+---
+
+## registry_integration
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol: Registry Integration
+```
+
+After implementing, register new checkers:
+
+---
+
+## exit_criteria
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol: Exit Criteria
+```
+
+- [ ] `Lean4Checker` implements `ProofChecker` protocol - [ ] `VerusChecker` implements `ProofChecker` protocol - [ ] Both checkers handle unavailability gracefully (`is_available` property) - [ ] Both checkers have timeout handling (no zombie processes) - [ ] Tests skip when checker not installed (`@pytest.mark.skipif`) - [ ] `available_checkers()` returns all installed checkers - [ ] Existing tests still pass (152 ASHC tests) - [ ] Temp file cleanup verified (no accumulation)
+
+---
+
+## connection_to_proof_generation_pipeline
+
+```python
+spec Checker Bridges: The Gatekeeper Protocol: Connection to Proof-Generation Pipeline
+```
+
+Checkers plug into `ProofSearcher`:
+
+### Examples
+```python
+>>> class ProofSearcher:
+    def __init__(
+        self,
+        gateway: MorpheusGateway,
+        checker: ProofChecker,  # ← Any checker works here
+        lemma_db: LemmaDatabase | None = None,
+        config: ProofSearchConfig | None = None,
+    ): ...
+```
+
+---
+
 ## spec.protocols.cli
 
 ## epigraph
@@ -2437,6 +2595,458 @@ The Membrane is not a product. It is a **practice**.
 
 ---
 
+## spec.protocols.memory-first-docs
+
+## memory_first_documentation
+
+```python
+spec Memory-First Documentation
+```
+
+Teaching moments don't die; they become ancestors.
+
+### Examples
+```python
+>>> LivingDocs = Brain.project(teaching_crystals)
+
+hydrate(task) =
+  Brain.semantic_search(task)
+  >> filter_teaching
+  >> check_extinctions
+  >> annotate_successors
+  >> project(observer)
+```
+```python
+>>> class TeachingCrystal(TimestampMixin, Base):
+    """
+    A teaching moment crystallized in Brain.
+
+    Persists beyond the death of source code.
+    Links to successors when source is deleted.
+    """
+    __tablename__ = "brain_teaching_crystals"
+
+    id: Mapped[str]  # Primary key
+
+    # The teaching
+    insight: Mapped[str]  # The gotcha
+    severity: Mapped[str]  # "info" | "warning" | "critical"
+    evidence: Mapped[str | None]  # test_file.py::test_name
+
+    # Provenance
+    source_module: Mapped[str]  # "services.town.dialogue_service"
+    source_symbol: Mapped[str]  # "DialogueService.process_turn"
+    source_commit: Mapped[str | None]  # Git SHA where learned
+
+    # Temporal
+    born_at: Mapped[datetime]  # When first captured
+    died_at: Mapped[datetime | None]  # When source was deleted
+
+    # Lineage (Successor Chain)
+    successor_module: Mapped[str | None]  # What replaced the source
+    successor_symbol: Mapped[str | None]  # Symbol in successor
+    applies_to: Mapped[list[str]]  # AGENTESE paths still relevant
+
+    # Link to full crystal content
+    crystal_id: Mapped[str | None]  # FK to brain_crystals
+```
+```python
+>>> class ExtinctionEvent(TimestampMixin, Base):
+    """
+    A mass deletion event with salvaged wisdom.
+
+    Records architectural decisions that removed code
+    while preserving the teaching moments learned.
+    """
+    __tablename__ = "brain_extinction_events"
+
+    id: Mapped[str]  # Primary key
+
+    # What happened
+    reason: Mapped[str]  # "Crown Jewel Cleanup - AD-009"
+    decision_doc: Mapped[str | None]  # "spec/decisions/AD-009.md"
+    commit: Mapped[str]  # Git SHA of deletion
+
+    # What was deleted
+    deleted_paths: Mapped[list[str]]  # ["services/town/", ...]
+
+    # Successor mapping (DAG)
+    successor_map: Mapped[dict[str, str]]  # {"town": "brain", ...}
+```
+```python
+>>> @dataclass
+class HydrationContext:
+    """Context blob with extinction awareness."""
+
+    task: str
+    relevant_teaching: list[TeachingResult]
+    related_modules: list[str]
+    voice_anchors: list[str]
+
+    # Semantic (from Brain vectors)
+    semantic_teaching: list[ScoredTeachingResult]
+    has_semantic: bool
+
+    # Extinction awareness (Memory-First)
+    extinct_modules: list[str]  # Modules referenced that no longer exist
+    ancestral_wisdom: list[TeachingCrystal]  # Teaching from extinct code
+    successor_map: dict[str, str]  # What replaced what
+```
+```python
+>>> For all teaching moments T in source code:
+  crystallize(T) → TeachingCrystal in Brain
+
+Teaching moments extracted from code MUST be crystallized in Brain.
+```
+
+---
+
+## purpose
+
+```python
+spec Memory-First Documentation: Purpose
+```
+
+Documentation systems suffer from amnesia—they know only the present. When code is deleted, its wisdom dies. Memory-First Documentation treats the codebase as a living organism with institutional memory.
+
+---
+
+## core_insight
+
+```python
+spec Memory-First Documentation: Core Insight
+```
+
+Brain is already the ground truth for memory (crystals, semantic search, healing). Living Docs should become a **projection of Brain's memory**, not a separate extraction system. Documentation emerges from Brain's understanding, including understanding of what no longer exists.
+
+### Examples
+```python
+>>> LivingDocs = Brain.project(teaching_crystals)
+
+hydrate(task) =
+  Brain.semantic_search(task)
+  >> filter_teaching
+  >> check_extinctions
+  >> annotate_successors
+  >> project(observer)
+```
+
+---
+
+## connection_to_temporal_knowledge_graphs
+
+```python
+spec Memory-First Documentation: Connection to Temporal Knowledge Graphs
+```
+
+Memory-First Documentation implements the temporal knowledge graph pattern:
+
+---
+
+## connection_to_adrs
+
+```python
+spec Memory-First Documentation: Connection to ADRs
+```
+
+Architecture Decision Records handle decisions; Memory-First handles code:
+
+---
+
+## the_soil_remembers
+
+```python
+spec Memory-First Documentation: The Soil Remembers
+```
+
+The final insight: **the soil remembers what the garden forgets**.
+
+### Examples
+```python
+>>> Current Hydration:
+  context = find_relevant_teaching(task)
+
+Memory-First Hydration:
+  context = find_relevant_teaching(task)
+           + find_ancestral_wisdom(task)
+           + find_successor_mapping(task)
+```
+
+---
+
+## spec.protocols.metabolic-development
+
+## metabolic_development_protocol
+
+```python
+spec Metabolic Development Protocol
+```
+
+The development session is not separate from the code. The session IS the code, becoming.
+
+### Examples
+```python
+>>> LATERAL (Infrastructure)
+         ┌──────────────────────────────────────────────────────────────┐
+         │                                                              │
+         │   Morning Coffee ───► Living Docs ───► ASHC ───► Interactive Text
+         │         │                   │             │              │
+         │         ▼                   ▼             ▼              ▼
+         │   Intent Capture    Context Compile   Evidence Acc.  Live Specs
+         │                                                              │
+         └──────────────────────────────────────────────────────────────┘
+                                       │
+                                       │
+                            VERTICAL   │  (Developer Journeys)
+                                       │
+                                       ▼
+                    ┌──────────────────────────────────────┐
+                    │                                      │
+                    │   Journey 1: Morning Start           │
+                    │   Journey 2: Feature Implementation  │
+                    │   Journey 3: Session Handoff         │
+                    │   Journey 4: Verification & Ship     │
+                    │                                      │
+                    └──────────────────────────────────────┘
+```
+```python
+>>> ┌─────────────────────────────────────────────────────────────────────────────┐
+│                        THE METABOLIC PIPELINE                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   MORNING COFFEE          LIVING DOCS           ASHC              ITEXT    │
+│   (Intent Capture)        (Context Compile)     (Evidence Acc.)   (Live)   │
+│                                                                             │
+│   ┌───────────────┐       ┌───────────────┐     ┌───────────────┐          │
+│   │   Voice       │──────►│   Hydrator    │────►│   Compiler    │          │
+│   │   Capture     │       │               │     │               │          │
+│   │               │       │   Keywords→   │     │   Spec→Impl→  │          │
+│   │   "Today I    │       │   Context     │     │   Evidence    │          │
+│   │   want to..." │       │               │     │               │          │
+│   └───────────────┘       └───────────────┘     └───────────────┘          │
+│         │                       │                      │                    │
+│         │  Stigmergy            │  Teaching            │  Traces            │
+│         │  Pheromones           │  Moments             │  Witnesses         │
+│         ▼                       ▼                      ▼                    │
+│   ┌───────────────┐       ┌───────────────┐     ┌───────────────┐          │
+│   │   Archaeology │       │   Projection  │     │   Causal      │          │
+│   │               │       │               │     │   Graph       │          │
+│   │   Strata of   │       │   Observer→   │     │               │          │
+│   │   Past Voice  │       │   Surface     │     │   Nudge→      │          │
+│   │               │       │               │     │   Outcome     │          │
+│   └───────────────┘       └───────────────┘     └───────────────┘          │
+│         │                       │                      │                    │
+│         └───────────────────────┴──────────────────────┘                    │
+│                                 │                                           │
+│                                 ▼                                           │
+│                        ┌───────────────────┐                                │
+│                        │  INTERACTIVE TEXT │                                │
+│                        │                   │                                │
+│                        │  Specs become     │                                │
+│                        │  control surfaces │                                │
+│                        │                   │                                │
+│                        │  Tasks→Traces     │                                │
+│                        │  AGENTESE→Habitats│                                │
+│                        │  Images→Context   │                                │
+│                        └───────────────────┘                                │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+```python
+>>> # Metabolic Integration Matrix
+METABOLIC_WIRING = {
+    # Brain ↔ ASHC: Evidence becomes crystals
+    "ashc.evidence.accumulated": [
+        brain_crystallize_evidence,  # Evidence corpus → Brain crystal
+    ],
+
+    # Gardener ↔ Morning Coffee: Voice patterns update garden
+    "coffee.voice.captured": [
+        gardener_update_voice_patterns,  # Voice → Plot metadata
+    ],
+
+    # Witness ↔ Interactive Text: Task completion creates marks
+    "itext.task.completed": [
+        witness_capture_mark,  # Toggle → Mark in Walk
+    ],
+
+    # K-gent ↔ Hydration: Voice anchors shape persona
+    "hydration.compiled": [
+        kgent_absorb_voice_anchors,  # Anchors → K-gent coordinates
+    ],
+
+    # Living Docs ↔ ASHC: Teaching moments from failures
+    "ashc.test.failed": [
+        living_docs_create_teaching_moment,  # Failure → Gotcha
+    ],
+
+    # Morning Coffee ↔ Brain: Voice becomes crystal
+    "coffee.voice.captured": [
+        brain_capture_voice_as_crystal,  # Voice text → Memory crystal
+    ],
+}
+```
+```python
+>>> class MetabolicContext:
+    """Unified context generated from all metabolic sources."""
+
+    @classmethod
+    async def compile(
+        cls,
+        task: str,
+        observer: Observer,
+        morning_voice: MorningVoice | None = None,
+    ) -> "MetabolicContext":
+        """
+        Compile context from all metabolic sources.
+
+        Sources:
+        1. Morning Coffee: Today's intent + past patterns
+        2. Living Docs: Task-relevant gotchas + related files
+        3. ASHC: Evidence from similar past work
+        4. Interactive Text: Relevant specs + inline wisdom
+        """
+        # Morning Coffee: voice archaeology
+        voice_context = await stigmergy.sense_patterns(task)
+        archaeology = await strata.excavate(task, depth="shallow")
+
+        # Living Docs: hydrate task-specific context
+        hydration = hydrate_context(task)
+
+        # ASHC: find prior evidence for similar work
+        prior_evidence = await causal_graph.predict_for(task)
+
+        # Interactive Text: extract relevant specs
+        relevant_specs = await interactive_text.tokens_for(task)
+
+        return cls(
+            task=task,
+            observer=observer,
+            voice=voice_context,
+            archaeology=archaeology,
+            teaching=hydration.relevant_teaching,
+            evidence=prior_evidence,
+            specs=relevant_specs,
+        )
+```
+```python
+>>> ┌─────────────────────────────────────────────────────────────────────────────┐
+│  MORNING START JOURNEY                                                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. RITUAL                                                                  │
+│     kg coffee begin                                                         │
+│     ▶ "Good morning. The garden knows things from yesterday..."            │
+│     ▶ Show resonant past mornings (circadian matching)                     │
+│     ▶ Surface stigmergic patterns ("Ship something" - 7 of 10 mornings)    │
+│                                                                             │
+│  2. CAPTURE                                                                 │
+│     "Today I want to finish the verification integration"                   │
+│     ▶ Intent recorded as MorningVoice                                      │
+│     ▶ Pheromone deposited at concepts: [verification, integration]         │
+│     ▶ Archaeology stratum updated                                          │
+│                                                                             │
+│  3. HYDRATE                                                                 │
+│     kg docs hydrate "finish verification integration"                       │
+│     ▶ Teaching moments surfaced (gotchas for verification)                 │
+│     ▶ Related files identified                                             │
+│     ▶ Prior ASHC evidence shown                                            │
+│                                                                             │
+│  4. COMPILE                                                                 │
+│     Session context injected into Claude Code                              │
+│     ▶ CLAUDE.md + hydration context + voice anchors                        │
+│     ▶ /hydrate skill available for mid-session re-focus                    │
+│                                                                             │
+│  5. SERENDIPITY (Accursed Share)                                           │
+│     10% chance: Surface random past voice from unexpected era              │
+│     ▶ "Three months ago, you said: 'The best code is no code'"            │
+│     ▶ Unexpected connection may spark insight                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## epigraph
+
+```python
+spec Metabolic Development Protocol: Epigraph
+```
+
+These three insights from our brainstorming collapse into one:
+
+---
+
+## session_handoff
+
+```python
+spec Metabolic Development Protocol: Session Handoff
+```
+
+**Intent:** {self.intent_summary}
+
+### Examples
+```python
+>>> **Session Boundary Detection**
+
+When does a session *really* end?
+```
+```python
+>>> **CLI Flow:**
+```
+
+---
+
+## part_vi_laws
+
+```python
+spec Metabolic Development Protocol: Part VI: Laws
+```
+
+| Law | Statement | Witness | |-----|-----------|---------| | **Session Coherence** | `∀ session: session.traces ⊆ session.evidence.traces` | `MetabolicWitness.verify_coherence()` | | **Voice Preservation** | `∀ voice: archaeology.contains(voice)` after 24h | `Archaeology.verify_deposit()` | | **Evidence Sufficiency** | `∀ ship: evidence.confidence ≥ 0.8` | `ASHC.verify_evidence()` | | **Handoff Completeness** | `∀ handoff: next_session.can_continue(handoff)` | `Handoff.verify_context()` | | **D
+
+---
+
+## part_viii_anti_patterns
+
+```python
+spec Metabolic Development Protocol: Part VIII: Anti-Patterns
+```
+
+| Anti-Pattern | Why It's Wrong | |--------------|----------------| | Session isolation | Sessions should flow into each other | | Manual documentation | Docs compile from source, not written | | One-shot verification | Evidence requires repetition | | Voice smoothing | Preserve rough edges, don't polish | | Context dumping | Compile focused context, don't overwhelm | | Evidence inflation | 100 identical runs ≠ 100x confidence (diversity matters) | | Hiding abandoned work | Failed experiments ar
+
+---
+
+## part_ix_connection_to_principles
+
+```python
+spec Metabolic Development Protocol: Part IX: Connection to Principles
+```
+
+| Principle | How Metabolic Development Embodies It | Strength | |-----------|---------------------------------------|----------| | **Tasteful** | Focused context, not exhaustive dumps | ✅ Strong | | **Curated** | Relevant gotchas, not all gotchas | ✅ Strong | | **Ethical** | Evidence over claims; transparent about uncertainty; waste visible not hidden | ✅ Strong | | **Joy-Inducing** | Morning ritual feels like coming home; serendipity surfaces unexpected connections | ✅ Strong | | **Composable*
+
+---
+
+## part_xi_the_accursed_share_integration
+
+```python
+spec Metabolic Development Protocol: Part XI: The Accursed Share Integration
+```
+
+The 10% exploration budget manifests throughout the metabolic system:
+
+---
+
+## closing_meditation
+
+```python
+spec Metabolic Development Protocol: Closing Meditation
+```
+
+This protocol collapses four separate insights into one coherent vision:
+
+---
+
 ## spec.protocols.metaphysical-forge
 
 ## metaphysical_forge
@@ -3341,6 +3951,177 @@ spec Projection Protocol (UI): Future Targets
 ```
 
 | Target | Status | Notes | |--------|--------|-------| | CLI | ✓ Shipped | ASCII art, box drawing | | TUI | ✓ Shipped | Textual widgets | | marimo | ✓ Shipped | anywidget + mo.Html | | JSON | ✓ Shipped | API responses | | SSE | ✓ Shipped | Streaming events | | WebGL | ✓ Shipped | Three.js primitives (TopologyNode3D, TopologyEdge3D, LOD, themes) | | WebXR | Future | VR/AR experiences | | Audio | Future | Sonification of state |
+
+---
+
+## spec.protocols.proof-generation
+
+## proof_generating_ashc
+
+```python
+spec Proof-Generating ASHC
+```
+
+Failures don't just update a causal graph—they generate proof obligations.
+
+### Examples
+```python
+>>> ProofObligation : FailedGeneration → (Spec, Property, Witness)
+
+ProofSearch : ProofObligation → Proof | Timeout
+
+VerifiedLemma : Proof × Checker → Lemma
+
+ASHCWithProof : Evidence → ProofObligation* → Lemma*
+```
+```python
+>>> Spec → Generate N → Verify each → Select best → Output
+                         ↓
+                   Failures → ProofObligation
+                         ↓
+                   LLM proof search (Lean/Dafny/Verus)
+                         ↓
+                   VerifiedLemma for NEXT generation
+```
+```python
+>>> concept.ashc.obligation    → Generate proof obligation from failure
+concept.ashc.prove         → Attempt to discharge obligation
+concept.ashc.lemma         → Query verified lemmas
+concept.ashc.graph         → Visualize lemma dependency graph
+```
+```python
+>>> @node("world.tools.bash")
+async def bash_invoke(
+    observer: Umwelt,
+    command: str,
+) -> Witness[BashResult]:
+    """
+    Type signature generates proof obligation:
+    ∀ observer, command. bash_invoke(observer, command) : Witness[BashResult]
+    """
+    ...
+```
+```python
+>>> Type Signature → Proof Obligation → LLM Proof Attempt → Checker → Lemma
+      ↓                                                            ↓
+  AD-013 (Typed AGENTESE)                                   Used by NEXT generation
+```
+
+### Things to Know
+
+⚠️ **Note:** Anti-pattern: Proving everything: Too expensive; prioritize critical paths
+
+⚠️ **Note:** Anti-pattern: Ignoring failed proofs: Signal of spec ambiguity—investigate, don't suppress
+
+⚠️ **Note:** Anti-pattern: Manual proof editing: Proofs should regenerate from spec (Generative principle)
+
+⚠️ **Note:** Anti-pattern: Proof hoarding: Share lemmas across services via SynergyBus
+
+⚠️ **Note:** Anti-pattern: Skipping the checker: LLM claims are worthless without mechanical verification
+
+---
+
+## purpose
+
+```python
+spec Proof-Generating ASHC: Purpose
+```
+
+Extend ASHC's evidence compilation to produce **formal proofs** that LLMs attempt to discharge.
+
+---
+
+## the_core_insight
+
+```python
+spec Proof-Generating ASHC: The Core Insight
+```
+
+The equation changes when proof generation is LLM-assisted:
+
+---
+
+## integration_with_ashc
+
+```python
+spec Proof-Generating ASHC: Integration with ASHC
+```
+
+| ASHC Concept | Proof Extension | |--------------|-----------------| | Evidence | Proof obligation | | Causal graph | Lemma dependency graph | | Nudge | Proof search direction | | Learned prior | Verified lemma | | Work bet | Proof attempt budget |
+
+---
+
+## laws
+
+```python
+spec Proof-Generating ASHC: Laws
+```
+
+1. **Soundness**: `verified(lemma) → property_holds(lemma.property)` - Verified lemmas correspond to actual properties - The proof checker is the source of truth
+
+---
+
+## integration_with_typed_agentese_ad_013
+
+```python
+spec Proof-Generating ASHC: Integration with Typed AGENTESE (AD-013)
+```
+
+Typed AGENTESE provides the type annotations that become proof obligations:
+
+### Examples
+```python
+>>> @node("world.tools.bash")
+async def bash_invoke(
+    observer: Umwelt,
+    command: str,
+) -> Witness[BashResult]:
+    """
+    Type signature generates proof obligation:
+    ∀ observer, command. bash_invoke(observer, command) : Witness[BashResult]
+    """
+    ...
+```
+
+---
+
+## integration_with_polynomial_functors_10
+
+```python
+spec Proof-Generating ASHC: Integration with Polynomial Functors (§10)
+```
+
+Path composition validity becomes provable:
+
+### Examples
+```python
+>>> Path A : Input₁ → Output₁
+Path B : Input₂ → Output₂
+
+Composition valid iff Output₁ ≅ Input₂
+
+Proof: show type isomorphism via Lean4 tactics
+```
+
+---
+
+## risks_and_mitigations
+
+```python
+spec Proof-Generating ASHC: Risks and Mitigations
+```
+
+| Risk | Mitigation | |------|------------| | Proof generation too slow | Cache proven lemmas; prune proof search tree | | LLM can't discharge obligation | Fall back to evidence-only mode | | Proof checker integration complex | Start with Dafny (simpler than Lean) | | Over-formalization | Only prove critical path properties | | Proof rot | Regenerate proofs on spec change |
+
+---
+
+## connection_to_stigmergic_cognition_13
+
+```python
+spec Proof-Generating ASHC: Connection to Stigmergic Cognition (§13)
+```
+
+Proofs are traces. The lemma database is a stigmergic surface:
 
 ---
 
@@ -4681,6 +5462,6 @@ Applying the naming criteria from the plan:
 
 ---
 
-*206 symbols, 23 teaching moments*
+*235 symbols, 33 teaching moments*
 
 *Generated by Living Docs — 2025-12-21*

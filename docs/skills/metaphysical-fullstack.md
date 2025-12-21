@@ -168,7 +168,7 @@ class MemoryNode:
         return await self.persistence.status()
 ```
 
-**⚠️ DI Contract**: Every `dependencies=("foo",)` in `@node` MUST have a matching provider registered in `services/providers.py`. The container **silently skips** unregistered dependencies, causing cryptic `TypeError` at instantiation. See `agentese-node-registration.md` → "The Silent Skip Problem".
+**✅ DI Contract (Enlightened Resolution)**: Every `dependencies=("foo",)` in `@node` MUST have a matching provider registered in `services/providers.py`. The container now **fails immediately** with actionable `DependencyNotFoundError` for required deps. Optional deps (with `| None = None` default) are skipped gracefully. See `agentese-node-registration.md` → "Enlightened Resolution".
 
 ### 3. AGENTESE Universal Protocol (The API IS the Protocol)
 

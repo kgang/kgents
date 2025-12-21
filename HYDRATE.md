@@ -79,7 +79,7 @@ Projection → AGENTESE Protocol → Node → Service → Infrastructure → Per
 
 | Jewel | Status | Purpose |
 |-------|--------|---------|
-| Brain | 100% | Spatial cathedral of memory |
+| Brain | 100% | Spatial cathedral of memory + TeachingCrystals |
 | Gardener | 100% | Cultivation practice |
 | Gestalt | 85% | Living visualization |
 | Forge | 85% | Creative workshop |

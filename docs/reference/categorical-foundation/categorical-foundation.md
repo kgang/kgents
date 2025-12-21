@@ -2108,6 +2108,26 @@ module protocol
 
 D-gent Protocols: Dual interface for data persistence.
 
+### Things to Know
+
+ℹ️ put() overwrites existing datum with same ID This is intentional for graceful degradation updates, not a bug. Use content-addressed IDs (SHA-256) if you need immutability.
+  - *Verified in: `test_backends.py::TestPut::test_put_overwrites_existing`*
+
+ℹ️ causal_chain() returns empty list for missing parent, not error If a datum has causal_parent pointing to a deleted datum, you get just the child in the chain. Handle orphaned data gracefully.
+  - *Verified in: `test_backends.py::TestCausalChain::test_causal_chain_orphaned_datum`*
+
+ℹ️ list() returns newest first (sorted by created_at descending) This affects pagination. Use `after` param for time-based filtering.
+  - *Verified in: `test_backends.py::TestList::test_list_sorted_by_created_at_desc`*
+
+ℹ️ DgentRouter silently falls back to memory backend If preferred backend unavailable (e.g., Postgres URL missing), it uses MEMORY without error. Check selected_backend after put().
+  - *Verified in: `test_router.py::TestBackendSelection::test_falls_back_to_memory`*
+
+ℹ️ DataBus subscriber errors don't block other subscribers A failing handler is logged but doesn't prevent event delivery. Check bus.stats["total_errors"] for silent failures.
+  - *Verified in: `test_bus.py::TestErrorHandling::test_subscriber_error_does_not_block`*
+
+ℹ️ get() and list() are silent reads - no DataBus events emitted Only put() and delete() emit events. If you need read tracking, instrument at a higher layer (e.g., M-gent reinforcement).
+  - *Verified in: `test_bus.py::TestBusEnabledDgent::test_get_does_not_emit`*
+
 ---
 
 ## DataAgent
@@ -2886,6 +2906,23 @@ module agent
 ```
 
 FluxAgent: Stream-transforming agent wrapper.
+
+### Things to Know
+
+🚨 **Critical:** start() returns AsyncIterator[B], NOT None. You MUST consume the iterator with `async for`. Just calling start() does nothing.
+  - *Verified in: `test_agent.py::TestFluxAgentStartReturnsAsyncIterator`*
+
+ℹ️ invoke() behavior changes based on state. DORMANT = direct call, FLOWING = perturbation injected into stream. Same method, different semantics. Check flux.state before assuming behavior.
+  - *Verified in: `test_agent.py::TestFluxAgentInvokeOnDormant`*
+
+🚨 **Critical:** Cannot start() a FLOWING flux. You'll get FluxStateError. The flux must be DORMANT or STOPPED first. Use flux.stop() to reset.
+  - *Verified in: `test_agent.py::TestFluxAgentStateTransitions::test_cannot_start_while_flowing`*
+
+ℹ️ Entropy exhaustion causes COLLAPSED state, which is TERMINAL. Unlike STOPPED, you cannot restart from COLLAPSED. Call reset() first, which restores entropy_budget and clears counters.
+  - *Verified in: `test_agent.py::TestFluxAgentEntropyManagement::test_entropy_collapse`*
+
+ℹ️ Core processing is EVENT-DRIVEN, not timer-driven. No asyncio.sleep() in _process_flux. If you add polling loops, you're fighting the design. Use event sources and let the stream drive execution.
+  - *Verified in: `test_agent.py::TestNoAsyncSleepInCore`*
 
 ---
 
@@ -3685,6 +3722,14 @@ module errors
 
 Flux-specific exceptions.
 
+### Things to Know
+
+ℹ️ All Flux exceptions carry a `context` dict with structured data. Don't just catch and log the message - check context for state info, buffer sizes, stage indices, etc. Useful for debugging pipelines.
+  - *Verified in: `Structural - FluxError.__init__ stores context`*
+
+ℹ️ FluxStateError contains current_state and attempted_operation fields. When debugging "cannot X from state Y" errors, these tell you exactly what the flux was doing and what you tried to do.
+  - *Verified in: `Structural - FluxStateError stores these fields`*
+
 ---
 
 ## FluxError
@@ -3766,6 +3811,19 @@ module functor
 ```
 
 Flux Functor: The lift mechanism.
+
+### Things to Know
+
+ℹ️ Flux.lift() creates a NEW FluxAgent each time. Lifting the same agent twice gives two independent flux instances with separate state. If you need shared state, lift once and reuse the FluxAgent. (Evidence: Structural - lift() calls FluxAgent constructor)
+
+🚨 **Critical:** Flux.unlift() does NOT stop a running flux. It just returns the inner agent. Always call flux.stop() first if the flux is running.
+  - *Verified in: `Structural - unlift docstring explicitly warns`*
+
+ℹ️ Functor law verification is complex for FluxFunctor because it operates on streams. Identity law holds per-element, not for the whole stream. Composition law requires collecting stream outputs.
+  - *Verified in: `test_integration.py::TestFluxFunctorLaws`*
+
+ℹ️ FluxFunctor.pure() returns a single-element AsyncIterator, not a FluxAgent. Use it for stream-level identity, not agent lifting.
+  - *Verified in: `Structural - pure returns async generator`*
 
 ---
 
@@ -4228,6 +4286,17 @@ module perturbation
 
 Perturbation handling for FluxAgent.
 
+### Things to Know
+
+ℹ️ Perturbation priority ordering is REVERSED for asyncio.PriorityQueue. Higher priority values come FIRST (e.g., priority=100 before priority=10). This is because PriorityQueue is a min-heap, so we flip comparison.
+  - *Verified in: `test_perturbation.py::TestPerturbationOrdering::test_higher_priority_comes_first`*
+
+ℹ️ set_result/set_exception/cancel are IDEMPOTENT. Calling them on an already-done Future is safe (no-op). This prevents race conditions between flux processing and caller cancellation.
+  - *Verified in: `test_perturbation.py::TestPerturbationResult::test_set_result_idempotent`*
+
+ℹ️ create_perturbation() uses priority=100 by default, not 0. This means helper-created perturbations are HIGH priority. If you want normal priority, explicitly pass priority=0.
+  - *Verified in: `test_perturbation.py::TestCreatePerturbation::test_create_with_data`*
+
 ---
 
 ## Perturbation
@@ -4359,6 +4428,19 @@ module pipeline
 ```
 
 FluxPipeline: Living Pipelines via | operator.
+
+### Things to Know
+
+🚨 **Critical:** Empty pipelines raise FluxPipelineError immediately in __post_init__. You cannot create FluxPipeline([]). Always have at least one stage.
+  - *Verified in: `test_pipeline.py::TestPipelineValidation::test_empty_pipeline_raises`*
+
+ℹ️ Pipeline can only be started ONCE. Re-calling start() on a running pipeline raises FluxPipelineError. Create a new pipeline or stop first. (Evidence: Structural - start() checks self._started flag)
+
+ℹ️ stop() stops stages in REVERSE order (last to first). This allows proper draining of intermediate data. If any stage fails to stop, errors are collected and raised as a combined FluxPipelineError.
+  - *Verified in: `test_pipeline.py::TestPipelineStop::test_stop_all_stages`*
+
+ℹ️ Piping a pipeline into another pipeline MERGES them into a single pipeline, not a nested structure. (p1 | p2) has len(p1)+len(p2) stages.
+  - *Verified in: `test_pipeline.py::TestPipelineCombination::test_pipeline_or_pipeline`*
 
 ---
 
@@ -5598,6 +5680,14 @@ module base
 
 Base protocols and types for flux sources.
 
+### Things to Know
+
+ℹ️ Sources should be EVENT-DRIVEN, not timer-driven. If your __anext__() uses asyncio.sleep() in a loop to poll, you're doing it wrong. Await the actual event (file watcher, message queue, etc.) instead.
+  - *Verified in: `Structural - module docstring emphasizes event-driven`*
+
+ℹ️ close() is NOT async. If your source needs async cleanup, do it in __aexit__ (the async context manager exit) instead.
+  - *Verified in: `Structural - close signature is sync`*
+
 ---
 
 ## SourceProtocol
@@ -6318,6 +6408,17 @@ module state
 ```
 
 Flux lifecycle states.
+
+### Things to Know
+
+ℹ️ COLLAPSED is TERMINAL - no transitions out. Unlike STOPPED (which allows restart via start()), COLLAPSED requires explicit reset() to return to DORMANT. Entropy exhaustion = permanent death.
+  - *Verified in: `can_transition_to returns empty set for COLLAPSED`*
+
+ℹ️ allows_perturbation() is only True for FLOWING state. DORMANT uses direct invoke (not perturbation), PERTURBED rejects (already handling one), and terminal states reject entirely. Check state first.
+  - *Verified in: `Structural - allows_perturbation implementation`*
+
+ℹ️ DRAINING is a transient state between source exhaustion and STOPPED. is_processing() returns True for DRAINING because output buffer may still have items. Wait for STOPPED before assuming completion.
+  - *Verified in: `Structural - is_processing includes DRAINING`*
 
 ---
 
@@ -8280,6 +8381,13 @@ module flux
 
 KgentFlux: K-gent as a Flux Stream Agent.
 
+### Things to Know
+
+ℹ️ FluxStream is single-use. Once consumed (iterated), _consumed=True and re-iteration raises StopAsyncIteration immediately. Create a new FluxStream for each consumption via factory function. (Evidence: test_soul_streaming_integration.py::TestPipeAssociativity uses create_stream() factory to avoid reuse)
+
+🚨 **Critical:** Metadata events ALWAYS pass through filter(), take(), map() unchanged. Only data events are filtered/transformed. This preserves token counts and completion signals. Don't filter expecting metadata to be blocked.
+  - *Verified in: `test_soul_streaming_integration.py::test_pipeline_preserves_metadata`*
+
 ---
 
 ## FluxEvent
@@ -9845,6 +9953,14 @@ module gatekeeper
 ```
 
 Semantic Gatekeeper: Validate code against principles.
+
+### Things to Know
+
+🚨 **Critical:** Only ERROR and CRITICAL severities cause result.passed=False. INFO and WARNING violations are informational and DO NOT fail validation. Check by_severity counts if you need warning-level enforcement.
+  - *Verified in: `test_gatekeeper.py::TestSeverity::test_pass_fail_threshold`*
+
+ℹ️ LLM failures in semantic analysis are SILENT - they return empty list. The gatekeeper gracefully degrades to heuristic-only validation. Check if self._llm is set AND use_llm=True to confirm LLM is active.
+  - *Verified in: `gatekeeper.py::_check_semantic catches all exceptions`*
 
 ---
 
@@ -13468,6 +13584,26 @@ module soul
 
 K-gent Soul: The Middleware of Consciousness.
 
+### Things to Know
+
+🚨 **Critical:** Budget tiers are NOT just token limits - they gate LLM access entirely. DORMANT and WHISPER never call the LLM; they use templates. Set budget=BudgetTier.DIALOGUE to actually invoke the LLM.
+  - *Verified in: `test_soul.py::test_soul_dialogue_template - templates bypass LLM`*
+
+ℹ️ Auto-LLM creation spawns subprocesses which are SLOW in tests. Set KGENTS_NO_AUTO_LLM=1 or pass auto_llm=False in test fixtures. The test suite does this via environment variable.
+  - *Verified in: `test_soul.py::TestLLMDialogue - uses auto_llm=False`*
+
+ℹ️ Empty/whitespace messages return templates, NOT errors. This is intentional graceful degradation - "What's on your mind?" Do not rely on dialogue() to validate user input.
+  - *Verified in: `test_soul.py::test_soul_dialogue_empty_message`*
+
+🚨 **Critical:** intercept_deep() ALWAYS escalates dangerous operations regardless of LLM recommendations. The DANGEROUS_KEYWORDS set is hardcoded and cannot be overridden. This is a safety invariant.
+  - *Verified in: `test_soul.py::test_deep_intercept_dangerous_operation`*
+
+ℹ️ Low LLM confidence (< 0.7) forces escalation even if LLM says "approve". This prevents overconfident auto-approval of ambiguous operations.
+  - *Verified in: `test_soul.py::test_deep_intercept_low_confidence_escalates`*
+
+ℹ️ Without LLM, intercept_deep() silently falls back to shallow intercept. Check result.was_deep to know which path was taken.
+  - *Verified in: `test_soul.py::test_deep_intercept_fallback_without_llm`*
+
 ---
 
 ## BudgetTier
@@ -15951,6 +16087,26 @@ module protocol
 
 MgentProtocol: The M-gent Interface
 
+### Things to Know
+
+ℹ️ forget() returns False for cherished memories - they're protected Call cherish() to pin important memories from the forgetting cycle. This is intentional: cherished memories have relevance=1.0 and can't compost.
+  - *Verified in: `test_associative.py::TestForget::test_forget_cherished_returns_false`*
+
+ℹ️ recall() reinforces accessed memories (increases access_count) Every recall is a touch - relevance increases through repeated access. This is the stigmergy pattern: use strengthens memory.
+  - *Verified in: `test_associative.py::TestRecall::test_recall_reinforces_memory`*
+
+🚨 **Critical:** ACTIVE -> COMPOSTING is INVALID transition (must go through DORMANT) Lifecycle transitions have strict rules. Memory must be DORMANT before it can be demoted to COMPOSTING during consolidation.
+  - *Verified in: `test_lifecycle.py::TestValidTransitions::test_active_to_composting_invalid`*
+
+ℹ️ Consolidation applies relevance decay to non-cherished memories only Cherished memories keep relevance=1.0 through sleep cycles. Use cherish() sparingly - it's a commitment to preserve.
+  - *Verified in: `test_consolidation_engine.py::TestConsolidationBasic::test_consolidate_protects_cherished`*
+
+ℹ️ similarity() returns 0.0 for mismatched embedding dimensions If you mix embeddings of different sizes, comparisons silently fail. Ensure all embeddings use consistent dimension (e.g., 64 for HashEmbedder).
+  - *Verified in: `test_memory.py::TestSimilarity::test_similarity_mismatched_dimensions`*
+
+ℹ️ Memory.embedding is a tuple, not list (converted on creation) Pass list to create(), get tuple back. This ensures hashability.
+  - *Verified in: `test_memory.py::TestMemoryCreation::test_embedding_list_to_tuple`*
+
 ---
 
 ## ConsolidationReport
@@ -16863,6 +17019,13 @@ module algebra
 
 CLI Algebra: Operad → CLI Commands.
 
+### Things to Know
+
+ℹ️ CLIAlgebra.to_cli() requires an agent_resolver to map names to agents. The default resolver uses poly.get_primitive(). If your agents aren't registered primitives, provide a custom resolver or you'll get None.
+  - *Verified in: `Structural - _default_resolver calls get_primitive`*
+
+ℹ️ Command names are auto-generated from operad name + operation name. The operad name is lowercased and "operad" is stripped, so "SoulOperad" + "introspect" becomes "kg soul introspect". (Evidence: Structural - to_cli() line 133)
+
 ---
 
 ## CLIHandler
@@ -17004,6 +17167,23 @@ module core
 ```
 
 Operad Core: Grammar of Agent Composition.
+
+### Things to Know
+
+ℹ️ Operations require EXACT arity. An Operation with arity=2 rejects 1 or 3 arguments with ValueError, even if semantically valid.
+  - *Verified in: `test_core.py::TestOperation::test_operation_wrong_arity_raises`*
+
+🚨 **Critical:** Operad.compose() raises KeyError for unknown operations, not None. Always check `operad.get(op_name)` first if unsure.
+  - *Verified in: `test_core.py::TestOperad::test_operad_compose_unknown_op_raises`*
+
+ℹ️ State composition via seq/par creates NESTED tuple states. Left-assoc seq(seq(a,b),c) gives state ((s_a,s_b),s_c), right-assoc gives (s_a,(s_b,s_c)). Results are equivalent but state shapes differ.
+  - *Verified in: `test_core.py::TestCompositionLaws::test_seq_associativity_behavioral`*
+
+ℹ️ OperadRegistry uses class-level state. For parallel test execution (xdist), call OperadRegistry.reset() + re-import in conftest to ensure clean state.
+  - *Verified in: `test_xdist_registry_canary.py`*
+
+ℹ️ Law verification is STRUCTURAL, not behavioral. verify_law() checks composition structure but doesn't execute with test inputs by default. For behavioral verification, pass agents AND invoke the result.
+  - *Verified in: `test_core.py::TestLawVerification::test_verify_law_by_name`*
 
 ---
 
@@ -17399,6 +17579,14 @@ module soul
 
 Soul Operad: K-gent Composition Grammar.
 
+### Things to Know
+
+ℹ️ Domain operads EXTEND the universal AGENT_OPERAD, not replace it. SOUL_OPERAD includes all 5 universal operations (seq, par, branch, fix, trace) PLUS the soul-specific ones. Check for duplicates.
+  - *Verified in: `test_domains.py::TestSoulOperad::test_has_universal_operations`*
+
+ℹ️ dialectic uses parallel() then sequential(sublate). The input goes to BOTH thesis and antithesis agents, then their pair output goes to sublation. Don't assume thesis runs before antithesis.
+  - *Verified in: `test_domains.py::TestSoulOperad::test_dialectic_composes_parallel_then_sublate`*
+
 ---
 
 ## create_soul_operad
@@ -17432,6 +17620,17 @@ module primitives
 ```
 
 Polynomial Primitives: The 17 Atomic Agents.
+
+### Things to Know
+
+ℹ️ All state Enums follow the pattern: initial state, intermediate states, terminal state(s). The directions function uses this to control valid inputs per state.
+  - *Verified in: `test_primitives.py::TestPrimitiveProperties::test_all_primitives_have_directions`*
+
+ℹ️ PRIMITIVES is a registry dict, not a list. Use get_primitive("id") to retrieve by name, not PRIMITIVES[0].
+  - *Verified in: `test_primitives.py::TestPrimitiveRegistry::test_get_primitive_by_name`*
+
+ℹ️ The primitive module imports from .protocol—if you see circular import errors, check that protocol.py doesn't import primitives.
+  - *Verified in: `test_primitives.py::TestPrimitiveRegistry::test_all_17_primitives_registered`*
 
 ---
 
@@ -17795,6 +17994,14 @@ class PolyAgentProtocol(Protocol[S, A, B])
 
 Protocol for polynomial agents.
 
+### Things to Know
+
+ℹ️ This is a typing.Protocol, not ABC. Use isinstance() checks with @runtime_checkable, not inheritance verification.
+  - *Verified in: `test_protocol.py::TestPolyAgentConstruction`*
+
+ℹ️ The directions function returns valid inputs for each state. This enables MODE-DEPENDENT behavior—the key polynomial insight. Different states accept different inputs.
+  - *Verified in: `test_protocol.py::TestStateDependentBehavior`*
+
 ---
 
 ## PolyAgent
@@ -17809,6 +18016,29 @@ Immutable polynomial agent.
 ```python
 >>> id_agent = PolyAgent(
 ```
+```python
+>>> id_agent = PolyAgent(
+```
+```python
+>>> ...     name="Id",
+```
+```python
+>>> ...     positions=frozenset({"ready"}),
+```
+```python
+>>> ...     _directions=lambda s: frozenset({Any}),
+```
+
+### Things to Know
+
+ℹ️ PolyAgent[S,A,B] > Agent[A,B] because state enables mode-dependent behavior. A stateless agent is just PolyAgent[str, A, B] with positions={"ready"}.
+  - *Verified in: `test_protocol.py::test_stateless_agent_type_alias`*
+
+ℹ️ Use frozenset({Any}) in _directions to accept any input. The _accepts_input helper checks for Any type marker.
+  - *Verified in: `test_protocol.py::test_identity_construction`*
+
+ℹ️ invoke() validates state and input BEFORE calling transition. Invalid state/input raises ValueError, not silent failure.
+  - *Verified in: `test_protocol.py::test_invoke_invalid_state_raises`*
 
 ---
 
@@ -17819,6 +18049,14 @@ class WiringDiagram(Generic[S, S2, A, B, C])
 ```
 
 Wiring diagram for polynomial composition.
+
+### Things to Know
+
+ℹ️ compose() creates a new PolyAgent with PRODUCT state space. If left has 3 states and right has 4, composed has 12 states.
+  - *Verified in: `test_protocol.py::TestWiringDiagram`*
+
+ℹ️ Output of left feeds into input of right. This is sequential composition. For parallel (same input to both), use parallel().
+  - *Verified in: `test_protocol.py::TestSequentialComposition`*
 
 ---
 
@@ -18031,6 +18269,11 @@ class PolyAgentWrapper(BootstrapAgent[A, B])
 ```
 
 Wrapper that adapts PolyAgent to bootstrap Agent interface.
+
+### Things to Know
+
+ℹ️ State is MUTABLE in the wrapper (via self._state). The underlying PolyAgent is immutable, but the wrapper tracks current state across invocations.
+  - *Verified in: `test_protocol.py::test_to_bootstrap_agent_stateful`*
 
 ---
 
@@ -18962,6 +19205,23 @@ module protocol
 
 Sheaf Protocol: Emergence from Local to Global.
 
+### Things to Know
+
+🚨 **Critical:** restrict() raises RestrictionError if no positions valid in subcontext Position filter must match at least one position, or restriction fails. Check your filter predicate before calling restrict().
+  - *Verified in: `test_emergence.py::TestSheafRestriction::test_restrict_to_context`*
+
+ℹ️ glue() raises GluingError if locals fail compatibility check Compatible means: agents on overlapping contexts produce equivalent outputs on the overlap. Call compatible() first to diagnose issues.
+  - *Verified in: `test_emergence.py::TestSheafGluing::test_glue_local_souls`*
+
+ℹ️ Context is hashable - use as dict key or in sets Context uses frozen capabilities, so it's safe for hash-based containers.
+  - *Verified in: `test_emergence.py::TestContext::test_context_hashable`*
+
+ℹ️ eigenvector_overlap() returns None for non-overlapping contexts No shared capabilities = no overlap. This is expected for disjoint contexts. Use this to detect when gluing is unnecessary.
+  - *Verified in: `test_emergence.py::TestEigenvectorOverlap::test_no_overlap`*
+
+ℹ️ Glued agent positions are UNION of local positions Position "ready" appearing in multiple locals appears once in glued agent. The first-registered local handles dispatch for shared positions.
+  - *Verified in: `test_emergence.py::TestSheafGluing::test_glued_has_union_positions`*
+
 ---
 
 ## Context
@@ -19084,6 +19344,6 @@ Dispatch to appropriate local agent.
 
 ---
 
-*1776 symbols, 4 teaching moments*
+*1776 symbols, 74 teaching moments*
 
 *Generated by Living Docs — 2025-12-21*

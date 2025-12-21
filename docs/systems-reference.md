@@ -6,7 +6,9 @@ context: self
 
 > *"Agents: these systems exist and are tested. Use them."*
 
-This document inventories all production-ready infrastructure in kgents. When planning features, CHECK HERE FIRST before assuming you need to build something new.
+This document inventories all production-ready **backend** infrastructure in kgents. When planning features, CHECK HERE FIRST before assuming you need to build something new.
+
+**Note (2025-12-21)**: Web UI has been pruned to focus on Brain, Galleries, and OS-Shell. Backend services (Town, Park, Forge, Gestalt, etc.) remain for future integration.
 
 ---
 

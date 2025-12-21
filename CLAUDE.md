@@ -277,18 +277,22 @@ _import_node_modules() in gateway.py: Ensures all nodes load before discovery
 Two-way mapping needed: AGENTESE path ↔ React route in NavigationTree
 ```
 
-### ⚠️ DI Container Silent Skip (Common Pitfall)
+### ✅ DI Enlightened Resolution (2025-12-21)
 ```
-Container SILENTLY SKIPS unregistered dependencies at DEBUG level!
+Container respects Python signature semantics:
 
-@node(dependencies=("foo",)) → container.has("foo")? → NO → skip silently → TypeError
+REQUIRED deps (no default) → DependencyNotFoundError immediately with helpful message
+OPTIONAL deps (= None default) → skipped gracefully, uses default
+DECLARED deps (@node(dependencies=(...))) → ALL treated as required
 
-THE FIX: For EVERY dep in dependencies=(...):
+THE FIX: For EVERY required dep:
   1. Add get_foo() to services/providers.py
   2. Register: container.register("foo", get_foo, singleton=True)
   3. Names MUST match exactly (case-sensitive)
 
-See: docs/skills/agentese-node-registration.md → "The Silent Skip Problem"
+To make optional: def __init__(self, foo: Foo | None = None): ...
+
+See: docs/skills/agentese-node-registration.md → "Enlightened Resolution"
 ```
 
 ### Event-Driven Architecture

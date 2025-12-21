@@ -184,12 +184,13 @@ npm install && npm run dev
 
 ## Common Gotchas (Read Before You Hit Them)
 
-### The DI Silent Skip
+### DI Enlightened Resolution (2025-12-21)
 ```python
-@node(dependencies=("soul_provider",))  # If not registered → silently skipped
-class MyNode: ...                        # You get: TypeError on first invoke
+@node(dependencies=("soul_provider",))  # If not registered → DependencyNotFoundError (fast!)
+class MyNode: ...                        # Error tells you exactly what to add
 
-# Fix: Check services/providers.py has matching registration
+# Required deps fail immediately with actionable message
+# Optional deps (with `= None` default) skip gracefully
 ```
 
 ### Import-Time Registration

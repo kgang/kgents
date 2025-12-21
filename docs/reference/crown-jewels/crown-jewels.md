@@ -4,6 +4,1302 @@
 
 ---
 
+## services.ashc.__init__
+
+## __init__
+
+```python
+module __init__
+```
+
+ASHC Crown Jewel: Agentic Self-Hosting Compiler with Proof Generation.
+
+---
+
+## services.ashc.checker
+
+## checker
+
+```python
+module checker
+```
+
+**AGENTESE:** `concept.ashc.prove`
+
+Proof Checker Bridge: The Gatekeeper.
+
+### Things to Know
+
+ℹ️ Dafny outputs to stderr even on success. Parse exit code, not output presence, to determine success.
+
+🚨 **Critical:** Always clean up temp files—even on exceptions. Use try/finally.
+
+ℹ️ Set process timeouts to prevent zombie processes.
+
+ℹ️ Z3 timeouts are unreliable. Use resource limits instead of time limits for Dafny/Verus. Timeouts may not be respected.
+
+ℹ️ Lean4 requires `lake env lean` for project files, not bare `lean`. The bare command won't find project dependencies.
+
+🚨 **Critical:** Verus `verus!` blocks inside `impl` sections are silently ignored. Always wrap the entire `impl` block.
+
+ℹ️ Platform non-determinism: Same proof may verify on macOS but timeout on Linux due to Z3 behavior differences.
+
+---
+
+## CheckerUnavailable
+
+```python
+class CheckerUnavailable(Exception)
+```
+
+Raised when a proof checker is not installed or not accessible.
+
+---
+
+## CheckerError
+
+```python
+class CheckerError(Exception)
+```
+
+Raised when a proof checker encounters an unexpected error.
+
+---
+
+## ProofChecker
+
+```python
+class ProofChecker(Protocol)
+```
+
+Protocol for proof checker adapters.
+
+### Things to Know
+
+ℹ️ Protocol > ABC for interfaces. Enables duck typing without inheritance coupling. See meta.md: "Protocol > ABC"
+
+---
+
+## DafnyChecker
+
+```python
+class DafnyChecker
+```
+
+Dafny proof checker via subprocess.
+
+### Examples
+```python
+>>> checker = DafnyChecker()
+```
+```python
+>>> if checker.is_available:
+```
+
+### Things to Know
+
+ℹ️ Dafny outputs to stderr even on success. Parse exit code, not output presence, to determine success.
+
+ℹ️ Use asyncio.create_subprocess_exec, not subprocess.run, to avoid blocking the event loop.
+
+🚨 **Critical:** Always unlink temp files in finally block—exceptions happen.
+
+ℹ️ Noisy error cascades—first error message is the key one.
+
+🚨 **Critical:** --verification-time-limit not always respected; prefer --resource-limit for reliable bounded verification. Example: >>> checker = DafnyChecker() >>> if checker.is_available: ... result = await checker.check("lemma Trivial() ensures true {}") ... assert result.success
+
+---
+
+## MockChecker
+
+```python
+class MockChecker
+```
+
+Mock proof checker for testing without external dependencies.
+
+### Things to Know
+
+ℹ️ Use DI pattern (inject checker) rather than mocking. This mock checker IS the test double.
+
+---
+
+## CheckerRegistry
+
+```python
+class CheckerRegistry
+```
+
+Registry of available proof checkers.
+
+### Things to Know
+
+ℹ️ Lazy initialization—don't instantiate checkers until needed. This avoids startup cost when checkers aren't used.
+
+---
+
+## Lean4Checker
+
+```python
+class Lean4Checker
+```
+
+Lean4 proof checker via subprocess.
+
+### Examples
+```python
+>>> checker = Lean4Checker()
+```
+```python
+>>> if checker.is_available:
+```
+
+### Things to Know
+
+ℹ️ Use 'lake env lean' not just 'lean' to get correct environment.
+
+ℹ️ Proofs containing 'sorry' are incomplete—treat as FAILED.
+
+ℹ️ Lean uses unicode (∀, →, ×); ensure UTF-8 encoding.
+
+🚨 **Critical:** Exact toolchain matching required. Project and deps must use same Lean version or cache won't work.
+
+🚨 **Critical:** Without mathlib cache, builds take 20+ minutes. Always use `lake exe cache get` when working with mathlib projects. Example: >>> checker = Lean4Checker() >>> if checker.is_available: ... result = await checker.check("theorem trivial : ∀ x : Nat, x = x := fun _ => rfl") ... assert result.success
+
+---
+
+## VerusChecker
+
+```python
+class VerusChecker
+```
+
+Verus proof checker (Rust verification) via subprocess.
+
+### Examples
+```python
+>>> checker = VerusChecker()
+```
+```python
+>>> if checker.is_available:
+```
+
+### Things to Know
+
+ℹ️ Verus requires Rust toolchain; may need rustup setup.
+
+🚨 **Critical:** All verified code must be inside the verus! macro.
+
+🚨 **Critical:** vstd imports must be explicit.
+
+🚨 **Critical:** CRITICAL: verus! blocks inside `impl` sections are SILENTLY IGNORED. Always wrap the entire impl, not just methods.
+
+ℹ️ Z3 timeouts are unreliable. May diverge regardless of limit.
+
+ℹ️ cargo verus verify --error-format=json is broken (Issue #1572). Use direct verus invocation for structured error output. Example: >>> checker = VerusChecker() >>> if checker.is_available: ... result = await checker.check("proof fn trivial() ensures true {}") ... assert result.success
+
+---
+
+## get_checker
+
+```python
+def get_checker(name: str='dafny') -> ProofChecker
+```
+
+Get a proof checker by name.
+
+---
+
+## available_checkers
+
+```python
+def available_checkers() -> list[str]
+```
+
+Return names of all available proof checkers.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Checker identifier (e.g., 'dafny', 'lean4').
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+True if the checker is installed and accessible.
+
+---
+
+## check
+
+```python
+async def check(self, proof_source: str, timeout_ms: int=30000) -> CheckerResult
+```
+
+Verify a proof.
+
+---
+
+## __init__
+
+```python
+def __init__(self, dafny_path: str | None=None, *, verify_on_init: bool=True)
+```
+
+Initialize the Dafny checker.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Checker identifier.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+True if Dafny is installed and accessible.
+
+---
+
+## check
+
+```python
+async def check(self, proof_source: str, timeout_ms: int=30000) -> CheckerResult
+```
+
+Run Dafny verification on proof source.
+
+---
+
+## __init__
+
+```python
+def __init__(self, *, default_success: bool=True, latency_ms: int=100)
+```
+
+Initialize mock checker.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Checker identifier.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+Mock is always available.
+
+---
+
+## call_count
+
+```python
+def call_count(self) -> int
+```
+
+Number of check() calls made.
+
+---
+
+## last_proof
+
+```python
+def last_proof(self) -> str
+```
+
+The last proof source that was checked.
+
+---
+
+## always_succeed_on
+
+```python
+def always_succeed_on(self, pattern: str) -> 'MockChecker'
+```
+
+Add pattern that always succeeds.
+
+---
+
+## always_fail_on
+
+```python
+def always_fail_on(self, pattern: str) -> 'MockChecker'
+```
+
+Add pattern that always fails.
+
+---
+
+## check
+
+```python
+async def check(self, proof_source: str, timeout_ms: int=30000) -> CheckerResult
+```
+
+Mock verification that returns configurable results.
+
+---
+
+## register
+
+```python
+def register(self, name: str, checker_class: type[ProofChecker]) -> None
+```
+
+Register a checker class.
+
+---
+
+## get
+
+```python
+def get(self, name: str) -> ProofChecker
+```
+
+Get a checker instance by name.
+
+---
+
+## available_checkers
+
+```python
+def available_checkers(self) -> list[str]
+```
+
+Return names of all available (installed) checkers.
+
+---
+
+## __init__
+
+```python
+def __init__(self, binary_path: str | None=None, *, verify_on_init: bool=True)
+```
+
+Initialize the Lean4 checker.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Checker identifier.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+True if Lean4 is installed and accessible.
+
+---
+
+## check
+
+```python
+async def check(self, proof_source: str, timeout_ms: int=30000) -> CheckerResult
+```
+
+Run Lean4 verification on proof source.
+
+---
+
+## __init__
+
+```python
+def __init__(self, binary_path: str | None=None, *, verify_on_init: bool=True)
+```
+
+Initialize the Verus checker.
+
+---
+
+## name
+
+```python
+def name(self) -> str
+```
+
+Checker identifier.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+True if Verus is installed and accessible.
+
+---
+
+## check
+
+```python
+async def check(self, proof_source: str, timeout_ms: int=30000) -> CheckerResult
+```
+
+Run Verus verification on proof source.
+
+---
+
+## services.ashc.contracts
+
+## contracts
+
+```python
+module contracts
+```
+
+**AGENTESE:** `concept.ashc.obligation`
+
+ASHC Proof-Generation Contracts.
+
+### Things to Know
+
+ℹ️ All contracts are frozen dataclasses. Create new instances with updated fields, don't mutate existing ones. This enables safe composition and audit trails.
+
+---
+
+## ProofStatus
+
+```python
+class ProofStatus(Enum)
+```
+
+Status of a proof obligation or attempt.
+
+### Things to Know
+
+ℹ️ Use auto() for status values—we care about the semantic meaning, not the underlying integer. Comparison is by enum member, not value.
+
+---
+
+## ObligationSource
+
+```python
+class ObligationSource(Enum)
+```
+
+Source of a proof obligation.
+
+---
+
+## ProofObligation
+
+```python
+class ProofObligation
+```
+
+A property that needs to be proven.
+
+### Examples
+```python
+>>> obl = ProofObligation(
+```
+```python
+>>> obl.property
+```
+
+### Things to Know
+
+ℹ️ ProofObligation is immutable. Create new obligations with updated context, don't mutate existing ones. Example: >>> obl = ProofObligation( ... id=ObligationId("obl-001"), ... property="∀ x: int. x + 0 == x", ... source=ObligationSource.TEST, ... source_location="test_math.py:42", ... ) >>> obl.property '∀ x: int. x + 0 == x'
+
+---
+
+## ProofAttempt
+
+```python
+class ProofAttempt
+```
+
+A single attempt to discharge a proof obligation.
+
+### Things to Know
+
+ℹ️ We store failed attempts too—they inform future searches. "What didn't work" is as valuable as "what worked." The tactics_that_failed set helps avoid repeating mistakes. Laws: 1. Attempts are immutable records 2. Failed attempts inform future searches (stigmergic learning) 3. duration_ms enables performance analysis
+
+---
+
+## VerifiedLemma
+
+```python
+class VerifiedLemma
+```
+
+A proven fact in the lemma database.
+
+### Things to Know
+
+ℹ️ VerifiedLemma includes the full proof—not just the statement. This enables proof reuse and composition.
+
+---
+
+## ProofSearchResult
+
+```python
+class ProofSearchResult
+```
+
+Result of a proof search session.
+
+### Things to Know
+
+ℹ️ ProofSearchResult is the ONLY mutable contract. It accumulates attempts during search, then becomes effectively immutable once search completes.
+
+---
+
+## ProofSearchConfig
+
+```python
+class ProofSearchConfig
+```
+
+Configuration for proof search phases.
+
+### Things to Know
+
+ℹ️ Tactic progressions are tuples (immutable). Quick phase uses simple tactics; deeper phases add more sophisticated ones.
+
+ℹ️ Temperature is a hyper-parameter for LLM proof generation. Lower (0.1-0.3) for deterministic proofs, higher (0.5-0.7) for creative exploration. Not hardcoded per Kent's decision.
+
+---
+
+## CheckerResult
+
+```python
+class CheckerResult
+```
+
+Result from a proof checker (Dafny, Lean4, Verus).
+
+### Things to Know
+
+ℹ️ Dafny outputs to stderr even on success. Parse exit code, not output presence, to determine success.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary for persistence/API.
+
+---
+
+## from_dict
+
+```python
+def from_dict(cls, data: dict[str, Any]) -> ProofObligation
+```
+
+Deserialize from dictionary.
+
+---
+
+## with_context
+
+```python
+def with_context(self, *additional: str) -> ProofObligation
+```
+
+Return a new obligation with additional context.
+
+### Examples
+```python
+>>> obl2 = obl.with_context("Hint: use induction on x")
+```
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary for persistence/API.
+
+---
+
+## from_dict
+
+```python
+def from_dict(cls, data: dict[str, Any]) -> ProofAttempt
+```
+
+Deserialize from dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary for persistence/API.
+
+---
+
+## from_dict
+
+```python
+def from_dict(cls, data: dict[str, Any]) -> VerifiedLemma
+```
+
+Deserialize from dictionary.
+
+---
+
+## with_incremented_usage
+
+```python
+def with_incremented_usage(self) -> VerifiedLemma
+```
+
+Return a new lemma with incremented usage count.
+
+---
+
+## succeeded
+
+```python
+def succeeded(self) -> bool
+```
+
+True if a valid proof was found.
+
+---
+
+## tactics_that_failed
+
+```python
+def tactics_that_failed(self) -> set[str]
+```
+
+Tactics to avoid in future searches.
+
+---
+
+## tactics_that_succeeded
+
+```python
+def tactics_that_succeeded(self) -> set[str]
+```
+
+Tactics that worked in successful attempts.
+
+---
+
+## budget_remaining
+
+```python
+def budget_remaining(self) -> int
+```
+
+Remaining proof attempts in budget.
+
+---
+
+## avg_attempt_duration_ms
+
+```python
+def avg_attempt_duration_ms(self) -> float
+```
+
+Average duration of proof attempts in milliseconds.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary for persistence/API.
+
+---
+
+## total_budget
+
+```python
+def total_budget(self) -> int
+```
+
+Total proof attempts across all phases.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary.
+
+---
+
+## is_timeout
+
+```python
+def is_timeout(self) -> bool
+```
+
+True if verification timed out.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize to dictionary.
+
+---
+
+## services.ashc.obligation
+
+## obligation
+
+```python
+module obligation
+```
+
+**AGENTESE:** `concept.ashc.obligation`
+
+Obligation Extraction: From Failures to Theorems.
+
+### Things to Know
+
+ℹ️ Context extraction is bounded to 5 lines. Large tracebacks would bloat obligations and slow proof search. Prefer relevant excerpts over complete dumps.
+
+ℹ️ Assertion parsing is pattern-based, not AST-based. This is intentional—we want readable properties, not compiled forms.
+
+---
+
+## ObligationExtractor
+
+```python
+class ObligationExtractor
+```
+
+Extract proof obligations from various sources.
+
+### Examples
+```python
+>>> extractor = ObligationExtractor()
+```
+```python
+>>> obl = extractor.from_test_failure(
+```
+```python
+>>> "∀" in obl.property
+```
+
+---
+
+## extract_from_pytest_report
+
+```python
+def extract_from_pytest_report(report: dict[str, Any]) -> ProofObligation | None
+```
+
+Extract obligation from a pytest JSON report entry.
+
+### Examples
+```python
+>>> report = {
+```
+```python
+>>> obl = extract_from_pytest_report(report)
+```
+```python
+>>> obl is not None
+```
+
+---
+
+## from_test_failure
+
+```python
+def from_test_failure(self, test_name: str, assertion: str, traceback: str, source_file: str, line_number: int) -> ProofObligation
+```
+
+Extract obligation from a test failure.
+
+### Examples
+```python
+>>> obl = extractor.from_test_failure(
+```
+```python
+>>> obl.property
+```
+
+---
+
+## from_type_signature
+
+```python
+def from_type_signature(self, path: str, input_type: str, output_type: str, effects: tuple[str, ...]=()) -> ProofObligation
+```
+
+Extract obligation from AD-013 typed AGENTESE path.
+
+### Examples
+```python
+>>> obl = extractor.from_type_signature(
+```
+```python
+>>> "BashRequest" in obl.property
+```
+
+---
+
+## from_composition
+
+```python
+def from_composition(self, pipeline_name: str, agents: tuple[str, ...], expected_type: str) -> ProofObligation
+```
+
+Extract obligation from pipeline composition.
+
+### Examples
+```python
+>>> obl = extractor.from_composition(
+```
+```python
+>>> "composition" in obl.property.lower()
+```
+
+---
+
+## obligations
+
+```python
+def obligations(self) -> list[ProofObligation]
+```
+
+All obligations extracted in this session.
+
+---
+
+## obligation_count
+
+```python
+def obligation_count(self) -> int
+```
+
+Number of obligations extracted.
+
+---
+
+## clear
+
+```python
+def clear(self) -> None
+```
+
+Clear all extracted obligations (start fresh session).
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize extraction session to dictionary.
+
+---
+
+## services.ashc.persistence
+
+## persistence
+
+```python
+module persistence
+```
+
+**AGENTESE:** `concept.ashc.lemma.`
+
+ASHC Persistence: Postgres-backed LemmaDatabase via D-gent patterns.
+
+### Things to Know
+
+ℹ️ find_related() increments usage_count for returned lemmas. This is intentional—lemmas that help more become more visible.
+  - *Verified in: `test_lemma_db.py::test_stigmergic_reinforcement`*
+
+ℹ️ store() is idempotent on id. If a lemma with the same id exists, it's updated (not duplicated). This supports proof regeneration.
+  - *Verified in: `test_lemma_db.py::test_store_idempotent`*
+
+ℹ️ Keyword matching uses simple word overlap for now. Brain vectors are deferred to Phase 5 for semantic similarity.
+  - *Verified in: `test_lemma_db.py::test_keyword_matching`*
+
+---
+
+## LemmaStats
+
+```python
+class LemmaStats
+```
+
+Statistics about the lemma database.
+
+---
+
+## PostgresLemmaDatabase
+
+```python
+class PostgresLemmaDatabase
+```
+
+Postgres-backed implementation of LemmaDatabase protocol.
+
+### Examples
+```python
+>>> session_factory = get_session_factory()
+```
+```python
+>>> lemma_db = PostgresLemmaDatabase(session_factory)
+```
+```python
+>>> await lemma_db.store(verified_lemma)
+```
+```python
+>>> related = await lemma_db.find_related("∀ x. x == x", limit=3)
+```
+
+### Things to Know
+
+ℹ️ PostgresLemmaDatabase is stateless between calls. All state is in the database. Safe for concurrent access.
+  - *Verified in: `test_lemma_db.py::test_concurrent_access`*
+
+---
+
+## __init__
+
+```python
+def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None
+```
+
+Initialize Postgres-backed lemma database.
+
+---
+
+## find_related
+
+```python
+def find_related(self, property_stmt: str, limit: int=3) -> list[VerifiedLemma]
+```
+
+Find lemmas related to a property statement.
+
+---
+
+## find_related_async
+
+```python
+async def find_related_async(self, property_stmt: str, limit: int=3) -> list[VerifiedLemma]
+```
+
+Find lemmas related to a property statement (async version).
+
+---
+
+## store
+
+```python
+def store(self, lemma: VerifiedLemma) -> None
+```
+
+Store a newly verified lemma.
+
+---
+
+## store_async
+
+```python
+async def store_async(self, lemma: VerifiedLemma) -> None
+```
+
+Store a newly verified lemma (async version).
+
+---
+
+## get_by_id
+
+```python
+async def get_by_id(self, lemma_id: str) -> VerifiedLemma | None
+```
+
+Get a specific lemma by ID.
+
+---
+
+## get_by_obligation
+
+```python
+async def get_by_obligation(self, obligation_id: str) -> VerifiedLemma | None
+```
+
+Get lemma by its origin obligation.
+
+---
+
+## list_recent
+
+```python
+async def list_recent(self, limit: int=10) -> list[VerifiedLemma]
+```
+
+List recently verified lemmas.
+
+---
+
+## list_most_used
+
+```python
+async def list_most_used(self, limit: int=10) -> list[VerifiedLemma]
+```
+
+List most frequently used lemmas.
+
+---
+
+## stats
+
+```python
+async def stats(self) -> LemmaStats
+```
+
+Get statistics about the lemma database.
+
+---
+
+## count
+
+```python
+async def count(self) -> int
+```
+
+Count total lemmas.
+
+---
+
+## services.ashc.search
+
+## search
+
+```python
+module search
+```
+
+**AGENTESE:** `concept.ashc.prove`
+
+LLM Proof Search: The Hallucination-Tolerant Pipeline.
+
+### Things to Know
+
+ℹ️ Temperature is a hyper-parameter in ProofSearchConfig, not hardcoded. Different obligations may benefit from different temperatures.
+  - *Verified in: `test_search.py::test_temperature_configurable`*
+
+ℹ️ Failed tactics are tracked SEPARATELY, not in obligation.context. This enables cross-attempt learning without bloating obligations.
+  - *Verified in: `test_search.py::test_failed_tactics_not_repeated`*
+
+---
+
+## LemmaDatabase
+
+```python
+class LemmaDatabase(Protocol)
+```
+
+Protocol for lemma database access.
+
+### Things to Know
+
+ℹ️ Protocol > ABC for interfaces. Enables duck typing without inheritance coupling. See meta.md: "Protocol > ABC"
+
+---
+
+## InMemoryLemmaDatabase
+
+```python
+class InMemoryLemmaDatabase
+```
+
+In-memory stub for lemma database.
+
+### Things to Know
+
+ℹ️ This is a STUB, not the final implementation. It stores lemmas in memory only—they're lost on restart. Phase 4 adds D-gent persistence.
+
+---
+
+## ProofSearcher
+
+```python
+class ProofSearcher
+```
+
+LLM-assisted proof search with budget management.
+
+### Examples
+```python
+>>> searcher = ProofSearcher(gateway, checker, lemma_db)
+```
+```python
+>>> obl = ProofObligation(property="∀ x. x == x", ...)
+```
+```python
+>>> result = await searcher.search(obl)
+```
+```python
+>>> if result.succeeded:
+```
+
+### Things to Know
+
+ℹ️ The searcher is stateless between calls. Each search() invocation is independent. Failed tactics are tracked PER SEARCH, not across searches.
+  - *Verified in: `test_search.py::test_searcher_stateless`*
+
+ℹ️ Budget is ATTEMPTS, not wall time. A slow checker can exhaust budget quickly. Monitor avg_attempt_duration_ms. (Evidence: test_search.py::test_budget_is_attempt_count) Example: >>> searcher = ProofSearcher(gateway, checker, lemma_db) >>> obl = ProofObligation(property="∀ x. x == x", ...) >>> result = await searcher.search(obl) >>> if result.succeeded: ... print(f"Proved! Lemma: {result.lemma.statement}")
+
+---
+
+## find_related
+
+```python
+def find_related(self, property_stmt: str, limit: int=3) -> list[VerifiedLemma]
+```
+
+Find lemmas related to a property statement.
+
+---
+
+## store
+
+```python
+def store(self, lemma: VerifiedLemma) -> None
+```
+
+Store a newly verified lemma.
+
+---
+
+## find_related
+
+```python
+def find_related(self, property_stmt: str, limit: int=3) -> list[VerifiedLemma]
+```
+
+Find lemmas with overlapping keywords.
+
+---
+
+## store
+
+```python
+def store(self, lemma: VerifiedLemma) -> None
+```
+
+Store a newly verified lemma.
+
+---
+
+## lemma_count
+
+```python
+def lemma_count(self) -> int
+```
+
+Number of stored lemmas.
+
+---
+
+## __init__
+
+```python
+def __init__(self, gateway: 'MorpheusGateway', checker: ProofChecker, lemma_db: LemmaDatabase | None=None, config: ProofSearchConfig | None=None)
+```
+
+Initialize proof searcher.
+
+---
+
+## config
+
+```python
+def config(self) -> ProofSearchConfig
+```
+
+Current search configuration.
+
+---
+
+## search
+
+```python
+async def search(self, obligation: ProofObligation) -> ProofSearchResult
+```
+
+Attempt to discharge a proof obligation.
+
+### Examples
+```python
+>>> result = await searcher.search(obligation)
+```
+```python
+>>> if result.succeeded:
+```
+
+---
+
 ## services.brain.__init__
 
 ## __init__
@@ -287,6 +1583,34 @@ class BrainNode(BaseLogosNode)
 ```
 
 AGENTESE node for Brain Crown Jewel.
+
+### Examples
+```python
+>>> POST /agentese/self/memory/capture
+```
+```python
+>>> {"content": "Python is great for data science"}
+```
+```python
+>>> await logos.invoke("self.memory.capture", observer, content="...")
+```
+```python
+>>> kgents brain capture "..."
+```
+
+### Things to Know
+
+ℹ️ BrainNode REQUIRES brain_persistence dependency. Without it, instantiation fails with TypeError—this is intentional! It enables Logos fallback to SelfMemoryContext when DI isn't configured.
+  - *Verified in: `test_node.py::TestBrainNodeRegistration::test_node_requires_persistence`*
+
+ℹ️ Affordances vary by observer archetype. Guests can only search, newcomers can capture, developers can delete. Check archetype before assuming full access.
+  - *Verified in: `test_node.py::TestBrainNodeAffordances`*
+
+ℹ️ Every BrainNode invocation emits a Mark (WARP Law 3). Don't add manual tracing—the gateway handles it at _invoke_path().
+  - *Verified in: `test_node.py::TestBrainWARPIntegration`*
+
+ℹ️ crystal_id can come from either "crystal_id" or "id" kwargs. The get/delete aspects check both for backward compatibility.
+  - *Verified in: `test_node.py::TestBrainNodeGet::test_get_without_id_returns_error`*
 
 ---
 
@@ -1131,6 +2455,14 @@ module bus_bridge
 
 Bus Bridge: Cross-bus event forwarding for CLI v7 Phase 7 (Live Flux).
 
+### Things to Know
+
+ℹ️ wire_a2a_to_global_synergy() is idempotent - calling it twice returns the SAME unsubscribe function. This prevents duplicate bridging but means you cannot create multiple independent bridges.
+  - *Verified in: `test_bus_bridge.py::TestBusBridgeLifecycle::test_double_wire_is_idempotent`*
+
+ℹ️ Malformed A2A events do NOT crash the bridge - graceful degradation. Missing fields like from_agent/to_agent are replaced with "unknown". The bridge continues processing after errors, so a bad event won't break the entire A2A visibility pipeline.
+  - *Verified in: `test_bus_bridge.py::TestBridgeErrorHandling::test_malformed_event_doesnt_crash_bridge`*
+
 ---
 
 ## wire_a2a_to_global_synergy
@@ -1394,6 +2726,14 @@ module file_guard
 ```
 
 FileEditGuard: Read-before-edit enforcement.
+
+### Things to Know
+
+🚨 **Critical:** Edits without prior read fail with EditError.NOT_READ. The guard returns a structured error response rather than raising, so you MUST check response.success before assuming the edit worked.
+  - *Verified in: `test_file_guard.py::TestEditOperations::test_edit_requires_prior_read`*
+
+ℹ️ Non-unique old_string returns EditError.NOT_UNIQUE, not an exception. Use replace_all=True when you intentionally want to replace all occurrences. The error response includes a suggestion to help the user.
+  - *Verified in: `test_file_guard.py::TestEditOperations::test_edit_string_not_unique`*
 
 ---
 
@@ -1761,6 +3101,14 @@ module persistence
 
 WindowPersistence: D-gent integration for ConversationWindow state.
 
+### Things to Know
+
+🚨 **Critical:** Corrupted JSON data returns None from load_window(), not an exception. Always handle the None case when loading - the user may have edited the underlying storage or the data may be from an incompatible version.
+  - *Verified in: `test_persistence.py::TestWindowPersistenceLoad::test_load_window_handles_corrupted_data`*
+
+ℹ️ Window persistence is independent from ChatSession lifecycle. A window can exist in D-gent even after its session is gone. Use exists() to check before assuming a load will succeed.
+  - *Verified in: `test_persistence.py::TestWindowPersistenceIntegration::test_exists_check`*
+
 ---
 
 ## WindowPersistence
@@ -1862,6 +3210,14 @@ module presence
 ```
 
 Agent Presence: Visible cursor states and activity indicators.
+
+### Things to Know
+
+🚨 **Critical:** Invalid state transitions are REJECTED silently (return False). WAITING cannot go directly to SUGGESTING - it must pass through WORKING or FOLLOWING first. Always check transition_to() return value.
+  - *Verified in: `test_presence.py::TestAgentCursor::test_transition_to_invalid`*
+
+ℹ️ States cannot transition to themselves - no self-loops allowed. The directed graph enforces this constraint to prevent infinite loops.
+  - *Verified in: `test_presence.py::TestCursorStateTransitions::test_no_self_transitions`*
 
 ---
 
@@ -2832,7 +4188,7 @@ Deserialize window state.
 
 ---
 
-## services.gardener.__init__
+## services.interactive_text.__init__
 
 ## __init__
 
@@ -2840,11 +4196,25 @@ Deserialize window state.
 module __init__
 ```
 
-Gardener Crown Jewel: Cultivation Practice for Ideas.
+Interactive Text Crown Jewel: Meaning Token Frontend Architecture.
+
+### Things to Know
+
+ℹ️ Six core token types are lazy-registered via TokenRegistry._ensure_initialized(). First call to get()/recognize() triggers registration of CORE_TOKEN_DEFINITIONS.
+  - *Verified in: `test_registry.py::test_core_tokens_registered`*
+
+ℹ️ DocumentPolynomial is stateless—state lives in caller, not polynomial. Each transition() call takes state as input, returns (new_state, output).
+  - *Verified in: `test_properties.py::test_polynomial_stateless`*
+
+🚨 **Critical:** Observer.density affects projection output—COMPACT truncates, SPACIOUS shows all. Always pass observer to projection; don't assume COMFORTABLE default.
+  - *Verified in: `test_projectors.py::test_density_affects_output`*
+
+ℹ️ DocumentSheaf.glue() requires compatible local views—SheafConditionError if conflict. Verify sheaf conditions before attempting multi-view merge.
+  - *Verified in: `test_properties.py::test_sheaf_conflict_detection`*
 
 ---
 
-## services.gardener.contracts
+## services.interactive_text.contracts
 
 ## contracts
 
@@ -2852,601 +4222,525 @@ Gardener Crown Jewel: Cultivation Practice for Ideas.
 module contracts
 ```
 
-Gardener AGENTESE Contract Definitions.
+**AGENTESE:** `concept.document.contracts`
+
+Interactive Text AGENTESE Contract Definitions.
+
+### Things to Know
+
+ℹ️ Observer.capabilities is frozenset—immutable by design. Create new Observer with updated capabilities, don't mutate.
+  - *Verified in: `test_contracts.py::test_observer_immutability`*
+
+🚨 **Critical:** TokenPattern validates on __post_init__—empty name raises ValueError. Always provide a non-empty name when constructing TokenPattern.
+  - *Verified in: `test_contracts.py::test_token_pattern_validation`*
+
+🚨 **Critical:** MeaningToken.token_id default uses position (type:start:end). Custom implementations may override but must remain unique per doc.
+  - *Verified in: `test_contracts.py::test_token_id_uniqueness`*
+
+ℹ️ InteractionResult.not_available() vs failure()—semantic difference. not_available = affordance disabled; failure = execution error.
+  - *Verified in: `test_contracts.py::test_interaction_result_types`*
 
 ---
 
-## ConceptGardenerManifestResponse
+## AffordanceAction
 
 ```python
-class ConceptGardenerManifestResponse
+class AffordanceAction(str, Enum)
 ```
 
-Gardener health status manifest.
+Actions that can be performed on a token.
 
 ---
 
-## ConceptGardenerSessionManifestResponse
+## ObserverDensity
 
 ```python
-class ConceptGardenerSessionManifestResponse
+class ObserverDensity(str, Enum)
 ```
 
-Active session status response.
+Display density preference for projections.
 
 ---
 
-## ConceptGardenerSessionDefineRequest
+## ObserverRole
 
 ```python
-class ConceptGardenerSessionDefineRequest
+class ObserverRole(str, Enum)
 ```
 
-Request to start a new polynomial session.
+Role-based access control for affordances.
 
 ---
 
-## ConceptGardenerSessionDefineResponse
+## DocumentState
 
 ```python
-class ConceptGardenerSessionDefineResponse
+class DocumentState(str, Enum)
 ```
 
-Response after creating a new session.
+States in the document polynomial state machine.
 
 ---
 
-## ConceptGardenerSessionAdvanceRequest
+## TokenPattern
 
 ```python
-class ConceptGardenerSessionAdvanceRequest
+class TokenPattern
 ```
 
-Request to advance to the next phase.
+Pattern for recognizing a meaning token in text.
 
 ---
 
-## ConceptGardenerSessionAdvanceResponse
+## Affordance
 
 ```python
-class ConceptGardenerSessionAdvanceResponse
+class Affordance
 ```
 
-Response after advancing phase.
+An interaction possibility offered by a token.
 
 ---
 
-## ConceptGardenerPolynomialResponse
+## Observer
 
 ```python
-class ConceptGardenerPolynomialResponse
+class Observer
 ```
 
-Full polynomial state visualization.
+Entity receiving projections with specific umwelt.
 
 ---
 
-## ConceptGardenerSessionsListResponse
+## TokenDefinition
 
 ```python
-class ConceptGardenerSessionsListResponse
+class TokenDefinition
 ```
 
-List of recent sessions.
+Complete definition of a meaning token type.
 
 ---
 
-## ConceptGardenerRouteRequest
+## MeaningToken
 
 ```python
-class ConceptGardenerRouteRequest
+class MeaningToken(ABC, Generic[T])
 ```
 
-Request to route natural language to AGENTESE path.
+Base class for meaning tokens—semantic primitives that project to renderings.
 
 ---
 
-## ConceptGardenerRouteResponse
+## InteractionResult
 
 ```python
-class ConceptGardenerRouteResponse
+class InteractionResult
 ```
 
-Route result with resolved path.
+Result of interacting with a token.
 
 ---
 
-## ConceptGardenerProposeResponse
+## __post_init__
 
 ```python
-class ConceptGardenerProposeResponse
+def __post_init__(self) -> None
 ```
 
-Proactive suggestions for what to do next.
+Validate pattern configuration.
 
 ---
 
-## services.gardener.persistence
-
-## persistence
+## to_dict
 
 ```python
-module persistence
+def to_dict(self) -> dict[str, Any]
 ```
 
-Gardener Persistence: TableAdapter + D-gent integration for Gardener Crown Jewel.
+Convert to dictionary for serialization.
 
 ---
 
-## SessionView
+## create
 
 ```python
-class SessionView
+def create(cls, archetype: str='guest', capabilities: frozenset[str] | None=None, density: ObserverDensity=ObserverDensity.COMFORTABLE, role: ObserverRole=ObserverRole.VIEWER, metadata: dict[str, Any] | None=None) -> Observer
 ```
 
-View of a gardening session.
+Create a new observer with a generated ID.
 
 ---
 
-## IdeaView
+## has_capability
 
 ```python
-class IdeaView
+def has_capability(self, capability: str) -> bool
 ```
 
-View of a garden idea.
+Check if observer has a specific capability.
 
 ---
 
-## PlotView
+## to_dict
 
 ```python
-class PlotView
+def to_dict(self) -> dict[str, Any]
 ```
 
-View of a garden plot.
+Convert to dictionary for serialization.
 
 ---
 
-## ConnectionView
+## __post_init__
 
 ```python
-class ConnectionView
+def __post_init__(self) -> None
 ```
 
-View of an idea connection.
+Validate token definition.
 
 ---
 
-## GardenStatus
+## get_affordance
 
 ```python
-class GardenStatus
+def get_affordance(self, action: AffordanceAction) -> Affordance | None
 ```
 
-Garden health status.
+Get affordance by action type.
 
 ---
 
-## GardenerPersistence
+## token_type
 
 ```python
-class GardenerPersistence
+def token_type(self) -> str
 ```
 
-Persistence layer for Gardener Crown Jewel.
+Token type name from registry.
 
 ---
 
-## start_session
+## source_text
 
 ```python
-async def start_session(self, title: str | None=None, notes: str | None=None) -> SessionView
+def source_text(self) -> str
 ```
 
-**AGENTESE:** `concept.gardener.session.start`
-
-Start a new gardening session.
+Original text that was recognized as this token.
 
 ---
 
-## end_session
+## source_position
 
 ```python
-async def end_session(self, session_id: str | None=None, notes: str | None=None) -> SessionView | None
+def source_position(self) -> tuple[int, int]
 ```
 
-**AGENTESE:** `concept.gardener.session.end`
-
-End a gardening session.
+(start, end) position in source document.
 
 ---
 
-## get_current_session
+## token_id
 
 ```python
-async def get_current_session(self) -> SessionView | None
+def token_id(self) -> str
 ```
 
-Get the current active session.
+Unique identifier for this token instance.
 
 ---
 
-## get_session
+## get_affordances
 
 ```python
-async def get_session(self, session_id: str) -> SessionView | None
+async def get_affordances(self, observer: Observer) -> list[Affordance]
 ```
 
-Get a session by ID.
+Get available affordances for this observer.
 
 ---
 
-## list_sessions
+## project
 
 ```python
-async def list_sessions(self, limit: int=20) -> list[SessionView]
+async def project(self, target: str, observer: Observer) -> T
 ```
 
-List recent gardening sessions.
+Project token to target-specific rendering.
 
 ---
 
-## plant_idea
+## to_dict
 
 ```python
-async def plant_idea(self, content: str, session_id: str | None=None, plot_id: str | None=None, tags: list[str] | None=None, confidence: float=0.3) -> IdeaView
+def to_dict(self) -> dict[str, Any]
 ```
 
-**AGENTESE:** `self.garden.plant`
-
-Plant a new idea in the garden.
+Convert to dictionary for serialization.
 
 ---
 
-## nurture_idea
+## success_result
 
 ```python
-async def nurture_idea(self, idea_id: str, refinement: str | None=None, confidence_delta: float=0.1) -> IdeaView | None
+def success_result(cls, data: Any, witness_id: str | None=None) -> InteractionResult
 ```
 
-**AGENTESE:** `self.garden.nurture`
-
-Nurture an existing idea.
+Create a successful interaction result.
 
 ---
 
-## harvest_idea
+## not_available
 
 ```python
-async def harvest_idea(self, idea_id: str) -> IdeaView | None
+def not_available(cls, action: str) -> InteractionResult
 ```
 
-**AGENTESE:** `self.garden.harvest`
-
-Promote idea to next lifecycle stage.
+Create a result for unavailable action.
 
 ---
 
-## get_idea
+## failure
 
 ```python
-async def get_idea(self, idea_id: str, include_connections: bool=False) -> IdeaView | None
+def failure(cls, error: str) -> InteractionResult
 ```
 
-Get an idea by ID.
+Create a failed interaction result.
 
 ---
 
-## list_ideas
+## services.interactive_text.events
+
+## events
 
 ```python
-async def list_ideas(self, lifecycle: str | None=None, plot_id: str | None=None, session_id: str | None=None, limit: int=50) -> list[IdeaView]
+module events
 ```
 
-List ideas with optional filters.
+**AGENTESE:** `self.document.events`
+
+Interactive Text Event Definitions and DataBus Integration.
+
+### Things to Know
+
+ℹ️ DocumentEventBus.emit() uses asyncio.create_task—fire-and-forget. Handlers run in background; emit() returns immediately.
+  - *Verified in: `test_properties.py::test_event_emission_non_blocking`*
+
+🚨 **Critical:** _safe_notify() swallows exceptions—handlers must not rely on error propagation. Errors increment _error_count but don't fail emission or other handlers.
+  - *Verified in: `test_properties.py::test_handler_exception_isolation`*
+
+ℹ️ Buffer is bounded (DEFAULT_BUFFER_SIZE=1000)—old events are dropped. replay() only sees events still in buffer; don't rely on full history.
+  - *Verified in: `test_properties.py::test_buffer_eviction`*
+
+ℹ️ get_document_event_bus() returns global singleton—reset between tests. Call reset_document_event_bus() in test fixtures to avoid state leakage.
+  - *Verified in: `test_properties.py::test_global_bus_reset`*
 
 ---
 
-## create_plot
+## DocumentEventType
 
 ```python
-async def create_plot(self, name: str, description: str | None=None, color: str | None=None) -> PlotView
+class DocumentEventType(Enum)
 ```
 
-Create a new garden plot.
+Types of document events emitted by the polynomial state machine.
 
 ---
 
-## list_plots
+## DocumentEvent
 
 ```python
-async def list_plots(self) -> list[PlotView]
+class DocumentEvent
 ```
 
-List all garden plots.
+An event representing a document state transition.
 
 ---
 
-## connect_ideas
+## DocumentSubscriber
 
 ```python
-async def connect_ideas(self, source_id: str, target_id: str, connection_type: str='relates_to', strength: float=0.5, notes: str | None=None) -> ConnectionView | None
+class DocumentSubscriber
 ```
 
-Create a connection between two ideas.
+A subscriber to document events.
 
 ---
 
-## manifest
+## DocumentEventBus
 
 ```python
-async def manifest(self) -> GardenStatus
+class DocumentEventBus
 ```
 
-**AGENTESE:** `self.garden.manifest`
-
-Get garden health status.
+Event bus for document state transitions.
 
 ---
 
-## services.gardener.plan_parser
-
-## plan_parser
+## EventEmittingPolynomial
 
 ```python
-module plan_parser
+class EventEmittingPolynomial
 ```
 
-Plan Parser: Extract progress from plan files and _forest.md.
+Document Polynomial wrapper that emits events on transitions.
 
 ---
 
-## PlanMetadata
+## get_document_event_bus
 
 ```python
-class PlanMetadata
+def get_document_event_bus() -> DocumentEventBus
 ```
 
-Parsed metadata from a plan file.
+Get the global document event bus instance.
 
 ---
 
-## parse_progress_string
+## reset_document_event_bus
 
 ```python
-def parse_progress_string(progress_str: str) -> float
+def reset_document_event_bus() -> None
 ```
 
-Parse a progress string like "88%" or "0.88" to a float.
+Reset the global document event bus (for testing).
 
 ---
 
-## parse_forest_table
+## create
 
 ```python
-def parse_forest_table(forest_path: Path) -> dict[str, PlanMetadata]
+def create(cls, event_type: DocumentEventType, document_path: str | Path | None, previous_state: DocumentState, new_state: DocumentState, input_action: str, output: TransitionOutput, source: str='document_polynomial', causal_parent: str | None=None, metadata: dict[str, Any] | None=None) -> DocumentEvent
 ```
 
-Parse the _forest.md table to extract plan progress.
+Factory for creating document events with sensible defaults.
 
 ---
 
-## parse_plan_progress
+## from_transition
 
 ```python
-async def parse_plan_progress(plan_path: Path) -> PlanMetadata
+def from_transition(cls, document_path: str | Path | None, previous_state: DocumentState, input_action: str, new_state: DocumentState, output: TransitionOutput, causal_parent: str | None=None, metadata: dict[str, Any] | None=None) -> DocumentEvent
 ```
 
-Extract progress from an individual plan file.
+Create event from a polynomial transition.
 
 ---
 
-## infer_crown_jewel
+## to_dict
 
 ```python
-def infer_crown_jewel(plan_name: str) -> str | None
+def to_dict(self) -> dict[str, Any]
 ```
 
-Infer which Crown Jewel a plan corresponds to.
+Convert to dictionary for serialization.
 
 ---
 
-## infer_agentese_path
+## emit
 
 ```python
-def infer_agentese_path(plan_path: Path) -> str
+async def emit(self, event: DocumentEvent) -> None
 ```
 
-Infer AGENTESE path from plan file location.
+Emit an event to all subscribers.
 
 ---
 
-## services.gestalt.__init__
+## emit_transition
+
+```python
+async def emit_transition(self, document_path: str | Path | None, previous_state: DocumentState, input_action: str, new_state: DocumentState, output: TransitionOutput, metadata: dict[str, Any] | None=None) -> DocumentEvent
+```
+
+Emit an event for a polynomial transition.
+
+---
+
+## subscribe
+
+```python
+def subscribe(self, event_type: DocumentEventType, handler: DocumentEventHandler) -> Callable[[], None]
+```
+
+Subscribe to events of a specific type.
+
+---
+
+## subscribe_all
+
+```python
+def subscribe_all(self, handler: DocumentEventHandler) -> Callable[[], None]
+```
+
+Subscribe to ALL event types.
+
+---
+
+## replay
+
+```python
+async def replay(self, handler: DocumentEventHandler, since: float | None=None, event_type: DocumentEventType | None=None) -> int
+```
+
+Replay buffered events to a handler.
+
+---
+
+## latest
+
+```python
+def latest(self) -> DocumentEvent | None
+```
+
+Get the most recent event.
+
+---
+
+## stats
+
+```python
+def stats(self) -> dict[str, int]
+```
+
+Get bus statistics.
+
+---
+
+## clear
+
+```python
+def clear(self) -> None
+```
+
+Clear all subscribers and buffer (for testing).
+
+---
 
 ## __init__
 
 ```python
-module __init__
+def __init__(self, bus: DocumentEventBus, document_path: str | Path | None=None) -> None
 ```
 
-Gestalt Crown Jewel: Living Garden Where Code Breathes.
+Initialize event-emitting polynomial.
 
 ---
 
-## services.gestalt.contracts
-
-## contracts
+## transition
 
 ```python
-module contracts
+async def transition(self, state: DocumentState, input_action: str, metadata: dict[str, Any] | None=None) -> tuple[DocumentState, TransitionOutput, DocumentEvent]
 ```
 
-Gestalt AGENTESE Contract Definitions.
+Perform transition and emit event.
 
 ---
 
-## GestaltManifestResponse
-
-```python
-class GestaltManifestResponse
-```
-
-Gestalt architecture manifest response.
-
----
-
-## ModuleHealth
-
-```python
-class ModuleHealth
-```
-
-Health metrics for a single module.
-
----
-
-## HealthResponse
-
-```python
-class HealthResponse
-```
-
-Response for health manifest aspect.
-
----
-
-## TopologyNode
-
-```python
-class TopologyNode
-```
-
-A node in the 3D topology visualization.
-
----
-
-## TopologyLink
-
-```python
-class TopologyLink
-```
-
-A link between topology nodes.
-
----
-
-## TopologyStats
-
-```python
-class TopologyStats
-```
-
-Statistics for the topology.
-
----
-
-## TopologyRequest
-
-```python
-class TopologyRequest
-```
-
-Request for topology visualization data.
-
----
-
-## TopologyResponse
-
-```python
-class TopologyResponse
-```
-
-Response for topology visualization.
-
----
-
-## DriftViolation
-
-```python
-class DriftViolation
-```
-
-A single drift violation.
-
----
-
-## DriftResponse
-
-```python
-class DriftResponse
-```
-
-Response for drift violations.
-
----
-
-## ModuleRequest
-
-```python
-class ModuleRequest
-```
-
-Request for module details.
-
----
-
-## ModuleDependency
-
-```python
-class ModuleDependency
-```
-
-A module dependency.
-
----
-
-## ModuleDependent
-
-```python
-class ModuleDependent
-```
-
-A module that depends on this one.
-
----
-
-## ModuleResponse
-
-```python
-class ModuleResponse
-```
-
-Response for module details.
-
----
-
-## ScanRequest
-
-```python
-class ScanRequest
-```
-
-Request to rescan codebase.
-
----
-
-## ScanResponse
-
-```python
-class ScanResponse
-```
-
-Response after rescanning.
-
----
-
-## services.gestalt.node
+## services.interactive_text.node
 
 ## node
 
@@ -3454,37 +4748,306 @@ Response after rescanning.
 module node
 ```
 
-Gestalt AGENTESE Node: @node("world.codebase")
+Interactive Text AGENTESE Node.
+
+### Things to Know
+
+ℹ️ The node depends on "interactive_text_service" in the DI container. If this dependency isn't registered in providers.py, the node will be SILENTLY SKIPPED during gateway setup. No error, just missing paths.
+  - *Verified in: `test_agentese_path.py::TestAGENTESEPathTokenCreation::test_create_token`*
+
+ℹ️ Archetype-based affordances: developer/operator/admin/editor get full access (parse + task_toggle). architect/researcher get parse only. Everyone else (guest) gets parse only. Case-insensitive matching.
+  - *Verified in: `test_agentese_path.py::TestAGENTESEPathActions::test_right_click_admin_has_edit`*
+
+ℹ️ _invoke_aspect returns DICT, not Renderable. The rendering classes (ParseRendering, TaskToggleRendering) call .to_dict() immediately. This is for JSON serialization compatibility with the API layer.
+  - *Verified in: `test_agentese_path.py::TestAGENTESEPathProjection::test_project_json`*
 
 ---
 
-## GestaltManifestRendering
+## DocumentManifestRendering
 
 ```python
-class GestaltManifestRendering
+class DocumentManifestRendering
 ```
 
-Rendering for codebase architecture manifest.
+Renderable wrapper for document manifest response.
 
 ---
 
-## TopologyRendering
+## ParseRendering
 
 ```python
-class TopologyRendering
+class ParseRendering
 ```
 
-Rendering for 3D topology visualization data.
+Renderable wrapper for parse response.
 
 ---
 
-## GestaltNode
+## TaskToggleRendering
 
 ```python
-class GestaltNode(BaseLogosNode)
+class TaskToggleRendering
 ```
 
-AGENTESE node for Gestalt Crown Jewel.
+Renderable wrapper for task toggle response.
+
+---
+
+## InteractiveTextNode
+
+```python
+class InteractiveTextNode(BaseLogosNode)
+```
+
+AGENTESE node for Interactive Text service.
+
+---
+
+## __init__
+
+```python
+def __init__(self, interactive_text_service: InteractiveTextService) -> None
+```
+
+Initialize with injected service.
+
+---
+
+## handle
+
+```python
+def handle(self) -> str
+```
+
+The AGENTESE path to this node.
+
+---
+
+## manifest
+
+```python
+async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+**AGENTESE:** `self.document.manifest`
+
+Return service status and capabilities.
+
+---
+
+## services.interactive_text.parser
+
+## parser
+
+```python
+module parser
+```
+
+Markdown Parser with Roundtrip Fidelity.
+
+### Things to Know
+
+ℹ️ Token priority determines winner on overlap. When two patterns match overlapping text (e.g., nested backticks with AGENTESE path inside), _remove_overlapping_matches() keeps the match with HIGHER priority. Sort order is: (start_pos, -priority) so higher priority wins at same position.
+  - *Verified in: `test_parser.py::TestEdgeCases::test_nested_backticks`*
+
+🚨 **Critical:** Roundtrip fidelity is THE invariant. parse(text).render() MUST equal text exactly—byte-for-byte, including all whitespace, tabs, and newlines. If rendering changes even one character, you've broken the contract.
+  - *Verified in: `test_parser.py::TestRoundtripFidelity::test_roundtrip_preserves_whitespace`*
+
+🚨 **Critical:** Empty documents are valid. parse("") returns ParsedDocument with empty spans tuple, not None. Always check token_count, not truthiness of document.
+  - *Verified in: `test_parser.py::TestRoundtripFidelity::test_roundtrip_empty_document`*
+
+ℹ️ IncrementalParser expands affected region to line boundaries. When applying edits, _find_affected_region() extends start backward to previous newline and end forward to next newline. This prevents partial token corruption but means even small edits may re-parse entire lines.
+  - *Verified in: `test_parser.py::TestIncrementalParser::test_edit_preserves_tokens_before`*
+
+---
+
+## SourcePosition
+
+```python
+class SourcePosition
+```
+
+Position in source document.
+
+---
+
+## TextSpan
+
+```python
+class TextSpan
+```
+
+A span of text in the document.
+
+---
+
+## ParsedDocument
+
+```python
+class ParsedDocument
+```
+
+A parsed document with extracted tokens.
+
+---
+
+## SourceMap
+
+```python
+class SourceMap
+```
+
+Maps tokens to their source positions.
+
+---
+
+## MarkdownParser
+
+```python
+class MarkdownParser
+```
+
+Parser for markdown documents with token extraction.
+
+---
+
+## DocumentEdit
+
+```python
+class DocumentEdit
+```
+
+Represents an edit to a document.
+
+---
+
+## IncrementalParser
+
+```python
+class IncrementalParser
+```
+
+Parser supporting incremental updates.
+
+---
+
+## parse_markdown
+
+```python
+def parse_markdown(text: str, path: Path | None=None) -> ParsedDocument
+```
+
+Parse markdown text into a ParsedDocument.
+
+---
+
+## render_markdown
+
+```python
+def render_markdown(document: ParsedDocument) -> str
+```
+
+Render a ParsedDocument back to text.
+
+---
+
+## length
+
+```python
+def length(self) -> int
+```
+
+Length of the span in bytes.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str | None
+```
+
+Token type name if this is a token.
+
+---
+
+## tokens
+
+```python
+def tokens(self) -> list[TextSpan]
+```
+
+Get all token spans.
+
+---
+
+## token_count
+
+```python
+def token_count(self) -> int
+```
+
+Number of tokens in the document.
+
+---
+
+## get_token_at
+
+```python
+def get_token_at(self, offset: int) -> TextSpan | None
+```
+
+Get token at a specific byte offset.
+
+---
+
+## get_tokens_in_range
+
+```python
+def get_tokens_in_range(self, start: int, end: int) -> list[TextSpan]
+```
+
+Get all tokens overlapping a byte range.
+
+---
+
+## render
+
+```python
+def render(self) -> str
+```
+
+Render document back to text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __post_init__
+
+```python
+def __post_init__(self) -> None
+```
+
+Build the token index.
+
+---
+
+## get_token_at_position
+
+```python
+def get_token_at_position(self, line: int, column: int) -> TextSpan | None
+```
+
+Get token at a line/column position.
 
 ---
 
@@ -3494,235 +5057,5064 @@ AGENTESE node for Gestalt Crown Jewel.
 def __init__(self) -> None
 ```
 
-Initialize GestaltNode.
+Initialize the parser.
+
+---
+
+## parse
+
+```python
+def parse(self, text: str, path: Path | None=None) -> ParsedDocument
+```
+
+Parse markdown text into a ParsedDocument.
+
+---
+
+## parse_file
+
+```python
+def parse_file(self, path: Path) -> ParsedDocument
+```
+
+Parse a markdown file.
+
+---
+
+## old_length
+
+```python
+def old_length(self) -> int
+```
+
+Length of text being replaced.
+
+---
+
+## new_length
+
+```python
+def new_length(self) -> int
+```
+
+Length of new text.
+
+---
+
+## delta
+
+```python
+def delta(self) -> int
+```
+
+Change in document length.
+
+---
+
+## __init__
+
+```python
+def __init__(self) -> None
+```
+
+Initialize the incremental parser.
+
+---
+
+## parse
+
+```python
+def parse(self, text: str, path: Path | None=None) -> ParsedDocument
+```
+
+Parse a document from scratch.
+
+---
+
+## apply_edit
+
+```python
+def apply_edit(self, document: ParsedDocument, edit: DocumentEdit) -> ParsedDocument
+```
+
+Apply an edit to a document incrementally.
+
+---
+
+## services.interactive_text.polynomial
+
+## polynomial
+
+```python
+module polynomial
+```
+
+Document Polynomial State Machine.
+
+### Things to Know
+
+ℹ️ Invalid inputs return (same_state, NoOp), NOT an exception. The polynomial is total—every (state, input) pair produces a valid output. Check the output type to detect invalid transitions: isinstance(output, NoOp).
+  - *Verified in: `test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_invalid_inputs_produce_noop`*
+
+ℹ️ The polynomial is STATELESS—it defines the transition function, not current state. DocumentSheaf or your own state holder tracks actual document state. DocumentPolynomial.transition(state, input) is a pure function.
+  - *Verified in: `test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_transitions_are_deterministic`*
+
+ℹ️ Each state has a FIXED set of valid directions. VIEWING accepts {edit, refresh, hover, click, drag}. EDITING accepts {save, cancel, continue_edit, hover}. SYNCING accepts {wait, force_local, force_remote}. CONFLICTING accepts {resolve, abort, view_diff}. Sending wrong input to wrong state → NoOp.
+  - *Verified in: `test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_viewing_state_accepts_correct_inputs`*
+
+ℹ️ TransitionOutput subclasses are FROZEN dataclasses. Once created, they're immutable. This enables safe composition and prevents state corruption when outputs are passed between components.
+  - *Verified in: `test_properties.py::TestProperty6DocumentPolynomialStateValidity::test_transition_outputs_are_serializable`*
+
+---
+
+## TransitionOutput
+
+```python
+class TransitionOutput(ABC)
+```
+
+Base class for all transition outputs.
+
+---
+
+## NoOp
+
+```python
+class NoOp(TransitionOutput)
+```
+
+No operation - invalid transition attempted.
+
+---
+
+## EditSession
+
+```python
+class EditSession(TransitionOutput)
+```
+
+Output when entering edit mode.
+
+---
+
+## RefreshResult
+
+```python
+class RefreshResult(TransitionOutput)
+```
+
+Output when refreshing document.
+
+---
+
+## HoverInfo
+
+```python
+class HoverInfo(TransitionOutput)
+```
+
+Output when hovering over element.
+
+---
+
+## ClickResult
+
+```python
+class ClickResult(TransitionOutput)
+```
+
+Output when clicking element.
+
+---
+
+## DragResult
+
+```python
+class DragResult(TransitionOutput)
+```
+
+Output when dragging element.
+
+---
+
+## SaveRequest
+
+```python
+class SaveRequest(TransitionOutput)
+```
+
+Output when requesting save.
+
+---
+
+## CancelResult
+
+```python
+class CancelResult(TransitionOutput)
+```
+
+Output when canceling edit.
+
+---
+
+## EditContinue
+
+```python
+class EditContinue(TransitionOutput)
+```
+
+Output when continuing edit.
+
+---
+
+## SyncComplete
+
+```python
+class SyncComplete(TransitionOutput)
+```
+
+Output when sync completes successfully.
+
+---
+
+## LocalWins
+
+```python
+class LocalWins(TransitionOutput)
+```
+
+Output when forcing local version.
+
+---
+
+## RemoteWins
+
+```python
+class RemoteWins(TransitionOutput)
+```
+
+Output when accepting remote version.
+
+---
+
+## ConflictDetected
+
+```python
+class ConflictDetected(TransitionOutput)
+```
+
+Output when conflict is detected during sync.
+
+---
+
+## Resolved
+
+```python
+class Resolved(TransitionOutput)
+```
+
+Output when conflict is resolved.
+
+---
+
+## Aborted
+
+```python
+class Aborted(TransitionOutput)
+```
+
+Output when conflict resolution is aborted.
+
+---
+
+## DiffView
+
+```python
+class DiffView(TransitionOutput)
+```
+
+Output when viewing diff in conflict state.
+
+---
+
+## DocumentPolynomial
+
+```python
+class DocumentPolynomial
+```
+
+Document as polynomial functor: editing states with mode-dependent inputs.
+
+---
+
+## output_type
+
+```python
+def output_type(self) -> str
+```
+
+Type identifier for this output.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## directions
+
+```python
+def directions(cls, state: DocumentState) -> frozenset[str]
+```
+
+Get valid inputs for a given state.
+
+---
+
+## transition
+
+```python
+def transition(cls, state: DocumentState, input_action: str) -> tuple[DocumentState, TransitionOutput]
+```
+
+Compute state transition for given state and input.
+
+---
+
+## is_valid_input
+
+```python
+def is_valid_input(cls, state: DocumentState, input_action: str) -> bool
+```
+
+Check if an input is valid for a given state.
+
+---
+
+## get_all_transitions
+
+```python
+def get_all_transitions(cls) -> dict[tuple[DocumentState, str], tuple[DocumentState, type[TransitionOutput]]]
+```
+
+Get the complete transition table.
+
+---
+
+## verify_determinism
+
+```python
+def verify_determinism(cls) -> bool
+```
+
+Verify that the polynomial is deterministic.
+
+---
+
+## verify_completeness
+
+```python
+def verify_completeness(cls) -> bool
+```
+
+Verify that all states have defined directions.
+
+---
+
+## verify_laws
+
+```python
+def verify_laws(cls) -> bool
+```
+
+Verify polynomial laws hold.
+
+---
+
+## services.interactive_text.projectors.__init__
+
+## __init__
+
+```python
+module __init__
+```
+
+Projection functor implementations.
+
+---
+
+## services.interactive_text.projectors.base
+
+## base
+
+```python
+module base
+```
+
+**AGENTESE:** `self.document.project`
+
+Projection Functor Base Class.
+
+### Things to Know
+
+🚨 **Critical:** ProjectionFunctor must satisfy functor laws: P(id) = id, P(f∘g) = P(f)∘P(g). project_composition() relies on _compose() to preserve associativity.
+  - *Verified in: `test_projectors.py::test_composition_law`*
+
+ℹ️ DensityParams.for_density() is the canonical way to get parameters. Don't hardcode padding/font_size—use DENSITY_PARAMS lookup.
+  - *Verified in: `test_projectors.py::test_density_params_lookup`*
+
+ℹ️ _compose() is abstract and target-specific: CLI joins with newlines, JSON wraps in arrays, Web nests components. Override per target.
+  - *Verified in: `test_projectors.py::test_cli_compose_newlines`*
+
+---
+
+## DensityParams
+
+```python
+class DensityParams
+```
+
+Parameters for density-based projection.
+
+---
+
+## ProjectionResult
+
+```python
+class ProjectionResult(Generic[Target])
+```
+
+Result of a projection operation.
+
+---
+
+## CompositionResult
+
+```python
+class CompositionResult(Generic[Target])
+```
+
+Result of composing multiple projections.
+
+---
+
+## ProjectionFunctor
+
+```python
+class ProjectionFunctor(ABC, Generic[Target])
+```
+
+Abstract base class for projection functors.
+
+---
+
+## for_density
+
+```python
+def for_density(cls, density: ObserverDensity) -> DensityParams
+```
+
+Get density parameters for a given density level.
+
+---
+
+## target_name
+
+```python
+def target_name(self) -> str
+```
+
+Name of the projection target (e.g., 'cli', 'web', 'json').
+
+---
+
+## project_token
+
+```python
+async def project_token(self, token: 'MeaningToken[Any]', observer: Observer) -> Target
+```
+
+Project a single token to target-specific rendering.
+
+---
+
+## project_document
+
+```python
+async def project_document(self, document: 'Document', observer: Observer) -> Target
+```
+
+Project an entire document to target-specific rendering.
+
+---
+
+## project_composition
+
+```python
+async def project_composition(self, tokens: list['MeaningToken[Any]'], composition_type: str, observer: Observer) -> CompositionResult[Target]
+```
+
+Project composed tokens.
+
+---
+
+## get_density_params
+
+```python
+def get_density_params(self, observer: Observer) -> DensityParams
+```
+
+Get density parameters for an observer.
+
+---
+
+## project_with_result
+
+```python
+async def project_with_result(self, token: 'MeaningToken[Any]', observer: Observer) -> ProjectionResult[Target]
+```
+
+Project a token and return full result with metadata.
+
+---
+
+## Document
+
+```python
+class Document
+```
+
+Placeholder for Document type.
+
+---
+
+## services.interactive_text.projectors.cli
+
+## cli
+
+```python
+module cli
+```
+
+CLI Projection Functor.
+
+---
+
+## RichMarkup
+
+```python
+class RichMarkup
+```
+
+Rich terminal markup representation.
+
+---
+
+## CLIProjectable
+
+```python
+class CLIProjectable(Protocol)
+```
+
+Protocol for tokens that can be projected to CLI.
+
+---
+
+## CLIProjectionFunctor
+
+```python
+class CLIProjectionFunctor(ProjectionFunctor[str])
+```
+
+Project meaning tokens to Rich terminal markup.
+
+---
+
+## to_markup
+
+```python
+def to_markup(self) -> str
+```
+
+Convert to Rich markup string.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original source text.
+
+---
+
+## token_id
+
+```python
+def token_id(self) -> str
+```
+
+Unique token identifier.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## project_token
+
+```python
+async def project_token(self, token: CLIProjectable, observer: Observer) -> str
+```
+
+Project token to Rich markup string.
+
+---
+
+## project_document
+
+```python
+async def project_document(self, document: Any, observer: Observer) -> str
+```
+
+Project document to Rich markup string.
+
+---
+
+## services.interactive_text.projectors.json
+
+## json
+
+```python
+module json
+```
+
+JSON Projection Functor.
+
+---
+
+## JSONToken
+
+```python
+class JSONToken
+```
+
+JSON representation of a meaning token.
+
+---
+
+## JSONDocument
+
+```python
+class JSONDocument
+```
+
+JSON representation of a document.
+
+---
+
+## JSONProjectable
+
+```python
+class JSONProjectable(Protocol)
+```
+
+Protocol for tokens that can be projected to JSON.
+
+---
+
+## JSONProjectionFunctor
+
+```python
+class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]])
+```
+
+Project meaning tokens to API-friendly JSON structures.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for JSON serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for JSON serialization.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original source text.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+Source position (start, end).
+
+---
+
+## token_id
+
+```python
+def token_id(self) -> str
+```
+
+Unique token identifier.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for observer.
+
+---
+
+## project_token
+
+```python
+async def project_token(self, token: JSONProjectable, observer: Observer) -> dict[str, Any]
+```
+
+Project token to JSON dictionary.
+
+---
+
+## project_document
+
+```python
+async def project_document(self, document: Any, observer: Observer) -> dict[str, Any]
+```
+
+Project document to JSON dictionary.
+
+---
+
+## services.interactive_text.projectors.web
+
+## web
+
+```python
+module web
+```
+
+Web Projection Functor.
+
+---
+
+## ReactElement
+
+```python
+class ReactElement
+```
+
+Specification for a React element.
+
+---
+
+## WebProjectable
+
+```python
+class WebProjectable(Protocol)
+```
+
+Protocol for tokens that can be projected to web.
+
+---
+
+## WebProjectionFunctor
+
+```python
+class WebProjectionFunctor(ProjectionFunctor[ReactElement])
+```
+
+Project meaning tokens to React element specifications.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for JSON serialization.
+
+---
+
+## with_props
+
+```python
+def with_props(self, **new_props: Any) -> ReactElement
+```
+
+Create a new element with additional props.
+
+---
+
+## with_children
+
+```python
+def with_children(self, *children: 'ReactElement | str') -> ReactElement
+```
+
+Create a new element with children.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original source text.
+
+---
+
+## token_id
+
+```python
+def token_id(self) -> str
+```
+
+Unique token identifier.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for observer.
+
+---
+
+## project_token
+
+```python
+async def project_token(self, token: WebProjectable, observer: Observer) -> ReactElement
+```
+
+Project token to React element specification.
+
+---
+
+## project_document
+
+```python
+async def project_document(self, document: Any, observer: Observer) -> ReactElement
+```
+
+Project document to React element specification.
+
+---
+
+## services.interactive_text.registry
+
+## registry
+
+```python
+module registry
+```
+
+**AGENTESE:** `concept.document.token`
+
+Token Registry: Single Source of Truth for Token Definitions.
+
+### Things to Know
+
+ℹ️ TokenRegistry uses ClassVar—singleton pattern with class-level state. All instances share _tokens dict. Use clear() between tests.
+  - *Verified in: `test_registry.py::test_register_duplicate_raises`*
+
+ℹ️ _ensure_initialized() is lazy—core tokens not registered until first get(). Call get_all() or recognize() to trigger initialization.
+  - *Verified in: `test_registry.py::test_core_tokens_lazy_init`*
+
+ℹ️ recognize() returns sorted by (position, -priority)—priority breaks ties. Higher priority wins when patterns overlap at same position.
+  - *Verified in: `test_registry.py::test_priority_ordering`*
+
+ℹ️ register() raises ValueError on duplicate; use register_or_replace() for updates. This prevents accidental token definition clobbering.
+  - *Verified in: `test_registry.py::test_register_or_replace`*
+
+---
+
+## TokenMatch
+
+```python
+class TokenMatch
+```
+
+A token match found in text.
+
+---
+
+## TokenRegistry
+
+```python
+class TokenRegistry
+```
+
+Single source of truth for token definitions (AD-011).
+
+---
+
+## text
+
+```python
+def text(self) -> str
+```
+
+The matched text.
+
+---
+
+## groups
+
+```python
+def groups(self) -> tuple[str | None, ...]
+```
+
+Captured groups from the match.
+
+---
+
+## register
+
+```python
+def register(cls, definition: TokenDefinition) -> None
+```
+
+Register a token type.
+
+---
+
+## register_or_replace
+
+```python
+def register_or_replace(cls, definition: TokenDefinition) -> None
+```
+
+Register a token type, replacing if it exists.
+
+---
+
+## unregister
+
+```python
+def unregister(cls, name: str) -> bool
+```
+
+Unregister a token type.
+
+---
+
+## get
+
+```python
+def get(cls, name: str) -> TokenDefinition | None
+```
+
+Get token definition by name.
+
+---
+
+## get_all
+
+```python
+def get_all(cls) -> dict[str, TokenDefinition]
+```
+
+Get all registered token definitions.
+
+---
+
+## recognize
+
+```python
+def recognize(cls, text: str) -> list[TokenMatch]
+```
+
+Find all tokens in text, ordered by position then priority.
+
+---
+
+## clear
+
+```python
+def clear(cls) -> None
+```
+
+Clear all registered tokens. Useful for testing.
+
+---
+
+## services.interactive_text.service
+
+## service
+
+```python
+module service
+```
+
+Interactive Text Service: Crown Jewel Business Logic.
+
+### Things to Know
+
+ℹ️ Toggle requires EITHER file_path OR text, not both. When using file mode, you need file_path + (task_id OR line_number). Text mode needs text + line_number. Mixing modes or missing required params returns error response with success=False.
+  - *Verified in: `test_properties.py::TestProperty6DocumentPolynomialStateValidity`*
+
+🚨 **Critical:** Line numbers are 1-indexed for human ergonomics. The toggle_task_at_line() method converts to 0-indexed internally. Off-by-one errors are common when directly manipulating the lines list—always use (line_number - 1).
+  - *Verified in: `test_parser.py::TestTokenRecognition::test_task_checkbox_checked`*
+
+🚨 **Critical:** TraceWitness is ALWAYS captured on successful toggle, even in text mode where no file is modified. The trace captures previous_state → new_state for audit. If you need to skip trace capture, you must use the internal _toggle_task_at_line() method directly (not recommended for production use).
+  - *Verified in: `test_tokens_base.py::TestTraceWitness::test_create_witness`*
+
+---
+
+## ParseRequest
+
+```python
+class ParseRequest
+```
+
+Request to parse markdown text.
+
+---
+
+## ParseResponse
+
+```python
+class ParseResponse
+```
+
+Response from parse operation.
+
+---
+
+## TaskToggleRequest
+
+```python
+class TaskToggleRequest
+```
+
+Request to toggle a task checkbox.
+
+---
+
+## TaskToggleResponse
+
+```python
+class TaskToggleResponse
+```
+
+Response from task toggle operation.
+
+---
+
+## DocumentManifestResponse
+
+```python
+class DocumentManifestResponse
+```
+
+Response for manifest (status) operation.
+
+---
+
+## InteractiveTextService
+
+```python
+class InteractiveTextService
+```
+
+Interactive Text Crown Jewel Service.
+
+---
+
+## get_interactive_text_service
+
+```python
+def get_interactive_text_service() -> InteractiveTextService
+```
+
+Factory function for InteractiveTextService.
+
+---
+
+## __init__
+
+```python
+def __init__(self) -> None
+```
+
+Initialize the service.
 
 ---
 
 ## manifest
 
 ```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
+async def manifest(self) -> DocumentManifestResponse
 ```
 
-**AGENTESE:** `world.codebase.manifest`
-
-Manifest codebase architecture to observer.
+Get service status and capabilities.
 
 ---
 
-## services.gestalt.persistence
-
-## persistence
+## parse_document
 
 ```python
-module persistence
+async def parse_document(self, text: str, layout_mode: str='COMFORTABLE') -> ParseResponse
 ```
 
-Gestalt Persistence: TableAdapter + D-gent integration for Gestalt Crown Jewel.
+Parse markdown text to SceneGraph for frontend rendering.
+
+### Examples
+```python
+>>> service = InteractiveTextService()
+```
+```python
+>>> response = await service.parse_document("Check `self.brain`")
+```
+```python
+>>> response.token_count
+```
 
 ---
 
-## TopologyView
+## toggle_task
 
 ```python
-class TopologyView
+async def toggle_task(self, request: TaskToggleRequest, observer: Observer | None=None) -> TaskToggleResponse
 ```
 
-View of a code topology.
+Toggle a task checkbox and capture TraceWitness.
+
+### Examples
+```python
+>>> service = InteractiveTextService()
+```
+```python
+>>> request = TaskToggleRequest(
+```
+```python
+>>> response = await service.toggle_task(request)
+```
+```python
+>>> response.success
+```
 
 ---
 
-## CodeBlockView
+## services.interactive_text.sheaf
+
+## sheaf
 
 ```python
-class CodeBlockView
+module sheaf
 ```
 
-View of a code block.
+Document Sheaf: Multi-View Coherence Structure.
+
+### Things to Know
+
+🚨 **Critical:** glue() RAISES SheafConditionError if views are incompatible. Always call verify_sheaf_condition() first if you want to handle conflicts gracefully. Don't assume glue() will merge conflicts—it refuses to produce invalid state.
+  - *Verified in: `test_properties.py::TestProperty8DocumentSheafCoherence::test_incompatible_views_cannot_be_glued`*
+
+ℹ️ TokenState equality compares (token_id, token_type, content, position) but IGNORES metadata. Two tokens with different metadata but same core fields are considered equal. This is intentional—metadata is view-local decoration.
+  - *Verified in: `test_properties.py::TestProperty8DocumentSheafCoherence::test_token_state_equality`*
+
+ℹ️ compatible() is SYMMETRIC: compatible(v1, v2) == compatible(v2, v1). Same for overlap(). But verify_sheaf_condition() checks ALL pairs, not just the ones you pass in. Adding a third view requires checking 3 pairs.
+  - *Verified in: `test_properties.py::TestProperty8DocumentSheafCoherence::test_compatible_is_symmetric`*
+
+🚨 **Critical:** A single view is ALWAYS coherent with itself. verify_sheaf_condition() on a sheaf with one view returns success with checked_pairs=0. The sheaf condition is about agreement between views, not internal consistency.
+  - *Verified in: `test_properties.py::TestProperty8DocumentSheafCoherence::test_single_view_always_coherent`*
+
+ℹ️ Views for DIFFERENT documents cannot be added to the same sheaf. add_view() raises ValueError if view.document_path != sheaf.document_path. Create separate sheafs per document.
+  - *Verified in: `sheaf.py::DocumentSheaf::add_view validation`*
 
 ---
 
-## CodeLinkView
+## TokenState
 
 ```python
-class CodeLinkView
+class TokenState
 ```
 
-View of a code link.
+State of a token in a view.
 
 ---
 
-## GestaltStatus
+## DocumentView
 
 ```python
-class GestaltStatus
+class DocumentView(Protocol)
 ```
 
-Gestalt health status.
+Protocol for document views.
 
 ---
 
-## GestaltPersistence
+## TokenChange
 
 ```python
-class GestaltPersistence
+class TokenChange
 ```
 
-Persistence layer for Gestalt Crown Jewel.
+A change to a token.
 
 ---
 
-## create_topology
+## FileChange
 
 ```python
-async def create_topology(self, name: str, description: str | None=None, repo_path: str | None=None, git_ref: str | None=None) -> TopologyView
+class FileChange
 ```
 
-**AGENTESE:** `self.gestalt.topology.create`
-
-Create a new code topology.
+A change to the underlying file.
 
 ---
 
-## get_topology
+## Edit
 
 ```python
-async def get_topology(self, topology_id: str) -> TopologyView | None
+class Edit
 ```
 
-Get a topology by ID.
+An edit operation on a document.
 
 ---
 
-## list_topologies
+## SheafConflict
 
 ```python
-async def list_topologies(self, limit: int=20) -> list[TopologyView]
+class SheafConflict
 ```
 
-List all topologies.
+A conflict between two views.
 
 ---
 
-## delete_topology
+## SheafVerification
 
 ```python
-async def delete_topology(self, topology_id: str) -> bool
+class SheafVerification
 ```
 
-Delete a topology and all its blocks/links.
+Result of verifying the sheaf condition.
 
 ---
 
-## add_block
+## SimpleDocumentView
 
 ```python
-async def add_block(self, topology_id: str, name: str, block_type: str, file_path: str, line_start: int | None=None, line_end: int | None=None, position: tuple[float, float, float]=(0.0, 0.0, 0.0), test_coverage: float | None=None, complexity: float | None=None, content_hash: str | None=None) -> CodeBlockView | None
+class SimpleDocumentView
 ```
 
-**AGENTESE:** `self.gestalt.block.add`
-
-Add a code block to a topology.
+Simple implementation of DocumentView for testing and basic use.
 
 ---
 
-## update_block_health
+## DocumentSheaf
 
 ```python
-async def update_block_health(self, block_id: str, test_coverage: float | None=None, complexity: float | None=None, churn_rate: float | None=None) -> CodeBlockView | None
+class DocumentSheaf
 ```
 
-**AGENTESE:** `self.gestalt.block.health`
-
-Update block health metrics.
+Sheaf structure ensuring multi-view coherence.
 
 ---
 
-## update_block_position
+## SheafConditionError
 
 ```python
-async def update_block_position(self, block_id: str, x: float, y: float, z: float=0.0) -> CodeBlockView | None
+class SheafConditionError(Exception)
 ```
 
-Update block 3D position.
+Raised when the sheaf condition is violated.
 
 ---
 
-## get_block
+## __eq__
 
 ```python
-async def get_block(self, block_id: str) -> CodeBlockView | None
+def __eq__(self, other: object) -> bool
 ```
 
-Get a block by ID.
+Two token states are equal if their observable state matches.
 
 ---
 
-## list_blocks
+## view_id
 
 ```python
-async def list_blocks(self, topology_id: str, block_type: str | None=None, file_path: str | None=None, limit: int=100) -> list[CodeBlockView]
+def view_id(self) -> str
 ```
 
-List blocks in a topology with optional filters.
+Unique identifier for this view.
 
 ---
 
-## add_link
+## document_path
 
 ```python
-async def add_link(self, topology_id: str, source_block_id: str, target_block_id: str, link_type: str, strength: float=1.0, call_count: int | None=None, notes: str | None=None) -> CodeLinkView | None
+def document_path(self) -> Path
 ```
 
-**AGENTESE:** `self.gestalt.link.add`
-
-Add a link between code blocks.
+Path to the document this view observes.
 
 ---
 
-## list_links
+## tokens
 
 ```python
-async def list_links(self, topology_id: str, link_type: str | None=None, block_id: str | None=None, limit: int=200) -> list[CodeLinkView]
+def tokens(self) -> frozenset[str]
 ```
 
-List links with optional filters.
+Token IDs visible in this view.
 
 ---
 
-## trace_dependencies
+## state_of
 
 ```python
-async def trace_dependencies(self, block_id: str, direction: str='both', max_depth: int=3) -> list[CodeLinkView]
+def state_of(self, token_id: str) -> TokenState | None
 ```
 
-**AGENTESE:** `self.gestalt.link.trace`
-
-Trace dependency chain from a block.
+Get state of a token in this view.
 
 ---
 
-## create_snapshot
+## update
 
 ```python
-async def create_snapshot(self, topology_id: str, git_ref: str | None=None) -> str | None
+async def update(self, changes: list[TokenChange]) -> None
 ```
 
-**AGENTESE:** `self.gestalt.snapshot`
+Apply changes to this view.
 
-Create a snapshot of topology state.
+---
+
+## created
+
+```python
+def created(cls, state: TokenState) -> TokenChange
+```
+
+Create a creation change.
+
+---
+
+## modified
+
+```python
+def modified(cls, old: TokenState, new: TokenState) -> TokenChange
+```
+
+Create a modification change.
+
+---
+
+## deleted
+
+```python
+def deleted(cls, state: TokenState) -> TokenChange
+```
+
+Create a deletion change.
+
+---
+
+## apply
+
+```python
+def apply(self, content: str) -> str
+```
+
+Apply this edit to content.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## success
+
+```python
+def success(cls, checked_pairs: int=0) -> SheafVerification
+```
+
+Create a successful verification result.
+
+---
+
+## failure
+
+```python
+def failure(cls, conflicts: list[SheafConflict], checked_pairs: int=0) -> SheafVerification
+```
+
+Create a failed verification result.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## update
+
+```python
+async def update(self, changes: list[TokenChange]) -> None
+```
+
+Apply changes to this view.
+
+---
+
+## add_token
+
+```python
+def add_token(self, state: TokenState) -> None
+```
+
+Add a token to this view.
+
+---
+
+## remove_token
+
+```python
+def remove_token(self, token_id: str) -> None
+```
+
+Remove a token from this view.
+
+---
+
+## create
+
+```python
+def create(cls, document_path: Path | str, tokens: list[TokenState] | None=None) -> SimpleDocumentView
+```
+
+Create a new view with optional initial tokens.
+
+---
+
+## overlap
+
+```python
+def overlap(self, v1: DocumentView, v2: DocumentView) -> frozenset[str]
+```
+
+Get tokens visible in both views.
+
+---
+
+## compatible
+
+```python
+def compatible(self, v1: DocumentView, v2: DocumentView) -> bool
+```
+
+Check if two views agree on overlapping tokens (sheaf condition).
+
+---
+
+## verify_sheaf_condition
+
+```python
+def verify_sheaf_condition(self) -> SheafVerification
+```
+
+Verify all views are pairwise compatible.
+
+---
+
+## add_view
+
+```python
+def add_view(self, view: DocumentView) -> None
+```
+
+Add a view to the sheaf.
+
+---
+
+## remove_view
+
+```python
+def remove_view(self, view_id: str) -> bool
+```
+
+Remove a view from the sheaf.
+
+---
+
+## get_view
+
+```python
+def get_view(self, view_id: str) -> DocumentView | None
+```
+
+Get a view by ID.
+
+---
+
+## glue
+
+```python
+def glue(self) -> dict[str, TokenState]
+```
+
+Combine compatible views into global document state.
+
+---
+
+## on_file_change
+
+```python
+async def on_file_change(self, change: FileChange) -> None
+```
+
+Handle file change—broadcast to all views.
+
+---
+
+## on_view_edit
+
+```python
+async def on_view_edit(self, view: DocumentView, edit: Edit) -> None
+```
+
+Handle edit from a view—apply to file, broadcast to all.
+
+---
+
+## on_change
+
+```python
+def on_change(self, handler: Callable[[list[TokenChange]], Any]) -> Callable[[], None]
+```
+
+Register a change handler.
+
+---
+
+## create
+
+```python
+def create(cls, document_path: Path | str) -> DocumentSheaf
+```
+
+Create a new sheaf for a document.
+
+---
+
+## services.interactive_text.tokens.__init__
+
+## __init__
+
+```python
+module __init__
+```
+
+Token type implementations.
+
+---
+
+## services.interactive_text.tokens.agentese_path
+
+## agentese_path
+
+```python
+module agentese_path
+```
+
+**AGENTESE:** `self.document.token.agentese`
+
+AGENTESEPath Token Implementation.
+
+### Things to Know
+
+ℹ️ Ghost tokens (non-existent paths) still render but with reduced affordances. is_ghost=True disables invoke/navigate; shows "not yet implemented".
+  - *Verified in: `test_agentese_path.py::test_ghost_token_affordances`*
+
+ℹ️ Path validation uses regex matching context (world|self|concept|void|time). Invalid context prefix won't match—token won't be recognized.
+  - *Verified in: `test_agentese_path.py::test_path_validation`*
+
+ℹ️ _check_path_exists() is async and may hit registry—cache results. Repeated hover events should not repeatedly query path existence.
+  - *Verified in: `test_agentese_path.py::test_path_check_caching`*
+
+---
+
+## PolynomialState
+
+```python
+class PolynomialState
+```
+
+State information for an AGENTESE node.
+
+---
+
+## HoverInfo
+
+```python
+class HoverInfo
+```
+
+Information displayed on token hover.
+
+---
+
+## NavigationResult
+
+```python
+class NavigationResult
+```
+
+Result of navigating to an AGENTESE path.
+
+---
+
+## ContextMenuResult
+
+```python
+class ContextMenuResult
+```
+
+Result of showing context menu for an AGENTESE path.
+
+---
+
+## DragResult
+
+```python
+class DragResult
+```
+
+Result of dragging an AGENTESE path to REPL.
+
+---
+
+## AGENTESEPathToken
+
+```python
+class AGENTESEPathToken(BaseMeaningToken[str])
+```
+
+Token representing an AGENTESE path in text.
+
+---
+
+## create_agentese_path_token
+
+```python
+def create_agentese_path_token(text: str, position: tuple[int, int] | None=None, check_exists: bool=False) -> AGENTESEPathToken | None
+```
+
+Create an AGENTESEPath token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## ghost
+
+```python
+def ghost(cls, path: str) -> HoverInfo
+```
+
+Create hover info for a ghost token.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], path: str, exists: bool=True) -> None
+```
+
+Initialize an AGENTESEPath token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str], exists: bool=True) -> AGENTESEPathToken
+```
+
+Create token from regex match.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name from registry.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original text that was recognized as this token.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+(start, end) position in source document.
+
+---
+
+## path
+
+```python
+def path(self) -> str
+```
+
+The AGENTESE path (without backticks).
+
+---
+
+## context
+
+```python
+def context(self) -> str
+```
+
+The context (world, self, concept, void, time).
+
+---
+
+## segments
+
+```python
+def segments(self) -> list[str]
+```
+
+Path segments after the context.
+
+---
+
+## exists
+
+```python
+def exists(self) -> bool
+```
+
+Whether this path exists in the registry.
+
+---
+
+## is_ghost
+
+```python
+def is_ghost(self) -> bool
+```
+
+Whether this is a ghost token (non-existent path).
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## project
+
+```python
+async def project(self, target: str, observer: Observer) -> str | dict[str, Any]
+```
+
+Project token to target-specific rendering.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## services.interactive_text.tokens.base
+
+## base
+
+```python
+module base
+```
+
+**AGENTESE:** `self.document.token`
+
+MeaningToken Base Class Implementation.
+
+### Things to Know
+
+ℹ️ on_interact() validates affordances BEFORE calling _execute_action. Order matters: check enabled + action match, THEN execute.
+  - *Verified in: `test_tokens_base.py::test_on_interact_validates_affordance`*
+
+ℹ️ capture_trace defaults to True—every interaction creates a TraceWitness. Set capture_trace=False for high-frequency operations (hover spam).
+  - *Verified in: `test_tokens_base.py::test_capture_trace_default`*
+
+ℹ️ token_id uses source_position (start:end), NOT content hash. Renumbering or editing document invalidates existing token IDs.
+  - *Verified in: `test_tokens_base.py::test_token_id_format`*
+
+ℹ️ filter_affordances_by_observer returns DISABLED affordances, not empty. UI can show "locked" affordances with capability requirements.
+  - *Verified in: `test_tokens_base.py::test_filter_affordances_disabled`*
+
+---
+
+## ExecutionTrace
+
+```python
+class ExecutionTrace
+```
+
+Trace of a token interaction for formal verification.
+
+---
+
+## TraceWitness
+
+```python
+class TraceWitness
+```
+
+A constructive proof of interaction captured for formal verification.
+
+---
+
+## BaseMeaningToken
+
+```python
+class BaseMeaningToken(ABC, Generic[T])
+```
+
+Base implementation for meaning tokens with interaction handling.
+
+---
+
+## filter_affordances_by_observer
+
+```python
+def filter_affordances_by_observer(affordances: tuple[Affordance, ...], observer: Observer, required_capabilities: dict[str, frozenset[str]] | None=None) -> list[Affordance]
+```
+
+Filter affordances based on observer capabilities and role.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name from registry.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original text that was recognized as this token.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+(start, end) position in source document.
+
+---
+
+## token_id
+
+```python
+def token_id(self) -> str
+```
+
+Unique identifier for this token instance.
+
+---
+
+## get_definition
+
+```python
+def get_definition(self) -> TokenDefinition | None
+```
+
+Get the token definition from the registry.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## project
+
+```python
+async def project(self, target: str, observer: Observer) -> str | dict[str, Any]
+```
+
+Project token to target-specific rendering.
+
+---
+
+## on_interact
+
+```python
+async def on_interact(self, action: AffordanceAction, observer: Observer, capture_trace: bool=True, **kwargs: Any) -> InteractionResult
+```
+
+Handle interaction with this token.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## services.interactive_text.tokens.code_block
+
+## code_block
+
+```python
+module code_block
+```
+
+CodeBlock Token Implementation.
+
+---
+
+## ExecutionResult
+
+```python
+class ExecutionResult
+```
+
+Result of executing a code block.
+
+---
+
+## CodeBlockHoverInfo
+
+```python
+class CodeBlockHoverInfo
+```
+
+Information displayed on code block hover.
+
+---
+
+## CodeBlockContextMenuResult
+
+```python
+class CodeBlockContextMenuResult
+```
+
+Result of showing context menu for a code block.
+
+---
+
+## EditFocusResult
+
+```python
+class EditFocusResult
+```
+
+Result of focusing a code block for editing.
+
+---
+
+## CodeBlockToken
+
+```python
+class CodeBlockToken(BaseMeaningToken[str])
+```
+
+Token representing a fenced code block.
+
+---
+
+## create_code_block_token
+
+```python
+def create_code_block_token(text: str, position: tuple[int, int] | None=None) -> CodeBlockToken | None
+```
+
+Create a CodeBlock token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], language: str, code: str) -> None
+```
+
+Initialize a CodeBlock token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str]) -> CodeBlockToken
+```
+
+Create token from regex match.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name from registry.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original text that was recognized as this token.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+(start, end) position in source document.
+
+---
+
+## language
+
+```python
+def language(self) -> str
+```
+
+Programming language.
+
+---
+
+## code
+
+```python
+def code(self) -> str
+```
+
+Code content.
+
+---
+
+## line_count
+
+```python
+def line_count(self) -> int
+```
+
+Number of lines in the code.
+
+---
+
+## can_execute
+
+```python
+def can_execute(self) -> bool
+```
+
+Whether this code block can be executed.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## project
+
+```python
+async def project(self, target: str, observer: Observer) -> str | dict[str, Any]
+```
+
+Project token to target-specific rendering.
+
+---
+
+## execute
+
+```python
+async def execute(self, observer: Observer, sandboxed: bool=True) -> ExecutionResult
+```
+
+Execute the code block.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## services.interactive_text.tokens.image
+
+## image
+
+```python
+module image
+```
+
+Image Token Implementation.
+
+---
+
+## ImageAnalysis
+
+```python
+class ImageAnalysis
+```
+
+AI-generated analysis of an image.
+
+---
+
+## ImageHoverInfo
+
+```python
+class ImageHoverInfo
+```
+
+Information displayed on image hover.
+
+---
+
+## ImageExpandResult
+
+```python
+class ImageExpandResult
+```
+
+Result of expanding an image to full analysis panel.
+
+---
+
+## ImageDragResult
+
+```python
+class ImageDragResult
+```
+
+Result of dragging an image to chat context.
+
+---
+
+## ImageToken
+
+```python
+class ImageToken(BaseMeaningToken[str])
+```
+
+Token representing a markdown image.
+
+---
+
+## create_image_token
+
+```python
+def create_image_token(text: str, position: tuple[int, int] | None=None, llm_available: bool=True) -> ImageToken | None
+```
+
+Create an Image token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], alt_text: str, path: str, llm_available: bool=True) -> None
+```
+
+Initialize an Image token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str], llm_available: bool=True) -> ImageToken
+```
+
+Create token from regex match.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name from registry.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original text that was recognized as this token.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+(start, end) position in source document.
+
+---
+
+## alt_text
+
+```python
+def alt_text(self) -> str
+```
+
+Image alt text.
+
+---
+
+## path
+
+```python
+def path(self) -> str
+```
+
+Image path/URL.
+
+---
+
+## llm_available
+
+```python
+def llm_available(self) -> bool
+```
+
+Whether LLM service is available.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## project
+
+```python
+async def project(self, target: str, observer: Observer) -> str | dict[str, Any]
+```
+
+Project token to target-specific rendering.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## services.interactive_text.tokens.principle_ref
+
+## principle_ref
+
+```python
+module principle_ref
+```
+
+PrincipleRef Token Implementation.
+
+---
+
+## PrincipleInfo
+
+```python
+class PrincipleInfo
+```
+
+Information about a design principle.
+
+---
+
+## PrincipleHoverInfo
+
+```python
+class PrincipleHoverInfo
+```
+
+Information displayed on principle hover.
+
+---
+
+## PrincipleNavigationResult
+
+```python
+class PrincipleNavigationResult
+```
+
+Result of navigating to a principle.
+
+---
+
+## PrincipleContextMenuResult
+
+```python
+class PrincipleContextMenuResult
+```
+
+Result of showing context menu for a principle.
+
+---
+
+## PrincipleRefToken
+
+```python
+class PrincipleRefToken(BaseMeaningToken[str])
+```
+
+Token representing a principle reference.
+
+---
+
+## create_principle_ref_token
+
+```python
+def create_principle_ref_token(text: str, position: tuple[int, int] | None=None) -> PrincipleRefToken | None
+```
+
+Create a PrincipleRef token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], number: int) -> None
+```
+
+Initialize a PrincipleRef token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str]) -> PrincipleRefToken
+```
+
+Create token from regex match.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## services.interactive_text.tokens.requirement_ref
+
+## requirement_ref
+
+```python
+module requirement_ref
+```
+
+RequirementRef Token Implementation.
+
+---
+
+## RequirementInfo
+
+```python
+class RequirementInfo
+```
+
+Information about a requirement.
+
+---
+
+## RequirementHoverInfo
+
+```python
+class RequirementHoverInfo
+```
+
+Information displayed on requirement hover.
+
+---
+
+## RequirementNavigationResult
+
+```python
+class RequirementNavigationResult
+```
+
+Result of navigating to a requirement.
+
+---
+
+## RequirementContextMenuResult
+
+```python
+class RequirementContextMenuResult
+```
+
+Result of showing context menu for a requirement.
+
+---
+
+## RequirementRefToken
+
+```python
+class RequirementRefToken(BaseMeaningToken[str])
+```
+
+Token representing a requirement reference.
+
+---
+
+## create_requirement_ref_token
+
+```python
+def create_requirement_ref_token(text: str, position: tuple[int, int] | None=None) -> RequirementRefToken | None
+```
+
+Create a RequirementRef token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], major: int, minor: int | None=None) -> None
+```
+
+Initialize a RequirementRef token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str]) -> RequirementRefToken
+```
+
+Create token from regex match.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## services.interactive_text.tokens.task_checkbox
+
+## task_checkbox
+
+```python
+module task_checkbox
+```
+
+TaskCheckbox Token Implementation.
+
+---
+
+## VerificationStatus
+
+```python
+class VerificationStatus
+```
+
+Verification status for a task.
+
+---
+
+## TaskHoverInfo
+
+```python
+class TaskHoverInfo
+```
+
+Information displayed on task hover.
+
+---
+
+## ToggleResult
+
+```python
+class ToggleResult
+```
+
+Result of toggling a task checkbox.
+
+---
+
+## TaskContextMenuResult
+
+```python
+class TaskContextMenuResult
+```
+
+Result of showing context menu for a task.
+
+---
+
+## TaskCheckboxToken
+
+```python
+class TaskCheckboxToken(BaseMeaningToken[bool])
+```
+
+Token representing a GitHub-style task checkbox.
+
+---
+
+## create_task_checkbox_token
+
+```python
+def create_task_checkbox_token(text: str, position: tuple[int, int] | None=None, file_path: str | None=None, line_number: int | None=None) -> TaskCheckboxToken | None
+```
+
+Create a TaskCheckbox token from text.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## __init__
+
+```python
+def __init__(self, source_text: str, source_position: tuple[int, int], checked: bool, description: str, file_path: str | None=None, line_number: int | None=None, requirement_refs: tuple[str, ...]=()) -> None
+```
+
+Initialize a TaskCheckbox token.
+
+---
+
+## from_match
+
+```python
+def from_match(cls, match: re.Match[str], file_path: str | None=None, line_number: int | None=None) -> TaskCheckboxToken
+```
+
+Create token from regex match.
+
+---
+
+## token_type
+
+```python
+def token_type(self) -> str
+```
+
+Token type name from registry.
+
+---
+
+## source_text
+
+```python
+def source_text(self) -> str
+```
+
+Original text that was recognized as this token.
+
+---
+
+## source_position
+
+```python
+def source_position(self) -> tuple[int, int]
+```
+
+(start, end) position in source document.
+
+---
+
+## checked
+
+```python
+def checked(self) -> bool
+```
+
+Whether the checkbox is checked.
+
+---
+
+## description
+
+```python
+def description(self) -> str
+```
+
+Task description text.
+
+---
+
+## file_path
+
+```python
+def file_path(self) -> str | None
+```
+
+Path to source file.
+
+---
+
+## line_number
+
+```python
+def line_number(self) -> int | None
+```
+
+Line number in source file.
+
+---
+
+## requirement_refs
+
+```python
+def requirement_refs(self) -> tuple[str, ...]
+```
+
+Linked requirement references.
+
+---
+
+## verification
+
+```python
+def verification(self) -> VerificationStatus | None
+```
+
+Verification status for this task.
+
+---
+
+## get_affordances
+
+```python
+async def get_affordances(self, observer: Observer) -> list[Affordance]
+```
+
+Get available affordances for this observer.
+
+---
+
+## project
+
+```python
+async def project(self, target: str, observer: Observer) -> str | dict[str, Any]
+```
+
+Project token to target-specific rendering.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## services.liminal.__init__
+
+## __init__
+
+```python
+module __init__
+```
+
+Liminal Transition Protocols: Rituals that honor state changes.
+
+---
+
+## services.liminal.coffee.__init__
+
+## __init__
+
+```python
+module __init__
+```
+
+Morning Coffee: Liminal Transition Protocol from Rest to Work.
+
+---
+
+## services.liminal.coffee.capture
+
+## capture
+
+```python
+module capture
+```
+
+Voice Capture: What's on your mind before code takes over?
+
+---
+
+## CaptureQuestion
+
+```python
+class CaptureQuestion
+```
+
+A question in the voice capture flow.
+
+---
+
+## CaptureSession
+
+```python
+class CaptureSession
+```
+
+A voice capture session.
+
+---
+
+## get_voice_store_path
+
+```python
+def get_voice_store_path(base_path: Path | str | None=None) -> Path
+```
+
+Get path to voice capture store.
+
+---
+
+## save_voice
+
+```python
+def save_voice(voice: MorningVoice, store_path: Path | str | None=None) -> Path
+```
+
+Save a MorningVoice capture to persistent storage.
+
+---
+
+## load_voice
+
+```python
+def load_voice(capture_date: date, store_path: Path | str | None=None) -> MorningVoice | None
+```
+
+Load a MorningVoice capture from storage.
+
+---
+
+## load_recent_voices
+
+```python
+def load_recent_voices(limit: int=7, store_path: Path | str | None=None) -> list[MorningVoice]
+```
+
+Load recent voice captures.
+
+---
+
+## iter_all_voices
+
+```python
+def iter_all_voices(store_path: Path | str | None=None) -> Iterator[MorningVoice]
+```
+
+Iterate over all voice captures.
+
+---
+
+## voice_to_anchor
+
+```python
+def voice_to_anchor(voice: MorningVoice) -> dict[str, Any] | None
+```
+
+Convert MorningVoice to voice anchor format.
+
+---
+
+## extract_voice_patterns
+
+```python
+def extract_voice_patterns(voices: list[MorningVoice]) -> dict[str, Any]
+```
+
+Extract patterns from historical voice captures.
+
+---
+
+## save_voice_async
+
+```python
+async def save_voice_async(voice: MorningVoice, store_path: Path | str | None=None) -> Path
+```
+
+Async version of save_voice.
+
+---
+
+## load_voice_async
+
+```python
+async def load_voice_async(capture_date: date, store_path: Path | str | None=None) -> MorningVoice | None
+```
+
+Async version of load_voice.
+
+---
+
+## load_recent_voices_async
+
+```python
+async def load_recent_voices_async(limit: int=7, store_path: Path | str | None=None) -> list[MorningVoice]
+```
+
+Async version of load_recent_voices.
+
+---
+
+## questions
+
+```python
+def questions(self) -> tuple[CaptureQuestion, ...]
+```
+
+Get the capture questions.
+
+---
+
+## current_question
+
+```python
+def current_question(self) -> CaptureQuestion | None
+```
+
+Get the current question, or None if complete.
+
+---
+
+## is_complete
+
+```python
+def is_complete(self) -> bool
+```
+
+Check if all questions have been answered.
+
+---
+
+## progress
+
+```python
+def progress(self) -> float
+```
+
+Progress through questions (0.0-1.0).
+
+---
+
+## answer
+
+```python
+def answer(self, response: str | None) -> CaptureQuestion | None
+```
+
+Record answer to current question and advance.
+
+---
+
+## skip
+
+```python
+def skip(self) -> CaptureQuestion | None
+```
+
+Skip current question (record as None).
+
+---
+
+## build_voice
+
+```python
+def build_voice(self) -> MorningVoice
+```
+
+Build MorningVoice from captured answers.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Serialize session state.
+
+---
+
+## services.liminal.coffee.circadian
+
+## circadian
+
+```python
+module circadian
+```
+
+**AGENTESE:** `void.metabolism.serendipity`
+
+Circadian Resonance: The garden knows things from yesterday.
+
+### Things to Know
+
+ℹ️ Day-of-week matters more than raw recency. Monday mornings resonate with Monday mornings.
+  - *Verified in: `test_circadian.py::test_weekday_resonance`*
+
+ℹ️ FOSSIL layer (> 14 days) is the serendipity goldmine. Recent voices are too familiar; ancient ones surprise.
+  - *Verified in: `test_circadian.py::test_fossil_serendipity`*
+
+---
+
+## StratigraphyLayer
+
+```python
+class StratigraphyLayer(Enum)
+```
+
+Layers in the voice archaeology.
+
+---
+
+## ArchaeologicalVoice
+
+```python
+class ArchaeologicalVoice
+```
+
+A voice from the past with archaeological metadata.
+
+---
+
+## ResonanceMatch
+
+```python
+class ResonanceMatch
+```
+
+A past morning that resonates with today.
+
+---
+
+## PatternOccurrence
+
+```python
+class PatternOccurrence
+```
+
+A recurring pattern detected in voice history.
+
+---
+
+## SerendipityWisdom
+
+```python
+class SerendipityWisdom
+```
+
+Unexpected wisdom from the FOSSIL layer.
+
+---
+
+## CircadianContext
+
+```python
+class CircadianContext
+```
+
+Full circadian context for today's morning.
+
+---
+
+## CircadianResonance
+
+```python
+class CircadianResonance
+```
+
+Match today to similar past mornings.
+
+---
+
+## get_circadian_resonance
+
+```python
+def get_circadian_resonance() -> CircadianResonance
+```
+
+Get or create the global CircadianResonance service.
+
+---
+
+## set_circadian_resonance
+
+```python
+def set_circadian_resonance(resonance: CircadianResonance) -> None
+```
+
+Set the global CircadianResonance service (for testing).
+
+---
+
+## reset_circadian_resonance
+
+```python
+def reset_circadian_resonance() -> None
+```
+
+Reset the global CircadianResonance service.
+
+---
+
+## age_range
+
+```python
+def age_range(self) -> tuple[int, int | None]
+```
+
+Age range in days (min, max or None for unbounded).
+
+---
+
+## for_age
+
+```python
+def for_age(cls, days: int) -> 'StratigraphyLayer'
+```
+
+Get the layer for a given age in days.
+
+---
+
+## from_voice
+
+```python
+def from_voice(cls, voice: 'MorningVoice', today: date | None=None) -> 'ArchaeologicalVoice'
+```
+
+Create from a MorningVoice.
+
+---
+
+## weekday_name
+
+```python
+def weekday_name(self) -> str
+```
+
+Human-readable weekday name.
+
+---
+
+## frequency
+
+```python
+def frequency(self) -> float
+```
+
+Frequency as ratio (0.0-1.0).
+
+---
+
+## __init__
+
+```python
+def __init__(self, serendipity_probability: float=0.1, fossil_age_days: int=14)
+```
+
+Initialize CircadianResonance.
+
+---
+
+## get_context
+
+```python
+def get_context(self, voices: list['MorningVoice'], today: date | None=None, resonance_limit: int=3, pattern_limit: int=5) -> CircadianContext
+```
+
+Get full circadian context for today.
+
+---
+
+## find_resonances
+
+```python
+def find_resonances(self, voices: list['MorningVoice'], today: date | None=None, limit: int=3) -> list[ResonanceMatch]
+```
+
+Find past mornings that resonate with today.
+
+---
+
+## detect_patterns
+
+```python
+def detect_patterns(self, voices: list['MorningVoice'], limit: int=5, min_occurrences: int=2) -> list[PatternOccurrence]
+```
+
+Detect recurring patterns in voice history.
+
+---
+
+## maybe_serendipity
+
+```python
+def maybe_serendipity(self, voices: list['MorningVoice'], today: date | None=None) -> SerendipityWisdom | None
+```
+
+Maybe return unexpected wisdom from the FOSSIL layer.
+
+---
+
+## force_serendipity
+
+```python
+def force_serendipity(self, voices: list['MorningVoice'], today: date | None=None) -> SerendipityWisdom | None
+```
+
+Force serendipity trigger (for testing).
+
+---
+
+## services.liminal.coffee.cli_formatting
+
+## cli_formatting
+
+```python
+module cli_formatting
+```
+
+Morning Coffee CLI Formatting: Rich terminal output for the liminal ritual.
+
+---
+
+## format_garden_view
+
+```python
+def format_garden_view(data: dict[str, Any]) -> str
+```
+
+Format GardenView as rich CLI output.
+
+---
+
+## format_weather
+
+```python
+def format_weather(data: dict[str, Any]) -> str
+```
+
+Format ConceptualWeather as rich CLI output.
+
+---
+
+## format_menu
+
+```python
+def format_menu(data: dict[str, Any]) -> str
+```
+
+Format ChallengeMenu as rich CLI output.
+
+---
+
+## format_capture_questions
+
+```python
+def format_capture_questions() -> str
+```
+
+Format voice capture questions for interactive flow.
+
+---
+
+## format_captured_voice
+
+```python
+def format_captured_voice(data: dict[str, Any]) -> str
+```
+
+Format the confirmation after a voice is captured.
+
+---
+
+## format_manifest
+
+```python
+def format_manifest(data: dict[str, Any]) -> str
+```
+
+Format ritual manifest (status overview).
+
+---
+
+## format_history
+
+```python
+def format_history(data: dict[str, Any]) -> str
+```
+
+Format voice capture history.
+
+---
+
+## format_circadian_context
+
+```python
+def format_circadian_context(data: dict[str, Any]) -> str
+```
+
+Format CircadianContext for CLI display.
+
+---
+
+## format_hydration_context
+
+```python
+def format_hydration_context(data: dict[str, Any]) -> str
+```
+
+Format HydrationContext (gotchas + files + anchors) for CLI display.
+
+---
+
+## format_transition
+
+```python
+def format_transition(chosen_item: dict[str, Any] | None=None) -> str
+```
+
+Format the transition message when beginning work.
+
+---
+
+## format_ritual_start
+
+```python
+def format_ritual_start() -> str
+```
+
+Header for starting the full ritual.
+
+---
+
+## format_movement_separator
+
+```python
+def format_movement_separator(movement_name: str) -> str
+```
+
+Separator between movements.
+
+---
+
+## services.liminal.coffee.core
+
+## core
+
+```python
+module core
+```
+
+CoffeeService: Orchestrates the Morning Coffee ritual.
+
+---
+
+## CoffeeRitualStarted
+
+```python
+class CoffeeRitualStarted
+```
+
+Emitted when the Morning Coffee ritual begins.
+
+---
+
+## CoffeeMovementCompleted
+
+```python
+class CoffeeMovementCompleted
+```
+
+Emitted when a movement completes.
+
+---
+
+## CoffeeVoiceCaptured
+
+```python
+class CoffeeVoiceCaptured
+```
+
+Emitted when a voice capture completes.
+
+---
+
+## CoffeeRitualCompleted
+
+```python
+class CoffeeRitualCompleted
+```
+
+Emitted when the ritual completes successfully.
+
+---
+
+## CoffeeRitualExited
+
+```python
+class CoffeeRitualExited
+```
+
+Emitted when the ritual is exited early.
+
+---
+
+## CoffeeService
+
+```python
+class CoffeeService
+```
+
+Orchestrates the Morning Coffee ritual.
+
+---
+
+## get_coffee_service
+
+```python
+def get_coffee_service() -> CoffeeService
+```
+
+Get or create the global CoffeeService.
+
+---
+
+## set_coffee_service
+
+```python
+def set_coffee_service(service: CoffeeService) -> None
+```
+
+Set the global CoffeeService (for testing).
+
+---
+
+## reset_coffee_service
+
+```python
+def reset_coffee_service() -> None
+```
+
+Reset the global CoffeeService.
+
+---
+
+## __init__
+
+```python
+def __init__(self, repo_path: Path | str | None=None, now_md_path: Path | str | None=None, plans_path: Path | str | None=None, brainstorm_path: Path | str | None=None, voice_store_path: Path | str | None=None, synergy_bus: 'SynergyEventBus | None'=None, brain_persistence: 'BrainPersistence | None'=None, voice_stigmergy: VoiceStigmergy | None=None) -> None
+```
+
+Initialize CoffeeService.
+
+---
+
+## state
+
+```python
+def state(self) -> CoffeeState
+```
+
+Current ritual state.
+
+---
+
+## is_active
+
+```python
+def is_active(self) -> bool
+```
+
+Whether a ritual is currently active.
+
+---
+
+## current_movement
+
+```python
+def current_movement(self) -> str | None
+```
+
+Current movement name, or None if dormant.
 
 ---
 
 ## manifest
 
 ```python
-async def manifest(self) -> GestaltStatus
+def manifest(self) -> dict[str, Any]
 ```
 
-**AGENTESE:** `self.gestalt.manifest`
+Get ritual manifest — current state and last ritual info.
 
-Get gestalt health status.
+---
+
+## garden
+
+```python
+async def garden(self) -> GardenView
+```
+
+Generate the Garden View (Movement 1).
+
+---
+
+## weather
+
+```python
+async def weather(self) -> ConceptualWeather
+```
+
+Generate the Conceptual Weather (Movement 2).
+
+---
+
+## menu
+
+```python
+async def menu(self, garden_view: GardenView | None=None, weather: ConceptualWeather | None=None) -> ChallengeMenu
+```
+
+Generate the Challenge Menu (Movement 3).
+
+---
+
+## start_capture
+
+```python
+def start_capture(self) -> CaptureSession
+```
+
+Start a voice capture session (Movement 4).
+
+---
+
+## save_capture
+
+```python
+async def save_capture(self, voice: MorningVoice) -> Path
+```
+
+Save a completed voice capture.
+
+---
+
+## reinforce_on_accomplishment
+
+```python
+async def reinforce_on_accomplishment(self, accomplished: bool=True) -> int
+```
+
+Reinforce pheromones when session ends with accomplishment.
+
+---
+
+## get_stigmergy_patterns
+
+```python
+async def get_stigmergy_patterns(self, context: str | None=None, limit: int=5) -> list[tuple[str, float]]
+```
+
+Get current stigmergy patterns for display.
+
+---
+
+## search_voice_archaeology
+
+```python
+async def search_voice_archaeology(self, query: str, limit: int=10) -> list[dict[str, Any]]
+```
+
+Search past voice captures using semantic search.
+
+---
+
+## get_voice_patterns_from_brain
+
+```python
+async def get_voice_patterns_from_brain(self) -> dict[str, Any]
+```
+
+Extract patterns from voice captures stored in Brain.
+
+---
+
+## wake
+
+```python
+def wake(self) -> CoffeeOutput
+```
+
+Start the ritual (DORMANT → GARDEN).
+
+---
+
+## advance
+
+```python
+def advance(self, command: str, **data: Any) -> CoffeeOutput
+```
+
+Advance the ritual state machine.
+
+---
+
+## exit_ritual
+
+```python
+def exit_ritual(self) -> CoffeeOutput
+```
+
+Exit the ritual at any point. No guilt, no nagging.
+
+---
+
+## quick
+
+```python
+async def quick(self) -> tuple[GardenView, ChallengeMenu]
+```
+
+Run quick ritual: Garden + Menu only.
+
+---
+
+## get_recent_voices
+
+```python
+def get_recent_voices(self, limit: int=7) -> list[MorningVoice]
+```
+
+Get recent voice captures.
+
+---
+
+## get_voice
+
+```python
+def get_voice(self, capture_date: date) -> MorningVoice | None
+```
+
+Get voice capture for a specific date.
+
+---
+
+## services.liminal.coffee.garden
+
+## garden
+
+```python
+module garden
+```
+
+Garden View Generator: What grew while I slept?
+
+---
+
+## parse_git_stat
+
+```python
+def parse_git_stat(since: datetime | None=None, repo_path: Path | str | None=None) -> list[GardenItem]
+```
+
+Parse git diff --stat since a given time.
+
+---
+
+## parse_now_md
+
+```python
+def parse_now_md(now_md_path: Path | str | None=None) -> dict[str, float]
+```
+
+Parse NOW.md to extract jewel progress percentages.
+
+---
+
+## detect_recent_brainstorming
+
+```python
+def detect_recent_brainstorming(brainstorm_path: Path | str | None=None, since: datetime | None=None) -> list[GardenItem]
+```
+
+Detect recent brainstorming files as seeds.
+
+---
+
+## generate_garden_view
+
+```python
+def generate_garden_view(repo_path: Path | str | None=None, now_md_path: Path | str | None=None, brainstorm_path: Path | str | None=None, since: datetime | None=None) -> GardenView
+```
+
+Generate the complete Garden View for Morning Coffee.
+
+---
+
+## generate_garden_view_async
+
+```python
+async def generate_garden_view_async(repo_path: Path | str | None=None, now_md_path: Path | str | None=None, brainstorm_path: Path | str | None=None, since: datetime | None=None) -> GardenView
+```
+
+Async version of generate_garden_view.
+
+---
+
+## services.liminal.coffee.menu
+
+## menu
+
+```python
+module menu
+```
+
+Menu Generator: What suits my taste this morning?
+
+---
+
+## extract_todos_from_plans
+
+```python
+def extract_todos_from_plans(plans_path: Path | str | None=None) -> list[dict[str, Any]]
+```
+
+Extract TODO items from plan files.
+
+---
+
+## extract_todos_from_now
+
+```python
+def extract_todos_from_now(now_path: Path | str | None=None) -> list[dict[str, Any]]
+```
+
+Extract actionable items from NOW.md.
+
+---
+
+## classify_challenge
+
+```python
+def classify_challenge(item: str) -> ChallengeLevel
+```
+
+Classify an item into a challenge level based on heuristics.
+
+---
+
+## estimate_cognitive_load
+
+```python
+def estimate_cognitive_load(item: str) -> float
+```
+
+Estimate cognitive load (0.0-1.0) for an item.
+
+---
+
+## generate_menu
+
+```python
+def generate_menu(plans_path: Path | str | None=None, now_path: Path | str | None=None, garden_view: GardenView | None=None, weather: ConceptualWeather | None=None, max_per_level: int=3) -> ChallengeMenu
+```
+
+Generate the challenge menu for Morning Coffee.
+
+---
+
+## generate_menu_async
+
+```python
+async def generate_menu_async(plans_path: Path | str | None=None, now_path: Path | str | None=None, garden_view: GardenView | None=None, weather: ConceptualWeather | None=None, max_per_level: int=3) -> ChallengeMenu
+```
+
+Async version of generate_menu.
+
+---
+
+## services.liminal.coffee.node
+
+## node
+
+```python
+module node
+```
+
+**AGENTESE:** `time.coffee.`
+
+Morning Coffee AGENTESE Node: time.coffee.*
+
+---
+
+## CoffeeManifestResponse
+
+```python
+class CoffeeManifestResponse
+```
+
+Response for manifest aspect.
+
+---
+
+## GardenResponse
+
+```python
+class GardenResponse
+```
+
+Response for garden aspect.
+
+---
+
+## WeatherResponse
+
+```python
+class WeatherResponse
+```
+
+Response for weather aspect.
+
+---
+
+## MenuResponse
+
+```python
+class MenuResponse
+```
+
+Response for menu aspect.
+
+---
+
+## CaptureRequest
+
+```python
+class CaptureRequest
+```
+
+Request for capture aspect.
+
+---
+
+## CaptureResponse
+
+```python
+class CaptureResponse
+```
+
+Response for capture aspect.
+
+---
+
+## BeginResponse
+
+```python
+class BeginResponse
+```
+
+Response for begin aspect.
+
+---
+
+## HistoryRequest
+
+```python
+class HistoryRequest
+```
+
+Request for history aspect.
+
+---
+
+## HistoryResponse
+
+```python
+class HistoryResponse
+```
+
+Response for history aspect.
+
+---
+
+## CoffeeNode
+
+```python
+class CoffeeNode(BaseLogosNode)
+```
+
+time.coffee — Morning Coffee liminal transition protocol.
+
+---
+
+## get_coffee_node
+
+```python
+def get_coffee_node() -> CoffeeNode
+```
+
+Get or create the CoffeeNode singleton.
+
+---
+
+## set_coffee_node
+
+```python
+def set_coffee_node(node: CoffeeNode) -> None
+```
+
+Set the CoffeeNode singleton (for testing).
+
+---
+
+## __post_init__
+
+```python
+def __post_init__(self) -> None
+```
+
+Initialize with service.
+
+---
+
+## manifest
+
+```python
+async def manifest(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+View current ritual state.
+
+---
+
+## garden
+
+```python
+async def garden(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+Generate Garden View (Movement 1).
+
+---
+
+## weather
+
+```python
+async def weather(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+Generate Conceptual Weather (Movement 2).
+
+---
+
+## menu
+
+```python
+async def menu(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+Generate Challenge Menu (Movement 3).
+
+---
+
+## capture
+
+```python
+async def capture(self, observer: 'Umwelt[Any, Any]', *, non_code_thought: str | None=None, eye_catch: str | None=None, success_criteria: str | None=None, raw_feeling: str | None=None, chosen_challenge: str | None=None) -> Renderable
+```
+
+Record voice capture (Movement 4).
+
+---
+
+## begin
+
+```python
+async def begin(self, observer: 'Umwelt[Any, Any]') -> Renderable
+```
+
+Complete ritual, transition to work.
+
+---
+
+## history
+
+```python
+async def history(self, observer: 'Umwelt[Any, Any]', *, limit: int=7, capture_date: str | None=None) -> Renderable
+```
+
+View past voice captures.
+
+---
+
+## services.liminal.coffee.polynomial
+
+## polynomial
+
+```python
+module polynomial
+```
+
+Morning Coffee Polynomial: State machine for the liminal transition ritual.
+
+---
+
+## coffee_directions
+
+```python
+def coffee_directions(state: CoffeeState) -> FrozenSet[Any]
+```
+
+Valid commands for each Coffee state.
+
+---
+
+## coffee_transition
+
+```python
+def coffee_transition(state: CoffeeState, input: Any) -> tuple[CoffeeState, CoffeeOutput]
+```
+
+Coffee state transition function.
+
+---
+
+## services.liminal.coffee.stigmergy
+
+## stigmergy
+
+```python
+module stigmergy
+```
+
+**AGENTESE:** `void.metabolism.stigmergy`
+
+VoiceStigmergy: Wire stigmergic memory to Morning Coffee.
+
+### Things to Know
+
+ℹ️ Pheromone field is in-memory by default. Persist to D-gent for cross-session stigmergy.
+  - *Verified in: `test_voice_stigmergy.py::test_field_persists`*
+
+ℹ️ Decay rate is 5% per day (0.002 per hour). This matches the spec's "reinforcement vs decay" balance.
+  - *Verified in: `test_voice_stigmergy.py::TestPheromoneDecay::test_daily_decay_reduces_intensity`*
+
+---
+
+## PheromoneDeposit
+
+```python
+class PheromoneDeposit
+```
+
+A record of pheromones deposited from a voice capture.
+
+---
+
+## VoiceStigmergy
+
+```python
+class VoiceStigmergy
+```
+
+Service that connects MorningVoice to PheromoneField.
+
+---
+
+## get_voice_stigmergy
+
+```python
+def get_voice_stigmergy() -> VoiceStigmergy
+```
+
+Get or create the global VoiceStigmergy service.
+
+---
+
+## set_voice_stigmergy
+
+```python
+def set_voice_stigmergy(service: VoiceStigmergy) -> None
+```
+
+Set the global VoiceStigmergy service (for testing).
+
+---
+
+## reset_voice_stigmergy
+
+```python
+def reset_voice_stigmergy() -> None
+```
+
+Reset the global VoiceStigmergy service.
+
+---
+
+## __init__
+
+```python
+def __init__(self, field: PheromoneField | None=None, store_path: Path | str | None=None, persistence: 'MetabolismPersistence | None'=None)
+```
+
+Initialize VoiceStigmergy.
+
+---
+
+## deposit_from_voice
+
+```python
+async def deposit_from_voice(self, voice: 'MorningVoice', base_intensity: float=1.0) -> PheromoneDeposit
+```
+
+Deposit pheromones from a MorningVoice capture.
+
+---
+
+## reinforce_accomplished
+
+```python
+async def reinforce_accomplished(self, deposit: PheromoneDeposit, factor: float | None=None) -> int
+```
+
+Reinforce pheromones when a task is accomplished.
+
+---
+
+## reinforce_partial
+
+```python
+async def reinforce_partial(self, deposit: PheromoneDeposit) -> int
+```
+
+Reinforce pheromones for partial completion.
+
+---
+
+## sense_patterns
+
+```python
+async def sense_patterns(self, context: str | None=None, limit: int=10) -> list[tuple[str, float]]
+```
+
+Sense current pheromone patterns.
+
+---
+
+## get_top_patterns
+
+```python
+async def get_top_patterns(self, limit: int=5) -> list[tuple[str, float]]
+```
+
+Get the top N patterns without context filtering.
+
+---
+
+## apply_daily_decay
+
+```python
+async def apply_daily_decay(self) -> int
+```
+
+Apply a day's worth of decay to the field.
+
+---
+
+## save
+
+```python
+async def save(self) -> Path
+```
+
+Persist the pheromone field to storage.
+
+---
+
+## load
+
+```python
+async def load(self) -> bool
+```
+
+Load the pheromone field from storage.
+
+---
+
+## stats
+
+```python
+def stats(self) -> dict[str, Any]
+```
+
+Get field statistics.
+
+---
+
+## services.liminal.coffee.types
+
+## types
+
+```python
+module types
+```
+
+Morning Coffee Types: Core data structures for the liminal transition ritual.
+
+---
+
+## CoffeeState
+
+```python
+class CoffeeState(Enum)
+```
+
+Positions in the Morning Coffee polynomial.
+
+---
+
+## ChallengeLevel
+
+```python
+class ChallengeLevel(Enum)
+```
+
+Challenge gradients for the Menu.
+
+---
+
+## Movement
+
+```python
+class Movement
+```
+
+A phase of the Morning Coffee ritual.
+
+---
+
+## GardenCategory
+
+```python
+class GardenCategory(Enum)
+```
+
+Categories of garden items.
+
+---
+
+## GardenItem
+
+```python
+class GardenItem
+```
+
+A single item in the garden view.
+
+---
+
+## GardenView
+
+```python
+class GardenView
+```
+
+The Garden View — Movement 1.
+
+---
+
+## WeatherType
+
+```python
+class WeatherType(Enum)
+```
+
+Types of conceptual weather patterns.
+
+---
+
+## WeatherPattern
+
+```python
+class WeatherPattern
+```
+
+A single conceptual weather pattern.
+
+---
+
+## ConceptualWeather
+
+```python
+class ConceptualWeather
+```
+
+The Conceptual Weather — Movement 2.
+
+---
+
+## MenuItem
+
+```python
+class MenuItem
+```
+
+A potential work item on the menu.
+
+---
+
+## ChallengeMenu
+
+```python
+class ChallengeMenu
+```
+
+The Menu — Movement 3.
+
+---
+
+## MorningVoice
+
+```python
+class MorningVoice
+```
+
+Fresh capture of Kent's authentic morning state.
+
+---
+
+## RitualEvent
+
+```python
+class RitualEvent
+```
+
+Input event to the Coffee polynomial.
+
+---
+
+## CoffeeOutput
+
+```python
+class CoffeeOutput
+```
+
+Output from the Coffee polynomial.
+
+---
+
+## emoji
+
+```python
+def emoji(self) -> str
+```
+
+Visual indicator for the challenge level.
+
+---
+
+## description
+
+```python
+def description(self) -> str
+```
+
+Human-readable description.
+
+---
+
+## cognitive_load
+
+```python
+def cognitive_load(self) -> float
+```
+
+Estimated cognitive load (0.0-1.0).
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## is_empty
+
+```python
+def is_empty(self) -> bool
+```
+
+Check if the garden view has any items.
+
+---
+
+## total_items
+
+```python
+def total_items(self) -> int
+```
+
+Total number of items across all categories.
+
+---
+
+## emoji
+
+```python
+def emoji(self) -> str
+```
+
+Visual indicator.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## is_empty
+
+```python
+def is_empty(self) -> bool
+```
+
+Check if there are any weather patterns.
+
+---
+
+## all_patterns
+
+```python
+def all_patterns(self) -> list[WeatherPattern]
+```
+
+Get all patterns as a flat list.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## is_empty
+
+```python
+def is_empty(self) -> bool
+```
+
+Check if menu has any items (serendipity always available).
+
+---
+
+## get_items_by_level
+
+```python
+def get_items_by_level(self, level: ChallengeLevel) -> tuple[MenuItem, ...]
+```
+
+Get items for a specific challenge level.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## from_dict
+
+```python
+def from_dict(cls, data: dict[str, Any]) -> 'MorningVoice'
+```
+
+Create from dictionary.
+
+---
+
+## is_substantive
+
+```python
+def is_substantive(self) -> bool
+```
+
+Check if the capture has meaningful content.
+
+---
+
+## as_voice_anchor
+
+```python
+def as_voice_anchor(self) -> dict[str, Any] | None
+```
+
+Convert to a voice anchor if substantive.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to dictionary.
+
+---
+
+## services.liminal.coffee.weather
+
+## weather
+
+```python
+module weather
+```
+
+Conceptual Weather Analyzer: What's shifting in the atmosphere?
+
+---
+
+## parse_plan_headers
+
+```python
+def parse_plan_headers(plans_path: Path | str | None=None) -> list[dict[str, str]]
+```
+
+Parse plan file headers for status and context.
+
+---
+
+## analyze_commit_messages
+
+```python
+def analyze_commit_messages(since: datetime | None=None, repo_path: Path | str | None=None, max_commits: int=50) -> list[str]
+```
+
+Get recent commit messages for pattern analysis.
+
+---
+
+## detect_refactoring
+
+```python
+def detect_refactoring(commit_messages: list[str], plans: list[dict[str, str]]) -> list[WeatherPattern]
+```
+
+Detect refactoring patterns.
+
+---
+
+## detect_emerging
+
+```python
+def detect_emerging(commit_messages: list[str], plans: list[dict[str, str]]) -> list[WeatherPattern]
+```
+
+Detect emerging patterns and insights.
+
+---
+
+## detect_scaffolding
+
+```python
+def detect_scaffolding(commit_messages: list[str], plans: list[dict[str, str]]) -> list[WeatherPattern]
+```
+
+Detect scaffolding/architecture patterns.
+
+---
+
+## detect_tension
+
+```python
+def detect_tension(commit_messages: list[str], plans: list[dict[str, str]]) -> list[WeatherPattern]
+```
+
+Detect tensions and competing concerns.
+
+---
+
+## generate_weather
+
+```python
+def generate_weather(repo_path: Path | str | None=None, plans_path: Path | str | None=None, since: datetime | None=None) -> ConceptualWeather
+```
+
+Generate the Conceptual Weather for Morning Coffee.
+
+---
+
+## generate_weather_async
+
+```python
+async def generate_weather_async(repo_path: Path | str | None=None, plans_path: Path | str | None=None, since: datetime | None=None) -> ConceptualWeather
+```
+
+Async version of generate_weather.
 
 ---
 
@@ -3735,6 +10127,138 @@ module __init__
 ```
 
 Living Docs: Documentation as Projection
+
+---
+
+## services.living_docs.brain_adapter
+
+## brain_adapter
+
+```python
+module brain_adapter
+```
+
+**AGENTESE:** `concept.docs.hydrate`
+
+HydrationBrainAdapter: Wire Brain semantic search to Living Docs hydration.
+
+### Things to Know
+
+ℹ️ Brain requires async session; Hydrator is sync. Use asyncio.run() or async API for integration.
+  - *Verified in: `test_brain_adapter.py::TestSemanticTeaching::test_returns_teaching_from_brain_results`*
+
+ℹ️ Brain may return empty if no crystals exist. Fall back to keyword matching gracefully.
+  - *Verified in: `test_brain_adapter.py::TestSemanticTeaching::test_returns_empty_without_brain`*
+
+---
+
+## ScoredTeachingResult
+
+```python
+class ScoredTeachingResult
+```
+
+A teaching result with similarity score for semantic ranking.
+
+---
+
+## ASHCEvidence
+
+```python
+class ASHCEvidence
+```
+
+Prior evidence from ASHC for related work.
+
+---
+
+## HydrationBrainAdapter
+
+```python
+class HydrationBrainAdapter
+```
+
+Adapter that connects Living Docs hydration to Brain semantic search.
+
+---
+
+## get_hydration_brain_adapter
+
+```python
+def get_hydration_brain_adapter() -> HydrationBrainAdapter
+```
+
+Get or create the global HydrationBrainAdapter.
+
+---
+
+## set_hydration_brain_adapter
+
+```python
+def set_hydration_brain_adapter(adapter: HydrationBrainAdapter) -> None
+```
+
+Set the global HydrationBrainAdapter (for DI/testing).
+
+---
+
+## reset_hydration_brain_adapter
+
+```python
+def reset_hydration_brain_adapter() -> None
+```
+
+Reset the global adapter.
+
+---
+
+## __init__
+
+```python
+def __init__(self, brain: 'BrainPersistence | None'=None)
+```
+
+Initialize adapter.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+Check if Brain integration is available.
+
+---
+
+## find_semantic_teaching
+
+```python
+async def find_semantic_teaching(self, query: str, limit: int=10, min_similarity: float=0.3) -> list[ScoredTeachingResult]
+```
+
+Find teaching moments using Brain's semantic search.
+
+---
+
+## find_prior_evidence
+
+```python
+async def find_prior_evidence(self, task_pattern: str, limit: int=3) -> list[ASHCEvidence]
+```
+
+Find prior ASHC evidence for similar work.
+
+---
+
+## semantic_hydrate
+
+```python
+async def semantic_hydrate(self, task: str, teaching_limit: int=10, evidence_limit: int=3) -> dict[str, Any]
+```
+
+Get combined semantic context for a task.
 
 ---
 
@@ -3974,6 +10498,265 @@ def generate_to_directory(self, output_dir: Path, overwrite: bool=False) -> Gene
 ```
 
 Generate complete reference documentation to a directory structure.
+
+---
+
+## services.living_docs.hydrator
+
+## hydrator
+
+```python
+module hydrator
+```
+
+**AGENTESE:** `concept.docs.hydrate`
+
+Hydration Context Generator for Claude Code Sessions
+
+### Things to Know
+
+ℹ️ hydrate_context() is keyword-based, not semantic. Use Brain vectors for semantic similarity (future work).
+  - *Verified in: `test_hydrator.py::test_keyword_matching`*
+
+ℹ️ Voice anchors are curated, not mined. They come from _focus.md, not git history.
+  - *Verified in: `test_hydrator.py::test_voice_anchors`*
+
+---
+
+## HydrationContext
+
+```python
+class HydrationContext
+```
+
+Context blob optimized for Claude Code sessions.
+
+### Things to Know
+
+ℹ️ to_markdown() output is designed for system prompts. It's not a reference doc—it's a focus lens.
+  - *Verified in: `test_hydrator.py::test_markdown_format`*
+
+---
+
+## Hydrator
+
+```python
+class Hydrator
+```
+
+Generate task-relevant context for Claude Code sessions.
+
+### Things to Know
+
+ℹ️ Hydrator prefers keyword matching; Brain is supplemental. Semantic matching is best-effort—graceful degradation if unavailable.
+  - *Verified in: `test_hydrator.py::test_keyword_extraction`*
+
+---
+
+## hydrate_context
+
+```python
+def hydrate_context(task: str) -> HydrationContext
+```
+
+Generate hydration context for a task.
+
+---
+
+## relevant_for_file
+
+```python
+def relevant_for_file(path: str) -> HydrationContext
+```
+
+Get relevant context for editing a specific file.
+
+---
+
+## to_markdown
+
+```python
+def to_markdown(self) -> str
+```
+
+Render as markdown suitable for system prompt or /hydrate.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, object]
+```
+
+Convert to dictionary for JSON serialization.
+
+---
+
+## hydrate
+
+```python
+def hydrate(self, task: str) -> HydrationContext
+```
+
+Generate hydration context for a task (sync version).
+
+---
+
+## hydrate_async
+
+```python
+async def hydrate_async(self, task: str) -> HydrationContext
+```
+
+Generate hydration context with semantic enhancement.
+
+---
+
+## services.living_docs.linter
+
+## linter
+
+```python
+module linter
+```
+
+**AGENTESE:** `concept.docs.lint`
+
+Docstring Linter: Enforce Documentation Standards
+
+### Things to Know
+
+ℹ️ Only lint public symbols (no _ prefix). Private helpers don't need documentation.
+  - *Verified in: `test_linter.py::test_skip_private_symbols`*
+
+ℹ️ AST parsing fails gracefully—returns empty results, not exceptions. Invalid Python is already caught by ruff.
+  - *Verified in: `test_linter.py::test_invalid_syntax_graceful`*
+
+---
+
+## LintResult
+
+```python
+class LintResult
+```
+
+A single documentation lint issue.
+
+---
+
+## LintStats
+
+```python
+class LintStats
+```
+
+Statistics from a lint run.
+
+---
+
+## DocstringLinter
+
+```python
+class DocstringLinter
+```
+
+Linter for Python documentation standards.
+
+### Things to Know
+
+ℹ️ The linter uses AST, not runtime imports. This means it can lint broken code without crashes.
+  - *Verified in: `test_linter.py::test_lint_broken_imports`*
+
+---
+
+## lint_file
+
+```python
+def lint_file(path: Path) -> list[LintResult]
+```
+
+Lint a single Python file for documentation issues.
+
+---
+
+## lint_directory
+
+```python
+def lint_directory(path: Path, changed_only: bool=False, changed_files: set[Path] | None=None) -> LintStats
+```
+
+Lint all Python files in a directory.
+
+---
+
+## get_changed_files
+
+```python
+def get_changed_files(repo_root: Path) -> set[Path]
+```
+
+Get list of Python files changed since last commit.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, object]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, object]
+```
+
+Convert to dictionary for serialization.
+
+---
+
+## should_lint
+
+```python
+def should_lint(self, path: Path) -> bool
+```
+
+Check if a file should be linted (not excluded).
+
+---
+
+## lint_file
+
+```python
+def lint_file(self, path: Path) -> list[LintResult]
+```
+
+Lint a single Python file for documentation issues.
+
+---
+
+## lint_source
+
+```python
+def lint_source(self, source: str, module_name: str, path: Path | None=None) -> list[LintResult]
+```
+
+Lint Python source code for documentation issues.
+
+---
+
+## lint_directory
+
+```python
+def lint_directory(self, path: Path, changed_only: bool=False, changed_files: set[Path] | None=None) -> LintStats
+```
+
+Lint all Python files in a directory.
 
 ---
 
@@ -4583,7 +11366,7 @@ Check if docs adequately compress implementation.
 
 ---
 
-## services.park.__init__
+## services.morpheus.__init__
 
 ## __init__
 
@@ -4591,1075 +11374,13 @@ Check if docs adequately compress implementation.
 module __init__
 ```
 
-Park Crown Jewel: Punchdrunk Westworld Where Hosts Can Say No.
+**AGENTESE:** `world.morpheus.`
 
----
-
-## services.park.contracts
-
-## contracts
-
-```python
-module contracts
-```
-
-Park AGENTESE Contract Definitions.
-
----
-
-## ParkManifestResponse
-
-```python
-class ParkManifestResponse
-```
-
-Park health status manifest response.
-
----
-
-## HostSummary
-
-```python
-class HostSummary
-```
-
-Summary of a park host for list views.
-
----
-
-## HostDetail
-
-```python
-class HostDetail
-```
-
-Full host details.
-
----
-
-## HostListResponse
-
-```python
-class HostListResponse
-```
-
-Response for host list aspect.
-
----
-
-## HostGetResponse
-
-```python
-class HostGetResponse
-```
-
-Response for host get aspect.
-
----
-
-## HostCreateRequest
-
-```python
-class HostCreateRequest
-```
-
-Request to create a new park host.
-
----
-
-## HostCreateResponse
-
-```python
-class HostCreateResponse
-```
-
-Response after creating a host.
-
----
-
-## HostUpdateRequest
-
-```python
-class HostUpdateRequest
-```
-
-Request to update host state.
-
----
-
-## HostUpdateResponse
-
-```python
-class HostUpdateResponse
-```
-
-Response after updating a host.
-
----
-
-## InteractionDetail
-
-```python
-class InteractionDetail
-```
-
-Details of an interaction with a host.
-
----
-
-## HostInteractRequest
-
-```python
-class HostInteractRequest
-```
-
-Request to interact with a host.
-
----
-
-## HostInteractResponse
-
-```python
-class HostInteractResponse
-```
-
-Response after interacting with a host.
-
----
-
-## MemorySummary
-
-```python
-class MemorySummary
-```
-
-Summary of a host memory.
-
----
-
-## HostWitnessRequest
-
-```python
-class HostWitnessRequest
-```
-
-Request to view host memories.
-
----
-
-## HostWitnessResponse
-
-```python
-class HostWitnessResponse
-```
-
-Response for host memories.
-
----
-
-## EpisodeSummary
-
-```python
-class EpisodeSummary
-```
-
-Summary of a park episode for list views.
-
----
-
-## EpisodeDetail
-
-```python
-class EpisodeDetail
-```
-
-Full episode details.
-
----
-
-## EpisodeListResponse
-
-```python
-class EpisodeListResponse
-```
-
-Response for episode list aspect.
-
----
-
-## EpisodeStartRequest
-
-```python
-class EpisodeStartRequest
-```
-
-Request to start a park episode.
-
----
-
-## EpisodeStartResponse
-
-```python
-class EpisodeStartResponse
-```
-
-Response after starting an episode.
-
----
-
-## EpisodeEndRequest
-
-```python
-class EpisodeEndRequest
-```
-
-Request to end a park episode.
-
----
-
-## EpisodeEndResponse
-
-```python
-class EpisodeEndResponse
-```
-
-Response after ending an episode.
-
----
-
-## LocationSummary
-
-```python
-class LocationSummary
-```
-
-Summary of a park location.
-
----
-
-## LocationListResponse
-
-```python
-class LocationListResponse
-```
-
-Response for location list aspect.
-
----
-
-## LocationCreateRequest
-
-```python
-class LocationCreateRequest
-```
-
-Request to create a location.
-
----
-
-## LocationCreateResponse
-
-```python
-class LocationCreateResponse
-```
-
-Response after creating a location.
-
----
-
-## ScenarioSummary
-
-```python
-class ScenarioSummary
-```
-
-Summary of a scenario template for list views.
-
----
-
-## ScenarioListResponse
-
-```python
-class ScenarioListResponse
-```
-
-Response for scenario list aspect.
-
----
-
-## ScenarioDetail
-
-```python
-class ScenarioDetail
-```
-
-Full scenario template details.
-
----
-
-## ScenarioGetRequest
-
-```python
-class ScenarioGetRequest
-```
-
-Request to get a scenario template.
-
----
-
-## ScenarioGetResponse
-
-```python
-class ScenarioGetResponse
-```
-
-Response for scenario get aspect.
-
----
-
-## ScenarioStartRequest
-
-```python
-class ScenarioStartRequest
-```
-
-Request to start a scenario session.
-
----
-
-## SessionProgress
-
-```python
-class SessionProgress
-```
-
-Progress of a scenario session.
-
----
-
-## ScenarioSessionDetail
-
-```python
-class ScenarioSessionDetail
-```
-
-Details of an active scenario session.
-
----
-
-## ScenarioStartResponse
-
-```python
-class ScenarioStartResponse
-```
-
-Response after starting a scenario.
-
----
-
-## ScenarioTickRequest
-
-```python
-class ScenarioTickRequest
-```
-
-Request to advance a scenario session.
-
----
-
-## ScenarioTickResponse
-
-```python
-class ScenarioTickResponse
-```
-
-Response after advancing a scenario.
-
----
-
-## ScenarioEndRequest
-
-```python
-class ScenarioEndRequest
-```
-
-Request to end/abandon a scenario session.
-
----
-
-## ScenarioEndResponse
-
-```python
-class ScenarioEndResponse
-```
-
-Response after ending a scenario.
-
----
-
-## ScenarioSessionListResponse
-
-```python
-class ScenarioSessionListResponse
-```
-
-Response for active sessions list.
-
----
-
-## ConsentDebtRequest
-
-```python
-class ConsentDebtRequest
-```
-
-Request for consent debt operations.
-
----
-
-## ConsentDebtResponse
-
-```python
-class ConsentDebtResponse
-```
-
-Response for consent debt operations.
-
----
-
-## services.park.node
-
-## node
-
-```python
-module node
-```
-
-Park AGENTESE Node: @node("world.park")
-
----
-
-## ParkManifestRendering
-
-```python
-class ParkManifestRendering
-```
-
-Rendering for park manifest (status overview).
-
----
-
-## HostRendering
-
-```python
-class HostRendering
-```
-
-Rendering for a single park host.
-
----
-
-## HostListRendering
-
-```python
-class HostListRendering
-```
-
-Rendering for list of park hosts.
-
----
-
-## EpisodeRendering
-
-```python
-class EpisodeRendering
-```
-
-Rendering for a park episode.
-
----
-
-## InteractionRendering
-
-```python
-class InteractionRendering
-```
-
-Rendering for a host interaction.
-
----
-
-## MemoryListRendering
-
-```python
-class MemoryListRendering
-```
-
-Rendering for host memories.
-
----
-
-## LocationListRendering
-
-```python
-class LocationListRendering
-```
-
-Rendering for park locations.
-
----
-
-## ParkNode
-
-```python
-class ParkNode(BaseLogosNode)
-```
-
-AGENTESE node for Park Crown Jewel.
-
----
-
-## __init__
-
-```python
-def __init__(self, park_persistence: ParkPersistence, scenario_service: ScenarioService | None=None) -> None
-```
-
-Initialize ParkNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.park.manifest`
-
-Manifest park status overview.
-
----
-
-## services.park.persistence
-
-## persistence
-
-```python
-module persistence
-```
-
-Park Persistence: TableAdapter + D-gent integration for Park Crown Jewel.
-
----
-
-## HostView
-
-```python
-class HostView
-```
-
-View of a park host.
-
----
-
-## MemoryView
-
-```python
-class MemoryView
-```
-
-View of a host memory.
-
----
-
-## EpisodeView
-
-```python
-class EpisodeView
-```
-
-View of a park episode.
-
----
-
-## InteractionView
-
-```python
-class InteractionView
-```
-
-View of a host interaction.
-
----
-
-## LocationView
-
-```python
-class LocationView
-```
-
-View of a park location.
-
----
-
-## ParkStatus
-
-```python
-class ParkStatus
-```
-
-Park health status.
-
----
-
-## ParkPersistence
-
-```python
-class ParkPersistence
-```
-
-Persistence layer for Park Crown Jewel.
-
----
-
-## create_host
-
-```python
-async def create_host(self, name: str, character: str, backstory: str | None=None, traits: dict[str, Any] | None=None, values: list[str] | None=None, boundaries: list[str] | None=None, location: str | None=None) -> HostView
-```
-
-**AGENTESE:** `world.park.host.create`
-
-Create a new park host.
-
----
-
-## get_host
-
-```python
-async def get_host(self, host_id: str) -> HostView | None
-```
-
-Get a host by ID.
-
----
-
-## get_host_by_name
-
-```python
-async def get_host_by_name(self, name: str) -> HostView | None
-```
-
-Get a host by name.
-
----
-
-## list_hosts
-
-```python
-async def list_hosts(self, character: str | None=None, location: str | None=None, active_only: bool=True, limit: int=50) -> list[HostView]
-```
-
-List hosts with optional filters.
-
----
-
-## update_host_state
-
-```python
-async def update_host_state(self, host_id: str, mood: str | None=None, energy_level: float | None=None, location: str | None=None) -> HostView | None
-```
-
-Update host state (mood, energy, location).
-
----
-
-## form_memory
-
-```python
-async def form_memory(self, host_id: str, content: str, memory_type: str='event', salience: float=0.5, emotional_valence: float=0.0, episode_id: str | None=None, visitor_id: str | None=None) -> MemoryView | None
-```
-
-**AGENTESE:** `world.park.host.remember`
-
-Form a new memory for a host.
-
----
-
-## recall_memories
-
-```python
-async def recall_memories(self, host_id: str, memory_type: str | None=None, min_salience: float=0.0, limit: int=20) -> list[MemoryView]
-```
-
-**AGENTESE:** `world.park.host.witness`
-
-Recall host memories.
-
----
-
-## decay_memories
-
-```python
-async def decay_memories(self, host_id: str, decay_rate: float=0.05, min_salience: float=0.1) -> int
-```
-
-Decay memory salience over time.
-
----
-
-## start_episode
-
-```python
-async def start_episode(self, visitor_id: str | None=None, visitor_name: str | None=None, title: str | None=None) -> EpisodeView
-```
-
-**AGENTESE:** `world.park.episode.start`
-
-Start a new park episode.
-
----
-
-## end_episode
-
-```python
-async def end_episode(self, episode_id: str, summary: str | None=None, status: str='completed') -> EpisodeView | None
-```
-
-**AGENTESE:** `world.park.episode.end`
-
-End a park episode.
-
----
-
-## get_episode
-
-```python
-async def get_episode(self, episode_id: str) -> EpisodeView | None
-```
-
-Get an episode by ID.
-
----
-
-## list_episodes
-
-```python
-async def list_episodes(self, visitor_id: str | None=None, status: str | None=None, limit: int=20) -> list[EpisodeView]
-```
-
-List episodes with optional filters.
-
----
-
-## interact
-
-```python
-async def interact(self, episode_id: str, host_id: str, visitor_input: str, interaction_type: str='dialogue', location: str | None=None, check_consent: bool=True) -> InteractionView | None
-```
-
-**AGENTESE:** `world.park.host.interact`
-
-Create an interaction with a host.
-
----
-
-## list_interactions
-
-```python
-async def list_interactions(self, episode_id: str | None=None, host_id: str | None=None, limit: int=50) -> list[InteractionView]
-```
-
-List interactions with optional filters.
-
----
-
-## create_location
-
-```python
-async def create_location(self, name: str, description: str | None=None, atmosphere: str | None=None, x: float | None=None, y: float | None=None, capacity: int | None=None, connected_to: list[str] | None=None) -> LocationView
-```
-
-Create a park location.
-
----
-
-## list_locations
-
-```python
-async def list_locations(self, open_only: bool=True) -> list[LocationView]
-```
-
-List park locations.
-
----
-
-## manifest
-
-```python
-async def manifest(self) -> ParkStatus
-```
-
-**AGENTESE:** `world.park.manifest`
-
-Get park health status.
-
----
-
-## services.park.scenario_service
-
-## scenario_service
-
-```python
-module scenario_service
-```
-
-Scenario Service: Structured scenarios for Punchdrunk Park.
-
----
-
-## ScenarioView
-
-```python
-class ScenarioView
-```
-
-View of a scenario template for API/CLI rendering.
-
----
-
-## ScenarioDetailView
-
-```python
-class ScenarioDetailView
-```
-
-Detailed view of a scenario template.
-
----
-
-## SessionView
-
-```python
-class SessionView
-```
-
-View of an active scenario session.
-
----
-
-## TickResultView
-
-```python
-class TickResultView
-```
-
-View of a scenario tick result.
-
----
-
-## ScenarioService
-
-```python
-class ScenarioService
-```
-
-Service layer for Scenario operations.
-
----
-
-## create_scenario_service
-
-```python
-def create_scenario_service(registry: ScenarioRegistry | None=None, director: 'DirectorAgent | None'=None) -> ScenarioService
-```
-
-Create a configured ScenarioService.
-
----
-
-## __init__
-
-```python
-def __init__(self, registry: ScenarioRegistry | None=None, director: 'DirectorAgent | None'=None) -> None
-```
-
-Initialize scenario service.
-
----
-
-## registry
-
-```python
-def registry(self) -> ScenarioRegistry
-```
-
-Underlying scenario registry.
-
----
-
-## register_template
-
-```python
-def register_template(self, template: ScenarioTemplate) -> list[str]
-```
-
-Register a scenario template.
-
----
-
-## list_scenarios
-
-```python
-async def list_scenarios(self, scenario_type: ScenarioType | None=None, tags: list[str] | None=None, difficulty: str | None=None, limit: int=50) -> list[ScenarioView]
-```
-
-**AGENTESE:** `world.park.scenario.list`
-
-List available scenario templates.
-
----
-
-## get_scenario
-
-```python
-async def get_scenario(self, scenario_id: str, detail: bool=False) -> ScenarioView | ScenarioDetailView | None
-```
-
-**AGENTESE:** `world.park.scenario.get`
-
-Get a scenario template by ID.
-
----
-
-## start_session
-
-```python
-async def start_session(self, scenario_id: str) -> SessionView
-```
-
-**AGENTESE:** `world.park.scenario.start`
-
-Start a new scenario session.
-
----
-
-## get_session
-
-```python
-async def get_session(self, session_id: str) -> SessionView | None
-```
-
-Get a session by ID.
-
----
-
-## list_sessions
-
-```python
-async def list_sessions(self, active_only: bool=True, limit: int=20) -> list[SessionView]
-```
-
-List scenario sessions.
-
----
-
-## tick
-
-```python
-async def tick(self, session_id: str, elapsed_seconds: float=1.0) -> TickResultView
-```
-
-**AGENTESE:** `world.park.scenario.tick`
-
-Advance a scenario session.
-
----
-
-## record_interaction
-
-```python
-async def record_interaction(self, session_id: str, from_citizen: str, to_citizen: str, interaction_type: str='dialogue', content: str='') -> dict[str, Any]
-```
-
-Record an interaction in a session.
-
----
-
-## reveal_information
-
-```python
-async def reveal_information(self, session_id: str, info_key: str) -> dict[str, Any]
-```
-
-Reveal information in a session (mystery scenarios).
-
----
-
-## abandon_session
-
-```python
-async def abandon_session(self, session_id: str, reason: str='') -> SessionView
-```
-
-**AGENTESE:** `world.park.scenario.end`
-
-Abandon a scenario session.
-
----
-
-## complete_session
-
-```python
-async def complete_session(self, session_id: str) -> SessionView
-```
-
-Get the final state of a completed session.
-
----
-
-## get_consent_debt
-
-```python
-async def get_consent_debt(self, session_id: str, citizen_name: str) -> float
-```
-
-Get consent debt for a citizen in a session.
-
----
-
-## incur_consent_debt
-
-```python
-async def incur_consent_debt(self, session_id: str, citizen_name: str, amount: float=0.1) -> dict[str, Any]
-```
-
-Incur consent debt for forcing a host to act.
-
----
-
-## can_inject_beat
-
-```python
-async def can_inject_beat(self, session_id: str, citizen_name: str) -> bool
-```
-
-Check if a beat can be injected for this citizen.
-
----
-
-## apologize
-
-```python
-async def apologize(self, session_id: str, citizen_name: str, reduction: float=0.15) -> dict[str, Any]
-```
-
-Reduce consent debt by apologizing.
+Morpheus Crown Jewel: LLM Gateway as Metaphysical Fullstack Agent.
 
 ---
 
-## services.town.__init__
+## services.morpheus.adapters.__init__
 
 ## __init__
 
@@ -5667,3777 +11388,1326 @@ Reduce consent debt by apologizing.
 module __init__
 ```
 
-Town Crown Jewel: Agent Simulation Westworld.
+Morpheus Adapters: LLM backend implementations.
 
 ---
 
-## services.town.budget_service
+## services.morpheus.adapters.base
 
-## budget_service
+## base
 
 ```python
-module budget_service
+module base
 ```
 
-Town Budget Service: Credit and subscription tracking for Agent Town.
+Morpheus Adapter Protocol: Interface for LLM backends.
 
 ---
 
-## SubscriptionTier
+## AdapterConfig
 
 ```python
-class SubscriptionTier
+class AdapterConfig
 ```
 
-Subscription tier definition per spec/town/monetization.md.
+Base configuration for adapters.
 
 ---
 
-## ConsentState
+## Adapter
 
 ```python
-class ConsentState
+class Adapter(Protocol)
 ```
 
-Tracks consent debt between user and inhabited citizen.
-
----
-
-## UserBudgetInfo
-
-```python
-class UserBudgetInfo
-```
-
-Complete budget information for a user.
-
----
-
-## BudgetStore
-
-```python
-class BudgetStore(Protocol)
-```
-
-Protocol for budget storage backends.
-
----
-
-## InMemoryBudgetStore
-
-```python
-class InMemoryBudgetStore
-```
-
-In-memory budget store for development and testing.
-
----
-
-## RedisBudgetStore
-
-```python
-class RedisBudgetStore
-```
-
-Redis-backed budget store for production.
-
----
-
-## create_budget_store
-
-```python
-def create_budget_store(use_redis: bool=True) -> BudgetStore
-```
-
-Create a budget store instance.
-
----
-
-## can_force
-
-```python
-def can_force(self) -> bool
-```
-
-Force requires debt < 0.8 and cooldown elapsed.
-
----
-
-## apply_force
-
-```python
-def apply_force(self, action: str='', severity: float=0.2) -> None
-```
-
-Force increases debt, resets cooldown, logs the action.
-
----
-
-## cool_down
-
-```python
-def cool_down(self, elapsed: float) -> None
-```
-
-Debt decays over time (harmony restoration).
-
----
-
-## at_rupture
-
-```python
-def at_rupture(self) -> bool
-```
-
-Citizen refuses all interaction until debt clears.
-
----
-
-## apologize
-
-```python
-def apologize(self, sincerity: float=0.1) -> None
-```
-
-Apologize action reduces debt.
-
----
-
-## status_message
-
-```python
-def status_message(self) -> str
-```
-
-Get human-readable status message.
-
----
-
-## tier
-
-```python
-def tier(self) -> SubscriptionTier
-```
-
-Get tier configuration.
-
----
-
-## monthly_remaining
-
-```python
-def monthly_remaining(self, action: str, lod_level: int | None=None) -> int
-```
-
-Get remaining included actions for this month.
-
----
-
-## can_afford_credits
-
-```python
-def can_afford_credits(self, credits: int) -> bool
-```
-
-Check if user has enough credits.
-
----
-
-## get_budget
-
-```python
-async def get_budget(self, user_id: str) -> UserBudgetInfo | None
-```
-
-Get budget info for a user.
-
----
-
-## create_budget
-
-```python
-async def create_budget(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Create budget for a new user.
-
----
-
-## spend_credits
-
-```python
-async def spend_credits(self, user_id: str, credits: int) -> bool
-```
-
-Spend credits from user's balance.
-
----
-
-## add_credits
-
-```python
-async def add_credits(self, user_id: str, credits: int) -> bool
-```
-
-Add credits to user's balance (from purchase).
-
----
-
-## record_action
-
-```python
-async def record_action(self, user_id: str, action: str, credits: int) -> bool
-```
-
-Record action usage (monthly counter + credit spend if needed).
-
----
-
-## get_consent_state
-
-```python
-async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None
-```
-
-Get consent debt state for a user-citizen pair.
-
----
-
-## update_consent_state
-
-```python
-async def update_consent_state(self, user_id: str, consent: ConsentState) -> bool
-```
-
-Update consent debt state.
-
----
-
-## update_subscription
-
-```python
-async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool
-```
-
-Update user's subscription tier and renewal date.
-
----
-
-## get_or_create
-
-```python
-async def get_or_create(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Get existing budget or create new one.
-
----
-
-## get_budget
-
-```python
-async def get_budget(self, user_id: str) -> UserBudgetInfo | None
-```
-
-Get budget info for a user.
-
----
-
-## create_budget
-
-```python
-async def create_budget(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Create budget for a new user.
-
----
-
-## spend_credits
-
-```python
-async def spend_credits(self, user_id: str, credits: int) -> bool
-```
-
-Spend credits from user's balance.
-
----
-
-## add_credits
-
-```python
-async def add_credits(self, user_id: str, credits: int) -> bool
-```
-
-Add credits to user's balance.
-
----
-
-## record_action
-
-```python
-async def record_action(self, user_id: str, action: str, credits: int) -> bool
-```
-
-Record action usage.
-
----
-
-## get_consent_state
-
-```python
-async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None
-```
-
-Get consent debt state.
-
----
-
-## update_consent_state
-
-```python
-async def update_consent_state(self, user_id: str, consent: ConsentState) -> bool
-```
-
-Update consent debt state.
-
----
-
-## update_subscription
-
-```python
-async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool
-```
-
-Update subscription tier and renewal.
-
----
-
-## get_or_create
-
-```python
-async def get_or_create(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Get existing budget or create new one.
-
----
-
-## __init__
-
-```python
-def __init__(self, redis_url: str | None=None) -> None
-```
-
-Initialize Redis connection.
-
----
-
-## get_budget
-
-```python
-async def get_budget(self, user_id: str) -> UserBudgetInfo | None
-```
-
-Get budget info for a user.
-
----
-
-## create_budget
-
-```python
-async def create_budget(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Create budget for a new user.
-
----
-
-## spend_credits
-
-```python
-async def spend_credits(self, user_id: str, credits: int) -> bool
-```
-
-Spend credits atomically.
-
----
-
-## add_credits
-
-```python
-async def add_credits(self, user_id: str, credits: int) -> bool
-```
-
-Add credits.
-
----
-
-## record_action
-
-```python
-async def record_action(self, user_id: str, action: str, credits: int) -> bool
-```
-
-Record action and spend credits if needed.
-
----
-
-## get_consent_state
-
-```python
-async def get_consent_state(self, user_id: str, citizen_id: str) -> ConsentState | None
-```
-
-Get consent debt state.
-
----
-
-## update_consent_state
-
-```python
-async def update_consent_state(self, user_id: str, consent: ConsentState) -> bool
-```
-
-Update consent debt state.
-
----
-
-## update_subscription
-
-```python
-async def update_subscription(self, user_id: str, tier: str, renews_at: datetime) -> bool
-```
-
-Update subscription tier and renewal.
-
----
-
-## get_or_create
-
-```python
-async def get_or_create(self, user_id: str, tier: str='TOURIST') -> UserBudgetInfo
-```
-
-Get existing budget or create new one.
-
----
-
-## services.town.bus_wiring
-
-## bus_wiring
-
-```python
-module bus_wiring
-```
-
-Town Bus Wiring: Connect Town services to the three-bus architecture.
-
----
-
-## TownSynergyBus
-
-```python
-class TownSynergyBus
-```
-
-Simplified SynergyBus for cross-jewel town events.
-
----
-
-## TownEventBus
-
-```python
-class TownEventBus
-```
-
-EventBus for UI fan-out.
-
----
-
-## TownDataBus
-
-```python
-class TownDataBus
-```
-
-Town-specific DataBus that emits TownEvent types.
-
----
-
-## wire_data_to_synergy
-
-```python
-def wire_data_to_synergy(data_bus: TownDataBus, synergy_bus: TownSynergyBus) -> list[UnsubscribeFunc]
-```
-
-Wire DataBus events to SynergyBus topics.
-
----
-
-## wire_synergy_to_event
-
-```python
-def wire_synergy_to_event(synergy_bus: TownSynergyBus, event_bus: TownEventBus, topics: list[str] | None=None) -> list[UnsubscribeFunc]
-```
-
-Wire SynergyBus topics to EventBus fan-out.
-
----
-
-## kgent_narrative_handler
-
-```python
-async def kgent_narrative_handler(topic: str, event: TownEvent) -> None
-```
-
-K-gent handler: Generate narrative from gossip events.
-
----
-
-## atelier_prompt_handler
-
-```python
-async def atelier_prompt_handler(topic: str, event: TownEvent) -> None
-```
-
-Atelier handler: Generate creative prompt from coalition events.
-
----
-
-## mgent_stigmergy_handler
-
-```python
-async def mgent_stigmergy_handler(topic: str, event: TownEvent) -> None
-```
-
-M-gent handler: Update stigmergy from relationship events.
-
----
-
-## TownBusManager
-
-```python
-class TownBusManager
-```
-
-Manages the three-bus architecture for Town.
-
----
-
-## get_town_bus_manager
-
-```python
-def get_town_bus_manager() -> TownBusManager
-```
-
-Get the global TownBusManager instance.
-
----
-
-## reset_town_bus_manager
-
-```python
-def reset_town_bus_manager() -> None
-```
-
-Reset the global TownBusManager (for testing).
-
----
-
-## publish
-
-```python
-async def publish(self, topic: str, event: TownEvent) -> None
-```
-
-Publish an event to a topic.
-
----
-
-## subscribe
-
-```python
-def subscribe(self, topic: str, handler: SynergyHandler) -> UnsubscribeFunc
-```
-
-Subscribe to a topic.
-
----
-
-## stats
-
-```python
-def stats(self) -> dict[str, int]
-```
-
-Get bus statistics.
-
----
-
-## clear
-
-```python
-def clear(self) -> None
-```
-
-Clear all handlers (for testing).
-
----
-
-## publish
-
-```python
-async def publish(self, event: TownEvent) -> None
-```
-
-Publish event to all subscribers.
-
----
-
-## subscribe
-
-```python
-def subscribe(self, handler: TownEventHandler) -> UnsubscribeFunc
-```
-
-Subscribe to all events.
-
----
-
-## stats
-
-```python
-def stats(self) -> dict[str, int]
-```
-
-Get bus statistics.
-
----
-
-## clear
-
-```python
-def clear(self) -> None
-```
-
-Clear all subscribers (for testing).
-
----
-
-## __init__
-
-```python
-def __init__(self, base_bus: DataBus | None=None) -> None
-```
-
-Initialize with optional base DataBus.
-
----
-
-## emit
-
-```python
-async def emit(self, event: TownEvent) -> None
-```
-
-Emit a town event.
-
----
-
-## subscribe
-
-```python
-def subscribe(self, event_type: type[TownEvent], handler: TownEventHandler) -> UnsubscribeFunc
-```
-
-Subscribe to a specific event type.
-
----
-
-## subscribe_all
-
-```python
-def subscribe_all(self, handler: TownEventHandler) -> UnsubscribeFunc
-```
-
-Subscribe to all event types.
-
----
-
-## stats
-
-```python
-def stats(self) -> dict[str, int]
-```
-
-Get bus statistics.
-
----
-
-## clear
-
-```python
-def clear(self) -> None
-```
-
-Clear all handlers (for testing).
-
----
-
-## wire_all
-
-```python
-def wire_all(self) -> None
-```
-
-Wire all buses together.
-
----
-
-## wire_cross_jewel_handlers
-
-```python
-def wire_cross_jewel_handlers(self) -> None
-```
-
-Wire cross-jewel event handlers.
-
----
-
-## unwire_all
-
-```python
-def unwire_all(self) -> None
-```
-
-Disconnect all wiring.
-
----
-
-## clear
-
-```python
-def clear(self) -> None
-```
-
-Clear all buses and wiring (for testing).
-
----
-
-## stats
-
-```python
-def stats(self) -> dict[str, dict[str, int]]
-```
-
-Get combined statistics.
-
----
-
-## services.town.citizen_node
-
-## citizen_node
-
-```python
-module citizen_node
-```
-
-Town Citizen AGENTESE Node: @node("world.town.citizen")
-
----
-
-## CitizenManifestRendering
-
-```python
-class CitizenManifestRendering
-```
-
-Rendering for citizen registry manifest.
-
----
-
-## CitizenManifestResponse
-
-```python
-class CitizenManifestResponse
-```
-
-Response type for citizen manifest.
-
----
-
-## CitizenNode
-
-```python
-class CitizenNode(BaseLogosNode)
-```
-
-AGENTESE node for Town Citizen Registry.
-
----
-
-## __init__
-
-```python
-def __init__(self, town_persistence: TownPersistence) -> None
-```
-
-Initialize CitizenNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.citizen.manifest`
-
-Manifest citizen registry overview.
-
----
-
-## services.town.coalition_node
-
-## coalition_node
-
-```python
-module coalition_node
-```
-
-Coalition AGENTESE Node: @node("world.town.coalition")
-
----
-
-## CoalitionManifestRendering
-
-```python
-class CoalitionManifestRendering
-```
-
-Rendering for coalition system manifest.
-
----
-
-## CoalitionRendering
-
-```python
-class CoalitionRendering
-```
-
-Rendering for coalition details.
-
----
-
-## CoalitionListRendering
-
-```python
-class CoalitionListRendering
-```
-
-Rendering for coalition list.
-
----
-
-## CoalitionNode
-
-```python
-class CoalitionNode(BaseLogosNode)
-```
-
-AGENTESE node for Coalition Detection Crown Jewel.
-
----
-
-## __init__
-
-```python
-def __init__(self, coalition_service: CoalitionService) -> None
-```
-
-Initialize CoalitionNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.coalition.manifest`
-
-Manifest coalition system status to observer.
-
----
-
-## services.town.coalition_service
-
-## coalition_service
-
-```python
-module coalition_service
-```
-
-Town Coalition Service: Coalition Detection and Reputation System.
-
----
-
-## Coalition
-
-```python
-class Coalition
-```
-
-A coalition is a group of citizens with aligned eigenvectors.
-
----
-
-## find_k_cliques
-
-```python
-def find_k_cliques(adjacency: dict[str, set[str]], k: int=3) -> list[frozenset[str]]
-```
-
-Find all k-cliques in an adjacency graph.
-
----
-
-## percolate_cliques
-
-```python
-def percolate_cliques(cliques: list[frozenset[str]], k: int=3) -> list[set[str]]
-```
-
-Percolate k-cliques to find overlapping communities.
-
----
-
-## detect_coalitions
-
-```python
-def detect_coalitions(citizens: dict[str, 'Citizen'], similarity_threshold: float=0.8, k: int=3) -> list[Coalition]
-```
-
-Detect coalitions via k-clique percolation on eigenvector similarity.
-
----
-
-## ReputationGraph
-
-```python
-class ReputationGraph
-```
-
-EigenTrust-style reputation graph.
-
----
-
-## CoalitionService
-
-```python
-class CoalitionService
-```
-
-Service for managing coalition lifecycle and reputation.
-
----
-
-## __post_init__
-
-```python
-def __post_init__(self) -> None
-```
-
-Initialize defaults.
-
----
-
-## size
-
-```python
-def size(self) -> int
-```
-
-Number of members.
-
----
-
-## add_member
-
-```python
-def add_member(self, citizen_id: str) -> None
-```
-
-Add a member to the coalition.
-
----
-
-## remove_member
-
-```python
-def remove_member(self, citizen_id: str) -> None
-```
-
-Remove a member from the coalition.
-
----
-
-## compute_centroid
-
-```python
-def compute_centroid(self, citizens: dict[str, 'Citizen']) -> 'Eigenvectors'
-```
-
-Compute the centroid eigenvector of the coalition.
-
----
-
-## decay
-
-```python
-def decay(self, rate: float=0.05) -> None
-```
-
-Apply decay to coalition strength.
-
----
-
-## reinforce
-
-```python
-def reinforce(self, amount: float=0.1) -> None
-```
-
-Reinforce coalition strength (from collective action).
-
----
-
-## is_alive
-
-```python
-def is_alive(self, threshold: float=0.1) -> bool
-```
-
-Check if coalition is still alive.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize to dictionary.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> Coalition
-```
-
-Deserialize from dictionary.
-
----
-
-## set_trust
-
-```python
-def set_trust(self, truster: str, trustee: str, value: float) -> None
-```
-
-Set local trust from truster to trustee.
-
----
-
-## get_trust
-
-```python
-def get_trust(self, truster: str, trustee: str) -> float
-```
-
-Get local trust from truster to trustee.
-
----
-
-## add_pretrusted
-
-```python
-def add_pretrusted(self, citizen_id: str) -> None
-```
-
-Mark a citizen as pre-trusted (anchor for convergence).
-
----
-
-## get_reputation
-
-```python
-def get_reputation(self, citizen_id: str) -> float
-```
-
-Get global reputation for a citizen.
-
----
-
-## compute_reputation
-
-```python
-def compute_reputation(self, citizens: dict[str, 'Citizen'], alpha: float=0.5, iterations: int=20, epsilon: float=0.001) -> dict[str, float]
-```
-
-Compute global reputation via EigenTrust power iteration.
-
----
-
-## update_from_interaction
-
-```python
-def update_from_interaction(self, truster: str, trustee: str, success: bool, weight: float=0.1) -> None
-```
-
-Update local trust based on interaction outcome.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize to dictionary.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> ReputationGraph
-```
-
-Deserialize from dictionary.
-
----
-
-## __init__
-
-```python
-def __init__(self, similarity_threshold: float=0.8, k: int=3) -> None
-```
-
-Initialize coalition service.
-
----
-
-## coalitions
-
-```python
-def coalitions(self) -> dict[str, Coalition]
-```
-
-Get all coalitions.
-
----
-
-## reputation
-
-```python
-def reputation(self) -> ReputationGraph
-```
-
-Get reputation graph.
-
----
-
-## detect
-
-```python
-def detect(self, citizens: dict[str, 'Citizen']) -> list[Coalition]
-```
-
-Detect coalitions and update internal state.
-
----
-
-## get_coalition
-
-```python
-def get_coalition(self, coalition_id: str) -> Coalition | None
-```
-
-Get a coalition by ID.
-
----
-
-## get_citizen_coalitions
-
-```python
-def get_citizen_coalitions(self, citizen_id: str) -> list[Coalition]
-```
-
-Get all coalitions a citizen belongs to.
-
----
-
-## get_bridge_citizens
-
-```python
-def get_bridge_citizens(self) -> list[str]
-```
-
-Get citizens that belong to multiple coalitions (bridge nodes).
-
----
-
-## decay_all
-
-```python
-def decay_all(self, rate: float=0.05) -> int
-```
-
-Apply decay to all coalitions. Returns number pruned.
-
----
-
-## reinforce_coalition
-
-```python
-def reinforce_coalition(self, coalition_id: str, amount: float=0.1) -> bool
-```
-
-Reinforce a coalition's strength.
-
----
-
-## record_interaction
-
-```python
-def record_interaction(self, actor: str, target: str, success: bool) -> None
-```
-
-Record an interaction for reputation updates.
-
----
-
-## compute_reputation
-
-```python
-def compute_reputation(self, citizens: dict[str, 'Citizen'], alpha: float=0.5) -> dict[str, float]
-```
-
-Compute global reputation scores.
-
----
-
-## summary
-
-```python
-def summary(self) -> dict[str, Any]
-```
-
-Get summary statistics.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize service state.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> CoalitionService
-```
-
-Deserialize service state.
-
----
-
-## services.town.collective_node
-
-## collective_node
-
-```python
-module collective_node
-```
-
-Collective AGENTESE Node: @node("world.town.collective")
-
----
-
-## CollectiveManifestResponse
-
-```python
-class CollectiveManifestResponse
-```
-
-Response for collective manifest.
-
----
-
-## GossipRequest
-
-```python
-class GossipRequest
-```
-
-Request to spread gossip.
-
----
-
-## GossipResponse
-
-```python
-class GossipResponse
-```
-
-Response after spreading gossip.
-
----
-
-## EmergenceResponse
-
-```python
-class EmergenceResponse
-```
-
-Response for emergence metrics.
-
----
-
-## ActivitySummary
-
-```python
-class ActivitySummary
-```
-
-Summary of activity in a region.
-
----
-
-## ActivityResponse
-
-```python
-class ActivityResponse
-```
-
-Response for region activity.
-
----
-
-## SimulationStepRequest
-
-```python
-class SimulationStepRequest
-```
-
-Request to advance simulation.
-
----
-
-## SimulationStepResponse
-
-```python
-class SimulationStepResponse
-```
-
-Response after simulation step.
-
----
-
-## CollectiveManifestRendering
-
-```python
-class CollectiveManifestRendering
-```
-
-Rendering for collective manifest.
-
----
-
-## EmergenceRendering
-
-```python
-class EmergenceRendering
-```
-
-Rendering for emergence metrics.
-
----
-
-## CollectiveNode
-
-```python
-class CollectiveNode(BaseLogosNode)
-```
-
-AGENTESE node for Collective Town operations.
-
----
-
-## __init__
-
-```python
-def __init__(self, sheaf: TownSheaf | None=None, bus_manager: TownBusManager | None=None) -> None
-```
-
-Initialize CollectiveNode.
-
----
-
-## set_citizen_location
-
-```python
-def set_citizen_location(self, citizen_id: str, region: str) -> None
-```
-
-Update citizen location.
-
----
-
-## record_conversation
-
-```python
-def record_conversation(self, region: str) -> None
-```
-
-Record a conversation in a region.
-
----
-
-## get_region_views
-
-```python
-def get_region_views(self) -> dict[TownContext, RegionView]
-```
-
-Build region views from current state.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.collective.manifest`
-
-Manifest collective status.
-
----
-
-## services.town.contracts
-
-## contracts
-
-```python
-module contracts
-```
-
-Town AGENTESE Contract Definitions.
-
----
-
-## TownManifestResponse
-
-```python
-class TownManifestResponse
-```
-
-Town health status manifest response.
-
----
-
-## CitizenSummary
-
-```python
-class CitizenSummary
-```
-
-Summary of a citizen for list views.
-
----
-
-## CitizenDetail
-
-```python
-class CitizenDetail
-```
-
-Full citizen details.
-
----
-
-## CitizenListResponse
-
-```python
-class CitizenListResponse
-```
-
-Response for citizen list aspect.
-
----
-
-## CitizenGetResponse
-
-```python
-class CitizenGetResponse
-```
-
-Response for citizen get aspect.
-
----
-
-## CitizenCreateRequest
-
-```python
-class CitizenCreateRequest
-```
-
-Request to create a new citizen.
-
----
-
-## CitizenCreateResponse
-
-```python
-class CitizenCreateResponse
-```
-
-Response after creating a citizen.
-
----
-
-## CitizenUpdateRequest
-
-```python
-class CitizenUpdateRequest
-```
-
-Request to update a citizen.
-
----
-
-## CitizenUpdateResponse
-
-```python
-class CitizenUpdateResponse
-```
-
-Response after updating a citizen.
-
----
-
-## TurnSummary
-
-```python
-class TurnSummary
-```
-
-Summary of a conversation turn.
-
----
-
-## ConversationDetail
-
-```python
-class ConversationDetail
-```
-
-Full conversation details.
-
----
-
-## ConverseRequest
-
-```python
-class ConverseRequest
-```
-
-Request to start a conversation with a citizen.
-
----
-
-## ConverseResponse
-
-```python
-class ConverseResponse
-```
-
-Response after starting a conversation.
-
----
-
-## TurnRequest
-
-```python
-class TurnRequest
-```
-
-Request to add a turn to a conversation.
-
----
-
-## TurnResponse
-
-```python
-class TurnResponse
-```
-
-Response after adding a turn.
-
----
-
-## HistoryRequest
-
-```python
-class HistoryRequest
-```
-
-Request for dialogue history.
-
----
-
-## ConversationSummary
-
-```python
-class ConversationSummary
-```
-
-Summary of a conversation for history views.
-
----
-
-## HistoryResponse
-
-```python
-class HistoryResponse
-```
-
-Response for dialogue history.
-
----
-
-## RelationshipSummary
-
-```python
-class RelationshipSummary
-```
-
-Summary of a citizen relationship.
-
----
-
-## RelationshipsRequest
-
-```python
-class RelationshipsRequest
-```
-
-Request for citizen relationships.
-
----
-
-## RelationshipsResponse
-
-```python
-class RelationshipsResponse
-```
-
-Response for citizen relationships.
-
----
-
-## CoalitionManifestResponse
-
-```python
-class CoalitionManifestResponse
-```
-
-Coalition system health manifest response.
-
----
-
-## CoalitionSummary
-
-```python
-class CoalitionSummary
-```
-
-Summary of a coalition for list views.
-
----
-
-## CoalitionDetail
-
-```python
-class CoalitionDetail
-```
-
-Full coalition details.
-
----
-
-## CoalitionListResponse
-
-```python
-class CoalitionListResponse
-```
-
-Response for coalition list aspect.
-
----
-
-## CoalitionDetectRequest
-
-```python
-class CoalitionDetectRequest
-```
-
-Request to detect coalitions in citizen graph.
-
----
-
-## CoalitionDetectResponse
-
-```python
-class CoalitionDetectResponse
-```
-
-Response after coalition detection.
-
----
-
-## BridgeCitizensResponse
-
-```python
-class BridgeCitizensResponse
-```
-
-Response for bridge citizens aspect.
-
----
-
-## CoalitionDecayResponse
-
-```python
-class CoalitionDecayResponse
-```
-
-Response after applying coalition decay.
-
----
-
-## WorkshopStatusResponse
-
-```python
-class WorkshopStatusResponse
-```
-
-Response for workshop status aspect.
-
----
-
-## WorkshopAssignRequest
-
-```python
-class WorkshopAssignRequest
-```
-
-Request to assign task to workshop builders.
-
----
-
-## WorkshopAssignResponse
-
-```python
-class WorkshopAssignResponse
-```
-
-Response after workshop task assignment.
-
----
-
-## WorkshopEventResponse
-
-```python
-class WorkshopEventResponse
-```
-
-Response for workshop event (advance, complete).
-
----
-
-## WorkshopBuildersResponse
-
-```python
-class WorkshopBuildersResponse
-```
-
-Response listing available builders.
-
----
-
-## OperationSummary
-
-```python
-class OperationSummary
-```
-
-Summary of a town operation.
-
----
-
-## ScenarioConfig
-
-```python
-class ScenarioConfig
-```
-
-Configuration for a town scenario.
-
----
-
-## ScenarioStatusResponse
-
-```python
-class ScenarioStatusResponse
-```
-
-Response for scenario status aspect.
-
----
-
-## services.town.dialogue_service
-
-## dialogue_service
-
-```python
-module dialogue_service
-```
-
-Town Dialogue Service: LLM-backed dialogue generation for Agent Town citizens.
-
----
-
-## DialogueTier
-
-```python
-class DialogueTier(Enum)
-```
-
-Citizen dialogue budget tiers.
-
----
-
-## DialogueContext
-
-```python
-class DialogueContext
-```
-
-Memory-grounded context for dialogue generation.
-
----
-
-## DialogueResult
-
-```python
-class DialogueResult
-```
-
-Result from dialogue generation.
-
----
-
-## CitizenBudget
-
-```python
-class CitizenBudget
-```
-
-Per-citizen token tracking.
-
----
-
-## DialogueBudgetConfig
-
-```python
-class DialogueBudgetConfig
-```
-
-Per-citizen token budget configuration.
-
----
-
-## DialogueService
-
-```python
-class DialogueService
-```
-
-LLM-backed dialogue generation service for Agent Town citizens.
-
----
-
-## create_dialogue_service
-
-```python
-def create_dialogue_service(use_mock: bool=False, budget_config: DialogueBudgetConfig | None=None) -> DialogueService
-```
-
-Create a DialogueService with appropriate LLM client.
-
----
-
-## to_context_string
-
-```python
-def to_context_string(self) -> str
-```
-
-Render context for prompt injection.
-
----
-
-## tokens_remaining
-
-```python
-def tokens_remaining(self) -> int
-```
-
-Tokens remaining for today.
-
----
-
-## can_afford
-
-```python
-def can_afford(self, estimated_tokens: int) -> bool
-```
-
-Check if budget allows this operation.
-
----
-
-## spend
-
-```python
-def spend(self, tokens: int) -> None
-```
-
-Record token expenditure.
-
----
-
-## reset_if_new_day
-
-```python
-def reset_if_new_day(self) -> None
-```
-
-Reset budget if it's a new day.
-
----
-
-## model_for_operation
-
-```python
-def model_for_operation(self, operation: str) -> str
-```
-
-Get model name for an operation.
-
----
-
-## estimate_tokens
-
-```python
-def estimate_tokens(self, operation: str) -> int
-```
-
-Estimate token cost for an operation.
-
----
-
-## budget_for_tier
-
-```python
-def budget_for_tier(self, tier: str) -> int
-```
-
-Get daily budget for a citizen tier.
-
----
-
-## has_llm
-
-```python
-def has_llm(self) -> bool
-```
-
-Check if LLM client is configured.
-
----
-
-## register_citizen
-
-```python
-def register_citizen(self, citizen_id: str, tier: str) -> CitizenBudget
-```
-
-Register a citizen for budget tracking.
-
----
-
-## get_budget
-
-```python
-def get_budget(self, citizen_id: str) -> CitizenBudget | None
-```
-
-Get a citizen's budget tracker.
-
----
-
-## get_tier
-
-```python
-def get_tier(self, citizen: 'Citizen') -> DialogueTier
-```
-
-Determine dialogue tier for a citizen based on budget.
-
----
-
-## generate
-
-```python
-async def generate(self, speaker: 'Citizen', listener: 'Citizen', operation: str, phase: 'TownPhase | None'=None, recent_events: list[str] | None=None) -> DialogueResult
-```
-
-Generate dialogue for an interaction.
-
----
-
-## generate_stream
-
-```python
-async def generate_stream(self, speaker: 'Citizen', listener: 'Citizen', operation: str, phase: 'TownPhase | None'=None, recent_events: list[str] | None=None) -> AsyncIterator[Union[str, DialogueResult]]
-```
-
-Generate dialogue with streaming.
-
----
-
-## get_stats
-
-```python
-def get_stats(self) -> dict[str, Any]
-```
-
-Get service statistics.
-
----
-
-## services.town.events
-
-## events
-
-```python
-module events
-```
-
-Town Event Definitions: DataEvent subclasses for Agent Town.
-
----
-
-## TownEventType
-
-```python
-class TownEventType(Enum)
-```
-
-Types of town events.
-
----
-
-## TownEvent
-
-```python
-class TownEvent
-```
-
-Base class for all town events.
-
----
-
-## CitizenCreated
-
-```python
-class CitizenCreated(TownEvent)
-```
-
-Emitted when a new citizen is created.
-
----
-
-## CitizenUpdated
-
-```python
-class CitizenUpdated(TownEvent)
-```
-
-Emitted when a citizen's attributes change.
-
----
-
-## CitizenDeactivated
-
-```python
-class CitizenDeactivated(TownEvent)
-```
-
-Emitted when a citizen is deactivated.
-
----
-
-## ConversationStarted
-
-```python
-class ConversationStarted(TownEvent)
-```
-
-Emitted when a conversation begins.
-
----
-
-## ConversationTurn
-
-```python
-class ConversationTurn(TownEvent)
-```
-
-Emitted when a turn is added to a conversation.
-
----
-
-## ConversationEnded
-
-```python
-class ConversationEnded(TownEvent)
-```
-
-Emitted when a conversation ends.
-
----
-
-## RelationshipCreated
-
-```python
-class RelationshipCreated(TownEvent)
-```
-
-Emitted when a new relationship forms.
-
----
-
-## RelationshipChanged
-
-```python
-class RelationshipChanged(TownEvent)
-```
-
-Emitted when a relationship strength changes.
-
----
-
-## GossipSpread
-
-```python
-class GossipSpread(TownEvent)
-```
-
-Emitted when gossip spreads between citizens.
-
----
-
-## CoalitionFormed
-
-```python
-class CoalitionFormed(TownEvent)
-```
-
-Emitted when a coalition is detected/formed.
-
----
-
-## CoalitionDissolved
-
-```python
-class CoalitionDissolved(TownEvent)
-```
-
-Emitted when a coalition dissolves.
-
----
-
-## InhabitStarted
-
-```python
-class InhabitStarted(TownEvent)
-```
-
-Emitted when a user starts inhabiting a citizen.
-
----
-
-## InhabitEnded
-
-```python
-class InhabitEnded(TownEvent)
-```
-
-Emitted when a user stops inhabiting a citizen.
-
----
-
-## ForceApplied
-
-```python
-class ForceApplied(TownEvent)
-```
-
-Emitted when a user forces a citizen action.
-
----
-
-## SimulationStep
-
-```python
-class SimulationStep(TownEvent)
-```
-
-Emitted when a simulation step completes.
-
----
-
-## RegionActivity
-
-```python
-class RegionActivity(TownEvent)
-```
-
-Emitted when significant activity happens in a region.
-
----
-
-## TownTopics
-
-```python
-class TownTopics
-```
-
-SynergyBus topic constants for town events.
-
----
-
-## create
-
-```python
-def create(cls, citizen_id: str, name: str, archetype: str, region: str='inn', traits: dict[str, Any] | None=None, causal_parent: str | None=None) -> CitizenCreated
-```
-
-Factory for creating CitizenCreated events.
-
----
-
-## create
-
-```python
-def create(cls, citizen_id: str, changes: dict[str, Any], causal_parent: str | None=None) -> CitizenUpdated
-```
-
-Factory for creating CitizenUpdated events.
-
----
-
-## create
-
-```python
-def create(cls, citizen_id: str, reason: str='manual', causal_parent: str | None=None) -> CitizenDeactivated
-```
-
-Factory for creating CitizenDeactivated events.
-
----
-
-## create
-
-```python
-def create(cls, conversation_id: str, citizen_id: str, topic: str='', causal_parent: str | None=None) -> ConversationStarted
-```
-
-Factory for creating ConversationStarted events.
-
----
-
-## create
-
-```python
-def create(cls, conversation_id: str, citizen_id: str, turn_number: int, role: str, content: str, sentiment: str | None=None, emotion: str | None=None, causal_parent: str | None=None) -> ConversationTurn
-```
-
-Factory for creating ConversationTurn events.
-
----
-
-## create
-
-```python
-def create(cls, conversation_id: str, citizen_id: str, turn_count: int, summary: str='', causal_parent: str | None=None) -> ConversationEnded
-```
-
-Factory for creating ConversationEnded events.
-
----
-
-## create
-
-```python
-def create(cls, relationship_id: str, citizen_a: str, citizen_b: str, relationship_type: str, initial_strength: float=0.5, causal_parent: str | None=None) -> RelationshipCreated
-```
-
-Factory for creating RelationshipCreated events.
-
----
-
-## create
-
-```python
-def create(cls, relationship_id: str, citizen_a: str, citizen_b: str, old_strength: float, new_strength: float, reason: str='interaction', causal_parent: str | None=None) -> RelationshipChanged
-```
-
-Factory for creating RelationshipChanged events.
-
----
-
-## create
-
-```python
-def create(cls, source_citizen: str, target_citizen: str, rumor_content: str, accuracy: float=1.0, source_region: str='', target_region: str='', causal_parent: str | None=None) -> GossipSpread
-```
-
-Factory for creating GossipSpread events.
-
----
-
-## create
-
-```python
-def create(cls, coalition_id: str, members: set[str] | frozenset[str], purpose: str='', strength: float=1.0, causal_parent: str | None=None) -> CoalitionFormed
-```
-
-Factory for creating CoalitionFormed events.
-
----
-
-## create
-
-```python
-def create(cls, coalition_id: str, members: set[str] | frozenset[str], reason: str='decay', causal_parent: str | None=None) -> CoalitionDissolved
-```
-
-Factory for creating CoalitionDissolved events.
-
----
-
-## create
-
-```python
-def create(cls, user_id: str, citizen_id: str, inhabit_mode: str='basic', causal_parent: str | None=None) -> InhabitStarted
-```
-
-Factory for creating InhabitStarted events.
-
----
-
-## create
-
-```python
-def create(cls, user_id: str, citizen_id: str, duration_seconds: float, actions_taken: int=0, causal_parent: str | None=None) -> InhabitEnded
-```
-
-Factory for creating InhabitEnded events.
-
----
-
-## create
-
-```python
-def create(cls, user_id: str, citizen_id: str, action: str, severity: float=0.2, debt_after: float=0.0, causal_parent: str | None=None) -> ForceApplied
-```
-
-Factory for creating ForceApplied events.
-
----
-
-## create
-
-```python
-def create(cls, step_number: int, active_citizens: int, interactions: int=0, coalitions_changed: int=0, causal_parent: str | None=None) -> SimulationStep
-```
-
-Factory for creating SimulationStep events.
-
----
-
-## create
-
-```python
-def create(cls, region: str, citizen_count: int, activity_type: str, details: str='', causal_parent: str | None=None) -> RegionActivity
-```
-
-Factory for creating RegionActivity events.
-
----
-
-## services.town.inhabit_node
-
-## inhabit_node
-
-```python
-module inhabit_node
-```
-
-Town INHABIT AGENTESE Node: @node("world.town.inhabit")
-
----
-
-## InhabitSessionRendering
-
-```python
-class InhabitSessionRendering
-```
-
-Rendering for INHABIT session status.
-
----
-
-## InhabitActionRendering
-
-```python
-class InhabitActionRendering
-```
-
-Rendering for INHABIT action results.
-
----
-
-## InhabitListRendering
-
-```python
-class InhabitListRendering
-```
-
-Rendering for active sessions list.
-
----
-
-## InhabitNode
-
-```python
-class InhabitNode(BaseLogosNode)
-```
-
-AGENTESE node for INHABIT Crown Jewel feature.
-
----
-
-## __init__
-
-```python
-def __init__(self, inhabit_service: InhabitService, citizen_resolver: Any=None) -> None
-```
-
-Initialize InhabitNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.inhabit.manifest`
-
-Manifest INHABIT status overview.
-
----
-
-## services.town.inhabit_service
-
-## inhabit_service
-
-```python
-module inhabit_service
-```
-
-Town INHABIT Service: User-Citizen merge with consent tracking.
-
----
-
-## InhabitTier
-
-```python
-class InhabitTier(Enum)
-```
-
-User subscription tiers with different INHABIT privileges.
-
----
-
-## AlignmentScore
-
-```python
-class AlignmentScore
-```
-
-How well an action aligns with citizen's personality.
-
----
-
-## InhabitResponse
-
-```python
-class InhabitResponse
-```
-
-Response from an INHABIT action.
-
----
-
-## InhabitSession
-
-```python
-class InhabitSession
-```
-
-An INHABIT session where user merges with a citizen.
-
----
-
-## calculate_alignment
-
-```python
-async def calculate_alignment(citizen: 'Citizen', proposed_action: str, llm_client: Any) -> AlignmentScore
-```
-
-Evaluate action alignment against citizen's personality.
-
----
-
-## generate_inner_voice
-
-```python
-async def generate_inner_voice(citizen: 'Citizen', situation: str, llm_client: Any) -> tuple[str, int]
-```
-
-Generate citizen's inner thoughts for a situation.
-
----
-
-## InhabitService
-
-```python
-class InhabitService
-```
-
-Service for managing INHABIT sessions.
-
----
-
-## __post_init__
-
-```python
-def __post_init__(self) -> None
-```
-
-Set tier-specific caps and initialize consent state.
-
----
-
-## update
-
-```python
-def update(self) -> None
-```
-
-Update session timing and consent decay.
-
----
-
-## is_expired
-
-```python
-def is_expired(self) -> bool
-```
-
-Check if session has exceeded time limit.
-
----
-
-## check_session_expired
-
-```python
-def check_session_expired(self) -> bool
-```
-
-Check if session has exceeded its time limit.
-
----
-
-## time_remaining
-
-```python
-def time_remaining(self) -> float
-```
-
-Get remaining time in seconds.
-
----
-
-## can_force
-
-```python
-def can_force(self) -> bool
-```
-
-Check if force action is allowed.
-
----
-
-## force_action
-
-```python
-def force_action(self, action: str, severity: float=0.2) -> dict[str, Any]
-```
-
-Force the citizen to perform an action.
-
----
-
-## suggest_action
-
-```python
-def suggest_action(self, action: str) -> dict[str, Any]
-```
-
-Suggest an action to the citizen (collaborative, not forced).
-
----
-
-## apologize
-
-```python
-def apologize(self, sincerity: float=0.3) -> dict[str, Any]
-```
-
-Apologize to the citizen, reducing consent debt.
-
----
-
-## get_status
-
-```python
-def get_status(self) -> dict[str, Any]
-```
-
-Get session status for display.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize session to dictionary (for logging/audit).
-
----
-
-## emit_inhabit_event
-
-```python
-def emit_inhabit_event(self, response: InhabitResponse) -> dict[str, Any]
-```
-
-Create an INHABIT event for TownFlux integration.
-
----
-
-## start_session
-
-```python
-def start_session(self, user_id: str, citizen: 'Citizen', tier: InhabitTier, force_enabled: bool=False) -> InhabitSession
-```
-
-Start a new INHABIT session.
-
----
-
-## get_session
-
-```python
-def get_session(self, user_id: str) -> InhabitSession | None
-```
-
-Get a user's active session.
-
----
-
-## end_session
-
-```python
-def end_session(self, user_id: str) -> dict[str, Any] | None
-```
-
-End a user's session gracefully.
-
----
-
-## list_active_sessions
-
-```python
-def list_active_sessions(self) -> list[dict[str, Any]]
-```
-
-List all active sessions.
-
----
-
-## services.town.memory_service
-
-## memory_service
-
-```python
-module memory_service
-```
-
-Town Memory Service: Citizen episodic and collective memory.
-
----
-
-## ConversationEntry
-
-```python
-class ConversationEntry
-```
-
-A single conversation turn.
-
----
-
-## PersistentCitizenMemory
-
-```python
-class PersistentCitizenMemory
-```
-
-Persistent memory for a citizen using D-gent.
-
----
-
-## CollectiveEvent
-
-```python
-class CollectiveEvent
-```
-
-A town-wide event that citizens can reference.
-
----
-
-## TownCollectiveMemory
-
-```python
-class TownCollectiveMemory
-```
-
-Shared memory for the entire town using D-gent.
-
----
-
-## create_collective_memory
-
-```python
-async def create_collective_memory(town_id: str, dgent: DgentProtocol | None=None) -> TownCollectiveMemory
-```
-
-Create and load collective memory for a town.
-
----
-
-## create_persistent_memory
-
-```python
-async def create_persistent_memory(citizen: 'Citizen', dgent: DgentProtocol | None=None) -> PersistentCitizenMemory
-```
-
-Create and load persistent memory for a citizen.
-
----
-
-## save_citizen_state
-
-```python
-async def save_citizen_state(citizen: 'Citizen', memory: PersistentCitizenMemory) -> None
-```
-
-Save a citizen's full state to persistent memory.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize to dictionary.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> ConversationEntry
-```
-
-Deserialize from dictionary.
-
----
-
-## __init__
-
-```python
-def __init__(self, citizen_id: str, dgent: DgentProtocol | None=None) -> None
-```
-
-Initialize persistent memory for a citizen.
-
----
-
-## citizen_id
-
-```python
-def citizen_id(self) -> str
-```
-
-The citizen this memory belongs to.
-
----
-
-## namespace
-
-```python
-def namespace(self) -> str
-```
-
-D-gent namespace prefix.
-
----
-
-## load
-
-```python
-async def load(self) -> None
-```
-
-Load memory from D-gent on startup.
-
----
-
-## save
-
-```python
-async def save(self) -> None
-```
-
-Persist current memory state to D-gent.
-
----
-
-## graph
-
-```python
-def graph(self) -> GraphMemory
-```
-
-Access the graph memory (lazy initialization).
-
----
-
-## store_memory
-
-```python
-async def store_memory(self, key: str, content: str, connections: dict[str, float] | None=None, metadata: dict[str, Any] | None=None) -> None
-```
-
-Store an episodic memory.
-
----
-
-## recall_memory
-
-```python
-async def recall_memory(self, query: str, k_hops: int=2) -> list[dict[str, Any]]
-```
-
-Recall memories by graph traversal.
-
----
-
-## recall_by_content
-
-```python
-async def recall_by_content(self, substring: str, k_hops: int=2) -> list[dict[str, Any]]
-```
-
-Recall memories by content search.
-
----
-
-## reinforce_memory
-
-```python
-async def reinforce_memory(self, key: str, amount: float=0.1) -> bool
-```
-
-Reinforce a memory (increase strength).
-
----
-
-## decay_memories
-
-```python
-async def decay_memories(self, rate: float | None=None) -> int
-```
-
-Apply decay to all memories.
-
----
-
-## conversations
-
-```python
-def conversations(self) -> list[ConversationEntry]
-```
-
-All conversation entries.
-
----
-
-## add_conversation
-
-```python
-async def add_conversation(self, speaker: str, message: str, topic: str | None=None, emotion: str | None=None, eigenvector_deltas: dict[str, float] | None=None) -> ConversationEntry
-```
-
-Add a conversation entry.
-
----
-
-## get_recent_conversations
-
-```python
-async def get_recent_conversations(self, limit: int=10, topic: str | None=None) -> list[ConversationEntry]
-```
-
-Get recent conversations.
-
----
-
-## search_conversations
-
-```python
-async def search_conversations(self, query: str) -> list[ConversationEntry]
-```
-
-Search conversations by content.
-
----
-
-## save_relationships
-
-```python
-async def save_relationships(self, relationships: dict[str, float]) -> None
-```
-
-Save relationship weights to D-gent.
-
----
-
-## load_relationships
-
-```python
-async def load_relationships(self) -> dict[str, float]
-```
-
-Load relationship weights from D-gent.
-
----
-
-## save_eigenvectors
-
-```python
-async def save_eigenvectors(self, eigenvectors: dict[str, float]) -> None
-```
-
-Save current eigenvector snapshot with timestamp.
-
----
-
-## get_eigenvector_drift
-
-```python
-async def get_eigenvector_drift(self, window_size: int=10) -> dict[str, float] | None
-```
-
-Calculate eigenvector drift over recent history.
-
----
-
-## clear
-
-```python
-async def clear(self) -> None
-```
-
-Clear all memory (graph, conversations, relationships).
-
----
-
-## memory_summary
-
-```python
-def memory_summary(self) -> dict[str, Any]
-```
-
-Get a summary of this citizen's memory.
-
----
-
-## to_dict
-
-```python
-def to_dict(self) -> dict[str, Any]
-```
-
-Serialize to dictionary.
-
----
-
-## from_dict
-
-```python
-def from_dict(cls, data: dict[str, Any]) -> CollectiveEvent
-```
-
-Deserialize from dictionary.
-
----
-
-## __init__
-
-```python
-def __init__(self, town_id: str, dgent: DgentProtocol | None=None, max_events: int=100) -> None
-```
-
-Initialize collective memory.
-
----
-
-## load
-
-```python
-async def load(self) -> None
-```
-
-Load collective memory from D-gent.
-
----
-
-## record_event
-
-```python
-async def record_event(self, event_type: str, content: str, participants: list[str] | None=None, metadata: dict[str, Any] | None=None) -> CollectiveEvent
-```
-
-Record a town-wide event.
-
----
-
-## get_recent_events
-
-```python
-async def get_recent_events(self, limit: int=10, event_type: str | None=None) -> list[CollectiveEvent]
-```
-
-Get recent town events.
-
----
-
-## get_events_involving
-
-```python
-async def get_events_involving(self, citizen_id: str, limit: int=5) -> list[CollectiveEvent]
-```
-
-Get events involving a specific citizen.
-
----
-
-## get_shared_context
-
-```python
-async def get_shared_context(self, citizen_ids: list[str] | None=None, limit: int=5) -> list[CollectiveEvent]
-```
-
-Get shared context for dialogue grounding.
-
----
-
-## summary
-
-```python
-def summary(self) -> dict[str, Any]
-```
-
-Get a summary of collective memory state.
-
----
-
-## services.town.node
-
-## node
-
-```python
-module node
-```
-
-Town AGENTESE Node: @node("world.town")
-
----
-
-## TownManifestRendering
-
-```python
-class TownManifestRendering
-```
-
-Rendering for town status manifest.
-
----
-
-## CitizenRendering
-
-```python
-class CitizenRendering
-```
-
-Rendering for citizen details.
-
----
-
-## CitizenListRendering
-
-```python
-class CitizenListRendering
-```
-
-Rendering for citizen list.
-
----
-
-## ConversationRendering
-
-```python
-class ConversationRendering
-```
-
-Rendering for conversation details.
-
----
-
-## RelationshipListRendering
-
-```python
-class RelationshipListRendering
-```
-
-Rendering for relationship list.
-
----
-
-## TownNode
-
-```python
-class TownNode(BaseLogosNode)
-```
-
-AGENTESE node for Agent Town Crown Jewel.
-
----
-
-## __init__
-
-```python
-def __init__(self, town_persistence: TownPersistence) -> None
-```
-
-Initialize TownNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.manifest`
-
-Manifest town status to observer.
-
----
-
-## services.town.persistence
-
-## persistence
-
-```python
-module persistence
-```
-
-Town Persistence: TableAdapter + D-gent integration for Agent Town Crown Jewel.
-
----
-
-## CitizenView
-
-```python
-class CitizenView
-```
-
-View of a citizen for external consumption.
-
----
-
-## ConversationView
-
-```python
-class ConversationView
-```
-
-View of a conversation.
-
----
-
-## TurnView
-
-```python
-class TurnView
-```
-
-View of a conversation turn.
-
----
-
-## RelationshipView
-
-```python
-class RelationshipView
-```
-
-View of a citizen relationship.
-
----
-
-## TownStatus
-
-```python
-class TownStatus
-```
-
-Town health status.
-
----
-
-## TownPersistence
-
-```python
-class TownPersistence
-```
-
-Persistence layer for Agent Town Crown Jewel.
-
----
-
-## create_citizen
-
-```python
-async def create_citizen(self, name: str, archetype: str, description: str | None=None, traits: dict[str, Any] | None=None) -> CitizenView
-```
-
-**AGENTESE:** `world.town.citizen.define`
-
-Create a new citizen in the town.
-
----
-
-## get_citizen
-
-```python
-async def get_citizen(self, citizen_id: str) -> CitizenView | None
-```
-
-Get a citizen by ID.
-
----
-
-## get_citizen_by_name
-
-```python
-async def get_citizen_by_name(self, name: str) -> CitizenView | None
-```
-
-Get a citizen by name.
-
----
-
-## list_citizens
-
-```python
-async def list_citizens(self, active_only: bool=False, archetype: str | None=None, limit: int=50) -> list[CitizenView]
-```
-
-List citizens with optional filters.
-
----
-
-## update_citizen
-
-```python
-async def update_citizen(self, citizen_id: str, description: str | None=None, traits: dict[str, Any] | None=None, is_active: bool | None=None) -> CitizenView | None
-```
-
-Update citizen attributes.
-
----
-
-## start_conversation
-
-```python
-async def start_conversation(self, citizen_id: str, topic: str | None=None) -> ConversationView | None
-```
-
-**AGENTESE:** `world.town.citizen.`
-
-Start a new conversation with a citizen.
-
----
-
-## add_turn
-
-```python
-async def add_turn(self, conversation_id: str, role: str, content: str, sentiment: str | None=None, emotion: str | None=None) -> TurnView | None
-```
-
-Add a turn to a conversation.
-
----
-
-## get_conversation
-
-```python
-async def get_conversation(self, conversation_id: str, include_turns: bool=True) -> ConversationView | None
-```
-
-Get a conversation with optional turns.
-
----
-
-## end_conversation
-
-```python
-async def end_conversation(self, conversation_id: str, summary: str | None=None) -> bool
-```
-
-End an active conversation.
-
----
-
-## get_dialogue_history
-
-```python
-async def get_dialogue_history(self, citizen_id: str, limit: int=50) -> list[ConversationView]
-```
-
-**AGENTESE:** `world.town.citizen.`
-
-Get dialogue history for a citizen.
-
----
-
-## create_relationship
-
-```python
-async def create_relationship(self, citizen_a_id: str, citizen_b_id: str, relationship_type: str, strength: float=0.5, notes: str | None=None) -> RelationshipView | None
-```
-
-Create a relationship between two citizens.
-
----
-
-## get_relationships
-
-```python
-async def get_relationships(self, citizen_id: str) -> list[RelationshipView]
-```
-
-Get all relationships for a citizen.
-
----
-
-## manifest
-
-```python
-async def manifest(self) -> TownStatus
-```
-
-**AGENTESE:** `world.town.manifest`
-
-Get town health status.
-
----
-
-## services.town.workshop_node
-
-## workshop_node
-
-```python
-module workshop_node
-```
-
-Workshop AGENTESE Node: @node("world.town.workshop")
-
----
-
-## WorkshopManifestRendering
-
-```python
-class WorkshopManifestRendering
-```
-
-Rendering for workshop status manifest.
-
----
-
-## WorkshopBuildersRendering
-
-```python
-class WorkshopBuildersRendering
-```
-
-Rendering for builder list.
-
----
-
-## WorkshopNode
-
-```python
-class WorkshopNode(BaseLogosNode)
-```
-
-AGENTESE node for Workshop Crown Jewel.
-
----
-
-## __init__
-
-```python
-def __init__(self, workshop_service: WorkshopService) -> None
-```
-
-Initialize WorkshopNode.
-
----
-
-## manifest
-
-```python
-async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
-```
-
-**AGENTESE:** `world.town.workshop.manifest`
-
-Manifest workshop status to observer.
-
----
-
-## services.town.workshop_service
-
-## workshop_service
-
-```python
-module workshop_service
-```
-
-Workshop Service: Builder coordination for Town Crown Jewel.
-
----
-
-## WorkshopView
-
-```python
-class WorkshopView
-```
-
-View of workshop status for API/CLI rendering.
-
----
-
-## WorkshopTaskView
-
-```python
-class WorkshopTaskView
-```
-
-View of a workshop task.
-
----
-
-## WorkshopPlanView
-
-```python
-class WorkshopPlanView
-```
-
-View of a workshop plan.
-
----
-
-## WorkshopEventView
-
-```python
-class WorkshopEventView
-```
-
-View of a workshop event.
-
----
-
-## WorkshopFluxView
-
-```python
-class WorkshopFluxView
-```
-
-View of flux execution status.
-
----
-
-## WorkshopService
-
-```python
-class WorkshopService
-```
-
-Service layer for Workshop operations.
-
----
-
-## create_workshop_service
-
-```python
-def create_workshop_service(builders: tuple['Builder', ...] | None=None, event_bus: 'EventBus[WorkshopEvent] | None'=None, dialogue_engine: 'CitizenDialogueEngine | None'=None) -> WorkshopService
-```
-
-Create a configured WorkshopService.
-
----
-
-## __init__
-
-```python
-def __init__(self, workshop: WorkshopEnvironment | None=None, dialogue_engine: 'CitizenDialogueEngine | None'=None) -> None
-```
-
-Initialize workshop service.
-
----
-
-## workshop
-
-```python
-def workshop(self) -> WorkshopEnvironment
-```
-
-Underlying workshop environment.
-
----
-
-## is_active
-
-```python
-def is_active(self) -> bool
-```
-
-Check if workshop has an active task.
-
----
-
-## manifest
-
-```python
-async def manifest(self, lod: int=1) -> WorkshopView
-```
-
-**AGENTESE:** `world.town.workshop.manifest`
-
-Get workshop status.
-
----
-
-## assign_task
-
-```python
-async def assign_task(self, task: str | WorkshopTask, priority: int=1) -> WorkshopPlanView
-```
-
-**AGENTESE:** `world.town.workshop.assign`
-
-Assign a task to the workshop.
-
----
-
-## advance
-
-```python
-async def advance(self) -> WorkshopEventView
-```
-
-**AGENTESE:** `world.town.workshop.advance`
-
-Advance the workshop by one step.
+Protocol for LLM adapters.
 
 ---
 
 ## complete
 
 ```python
-async def complete(self, summary: str='') -> WorkshopEventView
+async def complete(self, request: 'ChatRequest') -> 'ChatResponse'
 ```
 
-**AGENTESE:** `world.town.workshop.complete`
-
-Mark the current task as complete.
+Process a chat completion request.
 
 ---
 
-## handoff
+## stream
 
 ```python
-async def handoff(self, from_archetype: str, to_archetype: str, artifact: Any=None, message: str='') -> WorkshopEventView
+async def stream(self, request: 'ChatRequest') -> AsyncIterator['StreamChunk']
 ```
 
-Explicit handoff between builders.
+Process a streaming chat completion request.
 
 ---
 
-## reset
+## is_available
 
 ```python
-def reset(self) -> None
+def is_available(self) -> bool
 ```
 
-Reset workshop to idle state.
+Check if this adapter is available and can process requests.
 
 ---
 
-## create_flux
+## health_check
 
 ```python
-def create_flux(self, nphase_session: 'NPhaseSession | None'=None, auto_advance: bool=True, max_steps_per_phase: int=5, seed: int | None=None) -> WorkshopFlux
+def health_check(self) -> dict[str, Any]
 ```
 
-Create a WorkshopFlux for streaming execution.
+Return health status for monitoring.
 
 ---
 
-## run_task
+## supports_streaming
 
 ```python
-async def run_task(self, task: str | WorkshopTask, priority: int=1, nphase_session: 'NPhaseSession | None'=None) -> AsyncIterator[WorkshopEventView]
+def supports_streaming(self) -> bool
 ```
 
-Run a task to completion with streaming events.
+Check if this adapter supports streaming.
 
 ---
 
-## get_flux_status
+## services.morpheus.adapters.claude_cli
+
+## claude_cli
 
 ```python
-def get_flux_status(self) -> WorkshopFluxView | None
+module claude_cli
 ```
 
-Get current flux status if active.
+Claude CLI Adapter: Wraps ClaudeCLIRuntime with concurrency control.
 
 ---
 
-## get_metrics
+## ClaudeCLIConfig
 
 ```python
-def get_metrics(self) -> WorkshopMetrics | None
+class ClaudeCLIConfig
 ```
 
-Get flux execution metrics.
+Configuration for Claude CLI adapter.
 
 ---
 
-## get_builder
+## ClaudeCLIAdapter
 
 ```python
-def get_builder(self, archetype: str) -> 'Builder | None'
+class ClaudeCLIAdapter
 ```
 
-Get a builder by archetype name.
+Adapter from OpenAI-compatible requests to ClaudeCLIRuntime.
 
 ---
 
-## list_builders
+## request_count
 
 ```python
-def list_builders(self) -> list[str]
+def request_count(self) -> int
 ```
 
-List all builder archetypes.
+Total requests processed.
+
+---
+
+## complete
+
+```python
+async def complete(self, request: ChatRequest) -> ChatResponse
+```
+
+Process a chat completion request.
+
+---
+
+## stream
+
+```python
+async def stream(self, request: ChatRequest) -> AsyncIterator[StreamChunk]
+```
+
+Process a streaming chat completion request.
+
+---
+
+## is_available
+
+```python
+def is_available(self) -> bool
+```
+
+Check if Claude CLI is available.
+
+---
+
+## supports_streaming
+
+```python
+def supports_streaming(self) -> bool
+```
+
+Claude CLI supports streaming (via result chunking).
+
+---
+
+## health_check
+
+```python
+def health_check(self) -> dict[str, Any]
+```
+
+Return health status for monitoring.
+
+---
+
+## services.morpheus.adapters.mock
+
+## mock
+
+```python
+module mock
+```
+
+Mock Adapter: Testing adapter with queued responses.
+
+---
+
+## MockAdapter
+
+```python
+class MockAdapter
+```
+
+Mock adapter for testing without real LLM calls.
+
+---
+
+## complete
+
+```python
+async def complete(self, request: ChatRequest) -> ChatResponse
+```
+
+Return mock response.
+
+---
+
+## stream
+
+```python
+async def stream(self, request: ChatRequest) -> AsyncIterator[StreamChunk]
+```
+
+Stream mock response in chunks.
+
+---
+
+## history
+
+```python
+def history(self) -> list[ChatRequest]
+```
+
+Request history for testing assertions.
+
+---
+
+## queue_response
+
+```python
+def queue_response(self, response: str) -> None
+```
+
+Add a response to the queue.
+
+---
+
+## clear_history
+
+```python
+def clear_history(self) -> None
+```
+
+Clear request history.
+
+---
+
+## services.morpheus.contracts
+
+## contracts
+
+```python
+module contracts
+```
+
+Morpheus Contracts: Request/Response types for AGENTESE aspects.
+
+---
+
+## MorpheusManifestResponse
+
+```python
+class MorpheusManifestResponse
+```
+
+Response for world.morpheus.manifest.
+
+### Things to Know
+
+ℹ️ These contract types are for AGENTESE OpenAPI schema generation. They are NOT the same as the internal types in types.py/persistence.py.
+  - *Verified in: `node.py uses MorpheusManifestRendering, not this`*
+
+---
+
+## CompleteRequest
+
+```python
+class CompleteRequest
+```
+
+Request for world.morpheus.complete.
+
+### Things to Know
+
+ℹ️ `messages` is a list of dicts, not ChatMessage objects. The node converts these to ChatMessage internally.
+  - *Verified in: `node.py::_handle_complete converts dicts`*
+
+---
+
+## CompleteResponse
+
+```python
+class CompleteResponse
+```
+
+Response for world.morpheus.complete.
+
+### Things to Know
+
+ℹ️ `response` is the extracted text, not the full ChatResponse. Use world.morpheus.manifest to see detailed response metadata.
+  - *Verified in: `node.py::_handle_complete extracts response_text`*
+
+---
+
+## StreamRequest
+
+```python
+class StreamRequest
+```
+
+Request for world.morpheus.stream.
+
+### Things to Know
+
+ℹ️ Same structure as CompleteRequest, but the node sets stream=True internally and returns an async generator instead of a response.
+  - *Verified in: `node.py::_handle_stream sets request.stream = True`*
+
+---
+
+## StreamResponse
+
+```python
+class StreamResponse
+```
+
+Response metadata for world.morpheus.stream (actual data is SSE).
+
+### Things to Know
+
+ℹ️ The actual content is delivered via SSE, not in this response. This is just metadata confirming the stream started.
+  - *Verified in: `node.py::_handle_stream returns stream generator`*
+
+---
+
+## ProvidersResponse
+
+```python
+class ProvidersResponse
+```
+
+Response for world.morpheus.providers.
+
+### Things to Know
+
+ℹ️ The `filter` field indicates which filter was applied based on observer archetype: "all" (admin), "enabled" (dev), "public" (guest).
+  - *Verified in: `test_node.py::TestMorpheusNodeProviders`*
+
+---
+
+## MetricsResponse
+
+```python
+class MetricsResponse
+```
+
+Response for world.morpheus.metrics.
+
+### Things to Know
+
+ℹ️ This aspect requires "developer" or "admin" archetype. Guests calling metrics get a Forbidden error.
+  - *Verified in: `test_node.py::TestMorpheusNodeMetrics`*
+
+---
+
+## HealthResponse
+
+```python
+class HealthResponse
+```
+
+Response for world.morpheus.health.
+
+### Things to Know
+
+ℹ️ "healthy" means at least one provider is available—not that all are. "degraded" = some providers down, "unhealthy" = all providers down.
+  - *Verified in: `test_node.py::TestMorpheusNodeHealth`*
+
+---
+
+## RouteRequest
+
+```python
+class RouteRequest
+```
+
+Request for world.morpheus.route.
+
+### Things to Know
+
+ℹ️ This is a query aspect, not a mutation. It tells you WHERE a model would route without actually making a request.
+  - *Verified in: `test_node.py::TestMorpheusNodeRoute`*
+
+---
+
+## RouteResponse
+
+```python
+class RouteResponse
+```
+
+Response for world.morpheus.route.
+
+### Things to Know
+
+ℹ️ `available` is false if no provider matches the model prefix. Check `available` before making a complete/stream request.
+  - *Verified in: `test_node.py::test_route_for_unknown_model`*
+
+---
+
+## RateLimitResponse
+
+```python
+class RateLimitResponse
+```
+
+Response for world.morpheus.rate_limit.
+
+### Things to Know
+
+ℹ️ `reset_at` is a timestamp hint, not a guarantee. Sliding window limits may clear earlier as old requests age out.
+  - *Verified in: `gateway.py RateLimitState uses 60s sliding window`*
+
+---
+
+## services.morpheus.gateway
+
+## gateway
+
+```python
+module gateway
+```
+
+**AGENTESE:** `world.morpheus`
+
+Morpheus Gateway: Routes requests to LLM backends.
+
+---
+
+## ProviderConfig
+
+```python
+class ProviderConfig
+```
+
+Configuration for a single LLM provider.
+
+### Things to Know
+
+ℹ️ The `public` flag controls visibility to non-admin observers. Private providers (public=False) still work but aren't listed for guests. Use for internal/experimental providers.
+  - *Verified in: `test_node.py::TestMorpheusNodeProviders`*
+
+🚨 **Critical:** The `prefix` is the ONLY routing mechanism. Model names must START with this prefix. If you register prefix="claude-", then "claude-opus" routes but "anthropic-claude" does not.
+  - *Verified in: `test_rate_limit.py::TestGatewayRateLimiting`*
+
+---
+
+## GatewayConfig
+
+```python
+class GatewayConfig
+```
+
+Configuration for the Morpheus Gateway.
+
+### Things to Know
+
+🚨 **Critical:** The `rate_limit_by_archetype` dict is the source of truth for per-observer limits. Unknown archetypes fall back to `rate_limit_rpm`. Always ensure new archetypes are added here BEFORE use.
+  - *Verified in: `test_rate_limit.py::TestGatewayRateLimiting`*
+
+ℹ️ Limits are PER-MINUTE sliding windows, not hard resets. A burst of 10 requests will block for ~60s, not until the next minute boundary.
+  - *Verified in: `test_rate_limit.py::TestRateLimitState`*
+
+---
+
+## RateLimitState
+
+```python
+class RateLimitState
+```
+
+Thread-safe rate limit tracking using sliding window.
+
+### Things to Know
+
+ℹ️ Each archetype has its OWN window. Exhausting "guest" limits does not affect "admin" limits. This is by design—archetypes represent trust levels, not resource pools.
+  - *Verified in: `test_rate_limit.py::test_check_and_record_separate_archetypes`*
+
+ℹ️ The sliding window implementation means old entries are pruned on EVERY check. High-traffic archetypes may see O(n) cleanup cost. For production at scale, consider external rate limiting (Redis).
+  - *Verified in: `test_rate_limit.py::TestRateLimitState`*
+
+---
+
+## RateLimitError
+
+```python
+class RateLimitError(Exception)
+```
+
+Raised when rate limit is exceeded.
+
+### Things to Know
+
+ℹ️ The `retry_after` field is a HINT, not a guarantee. The sliding window may clear sooner if earlier requests age out. Clients should use exponential backoff, not fixed waits.
+  - *Verified in: `test_rate_limit.py::TestRateLimitError`*
+
+ℹ️ In streaming mode, rate limit errors are YIELDED as content, not raised. Check the first chunk for "Rate limit exceeded".
+  - *Verified in: `test_rate_limit.py::test_stream_respects_rate_limit`*
+
+---
+
+## MorpheusGateway
+
+```python
+class MorpheusGateway
+```
+
+Morpheus Gateway: Routes OpenAI-compatible requests to LLM backends.
+
+### Things to Know
+
+ℹ️ Providers are matched by PREFIX, first match wins. Register more specific prefixes BEFORE generic ones. "claude-3-opus" before "claude-".
+  - *Verified in: `test_rate_limit.py::TestGatewayRateLimiting`*
+
+🚨 **Critical:** Streaming errors are yielded as content, not raised as exceptions. This is intentional—SSE clients expect data, not connection drops. Always check first chunk for error messages.
+  - *Verified in: `test_streaming.py::test_gateway_stream_unknown_model_yields_error`*
+
+ℹ️ The gateway is stateless except for rate limiting. Provider registration order matters for matching, but requests are independent.
+  - *Verified in: `test_node.py::TestMorpheusNodeComplete`*
+
+---
+
+## check_and_record
+
+```python
+def check_and_record(self, archetype: str, limit: int) -> tuple[bool, int]
+```
+
+Check rate limit and record request if allowed.
+
+---
+
+## get_usage
+
+```python
+def get_usage(self, archetype: str) -> int
+```
+
+Get current request count in the window.
+
+---
+
+## register_provider
+
+```python
+def register_provider(self, name: str, adapter: 'Adapter', prefix: str, enabled: bool=True, public: bool=True) -> None
+```
+
+Register an LLM provider.
+
+---
+
+## unregister_provider
+
+```python
+def unregister_provider(self, name: str) -> bool
+```
+
+Remove a provider. Returns True if removed.
+
+---
+
+## complete
+
+```python
+async def complete(self, request: 'ChatRequest', archetype: str='guest') -> 'ChatResponse'
+```
+
+Process a chat completion request.
+
+---
+
+## stream
+
+```python
+async def stream(self, request: 'ChatRequest', archetype: str='guest') -> AsyncIterator['StreamChunk']
+```
+
+Process a streaming chat completion request.
+
+---
+
+## list_providers
+
+```python
+def list_providers(self, *, enabled_only: bool=False, public_only: bool=False) -> list[ProviderConfig]
+```
+
+List providers with optional filtering.
+
+---
+
+## get_provider
+
+```python
+def get_provider(self, name: str) -> Optional[ProviderConfig]
+```
+
+Get a specific provider by name.
+
+---
+
+## route_info
+
+```python
+def route_info(self, model: str) -> dict[str, Any]
+```
+
+Get routing info for a model (for debugging/introspection).
+
+---
+
+## rate_limit_status
+
+```python
+def rate_limit_status(self, archetype: str) -> dict[str, Any]
+```
+
+Get rate limit status for an archetype.
+
+---
+
+## health_check
+
+```python
+def health_check(self) -> dict[str, Any]
+```
+
+Return comprehensive health status.
+
+---
+
+## request_count
+
+```python
+def request_count(self) -> int
+```
+
+Total requests processed.
+
+---
+
+## error_count
+
+```python
+def error_count(self) -> int
+```
+
+Total errors encountered.
+
+---
+
+## services.morpheus.node
+
+## node
+
+```python
+module node
+```
+
+Morpheus AGENTESE Node: @node("world.morpheus")
+
+---
+
+## MorpheusManifestRendering
+
+```python
+class MorpheusManifestRendering
+```
+
+Rendering for Morpheus status manifest.
+
+### Things to Know
+
+ℹ️ This is a Renderable, not a Response. It has both to_dict() and to_text() for multi-target projection (JSON/CLI/TUI).
+  - *Verified in: `test_node.py::TestMorpheusNodeManifest`*
+
+---
+
+## CompletionRendering
+
+```python
+class CompletionRendering
+```
+
+Rendering for completion result.
+
+### Things to Know
+
+ℹ️ The `response_text` is extracted from choices[0].message.content. Multi-choice completions (n>1) are not yet supported in rendering.
+  - *Verified in: `test_node.py::TestMorpheusNodeComplete`*
+
+---
+
+## ProvidersRendering
+
+```python
+class ProvidersRendering
+```
+
+Rendering for providers list.
+
+### Things to Know
+
+ℹ️ The `filter_applied` field indicates which filter was used: "all" (admin), "enabled" (developer), or "public" (guest). Use this to explain why some providers aren't visible.
+  - *Verified in: `test_node.py::TestMorpheusNodeProviders`*
+
+---
+
+## MorpheusNode
+
+```python
+class MorpheusNode(BaseLogosNode)
+```
+
+AGENTESE node for Morpheus Gateway.
+
+### Examples
+```python
+>>> POST /agentese/world/morpheus/complete
+```
+```python
+>>> {"model": "claude-sonnet-4-20250514", "messages": [...]}
+```
+```python
+>>> await logos.invoke("world.morpheus.complete", observer, model="...", messages=[...])
+```
+```python
+>>> kg morpheus complete --model claude-sonnet-4-20250514 --message "Hello"
+```
+
+### Things to Know
+
+ℹ️ The `morpheus_persistence` dependency is injected by the DI container. If it's not registered in providers.py, you'll get None and all aspects will return error dicts.
+  - *Verified in: `test_node.py::TestMorpheusNodeHandle`*
+
+ℹ️ Observer archetype determines affordances AND filtering. A "guest" calling "providers" gets filtered results, not an error. An error only occurs for truly forbidden aspects like "configure".
+  - *Verified in: `test_node.py::TestMorpheusNodeAffordances`*
+
+ℹ️ The stream aspect returns a dict with a generator, not raw SSE. The transport layer (HTTP/CLI) is responsible for iterating.
+  - *Verified in: `test_streaming.py::TestPersistenceStreaming`*
+
+---
+
+## __init__
+
+```python
+def __init__(self, morpheus_persistence: MorpheusPersistence) -> None
+```
+
+Initialize MorpheusNode.
+
+---
+
+## manifest
+
+```python
+async def manifest(self, observer: 'Observer | Umwelt[Any, Any]') -> Renderable
+```
+
+**AGENTESE:** `world.morpheus.manifest`
+
+Manifest Morpheus status to observer.
+
+---
+
+## services.morpheus.observability
+
+## observability
+
+```python
+module observability
+```
+
+Morpheus Observability: OpenTelemetry spans and metrics for LLM gateway.
+
+---
+
+## get_morpheus_tracer
+
+```python
+def get_morpheus_tracer() -> Tracer
+```
+
+Get the morpheus tracer, creating if needed.
+
+---
+
+## get_morpheus_meter
+
+```python
+def get_morpheus_meter() -> metrics.Meter
+```
+
+Get the morpheus meter, creating if needed.
+
+---
+
+## MorpheusMetricsState
+
+```python
+class MorpheusMetricsState
+```
+
+Thread-safe in-memory metrics state for summaries.
+
+### Things to Know
+
+ℹ️ This is SEPARATE from OTEL counters. reset_morpheus_metrics() clears this state but OTEL counters keep incrementing.
+  - *Verified in: `test_observability.py - if exists`*
+
+ℹ️ The _lock is per-instance but the global _state is a singleton. All record_* functions share this lock—contention possible at scale.
+  - *Verified in: `persistence.py record_completion calls`*
+
+---
+
+## record_completion
+
+```python
+def record_completion(model: str, provider: str, archetype: str, duration_s: float, tokens_in: int, tokens_out: int, success: bool, streaming: bool=False, estimated_cost_usd: float=0.0) -> None
+```
+
+Record metrics for a completed LLM request.
+
+---
+
+## record_rate_limit
+
+```python
+def record_rate_limit(archetype: str, model: str='unknown') -> None
+```
+
+Record a rate limit hit.
+
+---
+
+## record_time_to_first_token
+
+```python
+def record_time_to_first_token(model: str, provider: str, ttft_s: float) -> None
+```
+
+Record time to first token for streaming requests.
+
+---
+
+## MorpheusTelemetry
+
+```python
+class MorpheusTelemetry
+```
+
+Telemetry wrapper for Morpheus gateway operations.
+
+### Things to Know
+
+ℹ️ The context managers are async but use sync tracer.start_as_current_span. This is intentional—OTEL spans are sync, only our I/O is async.
+  - *Verified in: `persistence.py::complete uses trace_completion`*
+
+ℹ️ Duration is recorded in the finally block, so it includes error handling time. For precise LLM latency, check provider metrics.
+  - *Verified in: `test_observability.py::test_tracing - if exists`*
+
+---
+
+## get_morpheus_metrics_summary
+
+```python
+def get_morpheus_metrics_summary() -> dict[str, Any]
+```
+
+Get a summary of current Morpheus metrics.
+
+---
+
+## reset_morpheus_metrics
+
+```python
+def reset_morpheus_metrics() -> None
+```
+
+Reset in-memory metrics state.
+
+---
+
+## trace_completion
+
+```python
+async def trace_completion(self, request: 'ChatRequest', archetype: str, provider: str='unknown', **extra_attributes: Any) -> AsyncIterator[Span]
+```
+
+Trace a completion request.
+
+---
+
+## trace_stream
+
+```python
+async def trace_stream(self, request: 'ChatRequest', archetype: str, provider: str='unknown', **extra_attributes: Any) -> AsyncIterator[Span]
+```
+
+Trace a streaming request.
+
+---
+
+## services.morpheus.persistence
+
+## persistence
+
+```python
+module persistence
+```
+
+Morpheus Persistence: Domain semantics for LLM gateway operations.
+
+---
+
+## CompletionResult
+
+```python
+class CompletionResult
+```
+
+Result of a completion operation with metadata.
+
+### Things to Know
+
+🚨 **Critical:** The `telemetry_span_id` is only populated when telemetry is enabled. Always check for None before using for tracing correlation.
+  - *Verified in: `test_node.py::TestMorpheusNodeComplete`*
+
+ℹ️ `latency_ms` includes network and processing time, not just LLM inference. For streaming, this is total time from request to last chunk.
+  - *Verified in: `test_streaming.py::TestPersistenceStreaming`*
+
+---
+
+## ProviderStatus
+
+```python
+class ProviderStatus
+```
+
+Status of a single provider.
+
+### Things to Know
+
+ℹ️ `available` is checked at query time via adapter.is_available(). This may involve network calls—cache results if calling frequently.
+  - *Verified in: `test_node.py::TestMorpheusNodeProviders`*
+
+ℹ️ `request_count` comes from the adapter's health_check(), not the gateway's counters. Adapters track their own metrics independently.
+  - *Verified in: `test_node.py::test_admin_sees_all_providers`*
+
+---
+
+## MorpheusStatus
+
+```python
+class MorpheusStatus
+```
+
+Overall Morpheus health status.
+
+### Things to Know
+
+ℹ️ `healthy` is True when AT LEAST ONE provider is available. This means "degraded but functional"—not "fully healthy". Check providers_healthy vs providers_total for full picture.
+  - *Verified in: `test_node.py::TestMorpheusNodeManifest`*
+
+ℹ️ `uptime_seconds` is from MorpheusPersistence creation, not system boot. Each persistence instance tracks its own uptime.
+  - *Verified in: `test_node.py::test_manifest_returns_status`*
+
+---
+
+## MorpheusPersistence
+
+```python
+class MorpheusPersistence
+```
+
+Domain semantics for Morpheus Gateway.
+
+### Things to Know
+
+ℹ️ Telemetry is ENABLED by default. Pass telemetry_enabled=False for tests to avoid OTEL overhead and side effects.
+  - *Verified in: `test_streaming.py::persistence_with_streaming`*
+
+ℹ️ This class accesses gateway._providers and gateway._route_model() which are private. This is intentional—persistence OWNS the gateway and needs internal access for telemetry tagging.
+  - *Verified in: `test_node.py::TestMorpheusNodeProviders`*
+
+🚨 **Critical:** RateLimitError is re-raised after recording metrics. The caller must handle it—it's not silently swallowed.
+  - *Verified in: `test_rate_limit.py::TestPersistenceRateLimiting`*
+
+---
+
+## __init__
+
+```python
+def __init__(self, gateway: Optional[MorpheusGateway]=None, *, telemetry_enabled: bool=True) -> None
+```
+
+Initialize MorpheusPersistence.
+
+---
+
+## gateway
+
+```python
+def gateway(self) -> MorpheusGateway
+```
+
+Access the underlying gateway.
+
+---
+
+## manifest
+
+```python
+async def manifest(self) -> MorpheusStatus
+```
+
+**AGENTESE:** `world.morpheus.manifest`
+
+Return Morpheus status.
+
+---
+
+## complete
+
+```python
+async def complete(self, request: ChatRequest, archetype: str='guest') -> CompletionResult
+```
+
+**AGENTESE:** `world.morpheus.complete`
+
+Process a chat completion request with telemetry.
+
+---
+
+## stream
+
+```python
+async def stream(self, request: ChatRequest, archetype: str='guest') -> AsyncIterator[StreamChunk]
+```
+
+**AGENTESE:** `world.morpheus.stream`
+
+Process a streaming chat completion request with telemetry.
+
+---
+
+## list_providers
+
+```python
+async def list_providers(self, *, enabled_only: bool=False, public_only: bool=False) -> list[ProviderStatus]
+```
+
+**AGENTESE:** `world.morpheus.providers`
+
+List providers with optional filtering.
+
+---
+
+## route_info
+
+```python
+async def route_info(self, model: str) -> dict[str, Any]
+```
+
+**AGENTESE:** `world.morpheus.route`
+
+Get routing info for a model.
+
+---
+
+## health
+
+```python
+async def health(self) -> dict[str, Any]
+```
+
+**AGENTESE:** `world.morpheus.health`
+
+Get health check info.
+
+---
+
+## rate_limit_status
+
+```python
+def rate_limit_status(self, archetype: str) -> dict[str, Any]
+```
+
+**AGENTESE:** `world.morpheus.rate_limit`
+
+Get rate limit status for an archetype.
+
+---
+
+## services.morpheus.types
+
+## types
+
+```python
+module types
+```
+
+Morpheus Types: OpenAI-compatible request/response schemas.
+
+---
+
+## ChatMessage
+
+```python
+class ChatMessage
+```
+
+A single message in the conversation.
+
+### Things to Know
+
+ℹ️ The `name` field is ONLY for function calls, not user display names. Using it for other purposes may confuse downstream providers.
+  - *Verified in: `test_streaming.py::TestMockAdapterStreaming`*
+
+---
+
+## ChatRequest
+
+```python
+class ChatRequest
+```
+
+OpenAI-compatible chat completion request.
+
+### Things to Know
+
+ℹ️ The `stream` flag is informational here—streaming is controlled by which method you call (complete vs stream), not by this flag.
+  - *Verified in: `test_streaming.py::TestGatewayStreaming`*
+
+ℹ️ The `user` field is for rate limiting correlation, not auth. Use observer archetype for access control, user for per-user limits.
+  - *Verified in: `test_rate_limit.py::TestGatewayRateLimiting`*
+
+---
+
+## Usage
+
+```python
+class Usage
+```
+
+Token usage statistics.
+
+### Things to Know
+
+ℹ️ For streaming, token counts are ESTIMATES unless the provider sends a final usage summary. Don't rely on exact counts during stream.
+  - *Verified in: `test_streaming.py::TestStreamChunk`*
+
+---
+
+## ChatChoice
+
+```python
+class ChatChoice
+```
+
+A single completion choice.
+
+### Things to Know
+
+🚨 **Critical:** `finish_reason="length"` means max_tokens was hit—output may be incomplete. Always check finish_reason before assuming full response.
+  - *Verified in: `test_streaming.py::TestStreamChunk`*
+
+---
+
+## ChatResponse
+
+```python
+class ChatResponse
+```
+
+OpenAI-compatible chat completion response.
+
+### Things to Know
+
+ℹ️ The `id` field is generated uniquely per response. Use it for correlating logs and telemetry across the request lifecycle.
+  - *Verified in: `test_streaming.py::test_to_dict_serialization`*
+
+🚨 **Critical:** `usage` may be None for some providers or streaming. Always null-check before accessing token counts.
+  - *Verified in: `test_node.py::TestMorpheusNodeComplete`*
+
+---
+
+## MorpheusError
+
+```python
+class MorpheusError
+```
+
+Error response following OpenAI error format.
+
+### Things to Know
+
+ℹ️ Error types match OpenAI: "invalid_request_error", "rate_limit_error", "authentication_error", "server_error". Use these for client compatibility.
+  - *Verified in: `test_rate_limit.py::TestRateLimitError`*
+
+---
+
+## StreamDelta
+
+```python
+class StreamDelta
+```
+
+Delta content in a streaming chunk.
+
+### Things to Know
+
+ℹ️ Both `role` and `content` can be None in the same delta—this is valid for the final chunk. Check for finish_reason instead.
+  - *Verified in: `test_streaming.py::test_final_creates_finish_chunk`*
+
+---
+
+## StreamChoice
+
+```python
+class StreamChoice
+```
+
+A single streaming choice.
+
+### Things to Know
+
+ℹ️ `finish_reason` is ONLY set on the final chunk. During streaming, all chunks have finish_reason=None until the last one.
+  - *Verified in: `test_streaming.py::test_stream_returns_chunks`*
+
+---
+
+## StreamChunk
+
+```python
+class StreamChunk
+```
+
+OpenAI-compatible streaming chunk.
+
+### Things to Know
+
+ℹ️ All chunks in a stream share the SAME `id`. Use this to group chunks from the same completion. Don't use it for uniqueness.
+  - *Verified in: `test_streaming.py::test_from_text_creates_chunk`*
+
+ℹ️ Use to_sse() for Server-Sent Events format. The trailing \n\n is required by SSE spec—don't strip it.
+  - *Verified in: `test_streaming.py::test_to_sse_format`*
+
+---
+
+## to_dict
+
+```python
+def to_dict(self) -> dict[str, Any]
+```
+
+Convert to OpenAI API format.
+
+---
+
+## from_dict
+
+```python
+def from_dict(cls, data: dict[str, Any]) -> 'ChatRequest'
+```
+
+Create from dict (e.g., JSON body).
+
+---
+
+## from_text
+
+```python
+def from_text(cls, text: str, model: str, prompt_tokens: int=0, completion_tokens: int=0) -> 'ChatResponse'
+```
+
+Create response from plain text.
+
+---
+
+## to_sse
+
+```python
+def to_sse(self) -> str
+```
+
+Convert to Server-Sent Events format.
+
+---
+
+## from_text
+
+```python
+def from_text(cls, text: str, chunk_id: str, model: str) -> 'StreamChunk'
+```
+
+Create a content chunk from plain text.
+
+---
+
+## final
+
+```python
+def final(cls, chunk_id: str, model: str) -> 'StreamChunk'
+```
+
+Create a final chunk with finish_reason.
 
 ---
 
@@ -9696,6 +12966,14 @@ module categorical_checker
 ```
 
 Categorical Checker: Practical categorical law verification with LLM assistance.
+
+### Things to Know
+
+🚨 **Critical:** Empty counter-example list returns {"strategies": [], "analysis": "No violations found"}. Always check the analysis message - an empty list is success, not an error.
+  - *Verified in: `test_categorical_checker.py::TestCounterExampleGeneration::test_empty_counter_examples_handled`*
+
+ℹ️ Functor verification may return DIFFERENT law names for different checks. Check for law_name in ["functor_laws", "functor_identity", "functor_composition"] rather than exact equality.
+  - *Verified in: `test_categorical_checker.py::TestFunctorLaws::test_functor_verification_returns_result`*
 
 ---
 
@@ -9991,6 +13269,14 @@ module generative_loop
 
 Generative Loop Engine: The closed cycle from intent to implementation and back.
 
+### Things to Know
+
+ℹ️ Roundtrip may LOSE nodes during compression if node count is small. The compression allows up to 50% node loss for small topologies (<=2 nodes). This is intentional - consolidation is valid compression.
+  - *Verified in: `test_generative_loop.py::TestGenerativeLoopRoundTrip::test_roundtrip_preserves_node_count`*
+
+ℹ️ Refinement increments the PATCH version, not major/minor. Version goes from 1.0.0 to 1.0.1 after refinement. This is semantic versioning for specs - refinements are backwards compatible.
+  - *Verified in: `test_generative_loop.py::TestSpecRefinement::test_refine_increments_version`*
+
 ---
 
 ## AGENTESEPath
@@ -10262,6 +13548,14 @@ module graph_engine
 ```
 
 Graph Engine: Derivation graph construction from specifications.
+
+### Things to Know
+
+🚨 **Critical:** Contradictions use HEURISTIC detection, not formal logic. The engine looks for keyword pairs like "synchronous/asynchronous" or "must/must not" in descriptions. A contradiction may be a false positive if context disambiguates the usage.
+  - *Verified in: `test_graph_engine.py::TestContradictionDetection::test_detect_exclusive_conflicts`*
+
+🚨 **Critical:** Principle nodes are ALWAYS created (7 kgents principles) regardless of spec content. They are the roots of the derivation graph. Implementation nodes without paths to these principles are flagged as orphaned.
+  - *Verified in: `test_graph_engine.py::TestVerificationGraphCorrectness::test_principle_nodes_created`*
 
 ---
 
@@ -13338,6 +16632,14 @@ module grant
 
 Grant: Negotiated Permission Contract.
 
+### Things to Know
+
+ℹ️ Grant status lifecycle is DIRECTIONAL. EXPIRED is terminal unless explicitly renewed. REVOKED can be re-granted, but EXPIRED cannot. Check is_active property rather than status == GRANTED for safety.
+  - *Verified in: `test_ritual.py::test_grant_revocation_invalidates_ritual`*
+
+🚨 **Critical:** GateFallback.DENY is the SAFE DEFAULT for timeout. If a ReviewGate times out, the fallback determines behavior. DENY blocks, ALLOW_LIMITED reduces scope, ESCALATE delegates. Always set explicit fallback.
+  - *Verified in: `test_covenant.py::test_covenant_gate_fallback`*
+
 ---
 
 ## generate_grant_id
@@ -14749,6 +18051,14 @@ module mark
 
 Mark: The Atomic Unit of Execution Artifact.
 
+### Things to Know
+
+ℹ️ Marks are IMMUTABLE (frozen=True). You cannot modify a Mark after creation. To "update" metadata, create a new Mark linked via CONTINUES relation to the original.
+  - *Verified in: `test_trace_node.py::test_mark_immutability`*
+
+ℹ️ MarkLink.source can be MarkId OR PlanPath. This allows linking marks to Forest plan files directly. When traversing links, check the type before assuming you have a MarkId.
+  - *Verified in: `test_session_walk.py::TestForestIntegration::test_walk_with_root_plan`*
+
 ---
 
 ## generate_mark_id
@@ -15665,16 +18975,16 @@ Playbook: Lawful Workflow Orchestration.
 ### Things to Know
 
 🚨 **Critical:** Always verify Grant is GRANTED status before creating Playbook. Passing a PENDING or REVOKED Grant raises MissingGrant.
-  - *Verified in: `test_playbook.py::test_grant_required`*
+  - *Verified in: `test_ritual.py::test_ritual_requires_grant`*
 
 ℹ️ Phase transitions are DIRECTED—you cannot skip phases. SENSE → ACT → REFLECT → SENSE (cycle). InvalidPhaseTransition if wrong.
-  - *Verified in: `test_playbook.py::test_phase_ordering`*
+  - *Verified in: `test_ritual.py::test_invalid_transitions_blocked`*
 
 ℹ️ Guards evaluate at phase boundaries, not during phase. Budget exhaustion during ACT phase only fails at ACT → REFLECT.
-  - *Verified in: `test_playbook.py::test_guard_evaluation`*
+  - *Verified in: `test_ritual.py::test_guard_evaluation_recorded`*
 
 🚨 **Critical:** from_dict() does NOT restore _grant and _scope objects. You must reattach them manually after deserialization.
-  - *Verified in: `test_playbook.py::test_serialization_roundtrip`*
+  - *Verified in: `test_ritual.py::test_ritual_roundtrip`*
 
 ---
 
@@ -17761,6 +21071,14 @@ module session_walk
 ```
 
 Session-Walk Bridge: Connects CLI Sessions to WARP Walks.
+
+### Things to Know
+
+ℹ️ Starting a second Walk for a session with active Walk raises ValueError. Complete or abandon the current Walk first. Check has_walk() before calling start_walk_for_session().
+  - *Verified in: `test_session_walk.py::TestLaw1SessionOwnsWalk::test_cannot_start_second_walk_when_active`*
+
+🚨 **Critical:** advance_walk() returns False silently for sessions without Walk. It does NOT raise an exception. Always check has_walk() first if you need to know whether the Walk exists.
+  - *Verified in: `test_session_walk.py::TestLaw3OptionalBinding::test_advance_walk_returns_false_without_walk`*
 
 ---
 
@@ -21041,6 +24359,6 @@ Get the pipeline with optional parameter overrides.
 
 ---
 
-*2033 symbols, 21 teaching moments*
+*2277 symbols, 203 teaching moments*
 
 *Generated by Living Docs — 2025-12-21*
