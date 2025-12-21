@@ -256,7 +256,7 @@ Agents leave proofs as traces. Future agents follow the proven paths.
 - **Heritage**: `spec/heritage.md` §12 (Kleppmann), §10 (Polynomial Functors)
 - **Typed AGENTESE**: `spec/principles.md` AD-013
 - **ASHC Core**: `spec/protocols/ashc.md` (to be created)
-- **Witness Service**: `spec/agents/witness.md`
+- **Witness Service**: `spec/protocols/witness-primitives.md`
 - **Polynomial Agents**: `spec/principles.md` AD-002
 
 ---

@@ -6,8 +6,8 @@
 
 ## Summary
 
-- **Active Plans**: 16 (pruned from 28)
-- **Test Count**: 20,800+ (Foundry 48, Projector 223, Witness 461+, Garden 789, Brain 212+, Metabolic 53)
+- **Active Plans**: 17 (pruned from 28, +1 proof-generation)
+- **Test Count**: 20,829+ (Foundry 48, Projector 223, Witness 461+, Garden 789, Brain 212+, Metabolic 53, ASHC Proof 29)
 - **Hero Path**: Brain 100% + Gardener 100% + Gestalt 100%
 
 ---
@@ -17,10 +17,10 @@
 ### Metabolic Development (Primary Workstream)
 | Plan | Status | Notes |
 |------|--------|-------|
-| `metabolic.md` | **ACTIVE** | Phase 0 ✅, Phase 1 ✅ (partial), Phase 2.1 ✅ |
+| `metabolic.md` | **ACTIVE** | Phase 0-1.3 ✅, Phase 2.1 ✅ |
 | Phase 0: Foundation | ✅ complete | Stigmergy, Brain adapter, Session polynomial |
 | Phase 1.1-1.2: Circadian | ✅ complete | Resonance, Archaeology, Serendipity (24 tests) |
-| Phase 1.3: Morning Flow | pending | Wire to `kg coffee begin` CLI |
+| Phase 1.3: Morning Flow | ✅ complete | `kg coffee begin` → circadian + hydration |
 | Phase 2.1: ASHC Continuous | ✅ complete | BackgroundEvidencing, DiversityScore (29 tests) |
 | D-gent Persistence | 📋 handoff | `HANDOFF_DGENT_PERSISTENCE.md` written |
 
@@ -47,6 +47,14 @@
 | Plan | Status | Notes |
 |------|--------|-------|
 | `foundry-synthesis.md` | **Phase 4 ✅** | Agent Foundry Service complete, 414 tests, Living Docs enhanced (Phase 5: Promotion next) |
+
+### Proof Generation (New)
+| Plan | Status | Notes |
+|------|--------|-------|
+| `proof-generation-implementation.md` | **ACTIVE** | 5-phase, 10-week implementation |
+| Phase 0: Foundation | ✅ complete | Contracts (29 tests), service structure |
+| Phase 1: Checker Bridge | **next** | Dafny integration |
+| Phases 2-5 | planning | Obligations → Search → DB → Integration |
 
 ### Research
 | Plan | Status | Notes |
@@ -81,4 +89,4 @@
 
 ---
 
-*Last verified: 2025-12-21 | Metabolic Phase 0-1.2, 2.1 complete*
+*Last verified: 2025-12-21 | Metabolic Phase 0-1.3, 2.1 complete*

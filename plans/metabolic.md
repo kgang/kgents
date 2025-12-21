@@ -12,7 +12,7 @@
   | **0** | 0.3 Session Polynomial | ✅ Complete | 4 | `metabolism/polynomial.py` |
   | **1** | 1.1 Circadian Resonance | ✅ Complete | 24 | `coffee/circadian.py` |
   | **1** | 1.2 Serendipity | ✅ Complete | (included above) | (same file) |
-  | **1** | 1.3 Full Morning Flow | ⏳ Pending | - | Wire to CLI |
+  | **1** | 1.3 Full Morning Flow | ✅ Complete | - | `coffee.py:_run_begin` |
   | **2** | 2.1 ASHC Continuous | ✅ Complete | 29 | `metabolism/evidencing.py` |
   | **2** | 2.2 Interactive Text | ❌ Not started | - | - |
   | **2** | 2.3 Verification Graph | ❌ Not started | - | - |
