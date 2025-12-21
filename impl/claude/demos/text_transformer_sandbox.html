@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>kgents sandbox: text-transformer-agent</title>
+    <meta name="description" content="Sandboxed execution of TextTransformerAgent agent via Pyodide">
+    <meta name="generator" content="kgents WASMProjector">
+
+    <!-- Pyodide -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<style>
+    :root {
+        --bg: #1a1a2e;
+        --surface: #16213e;
+        --text: #e8e8e8;
+        --accent: #0f3460;
+        --highlight: #e94560;
+        --success: #4ecca3;
+        --warning: #ffc947;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem;
+    }
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .header h1 {
+        font-size: 1.5rem;
+        font-weight: 400;
+    }
+    .badge {
+        background: var(--highlight);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .sandbox-indicator {
+        background: var(--success);
+        color: var(--bg);
+    }
+    .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        flex: 1;
+    }
+    @media (max-width: 768px) {
+        .container { grid-template-columns: 1fr; }
+    }
+    .panel {
+        background: var(--surface);
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+    .panel-header {
+        font-size: 0.875rem;
+        color: var(--highlight);
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    textarea, .output {
+        flex: 1;
+        background: var(--bg);
+        border: 1px solid var(--accent);
+        border-radius: 0.25rem;
+        padding: 1rem;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.875rem;
+        resize: none;
+        min-height: 200px;
+    }
+    textarea:focus {
+        outline: none;
+        border-color: var(--highlight);
+    }
+    .output {
+        overflow-y: auto;
+        white-space: pre-wrap;
+    }
+    .controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    button {
+        background: var(--highlight);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.875rem;
+        transition: opacity 0.2s;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.secondary {
+        background: var(--accent);
+    }
+    .status {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+    }
+    .status.loading { background: var(--warning); color: var(--bg); }
+    .status.ready { background: var(--success); color: var(--bg); }
+    .status.error { background: var(--highlight); }
+    .metrics {
+        margin-top: 1rem;
+        font-size: 0.75rem;
+        color: var(--text);
+        opacity: 0.7;
+    }
+    .metrics span { margin-right: 1.5rem; }
+</style>
+</head>
+<body>
+    <div class="header">
+        <h1>text-transformer-agent</h1>
+        <span class="badge sandbox-indicator">SANDBOXED</span>
+
+    </div>
+
+    <div id="status" class="status loading">Loading Pyodide runtime...</div>
+
+    <div class="container">
+        <div class="panel">
+            <div class="panel-header">Input</div>
+            <textarea id="input" placeholder="Enter input for the agent..."></textarea>
+            <div class="controls">
+                <button id="run-btn" disabled>Run Agent</button>
+                <button id="clear-btn" class="secondary">Clear</button>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">Output</div>
+            <div id="output" class="output"></div>
+            <div id="metrics" class="metrics" style="display: none;">
+                <span id="latency">Latency: --</span>
+                <span id="output-size">Size: --</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 2rem; font-size: 0.75rem; opacity: 0.5;">
+        Capabilities: stateful • observable | Runtime: Pyodide 0.24.1 | Isolation: Browser WASM Sandbox
+    </div>
+<script>
+                let pyodide = null;
+                const statusEl = document.getElementById('status');
+                const inputEl = document.getElementById('input');
+                const outputEl = document.getElementById('output');
+                const runBtn = document.getElementById('run-btn');
+                const clearBtn = document.getElementById('clear-btn');
+                const metricsEl = document.getElementById('metrics');
+                const latencyEl = document.getElementById('latency');
+                const outputSizeEl = document.getElementById('output-size');
+
+                async function initPyodide() {
+                    try {
+                        statusEl.textContent = 'Loading Pyodide...';
+                        pyodide = await loadPyodide();
+
+                        statusEl.textContent = 'Initializing agent...';
+
+                        // Load agent code
+                        await pyodide.runPythonAsync(`
+# Minimal agent runtime for WASM sandbox
+from dataclasses import dataclass
+from typing import TypeVar, Generic, Any
+from abc import ABC, abstractmethod
+
+A = TypeVar('A')
+B = TypeVar('B')
+
+class Agent(ABC, Generic[A, B]):
+    @property
+    @abstractmethod
+    def name(self) -> str: ...
+
+    @abstractmethod
+    async def invoke(self, input: A) -> B: ...
+
+
+# IndexedDB persistence via js bridge
+async def load_state():
+    from js import indexedDB
+    # Simplified: use localStorage fallback
+    from js import localStorage
+    import json
+    stored = localStorage.getItem('agent_state')
+    return json.loads(stored) if stored else {}
+
+async def save_state(state):
+    from js import localStorage
+    import json
+    localStorage.setItem('agent_state', json.dumps(state))
+
+
+import time
+_start_time = None
+
+def start_metrics():
+    global _start_time
+    _start_time = time.time()
+
+def get_metrics():
+    if _start_time is None:
+        return {}
+    return {'latency_ms': (time.time() - _start_time) * 1000}
+
+
+# Agent implementation
+class TextTransformerAgent(Agent[str, str]):
+    """
+    Transforms text in various ways.
+
+    This agent runs COMPLETELY in the browser sandbox:
+    - No server required after loading
+    - No filesystem access
+    - No network access
+    - Pure Python via Pyodide WASM
+    """
+
+    @property
+    def name(self) -> str:
+        return "text-transformer"
+
+    async def invoke(self, text: str) -> str:
+        """Transform input text."""
+        # Simple transformations
+        lines = [
+            f"Original: {text}",
+            f"UPPERCASE: {text.upper()}",
+            f"lowercase: {text.lower()}",
+            f"Title Case: {text.title()}",
+            f"Reversed: {text[::-1]}",
+            f"Length: {len(text)} characters",
+            f"Words: {len(text.split())} words",
+        ]
+        return "\\n".join(lines)
+
+
+# Create agent instance
+_agent = TextTransformerAgent()
+
+async def run_agent(input_text):
+    start_metrics()
+    result = await _agent.invoke(input_text)
+    return str(result)
+`);
+
+                        statusEl.textContent = 'Ready — Agent loaded in sandbox';
+                        statusEl.className = 'status ready';
+                        runBtn.disabled = false;
+                    } catch (err) {
+                        statusEl.textContent = 'Error: ' + err.message;
+                        statusEl.className = 'status error';
+                        console.error(err);
+                    }
+                }
+
+                async function runAgent() {
+                    if (!pyodide) return;
+
+                    const input = inputEl.value;
+                    if (!input.trim()) {
+                        outputEl.textContent = 'Please enter some input.';
+                        return;
+                    }
+
+                    runBtn.disabled = true;
+                    outputEl.textContent = 'Running...';
+                    const startTime = performance.now();
+
+                    try {
+                        // Escape input for Python string
+                        const escapedInput = input.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                        const result = await pyodide.runPythonAsync(`await run_agent('${escapedInput}')`);
+
+                        const elapsed = performance.now() - startTime;
+                        outputEl.textContent = result;
+
+                        // Show metrics
+                        metricsEl.style.display = 'block';
+                        latencyEl.textContent = 'Latency: ' + elapsed.toFixed(2) + 'ms';
+                        outputSizeEl.textContent = 'Size: ' + result.length + ' chars';
+
+                    } catch (err) {
+                        outputEl.textContent = 'Error: ' + err.message;
+                        console.error(err);
+                    } finally {
+                        runBtn.disabled = false;
+                    }
+                }
+
+                // Event listeners
+                runBtn.addEventListener('click', runAgent);
+                clearBtn.addEventListener('click', () => {
+                    inputEl.value = '';
+                    outputEl.textContent = '';
+                    metricsEl.style.display = 'none';
+                });
+
+                // Ctrl+Enter to run
+                inputEl.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && e.key === 'Enter') {
+                        runAgent();
+                    }
+                });
+
+                // Initialize on load
+                initPyodide();
+            </script>
+</body>
+</html>
