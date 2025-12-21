@@ -303,6 +303,12 @@ impl/claude/agents/j/target_selector.py         # Target Selection: (Reality, Co
 impl/claude/agents/j/_tests/test_target_selector.py  # 45 tests for target selection
 ```
 
+### Created (Phase 3) ✅
+```
+impl/claude/system/projector/marimo.py            # MarimoProjector + MarimoArtifact (350+ lines)
+impl/claude/system/projector/_tests/test_marimo.py  # 54 tests for Marimo projector
+```
+
 ### Modified (Phase 1) ✅
 ```
 impl/claude/protocols/cli/handlers/a_gent.py        # --target, --stream, --trace flags
@@ -316,6 +322,12 @@ impl/claude/system/projector/__init__.py             # Export Docker, Compose, I
 ```
 impl/claude/system/projector/__init__.py             # Export WASM, WASMArtifact
 impl/claude/protocols/cli/commands/agent/manifest.py # Added wasm target routing
+```
+
+### Modified (Phase 3) ✅
+```
+impl/claude/system/projector/__init__.py             # Export Marimo, MarimoArtifact
+impl/claude/protocols/cli/commands/agent/manifest.py # Added marimo target routing
 ```
 
 ### Planned (Future Phases)
