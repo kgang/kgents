@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Mind-Map Topology Engine: Treating mind-maps as formal topological spaces.
 

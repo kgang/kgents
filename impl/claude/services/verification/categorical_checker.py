@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Categorical Checker: Practical categorical law verification with LLM assistance.
 

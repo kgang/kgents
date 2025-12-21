@@ -302,11 +302,9 @@ class MarimoProjector(Projector[str]):
 
     def _generate_state_management(self, agent_name: str) -> str:
         """Generate mo.state() for persistent state."""
-        return textwrap.dedent(f"""
-            # State management for {agent_name}
-            agent_state, set_agent_state = mo.state({{}})
-            run_history, set_run_history = mo.state([])
-        """).strip()
+        return f"""# State management for {agent_name}
+agent_state, set_agent_state = mo.state({{}})
+run_history, set_run_history = mo.state([])"""
 
     def _generate_main_cell(
         self,
@@ -317,7 +315,9 @@ class MarimoProjector(Projector[str]):
         has_observable: bool,
         has_streamable: bool,
     ) -> str:
-        """Generate the main interactive cell."""
+        """Generate the main interactive cell with clean indentation."""
+        lines: list[str] = []
+
         # Build capability badges
         badges = []
         if has_stateful:
@@ -326,108 +326,141 @@ class MarimoProjector(Projector[str]):
             badges.append("streaming")
         if has_observable:
             badges.append("observable")
-
         caps_text = " • ".join(badges) if badges else "minimal"
-        persona_line = (
-            f'\nmo.callout(mo.md("**Persona**: {persona}"), kind="info"),' if persona else ""
-        )
 
-        # Observable metrics
-        metrics_code = ""
+        # Header comment
+        lines.append(f"# {agent_name} — Interactive Exploration")
+        lines.append("")
+
+        # Observable metrics functions
         if has_observable:
-            metrics_code = textwrap.dedent("""
-
-                # Observable metrics
-                _start_time = None
-
-                def start_metrics():
-                    global _start_time
-                    _start_time = time.time()
-
-                def get_metrics():
-                    if _start_time is None:
-                        return {"latency_ms": 0}
-                    return {"latency_ms": (time.time() - _start_time) * 1000}
-            """)
-
-        # Streaming progress
-        progress_code = ""
-        if has_streamable:
-            progress_code = "\n    progress = mo.status.progress_bar()"
-
-        # State persistence
-        state_save = ""
-        if has_stateful:
-            state_save = textwrap.dedent("""
-
-                    # Update state
-                    set_run_history(lambda h: h + [{
-                        "input": user_input.value,
-                        "output": str(result),
-                        "timestamp": time.time() if 'time' in dir() else 0,
-                    }])
-            """)
-
-        return textwrap.dedent(f"""
-            # {agent_name} — Interactive Exploration
-            {metrics_code}
-            # Create agent instance
-            _agent = {class_name}()
-
-            # Input widget
-            user_input = mo.ui.text_area(
-                placeholder="Enter input for the agent...",
-                label="Input",
-            )
-
-            # Run button
-            run_button = mo.ui.run_button(label="Run Agent")
-
-            async def run_agent():
-                if not user_input.value.strip():
-                    return mo.callout(mo.md("Please enter some input."), kind="warn")
-                {"start_metrics()" if has_observable else ""}{progress_code}
-                try:
-                    result = await _agent.invoke(user_input.value)
-                    {"metrics = get_metrics()" if has_observable else ""}{state_save}
-                    newline = chr(10)
-                    latency_callout = {"mo.callout(mo.md('Latency: ' + str(round(metrics['latency_ms'], 2)) + 'ms'), kind='info')" if has_observable else "None"}
-                    return mo.vstack([
-                        mo.md(f"**Output:**"),
-                        mo.md(f"```{{newline}}{{result}}{{newline}}```"),
-                    ] + ([latency_callout] if latency_callout else []))
-                except Exception as e:
-                    return mo.callout(mo.md(f"Error: {{e}}"), kind="danger")
-
-            # Main cell output
-            mo.vstack([
-                mo.hstack([
-                    mo.md("## {agent_name}"),
-                    mo.md("**Capabilities**: {caps_text}"),{persona_line}
-                ]),
-                user_input,
-                run_button,
-                mo.md("---"),
-                mo.md("**Output:**") if run_button.value else mo.md("*Click Run to execute*"),
-                asyncio.run(run_agent()) if run_button.value else None,
+            lines.extend([
+                "# Observable metrics",
+                "_start_time = None",
+                "",
+                "def start_metrics():",
+                "    global _start_time",
+                "    _start_time = time.time()",
+                "",
+                "def get_metrics():",
+                "    if _start_time is None:",
+                '        return {"latency_ms": 0}',
+                '    return {"latency_ms": (time.time() - _start_time) * 1000}',
+                "",
             ])
-        """).strip()
+
+        # Agent instance
+        lines.extend([
+            "# Create agent instance",
+            f"_agent = {class_name}()",
+            "",
+        ])
+
+        # Input widget
+        lines.extend([
+            "# Input widget",
+            "user_input = mo.ui.text_area(",
+            '    placeholder="Enter input for the agent...",',
+            '    label="Input",',
+            ")",
+            "",
+        ])
+
+        # Run button
+        lines.extend([
+            "# Run button",
+            'run_button = mo.ui.run_button(label="Run Agent")',
+            "",
+        ])
+
+        # run_agent function
+        lines.append("async def run_agent():")
+        lines.append("    if not user_input.value.strip():")
+        lines.append('        return mo.callout(mo.md("Please enter some input."), kind="warn")')
+
+        if has_observable:
+            lines.append("    start_metrics()")
+
+        if has_streamable:
+            lines.append("    progress = mo.status.progress_bar()")
+
+        lines.append("    try:")
+        lines.append("        result = await _agent.invoke(user_input.value)")
+
+        if has_observable:
+            lines.append("        metrics = get_metrics()")
+
+        if has_stateful:
+            lines.extend([
+                "        # Update run history",
+                "        set_run_history(lambda h: h + [{",
+                '            "input": user_input.value,',
+                '            "output": str(result),',
+                "        }])",
+            ])
+
+        # Build return statement
+        lines.append("        output_parts = [")
+        lines.append('            mo.md("**Result:**"),')
+        lines.append('            mo.md(f"```\\n{result}\\n```"),')
+        lines.append("        ]")
+
+        if has_observable:
+            lines.append('        output_parts.append(mo.callout(mo.md(f"Latency: {metrics[\'latency_ms\']:.2f}ms"), kind="info"))')
+
+        lines.append("        return mo.vstack(output_parts)")
+        lines.append("    except Exception as e:")
+        lines.append('        return mo.callout(mo.md(f"Error: {e}"), kind="danger")')
+        lines.append("")
+
+        # Main cell output
+        lines.append("# Main cell output")
+
+        # Build header items
+        header_items = [
+            f'mo.md("## {agent_name}")',
+            f'mo.md("**Capabilities**: {caps_text}")',
+        ]
+        if persona:
+            header_items.append(f'mo.callout(mo.md("**Persona**: {persona}"), kind="info")')
+
+        lines.append("mo.vstack([")
+        lines.append("    mo.hstack([")
+        for item in header_items:
+            lines.append(f"        {item},")
+        lines.append("    ]),")
+        lines.append("    user_input,")
+        lines.append("    run_button,")
+        lines.append('    mo.md("---"),')
+        lines.append('    asyncio.run(run_agent()) if run_button.value else mo.md("*Click Run to execute*"),')
+        lines.append("])")
+
+        return "\n".join(lines)
 
     def _generate_source_viewer(self, agent_source: str, class_name: str) -> str:
         """Generate collapsible source code viewer."""
-        # Escape the source for embedding in f-string
-        escaped_source = agent_source.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
+        # Escape the source properly for embedding
+        escaped = agent_source.replace("\\", "\\\\").replace('"', '\\"')
+        # Convert to raw string lines for clean output
+        source_lines = escaped.split("\n")
 
-        return textwrap.dedent(f'''
-            # Source viewer
-            mo.accordion({{
-                "View {class_name} Source": mo.md(f"""
-            ```python
-            {escaped_source}
-            ```
-            """)
-            }})
-        ''').strip()
+        lines = [
+            "# Source viewer",
+            "mo.accordion({",
+            f'    "View {class_name} Source": mo.md(',
+        ]
+
+        # Use triple-quoted string for the source
+        lines.append('        """')
+        lines.append("```python")
+        for src_line in source_lines:
+            lines.append(src_line)
+        lines.append("```")
+        lines.append('"""')
+        lines.append("    )")
+        lines.append("})")
+
+        return "\n".join(lines)
 
     def supports(self, capability: type["CapabilityBase"]) -> bool:
         """

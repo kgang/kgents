@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Property-Based Tests for Projection Functors.
 

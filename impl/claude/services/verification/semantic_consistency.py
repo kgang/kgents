@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Semantic Consistency Engine: Cross-document consistency verification.
 

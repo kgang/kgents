@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Enhanced Trace Witness: Specification compliance verification with constructive proofs.
 

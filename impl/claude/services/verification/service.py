@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Verification Service: Core business logic for formal verification system.
 

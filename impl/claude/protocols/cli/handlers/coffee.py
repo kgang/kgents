@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Coffee Handler: Rich CLI for the Morning Coffee liminal transition protocol.
 

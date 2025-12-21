@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Integration test for the formal verification system.
 

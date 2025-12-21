@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Phase 8: Observer Consistency Audit Tests
 

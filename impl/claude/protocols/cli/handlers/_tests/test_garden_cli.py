@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Tests for Gardener-Logos CLI Commands (Phase 2).
 

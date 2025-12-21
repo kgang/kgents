@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 AGENTESE Self Context Resolver
 

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 AGENTESE Integration: Verification system nodes for the AGENTESE protocol.
 

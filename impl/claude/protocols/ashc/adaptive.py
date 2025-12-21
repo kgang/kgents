@@ -50,7 +50,7 @@ def beta_pdf(x: float, alpha: float, beta: float) -> float:
     """
     if x <= 0 or x >= 1:
         return 0.0
-    return (x ** (alpha - 1)) * ((1 - x) ** (beta - 1))
+    return float((x ** (alpha - 1)) * ((1 - x) ** (beta - 1)))
 
 
 def beta_mean(alpha: float, beta: float) -> float:

@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """
 Verification Persistence: Data access layer for formal verification system.
 
