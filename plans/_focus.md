@@ -22,6 +22,13 @@
 ## KENT's INFO2AGENTS
 * Whenever you write a prompt, it'll always be executed with /hydrate
 * Being/having fun is free :)
+
+## Kent's QUOTEs
+  1. "An agent is a thing that justifies its behavior."
+  2. "The proof IS the decision."
+  3. "Ethics is part of the beauty."
+  4. "My somatic awareness is extreme."
+  5. "Don't waste good work, like you wouldn't waste food."
 ---
 
 **Constraints**:

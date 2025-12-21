@@ -1226,5 +1226,4 @@ __all__ = [
     "chatty",
     "is_chatty",
     "get_chatty_config",
-    "to_chat_config",
 ]
