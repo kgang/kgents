@@ -87,7 +87,7 @@ export interface BreathingContainerProps {
 /** Intensity to amplitude mapping */
 const INTENSITY_AMPLITUDE: Record<BreathingIntensity, number> = {
   subtle: 0.015, // 1.5%
-  normal: BREATHING_ANIMATION.amplitude, // 3%
+  normal: 0.009, // ~1% (3.3x gentler than original 3%)
   emphatic: 0.05, // 5%
 };
 
