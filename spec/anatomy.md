@@ -293,7 +293,7 @@ Composition MUST be:
 - **Associative**: (A ∘ B) ∘ C = A ∘ (B ∘ C)
 - **Respect identity**: A ∘ id = A, id ∘ A = A
 
-See [c-gents/composition.md](c-gents/composition.md) for formal treatment.
+See [agents/composition.md](agents/composition.md) for formal treatment.
 
 ---
 

@@ -63,12 +63,6 @@ export function Layout() {
                 label="Gestalt"
                 currentPath={location.pathname}
               />
-              <NavLink
-                to="/gardener"
-                jewel="gardener"
-                label="Gardener"
-                currentPath={location.pathname}
-              />
               <span className="text-gray-600">│</span>
               <NavLink
                 to="/forge"

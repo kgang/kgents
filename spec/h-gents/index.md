@@ -148,4 +148,4 @@ They can also run in **background mode**, continuously examining system outputs 
 
 - [principles.md](../principles.md) - Core design principles (esp. Ethical, Heterarchical)
 - [anatomy.md](../anatomy.md) - What constitutes an agent
-- [c-gents/](../c-gents/) - Composition (H-gents as meta-composable layer)
+- [agents/](../agents/) - Categorical foundations (H-gents as meta-composable layer)

@@ -15,6 +15,11 @@
  */
 
 import { useState, useCallback } from 'react';
+import {
+  useLayoutClaim,
+  ReservedSlot,
+  FadeTransition,
+} from '@/components/layout-sheaf';
 
 // =============================================================================
 // Types
@@ -145,6 +150,9 @@ export function ObserverSwitcher({
 }: ObserverSwitcherProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
+  // Reserve 16px for description slot - prevents layout shift on hover
+  useLayoutClaim('observer-description', 16, true);
+
   const handleChange = useCallback(
     (id: string) => {
       if (!disabled && id !== current) {
@@ -166,14 +174,22 @@ export function ObserverSwitcher({
     return (
       <div className={`flex flex-col gap-1 ${className}`}>
         {/* Header */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2" data-testid="observer-header">
           <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
             Observer
           </span>
-          {showDescriptions && hoveredId && (
-            <span className="text-[10px] text-gray-400 truncate">
-              {available.find((o) => o.id === hoveredId)?.description}
-            </span>
+          {showDescriptions && (
+            <ReservedSlot
+              id="observer-description"
+              className="flex-1 min-w-0"
+              constraints={{ minHeight: 16, maxHeight: 16 }}
+            >
+              <FadeTransition show={!!hoveredId}>
+                <span className="text-[10px] text-gray-400 truncate block">
+                  {hoveredId && available.find((o) => o.id === hoveredId)?.description}
+                </span>
+              </FadeTransition>
+            </ReservedSlot>
           )}
         </div>
 

@@ -335,6 +335,11 @@ def project_command(
     Returns:
         Exit code (0 for success, non-zero for failure)
     """
+    # Ensure all node modules are imported (populates registry)
+    from protocols.agentese.gateway import _import_node_modules
+
+    _import_node_modules()
+
     # Create Logos
     from protocols.agentese.logos import create_logos
 

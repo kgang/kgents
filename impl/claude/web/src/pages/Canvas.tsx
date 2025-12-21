@@ -119,15 +119,16 @@ export function Canvas() {
   // Invoke an aspect from the detail panel
   const handleInvokeAspect = useCallback((path: string, aspect: string) => {
     console.log(`[Canvas] Invoking ${path}:${aspect}`);
-    // Navigate to AGENTESE explorer with the aspect
-    navigate(`/agentese?path=${encodeURIComponent(path)}&aspect=${encodeURIComponent(aspect)}`);
+    // Navigate directly to AGENTESE path - "The URL IS the AGENTESE path"
+    const url = aspect === 'manifest' ? `/${path}` : `/${path}:${aspect}`;
+    navigate(url);
   }, [navigate]);
 
   // Handle node navigation (double-click)
   const handleNodeNavigate = useCallback(
     (path: string) => {
-      // Navigate to AGENTESE docs explorer for this path
-      navigate(`/agentese?path=${encodeURIComponent(path)}`);
+      // Navigate directly to AGENTESE path - "The URL IS the AGENTESE path"
+      navigate(`/${path}`);
     },
     [navigate]
   );

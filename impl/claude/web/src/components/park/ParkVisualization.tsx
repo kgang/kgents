@@ -526,7 +526,7 @@ function SummaryScreen({ summary, onReset }: SummaryScreenProps) {
 
   const outcomeColor =
     summary.outcome === 'success'
-      ? JEWEL_COLORS.gardener.primary
+      ? JEWEL_COLORS.gestalt.primary
       : summary.outcome === 'failure'
         ? JEWEL_COLORS.domain.primary
         : JEWEL_COLORS.coalition.primary;

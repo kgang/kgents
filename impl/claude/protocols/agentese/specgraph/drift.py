@@ -230,7 +230,7 @@ def audit_all_jewels(
         ("atelier", spec_root / "a-gents" / "art", impl_root / "agents" / "atelier"),
         ("park", spec_root / "town" / "operad.md", impl_root / "agents" / "park"),
         ("gestalt", spec_root / "g-gents", impl_root / "agents" / "gestalt"),
-        ("flow", spec_root / "c-gents" / "composition.md", impl_root / "agents" / "f"),
+        ("flow", spec_root / "agents" / "composition.md", impl_root / "agents" / "f"),
     ]
 
     reports = []

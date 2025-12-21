@@ -396,7 +396,7 @@ For each monad transformer:
 - [spec/d-gents/README.md](../d-gents/README.md) - State Monad Transformer (reference implementation)
 - [spec/d-gents/symbiont.md](../d-gents/symbiont.md) - Detailed Symbiont spec
 - [spec/h-gents/hegel.md](../h-gents/hegel.md) - Dialectic operations
-- [spec/c-gents/monads.md](../c-gents/monads.md) - Category theory foundations
+- [spec/agents/monads.md](../agents/monads.md) - Category theory foundations
 
 ---
 

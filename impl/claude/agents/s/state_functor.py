@@ -23,7 +23,7 @@ Relationship to Symbiont:
     Symbiont is the ergonomic pattern; StateFunctor is the formal functor.
 
 See Also:
-    - spec/c-gents/functor-catalog.md §14 — State Functor specification
+    - spec/agents/functor-catalog.md §14 — State Functor specification
     - agents.d.Symbiont — The preferred ergonomic pattern
 """
 

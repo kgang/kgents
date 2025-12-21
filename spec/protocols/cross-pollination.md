@@ -257,7 +257,7 @@ C-gent verifies:
 2. **Monad laws** hold for Effect types
 3. **No direct imports** between agent genera (audit)
 
-See: [../c-gents/composition.md](../c-gents/composition.md)
+See: [../agents/composition.md](../agents/composition.md)
 
 ---
 
@@ -277,7 +277,7 @@ See: [../c-gents/composition.md](../c-gents/composition.md)
 - [../w-gents/interceptors.md](../w-gents/interceptors.md) - Middleware interceptors
 - [../l-gents/catalog.md](../l-gents/catalog.md) - Capability registry
 - [../k-gent/persona.md](../k-gent/persona.md) - Persona model
-- [../c-gents/functors.md](../c-gents/functors.md) - Functor theory
+- [../agents/functors.md](../agents/functors.md) - Functor theory
 
 ---
 

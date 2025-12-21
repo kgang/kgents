@@ -390,9 +390,9 @@ A test suite using T-gents should achieve:
 
 - [README.md](README.md) - T-gents overview
 - [taxonomy.md](taxonomy.md) - Specific T-gent implementations
-- [../c-gents/composition.md](../c-gents/composition.md) - Composition rules
-- [../c-gents/functors.md](../c-gents/functors.md) - Functor specifications
-- [../c-gents/monads.md](../c-gents/monads.md) - Monadic patterns
+- [../agents/composition.md](../agents/composition.md) - Composition rules
+- [../agents/functors.md](../agents/functors.md) - Functor specifications
+- [../agents/monads.md](../agents/monads.md) - Monadic patterns
 
 ---
 

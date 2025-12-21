@@ -100,11 +100,14 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     # Parse flags
     json_mode = "--json" in args
     validate_mode = "--validate" in args
+    stream_mode = "--stream" in args
+    trace_mode = "--trace" in args
     namespace = "kgents-agents"
     archetype = "minimal"
     output_path = None
+    target = "k8s"  # Default projection target
 
-    # Parse --namespace, --archetype, --output
+    # Parse --namespace, --archetype, --output, --target
     for i, arg in enumerate(args):
         if arg == "--namespace" and i + 1 < len(args):
             namespace = args[i + 1]
@@ -112,6 +115,8 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
             archetype = args[i + 1]
         elif arg == "--output" and i + 1 < len(args):
             output_path = args[i + 1]
+        elif arg == "--target" and i + 1 < len(args):
+            target = args[i + 1]
 
     # Get subcommand
     subcommand = None
@@ -128,6 +133,7 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
                 "--input",
                 "--archetype",
                 "--output",
+                "--target",
             ) and i + 1 < len(args):
                 if arg == "--input":
                     input_data = args[i + 1]
@@ -149,10 +155,13 @@ def cmd_a(args: list[str], ctx: "InvocationContext | None" = None) -> int:
         agent_name=agent_name,
         json_mode=json_mode,
         validate_mode=validate_mode,
+        stream_mode=stream_mode,
+        trace_mode=trace_mode,
         namespace=namespace,
         archetype=archetype,
         output_path=output_path,
         input_data=input_data,
+        target=target,
         ctx=ctx,
     )
 
@@ -162,10 +171,13 @@ def _dispatch(
     agent_name: str | None,
     json_mode: bool,
     validate_mode: bool,
+    stream_mode: bool,
+    trace_mode: bool,
     namespace: str,
     archetype: str,
     output_path: str | None,
     input_data: str | None,
+    target: str,
     ctx: "InvocationContext | None",
 ) -> int:
     """Route to the appropriate command handler."""
@@ -190,7 +202,9 @@ def _dispatch(
                     ctx,
                 )
                 return 1
-            return execute_manifest(agent_name, namespace, json_mode, validate_mode, ctx)
+            return execute_manifest(
+                agent_name, namespace, json_mode, validate_mode, target, ctx
+            )
 
         case "run":
             if not agent_name:
@@ -200,7 +214,11 @@ def _dispatch(
                     ctx,
                 )
                 return 1
-            return asyncio.run(execute_run(agent_name, input_data, json_mode, ctx))
+            return asyncio.run(
+                execute_run(
+                    agent_name, input_data, json_mode, stream_mode, trace_mode, ctx
+                )
+            )
 
         case "list":
             return execute_list(json_mode, ctx)

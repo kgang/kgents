@@ -537,7 +537,7 @@ async for synthesis in dialectician_flux.start(thesis_source):
     ...
 ```
 
-See `spec/c-gents/flux.md` for full Flux specification.
+See `spec/agents/flux.md` for full Flux specification.
 
 ---
 
@@ -547,4 +547,4 @@ See `spec/c-gents/flux.md` for full Flux specification.
 - [anatomy.md](anatomy.md) - Symbiont and Hypnagogic patterns
 - [testing.md](testing.md) - T-gents taxonomy (Type IV Critics = Questioner)
 - [reliability.md](reliability.md) - Fallback patterns
-- [c-gents/flux.md](c-gents/flux.md) - Flux Functor specification
+- [agents/flux.md](agents/flux.md) - Flux Functor specification

@@ -527,5 +527,5 @@ C-gent composition is visualized across scales:
 - [grammar.md](grammar.md) - Visual grammar at each scale
 - [time.md](time.md) - Time epochs per scale
 - [export.md](export.md) - Serialization at each scale
-- [../c-gents/composition.md](../c-gents/composition.md) - Composition edges
+- [../agents/composition.md](../agents/composition.md) - Composition edges
 - [../l-gents/README.md](../l-gents/README.md) - Library data source

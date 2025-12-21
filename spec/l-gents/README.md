@@ -495,5 +495,5 @@ L-gent makes the answer "yes" to all three.
 - [lattice.md](lattice.md) - Type compatibility and composition planning
 - [../f-gents/](../f-gents/) - Artifact creation (L-gent's primary source)
 - [../d-gents/](../d-gents/) - Persistence infrastructure (L-gent's storage backend)
-- [../c-gents/](../c-gents/) - Composition foundations (L-gent enables C-gent decisions)
+- [../agents/](../agents/) - Categorical foundations (L-gent enables composition decisions)
 - [../bootstrap.md](../bootstrap.md) - Derivation from irreducibles

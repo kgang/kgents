@@ -9,6 +9,7 @@ for contradiction detection and orphaned node identification.
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -33,7 +34,7 @@ class GraphEngine:
     to implementation, with analysis for contradictions and completeness.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.principles_cache: dict[str, GraphNode] = {}
         self.spec_cache: dict[str, list[GraphNode]] = {}
 
@@ -77,7 +78,7 @@ class GraphEngine:
             orphaned_nodes=[node.node_id for node in orphaned_nodes],
             derivation_paths=derivation_paths,
             status=status,
-            created_at=None,  # Will be set by persistence layer
+            created_at=datetime.now(),  # Set creation time
         )
 
         logger.info(f"Built verification graph with {len(nodes)} nodes, {len(edges)} edges")
@@ -94,7 +95,7 @@ class GraphEngine:
         design_file = spec_dir / "design.md"
         tasks_file = spec_dir / "tasks.md"
 
-        spec_data = {
+        spec_data: dict[str, Any] = {
             "requirements": None,
             "design": None,
             "tasks": None,
@@ -219,7 +220,7 @@ class GraphEngine:
             ("generative", "Generative", "Spec is compression; design should generate implementation"),
         ]
 
-        nodes = []
+        nodes: list[GraphNode] = []
         for principle_id, name, description in principles:
             node = GraphNode(
                 node_id=f"principle_{principle_id}",
@@ -391,10 +392,10 @@ class GraphEngine:
     ) -> list[Contradiction]:
         """Detect circular dependencies in the derivation graph."""
 
-        contradictions = []
+        contradictions: list[Contradiction] = []
 
         # Build adjacency list
-        graph = {}
+        graph: dict[str, list[str]] = {}
         for edge in edges:
             if edge.source_id not in graph:
                 graph[edge.source_id] = []
@@ -571,7 +572,7 @@ class GraphEngine:
         # Heuristic: if we have more than 2x edges than nodes, might be over-specified
         if len(edges) > len(nodes) * 2:
             # Find nodes with high in-degree (many things derive from them)
-            in_degree = {}
+            in_degree: dict[str, int] = {}
             for edge in edges:
                 in_degree[edge.target_id] = in_degree.get(edge.target_id, 0) + 1
 
@@ -663,7 +664,7 @@ class GraphEngine:
     ) -> dict[str, list[str]]:
         """Generate resolution strategies for detected issues."""
 
-        strategies = {
+        strategies: dict[str, list[str]] = {
             "contradictions": [],
             "orphaned_nodes": [],
             "general": [],
@@ -751,7 +752,7 @@ class GraphEngine:
         """Find path between two nodes using BFS."""
 
         # Build adjacency list
-        graph = {}
+        graph: dict[str, list[str]] = {}
         for edge in edges:
             if edge.source_id not in graph:
                 graph[edge.source_id] = []

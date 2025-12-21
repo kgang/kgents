@@ -353,34 +353,6 @@ export {
   type WorldTownWorkshopCompleteResponse,
 } from './useWorkshopQuery';
 
-// Gardener AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  gardenerQueryKeys,
-  // Gardener manifest
-  useGardenerManifest,
-  // Session queries
-  useGardenerSession,
-  useGardenerPolynomial,
-  useGardenerSessions,
-  useGardenerPropose,
-  // Session mutations
-  useDefineSession,
-  useAdvanceSession,
-  useRouteInput,
-  // Type re-exports
-  type ConceptGardenerManifestResponse,
-  type ConceptGardenerSessionManifestResponse,
-  type ConceptGardenerSessionDefineRequest,
-  type ConceptGardenerSessionDefineResponse,
-  type ConceptGardenerSessionAdvanceRequest,
-  type ConceptGardenerSessionAdvanceResponse,
-  type ConceptGardenerSessionPolynomialResponse,
-  type ConceptGardenerSessionsManifestResponse,
-  type ConceptGardenerRouteRequest,
-  type ConceptGardenerRouteResponse,
-  type ConceptGardenerProposeResponse,
-} from './useGardenerQuery';
 
 // Differance AGENTESE queries (Contract-Driven) - Phase 5: FRUITING
 export {
@@ -444,32 +416,6 @@ export {
   type SoulVibeResponse,
 } from './useSoulQuery';
 
-// Garden AGENTESE queries (self.garden.* - garden STATE)
-// Distinct from Gardener (concept.gardener.* - SESSION orchestration)
-export {
-  // Query keys
-  gardenQueryKeys,
-  // Garden manifest (full GardenJSON state)
-  useGardenManifest,
-  // Garden queries
-  useGardenSeason,
-  useGardenHealth,
-  useGardenSuggest,
-  // Garden mutations
-  useGardenTransition,
-  useGardenAccept,
-  useGardenDismiss,
-  // Conversion helper
-  toTransitionSuggestion,
-  // Type re-exports
-  type GardenSeasonResponse,
-  type GardenHealthResponse,
-  type GardenSuggestResponse,
-  type GardenTransitionRequest,
-  type GardenTransitionResponse,
-  type GardenAcceptResponse,
-  type GardenDismissResponse,
-} from './useGardenQuery';
 
 // Simple toast notifications (general-purpose feedback)
 export {

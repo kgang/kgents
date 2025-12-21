@@ -49,7 +49,17 @@ function measureRenderTime(
   return { duration, result };
 }
 
-// Generate mock citizens
+/**
+ * Generate mock citizens for performance tests.
+ *
+ * DESIGN: Performance tests measure render speed, not layout behavior.
+ * Therefore, citizens are configured with:
+ * - collapsible: false - ensures all cards render regardless of layout context
+ * - priority: 10 - high priority so cards are never hidden
+ *
+ * This makes tests deterministic and focused on actual render performance.
+ * Layout behavior (collapsing, hiding) should be tested separately in layout tests.
+ */
 function generateCitizens(count: number): CitizenCardJSON[] {
   const archetypes = ['Builder', 'Trader', 'Healer', 'Scholar', 'Watcher', 'Explorer'];
   const phases = ['IDLE', 'WORKING', 'SOCIALIZING', 'REFLECTING'] as const;
@@ -74,9 +84,10 @@ function generateCitizens(count: number): CitizenCardJSON[] {
       curiosity: Math.random(),
       trust: Math.random(),
     },
+    // Performance tests: always render all cards (no layout-dependent hiding)
     layout: {
-      priority: (i % 10) + 1,
-      collapsible: true,
+      priority: 10, // High priority - never hidden
+      collapsible: false, // Never collapse - test raw render performance
     },
   }));
 }

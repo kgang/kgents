@@ -1,222 +1,192 @@
-# D-gent: The Data Agent (Persistence Layer)
+# D-gent: The Data Agent
 
 > *"The cortex is singular. Memory is global. Context is local."*
 
-## Status
-
-**Version**: 1.0
-**Status**: Canonical
-**Implementation**: `impl/claude/protocols/cli/instance_db/`
-**Tests**: `test_storage.py`, `test_lifecycle.py`, `test_cli_session.py`
+**Status**: Canonical | **Layer**: 0 (Persistence) | **Impl**: `impl/claude/agents/d/`
 
 ---
 
-## Overview
+## Purpose
 
-D-gent owns all persistence for kgents. It is the **Layer 0** of the Metaphysical Fullstack (AD-009)—the foundation upon which services build. Other agents request storage via D-gent interfaces; D-gent manages migrations, backups, and recovery.
-
-**Key Insight**: D-gent is infrastructure, not a Crown Jewel. It provides the categorical primitives that services compose.
+D-gent owns all persistence for kgents. It is **Layer 0** of the Metaphysical Fullstack—the foundation upon which services build. D-gent is infrastructure, not a Crown Jewel.
 
 ---
 
-## The Storage Polynomial
+## Core Abstractions
+
+### Datum: The Atomic Unit
+
+Schema-free bytes with identity and causal lineage.
 
 ```python
-STORAGE_POLYNOMIAL = PolyAgent[StorageState, StorageOp, StorageResult](
-    positions=frozenset({
-        StorageState.IDLE,
-        StorageState.READING,
-        StorageState.WRITING,
-        StorageState.MIGRATING,
-        StorageState.RECOVERING,
-    }),
-    directions=lambda s: VALID_OPS[s],
-    transition=storage_transition,
-)
+@dataclass(frozen=True)
+class Datum:
+    id: str                      # UUID or content-addressed hash
+    content: bytes               # Schema-free payload
+    created_at: float            # Unix timestamp
+    causal_parent: str | None    # Enables lineage tracing
+    metadata: dict[str, str]     # Optional tags
 ```
 
-**State Machine**:
+**Key Design Decisions**:
+- **Schema-free**: Interpretation happens at read time (lenses), not write time
+- **Content-addressed option**: `Datum.create(content, content_addressed=True)` → SHA-256 ID
+- **Causal chain**: `datum.derive(new_content)` → new datum with `causal_parent` set
+
+### DgentProtocol: Five Methods
+
+```python
+class DgentProtocol(Protocol):
+    async def put(self, datum: Datum) -> str: ...      # Store, return ID
+    async def get(self, id: str) -> Datum | None: ...  # Retrieve by ID
+    async def delete(self, id: str) -> bool: ...       # Remove, return success
+    async def list(self, prefix: str | None = None, after: float | None = None, limit: int = 100) -> list[Datum]: ...
+    async def causal_chain(self, id: str) -> list[Datum]: ...  # Trace ancestry
 ```
-IDLE --[read]--> READING --[done]--> IDLE
-IDLE --[write]--> WRITING --[done]--> IDLE
-IDLE --[migrate]--> MIGRATING --[done]--> IDLE
-IDLE --[error]--> RECOVERING --[recovered]--> IDLE
+
+**That's it.** Five methods. All backends implement this.
+
+---
+
+## Backend Lattice (Projection Tiers)
+
 ```
+Tier 0: Memory     → Ephemeral, fastest (~1μs)
+Tier 1: JSONL      → Simple file, append-only (~1ms)
+Tier 2: SQLite     → Local database, concurrent reads (~5ms)
+Tier 3: Postgres   → Production database, ACID (~10ms)
+```
+
+### DgentRouter: Automatic Selection
+
+```python
+router = DgentRouter(namespace="brain", preferred=Backend.SQLITE)
+await router.put(datum)  # Routes to best available backend
+```
+
+**Graceful Degradation**: If preferred unavailable, falls back through the lattice.
+
+**Environment Override**: `KGENTS_DGENT_BACKEND=POSTGRES` forces specific backend.
 
 ---
 
 ## XDG Compliance
 
-D-gent follows the [XDG Base Directory Specification](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html):
+| Purpose | Path | Env Variable |
+|---------|------|--------------|
+| Config | `~/.config/kgents/` | `XDG_CONFIG_HOME` |
+| Data | `~/.local/share/kgents/` | `XDG_DATA_HOME` |
+| Cache | `~/.cache/kgents/` | `XDG_CACHE_HOME` |
 
-| Purpose | Path | Environment Variable |
-|---------|------|----------------------|
-| **Configuration** | `~/.config/kgents/` | `XDG_CONFIG_HOME` |
-| **Data** | `~/.local/share/kgents/` | `XDG_DATA_HOME` |
-| **Cache** | `~/.cache/kgents/` | `XDG_CACHE_HOME` |
-
-**Per-Project** (non-XDG):
-- `.kgents/config.yaml` — Project-specific configuration
-- `.kgents/catalog.json` — Agent registry for project
+**Per-Project**: `.kgents/` in project root for local config.
 
 ---
 
-## Storage Providers
+## Symbiont: State Threading
 
-The `StorageProvider` unifies access to all persistence backends:
+Fuses stateless logic with stateful memory.
 
 ```python
+Symbiont[I, O, S] = StateFunctor.lift_logic(f) where backend is D-gent
+```
+
+**Pattern**:
+```python
+def chat_logic(msg: str, history: list) -> tuple[str, list]:
+    """Pure function: (input, state) → (output, new_state)"""
+    history.append(("user", msg))
+    response = generate(history)
+    history.append(("bot", response))
+    return response, history
+
+memory = VolatileAgent(_state=[])
+chatbot = Symbiont(logic=chat_logic, memory=memory)
+await chatbot.invoke("Hello")  # State threaded automatically
+```
+
+**Key Insight**: Logic remains pure; D-gent handles side effects.
+
+See: `spec/agents/functor-catalog.md` §14 (State Functor) for formal treatment.
+
+---
+
+## Lenses: Focused State Access
+
+Compositional getter/setter pairs for sub-state access.
+
+```python
+Lens[S, A] = (get: S → A, set: (S, A) → S)
+```
+
+**Laws** (must satisfy all three):
+1. **GetPut**: `lens.set(s, lens.get(s)) == s`
+2. **PutGet**: `lens.get(lens.set(s, a)) == a`
+3. **PutPut**: `lens.set(lens.set(s, a), b) == lens.set(s, b)`
+
+**Composition**: `user_lens >> address_lens >> city_lens` → focus on nested city.
+
+**LensAgent**: D-gent that projects through a lens:
+```python
+global_dgent = PersistentAgent[GlobalState](...)
+user_dgent = LensAgent(global_dgent, user_lens)  # Sees only user slice
+```
+
+---
+
+## DataBus Integration
+
+D-gent emits events on state changes:
+
+```python
+class DataEventType(Enum):
+    CREATED = auto()
+    UPDATED = auto()
+    DELETED = auto()
+
 @dataclass
-class StorageProvider:
-    relational: IRelationalStore    # → membrane.db
-    vector: IVectorStore            # → vectors.json / sqlite-vec
-    blob: IBlobStore                # → blobs/ directory
-    telemetry: ITelemetryStore      # → telemetry.db
+class DataEvent:
+    event_type: DataEventType
+    datum_id: str
+    namespace: str
+    timestamp: float
 ```
 
-### Interfaces
+**BusEnabledDgent**: Wraps any DgentProtocol to emit events.
 
-```python
-class IRelationalStore(Protocol):
-    async def execute(self, query: str, params: dict | None = None) -> None: ...
-    async def fetch_all(self, query: str, params: dict | None = None) -> list[dict]: ...
-    async def fetch_one(self, query: str, params: dict | None = None) -> dict | None: ...
-    async def close(self) -> None: ...
-
-class IVectorStore(Protocol):
-    async def add(self, id: str, vector: list[float], metadata: dict | None = None) -> None: ...
-    async def search(self, query: list[float], k: int = 10) -> list[SearchResult]: ...
-    async def close(self) -> None: ...
-
-class IBlobStore(Protocol):
-    async def put(self, key: str, data: bytes) -> None: ...
-    async def get(self, key: str) -> bytes | None: ...
-    async def delete(self, key: str) -> bool: ...
-    async def close(self) -> None: ...
-
-class ITelemetryStore(Protocol):
-    async def append(self, events: list[TelemetryEvent]) -> None: ...
-    async def query(self, span_id: str | None = None, limit: int = 100) -> list[TelemetryEvent]: ...
-    async def close(self) -> None: ...
-```
+See: `docs/skills/data-bus-integration.md` for event-driven patterns.
 
 ---
 
-## membrane.db Schema
+## Usage Patterns
 
-The unified database (`~/.local/share/kgents/membrane.db`) contains all persistent state:
-
-### Core Tables
-
-| Table | Purpose |
-|-------|---------|
-| `instances` | Active kgent instances with heartbeat |
-| `shapes` | Observed patterns (shapes in the membrane) |
-| `dreams` | Consolidated insights |
-| `embedding_metadata` | Vector model tracking |
-| `schema_version` | Migration versioning |
-
-### CLI Session Tables
-
-| Table | Purpose |
-|-------|---------|
-| `cli_sessions` | CLI sessions (repl, flow, script) |
-| `cli_session_events` | Events within sessions |
-| `cli_session_agents` | Agents spawned in sessions |
-| `cli_session_artifacts` | Outputs from sessions |
-
-### Self-Grow Tables
-
-| Table | Purpose |
-|-------|---------|
-| `self_grow_proposals` | Proposed prompt changes |
-| `self_grow_nursery` | Germinated proposals |
-| `self_grow_rollback_tokens` | Rollback capability |
-
----
-
-## Usage Pattern
-
-### Via StorageProvider (Recommended)
+### Via DgentRouter (Recommended)
 
 ```python
-from protocols.cli.instance_db import StorageProvider
+from agents.d import DgentRouter, Datum
 
-async def example():
-    storage = await StorageProvider.from_config()
-    await storage.run_migrations()
-
-    # Unified access to all stores
-    await storage.relational.execute("INSERT INTO shapes ...")
-    results = await storage.vector.search(query_vec)
-    await storage.blob.put("backups/today.bak", data)
-    await storage.telemetry.append([event])
-
-    await storage.close()
+router = DgentRouter(namespace="my-service")
+datum = Datum.create(b'{"key": "value"}')
+await router.put(datum)
+retrieved = await router.get(datum.id)
 ```
 
-### Via Specific Services
+### Via Symbiont (State Threading)
 
 ```python
-from protocols.cli.instance_db import CLISessionService, create_cli_session_service
+from agents.d import Symbiont, VolatileAgent
 
-async def cli_example():
-    service = await create_cli_session_service()
-    session = await service.start_session("interactive", "My REPL")
-    await service.log_event(session.id, "command", "repl", "User ran check")
-    await service.end_session(session.id, state="completed")
+memory = VolatileAgent(_state=initial_state)
+agent = Symbiont(logic=my_logic, memory=memory)
+result = await agent.invoke(input_data)
 ```
 
----
-
-## Graceful Degradation
-
-D-gent follows the Graceful Degradation principle (spec/principles.md):
-
-| Condition | Behavior |
-|-----------|----------|
-| DB unavailable | In-memory fallback, warns on restart |
-| Migration fails | Roll back to previous schema |
-| Config parse error | Use XDG defaults |
-| Env var unset | Use XDG defaults (non-strict mode) |
+### Via LensAgent (Focused Access)
 
 ```python
-# In-memory fallback
-storage = await StorageProvider.create_minimal()
-```
+from agents.d import LensAgent, key_lens
 
----
-
-## Migration Strategy
-
-### From Legacy Paths
-
-Legacy `~/.kgents/` paths are being migrated to XDG structure:
-
-| Legacy | Target | Status |
-|--------|--------|--------|
-| `~/.kgents/history.db` | `membrane.db` (cli_sessions) | COMPLETE |
-| `~/.kgents/witness.*` | `membrane.db` + `~/.cache/kgents/` | PLANNED |
-| `~/.kgents/ghost/` | `~/.local/share/kgents/blobs/ghost/` | PLANNED |
-| `~/.kgents/prompt-history/` | `membrane.db` (prompt_checkpoints) | PLANNED |
-| `~/.kgents/hypnagogia/` | `membrane.db` (agent_state) | PLANNED |
-| `~/.kgents/soul/` | `membrane.db` (agent_state) | PLANNED |
-| `~/.kgents/atelier/` | `~/.local/share/kgents/blobs/atelier/` | PLANNED |
-
-### Migration Pattern
-
-```python
-# Each service follows the same pattern:
-# 1. Read from legacy if exists
-# 2. Write to new location
-# 3. Mark legacy as migrated
-# 4. Warn on next access of legacy path
-
-def migrate_service(service_name: str) -> None:
-    legacy = Path.home() / ".kgents" / service_name
-    if legacy.exists():
-        # Migrate...
-        legacy.rename(f"{legacy}.migrated")
+global_store = DgentRouter(namespace="global")
+user_store = LensAgent(global_store, key_lens("users"))
 ```
 
 ---
@@ -225,42 +195,74 @@ def migrate_service(service_name: str) -> None:
 
 ```python
 # ❌ Hardcoded paths
-state_path = Path.home() / ".kgents" / "state.json"
+Path.home() / ".kgents" / "state.json"
 
-# ✅ XDG-compliant via StorageProvider
-storage = await StorageProvider.from_config()
-await storage.relational.execute("INSERT INTO agent_state ...")
+# ✅ XDG-compliant via DgentRouter
+DgentRouter(namespace="state")
 
 # ❌ Multiple databases per project
-project_db = project / ".kgents" / "cortex.db"
+project / ".kgents" / "cortex.db"
 
-# ✅ Single global database with project_hash
-await storage.relational.execute(
-    "INSERT INTO shapes (project_hash, ...) VALUES (:hash, ...)",
-    {"hash": project_hash}
-)
+# ✅ Single database with namespace
+DgentRouter(namespace=f"project:{project_hash}")
 
-# ❌ Direct file I/O for state
-Path("~/.kgents/soul/state.json").write_text(json.dumps(state))
+# ❌ Direct file I/O
+Path("state.json").write_text(json.dumps(state))
 
-# ✅ StorageProvider interfaces
-await storage.relational.execute(
-    "INSERT OR REPLACE INTO agent_state (agent_id, genus, state) VALUES (:id, :genus, :state)",
-    {"id": "soul", "genus": "k-gent", "state": json.dumps(state)}
-)
+# ✅ DgentProtocol
+await router.put(Datum.create(json.dumps(state).encode()))
+
+# ❌ Bypassing Symbiont state threading
+state = await memory.load()
+state["value"] = 42
+await memory.save(state)  # Logic bypassed!
+
+# ✅ All changes through logic
+await symbiont.invoke("set_value_42")
 ```
 
 ---
 
-## Principles Alignment
+## Dual Protocol Design
 
-| Principle | How D-gent Embodies It |
-|-----------|------------------------|
-| **Tasteful** | One canonical DB, not scattered files |
-| **Composable** | Interfaces enable provider swapping |
-| **Generative** | Schema from spec, migrations derived |
-| **Graceful Degradation** | In-memory fallback always works |
-| **Transparent Infrastructure** | First-run messages tell user where data lives |
+D-gent provides **two complementary protocols** for different use cases:
+
+| Protocol | Signature | Use Case |
+|----------|-----------|----------|
+| **DgentProtocol** | `put/get/delete/list/causal_chain` | Schema-free Datum persistence |
+| **DataAgent[S]** | `load/save/history` | Typed state management with Symbiont |
+
+```python
+# DgentProtocol: Schema-free bytes
+class DgentProtocol(Protocol):
+    async def put(self, datum: Datum) -> str: ...
+    async def get(self, id: str) -> Datum | None: ...
+
+# DataAgent[S]: Typed state (used with Symbiont)
+class DataAgent(Protocol[S]):
+    async def load(self) -> S: ...
+    async def save(self, state: S) -> None: ...
+    async def history(self, limit: int | None = None) -> list[S]: ...
+```
+
+**When to use which**:
+- **DgentProtocol**: Raw data storage, causal lineage, schema-at-read patterns
+- **DataAgent[S]**: Symbiont state threading, typed agents, state machines
+
+---
+
+## Implementation Reference
+
+| File | Purpose |
+|------|---------|
+| `datum.py` | Datum dataclass |
+| `protocol.py` | DgentProtocol + legacy DataAgent |
+| `router.py` | DgentRouter (backend selection) |
+| `backends/` | Memory, JSONL, SQLite, Postgres |
+| `symbiont.py` | State threading pattern |
+| `lens.py` | Lens, Prism, Traversal |
+| `lens_agent.py` | LensAgent (focused D-gent) |
+| `bus.py` | DataBus, BusEnabledDgent |
 
 ---
 
@@ -268,8 +270,8 @@ await storage.relational.execute(
 
 - **Skill**: `docs/skills/unified-storage.md`
 - **Skill**: `docs/skills/metaphysical-fullstack.md` (Layer 0)
-- **Implementation**: `impl/claude/protocols/cli/instance_db/`
-- **Principles**: `spec/principles.md` §Graceful Degradation, §Transparent Infrastructure
+- **Functor**: `spec/agents/functor-catalog.md` §14 (State Functor)
+- **Principles**: `spec/principles.md` §Graceful Degradation
 
 ---
 

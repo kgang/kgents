@@ -554,4 +554,4 @@ Time (`t:`) appears at every scale but references different epochs.
 - [states.md](states.md) - Moon phase state definitions
 - [scales.md](scales.md) - Fractal scaling rules
 - [export.md](export.md) - Markdown serialization
-- [../c-gents/composition.md](../c-gents/composition.md) - Composition as morphisms
+- [../agents/composition.md](../agents/composition.md) - Composition as morphisms

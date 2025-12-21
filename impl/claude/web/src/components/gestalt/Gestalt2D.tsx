@@ -125,7 +125,7 @@ export function Gestalt2D({
   // ==========================================================================
   if (isMobile) {
     return (
-      <div className={`flex flex-col h-full bg-[#1a1a1a] ${className}`}>
+      <div className={`flex-1 min-h-0 flex flex-col bg-[#1a1a1a] ${className}`}>
         {/* Header */}
         <GestaltHeader
           topology={topology}
@@ -217,7 +217,7 @@ export function Gestalt2D({
   // Desktop/Tablet Layout (ElasticSplit)
   // ==========================================================================
   return (
-    <div className={`h-full bg-[#1a1a1a] flex flex-col ${className}`}>
+    <div className={`flex-1 min-h-0 bg-[#1a1a1a] flex flex-col ${className}`}>
       {/* Header */}
       <GestaltHeader
         topology={topology}

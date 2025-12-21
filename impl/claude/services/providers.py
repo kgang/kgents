@@ -67,6 +67,7 @@ if TYPE_CHECKING:
     from services.witness.crystallization_node import TimeWitnessNode
     from services.witness.persistence import WitnessPersistence
     from services.witness.trace_store import MarkStore
+    from services.liminal.coffee.core import CoffeeService
 
 logger = logging.getLogger(__name__)
 
@@ -460,6 +461,18 @@ async def get_verification_persistence() -> "VerificationPersistence":
     return await get_service("verification_persistence")
 
 
+async def get_coffee_service() -> "CoffeeService":
+    """
+    Get the CoffeeService for Morning Coffee ritual.
+
+    The liminal transition protocol from rest to work.
+    Used by CoffeeNode for ritual orchestration.
+    """
+    from services.liminal.coffee.core import CoffeeService
+
+    return CoffeeService()
+
+
 async def get_workshop_service() -> "WorkshopService":
     """
     Get the WorkshopService for Agent Town builder coordination.
@@ -597,6 +610,9 @@ async def setup_providers() -> None:
 
     # Verification Crown Jewel (Formal Verification Metatheory)
     container.register("verification_persistence", get_verification_persistence, singleton=True)
+
+    # Liminal Protocols (Morning Coffee, etc.)
+    container.register("coffee_service", get_coffee_service, singleton=True)
 
     logger.info(
         "All Crown Jewel services registered (9 persistence + Town sub-services + Park scenarios + Principles + Conductor + Tooling + Verification)"
@@ -838,4 +854,6 @@ __all__ = [
     "get_tool_executor",
     # Verification Crown Jewel
     "get_verification_persistence",
+    # Liminal Protocols
+    "get_coffee_service",
 ]

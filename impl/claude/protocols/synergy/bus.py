@@ -286,9 +286,7 @@ def _register_default_handlers(bus: SynergyEventBus) -> None:
         AtelierToBrainHandler,
         BrainToCoalitionHandler,
         CoalitionToBrainHandler,
-        GardenToBrainHandler,
         GestaltToBrainHandler,
-        GestaltToGardenHandler,
     )
 
     # ==========================================================================
@@ -323,48 +321,8 @@ def _register_default_handlers(bus: SynergyEventBus) -> None:
         BrainToCoalitionHandler(),
     )
 
-    # ==========================================================================
-    # Wave 4: Garden synergy handlers (Gardener-Logos Phase 6)
-    # ==========================================================================
-
-    # Create shared handler instances
-    garden_brain_handler = GardenToBrainHandler()
-
-    # Garden → Brain: Auto-capture season transitions
-    bus.register(
-        SynergyEventType.SEASON_CHANGED,
-        garden_brain_handler,
-    )
-
-    # Garden → Brain: Auto-capture significant gestures
-    bus.register(
-        SynergyEventType.GESTURE_APPLIED,
-        garden_brain_handler,
-    )
-
-    # Garden → Brain: Auto-capture plot progress updates
-    bus.register(
-        SynergyEventType.PLOT_PROGRESS_UPDATED,
-        garden_brain_handler,
-    )
-
-    # Gestalt → Garden: Update plots when analysis completes
-    bus.register(
-        SynergyEventType.ANALYSIS_COMPLETE,
-        GestaltToGardenHandler(),
-    )
-
-    # ==========================================================================
-    # Self.Garden Phase 2: Garden → Witness integration
-    # ==========================================================================
-
-    from .handlers import GardenToWitnessHandler
-
-    # Garden → Witness: Forward gestures to witness thought stream
-    bus.register(
-        SynergyEventType.GESTURE_APPLIED,
-        GardenToWitnessHandler(),
-    )
+    # Note: Garden handlers deprecated 2025-12-21
+    # See: spec/protocols/_archive/gardener-evergreen-heritage.md
 
 
 __all__ = [

@@ -207,7 +207,7 @@ class PrincipleRefToken(BaseMeaningToken[str]):
             ),
         ]
 
-    async def project(self, target: str, observer: Observer) -> str:
+    async def project(self, target: str, observer: Observer) -> str | dict[str, Any]:
         if target == "cli":
             return f"[magenta]{self._source_text}[/magenta]"
         elif target == "json":

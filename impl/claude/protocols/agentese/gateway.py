@@ -73,9 +73,7 @@ def _import_node_modules() -> None:
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
             concept_scope,  # noqa: F401 - WARP Phase 1: Context contracts (concept.scope.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
-            forest,  # noqa: F401 - Forest Protocol (self.forest.*)
-            garden,  # noqa: F401 - Garden State (self.garden.*)
-            gardener,  # noqa: F401 - The 7th Crown Jewel (concept.gardener.*)
+            self_archaeology,  # noqa: F401 - Repo archaeology (self.memory.archaeology.*)
             self_conductor,  # noqa: F401 - CLI v7 Phase 2: Conversation Window (self.conductor.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_grant,  # noqa: F401 - WARP Phase 1: Permission contracts (self.grant.*)
@@ -88,7 +86,6 @@ def _import_node_modules() -> None:
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
-            tend,  # noqa: F401 - Tending Gestures (self.garden.tend.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             time_trace_warp,  # noqa: F401 - WARP Phase 1: Mark/Walk (time.trace.*, time.walk.*)
             world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
@@ -151,14 +148,6 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (park): {e}")
 
-        # === Garden Protocol nodes (Next-generation planning) ===
-        try:
-            from protocols.garden import (
-                node as garden_node,  # noqa: F401  # self.forest.plan.*
-                session as garden_session,  # noqa: F401  # self.forest.session.*
-            )
-        except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (garden): {e}")
 
         # === Witness Crown Jewel nodes ===
         try:
@@ -180,6 +169,18 @@ def _import_node_modules() -> None:
             )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (concept.principles): {e}")
+
+        # === Living Docs (concept.docs.*, self.docs.*) ===
+        try:
+            from services.living_docs import node as living_docs_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (living_docs): {e}")
+
+        # === Liminal Protocols (time.coffee.*, etc.) ===
+        try:
+            from services.liminal.coffee import node as coffee_node  # noqa: F401
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (coffee): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:

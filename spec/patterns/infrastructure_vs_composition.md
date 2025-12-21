@@ -395,7 +395,7 @@ For any agent genus, ask:
 - [../bootstrap.md](../bootstrap.md) - Bootstrap primitives
 - [../d-gents/README.md](../d-gents/README.md) - Reference implementation (D-gents)
 - [../h-gents/index.md](../h-gents/index.md) - H-gents stratification
-- [../c-gents/composition.md](../c-gents/composition.md) - Category theory foundations
+- [../agents/composition.md](../agents/composition.md) - Category theory foundations
 
 ---
 

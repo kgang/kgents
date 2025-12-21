@@ -188,7 +188,6 @@ SWARM_AFFORDANCES: tuple[str, ...] = (
         "handoff": Contract(SwarmHandoffRequest, SwarmHandoffResponse),
         "despawn": Contract(SwarmDespawnRequest, SwarmDespawnResponse),
     },
-    dependencies=("swarm_spawner",),  # CRITICAL: Must register in providers.py
 )
 @dataclass
 class SwarmNode(BaseLogosNode):

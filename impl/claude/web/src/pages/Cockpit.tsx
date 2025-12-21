@@ -25,7 +25,7 @@ import { Compass, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { Breathe } from '@/components/joy';
 import { VoiceAnchor } from '@/components/cockpit/VoiceAnchor';
 import { RecentTracesPanel, GhostBadge } from '@/components/differance';
-import { brainApi, gestaltApi, gardenerApi } from '@/api/client';
+import { brainApi, gestaltApi } from '@/api/client';
 import { useGhosts } from '@/hooks/useDifferanceQuery';
 import { JEWEL_COLORS, JEWEL_ICONS, type JewelName } from '@/constants/jewels';
 import { SESSION_RITUAL_ITEMS, ANTI_SAUSAGE_QUESTIONS } from '@/constants/voiceAnchors';
@@ -49,7 +49,6 @@ interface CockpitState {
   error?: string;
   brain: { crystals: number } | null;
   gestalt: { grade: string; healthy: boolean } | null;
-  gardener: { season: string; plots: number } | null;
 }
 
 // =============================================================================
@@ -238,7 +237,6 @@ function QuickLaunchButton({ jewel, label }: { jewel: JewelName; label: string }
   const routes: Partial<Record<JewelName, string>> = {
     brain: '/self.memory',
     gestalt: '/world.codebase',
-    gardener: '/concept.gardener',
     forge: '/world.forge',
     coalition: '/world.town',
     park: '/world.park',
@@ -280,7 +278,6 @@ export default function Cockpit() {
     loading: true,
     brain: null,
     gestalt: null,
-    gardener: null,
   });
 
   // Fetch ghost counts from Différance Engine
@@ -292,16 +289,14 @@ export default function Cockpit() {
 
   // Calculate ghost counts per jewel (based on operation prefixes in context)
   const ghostCounts = useMemo(() => {
-    if (!ghostsData) return { brain: 0, gestalt: 0, gardener: 0, forge: 0 };
+    if (!ghostsData) return { brain: 0, gestalt: 0, forge: 0 };
 
-    const counts = { brain: 0, gestalt: 0, gardener: 0, forge: 0 };
+    const counts = { brain: 0, gestalt: 0, forge: 0 };
     for (const ghost of ghostsData.ghosts) {
       // Infer jewel from operation name patterns
       const op = ghost.operation.toLowerCase();
       if (op.includes('capture') || op.includes('surface') || op.includes('crystal')) {
         counts.brain++;
-      } else if (op.includes('gesture') || op.includes('plant') || op.includes('nurture')) {
-        counts.gardener++;
       } else if (op.includes('scan') || op.includes('health') || op.includes('drift')) {
         counts.gestalt++;
       } else if (op.includes('commission') || op.includes('bid') || op.includes('exhibit')) {
@@ -314,10 +309,9 @@ export default function Cockpit() {
   // Fetch status from all jewels
   const fetchStatus = useCallback(async () => {
     try {
-      const [brainRes, gestaltRes, gardenerRes] = await Promise.allSettled([
+      const [brainRes, gestaltRes] = await Promise.allSettled([
         brainApi.getStatus(),
         gestaltApi.getHealth(),
-        gardenerApi.getGarden(),
       ]);
 
       setState({
@@ -332,13 +326,6 @@ export default function Cockpit() {
                 grade: gestaltRes.value.overall_grade,
                 healthy:
                   gestaltRes.value.overall_grade === 'A' || gestaltRes.value.overall_grade === 'A+',
-              }
-            : null,
-        gardener:
-          gardenerRes.status === 'fulfilled' && gardenerRes.value
-            ? {
-                season: gardenerRes.value.season,
-                plots: Object.keys(gardenerRes.value.plots ?? {}).length,
               }
             : null,
       });
@@ -384,14 +371,6 @@ export default function Cockpit() {
         subtext: state.gestalt?.healthy ? 'healthy' : 'needs attention',
         route: '/world.codebase',
         ghostCount: ghostCounts.gestalt,
-      },
-      {
-        jewel: 'gardener',
-        label: 'Gardener',
-        value: state.gardener?.season ?? '—',
-        subtext: state.gardener ? `${state.gardener.plots} plots` : undefined,
-        route: '/concept.gardener',
-        ghostCount: ghostCounts.gardener,
       },
       {
         jewel: 'forge',
@@ -485,7 +464,6 @@ export default function Cockpit() {
           <div className="flex flex-wrap gap-2">
             <QuickLaunchButton jewel="brain" label="Brain" />
             <QuickLaunchButton jewel="gestalt" label="Gestalt" />
-            <QuickLaunchButton jewel="gardener" label="Gardener" />
             <QuickLaunchButton jewel="forge" label="Forge" />
             <QuickLaunchButton jewel="coalition" label="Town" />
             <QuickLaunchButton jewel="park" label="Park" />

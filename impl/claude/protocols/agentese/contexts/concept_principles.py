@@ -50,7 +50,6 @@ logger = logging.getLogger(__name__)
 @node(
     "concept.principles",
     description="The kgents design principles - queryable, stance-aware",
-    dependencies=("principle_loader",),
     examples=[
         ("manifest", {}, "View principles for your stance"),
         ("constitution", {}, "The Seven Immutable Principles"),

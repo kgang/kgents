@@ -11,7 +11,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { Brain, Network, Leaf, Palette, Users, Theater } from 'lucide-react';
+import { Brain, Network, Palette, Users, Theater } from 'lucide-react';
 import { getJewelColor, type JewelName } from '@/constants/jewels';
 
 // =============================================================================
@@ -46,7 +46,6 @@ const STORAGE_KEY_EXPANDED_JEWELS = 'kgents:navtree:expandedJewels';
 const CROWN_JEWELS: CrownJewel[] = [
   { name: 'brain', label: 'Brain', path: 'self.memory', icon: Brain },
   { name: 'gestalt', label: 'Gestalt', path: 'world.codebase', icon: Network },
-  { name: 'gardener', label: 'Gardener', path: 'concept.gardener', icon: Leaf },
   { name: 'forge', label: 'Forge', path: 'world.forge', icon: Palette },
   {
     name: 'coalition',

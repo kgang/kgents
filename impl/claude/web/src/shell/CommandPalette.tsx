@@ -20,7 +20,6 @@ import {
   Clock,
   Brain,
   Network,
-  Leaf,
   Palette,
   Users,
   Theater,
@@ -114,7 +113,6 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
       // Navigation - Crown Jewels
       nav('self.memory', 'Brain', Brain, JEWEL_COLORS.brain.primary, 'Memory & crystallization'),
       nav('world.codebase', 'Gestalt', Network, JEWEL_COLORS.gestalt.primary, 'Codebase analysis'),
-      nav('concept.gardener', 'Gardener', Leaf, JEWEL_COLORS.gardener.primary, 'Concept gardening'),
       nav('world.forge', 'Forge', Palette, JEWEL_COLORS.forge.primary, 'Design workshop'),
       nav('world.town', 'Town', Users, JEWEL_COLORS.coalition.primary, 'Agent simulation'),
       nav('world.park', 'Park', Theater, JEWEL_COLORS.park.primary, 'Roleplay scenarios'),

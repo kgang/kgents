@@ -2,6 +2,10 @@
 Run command for A-gent.
 
 Compiles and runs an agent locally via LocalProjector.
+
+Options:
+- --stream: Enable streaming output (for Flux agents)
+- --trace: Show state transitions (for PolyAgent debugging)
 """
 
 from __future__ import annotations
@@ -19,9 +23,21 @@ async def execute_run(
     agent_name: str,
     input_data: str | None,
     json_mode: bool,
-    ctx: "InvocationContext | None",
+    stream_mode: bool = False,
+    trace_mode: bool = False,
+    ctx: "InvocationContext | None" = None,
 ) -> int:
-    """Handle 'a run <agent>' command."""
+    """
+    Handle 'a run <agent>' command.
+
+    Args:
+        agent_name: Name or path of agent to run
+        input_data: Input to pass to agent.invoke()
+        json_mode: Output as JSON
+        stream_mode: Enable streaming output (for Flux agents)
+        trace_mode: Show state transitions (debugging)
+        ctx: CLI invocation context
+    """
     try:
         from system.projector import LocalProjector
 

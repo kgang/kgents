@@ -655,59 +655,9 @@ DESIGN_PATHS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Crown Jewel 7: The Gardener
-GARDENER_PATHS: dict[str, dict[str, Any]] = {
-    "concept.gardener.manifest": {
-        "aspect": "manifest",
-        "description": "View Gardener status and active sessions",
-        "effects": [],
-    },
-    "concept.gardener.session.create": {
-        "aspect": "define",
-        "description": "Start new development session",
-        "effects": ["SESSION_CREATED", "FOREST_UPDATED"],
-    },
-    "concept.gardener.session.manifest": {
-        "aspect": "manifest",
-        "description": "View current session state",
-        "effects": [],
-    },
-    "concept.gardener.session.resume": {
-        "aspect": "define",
-        "description": "Resume existing session",
-        "effects": ["SESSION_RESUMED"],
-    },
-    "concept.gardener.session.advance": {
-        "aspect": "define",
-        "description": "Advance to next N-Phase",
-        "effects": ["PHASE_ADVANCED", "FOREST_UPDATED"],
-    },
-    "concept.gardener.propose": {
-        "aspect": "manifest",
-        "description": "Get proactive suggestions",
-        "effects": [],
-    },
-    "concept.gardener.route": {
-        "aspect": "manifest",
-        "description": "Route natural language to AGENTESE path",
-        "effects": [],
-    },
-    "self.forest.manifest": {
-        "aspect": "manifest",
-        "description": "Show forest canopy view",
-        "effects": [],
-    },
-    "self.forest.evolve": {
-        "aspect": "define",
-        "description": "Propose forest changes",
-        "effects": ["FOREST_PROPOSAL"],
-    },
-    "self.meta.append": {
-        "aspect": "define",
-        "description": "Add learning to meta.md",
-        "effects": ["META_UPDATED"],
-    },
-}
+# Crown Jewel 7: The Gardener - DEPRECATED 2025-12-21
+# See: spec/protocols/_archive/gardener-evergreen-heritage.md
+GARDENER_PATHS: dict[str, dict[str, Any]] = {}  # Empty, paths deprecated
 
 # Morpheus: LLM Gateway (world.morpheus.*)
 # Note: Morpheus is infrastructure, not a "Crown Jewel" application,

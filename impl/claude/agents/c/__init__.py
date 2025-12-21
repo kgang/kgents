@@ -15,6 +15,12 @@ Functor Laws:
 Category Laws:
 - Associativity: (f >> g) >> h = f >> (g >> h)
 - Identity: Id >> f = f = f >> Id
+
+See Also:
+- spec/agents/composition.md — Composition theory
+- spec/agents/functors.md — Functor specification
+- spec/agents/functor-catalog.md — Complete functor catalog
+- spec/agents/monads.md — Monad patterns
 """
 
 # Functor types and lifted agents

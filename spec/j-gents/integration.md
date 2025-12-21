@@ -396,7 +396,7 @@ class DistributedJGent(JGent):
 ### 6.2 Bootstrap Updates Required
 
 - [ ] `spec/bootstrap.md` - Add "Reality is Trichotomous" idiom
-- [ ] `spec/c-gents/functors.md` - Add Promise Functor
+- [ ] `spec/agents/functors.md` - Add Promise Functor
 - [ ] `spec/anatomy.md` - Add Ephemeral Agents section
 
 ### 6.3 Implementation Complete
@@ -475,6 +475,151 @@ Use eager evaluation when:
 
 ---
 
+---
+
+## 9. Alethic Projection Integration
+
+### 9.1 The Missing Link
+
+The original J-gent spec had MetaArchitect producing **source code**:
+
+```python
+MetaArchitect: (Intent, Context, Constraints) → SourceCode
+```
+
+**Enhanced design** — MetaArchitect produces **decorated agent class**:
+
+```python
+MetaArchitect: (Intent, Context, Constraints) → (Nucleus, Halo)
+
+# Then Alethic Projection takes over
+ProjectorRegistry.compile(nucleus, halo, target="local")
+```
+
+This means J-gent can:
+1. Generate an ephemeral agent definition
+2. Project it to **any target** based on context
+
+### 9.2 Reality Classification → Projector Selection
+
+Extend J-gent's reality classification to include **projection target selection**:
+
+```python
+class RealityClassifier:
+    async def classify(self, intent: str, context: dict) -> Classification:
+        reality = await self._classify_reality(intent)
+        target = await self._select_target(reality, context)
+
+        return Classification(
+            reality=reality,      # DETERMINISTIC | PROBABILISTIC | CHAOTIC
+            target=target,        # LOCAL | CLI | WASM | K8S | MARIMO
+            entropy_budget=self._compute_budget(reality),
+        )
+
+    def _select_target(self, reality: Reality, context: dict) -> Target:
+        match reality:
+            case Reality.DETERMINISTIC:
+                return Target.LOCAL  # Fast, in-process
+            case Reality.PROBABILISTIC:
+                if context.get("interactive"):
+                    return Target.MARIMO  # Exploration
+                elif context.get("production"):
+                    return Target.K8S  # Scale
+                else:
+                    return Target.CLI  # Quick test
+            case Reality.CHAOTIC:
+                return Target.WASM  # Sandboxed, untrusted
+```
+
+### 9.3 The Agent Foundry Crown Jewel
+
+The full synthesis lives in a new **Crown Jewel** that orchestrates J-gent + Alethic Projection:
+
+```python
+class AgentFoundry:
+    """
+    Crown Jewel: On-demand agent construction.
+
+    Combines J-gent JIT intelligence with Alethic Projection
+    to create and deploy ephemeral agents.
+    """
+
+    async def forge(
+        self,
+        intent: str,
+        context: dict | None = None,
+    ) -> CompiledAgent:
+        # 1. Classify reality + select target
+        classification = await self.classifier.classify(intent, context)
+
+        # 2. Generate (Nucleus, Halo) via MetaArchitect
+        agent_def = await self.architect.generate(intent, classification)
+
+        # 3. Validate via Chaosmonger
+        if not await self.chaosmonger.is_stable(agent_def):
+            return self._fallback_agent(intent)
+
+        # 4. Project to target
+        projector = self.projectors.get(classification.target)
+        return projector.compile(agent_def.cls)
+```
+
+**Full Specification**: See `spec/services/foundry.md`
+
+### 9.4 Capability Inference
+
+MetaArchitect can infer capabilities from intent:
+
+```python
+class CapabilityInferrer:
+    """Infer Halo capabilities from intent analysis."""
+
+    async def infer(self, intent: str) -> set[Capability]:
+        capabilities = set()
+
+        if "state" in intent or "remember" in intent:
+            capabilities.add(Capability.Stateful(schema=dict))
+
+        if "stream" in intent or "continuous" in intent:
+            capabilities.add(Capability.Streamable(budget=5.0))
+
+        if "observe" in intent or "metrics" in intent:
+            capabilities.add(Capability.Observable(metrics=True))
+
+        return capabilities
+```
+
+### 9.5 Sandbox Graduation
+
+Chaotic reality agents start in WASM sandbox, graduate based on proven behavior:
+
+```
+Reality: CHAOTIC
+    │
+    ▼
+WASMProjector (sandbox)
+    │
+    ├── Success × N → Confidence increases
+    │
+    ▼
+LocalProjector (trusted)
+    │
+    ├── Success × M → Production ready
+    │
+    ▼
+K8sProjector (deployed)
+```
+
+### 9.6 Integration Checklist (Alethic)
+
+- [ ] MetaArchitect enhanced to produce `(Nucleus, Halo)` not `SourceCode`
+- [ ] RealityClassifier extended with `_select_target()` method
+- [ ] AgentFoundry Crown Jewel implemented (`services/foundry/`)
+- [ ] AGENTESE nodes registered (`self.foundry.*`)
+- [ ] WASMProjector implemented for chaotic reality sandbox
+
+---
+
 ## Summary
 
 **Phase 5 delivers**:
@@ -483,7 +628,10 @@ Use eager evaluation when:
 2. ⏳ Bootstrap spec updates (bootstrap.md, functors.md, anatomy.md)
 3. ⏳ Integration tests across agent genera
 4. ⏳ Performance validation (caching, lazy evaluation)
+5. **NEW**: ✅ Alethic Projection integration specified
 
-J-gents are now **fully specified** and **functionally implemented**. Remaining work is polish: update cross-references, add integration tests, validate performance claims.
+J-gents are now **fully specified** and **functionally implemented**. The Alethic Projection synthesis completes the vision: **Classify reality, compile the mind, project anywhere, graduate to permanence.**
 
-The J-gents story is complete: **Classify reality, compile the mind, collapse to safety.**
+See also:
+- `spec/services/foundry.md` — Agent Foundry Crown Jewel
+- `spec/protocols/alethic-projection.md` — Projector targets and composition

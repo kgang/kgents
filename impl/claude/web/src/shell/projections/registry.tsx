@@ -35,15 +35,6 @@ const BrainProjection = lazy(() =>
   }))
 );
 
-const GardenerProjection = lazy(() =>
-  import('@/pages/Gardener').then((m) => ({
-    default: (_props: ProjectionProps) => {
-      const Page = m.default;
-      return <Page />;
-    },
-  }))
-);
-
 const ForgeProjection = lazy(() =>
   import('@/pages/Forge').then((m) => ({
     default: (_props: ProjectionProps) => {
@@ -137,16 +128,6 @@ const CockpitProjection = lazy(() =>
   }))
 );
 
-// Garden - self.garden state manager (complementary to Gardener orchestrator)
-const GardenProjection = lazy(() =>
-  import('@/pages/Garden').then((m) => ({
-    default: (_props: ProjectionProps) => {
-      const Page = m.default;
-      return <Page />;
-    },
-  }))
-);
-
 // Gallery - world.gallery showcase
 const GalleryProjection = lazy(() =>
   import('@/pages/GalleryPage').then((m) => ({
@@ -224,10 +205,6 @@ const TYPE_REGISTRY = new Map<string, RegistryEntry>([
   ['CrystalCartography', { component: BrainProjection, priority: 100 }],
   ['BrainManifest', { component: BrainProjection, priority: 100 }],
 
-  // Gardener
-  ['GardenerSession', { component: GardenerProjection, priority: 100 }],
-  ['GardenerPlot', { component: GardenerProjection, priority: 100 }],
-
   // Forge
   ['ForgeCommission', { component: ForgeProjection, priority: 100 }],
   ['ForgeArtisan', { component: ForgeProjection, priority: 100 }],
@@ -276,10 +253,6 @@ const PATH_REGISTRY = new Map<string, RegistryEntry>([
   ['self.memory.*', { component: BrainProjection, priority: 50 }],
   ['self.memory', { component: BrainProjection, priority: 40 }],
 
-  // Gardener (concept.gardener.*)
-  ['concept.gardener.*', { component: GardenerProjection, priority: 50 }],
-  ['concept.gardener', { component: GardenerProjection, priority: 40 }],
-
   // Forge (world.forge.*)
   ['world.forge.*', { component: ForgeProjection, priority: 50 }],
   ['world.forge', { component: ForgeProjection, priority: 40 }],
@@ -307,16 +280,6 @@ const PATH_REGISTRY = new Map<string, RegistryEntry>([
   // Park (world.park.*)
   ['world.park.*', { component: ParkProjection, priority: 50 }],
   ['world.park', { component: ParkProjection, priority: 40 }],
-
-  // Garden (self.garden.*) - state manager for garden lifecycle
-  ['self.garden.*', { component: GardenProjection, priority: 50 }],
-  ['self.garden', { component: GardenProjection, priority: 40 }],
-
-  // Forest (self.forest.*) - project health, plans, sessions (Garden Protocol)
-  ['self.forest.plan.**', { component: GardenerProjection, priority: 60 }],
-  ['self.forest.session.**', { component: GardenerProjection, priority: 60 }],
-  ['self.forest.*', { component: GardenerProjection, priority: 50 }],
-  ['self.forest', { component: GardenerProjection, priority: 40 }],
 
   // Differance (self.differance.*) - self-context différance traces
   ['self.differance.*', { component: DifferanceProjection, priority: 50 }],

@@ -19,7 +19,7 @@ For backwards compatibility, all exports from this module remain available.
 New code should use agents.d directly.
 
 See Also:
-    - spec/c-gents/functor-catalog.md §14 — State Functor specification
+    - spec/agents/functor-catalog.md §14 — State Functor specification
     - spec/d-gents/symbiont.md — Symbiont pattern documentation
     - agents.d.Symbiont — The canonical state+persistence pattern
 """

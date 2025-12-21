@@ -187,8 +187,8 @@ Every agent genus can be reformulated as PolyAgent:
 - **Primitives**: `spec/agents/primitives.md`
 - **Operads**: `spec/agents/operads.md`
 - **Emergence**: `spec/agents/emergence.md`
-- **C-gent Functors**: `spec/c-gents/functors.md` (polynomial foundation)
-- **Functor Catalog**: `spec/c-gents/functor-catalog.md` (13 functors with polynomial interpretations)
+- **Functors**: `spec/agents/functors.md` (polynomial foundation)
+- **Functor Catalog**: `spec/agents/functor-catalog.md` (13 functors with polynomial interpretations)
 - **Implementation**: `impl/claude/agents/{poly,operad,sheaf}/`
 
 ## Theory References

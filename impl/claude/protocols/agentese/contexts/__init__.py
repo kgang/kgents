@@ -75,45 +75,8 @@ from .design import (
     create_design_node,
     create_design_resolver,
 )
-from .forest import (
-    FOREST_ROLE_AFFORDANCES,
-    EpilogueEntry,
-    ForestContextResolver,
-    ForestLawCheck,
-    ForestManifest,
-    ForestNode,
-    ParsedTree,
-    create_forest_node,
-    create_forest_resolver,
-    parse_forest_md,
-)
-
-# Gardener context (The 7th Crown Jewel)
-from .gardener import (
-    COMMAND_TO_PATH,
-    GARDENER_ROLE_AFFORDANCES,
-    NL_PATTERN_HINTS,
-    GardenerContextResolver,
-    GardenerNode,
-    GardenerSession,
-    RouteMethod,
-    RouteResult,
-    create_gardener_node,
-    create_gardener_resolver,
-    get_all_command_mappings,
-    resolve_command_to_path,
-)
-
-# Prompt context (concept.prompt.* - partially archived 2025-12-18)
-from .prompt import (
-    PROMPT_ROLE_AFFORDANCES,
-    CheckpointSummaryDTO,
-    EvolutionResult,
-    PromptContextResolver,
-    PromptNode,
-    ValidationResult,
-    create_prompt_resolver,
-)
+# Note: Forest, Gardener, and Prompt contexts were deprecated 2025-12-21
+# See: spec/protocols/_archive/gardener-evergreen-heritage.md
 from .self_ import (
     BUS_AFFORDANCES,
     # Town Citizen integration (Phase 3 Crown Jewels)
@@ -522,30 +485,7 @@ __all__ = [
     "AgentListNode",
     "create_agent_resolver",
     "create_agent_node",
-    # Forest context (concept.forest.*)
-    "FOREST_ROLE_AFFORDANCES",
-    "EpilogueEntry",
-    "ForestContextResolver",
-    "ForestLawCheck",
-    "ForestManifest",
-    "ForestNode",
-    "ParsedTree",
-    "create_forest_node",
-    "create_forest_resolver",
-    "parse_forest_md",
-    # Gardener context (concept.gardener.* - The 7th Crown Jewel)
-    "COMMAND_TO_PATH",
-    "GARDENER_ROLE_AFFORDANCES",
-    "NL_PATTERN_HINTS",
-    "GardenerContextResolver",
-    "GardenerNode",
-    "GardenerSession",
-    "RouteMethod",
-    "RouteResult",
-    "create_gardener_node",
-    "create_gardener_resolver",
-    "get_all_command_mappings",
-    "resolve_command_to_path",
+    # Note: Forest and Gardener contexts deprecated 2025-12-21
     # Crown Jewels (Seven Crown Jewel applications + Emergence + Gestalt Live + Design)
     "ALL_CROWN_JEWEL_PATHS",
     "ATELIER_PATHS",
@@ -588,14 +528,7 @@ __all__ = [
     "create_brain_flow_node",
     "create_gardener_flow_node",
     "create_gestalt_flow_node",
-    # Prompt context (concept.prompt.* - partially archived 2025-12-18)
-    "PROMPT_ROLE_AFFORDANCES",
-    "CheckpointSummaryDTO",
-    "EvolutionResult",
-    "PromptContextResolver",
-    "PromptNode",
-    "ValidationResult",
-    "create_prompt_resolver",
+    # Note: Prompt context deprecated 2025-12-21
     # Town Citizen integration (Chat Protocol - Phase 2.5)
     "ARCHETYPE_PROMPTS",
     "CITIZEN_CHAT_AFFORDANCES",

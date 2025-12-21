@@ -197,10 +197,19 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "chat": "protocols.cli.handlers.chat:cmd_chat",
     # ==========================================================================
+    # Coffee: Morning Coffee Liminal Transition Protocol (time.coffee.*)
+    # ==========================================================================
+    "coffee": "protocols.cli.handlers.coffee:cmd_coffee",
+    # ==========================================================================
     # Completions: Shell completions generator (Wave 3)
     # ==========================================================================
     "completions": "protocols.cli.completions:cmd_completions",
     "q": "protocols.cli.handlers.query:cmd_query",
+    # ==========================================================================
+    # Living Docs: Documentation Generator (Phase 4-5)
+    # Uses thin routing shim - all logic in services/living_docs/
+    # ==========================================================================
+    "docs": "protocols.cli.handlers.docs:cmd_docs",
 }
 
 
@@ -296,6 +305,20 @@ async def _bootstrap_cortex(project_path: Path | None = None) -> Any:
 
         _lifecycle_manager = LifecycleManager()
         _lifecycle_state = await _lifecycle_manager.bootstrap(project_path)
+
+        # Wire Crown Jewel services for AGENTESE nodes
+        # This enables real LLM calls via ChatNode → Morpheus
+        try:
+            from services.providers import setup_providers
+
+            await setup_providers()
+        except Exception as provider_err:
+            # Graceful degradation - chat will use stub mode
+            import logging
+
+            logging.getLogger(__name__).debug(
+                f"setup_providers skipped: {provider_err}"
+            )
 
         return _lifecycle_state
     except Exception as e:

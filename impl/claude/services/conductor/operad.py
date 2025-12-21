@@ -363,10 +363,8 @@ def get_swarm_operad() -> Operad:
 
 
 # For direct access (triggers lazy init)
-@property
-def SWARM_OPERAD() -> Operad:  # type: ignore
-    """The SWARM_OPERAD instance."""
-    return get_swarm_operad()
+# Note: SWARM_OPERAD is accessed via get_swarm_operad() function
+SWARM_OPERAD = property(lambda self: get_swarm_operad())  # type: ignore[misc]
 
 
 # =============================================================================

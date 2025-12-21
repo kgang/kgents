@@ -1,13 +1,19 @@
 """
-DgentProtocol: The minimal interface for data persistence.
+D-gent Protocols: Dual interface for data persistence.
 
-Five methods. That's it.
+Two complementary protocols:
 
-This is the NEW simplified D-gent architecture (data-architecture-rewrite).
+1. DgentProtocol (5 methods):
+   - put/get/delete/list/causal_chain
+   - Schema-free Datum persistence
+   - Use for: raw data storage, causal lineage, schema-at-read
 
-Backward Compatibility:
-    DataAgent is the OLD protocol (load/save/history). It's kept for backward
-    compatibility with existing code but new code should use DgentProtocol.
+2. DataAgent[S] (3 methods):
+   - load/save/history
+   - Typed state management
+   - Use for: Symbiont state threading, typed agents, state machines
+
+These serve different purposes and both are actively used.
 """
 
 from __future__ import annotations
@@ -26,15 +32,16 @@ S = TypeVar("S")  # State type
 
 class DataAgent(Protocol[S]):
     """
-    DEPRECATED: The old protocol for state management.
+    Typed state management protocol for Symbiont pattern.
 
-    New code should use DgentProtocol instead.
+    Use DataAgent[S] when you need:
+    - State threading with Symbiont
+    - Typed state (not schema-free bytes)
+    - State history queries
 
-    This is kept for backward compatibility with:
-    - CachedAgent
-    - PersistentAgent
-    - VolatileAgent
-    - etc.
+    Implementations: VolatileAgent, PersistentAgent, LensAgent, etc.
+
+    For schema-free Datum persistence, use DgentProtocol instead.
     """
 
     @abstractmethod

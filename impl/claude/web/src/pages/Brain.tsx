@@ -30,7 +30,7 @@ export default function BrainPage() {
       jewel="brain"
       loadingAction="analyze"
       body={{ similarity_threshold: 0.3 }}
-      className="h-screen"
+      className="flex-1 min-h-0 flex flex-col"
     >
       {(topology) => (
         <Brain2D

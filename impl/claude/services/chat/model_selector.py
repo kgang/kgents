@@ -61,8 +61,9 @@ def can_switch_model(session: "ChatSession", observer: "Umwelt") -> bool:
     Check if model switching is allowed for this session.
 
     Model switching is allowed when:
-    1. It's a one-on-one session (single observer)
-    2. Observer is not a guest (has permissions)
+    1. It's a personal session (self.* path) - owner can always switch
+    2. It's a one-on-one session (citizen paths)
+    3. Observer has explicit non-guest archetype
 
     Args:
         session: The chat session
@@ -71,17 +72,10 @@ def can_switch_model(session: "ChatSession", observer: "Umwelt") -> bool:
     Returns:
         True if model switching is allowed
     """
-    archetype = _get_archetype(observer)
-
-    # Guests can't switch models
-    if archetype == "guest":
-        return False
-
-    # For now, allow model switching for self.* paths and citizen paths
-    # (citizen paths are allowed since user specified "any one-on-one session")
     node_path = session.node_path
 
-    # Personal sessions always allowed
+    # Personal sessions (self.*) always allow model switching
+    # The owner of the session should be able to pick their model
     if node_path.startswith("self."):
         return True
 
@@ -89,7 +83,14 @@ def can_switch_model(session: "ChatSession", observer: "Umwelt") -> bool:
     if "citizen" in node_path:
         return True
 
-    # Default: allow if not a guest
+    # For other paths, check archetype
+    archetype = _get_archetype(observer)
+
+    # Guests can't switch models on non-personal paths
+    if archetype == "guest":
+        return False
+
+    # Allow for all other archetypes
     return True
 
 

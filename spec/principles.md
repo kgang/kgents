@@ -74,7 +74,7 @@ These seven principles guide all kgents design decisions.
 
 > Agents are morphisms in a category; composition is primary.
 
-This principle comes from [C-gents](c-gents/) but applies to all agents.
+This principle comes from the [categorical foundations](agents/) and applies to all agents.
 
 **Heritage Citation (SPEAR):** The SPEAR paper (arXiv:2508.05012) formalizes prompt algebra with composition, union, tensor, and differentiation operators. kgents implements `compose_sections()` with verified associativity—the same algebraic structure applies to both agents and prompts. See `spec/heritage.md` §7.
 
@@ -249,7 +249,7 @@ When a FluxAgent is **FLOWING** (processing a stream), calling `invoke()` doesn'
 Perturbation preserves **State Integrity**.
 
 See:
-- `spec/c-gents/functor-catalog.md` §13 — Flux functor
+- `spec/agents/functor-catalog.md` §13 — Flux functor
 - `spec/agents/flux.md` — Full specification
 
 ### Anti-patterns

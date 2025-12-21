@@ -14,6 +14,23 @@ Migration: 2025-12-16
 - Original location: impl/claude/bootstrap/types.py
 - New location: impl/claude/agents/poly/types.py
 - The bootstrap module re-exports from here for backward compatibility.
+
+Teaching:
+    gotcha: Agent is a Protocol, not a base class. Use structural typing.
+            Don't inherit from Agent—implement the invoke() method.
+            (Evidence: test_protocol.py::test_agent_structural_typing)
+
+    gotcha: ComposedAgent flattens automatically. (a >> b) >> c = a >> (b >> c).
+            This is associativity. Verify with BootstrapWitness.verify_composition_laws().
+            (Evidence: test_primitives.py::test_composition_associativity)
+
+    gotcha: Result.unwrap() raises RuntimeError on Err. Always check is_ok() first
+            or use unwrap_or(default) for safe extraction.
+            (Evidence: test_primitives.py::test_result_unwrap_error)
+
+    gotcha: Type variables A_contra and B_co have variance for Protocol correctness.
+            Using invariant type vars in Protocol causes mypy errors.
+            (Evidence: test_protocol.py::test_variance_correctness)
 """
 
 from __future__ import annotations

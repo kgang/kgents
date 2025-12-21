@@ -18,7 +18,7 @@ Relationship to State Functor:
     - Functor registry integration
 
 See Also:
-    - spec/c-gents/functor-catalog.md §14 — State Functor specification
+    - spec/agents/functor-catalog.md §14 — State Functor specification
     - spec/d-gents/symbiont.md — Symbiont pattern documentation
 """
 
@@ -68,7 +68,7 @@ class Symbiont(Agent[In, Out], Generic[In, Out, S]):
         >>> await chatbot.invoke("Hello")  # Returns "Echo: Hello"
 
     See Also:
-        - spec/c-gents/functor-catalog.md §14 for State Functor formalism
+        - spec/agents/functor-catalog.md §14 for State Functor formalism
         - spec/d-gents/symbiont.md for pattern documentation
     """
 

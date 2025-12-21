@@ -67,7 +67,6 @@ function CrownContext() {
     // AGENTESE paths: context.holon.aspect
     if (path.startsWith('/self.memory')) return 'brain';
     if (path.startsWith('/world.codebase')) return 'gestalt';
-    if (path.startsWith('/concept.gardener') || path.startsWith('/self.garden')) return 'gardener';
     if (path.startsWith('/world.forge')) return 'forge';
     if (path.startsWith('/world.town')) return 'coalition';
     if (path.startsWith('/world.park')) return 'park';
@@ -114,7 +113,6 @@ function QuickNav() {
   const jewels: Array<{ name: JewelName; route: string }> = [
     { name: 'brain', route: '/self.memory' },
     { name: 'gestalt', route: '/world.codebase' },
-    { name: 'gardener', route: '/concept.gardener' },
     { name: 'forge', route: '/world.forge' },
     { name: 'coalition', route: '/world.town' },
     { name: 'park', route: '/world.park' },
@@ -262,28 +260,14 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
   // When navigation expands: main slides right
   //
   // Mobile layout fixed elements:
+  // Mobile layout constants
   // - ObserverDrawer: 40px (collapsed)
   // - Header: ~44px (py-2 + content)
   // Total: ~84px top offset needed
   const MOBILE_HEADER_HEIGHT = 44;
-  const mainStyle: React.CSSProperties =
-    density === 'compact'
-      ? {
-          // Mobile: account for fixed ObserverDrawer + Header at top
-          paddingTop: `${observerHeight + MOBILE_HEADER_HEIGHT}px`,
-          paddingBottom: '5rem', // Space for FAB/bottom toolbar
-        }
-      : {
-          // Desktop: use animated offsets
-          marginTop: `${observerHeight}px`,
-          marginBottom: `${terminalHeight}px`,
-          marginLeft: navigationTreeExpanded ? `${navigationWidth}px` : 0,
-          // Disable CSS transitions when JS is animating to avoid double-animation
-          transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex flex-col relative">
+    <div className="h-screen bg-gray-900 flex flex-col relative overflow-hidden">
       {/* Observer Drawer - Always present at top */}
       <ObserverErrorBoundary>
         <ObserverDrawer />
@@ -319,21 +303,31 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
       <QuickNav />
 
       {/* Main layout area - Navigation floats over this */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden relative">
         {/* Navigation Tree - Floating overlay sidebar */}
         <NavigationErrorBoundary>
           <NavigationTree />
         </NavigationErrorBoundary>
 
-        {/* Content Canvas - uses coordinated offsets */}
-        <main className="flex-1 overflow-auto absolute inset-0" style={mainStyle}>
+        {/* Content Canvas - flex child that fills available space */}
+        <main
+          className="flex-1 min-h-0 flex flex-col"
+          style={{
+            marginTop: density !== 'compact' ? `${observerHeight}px` : undefined,
+            marginLeft: density !== 'compact' && navigationTreeExpanded ? `${navigationWidth}px` : 0,
+            marginBottom: density !== 'compact' ? `${terminalHeight}px` : undefined,
+            paddingTop: density === 'compact' ? `${observerHeight + MOBILE_HEADER_HEIGHT}px` : undefined,
+            paddingBottom: density === 'compact' ? '5rem' : undefined,
+            transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
           <ProjectionErrorBoundary>
             <Outlet />
           </ProjectionErrorBoundary>
         </main>
       </div>
 
-      {/* Terminal Layer - Fixed at bottom */}
+      {/* Terminal - In document flow at bottom */}
       <TerminalErrorBoundary>
         <Terminal />
       </TerminalErrorBoundary>

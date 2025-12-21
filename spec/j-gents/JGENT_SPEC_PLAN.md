@@ -427,7 +427,7 @@ This is Fix applied to the decision of WHETHER to iterate:
 - CHAOTIC: Iteration forbidden
 ```
 
-### 3.2 c-gents/functors.md Additions
+### 3.2 agents/functors.md Additions
 
 Add new functor:
 

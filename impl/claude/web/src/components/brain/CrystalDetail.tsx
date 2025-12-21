@@ -165,7 +165,7 @@ export function CrystalDetail({
   const panelClass =
     variant === 'modal'
       ? 'bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col'
-      : 'bg-gray-800 border-l border-gray-700 h-full flex flex-col';
+      : 'bg-gray-800 h-full flex flex-col overflow-hidden';
 
   return (
     <div className={containerClass} onClick={variant === 'modal' ? onClose : undefined}>
@@ -209,8 +209,8 @@ export function CrystalDetail({
             </div>
           </div>
 
-          {/* Observer Switcher */}
-          <div className="px-4 py-3 border-b border-gray-700 bg-gray-800/50">
+          {/* Observer Switcher - fixed height to prevent layout shift on hover */}
+          <div className="px-4 py-3 border-b border-gray-700 bg-gray-800/50 min-h-[72px]">
             <ObserverSwitcher
               current={observer}
               available={DEFAULT_OBSERVERS.brain}

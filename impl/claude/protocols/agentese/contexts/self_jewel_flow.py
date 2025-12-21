@@ -60,34 +60,9 @@ BRAIN_FLOW_PATHS: dict[str, dict[str, Any]] = {
     },
 }
 
-# Gardener + ChatFlow paths (Hero Path Phase 3)
-GARDENER_FLOW_PATHS: dict[str, dict[str, Any]] = {
-    "self.jewel.gardener.flow.chat.manifest": {
-        "aspect": "manifest",
-        "description": "View Gardener chat flow state",
-        "effects": [],
-    },
-    "self.jewel.gardener.flow.chat.tend": {
-        "aspect": "define",
-        "description": "Tend the garden via conversational chat",
-        "effects": ["TURN_COMPLETED", "GESTURE_APPLIED"],
-    },
-    "self.jewel.gardener.flow.chat.suggest": {
-        "aspect": "manifest",
-        "description": "Get tending suggestions via chat",
-        "effects": [],
-    },
-    "self.jewel.gardener.flow.chat.history": {
-        "aspect": "manifest",
-        "description": "View tending chat history",
-        "effects": [],
-    },
-    "self.jewel.gardener.flow.chat.reset": {
-        "aspect": "define",
-        "description": "Reset chat context",
-        "effects": ["FLOW_COMPLETED"],
-    },
-}
+# Gardener + ChatFlow paths - DEPRECATED 2025-12-21
+# See: spec/protocols/_archive/gardener-evergreen-heritage.md
+GARDENER_FLOW_PATHS: dict[str, dict[str, Any]] = {}  # Empty, deprecated
 
 # Gestalt + ResearchFlow paths (Hero Path Phase 4)
 GESTALT_FLOW_PATHS: dict[str, dict[str, Any]] = {
@@ -256,13 +231,7 @@ BRAIN_FLOW_AFFORDANCES: tuple[str, ...] = (
     "reset",
 )
 
-GARDENER_FLOW_AFFORDANCES: tuple[str, ...] = (
-    "manifest",
-    "tend",
-    "suggest",
-    "history",
-    "reset",
-)
+GARDENER_FLOW_AFFORDANCES: tuple[str, ...] = ()  # Deprecated 2025-12-21
 
 GESTALT_FLOW_AFFORDANCES: tuple[str, ...] = (
     "manifest",

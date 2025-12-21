@@ -23,7 +23,7 @@ export default function GestaltPage() {
       aspect="topology"
       body={body}
       jewel="gestalt"
-      className="h-screen"
+      className="flex-1 min-h-0 flex flex-col"
     >
       {(data) => <Gestalt2D topology={data as WorldCodebaseTopologyResponse} />}
     </PathProjection>

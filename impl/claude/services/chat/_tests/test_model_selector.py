@@ -15,6 +15,7 @@ from services.chat.model_selector import (
     MorpheusConfig,
     TokenBudget,
     budget_aware_selector,
+    can_switch_model,
     default_model_selector,
 )
 
@@ -176,3 +177,50 @@ class TestTierBudgets:
 
         assert budget.daily_tokens == 1_000_000
         assert budget.per_request == 16384
+
+
+def _make_session(node_path: str = "self.chat") -> MagicMock:
+    """Create a mock chat session."""
+    session = MagicMock()
+    session.node_path = node_path
+    return session
+
+
+class TestCanSwitchModel:
+    """Tests for can_switch_model function - model switching permissions."""
+
+    def test_self_paths_always_allow_switching(self) -> None:
+        """Personal sessions (self.*) always allow model switching."""
+        session = _make_session("self.chat")
+        observer = _make_observer(archetype="guest")
+
+        # Even guest can switch on self.* paths - it's their session
+        assert can_switch_model(session, observer) is True
+
+    def test_self_soul_allows_switching(self) -> None:
+        """self.soul allows model switching."""
+        session = _make_session("self.soul")
+        observer = _make_observer(archetype="guest")
+
+        assert can_switch_model(session, observer) is True
+
+    def test_citizen_paths_allow_switching(self) -> None:
+        """Citizen conversations allow model switching."""
+        session = _make_session("world.town.citizen.elara")
+        observer = _make_observer(archetype="guest")
+
+        assert can_switch_model(session, observer) is True
+
+    def test_guest_cannot_switch_on_non_self_paths(self) -> None:
+        """Guest cannot switch models on non-personal paths."""
+        session = _make_session("world.park.scenario")
+        observer = _make_observer(archetype="guest")
+
+        assert can_switch_model(session, observer) is False
+
+    def test_developer_can_switch_anywhere(self) -> None:
+        """Developer can switch models on any path."""
+        session = _make_session("world.park.scenario")
+        observer = _make_observer(archetype="developer")
+
+        assert can_switch_model(session, observer) is True

@@ -1178,6 +1178,45 @@ The time context handles temporal operations:
     return context_help.get(context, f"No detailed help for {context}")
 
 
+def _stream_result(async_iter: Any, state: ReplState) -> str:
+    """
+    Stream tokens to stdout in real-time.
+
+    Consumes an async iterator from a streaming AGENTESE path
+    (e.g., self.chat.stream) and prints tokens as they arrive.
+
+    Args:
+        async_iter: Async iterator yielding tokens (dict or str)
+        state: REPL state for context
+
+    Returns:
+        Full accumulated response as string
+    """
+    import sys
+
+    async def _consume() -> str:
+        full_response = ""
+        async for chunk in async_iter:
+            if isinstance(chunk, dict):
+                # ChatNode.stream returns dicts with 'content' key
+                content = chunk.get("content", "")
+                if content:
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
+                    full_response += content
+            else:
+                # Plain string tokens
+                token = str(chunk)
+                sys.stdout.write(token)
+                sys.stdout.flush()
+                full_response += token
+        return full_response
+
+    result = asyncio.run(_consume())
+    print()  # Newline after streaming
+    return result
+
+
 def handle_invocation(state: ReplState, parts: list[str]) -> str:
     """
     Handle path invocation.
@@ -1237,6 +1276,11 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
             # Has explicit aspect
             try:
                 result = asyncio.run(logos.invoke(path_str, umwelt))
+                # Handle streaming results (e.g., self.chat.stream)
+                if hasattr(result, "__aiter__"):
+                    output = _stream_result(result, state)
+                    state.last_result = output
+                    return _complete_invocation(output)
                 state.last_result = result
                 return _complete_invocation(_render_result(result, state))
             except Exception:
@@ -1246,6 +1290,11 @@ def handle_invocation(state: ReplState, parts: list[str]) -> str:
             # Holon without aspect - try .manifest
             try:
                 result = asyncio.run(logos.invoke(f"{path_str}.manifest", umwelt))
+                # Handle streaming results (unlikely for .manifest but be consistent)
+                if hasattr(result, "__aiter__"):
+                    output = _stream_result(result, state)
+                    state.last_result = output
+                    return _complete_invocation(output)
                 state.last_result = result
                 return _complete_invocation(_render_result(result, state))
             except Exception:

@@ -50,6 +50,8 @@ export interface CanvasNode {
   expandable?: boolean;
   /** Node is currently expanded */
   expanded?: boolean;
+  /** Available aspects for this node (from backend metadata) */
+  aspects?: string[];
 }
 
 /** Canvas viewport state */

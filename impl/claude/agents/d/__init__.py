@@ -65,8 +65,8 @@ from .lens import (
 from .lens_agent import LensAgent, focused
 from .persistent import PersistentAgent
 
-# Protocols
-from .protocol import BaseDgent, DgentProtocol
+# Protocols (dual interface - see protocol.py)
+from .protocol import BaseDgent, DataAgent, DgentProtocol
 
 # Router and Bus
 from .router import Backend, BackendStatus, DgentRouter
@@ -93,8 +93,9 @@ from .volatile import VolatileAgent
 __all__ = [
     # Core Types
     "Datum",
-    # Protocols
+    # Protocols (dual interface)
     "DgentProtocol",
+    "DataAgent",
     "BaseDgent",
     # Backends
     "MemoryBackend",

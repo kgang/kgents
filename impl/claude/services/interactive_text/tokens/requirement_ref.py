@@ -235,7 +235,7 @@ class RequirementRefToken(BaseMeaningToken[str]):
             ),
         ]
 
-    async def project(self, target: str, observer: Observer) -> str:
+    async def project(self, target: str, observer: Observer) -> str | dict[str, Any]:
         if target == "cli":
             return f"[yellow]{self._source_text}[/yellow]"
         elif target == "json":

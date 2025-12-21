@@ -380,20 +380,22 @@ def register_witness_handlers() -> list[UnsubscribeFunc]:
 
     This enables cross-jewel processing of Witness events:
     - WITNESS_THOUGHT_CAPTURED → WitnessToBrainHandler → Brain crystals
-    - WITNESS_GIT_COMMIT → WitnessToGardenHandler → Plot updates
+    - WITNESS_GIT_COMMIT → WitnessToBrainHandler → Brain crystals
+
+    Note: Garden handlers deprecated 2025-12-21.
+    See: spec/protocols/_archive/gardener-evergreen-heritage.md
 
     Returns:
         List of unsubscribe functions for cleanup
     """
     from protocols.synergy import SynergyEventType, get_synergy_bus
-    from protocols.synergy.handlers import WitnessToBrainHandler, WitnessToGardenHandler
+    from protocols.synergy.handlers import WitnessToBrainHandler
 
     global_bus = get_synergy_bus()
     unsubscribes: list[UnsubscribeFunc] = []
 
     # Create handlers (auto_capture=True for production)
     brain_handler = WitnessToBrainHandler(auto_capture=True)
-    garden_handler = WitnessToGardenHandler(auto_update=True)
 
     # Register brain handler for thought events
     unsubscribes.append(
@@ -401,9 +403,6 @@ def register_witness_handlers() -> list[UnsubscribeFunc]:
     )
     # Brain also handles git commits (for crystal capture)
     unsubscribes.append(global_bus.register(SynergyEventType.WITNESS_GIT_COMMIT, brain_handler))
-
-    # Register garden handler for git commit events
-    unsubscribes.append(global_bus.register(SynergyEventType.WITNESS_GIT_COMMIT, garden_handler))
 
     logger.info("Witness handlers registered with global SynergyBus")
     return unsubscribes
@@ -447,7 +446,8 @@ class WitnessBusManager:
 
         Handlers registered:
         - WitnessToBrainHandler: thought → crystal storage
-        - WitnessToGardenHandler: commit → plot cultivation
+
+        Note: Garden handlers deprecated 2025-12-21.
 
         Also bridges local WitnessSynergyBus → global SynergyBus.
         """

@@ -16,7 +16,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { JEWEL_INFO, type Jewel } from '../synergy/types';
-import { brainApi, gardenerApi } from '../../api/client';
+import { brainApi } from '../../api/client';
 
 /**
  * Map AGENTESE paths to jewels for display.
@@ -26,8 +26,6 @@ const PATH_TO_JEWEL: Record<string, Jewel> = {
   '/self.memory': 'brain',
   '/world.codebase': 'gestalt',
   '/world.gestalt.live': 'gestalt',
-  '/concept.gardener': 'gardener',
-  '/self.garden': 'gardener',
   '/world.forge': 'forge',
   '/world.town': 'coalition',
   '/world.domain': 'coalition',
@@ -42,8 +40,6 @@ const PATH_TO_AGENTESE: Record<string, string> = {
   '/self.memory': 'self.memory.*',
   '/world.codebase': 'world.codebase.*',
   '/world.gestalt.live': 'world.gestalt.live.*',
-  '/concept.gardener': 'concept.gardener.*',
-  '/self.garden': 'self.garden.*',
   '/world.forge': 'world.forge.*',
   '/world.town': 'world.town.*',
   '/world.domain': 'world.domain.*',
@@ -52,14 +48,10 @@ const PATH_TO_AGENTESE: Record<string, string> = {
 };
 
 interface CrownState {
-  /** Current gardener session phase (if active) */
-  gardenerPhase?: string;
   /** Number of brain crystals */
   crystalCount?: number;
   /** Currently worn park mask (if any) */
   activeMask?: string;
-  /** Active Gardener season */
-  season?: string;
   /** Whether data is loading */
   loading?: boolean;
 }
@@ -115,32 +107,16 @@ export function CrownContext() {
   const agentesePath = getAgentesePath(location.pathname);
   const jewelInfo = currentJewel ? JEWEL_INFO[currentJewel] : undefined;
 
-  // Fetch crown state from multiple APIs
+  // Fetch crown state from APIs
   const fetchCrownState = useCallback(async () => {
     try {
-      // Fetch Brain and Garden state in parallel
-      const [brainRes, gardenRes] = await Promise.allSettled([
-        brainApi.getStatus(),
-        gardenerApi.getGarden(),
-      ]);
+      const brainRes = await brainApi.getStatus().catch(() => null);
 
       const newState: CrownState = { loading: false };
 
       // Brain crystal count
-      if (brainRes.status === 'fulfilled' && brainRes.value) {
-        newState.crystalCount = brainRes.value.concept_count;
-      }
-
-      // Garden season and session
-      if (gardenRes.status === 'fulfilled' && gardenRes.value) {
-        const garden = gardenRes.value;
-        newState.season = garden.season;
-
-        // Check if there's an active Gardener session
-        if (garden.session_id) {
-          // Could fetch session phase here if needed
-          newState.gardenerPhase = 'active';
-        }
+      if (brainRes) {
+        newState.crystalCount = brainRes.concept_count;
       }
 
       setState(newState);
@@ -183,32 +159,8 @@ export function CrownContext() {
         </div>
 
         {/* Divider */}
-        {(state.gardenerPhase || state.crystalCount || state.activeMask || state.season) && (
+        {(state.crystalCount || state.activeMask) && (
           <span className="text-gray-600">│</span>
-        )}
-
-        {/* Gardener phase */}
-        {state.gardenerPhase && (
-          <Link
-            to="/concept.gardener"
-            className="flex items-center gap-1 text-green-400/70 hover:text-green-400 transition-colors"
-            title="Active Gardener Session"
-          >
-            <span>🌱</span>
-            <span>{state.gardenerPhase}</span>
-          </Link>
-        )}
-
-        {/* Season indicator */}
-        {state.season && (
-          <Link
-            to="/self.garden"
-            className="flex items-center gap-1 text-green-400/70 hover:text-green-400 transition-colors"
-            title="Current Season"
-          >
-            <span>🌿</span>
-            <span>{state.season}</span>
-          </Link>
         )}
 
         {/* Crystal count */}

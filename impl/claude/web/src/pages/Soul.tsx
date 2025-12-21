@@ -245,7 +245,8 @@ function StarterChips({
 
 function MessageBubble({ message }: { message: DialogueMessage }) {
   const isUser = message.role === 'user';
-  const modeConfig = MODE_CONFIG[message.mode];
+  // Fallback to 'reflect' if mode is undefined or invalid
+  const modeConfig = MODE_CONFIG[message.mode] ?? MODE_CONFIG.reflect;
 
   return (
     <motion.div

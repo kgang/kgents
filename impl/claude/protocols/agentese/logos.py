@@ -14,15 +14,38 @@ Phase 4 Additions:
     - JIT compilation from spec files via MetaArchitect
     - define_concept() for autopoiesis (creating new entities)
     - promote_concept() for graduating JIT nodes to permanent implementations
+
+Teaching:
+    gotcha: @node runs at import time. If the module isn't imported,
+            the node won't be registered. Call _import_node_modules() first.
+            (Evidence: test_logos.py::test_node_discovery)
+
+    gotcha: Resolution checks NodeRegistry BEFORE SimpleRegistry.
+            @node decorators in services/ override any manual registration.
+            (Evidence: test_logos.py::test_resolution_order)
+
+    gotcha: Observer can be None in v3 API—it defaults to Observer.guest().
+            But guest observers have minimal affordances. Be explicit.
+            (Evidence: test_logos.py::test_guest_observer)
+
+    gotcha: ComposedPath.invoke() enforces Minimal Output Principle by default.
+            Arrays break composition. Use without_enforcement() if you need them.
+            (Evidence: test_logos.py::test_minimal_output_enforcement)
+
+    gotcha: Aliases are PREFIX expansion only. "me.challenge" → "self.soul.challenge".
+            You cannot alias an aspect, only a path prefix.
+            (Evidence: test_logos.py::test_alias_expansion)
 """
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
     Any,
+    AsyncIterator,
     Iterator,
     cast,
 )
@@ -692,6 +715,47 @@ class Logos:
             result = await self._auto_curate(result, observer, path)
 
         return result
+
+    @asynccontextmanager
+    async def invoke_stream(
+        self,
+        path: str,
+        observer: "Observer | Umwelt[Any, Any] | None" = None,
+        **kwargs: Any,
+    ) -> AsyncIterator[AsyncIterator[Any]]:
+        """
+        Context manager for streaming invocations.
+
+        Invokes the path and yields the result as an async iterator.
+        If the result is already an async iterator (e.g., from self.chat.stream),
+        it's yielded directly. Otherwise, the result is wrapped in a single-item
+        async iterator for consistency.
+
+        Usage:
+            async with logos.invoke_stream("self.chat.stream", observer, message="Hi") as stream:
+                async for token in stream:
+                    print(token, end="", flush=True)
+            print()  # Newline after streaming
+
+        Args:
+            path: Full AGENTESE path including aspect
+            observer: Observer, Umwelt, or None (defaults to guest)
+            **kwargs: Aspect-specific arguments
+
+        Yields:
+            AsyncIterator that produces the streaming result
+        """
+        result = await self.invoke(path, observer, **kwargs)
+
+        if hasattr(result, "__aiter__"):
+            # Already an async iterator (e.g., ChatNode.stream)
+            yield result
+        else:
+            # Wrap non-streaming result in single-item iterator
+            async def _single() -> AsyncIterator[Any]:
+                yield result
+
+            yield _single()
 
     async def _invoke_with_telemetry(
         self,

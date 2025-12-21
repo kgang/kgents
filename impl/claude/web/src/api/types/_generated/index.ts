@@ -4,10 +4,10 @@
  */
 
 export * from './world-forge-commission';
+export * from './self-conductor-swarm';
 export * from './world-town-coalition';
 export * from './world-town-workshop';
 export * from './world-town-citizen';
-export * from './concept-gardener';
 export * from './world-forge-soul';
 export * from './time-differance';
 export * from './self-conductor';

@@ -327,13 +327,13 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
             self.REQUIRED_CAPABILITIES,
         )
 
-    async def project(self, target: str, observer: Observer) -> str:
+    async def project(self, target: str, observer: Observer) -> str | dict[str, Any]:
         """Project token to target-specific rendering.
-        
+
         Args:
             target: Target name (e.g., "cli", "web", "json")
             observer: The observer receiving the projection
-            
+
         Returns:
             Target-specific rendering of this token
         """

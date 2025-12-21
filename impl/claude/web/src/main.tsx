@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { enableMapSet } from 'immer';
 import App from './App';
+import { LayoutSheafProvider } from './components/layout-sheaf';
 import './styles/globals.css';
 import './styles/animations.css';
 import { reportWebVitalsToConsole } from './lib/reportWebVitals';
@@ -12,9 +13,11 @@ enableMapSet();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <LayoutSheafProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </LayoutSheafProvider>
   </StrictMode>,
 );
 

@@ -62,7 +62,7 @@ def _get_trust_level_class() -> type:
 
 def _get_trust_levels() -> dict[str, Any]:
     """Get trust level enum values."""
-    TL = _get_trust_level_class()
+    from services.witness.polynomial import TrustLevel as TL
     return {
         "READ_ONLY": TL.READ_ONLY,
         "BOUNDED": TL.BOUNDED,

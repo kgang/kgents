@@ -38,12 +38,12 @@ function TabButton({ tab, isActive, onClick }: TabButtonProps) {
     <button
       onClick={onClick}
       className={`
-        relative px-4 py-2 text-sm font-medium transition-colors
+        relative flex-shrink-0 px-3 py-2 text-sm font-medium transition-colors
         ${isActive ? 'text-cyan-400' : 'text-gray-400 hover:text-gray-200'}
       `}
     >
-      <span className="flex items-center gap-2">
-        <span>{tab.icon}</span>
+      <span className="flex items-center gap-1.5">
+        <span className="text-xs">{tab.icon}</span>
         <span>{tab.label}</span>
       </span>
       {isActive && (
@@ -302,70 +302,68 @@ export function RequestBuilder({
   // Comfortable/Spacious layout
   return (
     <div className="flex flex-col h-full bg-gray-800/30 rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700/50">
-        <div className="flex items-center gap-3">
-          <span className="text-xl">🔧</span>
-          <div>
-            <div className="flex items-center gap-2">
-              <span
+      {/* Header - responsive: wraps to vertical on narrow widths */}
+      <div className="flex flex-col gap-2 p-3 border-b border-gray-700/50">
+        {/* Top row: method + URL (truncates) + Send button (never cut off) */}
+        <div className="flex items-center gap-2">
+          {/* Method badge - flex-shrink-0 to never compress */}
+          <span
+            className={`
+              flex-shrink-0 px-2 py-0.5 text-xs font-bold rounded uppercase
+              ${requestConfig.method === 'GET' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}
+            `}
+          >
+            {requestConfig.method}
+          </span>
+
+          {/* URL - truncates with ellipsis when narrow */}
+          <code className="flex-1 min-w-0 text-sm text-gray-300 truncate">
+            {requestConfig.url}
+          </code>
+
+          {/* Action buttons - flex-shrink-0 to NEVER get cut off */}
+          <div className="flex-shrink-0 flex items-center gap-1.5">
+            <button
+              onClick={builder.clear}
+              title="Clear"
+              className="
+                p-1.5 rounded-lg text-gray-400 hover:text-gray-200 hover:bg-gray-700/50
+                transition-colors
+              "
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+
+            <Shimmer active={builder.isLoading}>
+              <button
+                onClick={handleSend}
+                disabled={!builder.isValid || builder.isLoading}
+                title={`Send Request (${shortcutKey}+Enter)`}
                 className={`
-                  px-2 py-0.5 text-xs font-bold rounded uppercase
-                  ${requestConfig.method === 'GET' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}
+                  flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium
+                  transition-all
+                  ${
+                    builder.isValid && !builder.isLoading
+                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  }
                 `}
               >
-                {requestConfig.method}
-              </span>
-              <code className="text-sm text-gray-300">{requestConfig.url}</code>
-            </div>
-            <div className="text-xs text-gray-500 mt-1">
-              {path} → {aspect}
-            </div>
+                <Send className="w-4 h-4" />
+                <span>Send</span>
+              </button>
+            </Shimmer>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={builder.clear}
-            className="
-              flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm
-              text-gray-400 hover:text-gray-200 hover:bg-gray-700/50
-              transition-colors
-            "
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Clear</span>
-          </button>
-
-          <Shimmer active={builder.isLoading}>
-            <button
-              onClick={handleSend}
-              disabled={!builder.isValid || builder.isLoading}
-              title={`Send Request (${shortcutKey}+Enter)`}
-              className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
-                transition-all group
-                ${
-                  builder.isValid && !builder.isLoading
-                    ? 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
-                    : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                }
-              `}
-            >
-              <Send className="w-4 h-4" />
-              <span>Send</span>
-              <span className="hidden sm:inline-flex items-center gap-0.5 text-xs opacity-60 group-hover:opacity-80">
-                <kbd className="px-1 py-0.5 rounded bg-cyan-700/50 font-mono">{shortcutKey}</kbd>
-                <span>+</span>
-                <kbd className="px-1 py-0.5 rounded bg-cyan-700/50 font-mono">↵</kbd>
-              </span>
-            </button>
-          </Shimmer>
+        {/* Bottom row: path info - smaller, secondary */}
+        <div className="text-xs text-gray-500 truncate">
+          {path} → {aspect}
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-700/50">
+      {/* Tabs - scrollable when narrow */}
+      <div className="flex overflow-x-auto border-b border-gray-700/50 scrollbar-hide">
         {REQUEST_BUILDER_TABS.map((tab) => (
           <TabButton
             key={tab.id}

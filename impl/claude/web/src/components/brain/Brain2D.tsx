@@ -255,7 +255,7 @@ export function Brain2D({
   // Desktop/Tablet Layout (ElasticSplit)
   // ==========================================================================
   return (
-    <div className={`h-full bg-[#1a1a1a] flex flex-col ${className}`}>
+    <div className={`flex-1 min-h-0 bg-[#1a1a1a] flex flex-col ${className}`}>
       {/* Header */}
       <BrainHeader
         topology={topology}
@@ -281,23 +281,23 @@ export function Brain2D({
           </div>
         }
         secondary={
-          <div className="h-full overflow-y-auto border-l border-gray-700">
+          <div className="flex flex-col h-full border-l border-gray-700">
             {selectedCrystalData ? (
-              <div className="p-4">
-                <CrystalDetail
-                  crystal={selectedCrystalData}
-                  onClose={() => setSelectedCrystal(null)}
-                  observer={observer}
-                  onObserverChange={onObserverChange || (() => {})}
-                  variant="panel"
+              <CrystalDetail
+                crystal={selectedCrystalData}
+                onClose={() => setSelectedCrystal(null)}
+                observer={observer}
+                onObserverChange={onObserverChange || (() => {})}
+                variant="panel"
+              />
+            ) : (
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <SidePanel
+                  onCapture={handleCaptureSuccess}
+                  onGhostSelect={handleGhostSelect}
+                  density={density}
                 />
               </div>
-            ) : (
-              <SidePanel
-                onCapture={handleCaptureSuccess}
-                onGhostSelect={handleGhostSelect}
-                density={density}
-              />
             )}
           </div>
         }

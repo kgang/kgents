@@ -13,7 +13,7 @@ Laws:
 - Identity: Id >> f ≡ f ≡ f >> Id
 - Closure: Composition of agents produces an agent
 
-See spec/bootstrap.md lines 57-70, spec/c-gents/composition.md.
+See spec/bootstrap.md lines 57-70, spec/agents/composition.md.
 """
 
 from __future__ import annotations

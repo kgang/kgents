@@ -46,8 +46,8 @@ export interface NodeDetailPanelProps {
 // Constants
 // =============================================================================
 
-/** Common aspects available on most nodes */
-const COMMON_ASPECTS = ['manifest', 'witness', 'refine', 'sip', 'tithe'] as const;
+/** Default aspects when node doesn't specify its own */
+const DEFAULT_ASPECTS = ['manifest'] as const;
 
 /** Aspect descriptions for teaching mode */
 const ASPECT_DESCRIPTIONS: Record<string, string> = {
@@ -268,7 +268,7 @@ export function NodeDetailPanel({
                   Aspects
                 </h3>
                 <div className="space-y-1.5">
-                  {COMMON_ASPECTS.map((aspect) => (
+                  {(node.aspects ?? DEFAULT_ASPECTS).map((aspect) => (
                     <AspectButton
                       key={aspect}
                       aspect={aspect}

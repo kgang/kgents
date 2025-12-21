@@ -3,20 +3,23 @@
  *
  * This is the heart of AGENTESE-as-Route. It:
  * 1. Parses the current URL into AGENTESE path components
- * 2. Invokes the path via useAgentese hook
- * 3. Resolves the appropriate projection component
- * 4. Renders with loading/error states
+ * 2. Detects context-level paths (e.g., /self) and renders ContextOverviewProjection
+ * 3. Invokes the path via useAgentese hook for registered nodes
+ * 4. Resolves the appropriate projection component
+ * 5. Renders with loading/error states
  *
  * @see spec/protocols/agentese-as-route.md
  */
 
 import { Suspense, useMemo } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
-import { parseAgentesePath } from '@/utils/parseAgentesePath';
+import { parseAgentesePath, AGENTESE_CONTEXTS } from '@/utils/parseAgentesePath';
+import type { AgenteseContext } from '@/utils/parseAgentesePath';
 import { useAgentese } from '@/hooks/useAgentesePath';
 import { resolveProjection } from './registry';
 import { ProjectionLoading } from './ProjectionLoading';
 import { ProjectionError } from './ProjectionError';
+import { ContextOverviewProjection } from './ContextOverviewProjection';
 import type { ProjectionContext, UniversalProjectionOptions } from './types';
 
 // === LEGACY_REDIRECTS REMOVED ===
@@ -37,6 +40,15 @@ import type { ProjectionContext, UniversalProjectionOptions } from './types';
  *   <Route path="/*" element={<UniversalProjection />} />
  * </Routes>
  */
+/**
+ * Check if a path is a context-level path (single segment, no registered node)
+ * e.g., "self", "world", "concept", "void", "time"
+ */
+function isContextLevelPath(path: string): boolean {
+  const segments = path.split('.');
+  return segments.length === 1 && AGENTESE_CONTEXTS.includes(segments[0] as AgenteseContext);
+}
+
 export function UniversalProjection({ skip = false }: UniversalProjectionOptions = {}) {
   const location = useLocation();
   const pathname = location.pathname;
@@ -48,9 +60,16 @@ export function UniversalProjection({ skip = false }: UniversalProjectionOptions
   // Parse the AGENTESE path from URL
   const parsed = useMemo(() => parseAgentesePath(pathname + search), [pathname, search]);
 
+  // Check if this is a context-level path (e.g., /self, /world)
+  // These should show ContextOverviewProjection, not invoke the backend
+  const isContextPath = useMemo(
+    () => parsed.isValid && isContextLevelPath(parsed.path),
+    [parsed.isValid, parsed.path]
+  );
+
   // Invoke AGENTESE - must be called unconditionally (rules of hooks)
-  // Skip invocation for root redirects or invalid paths
-  const shouldSkip = skip || isRoot || !parsed.isValid;
+  // Skip invocation for root redirects, invalid paths, or context-level paths
+  const shouldSkip = skip || isRoot || !parsed.isValid || isContextPath;
   const { data, responseType, isLoading, error } = useAgentese(
     parsed.isValid ? parsed.path : 'self.cockpit',
     {
@@ -74,6 +93,12 @@ export function UniversalProjection({ skip = false }: UniversalProjectionOptions
         error={new Error(parsed.error || 'Invalid AGENTESE path')}
       />
     );
+  }
+
+  // Context-level path -> Show Context Overview
+  // This is like arriving at a garden's main gate - you see all paths you can explore
+  if (isContextPath) {
+    return <ContextOverviewProjection context={parsed.context as AgenteseContext} />;
   }
 
   // Loading state

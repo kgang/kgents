@@ -52,7 +52,7 @@
   }
 
   body {
-    @apply bg-town-bg text-white;
+    @apply bg-gray-900 text-white;
   }
 }
 
@@ -231,22 +231,236 @@
   }
 }
 
-/* Custom scrollbar */
+/* =============================================================================
+ * Scrollbar System — "Living Vine" Design
+ *
+ * Categorical Design: ScrollBar: (Density × Jewel × Hover) → Appearance
+ *
+ * From crown-jewels-genesis-moodboard.md:
+ * - "Everything Breathes" — 3-4 second subtle animation cycle
+ * - "Organic feel, not mechanical" — soft edges, warm colors
+ * - Context-aware — adapts to current Crown Jewel
+ *
+ * Functor Properties:
+ * - Composable: Appearance derived from context morphisms
+ * - Density-aware: Width scales with elastic density mode
+ * - Jewel-contextual: Color flows from --scrollbar-thumb-color
+ *
+ * @see docs/skills/elastic-ui-patterns.md
+ * @see creative/crown-jewels-genesis-moodboard.md
+ * ============================================================================= */
+
+:root {
+  /* Scrollbar contextual colors (overridable per jewel/section) */
+  --scrollbar-track-color: rgba(22, 33, 62, 0.6);       /* town-surface with transparency */
+  --scrollbar-thumb-color: rgba(15, 52, 96, 0.8);       /* town-accent base */
+  --scrollbar-thumb-hover: rgba(233, 69, 96, 0.9);      /* town-highlight on hover */
+  --scrollbar-thumb-active: rgba(233, 69, 96, 1);       /* full highlight when scrolling */
+
+  /* Density-aware dimensions (morphism: Density → Width) */
+  --scrollbar-width: 8px;                               /* spacious default */
+  --scrollbar-radius: 6px;                              /* organic roundness */
+
+  /* Animation timing (from mood board: "Everything Breathes") */
+  --scrollbar-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Density mode overrides */
+@media (max-width: 1023px) {
+  :root {
+    --scrollbar-width: 6px;                             /* comfortable */
+    --scrollbar-radius: 4px;
+  }
+}
+
+@media (max-width: 767px) {
+  :root {
+    --scrollbar-width: 4px;                             /* compact - minimal footprint */
+    --scrollbar-radius: 3px;
+  }
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: var(--scrollbar-width);
+  height: var(--scrollbar-width);
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-town-surface;
+  background: var(--scrollbar-track-color);
+  border-radius: var(--scrollbar-radius);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-town-accent rounded;
+  background: var(--scrollbar-thumb-color);
+  border-radius: var(--scrollbar-radius);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--scrollbar-transition);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-town-highlight;
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--scrollbar-thumb-active);
+}
+
+/* Corner (where horizontal and vertical scrollbars meet) */
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track-color);
+}
+
+/* Firefox (scrollbar-* properties) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+}
+
+/* =============================================================================
+ * Jewel-Contextual Scrollbar Classes
+ *
+ * Use these on container elements to inherit jewel identity:
+ *   <div className="scroll-jewel-brain overflow-auto">...</div>
+ *
+ * Each class is a context morphism: Jewel → ScrollbarAppearance
+ * ============================================================================= */
+
+.scroll-jewel-brain {
+  --scrollbar-thumb-color: rgba(6, 182, 212, 0.4);      /* cyan-500 */
+  --scrollbar-thumb-hover: rgba(6, 182, 212, 0.7);
+  --scrollbar-thumb-active: rgba(6, 182, 212, 0.9);
+}
+
+.scroll-jewel-gestalt {
+  --scrollbar-thumb-color: rgba(34, 197, 94, 0.4);      /* green-500 */
+  --scrollbar-thumb-hover: rgba(34, 197, 94, 0.7);
+  --scrollbar-thumb-active: rgba(34, 197, 94, 0.9);
+}
+
+.scroll-jewel-gardener {
+  --scrollbar-thumb-color: rgba(132, 204, 22, 0.4);     /* lime-500 */
+  --scrollbar-thumb-hover: rgba(132, 204, 22, 0.7);
+  --scrollbar-thumb-active: rgba(132, 204, 22, 0.9);
+}
+
+.scroll-jewel-atelier {
+  --scrollbar-thumb-color: rgba(245, 158, 11, 0.4);     /* amber-500 */
+  --scrollbar-thumb-hover: rgba(245, 158, 11, 0.7);
+  --scrollbar-thumb-active: rgba(245, 158, 11, 0.9);
+}
+
+.scroll-jewel-coalition {
+  --scrollbar-thumb-color: rgba(139, 92, 246, 0.4);     /* violet-500 */
+  --scrollbar-thumb-hover: rgba(139, 92, 246, 0.7);
+  --scrollbar-thumb-active: rgba(139, 92, 246, 0.9);
+}
+
+.scroll-jewel-park {
+  --scrollbar-thumb-color: rgba(236, 72, 153, 0.4);     /* pink-500 */
+  --scrollbar-thumb-hover: rgba(236, 72, 153, 0.7);
+  --scrollbar-thumb-active: rgba(236, 72, 153, 0.9);
+}
+
+.scroll-jewel-domain {
+  --scrollbar-thumb-color: rgba(239, 68, 68, 0.4);      /* red-500 */
+  --scrollbar-thumb-hover: rgba(239, 68, 68, 0.7);
+  --scrollbar-thumb-active: rgba(239, 68, 68, 0.9);
+}
+
+/* =============================================================================
+ * Mood Board Inspired Variants
+ *
+ * From "Living Earth" palette and "Alive Workshop" aesthetic
+ * ============================================================================= */
+
+/* Organic variant: earthy, mossy feel */
+.scroll-organic {
+  --scrollbar-track-color: rgba(45, 27, 20, 0.3);       /* Soil tone */
+  --scrollbar-thumb-color: rgba(74, 107, 74, 0.5);      /* Sage green */
+  --scrollbar-thumb-hover: rgba(107, 139, 107, 0.7);    /* Mint */
+  --scrollbar-thumb-active: rgba(139, 171, 139, 0.9);   /* Sprout */
+}
+
+/* Warm variant: copper and amber tones */
+.scroll-warm {
+  --scrollbar-track-color: rgba(74, 55, 40, 0.3);       /* Bark */
+  --scrollbar-thumb-color: rgba(192, 133, 82, 0.5);     /* Copper */
+  --scrollbar-thumb-hover: rgba(212, 165, 116, 0.7);    /* Amber */
+  --scrollbar-thumb-active: rgba(232, 196, 160, 0.9);   /* Honey */
+}
+
+/* Subtle variant: nearly invisible until hover */
+.scroll-subtle {
+  --scrollbar-thumb-color: rgba(100, 100, 120, 0.2);
+  --scrollbar-thumb-hover: rgba(100, 100, 120, 0.5);
+  --scrollbar-thumb-active: rgba(100, 100, 120, 0.7);
+}
+
+/* =============================================================================
+ * Breathing Scrollbar (Special Effect)
+ *
+ * For areas where the mood board's "Everything Breathes" applies.
+ * Use sparingly — joy-inducing, not distracting.
+ *
+ * Usage: <div className="scroll-breathe overflow-auto">...</div>
+ * ============================================================================= */
+
+@keyframes scrollbar-breathe {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.scroll-breathe::-webkit-scrollbar-thumb {
+  animation: scrollbar-breathe 4s ease-in-out infinite;
+}
+
+.scroll-breathe::-webkit-scrollbar-thumb:hover {
+  animation: none;
+  opacity: 1;
+}
+
+/* =============================================================================
+ * Utility Classes for Scrollbar Control
+ * ============================================================================= */
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Thin scrollbar variant */
+.scrollbar-thin {
+  --scrollbar-width: 4px;
+  --scrollbar-radius: 2px;
+}
+
+/* Always visible scrollbar (overlay style) */
+.scrollbar-overlay {
+  overflow: overlay;
+}
+
+.scrollbar-overlay::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-overlay::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.scrollbar-overlay::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 /* LOD blur effect */

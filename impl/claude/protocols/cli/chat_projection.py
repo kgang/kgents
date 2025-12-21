@@ -289,6 +289,7 @@ class ChatProjection:
 
     # State
     _running: bool = field(default=False, init=False)
+    _original_termios: Any = field(default=None, init=False)
 
     async def run(self) -> int:
         """
@@ -353,14 +354,17 @@ class ChatProjection:
 
     async def _send_and_stream(self, message: str) -> None:
         """Send message and stream the response."""
-        # Show user message echo (already typed, so just marker)
-        print(self.renderer.render_user_message(message))
+        # User message already visible from input() prompt - just add newline for spacing
+        print()
 
-        # Start assistant response
-        sys.stdout.write(self.renderer.render_assistant_start())
-        sys.stdout.flush()
+        # Block input during processing - show indicator and disable terminal echo
+        self._block_input_start()
 
         try:
+            # Start assistant response
+            sys.stdout.write(self.renderer.render_assistant_start())
+            sys.stdout.flush()
+
             # Stream response
             async for token in self.session.stream(message):
                 sys.stdout.write(self.renderer.render_streaming_token(token))
@@ -382,6 +386,54 @@ class ChatProjection:
 
         except RuntimeError as e:
             print(self.renderer.render_error(str(e)))
+        finally:
+            # Restore input and clear any buffered keystrokes
+            self._block_input_end()
+
+    def _block_input_start(self) -> None:
+        """
+        Block user input during request processing.
+
+        Disables terminal echo so keystrokes aren't shown or buffered.
+        Shows a visual indicator that we're processing.
+        """
+        try:
+            import termios
+            import tty
+
+            # Save terminal settings
+            self._original_termios = termios.tcgetattr(sys.stdin)
+            # Disable echo and canonical mode (no line buffering)
+            tty.setraw(sys.stdin.fileno(), termios.TCSANOW)
+            # But we still want Ctrl+C to work, so restore ISIG
+            new_attrs = termios.tcgetattr(sys.stdin)
+            new_attrs[3] = new_attrs[3] | termios.ISIG  # Enable signals
+            termios.tcsetattr(sys.stdin, termios.TCSANOW, new_attrs)
+        except (ImportError, termios.error, AttributeError):
+            # Not a TTY or termios not available (Windows, piped input)
+            self._original_termios = None
+
+    def _block_input_end(self) -> None:
+        """
+        Restore user input after request processing.
+
+        Restores terminal settings and clears any buffered input.
+        """
+        try:
+            import select
+            import termios
+
+            # Restore terminal settings
+            if hasattr(self, "_original_termios") and self._original_termios is not None:
+                termios.tcsetattr(sys.stdin, termios.TCSANOW, self._original_termios)
+
+            # Clear any buffered input (non-blocking read)
+            while select.select([sys.stdin], [], [], 0)[0]:
+                sys.stdin.read(1)
+
+        except (ImportError, termios.error, AttributeError):
+            # Not a TTY or termios not available
+            pass
 
     async def _handle_command(self, command: str) -> str | None:
         """
@@ -588,15 +640,13 @@ def run_chat_repl(
         else:
             entity_name = parts[-1].title()
 
-    # Create session via chat resolver
-    from protocols.agentese.contexts.chat_resolver import get_chat_resolver
-
-    resolver = get_chat_resolver()
-    chat_node = resolver.resolve(node_path)
-
     async def _run() -> int:
-        # Get or create session
-        session = await chat_node._get_or_create_session(observer)
+        # Create session via services layer (has Morpheus wired for real LLM calls)
+        # Must use async version from providers to get ChatServiceFactory with Morpheus
+        from services.providers import get_chat_factory
+
+        factory = await get_chat_factory()
+        session = await factory.create_session(node_path, observer)
 
         # One-shot mode
         if one_shot_message:
@@ -652,13 +702,12 @@ def run_chat_one_shot(
     """
     import json as json_lib
 
-    from protocols.agentese.contexts.chat_resolver import get_chat_resolver
-
-    resolver = get_chat_resolver()
-    chat_node = resolver.resolve(node_path)
-
     async def _run() -> int:
-        session = await chat_node._get_or_create_session(observer)
+        # Use async factory from providers for proper Morpheus integration
+        from services.providers import get_chat_factory
+
+        factory = await get_chat_factory()
+        session = await factory.create_session(node_path, observer)
         try:
             response = await session.send(message)
             if json_output:

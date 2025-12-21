@@ -24,14 +24,14 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
 1. **[principles.md](principles.md)** - Core design principles (start here)
 2. **[anatomy.md](anatomy.md)** - What constitutes an agent
 3. **[bootstrap.md](bootstrap.md)** - The irreducible kernel (7 agents)
-4. **[c-gents/composition.md](c-gents/composition.md)** - The `>>` operator as primary abstraction
+4. **[agents/composition.md](agents/composition.md)** - The `>>` operator as primary abstraction
 5. **[testing.md](testing.md)** - T-gents taxonomy (testing as first-class)
 6. **[reliability.md](reliability.md)** - Multi-layer reliability patterns
 7. **[archetypes.md](archetypes.md)** - Emergent behavioral patterns
 8. **Agent Genera** - Explore specific agent types:
    - [a-gents/](a-gents/) - Abstract + Art
    - [b-gents/](b-gents/) - Bio + Banker (resource-constrained systems)
-   - [c-gents/](c-gents/) - Category Theory (composition)
+   - [agents/](agents/) - Categorical Foundations (composition, functors, monads)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
    - [f-gents/](f-gents/) - Forge (artifact synthesis)
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)

@@ -786,6 +786,6 @@ async def add_type_incremental(self, node: TypeNode) -> None:
 
 - [catalog.md](catalog.md) - Types are registered here
 - [query.md](query.md) - Type-based search
-- [../c-gents/](../c-gents/) - Category theory foundations
+- [../agents/](../agents/) - Categorical foundations
 - [../f-gents/contracts.md](../f-gents/contracts.md) - Contract synthesis
 - [../h-gents/](../h-gents/) - Tension detection for types

@@ -254,11 +254,68 @@ impl/claude/agents/flux/
 
 ---
 
+## FluxConfig
+
+```python
+@dataclass
+class FluxConfig:
+    # Entropy (J-gent physics)
+    entropy_budget: float = 1.0
+    entropy_decay: float = 0.01
+    max_events: int | None = None
+
+    # Backpressure
+    buffer_size: int = 100
+    drop_policy: str = "block"  # "block" | "drop_oldest" | "drop_newest"
+
+    # Feedback (Ouroboros)
+    feedback_fraction: float = 0.0
+    feedback_transform: Callable[[B], A] | None = None
+
+    # Observability
+    emit_pheromones: bool = True
+    trace_enabled: bool = True
+    agent_id: str | None = None
+```
+
+### Backpressure Policies
+
+| Policy | Behavior | Use Case |
+|--------|----------|----------|
+| `block` | Producer waits | Preserve all events |
+| `drop_oldest` | Discard stale events | Real-time priority |
+| `drop_newest` | Discard fresh events | Historical priority |
+
+---
+
+## Event Sources
+
+```python
+# GOOD: Event-driven
+async def from_events(bus: EventBus) -> AsyncIterator[Event]:
+    async for event in bus.subscribe():
+        yield event
+
+# Sparingly: Timer-driven
+async def periodic(interval: float) -> AsyncIterator[float]:
+    while True:
+        yield time.time()
+        await asyncio.sleep(interval)
+```
+
+| Source | Nature | Use Case |
+|--------|--------|----------|
+| `from_events(bus)` | Reactive | Event-driven systems |
+| `from_pheromones(field)` | Reactive | Multi-agent sensing |
+| `periodic(interval)` | Active | Scheduled tasks (use sparingly) |
+
+---
+
 ## See Also
 
+- [functor-catalog.md](functor-catalog.md) §13 — Flux in functor catalog
+- [composition.md](composition.md) — Sequential composition foundation
 - `spec/principles.md` §6 — Heterarchical Principle, Flux Topology
-- `spec/c-gents/functor-catalog.md` §13 — Flux in functor catalog
-- `spec/bootstrap.md` — Why Flux is not a bootstrap agent
 - `spec/archetypes.md` — Archetypes as Flux configurations
 
 ---

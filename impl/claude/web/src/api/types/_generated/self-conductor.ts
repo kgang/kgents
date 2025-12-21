@@ -134,3 +134,50 @@ export interface SelfConductorResetResponse {
   preserved_system: boolean;
   error?: string | null;
 }
+
+/**
+ * Request for flux status.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SelfConductorFluxRequest {}
+
+/**
+ * Response for flux status - event integration state.
+ */
+export interface SelfConductorFluxResponse {
+  running: boolean;
+  subscriber_count: number;
+  event_types_monitored: string[];
+  bridge_active: boolean;
+  error?: string | null;
+}
+
+/**
+ * Request to start flux event integration.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SelfConductorFlux_startRequest {}
+
+/**
+ * Response for starting flux.
+ */
+export interface SelfConductorFlux_startResponse {
+  success: boolean;
+  was_already_running: boolean;
+  error?: string | null;
+}
+
+/**
+ * Request to stop flux event integration.
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface SelfConductorFlux_stopRequest {}
+
+/**
+ * Response for stopping flux.
+ */
+export interface SelfConductorFlux_stopResponse {
+  success: boolean;
+  was_running: boolean;
+  error?: string | null;
+}

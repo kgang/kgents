@@ -362,7 +362,7 @@ async def test_evolution_pipeline():
 - [taxonomy.md](taxonomy.md) - T-gent type specifications (Types I-IV)
 - [adversarial.md](adversarial.md) - Type V: Chaos engineering
 - [../u-gents/](../u-gents/) - U-gents: Tool Use framework
-- [../c-gents/](../c-gents/) - Category Theory basis
+- [../agents/](../agents/) - Categorical foundations
 - [../j-gents/stability.md](../j-gents/stability.md) - Entropy & collapse
 - [../bootstrap.md](../bootstrap.md) - The irreducible kernel
 

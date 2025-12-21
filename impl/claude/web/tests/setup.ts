@@ -78,12 +78,47 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // Mock ResizeObserver
-class MockResizeObserver {
-  observe = vi.fn();
-  unobserve = vi.fn();
-  disconnect = vi.fn();
+// CRITICAL: Must call callback with proper dimensions for layout context to work
+// Without this, useLayoutMeasure never updates context, causing layout-dependent
+// components (CitizenCard, etc.) to render with default/constrained context.
+//
+// NOTE: We call the callback SYNCHRONOUSLY to ensure layout context is updated
+// before test assertions run. Real ResizeObserver is async, but tests need
+// deterministic behavior.
+class MockResizeObserver implements ResizeObserver {
+  private callback: ResizeObserverCallback;
+  private observedElements: Set<Element> = new Set();
+
+  constructor(callback: ResizeObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element) {
+    this.observedElements.add(target);
+    // Simulate spacious desktop viewport (1280x800) for test stability
+    // Tests that need different dimensions can override this mock
+    const entry: ResizeObserverEntry = {
+      target,
+      contentRect: { width: 1280, height: 800 } as DOMRectReadOnly,
+      borderBoxSize: [{ blockSize: 800, inlineSize: 1280 }] as unknown as readonly ResizeObserverSize[],
+      contentBoxSize: [{ blockSize: 800, inlineSize: 1280 }] as unknown as readonly ResizeObserverSize[],
+      devicePixelContentBoxSize: [
+        { blockSize: 800, inlineSize: 1280 },
+      ] as unknown as readonly ResizeObserverSize[],
+    };
+    // Call callback SYNCHRONOUSLY for deterministic test behavior
+    this.callback([entry], this);
+  }
+
+  unobserve(target: Element) {
+    this.observedElements.delete(target);
+  }
+
+  disconnect() {
+    this.observedElements.clear();
+  }
 }
-window.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+window.ResizeObserver = MockResizeObserver;
 
 // Mock IntersectionObserver
 class MockIntersectionObserver {

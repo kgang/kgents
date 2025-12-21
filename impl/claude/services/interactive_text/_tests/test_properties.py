@@ -13,7 +13,7 @@ Minimum Iterations: 100 per property
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from hypothesis import HealthCheck, given, settings, strategies as st
@@ -31,6 +31,9 @@ from services.interactive_text.registry import (
     CORE_TOKEN_DEFINITIONS,
     TokenRegistry,
 )
+
+if TYPE_CHECKING:
+    from services.interactive_text.sheaf import Edit, SimpleDocumentView, TokenChange, TokenState
 
 # =============================================================================
 # Hypothesis Strategies for Token Generation

@@ -18,13 +18,15 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 
 ## The Protocol Catalog
 
+### Core Protocols
+
 | Protocol | Purpose | Key Agents | Status |
 |----------|---------|------------|--------|
-| [agentese.md](agentese.md) | Verb-first ontology, the protocol IS the API | All | Spec v3.0 |
+| [agentese.md](agentese.md) | Verb-first ontology, the protocol IS the API | All | **Canonical** |
+| [cli-v7.md](cli-v7.md) | Collaborative Canvas — the living interface | K, I, Reactive | **Canonical** |
 | [projection.md](projection.md) | Multi-target rendering (CLI/TUI/Web/marimo) | I, Reactive | Spec v1.0 |
 | [interactive-text.md](interactive-text.md) | Living documents with semantic tokens | I, D, Verification | Spec v1.0 |
 | [umwelt.md](umwelt.md) | Agent-specific world projection | D, F, G | Spec v1.0 |
-| [concept-home.md](concept-home.md) | Habitat Guarantee for AGENTESE paths | I, Reactive | Spec v1.0 |
 | [aspect-form-projection.md](aspect-form-projection.md) | Observer-dependent form rendering | Contract, Observer | Spec v1.0 |
 | [turn.md](turn.md) | Fixed-point event primitive, causal history | F, N, Ω | Spec v1.0 |
 | [cli.md](cli.md) | Human-agent interface membrane | P, K, O | Spec v1.0 |
@@ -32,6 +34,18 @@ A protocol is not a single agent—it is the **grammar of interaction** between 
 | [mirror.md](mirror.md) | Organizational introspection | P, W, H, O, J | Spec v1.0 |
 | bootstrap.md | Irreducible kernel verification | T, O | Planned |
 | composition.md | Multi-agent pipeline orchestration | C, O, T | Planned |
+
+### Historical Artifacts
+
+| Protocol | Purpose | Notes |
+|----------|---------|-------|
+| [n-phase-cycle.md](n-phase-cycle.md) | Phase enumeration approach | Superseded by [process-holons.md](process-holons.md) but preserved for conceptual lineage |
+
+### Archive
+
+Superseded and exploratory protocols live in `_archive/`. These represent conceptual evolution—ideas that informed current designs but are no longer active specs.
+
+See `_archive/` for: cli-v4 through cli-v6 (evolution to v7), concept-home, auto-inducer, 2d-renaissance, blending, crown-symbiont, event-stream, kairos.
 
 ---
 
@@ -157,7 +171,7 @@ Each layer adds capabilities without breaking the inner layers.
 ## See Also
 
 - [../principles.md](../principles.md) — Core design principles
-- [../c-gents/README.md](../c-gents/README.md) — Composition theory
+- [../agents/README.md](../agents/README.md) — Categorical foundations
 - [../bootstrap.md](../bootstrap.md) — Irreducible kernel
 - [../../docs/mirror-protocol-implementation.md](../../docs/mirror-protocol-implementation.md) — Mirror Protocol phases
 

@@ -10,7 +10,7 @@ This document describes the migration from the scattered Flux implementation to 
 
 Flux was defined in multiple locations:
 - `spec/agents/flux.md` - Main spec
-- `spec/c-gents/flux.md` - Functor catalog entry
+- `spec/agents/flux.md` - Functor catalog entry (now consolidated)
 - `impl/claude/agents/town/flux.py` - TownFlux implementation
 - `docs/skills/flux-agent.md` - Usage skill
 
@@ -79,7 +79,7 @@ __all__ = ["Flux", "FluxConfig", "FluxAgent"]
 | Old Path | New Path |
 |----------|----------|
 | `spec/agents/flux.md` | `spec/f-gents/README.md` |
-| `spec/c-gents/flux.md` | `spec/f-gents/README.md` (consolidated) |
+| `spec/agents/flux.md` | `spec/f-gents/README.md` (consolidated) |
 | `spec/f-gents/README.md` (Forge) | `spec/f-gents-archived/README.md` |
 | `spec/f-gents/forge.md` | `spec/f-gents-archived/forge.md` |
 | `spec/f-gents/contracts.md` | `spec/f-gents-archived/contracts.md` |
@@ -89,7 +89,7 @@ __all__ = ["Flux", "FluxConfig", "FluxAgent"]
 
 Files that reference the old Flux spec:
 - `spec/principles.md` - References `spec/agents/flux.md`
-- `spec/c-gents/functor-catalog.md` - References flux functor
+- `spec/agents/functor-catalog.md` - References flux functor
 - `docs/skills/flux-agent.md` - Uses old patterns
 - `spec/archetypes.md` - References flux configurations
 

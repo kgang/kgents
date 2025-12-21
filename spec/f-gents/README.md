@@ -754,7 +754,7 @@ This spec generates implementation. Modalities derive from configuration, not ne
 ## See Also
 
 - `spec/principles.md` - Design principles (especially Heterarchical)
-- `spec/c-gents/functor-catalog.md` - Flux functor entry
+- `spec/agents/functor-catalog.md` - Flux functor entry
 - `spec/archetypes.md` - Archetypes as Flow configurations
 - `spec/d-gents/symbiont.md` - Symbiont pattern for persistent flow state
 - `docs/skills/flux-agent.md` - Usage skill (being updated)

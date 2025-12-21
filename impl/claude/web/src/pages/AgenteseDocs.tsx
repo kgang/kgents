@@ -1,5 +1,5 @@
 /**
- * AGENTESE Docs Explorer - Phase 4 (Request Builder)
+ * AGENTESE Docs Explorer - Phase 5 (Elastic Refinement)
  *
  * A daring, observer-dependent API explorer that embodies AGENTESE philosophy.
  * Unlike Swagger (a form to fill), this is a world to explore.
@@ -11,24 +11,83 @@
  *
  * AD-010 Habitat Guarantee: No blank pages. Examples are one-click invocations.
  *
- * Phase 4 Additions:
- * - Postman-like Request Builder with schema-driven forms
- * - Request preview with syntax highlighting
- * - Code export (cURL, fetch, axios, Python)
- * - Headers editor (observer + custom)
+ * Phase 5: Elastic Refinement
+ * - Density-parameterized sizing (elastic-ui-patterns.md)
+ * - Breathing room via max-width container
+ * - Elastic panel widths replacing fixed pixels
+ * - Asymmetric request/response split (favor response)
  *
- * @see plans/openapi-projection-surface.md
+ * @see docs/skills/elastic-ui-patterns.md
  * @see plans/umwelt-visualization.md
  */
 
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, Zap, ChevronDown, ChevronUp } from 'lucide-react';
-import { useDesignPolynomial } from '@/hooks';
+import { useDesignPolynomial, type Density } from '@/hooks';
 import { ElasticSplit } from '@/components/elastic';
 import { BottomDrawer } from '@/components/elastic/BottomDrawer';
 import { FloatingActions } from '@/components/elastic/FloatingActions';
 import { useMotionPreferences } from '@/components/joy';
+
+// =============================================================================
+// Density-Parameterized Constants (AD-008: Density → Value morphism)
+// =============================================================================
+
+/**
+ * Panel widths by density. These are CSS classes, not pixels.
+ * The pattern: Record<Density, T> replaces scattered conditionals.
+ *
+ * Key insight: Side panels should be NARROW to maximize center content.
+ * Original was w-72 (288px) explorer, w-64 (256px) aspects = 544px total.
+ */
+const EXPLORER_WIDTH = {
+  compact: 'w-full',
+  comfortable: 'w-64',           // 256px - narrower for tablet
+  spacious: 'w-64 min-w-[240px]', // 256px - keep side panels lean
+} as const;
+
+const ASPECT_WIDTH = {
+  compact: 'w-full',
+  comfortable: 'w-48',           // 192px - compact chip layout
+  spacious: 'w-56 min-w-[200px]', // 224px - lean, actions don't need much
+} as const;
+
+/**
+ * Request/Response split ratio by density.
+ * Primary = RequestBuilder, Secondary = ResponseViewer
+ * Ratio is what PRIMARY gets. Keep it balanced - both need room.
+ */
+const REQUEST_RESPONSE_RATIO = {
+  compact: 0.5,       // Even split when stacked
+  comfortable: 0.45,  // Slight favor to response
+  spacious: 0.45,     // Request needs room for forms, response for JSON
+} as const;
+
+/**
+ * Container max-width by density for breathing room.
+ */
+const CONTAINER_MAX_WIDTH = {
+  compact: 'max-w-full',
+  comfortable: 'max-w-6xl',
+  spacious: 'max-w-[1600px]',
+} as const;
+
+/**
+ * Content padding by density.
+ */
+const CONTENT_PADDING = {
+  compact: 'p-0',
+  comfortable: 'p-2',
+  spacious: 'p-4',
+} as const;
+
+/**
+ * Get density-aware value. This is the core pattern from elastic-ui-patterns.md.
+ */
+function forDensity<T>(values: Record<Density, T>, density: Density): T {
+  return values[density];
+}
 
 import { PathExplorer } from '@/components/docs/PathExplorer';
 import { ObserverPicker, type Observer } from '@/components/docs/ObserverPicker';
@@ -347,16 +406,98 @@ function AgenteseDocsInner() {
   }
 
   // Comfortable (tablet) - two columns with tabs
+  // Use elastic constants for consistent behavior
   if (density === 'comfortable') {
+    const comfortablePadding = forDensity(CONTENT_PADDING, density);
+    const comfortableMaxWidth = forDensity(CONTAINER_MAX_WIDTH, density);
+
     return (
       <div className="h-full flex flex-col bg-gray-900">
         <ObserverPicker observer={observer} onChange={handleObserverChange} density={density} />
 
-        <ElasticSplit
-          direction="horizontal"
-          defaultRatio={0.35}
-          collapseAtDensity="compact"
-          primary={
+        {/* Container with breathing room */}
+        <div className={`flex-1 flex justify-center overflow-hidden ${comfortablePadding}`}>
+          <div className={`flex-1 ${comfortableMaxWidth} w-full`}>
+            <ElasticSplit
+              direction="horizontal"
+              defaultRatio={0.35}
+              collapseAtDensity="compact"
+              minPaneSize={220}
+              primary={
+                <PathExplorer
+                  paths={paths}
+                  metadata={metadata}
+                  selectedPath={selectedPath}
+                  onSelectPath={handleSelectPath}
+                  loading={loading}
+                  error={error}
+                  density={density}
+                />
+              }
+              secondary={
+                <div className="h-full flex flex-col">
+                  {/* Tabs for response/aspects */}
+                  <TabBar tabs={['Response', 'Actions']} activeTab={0} onTabChange={() => {}} />
+                  {showTour ? (
+                    <GuidedTour paths={paths} metadata={metadata} onSelectPath={handleSelectPath} />
+                  ) : (
+                    <>
+                      <div className="flex-1 overflow-auto">
+                        <ResponseViewer
+                          response={response}
+                          path={selectedPath}
+                          aspect={selectedAspect}
+                          observer={observer}
+                        />
+                      </div>
+                      {selectedPath && selectedMetadata && (
+                        <div className="border-t border-gray-700 p-3">
+                          <AspectPanel
+                            path={selectedPath}
+                            metadata={selectedMetadata}
+                            schema={selectedSchema}
+                            selectedAspect={selectedAspect}
+                            observer={observer}
+                            onInvoke={handleInvoke}
+                            density={density}
+                            compact
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              }
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Spacious (desktop) - full three-column layout with Request/Response split
+  // Apply density-parameterized values for elastic sizing
+  const explorerWidth = forDensity(EXPLORER_WIDTH, density);
+  const aspectWidth = forDensity(ASPECT_WIDTH, density);
+  const splitRatio = forDensity(REQUEST_RESPONSE_RATIO, density);
+  const containerMaxWidth = forDensity(CONTAINER_MAX_WIDTH, density);
+  const contentPadding = forDensity(CONTENT_PADDING, density);
+
+  return (
+    <div className="h-full flex flex-col bg-gray-900">
+      <ObserverPicker observer={observer} onChange={handleObserverChange} density={density} />
+
+      {/* Outer container with breathing room */}
+      <div className={`flex-1 flex justify-center overflow-hidden ${contentPadding}`}>
+        {/* Inner container with max-width for visual balance */}
+        <div className={`flex-1 flex overflow-hidden ${containerMaxWidth} w-full`}>
+          {/* Left: Path Explorer - elastic width */}
+          <motion.div
+            className={`${explorerWidth} flex-shrink-0 border-r border-gray-700 overflow-y-auto bg-gray-800/50`}
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: shouldAnimate ? 0.3 : 0 }}
+          >
             <PathExplorer
               paths={paths}
               metadata={metadata}
@@ -366,162 +507,102 @@ function AgenteseDocsInner() {
               error={error}
               density={density}
             />
-          }
-          secondary={
-            <div className="h-full flex flex-col">
-              {/* Tabs for response/aspects */}
-              <TabBar tabs={['Response', 'Actions']} activeTab={0} onTabChange={() => {}} />
+          </motion.div>
+
+          {/* Middle: Request Builder + Response Viewer (split) */}
+          <motion.div
+            className="flex-1 min-w-0 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: shouldAnimate ? 0.2 : 0, delay: 0.1 }}
+          >
+            <AnimatePresence mode="wait">
               {showTour ? (
-                <GuidedTour paths={paths} metadata={metadata} onSelectPath={handleSelectPath} />
-              ) : (
-                <>
-                  <div className="flex-1 overflow-auto">
-                    <ResponseViewer
-                      response={response}
-                      path={selectedPath}
-                      aspect={selectedAspect}
-                      observer={observer}
-                    />
-                  </div>
-                  {selectedPath && selectedMetadata && (
-                    <div className="border-t border-gray-700 p-4">
-                      <AspectPanel
+                <GuidedTour
+                  key="tour"
+                  paths={paths}
+                  metadata={metadata}
+                  onSelectPath={handleSelectPath}
+                />
+              ) : selectedPath ? (
+                <ElasticSplit
+                  key="request-response"
+                  direction="horizontal"
+                  defaultRatio={splitRatio}
+                  collapseAtDensity="compact"
+                  minPaneSize={300}
+                  primary={
+                    <div className="h-full overflow-auto border-r border-gray-700/50">
+                      <RequestBuilder
                         path={selectedPath}
-                        metadata={selectedMetadata}
-                        schema={selectedSchema}
-                        selectedAspect={selectedAspect}
+                        aspect={selectedAspect}
+                        schema={selectedSchema?.[selectedAspect]}
                         observer={observer}
-                        onInvoke={handleInvoke}
+                        onObserverChange={handleObserverChange}
+                        onSend={(payload) => handleInvoke(selectedAspect, payload)}
                         density={density}
-                        compact
+                        examples={selectedMetadata?.examples?.filter(
+                          (ex) => ex.aspect === selectedAspect
+                        )}
                       />
                     </div>
-                  )}
-                </>
+                  }
+                  secondary={
+                    <div className="h-full overflow-auto">
+                      <ResponseViewer
+                        response={response}
+                        path={selectedPath}
+                        aspect={selectedAspect}
+                        observer={observer}
+                      />
+                    </div>
+                  }
+                />
+              ) : (
+                <div
+                  key="empty"
+                  className="h-full flex items-center justify-center text-gray-500 p-8 text-center"
+                >
+                  <div>
+                    <div className="text-6xl mb-4">🌐</div>
+                    <h2 className="text-xl font-semibold text-white mb-2">AGENTESE Explorer</h2>
+                    <p>Select a path from the left panel to begin exploring.</p>
+                  </div>
+                </div>
               )}
-            </div>
-          }
-        />
-      </div>
-    );
-  }
+            </AnimatePresence>
+          </motion.div>
 
-  // Spacious (desktop) - full three-column layout with Request/Response split
-  return (
-    <div className="h-full flex flex-col bg-gray-900">
-      <ObserverPicker observer={observer} onChange={handleObserverChange} density={density} />
-
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Path Explorer */}
-        <motion.div
-          className="w-72 border-r border-gray-700 overflow-y-auto bg-gray-800/50"
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: shouldAnimate ? 0.3 : 0 }}
-        >
-          <PathExplorer
-            paths={paths}
-            metadata={metadata}
-            selectedPath={selectedPath}
-            onSelectPath={handleSelectPath}
-            loading={loading}
-            error={error}
-            density={density}
-          />
-        </motion.div>
-
-        {/* Middle: Request Builder + Response Viewer (split) */}
-        <motion.div
-          className="flex-1 overflow-hidden"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: shouldAnimate ? 0.2 : 0, delay: 0.1 }}
-        >
-          <AnimatePresence mode="wait">
-            {showTour ? (
-              <GuidedTour
-                key="tour"
-                paths={paths}
-                metadata={metadata}
-                onSelectPath={handleSelectPath}
-              />
-            ) : selectedPath ? (
-              <ElasticSplit
-                key="request-response"
-                direction="horizontal"
-                defaultRatio={0.5}
-                collapseAtDensity="compact"
-                primary={
-                  <div className="h-full overflow-auto border-r border-gray-700/50">
-                    <RequestBuilder
-                      path={selectedPath}
-                      aspect={selectedAspect}
-                      schema={selectedSchema?.[selectedAspect]}
-                      observer={observer}
-                      onObserverChange={handleObserverChange}
-                      onSend={(payload) => handleInvoke(selectedAspect, payload)}
-                      density={density}
-                      examples={selectedMetadata?.examples?.filter(
-                        (ex) => ex.aspect === selectedAspect
-                      )}
-                    />
-                  </div>
-                }
-                secondary={
-                  <div className="h-full overflow-auto">
-                    <ResponseViewer
-                      response={response}
-                      path={selectedPath}
-                      aspect={selectedAspect}
-                      observer={observer}
-                    />
-                  </div>
-                }
+          {/* Right: Aspect Panel - elastic width */}
+          <motion.div
+            className={`${aspectWidth} flex-shrink-0 border-l border-gray-700 overflow-y-auto bg-gray-800/30`}
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ duration: shouldAnimate ? 0.3 : 0 }}
+          >
+            {selectedPath && selectedMetadata ? (
+              <AspectPanel
+                path={selectedPath}
+                metadata={selectedMetadata}
+                schema={selectedSchema}
+                selectedAspect={selectedAspect}
+                observer={observer}
+                onInvoke={(aspect) => {
+                  // Just select the aspect - RequestBuilder will handle the actual send
+                  setSelectedAspect(aspect);
+                }}
+                density={density}
               />
             ) : (
-              <div
-                key="empty"
-                className="h-full flex items-center justify-center text-gray-500 p-8 text-center"
-              >
+              <div className="h-full flex items-center justify-center text-gray-500 p-8 text-center">
                 <div>
-                  <div className="text-6xl mb-4">🌐</div>
-                  <h2 className="text-xl font-semibold text-white mb-2">AGENTESE Explorer</h2>
-                  <p>Select a path from the left panel to begin exploring.</p>
+                  <div className="text-4xl mb-4">🌌</div>
+                  <p>Select a path to see available actions</p>
                 </div>
               </div>
             )}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Right: Aspect Panel */}
-        <motion.div
-          className="w-64 border-l border-gray-700 overflow-y-auto bg-gray-800/30"
-          initial={{ x: 20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: shouldAnimate ? 0.3 : 0 }}
-        >
-          {selectedPath && selectedMetadata ? (
-            <AspectPanel
-              path={selectedPath}
-              metadata={selectedMetadata}
-              schema={selectedSchema}
-              selectedAspect={selectedAspect}
-              observer={observer}
-              onInvoke={(aspect) => {
-                // Just select the aspect - RequestBuilder will handle the actual send
-                setSelectedAspect(aspect);
-              }}
-              density={density}
-            />
-          ) : (
-            <div className="h-full flex items-center justify-center text-gray-500 p-8 text-center">
-              <div>
-                <div className="text-4xl mb-4">🌌</div>
-                <p>Select a path to see available actions</p>
-              </div>
-            </div>
-          )}
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

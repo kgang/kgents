@@ -386,6 +386,9 @@ def pytest_configure(config: Any) -> None:
     config.addinivalue_line(
         "markers", "sentinel: mark test as CI safety/sentinel infrastructure (Phase 3)"
     )
+    config.addinivalue_line(
+        "markers", "llm_integration: mark test as requiring real LLM (ASHC VoidHarness)"
+    )
 
     # Register WitnessPlugin if --witness flag is used
     if config.getoption("--witness", default=False):
@@ -409,6 +412,13 @@ def pytest_addoption(parser: Any) -> None:
         action="store_true",
         default=False,
         help="Enable BootstrapWitness verification at session start",
+    )
+
+    parser.addoption(
+        "--run-llm-tests",
+        action="store_true",
+        default=False,
+        help="Run LLM integration tests (ASHC VoidHarness). Also enabled by RUN_LLM_TESTS=1",
     )
 
     # Test optimization plugin options
@@ -592,17 +602,35 @@ _DOMAIN_RULES: list[tuple[str, list[str]]] = [
 
 def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:
     """
-    Auto-apply domain markers to tests based on file paths.
+    Auto-apply domain markers and skip LLM tests unless explicitly requested.
 
-    This enables compartmentalized CI where different test domains
+    LLM tests (ASHC VoidHarness) are skipped unless:
+    - --run-llm-tests flag is passed
+    - RUN_LLM_TESTS=1 environment variable is set
+
+    Domain markers enable compartmentalized CI where different test domains
     run in parallel, reducing feedback time for multi-agent development.
-
-    The marker is applied based on the FIRST matching path pattern,
-    so more specific patterns should come before general ones.
     """
+    import os
+
+    # Check if LLM tests should run
+    run_llm = config.getoption("--run-llm-tests", default=False) or os.getenv("RUN_LLM_TESTS")
+    skip_llm = pytest.mark.skip(
+        reason="LLM tests require --run-llm-tests flag or RUN_LLM_TESTS=1 env var"
+    )
+
     for item in items:
         # Get relative path from impl/claude/
         path = str(item.fspath)
+
+        # Skip LLM integration tests unless explicitly enabled
+        # Check for: marker, path contains 'integration', or file named test_*_integration.py
+        is_llm_test = (
+            item.get_closest_marker("llm_integration") is not None
+            or "integration" in path
+        )
+        if is_llm_test and not run_llm:
+            item.add_marker(skip_llm)
 
         # Find matching domain
         for marker_name, patterns in _DOMAIN_RULES:

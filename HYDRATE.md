@@ -87,6 +87,8 @@ Projection → AGENTESE Protocol → Node → Service → Infrastructure → Per
 | Park | 60% | Westworld with consent |
 | Witness | 98% | Audit core: Mark, Walk, Playbook, Grant, Scope (461+ tests) |
 | Conductor | 92% | CLI v7 orchestration (Phase 5B: spring-physics cursors, NodeDetailPanel) |
+| ASHC | 95% | Self-hosting compiler: 408 tests, Phases 1-5 complete |
+| Liminal | 50% | Transition protocols: Morning Coffee (224 tests, Phase 2 complete) |
 
 ---
 

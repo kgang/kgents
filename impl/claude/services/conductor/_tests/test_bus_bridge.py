@@ -30,6 +30,11 @@ import asyncio
 
 import pytest
 
+from protocols.synergy import (
+    SynergyEventType,
+    get_synergy_bus,
+    reset_synergy_bus,
+)
 from services.conductor.bus_bridge import (
     is_bridge_active,
     unwire_a2a_bridge,
@@ -39,11 +44,6 @@ from services.witness.bus import (
     WitnessSynergyBus,
     get_synergy_bus as get_witness_bus,
     reset_witness_bus_manager,
-)
-from protocols.synergy import (
-    SynergyEventType,
-    get_synergy_bus,
-    reset_synergy_bus,
 )
 
 

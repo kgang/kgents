@@ -1,9 +1,25 @@
-# Projection Protocol
+# Projection Protocol (UI)
 
 > *"Developers design agents. Projections are batteries included."*
 
 **Status:** Canonical
-**Implementation:** `impl/claude/agents/i/reactive/` (37+ tests), `impl/claude/system/projector/`
+**Implementation:** `impl/claude/agents/i/reactive/` (37+ tests)
+**Related:** [`alethic-projection.md`](alethic-projection.md) (Agent Compilation)
+
+---
+
+## Two Projection Protocols
+
+kgents distinguishes **two projection domains**:
+
+| Protocol | Document | Functor | Purpose |
+|----------|----------|---------|---------|
+| **UI Projection** | This document | `State → Renderable[T]` | Display agent state |
+| **Agent Compilation** | [`alethic-projection.md`](alethic-projection.md) | `(Nucleus, Halo) → Executable[T]` | Deploy agents |
+
+This document covers **UI Projection**—how agent state renders to CLI, Web, marimo, etc.
+
+---
 
 ## Purpose
 

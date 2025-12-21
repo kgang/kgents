@@ -202,6 +202,6 @@ Root reports failure without crashing the orchestration loop.
 ## See Also
 
 - [bootstrap.md](../bootstrap.md) - The irreducible kernel
-- [c-gents/](../c-gents/) - Composition foundations
+- [agents/](../agents/) - Categorical foundations
 - [h-gents/hegel.md](../h-gents/hegel.md) - Dialectic synthesis
 - [JGENT_SPEC_PLAN.md](JGENT_SPEC_PLAN.md) - Full implementation plan

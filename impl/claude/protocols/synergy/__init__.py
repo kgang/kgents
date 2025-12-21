@@ -108,7 +108,6 @@ from .handlers import (
     CoalitionToBrainHandler,
     GestaltToBrainHandler,
     WitnessToBrainHandler,
-    WitnessToGardenHandler,
 )
 
 __all__ = [
@@ -152,7 +151,6 @@ __all__ = [
     "BrainToCoalitionHandler",
     # Handlers - Witness (8th Crown Jewel)
     "WitnessToBrainHandler",
-    "WitnessToGardenHandler",
     # Factory functions - Witness (8th Crown Jewel)
     "create_witness_thought_event",
     "create_witness_git_commit_event",

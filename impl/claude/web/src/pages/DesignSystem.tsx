@@ -156,7 +156,7 @@ function OperadCard({
           </h3>
           <p className="text-xs text-gray-500 truncate">{config.description}</p>
         </div>
-        {manifest && (
+        {manifest?.operations && (
           <div className="text-right">
             <div className="text-sm font-medium">{manifest.operations.length}</div>
             <div className="text-xs text-gray-600">ops</div>

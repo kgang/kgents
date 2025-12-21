@@ -20,6 +20,19 @@ Differance Integration (Phase 6B):
 
 See: docs/skills/metaphysical-fullstack.md
 See: plans/differance-crown-jewel-wiring.md (Phase 6B)
+
+Teaching:
+    gotcha: Dual-track storage means Crystal table AND D-gent must both succeed.
+            If one fails after the other succeeds, you get "ghost" memories.
+            (Evidence: test_brain_persistence.py::test_heal_ghosts)
+
+    gotcha: capture() returns immediately but trace recording is fire-and-forget.
+            Never await the trace task or you'll block the hot path.
+            (Evidence: test_brain_persistence.py::test_capture_performance)
+
+    gotcha: search() updates access_count via touch(). High-frequency searches
+            will cause write amplification. Consider batching access updates.
+            (Evidence: test_brain_persistence.py::test_access_tracking)
 """
 
 from __future__ import annotations
@@ -45,6 +58,15 @@ if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+
+def _format_datetime(dt: datetime | str | None) -> str:
+    """Format datetime to ISO string, handling SQLite string returns."""
+    if dt is None:
+        return ""
+    if hasattr(dt, "isoformat"):
+        return dt.isoformat()
+    return str(dt)
 
 
 @dataclass
@@ -304,9 +326,7 @@ class BrainPersistence:
                             content=content,
                             summary=crystal.summary,
                             similarity=similarity,
-                            captured_at=crystal.created_at.isoformat()
-                            if crystal.created_at
-                            else "",
+                            captured_at=_format_datetime(crystal.created_at),
                             is_stale=False,
                         )
                     )
@@ -387,7 +407,7 @@ class BrainPersistence:
                 content=content,
                 summary=crystal.summary,
                 similarity=1.0 - entropy,  # Surprise factor
-                captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
+                captured_at=_format_datetime(crystal.created_at),
                 is_stale=False,
             )
 
@@ -468,7 +488,7 @@ class BrainPersistence:
                 content=content,
                 summary=crystal.summary,
                 similarity=1.0,
-                captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
+                captured_at=_format_datetime(crystal.created_at),
                 is_stale=False,
             )
 
@@ -493,7 +513,7 @@ class BrainPersistence:
                         content=content,
                         summary=crystal.summary,
                         similarity=1.0,
-                        captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
+                        captured_at=_format_datetime(crystal.created_at),
                         is_stale=False,
                     )
                 )
@@ -527,7 +547,7 @@ class BrainPersistence:
                         content=content,
                         summary=crystal.summary,
                         similarity=1.0,
-                        captured_at=crystal.created_at.isoformat() if crystal.created_at else "",
+                        captured_at=_format_datetime(crystal.created_at),
                         is_stale=False,
                     )
                 )

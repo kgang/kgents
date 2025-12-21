@@ -534,7 +534,7 @@ class Functor(Protocol):
     - Async: Agent[A, B] → Agent[A, Awaitable[B]]
     - Logged: Agent[A, B] → Agent[A, (B, LogEntry)]
 
-    See: spec/c-gents/functors.md, impl/claude/agents/c/functor.py
+    See: spec/agents/functors.md, impl/claude/agents/c/functor.py
     """
 
     def lift(self, agent: Agent[A, B]) -> Agent[Any, Any]:

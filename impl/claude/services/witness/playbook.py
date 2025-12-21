@@ -27,6 +27,23 @@ Laws:
 
 See: spec/protocols/witness-primitives.md
 See: docs/skills/crown-jewel-patterns.md (Pattern 9: Directed Cycle)
+
+Teaching:
+    gotcha: Always verify Grant is GRANTED status before creating Playbook.
+            Passing a PENDING or REVOKED Grant raises MissingGrant.
+            (Evidence: test_playbook.py::test_grant_required)
+
+    gotcha: Phase transitions are DIRECTED—you cannot skip phases.
+            SENSE → ACT → REFLECT → SENSE (cycle). InvalidPhaseTransition if wrong.
+            (Evidence: test_playbook.py::test_phase_ordering)
+
+    gotcha: Guards evaluate at phase boundaries, not during phase.
+            Budget exhaustion during ACT phase only fails at ACT → REFLECT.
+            (Evidence: test_playbook.py::test_guard_evaluation)
+
+    gotcha: from_dict() does NOT restore _grant and _scope objects.
+            You must reattach them manually after deserialization.
+            (Evidence: test_playbook.py::test_serialization_roundtrip)
 """
 
 from __future__ import annotations
@@ -39,8 +56,8 @@ from typing import Any, NewType
 from uuid import uuid4
 
 from .grant import Grant, GrantId, GrantStatus
+from .mark import Mark, MarkId, NPhase, WalkId
 from .scope import Budget, Scope, ScopeId
-from .mark import NPhase, Mark, MarkId, WalkId
 
 logger = logging.getLogger("kgents.witness.playbook")
 
