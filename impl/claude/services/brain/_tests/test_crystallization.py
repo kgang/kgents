@@ -119,7 +119,8 @@ class TestCrystallizeTeaching:
         assert result.is_new is True
         assert result.evidence_verified is True
         assert result.severity == "critical"
-        assert "services-brain-persistence" in result.teaching_id
+        assert result.teaching_id.startswith("t-")
+        assert len(result.teaching_id) == 52  # "t-" + 50 char hash
 
         # Verify it's in the database
         crystal = await db_session.get(TeachingCrystal, result.teaching_id)

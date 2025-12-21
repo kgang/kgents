@@ -52,22 +52,20 @@ class TestVoiceGateNode:
         assert "check" in affordances
         assert "report" in affordances
 
-    def test_manifest_returns_rendering(self, node: VoiceGateNode) -> None:
+    @pytest.mark.asyncio
+    async def test_manifest_returns_rendering(self, node: VoiceGateNode) -> None:
         """Manifest aspect returns renderable."""
-        import asyncio
-
-        result = asyncio.get_event_loop().run_until_complete(node.manifest(None))  # type: ignore[arg-type]
+        result = await node.manifest(None)  # type: ignore[arg-type]
 
         assert isinstance(result, BasicRendering)
         assert result.metadata is not None
         assert "anchors" in result.metadata
         assert "laws" in result.metadata
 
-    def test_manifest_includes_anchors(self, node: VoiceGateNode) -> None:
+    @pytest.mark.asyncio
+    async def test_manifest_includes_anchors(self, node: VoiceGateNode) -> None:
         """Manifest includes voice anchors."""
-        import asyncio
-
-        result = asyncio.get_event_loop().run_until_complete(node.manifest(None))  # type: ignore[arg-type]
+        result = await node.manifest(None)  # type: ignore[arg-type]
 
         anchors = result.metadata["anchors"]
         assert "Daring, bold, creative, opinionated but not gaudy" in anchors

@@ -674,8 +674,9 @@ class BrainPersistence:
                     (Evidence: test_crystallization.py::test_deduplication)
         """
         # Generate deterministic ID for deduplication
-        insight_hash = hashlib.sha256(insight.encode()).hexdigest()[:12]
-        teaching_id = f"teach-{source_module.replace('.', '-')}-{source_symbol.replace('.', '-')}-{insight_hash}"
+        # Hash all three components to stay under 64 char limit
+        id_source = f"{source_module}:{source_symbol}:{insight}"
+        teaching_id = f"t-{hashlib.sha256(id_source.encode()).hexdigest()[:50]}"
 
         # Check for existing crystal (deduplication)
         async with self.table.session_factory() as session:
@@ -698,6 +699,7 @@ class BrainPersistence:
                 )
 
             # Create new teaching crystal
+            # born_at uses database default func.now() - don't pass Python datetime
             teaching = TeachingCrystal(
                 id=teaching_id,
                 insight=insight,
@@ -706,7 +708,7 @@ class BrainPersistence:
                 source_module=source_module,
                 source_symbol=source_symbol,
                 source_commit=source_commit,
-                born_at=datetime.now(UTC),
+                # born_at: uses database default
                 died_at=None,
                 successor_module=None,
                 successor_symbol=None,
