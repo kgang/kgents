@@ -17,6 +17,11 @@ import React from 'react';
 import { BreathingContainer } from '@/components/genesis/BreathingContainer';
 import { TraceNodeCard, type TraceNodeContent } from './TraceNodeCard';
 import { WalkCard, type WalkContent } from './WalkCard';
+import {
+  MeaningTokenRenderer,
+  type MeaningTokenKind,
+  type MeaningTokenContent,
+} from './MeaningTokenRenderer';
 import { SERVO_BG_CLASSES, SERVO_BORDER_CLASSES } from './theme';
 
 // =============================================================================
@@ -93,7 +98,7 @@ interface GenericPanelProps {
 
 function GenericPanel({ label, content, style, isSelected, onClick }: GenericPanelProps) {
   const bgClass = style.background
-    ? SERVO_BG_CLASSES[style.background] ?? `bg-[${style.background}]`
+    ? (SERVO_BG_CLASSES[style.background] ?? `bg-[${style.background}]`)
     : SERVO_BG_CLASSES.paper;
 
   return (
@@ -111,9 +116,7 @@ function GenericPanel({ label, content, style, isSelected, onClick }: GenericPan
       tabIndex={onClick ? 0 : undefined}
     >
       <div className="font-medium text-sm text-white">{label}</div>
-      {typeof content === 'string' && (
-        <div className="text-xs text-gray-300 mt-1">{content}</div>
-      )}
+      {typeof content === 'string' && <div className="text-xs text-gray-300 mt-1">{content}</div>}
     </div>
   );
 }
@@ -195,11 +198,7 @@ export function ServoNodeRenderer({
 }: ServoNodeRendererProps) {
   // Graceful degradation: handle missing/malformed node
   if (!node) {
-    return (
-      <div className="p-2 text-gray-500 text-sm">
-        [Empty node]
-      </div>
-    );
+    return <div className="p-2 text-gray-500 text-sm">[Empty node]</div>;
   }
 
   const kind = node.kind ?? 'PANEL';
@@ -256,6 +255,21 @@ export function ServoNodeRenderer({
       break;
 
     case 'TEXT':
+      // Check if this is a meaning token (has meaning_token_kind in metadata)
+      if (node.metadata?.meaning_token_kind) {
+        const tokenKind = node.metadata.meaning_token_kind as MeaningTokenKind;
+        rendered = (
+          <MeaningTokenRenderer
+            kind={tokenKind}
+            content={content as MeaningTokenContent | string}
+            label={label}
+            isSelected={isSelected}
+            onClick={handleClick}
+            className={className}
+          />
+        );
+        break;
+      }
       rendered = <TextNode label={label} content={content} />;
       break;
 
