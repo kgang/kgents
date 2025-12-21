@@ -4,6 +4,39 @@ Foundry Contracts — Request/Response types for the Agent Foundry.
 These dataclasses define the typed contracts for AGENTESE node aspects.
 Following the Phase 7 Autopoietic Architecture pattern from Brain/Witness.
 
+All contracts are FROZEN dataclasses — immutable after creation. This:
+1. Prevents accidental mutation across layer boundaries
+2. Enables safe caching (hashable keys)
+3. Makes debugging easier (no spooky action at a distance)
+
+AGENTESE: self.foundry.* (forge, inspect, cache, promote, manifest)
+
+Teaching:
+    gotcha: All Request/Response types are frozen=True. This is intentional.
+            If you need to modify a request, create a new one. Never use
+            mutable dataclasses for cross-layer contracts.
+            (Evidence: services/foundry/_tests/test_core.py — all tests use frozen contracts)
+
+    gotcha: ForgeResponse includes both `forced` and `reason` fields.
+            When `forced=True`, the target was chosen by a safety constraint
+            (CHAOTIC → WASM), not user preference. The `reason` explains why.
+            (Evidence: services/foundry/_tests/test_core.py::TestForgeBasics::test_forge_chaotic_intent)
+
+    gotcha: InspectResponse distinguishes ephemeral from registered agents
+            via `is_ephemeral` flag. Ephemeral agents have cache_metrics,
+            registered agents have halo and polynomial.
+            (Evidence: services/foundry/_tests/test_core.py::TestInspect::test_inspect_cached_agent)
+
+Example:
+    >>> request = ForgeRequest(
+    ...     intent="parse JSON data",
+    ...     context={"interactive": True},
+    ...     entropy_budget=0.8,
+    ... )
+    >>> # request.intent = "new"  # ERROR: frozen dataclass
+    >>> request.to_dict()  # Works for all Response types too
+    {'intent': 'parse JSON data', ...}
+
 See: spec/services/foundry.md
 """
 
@@ -12,7 +45,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
-
 
 # =============================================================================
 # Forge Contracts
@@ -35,7 +67,9 @@ class ForgeRequest:
 
     intent: str  # Natural language description of what the agent should do
     context: dict[str, Any] = field(default_factory=dict)  # Context flags
-    target_override: str | None = None  # Force specific target (local, cli, docker, k8s, wasm, marimo)
+    target_override: str | None = (
+        None  # Force specific target (local, cli, docker, k8s, wasm, marimo)
+    )
     entropy_budget: float = 1.0  # Computation budget (0.0-1.0)
 
 

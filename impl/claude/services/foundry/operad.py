@@ -4,6 +4,11 @@ FoundryOperad — Composition Grammar for Agent Foundry.
 Defines the valid operations and composition laws for the Foundry.
 Following the pattern from agents/operad/core.py.
 
+The operad provides:
+1. **Operations** — The generators (forge, inspect, promote, cache_*)
+2. **Laws** — Constraints on composition (idempotence, coherence)
+3. **Verification** — Structural verification of law satisfaction
+
 Operations:
 - forge: Intent → Artifact (arity=1)
 - inspect: AgentName → Halo (arity=1)
@@ -12,11 +17,33 @@ Operations:
 - cache_list: () → list[CacheEntry] (arity=0)
 
 Laws:
-- idempotent_forge: forge(forge(x)) ≡ forge(x) (cache coherence)
-- cache_coherence: cache_get(forge(x).key) ≡ forge(x)
-- inspect_after_forge: inspect(forge(x)) preserves x
+- idempotent_forge: forge(forge(x).intent) ≡ forge(x) — cache coherence
+- cache_coherence: cache_get(forge(x).key) ≡ forge(x) — lookup consistency
+- inspect_preserves: inspect(forge(x)).source ≡ forge(x).agent_source
 
-See: spec/services/foundry.md
+Teaching:
+    gotcha: Operations have ARITY (number of inputs), not return count.
+            forge has arity=1 (takes intent), cache_list has arity=0 (nullary).
+            Arity is used for validating composition sequences.
+
+    gotcha: Laws are verified STRUCTURALLY by type, not at runtime.
+            FOUNDRY_OPERAD.verify_law() returns STRUCTURAL status, meaning
+            the law is satisfied by the type signatures alone. Runtime
+            verification would require an actual Foundry instance.
+
+    gotcha: The operad is a SINGLETON (FOUNDRY_OPERAD). Unlike the polynomial
+            state machine which is per-forge-operation, the operad is shared
+            because it describes the grammar, not the state.
+
+Example:
+    >>> FOUNDRY_OPERAD.list_operations()
+    ['forge', 'inspect', 'promote', 'cache_get', 'cache_list']
+    >>> FOUNDRY_OPERAD.get_operation('forge').arity
+    1
+    >>> FOUNDRY_OPERAD.verify_law('idempotent_forge').passed
+    True
+
+See: spec/services/foundry.md, agents/operad/core.py
 """
 
 from __future__ import annotations

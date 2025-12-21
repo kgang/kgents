@@ -3,6 +3,8 @@ AgentFoundry — The Crown Jewel Orchestrator.
 
 The Foundry synthesizes J-gent JIT intelligence with Alethic Projection compilation.
 
+AGENTESE: self.foundry.*
+
 Pipeline:
     Intent → RealityClassifier → MetaArchitect → Chaosmonger → TargetSelector → Projector → Artifact
 
@@ -13,6 +15,28 @@ Key Responsibilities:
 4. Select projection target
 5. Compile to artifact
 6. Cache for reuse
+
+Teaching:
+    gotcha: Cache check happens BEFORE classification. Classification is expensive
+            (involves J-gent RealityClassifier). Cache hits skip the entire pipeline.
+            (Evidence: services/foundry/_tests/test_core.py::TestForgeCache::test_cache_hit)
+
+    gotcha: CHAOTIC reality OR unstable code → WASM sandbox UNCONDITIONALLY.
+            This is a security invariant, not a preference. No overrides allowed.
+            (Evidence: services/foundry/_tests/test_core.py::TestForgeBasics::test_forge_chaotic_intent)
+
+    gotcha: Lazy-load J-gent dependencies via _get_classifier()/_get_architect().
+            This defers imports until first use, improving startup time significantly.
+            (Evidence: services/foundry/_tests/test_core.py::TestForgeBasics::test_forge_simple_intent)
+
+Example:
+    >>> foundry = AgentFoundry()
+    >>> response = await foundry.forge(ForgeRequest(
+    ...     intent="parse CSV files and extract headers",
+    ...     context={"interactive": True}
+    ... ))
+    >>> response.target
+    'marimo'  # Interactive context → marimo notebook
 
 See: spec/services/foundry.md
 """
@@ -160,9 +184,7 @@ class AgentFoundry:
                 )
 
             # 2. Classify reality
-            self._state_machine.transition(
-                FoundryState.CLASSIFYING, FoundryEvent.START_FORGE
-            )
+            self._state_machine.transition(FoundryState.CLASSIFYING, FoundryEvent.START_FORGE)
 
             from agents.j import (
                 ArchitectConstraints,
@@ -180,6 +202,7 @@ class AgentFoundry:
 
             classification_input = ClassificationInput(
                 intent=request.intent,
+                context=request.context,
                 entropy_budget=entropy_budget,
             )
             classification = await self._get_classifier().invoke(classification_input)
@@ -356,22 +379,22 @@ class AgentFoundry:
             case Target.CLI:
                 from system.projector import CLIProjector
 
-                projector = CLIProjector()
-                artifact = self._project_source(projector, agent_source)
+                cli_projector = CLIProjector()
+                artifact = self._project_source(cli_projector, agent_source)
                 return artifact, "script"
 
             case Target.DOCKER:
                 from system.projector import DockerProjector
 
-                projector = DockerProjector()
-                artifact = self._project_source(projector, agent_source)
+                docker_projector = DockerProjector()
+                artifact = self._project_source(docker_projector, agent_source)
                 return artifact, "dockerfile"
 
             case Target.K8S:
                 from system.projector import K8sProjector, manifests_to_yaml
 
-                projector = K8sProjector()
-                artifact = self._project_source(projector, agent_source)
+                k8s_projector = K8sProjector()
+                artifact = self._project_source(k8s_projector, agent_source)
                 # K8s returns list of resources, convert to dicts
                 if isinstance(artifact, list):
                     return [r.to_dict() for r in artifact], "manifests"
@@ -380,15 +403,15 @@ class AgentFoundry:
             case Target.WASM:
                 from system.projector import WASMProjector
 
-                projector = WASMProjector()
-                artifact = self._project_source(projector, agent_source)
+                wasm_projector = WASMProjector()
+                artifact = self._project_source(wasm_projector, agent_source)
                 return artifact, "html"
 
             case Target.MARIMO:
                 from system.projector import MarimoProjector
 
-                projector = MarimoProjector()
-                artifact = self._project_source(projector, agent_source)
+                marimo_projector = MarimoProjector()
+                artifact = self._project_source(marimo_projector, agent_source)
                 return artifact, "cell"
 
             case _:
@@ -464,7 +487,7 @@ if __name__ == "__main__":
 
     def _wrap_dockerfile(self, source: str) -> str:
         """Wrap source in a Dockerfile."""
-        return f'''FROM python:3.11-slim
+        return f"""FROM python:3.11-slim
 WORKDIR /app
 
 # Generated agent source
@@ -474,12 +497,12 @@ EOF
 
 # Run agent
 CMD ["python", "agent.py"]
-'''
+"""
 
     def _wrap_wasm_html(self, source: str) -> str:
         """Wrap source in WASM-ready HTML."""
         escaped_source = source.replace("\\", "\\\\").replace("`", "\\`")
-        return f'''<!DOCTYPE html>
+        return f"""<!DOCTYPE html>
 <html>
 <head>
     <title>JIT Agent Sandbox</title>
@@ -514,11 +537,11 @@ asyncio.run(agent.invoke("${{input}}"))
     </script>
 </body>
 </html>
-'''
+"""
 
     def _wrap_marimo_cell(self, source: str) -> str:
         """Wrap source in a marimo notebook cell."""
-        return f'''import marimo as mo
+        return f"""import marimo as mo
 
 # === JIT Agent Source ===
 {source}
@@ -540,7 +563,7 @@ mo.vstack([
     run_button,
     mo.callout(invoke_agent(input_area.value) if run_button.value else "Click Run to invoke"),
 ])
-'''
+"""
 
     def _create_placeholder_source(self, intent: str, reality: Any) -> str:
         """Create a minimal placeholder agent for non-PROBABILISTIC cases."""

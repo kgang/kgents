@@ -3,7 +3,9 @@ Foundry AGENTESE Node: @node("self.foundry")
 
 Wraps AgentFoundry as an AGENTESE node for universal gateway access.
 
-AGENTESE Paths:
+AGENTESE: self.foundry.*
+
+Aspects:
 - self.foundry.manifest  - Foundry status (cache size, forges, etc.)
 - self.foundry.forge     - Forge new ephemeral agent from intent
 - self.foundry.inspect   - Inspect agent capabilities
@@ -15,7 +17,37 @@ The Metaphysical Fullstack Pattern (AD-009):
 - No explicit routes needed
 - All transports collapse to logos.invoke(path, observer, ...)
 
-See: docs/skills/metaphysical-fullstack.md
+Teaching:
+    gotcha: The @node decorator with dependencies=("foundry_service",) requires
+            get_foundry_service() to be registered in providers.py BEFORE import.
+            If the dependency isn't registered, the node silently skips (see
+            CLAUDE.md "DI Container Silent Skip" pattern).
+            (Evidence: services/providers.py::setup_providers)
+
+    gotcha: Rendering classes (ForgeRendering, InspectRendering, etc.) provide
+            BOTH to_dict() for JSON and to_text() for CLI. _invoke_aspect()
+            returns the dict form; manifest() returns the Renderable directly.
+            This allows different transports to project the same data differently.
+
+    gotcha: Affordances are archetype-dependent. Guest users can forge and
+            inspect but NOT access cache operations or promote. This is
+            enforced in _get_affordances_for_archetype().
+
+Example (CLI):
+    kg foundry forge "parse CSV files"
+    kg foundry inspect <cache_key>
+    kg foundry cache list
+
+Example (HTTP):
+    POST /agentese/self.foundry:forge
+    {"intent": "parse JSON data", "context": {"interactive": true}}
+
+Example (Python):
+    >>> from protocols.agentese.logos import create_logos
+    >>> logos = create_logos()
+    >>> result = await logos.invoke("self.foundry", umwelt, aspect="forge", intent="...")
+
+See: docs/skills/metaphysical-fullstack.md, docs/skills/agentese-node-registration.md
 """
 
 from __future__ import annotations
@@ -264,9 +296,7 @@ class FoundryNode(BaseLogosNode):
         # Guest users can forge and inspect
         return ("forge", "inspect")
 
-    async def manifest(
-        self, observer: "Observer | Umwelt[Any, Any]"
-    ) -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
         """
         Show foundry status to observer.
 
@@ -295,29 +325,29 @@ class FoundryNode(BaseLogosNode):
                 return ForgeRendering(response=response).to_dict()
 
             case "inspect":
-                request = InspectRequest(
+                inspect_request = InspectRequest(
                     agent_name=kwargs.get("agent_name", ""),
                     include_source=kwargs.get("include_source", False),
                 )
-                response = await self._foundry.inspect(request)
-                return InspectRendering(response=response).to_dict()
+                inspect_response = await self._foundry.inspect(inspect_request)
+                return InspectRendering(response=inspect_response).to_dict()
 
             case "cache":
-                request = CacheRequest(
+                cache_request = CacheRequest(
                     action=kwargs.get("action", "list"),
                     key=kwargs.get("key"),
                 )
-                response = await self._foundry.handle_cache(request)
-                return CacheRendering(response=response).to_dict()
+                cache_response = await self._foundry.handle_cache(cache_request)
+                return CacheRendering(response=cache_response).to_dict()
 
             case "promote":
-                request = PromoteRequest(
+                promote_request = PromoteRequest(
                     cache_key=kwargs.get("cache_key", ""),
                     agent_name=kwargs.get("agent_name", ""),
                     description=kwargs.get("description"),
                 )
-                response = await self._foundry.promote(request)
-                return response.to_dict()
+                promote_response = await self._foundry.promote(promote_request)
+                return promote_response.to_dict()
 
             case _:
                 return {"error": f"Unknown aspect: {aspect}"}

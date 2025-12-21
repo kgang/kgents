@@ -1,7 +1,10 @@
 """
 FoundryPolynomial — State Machine for Agent Foundry.
 
-The Foundry polynomial models the JIT agent compilation pipeline:
+The Foundry polynomial models the JIT agent compilation pipeline as a
+mode-dependent state machine following AD-002 (Polynomial Generalization).
+
+States:
 - IDLE: Ready for new forge request
 - CLASSIFYING: Running RealityClassifier
 - GENERATING: Running MetaArchitect (PROBABILISTIC only)
@@ -11,9 +14,32 @@ The Foundry polynomial models the JIT agent compilation pipeline:
 - CACHING: Storing result
 - FAILED: Error state
 
-Following AD-002 (Polynomial Generalization) pattern from spec/principles.md.
+Teaching:
+    gotcha: The polynomial defines DIRECTION SETS (valid inputs per state).
+            _foundry_directions(state) returns FrozenSet[FoundryEvent] — the
+            events that are legal to receive in each state. This is the
+            type-safe way to enforce state machine invariants.
+            (Evidence: services/foundry/_tests/test_polynomial.py::TestPolynomial::test_valid_inputs_for_idle)
 
-See: spec/services/foundry.md
+    gotcha: GENERATING is only reachable from CLASSIFYING when reality is
+            PROBABILISTIC. DETERMINISTIC/CHAOTIC skip straight to SELECTING.
+            This is visible in VALID_TRANSITIONS: CLASSIFYING → {GENERATING, SELECTING}.
+            (Evidence: services/foundry/_tests/test_polynomial.py::TestTransitions::test_valid_transitions_from_classifying)
+
+    gotcha: FAILED state only accepts RESET event. This ensures the Foundry
+            can always recover to IDLE after an error — no stuck states.
+            (Evidence: services/foundry/_tests/test_polynomial.py::TestStateMachine::test_fail)
+
+Example:
+    >>> fsm = FoundryStateMachine()
+    >>> fsm.state
+    FoundryState.IDLE
+    >>> fsm.transition(FoundryState.CLASSIFYING, FoundryEvent.START_FORGE)
+    True
+    >>> FOUNDRY_POLYNOMIAL.valid_inputs(FoundryState.CLASSIFYING)
+    frozenset({FoundryEvent.REALITY_CLASSIFIED, FoundryEvent.ERROR})
+
+See: spec/services/foundry.md, spec/principles.md (AD-002)
 """
 
 from __future__ import annotations

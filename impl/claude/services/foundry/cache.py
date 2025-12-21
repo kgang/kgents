@@ -6,9 +6,37 @@ Tracks invocation metrics to support promotion decisions in Phase 5.
 
 Features:
 - LRU eviction when capacity exceeded
-- TTL expiration for stale entries
+- TTL expiration for stale entries (default: 24 hours)
 - Invocation tracking (count, success/failure)
-- Thread-safe operations
+- Thread-safe operations via RLock
+
+Teaching:
+    gotcha: Cache key = SHA256(normalized(intent, context)). The intent is
+            lowercased and stripped, context keys are sorted. This ensures
+            "Parse CSV" and "parse csv" hit the same cache entry.
+            (Evidence: services/foundry/_tests/test_cache.py::TestCacheBasics::test_compute_key_case_insensitive)
+
+    gotcha: LRU eviction happens BEFORE put, not during. When at capacity,
+            we evict oldest entries until there's room for the new entry.
+            This guarantees put() always succeeds.
+            (Evidence: services/foundry/_tests/test_cache.py::TestCacheLRU::test_lru_eviction)
+
+    gotcha: TTL expiration is checked on GET, not on a background timer.
+            Expired entries are evicted on access, which saves CPU cycles
+            but means list_entries() may include stale entries.
+            (Evidence: services/foundry/_tests/test_cache.py::TestCacheExpiration::test_evict_expired)
+
+    gotcha: CacheEntry tracks invocations via record_invocation(), not on forge.
+            The Foundry must explicitly call cache.record_invocation(key, success)
+            after each agent execution to update metrics.
+            (Evidence: services/foundry/_tests/test_cache.py::TestCacheMetrics::test_record_invocation)
+
+Example:
+    >>> cache = EphemeralAgentCache(max_size=100, ttl_hours=24)
+    >>> key = cache.compute_key("parse csv", {})
+    >>> cache.put(CacheEntry(key=key, intent="parse csv", ...))
+    >>> cache.get(key)  # Returns entry and updates LRU order
+    CacheEntry(...)
 
 See: spec/services/foundry.md
 """
@@ -248,9 +276,7 @@ class EphemeralAgentCache:
         with self._lock:
             now = datetime.now(UTC)
             expired_keys = [
-                key
-                for key, entry in self._cache.items()
-                if (now - entry.created_at) > self._ttl
+                key for key, entry in self._cache.items() if (now - entry.created_at) > self._ttl
             ]
 
             for key in expired_keys:
