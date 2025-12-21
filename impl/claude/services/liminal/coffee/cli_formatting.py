@@ -396,6 +396,187 @@ def format_history(data: dict[str, Any]) -> str:
 # =============================================================================
 
 
+def format_circadian_context(data: dict[str, Any]) -> str:
+    """
+    Format CircadianContext for CLI display.
+
+    Shows resonances, patterns, and optional serendipity from the garden's memory.
+
+    Example output:
+    ┌───────────────────────────────────────────────────────────────────┐
+    │  💫 This Morning Echoes...                                       │
+    ├───────────────────────────────────────────────────────────────────┤
+    │                                                                   │
+    │  💫 December 14th (Saturday)                                     │
+    │     "I want to feel like I'm exploring, not completing."         │
+    │     That morning, you chose 🎲 SERENDIPITOUS                     │
+    │                                                                   │
+    │  📍 FROM YOUR PATTERNS                                           │
+    │     • "ship something" — 7 of 10 mornings                        │
+    │     • "depth" — recurring theme                                  │
+    │                                                                   │
+    │  🎲 FROM THE VOID                                                │
+    │     Three weeks ago: "The constraint is the freedom"             │
+    │                                                                   │
+    └───────────────────────────────────────────────────────────────────┘
+    """
+    lines = []
+
+    resonances = data.get("resonances", [])
+    patterns = data.get("patterns", [])
+    serendipity = data.get("serendipity")
+
+    # Resonances
+    if resonances:
+        lines.append("💫 ECHOES FROM SIMILAR MORNINGS")
+        for r in resonances[:2]:  # Top 2 resonances
+            arch = r.get("archaeological", {})
+            voice = arch.get("voice", {})
+            weekday_name = arch.get("weekday_name", "")
+            captured_date = voice.get("captured_date", "")
+
+            # Format date nicely
+            if captured_date:
+                try:
+                    from datetime import date as dt_date
+
+                    d = dt_date.fromisoformat(captured_date)
+                    date_str = d.strftime("%B %d")
+                except (ValueError, TypeError):
+                    date_str = captured_date
+            else:
+                date_str = "A past morning"
+
+            lines.append(f"   {date_str} ({weekday_name})")
+
+            # Show success criteria if available
+            criteria = voice.get("success_criteria", "")
+            if criteria:
+                lines.append(f'   "{_truncate(criteria, 50)}"')
+
+            # Show challenge if chosen
+            challenge = voice.get("chosen_challenge")
+            if challenge:
+                # Handle both dict and enum formats
+                if isinstance(challenge, dict):
+                    emoji = challenge.get("emoji", "🎯")
+                    value = challenge.get("value", "")
+                else:
+                    emoji = "🎯"
+                    value = str(challenge)
+                lines.append(f"   That morning, you chose {emoji} {value}")
+
+            lines.append("")
+
+    # Patterns
+    if patterns:
+        lines.append("📍 FROM YOUR PATTERNS")
+        for p in patterns[:3]:  # Top 3 patterns
+            pattern_text = p.get("pattern", "")
+            occurrences = p.get("occurrences", 0)
+            total = p.get("total_voices", 0)
+
+            if total > 0:
+                lines.append(f'   • "{pattern_text}" — {occurrences} of {total} mornings')
+            else:
+                lines.append(f'   • "{pattern_text}" — recurring theme')
+
+        lines.append("")
+
+    # Serendipity (the accursed share)
+    if serendipity:
+        arch = serendipity.get("archaeological", {})
+        quote = serendipity.get("quote", "")
+        age_days = arch.get("age_days", 0)
+
+        lines.append("🎲 FROM THE VOID (serendipity)")
+        if age_days > 21:
+            lines.append(f'   A month ago: "{_truncate(quote, 50)}"')
+        elif age_days > 14:
+            lines.append(f'   Three weeks ago: "{_truncate(quote, 50)}"')
+        else:
+            lines.append(f'   From the depths: "{_truncate(quote, 50)}"')
+        lines.append("")
+
+    if not lines:
+        lines.append("The garden is young. Patterns will emerge with time.")
+        lines.append("")
+
+    content = "\n".join(lines).rstrip()
+    return _box("💫 This Morning Echoes...", content)
+
+
+def format_hydration_context(data: dict[str, Any]) -> str:
+    """
+    Format HydrationContext (gotchas + files + anchors) for CLI display.
+
+    Example output:
+    ┌───────────────────────────────────────────────────────────────────┐
+    │  🧠 Context Compiled                                             │
+    ├───────────────────────────────────────────────────────────────────┤
+    │                                                                   │
+    │  🚨 CRITICAL                                                     │
+    │     • ASHC: Evidence requires 10+ runs                           │
+    │     • Witness: Trace witnesses must link to requirements         │
+    │                                                                   │
+    │  📁 FILES YOU'LL LIKELY TOUCH                                    │
+    │     • services/verification/core.py                              │
+    │     • protocols/ashc/evidence.py                                 │
+    │                                                                   │
+    │  🎯 VOICE ANCHORS                                                │
+    │     "Tasteful > feature-complete"                                │
+    │     "The Mirror Test"                                            │
+    │                                                                   │
+    └───────────────────────────────────────────────────────────────────┘
+    """
+    lines = []
+
+    teaching = data.get("relevant_teaching", [])
+    modules = data.get("related_modules", [])
+    anchors = data.get("voice_anchors", [])
+
+    # Group teaching by severity
+    if teaching:
+        critical = [t for t in teaching if t.get("severity") == "critical"]
+        warning = [t for t in teaching if t.get("severity") == "warning"]
+
+        if critical:
+            lines.append("🚨 CRITICAL")
+            for t in critical[:3]:
+                insight = t.get("insight", "")
+                lines.append(f"   • {_truncate(insight, 55)}")
+            lines.append("")
+
+        if warning:
+            lines.append("⚠️ WARNING")
+            for t in warning[:3]:
+                insight = t.get("insight", "")
+                lines.append(f"   • {_truncate(insight, 55)}")
+            lines.append("")
+
+    # Related modules
+    if modules:
+        lines.append("📁 FILES YOU'LL LIKELY TOUCH")
+        for m in modules[:5]:
+            lines.append(f"   • {m}")
+        lines.append("")
+
+    # Voice anchors
+    if anchors:
+        lines.append("🎯 VOICE ANCHORS (preserve these)")
+        for a in anchors[:3]:
+            lines.append(f"   {a}")
+        lines.append("")
+
+    if not lines:
+        lines.append("No specific context compiled.")
+        lines.append("Trust your instincts. The morning is yours.")
+        lines.append("")
+
+    content = "\n".join(lines).rstrip()
+    return _box("🧠 Context Compiled", content)
+
+
 def format_transition(chosen_item: dict[str, Any] | None = None) -> str:
     """
     Format the transition message when beginning work.
@@ -466,6 +647,8 @@ __all__ = [
     "format_captured_voice",
     "format_manifest",
     "format_history",
+    "format_circadian_context",
+    "format_hydration_context",
     "format_transition",
     "format_ritual_start",
     "format_movement_separator",

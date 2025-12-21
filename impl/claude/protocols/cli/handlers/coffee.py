@@ -358,38 +358,121 @@ def _run_capture(args: list[str], json_output: bool) -> int:
 
 def _run_begin(args: list[str], json_output: bool) -> int:
     """
-    Complete the ritual and transition to work.
+    Full morning start flow: Circadian context → Intent capture → Hydration → Ready.
+
+    Phase 1.3 of Metabolic Development Protocol.
 
     Usage:
-        kg coffee begin                # Just transition
-        kg coffee begin "ASHC L0"      # Transition with chosen item
+        kg coffee begin                # Full morning start flow
+        kg coffee begin "ASHC L0"      # Skip capture, transition with chosen item
     """
-    from services.liminal.coffee.cli_formatting import format_transition
+    from datetime import date
 
-    # Check for selected item text
+    from services.liminal.coffee import (
+        CircadianResonance,
+        MorningVoice,
+        get_circadian_resonance,
+        load_recent_voices,
+    )
+    from services.liminal.coffee.cli_formatting import (
+        format_circadian_context,
+        format_hydration_context,
+        format_transition,
+    )
+    from services.living_docs.hydrator import hydrate_context
+
+    service = _get_service()
+    resonance = get_circadian_resonance()
+
+    # Check for selected item text (skip capture mode)
     item_text = None
     for arg in args:
         if not arg.startswith("-") and arg != "begin":
             item_text = arg
             break
 
-    chosen_item = None
-    if item_text:
-        chosen_item = {"label": item_text, "source": "manual"}
+    # 1. Load voice history and get circadian context
+    voices = load_recent_voices(limit=30, store_path=service.voice_store_path)
+    circadian_ctx = resonance.get_context(voices)
 
     if json_output:
-        print(
-            json.dumps(
-                {
-                    "transitioned": True,
-                    "chosen_item": chosen_item,
-                    "message": "Ready. The morning is yours.",
-                },
-                indent=2,
-            )
+        # JSON mode: return structured data
+        result: dict[str, Any] = {
+            "circadian": circadian_ctx.to_dict(),
+            "chosen_item": {"label": item_text, "source": "manual"} if item_text else None,
+            "hydration": None,
+            "transitioned": True,
+        }
+
+        # If no chosen item, capture intent
+        if not item_text:
+            result["awaiting_intent"] = True
+            result["prompt"] = "What brings you here today?"
+
+        print(json.dumps(result, indent=2, default=str))
+        return 0
+
+    # 2. Display greeting with circadian context
+    print("\n☕ Good morning\n")
+
+    # Show circadian context if there's history
+    if circadian_ctx.resonances or circadian_ctx.patterns or circadian_ctx.serendipity:
+        print(format_circadian_context(circadian_ctx.to_dict()))
+        print()
+
+    # 3. If item_text provided, skip capture and transition
+    if item_text:
+        # Hydrate context for the provided intent
+        hydration = hydrate_context(item_text)
+        print(format_hydration_context(hydration.to_dict()))
+        print()
+        print(format_transition({"label": item_text, "source": "manual"}))
+        return 0
+
+    # 4. Interactive: Capture intent
+    print("[What brings you here today?]")
+    try:
+        intent = input("> ").strip()
+    except (KeyboardInterrupt, EOFError):
+        print("\n\n☕ The morning is still yours.\n")
+        return 0
+
+    if not intent:
+        print("\n☀️ Ready. The morning is yours.\n")
+        return 0
+
+    # 5. Hydrate context based on intent
+    print("\n✨ Intent captured. Hydrating context...\n")
+    hydration = hydrate_context(intent)
+    print(format_hydration_context(hydration.to_dict()))
+    print()
+
+    # 6. Optional: Save as today's voice
+    print("Save this as today's voice? (Y/n)")
+    try:
+        save_choice = input("> ").strip().lower()
+    except (KeyboardInterrupt, EOFError):
+        save_choice = "n"
+
+    if save_choice != "n":
+        voice = MorningVoice(
+            captured_date=date.today(),
+            non_code_thought=None,
+            eye_catch=None,
+            success_criteria=intent,
+            raw_feeling=None,
+            chosen_challenge=None,
         )
-    else:
-        print(format_transition(chosen_item))
+
+        async def _save():
+            return await service.save_capture(voice)
+
+        _run_async(_save())
+        print("   Voice saved.\n")
+
+    # 7. Transition
+    print(format_transition({"label": intent, "source": "morning_start"}))
+    print("\nContext compiled. Good morning, Kent.\n")
 
     return 0
 
