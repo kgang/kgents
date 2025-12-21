@@ -29,6 +29,7 @@ export interface GallerySectionProps {
 const GALLERIES: Gallery[] = [
   { route: '/_/gallery', label: 'Projection Gallery' },
   { route: '/_/gallery/layout', label: 'Layout Gallery' },
+  { route: '/_/gallery/interactive-text', label: 'Interactive Text' },
   { route: '/_/docs/agentese', label: 'AGENTESE Explorer' },
   { route: '/_/canvas', label: 'Collaborative Canvas' },
 ];

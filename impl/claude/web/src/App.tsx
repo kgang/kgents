@@ -22,15 +22,11 @@ const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
 const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
-const Canvas = lazy(() => import('./pages/Canvas'));
-
-// Town simulation and Inhabit now handled via UniversalProjection
-// (see registry.tsx for world.town.simulation and world.town.inhabit projections)
 
 function LoadingFallback() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-surface-canvas">
-      <PersonalityLoading jewel="gestalt" size="lg" action="connect" />
+      <PersonalityLoading jewel="brain" size="lg" action="connect" />
     </div>
   );
 }
@@ -50,9 +46,6 @@ function App() {
                 {/*
                  * Explicit routes (non-AGENTESE paths)
                  * Developer galleries use /_/ prefix (not part of AGENTESE ontology)
-                 * Town simulation and Inhabit now use AGENTESE dot-paths with query params:
-                 *   /world.town.simulation?townId=demo
-                 *   /world.town.inhabit?citizenId=kent_001
                  */}
 
                 {/* Developer Galleries - system routes (/_/) not AGENTESE ontology */}
@@ -63,18 +56,15 @@ function App() {
                 {/* AGENTESE Docs Explorer - Phase 3 OpenAPI projection */}
                 <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
 
-                {/* Collaborative Canvas - CLI v7 Phase 5 */}
-                <Route path="/_/canvas" element={<Canvas />} />
-
                 {/*
                  * Universal AGENTESE Projection (catch-all)
                  *
                  * All paths are parsed as AGENTESE invocations:
-                 *   /world.town.citizen.kent_001 → logos.invoke("world.town.citizen.kent_001")
+                 *   /self.memory → logos.invoke("self.memory")
                  *   /self.memory:capture → logos.invoke("self.memory", aspect="capture")
                  *
-                 * Root (/) redirects to /self.cockpit (developer cockpit).
-                 * Legacy routes have been removed - unknown paths show ConceptHome.
+                 * Root (/) redirects to /self.memory (Brain).
+                 * Unknown paths show ConceptHome fallback.
                  *
                  * @see spec/protocols/agentese-as-route.md
                  */}

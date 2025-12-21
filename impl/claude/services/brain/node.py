@@ -202,6 +202,25 @@ class BrainNode(BaseLogosNode):
 
         # Via CLI
         kgents brain capture "..."
+
+    Teaching:
+        gotcha: BrainNode REQUIRES brain_persistence dependency. Without it,
+                instantiation fails with TypeError—this is intentional!
+                It enables Logos fallback to SelfMemoryContext when DI isn't configured.
+                (Evidence: test_node.py::TestBrainNodeRegistration::test_node_requires_persistence)
+
+        gotcha: Affordances vary by observer archetype. Guests can only search,
+                newcomers can capture, developers can delete. Check archetype
+                before assuming full access.
+                (Evidence: test_node.py::TestBrainNodeAffordances)
+
+        gotcha: Every BrainNode invocation emits a Mark (WARP Law 3). Don't add
+                manual tracing—the gateway handles it at _invoke_path().
+                (Evidence: test_node.py::TestBrainWARPIntegration)
+
+        gotcha: crystal_id can come from either "crystal_id" or "id" kwargs.
+                The get/delete aspects check both for backward compatibility.
+                (Evidence: test_node.py::TestBrainNodeGet::test_get_without_id_returns_error)
     """
 
     def __init__(self, brain_persistence: BrainPersistence) -> None:
