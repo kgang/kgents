@@ -285,6 +285,18 @@ ProjectionFunctor laws: _compose() is target-specific (CLI=newlines, JSON=arrays
 Ghost tokens have reduced affordances: is_ghost=True disables invoke/navigate gracefully
 ```
 
+### Memory-First Docs: Crystallization (2025-12-21)
+```
+Deterministic ID = f"teach-{module}-{symbol}-{insight_hash[:12]}": idempotent deduplication
+TeachingCrystal provenance: source_module, source_symbol, evidence, born_at for full trace
+Query patterns: get_alive_teaching(), get_teaching_by_module(prefix), get_ancestral_wisdom()
+TeachingCrystallizer bridges Living Docs → Brain: collector.collect_all() → brain.crystallize_teaching()
+Async container.resolve() in crystallize_all_teaching(): must await, not sync call
+New model tables need init_db(): UndefinedTableError → run asyncio.run(init_db()) to create
+PostgreSQL asyncpg strict on timezones: DateTime column + datetime.now(UTC) → DataError; use func.now() default instead
+ID length must fit String(64): hash full content, not embed readable strings—"t-{sha256[:50]}" pattern
+```
+
 ### ASHC Phase 5: Checker Bridges (2025-12-21)
 ```
 Three Gatekeepers: Dafny (imperative/Z3), Lean4 (mathematical), Verus (Rust/linear types)

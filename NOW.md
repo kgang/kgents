@@ -18,14 +18,17 @@
 
 ---
 
-**ASHC WORK** — New ashc service with checker and obligation modules. Interactive text gallery added.
+**MEMORY-FIRST DOCS (Session 2 Complete)** — Teaching moments crystallized to Brain.
 
 | Item | Status |
 |------|--------|
-| `services/ashc/checker.py` | NEW (untracked) |
-| `services/ashc/obligation.py` | NEW (untracked) |
-| `services/interactive_text/` | service.py added, node.py untracked |
-| Interactive Text Gallery | Page live at `/_/gallery/interactive-text` |
+| `BrainPersistence.crystallize_teaching()` | ✅ Complete |
+| Query methods (alive, by_module, ancestral) | ✅ Complete |
+| `kg docs crystallize` CLI command | ✅ Complete |
+| `TeachingCrystallizer` module | ✅ Complete |
+| Tests (10 passing) | ✅ Complete |
+
+Next: Session 3 (Extinction) - `record_extinction()` to mark teaching as extinct when code deleted.
 
 ---
 
@@ -35,7 +38,7 @@
 |-------|---|-----------|
 | Brain | 100 | Spatial cathedral of memory. Ship-ready. THE crown jewel. |
 | Interactive Text | 75 | Gallery showcase for text rendering. |
-| Living Docs | 90 | `concept.docs`, `self.docs`, `self.document` nodes. |
+| Living Docs | 95 | `concept.docs`, `self.docs`, crystallization to Brain. |
 | Liminal | 80 | `time.coffee` morning ritual personality. |
 | OS-Shell | 100 | Universal AGENTESE rendering. NavigationTree, projections. |
 | ~~Town~~ | — | *Removed* |
@@ -65,8 +68,8 @@ Nothing right now. Cleanup is mechanical.
 ## What I Want Next
 
 1. Complete Crown Jewel cleanup (commit cleanup batch)
-2. ashc work: proof generation, session metabolism
-3. Build out interactive text capabilities
+2. Memory-First Docs Session 3: Extinction (mark teaching from deleted code)
+3. ashc work: proof generation, session metabolism
 
 *"Tasteful > feature-complete. Time to prune the garden."*
 
