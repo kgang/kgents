@@ -22,6 +22,7 @@ The kgents frontend has accumulated 15+ crown jewel apps during development. Wit
 | **Living Docs** | `concept.docs`, `self.docs`, `self.document` nodes | Documentation & interactive text |
 | **Liminal** | `time.coffee` node | Morning ritual personality |
 | **Infrastructure** | morpheus/, verification/, metabolism/, conductor/, ashc/, foundry/, principles/ | ashc work & core infra |
+| **Witness** | services/witness/, self.witness.*, time.witness.* | Trust-gated agency, trace store, voice gate |
 
 ### What We're Removing
 
@@ -32,7 +33,6 @@ The kgents frontend has accumulated 15+ crown jewel apps during development. Wit
 | **Forge** | world.forge.*, ForgeProjection, Forge page, Forge components | 18+ files |
 | **Gestalt** | world.codebase.*, GestaltProjection, Gestalt page, Gestalt components | 14+ files |
 | **Muse** | self.muse.*, Muse components | 8+ files |
-| **Witness** | self.witness.*, time.witness.*, Witness page, Witness components | 10+ files |
 | **Differance** | time.differance.*, DifferanceProjection, Differance page, Differance components | 11+ files |
 | **Chat** | self.chat.*, ChatProjection, Chat page, Chat components | 12+ files |
 | **Soul** | self.soul.*, SoulProjection, Soul page | 5+ files |

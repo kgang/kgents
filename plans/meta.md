@@ -215,6 +215,7 @@ Phase 6 hydrator: keyword-based matching now, semantic via Brain vectors is futu
 HydrationContext.to_markdown() optimized for Claude: gotchas → modules → voice anchors
 Voice anchors curated from _focus.md: don't mine from git, preserve authentic Kent voice
 relevant_for_file() extracts keywords from path parts: services/brain/core → ["brain", "core"]
+Doc backfill Phase 3: D-gent 6 gotchas, M-gent 6 gotchas, Sheaf 5 gotchas—17 total for categorical layer
 ```
 
 ### Foundry Phase 3: Marimo Projector (2025-12-21)
@@ -257,6 +258,47 @@ MetabolismPersistence: single D-gent layer for evidence + insights + stigmergy t
 Persistence param injection: BackgroundEvidencing(persistence=...) + fallback to JSON if None
 ```
 
+### ASHC Proof Generation Phase 2 (2025-12-21)
+```
+Post-process > pytest plugin: simpler, testable, decoupled—plugin can come in Phase 5
+Bounded context (5 lines max): prevents obligation bloat, faster proof search
+Pattern-based variable extraction: readable properties > AST dumps
+UUID-based obligation IDs: globally unique, session-independent
+```
+
+### ASHC Proof Generation Phase 3 (2025-12-21)
+```
+LemmaDatabase protocol > concrete class: DI for testing, D-gent persistence later
+Failed tactics as stigmergic anti-pheromone: track separately, inform future attempts
+Temperature as hyper-parameter: in config, not hardcoded—per Kent's decision
+Heritage hints from spec: polynomial, composition, identity patterns as LLM guidance
+Prompt determinism: sorted failed_tactics, bounded hints, stable structure
+```
+
+### Doc Backfill Phase 4: Interactive Text (2025-12-21)
+```
+Added interactive_text + liminal to CATEGORIES: missing services = no gotcha extraction
+Teaching totals: 116→165 (+49), critical: 20→31 (+11), evidence verified: 103→150
+TokenRegistry ClassVar singleton: class-level state shared across instances—clear() in tests
+DocumentEventBus fire-and-forget: asyncio.create_task + _safe_notify swallows exceptions
+ProjectionFunctor laws: _compose() is target-specific (CLI=newlines, JSON=arrays, Web=nesting)
+Ghost tokens have reduced affordances: is_ghost=True disables invoke/navigate gracefully
+```
+
+### ASHC Phase 5: Checker Bridges (2025-12-21)
+```
+Three Gatekeepers: Dafny (imperative/Z3), Lean4 (mathematical), Verus (Rust/linear types)
+Protocol > ABC for checkers: duck typing enables polymorphic ProofSearcher injection
+Lazy registry instantiation: register(name, class), instantiate on first get()—startup cost avoided
+Dafny stderr on success: parse exit code, not output presence
+Z3 timeout unreliable: --resource-limit more reliable than --verification-time-limit for Dafny/Verus
+Lean4 bare vs lake: `lake env lean` for projects, bare `lean` for standalone files
+Verus verus! impl gotcha: blocks inside impl sections SILENTLY IGNORED—wrap entire impl
+Zombie reaping essential: await proc.wait() after proc.kill() or process table fills
+sorry = incomplete: Lean4 proofs with sorry treated as FAILED (not just warning)
+Noisy error cascades (Dafny): first error is key, subsequent often red herrings
+```
+
 ---
 
 ## Anti-Patterns
@@ -286,4 +328,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~285/200 | Last updated: 2025-12-21 | Metabolic Development Phase 0-2.1*
+*Lines: ~320/200 | Last updated: 2025-12-21 | ASHC Phase 5: Checker Bridges*

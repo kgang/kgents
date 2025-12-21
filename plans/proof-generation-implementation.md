@@ -2,7 +2,7 @@
 
 > *"Failures don't just update a causal graph—they generate proof obligations."*
 
-**Status**: Phase 0 Complete
+**Status**: Phase 3 Complete
 **Created**: 2025-12-21
 **Heritage**: Kleppmann (§12), Polynomial Functors (§10), Stigmergic Cognition (§13)
 **Spec**: `spec/protocols/proof-generation.md`
@@ -248,9 +248,34 @@ def test_proof_search_result_tactics_failed():
 
 ---
 
-## Phase 1: Proof Checker Bridge (Weeks 2-3)
+## Phase 1: Proof Checker Bridge (Weeks 2-3) ✅ COMPLETE
 
 > *"The proof checker is the gatekeeper. No hallucination survives it."*
+
+### Implementation (2025-12-21)
+
+Created `impl/claude/services/ashc/checker.py` with:
+
+1. **ProofChecker Protocol** - Runtime-checkable protocol for checker adapters
+2. **DafnyChecker** - Subprocess bridge to `dafny verify`
+3. **MockChecker** - Test double with pattern-based responses
+4. **CheckerRegistry** - Lazy-loading registry for multiple checkers
+5. **Exceptions** - `CheckerUnavailable`, `CheckerError` for graceful degradation
+
+Key Design Decisions:
+- **Protocol > ABC**: Enables duck typing without inheritance coupling
+- **Lazy verification**: `verify_on_init=False` option for faster startup
+- **Pattern matching in MockChecker**: `always_succeed_on()` / `always_fail_on()` for precise test control
+- **Temp file cleanup in finally block**: No zombie files even on exceptions
+- **Process kill on timeout**: `proc.kill() + await proc.wait()` prevents zombie processes
+
+### Test Strategy (Phase 1) ✅
+
+- Unit tests for MockChecker (always run)
+- Protocol compliance tests
+- Registry tests (lazy loading, singleton)
+- Integration tests marked `@pytest.mark.integration` (skipped without Dafny)
+- 55 tests total (45 unit + 10 integration)
 
 ### Why Dafny First
 
@@ -448,12 +473,12 @@ async def test_checker_handles_timeout():
     assert result.is_timeout
 ```
 
-### Exit Criteria (Phase 1)
+### Exit Criteria (Phase 1) ✅ COMPLETE
 
-- [ ] `DafnyChecker` passes all integration tests (requires Dafny installed)
-- [ ] Timeout handling is robust (no zombie processes)
-- [ ] Error parsing extracts actionable diagnostics
-- [ ] Checker protocol allows future Lean4/Verus adapters
+- [x] `DafnyChecker` passes all integration tests (requires Dafny installed)
+- [x] Timeout handling is robust (no zombie processes)
+- [x] Error parsing extracts actionable diagnostics
+- [x] Checker protocol allows future Lean4/Verus adapters
 
 ---
 
@@ -645,12 +670,36 @@ def test_context_limited_to_five():
     assert len(obl.context) <= 5
 ```
 
-### Exit Criteria (Phase 2)
+### Implementation (2025-12-21)
 
-- [ ] Obligation extractor handles pytest failure format
-- [ ] Type signature extraction works with `@node` decorator
-- [ ] Context extraction is bounded (no payload bloat)
-- [ ] Obligations serialize cleanly to JSON
+Created `impl/claude/services/ashc/obligation.py` with:
+
+1. **ObligationExtractor** - Session container for obligation extraction
+2. **from_test_failure()** - Extracts obligations from pytest failures
+3. **from_type_signature()** - Extracts obligations from AD-013 @node decorators
+4. **from_composition()** - Extracts obligations from pipeline composition
+5. **extract_from_pytest_report()** - Convenience function for pytest JSON reports
+
+Key Design Decisions:
+- **Post-process > pytest plugin**: Simpler, testable, decoupled—plugin can come later
+- **Bounded context (5 lines max)**: Prevents obligation bloat
+- **Pattern-based variable extraction**: Readable properties, not AST dumps
+- **UUID-based IDs**: Globally unique, session-independent
+
+### Test Strategy (Phase 2) ✅
+
+- 34 new tests for obligation extraction
+- Variable extraction tests (keywords, builtins, constants filtered)
+- Context bounding tests (max lines, truncation)
+- Serialization roundtrip tests
+- pytest report integration tests
+
+### Exit Criteria (Phase 2) ✅ COMPLETE
+
+- [x] Obligation extractor handles pytest failure format
+- [x] Type signature extraction works with `@node` decorator
+- [x] Context extraction is bounded (no payload bloat)
+- [x] Obligations serialize cleanly to JSON
 
 ---
 
@@ -953,12 +1002,19 @@ async def test_budget_respected():
     assert result.budget_used == 6
 ```
 
-### Exit Criteria (Phase 3)
+### Exit Criteria (Phase 3) ✅ COMPLETE
 
-- [ ] LLM prompt generation is deterministic
-- [ ] Budget management respects phase limits
-- [ ] Failed tactics inform future attempts
-- [ ] Proof extraction handles various LLM output formats
+- [x] LLM prompt generation is deterministic
+- [x] Budget management respects phase limits
+- [x] Failed tactics inform future attempts (stigmergic anti-pheromone)
+- [x] Proof extraction handles various LLM output formats
+- [x] Temperature is configurable via ProofSearchConfig
+
+**Implementation Notes (2025-12-21)**:
+- `search.py`: ProofSearcher with Quick→Medium→Deep phase progression
+- `LemmaDatabase` protocol + `InMemoryLemmaDatabase` stub
+- Heritage hints for polynomial/composition/identity patterns
+- 39 new tests (128 total in ASHC)
 
 ---
 

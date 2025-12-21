@@ -214,13 +214,82 @@ await logos.invoke("world.house.manifest", poet_umwelt)       # → Metaphor
 
 ---
 
-## First Steps (Immediate Actions)
+## Implementation Phases
 
-1. **Add `ProofObligation` dataclass** to ASHC contracts
-2. **On test failure**, extract minimal proof obligation
-3. **Create `LeanBridge`** or `DafnyBridge` for proof checking
-4. **Run experiment**: 100 generations, measure proof discharge rate
-5. **Track metrics**: proof attempts, success rate, lemma reuse
+### Phase 1: Contracts ✅
+- Add `ProofObligation`, `ProofAttempt`, `VerifiedLemma` dataclasses
+- Status enums and type aliases
+- See: `impl/claude/services/ashc/contracts.py`
+
+### Phase 2: Obligation Extraction ✅
+- Extract proof obligations from pytest failures
+- Bounded context (5 lines max)
+- Pattern-based variable extraction
+- See: `impl/claude/services/ashc/obligation.py`
+
+### Phase 3: Proof Search ✅
+- LLM-assisted proof generation with budget management
+- `LemmaDatabase` protocol for hint retrieval
+- `InMemoryLemmaDatabase` stub for testing
+- See: `impl/claude/services/ashc/search.py`
+
+### Phase 4: Lemma Database ✅
+**Goal**: Postgres-backed LemmaDatabase via D-gent
+
+**Design Decisions**:
+- **Postgres via D-gent** (not SQLite): Unified persistence layer, production-ready
+- **TableAdapter bridge**: Leverage existing `agents/d/adapters/table_adapter.py`
+- **Async throughout**: All operations async, matches D-gent patterns
+- **Embeddings deferred**: Keyword matching now, Brain vectors later
+
+**Stigmergic Design** (§13):
+```
+pheromone = usage_count
+decay = age-based relevance scoring
+reinforcement = increment usage on successful hint
+emergent path = tactic selection evolves with corpus
+```
+
+**Deliverables**:
+1. `models/ashc.py` - SQLAlchemy model `VerifiedLemmaModel` ✓
+2. `services/ashc/persistence.py` - `PostgresLemmaDatabase` implementation ✓
+3. `services/ashc/_tests/test_persistence.py` - 24 tests ✓
+4. `services/providers.py` - `get_lemma_database()` provider ✓
+5. Alembic migration for `ashc_verified_lemmas` table (deferred to first prod deploy)
+
+**Exit Criteria**:
+- [x] `PostgresLemmaDatabase` implements `LemmaDatabase` protocol ✓
+- [x] Lemmas persist across restarts (verified by test) ✓
+- [x] Usage count increments on hint retrieval ✓
+- [x] `PostgresLemmaDatabase` wired to DI container via `get_lemma_database()` ✓
+
+**Schema** (verified_lemmas table):
+```sql
+CREATE TABLE verified_lemmas (
+    id VARCHAR PRIMARY KEY,
+    statement TEXT NOT NULL,
+    proof TEXT NOT NULL,
+    checker VARCHAR NOT NULL,
+    obligation_id VARCHAR NOT NULL,
+    dependencies JSONB DEFAULT '[]',
+    usage_count INT DEFAULT 0,
+    verified_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_lemmas_statement ON verified_lemmas USING gin(to_tsvector('english', statement));
+CREATE INDEX idx_lemmas_usage ON verified_lemmas(usage_count DESC);
+```
+
+### Phase 5: Checker Bridges (Future)
+- `LeanBridge` for Lean4 proofs
+- `DafnyBridge` for Dafny proofs (partially implemented)
+- `VerusBridge` for Verus proofs
+
+### Phase 6: Metrics & Observability (Future)
+- Proof attempt success rate
+- Lemma reuse frequency
+- Budget consumption patterns
+- Integration with Witness service
 
 ---
 

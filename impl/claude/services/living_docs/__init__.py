@@ -18,6 +18,12 @@ from .brain_adapter import (
     reset_hydration_brain_adapter,
     set_hydration_brain_adapter,
 )
+from .crystallizer import (
+    CrystallizationStats,
+    TeachingCrystallizer,
+    crystallize_all_teaching,
+    crystallize_all_teaching_sync,
+)
 from .extractor import DocstringExtractor
 from .generator import (
     GeneratedFile,
@@ -111,4 +117,9 @@ __all__ = [
     "lint_file",
     "lint_directory",
     "get_changed_files",
+    # Crystallizer (Memory-First Docs)
+    "CrystallizationStats",
+    "TeachingCrystallizer",
+    "crystallize_all_teaching",
+    "crystallize_all_teaching_sync",
 ]

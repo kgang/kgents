@@ -6,8 +6,8 @@
 
 ## Summary
 
-- **Active Plans**: 17 (pruned from 28, +1 proof-generation)
-- **Test Count**: 20,829+ (Foundry 48, Projector 223, Witness 461+, Garden 789, Brain 212+, Metabolic 53, ASHC Proof 29)
+- **Active Plans**: 18 (pruned from 28, +1 proof-generation, +1 memory-first-docs)
+- **Test Count**: 20,889+ (Foundry 48, Projector 223, Witness 461+, Garden 789, Brain 212+, Metabolic 53, ASHC Proof 89)
 - **Hero Path**: Brain 100% + Gardener 100% + Gestalt 100%
 
 ---
@@ -38,6 +38,7 @@
 ### New Capabilities
 | Plan | Status | Notes |
 |------|--------|-------|
+| `memory-first-docs-rollout.md` | **NEW** | 4-phase Memory-First Documentation (spec refined) |
 | `repo-archaeology-implementation.md` | **active** | Codebase understanding |
 | `morning-coffee-implementation.md` | **active** | Liminal Protocol — Phase 2 complete (224 tests) |
 | `interactive-text-implementation.md` | **fresh** | Spec→Interface protocol, 4 phases |
@@ -53,8 +54,11 @@
 |------|--------|-------|
 | `proof-generation-implementation.md` | **ACTIVE** | 5-phase, 10-week implementation |
 | Phase 0: Foundation | ✅ complete | Contracts (29 tests), service structure |
-| Phase 1: Checker Bridge | **next** | Dafny integration |
-| Phases 2-5 | planning | Obligations → Search → DB → Integration |
+| Phase 1: Checker Bridge | ✅ complete | DafnyChecker, MockChecker, registry (55 tests) |
+| Phase 2: Obligation Extraction | ✅ complete | ObligationExtractor, pytest bridge (34 tests) |
+| Phase 3: LLM Proof Search | ✅ complete | ProofSearcher, budget phases, 39 tests |
+| Phase 4: Lemma Database | **next** | D-gent persistence, semantic search |
+| Phase 5: ASHC Integration | planning | Pipeline integration, CLI |
 
 ### Research
 | Plan | Status | Notes |
@@ -89,4 +93,4 @@
 
 ---
 
-*Last verified: 2025-12-21 | Metabolic Phase 0-1.3, 2.1 complete*
+*Last verified: 2025-12-21 | Memory-First Docs spec refined + rollout planned*
