@@ -119,8 +119,9 @@ class TestA2AEventBridging:
 
         # Should have bridged to global bus
         swarm_events = [
-            e for e in received_events
-            if hasattr(e, 'event_type') and e.event_type == SynergyEventType.SWARM_A2A_MESSAGE
+            e
+            for e in received_events
+            if hasattr(e, "event_type") and e.event_type == SynergyEventType.SWARM_A2A_MESSAGE
         ]
         # Note: The handler might not receive events depending on the bus implementation
         # The important thing is that the bridge attempted to forward

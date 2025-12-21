@@ -63,6 +63,7 @@ from .swarm import IMPLEMENTER, PLANNER, RESEARCHER, REVIEWER, SwarmRole
 def _get_witness_operad() -> Operad:
     """Lazy import of WITNESS_OPERAD to avoid circular dependency."""
     from services.witness.operad import WITNESS_OPERAD
+
     return WITNESS_OPERAD
 
 

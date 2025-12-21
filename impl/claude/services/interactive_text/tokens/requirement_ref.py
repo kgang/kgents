@@ -32,7 +32,7 @@ from .base import BaseMeaningToken
 @dataclass(frozen=True)
 class RequirementInfo:
     """Information about a requirement.
-    
+
     Attributes:
         major: Major version number (e.g., 1 in R1.2)
         minor: Minor version number (e.g., 2 in R1.2), None if not specified
@@ -74,7 +74,7 @@ class RequirementInfo:
 @dataclass(frozen=True)
 class RequirementHoverInfo:
     """Information displayed on requirement hover.
-    
+
     Attributes:
         ref: The requirement reference (e.g., "R1.2")
         info: Requirement information
@@ -94,7 +94,7 @@ class RequirementHoverInfo:
 @dataclass(frozen=True)
 class RequirementNavigationResult:
     """Result of navigating to a requirement.
-    
+
     Attributes:
         ref: The requirement reference
         path: Path to requirement definition
@@ -117,7 +117,7 @@ class RequirementNavigationResult:
 @dataclass(frozen=True)
 class RequirementContextMenuResult:
     """Result of showing context menu for a requirement.
-    
+
     Attributes:
         ref: The requirement reference
         options: Available menu options
@@ -139,13 +139,13 @@ class RequirementContextMenuResult:
 
 class RequirementRefToken(BaseMeaningToken[str]):
     """Token representing a requirement reference.
-    
+
     RequirementRef tokens link to requirements in the verification
     graph and provide navigation to requirement definitions with
     verification status.
-    
+
     Pattern: `[R1]`, `[R1.2]`, etc.
-    
+
     Requirements: 12.3, 12.4, 12.5
     """
 
@@ -160,7 +160,7 @@ class RequirementRefToken(BaseMeaningToken[str]):
         minor: int | None = None,
     ) -> None:
         """Initialize a RequirementRef token.
-        
+
         Args:
             source_text: The original matched text
             source_position: (start, end) position in source document
@@ -301,11 +301,13 @@ class RequirementRefToken(BaseMeaningToken[str]):
 
     def to_dict(self) -> dict[str, Any]:
         base = super().to_dict()
-        base.update({
-            "major": self._major,
-            "minor": self._minor,
-            "ref": self.ref,
-        })
+        base.update(
+            {
+                "major": self._major,
+                "minor": self._minor,
+                "ref": self.ref,
+            }
+        )
         return base
 
 

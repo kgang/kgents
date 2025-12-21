@@ -37,11 +37,13 @@ def agent_path_strategy(draw: st.DrawFn) -> str:
     contexts = ["world", "self", "concept", "void", "time"]
     context = draw(st.sampled_from(contexts))
 
-    segments = draw(st.lists(
-        st.text(alphabet="abcdefghijklmnopqrstuvwxyz_", min_size=1, max_size=15),
-        min_size=1,
-        max_size=3,
-    ))
+    segments = draw(
+        st.lists(
+            st.text(alphabet="abcdefghijklmnopqrstuvwxyz_", min_size=1, max_size=15),
+            min_size=1,
+            max_size=3,
+        )
+    )
 
     return f"{context}.{'.'.join(segments)}"
 
@@ -49,32 +51,38 @@ def agent_path_strategy(draw: st.DrawFn) -> str:
 @st.composite
 def input_data_strategy(draw: st.DrawFn) -> dict[str, object]:
     """Generate valid input data for trace capture."""
-    value = draw(st.one_of(
-        st.integers(),
-        st.text(min_size=0, max_size=50),
-        st.lists(st.integers(), max_size=5),
-        st.dictionaries(st.text(min_size=1, max_size=10), st.integers(), max_size=3),
-    ))
+    value = draw(
+        st.one_of(
+            st.integers(),
+            st.text(min_size=0, max_size=50),
+            st.lists(st.integers(), max_size=5),
+            st.dictionaries(st.text(min_size=1, max_size=10), st.integers(), max_size=3),
+        )
+    )
 
     return {
         "value": value,
         "type": draw(st.sampled_from(["integer", "string", "list", "dict", "default"])),
-        "metadata": draw(st.dictionaries(
-            st.text(min_size=1, max_size=10),
-            st.text(min_size=0, max_size=20),
-            max_size=3,
-        )),
+        "metadata": draw(
+            st.dictionaries(
+                st.text(min_size=1, max_size=10),
+                st.text(min_size=0, max_size=20),
+                max_size=3,
+            )
+        ),
     }
 
 
 @st.composite
 def spec_property_strategy(draw: st.DrawFn) -> SpecProperty:
     """Generate specification properties."""
-    property_id = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz_",
-        min_size=1,
-        max_size=20,
-    ))
+    property_id = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz_",
+            min_size=1,
+            max_size=20,
+        )
+    )
     property_type = draw(st.sampled_from(["invariant", "safety", "liveness", "composition"]))
 
     return SpecProperty(
@@ -89,11 +97,13 @@ def spec_property_strategy(draw: st.DrawFn) -> SpecProperty:
 @st.composite
 def specification_strategy(draw: st.DrawFn) -> Specification:
     """Generate specifications."""
-    spec_id = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=1,
-        max_size=20,
-    ))
+    spec_id = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=1,
+            max_size=20,
+        )
+    )
 
     properties = draw(st.lists(spec_property_strategy(), min_size=0, max_size=5))
 
@@ -108,28 +118,36 @@ def specification_strategy(draw: st.DrawFn) -> Specification:
 @st.composite
 def behavioral_pattern_strategy(draw: st.DrawFn) -> BehavioralPattern:
     """Generate behavioral patterns."""
-    pattern_id = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=1,
-        max_size=20,
-    ))
-    pattern_type = draw(st.sampled_from([
-        "execution_flow",
-        "performance",
-        "verification_outcome",
-        "error_pattern",
-    ]))
+    pattern_id = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=1,
+            max_size=20,
+        )
+    )
+    pattern_type = draw(
+        st.sampled_from(
+            [
+                "execution_flow",
+                "performance",
+                "verification_outcome",
+                "error_pattern",
+            ]
+        )
+    )
 
     return BehavioralPattern(
         pattern_id=pattern_id,
         pattern_type=pattern_type,
         description=f"Pattern {pattern_id}",
         frequency=draw(st.integers(min_value=1, max_value=100)),
-        example_traces=draw(st.lists(
-            st.text(min_size=1, max_size=36),
-            min_size=0,
-            max_size=5,
-        )),
+        example_traces=draw(
+            st.lists(
+                st.text(min_size=1, max_size=36),
+                min_size=0,
+                max_size=5,
+            )
+        ),
         metadata={},
     )
 
@@ -364,8 +382,7 @@ class TestSelfImprovementCycle:
 
         # Check that some patterns have frequency > 1
         high_freq_patterns = [
-            p for p in witness_system.behavioral_patterns.values()
-            if p.frequency > 1
+            p for p in witness_system.behavioral_patterns.values() if p.frequency > 1
         ]
 
         # Should have at least one pattern with increased frequency
@@ -485,8 +502,6 @@ class TestEdgeCases:
             )
 
         # Analyze specific pattern type
-        analysis = await witness_system.analyze_behavioral_patterns(
-            pattern_type="execution_flow"
-        )
+        analysis = await witness_system.analyze_behavioral_patterns(pattern_type="execution_flow")
 
         assert isinstance(analysis, dict)

@@ -698,9 +698,7 @@ class PresenceNode(BaseLogosNode):
                                 "Standing by",
                             ],
                         }
-                        activity = random.choice(
-                            activities.get(cursor.state, ["Active..."])
-                        )
+                        activity = random.choice(activities.get(cursor.state, ["Active..."]))
                         cursor.update_activity(activity, focus_path)
 
                         # Broadcast update

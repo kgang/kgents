@@ -33,9 +33,9 @@ from services.interactive_text.projectors.base import (
 @dataclass(frozen=True)
 class JSONToken:
     """JSON representation of a meaning token.
-    
+
     This is a structured representation suitable for API responses.
-    
+
     Attributes:
         token_type: Type of the token
         token_id: Unique identifier
@@ -73,7 +73,7 @@ class JSONToken:
 @dataclass(frozen=True)
 class JSONDocument:
     """JSON representation of a document.
-    
+
     Attributes:
         tokens: List of token representations
         content: Original document content
@@ -138,11 +138,11 @@ class JSONProjectable(Protocol):
 
 class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
     """Project meaning tokens to API-friendly JSON structures.
-    
+
     This functor transforms meaning tokens into JSON-serializable
     dictionaries suitable for REST API responses. It includes all
     token data and available affordances.
-    
+
     Requirements: 2.2
     """
 
@@ -156,11 +156,11 @@ class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
         observer: Observer,
     ) -> dict[str, Any]:
         """Project token to JSON dictionary.
-        
+
         Args:
             token: The meaning token to project
             observer: The observer receiving the projection
-            
+
         Returns:
             JSON-serializable dictionary
         """
@@ -195,11 +195,11 @@ class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
         observer: Observer,
     ) -> dict[str, Any]:
         """Project document to JSON dictionary.
-        
+
         Args:
             document: The document to project
             observer: The observer receiving the projection
-            
+
         Returns:
             JSON-serializable dictionary
         """
@@ -210,18 +210,20 @@ class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
         doc_tokens = getattr(document, "tokens", [])
         for token in doc_tokens:
             token_dict = await self.project_token(token, observer)
-            tokens.append(JSONToken(
-                token_type=token_dict["tokenType"],
-                token_id=token_dict["tokenId"],
-                source_text=token_dict["sourceText"],
-                source_position=(
-                    token_dict["sourcePosition"]["start"],
-                    token_dict["sourcePosition"]["end"],
-                ),
-                data=token_dict["data"],
-                affordances=tuple(token_dict["affordances"]),
-                metadata=token_dict["metadata"],
-            ))
+            tokens.append(
+                JSONToken(
+                    token_type=token_dict["tokenType"],
+                    token_id=token_dict["tokenId"],
+                    source_text=token_dict["sourceText"],
+                    source_position=(
+                        token_dict["sourcePosition"]["start"],
+                        token_dict["sourcePosition"]["end"],
+                    ),
+                    data=token_dict["data"],
+                    affordances=tuple(token_dict["affordances"]),
+                    metadata=token_dict["metadata"],
+                )
+            )
 
         # Get document content
         content = getattr(document, "content", "")
@@ -243,11 +245,11 @@ class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
         composition_type: str,
     ) -> dict[str, Any]:
         """Compose JSON projections.
-        
+
         Args:
             projections: List of JSON dictionaries
             composition_type: "horizontal" or "vertical"
-            
+
         Returns:
             Composed JSON dictionary
         """
@@ -263,11 +265,11 @@ class JSONProjectionFunctor(ProjectionFunctor[dict[str, Any]]):
         params: DensityParams,
     ) -> dict[str, Any]:
         """Extract token-specific data.
-        
+
         Args:
             token: The token to extract data from
             params: Density parameters
-            
+
         Returns:
             Token-specific data dictionary
         """

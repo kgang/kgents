@@ -46,10 +46,11 @@ class Severity(str, Enum):
 # Living Earth Color Palette
 # =============================================================================
 
+
 class LivingEarthPalette:
     """
     Color palette inspired by Studio Ghibli's living worlds.
-    
+
     Warm earth tones, living greens, and gentle glows.
     """
 
@@ -128,7 +129,6 @@ SYMPATHETIC_MESSAGES: dict[str, dict[str, str]] = {
             "Let's find where the translation went astray."
         ),
     },
-
     # Sheaf and topology
     "sheaf_conflict": {
         "title": "Local Views Don't Quite Align",
@@ -152,7 +152,6 @@ SYMPATHETIC_MESSAGES: dict[str, dict[str, str]] = {
             "Once we see the shape clearly, the fix often becomes obvious."
         ),
     },
-
     # Derivation and semantic
     "orphaned_implementation": {
         "title": "This Code Is Floating Free",
@@ -176,7 +175,6 @@ SYMPATHETIC_MESSAGES: dict[str, dict[str, str]] = {
             "Resolving them is an opportunity to clarify our thinking."
         ),
     },
-
     # Trace and behavioral
     "trace_violation": {
         "title": "Behavior Didn't Match Expectations",
@@ -189,7 +187,6 @@ SYMPATHETIC_MESSAGES: dict[str, dict[str, str]] = {
             "bugs in the code or gaps in the spec — both worth knowing."
         ),
     },
-
     # HoTT
     "path_construction_failed": {
         "title": "Couldn't Find a Path Between These",
@@ -202,7 +199,6 @@ SYMPATHETIC_MESSAGES: dict[str, dict[str, str]] = {
             "Or we might need a more creative path. Let's explore."
         ),
     },
-
     # System
     "system_error": {
         "title": "Something Unexpected Happened",
@@ -231,7 +227,7 @@ This means we can write f ∘ g ∘ h without parentheses — the grouping doesn
 
 When associativity fails, it usually means:
 - **Side effects**: One morphism changes state that another reads
-- **Resource contention**: Different groupings use resources differently  
+- **Resource contention**: Different groupings use resources differently
 - **Timing dependencies**: Order of execution matters beyond composition
 
 **Common fixes**:
@@ -239,7 +235,6 @@ When associativity fails, it usually means:
 2. Explicitly manage shared state through the type system
 3. Use monads to sequence effects properly
 """,
-
     "identity_law": """
 **Why Identity Laws Matter**
 
@@ -256,7 +251,6 @@ When identity laws fail, it usually means:
 2. Check for implicit type conversions
 3. Verify no logging, metrics, or side effects in identity
 """,
-
     "sheaf_gluing": """
 **Why Sheaf Gluing Matters**
 
@@ -274,7 +268,6 @@ When gluing fails, it usually means:
 2. Refine the cover to reduce ambiguity
 3. Check that restriction maps are well-defined
 """,
-
     "functor_preservation": """
 **Why Functor Laws Matter**
 
@@ -298,11 +291,12 @@ When functor laws fail, it usually means:
 # Verification Error
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class VerificationError:
     """
     Sympathetic error with learning opportunities.
-    
+
     Errors are not failures — they're moments of discovery.
     """
 
@@ -324,17 +318,14 @@ class VerificationError:
         messages = SYMPATHETIC_MESSAGES.get(self.error_type, {})
         return messages.get(
             "message",
-            "Something didn't work as expected. Let me help you understand what happened."
+            "Something didn't work as expected. Let me help you understand what happened.",
         )
 
     @property
     def encouragement(self) -> str:
         """Get encouraging follow-up message."""
         messages = SYMPATHETIC_MESSAGES.get(self.error_type, {})
-        return messages.get(
-            "encouragement",
-            "Every issue we find makes the system stronger."
-        )
+        return messages.get("encouragement", "Every issue we find makes the system stronger.")
 
     @property
     def educational_content(self) -> str | None:
@@ -351,24 +342,36 @@ class VerificationError:
         ]
 
         if self.counter_example:
-            lines.extend([
-                "**What I observed:**",
-                f"- Input: `{self.counter_example.test_input}`" if hasattr(self.counter_example, 'test_input') else "",
-                f"- Expected: `{self.counter_example.expected_result}`" if hasattr(self.counter_example, 'expected_result') else "",
-                f"- Actual: `{self.counter_example.actual_result}`" if hasattr(self.counter_example, 'actual_result') else "",
-                "",
-            ])
+            lines.extend(
+                [
+                    "**What I observed:**",
+                    f"- Input: `{self.counter_example.test_input}`"
+                    if hasattr(self.counter_example, "test_input")
+                    else "",
+                    f"- Expected: `{self.counter_example.expected_result}`"
+                    if hasattr(self.counter_example, "expected_result")
+                    else "",
+                    f"- Actual: `{self.counter_example.actual_result}`"
+                    if hasattr(self.counter_example, "actual_result")
+                    else "",
+                    "",
+                ]
+            )
 
-        lines.extend([
-            f"*{self.encouragement}*",
-            "",
-        ])
+        lines.extend(
+            [
+                f"*{self.encouragement}*",
+                "",
+            ]
+        )
 
         if verbose and self.educational_content:
-            lines.extend([
-                "---",
-                self.educational_content,
-            ])
+            lines.extend(
+                [
+                    "---",
+                    self.educational_content,
+                ]
+            )
 
         return "\n".join(filter(None, lines))
 
@@ -390,21 +393,19 @@ SUCCESS_CELEBRATIONS: dict[str, str] = {
 
 def celebrate_success(verification_type: str) -> str:
     """Get a celebration message for successful verification."""
-    return SUCCESS_CELEBRATIONS.get(
-        verification_type,
-        "✨ Verification successful. Well done."
-    )
+    return SUCCESS_CELEBRATIONS.get(verification_type, "✨ Verification successful. Well done.")
 
 
 # =============================================================================
 # Progressive Disclosure
 # =============================================================================
 
+
 @dataclass
 class ProgressiveResult:
     """
     Result with progressive disclosure levels.
-    
+
     Shows simple results by default, with detailed analysis available on demand.
     """
 
@@ -439,7 +440,9 @@ def create_progressive_result(
     if success:
         return ProgressiveResult(
             summary=celebrate_success(verification_type),
-            details=f"Verified {details.get('test_count', 'multiple')} test cases." if details else None,
+            details=f"Verified {details.get('test_count', 'multiple')} test cases."
+            if details
+            else None,
             technical=str(details) if details else None,
             educational=EDUCATIONAL_CONTENT.get(verification_type),
         )

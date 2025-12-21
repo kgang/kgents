@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 async def manifest_verification_status(umwelt: Umwelt) -> dict[str, Any]:
     """
     Manifest the current state of the verification system.
-    
+
     Returns a joyful, human-readable summary of verification status,
     recent analyses, and system health.
     """
@@ -81,7 +81,7 @@ async def analyze_specification(
 ) -> dict[str, Any]:
     """
     Analyze a specification for consistency and principled derivation.
-    
+
     This is the heart of the verification system - it builds a derivation graph
     from kgents principles to implementation, identifies contradictions, and
     suggests improvements with sympathetic, educational explanations.
@@ -112,23 +112,27 @@ async def analyze_specification(
         # Format contradictions with empathy
         contradiction_summaries = []
         for contradiction in graph_result.contradictions:
-            contradiction_summaries.append({
-                "description": contradiction.description,
-                "severity": contradiction.severity,
-                "how_to_fix": contradiction.resolution_strategies,
-                "affected_nodes": contradiction.node_ids,
-            })
+            contradiction_summaries.append(
+                {
+                    "description": contradiction.description,
+                    "severity": contradiction.severity,
+                    "how_to_fix": contradiction.resolution_strategies,
+                    "affected_nodes": contradiction.node_ids,
+                }
+            )
 
         # Format orphaned nodes with constructive suggestions
         orphaned_summaries = []
         for node_id in graph_result.orphaned_nodes:
             node = next((n for n in graph_result.nodes if n.node_id == node_id), None)
             if node:
-                orphaned_summaries.append({
-                    "node": node.name,
-                    "description": node.description,
-                    "suggestion": f"Connect '{node.name}' to a kgents principle to give it purpose",
-                })
+                orphaned_summaries.append(
+                    {
+                        "node": node.name,
+                        "description": node.description,
+                        "suggestion": f"Connect '{node.name}' to a kgents principle to give it purpose",
+                    }
+                )
 
         return {
             "success": True,
@@ -168,10 +172,10 @@ async def verify_categorical_laws(
 ) -> dict[str, Any]:
     """
     Verify categorical laws for agent morphisms.
-    
+
     Supports: composition_associativity, identity_laws, functor_laws,
     operad_coherence, sheaf_gluing.
-    
+
     Returns sympathetic explanations of any violations with concrete
     suggestions for fixing them.
     """
@@ -235,7 +239,9 @@ async def verify_categorical_laws(
                 "law_name": result.law_name,
                 "violation": {
                     "description": result.llm_analysis,
-                    "counter_example": result.counter_example.__dict__ if result.counter_example else None,
+                    "counter_example": result.counter_example.__dict__
+                    if result.counter_example
+                    else None,
                     "how_to_fix": result.suggested_fix,
                 },
                 "encouragement": "Don't worry - violations are opportunities to learn and improve!",
@@ -259,7 +265,7 @@ async def verify_categorical_laws(
 async def suggest_improvements(umwelt: Umwelt) -> dict[str, Any]:
     """
     Generate improvement suggestions based on trace analysis.
-    
+
     This is where the self-improvement magic happens - the system analyzes
     behavioral patterns and suggests concrete improvements with justification.
     """
@@ -284,15 +290,17 @@ async def suggest_improvements(umwelt: Umwelt) -> dict[str, Any]:
         # Format proposals with joy and clarity
         formatted_proposals = []
         for proposal in proposals:
-            formatted_proposals.append({
-                "title": proposal.title,
-                "description": proposal.description,
-                "category": proposal.category,
-                "priority": proposal.risk_assessment,
-                "implementation": proposal.implementation_suggestion,
-                "kgents_principle": proposal.kgents_principle,
-                "why_this_matters": f"This aligns with the '{proposal.kgents_principle}' principle",
-            })
+            formatted_proposals.append(
+                {
+                    "title": proposal.title,
+                    "description": proposal.description,
+                    "category": proposal.category,
+                    "priority": proposal.risk_assessment,
+                    "implementation": proposal.implementation_suggestion,
+                    "kgents_principle": proposal.kgents_principle,
+                    "why_this_matters": f"This aligns with the '{proposal.kgents_principle}' principle",
+                }
+            )
 
         return {
             "success": True,
@@ -332,7 +340,7 @@ async def capture_execution_trace(
 ) -> dict[str, Any]:
     """
     Capture an execution trace as a constructive proof.
-    
+
     This creates a detailed record of agent execution that serves as
     a witness to the agent's behavior and can be verified against
     specifications.
@@ -349,9 +357,7 @@ async def capture_execution_trace(
         }
 
     try:
-        trace_result = await verification_service.capture_trace_witness(
-            agent_path, execution_data
-        )
+        trace_result = await verification_service.capture_trace_witness(agent_path, execution_data)
 
         # Create delightful response
         status_emoji = {
@@ -393,7 +399,7 @@ async def analyze_trace_corpus(
 ) -> dict[str, Any]:
     """
     Analyze the trace corpus for behavioral patterns.
-    
+
     Reveals patterns in system behavior that can inform improvements
     and optimization opportunities.
     """
@@ -443,7 +449,7 @@ async def visualize_derivation_graph(
 ) -> dict[str, Any]:
     """
     Visualize a derivation graph showing how implementation derives from principles.
-    
+
     Returns data suitable for beautiful graph visualization in the frontend,
     with nodes colored by type and edges showing derivation relationships.
     """
@@ -530,7 +536,7 @@ async def explore_derivation_path(
 ) -> dict[str, Any]:
     """
     Explore the derivation path from a principle to an implementation.
-    
+
     Shows the logical chain of reasoning that connects high-level principles
     to concrete implementation, with explanations at each step.
     """

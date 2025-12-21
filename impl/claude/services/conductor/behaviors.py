@@ -74,19 +74,19 @@ class CursorBehavior(Enum):
     "Daring, bold, creative, opinionated but not gaudy"
     """
 
-    FOLLOWER = auto()     # Loyal companion, follows with empathy
-    EXPLORER = auto()     # Curious wanderer, independent discovery
-    ASSISTANT = auto()    # Helpful partner, follows but suggests
-    AUTONOMOUS = auto()   # Self-directed, pursues own trajectory
+    FOLLOWER = auto()  # Loyal companion, follows with empathy
+    EXPLORER = auto()  # Curious wanderer, independent discovery
+    ASSISTANT = auto()  # Helpful partner, follows but suggests
+    AUTONOMOUS = auto()  # Self-directed, pursues own trajectory
 
     @property
     def emoji(self) -> str:
         """Visual indicator reflecting personality."""
         return {
-            CursorBehavior.FOLLOWER: "🐕",     # Loyal, attentive
-            CursorBehavior.EXPLORER: "🦋",     # Free, wandering
-            CursorBehavior.ASSISTANT: "🤝",    # Collaborative
-            CursorBehavior.AUTONOMOUS: "🌟",   # Self-directed, luminous
+            CursorBehavior.FOLLOWER: "🐕",  # Loyal, attentive
+            CursorBehavior.EXPLORER: "🦋",  # Free, wandering
+            CursorBehavior.ASSISTANT: "🤝",  # Collaborative
+            CursorBehavior.AUTONOMOUS: "🌟",  # Self-directed, luminous
         }[self]
 
     @property
@@ -108,10 +108,10 @@ class CursorBehavior(Enum):
         0.0 = completely independent
         """
         return {
-            CursorBehavior.FOLLOWER: 0.9,     # Close but not mechanical
-            CursorBehavior.EXPLORER: 0.1,     # Occasional awareness
-            CursorBehavior.ASSISTANT: 0.6,    # Attentive but not clingy
-            CursorBehavior.AUTONOMOUS: 0.0,   # Self-determined
+            CursorBehavior.FOLLOWER: 0.9,  # Close but not mechanical
+            CursorBehavior.EXPLORER: 0.1,  # Occasional awareness
+            CursorBehavior.ASSISTANT: 0.6,  # Attentive but not clingy
+            CursorBehavior.AUTONOMOUS: 0.0,  # Self-determined
         }[self]
 
     @property
@@ -123,10 +123,10 @@ class CursorBehavior(Enum):
         The Accursed Share: exploration budget for "useless" discovery.
         """
         return {
-            CursorBehavior.FOLLOWER: 0.1,     # Minimal wandering
-            CursorBehavior.EXPLORER: 0.9,     # High curiosity
-            CursorBehavior.ASSISTANT: 0.3,    # Moderate exploration
-            CursorBehavior.AUTONOMOUS: 0.5,   # Purposeful but open
+            CursorBehavior.FOLLOWER: 0.1,  # Minimal wandering
+            CursorBehavior.EXPLORER: 0.9,  # High curiosity
+            CursorBehavior.ASSISTANT: 0.3,  # Moderate exploration
+            CursorBehavior.AUTONOMOUS: 0.5,  # Purposeful but open
         }[self]
 
     @property
@@ -137,9 +137,9 @@ class CursorBehavior(Enum):
         Higher = more vocal, more proactive.
         """
         return {
-            CursorBehavior.FOLLOWER: 0.02,    # Rarely interjects
-            CursorBehavior.EXPLORER: 0.05,    # Shares discoveries
-            CursorBehavior.ASSISTANT: 0.15,   # Actively helpful
+            CursorBehavior.FOLLOWER: 0.02,  # Rarely interjects
+            CursorBehavior.EXPLORER: 0.05,  # Shares discoveries
+            CursorBehavior.ASSISTANT: 0.15,  # Actively helpful
             CursorBehavior.AUTONOMOUS: 0.08,  # Shares when relevant
         }[self]
 
@@ -152,10 +152,10 @@ class CursorBehavior(Enum):
         Lower = quicker, more reactive
         """
         return {
-            CursorBehavior.FOLLOWER: 0.7,     # Smooth following
-            CursorBehavior.EXPLORER: 0.4,     # Quick and curious
-            CursorBehavior.ASSISTANT: 0.6,    # Balanced
-            CursorBehavior.AUTONOMOUS: 0.5,   # Steady but purposeful
+            CursorBehavior.FOLLOWER: 0.7,  # Smooth following
+            CursorBehavior.EXPLORER: 0.4,  # Quick and curious
+            CursorBehavior.ASSISTANT: 0.6,  # Balanced
+            CursorBehavior.AUTONOMOUS: 0.5,  # Steady but purposeful
         }[self]
 
     @property
@@ -168,22 +168,30 @@ class CursorBehavior(Enum):
         - FOLLOWER prefers FOLLOWING state
         """
         return {
-            CursorBehavior.FOLLOWER: frozenset({
-                CursorState.FOLLOWING,
-                CursorState.WAITING,
-            }),
-            CursorBehavior.EXPLORER: frozenset({
-                CursorState.EXPLORING,
-                CursorState.WORKING,
-            }),
-            CursorBehavior.ASSISTANT: frozenset({
-                CursorState.FOLLOWING,
-                CursorState.SUGGESTING,
-            }),
-            CursorBehavior.AUTONOMOUS: frozenset({
-                CursorState.WORKING,
-                CursorState.EXPLORING,
-            }),
+            CursorBehavior.FOLLOWER: frozenset(
+                {
+                    CursorState.FOLLOWING,
+                    CursorState.WAITING,
+                }
+            ),
+            CursorBehavior.EXPLORER: frozenset(
+                {
+                    CursorState.EXPLORING,
+                    CursorState.WORKING,
+                }
+            ),
+            CursorBehavior.ASSISTANT: frozenset(
+                {
+                    CursorState.FOLLOWING,
+                    CursorState.SUGGESTING,
+                }
+            ),
+            CursorBehavior.AUTONOMOUS: frozenset(
+                {
+                    CursorState.WORKING,
+                    CursorState.EXPLORING,
+                }
+            ),
         }[self]
 
     @property
@@ -197,10 +205,10 @@ class CursorBehavior(Enum):
         Followers remain consistent (loyalty).
         """
         return {
-            CursorBehavior.FOLLOWER: 0.3,     # Consistent companion
-            CursorBehavior.EXPLORER: 0.8,     # Night = contemplative
-            CursorBehavior.ASSISTANT: 0.5,    # Moderate adjustment
-            CursorBehavior.AUTONOMOUS: 0.6,   # Self-aware of cycles
+            CursorBehavior.FOLLOWER: 0.3,  # Consistent companion
+            CursorBehavior.EXPLORER: 0.8,  # Night = contemplative
+            CursorBehavior.ASSISTANT: 0.5,  # Moderate adjustment
+            CursorBehavior.AUTONOMOUS: 0.6,  # Self-aware of cycles
         }[self]
 
     def describe_for_phase(self, phase: CircadianPhase) -> str:
@@ -243,6 +251,7 @@ class Position:
 
     Immutable for functional purity.
     """
+
     x: float
     y: float
 
@@ -277,8 +286,9 @@ class FocusPoint:
 
     Combines path (logical) with position (visual).
     """
-    path: str                   # AGENTESE path (e.g., "self.memory")
-    position: Position          # Canvas position
+
+    path: str  # AGENTESE path (e.g., "self.memory")
+    position: Position  # Canvas position
     timestamp: datetime = field(default_factory=datetime.now)
 
     def age_seconds(self) -> float:
@@ -365,7 +375,7 @@ class HumanFocusTracker:
 
         # Trim (Pattern #8: Bounded History)
         if len(self.history) > self.max_history:
-            self.history = self.history[-self.max_history:]
+            self.history = self.history[-self.max_history :]
 
         self._last_update = now
 

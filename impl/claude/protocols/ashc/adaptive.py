@@ -78,7 +78,7 @@ def incomplete_beta_regularized(x: float, a: float, b: float) -> float:
 
     # Use scipy if available, otherwise approximate
     try:
-        from scipy.special import betainc
+        from scipy.special import betainc  # type: ignore[import-untyped]
 
         return float(betainc(a, b, x))
     except ImportError:

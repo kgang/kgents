@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 class UniverseLevel(int, Enum):
     """Universe levels in the type hierarchy."""
+
     PROP = 0
     SET = 1
     GROUPOID = 2
@@ -30,6 +31,7 @@ class UniverseLevel(int, Enum):
 
 class PathType(str, Enum):
     """Types of paths (equality proofs) in HoTT."""
+
     REFL = "refl"
     UNIVALENCE = "univalence"
     INDUCTION = "induction"
@@ -41,6 +43,7 @@ class PathType(str, Enum):
 @dataclass(frozen=True)
 class HoTTType:
     """A type in Homotopy Type Theory."""
+
     name: str
     universe_level: UniverseLevel
     constructors: frozenset[str]
@@ -72,6 +75,7 @@ class HoTTType:
 @dataclass(frozen=True)
 class HoTTPath:
     """A path (proof of equality) in HoTT."""
+
     source: Any
     target: Any
     path_type: PathType
@@ -86,12 +90,15 @@ class HoTTPath:
 
     @classmethod
     def from_isomorphism(cls, a: Any, b: Any, iso_data: dict[str, Any]) -> HoTTPath:
-        return cls(source=a, target=b, path_type=PathType.UNIVALENCE, path_data={"isomorphism": iso_data})
+        return cls(
+            source=a, target=b, path_type=PathType.UNIVALENCE, path_data={"isomorphism": iso_data}
+        )
 
 
 @dataclass(frozen=True)
 class Isomorphism:
     """An isomorphism between two structures."""
+
     source_type: str
     target_type: str
     forward_map: dict[str, Any]
@@ -106,6 +113,7 @@ class Isomorphism:
 @dataclass(frozen=True)
 class HoTTVerificationResult:
     """Result of HoTT-based verification."""
+
     verified: bool
     path: HoTTPath | None
     verification_type: str
@@ -113,11 +121,21 @@ class HoTTVerificationResult:
 
     @classmethod
     def success(cls, path: HoTTPath, verification_type: str) -> HoTTVerificationResult:
-        return cls(verified=True, path=path, verification_type=verification_type, details={"witness": path.path_data})
+        return cls(
+            verified=True,
+            path=path,
+            verification_type=verification_type,
+            details={"witness": path.path_data},
+        )
 
     @classmethod
     def failure(cls, verification_type: str, reason: str) -> HoTTVerificationResult:
-        return cls(verified=False, path=None, verification_type=verification_type, details={"reason": reason})
+        return cls(
+            verified=False,
+            path=None,
+            verification_type=verification_type,
+            details={"reason": reason},
+        )
 
 
 class HoTTContext:
@@ -282,8 +300,16 @@ class HoTTContext:
         return {"transported_value": x, "along_path": p.path_data, "type_family": type_family}
 
     async def verify_composition_associativity(self, f: Any, g: Any, h: Any) -> dict[str, Any]:
-        left = {"composition_type": "left_associative", "morphisms": [f, g, h], "structure": "((f . g) . h)"}
-        right = {"composition_type": "right_associative", "morphisms": [f, g, h], "structure": "(f . (g . h))"}
+        left = {
+            "composition_type": "left_associative",
+            "morphisms": [f, g, h],
+            "structure": "((f . g) . h)",
+        }
+        right = {
+            "composition_type": "right_associative",
+            "morphisms": [f, g, h],
+            "structure": "(f . (g . h))",
+        }
         path = await self.construct_path(left, right)
         if path:
             return {
@@ -324,7 +350,9 @@ async def verify_isomorphism(a: Any, b: Any, context: HoTTContext | None = None)
     return await ctx.are_isomorphic(a, b)
 
 
-async def construct_equality_path(a: Any, b: Any, context: HoTTContext | None = None) -> HoTTPath | None:
+async def construct_equality_path(
+    a: Any, b: Any, context: HoTTContext | None = None
+) -> HoTTPath | None:
     """Convenience function to construct equality path."""
     ctx = context or HoTTContext()
     return await ctx.construct_path(a, b)

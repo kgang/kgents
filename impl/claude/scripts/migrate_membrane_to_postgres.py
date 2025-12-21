@@ -140,7 +140,7 @@ async def migrate_table(
         return source_count, 0
 
     # Build INSERT statement for Postgres
-    placeholders = ", ".join([f"${i+1}" for i in range(len(columns))])
+    placeholders = ", ".join([f"${i + 1}" for i in range(len(columns))])
     columns_str = ", ".join(columns)
     insert_sql = f"""
         INSERT INTO {table} ({columns_str})
@@ -203,8 +203,7 @@ async def run_migration(dry_run: bool = True) -> None:
     for table in TABLES_TO_MIGRATE:
         # Check if table exists in source
         cursor = sqlite_conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-            (table,)
+            "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
         )
         if not cursor.fetchone():
             continue
@@ -238,9 +237,7 @@ async def run_migration(dry_run: bool = True) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Migrate membrane.db from SQLite to PostgreSQL"
-    )
+    parser = argparse.ArgumentParser(description="Migrate membrane.db from SQLite to PostgreSQL")
     parser.add_argument(
         "--dry-run",
         action="store_true",

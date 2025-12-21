@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class GraphEngine:
     """
     Engine for constructing and analyzing verification graphs.
-    
+
     Builds directed graphs representing logical derivations from principles
     to implementation, with analysis for contradictions and completeness.
     """
@@ -45,7 +45,7 @@ class GraphEngine:
     ) -> VerificationGraphResult:
         """
         Build verification graph from specification documents.
-        
+
         Analyzes requirements, design, and task documents to construct
         a graph showing derivation paths from principles to implementation.
         """
@@ -215,9 +215,17 @@ class GraphEngine:
             ("curated", "Curated", "Intentional selection over exhaustive cataloging"),
             ("ethical", "Ethical", "Agents augment human capability, never replace judgment"),
             ("joy_inducing", "Joy-Inducing", "Delight in interaction; personality matters"),
-            ("composable", "Composable", "Agents are morphisms in a category; composition is primary"),
+            (
+                "composable",
+                "Composable",
+                "Agents are morphisms in a category; composition is primary",
+            ),
             ("heterarchical", "Heterarchical", "Agents exist in flux, not fixed hierarchy"),
-            ("generative", "Generative", "Spec is compression; design should generate implementation"),
+            (
+                "generative",
+                "Generative",
+                "Spec is compression; design should generate implementation",
+            ),
         ]
 
         nodes: list[GraphNode] = []
@@ -242,10 +250,10 @@ class GraphEngine:
         # For now, create placeholder nodes
         for i in range(3):  # Placeholder: 3 requirement nodes
             node = GraphNode(
-                node_id=f"requirement_{i+1}",
+                node_id=f"requirement_{i + 1}",
                 node_type="requirement",
-                name=f"Requirement {i+1}",
-                description=f"Placeholder requirement {i+1}",
+                name=f"Requirement {i + 1}",
+                description=f"Placeholder requirement {i + 1}",
                 metadata={"source": "requirements.md"},
             )
             nodes.append(node)
@@ -286,10 +294,10 @@ class GraphEngine:
         # For now, create placeholder nodes
         for i in range(5):  # Placeholder: 5 implementation nodes
             node = GraphNode(
-                node_id=f"implementation_{i+1}",
+                node_id=f"implementation_{i + 1}",
                 node_type="implementation",
-                name=f"Implementation Task {i+1}",
-                description=f"Placeholder implementation task {i+1}",
+                name=f"Implementation Task {i + 1}",
+                description=f"Placeholder implementation task {i + 1}",
                 metadata={"source": "tasks.md"},
             )
             nodes.append(node)
@@ -313,8 +321,7 @@ class GraphEngine:
             # TODO: Determine actual principle derivations from content analysis
             # For now, connect each requirement to the "composable" principle
             composable_principle = next(
-                (p for p in principle_nodes if "composable" in p.node_id),
-                None
+                (p for p in principle_nodes if "composable" in p.node_id), None
             )
             if composable_principle:
                 edge = GraphEdge(
@@ -463,8 +470,10 @@ class GraphEngine:
 
             for keyword in conflict_keywords:
                 matching_nodes = [
-                    node for node in nodes
-                    if keyword.lower() in node.description.lower() or keyword.lower() in node.name.lower()
+                    node
+                    for node in nodes
+                    if keyword.lower() in node.description.lower()
+                    or keyword.lower() in node.name.lower()
                 ]
                 if matching_nodes:
                     conflicting_nodes.extend(matching_nodes)
@@ -577,7 +586,8 @@ class GraphEngine:
                 in_degree[edge.target_id] = in_degree.get(edge.target_id, 0) + 1
 
             high_degree_nodes = [
-                node_id for node_id, degree in in_degree.items()
+                node_id
+                for node_id, degree in in_degree.items()
                 if degree > 3  # More than 3 incoming edges
             ]
 
@@ -672,12 +682,14 @@ class GraphEngine:
 
         # Strategies for contradictions
         if contradictions:
-            strategies["contradictions"].extend([
-                "Review conflicting requirements and resolve semantic contradictions",
-                "Break circular dependencies by introducing intermediate abstractions",
-                "Clarify the scope and context for conflicting assertions",
-                "Consider if conflicts represent different operational modes",
-            ])
+            strategies["contradictions"].extend(
+                [
+                    "Review conflicting requirements and resolve semantic contradictions",
+                    "Break circular dependencies by introducing intermediate abstractions",
+                    "Clarify the scope and context for conflicting assertions",
+                    "Consider if conflicts represent different operational modes",
+                ]
+            )
 
         # Strategies for orphaned nodes
         if orphaned_nodes:
@@ -698,19 +710,23 @@ class GraphEngine:
                     "Establish clear derivation paths from design to orphaned implementations"
                 )
 
-            strategies["orphaned_nodes"].extend([
-                "Review if orphaned elements are actually needed",
-                "Consider consolidating orphaned elements with related components",
-                "Add missing intermediate derivation steps",
-            ])
+            strategies["orphaned_nodes"].extend(
+                [
+                    "Review if orphaned elements are actually needed",
+                    "Consider consolidating orphaned elements with related components",
+                    "Add missing intermediate derivation steps",
+                ]
+            )
 
         # General strategies
-        strategies["general"].extend([
-            "Ensure all elements trace back to kgents principles",
-            "Maintain clear derivation chains from principles to implementation",
-            "Regular review of specification consistency",
-            "Use semantic analysis to detect hidden conflicts",
-        ])
+        strategies["general"].extend(
+            [
+                "Ensure all elements trace back to kgents principles",
+                "Maintain clear derivation chains from principles to implementation",
+                "Regular review of specification consistency",
+                "Use semantic analysis to detect hidden conflicts",
+            ]
+        )
 
         return strategies
 
@@ -736,7 +752,9 @@ class GraphEngine:
                         principle_id=principle.node_id,
                         implementation_id=impl.node_id,
                         path_nodes=path,
-                        path_edges=[e for e in edges if e.source_id in path and e.target_id in path],
+                        path_edges=[
+                            e for e in edges if e.source_id in path and e.target_id in path
+                        ],
                         is_complete=len(path) > 2,  # At least principle -> req -> impl
                     )
                     paths.append(derivation_path)

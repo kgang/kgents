@@ -57,7 +57,7 @@ class ProposalStatus(str, Enum):
 class VerificationGraph(CausalMixin, TimestampMixin, Base):
     """
     Verification graph representing derivation paths from principles to implementation.
-    
+
     Stores the logical structure showing how high-level principles derive
     into concrete implementations, with support for contradiction detection
     and orphaned node identification.
@@ -83,21 +83,21 @@ class VerificationGraph(CausalMixin, TimestampMixin, Base):
 
     # Status and metrics
     status: Mapped[VerificationStatus] = mapped_column(
-        SQLEnum(VerificationStatus),
-        nullable=False,
-        default=VerificationStatus.PENDING
+        SQLEnum(VerificationStatus), nullable=False, default=VerificationStatus.PENDING
     )
     node_count: Mapped[int] = mapped_column(nullable=False, default=0)
     edge_count: Mapped[int] = mapped_column(nullable=False, default=0)
 
     def __repr__(self) -> str:
-        return f"<VerificationGraph(id={self.id!r}, name={self.name!r}, status={self.status.value})>"
+        return (
+            f"<VerificationGraph(id={self.id!r}, name={self.name!r}, status={self.status.value})>"
+        )
 
 
 class TraceWitness(CausalMixin, TimestampMixin, Base):
     """
     Enhanced trace witness capturing behavioral correctness evidence.
-    
+
     Extends the existing kgents witness system with formal verification
     capabilities, storing constructive proofs of specification compliance.
     """
@@ -113,12 +113,16 @@ class TraceWitness(CausalMixin, TimestampMixin, Base):
     # Trace data
     input_data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
     output_data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    intermediate_steps: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    intermediate_steps: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
 
     # Verification data
     specification_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     properties_verified: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
-    violations_found: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    violations_found: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
 
     # Performance metrics
     execution_time_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -126,9 +130,7 @@ class TraceWitness(CausalMixin, TimestampMixin, Base):
 
     # Status
     verification_status: Mapped[VerificationStatus] = mapped_column(
-        SQLEnum(VerificationStatus),
-        nullable=False,
-        default=VerificationStatus.PENDING
+        SQLEnum(VerificationStatus), nullable=False, default=VerificationStatus.PENDING
     )
 
     def __repr__(self) -> str:
@@ -138,7 +140,7 @@ class TraceWitness(CausalMixin, TimestampMixin, Base):
 class CategoricalViolation(CausalMixin, TimestampMixin, Base):
     """
     Record of categorical law violations with counter-examples and remediation.
-    
+
     Stores violations discovered during categorical law verification,
     including LLM-generated analysis and suggested fixes.
     """
@@ -149,9 +151,7 @@ class CategoricalViolation(CausalMixin, TimestampMixin, Base):
 
     # Violation metadata
     violation_type: Mapped[ViolationType] = mapped_column(
-        SQLEnum(ViolationType),
-        nullable=False,
-        index=True
+        SQLEnum(ViolationType), nullable=False, index=True
     )
     law_description: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -181,7 +181,7 @@ class CategoricalViolation(CausalMixin, TimestampMixin, Base):
 class ImprovementProposal(CausalMixin, TimestampMixin, Base):
     """
     Self-improvement proposals generated from operational data analysis.
-    
+
     Stores LLM-generated improvement suggestions with validation results
     and application tracking for continuous system evolution.
     """
@@ -196,7 +196,9 @@ class ImprovementProposal(CausalMixin, TimestampMixin, Base):
     category: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
     # Source analysis
-    source_patterns: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    source_patterns: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     kgents_principle: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
     # Proposal details
@@ -206,15 +208,14 @@ class ImprovementProposal(CausalMixin, TimestampMixin, Base):
 
     # Validation results
     categorical_compliance: Mapped[bool | None] = mapped_column(nullable=True)
-    trace_impact_analysis: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    trace_impact_analysis: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
     llm_validation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Status and lifecycle
     status: Mapped[ProposalStatus] = mapped_column(
-        SQLEnum(ProposalStatus),
-        nullable=False,
-        default=ProposalStatus.GENERATED,
-        index=True
+        SQLEnum(ProposalStatus), nullable=False, default=ProposalStatus.GENERATED, index=True
     )
 
     # Application tracking
@@ -228,7 +229,7 @@ class ImprovementProposal(CausalMixin, TimestampMixin, Base):
 class SpecificationDocument(CausalMixin, TimestampMixin, Base):
     """
     Specification documents for semantic consistency analysis.
-    
+
     Tracks specification documents and their semantic content for
     cross-document consistency verification and evolution tracking.
     """
@@ -239,7 +240,9 @@ class SpecificationDocument(CausalMixin, TimestampMixin, Base):
 
     # Document metadata
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    document_type: Mapped[str] = mapped_column(String(64), nullable=False, index=True)  # requirements, design, tasks
+    document_type: Mapped[str] = mapped_column(
+        String(64), nullable=False, index=True
+    )  # requirements, design, tasks
     file_path: Mapped[str] = mapped_column(String(512), nullable=False)
     version: Mapped[str] = mapped_column(String(32), nullable=False, default="1.0.0")
 
@@ -249,7 +252,9 @@ class SpecificationDocument(CausalMixin, TimestampMixin, Base):
     semantic_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
     # Consistency analysis
-    consistency_issues: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    consistency_issues: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
     backward_compatibility: Mapped[bool | None] = mapped_column(nullable=True)
 
     # Last analysis
@@ -263,7 +268,7 @@ class SpecificationDocument(CausalMixin, TimestampMixin, Base):
 class HoTTType(CausalMixin, TimestampMixin, Base):
     """
     Homotopy Type Theory types for agent representation.
-    
+
     Stores HoTT type definitions for agents with equivalence structure
     and path composition support for categorical law verification.
     """
@@ -278,8 +283,12 @@ class HoTTType(CausalMixin, TimestampMixin, Base):
 
     # Type definition
     type_definition: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    introduction_rules: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
-    elimination_rules: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    introduction_rules: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
+    elimination_rules: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
 
     # Equivalence structure
     equivalences: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)

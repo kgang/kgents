@@ -34,9 +34,10 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class AGENTESEPath:
     """An AGENTESE path extracted from mind-map."""
+
     path: str
     context: str  # world, self, concept, void, time
-    aspect: str   # manifest, witness, refine, etc.
+    aspect: str  # manifest, witness, refine, etc.
     description: str
     node_type: str = ""
     original_id: str = ""
@@ -48,6 +49,7 @@ class AGENTESEPath:
 @dataclass(frozen=True)
 class OperadSpec:
     """An operad specification for composition grammar."""
+
     operad_id: str
     name: str
     operations: frozenset[str]
@@ -61,6 +63,7 @@ class OperadSpec:
 @dataclass(frozen=True)
 class AGENTESESpec:
     """AGENTESE specification extracted from mind-map."""
+
     spec_id: str
     name: str
     version: str
@@ -74,6 +77,7 @@ class AGENTESESpec:
 @dataclass(frozen=True)
 class Module:
     """A generated implementation module."""
+
     module_id: str
     name: str
     path: str
@@ -85,6 +89,7 @@ class Module:
 @dataclass(frozen=True)
 class Implementation:
     """Generated implementation from spec."""
+
     impl_id: str
     spec_id: str
     modules: frozenset[Module]
@@ -95,6 +100,7 @@ class Implementation:
 @dataclass(frozen=True)
 class SpecChange:
     """A change in specification."""
+
     change_id: str
     change_type: str  # addition, removal, modification
     path: str
@@ -106,6 +112,7 @@ class SpecChange:
 @dataclass(frozen=True)
 class SpecDiff:
     """Difference between original and refined spec."""
+
     diff_id: str
     original_spec_id: str
     refined_spec_id: str | None
@@ -119,6 +126,7 @@ class SpecDiff:
 @dataclass(frozen=True)
 class RoundtripResult:
     """Result of generative loop roundtrip."""
+
     roundtrip_id: str
     original_topology: MindMapTopology
     spec: AGENTESESpec
@@ -131,7 +139,6 @@ class RoundtripResult:
     created_at: datetime = field(default_factory=datetime.now)
 
 
-
 # =============================================================================
 # Compression Morphism
 # =============================================================================
@@ -140,7 +147,7 @@ class RoundtripResult:
 class CompressionMorphism:
     """
     Extracts essential decisions from mind-map topology into AGENTESE spec.
-    
+
     The compression morphism is a functor that preserves structure while
     reducing detail. Essential relationships are maintained.
     """
@@ -268,6 +275,7 @@ class CompressionMorphism:
     def _compute_topology_hash(self, topology: MindMapTopology) -> str:
         """Compute a hash of the topology for traceability."""
         import hashlib
+
         content = f"{len(topology.nodes)}:{len(topology.edges)}:{len(topology.covers)}"
         return hashlib.md5(content.encode()).hexdigest()[:12]
 
@@ -280,7 +288,7 @@ class CompressionMorphism:
 class ImplementationProjector:
     """
     Projects AGENTESE specification into implementation code.
-    
+
     Preserves composition structure from spec to implementation.
     """
 
@@ -351,22 +359,25 @@ async def {path.aspect}(umwelt):
         structure: dict[str, Any] = {"operads": [], "paths": []}
 
         for operad in spec.operads:
-            structure["operads"].append({
-                "id": operad.operad_id,
-                "name": operad.name,
-                "operations": list(operad.operations),
-                "rules": {"type": operad.composition_type, "cover": operad.cover_id},
-            })
+            structure["operads"].append(
+                {
+                    "id": operad.operad_id,
+                    "name": operad.name,
+                    "operations": list(operad.operations),
+                    "rules": {"type": operad.composition_type, "cover": operad.cover_id},
+                }
+            )
 
         for path in spec.paths:
-            structure["paths"].append({
-                "path": path.path,
-                "context": path.context,
-                "aspect": path.aspect,
-            })
+            structure["paths"].append(
+                {
+                    "path": path.path,
+                    "context": path.context,
+                    "aspect": path.aspect,
+                }
+            )
 
         return structure
-
 
 
 # =============================================================================
@@ -377,7 +388,7 @@ async def {path.aspect}(umwelt):
 class PatternSynthesizer:
     """
     Synthesizes behavioral patterns from accumulated traces.
-    
+
     Identifies recurring patterns that suggest specification refinements.
     """
 
@@ -410,7 +421,9 @@ class PatternSynthesizer:
         logger.info(f"Synthesized {len(patterns)} patterns")
         return patterns
 
-    async def _extract_flow_patterns(self, traces: list[TraceWitnessResult]) -> list[BehavioralPattern]:
+    async def _extract_flow_patterns(
+        self, traces: list[TraceWitnessResult]
+    ) -> list[BehavioralPattern]:
         """Extract execution flow patterns."""
         flow_counts: dict[str, int] = {}
         flow_traces: dict[str, list[str]] = {}
@@ -427,18 +440,22 @@ class PatternSynthesizer:
         patterns = []
         for flow_key, count in flow_counts.items():
             if count >= 2:  # Only patterns that appear multiple times
-                patterns.append(BehavioralPattern(
-                    pattern_id=f"flow_{hash(flow_key) % 10000}",
-                    pattern_type="execution_flow",
-                    description=f"Flow: {flow_key}",
-                    frequency=count,
-                    example_traces=flow_traces[flow_key][:5],
-                    metadata={"steps": flow_key.split(" -> ")},
-                ))
+                patterns.append(
+                    BehavioralPattern(
+                        pattern_id=f"flow_{hash(flow_key) % 10000}",
+                        pattern_type="execution_flow",
+                        description=f"Flow: {flow_key}",
+                        frequency=count,
+                        example_traces=flow_traces[flow_key][:5],
+                        metadata={"steps": flow_key.split(" -> ")},
+                    )
+                )
 
         return patterns
 
-    async def _extract_performance_patterns(self, traces: list[TraceWitnessResult]) -> list[BehavioralPattern]:
+    async def _extract_performance_patterns(
+        self, traces: list[TraceWitnessResult]
+    ) -> list[BehavioralPattern]:
         """Extract performance patterns."""
         patterns = []
 
@@ -447,28 +464,34 @@ class PatternSynthesizer:
         slow_traces = [t for t in traces if t.execution_time_ms and t.execution_time_ms >= 100]
 
         if fast_traces:
-            patterns.append(BehavioralPattern(
-                pattern_id="perf_fast",
-                pattern_type="performance",
-                description="Fast execution (<100ms)",
-                frequency=len(fast_traces),
-                example_traces=[t.witness_id for t in fast_traces[:5]],
-                metadata={"category": "fast", "threshold_ms": 100},
-            ))
+            patterns.append(
+                BehavioralPattern(
+                    pattern_id="perf_fast",
+                    pattern_type="performance",
+                    description="Fast execution (<100ms)",
+                    frequency=len(fast_traces),
+                    example_traces=[t.witness_id for t in fast_traces[:5]],
+                    metadata={"category": "fast", "threshold_ms": 100},
+                )
+            )
 
         if slow_traces:
-            patterns.append(BehavioralPattern(
-                pattern_id="perf_slow",
-                pattern_type="performance",
-                description="Slow execution (>=100ms)",
-                frequency=len(slow_traces),
-                example_traces=[t.witness_id for t in slow_traces[:5]],
-                metadata={"category": "slow", "threshold_ms": 100},
-            ))
+            patterns.append(
+                BehavioralPattern(
+                    pattern_id="perf_slow",
+                    pattern_type="performance",
+                    description="Slow execution (>=100ms)",
+                    frequency=len(slow_traces),
+                    example_traces=[t.witness_id for t in slow_traces[:5]],
+                    metadata={"category": "slow", "threshold_ms": 100},
+                )
+            )
 
         return patterns
 
-    async def _extract_verification_patterns(self, traces: list[TraceWitnessResult]) -> list[BehavioralPattern]:
+    async def _extract_verification_patterns(
+        self, traces: list[TraceWitnessResult]
+    ) -> list[BehavioralPattern]:
         """Extract verification outcome patterns."""
         patterns = []
         status_counts: dict[VerificationStatus, list[str]] = {}
@@ -480,18 +503,22 @@ class PatternSynthesizer:
             status_counts[status].append(trace.witness_id)
 
         for status, trace_ids in status_counts.items():
-            patterns.append(BehavioralPattern(
-                pattern_id=f"verification_{status.value}",
-                pattern_type="verification_outcome",
-                description=f"Verification status: {status.value}",
-                frequency=len(trace_ids),
-                example_traces=trace_ids[:5],
-                metadata={"status": status.value},
-            ))
+            patterns.append(
+                BehavioralPattern(
+                    pattern_id=f"verification_{status.value}",
+                    pattern_type="verification_outcome",
+                    description=f"Verification status: {status.value}",
+                    frequency=len(trace_ids),
+                    example_traces=trace_ids[:5],
+                    metadata={"status": status.value},
+                )
+            )
 
         return patterns
 
-    async def _llm_pattern_synthesis(self, traces: list[TraceWitnessResult]) -> list[BehavioralPattern]:
+    async def _llm_pattern_synthesis(
+        self, traces: list[TraceWitnessResult]
+    ) -> list[BehavioralPattern]:
         """Use LLM to identify higher-level patterns."""
         # Simulate LLM pattern synthesis
         await asyncio.sleep(0.05)
@@ -506,7 +533,7 @@ class PatternSynthesizer:
 class SpecDiffEngine:
     """
     Compares original mind-map with patterns to detect drift.
-    
+
     Identifies where implementation behavior diverges from intent.
     """
 
@@ -556,8 +583,10 @@ class SpecDiffEngine:
             drift_score=drift_score,
         )
 
-        logger.info(f"Diff computed: {len(additions)} additions, {len(removals)} removals, "
-                    f"{len(modifications)} modifications, drift={drift_score:.2f}")
+        logger.info(
+            f"Diff computed: {len(additions)} additions, {len(removals)} removals, "
+            f"{len(modifications)} modifications, drift={drift_score:.2f}"
+        )
         return diff
 
     async def _analyze_pattern_drift(
@@ -574,41 +603,46 @@ class SpecDiffEngine:
             steps = pattern.metadata.get("steps", [])
             for step in steps:
                 if step not in original.nodes:
-                    changes.append(SpecChange(
-                        change_id=str(uuid4()),
-                        change_type="addition",
-                        path=f"flow.{step}",
-                        old_value=None,
-                        new_value=step,
-                        reason=f"Emergent step '{step}' not in original topology",
-                    ))
+                    changes.append(
+                        SpecChange(
+                            change_id=str(uuid4()),
+                            change_type="addition",
+                            path=f"flow.{step}",
+                            old_value=None,
+                            new_value=step,
+                            reason=f"Emergent step '{step}' not in original topology",
+                        )
+                    )
 
         # Check for performance drift
         if pattern.pattern_type == "performance" and pattern.metadata.get("category") == "slow":
             if pattern.frequency > 5:  # Significant slow pattern
-                changes.append(SpecChange(
-                    change_id=str(uuid4()),
-                    change_type="modification",
-                    path="performance.threshold",
-                    old_value="fast",
-                    new_value="slow",
-                    reason=f"Performance degradation detected ({pattern.frequency} slow executions)",
-                ))
+                changes.append(
+                    SpecChange(
+                        change_id=str(uuid4()),
+                        change_type="modification",
+                        path="performance.threshold",
+                        old_value="fast",
+                        new_value="slow",
+                        reason=f"Performance degradation detected ({pattern.frequency} slow executions)",
+                    )
+                )
 
         # Check for verification failures
         if pattern.pattern_type == "verification_outcome":
             if pattern.metadata.get("status") == "failure" and pattern.frequency > 0:
-                changes.append(SpecChange(
-                    change_id=str(uuid4()),
-                    change_type="modification",
-                    path="verification.status",
-                    old_value="success",
-                    new_value="failure",
-                    reason=f"Verification failures detected ({pattern.frequency} failures)",
-                ))
+                changes.append(
+                    SpecChange(
+                        change_id=str(uuid4()),
+                        change_type="modification",
+                        path="verification.status",
+                        old_value="success",
+                        new_value="failure",
+                        reason=f"Verification failures detected ({pattern.frequency} failures)",
+                    )
+                )
 
         return changes
-
 
 
 # =============================================================================
@@ -619,9 +653,9 @@ class SpecDiffEngine:
 class GenerativeLoop:
     """
     The closed generative cycle orchestrator.
-    
+
     Mind-Map → Spec → Impl → Traces → Patterns → Refined Spec
-    
+
     > "The stream finds a way around the boulder."
     """
 
@@ -639,6 +673,7 @@ class GenerativeLoop:
     def trace_witness(self) -> Any:
         if self._trace_witness is None:
             from .trace_witness import EnhancedTraceWitness
+
             self._trace_witness = EnhancedTraceWitness(self.llm_client)
         return self._trace_witness
 
@@ -681,9 +716,9 @@ class GenerativeLoop:
     async def roundtrip(self, mind_map: MindMapTopology) -> RoundtripResult:
         """
         Full generative loop roundtrip.
-        
+
         Mind-Map → Spec → Impl → Traces → Patterns → Diff
-        
+
         Verifies that essential structure is preserved through the cycle.
         """
         logger.info("Starting generative loop roundtrip")
@@ -727,8 +762,10 @@ class GenerativeLoop:
             roundtrip_time_ms=roundtrip_time_ms,
         )
 
-        logger.info(f"Roundtrip complete in {roundtrip_time_ms:.0f}ms, "
-                    f"structure_preserved={structure_preserved}")
+        logger.info(
+            f"Roundtrip complete in {roundtrip_time_ms:.0f}ms, "
+            f"structure_preserved={structure_preserved}"
+        )
         return result
 
     async def _verify_structure_preservation(
@@ -739,7 +776,7 @@ class GenerativeLoop:
     ) -> bool:
         """
         Verify that essential structure is preserved through the roundtrip.
-        
+
         Essential structure includes:
         - Node count preservation (within tolerance)
         - Edge relationship preservation
@@ -760,7 +797,8 @@ class GenerativeLoop:
 
         # Check for critical failures
         critical_changes = [
-            c for c in diff.modifications
+            c
+            for c in diff.modifications
             if "failure" in c.reason.lower() or "error" in c.reason.lower()
         ]
         if len(critical_changes) > 0:
@@ -776,7 +814,7 @@ class GenerativeLoop:
     ) -> AGENTESESpec:
         """
         Refine specification based on observed patterns and drift.
-        
+
         This closes the loop by updating the spec based on runtime behavior.
         """
         logger.info(f"Refining spec {original_spec.spec_id}")

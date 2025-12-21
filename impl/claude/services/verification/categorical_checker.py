@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 class CategoricalChecker:
     """
     Practical categorical law verification with LLM assistance.
-    
+
     Uses concrete test execution rather than pure theorem proving,
     combined with LLM analysis for pattern recognition and violation explanation.
     """
@@ -48,7 +48,7 @@ class CategoricalChecker:
     ) -> VerificationResult:
         """
         Verify (f ∘ g) ∘ h ≡ f ∘ (g ∘ h) using practical testing.
-        
+
         Tests composition associativity with concrete inputs and uses
         LLM analysis for edge case detection and violation explanation.
         """
@@ -412,19 +412,19 @@ class CategoricalChecker:
 
             prompt = f"""
             Analyze this categorical law violation:
-            
-            Law: {law_type.replace('_', ' ').title()}
-            
+
+            Law: {law_type.replace("_", " ").title()}
+
             Morphisms involved:
             {chr(10).join(morphism_descriptions)}
-            
+
             Test Input: {counter_example.test_input}
             Expected Result: {counter_example.expected_result}
             Actual Result: {counter_example.actual_result}
-            
+
             Why might these results differ? What could cause {law_type} to break?
             Consider: side effects, state mutations, resource dependencies, timing, implementation bugs.
-            
+
             Provide a clear, technical explanation of the likely cause.
             """
 
@@ -445,14 +445,14 @@ class CategoricalChecker:
         try:
             prompt = f"""
             Given this categorical law violation, suggest specific fixes:
-            
+
             Counter-example: {counter_example.__dict__}
-            
+
             Provide concrete suggestions:
             1. Code changes needed
             2. Architecture adjustments
             3. Alternative composition strategies
-            
+
             Focus on practical, implementable solutions.
             """
 
@@ -479,15 +479,15 @@ class CategoricalChecker:
         try:
             prompt = f"""
             The {law_type} law verification passed for standard test inputs.
-            
+
             Morphisms:
             - {f.name}: {f.description}
             - {g.name}: {g.description}
             - {h.name}: {h.description}
-            
+
             What edge cases should be considered for {law_type}?
             What unusual inputs or conditions might reveal violations?
-            
+
             Suggest additional test scenarios to strengthen verification confidence.
             """
 
@@ -529,7 +529,7 @@ class CategoricalChecker:
     ) -> VerificationResult:
         """
         Verify functor laws: F(id) = id and F(g ∘ f) = F(g) ∘ F(f).
-        
+
         Tests that a functor preserves identity and composition structure.
         """
 
@@ -695,17 +695,17 @@ class CategoricalChecker:
 
         prompt = f"""
         Functor law verification passed for standard test inputs.
-        
+
         Functor: {functor.name} - {functor.description}
         Morphisms: {f.name}, {g.name}
-        
+
         What edge cases should be considered for functor preservation?
         Consider:
         - Nested compositions
         - Error handling and exceptions
         - Resource transformations
         - State preservation
-        
+
         Suggest additional test scenarios.
         """
 
@@ -722,7 +722,7 @@ class CategoricalChecker:
     ) -> VerificationResult:
         """
         Verify operad coherence conditions.
-        
+
         Tests that operad operations satisfy associativity and unit laws
         for multi-input compositions.
         """
@@ -738,9 +738,7 @@ class CategoricalChecker:
                 return assoc_result
 
             # 2. Verify unit laws for operad
-            unit_result = await self._verify_operad_units(
-                operad_operations, composition_rules
-            )
+            unit_result = await self._verify_operad_units(operad_operations, composition_rules)
             if not unit_result.success:
                 return unit_result
 
@@ -1006,17 +1004,17 @@ class CategoricalChecker:
 
         prompt = f"""
         Operad coherence verification passed for standard test inputs.
-        
+
         Operations: {len(operations)} operad operations
         Composition rules: {composition_rules}
-        
+
         What edge cases should be considered for operad coherence?
         Consider:
         - Complex nested compositions
         - Permutation symmetries
         - Arity mismatches
         - Partial applications
-        
+
         Suggest additional test scenarios.
         """
 
@@ -1033,7 +1031,7 @@ class CategoricalChecker:
     ) -> VerificationResult:
         """
         Verify sheaf gluing property.
-        
+
         Tests that local sections that agree on overlaps can be glued
         into a unique global section.
         """
@@ -1049,9 +1047,7 @@ class CategoricalChecker:
                 return agreement_result
 
             # 2. Verify unique gluing exists
-            gluing_result = await self._verify_unique_gluing(
-                local_sections, overlap_conditions
-            )
+            gluing_result = await self._verify_unique_gluing(local_sections, overlap_conditions)
             if not gluing_result.success:
                 return gluing_result
 
@@ -1207,21 +1203,22 @@ class CategoricalChecker:
 
         prompt = f"""
         Sheaf gluing verification passed for standard test inputs.
-        
+
         Local sections: {len(local_sections)}
         Overlap conditions: {len(overlap_conditions)}
-        
+
         What edge cases should be considered for sheaf gluing?
         Consider:
         - Empty overlaps
         - Disconnected domains
         - Infinite covers
         - Partial section definitions
-        
+
         Suggest additional test scenarios.
         """
 
         return await self._simulate_llm_call(prompt)
+
     # ========================================================================
     # Counter-Example Generation (Task 3.5)
     # ========================================================================
@@ -1234,7 +1231,7 @@ class CategoricalChecker:
     ) -> list[CounterExample]:
         """
         Generate concrete counter-examples for categorical law violations.
-        
+
         Uses LLM-assisted analysis to identify potential violation scenarios
         and generates concrete test cases that demonstrate the violations.
         """
@@ -1251,9 +1248,7 @@ class CategoricalChecker:
             counter_examples = []
 
             for scenario in violation_scenarios:
-                test_cases = await self._generate_test_cases_for_scenario(
-                    scenario, morphisms
-                )
+                test_cases = await self._generate_test_cases_for_scenario(scenario, morphisms)
 
                 for test_case in test_cases:
                     # 3. Execute test case to verify it's actually a violation
@@ -1291,8 +1286,7 @@ class CategoricalChecker:
         """Use LLM to identify potential violation scenarios."""
 
         morphism_descriptions = [
-            f"- {m.name}: {m.description} ({m.source_type} → {m.target_type})"
-            for m in morphisms
+            f"- {m.name}: {m.description} ({m.source_type} → {m.target_type})" for m in morphisms
         ]
 
         hints_text = ""
@@ -1301,12 +1295,12 @@ class CategoricalChecker:
 
         prompt = f"""
         Identify potential violation scenarios for the categorical law: {law_name}
-        
+
         Morphisms involved:
         {chr(10).join(morphism_descriptions)}
-        
+
         {hints_text}
-        
+
         For {law_name}, what specific scenarios might cause violations?
         Consider:
         - Side effects and state mutations
@@ -1315,13 +1309,13 @@ class CategoricalChecker:
         - Type mismatches and boundary conditions
         - Concurrent execution issues
         - Memory or resource constraints
-        
+
         Return 3-5 specific violation scenarios with:
         1. Scenario description
         2. Input conditions that trigger it
         3. Expected vs actual behavior
         4. Root cause analysis
-        
+
         Format as JSON array of scenarios.
         """
 
@@ -1362,7 +1356,10 @@ class CategoricalChecker:
                 },
                 {
                     "description": "Type coercion in identity composition",
-                    "input_conditions": {"type": "mixed_types", "value": {"num": 42, "str": "test"}},
+                    "input_conditions": {
+                        "type": "mixed_types",
+                        "value": {"num": 42, "str": "test"},
+                    },
                     "expected_behavior": "f ∘ id = f",
                     "actual_behavior": "Type conversion changes result",
                     "root_cause": "Implicit type conversions in composition",
@@ -1373,7 +1370,10 @@ class CategoricalChecker:
             return [
                 {
                     "description": "Functor doesn't preserve structure",
-                    "input_conditions": {"type": "structured", "value": {"nested": {"data": "test"}}},
+                    "input_conditions": {
+                        "type": "structured",
+                        "value": {"nested": {"data": "test"}},
+                    },
                     "expected_behavior": "F(g ∘ f) = F(g) ∘ F(f)",
                     "actual_behavior": "Structure is flattened or reorganized",
                     "root_cause": "Functor implementation doesn't preserve morphism structure",
@@ -1398,7 +1398,7 @@ class CategoricalChecker:
     ) -> dict[str, Any]:
         """
         Generate remediation strategies for categorical law violations.
-        
+
         Analyzes patterns across counter-examples and suggests systematic fixes.
         """
 
@@ -1468,12 +1468,14 @@ class CategoricalChecker:
 
             # Look for side effect indicators
             if counter_example.expected_result != counter_example.actual_result:
-                patterns["side_effect_indicators"].append({
-                    "input": counter_example.test_input,
-                    "difference": {
-                        "expected": counter_example.expected_result,
-                        "actual": counter_example.actual_result,
-                    },
-                })
+                patterns["side_effect_indicators"].append(
+                    {
+                        "input": counter_example.test_input,
+                        "difference": {
+                            "expected": counter_example.expected_result,
+                            "actual": counter_example.actual_result,
+                        },
+                    }
+                )
 
         return patterns

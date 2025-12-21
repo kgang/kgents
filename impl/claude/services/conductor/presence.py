@@ -416,6 +416,7 @@ class AgentCursor:
         if "behavior" in data:
             # Lazy import to avoid circular dependency
             from .behaviors import CursorBehavior
+
             behavior = CursorBehavior[data["behavior"]]
 
         # Parse canvas position

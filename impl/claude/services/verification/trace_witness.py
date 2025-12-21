@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class EnhancedTraceWitness:
     """
     Enhanced trace witness system for specification compliance verification.
-    
+
     Builds on existing kgents witness infrastructure to capture execution traces
     that serve as constructive proofs, with behavioral pattern analysis.
     """
@@ -52,7 +52,7 @@ class EnhancedTraceWitness:
     ) -> TraceWitnessResult:
         """
         Capture execution trace for an agent operation.
-        
+
         Records detailed execution steps that can serve as constructive proofs
         of specification compliance.
         """
@@ -64,9 +64,7 @@ class EnhancedTraceWitness:
 
         try:
             # 1. Execute agent operation with detailed tracing
-            execution_steps, output_data = await self._execute_with_tracing(
-                agent_path, input_data
-            )
+            execution_steps, output_data = await self._execute_with_tracing(agent_path, input_data)
 
             # 2. Verify against specification if provided
             properties_verified = []
@@ -75,9 +73,10 @@ class EnhancedTraceWitness:
             if specification_id:
                 spec = await self._get_specification(specification_id)
                 if spec:
-                    properties_verified, violations_found = await self._verify_against_specification(
-                        execution_steps, output_data, spec
-                    )
+                    (
+                        properties_verified,
+                        violations_found,
+                    ) = await self._verify_against_specification(execution_steps, output_data, spec)
 
             # 3. Determine verification status
             status = self._determine_verification_status(properties_verified, violations_found)
@@ -204,29 +203,31 @@ class EnhancedTraceWitness:
             spec_id=specification_id,
             name=f"Specification {specification_id}",
             version="1.0.0",
-            properties=frozenset([
-                SpecProperty(
-                    property_id="input_validation",
-                    property_type="safety",
-                    formal_statement="∀ input: validate(input) → safe(input)",
-                    natural_language="All inputs must be validated before processing",
-                    test_strategy="Check that input_validation step exists",
-                ),
-                SpecProperty(
-                    property_id="output_generation",
-                    property_type="liveness",
-                    formal_statement="∀ execution: eventually(output_generated)",
-                    natural_language="Every execution must eventually produce output",
-                    test_strategy="Check that output_generation step exists",
-                ),
-                SpecProperty(
-                    property_id="state_consistency",
-                    property_type="invariant",
-                    formal_statement="∀ step: consistent(step.input_state, step.output_state)",
-                    natural_language="State transitions must be consistent",
-                    test_strategy="Verify state consistency across all steps",
-                ),
-            ]),
+            properties=frozenset(
+                [
+                    SpecProperty(
+                        property_id="input_validation",
+                        property_type="safety",
+                        formal_statement="∀ input: validate(input) → safe(input)",
+                        natural_language="All inputs must be validated before processing",
+                        test_strategy="Check that input_validation step exists",
+                    ),
+                    SpecProperty(
+                        property_id="output_generation",
+                        property_type="liveness",
+                        formal_statement="∀ execution: eventually(output_generated)",
+                        natural_language="Every execution must eventually produce output",
+                        test_strategy="Check that output_generation step exists",
+                    ),
+                    SpecProperty(
+                        property_id="state_consistency",
+                        property_type="invariant",
+                        formal_statement="∀ step: consistent(step.input_state, step.output_state)",
+                        natural_language="State transitions must be consistent",
+                        test_strategy="Verify state consistency across all steps",
+                    ),
+                ]
+            ),
         )
 
         self.specification_cache[specification_id] = spec
@@ -250,19 +251,23 @@ class EnhancedTraceWitness:
                 if is_satisfied:
                     properties_verified.append(prop.property_id)
                 else:
-                    violations_found.append({
-                        "property_id": prop.property_id,
-                        "type": "property_violation",
-                        "description": f"Property '{prop.natural_language}' was not satisfied",
-                        "formal_statement": prop.formal_statement,
-                    })
+                    violations_found.append(
+                        {
+                            "property_id": prop.property_id,
+                            "type": "property_violation",
+                            "description": f"Property '{prop.natural_language}' was not satisfied",
+                            "formal_statement": prop.formal_statement,
+                        }
+                    )
 
             except Exception as e:
-                violations_found.append({
-                    "property_id": prop.property_id,
-                    "type": "verification_error",
-                    "description": f"Error verifying property: {str(e)}",
-                })
+                violations_found.append(
+                    {
+                        "property_id": prop.property_id,
+                        "type": "verification_error",
+                        "description": f"Error verifying property: {str(e)}",
+                    }
+                )
 
         return properties_verified, violations_found
 
@@ -315,8 +320,7 @@ class EnhancedTraceWitness:
         if violations_found:
             # Check severity of violations
             critical_violations = [
-                v for v in violations_found
-                if v.get("type") == "execution_error"
+                v for v in violations_found if v.get("type") == "execution_error"
             ]
             if critical_violations:
                 return VerificationStatus.FAILURE
@@ -369,50 +373,56 @@ class EnhancedTraceWitness:
         step_sequence = [step.operation for step in trace_result.intermediate_steps]
         flow_pattern_id = f"flow_{hash(tuple(step_sequence)) % 10000}"
 
-        patterns.append(BehavioralPattern(
-            pattern_id=flow_pattern_id,
-            pattern_type="execution_flow",
-            description=f"Execution flow: {' → '.join(step_sequence)}",
-            frequency=1,
-            example_traces=[trace_result.witness_id],
-            metadata={
-                "step_count": len(step_sequence),
-                "operations": step_sequence,
-            },
-        ))
+        patterns.append(
+            BehavioralPattern(
+                pattern_id=flow_pattern_id,
+                pattern_type="execution_flow",
+                description=f"Execution flow: {' → '.join(step_sequence)}",
+                frequency=1,
+                example_traces=[trace_result.witness_id],
+                metadata={
+                    "step_count": len(step_sequence),
+                    "operations": step_sequence,
+                },
+            )
+        )
 
         # Pattern 2: Performance pattern
         if trace_result.execution_time_ms is not None:
             perf_category = "fast" if trace_result.execution_time_ms < 100 else "slow"
             perf_pattern_id = f"performance_{perf_category}"
 
-            patterns.append(BehavioralPattern(
-                pattern_id=perf_pattern_id,
-                pattern_type="performance",
-                description=f"Performance category: {perf_category}",
-                frequency=1,
-                example_traces=[trace_result.witness_id],
-                metadata={
-                    "execution_time_ms": trace_result.execution_time_ms,
-                    "category": perf_category,
-                },
-            ))
+            patterns.append(
+                BehavioralPattern(
+                    pattern_id=perf_pattern_id,
+                    pattern_type="performance",
+                    description=f"Performance category: {perf_category}",
+                    frequency=1,
+                    example_traces=[trace_result.witness_id],
+                    metadata={
+                        "execution_time_ms": trace_result.execution_time_ms,
+                        "category": perf_category,
+                    },
+                )
+            )
 
         # Pattern 3: Verification status pattern
         status_pattern_id = f"verification_{trace_result.verification_status.value}"
 
-        patterns.append(BehavioralPattern(
-            pattern_id=status_pattern_id,
-            pattern_type="verification_outcome",
-            description=f"Verification status: {trace_result.verification_status.value}",
-            frequency=1,
-            example_traces=[trace_result.witness_id],
-            metadata={
-                "status": trace_result.verification_status.value,
-                "properties_verified": len(trace_result.properties_verified),
-                "violations_found": len(trace_result.violations_found),
-            },
-        ))
+        patterns.append(
+            BehavioralPattern(
+                pattern_id=status_pattern_id,
+                pattern_type="verification_outcome",
+                description=f"Verification status: {trace_result.verification_status.value}",
+                frequency=1,
+                example_traces=[trace_result.witness_id],
+                metadata={
+                    "status": trace_result.verification_status.value,
+                    "properties_verified": len(trace_result.properties_verified),
+                    "violations_found": len(trace_result.violations_found),
+                },
+            )
+        )
 
         return patterns
 
@@ -422,7 +432,7 @@ class EnhancedTraceWitness:
     ) -> dict[str, Any]:
         """
         Analyze behavioral patterns in the trace corpus.
-        
+
         Provides insights into system behavior and potential improvements.
         """
 
@@ -431,16 +441,10 @@ class EnhancedTraceWitness:
         # Filter patterns by type if specified
         patterns_to_analyze = list(self.behavioral_patterns.values())
         if pattern_type:
-            patterns_to_analyze = [
-                p for p in patterns_to_analyze
-                if p.pattern_type == pattern_type
-            ]
+            patterns_to_analyze = [p for p in patterns_to_analyze if p.pattern_type == pattern_type]
 
         # Analyze pattern frequencies
-        pattern_frequencies = {
-            p.pattern_id: p.frequency
-            for p in patterns_to_analyze
-        }
+        pattern_frequencies = {p.pattern_id: p.frequency for p in patterns_to_analyze}
 
         # Find most common patterns
         most_common = sorted(
@@ -459,9 +463,7 @@ class EnhancedTraceWitness:
         llm_insights = await self._llm_pattern_analysis(patterns_to_analyze)
 
         # Generate improvement suggestions
-        improvement_suggestions = await self._generate_improvement_suggestions(
-            patterns_to_analyze
-        )
+        improvement_suggestions = await self._generate_improvement_suggestions(patterns_to_analyze)
 
         return {
             "total_patterns": len(patterns_to_analyze),
@@ -491,18 +493,18 @@ class EnhancedTraceWitness:
 
         prompt = f"""
         Analyze these behavioral patterns from agent execution traces:
-        
+
         {chr(10).join(pattern_summary)}
-        
+
         Total patterns: {len(patterns)}
-        
+
         What insights can you provide about:
         1. System behavior trends
         2. Performance characteristics
         3. Potential optimization opportunities
         4. Reliability and consistency patterns
         5. Areas of concern or improvement
-        
+
         Focus on actionable insights for system improvement.
         """
 
@@ -522,17 +524,19 @@ class EnhancedTraceWitness:
 
         if slow_patterns:
             total_slow = sum(p.frequency for p in slow_patterns)
-            suggestions.append({
-                "type": "performance_optimization",
-                "title": "Optimize Slow Execution Paths",
-                "description": f"Found {total_slow} slow executions that could be optimized",
-                "priority": "medium",
-                "implementation": [
-                    "Profile slow execution paths",
-                    "Implement caching for repeated operations",
-                    "Optimize resource-intensive steps",
-                ],
-            })
+            suggestions.append(
+                {
+                    "type": "performance_optimization",
+                    "title": "Optimize Slow Execution Paths",
+                    "description": f"Found {total_slow} slow executions that could be optimized",
+                    "priority": "medium",
+                    "implementation": [
+                        "Profile slow execution paths",
+                        "Implement caching for repeated operations",
+                        "Optimize resource-intensive steps",
+                    ],
+                }
+            )
 
         # Analyze verification patterns
         verification_patterns = [p for p in patterns if p.pattern_type == "verification_outcome"]
@@ -540,32 +544,36 @@ class EnhancedTraceWitness:
 
         if failure_patterns:
             total_failures = sum(p.frequency for p in failure_patterns)
-            suggestions.append({
-                "type": "reliability_improvement",
-                "title": "Address Verification Failures",
-                "description": f"Found {total_failures} verification failures that need attention",
-                "priority": "high",
-                "implementation": [
-                    "Analyze failure patterns for root causes",
-                    "Strengthen input validation",
-                    "Improve error handling and recovery",
-                ],
-            })
+            suggestions.append(
+                {
+                    "type": "reliability_improvement",
+                    "title": "Address Verification Failures",
+                    "description": f"Found {total_failures} verification failures that need attention",
+                    "priority": "high",
+                    "implementation": [
+                        "Analyze failure patterns for root causes",
+                        "Strengthen input validation",
+                        "Improve error handling and recovery",
+                    ],
+                }
+            )
 
         # Analyze execution flow patterns
         flow_patterns = [p for p in patterns if p.pattern_type == "execution_flow"]
         if len(flow_patterns) > 5:
-            suggestions.append({
-                "type": "standardization",
-                "title": "Standardize Execution Flows",
-                "description": f"Found {len(flow_patterns)} different execution flows - consider standardization",
-                "priority": "low",
-                "implementation": [
-                    "Identify common execution patterns",
-                    "Create standard flow templates",
-                    "Refactor agents to use consistent patterns",
-                ],
-            })
+            suggestions.append(
+                {
+                    "type": "standardization",
+                    "title": "Standardize Execution Flows",
+                    "description": f"Found {len(flow_patterns)} different execution flows - consider standardization",
+                    "priority": "low",
+                    "implementation": [
+                        "Identify common execution patterns",
+                        "Create standard flow templates",
+                        "Refactor agents to use consistent patterns",
+                    ],
+                }
+            )
 
         return suggestions
 
@@ -598,15 +606,9 @@ class EnhancedTraceWitness:
             status_counts[status] = status_counts.get(status, 0) + 1
 
         # Performance statistics
-        execution_times = [
-            t.execution_time_ms for t in traces
-            if t.execution_time_ms is not None
-        ]
+        execution_times = [t.execution_time_ms for t in traces if t.execution_time_ms is not None]
 
-        avg_execution_time = (
-            sum(execution_times) / len(execution_times)
-            if execution_times else 0
-        )
+        avg_execution_time = sum(execution_times) / len(execution_times) if execution_times else 0
 
         # Agent path distribution
         agent_paths = {}
@@ -675,9 +677,10 @@ class EnhancedTraceWitness:
             similarity_score += 0.2
 
         # Performance similarity (within 50% range)
-        if (trace1.execution_time_ms is not None and
-            trace2.execution_time_ms is not None):
-            time_ratio = min(trace1.execution_time_ms, trace2.execution_time_ms) / max(trace1.execution_time_ms, trace2.execution_time_ms)
+        if trace1.execution_time_ms is not None and trace2.execution_time_ms is not None:
+            time_ratio = min(trace1.execution_time_ms, trace2.execution_time_ms) / max(
+                trace1.execution_time_ms, trace2.execution_time_ms
+            )
             if time_ratio > 0.5:
                 similarity_score += 0.1
 

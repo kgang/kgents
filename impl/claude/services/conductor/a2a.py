@@ -65,11 +65,11 @@ logger = logging.getLogger(__name__)
 class A2AMessageType(Enum):
     """Types of agent-to-agent messages."""
 
-    REQUEST = auto()      # Ask another agent to do something
-    RESPONSE = auto()     # Reply to a request
-    HANDOFF = auto()      # Transfer context and responsibility
-    NOTIFY = auto()       # Broadcast information (no response expected)
-    HEARTBEAT = auto()    # Presence signal
+    REQUEST = auto()  # Ask another agent to do something
+    RESPONSE = auto()  # Reply to a request
+    HANDOFF = auto()  # Transfer context and responsibility
+    NOTIFY = auto()  # Broadcast information (no response expected)
+    HEARTBEAT = auto()  # Presence signal
 
 
 # =============================================================================
@@ -214,10 +214,7 @@ class A2AChannel:
 
         await bus.publish(topic, message.to_dict())
 
-        logger.debug(
-            f"A2A {message.message_type.name}: "
-            f"{message.from_agent} -> {message.to_agent}"
-        )
+        logger.debug(f"A2A {message.message_type.name}: {message.from_agent} -> {message.to_agent}")
 
     async def request(
         self,

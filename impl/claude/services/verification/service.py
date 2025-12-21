@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 class VerificationService:
     """
     Core verification service implementing formal verification operations.
-    
+
     This service coordinates between different verification engines:
     - Graph engine for derivation analysis
     - Categorical checker for mathematical law verification
@@ -80,7 +80,7 @@ class VerificationService:
     async def analyze_specification(self, spec_path: str) -> VerificationGraphResult:
         """
         Analyze a specification for consistency and improvements.
-        
+
         Creates a verification graph showing derivation paths from principles
         to implementation, identifies contradictions and orphaned nodes.
         """
@@ -95,7 +95,9 @@ class VerificationService:
             name=graph_result.name,
             description=f"Verification graph for specification at {spec_path}",
             nodes={node.node_id: node.__dict__ for node in graph_result.nodes},
-            edges={f"{edge.source_id}->{edge.target_id}": edge.__dict__ for edge in graph_result.edges},
+            edges={
+                f"{edge.source_id}->{edge.target_id}": edge.__dict__ for edge in graph_result.edges
+            },
         )
 
         # Update with analysis results
@@ -103,7 +105,9 @@ class VerificationService:
             graph_id=stored_graph.graph_id,
             contradictions=[c.__dict__ for c in graph_result.contradictions],
             orphaned_nodes=graph_result.orphaned_nodes,
-            derivation_paths={f"path_{i}": path.__dict__ for i, path in enumerate(graph_result.derivation_paths)},
+            derivation_paths={
+                f"path_{i}": path.__dict__ for i, path in enumerate(graph_result.derivation_paths)
+            },
             status=graph_result.status,
         )
 
@@ -132,12 +136,14 @@ class VerificationService:
     ) -> VerificationResult:
         """
         Verify composition associativity: (f ∘ g) ∘ h ≡ f ∘ (g ∘ h).
-        
+
         Uses practical testing with concrete inputs plus LLM analysis
         for edge case detection and violation explanation.
         """
 
-        logger.info(f"Verifying composition associativity for morphisms: {f.name}, {g.name}, {h.name}")
+        logger.info(
+            f"Verifying composition associativity for morphisms: {f.name}, {g.name}, {h.name}"
+        )
 
         # Use categorical checker for verification
         result = await self.categorical_checker.verify_composition_associativity(f, g, h)
@@ -191,7 +197,7 @@ class VerificationService:
     ) -> TraceWitnessResult:
         """
         Capture a trace witness as constructive proof of behavior.
-        
+
         Extends the existing kgents witness system with formal verification
         capabilities and specification compliance checking.
         """
@@ -260,7 +266,7 @@ class VerificationService:
     async def generate_improvements(self) -> list[ImprovementProposalResult]:
         """
         Generate improvement suggestions based on trace analysis.
-        
+
         Uses LLM-assisted pattern recognition to identify opportunities
         for specification and implementation improvements.
         """
@@ -308,7 +314,7 @@ class VerificationService:
     ) -> SemanticConsistencyResult:
         """
         Verify semantic consistency across specification documents.
-        
+
         Analyzes multiple documents for concept consistency, cross-references,
         and backward compatibility.
         """
@@ -341,7 +347,9 @@ class VerificationService:
                     suggested_fix="; ".join(result.suggestions),
                 )
 
-        logger.info(f"Completed semantic consistency analysis: {len(result.conflicts)} conflicts found")
+        logger.info(
+            f"Completed semantic consistency analysis: {len(result.conflicts)} conflicts found"
+        )
 
         return result
 
@@ -357,7 +365,7 @@ class VerificationService:
     ) -> HoTTTypeResult:
         """
         Create HoTT type representation for an agent.
-        
+
         Represents agents as homotopy types with natural equivalence structure
         for univalent treatment of isomorphic specifications.
         """
@@ -373,6 +381,7 @@ class VerificationService:
         logger.info(f"Created HoTT type: {hott_type.type_id}")
 
         return hott_type
+
     # ========================================================================
     # Extended Categorical Verification (Tasks 3.3, 3.5)
     # ========================================================================
@@ -473,7 +482,9 @@ class VerificationService:
         # Store counter-examples for analysis
         for counter_example in counter_examples:
             await self.persistence.create_categorical_violation(
-                violation_type=getattr(ViolationType, law_name.upper(), ViolationType.SEMANTIC_INCONSISTENCY),
+                violation_type=getattr(
+                    ViolationType, law_name.upper(), ViolationType.SEMANTIC_INCONSISTENCY
+                ),
                 law_description=f"Generated counter-example for {law_name}",
                 counter_example=counter_example,
                 llm_analysis=f"Counter-example generated for {law_name}",

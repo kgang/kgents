@@ -35,10 +35,10 @@ from services.interactive_text.polynomial import TransitionOutput
 
 class DocumentEventType(Enum):
     """Types of document events emitted by the polynomial state machine.
-    
+
     These events correspond to state transitions in the DocumentPolynomial
     and are emitted through the DataBus for cross-jewel coordination.
-    
+
     Requirements: 3.6, 11.1
     """
 
@@ -77,18 +77,15 @@ _TRANSITION_TO_EVENT: dict[tuple[DocumentState, str], DocumentEventType] = {
     (DocumentState.VIEWING, "hover"): DocumentEventType.TOKEN_HOVERED,
     (DocumentState.VIEWING, "click"): DocumentEventType.TOKEN_CLICKED,
     (DocumentState.VIEWING, "drag"): DocumentEventType.TOKEN_DRAGGED,
-
     # EDITING transitions
     (DocumentState.EDITING, "save"): DocumentEventType.SAVE_REQUESTED,
     (DocumentState.EDITING, "cancel"): DocumentEventType.EDIT_CANCELLED,
     (DocumentState.EDITING, "continue_edit"): DocumentEventType.EDIT_CONTINUED,
     (DocumentState.EDITING, "hover"): DocumentEventType.TOKEN_HOVERED,
-
     # SYNCING transitions
     (DocumentState.SYNCING, "wait"): DocumentEventType.SYNC_COMPLETED,
     (DocumentState.SYNCING, "force_local"): DocumentEventType.LOCAL_FORCED,
     (DocumentState.SYNCING, "force_remote"): DocumentEventType.REMOTE_FORCED,
-
     # CONFLICTING transitions
     (DocumentState.CONFLICTING, "resolve"): DocumentEventType.CONFLICT_RESOLVED,
     (DocumentState.CONFLICTING, "abort"): DocumentEventType.CONFLICT_ABORTED,
@@ -104,11 +101,11 @@ _TRANSITION_TO_EVENT: dict[tuple[DocumentState, str], DocumentEventType] = {
 @dataclass(frozen=True)
 class DocumentEvent:
     """An event representing a document state transition.
-    
+
     DocumentEvents are emitted by the Document Polynomial on every state
     transition. They are consumed by verification, memory, witness, and
     UI services for cross-jewel coordination.
-    
+
     Attributes:
         event_id: Unique identifier for this event
         event_type: The type of document event
@@ -121,7 +118,7 @@ class DocumentEvent:
         source: Source identifier (e.g., "document_polynomial")
         causal_parent: ID of the event that caused this one (for ordering)
         metadata: Additional event-specific data
-        
+
     Requirements: 3.6, 11.1
     """
 
@@ -151,7 +148,7 @@ class DocumentEvent:
         metadata: dict[str, Any] | None = None,
     ) -> DocumentEvent:
         """Factory for creating document events with sensible defaults.
-        
+
         Args:
             event_type: The type of document event
             document_path: Path to the document
@@ -162,7 +159,7 @@ class DocumentEvent:
             source: Source identifier
             causal_parent: ID of the causing event
             metadata: Additional event data
-            
+
         Returns:
             A new DocumentEvent instance
         """
@@ -192,9 +189,9 @@ class DocumentEvent:
         metadata: dict[str, Any] | None = None,
     ) -> DocumentEvent:
         """Create event from a polynomial transition.
-        
+
         Automatically determines the event type from the transition.
-        
+
         Args:
             document_path: Path to the document
             previous_state: State before the transition
@@ -203,7 +200,7 @@ class DocumentEvent:
             output: The transition output
             causal_parent: ID of the causing event
             metadata: Additional event data
-            
+
         Returns:
             A new DocumentEvent instance
         """
@@ -260,17 +257,17 @@ DEFAULT_BUFFER_SIZE: Final[int] = 1000
 
 class DocumentEventBus:
     """Event bus for document state transitions.
-    
+
     This bus is specific to the interactive text service and emits
     DocumentEvents on polynomial state transitions. It can be bridged
     to the global DataBus for cross-jewel coordination.
-    
+
     Features:
     - Multiple subscribers per event type
     - Async, non-blocking emission
     - Replay capability (for late subscribers)
     - Causal ordering guarantees
-    
+
     Requirements: 3.6, 11.1
     """
 
@@ -286,9 +283,9 @@ class DocumentEventBus:
 
     async def emit(self, event: DocumentEvent) -> None:
         """Emit an event to all subscribers.
-        
+
         Non-blocking: subscribers run in background tasks.
-        
+
         Args:
             event: The document event to emit
         """
@@ -318,10 +315,10 @@ class DocumentEventBus:
         metadata: dict[str, Any] | None = None,
     ) -> DocumentEvent:
         """Emit an event for a polynomial transition.
-        
+
         Convenience method that creates and emits a DocumentEvent
         from transition parameters.
-        
+
         Args:
             document_path: Path to the document
             previous_state: State before the transition
@@ -329,7 +326,7 @@ class DocumentEventBus:
             new_state: State after the transition
             output: The transition output
             metadata: Additional event data
-            
+
         Returns:
             The emitted DocumentEvent
         """
@@ -360,11 +357,11 @@ class DocumentEventBus:
         handler: DocumentEventHandler,
     ) -> Callable[[], None]:
         """Subscribe to events of a specific type.
-        
+
         Args:
             event_type: The type of events to subscribe to
             handler: Async function to call for each event
-            
+
         Returns:
             Unsubscribe function (call to stop receiving events)
         """
@@ -382,10 +379,10 @@ class DocumentEventBus:
         handler: DocumentEventHandler,
     ) -> Callable[[], None]:
         """Subscribe to ALL event types.
-        
+
         Args:
             handler: Async function to call for each event
-            
+
         Returns:
             Unsubscribe function
         """
@@ -405,14 +402,14 @@ class DocumentEventBus:
         event_type: DocumentEventType | None = None,
     ) -> int:
         """Replay buffered events to a handler.
-        
+
         Useful for late subscribers to catch up.
-        
+
         Args:
             handler: Async function to call for each event
             since: Only replay events after this timestamp (None = all)
             event_type: Only replay events of this type (None = all)
-            
+
         Returns:
             Count of replayed events
         """
@@ -464,17 +461,17 @@ class DocumentEventBus:
 
 class EventEmittingPolynomial:
     """Document Polynomial wrapper that emits events on transitions.
-    
+
     This class wraps the DocumentPolynomial state machine and emits
     DocumentEvents through the DocumentEventBus on every transition.
-    
+
     Usage:
         bus = DocumentEventBus()
         poly = EventEmittingPolynomial(bus, document_path="/path/to/doc.md")
-        
+
         # Transition emits event automatically
         new_state, output = await poly.transition(DocumentState.VIEWING, "edit")
-        
+
     Requirements: 3.6, 11.1
     """
 
@@ -484,7 +481,7 @@ class EventEmittingPolynomial:
         document_path: str | Path | None = None,
     ) -> None:
         """Initialize event-emitting polynomial.
-        
+
         Args:
             bus: The event bus to emit events to
             document_path: Path to the document (for event metadata)
@@ -499,12 +496,12 @@ class EventEmittingPolynomial:
         metadata: dict[str, Any] | None = None,
     ) -> tuple[DocumentState, TransitionOutput, DocumentEvent]:
         """Perform transition and emit event.
-        
+
         Args:
             state: Current document state
             input_action: The input action to process
             metadata: Additional event metadata
-            
+
         Returns:
             Tuple of (new_state, output, event)
         """

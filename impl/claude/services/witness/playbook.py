@@ -478,7 +478,11 @@ class Playbook:
 
     def cancel(self, reason: str = "") -> None:
         """Cancel the Playbook."""
-        if self.status in {PlaybookStatus.COMPLETE, PlaybookStatus.FAILED, PlaybookStatus.CANCELLED}:
+        if self.status in {
+            PlaybookStatus.COMPLETE,
+            PlaybookStatus.FAILED,
+            PlaybookStatus.CANCELLED,
+        }:
             raise PlaybookError(f"Cannot cancel Playbook in status {self.status.name}")
 
         self.status = PlaybookStatus.CANCELLED

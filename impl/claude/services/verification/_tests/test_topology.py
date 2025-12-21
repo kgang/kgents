@@ -32,11 +32,13 @@ from services.verification.topology import (
 @st.composite
 def node_id_strategy(draw: st.DrawFn) -> str:
     """Generate valid node IDs."""
-    return draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=1,
-        max_size=20,
-    ))
+    return draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=1,
+            max_size=20,
+        )
+    )
 
 
 @st.composite
@@ -86,12 +88,14 @@ def cover_strategy(draw: st.DrawFn, node_ids: list[str] | None = None) -> Cover:
 
     if node_ids:
         member_count = draw(st.integers(min_value=1, max_value=min(5, len(node_ids))))
-        members = draw(st.lists(
-            st.sampled_from(node_ids),
-            min_size=member_count,
-            max_size=member_count,
-            unique=True,
-        ))
+        members = draw(
+            st.lists(
+                st.sampled_from(node_ids),
+                min_size=member_count,
+                max_size=member_count,
+                unique=True,
+            )
+        )
     else:
         members = draw(st.lists(node_id_strategy(), min_size=1, max_size=5, unique=True))
 
@@ -404,11 +408,13 @@ class TestEdgeCases:
         """Self-loop edges should be handled."""
         topology = MindMapTopology()
         topology.add_node(TopologicalNode(id="a", content="A"))
-        topology.add_edge(ContinuousMap(
-            source="a",
-            target="a",
-            mapping_type=MappingType.REFERENCE,
-        ))
+        topology.add_edge(
+            ContinuousMap(
+                source="a",
+                target="a",
+                mapping_type=MappingType.REFERENCE,
+            )
+        )
 
         # Node should be its own neighbor
         assert "a" in topology.nodes["a"].neighborhood

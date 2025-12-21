@@ -442,7 +442,7 @@ async def regenerate_single(
 # =============================================================================
 
 
-def main():
+def main() -> None:
     """CLI entry point for bootstrap regeneration."""
     import asyncio
 

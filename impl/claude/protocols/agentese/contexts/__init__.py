@@ -75,6 +75,7 @@ from .design import (
     create_design_node,
     create_design_resolver,
 )
+
 # Note: Forest, Gardener, and Prompt contexts were deprecated 2025-12-21
 # See: spec/protocols/_archive/gardener-evergreen-heritage.md
 from .self_ import (

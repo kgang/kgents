@@ -35,13 +35,14 @@ from services.interactive_text.registry import TokenMatch, TokenRegistry
 @dataclass(frozen=True)
 class SourcePosition:
     """Position in source document.
-    
+
     Attributes:
         start: Start byte offset in source
         end: End byte offset in source
         line: Line number (1-indexed)
         column: Column number (1-indexed)
     """
+
     start: int
     end: int
     line: int = 1
@@ -56,17 +57,18 @@ class SourcePosition:
 @dataclass(frozen=True)
 class TextSpan:
     """A span of text in the document.
-    
+
     TextSpans are the atomic units of the parsed document. They can be
     either plain text or recognized tokens. The parser preserves all
     text spans exactly as they appear in the source.
-    
+
     Attributes:
         text: The exact text content
         position: Position in source document
         is_token: Whether this span is a recognized token
         token_match: The token match if this is a token
     """
+
     text: str
     position: SourcePosition
     is_token: bool = False
@@ -83,19 +85,20 @@ class TextSpan:
 @dataclass
 class ParsedDocument:
     """A parsed document with extracted tokens.
-    
+
     The ParsedDocument maintains the complete structure of the source
     document as a sequence of TextSpans. This allows for:
     - Byte-identical roundtrip rendering
     - Accurate token positions
     - Incremental updates
-    
+
     Attributes:
         source: Original source text
         spans: Sequence of text spans (plain text and tokens)
         path: Optional file path
         state: Document polynomial state
     """
+
     source: str
     spans: tuple[TextSpan, ...]
     path: Path | None = None
@@ -113,10 +116,10 @@ class ParsedDocument:
 
     def get_token_at(self, offset: int) -> TextSpan | None:
         """Get token at a specific byte offset.
-        
+
         Args:
             offset: Byte offset in source
-            
+
         Returns:
             Token span at offset, or None if no token at that position
         """
@@ -127,11 +130,11 @@ class ParsedDocument:
 
     def get_tokens_in_range(self, start: int, end: int) -> list[TextSpan]:
         """Get all tokens overlapping a byte range.
-        
+
         Args:
             start: Start byte offset
             end: End byte offset
-            
+
         Returns:
             List of token spans overlapping the range
         """
@@ -145,13 +148,13 @@ class ParsedDocument:
 
     def render(self) -> str:
         """Render document back to text.
-        
+
         This method produces byte-identical output to the original source,
         guaranteeing roundtrip fidelity.
-        
+
         Returns:
             The rendered document text
-            
+
         Requirements: 16.2
         """
         return "".join(span.text for span in self.spans)
@@ -179,14 +182,15 @@ class ParsedDocument:
 @dataclass
 class SourceMap:
     """Maps tokens to their source positions.
-    
+
     The SourceMap provides efficient lookup of tokens by position
     and supports incremental updates when the document changes.
-    
+
     Attributes:
         document: The parsed document
         _token_index: Index of tokens by start position
     """
+
     document: ParsedDocument
     _token_index: dict[int, TextSpan] = field(default_factory=dict)
 
@@ -197,18 +201,16 @@ class SourceMap:
     def _rebuild_index(self) -> None:
         """Rebuild the token index from the document."""
         self._token_index = {
-            span.position.start: span
-            for span in self.document.spans
-            if span.is_token
+            span.position.start: span for span in self.document.spans if span.is_token
         }
 
     def get_token_at_position(self, line: int, column: int) -> TextSpan | None:
         """Get token at a line/column position.
-        
+
         Args:
             line: Line number (1-indexed)
             column: Column number (1-indexed)
-            
+
         Returns:
             Token at position, or None
         """
@@ -238,22 +240,22 @@ class SourceMap:
 
 class MarkdownParser:
     """Parser for markdown documents with token extraction.
-    
+
     The MarkdownParser extracts meaning tokens from markdown text while
     preserving all whitespace and formatting for roundtrip fidelity.
-    
+
     Key guarantees:
     - parse(text).render() == text (roundtrip fidelity)
     - All tokens have accurate source positions
     - Malformed markdown is handled gracefully
-    
+
     Usage:
         parser = MarkdownParser()
         doc = parser.parse(text)
         tokens = doc.tokens
         rendered = doc.render()
         assert rendered == text  # Roundtrip fidelity
-        
+
     Requirements: 16.1, 16.5, 16.6
     """
 
@@ -263,17 +265,17 @@ class MarkdownParser:
 
     def parse(self, text: str, path: Path | None = None) -> ParsedDocument:
         """Parse markdown text into a ParsedDocument.
-        
+
         This method extracts all recognized tokens while preserving
         the exact source text for roundtrip fidelity.
-        
+
         Args:
             text: The markdown text to parse
             path: Optional file path for the document
-            
+
         Returns:
             ParsedDocument with extracted tokens
-            
+
         Requirements: 16.1, 16.6
         """
         if not text:
@@ -297,13 +299,13 @@ class MarkdownParser:
 
     def parse_file(self, path: Path) -> ParsedDocument:
         """Parse a markdown file.
-        
+
         Args:
             path: Path to the markdown file
-            
+
         Returns:
             ParsedDocument with extracted tokens
-            
+
         Raises:
             FileNotFoundError: If the file doesn't exist
             UnicodeDecodeError: If the file can't be decoded as UTF-8
@@ -317,15 +319,15 @@ class MarkdownParser:
         matches: list[TokenMatch],
     ) -> list[TextSpan]:
         """Build text spans from token matches.
-        
+
         This method creates a sequence of TextSpans that covers the
         entire source text, with token spans for recognized tokens
         and plain text spans for everything else.
-        
+
         Args:
             text: The source text
             matches: Token matches from the registry
-            
+
         Returns:
             List of TextSpans covering the entire text
         """
@@ -343,34 +345,34 @@ class MarkdownParser:
         for match in non_overlapping:
             # Add plain text span before this token
             if match.start > current_pos:
-                plain_text = text[current_pos:match.start]
-                plain_pos = self._compute_position(
-                    current_pos, match.start, line, column, text
+                plain_text = text[current_pos : match.start]
+                plain_pos = self._compute_position(current_pos, match.start, line, column, text)
+                spans.append(
+                    TextSpan(
+                        text=plain_text,
+                        position=plain_pos,
+                        is_token=False,
+                    )
                 )
-                spans.append(TextSpan(
-                    text=plain_text,
-                    position=plain_pos,
-                    is_token=False,
-                ))
                 # Update line/column
-                line, column = self._update_line_column(
-                    plain_text, line, column
-                )
+                line, column = self._update_line_column(plain_text, line, column)
 
             # Add token span
-            token_text = text[match.start:match.end]
+            token_text = text[match.start : match.end]
             token_pos = SourcePosition(
                 start=match.start,
                 end=match.end,
                 line=line,
                 column=column,
             )
-            spans.append(TextSpan(
-                text=token_text,
-                position=token_pos,
-                is_token=True,
-                token_match=match,
-            ))
+            spans.append(
+                TextSpan(
+                    text=token_text,
+                    position=token_pos,
+                    is_token=True,
+                    token_match=match,
+                )
+            )
 
             # Update position
             line, column = self._update_line_column(token_text, line, column)
@@ -385,11 +387,13 @@ class MarkdownParser:
                 line=line,
                 column=column,
             )
-            spans.append(TextSpan(
-                text=remaining_text,
-                position=remaining_pos,
-                is_token=False,
-            ))
+            spans.append(
+                TextSpan(
+                    text=remaining_text,
+                    position=remaining_pos,
+                    is_token=False,
+                )
+            )
 
         return spans
 
@@ -398,13 +402,13 @@ class MarkdownParser:
         matches: list[TokenMatch],
     ) -> list[TokenMatch]:
         """Remove overlapping matches, keeping higher priority ones.
-        
+
         When tokens overlap, we keep the one with higher priority.
         If priorities are equal, we keep the one that starts first.
-        
+
         Args:
             matches: Sorted list of token matches
-            
+
         Returns:
             List of non-overlapping matches
         """
@@ -449,12 +453,12 @@ class MarkdownParser:
         column: int,
     ) -> tuple[int, int]:
         """Update line and column after processing text.
-        
+
         Args:
             text: The text that was processed
             line: Current line number
             column: Current column number
-            
+
         Returns:
             Updated (line, column) tuple
         """
@@ -475,12 +479,13 @@ class MarkdownParser:
 @dataclass
 class DocumentEdit:
     """Represents an edit to a document.
-    
+
     Attributes:
         start: Start byte offset of the edit
         end: End byte offset of the edit (exclusive)
         new_text: The new text to insert
     """
+
     start: int
     end: int
     new_text: str
@@ -503,11 +508,11 @@ class DocumentEdit:
 
 class IncrementalParser:
     """Parser supporting incremental updates.
-    
+
     The IncrementalParser extends MarkdownParser with support for
     partial re-parsing when only a portion of the document changes.
     This improves performance for large documents.
-    
+
     Requirements: 16.3, 16.4
     """
 
@@ -517,11 +522,11 @@ class IncrementalParser:
 
     def parse(self, text: str, path: Path | None = None) -> ParsedDocument:
         """Parse a document from scratch.
-        
+
         Args:
             text: The markdown text
             path: Optional file path
-            
+
         Returns:
             ParsedDocument with extracted tokens
         """
@@ -533,33 +538,27 @@ class IncrementalParser:
         edit: DocumentEdit,
     ) -> ParsedDocument:
         """Apply an edit to a document incrementally.
-        
+
         This method applies the edit and re-parses only the affected
         region, preserving tokens outside the edit range.
-        
+
         Args:
             document: The document to edit
             edit: The edit to apply
-            
+
         Returns:
             Updated ParsedDocument
-            
+
         Requirements: 16.3, 16.4
         """
         # Apply the edit to get new source text
-        new_source = (
-            document.source[:edit.start] +
-            edit.new_text +
-            document.source[edit.end:]
-        )
+        new_source = document.source[: edit.start] + edit.new_text + document.source[edit.end :]
 
         # Find the affected region
-        affected_start, affected_end = self._find_affected_region(
-            document, edit
-        )
+        affected_start, affected_end = self._find_affected_region(document, edit)
 
         # Re-parse the affected region
-        affected_text = new_source[affected_start:affected_end + edit.delta]
+        affected_text = new_source[affected_start : affected_end + edit.delta]
         affected_matches = TokenRegistry.recognize(affected_text)
 
         # Adjust match positions to document coordinates
@@ -591,14 +590,14 @@ class IncrementalParser:
         edit: DocumentEdit,
     ) -> tuple[int, int]:
         """Find the region affected by an edit.
-        
+
         We expand the edit region to include any tokens that might
         be affected by the change.
-        
+
         Args:
             document: The document being edited
             edit: The edit being applied
-            
+
         Returns:
             (start, end) of the affected region
         """
@@ -634,12 +633,12 @@ class IncrementalParser:
         new_matches: list[TokenMatch],
     ) -> list[TextSpan]:
         """Rebuild spans after an edit.
-        
+
         This method combines:
         - Spans before the affected region (unchanged)
         - New spans for the affected region
         - Spans after the affected region (with adjusted positions)
-        
+
         Args:
             document: Original document
             edit: The edit that was applied
@@ -647,7 +646,7 @@ class IncrementalParser:
             affected_start: Start of affected region
             affected_end: End of affected region (in old coordinates)
             new_matches: Token matches in the affected region
-            
+
         Returns:
             List of new spans
         """
@@ -674,17 +673,21 @@ class IncrementalParser:
                 line=span.position.line,  # Would need proper line tracking
                 column=span.position.column,
             )
-            result.append(TextSpan(
-                text=span.text,
-                position=adjusted_pos,
-                is_token=span.is_token,
-                token_match=TokenMatch(
-                    definition=span.token_match.definition,
-                    match=span.token_match.match,
-                    start=span.token_match.start + affected_start,
-                    end=span.token_match.end + affected_start,
-                ) if span.token_match else None,
-            ))
+            result.append(
+                TextSpan(
+                    text=span.text,
+                    position=adjusted_pos,
+                    is_token=span.is_token,
+                    token_match=TokenMatch(
+                        definition=span.token_match.definition,
+                        match=span.token_match.match,
+                        start=span.token_match.start + affected_start,
+                        end=span.token_match.end + affected_start,
+                    )
+                    if span.token_match
+                    else None,
+                )
+            )
 
         # Add spans after the affected region (with adjusted positions)
         for span in document.spans:
@@ -695,17 +698,21 @@ class IncrementalParser:
                     line=span.position.line,
                     column=span.position.column,
                 )
-                result.append(TextSpan(
-                    text=span.text,
-                    position=adjusted_pos,
-                    is_token=span.is_token,
-                    token_match=TokenMatch(
-                        definition=span.token_match.definition,
-                        match=span.token_match.match,
-                        start=span.token_match.start + edit.delta,
-                        end=span.token_match.end + edit.delta,
-                    ) if span.token_match else None,
-                ))
+                result.append(
+                    TextSpan(
+                        text=span.text,
+                        position=adjusted_pos,
+                        is_token=span.is_token,
+                        token_match=TokenMatch(
+                            definition=span.token_match.definition,
+                            match=span.token_match.match,
+                            start=span.token_match.start + edit.delta,
+                            end=span.token_match.end + edit.delta,
+                        )
+                        if span.token_match
+                        else None,
+                    )
+                )
 
         return result
 
@@ -717,14 +724,14 @@ class IncrementalParser:
 
 def parse_markdown(text: str, path: Path | None = None) -> ParsedDocument:
     """Parse markdown text into a ParsedDocument.
-    
+
     This is a convenience function that creates a MarkdownParser
     and parses the text.
-    
+
     Args:
         text: The markdown text to parse
         path: Optional file path
-        
+
     Returns:
         ParsedDocument with extracted tokens
     """
@@ -734,12 +741,12 @@ def parse_markdown(text: str, path: Path | None = None) -> ParsedDocument:
 
 def render_markdown(document: ParsedDocument) -> str:
     """Render a ParsedDocument back to text.
-    
+
     This is a convenience function that calls document.render().
-    
+
     Args:
         document: The document to render
-        
+
     Returns:
         The rendered markdown text
     """

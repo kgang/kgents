@@ -208,6 +208,18 @@ Combined docs: 8,243 DocNodes (7,609 code + 634 spec), 937 examples, 79 teaching
 Phase 3 generate_to_directory: GenerationManifest tracks all files + totals
 Category pages group by module: by_module dict → ## headers for each module
 No-overwrite default: check filepath.exists() before writing—prevents clobbering
+Phase 4-5: Iterator-based TeachingCollector > database—lightweight, composes with extractors
+Evidence verification: resolve test_file.py::test_name by globbing _tests/**/<file>.py
+CLI thin routing: docs.py routes to teaching.py—follows brain_thin.py pattern
+```
+
+### Foundry Phase 3: Marimo Projector (2025-12-21)
+```
+Marimo cell = self-contained Python: embed Agent ABC, source, and runtime in single output
+mo.ui.text_area + mo.ui.run_button: minimal interactive pattern for agent exploration
+Decorator stripping mandatory: @Capability.* not available in marimo runtime, strip before embed
+asyncio.run() for sync marimo cells: marimo cells are sync, wrap async agent.invoke()
+Capability badge pattern: stateful • streaming • observable or "minimal" for plain agents
 ```
 
 ---
@@ -235,4 +247,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~243/200 | Last updated: 2025-12-21 | Living Docs Phase 3 Complete*
+*Lines: ~250/200 | Last updated: 2025-12-21 | Foundry Phase 3 Complete*

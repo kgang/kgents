@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 class ImprovementCategory(str, Enum):
     """Categories of specification improvements."""
+
     PERFORMANCE = "performance"
     RELIABILITY = "reliability"
     COMPOSITION = "composition"
@@ -48,6 +49,7 @@ class ImprovementCategory(str, Enum):
 
 class RiskLevel(str, Enum):
     """Risk levels for improvement proposals."""
+
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
@@ -62,6 +64,7 @@ class RiskLevel(str, Enum):
 @dataclass
 class ImprovementProposal:
     """A formal proposal for specification improvement."""
+
     proposal_id: str
     title: str
     description: str
@@ -107,13 +110,13 @@ class PatternAnalyzer:
 
     # The 7 kgents principles for alignment checking
     KGENTS_PRINCIPLES = [
-        "Tasteful",      # Each agent serves a clear, justified purpose
-        "Curated",       # Intentional selection over exhaustive cataloging
-        "Ethical",       # Agents augment human capability, never replace judgment
+        "Tasteful",  # Each agent serves a clear, justified purpose
+        "Curated",  # Intentional selection over exhaustive cataloging
+        "Ethical",  # Agents augment human capability, never replace judgment
         "Joy-Inducing",  # Delight in interaction; personality matters
-        "Composable",    # Agents are morphisms in a category; composition is primary
-        "Heterarchical", # Agents exist in flux, not fixed hierarchy
-        "Generative",    # Spec is compression; design should generate implementation
+        "Composable",  # Agents are morphisms in a category; composition is primary
+        "Heterarchical",  # Agents exist in flux, not fixed hierarchy
+        "Generative",  # Spec is compression; design should generate implementation
     ]
 
     def __init__(self, llm_client: Any = None):
@@ -157,15 +160,17 @@ class PatternAnalyzer:
 
         if slow_patterns:
             total_slow = sum(p.frequency for p in slow_patterns)
-            opportunities.append({
-                "category": ImprovementCategory.PERFORMANCE,
-                "title": "Performance Optimization",
-                "description": f"Detected {total_slow} slow executions across {len(slow_patterns)} patterns",
-                "patterns": slow_patterns,
-                "principle": "Tasteful",  # Efficient agents serve clear purpose
-                "risk": RiskLevel.MEDIUM,
-                "impact": {"performance_improvement": "20-50%", "affected_traces": total_slow},
-            })
+            opportunities.append(
+                {
+                    "category": ImprovementCategory.PERFORMANCE,
+                    "title": "Performance Optimization",
+                    "description": f"Detected {total_slow} slow executions across {len(slow_patterns)} patterns",
+                    "patterns": slow_patterns,
+                    "principle": "Tasteful",  # Efficient agents serve clear purpose
+                    "risk": RiskLevel.MEDIUM,
+                    "impact": {"performance_improvement": "20-50%", "affected_traces": total_slow},
+                }
+            )
 
         return opportunities
 
@@ -177,19 +182,26 @@ class PatternAnalyzer:
         opportunities = []
 
         verification_patterns = [p for p in patterns if p.pattern_type == "verification_outcome"]
-        failure_patterns = [p for p in verification_patterns if p.metadata.get("status") == "failure"]
+        failure_patterns = [
+            p for p in verification_patterns if p.metadata.get("status") == "failure"
+        ]
 
         if failure_patterns:
             total_failures = sum(p.frequency for p in failure_patterns)
-            opportunities.append({
-                "category": ImprovementCategory.RELIABILITY,
-                "title": "Reliability Enhancement",
-                "description": f"Detected {total_failures} verification failures",
-                "patterns": failure_patterns,
-                "principle": "Ethical",  # Reliable agents augment capability
-                "risk": RiskLevel.HIGH,
-                "impact": {"reliability_improvement": "significant", "failures_addressed": total_failures},
-            })
+            opportunities.append(
+                {
+                    "category": ImprovementCategory.RELIABILITY,
+                    "title": "Reliability Enhancement",
+                    "description": f"Detected {total_failures} verification failures",
+                    "patterns": failure_patterns,
+                    "principle": "Ethical",  # Reliable agents augment capability
+                    "risk": RiskLevel.HIGH,
+                    "impact": {
+                        "reliability_improvement": "significant",
+                        "failures_addressed": total_failures,
+                    },
+                }
+            )
 
         return opportunities
 
@@ -204,15 +216,17 @@ class PatternAnalyzer:
 
         # Look for redundant or inefficient flows
         if len(flow_patterns) > 5:
-            opportunities.append({
-                "category": ImprovementCategory.COMPOSITION,
-                "title": "Flow Standardization",
-                "description": f"Detected {len(flow_patterns)} distinct execution flows - consider standardization",
-                "patterns": flow_patterns[:5],
-                "principle": "Composable",  # Composition is primary
-                "risk": RiskLevel.LOW,
-                "impact": {"standardization": "moderate", "flows_affected": len(flow_patterns)},
-            })
+            opportunities.append(
+                {
+                    "category": ImprovementCategory.COMPOSITION,
+                    "title": "Flow Standardization",
+                    "description": f"Detected {len(flow_patterns)} distinct execution flows - consider standardization",
+                    "patterns": flow_patterns[:5],
+                    "principle": "Composable",  # Composition is primary
+                    "risk": RiskLevel.LOW,
+                    "impact": {"standardization": "moderate", "flows_affected": len(flow_patterns)},
+                }
+            )
 
         return opportunities
 
@@ -228,22 +242,26 @@ class PatternAnalyzer:
 
         for pattern in high_freq_patterns:
             if pattern.metadata.get("emergent", False):
-                opportunities.append({
-                    "category": ImprovementCategory.EMERGENT,
-                    "title": f"Emergent Behavior: {pattern.description[:50]}",
-                    "description": f"Frequently occurring pattern ({pattern.frequency}x) suggests spec update",
-                    "patterns": [pattern],
-                    "principle": "Generative",  # Spec should capture emergent behavior
-                    "risk": RiskLevel.MEDIUM,
-                    "impact": {"spec_coverage": "improved", "pattern_frequency": pattern.frequency},
-                })
+                opportunities.append(
+                    {
+                        "category": ImprovementCategory.EMERGENT,
+                        "title": f"Emergent Behavior: {pattern.description[:50]}",
+                        "description": f"Frequently occurring pattern ({pattern.frequency}x) suggests spec update",
+                        "patterns": [pattern],
+                        "principle": "Generative",  # Spec should capture emergent behavior
+                        "risk": RiskLevel.MEDIUM,
+                        "impact": {
+                            "spec_coverage": "improved",
+                            "pattern_frequency": pattern.frequency,
+                        },
+                    }
+                )
 
         return opportunities
 
     def align_with_principle(self, opportunity: dict[str, Any]) -> str | None:
         """Determine which kgents principle an opportunity aligns with."""
         return opportunity.get("principle")
-
 
 
 # =============================================================================
@@ -342,7 +360,7 @@ class CategoricalComplianceVerifier:
     ) -> tuple[bool, str]:
         """
         Verify that a proposal maintains categorical compliance.
-        
+
         Checks:
         1. Composition associativity is preserved
         2. Identity laws are maintained
@@ -433,7 +451,7 @@ class CategoricalComplianceVerifier:
 class SelfImprovementEngine:
     """
     The self-improvement engine that orchestrates specification evolution.
-    
+
     Implements the autopilot vision where the system continuously improves
     its own specifications based on operational experience.
     """
@@ -456,7 +474,7 @@ class SelfImprovementEngine:
     ) -> list[ImprovementProposal]:
         """
         Analyze patterns and generate improvement proposals.
-        
+
         This is the main entry point for the self-improvement cycle.
         """
         logger.info(f"Analyzing {len(patterns)} patterns for improvements")
@@ -519,7 +537,7 @@ class SelfImprovementEngine:
     ) -> dict[str, Any]:
         """
         Apply a validated proposal.
-        
+
         In dry_run mode, returns what would be changed without applying.
         """
         if proposal_id not in self.proposals:
@@ -581,10 +599,13 @@ class SelfImprovementEngine:
             "total_proposals": len(self.proposals),
             "applied": len(self.applied_proposals),
             "rejected": len(self.rejected_proposals),
-            "pending": len([
-                p for p in self.proposals.values()
-                if p.status in [ProposalStatus.GENERATED, ProposalStatus.VALIDATED]
-            ]),
+            "pending": len(
+                [
+                    p
+                    for p in self.proposals.values()
+                    if p.status in [ProposalStatus.GENERATED, ProposalStatus.VALIDATED]
+                ]
+            ),
             "by_category": self._count_by_category(),
             "by_risk": self._count_by_risk(),
         }
@@ -612,7 +633,7 @@ class SelfImprovementEngine:
     ) -> dict[str, Any]:
         """
         Run a complete improvement cycle.
-        
+
         1. Analyze patterns
         2. Generate proposals
         3. Validate proposals

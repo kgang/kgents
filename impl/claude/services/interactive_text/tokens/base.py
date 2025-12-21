@@ -35,11 +35,11 @@ T = TypeVar("T")  # Projection target type
 @dataclass(frozen=True)
 class ExecutionTrace:
     """Trace of a token interaction for formal verification.
-    
+
     ExecutionTraces capture the details of token interactions for
     integration with the verification system. They form the basis
     of Trace_Witnesses that provide constructive proofs of behavior.
-    
+
     Attributes:
         agent_path: AGENTESE path of the handler
         operation: The operation performed (e.g., "toggle", "navigate")
@@ -71,11 +71,11 @@ class ExecutionTrace:
 @dataclass(frozen=True)
 class TraceWitness:
     """A constructive proof of interaction captured for formal verification.
-    
+
     TraceWitnesses are created when tokens are interacted with, providing
     evidence that can be used by the verification system to prove
     correctness properties.
-    
+
     Attributes:
         id: Unique identifier for this witness
         trace: The execution trace being witnessed
@@ -100,13 +100,13 @@ class TraceWitness:
 
 class BaseMeaningToken(ABC, Generic[T]):
     """Base implementation for meaning tokens with interaction handling.
-    
+
     This class extends the MeaningToken protocol with concrete implementations
     for common functionality including:
     - Affordance retrieval based on observer capabilities
     - Interaction handling with trace witness capture
     - Token serialization
-    
+
     Subclasses must implement:
     - token_type: Return the token type name
     - source_text: Return the original matched text
@@ -114,7 +114,7 @@ class BaseMeaningToken(ABC, Generic[T]):
     - get_affordances: Return affordances for an observer
     - project: Project to target-specific rendering
     - _execute_action: Execute the actual action logic
-    
+
     Type Parameters:
         T: The type of the projection target
     """
@@ -150,12 +150,12 @@ class BaseMeaningToken(ABC, Generic[T]):
     @abstractmethod
     async def get_affordances(self, observer: Observer) -> list[Affordance]:
         """Get available affordances for this observer.
-        
+
         Affordances may be filtered based on observer capabilities and role.
-        
+
         Args:
             observer: The observer requesting affordances
-            
+
         Returns:
             List of available affordances for this observer
         """
@@ -182,15 +182,15 @@ class BaseMeaningToken(ABC, Generic[T]):
         **kwargs: Any,
     ) -> Any:
         """Execute the actual action logic.
-        
+
         This method is called by on_interact after affordance validation.
         Subclasses implement the specific action behavior here.
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             The result of the action
         """
@@ -204,22 +204,22 @@ class BaseMeaningToken(ABC, Generic[T]):
         **kwargs: Any,
     ) -> InteractionResult:
         """Handle interaction with this token.
-        
+
         This method:
         1. Validates the action is available for this observer
         2. Executes the action
         3. Captures a trace witness for formal verification (if enabled)
         4. Returns the interaction result
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             capture_trace: Whether to capture a trace witness (default True)
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             InteractionResult with success status, data, and optional witness ID
-            
+
         Requirements: 1.2, 6.3, 12.1
         """
         # Get available affordances for this observer
@@ -262,19 +262,19 @@ class BaseMeaningToken(ABC, Generic[T]):
         output_data: Any,
     ) -> TraceWitness:
         """Capture a trace witness for formal verification.
-        
+
         Creates an ExecutionTrace and wraps it in a TraceWitness for
         integration with the verification system.
-        
+
         Args:
             affordance: The affordance that was invoked
             observer: The observer who performed the interaction
             input_data: Input data for the operation
             output_data: Output data from the operation
-            
+
         Returns:
             TraceWitness capturing the interaction
-            
+
         Requirements: 6.3, 12.1
         """
         import uuid
@@ -314,17 +314,17 @@ def filter_affordances_by_observer(
     required_capabilities: dict[str, frozenset[str]] | None = None,
 ) -> list[Affordance]:
     """Filter affordances based on observer capabilities and role.
-    
+
     This utility function filters affordances to only include those
     that the observer can actually use based on their capabilities.
-    
+
     Args:
         affordances: All affordances for the token
         observer: The observer to filter for
         required_capabilities: Optional mapping of affordance names to
             required capabilities. If not provided, all affordances
             are returned.
-            
+
     Returns:
         List of affordances available to this observer
     """
@@ -338,13 +338,15 @@ def filter_affordances_by_observer(
             result.append(affordance)
         else:
             # Return disabled version of affordance
-            result.append(Affordance(
-                name=affordance.name,
-                action=affordance.action,
-                handler=affordance.handler,
-                enabled=False,
-                description=f"{affordance.description} (requires: {', '.join(required)})",
-            ))
+            result.append(
+                Affordance(
+                    name=affordance.name,
+                    action=affordance.action,
+                    handler=affordance.handler,
+                    enabled=False,
+                    description=f"{affordance.description} (requires: {', '.join(required)})",
+                )
+            )
 
     return result
 

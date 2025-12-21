@@ -35,7 +35,7 @@
 ### Foundry Synthesis
 | Plan | Status | Notes |
 |------|--------|-------|
-| `foundry-synthesis.md` | **Phase 2 ✅** | WASM + Target Selection, 264 tests (Phase 3: Marimo next) |
+| `foundry-synthesis.md` | **Phase 3 ✅** | Marimo Integration complete, 366 tests (Phase 4: Foundry Service next) |
 
 ### Research
 | Plan | Status | Notes |

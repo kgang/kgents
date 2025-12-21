@@ -33,11 +33,13 @@ from services.verification.hott import (
 @st.composite
 def type_name_strategy(draw: st.DrawFn) -> str:
     """Generate valid type names."""
-    return draw(st.text(
-        alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-        min_size=1,
-        max_size=20,
-    ))
+    return draw(
+        st.text(
+            alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+            min_size=1,
+            max_size=20,
+        )
+    )
 
 
 @st.composite
@@ -45,16 +47,20 @@ def hott_type_strategy(draw: st.DrawFn) -> HoTTType:
     """Generate random HoTT types."""
     name = draw(type_name_strategy())
     universe_level = draw(st.sampled_from(list(UniverseLevel)))
-    constructors = draw(st.frozensets(
-        st.text(alphabet="abcdefghijklmnop", min_size=1, max_size=10),
-        min_size=0,
-        max_size=5,
-    ))
-    eliminators = draw(st.frozensets(
-        st.text(alphabet="abcdefghijklmnop", min_size=1, max_size=10),
-        min_size=0,
-        max_size=3,
-    ))
+    constructors = draw(
+        st.frozensets(
+            st.text(alphabet="abcdefghijklmnop", min_size=1, max_size=10),
+            min_size=0,
+            max_size=5,
+        )
+    )
+    eliminators = draw(
+        st.frozensets(
+            st.text(alphabet="abcdefghijklmnop", min_size=1, max_size=10),
+            min_size=0,
+            max_size=3,
+        )
+    )
 
     return HoTTType(
         name=name,
@@ -67,28 +73,32 @@ def hott_type_strategy(draw: st.DrawFn) -> HoTTType:
 @st.composite
 def simple_value_strategy(draw: st.DrawFn) -> object:
     """Generate simple values for isomorphism testing."""
-    return draw(st.one_of(
-        st.integers(min_value=-100, max_value=100),
-        st.text(min_size=0, max_size=20),
-        st.lists(st.integers(), min_size=0, max_size=5),
-        st.dictionaries(
-            st.text(min_size=1, max_size=5),
-            st.integers(),
-            min_size=0,
-            max_size=3,
-        ),
-    ))
+    return draw(
+        st.one_of(
+            st.integers(min_value=-100, max_value=100),
+            st.text(min_size=0, max_size=20),
+            st.lists(st.integers(), min_size=0, max_size=5),
+            st.dictionaries(
+                st.text(min_size=1, max_size=5),
+                st.integers(),
+                min_size=0,
+                max_size=3,
+            ),
+        )
+    )
 
 
 @st.composite
 def isomorphic_dict_pair_strategy(draw: st.DrawFn) -> tuple[dict[str, int], dict[str, int]]:
     """Generate pairs of isomorphic dictionaries (same keys AND same values)."""
-    keys = draw(st.lists(
-        st.text(min_size=1, max_size=5),
-        min_size=1,
-        max_size=5,
-        unique=True,
-    ))
+    keys = draw(
+        st.lists(
+            st.text(min_size=1, max_size=5),
+            min_size=1,
+            max_size=5,
+            unique=True,
+        )
+    )
     # Use the SAME values for both dicts to ensure true isomorphism
     values = draw(st.lists(st.integers(), min_size=len(keys), max_size=len(keys)))
 
@@ -101,12 +111,14 @@ def isomorphic_dict_pair_strategy(draw: st.DrawFn) -> tuple[dict[str, int], dict
 @st.composite
 def same_structure_dict_pair_strategy(draw: st.DrawFn) -> tuple[dict[str, int], dict[str, int]]:
     """Generate pairs of dicts with same keys but potentially different values."""
-    keys = draw(st.lists(
-        st.text(min_size=1, max_size=5),
-        min_size=1,
-        max_size=5,
-        unique=True,
-    ))
+    keys = draw(
+        st.lists(
+            st.text(min_size=1, max_size=5),
+            min_size=1,
+            max_size=5,
+            unique=True,
+        )
+    )
     values1 = draw(st.lists(st.integers(), min_size=len(keys), max_size=len(keys)))
     values2 = draw(st.lists(st.integers(), min_size=len(keys), max_size=len(keys)))
 

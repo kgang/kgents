@@ -48,7 +48,7 @@ logger = logging.getLogger(__name__)
 class VerificationPersistence:
     """
     Persistence layer for the formal verification system.
-    
+
     Combines SQLAlchemy for structured queries with D-gent for semantic search.
     Follows the TableAdapter pattern used by other Crown Jewels.
     """
@@ -254,7 +254,9 @@ class VerificationPersistence:
         await self.witnesses.update(witness_id, updates)
         logger.info(f"Updated witness verification: {witness_id}")
 
-    async def get_witnesses_by_agent(self, agent_path: str, limit: int = 100) -> list[TraceWitnessResult]:
+    async def get_witnesses_by_agent(
+        self, agent_path: str, limit: int = 100
+    ) -> list[TraceWitnessResult]:
         """Get trace witnesses for a specific agent path."""
 
         async with self.session_factory() as session:

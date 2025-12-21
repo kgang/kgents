@@ -80,13 +80,17 @@ def _handle_manifest(args: list[str]) -> int:
         stats = get_teaching_stats()
 
         if "--json" in args:
-            print(json.dumps({
-                "total_teaching_moments": stats.total,
-                "by_severity": stats.by_severity,
-                "with_evidence": stats.with_evidence,
-                "without_evidence": stats.without_evidence,
-                "verified_evidence": stats.verified_evidence,
-            }))
+            print(
+                json.dumps(
+                    {
+                        "total_teaching_moments": stats.total,
+                        "by_severity": stats.by_severity,
+                        "with_evidence": stats.with_evidence,
+                        "without_evidence": stats.without_evidence,
+                        "verified_evidence": stats.verified_evidence,
+                    }
+                )
+            )
         else:
             print("Living Docs Status")
             print("=" * 40)
@@ -130,7 +134,9 @@ def _handle_generate(args: list[str]) -> int:
             for f in manifest.files:
                 print(f"  {f.path.name}: {f.symbol_count} symbols, {f.teaching_count} teaching")
             print()
-            print(f"Total: {manifest.total_symbols} symbols, {manifest.total_teaching} teaching moments")
+            print(
+                f"Total: {manifest.total_symbols} symbols, {manifest.total_teaching} teaching moments"
+            )
             print(f"Output: {output_dir}")
 
         return 0
@@ -164,37 +170,47 @@ def _handle_teaching(args: list[str]) -> int:
         )
 
         if "--json" in args:
-            print(json.dumps([
-                {
-                    "insight": r.moment.insight,
-                    "severity": r.moment.severity,
-                    "symbol": r.symbol,
-                    "module": r.module,
-                    "evidence": r.moment.evidence,
-                }
-                for r in results
-            ]))
+            print(
+                json.dumps(
+                    [
+                        {
+                            "insight": r.moment.insight,
+                            "severity": r.moment.severity,
+                            "symbol": r.symbol,
+                            "module": r.module,
+                            "evidence": r.moment.evidence,
+                        }
+                        for r in results
+                    ]
+                )
+            )
         else:
             if not results:
                 print("No teaching moments found matching filters.")
                 return 0
 
             # Group by severity
-            by_severity: dict[str, list] = {"critical": [], "warning": [], "info": []}
+            from services.living_docs import TeachingResult
+
+            by_severity: dict[str, list[TeachingResult]] = {
+                "critical": [],
+                "warning": [],
+                "info": [],
+            }
             for r in results:
                 by_severity[r.moment.severity].append(r)
 
-            icons = {"critical": "\U0001F6A8", "warning": "\u26A0\uFE0F", "info": "\u2139\uFE0F"}
+            icons = {"critical": "\U0001f6a8", "warning": "\u26a0\ufe0f", "info": "\u2139\ufe0f"}
 
             for sev in ["critical", "warning", "info"]:
                 items = by_severity[sev]
                 if items:
                     print(f"\n{icons[sev]} {sev.upper()} ({len(items)})")
                     print("-" * 40)
-                    for r in items[:10]:  # Limit output
-                        print(f"{r.symbol}: {r.moment.insight[:60]}...")
-                        if r.moment.evidence:
-                            print(f"  Evidence: {r.moment.evidence}")
+                    for item in items[:10]:  # Limit output
+                        print(f"{item.symbol}: {item.moment.insight[:60]}...")
+                        if item.moment.evidence:
+                            print(f"  Evidence: {item.moment.evidence}")
                     if len(items) > 10:
                         print(f"  ...and {len(items) - 10} more")
 
@@ -216,19 +232,23 @@ def _handle_verify(args: list[str]) -> int:
         verified = [r for r in results if r.evidence_exists]
 
         if "--json" in args:
-            print(json.dumps({
-                "total": len(results),
-                "verified": len(verified),
-                "missing": len(missing),
-                "missing_details": [
+            print(
+                json.dumps(
                     {
-                        "symbol": r.result.symbol,
-                        "evidence": r.result.moment.evidence,
-                        "insight": r.result.moment.insight,
+                        "total": len(results),
+                        "verified": len(verified),
+                        "missing": len(missing),
+                        "missing_details": [
+                            {
+                                "symbol": r.result.symbol,
+                                "evidence": r.result.moment.evidence,
+                                "insight": r.result.moment.insight,
+                            }
+                            for r in missing
+                        ],
                     }
-                    for r in missing
-                ],
-            }))
+                )
+            )
         else:
             print("Evidence Verification")
             print("=" * 40)
@@ -238,7 +258,7 @@ def _handle_verify(args: list[str]) -> int:
 
             if missing:
                 print()
-                print("\u26A0\uFE0F Missing Evidence Links:")
+                print("\u26a0\ufe0f Missing Evidence Links:")
                 for r in missing[:10]:
                     print(f"  {r.result.symbol}: {r.result.moment.evidence}")
                 if len(missing) > 10:

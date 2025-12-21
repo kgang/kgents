@@ -32,7 +32,7 @@ from .base import BaseMeaningToken
 @dataclass(frozen=True)
 class PrincipleInfo:
     """Information about a design principle.
-    
+
     Attributes:
         number: Principle number (e.g., 1, 2, 3)
         title: Principle title
@@ -61,7 +61,7 @@ class PrincipleInfo:
 @dataclass(frozen=True)
 class PrincipleHoverInfo:
     """Information displayed on principle hover.
-    
+
     Attributes:
         ref: The principle reference (e.g., "P1")
         info: Principle information
@@ -81,7 +81,7 @@ class PrincipleHoverInfo:
 @dataclass(frozen=True)
 class PrincipleNavigationResult:
     """Result of navigating to a principle.
-    
+
     Attributes:
         ref: The principle reference
         path: Path to principle definition
@@ -104,7 +104,7 @@ class PrincipleNavigationResult:
 @dataclass(frozen=True)
 class PrincipleContextMenuResult:
     """Result of showing context menu for a principle.
-    
+
     Attributes:
         ref: The principle reference
         options: Available menu options
@@ -123,12 +123,12 @@ class PrincipleContextMenuResult:
 
 class PrincipleRefToken(BaseMeaningToken[str]):
     """Token representing a principle reference.
-    
+
     PrincipleRef tokens link to design principles in the verification
     graph and provide navigation to principle definitions.
-    
+
     Pattern: `[P1]`, `[P2]`, etc.
-    
+
     Requirements: 12.3, 12.4, 12.5
     """
 
@@ -142,7 +142,7 @@ class PrincipleRefToken(BaseMeaningToken[str]):
         number: int,
     ) -> None:
         """Initialize a PrincipleRef token.
-        
+
         Args:
             source_text: The original matched text
             source_position: (start, end) position in source document

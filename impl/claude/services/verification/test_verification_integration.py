@@ -173,7 +173,11 @@ The system uses category theory as its foundation.
         functor_result = await checker.verify_functor_laws(f, g, h)
 
         # Functor verification may return different law names for different checks
-        assert functor_result.law_name in ["functor_laws", "functor_identity", "functor_composition"]
+        assert functor_result.law_name in [
+            "functor_laws",
+            "functor_identity",
+            "functor_composition",
+        ]
         assert isinstance(functor_result.success, bool)
 
     @pytest.mark.asyncio
@@ -194,10 +198,10 @@ The system uses category theory as its foundation.
 
         # If counter-examples exist, they should have proper structure
         for counter_example in counter_examples:
-            assert hasattr(counter_example, 'test_input')
-            assert hasattr(counter_example, 'expected_result')
-            assert hasattr(counter_example, 'actual_result')
-            assert hasattr(counter_example, 'morphisms')
+            assert hasattr(counter_example, "test_input")
+            assert hasattr(counter_example, "expected_result")
+            assert hasattr(counter_example, "actual_result")
+            assert hasattr(counter_example, "morphisms")
 
     @pytest.mark.asyncio
     async def test_trace_witness_integration(self):
@@ -376,9 +380,7 @@ if __name__ == "__main__":
 
         # Test trace witness
         witness = EnhancedTraceWitness()
-        trace = await witness.capture_execution_trace(
-            "test.agent", {"value": "hello"}
-        )
+        trace = await witness.capture_execution_trace("test.agent", {"value": "hello"})
 
         print(f"Trace captured: {trace.witness_id}")
         print(f"Status: {trace.verification_status}")

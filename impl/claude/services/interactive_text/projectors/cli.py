@@ -32,10 +32,10 @@ from services.interactive_text.projectors.base import (
 @dataclass(frozen=True)
 class RichMarkup:
     """Rich terminal markup representation.
-    
+
     This is a structured representation of Rich markup that can be
     converted to actual Rich markup strings.
-    
+
     Attributes:
         text: The text content
         style: Rich style string (e.g., "cyan", "bold red")
@@ -97,11 +97,11 @@ class CLIProjectable(Protocol):
 
 class CLIProjectionFunctor(ProjectionFunctor[str]):
     """Project meaning tokens to Rich terminal markup.
-    
+
     This functor transforms meaning tokens into Rich markup strings
     suitable for terminal display. It supports density-parameterized
     output for different display preferences.
-    
+
     Token Type Mappings:
     - agentese_path: Cyan text with link-like styling
     - task_checkbox: Checkbox with status indicator
@@ -109,7 +109,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
     - code_block: Code block with syntax highlighting hint
     - principle_ref: Bold reference
     - requirement_ref: Italic reference
-    
+
     Requirements: 2.2, 2.4
     """
 
@@ -123,11 +123,11 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         observer: Observer,
     ) -> str:
         """Project token to Rich markup string.
-        
+
         Args:
             token: The meaning token to project
             observer: The observer receiving the projection
-            
+
         Returns:
             Rich markup string representation
         """
@@ -144,11 +144,11 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         observer: Observer,
     ) -> str:
         """Project document to Rich markup string.
-        
+
         Args:
             document: The document to project
             observer: The observer receiving the projection
-            
+
         Returns:
             Rich markup string representation of the document
         """
@@ -174,11 +174,11 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         composition_type: str,
     ) -> str:
         """Compose Rich markup strings.
-        
+
         Args:
             projections: List of Rich markup strings
             composition_type: "horizontal" or "vertical"
-            
+
         Returns:
             Composed Rich markup string
         """
@@ -193,11 +193,11 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project token based on its type.
-        
+
         Args:
             token: The token to project
             params: Density parameters
-            
+
         Returns:
             RichMarkup representation
         """
@@ -206,7 +206,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
 
         # Apply truncation if needed
         if params.truncate_length > 0 and len(source_text) > params.truncate_length:
-            source_text = source_text[:params.truncate_length - 3] + "..."
+            source_text = source_text[: params.truncate_length - 3] + "..."
 
         # Token-specific styling
         match token_type:
@@ -231,7 +231,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project AGENTESE path token.
-        
+
         AGENTESE paths are displayed in cyan to indicate they are
         interactive/navigable.
         """
@@ -253,7 +253,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project task checkbox token.
-        
+
         Task checkboxes show a checkbox indicator with the task description.
         """
         token_dict = token.to_dict()
@@ -262,7 +262,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
 
         # Apply truncation to description
         if params.truncate_length > 0 and len(description) > params.truncate_length - 4:
-            description = description[:params.truncate_length - 7] + "..."
+            description = description[: params.truncate_length - 7] + "..."
 
         if checked:
             checkbox = "✓"
@@ -284,7 +284,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project image token.
-        
+
         Images are displayed with an icon and alt text since terminals
         cannot display actual images.
         """
@@ -292,7 +292,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         alt_text = token_dict.get("alt_text", "image")
 
         if params.truncate_length > 0 and len(alt_text) > params.truncate_length - 3:
-            alt_text = alt_text[:params.truncate_length - 6] + "..."
+            alt_text = alt_text[: params.truncate_length - 6] + "..."
 
         return RichMarkup(text=f"📷 {alt_text}", style="dim")
 
@@ -302,7 +302,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project code block token.
-        
+
         Code blocks are displayed with syntax highlighting hints.
         """
         token_dict = token.to_dict()
@@ -311,7 +311,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
 
         # Apply truncation
         if params.truncate_length > 0 and len(code) > params.truncate_length:
-            code = code[:params.truncate_length - 3] + "..."
+            code = code[: params.truncate_length - 3] + "..."
 
         if params.show_details and language:
             header = RichMarkup(text=f"```{language}", style="dim")
@@ -327,7 +327,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project principle reference token.
-        
+
         Principle references are displayed in bold to indicate importance.
         """
         return RichMarkup(text=token.source_text, style="bold yellow")
@@ -338,7 +338,7 @@ class CLIProjectionFunctor(ProjectionFunctor[str]):
         params: DensityParams,
     ) -> RichMarkup:
         """Project requirement reference token.
-        
+
         Requirement references are displayed in italic to indicate traceability.
         """
         return RichMarkup(text=token.source_text, style="italic magenta")

@@ -390,11 +390,12 @@ class MarimoProjector(Projector[str]):
                 try:
                     result = await _agent.invoke(user_input.value)
                     {"metrics = get_metrics()" if has_observable else ""}{state_save}
+                    newline = chr(10)
+                    latency_callout = {"mo.callout(mo.md('Latency: ' + str(round(metrics['latency_ms'], 2)) + 'ms'), kind='info')" if has_observable else "None"}
                     return mo.vstack([
                         mo.md(f"**Output:**"),
-                        mo.md(f"```\\n{{result}}\\n```"),
-                        {"mo.callout(mo.md(f\"Latency: {{metrics['latency_ms']:.2f}}ms\"), kind='info')," if has_observable else ""}
-                    ])
+                        mo.md(f"```{{newline}}{{result}}{{newline}}```"),
+                    ] + ([latency_callout] if latency_callout else []))
                 except Exception as e:
                     return mo.callout(mo.md(f"Error: {{e}}"), kind="danger")
 

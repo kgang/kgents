@@ -316,9 +316,7 @@ async def _bootstrap_cortex(project_path: Path | None = None) -> Any:
             # Graceful degradation - chat will use stub mode
             import logging
 
-            logging.getLogger(__name__).debug(
-                f"setup_providers skipped: {provider_err}"
-            )
+            logging.getLogger(__name__).debug(f"setup_providers skipped: {provider_err}")
 
         return _lifecycle_state
     except Exception as e:

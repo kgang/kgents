@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class SemanticConsistencyEngine:
     """
     Engine for verifying semantic consistency across specification documents.
-    
+
     Analyzes concept references, detects conflicts, and verifies backward
     compatibility for specification evolution.
     """
@@ -44,7 +44,7 @@ class SemanticConsistencyEngine:
     ) -> SemanticConsistencyResult:
         """
         Verify semantic consistency across multiple specification documents.
-        
+
         Analyzes concept definitions, cross-references, and identifies conflicts
         or inconsistencies between documents.
         """
@@ -64,9 +64,7 @@ class SemanticConsistencyEngine:
             )
 
             # 3. Detect semantic conflicts
-            conflicts = await self._detect_semantic_conflicts(
-                document_concepts, unified_concepts
-            )
+            conflicts = await self._detect_semantic_conflicts(document_concepts, unified_concepts)
 
             # 4. Analyze cross-references
             cross_refs = await self._analyze_cross_references(document_concepts)
@@ -103,11 +101,13 @@ class SemanticConsistencyEngine:
             return SemanticConsistencyResult(
                 document_ids=document_paths,
                 consistent=False,
-                conflicts=[{
-                    "type": "verification_error",
-                    "description": f"Error during verification: {str(e)}",
-                    "documents": document_paths,
-                }],
+                conflicts=[
+                    {
+                        "type": "verification_error",
+                        "description": f"Error during verification: {str(e)}",
+                        "documents": document_paths,
+                    }
+                ],
                 cross_references={},
                 backward_compatible=False,
                 suggestions=[f"Fix verification error: {str(e)}"],
@@ -156,20 +156,20 @@ class SemanticConsistencyEngine:
         }
 
         # Simple pattern-based extraction (in real implementation, would be more sophisticated)
-        lines = content.split('\n')
+        lines = content.split("\n")
 
         current_section = None
         for line in lines:
             line = line.strip()
 
             # Detect section headers
-            if line.startswith('# ') or line.startswith('## '):
-                current_section = line.lstrip('# ').lower()
+            if line.startswith("# ") or line.startswith("## "):
+                current_section = line.lstrip("# ").lower()
                 continue
 
             # Extract definitions
-            if ':' in line and current_section in ['definitions', 'glossary']:
-                term, definition = line.split(':', 1)
+            if ":" in line and current_section in ["definitions", "glossary"]:
+                term, definition = line.split(":", 1)
                 concepts["definitions"][term.strip()] = {
                     "definition": definition.strip(),
                     "section": current_section,
@@ -188,11 +188,13 @@ class SemanticConsistencyEngine:
 
             # Extract references to other concepts (simple pattern matching)
             if "see " in line.lower() or "refer to " in line.lower():
-                concepts["references"].append({
-                    "line": line,
-                    "section": current_section,
-                    "document": doc_path,
-                })
+                concepts["references"].append(
+                    {
+                        "line": line,
+                        "section": current_section,
+                        "document": doc_path,
+                    }
+                )
 
         # Use LLM to enhance concept extraction
         if self.llm_client:
@@ -216,19 +218,19 @@ class SemanticConsistencyEngine:
 
         prompt = f"""
         Analyze this specification document and identify key concepts:
-        
+
         Document: {doc_path}
         Content preview:
         {content_preview}
-        
-        Basic concepts found: {len(basic_concepts.get('definitions', {}))} definitions
-        
+
+        Basic concepts found: {len(basic_concepts.get("definitions", {}))} definitions
+
         Identify additional:
         1. Key domain concepts and their relationships
         2. Implicit assumptions or constraints
         3. Cross-references to external concepts
         4. Potential ambiguities or unclear definitions
-        
+
         Focus on concepts that might conflict with other documents.
         """
 
@@ -329,16 +331,16 @@ class SemanticConsistencyEngine:
                     doc_concepts = document_concepts.get(source, {})
                     concept_def = doc_concepts.get("definitions", {}).get(concept_name)
                     if concept_def:
-                        definitions.append({
-                            "source": source,
-                            "definition": concept_def.get("definition", ""),
-                        })
+                        definitions.append(
+                            {
+                                "source": source,
+                                "definition": concept_def.get("definition", ""),
+                            }
+                        )
 
                 # Check if definitions are conflicting
                 if len(definitions) > 1:
-                    conflict = await self._analyze_definition_conflict(
-                        concept_name, definitions
-                    )
+                    conflict = await self._analyze_definition_conflict(concept_name, definitions)
                     if conflict:
                         conflicts.append(conflict)
 
@@ -349,9 +351,7 @@ class SemanticConsistencyEngine:
         conflicts.extend(requirement_conflicts)
 
         # 3. Detect assumption conflicts
-        assumption_conflicts = await self._detect_assumption_conflicts(
-            document_concepts
-        )
+        assumption_conflicts = await self._detect_assumption_conflicts(document_concepts)
         conflicts.extend(assumption_conflicts)
 
         # 4. Use LLM to detect subtle semantic conflicts
@@ -475,21 +475,25 @@ class SemanticConsistencyEngine:
         for doc_path, concepts in document_concepts.items():
             assumptions = concepts.get("assumptions", [])
             for assumption in assumptions:
-                all_assumptions.append({
-                    "assumption": assumption,
-                    "document": doc_path,
-                })
+                all_assumptions.append(
+                    {
+                        "assumption": assumption,
+                        "document": doc_path,
+                    }
+                )
 
         # Look for contradictory assumptions
         for i, assumption1 in enumerate(all_assumptions):
-            for assumption2 in all_assumptions[i+1:]:
+            for assumption2 in all_assumptions[i + 1 :]:
                 if await self._assumptions_conflict(assumption1, assumption2):
-                    conflicts.append({
-                        "type": "conflicting_assumptions",
-                        "description": "Conflicting assumptions between documents",
-                        "assumption1": assumption1,
-                        "assumption2": assumption2,
-                    })
+                    conflicts.append(
+                        {
+                            "type": "conflicting_assumptions",
+                            "description": "Conflicting assumptions between documents",
+                            "assumption1": assumption1,
+                            "assumption2": assumption2,
+                        }
+                    )
 
         return conflicts
 
@@ -536,17 +540,17 @@ class SemanticConsistencyEngine:
 
         prompt = f"""
         Analyze these specification documents for semantic conflicts:
-        
+
         {chr(10).join(concept_summary)}
-        
-        Total unified concepts: {len(unified_concepts.get('definitions', {}))}
-        
+
+        Total unified concepts: {len(unified_concepts.get("definitions", {}))}
+
         Look for subtle semantic conflicts such as:
         1. Implicit contradictions in concept definitions
         2. Inconsistent use of terminology
         3. Conflicting architectural assumptions
         4. Incompatible design patterns
-        
+
         Focus on conflicts that might not be obvious from keyword matching.
         """
 
@@ -619,10 +623,12 @@ class SemanticConsistencyEngine:
                 external_concepts.update(other_concepts.get("definitions", {}).keys())
 
         # Check if this document uses any external concepts
-        doc_text = " ".join([
-            str(concepts.get("definitions", {})),
-            str(concepts.get("requirements", {})),
-        ]).lower()
+        doc_text = " ".join(
+            [
+                str(concepts.get("definitions", {})),
+                str(concepts.get("requirements", {})),
+            ]
+        ).lower()
 
         for concept_name in external_concepts:
             if concept_name.lower() in doc_text:
@@ -634,11 +640,13 @@ class SemanticConsistencyEngine:
                         break
 
                 if defining_doc:
-                    implicit_deps.append({
-                        "concept": concept_name,
-                        "defined_in": defining_doc,
-                        "used_in": doc_path,
-                    })
+                    implicit_deps.append(
+                        {
+                            "concept": concept_name,
+                            "defined_in": defining_doc,
+                            "used_in": doc_path,
+                        }
+                    )
 
         return implicit_deps
 
@@ -696,11 +704,13 @@ class SemanticConsistencyEngine:
             if doc_path not in visited:
                 cycle = has_cycle(doc_path, [])
                 if cycle:
-                    circular_refs.append({
-                        "type": "circular_dependency",
-                        "cycle": cycle,
-                        "description": f"Circular dependency: {' -> '.join(cycle)}",
-                    })
+                    circular_refs.append(
+                        {
+                            "type": "circular_dependency",
+                            "cycle": cycle,
+                            "description": f"Circular dependency: {' -> '.join(cycle)}",
+                        }
+                    )
 
         return circular_refs
 
@@ -755,7 +765,7 @@ class SemanticConsistencyEngine:
         # Check for breaking changes
         breaking_changes = [
             ("required", "optional"),  # Making something optional is usually safe
-            ("must", "may"),          # Relaxing requirements is usually safe
+            ("must", "may"),  # Relaxing requirements is usually safe
         ]
 
         for old_word, new_word in breaking_changes:

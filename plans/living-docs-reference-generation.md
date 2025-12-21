@@ -285,85 +285,126 @@ Each category page includes:
 
 ---
 
-## Phase 4: Teaching Moments Database
+## Phase 4: Teaching Query API ✅ COMPLETE (2025-12-21)
 
-### 4.1 Aggregate All Gotchas
+### 4.1 Teaching Query API (Simplified from Database)
+
+Instead of a full `TeachingDatabase` class, implemented lightweight query functions:
 
 ```python
-# services/living_docs/teaching_db.py
+# services/living_docs/teaching.py
 
-class TeachingDatabase:
-    """Aggregated teaching moments across the codebase."""
+from services.living_docs import query_teaching, verify_evidence, get_teaching_stats
 
-    def collect_all(self, paths: list[Path]) -> list[TeachingMoment]:
-        """Collect all teaching moments from all files."""
-        ...
+# Query by severity
+critical = query_teaching(severity="critical")
 
-    def by_severity(self) -> dict[str, list[TeachingMoment]]:
-        """Group by severity: critical, warning, info."""
-        ...
+# Query by module pattern
+brain_gotchas = query_teaching(module_pattern="services.brain")
 
-    def by_module(self) -> dict[str, list[TeachingMoment]]:
-        """Group by module path."""
-        ...
+# Verify evidence links exist
+missing = [v for v in verify_evidence() if not v.evidence_exists]
 
-    def verify_evidence(self) -> list[TeachingMoment]:
-        """Find teaching moments with missing evidence."""
-        ...
+# Get statistics
+stats = get_teaching_stats()
+# → TeachingStats(total=35, by_severity={'critical': 14, ...}, ...)
 ```
 
-### 4.2 Teaching Moments Page
+**New Files**:
+- `services/living_docs/teaching.py` — Query API with evidence verification
+- `services/living_docs/_tests/test_teaching.py` — 23 tests
 
-Generate a dedicated page:
+**Key Types**:
+- `TeachingResult` — Teaching moment with source context (symbol, module, path)
+- `TeachingQuery` — Filter parameters (severity, module_pattern, with_evidence)
+- `VerificationResult` — Evidence verification with resolved path
+- `TeachingStats` — Aggregate statistics
 
-```markdown
-# Teaching Moments (Gotchas)
+**Design Decisions**:
+- Lightweight iterator-based collection (no database)
+- Evidence verification checks if test files exist
+- Builds on existing extractor infrastructure (no new dependencies)
 
-> *"Gotchas live in docstrings, not wikis."*
+---
 
-## 🚨 Critical (Must Know)
+## Phase 5: CLI Integration ✅ COMPLETE (2025-12-21)
 
-### Brain
-- **Crystal merging is NOT commutative**
-  Evidence: `test_brain_crystal.py::test_merge_order`
+### 5.1 Essential Commands (Simplified from 5 to 4)
 
-### Witness
-- **Always check Grant before invoking Playbook**
-  Evidence: `test_playbook.py::test_grant_required`
+```bash
+# Show status
+kg docs
 
-## ⚠️ Warnings
+# Generate full reference docs
+kg docs generate --output docs/reference/ --overwrite
 
+# Query teaching moments by severity or module
+kg docs teaching --severity critical
+kg docs teaching --module services.brain
+
+# Verify evidence links exist
+kg docs verify --strict
+```
+
+**New Files**:
+- `protocols/cli/handlers/docs.py` — CLI handler (thin routing shim)
+
+**Registered in**:
+- `protocols/cli/hollow.py` — COMMAND_REGISTRY
+
+### 5.2 CLI Usage
+
+```bash
+# Status overview
+$ kg docs
+Living Docs Status
+========================================
+Teaching Moments: 35
+  Critical: 14
+  Warning:  0
+  Info:     21
+
+With Evidence:    30
+Without Evidence: 5
+Verified:         23
+
+# Generate docs
+$ kg docs generate --output docs/reference/ --overwrite
+Generating docs to docs/reference/...
+
+Generated 9 files:
+  index.md: 6417 symbols, 73 teaching
+  crown-jewels.md: 2020 symbols, 20 teaching
+  ...
+
+# Query critical gotchas
+$ kg docs teaching --severity critical
+🚨 CRITICAL (14)
+----------------------------------------
+persistence: Dual-track storage means Crystal table AND D-gent...
+  Evidence: test_brain_persistence.py::test_heal_ghosts
 ...
 
-## ℹ️ Info
+# Verify evidence (CI-friendly)
+$ kg docs verify --strict
+```
 
-...
+### 5.3 JSON Output (Agent-Friendly)
+
+All commands support `--json` for structured output:
+
+```bash
+kg docs --json
+kg docs generate --json
+kg docs teaching --severity critical --json
+kg docs verify --json
 ```
 
 ---
 
-## Phase 5: CLI Integration
+## Phase 5 (Original for Reference)
 
-### 5.1 Generator Commands
-
-```bash
-# Generate full reference docs
-kg docs generate --output docs/reference/
-
-# Generate single file
-kg docs generate services/brain/persistence.py
-
-# Generate gotchas page
-kg docs gotchas --output docs/reference/teaching/gotchas.md
-
-# Verify all evidence links exist
-kg docs verify-evidence
-
-# Find stale docs (code changed, docs not regenerated)
-kg docs stale --days 7
-```
-
-### 5.2 CI Integration
+### CI Integration (Future Enhancement)
 
 ```yaml
 # .github/workflows/docs.yml
@@ -371,10 +412,9 @@ kg docs stale --days 7
   run: kg docs generate --output docs/reference/
 
 - name: Verify Evidence Links
-  run: kg docs verify-evidence --strict
+  run: kg docs verify --strict
 
-- name: Check for Stale Docs
-  run: kg docs stale --days 7 --fail-on-stale
+# Note: --stale detection deferred (nice-to-have)
 ```
 
 ---

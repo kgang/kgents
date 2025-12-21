@@ -46,23 +46,27 @@ def agentese_path_strategy(draw: st.DrawFn) -> str:
     context = draw(st.sampled_from(["world", "self", "concept", "void", "time"]))
     # Generate valid identifier segments
     first_char = draw(st.sampled_from("abcdefghijklmnopqrstuvwxyz_"))
-    rest_chars = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=0,
-        max_size=10,
-    ))
+    rest_chars = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=0,
+            max_size=10,
+        )
+    )
     first_segment = first_char + rest_chars
 
     # Optionally add more segments
-    additional_segments = draw(st.lists(
-        st.text(
-            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-            min_size=1,
-            max_size=10,
-        ).filter(lambda s: s[0].isalpha() or s[0] == "_"),
-        min_size=0,
-        max_size=3,
-    ))
+    additional_segments = draw(
+        st.lists(
+            st.text(
+                alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+                min_size=1,
+                max_size=10,
+            ).filter(lambda s: s[0].isalpha() or s[0] == "_"),
+            min_size=0,
+            max_size=3,
+        )
+    )
 
     segments = [first_segment] + additional_segments
     return f"`{context}.{'.'.join(segments)}`"
@@ -73,28 +77,34 @@ def task_checkbox_strategy(draw: st.DrawFn) -> str:
     """Generate valid task checkboxes."""
     checked = draw(st.sampled_from([" ", "x", "X"]))
     # Generate description without newlines
-    description = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-_",
-        min_size=1,
-        max_size=50,
-    ))
+    description = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-_",
+            min_size=1,
+            max_size=50,
+        )
+    )
     return f"- [{checked}] {description}\n"
 
 
 @st.composite
 def image_token_strategy(draw: st.DrawFn) -> str:
     """Generate valid markdown images."""
-    alt_text = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-        min_size=0,
-        max_size=30,
-    ))
+    alt_text = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+            min_size=0,
+            max_size=30,
+        )
+    )
     # Generate valid path without special chars
-    path = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789/_.-",
-        min_size=1,
-        max_size=30,
-    ))
+    path = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789/_.-",
+            min_size=1,
+            max_size=30,
+        )
+    )
     extension = draw(st.sampled_from([".png", ".jpg", ".gif", ".svg"]))
     return f"![{alt_text}]({path}{extension})"
 
@@ -104,11 +114,13 @@ def code_block_strategy(draw: st.DrawFn) -> str:
     """Generate valid fenced code blocks."""
     language = draw(st.sampled_from(["", "python", "javascript", "typescript", "rust", "go"]))
     # Generate code content without triple backticks
-    code = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789(){}[].,;:=+-*/<>!@#$%^&|\\'\"\n\t",
-        min_size=1,
-        max_size=100,
-    ).filter(lambda s: "```" not in s))
+    code = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789(){}[].,;:=+-*/<>!@#$%^&|\\'\"\n\t",
+            min_size=1,
+            max_size=100,
+        ).filter(lambda s: "```" not in s)
+    )
     return f"```{language}\n{code}\n```"
 
 
@@ -133,11 +145,13 @@ def requirement_ref_strategy(draw: st.DrawFn) -> str:
 @st.composite
 def observer_strategy(draw: st.DrawFn) -> Observer:
     """Generate valid observers with different umwelts."""
-    capabilities = draw(st.frozensets(
-        st.sampled_from(["llm", "verification", "network", "storage"]),
-        min_size=0,
-        max_size=4,
-    ))
+    capabilities = draw(
+        st.frozensets(
+            st.sampled_from(["llm", "verification", "network", "storage"]),
+            min_size=0,
+            max_size=4,
+        )
+    )
     density = draw(st.sampled_from(list(ObserverDensity)))
     role = draw(st.sampled_from(list(ObserverRole)))
 
@@ -151,7 +165,7 @@ def observer_strategy(draw: st.DrawFn) -> Observer:
 @st.composite
 def mixed_document_strategy(draw: st.DrawFn) -> tuple[str, dict[str, int]]:
     """Generate documents with mixed token types.
-    
+
     Returns:
         Tuple of (document_text, expected_token_counts)
     """
@@ -169,20 +183,26 @@ def mixed_document_strategy(draw: st.DrawFn) -> tuple[str, dict[str, int]]:
     num_tokens = draw(st.integers(min_value=1, max_value=5))
 
     for _ in range(num_tokens):
-        token_type = draw(st.sampled_from([
-            "agentese_path",
-            "task_checkbox",
-            "image",
-            "principle_ref",
-            "requirement_ref",
-        ]))
+        token_type = draw(
+            st.sampled_from(
+                [
+                    "agentese_path",
+                    "task_checkbox",
+                    "image",
+                    "principle_ref",
+                    "requirement_ref",
+                ]
+            )
+        )
 
         # Add some plain text before
-        prefix = draw(st.text(
-            alphabet="abcdefghijklmnopqrstuvwxyz ",
-            min_size=0,
-            max_size=20,
-        ))
+        prefix = draw(
+            st.text(
+                alphabet="abcdefghijklmnopqrstuvwxyz ",
+                min_size=0,
+                max_size=20,
+            )
+        )
         parts.append(prefix)
 
         if token_type == "agentese_path":
@@ -202,11 +222,13 @@ def mixed_document_strategy(draw: st.DrawFn) -> tuple[str, dict[str, int]]:
             counts["requirement_ref"] += 1
 
     # Add trailing text
-    suffix = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ",
-        min_size=0,
-        max_size=20,
-    ))
+    suffix = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ",
+            min_size=0,
+            max_size=20,
+        )
+    )
     parts.append(suffix)
 
     return "".join(parts), counts
@@ -231,12 +253,12 @@ def clean_registry() -> None:
 class TestProperty1TokenRecognitionCompleteness:
     """
     Property 1: Token Recognition Completeness
-    
+
     *For any* text containing patterns matching the six core token types
     (AGENTESEPath, TaskCheckbox, Image, CodeBlock, PrincipleRef, RequirementRef),
     the parser SHALL correctly identify and extract all matching tokens with
     accurate source positions.
-    
+
     **Validates: Requirements 1.1, 5.1, 6.1, 7.1, 8.1**
     """
 
@@ -248,7 +270,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_agentese_paths_always_recognized(self, path: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         AGENTESE paths are always recognized when present in text.
         Validates: Requirements 1.1, 5.1
         """
@@ -269,7 +291,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_task_checkboxes_always_recognized(self, checkbox: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         Task checkboxes are always recognized when present in text.
         Validates: Requirements 1.1, 6.1
         """
@@ -287,7 +309,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_images_always_recognized(self, image: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         Markdown images are always recognized when present in text.
         Validates: Requirements 1.1, 7.1
         """
@@ -305,7 +327,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_code_blocks_always_recognized(self, code: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         Fenced code blocks are always recognized when present in text.
         Validates: Requirements 1.1, 8.1
         """
@@ -323,7 +345,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_principle_refs_always_recognized(self, ref: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         Principle references are always recognized when present in text.
         Validates: Requirements 1.1
         """
@@ -341,7 +363,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_requirement_refs_always_recognized(self, ref: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         Requirement references are always recognized when present in text.
         Validates: Requirements 1.1
         """
@@ -359,7 +381,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_mixed_tokens_all_recognized(self, data: tuple[str, dict[str, int]]) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         All token types in a mixed document are recognized.
         Validates: Requirements 1.1, 5.1, 6.1, 7.1, 8.1
         """
@@ -377,8 +399,7 @@ class TestProperty1TokenRecognitionCompleteness:
             if expected > 0:
                 actual = actual_counts.get(token_type, 0)
                 assert actual >= expected, (
-                    f"Expected at least {expected} {token_type} tokens, "
-                    f"found {actual} in: {text!r}"
+                    f"Expected at least {expected} {token_type} tokens, found {actual} in: {text!r}"
                 )
 
     @given(text=st.text(min_size=0, max_size=500))
@@ -389,7 +410,7 @@ class TestProperty1TokenRecognitionCompleteness:
     def test_source_positions_accurate(self, text: str) -> None:
         """
         Feature: meaning-token-frontend, Property 1: Token Recognition Completeness
-        
+
         All recognized tokens have accurate source positions.
         Validates: Requirements 1.1
         """
@@ -403,7 +424,7 @@ class TestProperty1TokenRecognitionCompleteness:
 
             # Matched text must equal substring at position
             if match.start < match.end:
-                expected_text = text[match.start:match.end]
+                expected_text = text[match.start : match.end]
                 assert match.text == expected_text, (
                     f"Position mismatch: match.text={match.text!r}, "
                     f"text[{match.start}:{match.end}]={expected_text!r}"
@@ -428,7 +449,6 @@ __all__ = [
 ]
 
 
-
 # =============================================================================
 # Property 10: AGENTESE Path Affordances
 # =============================================================================
@@ -437,11 +457,11 @@ __all__ = [
 class TestProperty10AGENTESEPathAffordances:
     """
     Property 10: AGENTESE Path Affordances
-    
+
     *For any* recognized AGENTESE path token, hover SHALL return polynomial
     state information, click SHALL produce navigation action, right-click
     SHALL produce context menu, and drag SHALL produce REPL pre-fill.
-    
+
     **Validates: Requirements 5.2, 5.3, 5.4, 5.5**
     """
 
@@ -451,12 +471,10 @@ class TestProperty10AGENTESEPathAffordances:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_hover_returns_polynomial_state(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_hover_returns_polynomial_state(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 10: AGENTESE Path Affordances
-        
+
         Hover on AGENTESE path returns polynomial state information.
         Validates: Requirements 5.2
         """
@@ -487,12 +505,10 @@ class TestProperty10AGENTESEPathAffordances:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_click_produces_navigation(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_click_produces_navigation(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 10: AGENTESE Path Affordances
-        
+
         Click on AGENTESE path produces navigation action.
         Validates: Requirements 5.3
         """
@@ -520,12 +536,10 @@ class TestProperty10AGENTESEPathAffordances:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_right_click_produces_context_menu(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_right_click_produces_context_menu(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 10: AGENTESE Path Affordances
-        
+
         Right-click on AGENTESE path produces context menu.
         Validates: Requirements 5.4
         """
@@ -554,12 +568,10 @@ class TestProperty10AGENTESEPathAffordances:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_drag_produces_repl_prefill(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_drag_produces_repl_prefill(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 10: AGENTESE Path Affordances
-        
+
         Drag on AGENTESE path produces REPL pre-fill.
         Validates: Requirements 5.5
         """
@@ -591,11 +603,11 @@ class TestProperty10AGENTESEPathAffordances:
 class TestProperty11GhostTokenRendering:
     """
     Property 11: Ghost Token Rendering
-    
+
     *For any* AGENTESE path token referencing a non-existent node, the system
     SHALL render it as a ghost token with reduced affordances. Ghost tokens
     should still be recognizable but indicate their non-existent status.
-    
+
     **Validates: Requirements 5.6**
     """
 
@@ -605,12 +617,10 @@ class TestProperty11GhostTokenRendering:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_ghost_token_has_reduced_affordances(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_ghost_token_has_reduced_affordances(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 11: Ghost Token Rendering
-        
+
         Ghost tokens (non-existent paths) have reduced affordances compared to existing paths.
         Validates: Requirements 5.6
         """
@@ -647,12 +657,10 @@ class TestProperty11GhostTokenRendering:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_ghost_token_is_identifiable(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_ghost_token_is_identifiable(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 11: Ghost Token Rendering
-        
+
         Ghost tokens are identifiable as non-existent.
         Validates: Requirements 5.6
         """
@@ -680,7 +688,7 @@ class TestProperty11GhostTokenRendering:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 11: Ghost Token Rendering
-        
+
         Hovering a ghost token indicates the path does not exist.
         Validates: Requirements 5.6
         """
@@ -709,12 +717,10 @@ class TestProperty11GhostTokenRendering:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_ghost_token_click_offers_creation(
-        self, path: str, observer: Observer
-    ) -> None:
+    async def test_ghost_token_click_offers_creation(self, path: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 11: Ghost Token Rendering
-        
+
         Clicking a ghost token offers to create the path.
         Validates: Requirements 5.6
         """
@@ -765,10 +771,10 @@ __all__ = [
 class TestProperty12TaskCheckboxToggleWithTrace:
     """
     Property 12: Task Checkbox Toggle with Trace
-    
+
     *For any* task checkbox toggle, the system SHALL capture a Trace_Witness
     with constructive proof, toggle the state, and persist to the source file.
-    
+
     **Validates: Requirements 6.2, 6.3, 12.1**
     """
 
@@ -778,12 +784,10 @@ class TestProperty12TaskCheckboxToggleWithTrace:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_toggle_changes_state(
-        self, checkbox: str, observer: Observer
-    ) -> None:
+    async def test_toggle_changes_state(self, checkbox: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 12: Task Checkbox Toggle with Trace
-        
+
         Toggling a task checkbox changes its state.
         Validates: Requirements 6.2
         """
@@ -812,12 +816,10 @@ class TestProperty12TaskCheckboxToggleWithTrace:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_toggle_captures_trace_witness(
-        self, checkbox: str, observer: Observer
-    ) -> None:
+    async def test_toggle_captures_trace_witness(self, checkbox: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 12: Task Checkbox Toggle with Trace
-        
+
         Toggling a task checkbox captures a Trace_Witness.
         Validates: Requirements 6.3, 12.1
         """
@@ -851,7 +853,7 @@ class TestProperty12TaskCheckboxToggleWithTrace:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 12: Task Checkbox Toggle with Trace
-        
+
         Trace witness contains action data for verification.
         Validates: Requirements 6.3, 12.1
         """
@@ -886,12 +888,10 @@ class TestProperty12TaskCheckboxToggleWithTrace:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_toggle_with_file_path_updates_file(
-        self, observer: Observer
-    ) -> None:
+    async def test_toggle_with_file_path_updates_file(self, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 12: Task Checkbox Toggle with Trace
-        
+
         Toggling a task with file_path indicates file update.
         Validates: Requirements 6.2
         """
@@ -917,7 +917,6 @@ class TestProperty12TaskCheckboxToggleWithTrace:
         assert result.data.file_updated is True
 
 
-
 # =============================================================================
 # Property 14: Image Token Graceful Degradation
 # =============================================================================
@@ -926,10 +925,10 @@ class TestProperty12TaskCheckboxToggleWithTrace:
 class TestProperty14ImageTokenGracefulDegradation:
     """
     Property 14: Image Token Graceful Degradation
-    
+
     *For any* image token, when LLM is unavailable, the system SHALL display
     the image without analysis and show "requires connection" tooltip.
-    
+
     **Validates: Requirements 7.2, 7.5, 14.1**
     """
 
@@ -944,7 +943,7 @@ class TestProperty14ImageTokenGracefulDegradation:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 14: Image Token Graceful Degradation
-        
+
         Hovering an image without LLM capability indicates requires connection.
         Validates: Requirements 7.2, 7.5
         """
@@ -985,7 +984,7 @@ class TestProperty14ImageTokenGracefulDegradation:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 14: Image Token Graceful Degradation
-        
+
         Hovering an image with LLM capability provides analysis.
         Validates: Requirements 7.2
         """
@@ -1023,12 +1022,10 @@ class TestProperty14ImageTokenGracefulDegradation:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_image_still_displays_without_llm(
-        self, image: str, observer: Observer
-    ) -> None:
+    async def test_image_still_displays_without_llm(self, image: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 14: Image Token Graceful Degradation
-        
+
         Images still display and can be interacted with without LLM.
         Validates: Requirements 7.5, 14.1
         """
@@ -1065,12 +1062,10 @@ class TestProperty14ImageTokenGracefulDegradation:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_image_drag_works_without_llm(
-        self, image: str, observer: Observer
-    ) -> None:
+    async def test_image_drag_works_without_llm(self, image: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 14: Image Token Graceful Degradation
-        
+
         Dragging images to context works without LLM.
         Validates: Requirements 7.4, 14.1
         """
@@ -1093,7 +1088,6 @@ class TestProperty14ImageTokenGracefulDegradation:
         assert result.data.context_added is True
 
 
-
 # =============================================================================
 # Property 15: Code Block Execution Sandboxing
 # =============================================================================
@@ -1102,10 +1096,10 @@ class TestProperty14ImageTokenGracefulDegradation:
 class TestProperty15CodeBlockExecutionSandboxing:
     """
     Property 15: Code Block Execution Sandboxing
-    
+
     *For any* code block execution, the system SHALL run in a sandboxed
     environment, capture AGENTESE invocation traces, and display output.
-    
+
     **Validates: Requirements 8.3, 8.4, 8.6**
     """
 
@@ -1115,12 +1109,10 @@ class TestProperty15CodeBlockExecutionSandboxing:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_code_block_execution_is_sandboxed(
-        self, code: str, observer: Observer
-    ) -> None:
+    async def test_code_block_execution_is_sandboxed(self, code: str, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 15: Code Block Execution Sandboxing
-        
+
         Code block execution is sandboxed by default.
         Validates: Requirements 8.3
         """
@@ -1148,12 +1140,10 @@ class TestProperty15CodeBlockExecutionSandboxing:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_code_block_captures_agentese_traces(
-        self, observer: Observer
-    ) -> None:
+    async def test_code_block_captures_agentese_traces(self, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 15: Code Block Execution Sandboxing
-        
+
         Code block execution captures AGENTESE invocation traces.
         Validates: Requirements 8.6
         """
@@ -1163,10 +1153,10 @@ class TestProperty15CodeBlockExecutionSandboxing:
         )
 
         # Create code block with AGENTESE invocations
-        code_with_agentese = '''```python
+        code_with_agentese = """```python
 result = world.town.citizen.greet("Hello")
 data = self.memory.recall("test")
-```'''
+```"""
 
         match = CodeBlockToken.PATTERN.search(code_with_agentese)
         assert match is not None
@@ -1187,12 +1177,10 @@ data = self.memory.recall("test")
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_code_block_execution_returns_output(
-        self, observer: Observer
-    ) -> None:
+    async def test_code_block_execution_returns_output(self, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 15: Code Block Execution Sandboxing
-        
+
         Code block execution returns output.
         Validates: Requirements 8.4
         """
@@ -1201,9 +1189,9 @@ data = self.memory.recall("test")
             ExecutionResult,
         )
 
-        code = '''```python
+        code = """```python
 print("Hello, World!")
-```'''
+```"""
 
         match = CodeBlockToken.PATTERN.search(code)
         assert match is not None
@@ -1223,12 +1211,10 @@ print("Hello, World!")
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_non_executable_language_fails_gracefully(
-        self, observer: Observer
-    ) -> None:
+    async def test_non_executable_language_fails_gracefully(self, observer: Observer) -> None:
         """
         Feature: meaning-token-frontend, Property 15: Code Block Execution Sandboxing
-        
+
         Non-executable languages fail gracefully.
         Validates: Requirements 8.3
         """
@@ -1238,10 +1224,10 @@ print("Hello, World!")
         )
 
         # Create code block with non-executable language
-        code = '''```markdown
+        code = """```markdown
 # This is markdown
 Not executable
-```'''
+```"""
 
         match = CodeBlockToken.PATTERN.search(code)
         assert match is not None
@@ -1269,7 +1255,7 @@ Not executable
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 15: Code Block Execution Sandboxing
-        
+
         Context menu shows run option for executable languages.
         Validates: Requirements 8.3
         """
@@ -1306,12 +1292,12 @@ from services.interactive_text.contracts import DocumentState
 class TestProperty6DocumentPolynomialStateValidity:
     """
     Property 6: Document Polynomial State Validity
-    
+
     *For any* document state and valid input, the polynomial SHALL produce
     a deterministic transition to a valid state with appropriate output.
     The polynomial implements four positions (VIEWING, EDITING, SYNCING,
     CONFLICTING) with state-dependent valid inputs.
-    
+
     **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
     """
 
@@ -1323,7 +1309,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_all_states_have_valid_directions(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         All states have at least one valid input direction.
         Validates: Requirements 3.1
         """
@@ -1342,7 +1328,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_viewing_state_accepts_correct_inputs(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         VIEWING state accepts: edit, refresh, hover, click, drag.
         Validates: Requirements 3.2
         """
@@ -1366,7 +1352,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_editing_state_accepts_correct_inputs(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         EDITING state accepts: save, cancel, continue_edit, hover.
         Validates: Requirements 3.3
         """
@@ -1390,7 +1376,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_syncing_state_accepts_correct_inputs(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         SYNCING state accepts: wait, force_local, force_remote.
         Validates: Requirements 3.4
         """
@@ -1414,7 +1400,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_conflicting_state_accepts_correct_inputs(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         CONFLICTING state accepts: resolve, abort, view_diff.
         Validates: Requirements 3.5
         """
@@ -1438,12 +1424,10 @@ class TestProperty6DocumentPolynomialStateValidity:
         max_examples=100,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_transitions_are_deterministic(
-        self, state: DocumentState, input_action: str
-    ) -> None:
+    def test_transitions_are_deterministic(self, state: DocumentState, input_action: str) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         Same (state, input) always produces same (new_state, output_type).
         Validates: Requirements 3.1
         """
@@ -1453,9 +1437,7 @@ class TestProperty6DocumentPolynomialStateValidity:
         result2 = DocumentPolynomial.transition(state, input_action)
 
         # Same new state
-        assert result1[0] == result2[0], (
-            f"Non-deterministic state: {result1[0]} != {result2[0]}"
-        )
+        assert result1[0] == result2[0], f"Non-deterministic state: {result1[0]} != {result2[0]}"
 
         # Same output type
         assert type(result1[1]) == type(result2[1]), (
@@ -1470,7 +1452,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_valid_inputs_produce_valid_transitions(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         Valid inputs always produce valid state transitions (not NoOp).
         Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5
         """
@@ -1497,12 +1479,10 @@ class TestProperty6DocumentPolynomialStateValidity:
         max_examples=100,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_invalid_inputs_produce_noop(
-        self, state: DocumentState, invalid_input: str
-    ) -> None:
+    def test_invalid_inputs_produce_noop(self, state: DocumentState, invalid_input: str) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         Invalid inputs produce NoOp and preserve state.
         Validates: Requirements 3.1
         """
@@ -1524,7 +1504,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_polynomial_laws_hold(self) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         Polynomial laws (determinism, completeness, closure) all hold.
         Validates: Requirements 3.1
         """
@@ -1535,7 +1515,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_all_four_states_exist(self) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         All four states (VIEWING, EDITING, SYNCING, CONFLICTING) exist.
         Validates: Requirements 3.1
         """
@@ -1555,7 +1535,7 @@ class TestProperty6DocumentPolynomialStateValidity:
     def test_transition_outputs_are_serializable(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 6: Document Polynomial State Validity
-        
+
         All transition outputs can be serialized to dict.
         Validates: Requirements 3.1
         """
@@ -1570,7 +1550,6 @@ class TestProperty6DocumentPolynomialStateValidity:
             assert "output_type" in output_dict
 
 
-
 # =============================================================================
 # Property 7: Document Polynomial Event Emission
 # =============================================================================
@@ -1579,11 +1558,11 @@ class TestProperty6DocumentPolynomialStateValidity:
 class TestProperty7DocumentPolynomialEventEmission:
     """
     Property 7: Document Polynomial Event Emission
-    
+
     *For any* valid state transition in the Document Polynomial, the system
     SHALL emit a corresponding event through the DataBus. Events must contain
     the previous state, new state, input action, and transition output.
-    
+
     **Validates: Requirements 3.6, 11.1**
     """
 
@@ -1591,6 +1570,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     def reset_event_bus(self) -> None:
         """Reset the event bus before each test."""
         from services.interactive_text.events import reset_document_event_bus
+
         reset_document_event_bus()
 
     @given(state=st.sampled_from(list(DocumentState)))
@@ -1602,7 +1582,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_valid_transitions_emit_events(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Valid state transitions emit events through the event bus.
         Validates: Requirements 3.6, 11.1
         """
@@ -1653,7 +1633,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_events_contain_required_fields(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Emitted events contain all required fields.
         Validates: Requirements 3.6, 11.1
         """
@@ -1707,7 +1687,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_events_have_correct_event_type(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Events have the correct event type for the transition.
         Validates: Requirements 3.6
         """
@@ -1760,7 +1740,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_events_maintain_causal_ordering(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Sequential events maintain causal ordering through causal_parent.
         Validates: Requirements 11.1
         """
@@ -1814,7 +1794,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_events_are_serializable(self, state: DocumentState) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         All emitted events can be serialized to dict.
         Validates: Requirements 3.6
         """
@@ -1856,12 +1836,14 @@ class TestProperty7DocumentPolynomialEventEmission:
             assert "timestamp" in event_dict
 
     @given(
-        event_type=st.sampled_from([
-            "EDIT_STARTED",
-            "SAVE_REQUESTED",
-            "SYNC_COMPLETED",
-            "CONFLICT_RESOLVED",
-        ])
+        event_type=st.sampled_from(
+            [
+                "EDIT_STARTED",
+                "SAVE_REQUESTED",
+                "SYNC_COMPLETED",
+                "CONFLICT_RESOLVED",
+            ]
+        )
     )
     @settings(
         max_examples=100,
@@ -1871,7 +1853,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_subscribers_receive_filtered_events(self, event_type: str) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Subscribers can filter events by type.
         Validates: Requirements 11.1
         """
@@ -1921,7 +1903,7 @@ class TestProperty7DocumentPolynomialEventEmission:
     async def test_event_bus_stats_track_emissions(self) -> None:
         """
         Feature: meaning-token-frontend, Property 7: Document Polynomial Event Emission
-        
+
         Event bus statistics track emissions correctly.
         Validates: Requirements 11.1
         """
@@ -1961,24 +1943,36 @@ def token_state_strategy(draw: st.DrawFn) -> "TokenState":
     """Generate valid token states."""
     from services.interactive_text.sheaf import TokenState
 
-    token_type = draw(st.sampled_from([
-        "agentese_path", "task_checkbox", "image", "code_block",
-        "principle_ref", "requirement_ref",
-    ]))
+    token_type = draw(
+        st.sampled_from(
+            [
+                "agentese_path",
+                "task_checkbox",
+                "image",
+                "code_block",
+                "principle_ref",
+                "requirement_ref",
+            ]
+        )
+    )
 
     # Generate unique token ID
-    token_id = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789",
-        min_size=8,
-        max_size=16,
-    ))
+    token_id = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789",
+            min_size=8,
+            max_size=16,
+        )
+    )
 
     # Generate content based on type
-    content = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-",
-        min_size=1,
-        max_size=50,
-    ))
+    content = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-",
+            min_size=1,
+            max_size=50,
+        )
+    )
 
     # Generate valid position
     start = draw(st.integers(min_value=0, max_value=1000))
@@ -2015,7 +2009,7 @@ def document_view_strategy(
 @st.composite
 def compatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", "SimpleDocumentView"]:
     """Generate two compatible views (agree on overlapping tokens).
-    
+
     Key insight: We must ensure that:
     1. Shared tokens are the SAME object instances in both views
     2. Unique tokens have IDs that don't collide with shared or each other
@@ -2032,36 +2026,42 @@ def compatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", "S
     for i in range(num_shared):
         base = draw(token_state_strategy())
         # Use prefixed ID to ensure uniqueness
-        shared_tokens.append(TokenState(
-            token_id=f"shared_{i}_{base.token_id}",
-            token_type=base.token_type,
-            content=base.content,
-            position=base.position,
-        ))
+        shared_tokens.append(
+            TokenState(
+                token_id=f"shared_{i}_{base.token_id}",
+                token_type=base.token_type,
+                content=base.content,
+                position=base.position,
+            )
+        )
 
     # Generate unique tokens for view 1 with distinct prefix
     num_unique_v1 = draw(st.integers(min_value=0, max_value=3))
     unique_v1: list[TokenState] = []
     for i in range(num_unique_v1):
         base = draw(token_state_strategy())
-        unique_v1.append(TokenState(
-            token_id=f"v1_unique_{i}_{base.token_id}",
-            token_type=base.token_type,
-            content=base.content,
-            position=base.position,
-        ))
+        unique_v1.append(
+            TokenState(
+                token_id=f"v1_unique_{i}_{base.token_id}",
+                token_type=base.token_type,
+                content=base.content,
+                position=base.position,
+            )
+        )
 
     # Generate unique tokens for view 2 with distinct prefix
     num_unique_v2 = draw(st.integers(min_value=0, max_value=3))
     unique_v2: list[TokenState] = []
     for i in range(num_unique_v2):
         base = draw(token_state_strategy())
-        unique_v2.append(TokenState(
-            token_id=f"v2_unique_{i}_{base.token_id}",
-            token_type=base.token_type,
-            content=base.content,
-            position=base.position,
-        ))
+        unique_v2.append(
+            TokenState(
+                token_id=f"v2_unique_{i}_{base.token_id}",
+                token_type=base.token_type,
+                content=base.content,
+                position=base.position,
+            )
+        )
 
     # Create views with shared tokens having SAME state (same object instances)
     view1 = SimpleDocumentView.create(
@@ -2078,9 +2078,11 @@ def compatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", "S
 
 
 @st.composite
-def incompatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", "SimpleDocumentView"]:
+def incompatible_views_strategy(
+    draw: st.DrawFn,
+) -> tuple["SimpleDocumentView", "SimpleDocumentView"]:
     """Generate two incompatible views (disagree on at least one overlapping token).
-    
+
     Key insight: We must ensure the modified content is ALWAYS different from original,
     even after Hypothesis shrinking.
     """
@@ -2119,23 +2121,27 @@ def incompatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", 
     unique_v1: list[TokenState] = []
     for i in range(num_unique_v1):
         base = draw(token_state_strategy())
-        unique_v1.append(TokenState(
-            token_id=f"v1_incompat_{i}_{base.token_id}",
-            token_type=base.token_type,
-            content=base.content,
-            position=base.position,
-        ))
+        unique_v1.append(
+            TokenState(
+                token_id=f"v1_incompat_{i}_{base.token_id}",
+                token_type=base.token_type,
+                content=base.content,
+                position=base.position,
+            )
+        )
 
     num_unique_v2 = draw(st.integers(min_value=0, max_value=2))
     unique_v2: list[TokenState] = []
     for i in range(num_unique_v2):
         base = draw(token_state_strategy())
-        unique_v2.append(TokenState(
-            token_id=f"v2_incompat_{i}_{base.token_id}",
-            token_type=base.token_type,
-            content=base.content,
-            position=base.position,
-        ))
+        unique_v2.append(
+            TokenState(
+                token_id=f"v2_incompat_{i}_{base.token_id}",
+                token_type=base.token_type,
+                content=base.content,
+                position=base.position,
+            )
+        )
 
     # Create views with conflicting token states
     view1 = SimpleDocumentView.create(
@@ -2154,11 +2160,11 @@ def incompatible_views_strategy(draw: st.DrawFn) -> tuple["SimpleDocumentView", 
 class TestProperty8DocumentSheafCoherence:
     """
     Property 8: Document Sheaf Coherence
-    
+
     *For any* document opened in multiple views, the sheaf condition SHALL hold:
     all views with overlapping tokens agree on token state, and compatible views
     can be glued into a consistent global document.
-    
+
     **Validates: Requirements 4.1, 4.4, 4.5, 4.6**
     """
 
@@ -2172,7 +2178,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Compatible views satisfy the sheaf condition.
         Validates: Requirements 4.4
         """
@@ -2201,7 +2207,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Incompatible views fail the sheaf condition.
         Validates: Requirements 4.4, 4.5
         """
@@ -2230,7 +2236,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Compatible views can be glued into a consistent global document.
         Validates: Requirements 4.6
         """
@@ -2258,7 +2264,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Incompatible views cannot be glued.
         Validates: Requirements 4.6
         """
@@ -2281,12 +2287,10 @@ class TestProperty8DocumentSheafCoherence:
         max_examples=100,
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
-    def test_single_view_always_coherent(
-        self, view: "SimpleDocumentView"
-    ) -> None:
+    def test_single_view_always_coherent(self, view: "SimpleDocumentView") -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         A single view is always coherent (trivially satisfies sheaf condition).
         Validates: Requirements 4.1
         """
@@ -2310,7 +2314,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Overlap operation is symmetric: overlap(v1, v2) == overlap(v2, v1).
         Validates: Requirements 4.4
         """
@@ -2334,7 +2338,7 @@ class TestProperty8DocumentSheafCoherence:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Compatible operation is symmetric: compatible(v1, v2) == compatible(v2, v1).
         Validates: Requirements 4.4
         """
@@ -2356,7 +2360,7 @@ class TestProperty8DocumentSheafCoherence:
     def test_token_state_equality(self, token: "TokenState") -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Token states with same observable properties are equal.
         Validates: Requirements 4.4
         """
@@ -2381,7 +2385,7 @@ class TestProperty8DocumentSheafCoherence:
     def test_token_state_inequality_on_content_change(self, token: "TokenState") -> None:
         """
         Feature: meaning-token-frontend, Property 8: Document Sheaf Coherence
-        
+
         Token states with different content are not equal.
         Validates: Requirements 4.4
         """
@@ -2410,11 +2414,13 @@ def edit_strategy(draw: st.DrawFn, source_view_id: str = "test_view") -> "Edit":
 
     start = draw(st.integers(min_value=0, max_value=100))
     end = draw(st.integers(min_value=start, max_value=start + 50))
-    new_text = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n",
-        min_size=0,
-        max_size=50,
-    ))
+    new_text = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\n",
+            min_size=0,
+            max_size=50,
+        )
+    )
 
     return Edit(
         start=start,
@@ -2450,10 +2456,10 @@ def token_change_strategy(draw: st.DrawFn) -> "TokenChange":
 class TestProperty9DocumentSheafPropagation:
     """
     Property 9: Document Sheaf Propagation
-    
+
     *For any* edit in any view of a document, the change SHALL propagate to all
     other views, and the file on disk SHALL reflect the canonical state.
-    
+
     **Validates: Requirements 4.2, 4.3**
     """
 
@@ -2465,7 +2471,7 @@ class TestProperty9DocumentSheafPropagation:
     def test_edit_applies_correctly(self, edit: "Edit") -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         Edit operations apply correctly to content.
         Validates: Requirements 4.2
         """
@@ -2475,9 +2481,9 @@ class TestProperty9DocumentSheafPropagation:
         result = edit.apply(content)
 
         # Verify the edit was applied correctly
-        assert result[:edit.start] == content[:edit.start]
-        assert result[edit.start:edit.start + len(edit.new_text)] == edit.new_text
-        assert result[edit.start + len(edit.new_text):] == content[edit.end:]
+        assert result[: edit.start] == content[: edit.start]
+        assert result[edit.start : edit.start + len(edit.new_text)] == edit.new_text
+        assert result[edit.start + len(edit.new_text) :] == content[edit.end :]
 
     @given(changes=st.lists(token_change_strategy(), min_size=1, max_size=5))
     @settings(
@@ -2485,12 +2491,10 @@ class TestProperty9DocumentSheafPropagation:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_changes_propagate_to_views(
-        self, changes: list["TokenChange"]
-    ) -> None:
+    async def test_changes_propagate_to_views(self, changes: list["TokenChange"]) -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         Token changes propagate to all views in the sheaf.
         Validates: Requirements 4.2
         """
@@ -2548,7 +2552,7 @@ class TestProperty9DocumentSheafPropagation:
     def test_change_handler_registration(self, view: "SimpleDocumentView") -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         Change handlers can be registered and unregistered.
         Validates: Requirements 4.2
         """
@@ -2583,12 +2587,10 @@ class TestProperty9DocumentSheafPropagation:
         suppress_health_check=[HealthCheck.function_scoped_fixture],
     )
     @pytest.mark.asyncio
-    async def test_change_handlers_are_notified(
-        self, changes: list["TokenChange"]
-    ) -> None:
+    async def test_change_handlers_are_notified(self, changes: list["TokenChange"]) -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         Registered change handlers are notified when changes propagate.
         Validates: Requirements 4.2
         """
@@ -2628,7 +2630,7 @@ class TestProperty9DocumentSheafPropagation:
     def test_token_change_factory_methods(self, token: "TokenState") -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         TokenChange factory methods create correct change types.
         Validates: Requirements 4.2
         """
@@ -2669,7 +2671,7 @@ class TestProperty9DocumentSheafPropagation:
     def test_file_change_creation(self, view: "SimpleDocumentView") -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         FileChange objects are created correctly.
         Validates: Requirements 4.3
         """
@@ -2698,7 +2700,7 @@ class TestProperty9DocumentSheafPropagation:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 9: Document Sheaf Propagation
-        
+
         After gluing, the global state contains all tokens from all views.
         Validates: Requirements 4.3
         """

@@ -36,7 +36,7 @@ from .base import BaseMeaningToken, filter_affordances_by_observer
 @dataclass(frozen=True)
 class ImageAnalysis:
     """AI-generated analysis of an image.
-    
+
     Attributes:
         description: Natural language description
         extracted_text: Text extracted from image (OCR)
@@ -62,7 +62,7 @@ class ImageAnalysis:
 @dataclass(frozen=True)
 class ImageHoverInfo:
     """Information displayed on image hover.
-    
+
     Attributes:
         alt_text: Image alt text
         path: Image path/URL
@@ -88,7 +88,7 @@ class ImageHoverInfo:
 @dataclass(frozen=True)
 class ImageExpandResult:
     """Result of expanding an image to full analysis panel.
-    
+
     Attributes:
         path: Image path/URL
         alt_text: Image alt text
@@ -114,7 +114,7 @@ class ImageExpandResult:
 @dataclass(frozen=True)
 class ImageDragResult:
     """Result of dragging an image to chat context.
-    
+
     Attributes:
         path: Image path/URL
         alt_text: Image alt text
@@ -136,13 +136,13 @@ class ImageDragResult:
 
 class ImageToken(BaseMeaningToken[str]):
     """Token representing a markdown image.
-    
+
     Image tokens are first-class context that can be analyzed by AI
     and used in agent conversations. They provide graceful degradation
     when LLM services are unavailable.
-    
+
     Pattern: `![alt text](path/to/image.png)`
-    
+
     Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6
     """
 
@@ -166,7 +166,7 @@ class ImageToken(BaseMeaningToken[str]):
         llm_available: bool = True,
     ) -> None:
         """Initialize an Image token.
-        
+
         Args:
             source_text: The original matched text
             source_position: (start, end) position in source document
@@ -188,11 +188,11 @@ class ImageToken(BaseMeaningToken[str]):
         llm_available: bool = True,
     ) -> ImageToken:
         """Create token from regex match.
-        
+
         Args:
             match: Regex match object from pattern matching
             llm_available: Whether LLM service is available
-            
+
         Returns:
             New ImageToken instance
         """
@@ -236,10 +236,10 @@ class ImageToken(BaseMeaningToken[str]):
 
     async def get_affordances(self, observer: Observer) -> list[Affordance]:
         """Get available affordances for this observer.
-        
+
         Args:
             observer: The observer requesting affordances
-            
+
         Returns:
             List of available affordances
         """
@@ -315,15 +315,15 @@ class ImageToken(BaseMeaningToken[str]):
         **kwargs: Any,
     ) -> Any:
         """Execute the action for this token.
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             Action-specific result
-            
+
         Requirements: 7.2, 7.3, 7.4
         """
         if action == AffordanceAction.HOVER:
@@ -337,7 +337,7 @@ class ImageToken(BaseMeaningToken[str]):
 
     async def _handle_hover(self, observer: Observer) -> ImageHoverInfo:
         """Handle hover action - display AI description.
-        
+
         Requirements: 7.2, 7.5
         """
         # Check if LLM is available for analysis
@@ -361,7 +361,7 @@ class ImageToken(BaseMeaningToken[str]):
 
     async def _handle_expand(self, observer: Observer) -> ImageExpandResult:
         """Handle click action - expand to full analysis panel.
-        
+
         Requirements: 7.3
         """
         has_llm = "llm" in observer.capabilities and self._llm_available
@@ -378,7 +378,7 @@ class ImageToken(BaseMeaningToken[str]):
 
     async def _handle_drag(self, observer: Observer) -> ImageDragResult:
         """Handle drag action - add to conversation context.
-        
+
         Requirements: 7.4
         """
         # In full implementation, would invoke:
@@ -392,7 +392,7 @@ class ImageToken(BaseMeaningToken[str]):
 
     async def _get_analysis(self) -> ImageAnalysis:
         """Get or generate AI analysis for this image.
-        
+
         Returns cached analysis if available, otherwise generates new analysis.
         """
         if self._cached_analysis is not None:
@@ -420,11 +420,13 @@ class ImageToken(BaseMeaningToken[str]):
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         base = super().to_dict()
-        base.update({
-            "alt_text": self._alt_text,
-            "path": self._path,
-            "llm_available": self._llm_available,
-        })
+        base.update(
+            {
+                "alt_text": self._alt_text,
+                "path": self._path,
+                "llm_available": self._llm_available,
+            }
+        )
         return base
 
 
@@ -439,12 +441,12 @@ def create_image_token(
     llm_available: bool = True,
 ) -> ImageToken | None:
     """Create an Image token from text.
-    
+
     Args:
         text: Text that may contain a markdown image
         position: Optional (start, end) position override
         llm_available: Whether LLM service is available
-        
+
     Returns:
         ImageToken if text matches pattern, None otherwise
     """

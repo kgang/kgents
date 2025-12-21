@@ -107,6 +107,7 @@ class TestAGENTESEPathTokenCreation:
     def test_create_from_match(self) -> None:
         """Token can be created from regex match."""
         import re
+
         text = "See `self.memory.capture` for details"
         match = AGENTESEPathToken.PATH_PATTERN.search(text)
         assert match is not None
@@ -151,9 +152,7 @@ class TestAGENTESEPathAffordances:
     """Tests for AGENTESEPath affordances."""
 
     @pytest.mark.asyncio
-    async def test_get_affordances(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_get_affordances(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """Token returns expected affordances."""
         affordances = await token.get_affordances(observer)
 
@@ -205,7 +204,7 @@ class TestAGENTESEPathActions:
         self, token: AGENTESEPathToken, observer: Observer
     ) -> None:
         """Hover action returns polynomial state.
-        
+
         Requirements: 5.2
         """
         result = await token.on_interact(AffordanceAction.HOVER, observer)
@@ -221,7 +220,7 @@ class TestAGENTESEPathActions:
         self, ghost_token: AGENTESEPathToken, observer: Observer
     ) -> None:
         """Hover on ghost token returns ghost info.
-        
+
         Requirements: 5.6
         """
         result = await ghost_token.on_interact(AffordanceAction.HOVER, observer)
@@ -232,11 +231,9 @@ class TestAGENTESEPathActions:
         assert "not yet implemented" in result.data.content.lower()
 
     @pytest.mark.asyncio
-    async def test_click_navigates(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_click_navigates(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """Click action navigates to path's Habitat.
-        
+
         Requirements: 5.3
         """
         result = await token.on_interact(AffordanceAction.CLICK, observer)
@@ -252,7 +249,7 @@ class TestAGENTESEPathActions:
         self, ghost_token: AGENTESEPathToken, observer: Observer
     ) -> None:
         """Click on ghost token returns error.
-        
+
         Requirements: 5.6
         """
         result = await ghost_token.on_interact(AffordanceAction.CLICK, observer)
@@ -267,7 +264,7 @@ class TestAGENTESEPathActions:
         self, token: AGENTESEPathToken, observer: Observer
     ) -> None:
         """Right-click shows context menu.
-        
+
         Requirements: 5.4
         """
         result = await token.on_interact(AffordanceAction.RIGHT_CLICK, observer)
@@ -294,11 +291,9 @@ class TestAGENTESEPathActions:
         assert "edit" in option_actions
 
     @pytest.mark.asyncio
-    async def test_drag_prefills_repl(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_drag_prefills_repl(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """Drag action pre-fills REPL with path.
-        
+
         Requirements: 5.5
         """
         result = await token.on_interact(AffordanceAction.DRAG, observer)
@@ -318,9 +313,7 @@ class TestAGENTESEPathProjection:
     """Tests for AGENTESEPath projection."""
 
     @pytest.mark.asyncio
-    async def test_project_cli(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_project_cli(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """CLI projection uses Rich markup."""
         result = await token.project("cli", observer)
 
@@ -338,9 +331,7 @@ class TestAGENTESEPathProjection:
         assert "italic" in result
 
     @pytest.mark.asyncio
-    async def test_project_json(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_project_json(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """JSON projection returns structured data."""
         result = await token.project("json", observer)
 
@@ -352,9 +343,7 @@ class TestAGENTESEPathProjection:
         assert result["is_ghost"] is False
 
     @pytest.mark.asyncio
-    async def test_project_web(
-        self, token: AGENTESEPathToken, observer: Observer
-    ) -> None:
+    async def test_project_web(self, token: AGENTESEPathToken, observer: Observer) -> None:
         """Web projection returns source text."""
         result = await token.project("web", observer)
 

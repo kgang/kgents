@@ -123,9 +123,7 @@ async def migrate_history_db(
         source_conn.row_factory = sqlite3.Row
 
         # Check if tables exist
-        cursor = source_conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table'"
-        )
+        cursor = source_conn.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = {row[0] for row in cursor.fetchall()}
 
         sessions = []
@@ -315,9 +313,7 @@ async def migrate_history_db(
 
 def main() -> None:
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Migrate ~/.kgents/history.db to membrane.db"
-    )
+    parser = argparse.ArgumentParser(description="Migrate ~/.kgents/history.db to membrane.db")
     parser.add_argument(
         "--source",
         type=Path,

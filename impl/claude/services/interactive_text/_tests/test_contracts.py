@@ -37,19 +37,25 @@ from services.interactive_text.contracts import (
 @st.composite
 def token_pattern_strategy(draw: st.DrawFn) -> TokenPattern:
     """Generate valid token patterns."""
-    name = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz_",
-        min_size=1,
-        max_size=20,
-    ))
+    name = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz_",
+            min_size=1,
+            max_size=20,
+        )
+    )
     # Use simple patterns that are always valid
-    pattern_text = draw(st.sampled_from([
-        r"\w+",
-        r"\d+",
-        r"[a-z]+",
-        r"`[^`]+`",
-        r"\[.+?\]",
-    ]))
+    pattern_text = draw(
+        st.sampled_from(
+            [
+                r"\w+",
+                r"\d+",
+                r"[a-z]+",
+                r"`[^`]+`",
+                r"\[.+?\]",
+            ]
+        )
+    )
     priority = draw(st.integers(min_value=0, max_value=100))
 
     return TokenPattern(
@@ -62,17 +68,21 @@ def token_pattern_strategy(draw: st.DrawFn) -> TokenPattern:
 @st.composite
 def affordance_strategy(draw: st.DrawFn) -> Affordance:
     """Generate valid affordances."""
-    name = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz_",
-        min_size=1,
-        max_size=20,
-    ))
+    name = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz_",
+            min_size=1,
+            max_size=20,
+        )
+    )
     action = draw(st.sampled_from(list(AffordanceAction)))
-    handler = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz._",
-        min_size=5,
-        max_size=50,
-    ))
+    handler = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz._",
+            min_size=5,
+            max_size=50,
+        )
+    )
     enabled = draw(st.booleans())
 
     return Affordance(
@@ -86,11 +96,13 @@ def affordance_strategy(draw: st.DrawFn) -> Affordance:
 @st.composite
 def observer_strategy(draw: st.DrawFn) -> Observer:
     """Generate valid observers."""
-    capabilities = draw(st.frozensets(
-        st.sampled_from(["llm", "verification", "network", "storage"]),
-        min_size=0,
-        max_size=4,
-    ))
+    capabilities = draw(
+        st.frozensets(
+            st.sampled_from(["llm", "verification", "network", "storage"]),
+            min_size=0,
+            max_size=4,
+        )
+    )
     density = draw(st.sampled_from(list(ObserverDensity)))
     role = draw(st.sampled_from(list(ObserverRole)))
 

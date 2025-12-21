@@ -202,9 +202,7 @@ def _dispatch(
                     ctx,
                 )
                 return 1
-            return execute_manifest(
-                agent_name, namespace, json_mode, validate_mode, target, ctx
-            )
+            return execute_manifest(agent_name, namespace, json_mode, validate_mode, target, ctx)
 
         case "run":
             if not agent_name:
@@ -215,9 +213,7 @@ def _dispatch(
                 )
                 return 1
             return asyncio.run(
-                execute_run(
-                    agent_name, input_data, json_mode, stream_mode, trace_mode, ctx
-                )
+                execute_run(agent_name, input_data, json_mode, stream_mode, trace_mode, ctx)
             )
 
         case "list":

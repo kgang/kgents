@@ -369,10 +369,10 @@ class LivingDocsNode(BaseLogosNode):
 
         # Gather all teaching moments
         moments: list[tuple[str, Any]] = []  # (symbol, TeachingMoment)
-        for node in nodes:
-            for moment in node.teaching:
+        for doc_node in nodes:
+            for moment in doc_node.teaching:
                 if severity is None or moment.severity == severity:
-                    moments.append((node.symbol, moment))
+                    moments.append((doc_node.symbol, moment))
 
         if not moments:
             return BasicRendering(

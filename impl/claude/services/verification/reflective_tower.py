@@ -34,13 +34,14 @@ logger = logging.getLogger(__name__)
 
 class TowerLevel(IntEnum):
     """Levels in the reflective tower."""
+
     BEHAVIORAL_PATTERNS = -2  # Emergent patterns from traces
-    TRACE_WITNESSES = -1      # Constructive proofs of execution
-    CODE = 0                  # Python/TypeScript implementation
-    SPEC = 1                  # AGENTESE + Operads specification
-    META_SPEC = 2             # Category Theory meta-specification
-    FOUNDATIONS = 3           # HoTT/Topos Theory
-    INTENT = 100              # Mind-Map Topology (Kent's Intent) - "Level ∞"
+    TRACE_WITNESSES = -1  # Constructive proofs of execution
+    CODE = 0  # Python/TypeScript implementation
+    SPEC = 1  # AGENTESE + Operads specification
+    META_SPEC = 2  # Category Theory meta-specification
+    FOUNDATIONS = 3  # HoTT/Topos Theory
+    INTENT = 100  # Mind-Map Topology (Kent's Intent) - "Level ∞"
 
 
 LEVEL_NAMES = {
@@ -62,6 +63,7 @@ LEVEL_NAMES = {
 @dataclass(frozen=True)
 class LevelArtifact:
     """An artifact at a specific tower level."""
+
     artifact_id: str
     level: TowerLevel
     name: str
@@ -76,18 +78,20 @@ class LevelArtifact:
 @dataclass(frozen=True)
 class CompressionMorphism:
     """A morphism that compresses from higher to lower level."""
+
     morphism_id: str
     source_level: TowerLevel
     target_level: TowerLevel
     name: str
     description: str
     preserves: frozenset[str]  # What properties are preserved
-    loses: frozenset[str]      # What information is lost
+    loses: frozenset[str]  # What information is lost
 
 
 @dataclass(frozen=True)
 class ConsistencyResult:
     """Result of consistency verification between levels."""
+
     result_id: str
     source_level: TowerLevel
     target_level: TowerLevel
@@ -101,6 +105,7 @@ class ConsistencyResult:
 @dataclass(frozen=True)
 class CorrectionProposal:
     """A proposal to correct inconsistency between levels."""
+
     proposal_id: str
     source_level: TowerLevel
     target_level: TowerLevel
@@ -125,7 +130,9 @@ class LevelHandler:
     async def add_artifact(self, artifact: LevelArtifact) -> None:
         """Add an artifact to this level."""
         if artifact.level != self.level:
-            raise ValueError(f"Artifact level {artifact.level} doesn't match handler level {self.level}")
+            raise ValueError(
+                f"Artifact level {artifact.level} doesn't match handler level {self.level}"
+            )
         self.artifacts[artifact.artifact_id] = artifact
 
     async def get_artifact(self, artifact_id: str) -> LevelArtifact | None:
@@ -288,10 +295,12 @@ class ConsistencyVerifier:
         # Check level adjacency
         if abs(int(source_level) - int(target_level)) > 1:
             if not (source_level == TowerLevel.FOUNDATIONS and target_level == TowerLevel.INTENT):
-                violations.append({
-                    "type": "non_adjacent_levels",
-                    "description": f"Levels {source_level.name} and {target_level.name} are not adjacent",
-                })
+                violations.append(
+                    {
+                        "type": "non_adjacent_levels",
+                        "description": f"Levels {source_level.name} and {target_level.name} are not adjacent",
+                    }
+                )
 
         # Perform level-specific consistency checks
         level_violations = await self._check_level_consistency(source_artifact, target_artifact)
@@ -299,7 +308,9 @@ class ConsistencyVerifier:
 
         # Generate suggestions for violations
         if violations:
-            suggestions = await self._generate_suggestions(violations, source_artifact, target_artifact)
+            suggestions = await self._generate_suggestions(
+                violations, source_artifact, target_artifact
+            )
 
         end_time = datetime.now()
         verification_time_ms = (end_time - start_time).total_seconds() * 1000
@@ -323,7 +334,10 @@ class ConsistencyVerifier:
         violations = []
 
         # Patterns → Traces: patterns should be derivable from traces
-        if source.level == TowerLevel.BEHAVIORAL_PATTERNS and target.level == TowerLevel.TRACE_WITNESSES:
+        if (
+            source.level == TowerLevel.BEHAVIORAL_PATTERNS
+            and target.level == TowerLevel.TRACE_WITNESSES
+        ):
             violations.extend(await self._check_pattern_trace_consistency(source, target))
 
         # Traces → Code: traces should match code behavior
@@ -363,11 +377,13 @@ class ConsistencyVerifier:
         trace_id = trace_content.get("witness_id", "")
 
         if example_traces and trace_id not in example_traces:
-            violations.append({
-                "type": "pattern_trace_mismatch",
-                "description": f"Pattern does not reference trace {trace_id}",
-                "severity": "warning",
-            })
+            violations.append(
+                {
+                    "type": "pattern_trace_mismatch",
+                    "description": f"Pattern does not reference trace {trace_id}",
+                    "severity": "warning",
+                }
+            )
 
         return violations
 
@@ -389,11 +405,13 @@ class ConsistencyVerifier:
             # Simple check: agent path should relate to module
             path_parts = agent_path.split(".")
             if not any(part in module_path for part in path_parts):
-                violations.append({
-                    "type": "trace_code_path_mismatch",
-                    "description": f"Trace path '{agent_path}' doesn't match code module '{module_path}'",
-                    "severity": "info",
-                })
+                violations.append(
+                    {
+                        "type": "trace_code_path_mismatch",
+                        "description": f"Trace path '{agent_path}' doesn't match code module '{module_path}'",
+                        "severity": "info",
+                    }
+                )
 
         return violations
 
@@ -415,11 +433,13 @@ class ConsistencyVerifier:
             path_name = path if isinstance(path, str) else path.get("path", "")
             # Check if any function implements this path
             if not any(path_name.split(".")[-1] in func for func in code_functions):
-                violations.append({
-                    "type": "unimplemented_spec_path",
-                    "description": f"Spec path '{path_name}' has no corresponding implementation",
-                    "severity": "error",
-                })
+                violations.append(
+                    {
+                        "type": "unimplemented_spec_path",
+                        "description": f"Spec path '{path_name}' has no corresponding implementation",
+                        "severity": "error",
+                    }
+                )
 
         return violations
 
@@ -438,11 +458,13 @@ class ConsistencyVerifier:
         categories = metaspec_content.get("categories", [])
 
         if operads and not categories:
-            violations.append({
-                "type": "missing_categorical_foundation",
-                "description": "Spec has operads but meta-spec has no categories",
-                "severity": "warning",
-            })
+            violations.append(
+                {
+                    "type": "missing_categorical_foundation",
+                    "description": "Spec has operads but meta-spec has no categories",
+                    "severity": "warning",
+                }
+            )
 
         return violations
 
@@ -461,11 +483,13 @@ class ConsistencyVerifier:
         universe_level = foundations_content.get("universe_level", 0)
 
         if functors and universe_level < 1:
-            violations.append({
-                "type": "universe_level_insufficient",
-                "description": "Functors require universe level >= 1",
-                "severity": "warning",
-            })
+            violations.append(
+                {
+                    "type": "universe_level_insufficient",
+                    "description": "Functors require universe level >= 1",
+                    "severity": "warning",
+                }
+            )
 
         return violations
 
@@ -484,11 +508,13 @@ class ConsistencyVerifier:
         foundation_types = foundations_content.get("types", [])
 
         if intent_nodes and not foundation_types:
-            violations.append({
-                "type": "intent_not_formalized",
-                "description": "Intent has nodes but foundations has no types",
-                "severity": "info",
-            })
+            violations.append(
+                {
+                    "type": "intent_not_formalized",
+                    "description": "Intent has nodes but foundations has no types",
+                    "severity": "info",
+                }
+            )
 
         return violations
 
@@ -633,7 +659,7 @@ class ReflectiveTower:
         target_level: TowerLevel,
     ) -> list[ConsistencyResult]:
         """Verify consistency between all artifacts at two levels."""
-        results = []
+        results: list[ConsistencyResult] = []
 
         source_handler = self.handlers.get(source_level)
         target_handler = self.handlers.get(target_level)
@@ -680,7 +706,7 @@ class ReflectiveTower:
         consistency_result: ConsistencyResult,
     ) -> list[CorrectionProposal]:
         """Propose corrections for inconsistencies."""
-        proposals = []
+        proposals: list[CorrectionProposal] = []
 
         if consistency_result.is_consistent:
             return proposals

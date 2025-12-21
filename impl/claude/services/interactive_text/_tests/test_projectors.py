@@ -99,7 +99,7 @@ class TestDocument:
 
 class StringProjectionFunctor(ProjectionFunctor[str]):
     """Simple string-based projection functor for testing.
-    
+
     This functor projects tokens to simple string representations,
     making it easy to verify composition and naturality properties.
     """
@@ -120,7 +120,7 @@ class StringProjectionFunctor(ProjectionFunctor[str]):
         text = f"[{token.token_type}:{token._value}]"
 
         if params.truncate_length > 0 and len(text) > params.truncate_length:
-            text = text[:params.truncate_length - 3] + "..."
+            text = text[: params.truncate_length - 3] + "..."
 
         return text
 
@@ -149,7 +149,7 @@ class StringProjectionFunctor(ProjectionFunctor[str]):
 
 class ListProjectionFunctor(ProjectionFunctor[list[str]]):
     """List-based projection functor for testing composition properties.
-    
+
     This functor projects tokens to lists, making it easy to verify
     that composition preserves structure.
     """
@@ -197,20 +197,26 @@ class ListProjectionFunctor(ProjectionFunctor[list[str]]):
 @st.composite
 def token_strategy(draw: st.DrawFn) -> TestToken:
     """Generate random test tokens."""
-    token_type = draw(st.sampled_from([
-        "agentese_path",
-        "task_checkbox",
-        "image",
-        "code_block",
-        "principle_ref",
-        "requirement_ref",
-    ]))
+    token_type = draw(
+        st.sampled_from(
+            [
+                "agentese_path",
+                "task_checkbox",
+                "image",
+                "code_block",
+                "principle_ref",
+                "requirement_ref",
+            ]
+        )
+    )
 
-    value = draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=1,
-        max_size=20,
-    ))
+    value = draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=1,
+            max_size=20,
+        )
+    )
 
     start = draw(st.integers(min_value=0, max_value=1000))
     length = draw(st.integers(min_value=1, max_value=100))
@@ -228,21 +234,25 @@ def token_strategy(draw: st.DrawFn) -> TestToken:
 @st.composite
 def token_list_strategy(draw: st.DrawFn, min_size: int = 1, max_size: int = 5) -> list[TestToken]:
     """Generate a list of test tokens."""
-    return draw(st.lists(
-        token_strategy(),
-        min_size=min_size,
-        max_size=max_size,
-    ))
+    return draw(
+        st.lists(
+            token_strategy(),
+            min_size=min_size,
+            max_size=max_size,
+        )
+    )
 
 
 @st.composite
 def observer_strategy(draw: st.DrawFn) -> Observer:
     """Generate random observers with different umwelts."""
-    capabilities = draw(st.frozensets(
-        st.sampled_from(["llm", "verification", "network", "storage"]),
-        min_size=0,
-        max_size=4,
-    ))
+    capabilities = draw(
+        st.frozensets(
+            st.sampled_from(["llm", "verification", "network", "storage"]),
+            min_size=0,
+            max_size=4,
+        )
+    )
     density = draw(st.sampled_from(list(ObserverDensity)))
     role = draw(st.sampled_from(list(ObserverRole)))
 
@@ -267,11 +277,11 @@ def composition_type_strategy(draw: st.DrawFn) -> str:
 class TestProperty3ProjectionFunctorCompositionLaw:
     """
     Property 3: Projection Functor Composition Law
-    
+
     *For any* two meaning tokens A and B, projecting their horizontal
     composition SHALL equal composing their projections:
     P(A >> B) = P(A) >> P(B).
-    
+
     **Validates: Requirements 1.5, 2.6**
     """
 
@@ -293,17 +303,14 @@ class TestProperty3ProjectionFunctorCompositionLaw:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 3: Projection Functor Composition Law
-        
+
         Projecting composed tokens equals composing individual projections.
         Validates: Requirements 1.5, 2.6
         """
         functor = StringProjectionFunctor()
 
         # Project each token individually
-        individual_projections = [
-            await functor.project_token(token, observer)
-            for token in tokens
-        ]
+        individual_projections = [await functor.project_token(token, observer) for token in tokens]
 
         # Compose the individual projections
         composed_after = functor._compose(individual_projections, composition_type)
@@ -337,17 +344,14 @@ class TestProperty3ProjectionFunctorCompositionLaw:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 3: Projection Functor Composition Law
-        
+
         Composition law holds for list-based projections.
         Validates: Requirements 1.5, 2.6
         """
         functor = ListProjectionFunctor()
 
         # Project each token individually
-        individual_projections = [
-            await functor.project_token(token, observer)
-            for token in tokens
-        ]
+        individual_projections = [await functor.project_token(token, observer) for token in tokens]
 
         # Compose the individual projections
         composed_after = functor._compose(individual_projections, composition_type)
@@ -375,7 +379,7 @@ class TestProperty3ProjectionFunctorCompositionLaw:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 3: Projection Functor Composition Law
-        
+
         Composition result contains all source token IDs in order.
         Validates: Requirements 1.5, 2.6
         """
@@ -403,7 +407,7 @@ class TestProperty3ProjectionFunctorCompositionLaw:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 3: Projection Functor Composition Law
-        
+
         Composing a single token is equivalent to projecting it directly.
         Validates: Requirements 1.5, 2.6
         """
@@ -428,11 +432,11 @@ class TestProperty3ProjectionFunctorCompositionLaw:
 class TestProperty4ProjectionNaturalityCondition:
     """
     Property 4: Projection Naturality Condition
-    
+
     *For any* meaning token and *for any* state change to that token,
     projecting before the change then applying the target's state update
     SHALL produce the same result as applying the change then projecting.
-    
+
     **Validates: Requirements 2.1, 2.3**
     """
 
@@ -458,7 +462,7 @@ class TestProperty4ProjectionNaturalityCondition:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 4: Projection Naturality Condition
-        
+
         Naturality holds for token value changes.
         Validates: Requirements 2.1, 2.3
         """
@@ -501,7 +505,7 @@ class TestProperty4ProjectionNaturalityCondition:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 4: Projection Naturality Condition
-        
+
         Same token + same observer always produces same projection.
         Validates: Requirements 2.1, 2.3
         """
@@ -530,7 +534,7 @@ class TestProperty4ProjectionNaturalityCondition:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 4: Projection Naturality Condition
-        
+
         Projection preserves token type information.
         Validates: Requirements 2.1, 2.3
         """
@@ -562,7 +566,6 @@ __all__ = [
 ]
 
 
-
 # =============================================================================
 # Property 5: Density-Parameterized Projection
 # =============================================================================
@@ -571,11 +574,11 @@ __all__ = [
 class TestProperty5DensityParameterizedProjection:
     """
     Property 5: Density-Parameterized Projection
-    
+
     *For any* meaning token and *for any* density value (compact, comfortable,
     spacious), the projection SHALL produce valid target-specific output that
     differs appropriately by density.
-    
+
     **Validates: Requirements 2.4, 2.5**
     """
 
@@ -593,7 +596,7 @@ class TestProperty5DensityParameterizedProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 5: Density-Parameterized Projection
-        
+
         Different density settings produce appropriately different output.
         Validates: Requirements 2.4, 2.5
         """
@@ -646,7 +649,7 @@ class TestProperty5DensityParameterizedProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 5: Density-Parameterized Projection
-        
+
         Density parameters are correctly applied to projections.
         Validates: Requirements 2.4, 2.5
         """
@@ -682,7 +685,7 @@ class TestProperty5DensityParameterizedProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 5: Density-Parameterized Projection
-        
+
         Compact density truncates long content appropriately.
         Validates: Requirements 2.4, 2.5
         """
@@ -730,7 +733,7 @@ class TestProperty5DensityParameterizedProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 5: Density-Parameterized Projection
-        
+
         Web projection includes density information in output.
         Validates: Requirements 2.4, 2.5
         """
@@ -772,7 +775,7 @@ class TestProperty5DensityParameterizedProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 5: Density-Parameterized Projection
-        
+
         JSON projection includes density in metadata.
         Validates: Requirements 2.4, 2.5
         """
@@ -799,7 +802,6 @@ class TestProperty5DensityParameterizedProjection:
         assert result["metadata"]["density"] == density.value
 
 
-
 # =============================================================================
 # Property 18: Observer-Dependent Projection
 # =============================================================================
@@ -808,11 +810,11 @@ class TestProperty5DensityParameterizedProjection:
 class TestProperty18ObserverDependentProjection:
     """
     Property 18: Observer-Dependent Projection
-    
+
     *For any* meaning token and *for any* two observers with different umwelts
     (capabilities, density, role), the projections SHALL differ appropriately
     while maintaining semantic equivalence.
-    
+
     **Validates: Requirements 13.1, 13.2, 13.3, 13.4, 13.6**
     """
 
@@ -834,7 +836,7 @@ class TestProperty18ObserverDependentProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 18: Observer-Dependent Projection
-        
+
         Different observers receive valid projections.
         Validates: Requirements 13.1, 13.2, 13.3
         """
@@ -865,7 +867,7 @@ class TestProperty18ObserverDependentProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 18: Observer-Dependent Projection
-        
+
         Observer capabilities affect available affordances.
         Validates: Requirements 13.1, 13.4
         """
@@ -885,21 +887,25 @@ class TestProperty18ObserverDependentProjection:
 
                 # LLM capability enables AI analysis
                 if observer.has_capability("llm"):
-                    affordances.append(Affordance(
-                        name="analyze",
-                        action=AffordanceAction.HOVER,
-                        handler="llm.analyze",
-                        enabled=True,
-                    ))
+                    affordances.append(
+                        Affordance(
+                            name="analyze",
+                            action=AffordanceAction.HOVER,
+                            handler="llm.analyze",
+                            enabled=True,
+                        )
+                    )
 
                 # Verification capability enables verification
                 if observer.has_capability("verification"):
-                    affordances.append(Affordance(
-                        name="verify",
-                        action=AffordanceAction.DOUBLE_CLICK,
-                        handler="verify.handler",
-                        enabled=True,
-                    ))
+                    affordances.append(
+                        Affordance(
+                            name="verify",
+                            action=AffordanceAction.DOUBLE_CLICK,
+                            handler="verify.handler",
+                            enabled=True,
+                        )
+                    )
 
                 return affordances
 
@@ -919,9 +925,7 @@ class TestProperty18ObserverDependentProjection:
         llm_observer = Observer.create(capabilities=frozenset(["llm"]))
 
         # Observer with all capabilities
-        full_observer = Observer.create(
-            capabilities=frozenset(["llm", "verification", "network"])
-        )
+        full_observer = Observer.create(capabilities=frozenset(["llm", "verification", "network"]))
 
         basic_result = await functor.project_token(cap_token, basic_observer)
         llm_result = await functor.project_token(cap_token, llm_observer)
@@ -950,7 +954,7 @@ class TestProperty18ObserverDependentProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 18: Observer-Dependent Projection
-        
+
         Observer role affects projection content.
         Validates: Requirements 13.4
         """
@@ -970,21 +974,25 @@ class TestProperty18ObserverDependentProjection:
 
                 # Editors can edit
                 if observer.role in (ObserverRole.EDITOR, ObserverRole.ADMIN):
-                    affordances.append(Affordance(
-                        name="edit",
-                        action=AffordanceAction.DOUBLE_CLICK,
-                        handler="edit.handler",
-                        enabled=True,
-                    ))
+                    affordances.append(
+                        Affordance(
+                            name="edit",
+                            action=AffordanceAction.DOUBLE_CLICK,
+                            handler="edit.handler",
+                            enabled=True,
+                        )
+                    )
 
                 # Admins can delete
                 if observer.role == ObserverRole.ADMIN:
-                    affordances.append(Affordance(
-                        name="delete",
-                        action=AffordanceAction.RIGHT_CLICK,
-                        handler="delete.handler",
-                        enabled=True,
-                    ))
+                    affordances.append(
+                        Affordance(
+                            name="delete",
+                            action=AffordanceAction.RIGHT_CLICK,
+                            handler="delete.handler",
+                            enabled=True,
+                        )
+                    )
 
                 return affordances
 
@@ -1035,7 +1043,7 @@ class TestProperty18ObserverDependentProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 18: Observer-Dependent Projection
-        
+
         Different projection targets maintain semantic equivalence.
         Validates: Requirements 13.6
         """
@@ -1092,7 +1100,7 @@ class TestProperty18ObserverDependentProjection:
     ) -> None:
         """
         Feature: meaning-token-frontend, Property 18: Observer-Dependent Projection
-        
+
         Observer density affects projections across all projector types.
         Validates: Requirements 13.2, 13.3
         """

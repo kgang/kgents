@@ -69,6 +69,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class SwarmManifestResponse:
     """Response for manifest aspect."""
+
     active_count: int
     max_agents: int
     agents: list[dict[str, Any]]
@@ -78,6 +79,7 @@ class SwarmManifestResponse:
 @dataclass
 class SwarmSpawnRequest:
     """Request to spawn an agent."""
+
     task: str
     role: str | None = None  # "researcher", "planner", "implementer", "reviewer"
 
@@ -85,6 +87,7 @@ class SwarmSpawnRequest:
 @dataclass
 class SwarmSpawnResponse:
     """Response from spawn."""
+
     success: bool
     agent_id: str | None
     role: str | None
@@ -94,6 +97,7 @@ class SwarmSpawnResponse:
 @dataclass
 class SwarmListResponse:
     """Response from list."""
+
     agents: list[dict[str, Any]]
     count: int
 
@@ -101,6 +105,7 @@ class SwarmListResponse:
 @dataclass
 class SwarmDelegateRequest:
     """Request to delegate task."""
+
     from_agent: str
     to_agent: str
     task: dict[str, Any]
@@ -109,6 +114,7 @@ class SwarmDelegateRequest:
 @dataclass
 class SwarmDelegateResponse:
     """Response from delegate."""
+
     success: bool
     delegation_id: str
     from_agent: str
@@ -118,6 +124,7 @@ class SwarmDelegateResponse:
 @dataclass
 class SwarmHandoffRequest:
     """Request to hand off context."""
+
     from_agent: str
     to_agent: str
     context: dict[str, Any]
@@ -127,6 +134,7 @@ class SwarmHandoffRequest:
 @dataclass
 class SwarmHandoffResponse:
     """Response from handoff."""
+
     success: bool
     handoff_id: str
     from_despawned: bool
@@ -135,12 +143,14 @@ class SwarmHandoffResponse:
 @dataclass
 class SwarmDespawnRequest:
     """Request to despawn an agent."""
+
     agent_id: str
 
 
 @dataclass
 class SwarmDespawnResponse:
     """Response from despawn."""
+
     success: bool
     agent_id: str
 
@@ -148,6 +158,7 @@ class SwarmDespawnResponse:
 @dataclass
 class SwarmRolesResponse:
     """Response from roles."""
+
     roles: list[dict[str, Any]]
     count: int
 

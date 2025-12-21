@@ -28,11 +28,13 @@ from services.verification.contracts import AgentMorphism, VerificationResult
 @st.composite
 def morphism_id_strategy(draw: st.DrawFn) -> str:
     """Generate valid morphism IDs."""
-    return draw(st.text(
-        alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
-        min_size=1,
-        max_size=20,
-    ))
+    return draw(
+        st.text(
+            alphabet="abcdefghijklmnopqrstuvwxyz0123456789_",
+            min_size=1,
+            max_size=20,
+        )
+    )
 
 
 @st.composite
@@ -83,7 +85,9 @@ def identity_morphism_strategy(draw: st.DrawFn) -> AgentMorphism:
 
 
 @st.composite
-def composable_morphism_triple_strategy(draw: st.DrawFn) -> tuple[AgentMorphism, AgentMorphism, AgentMorphism]:
+def composable_morphism_triple_strategy(
+    draw: st.DrawFn,
+) -> tuple[AgentMorphism, AgentMorphism, AgentMorphism]:
     """Generate three composable morphisms for associativity testing."""
     # For composition f ∘ g ∘ h, we need:
     # h: A → B, g: B → C, f: C → D

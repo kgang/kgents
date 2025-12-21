@@ -34,7 +34,7 @@ from .bootstrap import (
     create_judge_pass,
     create_sublate_pass,
 )
-from .composition import ComposedPass, compose
+from .composition import ComposedPass, compose as compose_passes
 from .core import CompositionLaw, LawResult, LawStatus, PassProtocol
 from .laws import COMPOSITION_LAWS
 

@@ -149,10 +149,13 @@ class TestMultiAgentCollaboration:
             "recommendation": "JWT for stateless auth",
         }
 
-        await researcher_channel.notify("planner-1", {
-            "type": "research_complete",
-            "findings": research_findings,
-        })
+        await researcher_channel.notify(
+            "planner-1",
+            {
+                "type": "research_complete",
+                "findings": research_findings,
+            },
+        )
 
         # Planner should receive
         planner_msg = await planner_channel.receive_one(timeout=5.0)
@@ -171,10 +174,13 @@ class TestMultiAgentCollaboration:
             "estimated_files": 5,
         }
 
-        await planner_channel.notify("reviewer-1", {
-            "type": "plan_complete",
-            "plan": implementation_plan,
-        })
+        await planner_channel.notify(
+            "reviewer-1",
+            {
+                "type": "plan_complete",
+                "plan": implementation_plan,
+            },
+        )
 
         # Reviewer should receive
         reviewer_msg = await reviewer_channel.receive_one(timeout=5.0)
@@ -189,10 +195,12 @@ class TestMultiAgentCollaboration:
             "approval_threshold": 0.9,
         }
 
-        await reviewer_channel.broadcast({
-            "type": "review_criteria",
-            "criteria": review_criteria,
-        })
+        await reviewer_channel.broadcast(
+            {
+                "type": "review_criteria",
+                "criteria": review_criteria,
+            }
+        )
 
         # Both researcher and planner should receive broadcast
         researcher_broadcast = await researcher_channel.receive_one(timeout=5.0)
@@ -289,10 +297,13 @@ class TestMultiAgentCollaboration:
             channel = A2AChannel(f"researcher-{i}")
             research_channels.append(channel)
 
-            await channel.notify("coordinator", {
-                "researcher_id": i,
-                "findings": f"Results from researcher {i}",
-            })
+            await channel.notify(
+                "coordinator",
+                {
+                    "researcher_id": i,
+                    "findings": f"Results from researcher {i}",
+                },
+            )
 
         # Coordinator receives all
         received = []
@@ -329,10 +340,12 @@ class TestMultiAgentCollaboration:
         async def responder_loop():
             msg = await responder_channel.receive_one(timeout=10.0)
             if msg and msg.message_type == A2AMessageType.REQUEST:
-                response = msg.create_response({
-                    "answer": "42",
-                    "explanation": "The meaning of everything",
-                })
+                response = msg.create_response(
+                    {
+                        "answer": "42",
+                        "explanation": "The meaning of everything",
+                    }
+                )
                 await responder_channel.send(response)
 
         responder_task = asyncio.create_task(responder_loop())

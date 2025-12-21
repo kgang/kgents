@@ -357,11 +357,13 @@ class TestTokenRecognition:
 def text_with_agentese_paths(draw: st.DrawFn) -> tuple[str, int]:
     """Generate text containing AGENTESE paths."""
     context = draw(st.sampled_from(["world", "self", "concept", "void", "time"]))
-    segments = draw(st.lists(
-        st.from_regex(r"[a-z_][a-z0-9_]*", fullmatch=True),
-        min_size=1,
-        max_size=3,
-    ))
+    segments = draw(
+        st.lists(
+            st.from_regex(r"[a-z_][a-z0-9_]*", fullmatch=True),
+            min_size=1,
+            max_size=3,
+        )
+    )
     path = f"`{context}.{'.'.join(segments)}`"
 
     # Wrap in some text

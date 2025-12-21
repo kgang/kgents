@@ -38,7 +38,7 @@ from .base import BaseMeaningToken, ExecutionTrace, TraceWitness, filter_afforda
 @dataclass(frozen=True)
 class ExecutionResult:
     """Result of executing a code block.
-    
+
     Attributes:
         success: Whether execution succeeded
         output: Standard output from execution
@@ -70,7 +70,7 @@ class ExecutionResult:
 @dataclass(frozen=True)
 class CodeBlockHoverInfo:
     """Information displayed on code block hover.
-    
+
     Attributes:
         language: Programming language
         line_count: Number of lines
@@ -96,7 +96,7 @@ class CodeBlockHoverInfo:
 @dataclass(frozen=True)
 class CodeBlockContextMenuResult:
     """Result of showing context menu for a code block.
-    
+
     Attributes:
         language: Programming language
         options: Available menu options
@@ -119,7 +119,7 @@ class CodeBlockContextMenuResult:
 @dataclass(frozen=True)
 class EditFocusResult:
     """Result of focusing a code block for editing.
-    
+
     Attributes:
         code: Current code content
         language: Programming language
@@ -141,13 +141,13 @@ class EditFocusResult:
 
 class CodeBlockToken(BaseMeaningToken[str]):
     """Token representing a fenced code block.
-    
+
     CodeBlock tokens are live playgrounds that can be edited inline
     and executed in a sandboxed environment. AGENTESE invocations
     within code capture execution traces.
-    
+
     Pattern: ```language\ncode\n```
-    
+
     Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6
     """
 
@@ -174,7 +174,7 @@ class CodeBlockToken(BaseMeaningToken[str]):
         code: str,
     ) -> None:
         """Initialize a CodeBlock token.
-        
+
         Args:
             source_text: The original matched text
             source_position: (start, end) position in source document
@@ -190,10 +190,10 @@ class CodeBlockToken(BaseMeaningToken[str]):
     @classmethod
     def from_match(cls, match: re.Match[str]) -> CodeBlockToken:
         """Create token from regex match.
-        
+
         Args:
             match: Regex match object from pattern matching
-            
+
         Returns:
             New CodeBlockToken instance
         """
@@ -241,10 +241,10 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
     async def get_affordances(self, observer: Observer) -> list[Affordance]:
         """Get available affordances for this observer.
-        
+
         Args:
             observer: The observer requesting affordances
-            
+
         Returns:
             List of available affordances
         """
@@ -309,15 +309,15 @@ class CodeBlockToken(BaseMeaningToken[str]):
         **kwargs: Any,
     ) -> Any:
         """Execute the action for this token.
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             Action-specific result
-            
+
         Requirements: 8.2, 8.3, 8.4, 8.5, 8.6
         """
         if action == AffordanceAction.CLICK:
@@ -331,7 +331,7 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
     async def _handle_edit(self, observer: Observer) -> EditFocusResult:
         """Handle click action - focus for inline editing.
-        
+
         Requirements: 8.2
         """
         return EditFocusResult(
@@ -341,7 +341,7 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
     async def _handle_hover(self, observer: Observer) -> CodeBlockHoverInfo:
         """Handle hover action - show language info and execution status.
-        
+
         Requirements: 8.4
         """
         return CodeBlockHoverInfo(
@@ -353,7 +353,7 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
     async def _handle_context_menu(self, observer: Observer) -> CodeBlockContextMenuResult:
         """Handle right-click action - show context menu.
-        
+
         Requirements: 8.3, 8.5
         """
         options = [
@@ -361,13 +361,9 @@ class CodeBlockToken(BaseMeaningToken[str]):
         ]
 
         if self.can_execute:
-            options.append(
-                {"action": "run", "label": "Run (Sandboxed)", "enabled": True}
-            )
+            options.append({"action": "run", "label": "Run (Sandboxed)", "enabled": True})
 
-        options.append(
-            {"action": "import", "label": "Import to Module", "enabled": True}
-        )
+        options.append({"action": "import", "label": "Import to Module", "enabled": True})
 
         # Admin-only options
         if observer.role == ObserverRole.ADMIN:
@@ -383,14 +379,14 @@ class CodeBlockToken(BaseMeaningToken[str]):
 
     async def execute(self, observer: Observer, sandboxed: bool = True) -> ExecutionResult:
         """Execute the code block.
-        
+
         Args:
             observer: The observer executing the code
             sandboxed: Whether to run in sandbox (default True)
-            
+
         Returns:
             ExecutionResult with output and traces
-            
+
         Requirements: 8.3, 8.4, 8.6
         """
         if not self.can_execute:
@@ -432,12 +428,14 @@ class CodeBlockToken(BaseMeaningToken[str]):
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         base = super().to_dict()
-        base.update({
-            "language": self._language,
-            "code": self._code,
-            "line_count": self.line_count,
-            "can_execute": self.can_execute,
-        })
+        base.update(
+            {
+                "language": self._language,
+                "code": self._code,
+                "line_count": self.line_count,
+                "can_execute": self.can_execute,
+            }
+        )
         return base
 
 
@@ -451,11 +449,11 @@ def create_code_block_token(
     position: tuple[int, int] | None = None,
 ) -> CodeBlockToken | None:
     """Create a CodeBlock token from text.
-    
+
     Args:
         text: Text that may contain a fenced code block
         position: Optional (start, end) position override
-        
+
     Returns:
         CodeBlockToken if text matches pattern, None otherwise
     """

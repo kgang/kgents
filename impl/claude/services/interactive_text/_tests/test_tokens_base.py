@@ -281,9 +281,7 @@ class TestBaseMeaningToken:
         assert "not available" in result.error.lower()
 
     @pytest.mark.asyncio
-    async def test_on_interact_captures_trace(
-        self, token: TestToken, observer: Observer
-    ) -> None:
+    async def test_on_interact_captures_trace(self, token: TestToken, observer: Observer) -> None:
         """on_interact captures trace witness when enabled."""
         result = await token.on_interact(
             AffordanceAction.CLICK,
@@ -295,9 +293,7 @@ class TestBaseMeaningToken:
         assert result.witness_id is not None
 
     @pytest.mark.asyncio
-    async def test_on_interact_no_trace(
-        self, token: TestToken, observer: Observer
-    ) -> None:
+    async def test_on_interact_no_trace(self, token: TestToken, observer: Observer) -> None:
         """on_interact skips trace when disabled."""
         result = await token.on_interact(
             AffordanceAction.CLICK,
@@ -309,9 +305,7 @@ class TestBaseMeaningToken:
         assert result.witness_id is None
 
     @pytest.mark.asyncio
-    async def test_on_interact_with_kwargs(
-        self, token: TestToken, observer: Observer
-    ) -> None:
+    async def test_on_interact_with_kwargs(self, token: TestToken, observer: Observer) -> None:
         """on_interact passes kwargs to action handler."""
         token.set_action_result(
             AffordanceAction.CLICK,

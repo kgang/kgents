@@ -344,19 +344,19 @@ class DiffView(TransitionOutput):
 @dataclass(frozen=True)
 class DocumentPolynomial:
     """Document as polynomial functor: editing states with mode-dependent inputs.
-    
+
     Per AD-002, documents have state-dependent behavior. The polynomial
     captures valid inputs per state and transition rules.
-    
+
     The DocumentPolynomial implements:
     - Four positions (states): VIEWING, EDITING, SYNCING, CONFLICTING
     - directions(): Returns valid inputs for each state
     - transition(): Maps (state, input) → (new_state, output)
-    
+
     This is a pure state machine - it does not hold state itself but
     defines the transition function. Actual document state is managed
     by the DocumentSheaf.
-    
+
     Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
     """
 
@@ -372,25 +372,24 @@ class DocumentPolynomial:
     }
 
     # Transition table: (state, input) → (new_state, output_factory)
-    _transitions: ClassVar[dict[tuple[DocumentState, str], tuple[DocumentState, type[TransitionOutput]]]] = {
+    _transitions: ClassVar[
+        dict[tuple[DocumentState, str], tuple[DocumentState, type[TransitionOutput]]]
+    ] = {
         # VIEWING transitions (Requirement 3.2)
         (DocumentState.VIEWING, "edit"): (DocumentState.EDITING, EditSession),
         (DocumentState.VIEWING, "refresh"): (DocumentState.VIEWING, RefreshResult),
         (DocumentState.VIEWING, "hover"): (DocumentState.VIEWING, HoverInfo),
         (DocumentState.VIEWING, "click"): (DocumentState.VIEWING, ClickResult),
         (DocumentState.VIEWING, "drag"): (DocumentState.VIEWING, DragResult),
-
         # EDITING transitions (Requirement 3.3)
         (DocumentState.EDITING, "save"): (DocumentState.SYNCING, SaveRequest),
         (DocumentState.EDITING, "cancel"): (DocumentState.VIEWING, CancelResult),
         (DocumentState.EDITING, "continue_edit"): (DocumentState.EDITING, EditContinue),
         (DocumentState.EDITING, "hover"): (DocumentState.EDITING, HoverInfo),
-
         # SYNCING transitions (Requirement 3.4)
         (DocumentState.SYNCING, "wait"): (DocumentState.VIEWING, SyncComplete),
         (DocumentState.SYNCING, "force_local"): (DocumentState.VIEWING, LocalWins),
         (DocumentState.SYNCING, "force_remote"): (DocumentState.VIEWING, RemoteWins),
-
         # CONFLICTING transitions (Requirement 3.5)
         (DocumentState.CONFLICTING, "resolve"): (DocumentState.VIEWING, Resolved),
         (DocumentState.CONFLICTING, "abort"): (DocumentState.VIEWING, Aborted),
@@ -400,13 +399,13 @@ class DocumentPolynomial:
     @classmethod
     def directions(cls, state: DocumentState) -> frozenset[str]:
         """Get valid inputs for a given state.
-        
+
         Args:
             state: The current document state
-            
+
         Returns:
             Set of valid input strings for this state
-            
+
         Requirements: 3.2, 3.3, 3.4, 3.5
         """
         return cls._directions.get(state, frozenset())
@@ -418,17 +417,17 @@ class DocumentPolynomial:
         input_action: str,
     ) -> tuple[DocumentState, TransitionOutput]:
         """Compute state transition for given state and input.
-        
+
         This is a pure function: same (state, input) always produces
         same (new_state, output). The polynomial is deterministic.
-        
+
         Args:
             state: Current document state
             input_action: The input action to process
-            
+
         Returns:
             Tuple of (new_state, output) where output is a TransitionOutput
-            
+
         Requirements: 3.1, 3.2, 3.3, 3.4, 3.5
         """
         key = (state, input_action)
@@ -443,20 +442,22 @@ class DocumentPolynomial:
     @classmethod
     def is_valid_input(cls, state: DocumentState, input_action: str) -> bool:
         """Check if an input is valid for a given state.
-        
+
         Args:
             state: The current document state
             input_action: The input to check
-            
+
         Returns:
             True if the input is valid for this state
         """
         return input_action in cls.directions(state)
 
     @classmethod
-    def get_all_transitions(cls) -> dict[tuple[DocumentState, str], tuple[DocumentState, type[TransitionOutput]]]:
+    def get_all_transitions(
+        cls,
+    ) -> dict[tuple[DocumentState, str], tuple[DocumentState, type[TransitionOutput]]]:
         """Get the complete transition table.
-        
+
         Returns:
             Dictionary mapping (state, input) to (new_state, output_type)
         """
@@ -465,10 +466,10 @@ class DocumentPolynomial:
     @classmethod
     def verify_determinism(cls) -> bool:
         """Verify that the polynomial is deterministic.
-        
+
         A polynomial is deterministic if the same (state, input) always
         produces the same (new_state, output_type).
-        
+
         Returns:
             True if the polynomial is deterministic
         """
@@ -487,7 +488,7 @@ class DocumentPolynomial:
     @classmethod
     def verify_completeness(cls) -> bool:
         """Verify that all states have defined directions.
-        
+
         Returns:
             True if all states have at least one valid input
         """
@@ -499,12 +500,12 @@ class DocumentPolynomial:
     @classmethod
     def verify_laws(cls) -> bool:
         """Verify polynomial laws hold.
-        
+
         Verifies:
         1. Determinism: Same (state, input) always produces same output
         2. Completeness: All states have defined directions
         3. Closure: All transitions lead to valid states
-        
+
         Returns:
             True if all laws hold
         """

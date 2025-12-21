@@ -626,8 +626,7 @@ def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:
         # Skip LLM integration tests unless explicitly enabled
         # Check for: marker, path contains 'integration', or file named test_*_integration.py
         is_llm_test = (
-            item.get_closest_marker("llm_integration") is not None
-            or "integration" in path
+            item.get_closest_marker("llm_integration") is not None or "integration" in path
         )
         if is_llm_test and not run_llm:
             item.add_marker(skip_llm)

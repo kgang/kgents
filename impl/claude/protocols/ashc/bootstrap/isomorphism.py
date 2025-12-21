@@ -265,7 +265,7 @@ def _load_as_module(code: str, name: str) -> Any | None:
             raise
 
         # Store temp_path on module for later cleanup
-        module.__ashc_temp_path__ = temp_path
+        setattr(module, "__ashc_temp_path__", temp_path)
 
         return module
 
@@ -474,7 +474,7 @@ async def _verify_laws(module: Any, agent_name: str) -> bool:
                 left = await fg_h.invoke(x)  # ((3*2)+1)² = 49
                 right = await f_gh.invoke(x)  # ((3*2)+1)² = 49
 
-                return left == right
+                return bool(left == right)
             except Exception:
                 # Associativity test failed, but structure might still be ok
                 return False

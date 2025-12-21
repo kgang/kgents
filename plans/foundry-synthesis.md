@@ -4,7 +4,7 @@
 
 **Source**: `brainstorming/2025-12-21-jgent-alethic-projection-synthesis.md`
 **Spec**: `spec/services/foundry.md`
-**Status**: Phases 1-3 Complete (375 tests, Phase 4: Foundry Service next)
+**Status**: Phases 1-3 Complete (366 tests, Phase 4: Foundry Service next)
 
 ---
 
@@ -159,7 +159,7 @@ uv run python demos/wasm_sandbox_demo.py
 
 **Goal**: Enable interactive agent exploration via notebook cells.
 
-**Completed**: 2025-12-21 | **Tests**: 375 passing (54 new marimo tests)
+**Completed**: 2025-12-21 | **Tests**: 366 passing (54 new marimo tests)
 
 ### Tasks
 
@@ -332,11 +332,9 @@ impl/claude/protocols/cli/commands/agent/manifest.py # Added marimo target routi
 
 ### Planned (Future Phases)
 ```
-impl/claude/system/projector/marimo.py          # MarimoProjector (Phase 3)
 impl/claude/services/foundry/                   # AgentFoundry Crown Jewel (Phase 4)
-impl/claude/templates/agent_exploration.marimo  # Marimo template (Phase 3)
+impl/claude/templates/agent_exploration.marimo  # Marimo template (optional future)
 impl/claude/agents/j/meta_architect.py          # Produce (Nucleus, Halo) (Phase 4)
-impl/claude/agents/j/chaosmonger.py             # WASM target selection (Phase 2 remainder)
 ```
 
 ---

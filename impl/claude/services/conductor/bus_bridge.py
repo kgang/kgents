@@ -74,9 +74,7 @@ def wire_a2a_to_global_synergy() -> Callable[[], None]:
                     from_agent=event.get("from_agent", "unknown"),
                     to_agent=event.get("to_agent", "unknown"),
                     context_keys=list(event.get("payload", {}).keys()),
-                    conversation_turns=len(
-                        event.get("conversation_context", [])
-                    ),
+                    conversation_turns=len(event.get("conversation_context", [])),
                 )
             else:
                 # Generic A2A message

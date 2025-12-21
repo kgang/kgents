@@ -33,10 +33,10 @@ from services.interactive_text.projectors.base import (
 @dataclass(frozen=True)
 class ReactElement:
     """Specification for a React element.
-    
+
     This is a serializable representation of a React element that can
     be sent to the web client for rendering.
-    
+
     Attributes:
         component: React component name (e.g., "AGENTESEPathToken")
         props: Component props
@@ -119,11 +119,11 @@ class WebProjectable(Protocol):
 
 class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
     """Project meaning tokens to React element specifications.
-    
+
     This functor transforms meaning tokens into ReactElement specifications
     that can be serialized and sent to a web client for rendering.
     Affordances are included as data attributes for client-side handling.
-    
+
     Token Type Mappings:
     - agentese_path: AGENTESEPathToken component
     - task_checkbox: TaskCheckboxToken component
@@ -131,7 +131,7 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
     - code_block: CodeBlockToken component
     - principle_ref: PrincipleRefToken component
     - requirement_ref: RequirementRefToken component
-    
+
     Requirements: 2.2, 2.4
     """
 
@@ -145,11 +145,11 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
         observer: Observer,
     ) -> ReactElement:
         """Project token to React element specification.
-        
+
         Args:
             token: The meaning token to project
             observer: The observer receiving the projection
-            
+
         Returns:
             ReactElement specification
         """
@@ -180,11 +180,11 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
         observer: Observer,
     ) -> ReactElement:
         """Project document to React element specification.
-        
+
         Args:
             document: The document to project
             observer: The observer receiving the projection
-            
+
         Returns:
             ReactElement specification for the document
         """
@@ -216,11 +216,11 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
         composition_type: str,
     ) -> ReactElement:
         """Compose React elements.
-        
+
         Args:
             projections: List of React elements
             composition_type: "horizontal" or "vertical"
-            
+
         Returns:
             Composed React element
         """
@@ -244,12 +244,12 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
         affordances: list[Affordance],
     ) -> ReactElement:
         """Project token based on its type.
-        
+
         Args:
             token: The token to project
             params: Density parameters
             affordances: Available affordances
-            
+
         Returns:
             ReactElement specification
         """
@@ -294,7 +294,9 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
                 "showDetails": params.show_details,
                 "data-affordance-hover": self._get_affordance_handler(affordances, "hover"),
                 "data-affordance-click": self._get_affordance_handler(affordances, "click"),
-                "data-affordance-right-click": self._get_affordance_handler(affordances, "right-click"),
+                "data-affordance-right-click": self._get_affordance_handler(
+                    affordances, "right-click"
+                ),
                 "data-affordance-drag": self._get_affordance_handler(affordances, "drag"),
             },
         )
@@ -363,7 +365,9 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
                 "showDetails": params.show_details,
                 "fontSize": params.font_size,
                 "data-affordance-click": self._get_affordance_handler(affordances, "click"),
-                "data-affordance-double-click": self._get_affordance_handler(affordances, "double-click"),
+                "data-affordance-double-click": self._get_affordance_handler(
+                    affordances, "double-click"
+                ),
             },
         )
 
@@ -415,11 +419,11 @@ class WebProjectionFunctor(ProjectionFunctor[ReactElement]):
         action: str,
     ) -> str | None:
         """Get the handler for a specific affordance action.
-        
+
         Args:
             affordances: List of available affordances
             action: The action to find handler for
-            
+
         Returns:
             Handler string or None if not found
         """

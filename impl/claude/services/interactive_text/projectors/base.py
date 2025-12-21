@@ -39,10 +39,10 @@ Target = TypeVar("Target")
 @dataclass(frozen=True)
 class DensityParams:
     """Parameters for density-based projection.
-    
+
     These parameters control how tokens are rendered based on the
     observer's density preference (compact, comfortable, spacious).
-    
+
     Attributes:
         padding: Padding in pixels
         font_size: Font size in pixels
@@ -97,7 +97,7 @@ DENSITY_PARAMS: dict[ObserverDensity, DensityParams] = {
 @dataclass(frozen=True)
 class ProjectionResult(Generic[Target]):
     """Result of a projection operation.
-    
+
     Attributes:
         target: The projected output
         source_token_id: ID of the source token
@@ -116,7 +116,7 @@ class ProjectionResult(Generic[Target]):
 @dataclass(frozen=True)
 class CompositionResult(Generic[Target]):
     """Result of composing multiple projections.
-    
+
     Attributes:
         target: The composed projection output
         composition_type: Type of composition ("horizontal" or "vertical")
@@ -137,26 +137,26 @@ class CompositionResult(Generic[Target]):
 
 class ProjectionFunctor(ABC, Generic[Target]):
     """Abstract base class for projection functors.
-    
+
     Projection functors transform meaning tokens to target-specific renderings.
     They satisfy the functor laws:
-    
+
     1. Identity: P(id) = id
     2. Composition: P(f ∘ g) = P(f) ∘ P(g)
-    
+
     And the naturality condition:
     - For all state morphisms f : S₁ → S₂,
       P(f(s)) = P_target(P(s)) where P_target is the target's state update.
-    
+
     Subclasses must implement:
     - target_name: The name of the projection target
     - project_token: Project a single token
     - project_document: Project an entire document
     - _compose: Compose projected elements
-    
+
     Type Parameters:
         Target: The type of the projection output (e.g., str for CLI, dict for JSON)
-    
+
     Requirements: 2.1, 2.6
     """
 
@@ -173,11 +173,11 @@ class ProjectionFunctor(ABC, Generic[Target]):
         observer: Observer,
     ) -> Target:
         """Project a single token to target-specific rendering.
-        
+
         Args:
             token: The meaning token to project
             observer: The observer receiving the projection
-            
+
         Returns:
             Target-specific rendering of the token
         """
@@ -190,11 +190,11 @@ class ProjectionFunctor(ABC, Generic[Target]):
         observer: Observer,
     ) -> Target:
         """Project an entire document to target-specific rendering.
-        
+
         Args:
             document: The document to project
             observer: The observer receiving the projection
-            
+
         Returns:
             Target-specific rendering of the document
         """
@@ -207,13 +207,13 @@ class ProjectionFunctor(ABC, Generic[Target]):
         composition_type: str,
     ) -> Target:
         """Compose multiple projected elements.
-        
+
         Args:
             projections: List of projected elements to compose
             composition_type: Type of composition:
                 - "horizontal" (>>): Elements arranged side by side
                 - "vertical" (//): Elements arranged top to bottom
-                
+
         Returns:
             Composed projection
         """
@@ -226,26 +226,23 @@ class ProjectionFunctor(ABC, Generic[Target]):
         observer: Observer,
     ) -> CompositionResult[Target]:
         """Project composed tokens.
-        
+
         This method implements the composition law:
         - Horizontal (>>): P(A >> B) = P(A) >> P(B)
         - Vertical (//): P(A // B) = P(A) // P(B)
-        
+
         Args:
             tokens: List of tokens to compose
             composition_type: Type of composition ("horizontal" or "vertical")
             observer: The observer receiving the projection
-            
+
         Returns:
             CompositionResult containing the composed projection
-            
+
         Requirements: 1.5, 2.6
         """
         # Project each token individually
-        projections = [
-            await self.project_token(token, observer)
-            for token in tokens
-        ]
+        projections = [await self.project_token(token, observer) for token in tokens]
 
         # Compose the projections
         composed = self._compose(projections, composition_type)
@@ -259,10 +256,10 @@ class ProjectionFunctor(ABC, Generic[Target]):
 
     def get_density_params(self, observer: Observer) -> DensityParams:
         """Get density parameters for an observer.
-        
+
         Args:
             observer: The observer to get parameters for
-            
+
         Returns:
             DensityParams for the observer's density preference
         """
@@ -274,11 +271,11 @@ class ProjectionFunctor(ABC, Generic[Target]):
         observer: Observer,
     ) -> ProjectionResult[Target]:
         """Project a token and return full result with metadata.
-        
+
         Args:
             token: The meaning token to project
             observer: The observer receiving the projection
-            
+
         Returns:
             ProjectionResult containing the projection and metadata
         """
@@ -309,6 +306,7 @@ if TYPE_CHECKING:
     @dataclass
     class Document:
         """Placeholder for Document type."""
+
         pass
 
 

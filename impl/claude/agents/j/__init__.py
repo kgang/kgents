@@ -100,17 +100,6 @@ from .shared_budget import (
     create_depth_based_budget,
     create_dual_budget,
 )
-
-# Target Selection (Foundry Phase 2)
-from .target_selector import (
-    Target,
-    TargetSelectionInput,
-    TargetSelectionOutput,
-    is_sandbox_required,
-    recommend_target_for_code,
-    select_target,
-    select_target_with_reason,
-)
 from .t_integration import (
     FILTER_TEMPLATE,
     JSON_FIELD_EXTRACTOR,
@@ -121,6 +110,17 @@ from .t_integration import (
     compile_tool_from_intent,
     compile_tool_from_template,
     create_tool_from_source,
+)
+
+# Target Selection (Foundry Phase 2)
+from .target_selector import (
+    Target,
+    TargetSelectionInput,
+    TargetSelectionOutput,
+    is_sandbox_required,
+    recommend_target_for_code,
+    select_target,
+    select_target_with_reason,
 )
 
 __all__ = [

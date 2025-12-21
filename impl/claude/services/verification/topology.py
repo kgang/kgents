@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 # Core Data Structures
 # =============================================================================
 
+
 class MappingType(str, Enum):
     """Types of continuous maps between open sets."""
 
@@ -51,7 +52,7 @@ class MappingType(str, Enum):
 class TopologicalNode:
     """
     A node as an open set in the topology.
-    
+
     Each node represents a concept with its own "neighborhood" —
     the set of adjacent concepts that form its local context.
     """
@@ -80,7 +81,7 @@ class TopologicalNode:
 class ContinuousMap:
     """
     An edge as a continuous map between open sets.
-    
+
     Continuous maps preserve the topological structure —
     nearby points map to nearby points.
     """
@@ -100,7 +101,7 @@ class ContinuousMap:
 class Cover:
     """
     A cover of the topological space.
-    
+
     A cover is a collection of open sets whose union contains the space.
     Clusters in a mind-map form natural covers.
     """
@@ -122,11 +123,12 @@ class Cover:
 # Sheaf Verification
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class LocalSection:
     """
     A local section of a sheaf over an open set.
-    
+
     Represents data/meaning assigned to a region of the topology.
     """
 
@@ -149,7 +151,7 @@ class SheafVerification:
 class CoherenceConflict:
     """
     A conflict where the sheaf condition fails.
-    
+
     This happens when local sections disagree on their overlap.
     """
 
@@ -175,11 +177,12 @@ class RepairSuggestion:
 # Mind-Map Topology
 # =============================================================================
 
+
 @dataclass
 class MindMapTopology:
     """
     Mind-map as a topological space with sheaf structure.
-    
+
     This is the core data structure for treating mind-maps formally.
     It supports:
     - Topological operations (neighborhoods, covers)
@@ -281,7 +284,7 @@ class MindMapTopology:
     def verify_sheaf_condition(self) -> SheafVerification:
         """
         Verify the sheaf gluing condition.
-        
+
         For each pair of overlapping covers, check that local sections
         agree on the overlap. If they do, construct the global section.
         """
@@ -291,7 +294,7 @@ class MindMapTopology:
         # Check all pairs of covers for overlap agreement
         cover_list = list(self.covers.values())
         for i, cover1 in enumerate(cover_list):
-            for cover2 in cover_list[i + 1:]:
+            for cover2 in cover_list[i + 1 :]:
                 overlap = cover1.overlaps_with(cover2)
 
                 if overlap:
@@ -312,8 +315,9 @@ class MindMapTopology:
             verification_details={
                 "covers_checked": len(cover_list),
                 "overlaps_found": sum(
-                    1 for i, c1 in enumerate(cover_list)
-                    for c2 in cover_list[i + 1:]
+                    1
+                    for i, c1 in enumerate(cover_list)
+                    for c2 in cover_list[i + 1 :]
                     if c1.overlaps_with(c2)
                 ),
             },
@@ -376,38 +380,44 @@ class MindMapTopology:
             section1, section2 = conflict.conflicting_sections[:2]
 
             # Suggestion 1: Merge values
-            suggestions.append(RepairSuggestion(
-                conflict_id=conflict.conflict_id,
-                suggestion_type="merge",
-                description=(
-                    "Merge the conflicting values into a combined representation "
-                    "that captures both perspectives."
-                ),
-                proposed_value={"merged": [section1.value, section2.value]},
-                confidence=0.6,
-            ))
+            suggestions.append(
+                RepairSuggestion(
+                    conflict_id=conflict.conflict_id,
+                    suggestion_type="merge",
+                    description=(
+                        "Merge the conflicting values into a combined representation "
+                        "that captures both perspectives."
+                    ),
+                    proposed_value={"merged": [section1.value, section2.value]},
+                    confidence=0.6,
+                )
+            )
 
             # Suggestion 2: Add constraint
-            suggestions.append(RepairSuggestion(
-                conflict_id=conflict.conflict_id,
-                suggestion_type="constrain",
-                description=(
-                    "Add a constraint that specifies when each value applies, "
-                    "making the overlap more precise."
-                ),
-                confidence=0.7,
-            ))
+            suggestions.append(
+                RepairSuggestion(
+                    conflict_id=conflict.conflict_id,
+                    suggestion_type="constrain",
+                    description=(
+                        "Add a constraint that specifies when each value applies, "
+                        "making the overlap more precise."
+                    ),
+                    confidence=0.7,
+                )
+            )
 
             # Suggestion 3: Split the overlap
-            suggestions.append(RepairSuggestion(
-                conflict_id=conflict.conflict_id,
-                suggestion_type="split",
-                description=(
-                    "Split the overlap region into non-overlapping parts, "
-                    "each with a single consistent value."
-                ),
-                confidence=0.5,
-            ))
+            suggestions.append(
+                RepairSuggestion(
+                    conflict_id=conflict.conflict_id,
+                    suggestion_type="split",
+                    description=(
+                        "Split the overlap region into non-overlapping parts, "
+                        "each with a single consistent value."
+                    ),
+                    confidence=0.5,
+                )
+            )
 
         return suggestions
 
@@ -416,11 +426,12 @@ class MindMapTopology:
 # Import/Export
 # =============================================================================
 
+
 class ObsidianImporter:
     """Import mind-maps from Obsidian markdown format."""
 
     def __init__(self):
-        self.link_pattern = r'\[\[([^\]]+)\]\]'
+        self.link_pattern = r"\[\[([^\]]+)\]\]"
 
     def import_vault(self, vault_path: Path) -> MindMapTopology:
         """Import an Obsidian vault as a topology."""
@@ -502,7 +513,7 @@ class ObsidianImporter:
         if content.startswith("---"):
             try:
                 end = content.index("---", 3)
-                return content[end + 3:].strip()
+                return content[end + 3 :].strip()
             except ValueError:
                 pass
         return content
@@ -545,6 +556,7 @@ def import_from_obsidian(vault_path: str | Path) -> MindMapTopology:
 # Visualization Data
 # =============================================================================
 
+
 @dataclass
 class TopologyVisualization:
     """Data for visualizing the topology."""
@@ -567,45 +579,55 @@ def create_visualization_data(topology: MindMapTopology) -> TopologyVisualizatio
     # Create node data
     nodes = []
     for node in topology.nodes.values():
-        nodes.append({
-            "id": node.id,
-            "label": node.content[:50] + "..." if len(node.content) > 50 else node.content,
-            "type": node.node_type,
-            "color": LivingEarthPalette.MOSS if node.node_type == "principle" else LivingEarthPalette.STREAM,
-            "size": len(node.neighborhood) + 1,
-        })
+        nodes.append(
+            {
+                "id": node.id,
+                "label": node.content[:50] + "..." if len(node.content) > 50 else node.content,
+                "type": node.node_type,
+                "color": LivingEarthPalette.MOSS
+                if node.node_type == "principle"
+                else LivingEarthPalette.STREAM,
+                "size": len(node.neighborhood) + 1,
+            }
+        )
 
     # Create edge data
     edges = []
     for edge in topology.edges.values():
-        edges.append({
-            "source": edge.source,
-            "target": edge.target,
-            "type": edge.mapping_type.value,
-            "label": edge.label,
-            "weight": edge.weight,
-        })
+        edges.append(
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "type": edge.mapping_type.value,
+                "label": edge.label,
+                "weight": edge.weight,
+            }
+        )
 
     # Create cover data
     covers = []
     for cover in topology.covers.values():
-        covers.append({
-            "id": cover.cover_id,
-            "name": cover.name,
-            "members": list(cover.member_ids),
-            "color": LivingEarthPalette.SPRING_LEAF,
-        })
+        covers.append(
+            {
+                "id": cover.cover_id,
+                "name": cover.name,
+                "members": list(cover.member_ids),
+                "color": LivingEarthPalette.SPRING_LEAF,
+            }
+        )
 
     # Create conflict data
     conflicts = []
     for conflict in verification.conflicts:
-        conflicts.append({
-            "id": conflict.conflict_id,
-            "region": list(conflict.overlap_region),
-            "description": conflict.description,
-            "severity": conflict.severity.value,
-            "color": LivingEarthPalette.CONCERN,
-        })
+        conflicts.append(
+            {
+                "id": conflict.conflict_id,
+                "region": list(conflict.overlap_region),
+                "description": conflict.description,
+                "severity": conflict.severity.value,
+                "color": LivingEarthPalette.CONCERN,
+            }
+        )
 
     return TopologyVisualization(
         nodes=nodes,

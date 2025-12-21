@@ -39,7 +39,7 @@ from .base import BaseMeaningToken, ExecutionTrace, TraceWitness, filter_afforda
 @dataclass(frozen=True)
 class VerificationStatus:
     """Verification status for a task.
-    
+
     Attributes:
         verified: Whether the task has been verified
         requirement_refs: Linked requirement references
@@ -65,7 +65,7 @@ class VerificationStatus:
 @dataclass(frozen=True)
 class TaskHoverInfo:
     """Information displayed on task hover.
-    
+
     Attributes:
         description: Task description text
         checked: Current checkbox state
@@ -94,7 +94,7 @@ class TaskHoverInfo:
 @dataclass(frozen=True)
 class ToggleResult:
     """Result of toggling a task checkbox.
-    
+
     Attributes:
         success: Whether toggle succeeded
         new_state: New checkbox state after toggle
@@ -123,7 +123,7 @@ class ToggleResult:
 @dataclass(frozen=True)
 class TaskContextMenuResult:
     """Result of showing context menu for a task.
-    
+
     Attributes:
         description: Task description
         options: Available menu options
@@ -145,13 +145,13 @@ class TaskContextMenuResult:
 
 class TaskCheckboxToken(BaseMeaningToken[bool]):
     """Token representing a GitHub-style task checkbox.
-    
+
     TaskCheckbox tokens connect to the formal verification system.
     When toggled, they capture a Trace_Witness for verification and
     persist the state change to the source file.
-    
+
     Pattern: `- [ ] description` or `- [x] description`
-    
+
     Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
     """
 
@@ -178,7 +178,7 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
         requirement_refs: tuple[str, ...] = (),
     ) -> None:
         """Initialize a TaskCheckbox token.
-        
+
         Args:
             source_text: The original matched text
             source_position: (start, end) position in source document
@@ -205,12 +205,12 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
         line_number: int | None = None,
     ) -> TaskCheckboxToken:
         """Create token from regex match.
-        
+
         Args:
             match: Regex match object from pattern matching
             file_path: Path to source file
             line_number: Line number in source file
-            
+
         Returns:
             New TaskCheckboxToken instance
         """
@@ -280,13 +280,13 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
 
     async def get_affordances(self, observer: Observer) -> list[Affordance]:
         """Get available affordances for this observer.
-        
+
         Args:
             observer: The observer requesting affordances
-            
+
         Returns:
             List of available affordances
-            
+
         Requirements: 6.6
         """
         definition = self.get_definition()
@@ -363,15 +363,15 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
         **kwargs: Any,
     ) -> Any:
         """Execute the action for this token.
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             Action-specific result
-            
+
         Requirements: 6.2, 6.3, 6.4, 6.5, 6.6
         """
         if action == AffordanceAction.CLICK:
@@ -385,7 +385,7 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
 
     async def _handle_toggle(self, observer: Observer) -> ToggleResult:
         """Handle click action - toggle checkbox state.
-        
+
         Requirements: 6.2, 6.3
         """
         new_state = not self._checked
@@ -423,7 +423,7 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
 
     async def _handle_hover(self, observer: Observer) -> TaskHoverInfo:
         """Handle hover action - display verification status.
-        
+
         Requirements: 6.4, 6.5
         """
         # Get verification status (simulated)
@@ -444,7 +444,7 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
 
     async def _handle_context_menu(self, observer: Observer) -> TaskContextMenuResult:
         """Handle right-click action - show context menu.
-        
+
         Requirements: 6.6
         """
         options = [
@@ -459,9 +459,7 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
 
         # Admin-only options
         if observer.role == ObserverRole.ADMIN:
-            options.append(
-                {"action": "edit_task", "label": "Edit Task", "enabled": True}
-            )
+            options.append({"action": "edit_task", "label": "Edit Task", "enabled": True})
 
         verification = None
         if self._requirement_refs:
@@ -479,13 +477,15 @@ class TaskCheckboxToken(BaseMeaningToken[bool]):
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         base = super().to_dict()
-        base.update({
-            "checked": self._checked,
-            "description": self._description,
-            "file_path": self._file_path,
-            "line_number": self._line_number,
-            "requirement_refs": list(self._requirement_refs),
-        })
+        base.update(
+            {
+                "checked": self._checked,
+                "description": self._description,
+                "file_path": self._file_path,
+                "line_number": self._line_number,
+                "requirement_refs": list(self._requirement_refs),
+            }
+        )
         return base
 
 
@@ -501,13 +501,13 @@ def create_task_checkbox_token(
     line_number: int | None = None,
 ) -> TaskCheckboxToken | None:
     """Create a TaskCheckbox token from text.
-    
+
     Args:
         text: Text that may contain a task checkbox
         position: Optional (start, end) position override
         file_path: Path to source file
         line_number: Line number in source file
-        
+
     Returns:
         TaskCheckboxToken if text matches pattern, None otherwise
     """

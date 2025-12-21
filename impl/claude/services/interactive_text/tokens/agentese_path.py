@@ -40,10 +40,10 @@ from .base import BaseMeaningToken, filter_affordances_by_observer
 @dataclass(frozen=True)
 class PolynomialState:
     """State information for an AGENTESE node.
-    
+
     Represents the current position and valid transitions for a node
     in the polynomial state machine.
-    
+
     Attributes:
         position: Current state/mode of the node
         valid_inputs: Set of valid inputs in current state
@@ -66,7 +66,7 @@ class PolynomialState:
 @dataclass(frozen=True)
 class HoverInfo:
     """Information displayed on token hover.
-    
+
     Attributes:
         title: Title for the hover display
         content: Main content (polynomial state, description, etc.)
@@ -105,7 +105,7 @@ class HoverInfo:
 @dataclass(frozen=True)
 class NavigationResult:
     """Result of navigating to an AGENTESE path.
-    
+
     Attributes:
         success: Whether navigation succeeded
         path: The path that was navigated to
@@ -137,7 +137,7 @@ class NavigationResult:
 @dataclass(frozen=True)
 class ContextMenuResult:
     """Result of showing context menu for an AGENTESE path.
-    
+
     Attributes:
         path: The AGENTESE path
         options: Available menu options
@@ -160,7 +160,7 @@ class ContextMenuResult:
 @dataclass(frozen=True)
 class DragResult:
     """Result of dragging an AGENTESE path to REPL.
-    
+
     Attributes:
         path: The AGENTESE path to pre-fill
         template: REPL command template
@@ -179,16 +179,16 @@ class DragResult:
 
 class AGENTESEPathToken(BaseMeaningToken[str]):
     """Token representing an AGENTESE path in text.
-    
+
     AGENTESEPath tokens are portals to the agent system. They recognize
     backtick-wrapped paths like `world.town.citizen` and provide
     interactive affordances for exploring and invoking the agent system.
-    
+
     Ghost Tokens:
     When a path references a non-existent node, the token becomes a
     "ghost token" with reduced affordances. Ghost tokens still render
     but cannot be invoked or display state information.
-    
+
     Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6
     """
 
@@ -211,7 +211,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
         exists: bool = True,
     ) -> None:
         """Initialize an AGENTESEPath token.
-        
+
         Args:
             source_text: The original matched text (including backticks)
             source_position: (start, end) position in source document
@@ -235,11 +235,11 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
         exists: bool = True,
     ) -> AGENTESEPathToken:
         """Create token from regex match.
-        
+
         Args:
             match: Regex match object from pattern matching
             exists: Whether the path exists in the registry
-            
+
         Returns:
             New AGENTESEPathToken instance
         """
@@ -292,16 +292,16 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def get_affordances(self, observer: Observer) -> list[Affordance]:
         """Get available affordances for this observer.
-        
+
         Ghost tokens have reduced affordances - they cannot be invoked
         and don't display state information.
-        
+
         Args:
             observer: The observer requesting affordances
-            
+
         Returns:
             List of available affordances
-            
+
         Requirements: 5.2, 5.3, 5.4, 5.5, 5.6
         """
         definition = self.get_definition()
@@ -325,7 +325,9 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
                     action=a.action,
                     handler=a.handler,
                     enabled=a.action in (AffordanceAction.HOVER, AffordanceAction.CLICK),
-                    description=f"{a.description} (ghost token)" if a.description else "Ghost token",
+                    description=f"{a.description} (ghost token)"
+                    if a.description
+                    else "Ghost token",
                 )
                 for a in result
             ]
@@ -367,15 +369,15 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
         **kwargs: Any,
     ) -> Any:
         """Execute the action for this token.
-        
+
         Args:
             action: The action being performed
             observer: The observer performing the action
             **kwargs: Additional action-specific arguments
-            
+
         Returns:
             Action-specific result
-            
+
         Requirements: 5.2, 5.3, 5.4, 5.5
         """
         if action == AffordanceAction.HOVER:
@@ -391,7 +393,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def _handle_hover(self, observer: Observer) -> HoverInfo:
         """Handle hover action - display polynomial state.
-        
+
         Requirements: 5.2
         """
         if self.is_ghost:
@@ -408,7 +410,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def _handle_navigate(self, observer: Observer) -> NavigationResult:
         """Handle click action - navigate to path's Habitat.
-        
+
         Requirements: 5.3, 5.6
         """
         if self.is_ghost:
@@ -438,7 +440,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def _handle_context_menu(self, observer: Observer) -> ContextMenuResult:
         """Handle right-click action - show context menu.
-        
+
         Requirements: 5.4
         """
         options = [
@@ -446,16 +448,16 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
         ]
 
         if not self.is_ghost:
-            options.extend([
-                {"action": "invoke", "label": "Invoke", "enabled": True},
-                {"action": "view_source", "label": "View Source", "enabled": True},
-            ])
+            options.extend(
+                [
+                    {"action": "invoke", "label": "Invoke", "enabled": True},
+                    {"action": "view_source", "label": "View Source", "enabled": True},
+                ]
+            )
 
         # Admin-only options
         if observer.role == ObserverRole.ADMIN:
-            options.append(
-                {"action": "edit", "label": "Edit Node", "enabled": not self.is_ghost}
-            )
+            options.append({"action": "edit", "label": "Edit Node", "enabled": not self.is_ghost})
 
         return ContextMenuResult(
             path=self._path,
@@ -465,7 +467,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def _handle_drag(self, observer: Observer) -> DragResult:
         """Handle drag action - pre-fill REPL with path.
-        
+
         Requirements: 5.5
         """
         template = f"kg {self._path}"
@@ -477,7 +479,7 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
 
     async def _get_polynomial_state(self) -> PolynomialState:
         """Get the polynomial state for this path.
-        
+
         In full implementation, this would query the AGENTESE registry.
         For now, returns a simulated state.
         """
@@ -491,13 +493,15 @@ class AGENTESEPathToken(BaseMeaningToken[str]):
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
         base = super().to_dict()
-        base.update({
-            "path": self._path,
-            "context": self._context,
-            "segments": self._segments,
-            "exists": self._exists,
-            "is_ghost": self.is_ghost,
-        })
+        base.update(
+            {
+                "path": self._path,
+                "context": self._context,
+                "segments": self._segments,
+                "exists": self._exists,
+                "is_ghost": self.is_ghost,
+            }
+        )
         return base
 
 
@@ -512,12 +516,12 @@ def create_agentese_path_token(
     check_exists: bool = False,
 ) -> AGENTESEPathToken | None:
     """Create an AGENTESEPath token from text.
-    
+
     Args:
         text: Text that may contain an AGENTESE path
         position: Optional (start, end) position override
         check_exists: Whether to check if path exists in registry
-        
+
     Returns:
         AGENTESEPathToken if text matches pattern, None otherwise
     """

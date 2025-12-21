@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from services.forge.commission import CommissionService
     from services.gardener import GardenerPersistence
     from services.gestalt import GestaltPersistence
+    from services.liminal.coffee.core import CoffeeService
     from services.morpheus.persistence import MorpheusPersistence
     from services.muse.node import MuseNode
     from services.park import ParkPersistence
@@ -67,7 +68,6 @@ if TYPE_CHECKING:
     from services.witness.crystallization_node import TimeWitnessNode
     from services.witness.persistence import WitnessPersistence
     from services.witness.trace_store import MarkStore
-    from services.liminal.coffee.core import CoffeeService
 
 logger = logging.getLogger(__name__)
 

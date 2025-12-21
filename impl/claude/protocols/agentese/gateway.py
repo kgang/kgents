@@ -148,7 +148,6 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (park): {e}")
 
-
         # === Witness Crown Jewel nodes ===
         try:
             from services.witness import (

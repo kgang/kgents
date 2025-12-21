@@ -471,9 +471,7 @@ class TestBehaviorAnimator:
         distance = pos.distance_to(Position(100.0, 100.0))
         assert distance < 50.0  # Should be significantly closer
 
-    def test_explorer_moves_independently(
-        self, explorer_animator, human_focus, sample_graph
-    ):
+    def test_explorer_moves_independently(self, explorer_animator, human_focus, sample_graph):
         """EXPLORER moves somewhat independently of human focus."""
         explorer_animator.current_position = Position(0.0, 0.0)
         explorer_animator.current_path = "self.memory"
@@ -561,8 +559,7 @@ class TestBehaviorModulator:
         """Usually returns the base behavior (deterministic context)."""
         # Run multiple times to check stability
         results = [
-            modulator.get_effective_behavior(human_focus=stationary_focus)
-            for _ in range(10)
+            modulator.get_effective_behavior(human_focus=stationary_focus) for _ in range(10)
         ]
         # Most should be base behavior
         base_count = sum(1 for r in results if r == CursorBehavior.FOLLOWER)
@@ -632,9 +629,7 @@ class TestPositionProperties:
         st.floats(min_value=-100, max_value=100, allow_nan=False),
         st.floats(min_value=0.0, max_value=1.0),
     )
-    def test_lerp_stays_on_segment(
-        self, x1: float, y1: float, x2: float, y2: float, t: float
-    ):
+    def test_lerp_stays_on_segment(self, x1: float, y1: float, x2: float, y2: float, t: float):
         """Lerp result is on the line segment between points."""
         p1 = Position(x1, y1)
         p2 = Position(x2, y2)

@@ -363,34 +363,42 @@ class TestCrossPhaseEventFlow:
         bus = get_synergy_bus()
 
         # File event (Phase 1)
-        await bus.emit_and_wait(create_file_read_event(
-            path="/test.py",
-            size=100,
-            lines=10,
-        ))
+        await bus.emit_and_wait(
+            create_file_read_event(
+                path="/test.py",
+                size=100,
+                lines=10,
+            )
+        )
 
         # Conversation event (Phase 2)
-        await bus.emit_and_wait(create_conversation_turn_event(
-            session_id="sess-1",
-            turn_number=1,
-            role="user",
-            content_preview="Hello",
-        ))
+        await bus.emit_and_wait(
+            create_conversation_turn_event(
+                session_id="sess-1",
+                turn_number=1,
+                role="user",
+                content_preview="Hello",
+            )
+        )
 
         # Cursor event (Phase 3)
-        await bus.emit_and_wait(create_cursor_joined_event(
-            agent_id="agent-1",
-            display_name="Agent",
-            behavior="FOLLOWER",
-        ))
+        await bus.emit_and_wait(
+            create_cursor_joined_event(
+                agent_id="agent-1",
+                display_name="Agent",
+                behavior="FOLLOWER",
+            )
+        )
 
         # Swarm event (Phase 6)
-        await bus.emit_and_wait(create_swarm_spawned_event(
-            agent_id="spawned-1",
-            task="Task",
-            behavior="ASSISTANT",
-            autonomy_level=1,
-        ))
+        await bus.emit_and_wait(
+            create_swarm_spawned_event(
+                agent_id="spawned-1",
+                task="Task",
+                behavior="ASSISTANT",
+                autonomy_level=1,
+            )
+        )
 
         await asyncio.sleep(0.2)
 
@@ -424,11 +432,13 @@ class TestFluxPerformance:
         # Measure 10 events
         for i in range(10):
             start = time.perf_counter()
-            await bus.emit_and_wait(create_file_read_event(
-                path=f"/test_{i}.py",
-                size=100,
-                lines=10,
-            ))
+            await bus.emit_and_wait(
+                create_file_read_event(
+                    path=f"/test_{i}.py",
+                    size=100,
+                    lines=10,
+                )
+            )
             # Wait for processing
             await asyncio.sleep(0.05)
 
@@ -451,11 +461,13 @@ class TestFluxPerformance:
 
         start = time.perf_counter()
         for i in range(5):
-            await bus.emit_and_wait(create_file_read_event(
-                path=f"/test_{i}.py",
-                size=100,
-                lines=10,
-            ))
+            await bus.emit_and_wait(
+                create_file_read_event(
+                    path=f"/test_{i}.py",
+                    size=100,
+                    lines=10,
+                )
+            )
         elapsed = time.perf_counter() - start
 
         # Should complete reasonably fast even with many subscribers
@@ -476,11 +488,13 @@ class TestConductorEventSerialization:
         flux.subscribe(lambda e: received.append(e))
 
         bus = get_synergy_bus()
-        await bus.emit_and_wait(create_file_read_event(
-            path="/test.py",
-            size=100,
-            lines=10,
-        ))
+        await bus.emit_and_wait(
+            create_file_read_event(
+                path="/test.py",
+                size=100,
+                lines=10,
+            )
+        )
         await asyncio.sleep(0.1)
 
         assert len(received) == 1
@@ -493,6 +507,7 @@ class TestConductorEventSerialization:
 
         # Should be JSON-serializable
         import json
+
         json_str = json.dumps(data)
         assert json_str
 

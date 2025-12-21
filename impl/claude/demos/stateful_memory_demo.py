@@ -161,7 +161,7 @@ def run(cmd):
 </html>"""
 
 
-def main():
+def main() -> None:
     print("Compiling STATEFUL agent to WASM sandbox...")
 
     output_path = Path(gettempdir()) / "kgents_memory_demo.html"

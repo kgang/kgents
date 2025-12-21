@@ -58,7 +58,7 @@ class TextTransformerAgent(Agent[str, str]):
         return "\n".join(lines)
 
 
-def main():
+def main() -> None:
     """Generate and open WASM sandbox demo."""
     print("🔧 Compiling agent to WASM sandbox...")
 

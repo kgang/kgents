@@ -57,12 +57,14 @@ logger = logging.getLogger(__name__)
 def _get_trust_level_class() -> type:
     """Lazy import of TrustLevel to avoid circular dependency."""
     from services.witness.polynomial import TrustLevel as TL
+
     return TL
 
 
 def _get_trust_levels() -> dict[str, Any]:
     """Get trust level enum values."""
     from services.witness.polynomial import TrustLevel as TL
+
     return {
         "READ_ONLY": TL.READ_ONLY,
         "BOUNDED": TL.BOUNDED,
@@ -155,10 +157,9 @@ class SwarmRole:
             "READ_ONLY": frozenset({"glob", "grep", "read", "web_search"}),
             "BOUNDED": frozenset({"glob", "grep", "read", "web_search", "analyze", "critique"}),
             "SUGGESTION": frozenset({"glob", "grep", "read", "web_search", "think", "suggest"}),
-            "AUTONOMOUS": frozenset({
-                "glob", "grep", "read", "web_search",
-                "edit", "write", "bash", "invoke"
-            }),
+            "AUTONOMOUS": frozenset(
+                {"glob", "grep", "read", "web_search", "edit", "write", "bash", "invoke"}
+            ),
         }
         return TRUST_CAPS.get(self.trust_level_name, frozenset())
 
@@ -305,56 +306,68 @@ class SwarmSpawner:
             task_lower = task.lower()
 
             if any(kw in task_lower for kw in ["search", "find", "explore", "research", "look"]):
-                signals.append(SpawnSignal(
-                    "research_keywords",
-                    0.8,
-                    "Task involves exploration/research",
-                ))
+                signals.append(
+                    SpawnSignal(
+                        "research_keywords",
+                        0.8,
+                        "Task involves exploration/research",
+                    )
+                )
                 behavior = CursorBehavior.EXPLORER
                 trust_level = "READ_ONLY"
 
             elif any(kw in task_lower for kw in ["plan", "design", "architect", "strategy"]):
-                signals.append(SpawnSignal(
-                    "planning_keywords",
-                    0.8,
-                    "Task involves planning/design",
-                ))
+                signals.append(
+                    SpawnSignal(
+                        "planning_keywords",
+                        0.8,
+                        "Task involves planning/design",
+                    )
+                )
                 behavior = CursorBehavior.ASSISTANT
                 trust_level = "SUGGESTION"
 
             elif any(kw in task_lower for kw in ["implement", "write", "create", "fix", "build"]):
-                signals.append(SpawnSignal(
-                    "implementation_keywords",
-                    0.8,
-                    "Task involves implementation",
-                ))
+                signals.append(
+                    SpawnSignal(
+                        "implementation_keywords",
+                        0.8,
+                        "Task involves implementation",
+                    )
+                )
                 behavior = CursorBehavior.AUTONOMOUS
                 trust_level = "AUTONOMOUS"
 
             elif any(kw in task_lower for kw in ["review", "check", "verify", "test", "validate"]):
-                signals.append(SpawnSignal(
-                    "review_keywords",
-                    0.8,
-                    "Task involves review/verification",
-                ))
+                signals.append(
+                    SpawnSignal(
+                        "review_keywords",
+                        0.8,
+                        "Task involves review/verification",
+                    )
+                )
                 behavior = CursorBehavior.FOLLOWER
                 trust_level = "BOUNDED"
 
             else:
                 # Default: assistant with suggestion trust
-                signals.append(SpawnSignal(
-                    "general_task",
-                    0.5,
-                    "General task, defaulting to Planner role",
-                ))
+                signals.append(
+                    SpawnSignal(
+                        "general_task",
+                        0.5,
+                        "General task, defaulting to Planner role",
+                    )
+                )
 
         # Capacity signal
         if len(self._active_agents) >= self.max_agents:
-            signals.append(SpawnSignal(
-                "capacity_exceeded",
-                -1.0,  # Blocker
-                f"At capacity ({len(self._active_agents)}/{self.max_agents} agents)",
-            ))
+            signals.append(
+                SpawnSignal(
+                    "capacity_exceeded",
+                    -1.0,  # Blocker
+                    f"At capacity ({len(self._active_agents)}/{self.max_agents} agents)",
+                )
+            )
 
         # Aggregate confidence
         confidence = sum(s.weight for s in signals)
@@ -385,9 +398,7 @@ class SwarmSpawner:
         decision = self.evaluate_role(task, context)
 
         if not decision.spawn_allowed:
-            logger.warning(
-                f"Spawn denied for {agent_id}: {decision.reasons}"
-            )
+            logger.warning(f"Spawn denied for {agent_id}: {decision.reasons}")
             return None
 
         # Create cursor with role's behavior
