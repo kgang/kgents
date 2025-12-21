@@ -25,7 +25,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Base, Crystal, TeachingCrystal
 from models.base import get_engine
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

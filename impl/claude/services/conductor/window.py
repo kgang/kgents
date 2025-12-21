@@ -27,6 +27,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Callable
 
+
 # Local ContextStrategy enum (previously in services.chat.config)
 class ContextStrategy(Enum):
     """Context management strategy for conversation windows."""
