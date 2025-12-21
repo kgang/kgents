@@ -49,13 +49,10 @@ class TestPathRegistries:
         assert "self.jewel.brain.flow.chat.reset" in BRAIN_FLOW_PATHS
 
     def test_gardener_flow_paths_defined(self) -> None:
-        """Gardener flow paths should be defined."""
-        assert len(GARDENER_FLOW_PATHS) == 5
-        assert "self.jewel.gardener.flow.chat.manifest" in GARDENER_FLOW_PATHS
-        assert "self.jewel.gardener.flow.chat.tend" in GARDENER_FLOW_PATHS
-        assert "self.jewel.gardener.flow.chat.suggest" in GARDENER_FLOW_PATHS
-        assert "self.jewel.gardener.flow.chat.history" in GARDENER_FLOW_PATHS
-        assert "self.jewel.gardener.flow.chat.reset" in GARDENER_FLOW_PATHS
+        """Gardener flow paths should be empty (deprecated 2025-12-21)."""
+        # Gardener was deprecated in favor of Witness-based cultivation
+        # See: spec/protocols/_archive/gardener-evergreen-heritage.md
+        assert len(GARDENER_FLOW_PATHS) == 0
 
     def test_gestalt_flow_paths_defined(self) -> None:
         """Gestalt flow paths should be defined."""
@@ -67,13 +64,11 @@ class TestPathRegistries:
         assert "self.jewel.gestalt.flow.research.synthesize" in GESTALT_FLOW_PATHS
         assert "self.jewel.gestalt.flow.research.reset" in GESTALT_FLOW_PATHS
 
-    def test_hero_path_combines_all_three(self) -> None:
-        """Hero path should combine Brain, Gardener, and Gestalt paths."""
-        assert len(HERO_PATH_FLOW_PATHS) == 15  # 4 + 5 + 6
+    def test_hero_path_combines_brain_and_gestalt(self) -> None:
+        """Hero path should combine Brain and Gestalt paths (Gardener deprecated)."""
+        assert len(HERO_PATH_FLOW_PATHS) == 10  # 4 + 0 + 6 (Gardener deprecated)
         # Check all paths are present
         for path in BRAIN_FLOW_PATHS:
-            assert path in HERO_PATH_FLOW_PATHS
-        for path in GARDENER_FLOW_PATHS:
             assert path in HERO_PATH_FLOW_PATHS
         for path in GESTALT_FLOW_PATHS:
             assert path in HERO_PATH_FLOW_PATHS
@@ -109,12 +104,9 @@ class TestAffordances:
         assert "reset" in BRAIN_FLOW_AFFORDANCES
 
     def test_gardener_affordances(self) -> None:
-        """Gardener affordances should be defined."""
-        assert "manifest" in GARDENER_FLOW_AFFORDANCES
-        assert "tend" in GARDENER_FLOW_AFFORDANCES
-        assert "suggest" in GARDENER_FLOW_AFFORDANCES
-        assert "history" in GARDENER_FLOW_AFFORDANCES
-        assert "reset" in GARDENER_FLOW_AFFORDANCES
+        """Gardener affordances should be empty (deprecated 2025-12-21)."""
+        # Gardener was deprecated in favor of Witness-based cultivation
+        assert len(GARDENER_FLOW_AFFORDANCES) == 0
 
     def test_gestalt_affordances(self) -> None:
         """Gestalt affordances should be defined."""

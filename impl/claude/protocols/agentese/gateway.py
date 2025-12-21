@@ -201,7 +201,17 @@ except ImportError:
     JSONResponse = None  # type: ignore[assignment, misc]
 
     class HTTPException(Exception):  # type: ignore[no-redef]
-        """Stub HTTPException."""
+        """
+        Stub HTTPException for when FastAPI is not installed.
+
+        Provides the minimal interface needed by gateway code without
+        requiring FastAPI as a hard dependency.
+
+        Teaching:
+            gotcha: This stub exists for graceful degradation—gateway.py can
+                    be imported even without FastAPI for type checking.
+                    (Evidence: test_gateway.py::test_no_fastapi_graceful)
+        """
 
         def __init__(self, status_code: int, detail: str | dict[str, Any]) -> None:
             self.status_code = status_code
@@ -327,6 +337,17 @@ class AgenteseGateway:
     Example:
         gateway = AgenteseGateway(prefix="/api/v1")
         gateway.mount_on(app)
+
+    Teaching:
+        gotcha: Discovery endpoints MUST be defined BEFORE catch-all routes.
+                FastAPI matches routes in definition order, so /discover
+                must come before /{path:path}/* or it gets swallowed.
+                (Evidence: test_gateway.py::test_discover_endpoint)
+
+        gotcha: Law 3 (Completeness)—every AGENTESE invocation emits exactly
+                one Mark via _emit_trace(). This happens in _invoke_path(),
+                not at the endpoint level, ensuring consistent tracing.
+                (Evidence: test_gateway.py::test_mark_emission)
     """
 
     prefix: str = "/agentese"
@@ -672,6 +693,7 @@ class AgenteseGateway:
                     else:
                         # Single result, wrap in SSE format
                         async def single_event() -> AsyncGenerator[str, None]:
+                            """Wrap single result as SSE event."""
                             yield f"data: {json.dumps(_to_json_safe(result))}\n\n"
 
                         return StreamingResponse(

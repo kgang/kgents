@@ -108,6 +108,11 @@ class AgentesePath:
         # Or bind to logos first
         bound = pipeline.bind(logos)
         result = await bound.invoke(observer)
+
+    Teaching:
+        gotcha: AgentesePath creates UnboundComposedPath via >>. You must
+                call .bind(logos) or .run(observer, logos) to execute.
+                (Evidence: test_logos.py::test_unbound_composition)
     """
 
     value: str
@@ -141,6 +146,11 @@ class UnboundComposedPath:
     Composition of paths that hasn't been bound to a Logos yet (v3 API).
 
     Created by path() >> "..." operations.
+
+    Teaching:
+        gotcha: UnboundComposedPath is lazy—no Logos, no execution.
+                Call .bind(logos) to get ComposedPath, or .run() to execute.
+                (Evidence: test_logos.py::test_unbound_composition)
     """
 
     paths: list[str]
@@ -219,6 +229,11 @@ class ComposedPath:
     Track B (Law Enforcer) Enhancements:
     - emit_law_check: Emit law_check span events on each invocation
     - Law verification wired into invoke()
+
+    Teaching:
+        gotcha: ComposedPath.invoke() enforces Minimal Output Principle by default.
+                Arrays break composition. Use .without_enforcement() if needed.
+                (Evidence: test_logos.py::test_minimal_output_enforcement)
     """
 
     paths: list[str]
@@ -370,6 +385,12 @@ class IdentityPath:
     - path >> Id == path
 
     This is the unit element of path composition.
+
+    Teaching:
+        gotcha: IdentityPath is useful for conditional pipelines:
+                base = logos.identity() if skip else logos.path("step1")
+                pipeline = base >> "step2"
+                (Evidence: test_logos.py::test_identity_composition)
     """
 
     def __init__(self, logos: "Logos"):
@@ -377,6 +398,7 @@ class IdentityPath:
 
     @property
     def name(self) -> str:
+        """Return identity name for composition display."""
         return "Id"
 
     async def invoke(
@@ -404,7 +426,14 @@ class IdentityPath:
 
 
 class RegistryProtocol:
-    """Protocol for L-gent registry lookup."""
+    """
+    Protocol for L-gent registry lookup.
+
+    Teaching:
+        gotcha: This is a Protocol (structural typing). Any class with
+                get/register/update methods satisfies it—no inheritance needed.
+                (Evidence: test_logos.py::test_registry_protocol)
+    """
 
     def get(self, handle: str) -> Any | None:
         """Get entry by handle, or None if not found."""
@@ -428,6 +457,12 @@ class SimpleRegistry:
     Simple in-memory registry for testing and bootstrapping.
 
     Will be replaced by L-gent integration in Phase 6.
+
+    Teaching:
+        gotcha: SimpleRegistry is for testing. In production, NodeRegistry
+                from registry.py is the authoritative source—Logos checks
+                NodeRegistry BEFORE SimpleRegistry.
+                (Evidence: test_logos.py::test_resolution_order)
     """
 
     _entries: dict[str, LogosNode] = field(default_factory=dict)
@@ -469,6 +504,15 @@ class Logos:
     CRITICAL: There is no view from nowhere. All operations
     require an observer. `invoke()` without observer raises
     `ObserverRequiredError`.
+
+    Teaching:
+        gotcha: Resolution checks NodeRegistry BEFORE SimpleRegistry.
+                @node decorators in services/ override any manual registration.
+                (Evidence: test_logos.py::test_resolution_order)
+
+        gotcha: Aliases are PREFIX expansion only. "me.challenge" → "self.soul.challenge".
+                You cannot alias an aspect, only a path prefix.
+                (Evidence: test_logos.py::test_alias_expansion)
     """
 
     registry: SimpleRegistry = field(default_factory=SimpleRegistry)
@@ -1656,6 +1700,11 @@ class PlaceholderNode:
     Placeholder node for testing resolver behavior.
 
     Provides basic affordances and manifest behavior.
+
+    Teaching:
+        gotcha: PlaceholderNode is for tests only. Production nodes should
+                extend BaseLogosNode or use @node decorator.
+                (Evidence: test_logos.py::test_placeholder_node)
     """
 
     handle: str

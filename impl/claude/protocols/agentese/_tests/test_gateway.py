@@ -598,11 +598,11 @@ class TestGatewayMarkEmission:
         """Mark emission publishes to SynergyBus."""
         from services.witness.bus import WitnessTopics, get_synergy_bus
 
-        @node("test.synergy")
+        @node("self.gateway.synergy")
         class SynergyNode(TestNode):
             @property
             def handle(self) -> str:
-                return "test.synergy"
+                return "self.gateway.synergy"
 
         # Set up a subscriber to capture events
         captured_events: list[Any] = []
@@ -616,7 +616,7 @@ class TestGatewayMarkEmission:
         gateway.mount_on(test_app)
         client = TestClient(test_app)
 
-        response = client.post("/agentese/test/synergy/greet", json={})
+        response = client.post("/agentese/self/gateway/synergy/greet", json={})
         assert response.status_code == 200
 
         # Note: The asyncio.create_task in gateway may not complete synchronously

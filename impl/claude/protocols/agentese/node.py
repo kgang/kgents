@@ -68,6 +68,16 @@ class Observer:
         Observer.guest() - Anonymous guest observer
         Observer.test() - Test observer with all capabilities
         Observer.from_umwelt(umwelt) - Extract from full Umwelt
+
+    Teaching:
+        gotcha: Observer can be None in v3 API—Logos.invoke() defaults to
+                Observer.guest(). But guest observers have minimal affordances.
+                Be explicit about archetype for non-trivial operations.
+                (Evidence: test_logos.py::test_guest_observer)
+
+        gotcha: Observer is frozen (immutable). To change capabilities,
+                create a new Observer instance. This enables safe sharing.
+                (Evidence: test_node.py::test_observer_immutable)
     """
 
     archetype: str = "guest"
@@ -112,7 +122,8 @@ class Observer:
 
 @dataclass(frozen=True)
 class PolynomialManifest:
-    """The polynomial functor structure of an agent.
+    """
+    The polynomial functor structure of an agent.
 
     This makes AD-002 (Polynomial Generalization) visible by exposing
     the state machine structure of any agent.
@@ -123,6 +134,12 @@ class PolynomialManifest:
     - A is the input type, B is the output type (not captured here)
 
     This type captures the S and E structure, making it visible and interactive.
+
+    Teaching:
+        gotcha: Default polynomial() returns single 'default' position with all
+                affordances as directions. Override in PolyAgent subclasses
+                (e.g., Gardener) to expose real state machine structure.
+                (Evidence: test_node.py::test_polynomial_default)
     """
 
     positions: tuple[str, ...]  # S: set of positions (states)
@@ -130,6 +147,7 @@ class PolynomialManifest:
     directions: Mapping[str, tuple[str, ...]]  # E(s): directions from each position
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dictionary."""
         return {
             "positions": list(self.positions),
             "current": self.current,
@@ -150,6 +168,12 @@ class AgentMeta:
     This is a lightweight view of the agent's identity, separate from
     the full Umwelt. Used by LogosNode.affordances() to determine
     what verbs are available.
+
+    Teaching:
+        gotcha: AgentMeta is the v1 affordance API. New code should use
+                Observer directly—BaseLogosNode._umwelt_to_meta() bridges
+                both for backward compatibility.
+                (Evidence: test_node.py::test_agentmeta_to_observer)
     """
 
     name: str
@@ -183,6 +207,11 @@ class Renderable(Protocol):
 
     The result of manifest() must be Renderable—can be converted
     to various output formats based on observer preference.
+
+    Teaching:
+        gotcha: Renderable is a Protocol (structural typing), not ABC.
+                Any class with to_dict() and to_text() methods satisfies it.
+                (Evidence: test_node.py::test_renderable_protocol)
     """
 
     def to_dict(self) -> dict[str, Any]:
@@ -204,6 +233,11 @@ class AffordanceSet:
 
     The Umwelt Principle: Each agent inhabits its own
     world; there is no view from nowhere.
+
+    Teaching:
+        gotcha: AffordanceSet is observer-specific. Different observers
+                get different verbs from the same node—this is intentional.
+                (Evidence: test_node.py::test_affordance_polymorphism)
     """
 
     handle: str
@@ -233,6 +267,11 @@ class LogosNode(Protocol):
     Must be stateless (Symbiont pattern—state via D-gent Lens).
 
     AGENTESE Principle: Nouns are frozen verbs.
+
+    Teaching:
+        gotcha: LogosNode must be stateless. Any state access must go through
+                D-gent Lens (dependency injection). This enables composition.
+                (Evidence: test_node.py::test_logos_node_stateless)
     """
 
     @property
@@ -319,6 +358,12 @@ class BaseLogosNode(ABC):
     - _get_affordances_for_archetype()
     - manifest()
     - invoke()
+
+    Teaching:
+        gotcha: BaseLogosNode provides default implementations for help,
+                alternatives, and polynomial aspects. Override polynomial()
+                in PolyAgent subclasses to expose real state machine.
+                (Evidence: test_node.py::test_base_logos_node_defaults)
     """
 
     @property
@@ -593,6 +638,12 @@ class JITLogosNode:
 
     Created by J-gent JIT compilation when no implementation exists
     but a spec is found. Tracks usage for promotion decisions.
+
+    Teaching:
+        gotcha: JIT nodes track usage_count and success_rate for promotion.
+                Use should_promote() to check if node is ready for permanent
+                implementation in impl/.
+                (Evidence: test_jit.py::test_jit_promotion_threshold)
     """
 
     handle: str
@@ -698,6 +749,11 @@ class Ghost:
         aspect: The aspect name (e.g., "witness", "refine")
         hint: Human-readable hint about what this aspect does
         category: Optional category for grouping (e.g., "PERCEPTION", "MUTATION")
+
+    Teaching:
+        gotcha: Ghosts are limited to 5 per invocation. BaseLogosNode._get_alternatives()
+                truncates to prevent UI overload.
+                (Evidence: test_node.py::test_ghost_limit)
     """
 
     aspect: str
@@ -718,13 +774,22 @@ class Ghost:
 
 @dataclass(frozen=True)
 class BasicRendering:
-    """Simple rendering with summary and optional content."""
+    """
+    Simple rendering with summary and optional content.
+
+    Teaching:
+        gotcha: BasicRendering is the fallback for nodes without specialized
+                rendering. Use BlueprintRendering/PoeticRendering/EconomicRendering
+                for archetype-specific output.
+                (Evidence: test_node.py::test_basic_rendering_fallback)
+    """
 
     summary: str
     content: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dictionary."""
         return {
             "summary": self.summary,
             "content": self.content,
@@ -732,6 +797,7 @@ class BasicRendering:
         }
 
     def to_text(self) -> str:
+        """Convert to human-readable text format."""
         if self.content:
             return f"{self.summary}\n\n{self.content}"
         return self.summary
@@ -739,13 +805,21 @@ class BasicRendering:
 
 @dataclass(frozen=True)
 class BlueprintRendering:
-    """Technical rendering for architect archetypes."""
+    """
+    Technical rendering for architect archetypes.
+
+    Teaching:
+        gotcha: BlueprintRendering is returned when observer.archetype == "architect".
+                Contains dimensions, materials, and structural analysis.
+                (Evidence: test_node.py::test_archetype_rendering)
+    """
 
     dimensions: dict[str, float] = field(default_factory=dict)
     materials: tuple[str, ...] = ()
     structural_analysis: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dictionary."""
         return {
             "type": "blueprint",
             "dimensions": self.dimensions,
@@ -754,6 +828,7 @@ class BlueprintRendering:
         }
 
     def to_text(self) -> str:
+        """Convert to human-readable text format."""
         lines = ["BLUEPRINT"]
         if self.dimensions:
             lines.append(f"Dimensions: {self.dimensions}")
@@ -764,13 +839,21 @@ class BlueprintRendering:
 
 @dataclass(frozen=True)
 class PoeticRendering:
-    """Aesthetic rendering for poet archetypes."""
+    """
+    Aesthetic rendering for poet archetypes.
+
+    Teaching:
+        gotcha: PoeticRendering is returned when observer.archetype == "poet".
+                Contains metaphors and mood for aesthetic interpretation.
+                (Evidence: test_node.py::test_archetype_rendering)
+    """
 
     description: str
     metaphors: tuple[str, ...] = ()
     mood: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dictionary."""
         return {
             "type": "poetic",
             "description": self.description,
@@ -779,6 +862,7 @@ class PoeticRendering:
         }
 
     def to_text(self) -> str:
+        """Convert to human-readable text format."""
         lines = [self.description]
         if self.mood:
             lines.append(f"Mood: {self.mood}")
@@ -789,13 +873,21 @@ class PoeticRendering:
 
 @dataclass(frozen=True)
 class EconomicRendering:
-    """Financial rendering for economist archetypes."""
+    """
+    Financial rendering for economist archetypes.
+
+    Teaching:
+        gotcha: EconomicRendering is returned when observer.archetype == "economist".
+                Contains market value, comparable sales, and forecasts.
+                (Evidence: test_node.py::test_archetype_rendering)
+    """
 
     market_value: float = 0.0
     comparable_sales: tuple[dict[str, Any], ...] = ()
     appreciation_forecast: dict[str, float] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to JSON-serializable dictionary."""
         return {
             "type": "economic",
             "market_value": self.market_value,
@@ -804,6 +896,7 @@ class EconomicRendering:
         }
 
     def to_text(self) -> str:
+        """Convert to human-readable text format."""
         lines = [f"Market Value: ${self.market_value:,.2f}"]
         if self.appreciation_forecast:
             lines.append(f"Forecast: {self.appreciation_forecast}")
@@ -819,6 +912,11 @@ class AspectAgent:
     Wrapper that turns a LogosNode aspect into a composable Agent.
 
     Used by lens() to return Agent[Umwelt, Any] for composition.
+
+    Teaching:
+        gotcha: AspectAgent enables >> composition of node aspects.
+                a.lens("manifest") >> b.lens("refine") composes.
+                (Evidence: test_node.py::test_aspect_agent_composition)
     """
 
     node: LogosNode
@@ -826,6 +924,7 @@ class AspectAgent:
 
     @property
     def name(self) -> str:
+        """Return the fully-qualified aspect path."""
         return f"{self.node.handle}.{self.aspect}"
 
     async def invoke(self, input: "Umwelt[Any, Any]") -> Any:
@@ -839,13 +938,22 @@ class AspectAgent:
 
 @dataclass
 class ComposedAspectAgent:
-    """Composition of AspectAgent with another Agent."""
+    """
+    Composition of AspectAgent with another Agent.
+
+    Teaching:
+        gotcha: ComposedAspectAgent preserves associativity:
+                (a >> b) >> c == a >> (b >> c). This is enforced by the
+                flattening logic in __rshift__.
+                (Evidence: test_node.py::test_composition_associativity)
+    """
 
     first: AspectAgent
     second: "Agent[Any, Any]"
 
     @property
     def name(self) -> str:
+        """Return the composition name showing the pipeline."""
         return f"({self.first.name} >> {self.second.name})"
 
     async def invoke(self, input: "Umwelt[Any, Any]") -> Any:
@@ -878,15 +986,19 @@ class _WrapperNode:
 
     @property
     def handle(self) -> str:
+        """Return the agent's name as the AGENTESE handle."""
         return self.agent.name
 
     def affordances(self, observer: AgentMeta) -> list[str]:
+        """Return minimal affordances for wrapped agents."""
         return ["invoke"]
 
     def lens(self, aspect: str) -> "Agent[Any, Any]":
+        """Return the wrapped agent as a lens."""
         return self.agent
 
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """Return basic rendering for wrapped agents."""
         return BasicRendering(summary=f"Agent: {self.agent.name}")
 
     async def invoke(
@@ -895,4 +1007,5 @@ class _WrapperNode:
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Any:
+        """Invoke the wrapped agent with observer as input."""
         return await self.agent.invoke(observer)

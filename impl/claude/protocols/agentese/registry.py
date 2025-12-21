@@ -74,6 +74,11 @@ class NodeExample:
         aspect: The aspect to invoke (e.g., "capture", "search")
         kwargs: Keyword arguments to pass to the aspect
         label: Display label for the button (defaults to "Try {aspect}")
+
+    Teaching:
+        gotcha: Examples are defined in @node decorator, not in node class.
+                Pass examples=[(aspect, kwargs, label), ...] to @node().
+                (Evidence: test_registry.py::test_node_examples)
     """
 
     aspect: str
@@ -102,6 +107,12 @@ class NodeMetadata:
         lazy: Whether to defer instantiation until first use
         contracts: Contract declarations for type-safe BE/FE sync (Phase 7)
         examples: Pre-seeded example invocations (Habitat 2.0)
+
+    Teaching:
+        gotcha: Dependencies are resolved by ServiceContainer at instantiation.
+                If a dependency isn't registered, the node SILENTLY SKIPS!
+                Always verify deps exist in providers.py.
+                (Evidence: test_registry.py::test_missing_dependency)
     """
 
     path: str
@@ -191,6 +202,7 @@ def node(
     """
 
     def decorator(cls: type[T]) -> type[T]:
+        """Apply @node metadata to class and register with global registry."""
         # Get description from docstring if not provided
         desc = description or (cls.__doc__ or "").split("\n")[0].strip()
 
@@ -286,6 +298,16 @@ class NodeRegistry:
 
         # List all registered paths
         paths = registry.list_paths()
+
+    Teaching:
+        gotcha: @node decorator runs at import time. If a module isn't imported,
+                its node won't be registered. Call _import_node_modules() first
+                (done automatically by gateway.mount_on()).
+                (Evidence: test_registry.py::test_node_import_order)
+
+        gotcha: After reset_registry() in tests, call repopulate_registry()
+                to restore nodes for subsequent tests on the same xdist worker.
+                (Evidence: test_registry.py::test_registry_reset)
     """
 
     # Path -> node class
