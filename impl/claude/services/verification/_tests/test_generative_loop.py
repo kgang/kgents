@@ -88,8 +88,8 @@ def mind_map_topology_strategy(draw: st.DrawFn) -> MindMapTopology:
     seen_ids = set()
     unique_nodes = []
     for node in nodes_list:
-        if node.node_id not in seen_ids:
-            seen_ids.add(node.node_id)
+        if node.id not in seen_ids:
+            seen_ids.add(node.id)
             unique_nodes.append(node)
 
     if len(unique_nodes) < 2:

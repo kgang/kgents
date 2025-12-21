@@ -177,6 +177,7 @@ class TestManifestCommand:
             namespace="test-ns",
             json_mode=False,
             validate_mode=False,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 0
@@ -193,6 +194,7 @@ class TestManifestCommand:
             namespace="test-ns",
             json_mode=True,
             validate_mode=False,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 0
@@ -215,6 +217,7 @@ class TestManifestCommand:
             namespace="test",
             json_mode=True,
             validate_mode=False,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 0
@@ -232,6 +235,7 @@ class TestManifestCommand:
             namespace="production",
             json_mode=True,
             validate_mode=False,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 0
@@ -248,6 +252,7 @@ class TestManifestCommand:
             namespace="test",
             json_mode=False,
             validate_mode=False,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 1
@@ -260,6 +265,7 @@ class TestManifestCommand:
             namespace="test",
             json_mode=False,
             validate_mode=True,
+            target="k8s",
             ctx=_ctx(ctx),
         )
         assert result == 0
@@ -270,7 +276,7 @@ class TestManifestCommand:
         """Manifest with --validate --json includes 'valid' field."""
         ctx = MockContext()
         result = _handle_manifest(
-            "Kappa", namespace="test", json_mode=True, validate_mode=True, ctx=_ctx(ctx)
+            "Kappa", namespace="test", json_mode=True, validate_mode=True, target="k8s", ctx=_ctx(ctx)
         )
         assert result == 0
 
