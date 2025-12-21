@@ -113,6 +113,7 @@ These are DONE and documented elsewhere:
 
 | Feature | Completion | Documentation |
 |---------|------------|---------------|
+| **A-gent Alethic Refactor** | 2025-12-21 | `spec/a-gents/README.md`, `spec/a-gents/alethic.md` |
 | 2D Renaissance | 2025-12-18 | `spec/protocols/2d-renaissance.md` |
 | AGENTESE-as-Route | 2025-12-18 | `spec/protocols/agentese-as-route.md` |
 | Différance Engine | 2025-12-18 | `docs/systems-reference.md` |
@@ -123,4 +124,4 @@ These are DONE and documented elsewhere:
 
 ---
 
-*Last: 2025-12-19 (Witness Phase 3: CLI Handler - logs and status commands)*
+*Last: 2025-12-21 (A-gent Alethic Architecture Refactor)*

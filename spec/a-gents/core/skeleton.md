@@ -193,6 +193,7 @@ Extension MUST:
 
 ## See Also
 
-- [../README.md](../README.md) - A-gents overview
-- [../../anatomy.md](../../anatomy.md) - What constitutes an agent
-- [../../c-gents/composition.md](../../c-gents/composition.md) - Composition rules
+- [../README.md](../README.md) — Alethic Architecture overview
+- [../alethic.md](../alethic.md) — Deep dive into alethic concepts
+- [../../anatomy.md](../../anatomy.md) — What constitutes an agent
+- [../../architecture/polyfunctor.md](../../architecture/polyfunctor.md) — Polynomial functor theory

@@ -711,7 +711,7 @@ class AgentFactory:
         )
 
         # Parse spec file
-        spec = AgentFactory.from_spec_file(Path("spec/a-gents/art/creativity-coach.md"))
+        spec = AgentFactory.from_spec_file(Path("spec/a-gents/core/skeleton.md"))
 
         # Compose with validation
         pipeline = AgentFactory.compose(agent_a, agent_b, validate=True)

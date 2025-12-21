@@ -1,63 +1,54 @@
 """
-A-gents: Abstract Architectures + Art/Creativity
+A-gents: Alethic Architecture
 
-A-gents provide:
-- The agent skeleton (what every agent MUST be)
-- Creativity-focused agents for idea expansion
-- Bootstrap verification (BootstrapWitness)
-- Category-theoretic protocols (Morphism, Functor)
-- Agent factory (AgentFactory)
-- Self-describing agents (GroundedSkeleton)
-- **Alethic Architecture**: Halo capability protocol + Archetypes
-- **Alethic Agent**: Polynomial agent for truth-seeking (Phase 3 migration)
+The "A" stands for **Aletheia** (truth) and **Architecture**.
 
-The key insight of A-gents: Agent[A, B] from bootstrap IS the skeleton.
-AbstractAgent is just an alias for semantic clarity.
+A-gents provide the **truth-preserving** foundation for all agents:
 
-For richer metadata, use AgentMeta (optional).
+1. **Skeleton**: The minimal agent contract (identity, interface, behavior)
+2. **Halo**: Declarative capabilities (@Capability.* decorators)
+3. **Archetypes**: Pre-packaged patterns (Kappa, Lambda, Delta)
+4. **Alethic Agent**: Polynomial state machine for truth-seeking
+5. **Functor Protocol**: Universal lifting with law verification
 
-## The Alethic Architecture
+## The Nucleus-Halo-Projector Triad
 
-The Halo system provides declarative capabilities:
-- Nucleus: Pure logic (what the agent does)
-- Halo: Declarative capabilities (what the agent could become)
-- Archetype: Pre-packaged Halo for common patterns
-- Projector: Target-specific compilation (how the agent manifests)
-
-Example:
-    >>> @Capability.Stateful(schema=MyMemory)
-    ... @Capability.Soulful(persona="Kent")
-    ... class MyAgent(Agent[str, str]):
-    ...     async def invoke(self, input: str) -> str:
-    ...         return f"Hello, {input}"
-
-Or using archetypes:
-    >>> class MyService(Kappa[Request, Response]):
-    ...     async def invoke(self, req: Request) -> Response:
-    ...         return process(req)
+```
+Nucleus    → Pure Agent[A, B] logic (what it does)
+Halo       → @Capability.* decorators (what it could become)
+Projector  → Target-specific compilation (how it manifests)
+```
 
 ## Alethic Agent (Polynomial)
 
 The AlethicAgent models truth-seeking as a polynomial state machine:
-- GROUNDING → DELIBERATING → JUDGING → SYNTHESIZING
+    GROUNDING → DELIBERATING → JUDGING → SYNTHESIZING
 
 Example:
+    >>> from agents.a import AlethicAgent, Query
     >>> agent = AlethicAgent()
     >>> response = await agent.reason(Query(claim="The sky is blue"))
     >>> print(response.verdict.accepted)
 
-See: plans/architecture/alethic.md, plans/architecture/polyfunctor.md
+## Archetypes
+
+    >>> from agents.a import Kappa
+    >>> class MyService(Kappa[Request, Response]):
+    ...     async def invoke(self, req: Request) -> Response:
+    ...         return process(req)
+
+See: spec/a-gents/README.md, spec/a-gents/alethic.md
 """
 
-# Alethic Agent: Polynomial truth-seeking (Phase 3 migration)
+# =============================================================================
+# ALETHIC ARCHITECTURE: Core Components
+# =============================================================================
+
+# Alethic Agent: Polynomial truth-seeking
 from .alethic import (
-    # Polynomial Agent
     ALETHIC_AGENT,
-    # Wrapper
     AlethicAgent,
-    # Types
     AlethicResponse,
-    # State Machine
     AlethicState,
     DeliberationResult,
     Evidence,
@@ -66,61 +57,57 @@ from .alethic import (
     alethic_transition,
 )
 
-# Alethic Architecture: Genus Archetypes
+# Archetypes: Pre-packaged Halos
 from .archetypes import (
-    # Base
     Archetype,
-    # Standard Archetypes
     Delta,
     Kappa,
     Lambda,
-    # Utilities
     get_archetype,
     is_archetype_instance,
 )
+
+# =============================================================================
+# LEGACY: Creativity Coach (deprecated from A-gent core)
+# These remain for backwards compatibility but are NOT part of Alethic Architecture.
+# Consider moving to services/muse/ in a future refactor.
+# =============================================================================
 from .creativity import (
-    # Agent
     CreativityCoach,
     CreativityInput,
-    # Types
     CreativityMode,
     CreativityResponse,
     Persona,
-    # Convenience functions
     creativity_coach,
     philosophical_coach,
     playful_coach,
     provocative_coach,
 )
 
-# Alethic Algebra: Universal Functor Protocol
+# Functor Protocol: Universal lifting with law verification
 from .functor import (
-    # Verification
     FunctorLawResult,
-    # Core Protocol
     FunctorRegistry,
     FunctorVerificationReport,
     Liftable,
     Pointed,
     UniversalFunctor,
-    # Combinators
     compose_functors,
     identity_functor,
     verify_composition_law,
     verify_functor,
     verify_identity_law,
 )
+
+# Halo: Declarative capabilities
 from .halo import (
     HALO_ATTR,
-    # Base
     Capability,
     CapabilityBase,
-    # Capability types
     ObservableCapability,
     SoulfulCapability,
     StatefulCapability,
     StreamableCapability,
-    # Introspection
     get_capability,
     get_halo,
     get_own_halo,
@@ -135,75 +122,75 @@ from .quick import (
     agent,
     pipeline,
 )
+
+# Skeleton: Minimal agent contract
 from .skeleton import (
-    # The skeleton (re-exported from bootstrap)
     AbstractAgent,
     AgentBehavior,
     AgentFactory,
     AgentIdentity,
     AgentInterface,
-    # Optional metadata
     AgentMeta,
-    # Phase 3: AgentFactory
     AgentSpec,
     AutopoieticAgent,
-    # Phase 1: BootstrapWitness
     BootstrapVerificationResult,
     BootstrapWitness,
     FactoryAgent,
     Functor,
-    # Phase 4: GroundedSkeleton
     GroundedSkeleton,
-    # Phase 2: Category-Theoretic Protocols
     Morphism,
     check_composition,
     get_codomain,
     get_domain,
     get_meta,
-    # Utilities
     has_meta,
     verify_composition_types,
 )
 
+# =============================================================================
+# Public API
+# =============================================================================
+
 __all__ = [
-    # Core skeleton
+    # =========================================================================
+    # ALETHIC ARCHITECTURE: Primary Exports
+    # =========================================================================
+    # Alethic Agent (Polynomial truth-seeking)
+    "AlethicState",
+    "Query",
+    "Evidence",
+    "DeliberationResult",
+    "AlethicResponse",
+    "ALETHIC_AGENT",
+    "alethic_directions",
+    "alethic_transition",
+    "AlethicAgent",
+    # Skeleton (minimal agent contract)
     "AbstractAgent",
-    # Metadata (optional)
     "AgentMeta",
     "AgentIdentity",
     "AgentInterface",
     "AgentBehavior",
-    # Utilities
     "has_meta",
     "get_meta",
     "check_composition",
-    # Phase 1: BootstrapWitness
+    # Bootstrap Witness
     "BootstrapVerificationResult",
     "BootstrapWitness",
-    # Phase 2: Category-Theoretic Protocols
+    # Category-Theoretic Protocols
     "Morphism",
     "Functor",
     "get_domain",
     "get_codomain",
     "verify_composition_types",
-    # Phase 3: AgentFactory
+    # Agent Factory
     "AgentSpec",
     "AgentFactory",
     "FactoryAgent",
-    # Phase 4: GroundedSkeleton
+    # Grounded Skeleton
     "GroundedSkeleton",
     "AutopoieticAgent",
-    # Creativity Coach
-    "CreativityMode",
-    "CreativityInput",
-    "CreativityResponse",
-    "Persona",
-    "CreativityCoach",
-    "creativity_coach",
-    "playful_coach",
-    "philosophical_coach",
-    "provocative_coach",
-    # Alethic Architecture: Halo Capability Protocol
+    # Halo Capability Protocol
     "Capability",
     "CapabilityBase",
     "HALO_ATTR",
@@ -217,7 +204,7 @@ __all__ = [
     "get_capability",
     "merge_halos",
     "inherit_halo",
-    # Alethic Algebra: Universal Functor Protocol
+    # Universal Functor Protocol
     "UniversalFunctor",
     "Liftable",
     "Pointed",
@@ -229,25 +216,27 @@ __all__ = [
     "verify_functor",
     "compose_functors",
     "identity_functor",
-    # Alethic Architecture: Genus Archetypes
+    # Archetypes
     "Archetype",
     "Kappa",
     "Lambda",
     "Delta",
     "get_archetype",
     "is_archetype_instance",
-    # Alethic Agent: Polynomial truth-seeking (Phase 3 Polyfunctor)
-    "AlethicState",
-    "Query",
-    "Evidence",
-    "DeliberationResult",
-    "AlethicResponse",
-    "ALETHIC_AGENT",
-    "alethic_directions",
-    "alethic_transition",
-    "AlethicAgent",
     # Quick agent creation
     "FunctionAgent",
     "agent",
     "pipeline",
+    # =========================================================================
+    # LEGACY: Creativity Coach (backwards compat, not core Alethic)
+    # =========================================================================
+    "CreativityMode",
+    "CreativityInput",
+    "CreativityResponse",
+    "Persona",
+    "CreativityCoach",
+    "creativity_coach",
+    "playful_coach",
+    "philosophical_coach",
+    "provocative_coach",
 ]

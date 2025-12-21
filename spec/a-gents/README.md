@@ -1,82 +1,170 @@
-# A-gents: Abstract + Art
+# A-gents: Alethic Architecture
 
-The letter **A** represents two intertwined concepts:
-- **Abstract**: The foundational skeletons and patterns all agents inherit
-- **Art**: Creativity coaching and ideation support
+> *"A" for Architecture. A for Aletheia. A for the foundation upon which all agents stand.*
 
 ---
 
-## Why "A"?
+## Why "Alethic"?
 
-A is the first letter—the beginning. A-gents define:
-1. What all agents have in common (the abstract skeleton)
-2. How agents support human creativity (the art of collaboration)
+From Greek *aletheia* (ἀλήθεια)—truth, disclosure, unconcealment. In kgents:
 
----
+1. **Truth-Preserving**: Category laws (identity, associativity) are verified, not assumed
+2. **Self-Disclosing**: Agents describe themselves through Halos
+3. **Ground Reality**: Primitives like `GROUND`, `JUDGE`, `SUBLATE` operate on claims
 
-## Sub-categories
-
-### Abstract Agents (`abstract/`)
-
-The base patterns that all agents build upon.
-
-- **[skeleton.md](abstract/skeleton.md)**: The minimal agent structure
-- Future: Patterns for common agent architectures
-
-### Art Agents (`art/`)
-
-Agents that support human creativity without generating art themselves.
-
-- **[creativity-coach.md](art/creativity-coach.md)**: Brainstorming companion
-- Future: Inspiration agents, constraint agents, critique agents
+A-gent is not a single agent—it's the **architectural foundation** that makes agents truthful.
 
 ---
 
-## Design Notes
+## The Three Pillars
 
-### On "Abstract"
+### 1. Skeleton (core/skeleton.md)
 
-Abstract agents are not directly instantiated—they are templates. Like abstract classes in OOP, they define:
-- Required interfaces
-- Default behaviors
-- Extension points
+The minimal contract every agent MUST satisfy:
 
-Every agent in kgents inherits from the abstract skeleton, explicitly or implicitly.
+```yaml
+identity:
+  name: string
+  genus: string
+  version: string
+  purpose: string
 
-### On "Art"
+interface:
+  input: type
+  output: type
+  errors: [error-spec]
 
-Art agents do NOT generate art. They:
-- Ask generative questions ("What if...?")
-- Provide the "yes, and..." of improv
-- Help explore possibility space
-- Offer constructive constraints
-
-The human remains the artist. The agent is the thoughtful collaborator.
-
----
-
-## Examples
-
-### Abstract: Identity Agent
-The simplest possible agent—passes input through unchanged.
+behavior:
+  guarantees: [what-it-promises]
+  constraints: [what-it-won't-do]
 ```
-Input → [Identity] → Output (unchanged)
+
+Every kgents agent inherits this structure, explicitly or implicitly.
+
+### 2. Halo Capabilities
+
+Declarative metadata that describes what an agent *could become*:
+
+```python
+@Capability.Stateful(schema=MyMemory)
+@Capability.Soulful(persona="Kent")
+class MyAgent(Agent[str, str]):
+    async def invoke(self, input: str) -> str:
+        return f"Hello, {input}"
 ```
-Useful for composition testing and pipeline design.
 
-### Art: Brainstorm Buddy
-An agent that responds to ideas with:
-- Related concepts
-- Provocative questions
-- Unexpected connections
-- Constraints to spark creativity
+The Halo is the potentiality; the Projector actualizes it.
 
-Never judges, only expands.
+### 3. Archetypes
+
+Pre-packaged Halos for common patterns:
+
+| Archetype | Halo | Use Case |
+|-----------|------|----------|
+| **Kappa** | Stateless, Replicated, Horizontal | Microservices |
+| **Lambda** | Stateless, Event-triggered | Functions |
+| **Delta** | Stateful, Persistent, Durable | Actors |
+
+```python
+class MyService(Kappa[Request, Response]):
+    async def invoke(self, req: Request) -> Response:
+        return process(req)
+```
+
+---
+
+## The Alethic Agent
+
+A polynomial state machine for truth-seeking:
+
+```
+GROUNDING → DELIBERATING → JUDGING → SYNTHESIZING
+```
+
+This isn't just a fancy state machine—it composes the primitive polynomial agents (`GROUND`, `JUDGE`, `SUBLATE`) to perform structured reasoning.
+
+```python
+from agents.a import AlethicAgent, Query
+
+agent = AlethicAgent()
+response = await agent.reason(Query(claim="The sky is blue"))
+print(response.verdict.accepted)  # True/False
+print(response.reasoning_trace)   # How we got there
+```
+
+---
+
+## The Functor Protocol
+
+Universal lifting with law verification:
+
+```python
+@UniversalFunctor
+class MyFunctor:
+    @classmethod
+    def lift(cls, f: Callable[[A], B]) -> Callable[[F[A]], F[B]]:
+        ...
+```
+
+Functors are verified against categorical laws at runtime:
+- **Identity**: `fmap(id) == id`
+- **Composition**: `fmap(f . g) == fmap(f) . fmap(g)`
+
+---
+
+## The Nucleus-Halo-Projector Triad
+
+This is the core insight of A-gent:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  NUCLEUS         Pure Agent[A, B] logic (what it does)              │
+├─────────────────────────────────────────────────────────────────────┤
+│  HALO            @Capability.* decorators (what it could become)    │
+├─────────────────────────────────────────────────────────────────────┤
+│  PROJECTOR       Target-specific compilation (how it manifests)     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+The same agent can be projected to:
+- **K8sProjector** → Kubernetes manifests
+- **LocalProjector** → In-process execution
+- **CLIProjector** → Command-line interface
+
+---
+
+## CLI Interface
+
+```bash
+kg a                       # Show help
+kg a inspect MyAgent       # Show Halo + Nucleus details
+kg a manifest MyAgent      # K8sProjector → YAML output
+kg a run MyAgent           # LocalProjector → run agent
+kg a list                  # List registered agents
+kg a new MyAgent           # Scaffold new agent
+```
+
+---
+
+## Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `skeleton.py` | Minimal agent contract, `BootstrapWitness` |
+| `halo.py` | `@Capability.*` decorators |
+| `archetypes.py` | `Kappa`, `Lambda`, `Delta` |
+| `alethic.py` | `AlethicAgent` polynomial |
+| `functor.py` | `UniversalFunctor` protocol |
+| `quick.py` | `@agent` decorator for rapid creation |
 
 ---
 
 ## See Also
 
-- [skeleton.md](abstract/skeleton.md) - The base agent structure
-- [creativity-coach.md](art/creativity-coach.md) - Creativity support specification
-- [../anatomy.md](../anatomy.md) - What constitutes an agent
+- [core/skeleton.md](core/skeleton.md) — The minimal agent structure
+- [alethic.md](alethic.md) — Alethic architecture deep dive
+- [spec/architecture/polyfunctor.md](../architecture/polyfunctor.md) — Polynomial functor theory
+
+---
+
+*The Alethic Architecture: Where truth-seeking becomes structure.*
