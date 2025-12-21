@@ -169,7 +169,18 @@ def _ensure_instruments() -> tuple[Any, ...]:
 
 @dataclass
 class MorpheusMetricsState:
-    """Thread-safe in-memory metrics state for summaries."""
+    """
+    Thread-safe in-memory metrics state for summaries.
+
+    Teaching:
+        gotcha: This is SEPARATE from OTEL counters. reset_morpheus_metrics()
+                clears this state but OTEL counters keep incrementing.
+                (Evidence: test_observability.py - if exists)
+
+        gotcha: The _lock is per-instance but the global _state is a singleton.
+                All record_* functions share this lock—contention possible at scale.
+                (Evidence: persistence.py record_completion calls)
+    """
 
     total_requests: int = 0
     total_streaming: int = 0
@@ -318,6 +329,15 @@ class MorpheusTelemetry:
     Provides context managers for tracing:
     - Completion requests
     - Streaming requests
+
+    Teaching:
+        gotcha: The context managers are async but use sync tracer.start_as_current_span.
+                This is intentional—OTEL spans are sync, only our I/O is async.
+                (Evidence: persistence.py::complete uses trace_completion)
+
+        gotcha: Duration is recorded in the finally block, so it includes error
+                handling time. For precise LLM latency, check provider metrics.
+                (Evidence: test_observability.py::test_tracing - if exists)
     """
 
     span_prefix: str = "morpheus"

@@ -62,7 +62,14 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class MorpheusManifestRendering:
-    """Rendering for Morpheus status manifest."""
+    """
+    Rendering for Morpheus status manifest.
+
+    Teaching:
+        gotcha: This is a Renderable, not a Response. It has both to_dict()
+                and to_text() for multi-target projection (JSON/CLI/TUI).
+                (Evidence: test_node.py::TestMorpheusNodeManifest)
+    """
 
     status: MorpheusStatus
 
@@ -93,7 +100,14 @@ class MorpheusManifestRendering:
 
 @dataclass(frozen=True)
 class CompletionRendering:
-    """Rendering for completion result."""
+    """
+    Rendering for completion result.
+
+    Teaching:
+        gotcha: The `response_text` is extracted from choices[0].message.content.
+                Multi-choice completions (n>1) are not yet supported in rendering.
+                (Evidence: test_node.py::TestMorpheusNodeComplete)
+    """
 
     response_text: str
     model: str
@@ -117,7 +131,15 @@ class CompletionRendering:
 
 @dataclass(frozen=True)
 class ProvidersRendering:
-    """Rendering for providers list."""
+    """
+    Rendering for providers list.
+
+    Teaching:
+        gotcha: The `filter_applied` field indicates which filter was used:
+                "all" (admin), "enabled" (developer), or "public" (guest).
+                Use this to explain why some providers aren't visible.
+                (Evidence: test_node.py::TestMorpheusNodeProviders)
+    """
 
     providers: list[dict[str, Any]]
     filter_applied: str
@@ -176,6 +198,21 @@ class MorpheusNode(BaseLogosNode):
 
         # Via CLI
         kg morpheus complete --model claude-sonnet-4-20250514 --message "Hello"
+
+    Teaching:
+        gotcha: The `morpheus_persistence` dependency is injected by the DI container.
+                If it's not registered in providers.py, you'll get None and all
+                aspects will return error dicts.
+                (Evidence: test_node.py::TestMorpheusNodeHandle)
+
+        gotcha: Observer archetype determines affordances AND filtering. A "guest"
+                calling "providers" gets filtered results, not an error. An error
+                only occurs for truly forbidden aspects like "configure".
+                (Evidence: test_node.py::TestMorpheusNodeAffordances)
+
+        gotcha: The stream aspect returns a dict with a generator, not raw SSE.
+                The transport layer (HTTP/CLI) is responsible for iterating.
+                (Evidence: test_streaming.py::TestPersistenceStreaming)
     """
 
     def __init__(self, morpheus_persistence: MorpheusPersistence) -> None:

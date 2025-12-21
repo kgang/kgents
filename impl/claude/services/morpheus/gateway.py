@@ -26,7 +26,20 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class ProviderConfig:
-    """Configuration for a single LLM provider."""
+    """
+    Configuration for a single LLM provider.
+
+    Teaching:
+        gotcha: The `public` flag controls visibility to non-admin observers.
+                Private providers (public=False) still work but aren't listed
+                for guests. Use for internal/experimental providers.
+                (Evidence: test_node.py::TestMorpheusNodeProviders)
+
+        gotcha: The `prefix` is the ONLY routing mechanism. Model names must
+                START with this prefix. If you register prefix="claude-", then
+                "claude-opus" routes but "anthropic-claude" does not.
+                (Evidence: test_rate_limit.py::TestGatewayRateLimiting)
+    """
 
     name: str
     prefix: str  # Model prefix for routing (e.g., "claude-")
@@ -37,7 +50,20 @@ class ProviderConfig:
 
 @dataclass
 class GatewayConfig:
-    """Configuration for the Morpheus Gateway."""
+    """
+    Configuration for the Morpheus Gateway.
+
+    Teaching:
+        gotcha: The `rate_limit_by_archetype` dict is the source of truth for
+                per-observer limits. Unknown archetypes fall back to `rate_limit_rpm`.
+                Always ensure new archetypes are added here BEFORE use.
+                (Evidence: test_rate_limit.py::TestGatewayRateLimiting)
+
+        gotcha: Limits are PER-MINUTE sliding windows, not hard resets.
+                A burst of 10 requests will block for ~60s, not until the
+                next minute boundary.
+                (Evidence: test_rate_limit.py::TestRateLimitState)
+    """
 
     rate_limit_rpm: int = 60  # Default requests per minute
     rate_limit_burst: int = 10
@@ -53,7 +79,20 @@ class GatewayConfig:
 
 @dataclass
 class RateLimitState:
-    """Thread-safe rate limit tracking using sliding window."""
+    """
+    Thread-safe rate limit tracking using sliding window.
+
+    Teaching:
+        gotcha: Each archetype has its OWN window. Exhausting "guest" limits
+                does not affect "admin" limits. This is by design—archetypes
+                represent trust levels, not resource pools.
+                (Evidence: test_rate_limit.py::test_check_and_record_separate_archetypes)
+
+        gotcha: The sliding window implementation means old entries are pruned
+                on EVERY check. High-traffic archetypes may see O(n) cleanup cost.
+                For production at scale, consider external rate limiting (Redis).
+                (Evidence: test_rate_limit.py::TestRateLimitState)
+    """
 
     _windows: dict[str, list[float]] = field(default_factory=lambda: defaultdict(list))
     _lock: Lock = field(default_factory=Lock)
@@ -90,7 +129,19 @@ class RateLimitState:
 
 
 class RateLimitError(Exception):
-    """Raised when rate limit is exceeded."""
+    """
+    Raised when rate limit is exceeded.
+
+    Teaching:
+        gotcha: The `retry_after` field is a HINT, not a guarantee. The sliding
+                window may clear sooner if earlier requests age out. Clients
+                should use exponential backoff, not fixed waits.
+                (Evidence: test_rate_limit.py::TestRateLimitError)
+
+        gotcha: In streaming mode, rate limit errors are YIELDED as content,
+                not raised. Check the first chunk for "Rate limit exceeded".
+                (Evidence: test_rate_limit.py::test_stream_respects_rate_limit)
+    """
 
     def __init__(self, archetype: str, limit: int, retry_after: float = 60.0):
         self.archetype = archetype
@@ -112,6 +163,20 @@ class MorpheusGateway:
         gateway = MorpheusGateway()
         gateway.register_provider("claude-cli", ClaudeCLIAdapter(), prefix="claude-")
         response = await gateway.complete(request)
+
+    Teaching:
+        gotcha: Providers are matched by PREFIX, first match wins. Register more
+                specific prefixes BEFORE generic ones. "claude-3-opus" before "claude-".
+                (Evidence: test_rate_limit.py::TestGatewayRateLimiting)
+
+        gotcha: Streaming errors are yielded as content, not raised as exceptions.
+                This is intentional—SSE clients expect data, not connection drops.
+                Always check first chunk for error messages.
+                (Evidence: test_streaming.py::test_gateway_stream_unknown_model_yields_error)
+
+        gotcha: The gateway is stateless except for rate limiting. Provider
+                registration order matters for matching, but requests are independent.
+                (Evidence: test_node.py::TestMorpheusNodeComplete)
     """
 
     def __init__(self, config: Optional[GatewayConfig] = None) -> None:

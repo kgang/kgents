@@ -42,7 +42,18 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class CompletionResult:
-    """Result of a completion operation with metadata."""
+    """
+    Result of a completion operation with metadata.
+
+    Teaching:
+        gotcha: The `telemetry_span_id` is only populated when telemetry is enabled.
+                Always check for None before using for tracing correlation.
+                (Evidence: test_node.py::TestMorpheusNodeComplete)
+
+        gotcha: `latency_ms` includes network and processing time, not just LLM
+                inference. For streaming, this is total time from request to last chunk.
+                (Evidence: test_streaming.py::TestPersistenceStreaming)
+    """
 
     response: ChatResponse
     provider_name: str
@@ -60,7 +71,18 @@ class CompletionResult:
 
 @dataclass(frozen=True)
 class ProviderStatus:
-    """Status of a single provider."""
+    """
+    Status of a single provider.
+
+    Teaching:
+        gotcha: `available` is checked at query time via adapter.is_available().
+                This may involve network calls—cache results if calling frequently.
+                (Evidence: test_node.py::TestMorpheusNodeProviders)
+
+        gotcha: `request_count` comes from the adapter's health_check(), not the
+                gateway's counters. Adapters track their own metrics independently.
+                (Evidence: test_node.py::test_admin_sees_all_providers)
+    """
 
     name: str
     prefix: str
@@ -84,7 +106,19 @@ class ProviderStatus:
 
 @dataclass(frozen=True)
 class MorpheusStatus:
-    """Overall Morpheus health status."""
+    """
+    Overall Morpheus health status.
+
+    Teaching:
+        gotcha: `healthy` is True when AT LEAST ONE provider is available.
+                This means "degraded but functional"—not "fully healthy".
+                Check providers_healthy vs providers_total for full picture.
+                (Evidence: test_node.py::TestMorpheusNodeManifest)
+
+        gotcha: `uptime_seconds` is from MorpheusPersistence creation, not
+                system boot. Each persistence instance tracks its own uptime.
+                (Evidence: test_node.py::test_manifest_returns_status)
+    """
 
     healthy: bool
     providers_healthy: int
@@ -119,6 +153,20 @@ class MorpheusPersistence:
 
     This is the persistence layer in the Metaphysical Fullstack pattern.
     All transports (HTTP, CLI, AGENTESE) collapse to this interface.
+
+    Teaching:
+        gotcha: Telemetry is ENABLED by default. Pass telemetry_enabled=False for
+                tests to avoid OTEL overhead and side effects.
+                (Evidence: test_streaming.py::persistence_with_streaming)
+
+        gotcha: This class accesses gateway._providers and gateway._route_model()
+                which are private. This is intentional—persistence OWNS the gateway
+                and needs internal access for telemetry tagging.
+                (Evidence: test_node.py::TestMorpheusNodeProviders)
+
+        gotcha: RateLimitError is re-raised after recording metrics. The caller
+                must handle it—it's not silently swallowed.
+                (Evidence: test_rate_limit.py::TestPersistenceRateLimiting)
     """
 
     def __init__(

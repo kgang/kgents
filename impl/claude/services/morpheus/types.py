@@ -17,7 +17,14 @@ from typing import Any, Literal, Optional
 
 @dataclass
 class ChatMessage:
-    """A single message in the conversation."""
+    """
+    A single message in the conversation.
+
+    Teaching:
+        gotcha: The `name` field is ONLY for function calls, not user display names.
+                Using it for other purposes may confuse downstream providers.
+                (Evidence: test_streaming.py::TestMockAdapterStreaming)
+    """
 
     role: Literal["system", "user", "assistant"]
     content: str
@@ -33,7 +40,18 @@ class ChatMessage:
 
 @dataclass
 class ChatRequest:
-    """OpenAI-compatible chat completion request."""
+    """
+    OpenAI-compatible chat completion request.
+
+    Teaching:
+        gotcha: The `stream` flag is informational here—streaming is controlled
+                by which method you call (complete vs stream), not by this flag.
+                (Evidence: test_streaming.py::TestGatewayStreaming)
+
+        gotcha: The `user` field is for rate limiting correlation, not auth.
+                Use observer archetype for access control, user for per-user limits.
+                (Evidence: test_rate_limit.py::TestGatewayRateLimiting)
+    """
 
     model: str
     messages: list[ChatMessage]
@@ -75,7 +93,14 @@ class ChatRequest:
 
 @dataclass
 class Usage:
-    """Token usage statistics."""
+    """
+    Token usage statistics.
+
+    Teaching:
+        gotcha: For streaming, token counts are ESTIMATES unless the provider
+                sends a final usage summary. Don't rely on exact counts during stream.
+                (Evidence: test_streaming.py::TestStreamChunk)
+    """
 
     prompt_tokens: int
     completion_tokens: int
@@ -91,7 +116,14 @@ class Usage:
 
 @dataclass
 class ChatChoice:
-    """A single completion choice."""
+    """
+    A single completion choice.
+
+    Teaching:
+        gotcha: `finish_reason="length"` means max_tokens was hit—output may be
+                incomplete. Always check finish_reason before assuming full response.
+                (Evidence: test_streaming.py::TestStreamChunk)
+    """
 
     index: int
     message: ChatMessage
@@ -107,7 +139,18 @@ class ChatChoice:
 
 @dataclass
 class ChatResponse:
-    """OpenAI-compatible chat completion response."""
+    """
+    OpenAI-compatible chat completion response.
+
+    Teaching:
+        gotcha: The `id` field is generated uniquely per response. Use it for
+                correlating logs and telemetry across the request lifecycle.
+                (Evidence: test_streaming.py::test_to_dict_serialization)
+
+        gotcha: `usage` may be None for some providers or streaming. Always
+                null-check before accessing token counts.
+                (Evidence: test_node.py::TestMorpheusNodeComplete)
+    """
 
     id: str
     object: str = "chat.completion"
@@ -157,7 +200,14 @@ class ChatResponse:
 
 @dataclass
 class MorpheusError:
-    """Error response following OpenAI error format."""
+    """
+    Error response following OpenAI error format.
+
+    Teaching:
+        gotcha: Error types match OpenAI: "invalid_request_error", "rate_limit_error",
+                "authentication_error", "server_error". Use these for client compatibility.
+                (Evidence: test_rate_limit.py::TestRateLimitError)
+    """
 
     message: str
     type: str  # e.g., "invalid_request_error", "rate_limit_error"
@@ -177,7 +227,14 @@ class MorpheusError:
 
 @dataclass
 class StreamDelta:
-    """Delta content in a streaming chunk."""
+    """
+    Delta content in a streaming chunk.
+
+    Teaching:
+        gotcha: Both `role` and `content` can be None in the same delta—this is
+                valid for the final chunk. Check for finish_reason instead.
+                (Evidence: test_streaming.py::test_final_creates_finish_chunk)
+    """
 
     role: Optional[str] = None
     content: Optional[str] = None
@@ -193,7 +250,14 @@ class StreamDelta:
 
 @dataclass
 class StreamChoice:
-    """A single streaming choice."""
+    """
+    A single streaming choice.
+
+    Teaching:
+        gotcha: `finish_reason` is ONLY set on the final chunk. During streaming,
+                all chunks have finish_reason=None until the last one.
+                (Evidence: test_streaming.py::test_stream_returns_chunks)
+    """
 
     index: int
     delta: StreamDelta
@@ -211,7 +275,18 @@ class StreamChoice:
 
 @dataclass
 class StreamChunk:
-    """OpenAI-compatible streaming chunk."""
+    """
+    OpenAI-compatible streaming chunk.
+
+    Teaching:
+        gotcha: All chunks in a stream share the SAME `id`. Use this to group
+                chunks from the same completion. Don't use it for uniqueness.
+                (Evidence: test_streaming.py::test_from_text_creates_chunk)
+
+        gotcha: Use to_sse() for Server-Sent Events format. The trailing \\n\\n
+                is required by SSE spec—don't strip it.
+                (Evidence: test_streaming.py::test_to_sse_format)
+    """
 
     id: str
     object: str = "chat.completion.chunk"
