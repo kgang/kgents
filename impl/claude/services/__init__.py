@@ -1,7 +1,7 @@
 """
 Crown Jewel Services.
 
-This directory contains the Seven Crown Jewels - the flagship applications
+This directory contains the Crown Jewels - the flagship applications
 that consume the categorical infrastructure in agents/.
 
 Directory Structure:
@@ -13,7 +13,7 @@ Directory Structure:
 
 The Metaphysical Fullstack Pattern (AD-009):
 - agents/ = categorical primitives (PolyAgent, Operad, Sheaf, Flux, D-gent)
-- services/ = domain consumers (Brain, Town, Gardener, Park, Atelier...)
+- services/ = domain consumers (Brain, Witness, Foundry, Metabolism...)
 - models/ = generic SQLAlchemy tables
 - protocols/ = AGENTESE universal protocol (the API IS the protocol)
 
@@ -37,26 +37,6 @@ from .brain import (
     SearchResult,
 )
 
-# Gardener Crown Jewel
-from .gardener import (
-    ConnectionView,
-    GardenerPersistence,
-    GardenStatus,
-    IdeaView,
-    PlotView,
-    SessionView,
-)
-
-# Town Crown Jewel
-from .town import (
-    CitizenView,
-    ConversationView,
-    RelationshipView,
-    TownPersistence,
-    TownStatus,
-    TurnView,
-)
-
 __all__ = [
     # Brain
     "BrainNode",
@@ -67,18 +47,4 @@ __all__ = [
     "BrainStatus",
     "CaptureResult",
     "SearchResult",
-    # Town
-    "TownPersistence",
-    "TownStatus",
-    "CitizenView",
-    "ConversationView",
-    "TurnView",
-    "RelationshipView",
-    # Gardener
-    "GardenerPersistence",
-    "GardenStatus",
-    "SessionView",
-    "IdeaView",
-    "PlotView",
-    "ConnectionView",
 ]

@@ -1,9 +1,9 @@
 """
-Crown Jewel Bootstrap: Dependency Injection for All 7 Crown Jewels.
+Crown Jewel Bootstrap: Dependency Injection for Core Crown Jewels.
 
 This module provides a clean, centralized dependency injection layer that:
 1. Creates the session_factory + dgent_router at app startup
-2. Wires all 7 Crown Jewel persistence services
+2. Wires core Crown Jewel persistence services (Brain, Witness, Morpheus)
 3. Enables clean testing via reset() and injection points
 
 The Metaphysical Fullstack Pattern (AD-009):
@@ -41,13 +41,7 @@ if TYPE_CHECKING:
 
     from agents.d import DgentProtocol, TableAdapter
     from services.brain import BrainPersistence
-    from services.coalition import CoalitionPersistence
-    from services.forge import ForgePersistence
-    from services.gardener import GardenerPersistence
-    from services.gestalt import GestaltPersistence
     from services.morpheus import MorpheusPersistence
-    from services.park import ParkPersistence
-    from services.town import TownPersistence
     from services.witness import WitnessPersistence
 
 logger = logging.getLogger(__name__)
@@ -256,126 +250,6 @@ class ServiceRegistry:
                 dgent=self.dgent,
             )
 
-        # Town persistence
-        if name == "town_persistence":
-            from models.town import Citizen, Conversation
-            from services.town import TownPersistence
-
-            citizen_adapter = TableAdapter(
-                model=Citizen,
-                session_factory=self.session_factory,
-            )
-            conv_adapter = TableAdapter(
-                model=Conversation,
-                session_factory=self.session_factory,
-            )
-            return TownPersistence(
-                citizen_adapter=citizen_adapter,
-                conversation_adapter=conv_adapter,
-                dgent=self.dgent,
-            )
-
-        # Gardener persistence
-        if name == "gardener_persistence":
-            from models.gardener import GardenIdea, GardenSession
-            from services.gardener import GardenerPersistence
-
-            session_adapter = TableAdapter(
-                model=GardenSession,
-                session_factory=self.session_factory,
-            )
-            idea_adapter = TableAdapter(
-                model=GardenIdea,
-                session_factory=self.session_factory,
-            )
-            return GardenerPersistence(
-                session_adapter=session_adapter,
-                idea_adapter=idea_adapter,
-                dgent=self.dgent,
-            )
-
-        # Gestalt persistence
-        if name == "gestalt_persistence":
-            from models.gestalt import CodeBlock, Topology
-            from services.gestalt import GestaltPersistence
-
-            topology_adapter = TableAdapter(
-                model=Topology,
-                session_factory=self.session_factory,
-            )
-            block_adapter = TableAdapter(
-                model=CodeBlock,
-                session_factory=self.session_factory,
-            )
-            return GestaltPersistence(
-                topology_adapter=topology_adapter,
-                block_adapter=block_adapter,
-                dgent=self.dgent,
-            )
-
-        # Forge persistence
-        if name == "forge_persistence":
-            from models.atelier import Artisan, Workshop
-            from services.forge import ForgePersistence
-
-            workshop_adapter = TableAdapter(
-                model=Workshop,
-                session_factory=self.session_factory,
-            )
-            artisan_adapter = TableAdapter(
-                model=Artisan,
-                session_factory=self.session_factory,
-            )
-            return ForgePersistence(
-                workshop_adapter=workshop_adapter,
-                artisan_adapter=artisan_adapter,
-                dgent=self.dgent,
-            )
-
-        # Coalition persistence
-        if name == "coalition_persistence":
-            from models.coalition import Coalition, CoalitionMember
-            from services.coalition import CoalitionPersistence
-
-            coalition_adapter = TableAdapter(
-                model=Coalition,
-                session_factory=self.session_factory,
-            )
-            member_adapter = TableAdapter(
-                model=CoalitionMember,
-                session_factory=self.session_factory,
-            )
-            return CoalitionPersistence(
-                coalition_adapter=coalition_adapter,
-                member_adapter=member_adapter,
-                dgent=self.dgent,
-            )
-
-        # Park persistence
-        if name == "park_persistence":
-            from models.park import Episode, Host
-            from services.park import ParkPersistence
-
-            host_adapter = TableAdapter(
-                model=Host,
-                session_factory=self.session_factory,
-            )
-            episode_adapter = TableAdapter(
-                model=Episode,
-                session_factory=self.session_factory,
-            )
-            return ParkPersistence(
-                host_adapter=host_adapter,
-                episode_adapter=episode_adapter,
-                dgent=self.dgent,
-            )
-
-        # Scenario service (for Park Crown Jewel)
-        if name == "scenario_service":
-            from services.park.scenario_service import ScenarioService
-
-            return ScenarioService()
-
         # Morpheus persistence (no database - wraps LLM gateway)
         if name == "morpheus_persistence":
             from services.morpheus import MorpheusGateway, MorpheusPersistence
@@ -388,18 +262,6 @@ class ServiceRegistry:
                 prefix="claude-",
             )
             return MorpheusPersistence(gateway=gateway)
-
-        # Chat service factory (with Morpheus composition)
-        if name == "chat_factory":
-            from services.chat import ChatServiceFactory
-
-            try:
-                morpheus = await self.get("morpheus_persistence")
-                return ChatServiceFactory(morpheus=morpheus)
-            except Exception:
-                # Fallback: factory without Morpheus (echo mode)
-                logger.warning("Morpheus unavailable, chat will use echo mode")
-                return ChatServiceFactory()
 
         # K-gent Soul (Middleware of Consciousness - no database needed)
         if name == "kgent_soul":
@@ -458,16 +320,8 @@ class ServiceRegistry:
         """List all available service names."""
         return [
             "brain_persistence",
-            "town_persistence",
-            "gardener_persistence",
-            "gestalt_persistence",
-            "forge_persistence",
-            "coalition_persistence",
-            "park_persistence",
-            "witness_persistence",  # 8th Crown Jewel
-            "scenario_service",
+            "witness_persistence",
             "morpheus_persistence",
-            "chat_factory",
             "kgent_soul",
             "differance_store",
         ]
