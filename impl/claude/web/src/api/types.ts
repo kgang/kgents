@@ -29,7 +29,7 @@ export * from './types/_generated/self-memory';
 export * from './types/_generated/self-chat';
 export * from './types/_generated/world-forge';
 export * from './types/_generated/world-codebase';
-export * from './types/_generated/world-park';
+// world-park types removed (module archived)
 
 // Type aliases for backwards compatibility during migration
 // These map legacy names to the new generated types
@@ -67,11 +67,7 @@ export type {
   WorldForgeWorkshopListResponse as ForgeWorkshopListContract,
 } from './types/_generated/world-forge';
 
-export type {
-  WorldParkManifestResponse as ParkManifestContract,
-  WorldParkHostListResponse as ParkHostListContract,
-  WorldParkEpisodeListResponse as ParkEpisodeListContract,
-} from './types/_generated/world-park';
+// Park contract types removed (module archived)
 
 // =============================================================================
 // Local Types (FE-only)

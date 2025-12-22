@@ -12,9 +12,8 @@ AGENTESE: self.data.table.*
 Crown Jewel Tables:
 - brain.py: Crystal, Tag, BrainSettings
 - town.py: Citizen, Conversation, ConversationTurn
-- gestalt.py: Topology, CodeBlock, CodeLink
-- coalition.py: Coalition, CoalitionMember, CoalitionProposal
-- park.py: Host, Memory, Episode, Interaction
+
+Note: gestalt.py, coalition.py, park.py removed 2025-12-21.
 """
 
 # ASHC Crown Jewel
@@ -38,21 +37,6 @@ from .brain import (
     ExtinctionTeaching,
     TeachingCrystal,
 )
-
-# Coalition Crown Jewel
-from .coalition import (
-    Coalition,
-    CoalitionMember,
-    CoalitionOutput,
-    CoalitionProposal,
-    ProposalVote,
-)
-
-# Gestalt Crown Jewel
-from .gestalt import CodeBlock, CodeLink, Topology, TopologySnapshot
-
-# Park Crown Jewel
-from .park import Episode, Host, HostMemory, Interaction, ParkLocation
 
 # Town Crown Jewel
 from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
@@ -78,23 +62,6 @@ __all__ = [
     "Conversation",
     "ConversationTurn",
     "CitizenRelationship",
-    # Gestalt
-    "Topology",
-    "CodeBlock",
-    "CodeLink",
-    "TopologySnapshot",
-    # Coalition
-    "Coalition",
-    "CoalitionMember",
-    "CoalitionProposal",
-    "ProposalVote",
-    "CoalitionOutput",
-    # Park
-    "Host",
-    "HostMemory",
-    "Episode",
-    "Interaction",
-    "ParkLocation",
     # ASHC
     "VerifiedLemmaModel",
 ]

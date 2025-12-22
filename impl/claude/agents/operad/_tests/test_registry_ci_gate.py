@@ -11,9 +11,10 @@ Run as part of CI to catch operad drift.
 
 Phase 1 Operad Unification (2025-12-17):
 - Migrated FLOW_OPERAD, CHAT_OPERAD, RESEARCH_OPERAD, COLLABORATION_OPERAD
-- Migrated ATELIER_OPERAD
 - Migrated GROWTH_OPERAD
-- Target: 100% canonical usage (11/11 operads)
+- Target: 100% canonical usage
+
+Note: ATELIER_OPERAD removed 2025-12-21.
 """
 
 from __future__ import annotations
@@ -37,8 +38,7 @@ def import_all_operads() -> None:
     # Core operad (already imported)
 
     # Town operad
-    # Atelier operad
-    from agents.atelier.workshop.operad import ATELIER_OPERAD
+    # Note: Atelier operad removed 2025-12-21
 
     # Brain operad (Phase 4)
     from agents.brain.operad import BRAIN_OPERAD
@@ -51,8 +51,7 @@ def import_all_operads() -> None:
         RESEARCH_OPERAD,
     )
 
-    # Park/Director operad (Phase 4)
-    from agents.park.operad import DIRECTOR_OPERAD
+    # Note: Park/Director operad removed 2025-12-21
     from agents.town.operad import TOWN_OPERAD
 
     # Growth operad
@@ -61,11 +60,7 @@ def import_all_operads() -> None:
     # N-Phase operad
     from protocols.nphase.operad import NPHASE_OPERAD
 
-    # Domain operad (if exists)
-    try:
-        from agents.domain.drills.operad import DRILL_OPERAD
-    except ImportError:
-        pass  # Optional
+    # Note: Domain drill operad removed 2025-12-21
 
     # Soul operad (if exists)
     try:
@@ -108,11 +103,11 @@ EXPECTED_OPERADS = [
     "ChatOperad",
     "ResearchOperad",
     "CollaborationOperad",
-    "AtelierOperad",
+    # Note: AtelierOperad removed 2025-12-21
     "GrowthOperad",
     "NPHASE",  # N-Phase operad uses uppercase name
     "BrainOperad",  # Phase 4: Brain vertical slice
-    "DirectorOperad",  # Phase 4: Park vertical slice
+    # Note: DirectorOperad (Park) removed 2025-12-21
     "TracedOperad",  # Différance Engine: trace-recording composition
 ]
 
@@ -121,10 +116,10 @@ FULL_OPERADS = [
     "AgentOperad",
     "TownOperad",
     "FlowOperad",
-    "AtelierOperad",
+    # Note: AtelierOperad removed 2025-12-21
     "GrowthOperad",
     "BrainOperad",  # Phase 4
-    "DirectorOperad",  # Phase 4
+    # Note: DirectorOperad (Park) removed 2025-12-21
     "TracedOperad",  # Différance Engine
 ]
 
@@ -340,12 +335,7 @@ class TestSpecificOperadIntegration:
         assert "start" in operad.operations
         assert "turn" in operad.operations
 
-    def test_atelier_operad_registered(self) -> None:
-        """AtelierOperad is properly registered."""
-        operad = OperadRegistry.get("AtelierOperad")
-        assert operad is not None
-        assert "duet" in operad.operations
-        assert "ensemble" in operad.operations
+    # Note: test_atelier_operad_registered removed 2025-12-21
 
     def test_growth_operad_registered(self) -> None:
         """GrowthOperad is properly registered."""

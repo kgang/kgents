@@ -17,7 +17,6 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { documentApi, type TaskToggleResponse, type DocumentParseResponse } from '@/api/client';
-import { BreathingContainer } from '@/components/genesis/BreathingContainer';
 import {
   MeaningTokenRenderer,
   AGENTESEPortal,
@@ -165,17 +164,15 @@ interface PilotContainerProps {
 
 function PilotContainer({ title, subtitle, children, fullWidth }: PilotContainerProps) {
   return (
-    <BreathingContainer>
-      <div
-        className={`rounded-lg border border-emerald-800/30 bg-stone-900/50 overflow-hidden ${fullWidth ? '' : 'max-w-fit'}`}
-      >
-        <div className="px-4 py-2 bg-emerald-900/30 border-b border-emerald-800/30">
-          <h3 className="font-medium text-sm text-emerald-200">{title}</h3>
-          <p className="text-xs text-emerald-400/70">{subtitle}</p>
-        </div>
-        <div className="p-4">{children}</div>
+    <div
+      className={`rounded-lg border border-emerald-800/30 bg-stone-900/50 overflow-hidden ${fullWidth ? '' : 'max-w-fit'}`}
+    >
+      <div className="px-4 py-2 bg-emerald-900/30 border-b border-emerald-800/30">
+        <h3 className="font-medium text-sm text-emerald-200">{title}</h3>
+        <p className="text-xs text-emerald-400/70">{subtitle}</p>
       </div>
-    </BreathingContainer>
+      <div className="p-4">{children}</div>
+    </div>
   );
 }
 
@@ -462,28 +459,25 @@ function BadgeTokensPilot() {
 
         {/* Expanded principle/requirement */}
         {expanded && (
-          <BreathingContainer>
-            <div className="p-3 rounded bg-amber-900/20 border border-amber-700/30 text-sm">
-              {SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_type ===
-              'principle_ref' ? (
-                <p className="text-amber-200">
-                  {principleDescriptions[
-                    SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_data
-                      ?.principle_number as number
-                  ] ?? 'Principle description...'}
-                </p>
-              ) : (
-                <p className="text-purple-200">
-                  Requirement R
-                  {String(
-                    SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_data
-                      ?.requirement_id ?? '?'
-                  )}
-                  : Functional specification details...
-                </p>
-              )}
-            </div>
-          </BreathingContainer>
+          <div className="p-3 rounded bg-amber-900/20 border border-amber-700/30 text-sm">
+            {SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_type === 'principle_ref' ? (
+              <p className="text-amber-200">
+                {principleDescriptions[
+                  SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_data
+                    ?.principle_number as number
+                ] ?? 'Principle description...'}
+              </p>
+            ) : (
+              <p className="text-purple-200">
+                Requirement R
+                {String(
+                  SAMPLE_BADGES.find((b) => b.token_id === expanded)?.token_data?.requirement_id ??
+                    '?'
+                )}
+                : Functional specification details...
+              </p>
+            )}
+          </div>
         )}
       </div>
     </PilotContainer>
@@ -698,23 +692,26 @@ function LiveParsePilot() {
   }, [input]);
 
   // Debounced backend parse
-  const parseWithBackend = useCallback(async (text: string) => {
-    if (!useBackend || !text.trim()) {
-      setParseResult(null);
-      return;
-    }
-    setIsParsing(true);
-    setError(null);
-    try {
-      const result = await documentApi.parse(text);
-      setParseResult(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Parse failed');
-      setParseResult(null);
-    } finally {
-      setIsParsing(false);
-    }
-  }, [useBackend]);
+  const parseWithBackend = useCallback(
+    async (text: string) => {
+      if (!useBackend || !text.trim()) {
+        setParseResult(null);
+        return;
+      }
+      setIsParsing(true);
+      setError(null);
+      try {
+        const result = await documentApi.parse(text);
+        setParseResult(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Parse failed');
+        setParseResult(null);
+      } finally {
+        setIsParsing(false);
+      }
+    },
+    [useBackend]
+  );
 
   // Debounce input changes (300ms)
   const [debouncedInput, setDebouncedInput] = useState(input);
@@ -735,11 +732,15 @@ function LiveParsePilot() {
   const tokenCount = parseResult?.token_count ?? clientDetectedTokens.length;
 
   // Map token_types to display format
-  const displayTokens = useBackend && parseResult
-    ? Object.entries(tokenTypes).map(([type, count]) => ({ type, count: count as number }))
-    : Object.entries(
-        clientDetectedTokens.reduce((acc, t) => ({ ...acc, [t.type]: (acc[t.type] || 0) + 1 }), {} as Record<string, number>)
-      ).map(([type, count]) => ({ type, count }));
+  const displayTokens =
+    useBackend && parseResult
+      ? Object.entries(tokenTypes).map(([type, count]) => ({ type, count: count as number }))
+      : Object.entries(
+          clientDetectedTokens.reduce(
+            (acc, t) => ({ ...acc, [t.type]: (acc[t.type] || 0) + 1 }),
+            {} as Record<string, number>
+          )
+        ).map(([type, count]) => ({ type, count }));
 
   const tokenColorClass = (type: string) => {
     if (type.includes('agentese')) return 'bg-emerald-800 text-emerald-200';
@@ -752,7 +753,9 @@ function LiveParsePilot() {
   return (
     <PilotContainer
       title="Live Parse"
-      subtitle={useBackend ? 'Backend-powered via self.document.parse' : 'Client-side regex fallback'}
+      subtitle={
+        useBackend ? 'Backend-powered via self.document.parse' : 'Client-side regex fallback'
+      }
       fullWidth
     >
       <div className="grid md:grid-cols-2 gap-4">
@@ -763,9 +766,7 @@ function LiveParsePilot() {
             <button
               onClick={() => setUseBackend(!useBackend)}
               className={`text-xs px-2 py-0.5 rounded transition-colors ${
-                useBackend
-                  ? 'bg-emerald-800/50 text-emerald-300'
-                  : 'bg-gray-700 text-gray-400'
+                useBackend ? 'bg-emerald-800/50 text-emerald-300' : 'bg-gray-700 text-gray-400'
               }`}
             >
               {useBackend ? '✓ Backend' : '○ Client'}
@@ -796,7 +797,9 @@ function LiveParsePilot() {
               <div className="space-y-2">
                 {displayTokens.map(({ type, count }, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${tokenColorClass(type)}`}>
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs font-medium ${tokenColorClass(type)}`}
+                    >
                       {type}
                     </span>
                     <span className="text-gray-400 font-mono">×{count}</span>

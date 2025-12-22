@@ -190,56 +190,14 @@ export {
   useConversationHistory,
   useStartConversation,
   useAddTurn,
-  // Coalitions
-  useCoalitionManifest,
-  useCoalitions,
-  useCoalition,
-  useCoalitionBridges,
-  useDetectCoalitions,
-  useCoalitionDecay,
+  // Coalitions removed (module archived)
   // Type re-exports
   type WorldTownManifestResponse,
   type WorldTownCitizenListResponse,
   type WorldTownCitizenGetResponse,
-  type WorldTownCoalitionListResponse,
-  type WorldTownCoalitionManifestResponse,
 } from './useTownQuery';
 
-// Park AGENTESE queries (Contract-Driven)
-export {
-  // Query keys
-  parkQueryKeys,
-  // Park manifest
-  useParkManifest,
-  // Hosts
-  useHosts,
-  useHost,
-  useCreateHost,
-  useUpdateHost,
-  useInteractWithHost,
-  useHostMemories,
-  // Episodes
-  useEpisodes,
-  useStartEpisode,
-  useEndEpisode,
-  // Locations
-  useLocations,
-  useCreateLocation,
-  // Type re-exports
-  type WorldParkManifestResponse,
-  type WorldParkHostListResponse,
-  type WorldParkHostGetResponse,
-  type WorldParkHostCreateRequest,
-  type WorldParkHostCreateResponse,
-  type WorldParkHostInteractRequest,
-  type WorldParkHostInteractResponse,
-  type WorldParkEpisodeListResponse,
-  type WorldParkEpisodeStartRequest,
-  type WorldParkEpisodeStartResponse,
-  type WorldParkLocationListResponse,
-  type WorldParkLocationCreateRequest,
-  type WorldParkLocationCreateResponse,
-} from './useParkQuery';
+// Park AGENTESE queries removed (module archived)
 
 // Forge AGENTESE queries (Contract-Driven)
 export {

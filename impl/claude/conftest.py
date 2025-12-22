@@ -289,9 +289,7 @@ def _populate_operad_registry() -> None:
     )
     from agents.operad.core import AGENT_OPERAD  # noqa: F401
 
-    # Park/Director
-    from agents.park.operad import DIRECTOR_OPERAD  # noqa: F401
-
+    # Note: Park/Director operad removed 2025-12-21
     # Town
     from agents.town.operad import TOWN_OPERAD  # noqa: F401
 
@@ -302,10 +300,7 @@ def _populate_operad_registry() -> None:
     from protocols.nphase.operad import NPHASE_OPERAD  # noqa: F401
 
     # Optional operads (may not exist in all configurations)
-    try:
-        from agents.emergence.operad import EMERGENCE_OPERAD  # noqa: F401
-    except ImportError:
-        pass
+    # Note: agents.emergence removed 2025-12-21
 
     try:
         from agents.design.operad import DESIGN_OPERAD  # noqa: F401
@@ -466,14 +461,11 @@ _DOMAIN_RULES: list[tuple[str, list[str]]] = [
             "services/brain/",
             "services/town/",
             "services/conductor/",
-            "services/gestalt/",
-            "services/gardener/",
-            "services/park/",
+            # Note: gestalt/, gardener/, park/, coalition/ removed 2025-12-21
             "services/forge/",
             "services/muse/",
             "services/morpheus/",
             "services/witness/",
-            "services/coalition/",
             "services/chat/",
             "services/tooling/",
             "services/verification/",
@@ -542,11 +534,8 @@ _DOMAIN_RULES: list[tuple[str, list[str]]] = [
             "agents/differance/",
             "agents/emergence/",
             "agents/gallery/",
-            "agents/gardener/",
-            "agents/gestalt/",
+            # Note: gardener/, gestalt/, park/, domain/ removed 2025-12-21
             "agents/infra/",
-            "agents/park/",
-            "agents/domain/",
             "agents/shared/",
             "agents/testagent/",
         ],

@@ -78,13 +78,13 @@ class TestXdistRegistryCanary:
     """
 
     # Minimum expected operads (conservative - always present)
+    # Note: AtelierOperad removed 2025-12-21
+    # Note: DirectorOperad (Park) removed 2025-12-21
     MINIMUM_EXPECTED = [
         "AgentOperad",  # Always registered in core.py
         "TownOperad",
         "FlowOperad",
         "BrainOperad",
-        "DirectorOperad",
-        "AtelierOperad",
     ]
 
     def test_registry_not_empty(self) -> None:

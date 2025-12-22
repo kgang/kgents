@@ -280,42 +280,26 @@ def reset_synergy_bus() -> None:
 
 
 def _register_default_handlers(bus: SynergyEventBus) -> None:
-    """Register the default synergy handlers."""
+    """Register the default synergy handlers.
+
+    Note: Most handlers removed 2025-12-21 as part of cleanup.
+    - Gestalt, Coalition, Domain, Park handlers: archived
+    - Garden handlers: deprecated (see spec/protocols/_archive/gardener-evergreen-heritage.md)
+    - Atelier handlers: removed
+
+    Currently only WitnessToBrainHandler remains (8th Crown Jewel).
+    New handlers should be added here as the system evolves.
+    """
     # Import here to avoid circular imports
-    from .handlers import (
-        BrainToCoalitionHandler,
-        CoalitionToBrainHandler,
-        GestaltToBrainHandler,
-    )
+    from .handlers import WitnessToBrainHandler
 
     # ==========================================================================
-    # Wave 0-1: Hero Path handlers
+    # Witness (8th Crown Jewel): Capture thoughts and commits to Brain
     # ==========================================================================
-
-    # Gestalt → Brain: Auto-capture architecture snapshots
     bus.register(
-        SynergyEventType.ANALYSIS_COMPLETE,
-        GestaltToBrainHandler(),
+        SynergyEventType.WITNESS_THOUGHT_CAPTURED,
+        WitnessToBrainHandler(),
     )
-
-    # ==========================================================================
-    # Wave 2: Extensions handlers
-    # ==========================================================================
-
-    # Coalition → Brain: Auto-capture task completions
-    bus.register(
-        SynergyEventType.TASK_ASSIGNED,
-        CoalitionToBrainHandler(),
-    )
-
-    # Brain → Coalition: Enrich formation with context
-    bus.register(
-        SynergyEventType.COALITION_FORMED,
-        BrainToCoalitionHandler(),
-    )
-
-    # Note: Garden handlers deprecated 2025-12-21
-    # See: spec/protocols/_archive/gardener-evergreen-heritage.md
 
 
 __all__ = [

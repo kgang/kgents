@@ -37,16 +37,8 @@ import type {
   WorldTownCitizenUpdateRequest,
   WorldTownCitizenUpdateResponse,
 } from '../api/types/_generated/world-town-citizen';
-import type {
-  // Coalition types
-  WorldTownCoalitionManifestResponse,
-  WorldTownCoalitionListResponse,
-  WorldTownCoalitionGetResponse,
-  WorldTownCoalitionDetectRequest,
-  WorldTownCoalitionDetectResponse,
-  WorldTownCoalitionBridgesResponse,
-  WorldTownCoalitionDecayResponse,
-} from '../api/types/_generated/world-town-coalition';
+// Coalition types removed (module archived)
+// If coalition functionality is restored, re-add imports from world-town-coalition
 
 // =============================================================================
 // AGENTESE Response Wrapper
@@ -510,193 +502,8 @@ export function useAddTurn(): MutationResult<WorldTownTurnResponse, WorldTownTur
   };
 }
 
-// =============================================================================
-// Coalition Hooks
-// =============================================================================
-
-/**
- * Fetch coalition system manifest/health.
- * AGENTESE: world.town.coalition.manifest
- */
-export function useCoalitionManifest(): QueryResult<WorldTownCoalitionManifestResponse> {
-  const { state, execute } = useAsyncState<WorldTownCoalitionManifestResponse>();
-
-  const refetch = useCallback(() => {
-    execute(fetchAgentese<WorldTownCoalitionManifestResponse>('world.town.coalition.manifest'));
-  }, [execute]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    error: state.error ? new Error(state.error) : null,
-    refetch,
-  };
-}
-
-/**
- * Fetch list of all coalitions.
- * AGENTESE: world.town.coalition.list
- */
-export function useCoalitions(): QueryResult<WorldTownCoalitionListResponse> {
-  const { state, execute } = useAsyncState<WorldTownCoalitionListResponse>();
-
-  const refetch = useCallback(() => {
-    execute(fetchAgentese<WorldTownCoalitionListResponse>('world.town.coalition.list'));
-  }, [execute]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    error: state.error ? new Error(state.error) : null,
-    refetch,
-  };
-}
-
-/**
- * Fetch single coalition details.
- * AGENTESE: world.town.coalition.get
- */
-export function useCoalition(
-  coalitionId: string,
-  options?: { enabled?: boolean }
-): QueryResult<WorldTownCoalitionGetResponse> {
-  const { state, execute, reset } = useAsyncState<WorldTownCoalitionGetResponse>();
-  const enabled = options?.enabled !== false && !!coalitionId;
-
-  const refetch = useCallback(() => {
-    if (!enabled) return;
-    execute(
-      fetchAgentese<WorldTownCoalitionGetResponse>('world.town.coalition.get', {
-        coalition_id: coalitionId,
-      })
-    );
-  }, [execute, coalitionId, enabled]);
-
-  useEffect(() => {
-    if (enabled) {
-      refetch();
-    } else {
-      reset();
-    }
-  }, [enabled, refetch, reset]);
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    error: state.error ? new Error(state.error) : null,
-    refetch,
-  };
-}
-
-/**
- * Fetch bridge citizens (those in multiple coalitions).
- * AGENTESE: world.town.coalition.bridges
- */
-export function useCoalitionBridges(): QueryResult<WorldTownCoalitionBridgesResponse> {
-  const { state, execute } = useAsyncState<WorldTownCoalitionBridgesResponse>();
-
-  const refetch = useCallback(() => {
-    execute(fetchAgentese<WorldTownCoalitionBridgesResponse>('world.town.coalition.bridges'));
-  }, [execute]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    error: state.error ? new Error(state.error) : null,
-    refetch,
-  };
-}
-
-/**
- * Detect coalitions in the citizen graph.
- * AGENTESE: world.town.coalition.detect
- */
-export function useDetectCoalitions(): MutationResult<
-  WorldTownCoalitionDetectResponse,
-  WorldTownCoalitionDetectRequest
-> {
-  const { state, execute } = useAsyncState<WorldTownCoalitionDetectResponse>();
-  const [isPending, setIsPending] = useState(false);
-
-  const mutateAsync = useCallback(
-    async (data: WorldTownCoalitionDetectRequest = {}) => {
-      setIsPending(true);
-      try {
-        const result = await execute(
-          fetchAgentese<WorldTownCoalitionDetectResponse>('world.town.coalition.detect', data)
-        );
-        if (!result) throw new Error('Failed to detect coalitions');
-        return result;
-      } finally {
-        setIsPending(false);
-      }
-    },
-    [execute]
-  );
-
-  const mutate = useCallback(
-    (data: WorldTownCoalitionDetectRequest = {}) => {
-      mutateAsync(data).catch(() => {});
-    },
-    [mutateAsync]
-  );
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    isPending,
-    error: state.error ? new Error(state.error) : null,
-    mutate,
-    mutateAsync,
-  };
-}
-
-/**
- * Apply decay to coalitions (prune weak ones).
- * AGENTESE: world.town.coalition.decay
- */
-export function useCoalitionDecay(): MutationResult<WorldTownCoalitionDecayResponse, void> {
-  const { state, execute } = useAsyncState<WorldTownCoalitionDecayResponse>();
-  const [isPending, setIsPending] = useState(false);
-
-  const mutateAsync = useCallback(async () => {
-    setIsPending(true);
-    try {
-      const result = await execute(
-        fetchAgentese<WorldTownCoalitionDecayResponse>('world.town.coalition.decay', {})
-      );
-      if (!result) throw new Error('Failed to apply decay');
-      return result;
-    } finally {
-      setIsPending(false);
-    }
-  }, [execute]);
-
-  const mutate = useCallback(() => {
-    mutateAsync().catch(() => {});
-  }, [mutateAsync]);
-
-  return {
-    data: state.data,
-    isLoading: state.isLoading,
-    isPending,
-    error: state.error ? new Error(state.error) : null,
-    mutate,
-    mutateAsync,
-  };
-}
+// Coalition Hooks removed (module archived)
+// If coalition functionality is restored, re-add hooks here
 
 // =============================================================================
 // Query Keys (for cache invalidation patterns if needed later)
@@ -712,11 +519,6 @@ export const townQueryKeys = {
   conversations: () => [...townQueryKeys.all, 'conversations'] as const,
   conversationHistory: (citizenId: string) =>
     [...townQueryKeys.conversations(), 'history', citizenId] as const,
-  coalitions: () => [...townQueryKeys.all, 'coalitions'] as const,
-  coalitionsList: () => [...townQueryKeys.coalitions(), 'list'] as const,
-  coalitionDetail: (id: string) => [...townQueryKeys.coalitions(), 'detail', id] as const,
-  coalitionManifest: () => [...townQueryKeys.coalitions(), 'manifest'] as const,
-  coalitionBridges: () => [...townQueryKeys.coalitions(), 'bridges'] as const,
 };
 
 // =============================================================================
@@ -739,11 +541,4 @@ export type {
   WorldTownHistoryResponse,
   WorldTownRelationshipsRequest,
   WorldTownRelationshipsResponse,
-  WorldTownCoalitionManifestResponse,
-  WorldTownCoalitionListResponse,
-  WorldTownCoalitionGetResponse,
-  WorldTownCoalitionDetectRequest,
-  WorldTownCoalitionDetectResponse,
-  WorldTownCoalitionBridgesResponse,
-  WorldTownCoalitionDecayResponse,
 };

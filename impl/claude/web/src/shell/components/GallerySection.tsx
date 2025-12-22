@@ -30,6 +30,7 @@ const GALLERIES: Gallery[] = [
   { route: '/_/gallery', label: 'Projection Gallery' },
   { route: '/_/gallery/layout', label: 'Layout Gallery' },
   { route: '/_/gallery/interactive-text', label: 'Interactive Text' },
+  { route: '/_/canvas', label: 'AGENTESE Canvas' },
   { route: '/_/docs/agentese', label: 'AGENTESE Explorer' },
 ];
 

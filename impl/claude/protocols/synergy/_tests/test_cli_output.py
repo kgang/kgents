@@ -51,8 +51,8 @@ class TestDisplaySynergyNotification:
         """Display successful result without artifact."""
         result = SynergyResult(
             success=True,
-            handler_name="BrainToCoalitionHandler",
-            message="Context enrichment complete",
+            handler_name="WitnessToBrainHandler",
+            message="Thought captured to Brain",
         )
 
         stream = io.StringIO()
@@ -60,7 +60,7 @@ class TestDisplaySynergyNotification:
 
         output = stream.getvalue()
         assert displayed is True
-        assert "Context enrichment complete" in output
+        assert "Thought captured to Brain" in output
         assert "Crystal:" not in output
 
     def test_skipped_not_shown_by_default(self) -> None:
