@@ -44,14 +44,13 @@ from .concept_blend import (
     forge_blend,
 )
 
-# Crown Jewels path registry (Seven Crown Jewel apps + Emergence + Gestalt Live + Design)
+# Crown Jewels path registry (Brain + Design + Morpheus)
 from .crown_jewels import (
     ALL_CROWN_JEWEL_PATHS,
     ATELIER_PATHS,
     BRAIN_PATHS,
     COALITION_PATHS,
     DESIGN_PATHS,
-    EMERGENCE_PATHS,
     GARDENER_PATHS,
     GESTALT_LIVE_PATHS,
     GESTALT_PATHS,
@@ -201,16 +200,7 @@ from .world import (
     create_world_resolver,
 )
 
-# Emergence Node integration (Cymatics Design Sampler)
-from .world_emergence import (
-    EMERGENCE_AFFORDANCES,
-    PATTERN_FAMILIES,
-    EmergenceNode,
-    create_emergence_node,
-    get_emergence_node,
-    set_emergence_node,
-)
-
+# Note: Emergence Node (world.emergence.*) removed 2025-12-21
 # Gallery Node integration (Living Autopoietic Showcase)
 from .world_gallery import (
     GALLERY_AFFORDANCES,
@@ -398,14 +388,13 @@ __all__ = [
     "create_agent_resolver",
     "create_agent_node",
     # Note: Forest and Gardener contexts deprecated 2025-12-21
-    # Crown Jewels (Seven Crown Jewel applications + Emergence + Gestalt Live + Design)
+    # Crown Jewels (Brain + Design + Morpheus)
     "ALL_CROWN_JEWEL_PATHS",
     "ATELIER_PATHS",
     "BRAIN_PATHS",
     "COALITION_PATHS",
     "CrownJewelRegistry",
     "DESIGN_PATHS",
-    "EMERGENCE_PATHS",
     "GARDENER_PATHS",
     "GESTALT_LIVE_PATHS",
     "GESTALT_PATHS",
@@ -433,13 +422,7 @@ __all__ = [
     "BrainFlowNode",
     "create_brain_flow_node",
     # Note: Town, Park, Gestalt, Gardener Flow, Chat, Atelier removed 2025-12-21 (Crown Jewel Cleanup)
-    # Emergence Node integration (Cymatics Design Sampler)
-    "EMERGENCE_AFFORDANCES",
-    "PATTERN_FAMILIES",
-    "EmergenceNode",
-    "create_emergence_node",
-    "get_emergence_node",
-    "set_emergence_node",
+    # Note: Emergence Node (world.emergence.*) removed 2025-12-21
     # Gallery Node integration (Living Autopoietic Showcase)
     "GALLERY_AFFORDANCES",
     "GALLERY_CATEGORIES",

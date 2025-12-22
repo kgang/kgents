@@ -87,7 +87,7 @@ def _import_node_modules() -> None:
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
-            world_emergence,  # noqa: F401 - Cymatics (world.emergence.*)
+            # Note: world_emergence removed 2025-12-21
             world_file,  # noqa: F401 - CLI v7 Phase 1: File I/O (world.file.*)
             world_gallery,  # noqa: F401 - Gallery V2 (world.emergence.gallery.*)
             world_gallery_api,  # noqa: F401 - Gallery REST API (world.gallery.*)

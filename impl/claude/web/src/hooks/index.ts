@@ -117,14 +117,7 @@ export {
   type TouchGesturesState,
 } from './useTouchGestures';
 
-// Emergence visualization hooks
-export { useCymatics, type UseCymaticsOptions, type UseCymaticsReturn } from './useCymatics';
-
-export {
-  useGrowthAnimation,
-  type GrowthAnimationOptions,
-  type UseGrowthAnimationReturn,
-} from './useGrowthAnimation';
+// Note: Emergence visualization hooks (useCymatics, useGrowthAnimation) removed 2025-12-21
 
 // Teaching mode (Phase 4: Teaching Layer)
 export {
@@ -353,7 +346,6 @@ export {
   type WorldTownWorkshopCompleteResponse,
 } from './useWorkshopQuery';
 
-
 // Differance AGENTESE queries (Contract-Driven) - Phase 5: FRUITING
 export {
   // Query keys
@@ -480,3 +472,24 @@ export {
   type UseWalkDashboardOptions,
   type UseWalkDashboardReturn,
 } from './useWalkDashboard';
+
+// Canvas hooks (CLI v7 Phase 5: Collaborative Canvas)
+export {
+  useCanvasLayout,
+  type LayoutOptions,
+  type DragState,
+  type UseCanvasLayoutReturn,
+} from './useCanvasLayout';
+
+export {
+  useCanvasNodes,
+  type UseCanvasNodesOptions,
+  type UseCanvasNodesReturn,
+} from './useCanvasNodes';
+
+export {
+  useUserFocus,
+  type MousePosition,
+  type UseUserFocusOptions,
+  type UseUserFocusReturn,
+} from './useUserFocus';
