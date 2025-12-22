@@ -1,12 +1,10 @@
 """
 Test configuration for Context Perception tests.
+
+Note: pytest-asyncio is configured via asyncio_mode="auto" in pyproject.toml.
 """
 
 import pytest
-
-
-# Configure pytest-asyncio
-pytest_plugins = ["pytest_asyncio"]
 
 
 @pytest.fixture
