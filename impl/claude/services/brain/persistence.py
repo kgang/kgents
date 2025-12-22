@@ -52,7 +52,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from agents.d import Datum, DgentProtocol, TableAdapter
 from agents.differance.alternatives import get_alternatives
 from agents.differance.integration import DifferanceIntegration
-from models.brain import Crystal, CrystalTag, TeachingCrystal
+from models.brain import Crystal, CrystalTag, ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
 
 if TYPE_CHECKING:
     pass
@@ -119,6 +119,25 @@ class CrystallizeResult:
     source_symbol: str
     is_new: bool  # True if newly created, False if already existed
     evidence_verified: bool
+
+
+@dataclass
+class ExtinctionResult:
+    """Result of an extinction event (mass code deletion)."""
+
+    event_id: str
+    reason: str
+    affected_count: int  # Teaching crystals in deleted modules
+    preserved_count: int  # Teaching crystals marked as extinct
+
+
+@dataclass
+class GhostWisdom:
+    """Ancestral wisdom from deleted code, with extinction context."""
+
+    teaching: TeachingCrystal
+    extinction_event: ExtinctionEvent | None
+    successor: str | None  # What replaced the deleted module
 
 
 class BrainPersistence:
@@ -878,6 +897,198 @@ class BrainPersistence:
                 "info": alive - critical - warning,
             }
 
+    # =========================================================================
+    # Extinction Protocol (Memory-First Docs Phase 3)
+    # =========================================================================
+
+    async def prepare_extinction(
+        self,
+        reason: str,
+        commit: str,
+        deleted_paths: list[str],
+        decision_doc: str | None = None,
+        successor_map: dict[str, str | None] | None = None,
+    ) -> ExtinctionResult:
+        """
+        Prepare wisdom preservation before mass deletion.
+
+        AGENTESE: self.memory.extinction.prepare
+
+        The Extinction Law: Before deleting code, crystallize
+        its teaching and mark as extinct.
+
+        Args:
+            reason: Why the deletion happened (e.g., "Crown Jewel Cleanup - AD-009")
+            commit: Git SHA of the deletion commit
+            deleted_paths: Paths being deleted (e.g., ["services/town/", "services/park/"])
+            decision_doc: Reference to decision doc (optional)
+            successor_map: Mapping of old → new paths (optional)
+
+        Returns:
+            ExtinctionResult with event_id, affected_count, preserved_count
+
+        Teaching:
+            gotcha: deleted_paths uses filesystem paths but source_module uses dots.
+                    Convert "services/town/" → "services.town" for matching.
+                    (Evidence: test_extinction.py::test_path_conversion)
+        """
+        async with self.table.session_factory() as session:
+            # Create ExtinctionEvent
+            event_id = f"ext-{commit[:8]}-{int(datetime.now(UTC).timestamp())}"
+            event = ExtinctionEvent(
+                id=event_id,
+                reason=reason,
+                decision_doc=decision_doc,
+                commit=commit,
+                deleted_paths=deleted_paths,
+                successor_map=successor_map or {},
+            )
+            session.add(event)
+
+            # Convert paths to module prefixes
+            # "services/town/" → "services.town"
+            module_prefixes = [p.rstrip("/").replace("/", ".") for p in deleted_paths]
+
+            # Find affected teaching crystals
+            affected_crystals: list[TeachingCrystal] = []
+            for prefix in module_prefixes:
+                stmt = (
+                    select(TeachingCrystal)
+                    .where(TeachingCrystal.source_module.startswith(prefix))
+                    .where(TeachingCrystal.died_at.is_(None))
+                )
+                result = await session.execute(stmt)
+                affected_crystals.extend(result.scalars().all())
+
+            # Mark as extinct and link to event
+            preserved_count = 0
+            for crystal in affected_crystals:
+                crystal.died_at = datetime.now(UTC)
+
+                # Set successor if provided
+                if successor_map:
+                    for old_path, new_path in successor_map.items():
+                        old_module = old_path.rstrip("/").replace("/", ".")
+                        if crystal.source_module.startswith(old_module):
+                            crystal.successor_module = new_path
+                            break
+
+                # Create join record
+                link = ExtinctionTeaching(
+                    extinction_id=event_id,
+                    teaching_id=crystal.id,
+                )
+                session.add(link)
+                preserved_count += 1
+
+            # Update event with preserved count
+            event.preserved_count = preserved_count
+
+            await session.commit()
+
+            return ExtinctionResult(
+                event_id=event_id,
+                reason=reason,
+                affected_count=len(affected_crystals),
+                preserved_count=preserved_count,
+            )
+
+    async def get_extinction_events(self, limit: int = 50) -> list[ExtinctionEvent]:
+        """
+        List all extinction events.
+
+        AGENTESE: void.extinct.list
+
+        Returns:
+            List of ExtinctionEvent ordered by date
+        """
+        async with self.table.session_factory() as session:
+            stmt = select(ExtinctionEvent).order_by(ExtinctionEvent.created_at.desc()).limit(limit)
+            result = await session.execute(stmt)
+            return list(result.scalars().all())
+
+    async def get_extinction_event(self, event_id: str) -> ExtinctionEvent | None:
+        """
+        Get a specific extinction event by ID.
+
+        AGENTESE: void.extinct.show
+
+        Args:
+            event_id: The extinction event ID
+
+        Returns:
+            ExtinctionEvent or None if not found
+        """
+        async with self.table.session_factory() as session:
+            return await session.get(ExtinctionEvent, event_id)
+
+    async def get_extinct_wisdom(
+        self,
+        keywords: list[str] | None = None,
+        module_prefix: str | None = None,
+        limit: int = 50,
+    ) -> list[GhostWisdom]:
+        """
+        Get wisdom from deleted code (ancestral teaching).
+
+        AGENTESE: void.extinct.wisdom
+
+        Args:
+            keywords: Search for keywords in insights
+            module_prefix: Filter by former module location
+            limit: Maximum results
+
+        Returns:
+            List of GhostWisdom with teaching + extinction context
+
+        Teaching:
+            gotcha: GhostWisdom includes extinction context (event, successor).
+                    Use get_ancestral_wisdom() for raw TeachingCrystal list.
+                    (Evidence: test_extinction.py::test_ghost_wisdom_context)
+        """
+        async with self.table.session_factory() as session:
+            # Get extinct teaching crystals with their extinction events
+            stmt = (
+                select(TeachingCrystal, ExtinctionEvent)
+                .outerjoin(
+                    ExtinctionTeaching,
+                    TeachingCrystal.id == ExtinctionTeaching.teaching_id,
+                )
+                .outerjoin(
+                    ExtinctionEvent,
+                    ExtinctionTeaching.extinction_id == ExtinctionEvent.id,
+                )
+                .where(TeachingCrystal.died_at.isnot(None))
+                .order_by(TeachingCrystal.died_at.desc())
+                .limit(limit * 2)  # Over-fetch for filtering
+            )
+
+            if module_prefix:
+                stmt = stmt.where(TeachingCrystal.source_module.startswith(module_prefix))
+
+            result = await session.execute(stmt)
+
+            ghosts: list[GhostWisdom] = []
+            for teaching, event in result:
+                # Keyword filtering (if specified)
+                if keywords:
+                    insight_lower = teaching.insight.lower()
+                    if not any(kw.lower() in insight_lower for kw in keywords):
+                        continue
+
+                ghosts.append(
+                    GhostWisdom(
+                        teaching=teaching,
+                        extinction_event=event,
+                        successor=teaching.successor_module,
+                    )
+                )
+
+                if len(ghosts) >= limit:
+                    break
+
+            return ghosts
+
 
 __all__ = [
     "BrainPersistence",
@@ -885,4 +1096,6 @@ __all__ = [
     "SearchResult",
     "BrainStatus",
     "CrystallizeResult",
+    "ExtinctionResult",
+    "GhostWisdom",
 ]

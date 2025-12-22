@@ -161,6 +161,11 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "coffee": "protocols.cli.handlers.coffee:cmd_coffee",
     # ==========================================================================
+    # Dawn: Dawn Cockpit Daily Operating Surface (time.dawn.*)
+    # Quarter-screen TUI where copy-paste is the killer feature
+    # ==========================================================================
+    "dawn": "protocols.cli.handlers.dawn:cmd_dawn",
+    # ==========================================================================
     # Completions: Shell completions generator (Wave 3)
     # ==========================================================================
     "completions": "protocols.cli.completions:cmd_completions",
@@ -170,6 +175,37 @@ COMMAND_REGISTRY: dict[str, str] = {
     # Uses thin routing shim - all logic in services/living_docs/
     # ==========================================================================
     "docs": "protocols.cli.handlers.docs:cmd_docs",
+    # ==========================================================================
+    # ARCHAEOLOGY: Git History Mining for Priors and Teachings
+    # Uses thin routing shim - all logic in services/archaeology/
+    # ==========================================================================
+    "archaeology": "protocols.cli.handlers.archaeology:cmd_archaeology",
+    # ==========================================================================
+    # FILE_OPERAD: Navigate Operads as Documents (Session 2)
+    # Portal tokens enable inline expansion of cross-operad links
+    # ==========================================================================
+    "op": "protocols.file_operad.cli:cmd_op",
+    # ==========================================================================
+    # TYPED-HYPERGRAPH: Navigate context as typed-hypergraph (self.context.*)
+    # Lazy navigation, observer-dependent edges, replayable trails
+    # ==========================================================================
+    "context": "protocols.cli.handlers.context:cmd_context",
+    # ==========================================================================
+    # PORTAL: Navigate source files through hyperedge expansion (Phase 4)
+    # Portal tokens for real source files, not just .op files
+    # ==========================================================================
+    "portal": "protocols.cli.handlers.portal:cmd_portal",
+    # ==========================================================================
+    # EXPLORATION HARNESS: Bounded exploration with evidence (self.explore.*)
+    # Budget, loop detection, evidence collection, commitment protocol
+    # ==========================================================================
+    "explore": "protocols.cli.handlers.explore:cmd_explore",
+    # ==========================================================================
+    # DERIVATION FRAMEWORK: Agent justification chains (concept.derivation.*)
+    # Bootstrap axioms → derived agents, confidence propagation, principle draws
+    # ==========================================================================
+    "derivation": "protocols.cli.handlers.derivation:cmd_derivation",
+    "derive": "protocols.cli.handlers.derivation:cmd_derivation",  # alias
 }
 
 
@@ -765,52 +801,72 @@ def main(argv: Sequence[str] | None = None) -> int:
     command_args = remaining[1:]
 
     # =========================================================================
-    # Daemon Routing (Strict Mode)
+    # Local-Only Commands (Bypass Daemon)
     # =========================================================================
-    # When kgentsd is running, ALL commands route through the daemon.
-    # This provides centralized execution with daemon context, trust-gating,
-    # and audit logging for all CLI activity.
-    #
-    # If daemon is not running, we fail with an error (strict mode).
-    # =========================================================================
-    try:
-        from services.kgentsd.socket_client import (
-            DaemonConnectionError,
-            DaemonNotRunningError,
-            DaemonProtocolError,
-            DaemonTimeoutError,
-            is_daemon_available,
-            route_command,
-        )
+    # These commands run locally even when daemon infrastructure exists.
+    # They don't require daemon context, trust-gating, or audit logging.
+    LOCAL_ONLY_COMMANDS = {
+        "op",  # FILE_OPERAD: navigate operads as documents
+        "context",  # TYPED-HYPERGRAPH: navigate context as hypergraph
+        "init",
+        "wipe",
+        "migrate",
+        "completions",
+        "dawn",  # Dawn Cockpit TUI
+        "coffee",  # Morning Coffee (both local + daemon compatible)
+        "brain",  # Brain extinction queries (local + daemon compatible)
+        "docs",  # Living Docs (local + daemon compatible)
+        "witness",  # Witness dashboard needs stdin for interactive mode
+    }
 
-        if is_daemon_available():
-            # Route through daemon
-            try:
-                response = route_command(command, command_args, flags)
-                if response.stdout:
-                    print(response.stdout, end="")
-                if response.stderr:
-                    print(response.stderr, end="", file=sys.stderr)
-                return response.exit_code
-            except DaemonConnectionError as e:
-                print(f"Error: Cannot connect to kgentsd: {e}", file=sys.stderr)
-                return 1
-            except DaemonTimeoutError as e:
-                print(f"Error: kgentsd not responding: {e}", file=sys.stderr)
-                return 1
-            except DaemonProtocolError as e:
-                print(f"Error: Invalid response from kgentsd: {e}", file=sys.stderr)
-                return 1
-        else:
-            # Daemon not running - strict mode means we fail
-            print("Error: kgentsd daemon is not running.", file=sys.stderr)
-            print("Start with: kgentsd summon", file=sys.stderr)
-            return 1
+    if command not in LOCAL_ONLY_COMMANDS:
+        # =====================================================================
+        # Daemon Routing (Strict Mode)
+        # =====================================================================
+        # When kgentsd is running, ALL commands route through the daemon.
+        # This provides centralized execution with daemon context, trust-gating,
+        # and audit logging for all CLI activity.
+        #
+        # If daemon is not running, we fail with an error (strict mode).
+        # =====================================================================
+        try:
+            from services.kgentsd.socket_client import (
+                DaemonConnectionError,
+                DaemonNotRunningError,
+                DaemonProtocolError,
+                DaemonTimeoutError,
+                is_daemon_available,
+                route_command,
+            )
 
-    except ImportError:
-        # Socket client module not available - fall through to local execution
-        # This allows development without the daemon infrastructure
-        pass
+            if is_daemon_available():
+                # Route through daemon
+                try:
+                    response = route_command(command, command_args, flags)
+                    if response.stdout:
+                        print(response.stdout, end="")
+                    if response.stderr:
+                        print(response.stderr, end="", file=sys.stderr)
+                    return response.exit_code
+                except DaemonConnectionError as e:
+                    print(f"Error: Cannot connect to kgentsd: {e}", file=sys.stderr)
+                    return 1
+                except DaemonTimeoutError as e:
+                    print(f"Error: kgentsd not responding: {e}", file=sys.stderr)
+                    return 1
+                except DaemonProtocolError as e:
+                    print(f"Error: Invalid response from kgentsd: {e}", file=sys.stderr)
+                    return 1
+            else:
+                # Daemon not running - strict mode means we fail
+                print("Error: kgentsd daemon is not running.", file=sys.stderr)
+                print("Start with: kgentsd summon", file=sys.stderr)
+                return 1
+
+        except ImportError:
+            # Socket client module not available - fall through to local execution
+            # This allows development without the daemon infrastructure
+            pass
 
     # v3: Check for AGENTESE direct paths, shortcuts, queries, and legacy commands
     # These bypass the command registry and route through Logos

@@ -41,6 +41,16 @@ from .brain import (
 # Town Crown Jewel
 from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
+# Trail Protocol
+from .trail import (
+    TrailRow,
+    TrailStepRow,
+    TrailAnnotationRow,
+    TrailForkRow,
+    TrailEvidenceRow,
+    TrailCommitmentRow,
+)
+
 __all__ = [
     # Base infrastructure
     "Base",
@@ -64,4 +74,11 @@ __all__ = [
     "CitizenRelationship",
     # ASHC
     "VerifiedLemmaModel",
+    # Trail
+    "TrailRow",
+    "TrailStepRow",
+    "TrailAnnotationRow",
+    "TrailForkRow",
+    "TrailEvidenceRow",
+    "TrailCommitmentRow",
 ]

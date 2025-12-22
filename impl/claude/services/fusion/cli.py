@@ -35,6 +35,7 @@ See: spec/protocols/witness-supersession.md
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from dataclasses import dataclass
 from typing import Any
@@ -367,6 +368,7 @@ GUIDED MODE (default):
 FAST MODE OPTIONS:
   --fast "content"           Quick decision (same content for all)
   --reasoning "why"          Reasoning for quick decision
+  --json                     Machine-readable JSON output (fast mode only)
 
   --kent "content"           Kent's proposal
   --kent-reasoning "why"     Kent's reasoning
@@ -388,6 +390,10 @@ EXAMPLES:
             --synthesis "Build minimal kernel, validate, then decide" \\
             --why "Avoids both risks"
 
+AGENT-FRIENDLY EXAMPLES:
+  kg decide --fast "Choice" --reasoning "Why" --json
+  # Returns: {"fusion_id": "...", "status": "synthesized", ...}
+
 PHILOSOPHY:
   Kent and Claude are symmetric agents. Either can propose.
   Either can be superseded. Fusion emerges from dialectic.
@@ -396,6 +402,7 @@ PHILOSOPHY:
   "The proof IS the decision."
 
 See: spec/protocols/witness-supersession.md
+See: docs/skills/witness-for-agents.md
 """
 
 
@@ -410,6 +417,7 @@ def main(argv: list[str] | None = None) -> int:
         argv = sys.argv[1:]
 
     args = list(argv)
+    json_output = "--json" in args
 
     # Help
     if "--help" in args or "-h" in args:
@@ -425,34 +433,51 @@ def main(argv: list[str] | None = None) -> int:
 
             # Validate fast mode has required fields
             if not decision.kent_content and not decision.synthesis_content:
-                print("Error: --fast requires content")
-                print('Usage: kg decide --fast "content" --reasoning "why"')
+                if json_output:
+                    print(json.dumps({"error": "--fast requires content"}))
+                else:
+                    print("Error: --fast requires content")
+                    print('Usage: kg decide --fast "content" --reasoning "why"')
                 return 1
         else:
+            if json_output:
+                # Can't do guided mode with JSON output
+                print(json.dumps({"error": "Guided mode not supported with --json. Use --fast."}))
+                return 1
             decision = _guided_experience()
 
         # Validate we have what we need
         if not decision.synthesis_content:
-            print("Error: No synthesis provided")
+            if json_output:
+                print(json.dumps({"error": "No synthesis provided"}))
+            else:
+                print("Error: No synthesis provided")
             return 1
 
         # Run the fusion
         result = asyncio.run(_run_fusion(decision))
 
-        # Print result
-        _print_result(result)
+        # Output result
+        if json_output:
+            print(json.dumps(result))
+        else:
+            _print_result(result)
 
         return 0
 
     except KeyboardInterrupt:
-        print("\n\nDecision cancelled.")
+        if not json_output:
+            print("\n\nDecision cancelled.")
         return 0
     except Exception as e:
-        console = _get_console()
-        if console:
-            console.print(f"[red]Error: {e}[/red]")
+        if json_output:
+            print(json.dumps({"error": str(e)}))
         else:
-            print(f"Error: {e}")
+            console = _get_console()
+            if console:
+                console.print(f"[red]Error: {e}[/red]")
+            else:
+                print(f"Error: {e}")
         return 1
 
 

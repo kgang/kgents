@@ -79,6 +79,11 @@ class SynergyEventType(Enum):
     SWARM_A2A_MESSAGE = "swarm.a2a_message"  # A2A message sent
     SWARM_HANDOFF = "swarm.handoff"  # Agent handoff occurred
 
+    # Context events (Portal/Exploration - spec/protocols/portal-token.md)
+    CONTEXT_FILES_OPENED = "context.files_opened"  # Files opened via portal expansion
+    CONTEXT_FILES_CLOSED = "context.files_closed"  # Files closed via portal collapse
+    CONTEXT_FOCUS_CHANGED = "context.focus_changed"  # Focus moved to new paths
+
 
 class Jewel(Enum):
     """Crown Jewel identifiers."""
@@ -1326,6 +1331,117 @@ def create_swarm_handoff_event(
     )
 
 
+# =============================================================================
+# Context Events (Portal/Exploration - spec/protocols/portal-token.md)
+# =============================================================================
+
+
+def create_context_files_opened_event(
+    paths: list[str] | tuple[str, ...],
+    reason: str,
+    depth: int,
+    parent_path: str = "",
+    edge_type: str = "",
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a context files opened event.
+
+    Emitted when portal expansion opens files for agent context.
+    This enables cross-jewel awareness of what files the agent is exploring.
+
+    Args:
+        paths: File paths that were opened
+        reason: Human-readable reason (e.g., "Followed [tests] from auth.py")
+        depth: Nesting depth in exploration
+        parent_path: Path that led to this expansion
+        edge_type: The hyperedge type followed (e.g., "tests", "imports")
+
+    Returns:
+        SynergyEvent for CONTEXT_FILES_OPENED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONTEXT_FILES_OPENED,
+        source_id=parent_path or "root",
+        payload={
+            "paths": list(paths) if isinstance(paths, tuple) else paths,
+            "reason": reason,
+            "depth": depth,
+            "parent_path": parent_path,
+            "edge_type": edge_type,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_context_files_closed_event(
+    paths: list[str] | tuple[str, ...],
+    reason: str,
+    depth: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a context files closed event.
+
+    Emitted when portal collapse removes files from agent context.
+
+    Args:
+        paths: File paths that were closed
+        reason: Human-readable reason
+        depth: Nesting depth in exploration
+
+    Returns:
+        SynergyEvent for CONTEXT_FILES_CLOSED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONTEXT_FILES_CLOSED,
+        source_id="collapse",
+        payload={
+            "paths": list(paths) if isinstance(paths, tuple) else paths,
+            "reason": reason,
+            "depth": depth,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
+def create_context_focus_changed_event(
+    paths: list[str] | tuple[str, ...],
+    reason: str,
+    depth: int,
+    correlation_id: str | None = None,
+) -> SynergyEvent:
+    """
+    Create a context focus changed event.
+
+    Emitted when agent focus moves to a new set of paths.
+
+    Args:
+        paths: New focus paths
+        reason: Human-readable reason
+        depth: Nesting depth
+
+    Returns:
+        SynergyEvent for CONTEXT_FOCUS_CHANGED
+    """
+    return SynergyEvent(
+        source_jewel=Jewel.CONDUCTOR,
+        target_jewel=Jewel.ALL,
+        event_type=SynergyEventType.CONTEXT_FOCUS_CHANGED,
+        source_id="focus",
+        payload={
+            "paths": list(paths) if isinstance(paths, tuple) else paths,
+            "reason": reason,
+            "depth": depth,
+        },
+        correlation_id=correlation_id or str(uuid.uuid4()),
+    )
+
+
 __all__ = [
     # Event types
     "SynergyEventType",
@@ -1374,4 +1490,8 @@ __all__ = [
     "create_swarm_despawned_event",
     "create_swarm_a2a_message_event",
     "create_swarm_handoff_event",
+    # Factory functions - Context (Portal/Exploration)
+    "create_context_files_opened_event",
+    "create_context_files_closed_event",
+    "create_context_focus_changed_event",
 ]

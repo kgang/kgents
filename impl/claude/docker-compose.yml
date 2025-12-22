@@ -1,6 +1,6 @@
 # Docker Compose for kgents local development
 #
-# Provides PostgreSQL for D-gent persistence (Brain, Gardener, etc.)
+# Provides PostgreSQL with pgvector for D-gent persistence and semantic search.
 #
 # Usage:
 #   docker compose up -d              # Start services
@@ -12,10 +12,13 @@
 #
 # Crown Jewels (Brain, etc.) automatically detect and use Postgres
 # when KGENTS_POSTGRES_URL is set. Falls back to SQLite otherwise.
+#
+# pgvector: The pgvector/pgvector:pg16 image includes the vector extension
+# pre-installed for semantic search on trail embeddings.
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: kgents-postgres
     environment:
       POSTGRES_USER: kgents

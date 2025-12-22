@@ -68,6 +68,7 @@ class ServiceRegistry:
 
     # Core infrastructure (created first)
     _session_factory: "async_sessionmaker[AsyncSession] | None" = None
+    _engine: Any = None  # Store engine for proper disposal
     _dgent_router: "DgentProtocol | None" = None
 
     # Crown Jewel persistence services (created on demand)
@@ -145,6 +146,9 @@ class ServiceRegistry:
             echo=False,
             future=True,
         )
+
+        # Store engine reference for proper disposal on reset
+        self._engine = engine
 
         # Create session factory
         factory = async_sessionmaker(
@@ -307,8 +311,26 @@ class ServiceRegistry:
             self._services[name] = service
 
     def reset(self) -> None:
-        """Reset the registry (for testing)."""
+        """
+        Reset the registry (for testing and event loop transitions).
+
+        Properly disposes of the SQLAlchemy engine to avoid connection pool
+        issues when creating a new engine on a different event loop.
+        """
         with self._lock:
+            # Dispose engine to close all connections
+            # This is critical when transitioning between event loops
+            if self._engine is not None:
+                try:
+                    # For async engines, we need to dispose the sync_engine
+                    # This closes all pooled connections synchronously
+                    self._engine.sync_engine.dispose()
+                    logger.debug("Engine disposed")
+                except Exception as e:
+                    logger.debug(f"Engine disposal warning: {e}")
+                finally:
+                    self._engine = None
+
             self._services.clear()
             self._factories.clear()
             self._session_factory = None

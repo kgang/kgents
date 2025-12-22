@@ -68,6 +68,7 @@ class HydrationContext:
     Enhanced with semantic fields (Checkpoint 0.2):
     - semantic_teaching: Teaching moments from Brain vectors
     - prior_evidence: ASHC evidence for similar work (Phase 2)
+    - ancestral_wisdom: Ghost teaching from deleted code (Memory-First Docs)
 
     Teaching:
         gotcha: to_markdown() output is designed for system prompts.
@@ -84,6 +85,9 @@ class HydrationContext:
     semantic_teaching: list[Any] = field(default_factory=list)
     prior_evidence: list[Any] = field(default_factory=list)  # ASHCEvidence when Phase 2
     has_semantic: bool = False
+    # Ghost hydration (Memory-First Docs Phase 4)
+    ancestral_wisdom: list[Any] = field(default_factory=list)  # GhostWisdom from deleted code
+    extinct_modules: list[str] = field(default_factory=list)  # Modules that no longer exist
 
     def to_markdown(self) -> str:
         """
@@ -155,6 +159,39 @@ class HydrationContext:
                         lines.append(f"  - {insight}")
             lines.append("")
 
+        # Ancestral wisdom from deleted code (Memory-First Docs Phase 4)
+        if self.ancestral_wisdom:
+            lines.append("## \u26b0\ufe0f Ancestral Wisdom (From Deleted Code)")
+            lines.append("")
+            lines.append("These modules no longer exist but their lessons persist:")
+            lines.append("")
+
+            # Group by source module
+            by_module: dict[str, list[Any]] = {}
+            for ghost in self.ancestral_wisdom:
+                module = ghost.teaching.source_module
+                if module not in by_module:
+                    by_module[module] = []
+                by_module[module].append(ghost)
+
+            for module, ghosts in list(by_module.items())[:5]:  # Top 5 modules
+                first_ghost = ghosts[0]
+                lines.append(f"### `{module}`")
+                if first_ghost.extinction_event:
+                    lines.append(f"*Reason: {first_ghost.extinction_event.reason}*")
+                if first_ghost.successor:
+                    lines.append(f"*Replaced by: `{first_ghost.successor}`*")
+                lines.append("")
+
+                for ghost in ghosts[:3]:  # Top 3 per module
+                    icon = {
+                        "critical": "\U0001f6a8",
+                        "warning": "\u26a0\ufe0f",
+                        "info": "\u2139\ufe0f",
+                    }.get(ghost.teaching.severity, "\u2022")
+                    lines.append(f"- {icon} **{ghost.teaching.source_symbol}**: {ghost.teaching.insight}")
+                lines.append("")
+
         # Related modules
         if self.related_modules:
             lines.append("## Files You'll Likely Touch")
@@ -205,6 +242,18 @@ class HydrationContext:
             "prior_evidence": [
                 ev.to_dict() if hasattr(ev, "to_dict") else ev for ev in self.prior_evidence
             ],
+            "ancestral_wisdom": [
+                {
+                    "insight": g.teaching.insight,
+                    "severity": g.teaching.severity,
+                    "source_module": g.teaching.source_module,
+                    "source_symbol": g.teaching.source_symbol,
+                    "successor": g.successor,
+                    "extinction_reason": g.extinction_event.reason if g.extinction_event else None,
+                }
+                for g in self.ancestral_wisdom
+            ],
+            "extinct_modules": self.extinct_modules,
             "related_modules": self.related_modules,
             "voice_anchors": self.voice_anchors,
             "has_semantic": self.has_semantic,
@@ -302,6 +351,62 @@ class Hydrator:
             except Exception as e:
                 # Graceful degradation: log and return keyword-only context
                 logger.warning(f"Semantic hydration failed, using keyword-only: {e}")
+
+        return context
+
+    async def hydrate_with_ghosts(
+        self,
+        task: str,
+        brain: "BrainPersistence",
+    ) -> HydrationContext:
+        """
+        Hydrate context including ancestral wisdom from deleted code.
+
+        AGENTESE: concept.docs.hydrate (with ghost section)
+
+        The Ghost Hydration Law: Hydration MUST surface wisdom
+        from extinct code when relevant.
+
+        Args:
+            task: Natural language description of the task
+            brain: BrainPersistence instance for querying extinct wisdom
+
+        Returns:
+            HydrationContext with ancestral wisdom when task matches
+
+        Teaching:
+            gotcha: Ghost hydration is keyword-based, not semantic.
+                    Keywords from task are matched against extinct teaching insights.
+                    (Evidence: test_ghost_hydration.py::test_keyword_matching)
+        """
+        # Start with regular hydration
+        context = self.hydrate(task)
+
+        # Extract keywords for ghost matching
+        keywords = self._extract_keywords(task)
+
+        # Query for ghost matches
+        try:
+            ghosts = await brain.get_extinct_wisdom(keywords=keywords)
+
+            if ghosts:
+                # Create new context with ghosts
+                context = HydrationContext(
+                    task=context.task,
+                    relevant_teaching=context.relevant_teaching,
+                    related_modules=context.related_modules,
+                    voice_anchors=context.voice_anchors,
+                    semantic_teaching=context.semantic_teaching,
+                    prior_evidence=context.prior_evidence,
+                    has_semantic=context.has_semantic,
+                    ancestral_wisdom=ghosts,
+                    extinct_modules=list(set(g.teaching.source_module for g in ghosts)),
+                )
+                logger.debug(f"Enhanced hydration with {len(ghosts)} ancestral wisdom entries")
+
+        except Exception as e:
+            # Graceful degradation: log and return without ghosts
+            logger.warning(f"Ghost hydration failed, continuing without: {e}")
 
         return context
 
@@ -608,3 +713,40 @@ def relevant_for_file(path: str) -> HydrationContext:
     parts = path.replace("/", " ").replace("_", " ").replace(".py", "").split()
     task = f"edit {' '.join(parts)}"
     return hydrate_context(task)
+
+
+async def hydrate_context_with_ghosts(task: str) -> HydrationContext:
+    """
+    Generate hydration context including ancestral wisdom.
+
+    This is the async entry point for Memory-First Documentation.
+    Surfaces wisdom from deleted code when relevant to the task.
+
+    Args:
+        task: Natural language description of the task
+
+    Returns:
+        HydrationContext with ancestral wisdom when matches found
+
+    Usage:
+        import asyncio
+        from services.living_docs import hydrate_context_with_ghosts
+
+        ctx = asyncio.run(hydrate_context_with_ghosts("town dialogue"))
+        if ctx.ancestral_wisdom:
+            print("Ancestral wisdom found!")
+            for ghost in ctx.ancestral_wisdom:
+                print(f"  {ghost.teaching.insight}")
+    """
+    try:
+        from protocols.agentese.container import get_container
+
+        container = get_container()
+        brain = await container.resolve("brain_persistence")
+
+        hydrator = Hydrator()
+        return await hydrator.hydrate_with_ghosts(task, brain)
+    except Exception as e:
+        # Graceful degradation: return basic context
+        logger.warning(f"Failed to get brain for ghost hydration: {e}")
+        return hydrate_context(task)
