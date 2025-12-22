@@ -131,6 +131,7 @@ def _import_node_modules() -> None:
             from .contexts import (
                 concept_principles,  # noqa: F401  # concept.principles.*
                 concept_priors,  # noqa: F401  # concept.compiler.priors.* (ASHC integration)
+                concept_specgraph,  # noqa: F401  # concept.specgraph.* (SpecGraph navigation)
             )
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (concept.*): {e}")

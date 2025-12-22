@@ -156,6 +156,19 @@ class SpecRegistry:
         for edge in result.edges:
             self.graph.add_edge(edge)
         self.graph.add_tokens(spec_path, result.tokens)
+
+        # Also compute extended_by (inverse of extends)
+        for edge in result.edges:
+            if edge.edge_type == EdgeType.EXTENDS:
+                inverse = SpecEdge(
+                    edge_type=EdgeType.EXTENDED_BY,
+                    source=edge.target,
+                    target=edge.source,
+                    context=f"Extended by {edge.source}",
+                    line_number=edge.line_number,
+                )
+                self.graph.add_edge(inverse)
+
         return result
 
     # -------------------------------------------------------------------------

@@ -46,7 +46,7 @@ This spec extends the composition framework from `spec/agents/composition.md`.
 
 See `impl/claude/agents/poly/flux.py` for the implementation.
 
-Tests are in `impl/claude/agents/poly/_tests/test_flux.py`.
+Tests are in `_tests/test_flux.py`.
 
 ## AGENTESE Paths
 
