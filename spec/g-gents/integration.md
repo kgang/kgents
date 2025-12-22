@@ -16,10 +16,10 @@ G-gents don't operate in isolation. They are a **hub** in the kgents ecosystem, 
             └──────┬──────┘
                    │ register/find
                    │
-┌──────────┐       │       ┌──────────┐
-│  F-gent  │──────►│◄──────│  W-gent  │
-│  Forge   │       │       │ Witness  │
-└──────────┘       ▼       └──────────┘
+                   │       ┌──────────┐
+                   │◄──────│  W-gent  │
+                   │       │ Witness  │
+                   ▼       └──────────┘
             ┌─────────────┐
             │   G-gent    │
             │ Grammarian  │
@@ -233,86 +233,6 @@ async def execute_dsl(
         case Reality.CHAOTIC:
             # Collapse to Ground
             return Result.ground("Execution too complex for safety")
-```
-
----
-
-## F-gent Integration (Artifact Forge)
-
-### The Spellbook Pattern
-
-F-gent uses G-gent to create interface languages for artifacts.
-
-```python
-# F-gent forging process
-async def forge_artifact(
-    intent: str,
-    f_gent: ForgeAgent,
-    g_gent: GrammarianAgent
-) -> Artifact:
-    """
-    Forge an artifact with G-gent-generated interface.
-
-    The artifact's command interface is defined by a Tongue.
-    """
-    # 1. Analyze intent
-    analysis = await f_gent.analyze_intent(intent)
-
-    # 2. Generate contract with G-gent DSL
-    interface_tongue = await g_gent.reify(
-        domain=analysis.domain,
-        constraints=analysis.constraints,
-        level=GrammarLevel.COMMAND
-    )
-
-    # 3. Synthesize contract using tongue
-    contract = Contract(
-        agent_name=analysis.name,
-        interface_tongue=interface_tongue,  # G-gent output
-        input_type=interface_tongue.mime_type,
-        output_type=analysis.output_type
-    )
-
-    # 4. Generate implementation
-    impl = await f_gent.generate_impl(contract)
-
-    # 5. Crystallize artifact
-    return Artifact(
-        contract=contract,
-        implementation=impl,
-        tongue=interface_tongue  # Bundled for portability
-    )
-```
-
-### Contract DSL
-
-G-gent can also define the language for F-gent contracts themselves:
-
-```python
-# Meta-tongue: Language for defining contracts
-ContractTongue = await g_gent.reify(
-    domain="Agent Contracts",
-    constraints=[
-        "Type-safe signatures",
-        "Explicit invariants",
-        "Versioned"
-    ],
-    level=GrammarLevel.RECURSIVE
-)
-
-# Example contract in ContractTongue DSL:
-contract_dsl = """
-agent Summarizer: Document -> Summary
-version 1.0.0
-guarantees {
-    idempotent: invoke(invoke(x)) == invoke(x)
-    length: output.words < 500
-    no_hallucination: output.citations subset_of input.citations
-}
-"""
-
-# Parse contract using ContractTongue
-contract_ast = ContractTongue.parse(contract_dsl)
 ```
 
 ---
@@ -574,33 +494,7 @@ async def reconcile_tongues(
 
 ## Cross-Ecosystem Patterns
 
-### Pattern 1: F-gent Artifact with G-gent Interface
-
-```python
-# Complete flow: User wants a safe calendar agent
-
-# 1. F-gent receives intent
-intent = "Calendar agent that can only add and check events"
-
-# 2. F-gent asks G-gent for interface tongue
-interface_tongue = await g_gent.reify(
-    domain="Calendar",
-    constraints=["No deletes", "No modifications"]
-)
-
-# 3. F-gent generates artifact using tongue
-artifact = await f_gent.forge(intent, interface_tongue)
-
-# 4. L-gent registers both
-await l_gent.register(interface_tongue)
-await l_gent.register(artifact, interface_tongue=interface_tongue.name)
-
-# 5. Usage: User interacts via DSL
-command = "ADD 14:00 1h Team Meeting"
-result = artifact.invoke(command)  # Uses tongue.parse >> tongue.execute
-```
-
-### Pattern 2: W-gent Discovery → G-gent Formalization
+### Pattern 1: W-gent Discovery → G-gent Formalization
 
 ```python
 # Observe agent communication patterns, formalize into protocol
@@ -625,7 +519,7 @@ agent_b.set_protocol(protocol_tongue)
 # Invalid messages → parse error
 ```
 
-### Pattern 3: T-gent Adversarial Testing → G-gent Hardening
+### Pattern 2: T-gent Adversarial Testing → G-gent Hardening
 
 ```python
 # Adversarial testing reveals grammar weaknesses
@@ -664,7 +558,6 @@ if vulnerabilities:
 |-------------|-------------|------------------|--------|
 | **G + P** | Generate grammar + ParserConfig | Execute parsing | ParseResult[AST] |
 | **G + J** | Generate semantics + InterpreterConfig | JIT compile & execute | Result |
-| **G + F** | Define interface language | Forge artifact with interface | Artifact |
 | **G + L** | Produce Tongue artifact | Catalog for discovery | Registered Tongue |
 | **G + W** | Formalize observed patterns | Observe raw patterns | Inferred Tongue |
 | **G + T** | Provide grammar for testing | Fuzz & property test | Test Report |
@@ -678,7 +571,6 @@ if vulnerabilities:
 - [tongue.md](tongue.md) - Tongue artifact
 - [../p-gents/](../p-gents/) - Parser agents
 - [../j-gents/](../j-gents/) - JIT agents
-- [../f-gents/](../f-gents/) - Forge agents
 - [../l-gents/](../l-gents/) - Librarian agents
 
 ---

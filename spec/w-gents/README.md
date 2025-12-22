@@ -254,14 +254,14 @@ Display testing flow:
 - Perturbation injection results
 - Assertion pass/fail with traces
 
-### F-gents (Forge)
-**W-gents monitor artifact creation.**
+### F-gents (Foundry)
+**W-gents monitor agent compilation.**
 
-Track forge loop:
+Track foundry process:
 - Intent analysis (NLP parsing)
 - Contract synthesis (interface generation)
 - Prototype validation (AST checks, type errors)
-- Crystallization (artifact finalization)
+- Crystallization (agent finalization)
 
 ### D-gents (Data)
 **W-gents can observe state persistence.**

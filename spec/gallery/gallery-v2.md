@@ -150,11 +150,8 @@ GALLERY_OPERAD = Operad(
 
 - **CROWN_JEWELS** - Full vertical slice mini-demos
   - Agent Town (live citizen grid)
-  - Punchdrunk Park (crisis phase controls)
   - Holographic Brain (crystal topology)
-  - Gestalt (architecture health)
-  - Atelier (builder flow)
-  - Gardener (N-phase indicator)
+  - Atelier (commission flow)
 
 - **LAYOUT** - Design Language System
   - ElasticSplit (density-adaptive)

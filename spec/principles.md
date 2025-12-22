@@ -308,8 +308,8 @@ K-Terrarium proves this: Kubernetes clusters—historically daunting, requiring 
 
 This is not about AI replacing expertise. It's about AI **compressing the path to capability**:
 
-| Domain | Before AI Agents | After |
-|--------|------------------|-------|
+| Task | Before AI Agents | After |
+|------|------------------|-------|
 | Kubernetes | Weeks of study, YAML hell | `kgents infra init` |
 | Database ops | DBA knowledge required | Spec describes intent |
 | Distributed systems | Architecture expertise | Compositional primitives |
@@ -1052,7 +1052,7 @@ DOMAIN_SHEAF = Sheaf(
 
 **The Unification Table**:
 
-| Domain | Polynomial | Operad | Sheaf |
+| System | Polynomial | Operad | Sheaf |
 |--------|-----------|--------|-------|
 | Agent Town | `CitizenPolynomial` | `TOWN_OPERAD` | `TownSheaf` |
 | N-Phase | `NPhasePolynomial` | `NPHASE_OPERAD` | `ProjectSheaf` |
@@ -1063,9 +1063,9 @@ DOMAIN_SHEAF = Sheaf(
 **Consequences**:
 
 1. **One Pattern, Many Instantiations**: The codebase is simpler than it appears
-2. **Cross-Domain Learning**: Understanding TownOperad teaches NPhaseOperad
+2. **Cross-System Learning**: Understanding TownOperad teaches NPhaseOperad
 3. **Unified Registry**: `OperadRegistry.verify_all()` checks laws across all domains
-4. **Domain-Aware Compilation**: N-Phase compiler can inject domain operad laws into prompts
+4. **System-Aware Compilation**: N-Phase compiler can inject operad laws into prompts
 5. **Self-Similar Structure**: The development process (N-Phase) uses the same structure as what it builds (agents)
 
 **The Meta-Insight**:
@@ -1136,7 +1136,7 @@ $ kgents self soul reflect
 
 **Context**: UI code often contains repetitive conditional logic based on screen size, user role, feature flags, or other dimensions. These scattered conditionals obscure the underlying structure and make the code fragile.
 
-**Discovery**: The Gestalt Elastic refactor revealed that `isMobile`, `isTablet`, and `isDesktop` checks throughout the codebase were all manifestations of a single dimension: **density**. This is not unique to screen size—the same pattern appears wherever conditionals cluster.
+**Discovery**: The UI refactor revealed that `isMobile`, `isTablet`, and `isDesktop` checks throughout the codebase were all manifestations of a single dimension: **density**. This is not unique to screen size—the same pattern appears wherever conditionals cluster.
 
 ```
 Screen Density ≅ Observer Umwelt ≅ Projection Target ≅ Content Detail Level
@@ -1260,7 +1260,7 @@ This is the Projection Protocol extended to UI. AGENTESE says "observation is in
 | Directory | Contains | Purpose |
 |-----------|----------|---------|
 | `agents/` | PolyAgent, Operad, Sheaf, Flux, D-gent | Categorical primitives |
-| `services/` | Brain, Gardener, Town, Park, Atelier | Crown Jewels (consumers) |
+| `services/` | Brain, Town, Atelier | Crown Jewels (consumers) |
 | `models/` | SQLAlchemy ORM classes | Generic table definitions |
 | `protocols/` | AGENTESE, CLI projection | Universal routing |
 

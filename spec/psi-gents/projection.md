@@ -41,7 +41,7 @@ def extract_concepts(problem: Problem) -> list[str]:
 
     prompt = f"""
     Problem: {problem.description}
-    Domain: {problem.domain}
+    Context: {problem.domain}
     Constraints: {problem.constraints}
 
     List the key concepts, entities, and relationships in this problem.
@@ -225,7 +225,7 @@ Gaps are problem concepts that don't map well to the metaphor.
 
 ### Types of Gaps
 
-1. **Domain Mismatch**: Concept is too domain-specific
+1. **Context Mismatch**: Concept is too context-specific
    - "Authentication token" → no plumbing equivalent
 
 2. **Structural Gap**: Metaphor lacks the structural element
@@ -243,7 +243,7 @@ def handle_gaps(gaps: list[str], projection: Projection, problem: Problem) -> Pr
 
     for gap in gaps:
         # Strategy 1: Abstract further
-        abstracted = abstract_concept(gap, problem.domain)
+        abstracted = abstract_concept(gap, problem.domain)  # problem.domain is the context
         mapping = try_map(abstracted, projection.metaphor)
         if mapping:
             projection = add_mapping(projection, ConceptMapping(
@@ -312,7 +312,7 @@ def projection_quality(projection: Projection) -> float:
 Problem(
     id="perf-001",
     description="The API is slow. Users are complaining. We've tried adding caching but it didn't help.",
-    domain="software",
+    domain="software",  # Context of the problem
     constraints=["Must improve within this sprint", "Cannot increase infrastructure cost"]
 )
 ```

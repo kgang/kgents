@@ -48,7 +48,7 @@ DOMAIN_SHEAF = Sheaf(
 
 ## The Unification Table
 
-| Domain | Polynomial | Operad | Sheaf |
+| System | Polynomial | Operad | Sheaf |
 |--------|-----------|--------|-------|
 | Agent Town | `CitizenPolynomial` | `TOWN_OPERAD` | `TownSheaf` |
 | N-Phase | `NPhasePolynomial` | `NPHASE_OPERAD` | `ProjectSheaf` |
@@ -59,9 +59,9 @@ DOMAIN_SHEAF = Sheaf(
 ## Consequences
 
 1. **One Pattern, Many Instantiations**: The codebase is simpler than it appears
-2. **Cross-Domain Learning**: Understanding TownOperad teaches NPhaseOperad
-3. **Unified Registry**: `OperadRegistry.verify_all()` checks laws across all domains
-4. **Domain-Aware Compilation**: N-Phase compiler can inject domain operad laws into prompts
+2. **Cross-System Learning**: Understanding TownOperad teaches NPhaseOperad
+3. **Unified Registry**: `OperadRegistry.verify_all()` checks laws across all systems
+4. **System-Aware Compilation**: N-Phase compiler can inject operad laws into prompts
 5. **Self-Similar Structure**: The development process (N-Phase) uses the same structure as what it builds (agents)
 
 ## The Meta-Insight

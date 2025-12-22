@@ -327,6 +327,7 @@ Agents leave proofs as traces. Future agents follow the proven paths.
 - **ASHC Core**: `spec/protocols/ashc.md` (to be created)
 - **Witness Service**: `spec/protocols/witness-primitives.md`
 - **Polynomial Agents**: `spec/principles.md` AD-002
+- **Derivation Framework**: `spec/protocols/derivation-framework.md` — Proofs as evidence for derivation confidence
 
 ---
 

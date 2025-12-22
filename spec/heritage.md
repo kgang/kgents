@@ -77,7 +77,7 @@ These papers form the conceptual DNA of kgents. Every design decision, every arc
 ```
 @article{simulacra2023,
   title={Generative Agents: Interactive Simulacra of Human Behavior},
-  author={Park, Joon Sung and O'Brien, Joseph C and Cai, Carrie J and Morris, Meredith Ringel and Liang, Percy and Bernstein, Michael S},
+  author={Joon Sung Park and Joseph C. O'Brien and Carrie J. Cai and Meredith Ringel Morris and Percy Liang and Michael S. Bernstein},
   journal={arXiv:2304.03442},
   year={2023}
 }
@@ -483,7 +483,7 @@ The following papers form the mathematical bedrock for kgents' categorical found
 |---------------|----------------|
 | Machine with ports | PolyAgent with modes |
 | Wiring diagram | Operad operation |
-| Sheaf-valued algebra | Domain-specific sheaf (TownSheaf, ProjectSheaf) |
+| Sheaf-valued algebra | Domain-specific sheaves (TownSheaf, ProjectSheaf, BrainSheaf) |
 | Global section | Coherent agent composition |
 | Restriction map | Observer-dependent projection |
 

@@ -150,11 +150,6 @@ AGENTESE Paths
 Crown Jewels (Shortcuts)
 +-------------------------------+
 | Brain           self.memory   |
-| Gestalt         world.gestalt |
-| Gardener        concept.garden|
-| Atelier         world.atelier |
-| Coalition       world.town    |
-| Park            world.park    |
 +-------------------------------+
 
 Gallery
@@ -337,11 +332,6 @@ Each Crown Jewel's visualization is a composition of Gallery primitives:
 | Jewel | Primary Primitive | Supporting Primitives |
 |-------|-------------------|----------------------|
 | Brain | CrystalVine, OrganicCrystal | GraphWidget, TableWidget |
-| Gestalt | OrganicNode, VineEdge | GraphWidget, FilterPanel |
-| Gardener | GardenVisualization | SeasonIndicator, PlotCard |
-| Atelier | ArtisanGrid, PieceCard | StreamWidget, LineageTree |
-| Coalition | Mesa, CitizenPanel | TableWidget, GraphWidget |
-| Park | PhaseTransition, MaskSelector | ConsentMeter, TimerDisplay |
 
 ### Procedural Enhancement
 

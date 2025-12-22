@@ -438,8 +438,6 @@ The Muse ONLY processes crystals, not raw events. This creates clean separation.
 | Consumer | What Muse Provides | Integration |
 |----------|-------------------|-------------|
 | **Brain** | Story arc for context | Brain can ask "what phase am I in?" |
-| **Gardener** | Tension for season hints | High tension → don't suggest transition |
-| **Atelier** | Aesthetic readings | Design suggestions contextualized |
 
 ### Events Emitted
 

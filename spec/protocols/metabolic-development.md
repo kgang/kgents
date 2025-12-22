@@ -153,9 +153,9 @@ METABOLIC_WIRING = {
         brain_crystallize_evidence,  # Evidence corpus → Brain crystal
     ],
 
-    # Gardener ↔ Morning Coffee: Voice patterns update garden
+    # Brain ↔ Morning Coffee: Voice becomes crystal
     "coffee.voice.captured": [
-        gardener_update_voice_patterns,  # Voice → Plot metadata
+        brain_capture_voice_as_crystal,  # Voice text → Memory crystal
     ],
 
     # Witness ↔ Interactive Text: Task completion creates marks

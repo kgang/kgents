@@ -63,7 +63,7 @@ Every agent is a "metaphysical fullstack agent"—a complete vertical slice:
 | Directory | Contains | Purpose |
 |-----------|----------|---------|
 | `agents/` | PolyAgent, Operad, Sheaf, Flux, D-gent | Categorical primitives |
-| `services/` | Brain, Gardener, Town, Park, Atelier | Crown Jewels (consumers) |
+| `services/` | Brain, Town, Muse, Witness, Foundry | Crown Jewels (consumers) |
 | `models/` | SQLAlchemy ORM classes | Generic table definitions |
 | `protocols/` | AGENTESE, CLI projection | Universal routing |
 

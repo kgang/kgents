@@ -78,8 +78,7 @@ This protocol embodies Kent's core principles:
 # Crown Jewel entry points
 /self.memory                        → Brain overview
 /world.town                         → Town overview
-/concept.gardener                   → Gardener dashboard
-/world.forge                        → Forge commission panel
+/world.atelier                      → Atelier commission panel
 /time.differance                    → Différance timeline
 
 # Entity views
@@ -547,14 +546,9 @@ return density === 'compact'
 | Legacy Route | AGENTESE Path |
 |--------------|---------------|
 | `/brain` | `/self.memory` |
-| `/gestalt` | `/world.codebase` |
-| `/gardener` | `/concept.gardener` |
-| `/forge` | `/world.forge` |
 | `/town` | `/world.town` |
 | `/town/citizens` | `/world.town.citizen` |
 | `/town/citizens/:id` | `/world.town.citizen.{id}` |
-| `/town/coalitions` | `/world.town.coalition` |
-| `/park` | `/world.park` |
 | `/differance` | `/time.differance` |
 
 ---

@@ -286,9 +286,9 @@ W-gent can observe test execution:
 - Render failure traces
 - Track commutative diagram verification
 
-### With F-gents (Forge)
-W-gent can monitor artifact creation:
-- Visualize forge loop stages
+### With F-gents (Foundry)
+W-gent can monitor agent compilation:
+- Visualize foundry process stages
 - Show contract synthesis
 - Display validation results
 - Render artifact lineage

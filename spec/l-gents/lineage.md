@@ -164,29 +164,29 @@ class LineageGraph:
             context=context
         )
 
-    async def record_forge(
+    async def record_creation(
         self,
         artifact_id: str,
         intent: str,
-        forger: str,
+        creator: str,
         template_id: str | None = None
     ) -> None:
         """
-        Record that F-gent forged an artifact.
+        Record that an artifact was created.
 
-        Creates special "forged_from" relationships if template used.
-        Stores intent in catalog entry (for re-forging).
+        Creates special "created_from" relationships if template used.
+        Stores intent in catalog entry.
         """
         entry = await self.registry.get(artifact_id)
-        entry.forged_by = forger
-        entry.forged_from = intent
+        entry.created_by = creator
+        entry.created_from = intent
 
         if template_id:
             await self.add_relationship(
                 source_id=artifact_id,
                 target_id=template_id,
-                relationship_type="forged_from",
-                created_by=forger,
+                relationship_type="created_from",
+                created_by=creator,
                 context={"intent": intent}
             )
 
@@ -372,30 +372,30 @@ class EvolutionStep:
     timestamp: datetime
 ```
 
-## F-gent Integration: Forge Provenance
+## Artifact Creation Provenance
 
-Track the complete creation story of F-gent artifacts:
+Track the complete creation story of artifacts:
 
 ```python
-class ForgeProvenance:
-    """Track F-gent forging history."""
+class CreationProvenance:
+    """Track artifact creation history."""
 
-    async def record_forge_attempt(
+    async def record_creation_attempt(
         self,
         intent: str,
-        phases: list[ForgePhase],
+        phases: list[CreationPhase],
         result: CatalogEntry | None,
         success: bool
-    ) -> ForgeRecord:
+    ) -> CreationRecord:
         """
-        Record a complete F-gent forge attempt.
+        Record a complete artifact creation attempt.
 
         Enables:
         - "What intents have we seen before?"
         - "How many attempts did this take?"
         - "What phase failed?"
         """
-        record = ForgeRecord(
+        record = CreationRecord(
             id=generate_id(),
             intent=intent,
             phases=phases,
@@ -404,42 +404,42 @@ class ForgeProvenance:
             timestamp=datetime.utcnow()
         )
 
-        await self.storage.store_forge_record(record)
+        await self.storage.store_creation_record(record)
 
         if result:
-            # Link artifact to forge record
+            # Link artifact to creation record
             await self.lineage.add_relationship(
                 source_id=result.id,
                 target_id=record.id,
-                relationship_type="forged_from",
-                created_by="F-gent",
+                relationship_type="created_from",
+                created_by="system",
                 context={"intent": intent}
             )
 
         return record
 
-    async def find_similar_forges(
+    async def find_similar_creations(
         self,
         intent: str,
         threshold: float = 0.8
-    ) -> list[ForgeRecord]:
+    ) -> list[CreationRecord]:
         """
-        Find past forge attempts with similar intent.
+        Find past creation attempts with similar intent.
 
-        Prevents duplicate forging: "We already built something like this."
+        Prevents duplicate creation: "We already built something like this."
         """
         intent_embedding = await self.embedder.embed(intent)
         similar = await self.vectors.search(
             vector=intent_embedding,
-            filter={"type": "forge_record"},
+            filter={"type": "creation_record"},
             threshold=threshold
         )
-        return [await self.get_forge_record(r.id) for r in similar]
+        return [await self.get_creation_record(r.id) for r in similar]
 
 @dataclass
-class ForgePhase:
-    """One phase of the forge loop."""
-    phase_name: str               # understand, contract, prototype, validate, crystallize
+class CreationPhase:
+    """One phase of the creation loop."""
+    phase_name: str               # understand, design, prototype, validate, finalize
     input_summary: str
     output_summary: str
     success: bool
@@ -447,11 +447,11 @@ class ForgePhase:
     duration_ms: int
 
 @dataclass
-class ForgeRecord:
-    """Complete record of a forge attempt."""
+class CreationRecord:
+    """Complete record of a creation attempt."""
     id: str
     intent: str
-    phases: list[ForgePhase]
+    phases: list[CreationPhase]
     result_id: str | None         # Artifact ID if successful
     success: bool
     timestamp: datetime
@@ -623,5 +623,4 @@ class LineageLog:
 
 - [catalog.md](catalog.md) - What gets tracked
 - [query.md](query.md) - How to search lineage
-- [../f-gents/artifacts.md](../f-gents/artifacts.md) - Forging that initiates lineage
 - [../d-gents/streams.md](../d-gents/streams.md) - Event sourcing for storage

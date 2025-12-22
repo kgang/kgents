@@ -405,7 +405,7 @@ For any agent genus, ask:
 
 | Aspect | Infrastructure | Composition |
 |--------|----------------|-------------|
-| **Interface** | Domain-specific | Agent[I, O] |
+| **Interface** | System-specific | Agent[I, O] |
 | **Purpose** | Manage effects | Enable composition |
 | **Category** | Effect-specific | 𝒞_Agent |
 | **Composable** | No (via >>) | Yes (via >>) |

@@ -46,7 +46,7 @@ See: AD-006 (Unified Categorical Foundation) in `spec/principles.md`
 
 All kgents genera (B-gent, D-gent, K-gent, etc.) are built on these primitives:
 
-| Domain | Polynomial | Operad | Sheaf |
+| System | Polynomial | Operad | Sheaf |
 |--------|-----------|--------|-------|
 | Agent Town | `CitizenPolynomial` | `TOWN_OPERAD` | `TownSheaf` |
 | N-Phase | `NPhasePolynomial` | `NPHASE_OPERAD` | `ProjectSheaf` |

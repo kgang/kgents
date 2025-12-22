@@ -277,8 +277,8 @@ Every Crown Jewel gains trace visibility:
 # Brain: "Why did this memory crystallize this way?"
 await logos("time.trace.heritage", observer, output_id=crystal.id)
 
-# Gardener: "What alternatives were considered for this plot?"
-await logos("time.trace.ghosts", observer, scope="world.garden.plot.abc")
+# Example: "What alternatives were considered for this entity?"
+await logos("time.trace.ghosts", observer, scope="world.entity.abc")
 
 # Town: "What coalitions almost formed but didn't?"
 await logos("time.branch.compare", observer, chosen=coalition_a, ghost=coalition_b)
@@ -335,11 +335,11 @@ await logos("time.branch.compare", observer, chosen=coalition_a, ghost=coalition
 ```
 $ kg time.trace.why dec_abc123
 
-▶ dec_abc123: seq(Brain, Gardener)
-│ Context: "Cultivate memory"
-├── ✓ seq(Brain, Gardener) [CHOSEN]
-├── ░ par(Brain, Gardener) [GHOST: "Order matters"]
-└── ░ Brain only [GHOST: "Needs pruning"]
+▶ dec_abc123: seq(AgentA, AgentB)
+│ Context: "Sequential composition"
+├── ✓ seq(AgentA, AgentB) [CHOSEN]
+├── ░ par(AgentA, AgentB) [GHOST: "Order matters"]
+└── ░ AgentA only [GHOST: "Simplified"]
     │
     └── Parent: dec_xyz789
 ```
@@ -350,8 +350,8 @@ $ kg time.trace.why dec_abc123
 {
   "trace_id": "dec_abc123",
   "operation": "seq",
-  "inputs": ["Brain", "Gardener"],
-  "output": "BrainGardener",
+  "inputs": ["AgentA", "AgentB"],
+  "output": "ComposedAgent",
   "context": "Cultivate memory",
   "alternatives": [
     {"operation": "par", "reason": "Order matters", "explorable": true},

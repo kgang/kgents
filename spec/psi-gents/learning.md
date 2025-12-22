@@ -86,8 +86,8 @@ What features of the problem predict metaphor success?
 class ProblemFeatures:
     """Features extracted from a problem for learning."""
 
-    domain: str                    # Problem domain
-    domain_cluster: int            # Embedding-based cluster ID
+    problem_type: str              # Problem type
+    type_cluster: int              # Embedding-based cluster ID
     complexity: float              # 0.0 to 1.0
     constraint_count: int          # Number of constraints
     description_length: int        # Rough problem size
@@ -97,8 +97,8 @@ class ProblemFeatures:
 def extract_features(problem: Problem) -> ProblemFeatures:
     """Extract learning features from a problem."""
 
-    # Domain cluster via simple hashing (or actual clustering)
-    domain_cluster = hash(problem.domain) % 100
+    # Type cluster via simple hashing (or actual clustering)
+    type_cluster = hash(problem.domain) % 100
 
     # Embedding cluster if available
     embedding_cluster = None
@@ -106,8 +106,8 @@ def extract_features(problem: Problem) -> ProblemFeatures:
         embedding_cluster = cluster_embedding(problem.embedding)
 
     return ProblemFeatures(
-        domain=problem.domain,
-        domain_cluster=domain_cluster,
+        problem_type=problem.domain,
+        type_cluster=type_cluster,
         complexity=problem.complexity,
         constraint_count=len(problem.constraints),
         description_length=len(problem.description),
@@ -158,12 +158,12 @@ class FrequencyModel:
     """Simple frequency-based model."""
 
     counts: dict[tuple[str, str], tuple[int, int]] = field(default_factory=dict)
-    # (domain, metaphor_id) → (successes, total)
+    # (problem_type, metaphor_id) → (successes, total)
 
     min_samples: int = 5
 
     def predict(self, features: ProblemFeatures, metaphor_id: str) -> float:
-        key = (features.domain, metaphor_id)
+        key = (features.problem_type, metaphor_id)
         if key not in self.counts:
             return 0.5  # Prior: uncertain
         successes, total = self.counts[key]
@@ -172,7 +172,7 @@ class FrequencyModel:
         return successes / total
 
     def update(self, feedback: Feedback) -> None:
-        key = (feedback.problem_features.domain, feedback.metaphor_id)
+        key = (feedback.problem_features.problem_type, feedback.metaphor_id)
         successes, total = self.counts.get(key, (0, 0))
         if feedback.outcome == Outcome.SUCCESS:
             successes += 1
@@ -207,7 +207,7 @@ class LinearBanditModel:
             features.description_length / 1000.0,
             float(features.has_embedding),
             (features.embedding_cluster or 0) / 100.0,
-            features.domain_cluster / 100.0,
+            features.type_cluster / 100.0,
             # Add bias term
             1.0,
             # Padding
@@ -250,7 +250,7 @@ Balance exploration and exploitation properly.
 class ThompsonSamplingModel:
     """Thompson sampling for exploration/exploitation."""
 
-    # Per (domain, metaphor) Beta distribution parameters
+    # Per (problem_type, metaphor) Beta distribution parameters
     alphas: dict[tuple[str, str], float] = field(default_factory=dict)
     betas: dict[tuple[str, str], float] = field(default_factory=dict)
 
@@ -264,7 +264,7 @@ class ThompsonSamplingModel:
 
     def predict(self, features: ProblemFeatures, metaphor_id: str) -> float:
         """Return mean of Beta distribution (expected reward)."""
-        key = (features.domain, metaphor_id)
+        key = (features.problem_type, metaphor_id)
         alpha, beta = self._get_params(key)
         return alpha / (alpha + beta)
 
@@ -272,7 +272,7 @@ class ThompsonSamplingModel:
         self, features: ProblemFeatures, metaphor_id: str
     ) -> tuple[float, float]:
         """Return mean and standard deviation."""
-        key = (features.domain, metaphor_id)
+        key = (features.problem_type, metaphor_id)
         alpha, beta = self._get_params(key)
         mean = alpha / (alpha + beta)
         variance = (alpha * beta) / ((alpha + beta) ** 2 * (alpha + beta + 1))
@@ -280,12 +280,12 @@ class ThompsonSamplingModel:
 
     def sample(self, features: ProblemFeatures, metaphor_id: str) -> float:
         """Sample from the posterior (for Thompson sampling)."""
-        key = (features.domain, metaphor_id)
+        key = (features.problem_type, metaphor_id)
         alpha, beta = self._get_params(key)
         return np.random.beta(alpha, beta)
 
     def update(self, feedback: Feedback) -> None:
-        key = (feedback.problem_features.domain, feedback.metaphor_id)
+        key = (feedback.problem_features.problem_type, feedback.metaphor_id)
         alpha, beta = self._get_params(key)
 
         # Binary reward for Beta distribution
@@ -349,7 +349,7 @@ Also learn what abstraction level works for different problem types.
 class AbstractionModel:
     """Learn optimal abstraction level per problem type."""
 
-    # (domain_cluster, complexity_bucket) → successful abstraction levels
+    # (type_cluster, complexity_bucket) → successful abstraction levels
     history: dict[tuple[int, int], list[float]] = field(default_factory=dict)
 
     def _bucket_complexity(self, complexity: float) -> int:
@@ -358,7 +358,7 @@ class AbstractionModel:
 
     def suggest_abstraction(self, features: ProblemFeatures) -> float:
         """Suggest abstraction level based on history."""
-        key = (features.domain_cluster, self._bucket_complexity(features.complexity))
+        key = (features.type_cluster, self._bucket_complexity(features.complexity))
 
         if key not in self.history or not self.history[key]:
             # Default: scale with complexity
@@ -373,7 +373,7 @@ class AbstractionModel:
             return
 
         key = (
-            feedback.problem_features.domain_cluster,
+            feedback.problem_features.type_cluster,
             self._bucket_complexity(feedback.problem_features.complexity)
         )
 
@@ -430,10 +430,10 @@ def cold_start_retrieval(
     if problem.embedding:
         return retrieve_by_embedding(problem, corpus)
 
-    # Fall back to domain matching
+    # Fall back to keyword matching
     scored = []
     for metaphor in corpus:
-        # Score by domain keyword overlap
+        # Score by keyword overlap
         problem_words = set(problem.description.lower().split())
         metaphor_words = set(metaphor.description.lower().split())
         overlap = len(problem_words & metaphor_words)
@@ -509,7 +509,7 @@ def compute_learning_metrics(
 
     # Model coverage
     covered = sum(1 for m in corpus if model.predict(
-        ProblemFeatures(domain="test", domain_cluster=0, complexity=0.5,
+        ProblemFeatures(problem_type="test", type_cluster=0, complexity=0.5,
                        constraint_count=0, description_length=100,
                        has_embedding=False, embedding_cluster=None),
         m.id
@@ -529,7 +529,7 @@ def compute_learning_metrics(
 
 | Model Level | Complexity | Best For |
 |-------------|------------|----------|
-| Frequency | Simple | Small corpus, stable domains |
+| Frequency | Simple | Small corpus, stable problem types |
 | Linear Bandit | Medium | Generalizing across problems |
 | Thompson Sampling | Medium | Balancing exploration/exploitation |
 | Neural Bandit | High | Large corpus, complex patterns |

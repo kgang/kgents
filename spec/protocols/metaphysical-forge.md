@@ -466,65 +466,7 @@ await logos.invoke("self.memory.capture", {
 
 **Why**: Artifacts are knowledge. They belong in the cathedral.
 
-### 4.2 Gardener Integration
-
-Each commission creates a plot in the Garden:
-
-```python
-# On commission start
-plot = await logos.invoke("world.garden.plot.create", {
-    "name": commission.name,
-    "crown_jewel": "forge",
-    "season": GardenSeason.SPROUTING,
-})
-
-# During development
-gesture = TendingGesture(
-    verb=TendingVerb.WATER,
-    target=plot.id,
-    tone=0.7,
-)
-await logos.invoke("world.garden.tend", gesture)
-```
-
-**Why**: Development is cultivation. The Garden tracks progress across sessions.
-
-### 4.3 Gestalt Integration
-
-All generated code is verified for architectural coherence:
-
-```python
-# After Smith generates code
-coherence = await logos.invoke("world.gestalt.verify", {
-    "module": artifact.module_path,
-    "check": ["dependencies", "layers", "patterns"],
-})
-
-if not coherence.is_valid:
-    raise ArchitectureViolation(coherence.violations)
-```
-
-**Why**: No agent should break the system's coherence.
-
-### 4.4 Coalition Integration
-
-Multi-artisan commissions use Coalition for coordination:
-
-```python
-# For complex commissions
-coalition = await logos.invoke("world.coalition.form", {
-    "task": commission.intent,
-    "agents": ["architect", "smith", "herald"],
-    "strategy": "sequential",  # or "parallel" for independent work
-})
-
-async for result in coalition.execute():
-    yield ForgeUpdate(artisan=result.agent, output=result.artifact)
-```
-
-**Why**: Complex agents require coordinated effort.
-
-### 4.5 Town Integration
+### 4.2 Town Integration
 
 Citizens can observe Forge activity (when Kent permits):
 
@@ -686,16 +628,13 @@ Reserved for future iterations:
 
 ### Phase 6: Cross-Jewel Wiring (Week 17-20)
 
-**Goal**: Forge integrates with all Crown Jewels.
+**Goal**: Forge integrates with Crown Jewels.
 
 **Tasks**:
 - [ ] Brain: Artifact capture on completion
-- [ ] Gardener: Plot creation for commissions
-- [ ] Gestalt: Architecture coherence verification
-- [ ] Coalition: Multi-artisan coordination
 - [ ] Town: Visibility and reactions
 
-**Exit Criteria**: Full commission exercises all jewels.
+**Exit Criteria**: Full commission exercises Crown Jewel integration.
 
 ---
 
@@ -722,7 +661,7 @@ Reserved for future iterations:
 |-----------|--------|
 | **End-to-end** | Commission → Working agent in <1 hour |
 | **Quality** | 100% of artifacts pass Sentinel + Witness |
-| **Integration** | All 6 Crown Jewels touched per commission |
+| **Integration** | Crown Jewels touched per commission |
 | **Test coverage** | Generated tests achieve >90% coverage |
 
 ### 7.2 Experiential
@@ -741,7 +680,7 @@ Reserved for future iterations:
 | **Autopoietic** | Forge can build Forge artisans |
 | **Composable** | Artisans compose via `>>` operator |
 | **Categorical** | All agents follow PolyAgent + Operad + Sheaf |
-| **Coherent** | Gestalt reports zero violations |
+| **Coherent** | Code follows metaphysical fullstack patterns |
 
 ---
 
@@ -916,7 +855,7 @@ class CommissionRendering:
 
 1. **Architect artisan** - Actual categorical design generation via LLM
 2. **Streaming progress** - SSE for real-time artisan work visibility
-3. **Cross-jewel wiring** - Brain capture, Gardener plots on commission
+3. **Cross-jewel wiring** - Brain capture on commission
 
 ### Test Coverage
 

@@ -784,8 +784,8 @@ Stable selectors for Playwright tests, in order of preference:
 
 1. **aria-label** - `button[aria-label="Teaching Mode: ON"]`
 2. **data-testid** - `[data-testid="citizen-panel"]`
-3. **Specific role + name** - `getByRole('heading', { name: /Coalition Graph/i })`
-4. **Structural** - `h2:has-text("Coalitions")` with context
+3. **Specific role + name** - `getByRole('heading', { name: /Town Graph/i })`
+4. **Structural** - `h2:has-text("Citizens")` with context
 5. **Text content (last resort)** - `getByText(/Alice/)`
 
 **Anti-Pattern**: Never use bare `getByText()` for words that appear multiple times on the page.

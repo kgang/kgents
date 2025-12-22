@@ -1082,7 +1082,7 @@ agentese_v1_deprecated_calls{path}
 - [ ] `kg forest` works (legacy)
 - [ ] Composition with `>>` feels natural
 - [ ] New contributor understands API in 10 minutes
-- [ ] The Gardener works entirely through AGENTESE
+- [ ] All Crown Jewels work entirely through AGENTESE
 
 ---
 

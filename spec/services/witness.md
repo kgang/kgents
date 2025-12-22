@@ -37,7 +37,7 @@ The Witness is the **unified passive observer**—it captures, maps, and crystal
                                           │
                                   ┌───────┼───────┐
                                   ▼       ▼       ▼
-                               Brain  Gardener  Muse
+                               Brain  Muse
 ```
 
 The Witness occupies `time.*` context—it is fundamentally temporal. Everything flows through it into persistent memory.
@@ -304,9 +304,7 @@ class WitnessFlux(FluxAgent[WitnessState, SystemEvent, ExperienceCrystal]):
 | Consumer | What Witness Provides | Integration |
 |----------|----------------------|-------------|
 | **Brain** | ExperienceCrystals → Engrams | `brain.capture_from_witness()` |
-| **Gardener** | Session activity → Season transitions | Season.plasticity_from_witness() |
-| **Gestalt** | Heat map for architecture | `gestalt.overlay_heat()` |
-| **Atelier** | Territory for context | `atelier.context_from_witness()` |
+| **Town** | Citizen activity → Event traces | Town.record_witness() |
 | **Muse** | Pattern detection input | Direct subscription |
 
 ### Events Emitted

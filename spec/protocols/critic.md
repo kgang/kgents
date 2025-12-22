@@ -307,9 +307,9 @@ CRITIC_DEFAULTS = {
 }
 ```
 
-### 6.2 Per-Domain Calibration
+### 6.2 Per-Context Calibration
 
-Different creative domains may weight criteria differently:
+Different creative contexts may weight criteria differently:
 
 ```python
 # Art (emphasize novelty and surprise)

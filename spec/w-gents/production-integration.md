@@ -165,8 +165,6 @@ W-gents adapt their visualization to context:
 
 ### Cross-Genus Workflows
 
-**F-gent Forge**: Show forge phases (Intent → Contract → Prototype → Validate → Crystallize)
-
 **H-gent Dialectic**: Show synthesis decision tree (Preserve/Negate/Elevate strategies)
 
 **D-gent Persistence**: Show state timeline, history playback, diff snapshots

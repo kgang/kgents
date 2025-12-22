@@ -1,6 +1,6 @@
 # Agent Foundry
 
-> *"Forge agents from intent, project them anywhere, graduate them to permanence."*
+> *"Compile agents from intent, project them anywhere, graduate them to permanence."*
 
 **Status:** Draft
 **Implementation:** `impl/claude/services/foundry/` (planned)
@@ -20,7 +20,7 @@ The Agent Foundry is a **synthesis** of two powerful subsystems:
 
 The Foundry unifies them: **J-gent's MetaArchitect generates the agent definition. Alethic Projectors compile it to any target.**
 
-Why does this need to exist? Because the ability to forge a specialized agent from intent, project it to the right runtime, and graduate it to permanence based on proven behavior — this is the missing link between "I need an agent" and "I have an agent running."
+Why does this need to exist? Because the ability to compile a specialized agent from intent, project it to the right runtime, and graduate it to permanence based on proven behavior — this is the missing link between "I need an agent" and "I have an agent running."
 
 ---
 
@@ -98,7 +98,7 @@ Each stage is a morphism with clear input/output types:
 ```python
 FOUNDRY_POLYNOMIAL = PolyAgent[FoundryState, ForgeEvent, FoundryOutput](
     positions=frozenset({
-        FoundryState.IDLE,           # Ready to forge
+        FoundryState.IDLE,           # Ready to compile
         FoundryState.CLASSIFYING,    # Reality classification
         FoundryState.GENERATING,     # MetaArchitect at work
         FoundryState.VALIDATING,     # Chaosmonger filtering
@@ -107,7 +107,7 @@ FOUNDRY_POLYNOMIAL = PolyAgent[FoundryState, ForgeEvent, FoundryOutput](
         FoundryState.PROMOTING,      # Judge approval for permanence
     }),
     directions=lambda state: {
-        FoundryState.IDLE: {"forge", "promote", "inspect"},
+        FoundryState.IDLE: {"compile", "promote", "inspect"},
         FoundryState.CLASSIFYING: {"classified", "abort"},
         FoundryState.GENERATING: {"generated", "failed"},
         FoundryState.VALIDATING: {"stable", "unstable"},
@@ -275,20 +275,20 @@ K8sProjector (deployed)
 ```python
 @node(
     path="self.foundry",
-    description="Agent Foundry — forge ephemeral agents from intent",
+    description="Agent Foundry — compile ephemeral agents from intent",
     contracts={
         "manifest": Response(FoundryManifestResponse),
-        "forge": Contract(ForgeRequest, CompiledAgentResponse),
+        "compile": Contract(CompileRequest, CompiledAgentResponse),
         "inspect": Contract(InspectRequest, AgentInspection),
         "promote": Contract(PromoteRequest, PromotionDecision),
-        "history": Response(ForgeHistoryResponse),
+        "history": Response(CompileHistoryResponse),
         "cache": Response(CacheStatusResponse),
     },
     effects=["invokes:llm", "writes:cache", "writes:spec"],
     affordances={
         "guest": ["manifest"],
         "observer": ["manifest", "inspect", "history"],
-        "participant": ["manifest", "forge", "inspect", "history"],
+        "participant": ["manifest", "compile", "inspect", "history"],
         "architect": ["*"],
     },
 )
@@ -299,17 +299,17 @@ K8sProjector (deployed)
 | Aspect | Request | Response | Description |
 |--------|---------|----------|-------------|
 | `manifest` | — | FoundryManifestResponse | Foundry capabilities, projector registry |
-| `forge` | ForgeRequest | CompiledAgentResponse | Forge ephemeral agent from intent |
+| `compile` | CompileRequest | CompiledAgentResponse | Compile ephemeral agent from intent |
 | `inspect` | InspectRequest | AgentInspection | Inspect cached agent capabilities |
 | `promote` | PromoteRequest | PromotionDecision | Evaluate agent for promotion |
-| `history` | — | ForgeHistoryResponse | Recent forge operations |
+| `history` | — | CompileHistoryResponse | Recent compile operations |
 | `cache` | — | CacheStatusResponse | Cache size, hit rate, entries |
 
 ### CLI Interface
 
 ```bash
-kg foundry forge "Parse CloudWatch logs and extract Lambda cold starts"
-kg foundry forge --target marimo "Interactive data exploration agent"
+kg foundry compile "Parse CloudWatch logs and extract Lambda cold starts"
+kg foundry compile --target marimo "Interactive data exploration agent"
 kg foundry inspect <cache_key>
 kg foundry promote <cache_key>
 kg foundry cache status
@@ -341,14 +341,14 @@ class AgentFoundry:
         self.chaosmonger = chaosmonger
         self.projectors = projector_registry
 
-    async def forge(
+    async def compile(
         self,
         intent: str,
         context: dict | None = None,
         constraints: Constraints | None = None,
     ) -> CompiledAgent:
         """
-        Forge an agent on demand.
+        Compile an agent on demand.
 
         1. Classify reality to determine approach
         2. Generate agent definition via MetaArchitect
@@ -453,8 +453,8 @@ See `spec/protocols/alethic-projection.md` for full projector composition semant
 
 ### Cross-Jewel Integration
 
-| Jewel | Integration | Direction |
-|-------|-------------|-----------|
+| System | Integration | Direction |
+|--------|-------------|-----------|
 | **J-gent** | MetaArchitect generates (Nucleus, Halo) | Foundry consumes |
 | **Alethic Projector** | Compiles to target | Foundry consumes |
 | **Judge** | Approves promotion | Foundry consumes |

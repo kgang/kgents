@@ -203,9 +203,7 @@ Classify features by trajectory:
 KNOWN_FEATURES = {
     # Crown Jewels (expected: THRIVING or STABLE)
     "Brain": ["impl/claude/services/brain/*", "spec/m-gents/*"],
-    "Gardener": ["impl/claude/services/gardener/*", "spec/protocols/gardener*.md"],
     "Town": ["impl/claude/services/town/*", "spec/town/*"],
-    "Park": ["impl/claude/services/park/*"],
 
     # Infrastructure (expected: STABLE)
     "PolyAgent": ["impl/claude/agents/poly/*", "spec/architecture/polyfunctor.md"],
@@ -391,7 +389,7 @@ async def generate_history_crystals(trajectories: list[FeatureTrajectory]) -> li
 | Pattern | Success Rate | Example |
 |---------|--------------|---------|
 | polynomial_definition | 0.85 | K-gent SOUL_POLYNOMIAL |
-| agentese_integration | 0.78 | Gardener logos.md |
+| agentese_integration | 0.78 | Brain integration |
 | spec_first_development | 0.72 | Brain Crown Jewel |
 | operad_operations | 0.68 | Town TOWN_OPERAD |
 

@@ -249,32 +249,6 @@ A log panel showing the "accursed share"—the waste, errors, and tangents that 
 
 ---
 
-## The Forge View
-
-A second mode for pipeline composition:
-
-```
-MODE: COMPOSITION
-
-┌─ Inventory (Archetypes) ─┐    ┌─ Pipeline (Flux Chain) ──────┐
-│                          │    │                               │
-│ [A] Architect    lvl.4   │    │ [ Ground ]                    │
-│ [B] Builder      lvl.2   │    │     ↓                         │
-│ [V] Validator    lvl.8   │    │ K-Gent (Persona)              │
-│                          │    │     ↓                         │
-│ DRAG TO PIPELINE         │    │ + Slot Rune                   │
-│                          │    │     ↓                         │
-└──────────────────────────┘    │ Judge (Taste)                 │
-                                │                               │
-                                │ Thinking Budget: 12,040 tokens│
-                                │ Est. Entropy Cost: 0.4/tick   │
-                                └───────────────────────────────┘
-```
-
-**Purpose**: Visual composition of agent pipelines before execution.
-
----
-
 ## W-gent Integration
 
 ### The [observe] Action
@@ -405,8 +379,7 @@ Navigation:
 
 Views:
   1           Field view
-  2           Forge view
-  3           Timeline view
+  2           Timeline view
   +/-         Zoom in/out
 
 Actions:

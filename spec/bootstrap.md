@@ -354,33 +354,116 @@ The principles are the fixed point of judging principle-candidates by themselves
 
 ### Generating Agent Genera
 
-```
-A-gents = Compose(Ground, abstract_patterns)
-        | Compose(Ground, creativity_support)
-B-gents = Compose(Ground, scientific_method)
-C-gents = {Id, Compose, Fix}  // C-gents ARE bootstrap agents
-D-gents = {DataAgent (infrastructure), Symbiont (bootstrap agent)}
-H-gents = {Contradict, Sublate, introspection_targets}
-        // Operational modes derived from Contradict/Sublate composition:
-        //   HegelAgent: Single-pass synthesis
-        //   ContinuousDialectic: Recursive application until stability
-        //   BackgroundDialectic: Monitoring mode (detect without synthesize)
-        //   FullIntrospection: Hegel → Lacan → Jung pipeline
-K-gent = Ground() projected through persona_schema
-```
-
-### Generating D-gents
+From the seven bootstrap agents, each agent genus derives through specific compositions:
 
 ```
-DataAgent = StateInfrastructure  // Not derived (new primitive at infrastructure level)
+// CATEGORICAL FOUNDATION (C-gents ARE the bootstrap)
+C-gents = {Id, Compose, Fix}
+        // These are irreducible—the foundation of all composition
+
+// POLYNOMIAL STATE MACHINES (PolyAgent pattern)
+PolyAgent[S, A, B] = Fix(λp.
+  let machine = Compose(directions: S → Set[A], transition: (S, A) → (S, B))
+  in if Judge(machine, categorical_laws) then p else refine(p)
+)
+// Used by: CitizenPolynomial (Town), WitnessPolynomial, SOUL_POLYNOMIAL
+
+// DATA & STATE (D-gents)
+D-gents = DataBus ⊕ BusEnabledDgent ⊕ StorageProvider
+        // DataBus: Compose(EventEmitter, Subscriber) with backpressure
+        // Three-layer: DataBus → SynergyBus → EventBus
+        // wire_data_to_synergy(): bridges storage events to Crown Jewel coordination
+
+// DIALECTIC (H-gents)
+H-gents = {Contradict, Sublate} >> introspection_targets
+        // TraceMonoid: Compose(WiringTrace, Alternative) preserving ghosts
+        // Différance Engine: "what IS" alongside "what ALMOST WAS"
+        // GhostHeritageDAG: graph of choices + rejected alternatives
+
+// FLOW MODALITIES (F-gents)
+F-gents = Fix(λf.
+  Compose(modality: ChatFlow | ResearchFlow | CollaborationFlow,
+          context: ContextWindow, memory: M-gent)
+) where FLOW_OPERAD.verify_laws()
+        // ChatFlow: Turn-based with context management
+        // ResearchFlow: Tree of thought (HypothesisTree)
+        // CollaborationFlow: Multi-agent blackboard
+
+// STREAM PROCESSING (Flux)
+Flux = Fix applied to streams
+     = Fix(λs. map_async(agent.invoke, s), equality: exhausted)
+        // FluxAgent, FluxFunctor, FluxPipeline, Perturbation
+        // "Without Flux, all agents are corpses that only move when poked"
+
+// SOUL & GOVERNANCE (K-gent)
+K-gent = Ground() >> persona_schema >> SemanticGatekeeper
+        // KgentSoul: middleware of consciousness
+        // HypnagogicCycle: dream/consolidation phase
+        // PersonaGarden: pattern storage with degradation
+
+// MEMORY (M-gent)
+M-gent = Compose(HolographicMemory, MemoryCrystal, SemanticRouter)
+        // Compression: budget-aware context management
+        // Stigmergy: PheromoneField for coordination
+        // Cartography: HoloMaps for spatial memory
+
+// TOWN (Multi-Agent Simulation)
+Town = TownFlux(
+  citizens: [CitizenPolynomial],
+  environment: TownEnvironment,
+  dialogue: DialogueEngine
+) where TOWN_OPERAD.verify_laws()
+        // InhabitSession: player inhabits citizen
+        // CoalitionFormation: emergent group dynamics
+
+// REACTIVE UI (I-gents)
+I-gents = Compose(Signal, Computed, Effect) >> ProjectionTarget
+        // Signal[T]: observable state
+        // Computed[T]: derived state
+        // KgentsWidget[S]: base widget with to_cli(), to_marimo(), to_json()
+
+// WITNESS (Autonomous Agency)
+Witness = WitnessPolynomial(trust: L0→L3) >> GitWatcher >> CrownJewelInvoker
+        // L0: Observe only (suggest)
+        // L1: Read + non-destructive (run tests)
+        // L2: Write + reversible (git commit)
+        // L3: Full Kent (push, PR, invoke any jewel)
+```
+
+### Crown Jewels as Derived Systems
+
+Crown Jewels are domain-specific compositions of the categorical foundation:
+
+```
+Brain     = M-gent >> Différance >> AGENTESE("self.memory.*")
+          // Knowledge topology, trace-aware memory
+
+```
+
+### Generating D-gents (Event-Driven Infrastructure)
+
+```
+// DataBus: The reactive backbone
+DataBus = Compose(EventEmitter, Subscriber, Backpressure)
+        // Events: PUT, DELETE, UPGRADE, DEGRADE
+        // Pattern: bus.subscribe(DataEventType.PUT, handler)
+
+// BusEnabledDgent: Storage that emits
+BusEnabledDgent = Compose(StorageProvider, DataBus)
+                // Every mutation broadcasts to subscribers
+
+// SynergyBus: Cross-jewel coordination
+SynergyBus = Compose(DataBus, JewelRouter)
+           // 60+ event types for Crown Jewel communication
+           // wire_data_to_synergy() bridges the layers
 
 Symbiont[I, O, S] = Fix(λs.
-  let stateful = Compose(logic: (I, S) → (O, S), memory: DataAgent[S])
+  let stateful = Compose(logic: (I, S) → (O, S), memory: BusEnabledDgent[S])
   in if Judge(stateful, composability) then s else refine(s)
 ) : Agent[I, O]
 ```
 
-**Key Insight**: Symbiont is derivable from Compose + DataAgent. DataAgent itself is a new primitive at the infrastructure level, but Symbiont (the composition layer) IS a bootstrap agent via the State Monad Transformer pattern.
+**Key Insight**: The three-layer bus architecture (DataBus → SynergyBus → EventBus) enables loose coupling while maintaining coherence. Crown Jewels communicate through events, not direct calls.
 
 ### Generating the Spec
 
@@ -1058,4 +1141,5 @@ Autopoiesis Score = (lines generated by kgents) / (total lines)
 - [agents/composition.md](agents/composition.md) - Compose formalized
 - [h-gents/hegel.md](h-gents/hegel.md) - Sublate in detail
 - [k-gent/persona.md](k-gent/persona.md) - Ground's primary output
+- [protocols/derivation-framework.md](protocols/derivation-framework.md) - Bootstrap as axiom base for derived agents
 - `AUTONOMOUS_BOOTSTRAP_PROTOCOL.md` - Post-mortem and anti-patterns

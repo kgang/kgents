@@ -285,7 +285,7 @@ from services.morpheus import MorpheusGateway
 services/morpheus/
 ├── __init__.py           # Public API exports
 ├── node.py               # @node("world.morpheus") - AGENTESE node
-├── persistence.py        # Domain semantics layer
+├── persistence.py        # Service semantics layer
 ├── gateway.py            # Routing logic (transport-agnostic)
 ├── types.py              # OpenAI-compatible request/response types
 ├── adapters/

@@ -12,7 +12,7 @@ UI code often contains repetitive conditional logic based on screen size, user r
 
 ## Discovery
 
-The Gestalt Elastic refactor revealed that `isMobile`, `isTablet`, and `isDesktop` checks throughout the codebase were all manifestations of a single dimension: **density**. This is not unique to screen size—the same pattern appears wherever conditionals cluster.
+UI refactoring revealed that `isMobile`, `isTablet`, and `isDesktop` checks throughout the codebase were all manifestations of a single dimension: **density**. This is not unique to screen size—the same pattern appears wherever conditionals cluster.
 
 ```
 Screen Density ≅ Observer Umwelt ≅ Projection Target ≅ Content Detail Level

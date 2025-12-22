@@ -33,7 +33,7 @@ The synthesis is valid: implementation wisdom has been elevated to spec-level pr
    - [b-gents/](b-gents/) - Bio + Banker (resource-constrained systems)
    - [agents/](agents/) - Categorical Foundations (composition, functors, monads)
    - [d-gents/](d-gents/) - Data Agents (state, memory, persistence)
-   - [f-gents/](f-gents/) - Forge (artifact synthesis)
+   - [f-gents/](f-gents/) - Function/Flux (streaming, continuous agents)
    - [h-gents/](h-gents/) - Hegelian/Dialectic (introspection)
    - [i-gents/](i-gents/) - Interface (Living Codex Garden visualization)
    - [j-gents/](j-gents/) - JIT Agent Intelligence (lazy evaluation, JIT compilation)

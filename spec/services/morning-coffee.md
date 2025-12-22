@@ -306,7 +306,6 @@ kg coffee capture      # Just movement 4 (voice capture)
 | **Muse** | Story arc context for Menu suggestions | Coffee consumes |
 | **K-gent** | Morning voice feeds personality | Coffee produces |
 | **Brain** | Captures stored as crystals | Coffee produces |
-| **Gardener** | Season context for challenge gradients | Coffee consumes |
 | **Anti-Sausage** | Morning voice becomes reference | Coffee produces |
 
 ### Events Emitted
@@ -332,10 +331,11 @@ CoffeeRitualExited(session_id: str, at_movement: str)  # Early exit
 ├─────────────────────────────────────────────────────────────────┤
 │  ◉ 3 files changed → Brain persistence hardening                │
 │  ◉ New test: test_semantic_consistency.py                       │
-│  ◉ UI: Gestalt2D now renders crystalline facets                 │
+│  ◉ UI: Town visualization improvements                          │
 │                                                                  │
 │  🌿 Growing:   Brain 100% → stable                              │
-│  🌱 Sprouting: Gestalt 85% → crystalline rendering              │
+│  🌱 Sprouting: Town 85% → visualization complete                │
+│  🌱 Sprouting: Atelier 75% → commission flow active             │
 │  🌰 Seeds:     ASHC compiler → L0 kernel designed               │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -375,7 +375,8 @@ CoffeeRitualExited(session_id: str, at_movement: str)  # Early exit
 │                                                                  │
 │  🎯 FOCUSED (clear objective, moderate depth)                   │
 │     • Wire ASHC L0 kernel to existing AST                       │
-│     • Complete Gestalt crystalline facet interaction            │
+│     • Complete Town citizen interaction patterns                │
+│     • Complete Brain crystalline facet interaction              │
 │     • Implement one ASHC pass                                   │
 │                                                                  │
 │  🔥 INTENSE (deep work, high cognitive load)                    │

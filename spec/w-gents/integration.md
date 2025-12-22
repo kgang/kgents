@@ -197,27 +197,27 @@ pytest tests/ --kgents-observe
 
 ---
 
-## Integration with F-gents (Forge)
+## Integration with F-gents (Foundry)
 
-W-gents monitor artifact creation through forge loop.
+W-gents monitor agent compilation through foundry process.
 
-### Use Case: Forging New Agent
+### Use Case: Compiling New Agent
 
 ```bash
-kgents forge --intent "Summarize papers for executives" --observe
+kgents foundry forge --intent "Summarize papers for executives" --observe
 ```
 
 **W-gent Dashboard**:
 
 ```
-┌─ forge :: summarizer ─────────────────────────────┐
+┌─ foundry :: summarizer ───────────────────────────┐
 │                                                   │
-│ ┌─ Forge Loop ───────────────────────────────┐   │
+│ ┌─ Foundry Process ──────────────────────────┐   │
 │ │ ✓ 1. Understand (intent analysis)    2.1s  │   │
 │ │ ✓ 2. Contract (interface synthesis)  1.8s  │   │
 │ │ ⏳ 3. Prototype (code generation)     ...   │   │
 │ │ ⏸ 4. Validate (test execution)             │   │
-│ │ ⏸ 5. Crystallize (artifact finalization)   │   │
+│ │ ⏸ 5. Crystallize (agent finalization)      │   │
 │ └───────────────────────────────────────────┘   │
 │                                                   │
 │ ┌─ Generated Contract ───────────────────────┐   │

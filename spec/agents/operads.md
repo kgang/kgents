@@ -90,9 +90,9 @@ seq(id, a) = a = seq(a, id)
 
 ---
 
-## Domain Operads
+## Specialized Operads
 
-Domain operads **extend** AGENT_OPERAD with domain-specific operations.
+Specialized operads **extend** AGENT_OPERAD with context-specific operations.
 
 ### Soul Operad (K-gent)
 

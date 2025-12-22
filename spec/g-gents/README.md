@@ -317,19 +317,6 @@ Pipeline: G >> J
 
 When a Tongue needs an interpreter, J-gent JIT-compiles one from the semantic specification. The interpreter is **ephemeral**—created on demand, garbage collected after use.
 
-### F-gents (Forge)
-
-**The Spellbook**: F-gent uses G-gent to create "Spells" (reusable DSL scripts).
-
-```
-F_gent: Intent → Artifact
-G_gent: Domain → Tongue (for artifact's interface)
-
-F-gent invokes G-gent during Contract synthesis
-```
-
-When F-gent forges an artifact, G-gent defines the artifact's command language. The `.alo.md` artifact includes the Tongue definition alongside implementation.
-
 ### L-gents (Librarian)
 
 **The Vocabulary Index**: L-gent catalogs Tongues for discovery.
@@ -604,7 +591,6 @@ A G-gent implementation is successful if:
 - ✓ **Round-Trip Parsing**: `parse(render(ast)) == ast` for all valid inputs
 - ✓ **Level Flexibility**: Supports Schema, Command, and Recursive levels
 - ✓ **Domain Discovery**: L-gent can find Tongues by domain/constraint
-- ✓ **Contract Integration**: F-gent uses G-gent for interface languages
 
 ---
 
@@ -717,7 +703,6 @@ When G-gent (Structure) meets B-gent (Resources), grammar becomes **economic inf
 - [tongue.md](tongue.md) - Tongue artifact format
 - [../p-gents/](../p-gents/) - Parser integration
 - [../j-gents/](../j-gents/) - JIT interpreter integration
-- [../f-gents/](../f-gents/) - Forge artifact integration
 - [../l-gents/](../l-gents/) - Tongue discovery and cataloging
 - [../b-gents/](../b-gents/) - Banker (economic partner)
 - [../bootstrap.md](../bootstrap.md) - Derivation from irreducibles

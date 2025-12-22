@@ -187,21 +187,7 @@ class ElasticServoLayout:
 Each jewel needs a servo-scene contract:
 
 ```python
-@dataclass
-class AtelierServoContract:
-    """Atelier (Copper / Creative Forge) visual contract."""
-    workshop_glow: Color = Color(copper=0.8)
-    spectator_bids: list[LivingToken]
-    creation_canvas: BreathingFrame
-    breathing_surface: BreathingSurface  # 3-4s, 2-3% amplitude
-
-@dataclass
-class ParkServoContract:
-    """Park (Sage / Immersive Inhabit) visual contract."""
-    theater_mode: FirstPersonTheater
-    consent_gauge: LivingGauge
-    character_masks: list[OrbitingMask]
-    flow_traces: list[VinePath]  # Data moves like water
+# Crown Jewel visual contracts would be defined here as they are implemented
 ```
 
 ---

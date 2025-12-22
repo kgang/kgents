@@ -181,7 +181,7 @@ Find candidate metaphors that might fit the problem.
 
 **Methods**:
 - Embedding similarity (L-gent integration)
-- Domain matching
+- Problem type matching
 - Historical success rate for problem type (from LEARN)
 
 **Key insight**: Don't use a static library. Generate candidates dynamically or retrieve from a large corpus. The "right" metaphor may not be pre-catalogued.

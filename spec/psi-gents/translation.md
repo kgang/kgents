@@ -64,11 +64,11 @@ def translate_conclusion(
     {reverse_map}
 
     Original problem: {problem.description}
-    Problem domain: {problem.domain}
+    Problem context: {problem.domain}
 
     Translate the conclusion into concrete terms for the original problem.
     - Replace metaphor concepts with their problem equivalents
-    - Use terminology appropriate to the problem domain
+    - Use terminology appropriate to the problem context
     - Preserve the logical structure of the conclusion
     - Make it actionable and specific
 
@@ -98,7 +98,7 @@ def extract_actions(
     Extract 2-5 specific, concrete actions to implement this answer.
     Each action should be:
     - Specific enough to act on immediately
-    - Relevant to the problem domain
+    - Relevant to the problem context
     - Respectful of the stated constraints
 
     Format: One action per line, starting with a verb.
@@ -188,9 +188,9 @@ def handle_translation_gaps(
     translations = {}
     for gap_concept in gaps:
         prompt = f"""
-        Metaphor: {problem.domain} problem was analyzed using another framework
+        A {problem.domain} problem was analyzed using another framework
         Gap concept: "{gap_concept}" (from the metaphor, no direct mapping exists)
-        Problem domain: {problem.domain}
+        Problem context: {problem.domain}
 
         What would "{gap_concept}" mean in the context of {problem.domain}?
         Give the best equivalent concept or phrase.
@@ -377,7 +377,7 @@ confidence: 0.82
 | Gap count | 0-2 | 5+ |
 | Constraint violations | 0 | Any |
 | Confidence | > 0.7 | < 0.5 |
-| Action specificity | Domain-specific verbs | Generic ("improve", "fix") |
+| Action specificity | Context-specific verbs | Generic ("improve", "fix") |
 | Answer length | Comparable to problem | Much longer/shorter |
 
 ---
@@ -405,7 +405,7 @@ def handle_low_confidence_translation(
         [LOW CONFIDENCE TRANSLATION]
         The metaphor analysis suggested: {metaphor_solution.conclusion}
 
-        However, translation to {problem.domain} terms is uncertain.
+        However, translation to problem context is uncertain.
         Key insight (may need human interpretation):
         {extract_key_insight(metaphor_solution)}
 

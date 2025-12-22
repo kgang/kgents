@@ -191,12 +191,6 @@ Different agent genera emphasize different phases:
 - **Active** manages in-memory state
 - **Waning** is critical for data integrity
 
-### F-gents (Forge)
-- **Waking** analyzes intent
-- **Active** during generation
-- **Waning** crystallizes artifact
-- **Empty** on forge failure
-
 ### H-gents (Dialectic)
 - **Waking** loads thesis/antithesis
 - **Active** during synthesis attempt
