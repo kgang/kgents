@@ -309,9 +309,9 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
           <NavigationTree />
         </NavigationErrorBoundary>
 
-        {/* Content Canvas - flex child that fills available space */}
+        {/* Content Canvas - flex child that fills available space, scrollable */}
         <main
-          className="flex-1 min-h-0 flex flex-col"
+          className="flex-1 min-h-0 flex flex-col overflow-y-auto"
           style={{
             marginTop: density !== 'compact' ? `${observerHeight}px` : undefined,
             marginLeft: density !== 'compact' && navigationTreeExpanded ? `${navigationWidth}px` : 0,

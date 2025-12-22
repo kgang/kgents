@@ -1762,3 +1762,167 @@ export const PARK_EIGENVECTOR_CONFIG: Record<string, { label: string; color: str
   directness: { label: 'Directness', color: '#3b82f6' },
   warmth: { label: 'Warmth', color: '#f97316' },
 };
+
+// =============================================================================
+// Derivation Framework (Phase 5: Visualization)
+// =============================================================================
+
+/**
+ * Derivation tiers with confidence ceilings.
+ */
+export type DerivationTier =
+  | 'bootstrap'
+  | 'functor'
+  | 'polynomial'
+  | 'operad'
+  | 'jewel'
+  | 'app';
+
+/**
+ * Evidence types for principle draws.
+ */
+export type EvidenceType =
+  | 'categorical'
+  | 'empirical'
+  | 'stigmergic'
+  | 'axiom'
+  | 'none';
+
+/**
+ * A node in the derivation DAG.
+ */
+export interface DerivationDAGNode {
+  id: string;
+  label: string;
+  tier: DerivationTier;
+  tier_rank: number;
+  confidence: number;
+  is_bootstrap: boolean;
+}
+
+/**
+ * An edge in the derivation DAG (derives_from relationship).
+ */
+export interface DerivationDAGEdge {
+  source: string;
+  target: string;
+  is_current: boolean;
+}
+
+/**
+ * DAG visualization response from concept.derivation.dag.
+ */
+export interface DerivationDAGResponse {
+  nodes: DerivationDAGNode[];
+  edges: DerivationDAGEdge[];
+  tier_layers: Record<DerivationTier, string[]>;
+  focus: string | null;
+}
+
+/**
+ * Confidence breakdown for an agent.
+ */
+export interface DerivationConfidenceBreakdown {
+  agent_name: string;
+  inherited_confidence: number;
+  empirical_confidence: number;
+  stigmergic_confidence: number;
+  total_confidence: number;
+  tier_ceiling: number;
+  boost: number;
+  stigmergy_contribution: number;
+}
+
+/**
+ * A principle score in the breakdown.
+ */
+export interface PrincipleScore {
+  principle: string;
+  draw_strength: number;
+  evidence_type: EvidenceType;
+  evidence_count: number;
+}
+
+/**
+ * Principle breakdown response for radar charts.
+ */
+export interface DerivationPrinciplesResponse {
+  agent_name: string;
+  tier: DerivationTier;
+  total_confidence: number;
+  labels: string[];
+  data: number[];
+  principles: PrincipleScore[];
+}
+
+/**
+ * A point in the confidence timeline.
+ */
+export interface ConfidenceTimePoint {
+  timestamp: string;
+  inherited: number;
+  empirical: number;
+  stigmergic: number;
+  total: number;
+}
+
+/**
+ * Timeline response for confidence history.
+ */
+export interface DerivationTimelineResponse {
+  agent_name: string;
+  tier_ceiling: number;
+  points: ConfidenceTimePoint[];
+}
+
+/**
+ * Portal token for expandable navigation.
+ */
+export interface DerivationPortalToken {
+  agent_name: string;
+  tier: DerivationTier;
+  confidence: number;
+  derives_from_count?: number;
+  dependents_count?: number;
+}
+
+/**
+ * Navigation response from concept.derivation.navigate.
+ */
+export interface DerivationNavigateResponse {
+  current?: DerivationPortalToken;
+  edge: 'derives_from' | 'dependents';
+  connected: DerivationPortalToken[];
+  tokens?: DerivationPortalToken[]; // For bootstrap entry points
+}
+
+/**
+ * Tier visual configuration.
+ */
+export const DERIVATION_TIER_CONFIG: Record<
+  DerivationTier,
+  { color: string; icon: string; ceiling: number }
+> = {
+  bootstrap: { color: '#22c55e', icon: 'shield', ceiling: 1.0 },
+  functor: { color: '#3b82f6', icon: 'box', ceiling: 0.98 },
+  polynomial: { color: '#8b5cf6', icon: 'square-function', ceiling: 0.95 },
+  operad: { color: '#f59e0b', icon: 'git-branch', ceiling: 0.92 },
+  jewel: { color: '#ec4899', icon: 'diamond', ceiling: 0.85 },
+  app: { color: '#06b6d4', icon: 'code', ceiling: 0.75 },
+};
+
+/**
+ * Principle visual configuration for radar charts.
+ */
+export const DERIVATION_PRINCIPLE_CONFIG: Record<
+  string,
+  { color: string; icon: string }
+> = {
+  Tasteful: { color: '#8b5cf6', icon: 'sparkles' },
+  Curated: { color: '#ec4899', icon: 'filter' },
+  Ethical: { color: '#22c55e', icon: 'shield' },
+  'Joy-Inducing': { color: '#f59e0b', icon: 'smile' },
+  Composable: { color: '#3b82f6', icon: 'puzzle' },
+  Heterarchical: { color: '#06b6d4', icon: 'network' },
+  Generative: { color: '#a855f7', icon: 'wand-2' },
+};

@@ -23,6 +23,8 @@ const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
 const CanvasPage = lazy(() => import('./pages/Canvas'));
 const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
+const PortalPage = lazy(() => import('./pages/Portal'));
+const TrailPage = lazy(() => import('./pages/Trail'));
 
 function LoadingFallback() {
   return (
@@ -55,6 +57,8 @@ function App() {
                 <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
                 <Route path="/_/canvas" element={<CanvasPage />} />
                 <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
+                <Route path="/_/portal" element={<PortalPage />} />
+                <Route path="/_/trail/:id?" element={<TrailPage />} />
 
                 {/*
                  * Universal AGENTESE Projection (catch-all)
