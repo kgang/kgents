@@ -40,6 +40,8 @@ from protocols.agentese.node import (
     Renderable,
 )
 from protocols.agentese.registry import node
+from services.kgentsd.invoke import JewelInvoker, create_invoker
+from services.kgentsd.pipeline import Pipeline, PipelineRunner, Step
 
 from .contracts import (
     ActionRecordRequest,
@@ -60,9 +62,7 @@ from .contracts import (
     TrustResponse,
     WitnessManifestResponse,
 )
-from .invoke import JewelInvoker, create_invoker
 from .persistence import WitnessPersistence, WitnessStatus
-from .pipeline import Pipeline, PipelineRunner, Step
 from .polynomial import ActionResult, Thought, TrustLevel
 from .trust import ActionGate
 
@@ -628,7 +628,7 @@ class WitnessNode(BaseLogosNode):
                 return {"error": "No valid steps provided"}
 
             # Create pipeline - cast to list[Step | Branch] for type checker
-            from services.witness.pipeline import Branch
+            from services.kgentsd.pipeline import Branch
 
             pipeline_steps: list[Step | Branch] = list(steps)
             pipeline = Pipeline(steps=pipeline_steps)

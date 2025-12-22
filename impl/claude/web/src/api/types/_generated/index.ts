@@ -3,27 +3,17 @@
  * DO NOT EDIT - regenerate with: npm run sync-types
  */
 
-export * from './world-forge-commission';
 export * from './self-conductor-swarm';
-export * from './world-town-coalition';
-export * from './world-town-workshop';
-export * from './world-town-citizen';
-export * from './world-forge-soul';
 export * from './time-differance';
-export * from './self-conductor';
-export * from './world-codebase';
 export * from './world-morpheus';
 export * from './self-presence';
-export * from './world-witness';
+export * from './self-foundry';
 export * from './self-witness';
 export * from './time-witness';
+export * from './self-fusion';
 export * from './self-memory';
 export * from './time-branch';
-export * from './world-forge';
+export * from './time-coffee';
 export * from './world-file';
-export * from './world-park';
-export * from './world-town';
-export * from './self-chat';
-export * from './self-muse';
 export * from './self-repl';
 export * from './self-soul';

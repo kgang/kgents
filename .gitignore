@@ -237,8 +237,6 @@ impl/claude/.evolve_logs/
 
 # Archive directories (anywhere in repo)
 _archive/
-# Exception: commands archive is tracked for reference
-!commands/_archive/
 
 # Handoff prompts (session-to-session, not committed)
 _handoffs/

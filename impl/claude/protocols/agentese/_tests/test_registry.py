@@ -126,7 +126,11 @@ class TestNodeDecorator:
             lazy=False,
         )
         class ConfiguredNode(SimpleNode):
-            pass
+            # IMPORTANT: __init__ params MUST match declared dependencies
+            # (fail-fast validation at import time)
+            def __init__(self, service_a: Any = None, service_b: Any = None):
+                self._a = service_a
+                self._b = service_b
 
         meta = get_node_metadata(ConfiguredNode)
         assert meta is not None
@@ -180,6 +184,31 @@ class TestNodeDecorator:
         assert registry.has("test.node2")
         assert registry.get("test.node1") is Node1
         assert registry.get("test.node2") is Node2
+
+    def test_dependency_mismatch_fails_fast(self):
+        """@node validates dependencies at import time (FAIL-FAST).
+
+        This catches the common error where @node(dependencies=("foo",))
+        is declared but the class __init__ has a different parameter name.
+
+        Evidence: This test catches errors at decorator time, not at runtime
+        invocation. Much better DX.
+        """
+        with pytest.raises(TypeError) as exc_info:
+
+            @node(
+                "test.mismatch",
+                dependencies=("wrong_name",),
+            )
+            class MismatchedNode(SimpleNode):
+                # __init__ has 'actual_name' but dependencies declares 'wrong_name'
+                def __init__(self, actual_name: Any = None):
+                    self._actual = actual_name
+
+        error_msg = str(exc_info.value)
+        assert "wrong_name" in error_msg
+        assert "MismatchedNode" in error_msg
+        assert "actual_name" in error_msg  # Shows available params
 
 
 # === Test NodeRegistry ===

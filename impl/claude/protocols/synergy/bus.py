@@ -283,7 +283,6 @@ def _register_default_handlers(bus: SynergyEventBus) -> None:
     """Register the default synergy handlers."""
     # Import here to avoid circular imports
     from .handlers import (
-        AtelierToBrainHandler,
         BrainToCoalitionHandler,
         CoalitionToBrainHandler,
         GestaltToBrainHandler,
@@ -302,12 +301,6 @@ def _register_default_handlers(bus: SynergyEventBus) -> None:
     # ==========================================================================
     # Wave 2: Extensions handlers
     # ==========================================================================
-
-    # Atelier → Brain: Auto-capture created pieces
-    bus.register(
-        SynergyEventType.PIECE_CREATED,
-        AtelierToBrainHandler(),
-    )
 
     # Coalition → Brain: Auto-capture task completions
     bus.register(

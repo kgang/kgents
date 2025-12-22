@@ -1,10 +1,11 @@
 """
-Tests for Wave 2 synergy handlers: Atelier and Coalition integration.
+Tests for Wave 2 synergy handlers: Coalition integration.
 
 Wave 2 of the Enlightened Crown strategy adds:
-- AtelierToBrainHandler: Captures Atelier pieces to Brain
 - CoalitionToBrainHandler: Captures Coalition task results to Brain
 - BrainToCoalitionHandler: Enriches Coalition with Brain context
+
+Note: Atelier handlers removed 2025-12-21.
 """
 
 from __future__ import annotations
@@ -16,15 +17,12 @@ import pytest
 
 from protocols.synergy import (
     SynergyEventType,
-    create_bid_accepted_event,
     create_coalition_formed_event,
-    create_piece_created_event,
     create_task_complete_event,
     get_synergy_bus,
     reset_synergy_bus,
 )
 from protocols.synergy.handlers import (
-    AtelierToBrainHandler,
     BrainToCoalitionHandler,
     CoalitionToBrainHandler,
 )
@@ -36,92 +34,6 @@ def clean_bus():
     reset_synergy_bus()
     yield
     reset_synergy_bus()
-
-
-# =============================================================================
-# Atelier → Brain Handler Tests
-# =============================================================================
-
-
-class TestAtelierToBrainHandler:
-    """Tests for AtelierToBrainHandler."""
-
-    def test_handler_name(self):
-        """Handler has correct name."""
-        handler = AtelierToBrainHandler(auto_capture=False)
-        assert handler.name == "AtelierToBrainHandler"
-
-    @pytest.mark.asyncio
-    async def test_skips_non_piece_events(self):
-        """Handler skips events that aren't PIECE_CREATED."""
-        handler = AtelierToBrainHandler(auto_capture=False)
-
-        # Create a different event type
-        event = create_coalition_formed_event(
-            coalition_id="coal-123",
-            task_template="research",
-            archetypes=["Scout", "Sage"],
-            eigenvector_compatibility=0.9,
-            estimated_credits=50,
-        )
-
-        result = await handler.handle(event)
-        assert result.success is True
-        assert "skipped" in result.message.lower()
-
-    @pytest.mark.asyncio
-    async def test_dry_run_creates_content(self):
-        """Dry run mode creates content without capturing."""
-        handler = AtelierToBrainHandler(auto_capture=False)
-
-        event = create_piece_created_event(
-            piece_id="piece-abc123",
-            piece_type="haiku",
-            title="Autumn Reflection",
-            builder_id="calligrapher",
-            session_id="session-xyz",
-            spectator_count=5,
-            bid_count=2,
-        )
-
-        result = await handler.handle(event)
-
-        assert result.success is True
-        assert "dry run" in result.message.lower()
-        assert result.metadata["piece_type"] == "haiku"
-        assert result.metadata["title"] == "Autumn Reflection"
-
-    @pytest.mark.asyncio
-    async def test_crystal_content_format(self):
-        """Crystal content includes all relevant info."""
-        handler = AtelierToBrainHandler(auto_capture=False)
-
-        event = create_piece_created_event(
-            piece_id="piece-xyz789",
-            piece_type="code",
-            title="Fibonacci Generator",
-            builder_id="code-artisan",
-            session_id="session-123",
-            spectator_count=10,
-            bid_count=3,
-        )
-
-        # Access private method to test content format
-        content = handler._create_crystal_content(
-            piece_id="piece-xyz789",
-            piece_type="code",
-            title="Fibonacci Generator",
-            builder_id="code-artisan",
-            session_id="session-123",
-            spectator_count=10,
-            bid_count=3,
-            timestamp=datetime.now(),
-        )
-
-        assert "Atelier Creation: Fibonacci Generator" in content
-        assert "Type: code" in content
-        assert "Builder: code-artisan" in content
-        assert "10 spectators, 3 bids accepted" in content
 
 
 # =============================================================================
@@ -142,12 +54,12 @@ class TestCoalitionToBrainHandler:
         """Handler skips events that aren't TASK_ASSIGNED."""
         handler = CoalitionToBrainHandler(auto_capture=False)
 
-        event = create_piece_created_event(
-            piece_id="piece-123",
-            piece_type="haiku",
-            title="Test",
-            builder_id="test",
-            session_id="test",
+        event = create_coalition_formed_event(
+            coalition_id="coal-123",
+            task_template="research",
+            archetypes=["Scout", "Sage"],
+            eigenvector_compatibility=0.9,
+            estimated_credits=50,
         )
 
         result = await handler.handle(event)
@@ -242,12 +154,15 @@ class TestBrainToCoalitionHandler:
         """Handler skips events that aren't COALITION_FORMED."""
         handler = BrainToCoalitionHandler()
 
-        event = create_piece_created_event(
-            piece_id="piece-123",
-            piece_type="haiku",
-            title="Test",
-            builder_id="test",
-            session_id="test",
+        event = create_task_complete_event(
+            task_id="task-123",
+            coalition_id="coal-456",
+            task_template="research_report",
+            output_format="MARKDOWN",
+            output_summary="Test",
+            credits_spent=50,
+            handoffs=3,
+            duration_seconds=120.5,
         )
 
         result = await handler.handle(event)
@@ -279,40 +194,6 @@ class TestBrainToCoalitionHandler:
 
 class TestWave2EventFactories:
     """Tests for Wave 2 event factory functions."""
-
-    def test_piece_created_event(self):
-        """create_piece_created_event creates valid event."""
-        event = create_piece_created_event(
-            piece_id="piece-123",
-            piece_type="haiku",
-            title="Autumn Leaves",
-            builder_id="calligrapher",
-            session_id="session-abc",
-            spectator_count=5,
-            bid_count=2,
-        )
-
-        assert event.event_type == SynergyEventType.PIECE_CREATED
-        assert event.source_id == "piece-123"
-        assert event.payload["piece_type"] == "haiku"
-        assert event.payload["title"] == "Autumn Leaves"
-        assert event.payload["spectator_count"] == 5
-
-    def test_bid_accepted_event(self):
-        """create_bid_accepted_event creates valid event."""
-        event = create_bid_accepted_event(
-            bid_id="bid-123",
-            session_id="session-abc",
-            spectator_id="user-xyz",
-            bid_type="suggest_direction",
-            content="Try adding more contrast",
-            tokens_spent=5,
-        )
-
-        assert event.event_type == SynergyEventType.BID_ACCEPTED
-        assert event.source_id == "bid-123"
-        assert event.payload["bid_type"] == "suggest_direction"
-        assert event.payload["tokens_spent"] == 5
 
     def test_coalition_formed_event(self):
         """create_coalition_formed_event creates valid event."""
@@ -360,11 +241,6 @@ class TestWave2BusRegistration:
         """Wave 2 handlers are registered when bus initializes."""
         bus = get_synergy_bus()
 
-        # Check Atelier handler registered
-        atelier_handlers = bus._handlers.get(SynergyEventType.PIECE_CREATED, [])
-        assert len(atelier_handlers) >= 1
-        assert any(h.name == "AtelierToBrainHandler" for h in atelier_handlers)
-
         # Check Coalition handlers registered
         task_handlers = bus._handlers.get(SynergyEventType.TASK_ASSIGNED, [])
         assert len(task_handlers) >= 1
@@ -385,16 +261,16 @@ class TestWave2BusRegistration:
 
         bus.subscribe_results(on_result)
 
-        event = create_piece_created_event(
-            piece_id="test-piece",
-            piece_type="haiku",
-            title="Test",
-            builder_id="test",
-            session_id="test",
+        event = create_coalition_formed_event(
+            coalition_id="coal-test",
+            task_template="research",
+            archetypes=["Scout"],
+            eigenvector_compatibility=0.9,
+            estimated_credits=50,
         )
 
         await bus.emit_and_wait(event)
 
-        # Should have at least one result from AtelierToBrainHandler
+        # Should have at least one result from BrainToCoalitionHandler
         assert len(results) >= 1
-        assert any(r.handler_name == "AtelierToBrainHandler" for r in results)
+        assert any(r.handler_name == "BrainToCoalitionHandler" for r in results)

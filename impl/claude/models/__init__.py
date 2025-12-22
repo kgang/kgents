@@ -12,17 +12,13 @@ AGENTESE: self.data.table.*
 Crown Jewel Tables:
 - brain.py: Crystal, Tag, BrainSettings
 - town.py: Citizen, Conversation, ConversationTurn
-- gardener.py: GardenIdea, GardenSession, GardenPlot
 - gestalt.py: Topology, CodeBlock, CodeLink
-- atelier.py: Workshop, Exhibition, Artisan, Gallery
 - coalition.py: Coalition, CoalitionMember, CoalitionProposal
 - park.py: Host, Memory, Episode, Interaction
 """
 
-# Atelier Crown Jewel
 # ASHC Crown Jewel
 from .ashc import VerifiedLemmaModel
-from .atelier import ArtifactContribution, Artisan, Exhibition, GalleryItem, Workshop
 from .base import (
     Base,
     CausalMixin,
@@ -50,15 +46,6 @@ from .coalition import (
     CoalitionOutput,
     CoalitionProposal,
     ProposalVote,
-)
-
-# Gardener Crown Jewel
-from .gardener import (
-    GardenIdea,
-    GardenPlot,
-    GardenSession,
-    IdeaConnection,
-    IdeaLifecycle,
 )
 
 # Gestalt Crown Jewel
@@ -91,23 +78,11 @@ __all__ = [
     "Conversation",
     "ConversationTurn",
     "CitizenRelationship",
-    # Gardener
-    "IdeaLifecycle",
-    "GardenSession",
-    "GardenIdea",
-    "GardenPlot",
-    "IdeaConnection",
     # Gestalt
     "Topology",
     "CodeBlock",
     "CodeLink",
     "TopologySnapshot",
-    # Atelier
-    "Workshop",
-    "Artisan",
-    "Exhibition",
-    "GalleryItem",
-    "ArtifactContribution",
     # Coalition
     "Coalition",
     "CoalitionMember",

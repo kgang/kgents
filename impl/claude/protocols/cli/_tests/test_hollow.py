@@ -33,7 +33,8 @@ class TestHelpAndVersion:
         assert "kgents" in out
         assert "Tasteful" in out or "Crown Jewels" in out
         assert "brain" in out
-        assert "soul" in out
+        # Only commands with registered handlers are shown
+        assert "town" in out or "witness" in out
 
     def test_help_flag(self, capsys: pytest.CaptureFixture[str]) -> None:
         """kgents --help prints help."""

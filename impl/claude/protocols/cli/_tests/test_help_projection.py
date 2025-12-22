@@ -130,8 +130,9 @@ class TestGlobalHelp:
 
         assert "Crown Jewels" in result
         assert "brain" in result
-        assert "soul" in result
+        # Only commands with registered handlers are shown
         assert "town" in result
+        assert "atelier" in result
 
     def test_global_help_includes_forest(self) -> None:
         """Global help includes Forest Protocol family."""
@@ -143,14 +144,15 @@ class TestGlobalHelp:
         assert "forest" in result
         assert "garden" in result
 
-    def test_global_help_includes_joy(self) -> None:
-        """Global help includes Joy Commands family."""
+    def test_global_help_includes_witness(self) -> None:
+        """Global help includes Witness Protocol family."""
         from protocols.cli.help_global import render_global_help
 
         result = render_global_help(use_rich=False)
 
-        assert "Joy Commands" in result
-        assert "oblique" in result
+        assert "Witness Protocol" in result
+        assert "witness" in result
+        assert "decide" in result
 
     def test_global_help_includes_examples(self) -> None:
         """Global help includes example commands."""

@@ -16,9 +16,9 @@ Subscription Grammar:
         ...
 
     # Context manager for auto-unsubscribe
-    async with logos.subscription("self.forest.*") as sub:
+    async with logos.subscription("self.memory.*") as sub:
         async for event in sub:
-            if event.data.progress == 100:
+            if event.data.updated:
                 break
 
 Subscription Semantics (from spec §9.4):
@@ -659,9 +659,9 @@ class SubscriptionManager:
         Context manager for subscriptions.
 
         Example:
-            async with manager.subscription("self.forest.*") as sub:
+            async with manager.subscription("self.memory.*") as sub:
                 async for event in sub:
-                    if event.data.progress == 100:
+                    if event.data.updated:
                         break
         """
         sub = await self.subscribe(pattern, **kwargs)
@@ -868,9 +868,9 @@ class LogosSubscriptionMixin:
         Context manager for subscriptions.
 
         Example:
-            async with logos.subscription("self.forest.*") as sub:
+            async with logos.subscription("self.memory.*") as sub:
                 async for event in sub:
-                    if event.data.progress == 100:
+                    if event.data.updated:
                         break
         """
         manager = self._get_subscription_manager()
@@ -937,9 +937,9 @@ def add_subscription_methods_to_logos(logos_cls: type) -> type:
         Context manager for subscriptions.
 
         Example:
-            async with logos.subscription("self.forest.*") as sub:
+            async with logos.subscription("self.memory.*") as sub:
                 async for event in sub:
-                    if event.data.progress == 100:
+                    if event.data.updated:
                         break
         """
         manager = _get_subscription_manager(self)

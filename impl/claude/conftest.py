@@ -275,8 +275,7 @@ async def verified_bootstrap(bootstrap_witness: Any) -> Any:
 def _populate_operad_registry() -> None:
     """Import all operad modules to trigger registration."""
     # Core (auto-registered)
-    # Atelier
-    from agents.atelier.workshop.operad import ATELIER_OPERAD  # noqa: F401
+    # Note: Atelier removed 2025-12-21
 
     # Brain
     from agents.brain.operad import BRAIN_OPERAD  # noqa: F401

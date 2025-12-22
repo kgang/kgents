@@ -203,6 +203,30 @@ def node(
 
     def decorator(cls: type[T]) -> type[T]:
         """Apply @node metadata to class and register with global registry."""
+        # FAIL-FAST: Validate declared dependencies match __init__ signature
+        # This catches errors at import time, not at runtime invocation
+        if dependencies:
+            import inspect
+
+            try:
+                sig = inspect.signature(cls.__init__)
+                init_params = set(sig.parameters.keys()) - {"self"}
+            except (ValueError, TypeError):
+                init_params = set()
+
+            # Check each declared dependency exists in __init__
+            for dep_name in dependencies:
+                if dep_name not in init_params:
+                    raise TypeError(
+                        f"@node('{path}') declares dependency '{dep_name}' but "
+                        f"{cls.__name__}.__init__ has no '{dep_name}' parameter.\n\n"
+                        f"Available parameters: {sorted(init_params) or '(none)'}\n\n"
+                        f"Fix: Either:\n"
+                        f"  1. Add '{dep_name}' parameter to {cls.__name__}.__init__\n"
+                        f"  2. For dataclass: add field '{dep_name}: ... = None'\n"
+                        f"  3. Change dependencies=(...) to match actual parameter names"
+                    )
+
         # Get description from docstring if not provided
         desc = description or (cls.__doc__ or "").split("\n")[0].strip()
 
@@ -308,6 +332,12 @@ class NodeRegistry:
         gotcha: After reset_registry() in tests, call repopulate_registry()
                 to restore nodes for subsequent tests on the same xdist worker.
                 (Evidence: test_registry.py::TestNodeRegistry::test_clear + fixture pattern)
+
+        gotcha: Declared dependencies are validated at import time (FAIL-FAST).
+                If @node(dependencies=("foo",)) but __init__ has no 'foo' param,
+                a TypeError is raised immediately. This catches mismatch errors
+                at startup, not at runtime invocation.
+                (Evidence: test_registry.py::TestNodeRegistration::test_dependency_mismatch_fails_fast)
     """
 
     # Path -> node class

@@ -157,6 +157,20 @@ class BrainPersistence:
         # Differance integration for trace recording (Phase 6B)
         self._differance = DifferanceIntegration("brain")
 
+    @property
+    def _storage_backend(self) -> str:
+        """Detect storage backend from session factory's engine URL."""
+        try:
+            # Get the engine from the session factory bind
+            engine = self.table.session_factory.kw.get("bind")
+            if engine is not None:
+                url_str = str(engine.url).lower()
+                if "postgres" in url_str:
+                    return "postgres"
+        except Exception:
+            pass
+        return "sqlite"
+
     # =========================================================================
     # AGENTESE Aspects
     # =========================================================================
@@ -249,9 +263,7 @@ class BrainPersistence:
             summary=summary,
             captured_at=datetime.now(UTC).isoformat(),
             has_embedding=has_embedding,
-            storage="postgres"
-            if "postgres" in str(self.table.session_factory).lower()
-            else "sqlite",
+            storage=self._storage_backend,
             datum_id=datum_id,
             tags=tags,
         )
@@ -471,9 +483,7 @@ class BrainPersistence:
             coherency_rate=coherency_rate,
             ghosts_healed=self._ghosts_healed,
             storage_path="~/.local/share/kgents/brain",
-            storage_backend="postgres"
-            if "postgres" in str(self.table.session_factory).lower()
-            else "sqlite",
+            storage_backend=self._storage_backend,
         )
 
     # =========================================================================
@@ -831,9 +841,7 @@ class BrainPersistence:
         """
         async with self.table.session_factory() as session:
             # Total count
-            total_result = await session.execute(
-                select(func.count()).select_from(TeachingCrystal)
-            )
+            total_result = await session.execute(select(func.count()).select_from(TeachingCrystal))
             total = total_result.scalar() or 0
 
             # Alive count

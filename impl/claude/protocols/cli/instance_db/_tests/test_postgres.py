@@ -38,17 +38,20 @@ class TestPostgresAvailability:
     """Tests for Postgres availability checks."""
 
     def test_get_postgres_url_not_set(self, monkeypatch: Any) -> None:
-        """Should return None if KGENTS_POSTGRES_URL not set."""
+        """Should return None if neither KGENTS_DATABASE_URL nor KGENTS_POSTGRES_URL are set."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         assert get_postgres_url() is None
 
     def test_get_postgres_url_set(self, monkeypatch: Any) -> None:
         """Should return URL if KGENTS_POSTGRES_URL is set."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)  # Clear canonical first
         monkeypatch.setenv("KGENTS_POSTGRES_URL", "postgresql://localhost/test")
         assert get_postgres_url() == "postgresql://localhost/test"
 
     def test_is_postgres_available_no_url(self, monkeypatch: Any) -> None:
         """Should return False if URL not set."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         assert is_postgres_available() is False
 
@@ -124,6 +127,7 @@ class TestStorageRouter:
     @pytest.mark.asyncio
     async def test_create_auto_fallback_to_sqlite(self, tmp_path: Path, monkeypatch: Any) -> None:
         """Should fall back to SQLite when Postgres unavailable."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         store = await create_relational_store(
             backend="auto",
@@ -144,6 +148,7 @@ class TestStorageRouter:
     @pytest.mark.asyncio
     async def test_check_postgres_backend_status_no_url(self, monkeypatch: Any) -> None:
         """Postgres should be unavailable without URL."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         status = await check_backend_status(StorageBackend.POSTGRES)
         assert status.available is False
@@ -152,6 +157,7 @@ class TestStorageRouter:
     @pytest.mark.asyncio
     async def test_get_current_backend_no_postgres(self, monkeypatch: Any) -> None:
         """Should return SQLite when Postgres unavailable."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         backend = await get_current_backend()
         assert backend == StorageBackend.SQLITE
@@ -159,6 +165,7 @@ class TestStorageRouter:
     @pytest.mark.asyncio
     async def test_create_postgres_raises_without_url(self, monkeypatch: Any) -> None:
         """Should raise when postgres explicitly requested but unavailable."""
+        monkeypatch.delenv("KGENTS_DATABASE_URL", raising=False)
         monkeypatch.delenv("KGENTS_POSTGRES_URL", raising=False)
         with pytest.raises(RuntimeError, match="not set"):
             await create_relational_store(backend="postgres")

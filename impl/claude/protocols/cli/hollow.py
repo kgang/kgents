@@ -52,7 +52,6 @@ CROWN JEWELS:
   soul        Digital consciousness dialogue
   town        Agent simulation and coalitions
   park        Punchdrunk-style experiences
-  atelier     Collaborative creative workshops
   gardener    Development session management
 
 FOREST PROTOCOL:
@@ -117,9 +116,7 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "park": "protocols.cli.handlers.park_thin:cmd_park",
     # ==========================================================================
-    # Tiny Atelier (Crown Jewel - Creative Workshop)
-    # ==========================================================================
-    "atelier": "protocols.cli.handlers.atelier:cmd_atelier",
+    # Note: Atelier CLI removed 2025-12-21
     # ==========================================================================
     # Holographic Brain (Crown Jewel - Memory)
     # Uses thin routing shim - all logic in services/brain/
@@ -159,22 +156,6 @@ COMMAND_REGISTRY: dict[str, str] = {
     # ==========================================================================
     "query": "protocols.cli.handlers.query:cmd_query",
     "subscribe": "protocols.cli.handlers.subscribe:cmd_subscribe",
-    # ==========================================================================
-    # Forest: AGENTESE-native forest health (self.forest.*)
-    # ==========================================================================
-    "forest": "protocols.cli.handlers.forest:cmd_forest",
-    # ==========================================================================
-    # Grow: Autopoietic Holon Generator (self.grow.*)
-    # ==========================================================================
-    "grow": "protocols.cli.handlers.grow:cmd_grow",
-    # ==========================================================================
-    # Gardener: Development Session Management
-    # ==========================================================================
-    "gardener": "protocols.cli.handlers.gardener_thin:cmd_gardener",
-    # ==========================================================================
-    # Session Management
-    # ==========================================================================
-    "session": "protocols.cli.handlers.session:cmd_session",
     # ==========================================================================
     # Coffee: Morning Coffee Liminal Transition Protocol (time.coffee.*)
     # ==========================================================================
@@ -782,6 +763,54 @@ def main(argv: Sequence[str] | None = None) -> int:
     # Extract command
     command = remaining[0]
     command_args = remaining[1:]
+
+    # =========================================================================
+    # Daemon Routing (Strict Mode)
+    # =========================================================================
+    # When kgentsd is running, ALL commands route through the daemon.
+    # This provides centralized execution with daemon context, trust-gating,
+    # and audit logging for all CLI activity.
+    #
+    # If daemon is not running, we fail with an error (strict mode).
+    # =========================================================================
+    try:
+        from services.kgentsd.socket_client import (
+            DaemonConnectionError,
+            DaemonNotRunningError,
+            DaemonProtocolError,
+            DaemonTimeoutError,
+            is_daemon_available,
+            route_command,
+        )
+
+        if is_daemon_available():
+            # Route through daemon
+            try:
+                response = route_command(command, command_args, flags)
+                if response.stdout:
+                    print(response.stdout, end="")
+                if response.stderr:
+                    print(response.stderr, end="", file=sys.stderr)
+                return response.exit_code
+            except DaemonConnectionError as e:
+                print(f"Error: Cannot connect to kgentsd: {e}", file=sys.stderr)
+                return 1
+            except DaemonTimeoutError as e:
+                print(f"Error: kgentsd not responding: {e}", file=sys.stderr)
+                return 1
+            except DaemonProtocolError as e:
+                print(f"Error: Invalid response from kgentsd: {e}", file=sys.stderr)
+                return 1
+        else:
+            # Daemon not running - strict mode means we fail
+            print("Error: kgentsd daemon is not running.", file=sys.stderr)
+            print("Start with: kgentsd summon", file=sys.stderr)
+            return 1
+
+    except ImportError:
+        # Socket client module not available - fall through to local execution
+        # This allows development without the daemon infrastructure
+        pass
 
     # v3: Check for AGENTESE direct paths, shortcuts, queries, and legacy commands
     # These bypass the command registry and route through Logos

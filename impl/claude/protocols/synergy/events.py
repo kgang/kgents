@@ -47,10 +47,6 @@ class SynergyEventType(Enum):
     GESTURE_APPLIED = "gesture_applied"
     PLOT_PROGRESS_UPDATED = "plot_progress_updated"
 
-    # Atelier events
-    PIECE_CREATED = "piece_created"
-    BID_ACCEPTED = "bid_accepted"
-
     # Coalition events
     COALITION_FORMED = "coalition_formed"
     TASK_ASSIGNED = "task_assigned"
@@ -129,7 +125,6 @@ class Jewel(Enum):
     BRAIN = "brain"
     GESTALT = "gestalt"
     GARDENER = "gardener"
-    ATELIER = "atelier"
     COALITION = "coalition"
     PARK = "park"
     DOMAIN = "domain"
@@ -348,87 +343,6 @@ def create_artifact_created_event(
             "path": path,
             "description": description,
             "session_id": session_id,
-        },
-        correlation_id=correlation_id or str(uuid.uuid4()),
-    )
-
-
-# =============================================================================
-# Wave 2: Atelier Events
-# =============================================================================
-
-
-def create_piece_created_event(
-    piece_id: str,
-    piece_type: str,
-    title: str,
-    builder_id: str,
-    session_id: str,
-    spectator_count: int = 0,
-    bid_count: int = 0,
-    correlation_id: str | None = None,
-) -> SynergyEvent:
-    """
-    Create an Atelier piece created event.
-
-    When a builder completes a piece in the Atelier, this event
-    triggers auto-capture to Brain for memory persistence.
-
-    Args:
-        piece_id: Unique identifier for the piece
-        piece_type: Type of artifact (code, art, writing, etc.)
-        title: Human-readable title
-        builder_id: ID of the builder who created it
-        session_id: Atelier session ID
-        spectator_count: Number of spectators watching
-        bid_count: Number of spectator bids accepted
-
-    Returns:
-        SynergyEvent for PIECE_CREATED
-    """
-    return SynergyEvent(
-        source_jewel=Jewel.ATELIER,
-        target_jewel=Jewel.BRAIN,
-        event_type=SynergyEventType.PIECE_CREATED,
-        source_id=piece_id,
-        payload={
-            "piece_type": piece_type,
-            "title": title,
-            "builder_id": builder_id,
-            "session_id": session_id,
-            "spectator_count": spectator_count,
-            "bid_count": bid_count,
-        },
-        correlation_id=correlation_id or str(uuid.uuid4()),
-    )
-
-
-def create_bid_accepted_event(
-    bid_id: str,
-    session_id: str,
-    spectator_id: str,
-    bid_type: str,
-    content: str,
-    tokens_spent: int,
-    correlation_id: str | None = None,
-) -> SynergyEvent:
-    """
-    Create an Atelier bid accepted event.
-
-    When a builder accepts a spectator bid, this event can
-    trigger notifications or capture the interaction.
-    """
-    return SynergyEvent(
-        source_jewel=Jewel.ATELIER,
-        target_jewel=Jewel.ALL,
-        event_type=SynergyEventType.BID_ACCEPTED,
-        source_id=bid_id,
-        payload={
-            "session_id": session_id,
-            "spectator_id": spectator_id,
-            "bid_type": bid_type,
-            "content": content,
-            "tokens_spent": tokens_spent,
         },
         correlation_id=correlation_id or str(uuid.uuid4()),
     )
@@ -2161,9 +2075,6 @@ __all__ = [
     "create_crystal_formed_event",
     "create_session_complete_event",
     "create_artifact_created_event",
-    # Factory functions - Wave 2: Atelier
-    "create_piece_created_event",
-    "create_bid_accepted_event",
     # Factory functions - Wave 2: Coalition
     "create_coalition_formed_event",
     "create_task_complete_event",

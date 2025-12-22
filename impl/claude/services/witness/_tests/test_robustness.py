@@ -20,19 +20,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from services.witness.crystal import (
-    ExperienceCrystal,
-    MoodVector,
-    Narrative,
-    TopologySnapshot,
-)
-from services.witness.invoke import (
+from services.kgentsd.invoke import (
     classify_path,
     create_invoker,
     is_mutation_path,
     is_read_only_path,
 )
-from services.witness.pipeline import (
+from services.kgentsd.pipeline import (
     Branch,
     Pipeline,
     PipelineResult,
@@ -42,14 +36,20 @@ from services.witness.pipeline import (
     branch,
     step,
 )
-from services.witness.polynomial import Thought, TrustLevel
-from services.witness.schedule import (
+from services.kgentsd.schedule import (
     ScheduledTask,
     ScheduleStatus,
     ScheduleType,
     WitnessScheduler,
     create_scheduler,
 )
+from services.witness.crystal import (
+    ExperienceCrystal,
+    MoodVector,
+    Narrative,
+    TopologySnapshot,
+)
+from services.witness.polynomial import Thought, TrustLevel
 
 # =============================================================================
 # MoodVector Edge Cases

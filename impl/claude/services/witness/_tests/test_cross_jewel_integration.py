@@ -26,8 +26,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from services.witness.invoke import InvocationResult, JewelInvoker, create_invoker
-from services.witness.pipeline import (
+from services.kgentsd.invoke import InvocationResult, JewelInvoker, create_invoker
+from services.kgentsd.pipeline import (
     Branch,
     Pipeline,
     PipelineResult,
@@ -37,14 +37,14 @@ from services.witness.pipeline import (
     branch,
     step,
 )
-from services.witness.polynomial import TrustLevel
-from services.witness.schedule import (
+from services.kgentsd.schedule import (
     ScheduleStatus,
     WitnessScheduler,
     create_scheduler,
     delay,
     every,
 )
+from services.witness.polynomial import TrustLevel
 from services.witness.trust import GateDecision
 
 # =============================================================================

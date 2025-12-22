@@ -25,36 +25,42 @@ if TYPE_CHECKING:
 # === Command Families ===
 
 # Organized by user-facing family, not implementation structure
+# Only include commands that actually work (have handlers registered)
 COMMAND_FAMILIES = [
     (
         "Crown Jewels",
         "Primary experiences - where the magic happens",
         [
             ("brain", "self.memory", "Holographic memory operations"),
-            ("soul", "self.soul", "Digital consciousness dialogue"),
             ("town", "world.town", "Agent simulation and coalitions"),
-            ("park", "world.park", "Punchdrunk-style experiences"),
             ("atelier", "world.atelier", "Collaborative creative workshops"),
-            ("gardener", "self.forest.gardener", "Development session management"),
         ],
     ),
     (
         "Forest Protocol",
-        "Project health and cultivation",
+        "Project health and session management",
         [
             ("forest", "self.forest", "Project health and plan status"),
             ("garden", "self.forest.garden", "Hypnagogia and dream states"),
-            ("tend", "self.forest.tend", "Garden tending operations"),
+            ("session", "self.forest.session", "Session lifecycle management"),
+            ("gardener", "concept.gardener", "Development session operations"),
         ],
     ),
     (
-        "Joy Commands",
-        "Serendipity and creative disruption",
+        "Developer Tools",
+        "Documentation, rituals, and debugging",
         [
-            ("joy", "void.joy", "Oblique strategies gateway"),
-            ("oblique", "void.joy.oblique", "Draw an oblique strategy card"),
-            ("surprise-me", "void.joy.surprise", "Unexpected creative prompt"),
-            ("challenge", "void.joy.challenge", "Creative challenge generator"),
+            ("coffee", "time.coffee", "Morning ritual and transition"),
+            ("docs", "concept.docs", "Living documentation generator"),
+            ("init", "", "Initialize a kgents workspace"),
+        ],
+    ),
+    (
+        "Witness Protocol",
+        "Decision witnessing and dialectical fusion",
+        [
+            ("witness", "", "Everyday mark-making"),
+            ("decide", "", "Dialectical decision capture"),
         ],
     ),
     (
@@ -139,8 +145,8 @@ def _render_global_rich(show_paths: bool = False) -> str:
     console.print()
     console.print("[dim]Examples:[/]")
     console.print('  [dim]$[/] kg brain capture "Category theory is beautiful"')
-    console.print("  [dim]$[/] kg soul reflect")
-    console.print("  [dim]$[/] kg town inhabit alice")
+    console.print("  [dim]$[/] kg coffee --quick")
+    console.print("  [dim]$[/] kg witness mark 'Decided on approach'")
     console.print("  [dim]$[/] kg q 'self.*'")
     console.print()
     console.print("[dim]Learn more:[/] https://github.com/kgents/kgents")
@@ -179,8 +185,8 @@ def _render_global_plain(show_paths: bool = False) -> str:
     lines.append("")
     lines.append("Examples:")
     lines.append('  $ kg brain capture "Category theory is beautiful"')
-    lines.append("  $ kg soul reflect")
-    lines.append("  $ kg town inhabit alice")
+    lines.append("  $ kg coffee --quick")
+    lines.append("  $ kg witness mark 'Decided on approach'")
     lines.append("  $ kg q 'self.*'")
     lines.append("")
     lines.append("Learn more: https://github.com/kgents/kgents")

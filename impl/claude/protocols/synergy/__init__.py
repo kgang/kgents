@@ -6,7 +6,7 @@ Foundation 4 of the Enlightened Crown strategy.
 The synergy system enables automatic data flow between jewels:
 - Gestalt analysis → Brain captures architecture snapshot
 - Gardener session complete → Brain captures learnings
-- Atelier piece created → Brain captures metadata
+- Coalition task complete → Brain captures results
 
 Usage:
     from protocols.synergy import get_synergy_bus, create_analysis_complete_event
@@ -63,8 +63,6 @@ from .events import (
     # Wave 0-1 factory functions
     create_analysis_complete_event,
     create_artifact_created_event,
-    # Wave 2: Atelier factory functions
-    create_bid_accepted_event,
     # Wave 2: Coalition factory functions
     create_coalition_formed_event,
     create_consensus_reached_event,
@@ -85,7 +83,6 @@ from .events import (
     create_flow_started_event,
     create_hypothesis_created_event,
     create_hypothesis_synthesized_event,
-    create_piece_created_event,
     create_session_complete_event,
     create_swarm_a2a_message_event,
     create_swarm_despawned_event,
@@ -102,7 +99,6 @@ from .events import (
     create_witness_thought_event,
 )
 from .handlers import (
-    AtelierToBrainHandler,
     BaseSynergyHandler,
     BrainToCoalitionHandler,
     CoalitionToBrainHandler,
@@ -122,9 +118,6 @@ __all__ = [
     "create_crystal_formed_event",
     "create_session_complete_event",
     "create_artifact_created_event",
-    # Factory functions - Wave 2: Atelier
-    "create_piece_created_event",
-    "create_bid_accepted_event",
     # Factory functions - Wave 2: Coalition
     "create_coalition_formed_event",
     "create_task_complete_event",
@@ -146,7 +139,6 @@ __all__ = [
     "BaseSynergyHandler",
     "GestaltToBrainHandler",
     # Handlers - Wave 2
-    "AtelierToBrainHandler",
     "CoalitionToBrainHandler",
     "BrainToCoalitionHandler",
     # Handlers - Witness (8th Crown Jewel)

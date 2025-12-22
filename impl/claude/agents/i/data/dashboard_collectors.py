@@ -295,12 +295,12 @@ async def collect_kgent_metrics() -> KgentMetrics:
     """
     # Try full CLI context first
     try:
+        # Get or create soul instance
+        from protocols.cli.handlers.soul import _get_soul  # type: ignore[import-untyped]
+
         from agents.k import KgentSoul
         from agents.k.garden import get_garden
         from agents.k.hypnagogia import get_hypnagogia
-
-        # Get or create soul instance
-        from protocols.cli.handlers.soul import _get_soul
 
         soul = _get_soul()
         state = soul.manifest()
@@ -570,7 +570,9 @@ async def _collect_turn_metrics_impl() -> TurnMetrics:
         # Get pending yields count (with its own try/except)
         pending_yields = 0
         try:
-            from protocols.cli.handlers.approve import get_yield_handler
+            from protocols.cli.handlers.approve import (  # type: ignore[import-untyped]
+                get_yield_handler,
+            )
 
             handler = get_yield_handler()
             pending_yields = len(handler.list_pending())

@@ -219,11 +219,11 @@ class TestJewelEnum:
     """Tests for Jewel enum."""
 
     def test_all_jewels_exist(self) -> None:
-        """All 7 crown jewels plus ALL are defined."""
+        """Crown jewels plus ALL are defined."""
         assert Jewel.BRAIN.value == "brain"
         assert Jewel.GESTALT.value == "gestalt"
         assert Jewel.GARDENER.value == "gardener"
-        assert Jewel.ATELIER.value == "atelier"
+        # Note: Jewel.ATELIER removed 2025-12-21
         assert Jewel.COALITION.value == "coalition"
         assert Jewel.PARK.value == "park"
         assert Jewel.DOMAIN.value == "domain"

@@ -25,6 +25,7 @@ If you're thinking "I'll just figure it out"—don't. The skills exist because w
 | Your Goal | Start Here | Time |
 |-----------|------------|------|
 | Get running | [quickstart.md](quickstart.md) | 5 min |
+| Use the CLI | [cli-reference.md](cli-reference.md) | 10 min |
 | Build a feature | [skills/](skills/) | 30 min to skim |
 | Understand the math | [categorical-foundations.md](categorical-foundations.md) | 1 hr |
 | Add an AGENTESE path | [skills/agentese-node-registration.md](skills/agentese-node-registration.md) | 15 min |
@@ -129,6 +130,7 @@ async for event in event_stream:
 
 ### Getting Started
 - [quickstart.md](quickstart.md) — Zero to agent in 5 minutes
+- [cli-reference.md](cli-reference.md) — Complete CLI command reference
 - [local-development.md](local-development.md) — Development environment, editor setup
 
 ### Architecture

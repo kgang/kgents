@@ -1,14 +1,14 @@
 """
 Crown Jewels Path Registry
 
-Registers AGENTESE paths for the Seven Crown Jewel applications:
-1. Atelier Experience Platform (Flux) - world.atelier.*
-2. Coalition Forge (Operad) - world.coalition.*, concept.task.*
-3. Holographic Second Brain (Sheaf) - self.memory.*, self.memory.ghost.*
-4. Punchdrunk Park (Polynomial) - world.town.scenario.*, concept.mask.*
-5. Domain Simulation Engine (Tenancy) - world.simulation.*, concept.drill.*
-6. Gestalt Architecture Visualizer (Reactive) - world.codebase.*
-7. The Gardener (N-Phase) - concept.gardener.*
+Registers AGENTESE paths for the Crown Jewel applications:
+1. Coalition Forge (Operad) - world.coalition.*, concept.task.*
+2. Holographic Second Brain (Sheaf) - self.memory.*, self.memory.ghost.*
+3. Punchdrunk Park (Polynomial) - world.town.scenario.*, concept.mask.*
+4. Domain Simulation Engine (Tenancy) - world.simulation.*, concept.drill.*
+5. Gestalt Architecture Visualizer (Reactive) - world.codebase.*
+
+Note: Atelier and Gardener deprecated 2025-12-21.
 
 Per plans/core-apps-synthesis.md - the unified categorical foundation.
 
@@ -35,51 +35,10 @@ S = TypeVar("S")
 # Path Registry Definitions per Crown Jewel
 # =============================================================================
 
-# Crown Jewel 1: Atelier Experience Platform
-ATELIER_PATHS: dict[str, dict[str, Any]] = {
-    "world.atelier.manifest": {
-        "aspect": "manifest",
-        "description": "View active Atelier sessions",
-        "effects": [],
-    },
-    "world.atelier.session.manifest": {
-        "aspect": "manifest",
-        "description": "View current session state (builders, spectators, tokens)",
-        "effects": [],
-    },
-    "world.atelier.session.bid": {
-        "aspect": "define",
-        "description": "Bid tokens to influence creation direction",
-        "effects": ["TOKEN_TRANSFER", "NOTIFY_BUILDERS"],
-    },
-    "world.atelier.session.tithe": {
-        "aspect": "tithe",
-        "description": "Gift tokens to creator (pays entropy debt)",
-        "effects": ["TOKEN_TRANSFER", "GRATITUDE_EMIT"],
-    },
-    "world.atelier.gallery.manifest": {
-        "aspect": "manifest",
-        "description": "Browse saved creations",
-        "effects": [],
-    },
-    "world.atelier.gallery.purchase": {
-        "aspect": "define",
-        "description": "Purchase a creation from the gallery",
-        "effects": ["TOKEN_TRANSFER", "LICENSE_GRANT"],
-    },
-    "self.tokens.manifest": {
-        "aspect": "manifest",
-        "description": "View current token balance",
-        "effects": [],
-    },
-    "self.tokens.purchase": {
-        "aspect": "define",
-        "description": "Purchase tokens (Stripe integration)",
-        "effects": ["STRIPE_CHARGE", "TOKEN_CREDIT"],
-    },
-}
+# Atelier paths deprecated 2025-12-21
+ATELIER_PATHS: dict[str, dict[str, Any]] = {}
 
-# Crown Jewel 2: Coalition Forge
+# Crown Jewel 1: Coalition Forge
 COALITION_PATHS: dict[str, dict[str, Any]] = {
     "world.coalition.manifest": {
         "aspect": "manifest",
@@ -705,7 +664,6 @@ MORPHEUS_PATHS: dict[str, dict[str, Any]] = {
 # =============================================================================
 
 ALL_CROWN_JEWEL_PATHS: dict[str, dict[str, Any]] = {
-    **ATELIER_PATHS,
     **COALITION_PATHS,
     **BRAIN_PATHS,
     **PARK_PATHS,
@@ -735,11 +693,10 @@ class CrownJewelRegistry:
         List registered paths, optionally filtered by jewel.
 
         Args:
-            jewel: One of "atelier", "coalition", "brain", "park",
+            jewel: One of "coalition", "brain", "park",
                    "simulation", "gestalt", "gardener", "morpheus", or None for all
         """
         jewel_prefixes = {
-            "atelier": ("world.atelier.", "self.tokens."),
             "coalition": (
                 "world.coalition.",
                 "concept.task.",

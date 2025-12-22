@@ -7,7 +7,6 @@ From spec §10:
     # Define aliases
     logos.alias("me", "self.soul")
     logos.alias("chaos", "void.entropy")
-    logos.alias("forest", "self.forest")
 
     # Use aliases
     await logos("me.challenge", observer)      # → self.soul.challenge
@@ -23,7 +22,6 @@ Persistence (.kgents/aliases.yaml):
     aliases:
       me: self.soul
       chaos: void.entropy
-      forest: self.forest
       brain: self.memory
 """
 
@@ -262,7 +260,6 @@ def create_standard_aliases() -> dict[str, str]:
     return {
         "me": "self.soul",
         "brain": "self.memory",
-        "forest": "self.forest",
         "chaos": "void.entropy",
         "serendipity": "void.serendipity",
         "gratitude": "void.gratitude",

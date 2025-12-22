@@ -8,7 +8,6 @@ This context handles all temporal operations:
 - time.turns      -> Turn history (was: kgents turns)
 - time.dag        -> DAG visualization (was: kgents dag)
 - time.fork       -> Fork from a turn (was: kgents fork)
-- time.forest     -> Plan forest health (was: kgents forest)
 - time.telemetry  -> OpenTelemetry (was: kgents telemetry)
 - time.pending    -> Pending YIELD turns (was: kgents pending)
 - time.approve    -> Approve YIELD turn (was: kgents approve)
@@ -19,7 +18,6 @@ Usage:
     kgents time trace              # Call graph tracing
     kgents time turns              # Turn history
     kgents time dag                # DAG visualization
-    kgents time forest             # Plan forest health
     kgents time telemetry          # OpenTelemetry status
     kgents time pending            # List pending YIELD turns
     kgents time approve <id>       # Approve a pending turn
@@ -66,12 +64,6 @@ class TimeRouter(ContextRouter):
             "Fork from a turn for debugging",
             _handle_fork,
             aspects=["create", "list"],
-        )
-        self.register(
-            "forest",
-            "Plan forest health (Forest Protocol)",
-            _handle_forest,
-            aspects=["status", "update", "check", "lint"],
         )
         self.register(
             "telemetry",
@@ -130,13 +122,6 @@ def _handle_fork(args: list[str], ctx: "InvocationContext | None" = None) -> int
     from protocols.cli.handlers.turns import cmd_fork
 
     return cmd_fork(args, ctx)
-
-
-def _handle_forest(args: list[str], ctx: "InvocationContext | None" = None) -> int:
-    """Handle time forest -> delegating to existing forest handler."""
-    from protocols.cli.handlers.forest import cmd_forest
-
-    return cmd_forest(args)
 
 
 def _handle_telemetry(args: list[str], ctx: "InvocationContext | None" = None) -> int:

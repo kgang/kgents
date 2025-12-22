@@ -301,7 +301,7 @@ spec/           - The specification (conceptual, implementation-agnostic)
 impl/           - Reference implementations
 impl/claude/    - Python backend + React frontend
 docs/skills/    - THE 17 SKILLS (read these!)
-plans/          - Meta files only (_focus.md, _forest.md, meta.md)
+plans/          - Meta files only (_focus.md, meta.md)
 ```
 
 ---
@@ -314,7 +314,7 @@ plans/          - Meta files only (_focus.md, _forest.md, meta.md)
 
 See `NOW.md` — the one living document that replaces 22 plan files.
 
-**Quick Status**: Brain 100%, Gardener 100%, Gestalt 70%, Atelier 75%, Town 55%, Park 40%
+**Quick Status**: Brain 100%, Gestalt 70%, Atelier 75%, Town 55%, Park 40%
 
 ---
 
@@ -342,10 +342,16 @@ REQUIRED deps (no default) → DependencyNotFoundError immediately with helpful 
 OPTIONAL deps (= None default) → skipped gracefully, uses default
 DECLARED deps (@node(dependencies=(...))) → ALL treated as required
 
+FAIL-FAST: @node validates dependency names at IMPORT time
+  If @node(dependencies=("foo",)) but __init__ has no 'foo' param → TypeError
+  Error: "@node('path') declares 'foo' but Class.__init__ has no 'foo'"
+  This catches mismatches at startup, not at runtime invocation!
+
 THE FIX: For EVERY required dep:
   1. Add get_foo() to services/providers.py
   2. Register: container.register("foo", get_foo, singleton=True)
   3. Names MUST match exactly (case-sensitive)
+  4. Field/param name in __init__ MUST match dependency name
 
 To make optional: def __init__(self, foo: Foo | None = None): ...
 

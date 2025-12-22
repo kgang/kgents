@@ -60,7 +60,7 @@ packages = ["bootstrap", "agents", "runtime", "protocols", "services"]
 [project.scripts]
 kg = "protocols.cli.hollow:main"
 kgents = "protocols.cli.hollow:main"
-kgentsd = "services.witness.cli:main"
+kgentsd = "services.kgentsd.cli:main"
 km = "protocols.cli.km:main"
 
 [tool.pytest.ini_options]

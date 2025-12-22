@@ -966,26 +966,6 @@ class SelfContextResolver:
             case "soul":
                 # self.soul.* → SoulNode for K-gent dialogue
                 return self._soul or create_soul_node()
-            # Forest Protocol integration (Wave 2)
-            case "forest":
-                # self.forest.* → ForestNode for plan management
-                from .forest import create_forest_node
-
-                return create_forest_node()
-            # Garden integration (Wave 2.5)
-            case "garden":
-                # self.garden.* → GardenNode for garden state/seasons/health
-                # Handle sub-paths: self.garden.tend.*, self.garden.persona.*, self.garden.inducer.*
-                if rest:
-                    sub_holon = rest[0]
-                    if sub_holon == "tend":
-                        from .tend import create_tend_node
-
-                        return create_tend_node()
-                    # Future: persona, inducer sub-nodes
-                from .garden import create_garden_node
-
-                return create_garden_node()
             case _:
                 # Generic self node for undefined holons
                 return GenericSelfNode(holon)

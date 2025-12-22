@@ -1,24 +1,22 @@
 """
-Witness Crown Jewel: The 8th Jewel That Watches, Learns, and Acts.
+Witness Crown Jewel: Primitives for Witnessing, Memory, and Trust.
 
-The Witness is the only Crown Jewel that can invoke all others. It graduates
-from "invisible infrastructure" to a trust-gated agent that earns the right
-to act autonomously on Kent's behalf.
+The Witness service provides:
+- Mark: Atomic unit of witnessed execution
+- Grant: Permission contracts
+- Scope: Budget and context constraints
+- Playbook: Lawful workflow orchestration
+- Lesson: Immutable curated knowledge
+
+The daemon infrastructure (CLI, watchers, pipelines) has moved to services/kgentsd/.
 
 Philosophy:
-    "The ghost is not a haunting—it's a witnessing that becomes a doing."
+    "The proof IS the decision. The mark IS the witness."
 
 See: docs/skills/metaphysical-fullstack.md
-See: plans/kgentsd-crown-jewel.md
+See: spec/services/witness.md
 """
 
-from .audit import (
-    AuditEntry,
-    AuditingInvoker,
-    AuditingPipelineRunner,
-    create_auditing_invoker,
-    create_auditing_runner,
-)
 from .contracts import (
     ActionRecordRequest,
     ActionRecordResponse,
@@ -81,13 +79,6 @@ from .intent import (
     get_intent_tree,
     reset_intent_tree,
 )
-from .invoke import (
-    InvocationResult,
-    JewelInvoker,
-    create_invoker,
-    is_mutation_path,
-    is_read_only_path,
-)
 
 # Lesson (renamed from Terrace)
 from .lesson import (
@@ -137,17 +128,6 @@ from .persistence import (
     WitnessPersistence,
     WitnessStatus,
 )
-from .pipeline import (
-    Branch,
-    Pipeline,
-    PipelineResult,
-    PipelineRunner,
-    PipelineStatus,
-    Step,
-    StepResult,
-    branch,
-    step,
-)
 
 # Playbook (renamed from Ritual)
 from .playbook import (
@@ -171,6 +151,7 @@ from .playbook import (
 )
 from .polynomial import (
     WITNESS_POLYNOMIAL,
+    ActionResult,
     AgenteseEvent,
     CIEvent,
     EscalateCommand,
@@ -186,32 +167,6 @@ from .polynomial import (
     WitnessPhase,
     WitnessPolynomial,
     WitnessState,
-)
-from .reactor import (
-    DEFAULT_MAPPINGS,
-    Event,
-    EventMapping,
-    EventSource as ReactorEventSource,
-    Reaction,
-    ReactionStatus,
-    WitnessReactor,
-    ci_status_event,
-    create_reactor,
-    create_test_failure_event,
-    crystallization_ready_event,
-    git_commit_event,
-    health_tick_event,
-    pr_opened_event,
-    session_start_event,
-)
-from .schedule import (
-    ScheduledTask,
-    ScheduleStatus,
-    ScheduleType,
-    WitnessScheduler,
-    create_scheduler,
-    delay,
-    every,
 )
 
 # Scope (renamed from Offering)
@@ -299,38 +254,9 @@ from .walk import (
     get_walk_store,
     reset_walk_store,
 )
-from .watchers import (
-    GitWatcher,
-    WatcherState,
-    WatcherStats,
-    create_git_watcher,
-)
-from .workflows import (
-    CI_MONITOR,
-    CODE_CHANGE_RESPONSE,
-    CRYSTALLIZATION,
-    HEALTH_CHECK,
-    MORNING_STANDUP,
-    PR_REVIEW_WORKFLOW,
-    TEST_FAILURE_RESPONSE,
-    WORKFLOW_REGISTRY,
-    WorkflowCategory,
-    WorkflowTemplate,
-    chain_workflows,
-    extend_workflow,
-    get_workflow,
-    list_workflows,
-    search_workflows,
-)
 
 # Explicit exports for mypy
 __all__ = [
-    # Audit
-    "AuditEntry",
-    "AuditingInvoker",
-    "AuditingPipelineRunner",
-    "create_auditing_invoker",
-    "create_auditing_runner",
     # Contracts
     "ActionRecordRequest",
     "ActionRecordResponse",
@@ -386,12 +312,6 @@ __all__ = [
     "generate_intent_id",
     "get_intent_tree",
     "reset_intent_tree",
-    # Invoke
-    "InvocationResult",
-    "JewelInvoker",
-    "create_invoker",
-    "is_mutation_path",
-    "is_read_only_path",
     # Lesson (renamed from Terrace)
     "Lesson",
     "LessonId",
@@ -432,16 +352,6 @@ __all__ = [
     "TrustResult",
     "WitnessPersistence",
     "WitnessStatus",
-    # Pipeline
-    "Branch",
-    "Pipeline",
-    "PipelineResult",
-    "PipelineRunner",
-    "PipelineStatus",
-    "Step",
-    "StepResult",
-    "branch",
-    "step",
     # Playbook (renamed from Ritual)
     "GuardEvaluation",
     "GuardFailed",
@@ -462,6 +372,7 @@ __all__ = [
     "reset_playbook_store",
     # Polynomial
     "WITNESS_POLYNOMIAL",
+    "ActionResult",
     "AgenteseEvent",
     "CIEvent",
     "EscalateCommand",
@@ -477,30 +388,6 @@ __all__ = [
     "WitnessPhase",
     "WitnessPolynomial",
     "WitnessState",
-    # Reactor
-    "DEFAULT_MAPPINGS",
-    "Event",
-    "EventMapping",
-    "ReactorEventSource",
-    "Reaction",
-    "ReactionStatus",
-    "WitnessReactor",
-    "ci_status_event",
-    "create_reactor",
-    "create_test_failure_event",
-    "crystallization_ready_event",
-    "git_commit_event",
-    "health_tick_event",
-    "pr_opened_event",
-    "session_start_event",
-    # Schedule
-    "ScheduledTask",
-    "ScheduleStatus",
-    "ScheduleType",
-    "WitnessScheduler",
-    "create_scheduler",
-    "delay",
-    "every",
     # Scope (renamed from Offering)
     "Budget",
     "BudgetExceeded",
@@ -576,25 +463,4 @@ __all__ = [
     "WalkStore",
     "get_walk_store",
     "reset_walk_store",
-    # Watchers
-    "GitWatcher",
-    "WatcherState",
-    "WatcherStats",
-    "create_git_watcher",
-    # Workflows
-    "CI_MONITOR",
-    "CODE_CHANGE_RESPONSE",
-    "CRYSTALLIZATION",
-    "HEALTH_CHECK",
-    "MORNING_STANDUP",
-    "PR_REVIEW_WORKFLOW",
-    "TEST_FAILURE_RESPONSE",
-    "WORKFLOW_REGISTRY",
-    "WorkflowCategory",
-    "WorkflowTemplate",
-    "chain_workflows",
-    "extend_workflow",
-    "get_workflow",
-    "list_workflows",
-    "search_workflows",
 ]

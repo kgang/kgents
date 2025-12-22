@@ -291,7 +291,7 @@ class TestCLIHandlerIntegration:
 
     def test_town_handler_import(self) -> None:
         """Can import town handler."""
-        from protocols.cli.handlers.town import cmd_town
+        from protocols.cli.handlers.town import cmd_town  # type: ignore[import-untyped]
 
         assert cmd_town is not None
 

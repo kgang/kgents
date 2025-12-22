@@ -194,12 +194,14 @@ class CoffeeNode(BaseLogosNode):
     """
 
     _handle: str = "time.coffee"
-    service: CoffeeService | None = None
+    # NOTE: Field name MUST match @node(dependencies=(...)) declaration
+    # The container injects by name: coffee_service=value
+    coffee_service: CoffeeService | None = None
 
     def __post_init__(self) -> None:
         """Initialize with service."""
-        if self.service is None:
-            self.service = get_coffee_service()
+        if self.coffee_service is None:
+            self.coffee_service = get_coffee_service()
 
     @property
     def handle(self) -> str:
@@ -249,9 +251,9 @@ class CoffeeNode(BaseLogosNode):
     )
     async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """View current ritual state."""
-        assert self.service is not None
+        assert self.coffee_service is not None
 
-        data = self.service.manifest()
+        data = self.coffee_service.manifest()
 
         # Build summary
         if data["today_voice"]:
@@ -278,9 +280,9 @@ class CoffeeNode(BaseLogosNode):
     )
     async def garden(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Generate Garden View (Movement 1)."""
-        assert self.service is not None
+        assert self.coffee_service is not None
 
-        view = await self.service.garden()
+        view = await self.coffee_service.garden()
 
         return BasicRendering(
             summary=f"🌱 Garden: {view.total_items} items",
@@ -302,9 +304,9 @@ class CoffeeNode(BaseLogosNode):
     )
     async def weather(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Generate Conceptual Weather (Movement 2)."""
-        assert self.service is not None
+        assert self.coffee_service is not None
 
-        weather = await self.service.weather()
+        weather = await self.coffee_service.weather()
 
         pattern_count = len(weather.all_patterns)
         summary = f"🌤️ Weather: {pattern_count} patterns"
@@ -329,9 +331,9 @@ class CoffeeNode(BaseLogosNode):
     )
     async def menu(self, observer: "Umwelt[Any, Any]") -> Renderable:
         """Generate Challenge Menu (Movement 3)."""
-        assert self.service is not None
+        assert self.coffee_service is not None
 
-        menu = await self.service.menu()
+        menu = await self.coffee_service.menu()
 
         item_count = len(menu.gentle) + len(menu.focused) + len(menu.intense)
         summary = f"🍳 Menu: {item_count} invitations"
@@ -370,7 +372,7 @@ class CoffeeNode(BaseLogosNode):
         If any answers provided, create and save MorningVoice.
         Otherwise, return capture questions for interactive flow.
         """
-        assert self.service is not None
+        assert self.coffee_service is not None
 
         # If no answers, return questions for interactive flow
         if not any([non_code_thought, eye_catch, success_criteria, raw_feeling]):
@@ -405,7 +407,7 @@ class CoffeeNode(BaseLogosNode):
         )
 
         # Save
-        saved_path = await self.service.save_capture(voice)
+        saved_path = await self.coffee_service.save_capture(voice)
 
         result_data = {
             "captured": True,
@@ -459,16 +461,16 @@ class CoffeeNode(BaseLogosNode):
         capture_date: str | None = None,
     ) -> Renderable:
         """View past voice captures."""
-        assert self.service is not None
+        assert self.coffee_service is not None
 
         if capture_date:
             # Get specific date
             dt = date.fromisoformat(capture_date)
-            voice = self.service.get_voice(dt)
+            voice = self.coffee_service.get_voice(dt)
             voices = [voice] if voice else []
         else:
             # Get recent
-            voices = self.service.get_recent_voices(limit=limit)
+            voices = self.coffee_service.get_recent_voices(limit=limit)
 
         # Extract patterns if we have enough data
         patterns = None

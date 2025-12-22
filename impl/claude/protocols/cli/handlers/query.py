@@ -102,25 +102,11 @@ def _discover_paths() -> list[str]:
     except ImportError:
         pass
 
-    try:
-        from protocols.cli.handlers.gardener_thin import GARDENER_SUBCOMMAND_TO_PATH
-
-        paths.update(GARDENER_SUBCOMMAND_TO_PATH.values())
-    except ImportError:
-        pass
-
     # Non-thin handlers
     try:
         from protocols.cli.handlers.joy import JOY_SUBCOMMAND_MAP
 
         paths.update(JOY_SUBCOMMAND_MAP.values())
-    except ImportError:
-        pass
-
-    try:
-        from protocols.cli.handlers.forest import FOREST_SUBCOMMAND_MAP
-
-        paths.update(FOREST_SUBCOMMAND_MAP.values())
     except ImportError:
         pass
 

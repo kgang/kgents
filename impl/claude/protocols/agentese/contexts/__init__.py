@@ -201,15 +201,6 @@ from .world import (
     create_world_resolver,
 )
 
-# Atelier Node integration (Crown Jewels Metaphysical Upgrade)
-from .world_atelier import (
-    ATELIER_AFFORDANCES,
-    AtelierNode,
-    create_atelier_node,
-    get_atelier_node,
-    set_atelier_node,
-)
-
 # Emergence Node integration (Cymatics Design Sampler)
 from .world_emergence import (
     EMERGENCE_AFFORDANCES,
@@ -441,13 +432,7 @@ __all__ = [
     "JewelFlowNode",
     "BrainFlowNode",
     "create_brain_flow_node",
-    # Note: Town, Park, Gestalt, Gardener Flow, Chat removed 2025-12-21 (Crown Jewel Cleanup)
-    # Atelier Node integration (Crown Jewels Metaphysical Upgrade)
-    "ATELIER_AFFORDANCES",
-    "AtelierNode",
-    "create_atelier_node",
-    "get_atelier_node",
-    "set_atelier_node",
+    # Note: Town, Park, Gestalt, Gardener Flow, Chat, Atelier removed 2025-12-21 (Crown Jewel Cleanup)
     # Emergence Node integration (Cymatics Design Sampler)
     "EMERGENCE_AFFORDANCES",
     "PATTERN_FAMILIES",

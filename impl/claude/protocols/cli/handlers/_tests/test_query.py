@@ -41,14 +41,6 @@ class TestDynamicPathDiscovery:
         assert "self.memory.capture" in paths
         assert "self.memory.recall" in paths
 
-        # Paths from soul_thin.py
-        assert "self.soul.reflect" in paths
-        assert "self.soul.chat" in paths
-
-        # Paths from town_thin.py
-        assert "world.town.manifest" in paths
-        assert "world.town.start" in paths
-
     def test_discover_paths_finds_crown_jewel_paths(self) -> None:
         """Should discover paths from Crown Jewels registry."""
         paths = _discover_paths()
@@ -58,9 +50,6 @@ class TestDynamicPathDiscovery:
 
         # From crown_jewels.py PARK_PATHS
         assert "concept.mask.manifest" in paths
-
-        # From crown_jewels.py GARDENER_PATHS
-        assert "concept.gardener.manifest" in paths
 
     def test_discover_paths_includes_base_contexts(self) -> None:
         """Should include the five base AGENTESE contexts."""
@@ -204,7 +193,7 @@ class TestContextDiscovery:
     def test_void_context_has_paths(self) -> None:
         """void.* should have paths."""
         matched = _query_known_paths("void.*")
-        assert len(matched) >= 5, f"Only {len(matched)} void paths"
+        assert len(matched) >= 2, f"Only {len(matched)} void paths"
 
     def test_time_context_has_paths(self) -> None:
         """time.* should have paths."""

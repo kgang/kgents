@@ -89,37 +89,42 @@ class WorldRouter(ContextRouter):
 
 def _handle_agents(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world agents -> delegating to existing a_gent handler."""
-    from protocols.cli.handlers.a_gent import cmd_a
+    from protocols.cli.handlers.a_gent import cmd_a  # type: ignore[import-untyped]
 
-    return cmd_a(args, ctx)
+    result: int = cmd_a(args, ctx)
+    return result
 
 
 def _handle_daemon(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world daemon -> delegating to existing daemon handler."""
-    from protocols.cli.handlers.daemon import cmd_daemon
+    from protocols.cli.handlers.daemon import cmd_daemon  # type: ignore[import-untyped]
 
-    return cmd_daemon(args)
+    result: int = cmd_daemon(args)
+    return result
 
 
 def _handle_fixture(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world fixture -> delegating to existing fixture handler."""
-    from protocols.cli.handlers.fixture import cmd_fixture
+    from protocols.cli.handlers.fixture import cmd_fixture  # type: ignore[import-untyped]
 
-    return cmd_fixture(args, ctx)
+    result: int = cmd_fixture(args, ctx)
+    return result
 
 
 def _handle_dev(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world dev -> delegating to existing dev handler."""
-    from protocols.cli.handlers.dev import cmd_dev
+    from protocols.cli.handlers.dev import cmd_dev  # type: ignore[import-untyped]
 
-    return cmd_dev(args)
+    result: int = cmd_dev(args)
+    return result
 
 
 def _handle_town(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world town -> delegating to Agent Town handler."""
-    from protocols.cli.handlers.town import cmd_town
+    from protocols.cli.handlers.town import cmd_town  # type: ignore[import-untyped]
 
-    return cmd_town(args, ctx)
+    result: int = cmd_town(args, ctx)
+    return result
 
 
 def _handle_codebase(args: list[str], ctx: "InvocationContext | None" = None) -> int:
