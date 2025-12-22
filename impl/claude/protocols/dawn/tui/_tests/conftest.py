@@ -16,8 +16,8 @@ from protocols.dawn.snippets import SnippetLibrary
 
 @pytest.fixture
 def focus_manager() -> FocusManager:
-    """Create a FocusManager with test data."""
-    manager = FocusManager()
+    """Create a FocusManager with test data (no disk persistence)."""
+    manager = FocusManager(auto_persist=False)
 
     # Add items in different buckets
     manager.add("spec/protocols/dawn-cockpit.md", label="Dawn Spec", bucket=Bucket.TODAY)
@@ -32,7 +32,6 @@ def focus_manager() -> FocusManager:
 def focus_manager_with_stale(focus_manager: FocusManager) -> FocusManager:
     """Create a FocusManager with some stale items."""
     # Add a stale item (artificially old)
-    from datetime import datetime, timedelta
 
     old_time = datetime.now() - timedelta(hours=48)
 
@@ -55,8 +54,8 @@ def focus_manager_with_stale(focus_manager: FocusManager) -> FocusManager:
 
 @pytest.fixture
 def snippet_library() -> SnippetLibrary:
-    """Create a SnippetLibrary with test data."""
-    lib = SnippetLibrary()
+    """Create a SnippetLibrary with test data (no disk persistence)."""
+    lib = SnippetLibrary(auto_persist=False)
     lib.load_defaults()
 
     # Add a custom snippet for testing
@@ -67,11 +66,11 @@ def snippet_library() -> SnippetLibrary:
 
 @pytest.fixture
 def empty_focus_manager() -> FocusManager:
-    """Create an empty FocusManager."""
-    return FocusManager()
+    """Create an empty FocusManager (no disk persistence)."""
+    return FocusManager(auto_persist=False)
 
 
 @pytest.fixture
 def empty_snippet_library() -> SnippetLibrary:
-    """Create an empty SnippetLibrary."""
-    return SnippetLibrary()
+    """Create an empty SnippetLibrary (no disk persistence)."""
+    return SnippetLibrary(auto_persist=False)

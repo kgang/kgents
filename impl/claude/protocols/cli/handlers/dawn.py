@@ -69,6 +69,7 @@ def _get_managers() -> tuple[Any, Any]:
     Get FocusManager and SnippetLibrary instances.
 
     Uses the singleton pattern from DawnNode to ensure consistency.
+    Loads persisted data from disk.
     """
     from protocols.dawn import FocusManager, SnippetLibrary
     from protocols.dawn.node import get_dawn_node
@@ -76,12 +77,14 @@ def _get_managers() -> tuple[Any, Any]:
     try:
         # Try to get from the registered node (shares state with AGENTESE)
         node = get_dawn_node()
-        return node._focus_manager, node._snippet_library
+        return node.focus_manager, node.snippet_library
     except Exception:
-        # Fallback: create fresh instances
+        # Fallback: create fresh instances and load persisted data
         fm = FocusManager()
+        fm.load()  # Load persisted focus items
         sl = SnippetLibrary()
         sl.load_defaults()
+        sl.load_custom()  # Load persisted custom snippets
         return fm, sl
 
 
@@ -227,7 +230,8 @@ def _print_manifest(data: dict[str, Any]) -> None:
 
     stale_warning = f" ⚠️ {focus['stale']} stale" if focus["stale"] > 0 else ""
 
-    print("""
+    print(
+        """
 ┌─────────────────────────────────────────────────┐
 │  🌅 DAWN COCKPIT                                │
 │  "The cockpit just makes it easy."              │
@@ -247,14 +251,15 @@ def _print_manifest(data: dict[str, Any]) -> None:
 │    kg dawn hygiene      Check stale items       │
 └─────────────────────────────────────────────────┘
 """.format(
-        today=focus["today"],
-        week=focus["week"],
-        someday=focus["someday"],
-        stale_warning=stale_warning,
-        static=snippets["static"],
-        query=snippets["query"],
-        custom=snippets["custom"],
-    ).strip())
+            today=focus["today"],
+            week=focus["week"],
+            someday=focus["someday"],
+            stale_warning=stale_warning,
+            static=snippets["static"],
+            query=snippets["query"],
+            custom=snippets["custom"],
+        ).strip()
+    )
 
 
 # =============================================================================
@@ -420,11 +425,16 @@ def _run_focus_promote(args: list[str], json_output: bool) -> int:
     new_item = fm.promote(item_id)
 
     if json_output:
-        print(json.dumps({
-            "promoted": new_item is not None,
-            "from_bucket": old_item.bucket.value,
-            "to_bucket": new_item.bucket.value if new_item else None,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "promoted": new_item is not None,
+                    "from_bucket": old_item.bucket.value,
+                    "to_bucket": new_item.bucket.value if new_item else None,
+                },
+                indent=2,
+            )
+        )
     else:
         if new_item:
             print(f"⬆️ Promoted: {new_item.label}")
@@ -455,11 +465,16 @@ def _run_focus_demote(args: list[str], json_output: bool) -> int:
     new_item = fm.demote(item_id)
 
     if json_output:
-        print(json.dumps({
-            "demoted": new_item is not None,
-            "from_bucket": old_item.bucket.value,
-            "to_bucket": new_item.bucket.value if new_item else None,
-        }, indent=2))
+        print(
+            json.dumps(
+                {
+                    "demoted": new_item is not None,
+                    "from_bucket": old_item.bucket.value,
+                    "to_bucket": new_item.bucket.value if new_item else None,
+                },
+                indent=2,
+            )
+        )
     else:
         if new_item:
             print(f"⬇️ Demoted: {new_item.label}")
@@ -503,9 +518,11 @@ def _print_snippets(snippets: list[Any]) -> None:
         d = snippet.to_dict()
         icon = icons.get(d.get("type", "static"), "▶")
         content = d.get("content", "")
-        preview = content[:40] + "..." if content and len(content) > 40 else content or "[not loaded]"
+        preview = (
+            content[:40] + "..." if content and len(content) > 40 else content or "[not loaded]"
+        )
         print(f"  {icon} [{d['id']}] {d['label']}")
-        print(f"       \"{preview}\"")
+        print(f'       "{preview}"')
 
     print()
 
@@ -534,6 +551,7 @@ def _run_snippets_copy(args: list[str], json_output: bool) -> int:
     copied = False
     try:
         import pyperclip
+
         pyperclip.copy(content)
         copied = True
     except ImportError:
@@ -542,16 +560,22 @@ def _run_snippets_copy(args: list[str], json_output: bool) -> int:
         pass
 
     if json_output:
-        print(json.dumps({
-            "copied": copied,
-            "snippet_id": snippet_id,
-            "content": content,
-        }, indent=2, default=str))
+        print(
+            json.dumps(
+                {
+                    "copied": copied,
+                    "snippet_id": snippet_id,
+                    "content": content,
+                },
+                indent=2,
+                default=str,
+            )
+        )
     else:
         if copied:
             print(f"📋 Copied: {snippet.to_dict()['label']}")
         else:
-            print(f"Content (pyperclip not available):")
+            print("Content (pyperclip not available):")
             print(f"  {content}")
 
     return 0
@@ -593,7 +617,7 @@ def _print_hygiene(stale_items: list[Any]) -> None:
         print(f"  [{item.id}] {item.label}")
         print(f"       Bucket: {item.bucket.value}")
         print(f"       Last touched: {item.last_touched}")
-        print(f"       Suggestion: promote or demote?")
+        print("       Suggestion: promote or demote?")
         print()
 
     print("Actions:")

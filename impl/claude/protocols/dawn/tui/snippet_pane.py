@@ -368,7 +368,7 @@ class SnippetPane(Widget, can_focus=True):
                 # Try pyperclip first, fall back to pbcopy on macOS
                 copied = False
                 try:
-                    import pyperclip  # type: ignore[import-untyped]
+                    import pyperclip  # type: ignore[import-untyped]  # No stubs
 
                     pyperclip.copy(content)
                     copied = True

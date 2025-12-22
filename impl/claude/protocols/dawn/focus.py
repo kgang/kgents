@@ -12,17 +12,28 @@ Core Insight: Staleness is bucket-dependent, not wall-clock.
 All types are frozen dataclasses for immutability. Operations like
 touch/promote/demote return new instances.
 
+Teaching:
+    gotcha: Focus items are persisted to XDG_DATA_HOME/kgents/dawn/focus.json.
+            Call save() after mutations, or use auto_persist=True (default).
+            (Evidence: spec/protocols/dawn-cockpit.md § Focus Management)
+
 See: spec/protocols/dawn-cockpit.md
 """
 
 from __future__ import annotations
 
+import json
+import logging
+import os
 import uuid
 from builtins import list as List  # Avoid shadowing in FocusManager.list()
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class Bucket(Enum):
@@ -163,22 +174,42 @@ class FocusItem:
         )
 
 
+def _get_focus_path() -> Path:
+    """Get the path for focus persistence file."""
+    xdg_data = os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+    focus_dir = Path(xdg_data) / "kgents" / "dawn"
+    focus_dir.mkdir(parents=True, exist_ok=True)
+    return focus_dir / "focus.json"
+
+
 class FocusManager:
     """
-    Manages focus items across buckets.
+    Manages focus items across buckets with optional persistence.
 
-    This is an in-memory manager. Phase 2 adds persistence via D-gent.
+    Focus items are persisted to ~/.local/share/kgents/dawn/focus.json.
 
     Usage:
         manager = FocusManager()
+        manager.load()               # Load existing items from disk
         item = manager.add("path/to/file.md", label="My Focus")
-        manager.promote(item.id)
+        manager.promote(item.id)     # Mutations auto-persist
         stale = manager.get_stale()
+
+    Teaching:
+        gotcha: With auto_persist=True (default), mutations automatically save.
+                For batch operations, use auto_persist=False and call save() once.
+                (Evidence: spec/protocols/dawn-cockpit.md § Focus Management)
     """
 
-    def __init__(self) -> None:
-        """Initialize empty focus manager."""
+    def __init__(self, auto_persist: bool = True) -> None:
+        """
+        Initialize focus manager.
+
+        Args:
+            auto_persist: If True, automatically save after add/remove/touch/promote/demote.
+        """
         self._items: dict[str, FocusItem] = {}
+        self._auto_persist = auto_persist
 
     def list(self, bucket: Bucket | None = None) -> List[FocusItem]:
         """
@@ -218,6 +249,8 @@ class FocusManager:
             last_touched=now,
         )
         self._items[item.id] = item
+        if self._auto_persist:
+            self.save()
         return item
 
     def get(self, item_id: str) -> FocusItem | None:
@@ -232,6 +265,8 @@ class FocusManager:
         """
         if item_id in self._items:
             del self._items[item_id]
+            if self._auto_persist:
+                self.save()
             return True
         return False
 
@@ -246,6 +281,8 @@ class FocusManager:
             return None
         touched = item.touch()
         self._items[item_id] = touched
+        if self._auto_persist:
+            self.save()
         return touched
 
     def promote(self, item_id: str) -> FocusItem | None:
@@ -259,6 +296,8 @@ class FocusManager:
             return None
         promoted = item.promote()
         self._items[item_id] = promoted
+        if self._auto_persist:
+            self.save()
         return promoted
 
     def demote(self, item_id: str) -> FocusItem | None:
@@ -272,6 +311,8 @@ class FocusManager:
             return None
         demoted = item.demote()
         self._items[item_id] = demoted
+        if self._auto_persist:
+            self.save()
         return demoted
 
     def get_stale(self) -> List[FocusItem]:
@@ -281,10 +322,44 @@ class FocusManager:
     def clear(self) -> None:
         """Clear all items (for testing)."""
         self._items.clear()
+        if self._auto_persist:
+            self.save()
 
     def __len__(self) -> int:
         """Return total number of items."""
         return len(self._items)
+
+    # === Persistence ===
+
+    def save(self) -> None:
+        """Save focus items to disk."""
+        path = _get_focus_path()
+        data = [item.to_dict() for item in self._items.values()]
+        try:
+            with open(path, "w") as f:
+                json.dump(data, f, indent=2)
+            logger.debug(f"Saved {len(data)} focus items to {path}")
+        except Exception as e:
+            logger.error(f"Failed to save focus items: {e}")
+
+    def load(self) -> None:
+        """Load focus items from disk."""
+        path = _get_focus_path()
+        if not path.exists():
+            logger.debug(f"No focus file at {path}")
+            return
+
+        try:
+            with open(path) as f:
+                data = json.load(f)
+
+            for item_data in data:
+                item = FocusItem.from_dict(item_data)
+                self._items[item.id] = item
+
+            logger.debug(f"Loaded {len(data)} focus items from {path}")
+        except Exception as e:
+            logger.error(f"Failed to load focus items: {e}")
 
 
 __all__ = [

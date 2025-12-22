@@ -127,12 +127,15 @@ class DawnNode(BaseLogosNode):
     witness_persistence: "WitnessPersistence | None" = None
 
     def __post_init__(self) -> None:
-        """Initialize defaults if not injected."""
+        """Initialize defaults if not injected, load persisted data."""
         if self.focus_manager is None:
-            object.__setattr__(self, "focus_manager", FocusManager())
+            fm = FocusManager()
+            fm.load()  # Load persisted focus items
+            object.__setattr__(self, "focus_manager", fm)
         if self.snippet_library is None:
             lib = SnippetLibrary()
             lib.load_defaults()
+            lib.load_custom()  # Load persisted custom snippets
             object.__setattr__(self, "snippet_library", lib)
 
     @property
