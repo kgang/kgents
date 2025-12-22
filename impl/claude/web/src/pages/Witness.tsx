@@ -32,7 +32,6 @@ import {
   MarkFilters,
   createDefaultFilters,
   type MarkFilterState,
-  type AuthorFilter,
 } from '@/components/witness/MarkFilters';
 import type { Mark, CreateMarkRequest } from '@/api/witness';
 

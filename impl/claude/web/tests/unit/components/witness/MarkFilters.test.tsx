@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {
   MarkFilters,
@@ -20,22 +20,22 @@ import {
 // =============================================================================
 
 function createMockOnChange() {
-  return vi.fn<[MarkFilterState], void>();
+  return vi.fn();
 }
 
 function renderMarkFilters(props: Partial<Parameters<typeof MarkFilters>[0]> = {}) {
-  const onChange = props.onChange ?? createMockOnChange();
+  const onChange = createMockOnChange();
   const filters = props.filters ?? createDefaultFilters();
 
   render(
     <MarkFilters
       filters={filters}
-      onChange={onChange}
+      onChange={props.onChange ?? onChange}
       {...props}
     />
   );
 
-  return { onChange, filters };
+  return { onChange: props.onChange ?? onChange, filters };
 }
 
 // =============================================================================
@@ -89,7 +89,13 @@ describe('MarkFilters', () => {
 
     it('switches between author filters', async () => {
       const user = userEvent.setup();
-      const { onChange } = renderMarkFilters();
+      const onChange = vi.fn();
+      render(
+        <MarkFilters
+          filters={createDefaultFilters()}
+          onChange={onChange}
+        />
+      );
 
       await user.click(screen.getByTestId('filter-chip-claude'));
       expect(onChange).toHaveBeenCalledWith(
@@ -118,7 +124,13 @@ describe('MarkFilters', () => {
 
     it('calls onChange when search text changes', async () => {
       const user = userEvent.setup();
-      const { onChange } = renderMarkFilters();
+      const onChange = vi.fn();
+      render(
+        <MarkFilters
+          filters={createDefaultFilters()}
+          onChange={onChange}
+        />
+      );
 
       const input = screen.getByTestId('grep-input');
       await user.type(input, 'hello');
