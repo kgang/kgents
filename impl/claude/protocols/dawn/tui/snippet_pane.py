@@ -238,28 +238,42 @@ class SnippetPane(Widget, can_focus=True):
         """Populate snippets on mount."""
         self.refresh_items()
 
-    def refresh_items(self) -> None:
+    def refresh_items(self, force: bool = False) -> None:
         """
         Refresh the snippets display adaptively.
 
         Uses intelligent refresh:
-        1. If snippet IDs unchanged → just update selection styling (no flash)
+        1. If snippet data unchanged → just update selection styling (no flash)
         2. If snippets changed → minimal rebuild
         3. Always shows something (no empty flash)
+
+        Args:
+            force: If True, always do full rebuild (for after edits)
 
         Teaching:
             gotcha: remove_children() + mount() causes a flash because there's
                     a render frame where the container is empty. Use adaptive
                     refresh to compare before/after and only rebuild if needed.
                     (Evidence: User report of flash on 'r' key)
+
+            gotcha: Comparing only IDs is not enough — editing a snippet changes
+                    content but keeps the same ID. Compare full dict for accuracy.
+                    (Evidence: User report of edit not updating display)
         """
-        old_ids = [s.to_dict()["id"] for s in self._snippets]
+        # Capture old state for comparison (ID + label + content)
+        old_fingerprints = [
+            (s.to_dict()["id"], s.to_dict().get("label"), s.to_dict().get("content"))
+            for s in self._snippets
+        ]
         self._snippets = self.snippet_library.list_all()
-        new_ids = [s.to_dict()["id"] for s in self._snippets]
+        new_fingerprints = [
+            (s.to_dict()["id"], s.to_dict().get("label"), s.to_dict().get("content"))
+            for s in self._snippets
+        ]
 
         # Only render if mounted (has DOM context)
         try:
-            if old_ids == new_ids and self._item_widgets:
+            if not force and old_fingerprints == new_fingerprints and self._item_widgets:
                 # Same snippets — just update selection styling (no flash!)
                 self._update_selection_display()
             else:

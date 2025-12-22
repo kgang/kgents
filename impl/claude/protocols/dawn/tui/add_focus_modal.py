@@ -54,9 +54,8 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
 
     BINDINGS = [
         ("escape", "cancel", "Cancel"),
-        ("tab", "focus_next_in_modal", "Next"),
-        ("shift+tab", "focus_prev_in_modal", "Prev"),
     ]
+    # Note: Tab/Shift+Tab handled in on_key to prevent bubbling to parent app
 
     CSS = """
     AddFocusModal {
@@ -185,8 +184,21 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
             focusable[-1].focus()
 
     def on_key(self, event: Key) -> None:
-        """Handle Enter key to submit."""
-        if event.key == "enter":
+        """
+        Handle keyboard events for the modal.
+
+        Tab/Shift+Tab cycle through modal widgets (must stop propagation
+        to prevent parent app from switching panes).
+        """
+        if event.key == "tab":
+            event.stop()
+            event.prevent_default()
+            self.action_focus_next_in_modal()
+        elif event.key == "shift+tab":
+            event.stop()
+            event.prevent_default()
+            self.action_focus_prev_in_modal()
+        elif event.key == "enter":
             event.stop()
             self._submit()
 
