@@ -1240,6 +1240,211 @@ class JoyNode(BaseLogosNode):
                 return await self._flinch(observer, **kwargs)
 
 
+# === Extinct Node (Memory-First Docs) ===
+
+
+@dataclass
+class ExtinctNode(BaseLogosNode):
+    """
+    void.extinct - Access to ancestral wisdom from deleted code.
+
+    AGENTESE: void.extinct.*
+
+    The Extinction Protocol: Before deleting code, crystallize its teaching
+    and mark as extinct. Extinct teaching becomes ancestral wisdom.
+
+    Affordances:
+    - list: List extinction events
+    - show: Show details of an extinction event
+    - wisdom: Get ancestral wisdom from deleted code
+
+    Philosophy:
+        "Teaching moments don't die; they become ancestors."
+        "Don't waste good work, like you wouldn't waste food."
+
+    See: plans/memory-first-docs-execution.md
+    """
+
+    _handle: str = "void.extinct"
+
+    @property
+    def handle(self) -> str:
+        return self._handle
+
+    def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
+        """Everyone can access ancestral wisdom."""
+        return ("list", "show", "wisdom")
+
+    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+        """View extinction portal."""
+        try:
+            events = await self._get_events()
+            ghost_count = await self._count_ghosts()
+            return BasicRendering(
+                summary="Extinction Portal (Ancestral Wisdom)",
+                content=(
+                    f"Extinction events: {len(events)}\n"
+                    f"Ghost teaching crystals: {ghost_count}\n"
+                    f"\"Teaching moments don't die; they become ancestors.\""
+                ),
+                metadata={
+                    "event_count": len(events),
+                    "ghost_count": ghost_count,
+                },
+            )
+        except Exception:
+            return BasicRendering(
+                summary="Extinction Portal (Ancestral Wisdom)",
+                content="Portal to ancestral wisdom. Use 'list' to view extinction events.",
+                metadata={"status": "available"},
+            )
+
+    async def _invoke_aspect(
+        self,
+        aspect: str,
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
+    ) -> Any:
+        """Handle extinction aspects."""
+        match aspect:
+            case "list":
+                return await self._list_events(**kwargs)
+            case "show":
+                return await self._show_event(**kwargs)
+            case "wisdom":
+                return await self._get_wisdom(**kwargs)
+            case _:
+                return {"aspect": aspect, "status": "not implemented"}
+
+    async def _get_brain(self) -> Any:
+        """Get brain persistence instance."""
+        from protocols.agentese.container import get_container
+
+        container = get_container()
+        return await container.resolve("brain_persistence")
+
+    async def _get_events(self) -> list[Any]:
+        """Get all extinction events."""
+        brain = await self._get_brain()
+        return list(await brain.get_extinction_events())
+
+    async def _count_ghosts(self) -> int:
+        """Count ghost (extinct) teaching crystals."""
+        brain = await self._get_brain()
+        ghosts = await brain.get_extinct_wisdom(limit=1000)
+        return len(ghosts)
+
+    async def _list_events(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        List all extinction events.
+
+        AGENTESE: void.extinct.list
+        """
+        limit = kwargs.get("limit", 50)
+
+        try:
+            brain = await self._get_brain()
+            events = await brain.get_extinction_events(limit=limit)
+
+            return {
+                "events": [
+                    {
+                        "id": e.id,
+                        "reason": e.reason,
+                        "commit": e.commit,
+                        "preserved_count": e.preserved_count,
+                        "deleted_paths": e.deleted_paths,
+                    }
+                    for e in events
+                ],
+                "count": len(events),
+            }
+        except Exception as e:
+            return {"error": str(e), "events": [], "count": 0}
+
+    async def _show_event(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        Show details of an extinction event.
+
+        AGENTESE: void.extinct.show
+        """
+        event_id = kwargs.get("event_id") or kwargs.get("id")
+
+        if not event_id:
+            return {"error": "event_id required"}
+
+        try:
+            brain = await self._get_brain()
+            event = await brain.get_extinction_event(event_id)
+
+            if not event:
+                # Try prefix match
+                events = await brain.get_extinction_events()
+                for e in events:
+                    if e.id.startswith(str(event_id)):
+                        event = e
+                        break
+
+            if not event:
+                return {"error": f"Event not found: {event_id}"}
+
+            return {
+                "id": event.id,
+                "reason": event.reason,
+                "commit": event.commit,
+                "decision_doc": event.decision_doc,
+                "deleted_paths": event.deleted_paths,
+                "successor_map": event.successor_map,
+                "preserved_count": event.preserved_count,
+            }
+        except Exception as e:
+            return {"error": str(e)}
+
+    async def _get_wisdom(self, **kwargs: Any) -> dict[str, Any]:
+        """
+        Get ancestral wisdom from deleted code.
+
+        AGENTESE: void.extinct.wisdom
+
+        Args (via kwargs):
+            keywords: Search for keywords in insights
+            module: Filter by former module location (prefix match)
+            limit: Maximum results (default 50)
+        """
+        keywords = kwargs.get("keywords")
+        module_prefix = kwargs.get("module") or kwargs.get("module_prefix")
+        limit = kwargs.get("limit", 50)
+
+        try:
+            brain = await self._get_brain()
+            ghosts = await brain.get_extinct_wisdom(
+                keywords=keywords,
+                module_prefix=module_prefix,
+                limit=limit,
+            )
+
+            return {
+                "wisdom": [
+                    {
+                        "insight": g.teaching.insight,
+                        "severity": g.teaching.severity,
+                        "source_module": g.teaching.source_module,
+                        "source_symbol": g.teaching.source_symbol,
+                        "successor": g.successor,
+                        "extinction_reason": g.extinction_event.reason if g.extinction_event else None,
+                    }
+                    for g in ghosts
+                ],
+                "count": len(ghosts),
+                "filter": {
+                    "keywords": keywords,
+                    "module_prefix": module_prefix,
+                },
+            }
+        except Exception as e:
+            return {"error": str(e), "wisdom": [], "count": 0}
+
+
 # === Metabolic Node ===
 
 
@@ -1460,6 +1665,7 @@ class VoidContextResolver:
     _metabolism: MetabolicNode | None = None
     _hypnagogia: HypnagogiaNode | None = None
     _joy: JoyNode | None = None
+    _extinct: ExtinctNode | None = None
 
     def __post_init__(self) -> None:
         """Initialize singleton nodes with shared pool and ledger."""
@@ -1471,6 +1677,7 @@ class VoidContextResolver:
         self._metabolism = MetabolicNode()
         self._hypnagogia = HypnagogiaNode()
         self._joy = JoyNode(_pool=self._pool)
+        self._extinct = ExtinctNode()
 
         # Wire entropy pool to metabolic engine
         if self._metabolism._engine is not None:
@@ -1504,6 +1711,8 @@ class VoidContextResolver:
                 return self._hypnagogia or HypnagogiaNode()
             case "joy":
                 return self._joy or JoyNode()
+            case "extinct":
+                return self._extinct or ExtinctNode()
             case _:
                 # Generic void node for undefined holons
                 return GenericVoidNode(holon, self._pool)

@@ -200,6 +200,61 @@ from .world import (
     create_world_resolver,
 )
 
+# Typed-Hypergraph Context (self.context.* - AD-009 Context Management)
+from .self_context import (
+    CONTEXT_AFFORDANCES,
+    ALL_STANDARD_EDGES,
+    EVIDENCE_EDGES,
+    REVERSE_EDGES,
+    SEMANTIC_EDGES,
+    SPEC_EDGES,
+    STRUCTURAL_EDGES,
+    TEMPORAL_EDGES,
+    TESTING_EDGES,
+    ContextGraph,
+    ContextNavNode,
+    ContextNode,
+    Trail,
+    TrailStep,
+    create_context_graph,
+    create_context_node,
+    get_context_nav_node,
+    get_reverse_edge,
+)
+
+# Hyperedge Resolvers
+from .hyperedge_resolvers import (
+    ResolverRegistry,
+    agentese_path_to_file,
+    file_to_agentese_path,
+    get_resolver_registry,
+    register_resolver,
+    resolve_all_edges,
+    resolve_hyperedge,
+)
+
+# Portal Token Context (self.portal.* - Portal Token Navigation)
+from .self_portal import (
+    PORTAL_AFFORDANCES,
+    PortalNavNode,
+    get_portal_nav_node,
+    set_portal_nav_node,
+)
+
+# Exploration Harness Context (self.explore.* - Exploration with Safety)
+from .self_explore import (
+    EXPLORE_AFFORDANCES,
+    ExploreNode,
+    get_explore_node,
+    set_explore_node,
+)
+
+# Collaboration Context (self.collaboration.* - Phase 5C)
+from .self_collaboration import (
+    COLLABORATION_AFFORDANCES,
+    CollaborationNode,
+)
+
 # Note: Emergence Node (world.emergence.*) removed 2025-12-21
 # Gallery Node integration (Living Autopoietic Showcase)
 from .world_gallery import (
@@ -209,6 +264,16 @@ from .world_gallery import (
     create_gallery_node,
     get_gallery_node,
     set_gallery_node,
+)
+
+# Repo Node (world.repo.* - Path validation for trail creation)
+from .world_repo import (
+    CREATABLE_EXTENSIONS,
+    REPO_AFFORDANCES,
+    RepoNode,
+    create_repo_node,
+    get_repo_node,
+    set_repo_node,
 )
 
 # Note: Gestalt, Park, Town removed 2025-12-21 (Crown Jewel Cleanup)
@@ -450,4 +515,51 @@ __all__ = [
     "create_three_quality_node",
     # Unified factory
     "create_context_resolvers",
+    # Typed-Hypergraph Context (self.context.* - AD-009 Context Management)
+    "CONTEXT_AFFORDANCES",
+    "ALL_STANDARD_EDGES",
+    "EVIDENCE_EDGES",
+    "REVERSE_EDGES",
+    "SEMANTIC_EDGES",
+    "SPEC_EDGES",
+    "STRUCTURAL_EDGES",
+    "TEMPORAL_EDGES",
+    "TESTING_EDGES",
+    "ContextGraph",
+    "ContextNavNode",
+    "ContextNode",
+    "Trail",
+    "TrailStep",
+    "create_context_graph",
+    "create_context_node",
+    "get_context_nav_node",
+    "get_reverse_edge",
+    # Hyperedge Resolvers
+    "ResolverRegistry",
+    "agentese_path_to_file",
+    "file_to_agentese_path",
+    "get_resolver_registry",
+    "register_resolver",
+    "resolve_all_edges",
+    "resolve_hyperedge",
+    # Portal Token Context (self.portal.* - Portal Token Navigation)
+    "PORTAL_AFFORDANCES",
+    "PortalNavNode",
+    "get_portal_nav_node",
+    "set_portal_nav_node",
+    # Exploration Harness Context (self.explore.* - Exploration with Safety)
+    "EXPLORE_AFFORDANCES",
+    "ExploreNode",
+    "get_explore_node",
+    "set_explore_node",
+    # Collaboration Context (self.collaboration.* - Phase 5C)
+    "COLLABORATION_AFFORDANCES",
+    "CollaborationNode",
+    # Repo Node (world.repo.* - Path validation for trail creation)
+    "REPO_AFFORDANCES",
+    "CREATABLE_EXTENSIONS",
+    "RepoNode",
+    "create_repo_node",
+    "get_repo_node",
+    "set_repo_node",
 ]

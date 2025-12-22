@@ -427,7 +427,7 @@ class BaseLogosNode(ABC):
         return AspectAgent(self, aspect)  # type: ignore[return-value]
 
     @abstractmethod
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Collapse to observer-appropriate representation."""
         pass
 
@@ -443,7 +443,7 @@ class BaseLogosNode(ABC):
         Default implementation routes to _invoke_aspect().
         """
         if aspect == "manifest":
-            return await self.manifest(observer)
+            return await self.manifest(observer, **kwargs)
         if aspect == "affordances":
             # Get AgentMeta from Umwelt's DNA
             meta = self._umwelt_to_meta(observer)

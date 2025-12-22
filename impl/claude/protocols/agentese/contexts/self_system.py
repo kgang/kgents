@@ -199,18 +199,6 @@ class SystemNode(BaseLogosNode):
         except ImportError:
             pass
         try:
-            import agents.gestalt.operad  # noqa: F401
-        except ImportError:
-            pass
-        try:
-            import agents.park.operad  # noqa: F401
-        except ImportError:
-            pass
-        try:
-            import agents.atelier.workshop.operad  # noqa: F401
-        except ImportError:
-            pass
-        try:
             import agents.design.operad  # noqa: F401
         except ImportError:
             pass

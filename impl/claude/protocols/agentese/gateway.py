@@ -72,19 +72,24 @@ def _import_node_modules() -> None:
         # Note: removed 2025-12-21 (Crown Jewel Cleanup):
         #   time_trace_warp, world_gestalt_live, world_park, self_archaeology, self_conductor
         from .contexts import (
+            concept_derivation,  # noqa: F401 - Derivation Framework (concept.derivation.*)
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
             concept_scope,  # noqa: F401 - WARP Phase 1: Context contracts (concept.scope.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
+            self_context,  # noqa: F401 - Typed-Hypergraph Navigation (self.context.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_grant,  # noqa: F401 - WARP Phase 1: Permission contracts (self.grant.*)
             self_kgent,  # noqa: F401 - K-gent Sessions (self.kgent.*)
             self_lesson,  # noqa: F401 - WARP Phase 2: Knowledge layer (self.lesson.*)
             self_nphase,  # noqa: F401 - N-Phase Sessions (self.session.*)
             self_playbook,  # noqa: F401 - WARP Phase 1: Lawful workflows (self.playbook.*)
+            self_portal,  # noqa: F401 - Portal Token Navigation (self.portal.*)
             self_presence,  # noqa: F401 - CLI v7 Phase 4: Collaborative Canvas (self.presence.*)
+            self_collaboration,  # noqa: F401 - Phase 5C: Human-Agent Turn-Taking (self.collaboration.*)
             self_repl,  # noqa: F401 - CLI v7 Phase 4: REPL state (self.repl.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
+            self_trail,  # noqa: F401 - Visual Trail Graph (self.trail.*)
             self_voice,  # noqa: F401 - WARP Phase 2: Anti-Sausage gate (self.voice.gate.*)
             time_differance,  # noqa: F401 - Ghost Heritage DAG (time.differance.*, time.branch.*)
             # Note: world_emergence removed 2025-12-21
@@ -145,6 +150,12 @@ def _import_node_modules() -> None:
             from services.interactive_text import node as interactive_text_node  # noqa: F401
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (interactive_text): {e}")
+
+        # === Dawn Cockpit (time.dawn.*) ===
+        try:
+            from protocols.dawn import node as dawn_node  # noqa: F401  # time.dawn.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (dawn): {e}")
 
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
@@ -271,7 +282,23 @@ def _extract_observer(request: "Request") -> Observer:
 
 
 async def _generate_sse(gen: AsyncGenerator[Any, None]) -> AsyncGenerator[str, None]:
-    """Convert async generator to SSE format."""
+    """Convert async generator to SSE format.
+
+    Takes raw objects from async generator and wraps them in SSE format:
+    `data: {json}\n\n`
+
+    Teaching:
+        gotcha: Stream aspects must yield raw dicts/objects, NOT pre-formatted SSE.
+                This function wraps output with `data: {json}\n\n`. If the aspect
+                already formats SSE, you get double-wrapping: `data: "data: {...}"`.
+                (Evidence: test_gateway.py::test_sse_format)
+
+        gotcha: Async generator aspects must NOT be awaited in _invoke_aspect.
+                Calling an async generator function returns the generator; awaiting
+                fails with "object async_generator can't be used in 'await' expression".
+                Use: `return method()` not `await method()`.
+                (Evidence: test_self_collaboration.py::test_stream_aspect_returns_generator)
+    """
     try:
         async for chunk in gen:
             data = _to_json_safe(chunk)
