@@ -147,10 +147,7 @@ export interface MarkStreamEvent {
  * });
  */
 export async function createMark(request: CreateMarkRequest): Promise<Mark> {
-  const { data } = await apiClient.post<CreateMarkResponse>(
-    '/api/witness/marks',
-    request
-  );
+  const { data } = await apiClient.post<CreateMarkResponse>('/api/witness/marks', request);
 
   // Transform response to Mark format
   return {
@@ -170,6 +167,13 @@ export async function createMark(request: CreateMarkRequest): Promise<Mark> {
  * @example
  * const marks = await getRecentMarks({ limit: 20, author: 'kent' });
  */
+/** Response shape from the marks API */
+interface MarkListResponse {
+  marks: Mark[];
+  total: number;
+  has_more: boolean;
+}
+
 export async function getRecentMarks(filters?: MarkFilters): Promise<Mark[]> {
   const params = new URLSearchParams();
 
@@ -180,7 +184,7 @@ export async function getRecentMarks(filters?: MarkFilters): Promise<Mark[]> {
     params.set('author', filters.author);
   }
   if (filters?.principles?.length) {
-    params.set('principles', filters.principles.join(','));
+    params.set('principle', filters.principles[0]); // API takes single principle
   }
   if (filters?.today) {
     params.set('today', 'true');
@@ -192,17 +196,15 @@ export async function getRecentMarks(filters?: MarkFilters): Promise<Mark[]> {
   const query = params.toString();
   const url = `/api/witness/marks${query ? `?${query}` : ''}`;
 
-  const { data } = await apiClient.get<Mark[]>(url);
-  return data;
+  const { data } = await apiClient.get<MarkListResponse>(url);
+  return data.marks;
 }
 
 /**
  * Get marks from the current session.
  */
 export async function getSessionMarks(sessionId?: string): Promise<Mark[]> {
-  const url = sessionId
-    ? `/api/witness/marks?session_id=${sessionId}`
-    : '/api/witness/session';
+  const url = sessionId ? `/api/witness/marks?session_id=${sessionId}` : '/api/witness/session';
 
   const { data } = await apiClient.get<Mark[]>(url);
   return data;
@@ -240,10 +242,7 @@ export async function getMark(markId: string): Promise<Mark | null> {
 /**
  * Get the causal tree of marks starting from a root.
  */
-export async function getMarkTree(
-  rootMarkId: string,
-  maxDepth: number = 10
-): Promise<MarkTree> {
+export async function getMarkTree(rootMarkId: string, maxDepth: number = 10): Promise<MarkTree> {
   const { data } = await apiClient.get<MarkTree>(
     `/api/witness/marks/${rootMarkId}/tree?max_depth=${maxDepth}`
   );
@@ -318,10 +317,7 @@ export function subscribeToMarks(
 
       // Reconnect after delay
       if (!isCleanedUp) {
-        reconnectTimeout = window.setTimeout(
-          connect,
-          options?.reconnectDelay ?? 3000
-        );
+        reconnectTimeout = window.setTimeout(connect, options?.reconnectDelay ?? 3000);
       }
     };
   };

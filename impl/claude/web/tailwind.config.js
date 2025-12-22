@@ -158,14 +158,32 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
+      // Spacing: "Tight Frame" semantic tokens
+      // Use these for intentionally tighter spacing.
+      // Default Tailwind scale preserved for compatibility.
+      spacing: {
+        'tight-xs': '3px', // Micro gaps
+        'tight-sm': '6px', // Tight groupings
+        'tight-md': '10px', // Standard tight
+        'tight-lg': '16px', // Comfortable tight
+        'tight-xl': '24px', // Spacious tight
+      },
       animation: animations,
       keyframes: keyframes,
-      // Border radius scale (from visual-system.md)
+      // Border radius scale: "Bare Edge" philosophy
+      // The container is humble; the content glows.
+      // Sharp frames make warm elements pop.
       borderRadius: {
-        sm: '4px',
-        md: '8px',
-        lg: '12px',
-        xl: '16px',
+        none: '0px', // Panels, canvas — invisible frame
+        bare: '2px', // Cards, containers — just enough to not cut
+        subtle: '3px', // Interactive surfaces — softened for touch
+        DEFAULT: '2px', // Default to bare (was 4px)
+        sm: '2px', // Alias for bare
+        md: '3px', // Alias for subtle (was 8px)
+        lg: '4px', // Slightly softer (was 12px) — use sparingly
+        xl: '6px', // Soft accent (was 16px) — rare
+        pill: '9999px', // Badges, tags — finite, precious
+        full: '9999px', // Alias for pill
       },
       // Transition timing
       transitionDuration: {
