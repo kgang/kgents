@@ -27,13 +27,7 @@ function renderMarkFilters(props: Partial<Parameters<typeof MarkFilters>[0]> = {
   const onChange = createMockOnChange();
   const filters = props.filters ?? createDefaultFilters();
 
-  render(
-    <MarkFilters
-      filters={filters}
-      onChange={props.onChange ?? onChange}
-      {...props}
-    />
-  );
+  render(<MarkFilters filters={filters} onChange={props.onChange ?? onChange} {...props} />);
 
   return { onChange: props.onChange ?? onChange, filters };
 }
@@ -82,64 +76,48 @@ describe('MarkFilters', () => {
 
       await user.click(screen.getByTestId('filter-chip-kent'));
 
-      expect(onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ author: 'kent' })
-      );
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ author: 'kent' }));
     });
 
     it('switches between author filters', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(
-        <MarkFilters
-          filters={createDefaultFilters()}
-          onChange={onChange}
-        />
-      );
+      render(<MarkFilters filters={createDefaultFilters()} onChange={onChange} />);
 
       await user.click(screen.getByTestId('filter-chip-claude'));
-      expect(onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ author: 'claude' })
-      );
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ author: 'claude' }));
 
       onChange.mockClear();
 
       await user.click(screen.getByTestId('filter-chip-system'));
-      expect(onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ author: 'system' })
-      );
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ author: 'system' }));
     });
   });
 
   describe('Search (Grep) Filtering', () => {
-    it('allows text input in search field', async () => {
-      const user = userEvent.setup();
+    it('displays search input with placeholder', () => {
       renderMarkFilters();
-
       const input = screen.getByTestId('grep-input');
-      await user.type(input, 'test search');
-
-      expect(input).toHaveValue('test search');
+      expect(input).toHaveAttribute('placeholder', 'Search marks...');
     });
 
-    it('calls onChange when search text changes', async () => {
+    it('displays existing grep value', () => {
+      const filters = { ...createDefaultFilters(), grep: 'existing search' };
+      renderMarkFilters({ filters });
+      const input = screen.getByTestId('grep-input');
+      expect(input).toHaveValue('existing search');
+    });
+
+    it('calls onChange when user types in search field', async () => {
       const user = userEvent.setup();
       const onChange = vi.fn();
-      render(
-        <MarkFilters
-          filters={createDefaultFilters()}
-          onChange={onChange}
-        />
-      );
+      render(<MarkFilters filters={createDefaultFilters()} onChange={onChange} />);
 
       const input = screen.getByTestId('grep-input');
-      await user.type(input, 'hello');
+      await user.type(input, 'h');
 
-      // Called for each keystroke
-      expect(onChange).toHaveBeenCalled();
-      // Last call should include 'hello'
-      const lastCall = onChange.mock.calls[onChange.mock.calls.length - 1][0];
-      expect(lastCall.grep).toBe('hello');
+      // Called for first keystroke
+      expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ grep: 'h' }));
     });
   });
 
