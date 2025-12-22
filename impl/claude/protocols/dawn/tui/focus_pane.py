@@ -195,8 +195,6 @@ class FocusPane(Widget, can_focus=True):
         yield Static("═" * 20, classes="separator")
         # Items will be added dynamically
         yield Static(id="items-container")
-        yield Static("─" * 20, classes="separator")
-        yield Static("[dim][a] Add  [d] Done  [h] Hygiene[/dim]", id="help")
 
     def on_mount(self) -> None:
         """Populate items on mount."""
@@ -234,7 +232,9 @@ class FocusPane(Widget, can_focus=True):
             label_style = "yellow" if item.is_stale else ""
 
             if i == self.selected_index:
-                lines.append(f"[bold cyan]{selected}{emoji} [{i + 1}] {item.label}{stale}[/bold cyan]")
+                lines.append(
+                    f"[bold cyan]{selected}{emoji} [{i + 1}] {item.label}{stale}[/bold cyan]"
+                )
             elif item.is_stale:
                 lines.append(f"  {emoji} [{i + 1}] [yellow]{item.label}{stale}[/yellow]")
             else:

@@ -169,6 +169,11 @@ class SnippetPane(Widget, can_focus=True):
             self.snippet = snippet
             super().__init__()
 
+    class SnippetAddRequested(Message):
+        """Emitted when user requests to add a new snippet."""
+
+        pass
+
     is_active: reactive[bool] = reactive(False)
     _reactive_selected_index: reactive[int] = reactive(0)
 
@@ -228,20 +233,38 @@ class SnippetPane(Widget, can_focus=True):
         yield Static("📋 SNIPPETS", id="snippet-title", classes="pane-title")
         yield Static("═" * 25, classes="separator")
         yield VerticalScroll(id="snippets-scroll")
-        yield Static("─" * 25, classes="separator")
-        yield Static("[dim]↑↓ select  ⏎ copy  [e] edit  [x] del[/dim]", id="help")
 
     def on_mount(self) -> None:
         """Populate snippets on mount."""
         self.refresh_items()
 
     def refresh_items(self) -> None:
-        """Refresh the snippets display."""
+        """
+        Refresh the snippets display adaptively.
+
+        Uses intelligent refresh:
+        1. If snippet IDs unchanged → just update selection styling (no flash)
+        2. If snippets changed → minimal rebuild
+        3. Always shows something (no empty flash)
+
+        Teaching:
+            gotcha: remove_children() + mount() causes a flash because there's
+                    a render frame where the container is empty. Use adaptive
+                    refresh to compare before/after and only rebuild if needed.
+                    (Evidence: User report of flash on 'r' key)
+        """
+        old_ids = [s.to_dict()["id"] for s in self._snippets]
         self._snippets = self.snippet_library.list_all()
+        new_ids = [s.to_dict()["id"] for s in self._snippets]
 
         # Only render if mounted (has DOM context)
         try:
-            self._render_snippets()
+            if old_ids == new_ids and self._item_widgets:
+                # Same snippets — just update selection styling (no flash!)
+                self._update_selection_display()
+            else:
+                # Snippets changed — need to rebuild
+                self._render_snippets()
         except Exception:
             pass  # Not mounted yet
 
@@ -250,21 +273,30 @@ class SnippetPane(Widget, can_focus=True):
             self._selected_index = max(0, len(self._snippets) - 1)
 
     def _render_snippets(self) -> None:
-        """Render snippets to the scrollable container."""
+        """
+        Render snippets to the scrollable container.
+
+        Uses batched update to minimize flash:
+        1. Create new widgets first
+        2. Then swap in one operation
+        """
         try:
             container = self.query_one("#snippets-scroll", VerticalScroll)
         except Exception:
             return  # Not mounted
 
-        # Remove old widgets
-        container.remove_children()
-        self._item_widgets = []
+        # Build new widgets first (before removing old ones)
+        new_widgets: list[SnippetItemWidget] = []
 
         if not self._snippets:
-            container.mount(Static("[dim]No snippets. Load defaults.[/dim]"))
+            # Show placeholder — never empty
+            container.remove_children()
+            container.mount(
+                Static("[dim]No snippets. Press [+] to add.[/dim]", id="empty-placeholder")
+            )
+            self._item_widgets = []
             return
 
-        # Create individual widgets for each snippet
         for i, snippet in enumerate(self._snippets):
             widget = SnippetItemWidget(
                 snippet,
@@ -273,7 +305,12 @@ class SnippetPane(Widget, can_focus=True):
                 classes="snippet-item",
             )
             widget.is_selected = i == self.selected_index
-            self._item_widgets.append(widget)
+            new_widgets.append(widget)
+
+        # Now do the swap — remove old, add new
+        container.remove_children()
+        self._item_widgets = new_widgets
+        for widget in new_widgets:
             container.mount(widget)
 
         # Scroll to selected
@@ -337,6 +374,9 @@ class SnippetPane(Widget, can_focus=True):
             event.stop()
         elif key == "e" and self._snippets:
             self._edit_selected()
+            event.stop()
+        elif key == "n":
+            self._add_new()
             event.stop()
         elif key in "123456789" and self._snippets:
             index = int(key) - 1
@@ -417,6 +457,10 @@ class SnippetPane(Widget, can_focus=True):
             return
 
         self.post_message(self.SnippetEditRequested(snippet))
+
+    def _add_new(self) -> None:
+        """Request to add a new snippet."""
+        self.post_message(self.SnippetAddRequested())
 
 
 __all__ = [

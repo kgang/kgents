@@ -51,9 +51,12 @@ from textual.widgets import Header, Static
 from ..focus import Bucket, FocusManager
 from ..snippets import Snippet, SnippetLibrary
 from .add_focus_modal import AddFocusModal
+from .add_snippet_modal import AddSnippetModal
+from .coffee_overlay import CoffeeOverlay, CoffeeResult
 from .edit_snippet_modal import EditSnippetModal
 from .focus_pane import FocusPane
 from .garden_view import GardenView
+from .help_modal import HelpModal
 from .snippet_pane import SnippetPane
 
 if TYPE_CHECKING:
@@ -157,17 +160,18 @@ class DawnCockpit(App[None]):
     """
 
     BINDINGS = [
+        # Global bindings (shown in sidebar)
+        Binding("question_mark", "help", "Help", priority=True),
         Binding("q", "quit", "Quit", priority=True),
-        Binding("tab", "switch_pane", "Switch", priority=True),
-        # NOTE: Enter is handled by individual panes (FocusPane, SnippetPane)
-        # Not defined at app level - this prevents double-handling and lets
-        # the widget's on_key method have full control with event.stop()
-        Binding("a", "add_focus", "Add"),
-        Binding("d", "done_focus", "Done"),
-        Binding("h", "hygiene", "Hygiene"),
-        # Binding("c", "coffee", "Coffee"),  # Phase 5
-        Binding("slash", "search", "Search"),
+        Binding("tab", "switch_pane", "Switch Pane", priority=True),
         Binding("r", "refresh", "Refresh"),
+        Binding("slash", "search", "Search"),
+        Binding("c", "coffee", "Coffee"),  # Morning Coffee ritual
+        # Focus pane actions (context-sensitive, hidden from sidebar)
+        Binding("a", "add_focus", "Add Focus", show=False),
+        Binding("d", "done_focus", "Done", show=False),
+        Binding("h", "hygiene", "Hygiene", show=False),
+        Binding("u", "undo", "Undo", show=False),
     ]
 
     # Track active pane (empty default so watcher fires on first set)
@@ -193,6 +197,7 @@ class DawnCockpit(App[None]):
             self._snippet_library.load_defaults()
             self._snippet_library.load_custom()  # Load persisted custom snippets
         self._dawn_start_time = datetime.now()
+        self._last_archived_focus: Any = None  # For undo functionality
 
     @property
     def focus_manager(self) -> FocusManager:
@@ -252,7 +257,9 @@ class DawnCockpit(App[None]):
             self.query_one("#snippet-pane").focus()
 
     def action_add_focus(self) -> None:
-        """Add a new focus item (opens modal)."""
+        """Add a new focus item (opens modal) - only when focus pane is active."""
+        if self.active_pane != "focus":
+            return  # Ignore when snippet pane is active
         self.push_screen(AddFocusModal(), self._handle_add_focus)
 
     def _handle_add_focus(self, result: tuple[str, str, str] | None) -> None:
@@ -269,24 +276,87 @@ class DawnCockpit(App[None]):
         garden.add_event(f"✅ Added: {item.label}")
 
     def action_done_focus(self) -> None:
-        """Mark current focus item as done."""
+        """Mark current focus item as done - only when focus pane is active."""
+        if self.active_pane != "focus":
+            return  # Ignore when snippet pane is active
         focus_pane = self.query_one("#focus-pane", FocusPane)
         item = focus_pane.selected_item
         if item:
-            label = item.label  # Save before removal
+            # Store for undo
+            self._last_archived_focus = item
             self._focus_manager.remove(item.id)
             focus_pane.refresh_items()
             garden = self.query_one("#garden-view", GardenView)
-            garden.add_event(f"✅ Archived: {label}")
+            garden.add_event(f"✅ Done: {item.label} [u] undo")
+
+    def action_undo(self) -> None:
+        """Undo last archive action."""
+        if not hasattr(self, "_last_archived_focus") or self._last_archived_focus is None:
+            return
+        item = self._last_archived_focus
+        self._last_archived_focus = None
+        # Re-add the item
+        restored = self._focus_manager.add(
+            item.target,
+            label=item.label,
+            bucket=item.bucket,
+        )
+        self.query_one("#focus-pane", FocusPane).refresh_items()
+        garden = self.query_one("#garden-view", GardenView)
+        garden.add_event(f"↩️ Restored: {restored.label}")
 
     def action_hygiene(self) -> None:
-        """Run hygiene check on focus items."""
+        """Run hygiene check on focus items - only when focus pane is active."""
+        if self.active_pane != "focus":
+            return  # Ignore when snippet pane is active
         stale = self._focus_manager.get_stale()
         garden = self.query_one("#garden-view", GardenView)
         if stale:
             garden.add_event(f"Hygiene: {len(stale)} stale items found")
         else:
             garden.add_event("Hygiene: All items fresh!")
+
+    def action_help(self) -> None:
+        """Show comprehensive help panel."""
+        self.push_screen(HelpModal())
+
+    def action_coffee(self) -> None:
+        """
+        Start the Morning Coffee ritual.
+
+        Opens the coffee overlay which guides through four movements:
+        1. Garden View — What grew overnight
+        2. Hygiene Pass — Stale items needing attention
+        3. Focus Set — Confirm today's 1-3 items
+        4. Snippet Prime — Prepare button pad for day
+
+        See: spec/protocols/dawn-cockpit.md § Morning Coffee Integration
+        """
+        self.push_screen(
+            CoffeeOverlay(
+                focus_manager=self._focus_manager,
+                snippet_library=self._snippet_library,
+            ),
+            self._handle_coffee,
+        )
+
+    def _handle_coffee(self, result: CoffeeResult | None) -> None:
+        """Handle result from CoffeeOverlay."""
+        if result is None:
+            return
+        garden = self.query_one("#garden-view", GardenView)
+
+        if result.completed:
+            # Full ritual complete
+            minutes = int(result.time_spent_seconds / 60)
+            seconds = int(result.time_spent_seconds % 60)
+            garden.add_event(f"☕ Coffee complete! ({minutes}:{seconds:02d})")
+            # Refresh panes to show any updates
+            self.query_one("#focus-pane", FocusPane).refresh_items()
+            self.query_one("#snippet-pane", SnippetPane).refresh_items()
+        else:
+            # Partial ritual
+            garden.add_event(f"☕ Coffee paused at {result.movement_reached.title}")
 
     def action_search(self) -> None:
         """Open search prompt."""
@@ -305,7 +375,24 @@ class DawnCockpit(App[None]):
         """Handle snippet copied event — show confirmation in Garden."""
         garden = self.query_one("#garden-view", GardenView)
         label = message.snippet.to_dict().get("label", "snippet")
-        garden.add_event(f"📋 Copied: {label}")
+        garden.add_event(f"📋 {label}")
+
+    def on_snippet_pane_snippet_add_requested(
+        self, message: SnippetPane.SnippetAddRequested
+    ) -> None:
+        """Handle snippet add request — open add modal."""
+        self.push_screen(AddSnippetModal(), self._handle_add_snippet)
+
+    def _handle_add_snippet(self, result: tuple[str, str] | None) -> None:
+        """Handle result from AddSnippetModal."""
+        if result is None:
+            return  # User cancelled
+
+        label, content = result
+        self._snippet_library.add_custom(label, content)
+        self.query_one("#snippet-pane", SnippetPane).refresh_items()
+        garden = self.query_one("#garden-view", GardenView)
+        garden.add_event(f"★ Added: {label}")
 
     def on_snippet_pane_snippet_edit_requested(
         self, message: SnippetPane.SnippetEditRequested

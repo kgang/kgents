@@ -33,14 +33,18 @@ Teaching:
 
 from .add_focus_modal import AddFocusModal
 from .app import DawnCockpit, run_dawn_tui
+from .coffee_overlay import CoffeeOverlay, CoffeeResult, Movement
 from .focus_pane import FocusPane
 from .garden_view import GardenView
 from .snippet_pane import SnippetPane
 
 __all__ = [
     "AddFocusModal",
+    "CoffeeOverlay",
+    "CoffeeResult",
     "DawnCockpit",
     "FocusPane",
+    "Movement",
     "SnippetPane",
     "GardenView",
     "run_dawn_tui",
