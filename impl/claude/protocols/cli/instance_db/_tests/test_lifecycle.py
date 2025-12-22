@@ -280,7 +280,25 @@ class TestLifecycleManagerShutdown:
         """Should mark instance as terminated on shutdown."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
-        (data_dir / "membrane.db").touch()
+        config_dir = tmp_path / "config" / "kgents"
+        config_dir.mkdir(parents=True)
+        # Create config to trigger GLOBAL_ONLY mode with SQLite stores
+        # Note: paths use ${XDG_DATA_HOME} which will be expanded
+        config_content = f"""
+profile: test
+providers:
+  relational:
+    type: sqlite
+    connection: {data_dir / "membrane.db"}
+  vector:
+    type: memory
+  blob:
+    type: memory
+  telemetry:
+    type: sqlite
+    connection: {data_dir / "telemetry.db"}
+"""
+        (config_dir / "infrastructure.yaml").write_text(config_content)
 
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -290,15 +308,17 @@ class TestLifecycleManagerShutdown:
         state = await manager.bootstrap()
         instance_id = state.instance_id
 
-        # Get storage before shutdown
+        # Get the actual DB path from the manager's storage provider
+        assert state.storage_provider is not None, "Expected storage provider"
+        db_path = state.storage_provider.relational._db_path
 
         # Re-connect to verify
         await manager.shutdown()
 
-        # Re-open DB to verify
+        # Re-open DB to verify (use same path the manager used)
         from ..providers.sqlite import SQLiteRelationalStore
 
-        store = SQLiteRelationalStore(data_dir / "membrane.db")
+        store = SQLiteRelationalStore(db_path)
         row = await store.fetch_one(
             "SELECT status FROM instances WHERE id = :id",
             {"id": instance_id},
@@ -314,20 +334,42 @@ class TestLifecycleManagerShutdown:
         """Should log shutdown telemetry event."""
         data_dir = tmp_path / "data" / "kgents"
         data_dir.mkdir(parents=True)
-        (data_dir / "membrane.db").touch()
+        config_dir = tmp_path / "config" / "kgents"
+        config_dir.mkdir(parents=True)
+        # Create config to trigger GLOBAL_ONLY mode with SQLite stores
+        config_content = f"""
+profile: test
+providers:
+  relational:
+    type: sqlite
+    connection: {data_dir / "membrane.db"}
+  vector:
+    type: memory
+  blob:
+    type: memory
+  telemetry:
+    type: sqlite
+    connection: {data_dir / "telemetry.db"}
+"""
+        (config_dir / "infrastructure.yaml").write_text(config_content)
 
         monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
         monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
 
         manager = LifecycleManager()
-        await manager.bootstrap()
+        state = await manager.bootstrap()
+
+        # Get the actual telemetry DB path from the manager's storage provider
+        assert state.storage_provider is not None, "Expected storage provider"
+        telemetry_path = state.storage_provider.telemetry._db_path
+
         await manager.shutdown()
 
-        # Re-open to check telemetry
+        # Re-open to check telemetry (use same path the manager used)
         from ..providers.sqlite import SQLiteTelemetryStore
 
-        store = SQLiteTelemetryStore(data_dir / "telemetry.db")
+        store = SQLiteTelemetryStore(telemetry_path)
         events = await store.query(event_type="instance.stopped")
         assert len(events) >= 1
         await store.close()
