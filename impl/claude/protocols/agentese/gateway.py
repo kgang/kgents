@@ -76,6 +76,8 @@ def _import_node_modules() -> None:
             concept_intent,  # noqa: F401 - WARP Phase 1: Task decomposition (concept.intent.*)
             concept_scope,  # noqa: F401 - WARP Phase 1: Context contracts (concept.scope.*)
             design,  # noqa: F401 - Design Language System (concept.design.*)
+            self_archaeology,  # noqa: F401 - Git Archaeology (self.memory.archaeology.*)
+            self_collaboration,  # noqa: F401 - Phase 5C: Human-Agent Turn-Taking (self.collaboration.*)
             self_context,  # noqa: F401 - Typed-Hypergraph Navigation (self.context.*)
             self_differance,  # noqa: F401 - Différance navigation (self.differance.*)
             self_grant,  # noqa: F401 - WARP Phase 1: Permission contracts (self.grant.*)
@@ -85,7 +87,6 @@ def _import_node_modules() -> None:
             self_playbook,  # noqa: F401 - WARP Phase 1: Lawful workflows (self.playbook.*)
             self_portal,  # noqa: F401 - Portal Token Navigation (self.portal.*)
             self_presence,  # noqa: F401 - CLI v7 Phase 4: Collaborative Canvas (self.presence.*)
-            self_collaboration,  # noqa: F401 - Phase 5C: Human-Agent Turn-Taking (self.collaboration.*)
             self_repl,  # noqa: F401 - CLI v7 Phase 4: REPL state (self.repl.*)
             self_soul,  # noqa: F401 - K-gent Soul (self.soul.*)
             self_system,  # noqa: F401 - Autopoietic kernel (self.system.*)
@@ -129,9 +130,10 @@ def _import_node_modules() -> None:
         try:
             from .contexts import (
                 concept_principles,  # noqa: F401  # concept.principles.*
+                concept_priors,  # noqa: F401  # concept.compiler.priors.* (ASHC integration)
             )
         except ImportError as e:
-            logger.warning(f"AGENTESE node import failed (concept.principles): {e}")
+            logger.warning(f"AGENTESE node import failed (concept.*): {e}")
 
         # === Living Docs (concept.docs.*, self.docs.*) ===
         try:

@@ -44,140 +44,368 @@ logger = logging.getLogger(__name__)
 
 TRAIL_AFFORDANCES: tuple[str, ...] = (
     "manifest",  # List saved trails
-    "load",      # Load trail by ID
-    "graph",     # Get trail as react-flow graph data
-    "fork",      # Fork a trail
-    "create",    # Create a new trail
-    "status",    # Trail storage status
+    "load",  # Load trail by ID
+    "graph",  # Get trail as react-flow graph data
+    "fork",  # Fork a trail
+    "create",  # Create a new trail
+    "status",  # Trail storage status
+    "suggest",  # AI-suggested connections (Visual Trail Graph Session 3)
 )
 
 
 # === Demo Trail ===
+#
+# A comprehensive, branching exploration of the kgents architecture.
+# Demonstrates:
+# - 30 steps across multiple subsystems
+# - Branching exploration (parent_index for tree structure)
+# - Multiple edge types (structural, semantic, implementation)
+# - Rich reasoning traces showing discovery narrative
+# - Scale that tests the graph visualization
+#
 
 DEMO_TRAIL: dict[str, Any] = {
     "trail_id": "demo",
-    "name": "Discovering the Witness Crown Jewel",
+    "name": "The Kgents Architecture: A Branching Exploration",
     "steps": [
+        # === ROOT: Starting from principles ===
         {
             "index": 0,
-            "source_path": "spec/services/witness.md",
+            "parent_index": None,
+            "source_path": "spec/principles.md",
             "edge": None,
-            "destination_paths": ["spec/services/witness.md"],
-            "reasoning": "Beginning exploration at the Witness spec. The proof IS the decision. The mark IS the witness.",
+            "destination_paths": ["spec/principles.md"],
+            "reasoning": "Begin at the source: the seven principles. Tasteful, Curated, Ethical, Joy-Inducing, Composable, Heterarchical, Generative.",
             "loop_status": "OK",
             "created_at": "2025-12-22T09:00:00Z",
         },
+        # === BRANCH 1: Categorical Foundations (from principles) ===
         {
             "index": 1,
-            "source_path": "services/witness/__init__.py",
+            "parent_index": 0,
+            "source_path": "agents/poly/base.py",
             "edge": "implements",
-            "destination_paths": ["services/witness/__init__.py"],
-            "reasoning": "Following the spec to implementation. The Witness Crown Jewel exports: WitnessBus, Mark, FusionMark. These are the core primitives.",
+            "destination_paths": ["agents/poly/base.py"],
+            "reasoning": "Principle 5 (Composable) leads to PolyAgent. State × Input → Output. The polynomial functor is the foundation.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:02:15Z",
+            "created_at": "2025-12-22T09:02:00Z",
         },
         {
             "index": 2,
-            "source_path": "services/witness/bus.py",
+            "parent_index": 1,
+            "source_path": "agents/operad/core.py",
             "edge": "contains",
-            "destination_paths": ["services/witness/bus.py"],
-            "reasoning": "The WitnessBus is the heart. It's an event bus that records marks - discrete moments of witnessed action. Every action leaves a trace.",
+            "destination_paths": ["agents/operad/core.py"],
+            "reasoning": "Operads define composition grammar. An Operad(n) takes n inputs and produces one output. Composition IS the API.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:05:30Z",
+            "created_at": "2025-12-22T09:04:00Z",
         },
         {
             "index": 3,
-            "source_path": "models/witness.py",
-            "edge": "imports",
-            "destination_paths": ["models/witness.py"],
-            "reasoning": "The Mark model: id, action, reasoning, principles, timestamp. A mark is not just logging - it's JUSTIFIED action. The reasoning field is mandatory.",
+            "parent_index": 2,
+            "source_path": "agents/sheaf/gluing.py",
+            "edge": "contains",
+            "destination_paths": ["agents/sheaf/gluing.py"],
+            "reasoning": "Sheaf gluing = emergence. Local consistency → global coherence. This is how agents coordinate without central control.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:08:45Z",
+            "created_at": "2025-12-22T09:06:00Z",
         },
         {
             "index": 4,
-            "source_path": "protocols/agentese/contexts/self_trail.py",
-            "edge": "semantic:similar_to",
-            "destination_paths": ["protocols/agentese/contexts/self_trail.py"],
-            "reasoning": "Semantic leap! Trails and Marks are isomorphic - both capture justified exploration. A Trail is a sequence of Marks through conceptual space.",
+            "parent_index": 3,
+            "source_path": "spec/agents/bootstrap.md",
+            "edge": "specifies",
+            "destination_paths": ["spec/agents/bootstrap.md"],
+            "reasoning": "The bootstrap equations: PolyAgent → Operad → Sheaf. Each agent genus has generating equations.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:08:00Z",
+        },
+        # === BRANCH 2: Witness Crown Jewel (from principles) ===
+        {
+            "index": 5,
+            "parent_index": 0,
+            "source_path": "spec/services/witness.md",
+            "edge": "implements",
+            "destination_paths": ["spec/services/witness.md"],
+            "reasoning": "Principle 7 (Generative) leads to Witness. The proof IS the decision. Every action must justify itself.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:10:00Z",
+        },
+        {
+            "index": 6,
+            "parent_index": 5,
+            "source_path": "services/witness/bus.py",
+            "edge": "contains",
+            "destination_paths": ["services/witness/bus.py"],
+            "reasoning": "WitnessBus is the heart - an event bus that records Marks. Every action leaves a trace.",
             "loop_status": "OK",
             "created_at": "2025-12-22T09:12:00Z",
         },
         {
-            "index": 5,
-            "source_path": "spec/protocols/trail-protocol.md",
-            "edge": "specifies",
-            "destination_paths": ["spec/protocols/trail-protocol.md"],
-            "reasoning": "The Trail Protocol spec reveals the deeper pattern: trails are first-class knowledge artifacts. They persist understanding, not just history.",
-            "loop_status": "OK",
-            "created_at": "2025-12-22T09:15:30Z",
-        },
-        {
-            "index": 6,
-            "source_path": "services/witness/trail_bridge.py",
-            "edge": "implements",
-            "destination_paths": ["services/witness/trail_bridge.py"],
-            "reasoning": "The bridge! TrailBridge converts trails to marks. Every significant exploration step becomes witnessed evidence. The two systems unify.",
-            "loop_status": "OK",
-            "created_at": "2025-12-22T09:18:45Z",
-        },
-        {
             "index": 7,
+            "parent_index": 6,
+            "source_path": "models/witness.py",
+            "edge": "imports",
+            "destination_paths": ["models/witness.py"],
+            "reasoning": "Mark model: id, action, reasoning, principles, timestamp. Reasoning is MANDATORY. This is not logging.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:14:00Z",
+        },
+        # === SUB-BRANCH 2a: Trail subsystem (from Witness) ===
+        {
+            "index": 8,
+            "parent_index": 6,
             "source_path": "protocols/trail/storage.py",
             "edge": "contains",
             "destination_paths": ["protocols/trail/storage.py"],
-            "reasoning": "TrailStorageAdapter uses Postgres + pgvector. Trails are searchable by semantic similarity. You can find trails that explored similar concepts.",
+            "reasoning": "Trails are sequences of Marks through conceptual space. TrailStorageAdapter persists to Postgres + pgvector.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:16:00Z",
+        },
+        {
+            "index": 9,
+            "parent_index": 8,
+            "source_path": "services/witness/trail_bridge.py",
+            "edge": "implements",
+            "destination_paths": ["services/witness/trail_bridge.py"],
+            "reasoning": "TrailBridge converts trails ↔ marks. The two systems unify. Exploration becomes evidence.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:18:00Z",
+        },
+        {
+            "index": 10,
+            "parent_index": 9,
+            "source_path": "protocols/agentese/contexts/self_trail.py",
+            "edge": "implements",
+            "destination_paths": ["protocols/agentese/contexts/self_trail.py"],
+            "reasoning": "self.trail.* AGENTESE paths expose trails. This is the API for the Visual Trail Graph frontend.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:20:00Z",
+        },
+        # === SUB-BRANCH 2b: Fusion (from Mark model) ===
+        {
+            "index": 11,
+            "parent_index": 7,
+            "source_path": "services/fusion/core.py",
+            "edge": "uses",
+            "destination_paths": ["services/fusion/core.py"],
+            "reasoning": "FusionMark captures dialectic: Kent's view + Claude's view → synthesis. Decisions as artifacts.",
             "loop_status": "OK",
             "created_at": "2025-12-22T09:22:00Z",
         },
         {
-            "index": 8,
-            "source_path": "spec/principles.md",
-            "edge": "semantic:grounds",
-            "destination_paths": ["spec/principles.md"],
-            "reasoning": "Grounding in first principles. Witness embodies Principle 7: Generative. The proof IS the decision. Marks are compressed understanding.",
-            "loop_status": "OK",
-            "created_at": "2025-12-22T09:25:15Z",
-        },
-        {
-            "index": 9,
+            "index": 12,
+            "parent_index": 11,
             "source_path": "services/fusion/cli.py",
-            "edge": "uses",
+            "edge": "contains",
             "destination_paths": ["services/fusion/cli.py"],
-            "reasoning": "Fusion uses Witness! When Kent and Claude reach decisions, FusionMark captures the dialectic: thesis, antithesis, synthesis. Decisions become artifacts.",
+            "reasoning": "'kg decide' command captures reasoning. Philosophy becomes tooling.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:28:30Z",
+            "created_at": "2025-12-22T09:24:00Z",
+        },
+        # === BRANCH 3: Brain Crown Jewel (from principles) ===
+        {
+            "index": 13,
+            "parent_index": 0,
+            "source_path": "services/brain/__init__.py",
+            "edge": "implements",
+            "destination_paths": ["services/brain/__init__.py"],
+            "reasoning": "Principle 2 (Curated) leads to Brain. The spatial cathedral of memory. Intentional over exhaustive.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:26:00Z",
         },
         {
-            "index": 10,
-            "source_path": "CLAUDE.md",
-            "edge": "semantic:encodes",
-            "destination_paths": ["CLAUDE.md"],
-            "reasoning": "The CLAUDE.md encodes witness philosophy: 'kg decide' captures reasoning traces. Philosophy becomes tooling. The constitution is alive.",
+            "index": 14,
+            "parent_index": 13,
+            "source_path": "services/brain/core.py",
+            "edge": "contains",
+            "destination_paths": ["services/brain/core.py"],
+            "reasoning": "BrainService orchestrates: capture, search, relate. Memory as spatial navigation.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:31:45Z",
+            "created_at": "2025-12-22T09:28:00Z",
         },
         {
-            "index": 11,
+            "index": 15,
+            "parent_index": 14,
+            "source_path": "services/brain/adapters/postgres.py",
+            "edge": "contains",
+            "destination_paths": ["services/brain/adapters/postgres.py"],
+            "reasoning": "PostgresAdapter with pgvector. Semantic search via <=> operator. Thoughts have proximity.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:30:00Z",
+        },
+        # === SUB-BRANCH 3a: Crystals (from Brain) ===
+        {
+            "index": 16,
+            "parent_index": 14,
+            "source_path": "agents/m/crystal.py",
+            "edge": "uses",
+            "destination_paths": ["agents/m/crystal.py"],
+            "reasoning": "ExperienceCrystal: compressed understanding. Born → grows → dies or fossilizes. Memory has lifecycle.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:32:00Z",
+        },
+        {
+            "index": 17,
+            "parent_index": 16,
+            "source_path": "agents/m/cartography.py",
+            "edge": "contains",
+            "destination_paths": ["agents/m/cartography.py"],
+            "reasoning": "Memory cartography: navigable maps of thought-space. Spatial > hierarchical for organic memory.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:34:00Z",
+        },
+        # === BRANCH 4: AGENTESE Protocol (from principles) ===
+        {
+            "index": 18,
+            "parent_index": 0,
+            "source_path": "protocols/agentese/parser.py",
+            "edge": "implements",
+            "destination_paths": ["protocols/agentese/parser.py"],
+            "reasoning": "Principle 6 (Heterarchical) leads to AGENTESE. Verb-first ontology. world.house.manifest.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:36:00Z",
+        },
+        {
+            "index": 19,
+            "parent_index": 18,
+            "source_path": "protocols/agentese/gateway.py",
+            "edge": "contains",
+            "destination_paths": ["protocols/agentese/gateway.py"],
+            "reasoning": "Logos gateway: invoke(path, observer) → Renderable. Observer determines what is perceived.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:38:00Z",
+        },
+        {
+            "index": 20,
+            "parent_index": 19,
+            "source_path": "protocols/agentese/node.py",
+            "edge": "contains",
+            "destination_paths": ["protocols/agentese/node.py"],
+            "reasoning": "@node decorator registers paths. Aspects are actions: manifest, witness, refine, sip, tithe.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:40:00Z",
+        },
+        # === SUB-BRANCH 4a: Five Contexts ===
+        {
+            "index": 21,
+            "parent_index": 19,
+            "source_path": "protocols/agentese/contexts/world_context.py",
+            "edge": "contains",
+            "destination_paths": ["protocols/agentese/contexts/world_context.py"],
+            "reasoning": "world.* - The External. Entities, environments, tools. What exists outside the agent.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:42:00Z",
+        },
+        {
+            "index": 22,
+            "parent_index": 19,
+            "source_path": "protocols/agentese/contexts/self_context.py",
+            "edge": "contains",
+            "destination_paths": ["protocols/agentese/contexts/self_context.py"],
+            "reasoning": "self.* - The Internal. Memory, capability, state. The agent's introspection.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:44:00Z",
+        },
+        {
+            "index": 23,
+            "parent_index": 19,
+            "source_path": "protocols/agentese/contexts/time_context.py",
+            "edge": "contains",
+            "destination_paths": ["protocols/agentese/contexts/time_context.py"],
+            "reasoning": "time.* - The Temporal. Traces, forecasts, schedules. Time is not just a dimension.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:46:00Z",
+        },
+        # === BRANCH 5: Frontend Visualization (from Trail) ===
+        {
+            "index": 24,
+            "parent_index": 10,
             "source_path": "web/src/pages/Trail.tsx",
             "edge": "projects",
             "destination_paths": ["web/src/pages/Trail.tsx"],
-            "reasoning": "Full circle! This very visualization is the projection surface for trails. Bush's Memex realized. The trail becomes visible.",
+            "reasoning": "React frontend for Visual Trail Graph. Bush's Memex realized as force-directed graph.",
             "loop_status": "OK",
-            "created_at": "2025-12-22T09:35:00Z",
+            "created_at": "2025-12-22T09:48:00Z",
+        },
+        {
+            "index": 25,
+            "parent_index": 24,
+            "source_path": "web/src/components/trail/TrailGraph.tsx",
+            "edge": "contains",
+            "destination_paths": ["web/src/components/trail/TrailGraph.tsx"],
+            "reasoning": "react-flow + d3-force. Nodes repel, edges act as springs. Knowledge topology emerges.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:50:00Z",
+        },
+        {
+            "index": 26,
+            "parent_index": 25,
+            "source_path": "web/src/components/trail/ContextNode.tsx",
+            "edge": "contains",
+            "destination_paths": ["web/src/components/trail/ContextNode.tsx"],
+            "reasoning": "Custom react-flow node. Hover reveals reasoning tooltip. Spring animations for joy.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:52:00Z",
+        },
+        {
+            "index": 27,
+            "parent_index": 25,
+            "source_path": "web/src/hooks/useForceLayout.ts",
+            "edge": "uses",
+            "destination_paths": ["web/src/hooks/useForceLayout.ts"],
+            "reasoning": "d3-force physics: charge repulsion, link springs, collision detection. Semantic edges = longer springs.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:54:00Z",
+        },
+        # === CONVERGENCE: Back to meta-circularity ===
+        {
+            "index": 28,
+            "parent_index": 4,
+            "source_path": "CLAUDE.md",
+            "edge": "semantic:encodes",
+            "destination_paths": ["CLAUDE.md"],
+            "reasoning": "Meta-circularity! CLAUDE.md encodes the principles that create the tools that modify CLAUDE.md.",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:56:00Z",
+        },
+        {
+            "index": 29,
+            "parent_index": 28,
+            "source_path": "spec/constitution.md",
+            "edge": "semantic:grounds",
+            "destination_paths": ["spec/constitution.md"],
+            "reasoning": "The Constitution: 7 principles + 7 articles. Ontology (what agents are) + Governance (how they relate).",
+            "loop_status": "OK",
+            "created_at": "2025-12-22T09:58:00Z",
         },
     ],
     "annotations": {
-        0: "Entry point - always start with the spec",
-        4: "Key insight: structural similarity reveals deeper patterns",
-        8: "Grounding moment - connect implementation to philosophy",
-        11: "Closure - the visualization visualizes itself",
+        0: "Root: All paths lead from principles",
+        4: "Categorical: The mathematical foundation",
+        10: "Trail: Meta-circularity begins here",
+        19: "AGENTESE: The universal protocol",
+        24: "Frontend: Where exploration becomes visible",
+        29: "Constitution: The ground beneath the ground",
     },
-    "version": 1,
+    "version": 2,
     "created_at": "2025-12-22T09:00:00Z",
-    "updated_at": "2025-12-22T09:35:00Z",
+    "updated_at": "2025-12-22T09:58:00Z",
     "forked_from_id": None,
-    "topics": ["witness", "trail", "crown-jewel", "meta", "philosophy", "visualization"],
+    "topics": [
+        "kgents",
+        "architecture",
+        "categorical",
+        "witness",
+        "brain",
+        "agentese",
+        "trail",
+        "frontend",
+        "meta",
+        "philosophy",
+        "branching",
+        "exploration",
+    ],
 }
 
 
@@ -197,6 +425,7 @@ def get_demo_trail() -> dict[str, Any]:
 
 
 # === React Flow Data Helpers ===
+
 
 def trail_to_react_flow(
     trail_data: dict[str, Any],
@@ -356,7 +585,9 @@ def analyze_trail_evidence(trail_data: dict[str, Any]) -> dict[str, Any]:
 
     # Count unique paths and edges
     paths = {s.get("source_path", s.get("node_path", "")) for s in steps}
-    edges = {s.get("edge", s.get("edge_type", "")) for s in steps if s.get("edge") or s.get("edge_type")}
+    edges = {
+        s.get("edge", s.get("edge_type", "")) for s in steps if s.get("edge") or s.get("edge_type")
+    }
 
     # Determine evidence strength based on trail characteristics
     step_count = len(steps)
@@ -448,9 +679,8 @@ class TrailNode(BaseLogosNode):
     )
     async def manifest(
         self,
-        observer: "Umwelt[Any, Any] | Observer",
-        limit: int = 50,
-        response_format: str = "cli",
+        observer: "Umwelt[Any, Any]",
+        **kwargs: Any,
     ) -> Renderable:
         """
         List saved trails.
@@ -465,6 +695,10 @@ class TrailNode(BaseLogosNode):
             For CLI: Colored list of trails
             For JSON: {trails: [...], count: N} in metadata
         """
+        # Extract parameters from kwargs with defaults
+        limit: int = kwargs.get("limit", 50)
+        response_format: str = kwargs.get("response_format", "cli")
+
         BOLD = "\033[1m"
         DIM = "\033[2m"
         CYAN = "\033[36m"
@@ -472,11 +706,7 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = Observer.from_umwelt(observer)
 
         # Always include the demo trail at the top of the list
         demo = get_demo_trail()
@@ -617,11 +847,7 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         # Handle demo trail specially (no DB required)
         if trail_id == "demo":
@@ -742,7 +968,11 @@ class TrailNode(BaseLogosNode):
                     lines.append(f"  {DIM}{i + 1}.{RESET} {source} {DIM}(start){RESET}")
 
                 if reasoning:
-                    lines.append(f"      {DIM}{reasoning[:60]}...{RESET}" if len(reasoning) > 60 else f"      {DIM}{reasoning}{RESET}")
+                    lines.append(
+                        f"      {DIM}{reasoning[:60]}...{RESET}"
+                        if len(reasoning) > 60
+                        else f"      {DIM}{reasoning}{RESET}"
+                    )
 
             return BasicRendering(
                 summary=f"Trail: {trail.name}",
@@ -789,11 +1019,7 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         # Handle demo trail specially (no DB required)
         if trail_id == "demo":
@@ -838,7 +1064,9 @@ class TrailNode(BaseLogosNode):
             if trail is None:
                 return BasicRendering(
                     summary=f"Trail not found: {trail_id}",
-                    content=f"{YELLOW}Trail not found: {trail_id}{RESET}" if response_format == "cli" else "",
+                    content=f"{YELLOW}Trail not found: {trail_id}{RESET}"
+                    if response_format == "cli"
+                    else "",
                     metadata={"error": "not_found", "trail_id": trail_id},
                 )
 
@@ -934,11 +1162,7 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         try:
             storage = await self._ensure_storage()
@@ -1034,23 +1258,23 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not name or not name.strip():
             return BasicRendering(
                 summary="Trail name is required",
-                content=f"{YELLOW}Error: Trail name is required{RESET}" if response_format == "cli" else "",
+                content=f"{YELLOW}Error: Trail name is required{RESET}"
+                if response_format == "cli"
+                else "",
                 metadata={"error": "name_required"},
             )
 
         if not steps or len(steps) == 0:
             return BasicRendering(
                 summary="At least one step is required",
-                content=f"{YELLOW}Error: At least one step is required{RESET}" if response_format == "cli" else "",
+                content=f"{YELLOW}Error: At least one step is required{RESET}"
+                if response_format == "cli"
+                else "",
                 metadata={"error": "steps_required"},
             )
 
@@ -1064,7 +1288,9 @@ class TrailNode(BaseLogosNode):
                 if not step_path:
                     return BasicRendering(
                         summary=f"Step {i + 1} missing path",
-                        content=f"{YELLOW}Error: Step {i + 1} missing path{RESET}" if response_format == "cli" else "",
+                        content=f"{YELLOW}Error: Step {i + 1} missing path{RESET}"
+                        if response_format == "cli"
+                        else "",
                         metadata={"error": "step_missing_path", "step_index": i},
                     )
 
@@ -1074,20 +1300,28 @@ class TrailNode(BaseLogosNode):
                     if not isinstance(parent_idx, int) or parent_idx < 0 or parent_idx >= i:
                         return BasicRendering(
                             summary=f"Invalid parent_index at step {i + 1}",
-                            content=f"{YELLOW}Error: parent_index {parent_idx} invalid at step {i + 1} (must be 0..{i-1}){RESET}" if response_format == "cli" else "",
-                            metadata={"error": "invalid_parent_index", "step_index": i, "parent_index": parent_idx},
+                            content=f"{YELLOW}Error: parent_index {parent_idx} invalid at step {i + 1} (must be 0..{i - 1}){RESET}"
+                            if response_format == "cli"
+                            else "",
+                            metadata={
+                                "error": "invalid_parent_index",
+                                "step_index": i,
+                                "parent_index": parent_idx,
+                            },
                         )
 
-                validated_steps.append({
-                    "index": i,
-                    "parent_index": parent_idx,  # For branching trails
-                    "source_path": step_path,
-                    "edge": step.get("edge") if i > 0 else None,  # First step has no edge
-                    "destination_paths": [step_path],
-                    "reasoning": step.get("reasoning", ""),
-                    "loop_status": "OK",
-                    "created_at": datetime.utcnow().isoformat() + "Z",
-                })
+                validated_steps.append(
+                    {
+                        "index": i,
+                        "parent_index": parent_idx,  # For branching trails
+                        "source_path": step_path,
+                        "edge": step.get("edge") if i > 0 else None,  # First step has no edge
+                        "destination_paths": [step_path],
+                        "reasoning": step.get("reasoning", ""),
+                        "loop_status": "OK",
+                        "created_at": datetime.utcnow().isoformat() + "Z",
+                    }
+                )
 
             # Create observer for storage
             from protocols.exploration.types import Observer as ExplorationObserver
@@ -1206,6 +1440,323 @@ class TrailNode(BaseLogosNode):
                 metadata={"error": str(e)},
             )
 
+    @aspect(
+        category=AspectCategory.PERCEPTION,
+        effects=[],
+        help="Get AI-suggested connections for a trail step",
+    )
+    async def suggest(
+        self,
+        observer: "Umwelt[Any, Any] | Observer",
+        trail_id: str,
+        step_index: int = -1,
+        response_format: str = "json",
+    ) -> Renderable:
+        """
+        Get AI-suggested next steps for a trail.
+
+        AGENTESE: self.trail.suggest
+
+        Visual Trail Graph Session 3: Intelligence
+
+        Args:
+            trail_id: Trail to get suggestions for
+            step_index: Step to suggest from (-1 = last step)
+            response_format: "cli" or "json"
+
+        Returns:
+            - related_trails: Semantically similar trails
+            - suggested_files: Files to explore next (based on patterns)
+            - inferred_edges: Suggested edge types with confidence
+            - reasoning_prompts: Questions to consider
+        """
+        BOLD = "\033[1m"
+        DIM = "\033[2m"
+        CYAN = "\033[36m"
+        RESET = "\033[0m"
+
+        # Handle demo trail specially
+        if trail_id == "demo":
+            trail_dict = get_demo_trail()
+            steps = trail_dict.get("steps", [])
+        else:
+            try:
+                storage = await self._ensure_storage()
+                trail = await storage.load_trail(trail_id)
+
+                if trail is None:
+                    return BasicRendering(
+                        summary=f"Trail not found: {trail_id}",
+                        metadata={"error": "not_found", "trail_id": trail_id},
+                    )
+
+                steps = trail.steps
+                trail_dict = {
+                    "trail_id": trail.trail_id,
+                    "name": trail.name,
+                    "steps": steps,
+                    "topics": trail.topics,
+                }
+            except Exception as e:
+                logger.warning(f"Storage failed: {e}")
+                return BasicRendering(
+                    summary="Storage unavailable",
+                    metadata={"error": str(e)},
+                )
+
+        if not steps:
+            return BasicRendering(
+                summary="Trail has no steps",
+                metadata={"suggestions": []},
+            )
+
+        # Get target step
+        target_idx = step_index if step_index >= 0 else len(steps) - 1
+        if target_idx >= len(steps):
+            target_idx = len(steps) - 1
+
+        current_step = steps[target_idx]
+
+        # Generate suggestions
+        suggestions = await self._generate_suggestions(trail_dict, current_step, target_idx)
+
+        if response_format == "cli":
+            lines = [f"{BOLD}AI Suggestions for step {target_idx + 1}{RESET}\n"]
+
+            if suggestions.get("related_trails"):
+                lines.append(f"{BOLD}Related Trails:{RESET}")
+                for t in suggestions["related_trails"][:3]:
+                    lines.append(f"  {CYAN}●{RESET} {t['name']} ({int(t['score'] * 100)}% similar)")
+
+            if suggestions.get("suggested_files"):
+                lines.append(f"\n{BOLD}Explore Next:{RESET}")
+                for f in suggestions["suggested_files"][:3]:
+                    lines.append(f"  {DIM}→{RESET} {f['path']}")
+                    lines.append(f"    {DIM}{f['reason']}{RESET}")
+
+            if suggestions.get("reasoning_prompts"):
+                lines.append(f"\n{BOLD}Questions to Consider:{RESET}")
+                for p in suggestions["reasoning_prompts"][:3]:
+                    lines.append(f"  {DIM}?{RESET} {p}")
+
+            return BasicRendering(
+                summary=f"Suggestions for step {target_idx + 1}",
+                content="\n".join(lines),
+                metadata={
+                    "trail_id": trail_id,
+                    "step_index": target_idx,
+                    **suggestions,
+                },
+            )
+
+        return BasicRendering(
+            summary=f"Suggestions for step {target_idx + 1}",
+            content="",
+            metadata={
+                "trail_id": trail_id,
+                "step_index": target_idx,
+                **suggestions,
+            },
+        )
+
+    async def _generate_suggestions(
+        self,
+        trail_dict: dict[str, Any],
+        current_step: dict[str, Any],
+        step_index: int,
+    ) -> dict[str, Any]:
+        """
+        Generate full intelligence suggestions.
+
+        Returns dict with:
+        - related_trails: Semantically similar trails
+        - suggested_files: Files based on path patterns
+        - inferred_edges: Edge types with confidence
+        - reasoning_prompts: Questions to explore
+        """
+        related_trails: list[dict[str, Any]] = []
+        suggested_files: list[dict[str, Any]] = []
+        inferred_edges: list[dict[str, Any]] = []
+        reasoning_prompts: list[str] = []
+
+        # Try semantic search if embedder available
+        try:
+            from services.providers import get_embedder
+
+            embedder = await get_embedder()
+
+            if embedder and current_step.get("reasoning"):
+                # Embed current step's context
+                text = f"{current_step.get('source_path', '')} {current_step.get('reasoning', '')}"
+                embedding = await embedder.embed(text)
+
+                # Search for similar trails
+                try:
+                    storage = await self._ensure_storage()
+                    results = await storage.search_semantic(embedding, limit=5)
+                    related_trails = [
+                        {
+                            "trail_id": r.trail_id,
+                            "name": r.name,
+                            "score": round(r.score, 3),
+                            "step_count": r.step_count,
+                        }
+                        for r in results
+                        if r.trail_id != trail_dict.get("trail_id")  # Exclude self
+                    ]
+                except Exception as e:
+                    logger.debug(f"Semantic search failed: {e}")
+        except Exception as e:
+            logger.debug(f"Embedder not available: {e}")
+
+        # Suggest files based on path patterns
+        suggested_files = self._suggest_files(current_step)
+
+        # Infer edge types
+        inferred_edges = self._infer_edges(current_step, suggested_files)
+
+        # Generate reasoning prompts
+        reasoning_prompts = self._generate_prompts(trail_dict, current_step)
+
+        return {
+            "related_trails": related_trails,
+            "suggested_files": suggested_files,
+            "inferred_edges": inferred_edges,
+            "reasoning_prompts": reasoning_prompts,
+        }
+
+    def _suggest_files(self, current_step: dict[str, Any]) -> list[dict[str, Any]]:
+        """Suggest files based on path patterns."""
+        path = current_step.get("source_path", "")
+        suggestions: list[dict[str, Any]] = []
+
+        # Pattern: spec → impl
+        if path.startswith("spec/"):
+            impl_path = path.replace("spec/", "impl/claude/").replace(".md", ".py")
+            suggestions.append(
+                {
+                    "path": impl_path,
+                    "reason": "Implementation of this spec",
+                    "confidence": 0.8,
+                }
+            )
+
+        # Pattern: impl → test
+        if ".py" in path and "_tests" not in path:
+            # Build test path
+            parts = path.rsplit("/", 1)
+            if len(parts) == 2:
+                dir_path, filename = parts
+                test_filename = f"test_{filename}"
+                test_path = f"{dir_path}/_tests/{test_filename}"
+                suggestions.append(
+                    {
+                        "path": test_path,
+                        "reason": "Tests for this module",
+                        "confidence": 0.7,
+                    }
+                )
+
+        # Pattern: service → model
+        if "/services/" in path:
+            model_name = path.split("/")[-1].replace(".py", "")
+            suggestions.append(
+                {
+                    "path": f"models/{model_name}.py",
+                    "reason": "Data model for this service",
+                    "confidence": 0.6,
+                }
+            )
+
+        # Pattern: context node → protocol
+        if "/agentese/contexts/" in path:
+            suggestions.append(
+                {
+                    "path": "spec/protocols/agentese.md",
+                    "reason": "AGENTESE protocol specification",
+                    "confidence": 0.5,
+                }
+            )
+
+        # Pattern: any .py → principles
+        if path.endswith(".py"):
+            suggestions.append(
+                {
+                    "path": "spec/principles.md",
+                    "reason": "Ground in first principles",
+                    "confidence": 0.4,
+                }
+            )
+
+        return suggestions[:3]  # Limit to top 3
+
+    def _infer_edges(
+        self, current_step: dict[str, Any], suggested_files: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Infer edge types for suggestions."""
+        edges: list[dict[str, Any]] = []
+
+        for f in suggested_files:
+            path = f["path"]
+
+            if "impl" in path and "spec" in current_step.get("source_path", ""):
+                edge_type = "implements"
+            elif "test" in path:
+                edge_type = "tests"
+            elif "model" in path:
+                edge_type = "imports"
+            elif "principles" in path:
+                edge_type = "semantic:grounds"
+            elif "spec" in path:
+                edge_type = "specifies"
+            else:
+                edge_type = "uses"
+
+            edges.append(
+                {
+                    "edge_type": edge_type,
+                    "target_path": path,
+                    "confidence": f["confidence"],
+                }
+            )
+
+        return edges
+
+    def _generate_prompts(
+        self, trail_dict: dict[str, Any], current_step: dict[str, Any]
+    ) -> list[str]:
+        """Generate reasoning prompts based on context."""
+        prompts: list[str] = []
+
+        # Core prompts
+        prompts.append("What principles from spec/principles.md apply here?")
+        prompts.append("Are there similar patterns elsewhere in the codebase?")
+
+        # Edge-specific prompts
+        edge = current_step.get("edge")
+        if edge == "implements":
+            prompts.append("Does this implementation match the spec completely?")
+        elif edge == "tests":
+            prompts.append("What edge cases does this test miss?")
+        elif edge and edge.startswith("semantic:"):
+            prompts.append("What makes this semantic connection meaningful?")
+
+        # Path-specific prompts
+        path = current_step.get("source_path", "")
+        if "/services/" in path:
+            prompts.append("Is this service following the Crown Jewel pattern?")
+        elif "/agents/" in path:
+            prompts.append("Does this agent satisfy the category laws?")
+
+        # Trail-specific prompts
+        topics = trail_dict.get("topics", [])
+        if "witness" in topics:
+            prompts.append("How does this connect to the Witness architecture?")
+        if "trail" in topics:
+            prompts.append("Is this step part of the trail-as-evidence pattern?")
+
+        return prompts[:3]  # Limit to top 3
+
     async def _invoke_aspect(
         self,
         aspect: str,
@@ -1217,8 +1768,7 @@ class TrailNode(BaseLogosNode):
 
         match aspect:
             case "manifest":
-                limit = kwargs.get("limit", 50)
-                return await self.manifest(observer, limit, response_format)
+                return await self.manifest(observer, **kwargs)
             case "load":
                 trail_id = kwargs.get("trail_id", "")
                 return await self.load(observer, trail_id, response_format)
@@ -1237,6 +1787,10 @@ class TrailNode(BaseLogosNode):
                 return await self.create(observer, name, steps, topics, response_format)
             case "status":
                 return await self.status(observer, response_format)
+            case "suggest":
+                trail_id = kwargs.get("trail_id", "")
+                step_index = kwargs.get("step_index", -1)
+                return await self.suggest(observer, trail_id, step_index, response_format)
             case _:
                 return BasicRendering(
                     summary=f"Unknown aspect: {aspect}",
