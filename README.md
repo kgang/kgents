@@ -51,7 +51,7 @@ for f in ../../docs/examples/*.py; do python "$f"; done
 
 ### Marimo Notebooks (Interactive)
 
-Six interactive notebooks for hands-on exploration:
+Four interactive notebooks for hands-on exploration:
 
 ```bash
 cd impl/claude
@@ -68,12 +68,18 @@ marimo edit demos/stateful_memory_demo.py
 
 # Interactive text rendering and projection
 marimo edit demos/interactive_text_demo.py
+```
+
+### Python Demos (Standalone)
+
+```bash
+cd impl/claude
 
 # Reactive substrate visualization
-marimo edit demos/red_and_blue.py
+uv run python demos/red_and_blue.py
 
 # WASM sandbox: zero-trust browser execution
-marimo edit demos/wasm_sandbox_demo.py
+uv run python demos/wasm_sandbox_demo.py
 ```
 
 ### HTML Sandboxes (Browser, No Build)

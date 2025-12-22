@@ -80,14 +80,59 @@ Projection → AGENTESE Protocol → Node → Service → Infrastructure → Per
 | Jewel | Status | Purpose |
 |-------|--------|---------|
 | Brain | 100% | Spatial cathedral of memory + TeachingCrystal crystallization |
-| Gestalt | 85% | Living visualization |
-| Forge | 85% | Creative workshop |
 | Town | 70% | Multi-agent simulation |
-| Park | 60% | Westworld with consent |
 | Witness | 98% | Audit core: Mark, Walk, Playbook, Grant, Scope (461+ tests) |
-| Conductor | 92% | CLI v7 orchestration (Phase 5B: spring-physics cursors, NodeDetailPanel) |
-| ASHC | 95% | Self-hosting compiler: 408 tests, Phases 1-5 complete |
-| Liminal | 50% | Transition protocols: Morning Coffee (224 tests, Phase 2 complete) |
+| Atelier | 75% | Design forge and creative workshop |
+| Liminal | 50% | Transition protocols: Morning Coffee |
+
+---
+
+## Witness: Marks & Decisions
+
+> *"The proof IS the decision. The mark IS the witness."*
+
+### Mark Moments (`km`)
+
+```bash
+km "what happened"                         # Basic mark
+km "insight" --reasoning "why it matters"  # With justification
+km "gotcha" --tag gotcha --tag agentese    # Tagged for retrieval
+km "follow-up" --parent mark-abc           # Causal lineage
+km "action" --json                         # Machine-readable
+```
+
+**Tags**: `eureka` `gotcha` `taste` `friction` `joy` `veto` `decision` `pattern`
+
+### Record Decisions (`kg decide`)
+
+```bash
+# Quick decision
+kg decide --fast "choice" --reasoning "why"
+
+# Full dialectic (Kent + Claude differ)
+kg decide --kent "view" --kent-reasoning "why" \
+          --claude "view" --claude-reasoning "why" \
+          --synthesis "fusion" --why "justification"
+```
+
+### Query & Crystallize
+
+```bash
+kg witness show --today                # Today's marks
+kg witness show --tag joy              # Filter by tag
+kg witness tree mark-abc               # Causal tree
+kg witness crystallize                 # Marks → Session crystal
+kg witness context --budget 2000       # Budget-aware context
+```
+
+### When to Witness
+
+- After fixing something subtle → `km` with `--tag gotcha`
+- When choosing between options → `kg decide`
+- When something feels right/wrong → `km` with `--tag taste`
+- Before ending session → `/crystallize`
+
+**Crystal Hierarchy**: Marks → Session (L0) → Day (L1) → Week (L2) → Epoch (L3)
 
 ---
 
@@ -111,4 +156,4 @@ cd impl/claude/web && npm run typecheck && npm run lint
 
 ---
 
-*Lines: 90. Ceiling: 100.*
+*Lines: 115. Ceiling: 120.*

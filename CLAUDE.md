@@ -103,6 +103,29 @@ kg decide --kent "WebSockets" --kent-reasoning "Bidirectional, familiar" \
 
 **Philosophy**: Decisions without traces are reflexes. Decisions with traces are agency.
 
+### Agent-Friendly Mode (Subagents & Pipelines)
+
+When operating programmatically (subagents, pipelines, scripts):
+
+```bash
+# Always use --json for machine-readable output
+km "Completed audit" --json              # → {"mark_id": "...", "action": "...", ...}
+kg witness show --today --json           # → [{"id": "...", ...}, ...]
+kg decide --fast "Choice" --reasoning "Why" --json  # → {"fusion_id": "...", ...}
+
+# Query before acting
+kg witness show --grep "extinction" --json   # Search marks
+kg witness show --tag composable --json      # Filter by principle
+```
+
+**Subagent Protocol**:
+1. Query recent marks before starting work (`kg witness show --today --json`)
+2. Mark significant actions (`km "Completed X" --json`)
+3. Record decisions (`kg decide --fast "..." --json`)
+4. Return mark IDs for traceability
+
+See: `docs/skills/witness-for-agents.md`
+
 ---
 
 ## 📚 SKILLS: Your First Stop
@@ -314,7 +337,9 @@ plans/          - Meta files only (_focus.md, meta.md)
 
 See `NOW.md` — the one living document that replaces 22 plan files.
 
-**Quick Status**: Brain 100%, Gestalt 70%, Atelier 75%, Town 55%, Park 40%
+**Quick Status**: Brain 100%, Town 70%, Witness 98%, Atelier 75%, Liminal 50%
+
+*Post-Extinction (2025-12-21): Gestalt, Park, Emergence, Coalition, Drills removed. ~52K lines archived.*
 
 ---
 

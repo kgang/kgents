@@ -24,6 +24,59 @@ Before adding to ANY meta file:
 2. Will future-me understand without context? → If no, rewrite
 3. Can this be deleted in 30 days if unused? → If no, it's not meta—it's spec
 
+## Witnessing: Marks & Decisions
+
+> *"The proof IS the decision. The mark IS the witness."*
+
+### During the Session
+
+**Mark significant moments** with `km`:
+
+```bash
+km "what happened" --reasoning "why it matters" --tag <type>
+```
+
+| When | Tag | Example |
+|------|-----|---------|
+| Breakthrough understanding | `eureka` | `km "AGENTESE paths are places not actions" --tag eureka` |
+| Discovered a trap | `gotcha` | `km "Property shadows method" --tag gotcha` |
+| Aesthetic judgment | `taste` | `km "Animation feels alive now" --tag taste` |
+| UX pain point | `friction` | `km "Had to restart 3 times" --tag friction` |
+| Moment of delight | `joy` | `km "Tests all green on first try" --tag joy` |
+| Somatic rejection | `veto` | `km "This feels wrong" --tag veto` |
+
+**Record decisions** with `kg decide`:
+
+```bash
+# Quick decision
+kg decide --fast "Use SSE not WebSocket" --reasoning "Unidirectional is enough"
+
+# Full dialectic (when Kent and Claude differ)
+kg decide --kent "LangChain" --kent-reasoning "Scale, resources" \
+          --claude "Build kernel" --claude-reasoning "Joy, novel" \
+          --synthesis "Build minimal, validate, then decide" \
+          --why "Avoids both risks"
+```
+
+### When to Witness
+
+- **After fixing something subtle** → `km` with `--tag gotcha`
+- **When choosing between options** → `kg decide --fast`
+- **When Kent + Claude synthesize** → `kg decide` with full dialectic
+- **When something feels right/wrong** → `km` with `--tag taste` or `--tag veto`
+- **Before ending a productive session** → `/crystallize`
+
+### Proactive Witnessing
+
+As an agent, you should **proactively** emit marks and decisions:
+
+1. After resolving a non-trivial bug, emit: `km "Fixed X" --reasoning "Y" --tag gotcha`
+2. After making an architectural choice, emit: `kg decide --fast "choice" --reasoning "why"`
+3. When Kent expresses aesthetic preference, capture it: `km "Kent prefers X" --tag taste`
+4. When you reach synthesis together, use the full dialectic form
+
+Don't wait to be asked. Witness as you go.
+
 ## If HYDRATE.md is stale
 
 Update facts (test counts, phase status). Do NOT add new sections. Compress, don't expand.
@@ -69,3 +122,13 @@ This surfaces:
 - **Relevant Gotchas**: Mistakes to avoid for this task
 - **Related Modules**: Files you'll likely touch
 - **Voice Anchors**: Kent's phrases to preserve
+
+## End of Session
+
+Before ending a productive session, run `/crystallize` to:
+1. Review the session for significant moments
+2. Emit any un-captured marks and decisions
+3. Optionally update `meta.md` with atomic learnings
+4. Verify with `kg witness show --today`
+
+The goal: nothing valuable evaporates when the session ends.
