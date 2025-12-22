@@ -311,6 +311,54 @@ sorry = incomplete: Lean4 proofs with sorry treated as FAILED (not just warning)
 Noisy error cascades (Dafny): first error is key, subsequent often red herrings
 ```
 
+### Derivation Framework Phase 4: Decay & Refresh (2025-12-22)
+```
+Stigmergic decay ≠ evidence decay: different mechanisms, run together in decay cycle
+ActivityRecord tracks last_active timestamp: decay based on inactivity, not low usage
+Grace period (14 days default): recently active agents don't decay even if usage is low
+ASHC refresh is optional: if no runner, skips without failing the decay cycle
+run_decay_cycle is idempotent: safe to run daily via cron or scheduler
+Half-life formula for stigmergic: confidence' = confidence * 0.5^(days / halflife)
+DecayConfig for tunable parameters: half-life, thresholds, floors all configurable
+Explicit type annotations for mypy: float annotations prevent "Returning Any" errors
+```
+
+### SSE Streaming via AGENTESE (2025-12-22)
+```
+Async generators must NOT be awaited: calling them returns generator directly, await fails
+_invoke_aspect stream check: if aspect == "stream": return method() (no await)
+Gateway _generate_sse wraps output: don't pre-format SSE in stream aspect—double-wrap bug
+Stream aspects yield raw dicts: let gateway format with `data: {json}\n\n`
+AGENTESE SSE URL pattern: /{context}/{holon}/{aspect} not /{aspect}/stream
+Vite proxy works for SSE: no special config needed, just standard /agentese proxy
+```
+
+### Node Affordances Pattern (2025-12-22)
+```
+Never @property affordances(): BaseLogosNode.affordances() is a METHOD expecting (observer: AgentMeta) → list
+Shadowing with @property causes 'tuple not callable': self.affordances(meta) fails
+_get_affordances_for_archetype() is the hook: override this, not affordances itself
+COLLABORATION_AFFORDANCES should NOT include 'manifest': it's already in _base_affordances
+```
+
+### ZenPortal Audit (2025-12-22)
+```
+DI Container pattern: Services dataclass wires all deps at startup—single source of truth, easy mocking
+Atomic persistence: temp file + rename is POSIX atomic—never corrupt state on crash
+EventBus > direct calls: pub/sub decouples components, errors isolated per handler
+Vim navigation (j/k): reduces hand travel, matches terminal muscle memory
+Copy confirmation: silent ops = user uncertainty; use Garden + notify() for feedback
+Elastic width: truncate labels gracefully based on available space—never overflow
+Status glyphs (▪/▫): scannable at glance, language-independent, compact
+Notification toasts: bottom-left, 3s auto-dismiss, non-blocking feedback
+Selection persistence: save selected_session_id + session_order separately from data
+Human-friendly age: "3m", "1h", "2d" > ISO timestamps for daily-use UX
+Async service separation: sync wrapper + asyncio.to_thread() keeps UI responsive
+Graceful degradation via tuples: (result, error) never raises—caller decides
+Active pane indicator: reverse video title > subtle border change (unmistakable)
+SelectablePane base class: extract j/k/1-9/enter logic once, reuse everywhere
+```
+
 ---
 
 ## Anti-Patterns
@@ -340,4 +388,4 @@ Servo embedding vs Electron: which path for desktop app?
 
 ---
 
-*Lines: ~320/200 | Last updated: 2025-12-21 | ASHC Phase 5: Checker Bridges*
+*Lines: ~390/200 | Last updated: 2025-12-22 | ZenPortal Audit*
