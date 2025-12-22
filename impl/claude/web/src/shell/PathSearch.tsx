@@ -12,15 +12,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowRight,
-  Globe,
-  User,
-  BookOpen,
-  Sparkles,
-  Clock,
-  type LucideIcon,
-} from 'lucide-react';
+import { ArrowRight, Globe, User, BookOpen, Sparkles, Clock, type LucideIcon } from 'lucide-react';
 import { useMotionPreferences } from '@/components/joy/useMotionPreferences';
 import { apiClient } from '@/api/client';
 import type { AgenteseContext } from '@/utils/parseAgentesePath';
@@ -185,10 +177,13 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
   }, [filteredPaths.length, selectedIndex]);
 
   // Navigate to path
-  const navigateToPath = useCallback((path: string) => {
-    navigate(`/${path}`);
-    onClose();
-  }, [navigate, onClose]);
+  const navigateToPath = useCallback(
+    (path: string) => {
+      navigate(`/${path}`);
+      onClose();
+    },
+    [navigate, onClose]
+  );
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -196,15 +191,11 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < filteredPaths.length - 1 ? prev + 1 : 0
-          );
+          setSelectedIndex((prev) => (prev < filteredPaths.length - 1 ? prev + 1 : 0));
           break;
         case 'ArrowUp':
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev > 0 ? prev - 1 : filteredPaths.length - 1
-          );
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredPaths.length - 1));
           break;
         case 'Enter':
           event.preventDefault();
@@ -286,9 +277,9 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
             }}
             className="fixed z-50 top-[15%] left-1/2 -translate-x-1/2 w-full max-w-lg"
           >
-            <div className="bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-700/50 shadow-2xl overflow-hidden">
+            <div className="bg-steel-carbon/95 backdrop-blur-md rounded-xl border border-steel-gunmetal/50 shadow-2xl overflow-hidden">
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-700/50">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-steel-gunmetal/50">
                 <span className="text-cyan-400 font-mono text-sm">/</span>
                 <input
                   ref={inputRef}
@@ -297,12 +288,12 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Type path... (e.g., world.town.citizen)"
-                  className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-sm font-mono"
+                  className="flex-1 bg-transparent text-white placeholder-steel-zinc outline-none text-sm font-mono"
                   autoComplete="off"
                   autoCapitalize="off"
                   spellCheck={false}
                 />
-                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded text-gray-400">
+                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded text-steel-zinc">
                   Esc
                 </kbd>
               </div>
@@ -310,11 +301,11 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
               {/* Results */}
               <div className="max-h-[50vh] overflow-auto py-2">
                 {loading ? (
-                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  <div className="px-4 py-8 text-center text-steel-zinc text-sm">
                     Loading paths...
                   </div>
                 ) : filteredPaths.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  <div className="px-4 py-8 text-center text-steel-zinc text-sm">
                     {query ? (
                       <>
                         <p>No paths match "{query}"</p>
@@ -339,7 +330,7 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
                         className={`
                           w-full flex items-center gap-3 px-4 py-2.5 text-left
                           transition-colors
-                          ${isSelected ? 'bg-gray-700/50' : 'hover:bg-gray-700/30'}
+                          ${isSelected ? 'bg-steel-slate/50' : 'hover:bg-steel-slate/30'}
                         `}
                       >
                         <Icon className={`w-4 h-4 flex-shrink-0 ${colorClass}`} />
@@ -350,7 +341,9 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
                             pathParts.map((part, i) => (
                               <span
                                 key={i}
-                                className={part.highlight ? 'text-cyan-400 font-semibold' : 'text-gray-300'}
+                                className={
+                                  part.highlight ? 'text-cyan-400 font-semibold' : 'text-steel-zinc'
+                                }
                               >
                                 {part.text}
                               </span>
@@ -358,7 +351,7 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
                           )}
                         </div>
                         {isSelected && (
-                          <ArrowRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-steel-zinc flex-shrink-0" />
                         )}
                       </button>
                     );
@@ -367,19 +360,27 @@ export function PathSearch({ isOpen, onClose }: PathSearchProps) {
               </div>
 
               {/* Footer hints */}
-              <div className="px-4 py-2 border-t border-gray-700/50 bg-gray-800/50 flex items-center justify-between text-xs text-gray-500">
+              <div className="px-4 py-2 border-t border-steel-gunmetal/50 bg-steel-carbon/50 flex items-center justify-between text-xs text-steel-zinc">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">↑</kbd>
-                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">↓</kbd>
+                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      ↑
+                    </kbd>
+                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      ↓
+                    </kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">Tab</kbd>
+                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      Tab
+                    </kbd>
                     complete
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">Enter</kbd>
+                    <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      Enter
+                    </kbd>
                     go
                   </span>
                 </div>

@@ -62,6 +62,12 @@ from .contracts import (
     TrustResponse,
     WitnessManifestResponse,
 )
+from .garden import (
+    AccountabilityLens,
+    EvidenceLadder,
+    GardenScene,
+)
+from .garden_service import GardenService, get_garden_service
 from .persistence import WitnessPersistence, WitnessStatus
 from .polynomial import ActionResult, Thought, TrustLevel
 from .trust import ActionGate
@@ -153,6 +159,9 @@ class ThoughtStreamRendering:
         # Cross-jewel invocation (L3 only)
         "invoke": Contract(InvokeRequest, InvokeResponse),
         "pipeline": Contract(PipelineRequest, PipelineResponse),
+        # Phase 6: Witness Assurance Surface (Garden)
+        "garden": Response(GardenScene),
+        "ladder": Response(EvidenceLadder),
     },
     examples=[
         ("thoughts", {"limit": 20}, "Show recent thoughts"),
@@ -173,6 +182,9 @@ class ThoughtStreamRendering:
             {"steps": [{"path": "world.gestalt.manifest"}, {"path": "self.memory.capture"}]},
             "Run a pipeline across jewels (L3 only)",
         ),
+        # Phase 6: Witness Assurance Surface
+        ("garden", {"lens": "trust"}, "Get garden scene with trust lens"),
+        ("ladder", {"spec_path": "spec/protocols/witness.md"}, "Get evidence ladder for spec"),
     ],
 )
 class WitnessNode(BaseLogosNode):
@@ -198,6 +210,7 @@ class WitnessNode(BaseLogosNode):
         self,
         witness_persistence: WitnessPersistence,
         logos: Any = None,
+        garden_service: GardenService | None = None,
     ) -> None:
         """
         Initialize WitnessNode.
@@ -209,12 +222,14 @@ class WitnessNode(BaseLogosNode):
         Args:
             witness_persistence: The persistence layer (injected by container)
             logos: The Logos instance for cross-jewel invocation (optional)
+            garden_service: The garden service for Assurance Surface (optional)
 
         Raises:
             TypeError: If witness_persistence is not provided
         """
         self._persistence = witness_persistence
         self._logos = logos
+        self._garden_service = garden_service
         self._invoker: JewelInvoker | None = None
         self._current_trust_level = TrustLevel.READ_ONLY  # Default, updated via trust aspect
 
@@ -268,6 +283,8 @@ class WitnessNode(BaseLogosNode):
                 "manifest",
                 "thoughts",
                 "stream",  # SSE streaming
+                "garden",  # Phase 6: Assurance Surface
+                "ladder",  # Phase 6: Evidence Ladder
                 "trust",
                 "capture",
                 "action",
@@ -283,6 +300,8 @@ class WitnessNode(BaseLogosNode):
                 "manifest",
                 "thoughts",
                 "stream",  # SSE streaming
+                "garden",  # Phase 6: Assurance Surface
+                "ladder",  # Phase 6: Evidence Ladder
                 "trust",
                 "capture",
             )
@@ -293,6 +312,7 @@ class WitnessNode(BaseLogosNode):
                 "manifest",
                 "thoughts",
                 "stream",  # SSE streaming
+                "garden",  # Phase 6: Trust lens only
                 "trust",
             )
 
@@ -669,6 +689,50 @@ class WitnessNode(BaseLogosNode):
         elif aspect == "stream":
             # Return the async generator directly - gateway will handle SSE conversion
             return self.stream(observer, **kwargs)
+
+        elif aspect == "garden":
+            # Phase 6: Witness Assurance Surface - Garden Scene
+            lens_str = kwargs.get("lens", "audit")
+            density = kwargs.get("density", "comfortable")
+
+            # Get or create garden service
+            garden_svc = self._garden_service
+            if garden_svc is None:
+                garden_svc = get_garden_service(
+                    mark_store=None,  # TODO: wire up when MarkStore is available
+                    crystal_store=None,  # TODO: wire up when CrystalStore is available
+                )
+
+            try:
+                lens = AccountabilityLens(lens_str)
+            except ValueError:
+                lens = AccountabilityLens.AUDIT
+
+            scene = await garden_svc.build_garden_scene(lens=lens, density=density)
+            return scene.to_dict()
+
+        elif aspect == "ladder":
+            # Phase 6: Evidence Ladder for a specific spec
+            spec_path = kwargs.get("spec_path", "")
+
+            if not spec_path:
+                return {"error": "spec_path required"}
+
+            # Get or create garden service
+            garden_svc = self._garden_service
+            if garden_svc is None:
+                garden_svc = get_garden_service(
+                    mark_store=None,
+                    crystal_store=None,
+                )
+
+            ladder = await garden_svc.compute_evidence_ladder(spec_path)
+            return {
+                "spec_path": spec_path,
+                "ladder": ladder.to_dict(),
+                "confidence": ladder.confidence_score,
+                "total_evidence": ladder.total_evidence,
+            }
 
         else:
             return {"error": f"Unknown aspect: {aspect}"}

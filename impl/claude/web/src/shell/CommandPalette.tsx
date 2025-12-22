@@ -68,7 +68,13 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
 
   // Build command items
   const commands = useMemo<CommandItem[]>(() => {
-    const nav = (path: string, label: string, icon: LucideIcon, iconColor?: string, description?: string): CommandItem => ({
+    const nav = (
+      path: string,
+      label: string,
+      icon: LucideIcon,
+      iconColor?: string,
+      description?: string
+    ): CommandItem => ({
       id: `nav-${path}`,
       label,
       description: description || path,
@@ -82,7 +88,13 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
       keywords: [path, label.toLowerCase()],
     });
 
-    const action = (id: string, label: string, icon: LucideIcon, actionFn: () => void, description?: string): CommandItem => ({
+    const action = (
+      id: string,
+      label: string,
+      icon: LucideIcon,
+      actionFn: () => void,
+      description?: string
+    ): CommandItem => ({
       id,
       label,
       description,
@@ -128,10 +140,16 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
       terminalCmd('discover', 'Discover Paths', 'List all AGENTESE paths'),
 
       // Actions
-      action('toggle-nav', 'Toggle Navigation', Command, () => {
-        // This will be handled by the shell
-        document.dispatchEvent(new CustomEvent('shell:toggle-nav'));
-      }, 'Show/hide sidebar'),
+      action(
+        'toggle-nav',
+        'Toggle Navigation',
+        Command,
+        () => {
+          // This will be handled by the shell
+          document.dispatchEvent(new CustomEvent('shell:toggle-nav'));
+        },
+        'Show/hide sidebar'
+      ),
     ];
   }, [navigate, onClose, onTerminalCommand]);
 
@@ -163,15 +181,11 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev < filteredCommands.length - 1 ? prev + 1 : 0
-          );
+          setSelectedIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0));
           break;
         case 'ArrowUp':
           event.preventDefault();
-          setSelectedIndex((prev) =>
-            prev > 0 ? prev - 1 : filteredCommands.length - 1
-          );
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1));
           break;
         case 'Enter':
           event.preventDefault();
@@ -220,10 +234,10 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
             }}
             className="fixed z-50 top-[15%] left-1/2 -translate-x-1/2 w-full max-w-lg"
           >
-            <div className="bg-gray-800/95 backdrop-blur-md rounded-xl border border-gray-700/50 shadow-2xl overflow-hidden">
+            <div className="bg-steel-carbon/95 backdrop-blur-md rounded-xl border border-steel-gunmetal/50 shadow-2xl overflow-hidden">
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-700/50">
-                <Search className="w-5 h-5 text-gray-400 flex-shrink-0" />
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-steel-gunmetal/50">
+                <Search className="w-5 h-5 text-steel-zinc flex-shrink-0" />
                 <input
                   ref={inputRef}
                   type="text"
@@ -231,12 +245,12 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Type a command or search..."
-                  className="flex-1 bg-transparent text-white placeholder-gray-500 outline-none text-sm"
+                  className="flex-1 bg-transparent text-white placeholder-steel-zinc outline-none text-sm"
                   autoComplete="off"
                   autoCapitalize="off"
                   spellCheck={false}
                 />
-                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded text-gray-400">
+                <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded text-steel-zinc">
                   Esc
                 </kbd>
               </div>
@@ -244,7 +258,7 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
               {/* Results */}
               <div className="max-h-[50vh] overflow-auto py-2">
                 {filteredCommands.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                  <div className="px-4 py-8 text-center text-steel-zinc text-sm">
                     No commands found for "{query}"
                   </div>
                 ) : (
@@ -260,7 +274,7 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
                         className={`
                           w-full flex items-center gap-3 px-4 py-2.5 text-left
                           transition-colors
-                          ${isSelected ? 'bg-gray-700/50' : 'hover:bg-gray-700/30'}
+                          ${isSelected ? 'bg-steel-slate/50' : 'hover:bg-steel-slate/30'}
                         `}
                       >
                         <Icon
@@ -270,13 +284,13 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-white">{cmd.label}</div>
                           {cmd.description && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div className="text-xs text-steel-zinc truncate">
                               {cmd.description}
                             </div>
                           )}
                         </div>
                         {isSelected && (
-                          <ArrowRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                          <ArrowRight className="w-4 h-4 text-steel-zinc flex-shrink-0" />
                         )}
                       </button>
                     );
@@ -285,15 +299,21 @@ export function CommandPalette({ isOpen, onClose, onTerminalCommand }: CommandPa
               </div>
 
               {/* Footer hints */}
-              <div className="px-4 py-2 border-t border-gray-700/50 bg-gray-800/50 flex items-center justify-between text-xs text-gray-500">
+              <div className="px-4 py-2 border-t border-steel-gunmetal/50 bg-steel-carbon/50 flex items-center justify-between text-xs text-steel-zinc">
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">↑</kbd>
-                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">↓</kbd>
+                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      ↑
+                    </kbd>
+                    <kbd className="px-1 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      ↓
+                    </kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-gray-700/50 border border-gray-600/50 rounded">Enter</kbd>
+                    <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-steel-slate/50 border border-steel-gunmetal/50 rounded">
+                      Enter
+                    </kbd>
                     select
                   </span>
                 </div>

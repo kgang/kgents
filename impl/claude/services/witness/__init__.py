@@ -79,6 +79,33 @@ from .crystallizer import (
     Crystallizer,
 )
 
+# Evidence Ladder (Phase 1: Witness Assurance Protocol)
+from .evidence import (
+    Evidence,
+    EvidenceLevel,
+    compute_content_hash,
+    generate_evidence_id,
+)
+
+# Phase 6: Witness Assurance Surface (Garden)
+from .garden import (
+    AccountabilityLens,
+    ConfidencePulse,
+    EvidenceLadder,
+    GardenScene,
+    OrphanWeed,
+    PlantHealth,
+    ProvenanceNode,
+    PulseRate,
+    SpecPath,
+    SpecPlant,
+    SpecStatus as GardenSpecStatus,
+)
+from .garden_service import (
+    GardenService,
+    get_garden_service,
+)
+
 # Grant (renamed from Covenant)
 from .grant import (
     GateFallback,
@@ -248,6 +275,13 @@ from .sheaf import (
     source_overlap,
     verify_associativity_law,
     verify_identity_law,
+)
+from .status import (
+    ContextGraphProtocol,
+    SpecStatus,
+    WitnessedCriteria,
+    compute_status,
+    compute_status_from_evidence_only,
 )
 from .stream import (
     CrystalEvent,
@@ -555,6 +589,16 @@ __all__ = [
     "analyze_trail",
     "convert_trail_to_mark",
     "emit_trail_as_mark",
+    # Evidence Ladder (Phase 1: Witness Assurance Protocol)
+    "Evidence",
+    "EvidenceLevel",
+    "compute_content_hash",
+    "generate_evidence_id",
+    "ContextGraphProtocol",
+    "SpecStatus",
+    "WitnessedCriteria",
+    "compute_status",
+    "compute_status_from_evidence_only",
     # Phase 4: Integration & Streaming
     "HandoffContext",
     "NowMdProposal",
@@ -579,4 +623,18 @@ __all__ = [
     "crystals_to_graph",
     "format_graph_response",
     "get_hierarchy_graph",
+    # Phase 6: Witness Assurance Surface (Garden)
+    "AccountabilityLens",
+    "ConfidencePulse",
+    "EvidenceLadder",
+    "GardenScene",
+    "GardenService",
+    "GardenSpecStatus",
+    "OrphanWeed",
+    "PlantHealth",
+    "ProvenanceNode",
+    "PulseRate",
+    "SpecPath",
+    "SpecPlant",
+    "get_garden_service",
 ]

@@ -122,7 +122,8 @@ function StatBadge({ label, value, color = 'cyan' }: StatBadgeProps) {
 
   return (
     <div className={`px-2 py-1 rounded border ${colorClasses[color]} text-xs`}>
-      <span className="text-gray-400">{label}:</span> <span className="font-semibold">{value}</span>
+      <span className="text-steel-zinc">{label}:</span>{' '}
+      <span className="font-semibold">{value}</span>
     </div>
   );
 }
@@ -164,15 +165,15 @@ export function CrystalDetail({
 
   const panelClass =
     variant === 'modal'
-      ? 'bg-gray-800 rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col'
-      : 'bg-gray-800 h-full flex flex-col overflow-hidden';
+      ? 'bg-steel-carbon rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[80vh] overflow-hidden flex flex-col'
+      : 'bg-steel-carbon h-full flex flex-col overflow-hidden';
 
   return (
     <div className={containerClass} onClick={variant === 'modal' ? onClose : undefined}>
       <PopOnMount scale={1.02} duration={200}>
         <div className={panelClass} onClick={(e) => e.stopPropagation()}>
           {/* Header */}
-          <div className="p-4 border-b border-gray-700 bg-gray-800/90">
+          <div className="p-4 border-b border-steel-gunmetal bg-steel-carbon/90">
             <div className="flex justify-between items-start gap-2 mb-3">
               <div className="flex-1 min-w-0">
                 <h3 className="text-lg font-semibold text-white truncate flex items-center gap-2">
@@ -183,13 +184,13 @@ export function CrystalDetail({
                   )}
                   <span>{crystal.label}</span>
                 </h3>
-                <p className="text-xs text-gray-400 font-mono truncate" title={crystal.id}>
+                <p className="text-xs text-steel-zinc font-mono truncate" title={crystal.id}>
                   {crystal.id}
                 </p>
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-white text-xl p-1 -mr-1 -mt-1 rounded hover:bg-gray-700 transition-colors flex-shrink-0"
+                className="text-steel-zinc hover:text-white text-xl p-1 -mr-1 -mt-1 rounded hover:bg-steel-slate transition-colors flex-shrink-0"
                 aria-label="Close"
               >
                 ×
@@ -210,7 +211,7 @@ export function CrystalDetail({
           </div>
 
           {/* Observer Switcher - fixed height to prevent layout shift on hover */}
-          <div className="px-4 py-3 border-b border-gray-700 bg-gray-800/50 min-h-[72px]">
+          <div className="px-4 py-3 border-b border-steel-gunmetal bg-steel-carbon/50 min-h-[72px]">
             <ObserverSwitcher
               current={observer}
               available={DEFAULT_OBSERVERS.brain}
@@ -222,25 +223,25 @@ export function CrystalDetail({
 
           {/* Content - Observer Dependent */}
           <div className="flex-1 overflow-y-auto p-4">
-            <h4 className="text-sm font-semibold text-gray-400 mb-2 flex items-center gap-2">
+            <h4 className="text-sm font-semibold text-steel-zinc mb-2 flex items-center gap-2">
               {view.title}
               {view.badges.map((badge) => (
                 <span
                   key={badge}
-                  className="px-1.5 py-0.5 bg-gray-700 text-gray-300 text-[10px] rounded"
+                  className="px-1.5 py-0.5 bg-steel-slate text-steel-zinc text-[10px] rounded"
                 >
                   {badge}
                 </span>
               ))}
             </h4>
-            <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-700">
-              <pre className="text-sm text-gray-300 whitespace-pre-wrap font-mono">
+            <div className="bg-steel-obsidian/50 rounded-lg p-3 border border-steel-gunmetal">
+              <pre className="text-sm text-steel-zinc whitespace-pre-wrap font-mono">
                 {view.content}
               </pre>
             </div>
 
             {/* Path Trace - shows the AGENTESE path */}
-            <div className="mt-4 text-xs text-gray-500">
+            <div className="mt-4 text-xs text-steel-zinc">
               <span className="font-mono text-cyan-400">
                 self.memory.crystal[{crystal.id}].manifest
               </span>
@@ -250,7 +251,7 @@ export function CrystalDetail({
           </div>
 
           {/* Actions */}
-          <div className="p-3 border-t border-gray-700 bg-gray-800/90 flex gap-2">
+          <div className="p-3 border-t border-steel-gunmetal bg-steel-carbon/90 flex gap-2">
             <button
               onClick={() => {
                 /* TODO: Implement ghost surfacing from this crystal */
@@ -261,7 +262,7 @@ export function CrystalDetail({
             </button>
             <button
               onClick={onClose}
-              className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+              className="px-3 py-2 bg-steel-slate hover:bg-steel-gunmetal rounded text-sm transition-colors"
             >
               Close
             </button>

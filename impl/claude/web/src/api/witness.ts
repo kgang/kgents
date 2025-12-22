@@ -133,6 +133,105 @@ export interface MarkStreamEvent {
 }
 
 // =============================================================================
+// Garden Types (Phase 6: Witness Assurance Surface)
+// =============================================================================
+
+/**
+ * Plant health status in the garden visualization.
+ */
+export type PlantHealth = 'blooming' | 'healthy' | 'wilting' | 'dead' | 'seedling';
+
+/**
+ * Spec lifecycle status.
+ */
+export type SpecStatus = 'unwitnessed' | 'in_progress' | 'witnessed' | 'contested' | 'superseded';
+
+/**
+ * Accountability lens for filtering the garden.
+ */
+export type AccountabilityLens = 'audit' | 'author' | 'trust';
+
+/**
+ * Pulse rate based on confidence.
+ */
+export type PulseRate = 0 | 0.5 | 1.0 | 1.5; // flatline | awakening | alive | thriving
+
+/**
+ * Evidence ladder levels (L-∞ to L3).
+ */
+export interface EvidenceLadder {
+  orphan: number; // L-∞: Artifacts without lineage
+  prompt: number; // L-2: PromptAncestor count
+  trace: number; // L-1: TraceWitness count
+  mark: number; // L0: Human marks
+  test: number; // L1: Test artifacts
+  proof: number; // L2: Formal proofs
+  bet: number; // L3: Economic bets
+}
+
+/**
+ * Confidence pulse (heartbeat) for a spec.
+ */
+export interface ConfidencePulse {
+  confidence: number;
+  previous_confidence: number | null;
+  pulse_rate: PulseRate;
+  delta_direction: 'increasing' | 'decreasing' | 'stable';
+}
+
+/**
+ * A spec rendered as a plant in the garden.
+ */
+export interface SpecPlant {
+  path: string;
+  name: string;
+  status: SpecStatus;
+  confidence: number;
+  evidence_levels: EvidenceLadder;
+  pulse: ConfidencePulse;
+  height: number;
+  health: PlantHealth;
+  last_evidence_at: string | null;
+  mark_count: number;
+  test_count: number;
+}
+
+/**
+ * An artifact without prompt lineage (weed to tend).
+ */
+export interface OrphanWeed {
+  path: string;
+  artifact_type: string;
+  created_at: string;
+  suggested_prompt: string | null;
+}
+
+/**
+ * Complete garden scene (main visualization).
+ */
+export interface GardenScene {
+  specs: SpecPlant[];
+  orphans: OrphanWeed[];
+  overall_health: number;
+  lens: AccountabilityLens;
+  density: 'compact' | 'comfortable' | 'spacious';
+  total_specs: number;
+  witnessed_count: number;
+  orphan_count: number;
+  generated_at: string;
+}
+
+/**
+ * Response from ladder endpoint.
+ */
+export interface LadderResponse {
+  spec_path: string;
+  ladder: EvidenceLadder;
+  confidence: number;
+  total_evidence: number;
+}
+
+// =============================================================================
 // API Functions
 // =============================================================================
 
@@ -393,10 +492,129 @@ export function isMarkFromToday(mark: Mark): boolean {
 }
 
 // =============================================================================
+// Garden API Functions (Phase 6: Witness Assurance Surface)
+// =============================================================================
+
+/**
+ * Get the garden scene via AGENTESE gateway.
+ *
+ * @example
+ * const scene = await getGardenScene({ lens: 'trust', density: 'comfortable' });
+ */
+export async function getGardenScene(options?: {
+  lens?: AccountabilityLens;
+  density?: 'compact' | 'comfortable' | 'spacious';
+}): Promise<GardenScene> {
+  const params = new URLSearchParams();
+
+  if (options?.lens) {
+    params.set('lens', options.lens);
+  }
+  if (options?.density) {
+    params.set('density', options.density);
+  }
+
+  const query = params.toString();
+  const url = `/agentese/self/witness/garden${query ? `?${query}` : ''}`;
+
+  const { data } = await apiClient.get<GardenScene>(url);
+  return data;
+}
+
+/**
+ * Get the evidence ladder for a specific spec.
+ *
+ * @example
+ * const ladder = await getEvidenceLadder('spec/protocols/witness.md');
+ */
+export async function getEvidenceLadder(specPath: string): Promise<LadderResponse> {
+  const params = new URLSearchParams({ spec_path: specPath });
+  const url = `/agentese/self/witness/ladder?${params.toString()}`;
+
+  const { data } = await apiClient.get<LadderResponse>(url);
+  return data;
+}
+
+/**
+ * Subscribe to garden updates via SSE.
+ *
+ * @example
+ * const cleanup = subscribeToGarden(
+ *   (scene) => console.log('Garden updated:', scene),
+ *   { lens: 'trust' }
+ * );
+ */
+export function subscribeToGarden(
+  onScene: (scene: GardenScene) => void,
+  options?: {
+    lens?: AccountabilityLens;
+    onError?: (error: Error) => void;
+    onConnect?: () => void;
+    onDisconnect?: () => void;
+    reconnectDelay?: number;
+  }
+): () => void {
+  const API_BASE = import.meta.env.VITE_API_URL || '';
+  const params = new URLSearchParams();
+  if (options?.lens) {
+    params.set('lens', options.lens);
+  }
+  const query = params.toString();
+  const url = `${API_BASE}/agentese/self/witness/garden/stream${query ? `?${query}` : ''}`;
+
+  let eventSource: EventSource | null = null;
+  let reconnectTimeout: number | null = null;
+  let isCleanedUp = false;
+
+  const connect = () => {
+    if (isCleanedUp) return;
+
+    eventSource = new EventSource(url);
+
+    eventSource.onopen = () => {
+      options?.onConnect?.();
+    };
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data) as GardenScene;
+        onScene(data);
+      } catch (error) {
+        console.error('[subscribeToGarden] Failed to parse event:', error);
+      }
+    };
+
+    eventSource.onerror = () => {
+      options?.onDisconnect?.();
+      eventSource?.close();
+      eventSource = null;
+
+      // Reconnect after delay
+      if (!isCleanedUp) {
+        reconnectTimeout = window.setTimeout(connect, options?.reconnectDelay ?? 5000);
+      }
+    };
+  };
+
+  // Start connection
+  connect();
+
+  // Return cleanup function
+  return () => {
+    isCleanedUp = true;
+    if (reconnectTimeout !== null) {
+      window.clearTimeout(reconnectTimeout);
+    }
+    eventSource?.close();
+  };
+}
+
+// =============================================================================
 // Exports
 // =============================================================================
 
 export default {
+  // Mark functions
   createMark,
   getRecentMarks,
   getSessionMarks,
@@ -409,4 +627,8 @@ export default {
   groupMarksBySession,
   formatMarkTimestamp,
   isMarkFromToday,
+  // Garden functions (Phase 6)
+  getGardenScene,
+  getEvidenceLadder,
+  subscribeToGarden,
 };

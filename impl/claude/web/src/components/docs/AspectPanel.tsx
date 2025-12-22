@@ -68,8 +68,8 @@ const ASPECT_STYLES: Record<string, AspectStyle> = {
 
 const DEFAULT_STYLE: AspectStyle = {
   icon: Play,
-  color: 'text-gray-400',
-  bgColor: 'bg-gray-500/10',
+  color: 'text-steel-zinc',
+  bgColor: 'bg-steel-zinc/10',
 };
 
 function getAspectStyle(aspect: string): AspectStyle {
@@ -269,8 +269,8 @@ export function AspectPanel({
                   isSelected
                     ? `${style.bgColor} ${style.color} ring-1 ring-current/50`
                     : available
-                      ? 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50'
-                      : 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                      ? 'bg-steel-slate/50 text-steel-zinc hover:bg-steel-gunmetal/50'
+                      : 'bg-steel-carbon/50 text-steel-gunmetal cursor-not-allowed'
                 }
               `}
             >
@@ -295,9 +295,9 @@ export function AspectPanel({
   // Full mode: vertical list with examples
   return (
     <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-700">
-        <h3 className="text-sm font-medium text-gray-400 uppercase tracking-wider">Actions</h3>
-        <p className="text-xs text-gray-500 mt-1">{path}</p>
+      <div className="p-4 border-b border-steel-gunmetal">
+        <h3 className="text-sm font-medium text-steel-zinc uppercase tracking-wider">Actions</h3>
+        <p className="text-xs text-steel-zinc mt-1">{path}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
@@ -327,7 +327,7 @@ export function AspectPanel({
                     isSelected
                       ? `${style.bgColor} ring-1 ring-${style.color.replace('text-', '')}/30`
                       : available
-                        ? 'hover:bg-gray-700/30'
+                        ? 'hover:bg-steel-slate/30'
                         : 'opacity-50 cursor-not-allowed'
                   }
                 `}
@@ -356,7 +356,7 @@ export function AspectPanel({
                   <div className={`font-medium ${isSelected ? style.color : 'text-white'}`}>
                     {aspect}
                   </div>
-                  {!available && reason && <div className="text-xs text-gray-500">{reason}</div>}
+                  {!available && reason && <div className="text-xs text-steel-zinc">{reason}</div>}
                 </div>
 
                 {/* Examples toggle */}
@@ -366,10 +366,10 @@ export function AspectPanel({
                       e.stopPropagation();
                       toggleExamples(aspect);
                     }}
-                    className="p-1 hover:bg-gray-600/50 rounded transition-colors"
+                    className="p-1 hover:bg-steel-gunmetal/50 rounded transition-colors"
                   >
                     <ChevronDown
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                      className={`w-4 h-4 text-steel-zinc transition-transform ${
                         showExamples ? 'rotate-180' : ''
                       }`}
                     />
@@ -389,11 +389,11 @@ export function AspectPanel({
                       key={i}
                       onClick={() => handleInvoke(aspect, example.payload)}
                       className="w-full flex items-center gap-2 p-2 pl-4 rounded-lg
-                                 text-left text-sm bg-gray-700/30 hover:bg-gray-700/50
-                                 transition-colors border-l-2 border-gray-600"
+                                 text-left text-sm bg-steel-slate/30 hover:bg-steel-slate/50
+                                 transition-colors border-l-2 border-steel-gunmetal"
                     >
                       <Play className="w-3 h-3 text-cyan-400 flex-shrink-0" />
-                      <span className="text-gray-300 truncate">
+                      <span className="text-steel-zinc truncate">
                         {example.description || `Example ${i + 1}`}
                       </span>
                     </button>
@@ -407,10 +407,10 @@ export function AspectPanel({
 
       {/* Schema preview (for spacious) */}
       {density === 'spacious' && schema && selectedAspect && schema[selectedAspect] && (
-        <div className="border-t border-gray-700 p-4">
-          <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">Schema</h4>
+        <div className="border-t border-steel-gunmetal p-4">
+          <h4 className="text-xs font-medium text-steel-zinc uppercase mb-2">Schema</h4>
           <Shimmer active={false}>
-            <pre className="text-xs text-gray-400 overflow-auto max-h-32 bg-gray-800/50 rounded p-2">
+            <pre className="text-xs text-steel-zinc overflow-auto max-h-32 bg-steel-carbon/50 rounded p-2">
               {JSON.stringify(schema[selectedAspect], null, 2)}
             </pre>
           </Shimmer>

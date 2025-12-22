@@ -40,11 +40,7 @@ import {
 import { useShell } from './ShellProvider';
 import type { Trace, ObserverArchetype, Capability } from './types';
 import { useMotionPreferences } from '../components/joy/useMotionPreferences';
-import {
-  GLASS_EFFECT,
-  Z_INDEX_LAYERS,
-  TOP_PANEL_HEIGHTS,
-} from '../components/elastic';
+import { GLASS_EFFECT, Z_INDEX_LAYERS, TOP_PANEL_HEIGHTS } from '../components/elastic';
 
 // =============================================================================
 // Types
@@ -110,7 +106,7 @@ function CollapsedContent({
     <div className="flex items-center gap-4 px-4">
       {/* Observer icon and archetype */}
       <div className="flex items-center gap-2">
-        <User className="w-4 h-4 text-gray-400" />
+        <User className="w-4 h-4 text-steel-zinc" />
         <span className="text-sm font-medium text-white">{archetypeInfo.label}</span>
       </div>
 
@@ -119,7 +115,7 @@ function CollapsedContent({
         {capArray.map((cap) => (
           <span
             key={cap}
-            className={`text-xs px-1.5 py-0.5 rounded bg-gray-700/50 ${CAPABILITY_INFO[cap].color}`}
+            className={`text-xs px-1.5 py-0.5 rounded bg-steel-slate/50 ${CAPABILITY_INFO[cap].color}`}
           >
             {CAPABILITY_INFO[cap].label}
           </span>
@@ -139,7 +135,7 @@ function TraceStatusIcon({ status }: { status: Trace['status'] }) {
     case 'refused':
       return <AlertCircle className="w-3 h-3 text-amber-400" />;
     case 'pending':
-      return <Clock className="w-3 h-3 text-gray-400 animate-pulse" />;
+      return <Clock className="w-3 h-3 text-steel-zinc animate-pulse" />;
     default:
       return null;
   }
@@ -166,17 +162,13 @@ function TracesTable({ traces, limit }: { traces: Trace[]; limit: number }) {
   const displayTraces = traces.slice(0, limit);
 
   if (displayTraces.length === 0) {
-    return (
-      <div className="text-center py-4 text-gray-500 text-sm">
-        No recent traces
-      </div>
-    );
+    return <div className="text-center py-4 text-steel-zinc text-sm">No recent traces</div>;
   }
 
   return (
     <div className="overflow-auto max-h-24">
       <table className="w-full text-xs">
-        <thead className="text-gray-500 border-b border-gray-700/50">
+        <thead className="text-steel-zinc border-b border-steel-gunmetal/50">
           <tr>
             <th className="text-left py-1 px-2 font-medium">Time</th>
             <th className="text-left py-1 px-2 font-medium">Path</th>
@@ -186,14 +178,15 @@ function TracesTable({ traces, limit }: { traces: Trace[]; limit: number }) {
         </thead>
         <tbody>
           {displayTraces.map((trace) => (
-            <tr key={trace.id} className="border-b border-gray-700/30 hover:bg-gray-700/20">
-              <td className="py-1 px-2 text-gray-400 font-mono">
-                {formatTime(trace.timestamp)}
-              </td>
+            <tr
+              key={trace.id}
+              className="border-b border-steel-gunmetal/30 hover:bg-steel-slate/20"
+            >
+              <td className="py-1 px-2 text-steel-zinc font-mono">{formatTime(trace.timestamp)}</td>
               <td className="py-1 px-2 text-cyan-400 font-mono truncate max-w-48">
                 {trace.path}.{trace.aspect}
               </td>
-              <td className="py-1 px-2 text-right text-gray-400 font-mono">
+              <td className="py-1 px-2 text-right text-steel-zinc font-mono">
                 {formatDuration(trace.duration)}
               </td>
               <td className="py-1 px-2 text-center">
@@ -219,7 +212,7 @@ function ArchetypeSelector({
     <select
       value={current}
       onChange={(e) => onChange(e.target.value as ObserverArchetype)}
-      className="bg-gray-700 text-white text-sm rounded px-2 py-1 border border-gray-600 focus:border-cyan-500 focus:outline-none"
+      className="bg-steel-slate text-white text-sm rounded px-2 py-1 border border-steel-gunmetal focus:border-cyan-500 focus:outline-none"
     >
       {Object.entries(ARCHETYPE_INFO).map(([key, { label }]) => (
         <option key={key} value={key}>
@@ -259,17 +252,17 @@ function ExpandedContent({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-steel-gunmetal/50 shrink-0">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-cyan-400" />
           <span className="text-sm font-semibold text-white">Observer Umwelt</span>
         </div>
         <button
           onClick={onCollapse}
-          className="p-1 hover:bg-gray-700 rounded transition-colors"
+          className="p-1 hover:bg-steel-slate rounded transition-colors"
           aria-label="Collapse observer drawer"
         >
-          <ChevronUp className="w-4 h-4 text-gray-400" />
+          <ChevronUp className="w-4 h-4 text-steel-zinc" />
         </button>
       </div>
 
@@ -279,33 +272,33 @@ function ExpandedContent({
         <div className="space-y-3">
           {/* Archetype */}
           <div>
-            <label className="text-xs text-gray-500 block mb-1">Archetype</label>
+            <label className="text-xs text-steel-zinc block mb-1">Archetype</label>
             <ArchetypeSelector current={observer.archetype} onChange={onArchetypeChange} />
-            <p className="text-xs text-gray-500 mt-1">{archetypeInfo.description}</p>
+            <p className="text-xs text-steel-zinc mt-1">{archetypeInfo.description}</p>
           </div>
 
           {/* Session info */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <label className="text-gray-500 block">Session</label>
-              <span className="text-gray-300 font-mono">{observer.sessionId.slice(0, 12)}</span>
+              <label className="text-steel-zinc block">Session</label>
+              <span className="text-steel-zinc font-mono">{observer.sessionId.slice(0, 12)}</span>
             </div>
             {observer.tenantId && (
               <div>
-                <label className="text-gray-500 block">Tenant</label>
-                <span className="text-gray-300 font-mono">{observer.tenantId}</span>
+                <label className="text-steel-zinc block">Tenant</label>
+                <span className="text-steel-zinc font-mono">{observer.tenantId}</span>
               </div>
             )}
           </div>
 
           {/* Capabilities */}
           <div>
-            <label className="text-xs text-gray-500 block mb-1">Capabilities</label>
+            <label className="text-xs text-steel-zinc block mb-1">Capabilities</label>
             <div className="flex flex-wrap gap-1">
               {capArray.map((cap) => (
                 <span
                   key={cap}
-                  className={`text-xs px-2 py-0.5 rounded-full bg-gray-700/70 ${CAPABILITY_INFO[cap].color}`}
+                  className={`text-xs px-2 py-0.5 rounded-full bg-steel-slate/70 ${CAPABILITY_INFO[cap].color}`}
                 >
                   {CAPABILITY_INFO[cap].label}
                 </span>
@@ -319,18 +312,18 @@ function ExpandedContent({
           {/* Intent */}
           {observer.intent && (
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Intent</label>
-              <p className="text-sm text-gray-300">{observer.intent}</p>
+              <label className="text-xs text-steel-zinc block mb-1">Intent</label>
+              <p className="text-sm text-steel-zinc">{observer.intent}</p>
             </div>
           )}
 
           {/* Recent traces */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-xs text-gray-500">Recent Traces</label>
+              <label className="text-xs text-steel-zinc">Recent Traces</label>
               <button
                 onClick={onClearTraces}
-                className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1"
+                className="text-xs text-steel-zinc hover:text-steel-zinc flex items-center gap-1"
                 title="Clear traces"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -343,12 +336,12 @@ function ExpandedContent({
       </div>
 
       {/* Footer actions */}
-      <div className="px-4 py-2 border-t border-gray-700/50 flex items-center gap-2 shrink-0">
-        <button className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 flex items-center gap-1 transition-colors">
+      <div className="px-4 py-2 border-t border-steel-gunmetal/50 flex items-center gap-2 shrink-0">
+        <button className="text-xs px-2 py-1 bg-steel-slate hover:bg-steel-gunmetal rounded text-steel-zinc flex items-center gap-1 transition-colors">
           <Settings className="w-3 h-3" />
           Edit Observer
         </button>
-        <button className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 flex items-center gap-1 transition-colors">
+        <button className="text-xs px-2 py-1 bg-steel-slate hover:bg-steel-gunmetal rounded text-steel-zinc flex items-center gap-1 transition-colors">
           <Download className="w-3 h-3" />
           Export Session
         </button>
@@ -428,24 +421,24 @@ export function ObserverDrawer({
   // Compact density: Mobile layout with modal expansion
   if (density === 'compact') {
     return (
-      <div className={`fixed top-0 left-0 right-0 ${className}`} style={{ zIndex: Z_INDEX_LAYERS.modal }}>
+      <div
+        className={`fixed top-0 left-0 right-0 ${className}`}
+        style={{ zIndex: Z_INDEX_LAYERS.modal }}
+      >
         {/* Always-visible collapsed bar */}
         <button
           onClick={handleExpand}
           className={`
             w-full h-10 flex items-center justify-between
             ${glassStyles.background} ${glassStyles.blur}
-            border-b border-gray-700/50
-            hover:bg-gray-700/30 transition-colors
+            border-b border-steel-gunmetal/50
+            hover:bg-steel-slate/30 transition-colors
           `}
           aria-label="Expand observer drawer"
         >
-          <CollapsedContent
-            archetype={observer.archetype}
-            capabilities={observer.capabilities}
-          />
+          <CollapsedContent archetype={observer.archetype} capabilities={observer.capabilities} />
           <div className="px-3">
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-steel-zinc" />
           </div>
         </button>
 
@@ -453,10 +446,7 @@ export function ObserverDrawer({
         {isExpanded && (
           <>
             {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/50 -z-10"
-              onClick={handleCollapse}
-            />
+            <div className="fixed inset-0 bg-black/50 -z-10" onClick={handleCollapse} />
             {/* Expanded content */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -466,7 +456,7 @@ export function ObserverDrawer({
               className={`
                 absolute top-10 left-0 right-0
                 ${glassStyles.background} ${glassStyles.blur}
-                border-b border-gray-700/50 shadow-xl
+                border-b border-steel-gunmetal/50 shadow-xl
               `}
               style={{ height: TOP_PANEL_HEIGHTS.expanded - TOP_PANEL_HEIGHTS.collapsed }}
             >
@@ -493,7 +483,7 @@ export function ObserverDrawer({
       className={`
         fixed top-0 left-0 right-0
         ${glassStyles.background} ${glassStyles.blur}
-        border-b border-gray-700/50
+        border-b border-steel-gunmetal/50
         overflow-hidden
         ${className}
       `}
@@ -516,15 +506,12 @@ export function ObserverDrawer({
       ) : (
         <button
           onClick={handleExpand}
-          className="w-full h-full flex items-center justify-between hover:bg-gray-700/30 transition-colors"
+          className="w-full h-full flex items-center justify-between hover:bg-steel-slate/30 transition-colors"
           aria-label="Expand observer drawer"
         >
-          <CollapsedContent
-            archetype={observer.archetype}
-            capabilities={observer.capabilities}
-          />
+          <CollapsedContent archetype={observer.archetype} capabilities={observer.capabilities} />
           <div className="px-3 h-10 flex items-center">
-            <ChevronDown className="w-4 h-4 text-gray-400" />
+            <ChevronDown className="w-4 h-4 text-steel-zinc" />
           </div>
         </button>
       )}

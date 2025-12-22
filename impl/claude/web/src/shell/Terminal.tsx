@@ -4,6 +4,11 @@
  * The terminal provides direct AGENTESE gateway interaction with persistence.
  * It lives at the bottom of the shell and adapts to density.
  *
+ * STARK BIOME: Steel frame, jewel-brain cyan as terminal identity
+ * - Surfaces: steel-carbon, steel-gunmetal, steel-obsidian
+ * - Text: steel-zinc (muted) → glow-light (emphasis)
+ * - Terminal keeps cyan accent (jewel identity, earned glow)
+ *
  * Features:
  * - Full AGENTESE CLI in browser
  * - Tab completion from registry
@@ -21,14 +26,7 @@
  * @see spec/protocols/os-shell.md Part VI: Terminal Service
  */
 
-import {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useMemo,
-  type KeyboardEvent,
-} from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Terminal as TerminalIcon,
@@ -85,14 +83,15 @@ const MAX_PERSISTED_LINES = 50;
 
 /**
  * Render a terminal output line with appropriate styling.
+ * Terminal keeps semantic colors for output types (cyan, green, red, amber)
  */
 function TerminalOutputLine({ line }: { line: TerminalLine }) {
   const colorClass = {
-    input: 'text-cyan-400',
-    output: 'text-gray-300',
-    error: 'text-red-400',
-    info: 'text-amber-400',
-    system: 'text-gray-500',
+    input: 'text-jewel-brain', // Terminal identity: teal/cyan
+    output: 'text-glow-light', // Output: warm glow
+    error: 'text-state-alert', // Errors: muted rust
+    info: 'text-glow-spore', // Info: amber
+    system: 'text-steel-zinc', // System: muted
   }[line.type];
 
   // Handle JSON data display
@@ -106,11 +105,7 @@ function TerminalOutputLine({ line }: { line: TerminalLine }) {
     );
   }
 
-  return (
-    <div className={`font-mono text-xs ${colorClass}`}>
-      {line.content}
-    </div>
-  );
+  return <div className={`font-mono text-xs ${colorClass}`}>{line.content}</div>;
 }
 
 /**
@@ -128,30 +123,30 @@ function CompletionDropdown({
   if (suggestions.length === 0) return null;
 
   return (
-    <div className="absolute bottom-full left-0 right-0 bg-gray-800 border border-gray-700 rounded-t-lg shadow-lg max-h-48 overflow-auto">
+    <div className="absolute bottom-full left-0 right-0 bg-steel-carbon border border-steel-gunmetal rounded-t-bare shadow-lg max-h-48 overflow-auto">
       {suggestions.map((suggestion, index) => (
         <button
           key={suggestion.text}
           onClick={() => onSelect(suggestion)}
-          className={`w-full px-3 py-1.5 text-left text-xs font-mono flex items-center gap-2 hover:bg-gray-700 transition-colors ${
-            index === selectedIndex ? 'bg-gray-700' : ''
+          className={`w-full px-3 py-1.5 text-left text-xs font-mono flex items-center gap-2 hover:bg-steel-gunmetal transition-colors duration-quick ${
+            index === selectedIndex ? 'bg-steel-gunmetal' : ''
           }`}
         >
           <span
-            className={`px-1 rounded text-[10px] ${
+            className={`px-1 rounded-bare text-[10px] ${
               {
-                path: 'bg-cyan-900 text-cyan-300',
-                aspect: 'bg-green-900 text-green-300',
-                command: 'bg-amber-900 text-amber-300',
-                alias: 'bg-violet-900 text-violet-300',
+                path: 'bg-jewel-brain-bg text-jewel-brain',
+                aspect: 'bg-life-moss text-life-sage',
+                command: 'bg-soil-humus text-glow-spore',
+                alias: 'bg-jewel-coalition-bg text-jewel-coalition',
               }[suggestion.type]
             }`}
           >
             {suggestion.type}
           </span>
-          <span className="text-white">{suggestion.text}</span>
+          <span className="text-glow-light">{suggestion.text}</span>
           {suggestion.description && (
-            <span className="text-gray-500 ml-auto truncate max-w-48">
+            <span className="text-steel-zinc ml-auto truncate max-w-48">
               {suggestion.description}
             </span>
           )}
@@ -185,12 +180,7 @@ export function Terminal({
   defaultExpanded = false,
   defaultHeight = HEIGHTS.default,
 }: TerminalProps) {
-  const {
-    density,
-    terminalExpanded,
-    setTerminalExpanded,
-    observer,
-  } = useShell();
+  const { density, terminalExpanded, setTerminalExpanded, observer } = useShell();
   const { shouldAnimate } = useMotionPreferences();
 
   // Terminal service
@@ -370,9 +360,7 @@ export function Terminal({
         case 'ArrowUp':
           e.preventDefault();
           if (suggestions.length > 0) {
-            setSelectedSuggestion((prev) =>
-              prev > 0 ? prev - 1 : suggestions.length - 1
-            );
+            setSelectedSuggestion((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
           } else {
             // Navigate history
             const history = service.history;
@@ -387,9 +375,7 @@ export function Terminal({
         case 'ArrowDown':
           e.preventDefault();
           if (suggestions.length > 0) {
-            setSelectedSuggestion((prev) =>
-              prev < suggestions.length - 1 ? prev + 1 : 0
-            );
+            setSelectedSuggestion((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
           } else {
             // Navigate history
             if (historyIndex > 0) {
@@ -423,24 +409,14 @@ export function Terminal({
           break;
       }
     },
-    [
-      handleExecute,
-      handleClear,
-      suggestions,
-      selectedSuggestion,
-      service,
-      historyIndex,
-    ]
+    [handleExecute, handleClear, suggestions, selectedSuggestion, service, historyIndex]
   );
 
-  const handleSuggestionSelect = useCallback(
-    (suggestion: CompletionSuggestion) => {
-      setInput(suggestion.text);
-      setSuggestions([]);
-      inputRef.current?.focus();
-    },
-    []
-  );
+  const handleSuggestionSelect = useCallback((suggestion: CompletionSuggestion) => {
+    setInput(suggestion.text);
+    setSuggestions([]);
+    inputRef.current?.focus();
+  }, []);
 
   // ===========================================================================
   // Resize handling (spacious density only)
@@ -461,10 +437,7 @@ export function Terminal({
 
     const handleMouseMove = (e: MouseEvent) => {
       const deltaY = startY - e.clientY;
-      const newHeight = Math.min(
-        HEIGHTS.max,
-        Math.max(HEIGHTS.collapsed, startHeight + deltaY)
-      );
+      const newHeight = Math.min(HEIGHTS.max, Math.max(HEIGHTS.collapsed, startHeight + deltaY));
       setHeight(newHeight);
     };
 
@@ -493,10 +466,10 @@ export function Terminal({
         {/* Floating Action Button - Bottom-left to avoid collision with context-specific mobile buttons on right */}
         <button
           onClick={handleExpand}
-          className={`fixed bottom-4 left-4 w-14 h-14 bg-gray-800 hover:bg-gray-700 rounded-full shadow-lg flex items-center justify-center z-40 transition-colors ${className}`}
+          className={`fixed bottom-4 left-4 w-14 h-14 bg-steel-carbon hover:bg-steel-gunmetal rounded-full shadow-lg flex items-center justify-center z-40 transition-colors duration-quick ${className}`}
           aria-label="Open terminal"
         >
-          <TerminalIcon className="w-6 h-6 text-cyan-400" />
+          <TerminalIcon className="w-6 h-6 text-jewel-brain" />
         </button>
 
         {/* Full-screen modal */}
@@ -507,49 +480,46 @@ export function Terminal({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: '100%' }}
               transition={{ duration: shouldAnimate ? 0.3 : 0 }}
-              className="fixed inset-0 bg-gray-900 z-50 flex flex-col"
+              className="fixed inset-0 bg-steel-obsidian z-50 flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-steel-gunmetal">
                 <div className="flex items-center gap-2">
-                  <TerminalIcon className="w-5 h-5 text-cyan-400" />
-                  <span className="text-white font-medium">AGENTESE Terminal</span>
+                  <TerminalIcon className="w-5 h-5 text-jewel-brain" />
+                  <span className="text-glow-light font-medium">AGENTESE Terminal</span>
                 </div>
                 <button
                   onClick={handleCollapse}
-                  className="p-2 hover:bg-gray-700 rounded transition-colors"
+                  className="p-2 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                   aria-label="Close terminal"
                 >
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-steel-zinc" />
                 </button>
               </div>
 
               {/* Output */}
-              <div
-                ref={outputRef}
-                className="flex-1 overflow-auto p-4 space-y-1"
-              >
+              <div ref={outputRef} className="flex-1 overflow-auto p-4 space-y-1">
                 {lines.map((line) => (
                   <TerminalOutputLine key={line.id} line={line} />
                 ))}
               </div>
 
               {/* Input */}
-              <div className="relative border-t border-gray-700 p-4">
+              <div className="relative border-t border-steel-gunmetal p-4">
                 <CompletionDropdown
                   suggestions={suggestions}
                   selectedIndex={selectedSuggestion}
                   onSelect={handleSuggestionSelect}
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-cyan-400 font-mono text-sm">{PROMPT}</span>
+                  <span className="text-jewel-brain font-mono text-sm">{PROMPT}</span>
                   <input
                     ref={inputRef}
                     type="text"
                     value={input}
                     onChange={(e) => handleInputChange(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent text-white font-mono text-sm outline-none"
+                    className="flex-1 bg-transparent text-glow-light font-mono text-sm outline-none"
                     placeholder="Enter command..."
                     autoFocus
                     autoComplete="off"
@@ -559,7 +529,7 @@ export function Terminal({
                   <button
                     onClick={handleExecute}
                     disabled={isExecuting || !input.trim()}
-                    className="p-2 bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 disabled:text-gray-500 rounded transition-colors"
+                    className="p-2 bg-jewel-brain hover:bg-jewel-brain-accent disabled:bg-steel-gunmetal disabled:text-steel-zinc rounded-bare transition-colors duration-quick"
                   >
                     <Send className="w-4 h-4" />
                   </button>
@@ -578,7 +548,9 @@ export function Terminal({
 
   if (density === 'comfortable') {
     return (
-      <div className={`fixed bottom-0 left-0 right-0 z-40 bg-gray-800/[0.825] backdrop-blur-md border-t border-gray-700/50 ${className}`}>
+      <div
+        className={`fixed bottom-0 left-0 right-0 z-40 bg-steel-carbon/[0.825] backdrop-blur-md border-t border-steel-gunmetal/50 ${className}`}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {terminalExpanded ? (
             <motion.div
@@ -590,55 +562,52 @@ export function Terminal({
               className="flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-steel-gunmetal/50">
                 <div className="flex items-center gap-2">
-                  <TerminalIcon className="w-4 h-4 text-cyan-400" />
-                  <span className="text-white text-sm font-medium">Terminal</span>
+                  <TerminalIcon className="w-4 h-4 text-jewel-brain" />
+                  <span className="text-glow-light text-sm font-medium">Terminal</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <button
                     onClick={handleClear}
-                    className="p-1 hover:bg-gray-700 rounded transition-colors"
+                    className="p-1 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                     title="Clear"
                   >
-                    <Trash2 className="w-4 h-4 text-gray-400" />
+                    <Trash2 className="w-4 h-4 text-steel-zinc" />
                   </button>
                   <button
                     onClick={handleCollapse}
-                    className="p-1 hover:bg-gray-700 rounded transition-colors"
+                    className="p-1 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                     title="Collapse"
                   >
-                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-steel-zinc" />
                   </button>
                 </div>
               </div>
 
               {/* Output */}
-              <div
-                ref={outputRef}
-                className="flex-1 overflow-auto px-4 py-2 space-y-0.5"
-              >
+              <div ref={outputRef} className="flex-1 overflow-auto px-4 py-2 space-y-0.5">
                 {lines.map((line) => (
                   <TerminalOutputLine key={line.id} line={line} />
                 ))}
               </div>
 
               {/* Input */}
-              <div className="relative px-4 py-2 border-t border-gray-700/50">
+              <div className="relative px-4 py-2 border-t border-steel-gunmetal/50">
                 <CompletionDropdown
                   suggestions={suggestions}
                   selectedIndex={selectedSuggestion}
                   onSelect={handleSuggestionSelect}
                 />
                 <div className="flex items-center gap-2">
-                  <span className="text-cyan-400 font-mono text-xs">{PROMPT}</span>
+                  <span className="text-jewel-brain font-mono text-xs">{PROMPT}</span>
                   <input
                     ref={inputRef}
                     type="text"
                     value={input}
                     onChange={(e) => handleInputChange(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 bg-transparent text-white font-mono text-xs outline-none"
+                    className="flex-1 bg-transparent text-glow-light font-mono text-xs outline-none"
                     placeholder="Enter command..."
                     autoComplete="off"
                     autoCapitalize="off"
@@ -659,12 +628,12 @@ export function Terminal({
               <div className="flex items-center gap-2 px-4 h-12">
                 <button
                   onClick={handleExpand}
-                  className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                  className="p-1.5 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                   title="Expand terminal"
                 >
-                  <TerminalIcon className="w-4 h-4 text-cyan-400" />
+                  <TerminalIcon className="w-4 h-4 text-jewel-brain" />
                 </button>
-                <span className="text-cyan-400 font-mono text-xs">{PROMPT}</span>
+                <span className="text-jewel-brain font-mono text-xs">{PROMPT}</span>
                 <input
                   ref={inputRef}
                   type="text"
@@ -672,7 +641,7 @@ export function Terminal({
                   onChange={(e) => handleInputChange(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onFocus={handleExpand}
-                  className="flex-1 bg-transparent text-white font-mono text-xs outline-none"
+                  className="flex-1 bg-transparent text-glow-light font-mono text-xs outline-none"
                   placeholder="Enter command..."
                   autoComplete="off"
                   autoCapitalize="off"
@@ -680,10 +649,10 @@ export function Terminal({
                 />
                 <button
                   onClick={handleExpand}
-                  className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                  className="p-1.5 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                   title="Expand"
                 >
-                  <ChevronUp className="w-4 h-4 text-gray-400" />
+                  <ChevronUp className="w-4 h-4 text-steel-zinc" />
                 </button>
               </div>
             </motion.div>
@@ -702,55 +671,57 @@ export function Terminal({
 
   return (
     <div
-      className={`fixed bottom-0 left-0 right-0 z-40 bg-gray-800/[0.825] backdrop-blur-md border-t border-gray-700/50 flex flex-col ${className}`}
+      className={`fixed bottom-0 left-0 right-0 z-40 bg-steel-carbon/[0.825] backdrop-blur-md border-t border-steel-gunmetal/50 flex flex-col ${className}`}
       style={{ height: currentHeight }}
     >
       {/* Resize handle */}
       {isExpanded && (
         <div
           ref={resizeRef}
-          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-cyan-500/50 transition-colors"
+          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-jewel-brain/50 transition-colors duration-quick"
         />
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700/50 shrink-0">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-steel-gunmetal/50 shrink-0">
         <div className="flex items-center gap-2">
-          <TerminalIcon className="w-4 h-4 text-cyan-400" />
-          <span className="text-white text-sm font-medium">AGENTESE Terminal</span>
+          <TerminalIcon className="w-4 h-4 text-jewel-brain" />
+          <span className="text-glow-light text-sm font-medium">AGENTESE Terminal</span>
         </div>
         <div className="flex items-center gap-1">
           {isExpanded && (
             <>
               <button
                 onClick={handleClear}
-                className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                className="p-1.5 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                 title="Clear (Ctrl+L)"
               >
-                <Trash2 className="w-4 h-4 text-gray-400" />
+                <Trash2 className="w-4 h-4 text-steel-zinc" />
               </button>
               <button
-                onClick={() => setHeight((h) => (h === HEIGHTS.max ? HEIGHTS.default : HEIGHTS.max))}
-                className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+                onClick={() =>
+                  setHeight((h) => (h === HEIGHTS.max ? HEIGHTS.default : HEIGHTS.max))
+                }
+                className="p-1.5 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                 title={height === HEIGHTS.max ? 'Restore' : 'Maximize'}
               >
                 {height === HEIGHTS.max ? (
-                  <Minimize2 className="w-4 h-4 text-gray-400" />
+                  <Minimize2 className="w-4 h-4 text-steel-zinc" />
                 ) : (
-                  <Maximize2 className="w-4 h-4 text-gray-400" />
+                  <Maximize2 className="w-4 h-4 text-steel-zinc" />
                 )}
               </button>
             </>
           )}
           <button
             onClick={isExpanded ? handleCollapse : handleExpand}
-            className="p-1.5 hover:bg-gray-700 rounded transition-colors"
+            className="p-1.5 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
             title={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-steel-zinc" />
             ) : (
-              <ChevronUp className="w-4 h-4 text-gray-400" />
+              <ChevronUp className="w-4 h-4 text-steel-zinc" />
             )}
           </button>
         </div>
@@ -758,26 +729,33 @@ export function Terminal({
 
       {/* Output (only when expanded) */}
       {isExpanded && (
-        <div
-          ref={outputRef}
-          className="flex-1 overflow-auto px-4 py-2 space-y-0.5 min-h-0"
-        >
+        <div ref={outputRef} className="flex-1 overflow-auto px-4 py-2 space-y-0.5 min-h-0">
           {lines.length === 0 ? (
             <div className="text-xs font-mono space-y-0.5">
-              <div className="text-cyan-400">Welcome to the AGENTESE Terminal</div>
-              <div className="text-gray-500">&nbsp;</div>
-              <div className="text-gray-400">Try these commands:</div>
-              <div className="text-gray-300">  <span className="text-cyan-300">discover</span>         List all paths</div>
-              <div className="text-gray-300">  <span className="text-cyan-300">self.soul.manifest</span> View K-gent state</div>
-              <div className="text-gray-300">  <span className="text-cyan-300">world.codebase</span>     Codebase health</div>
-              <div className="text-gray-300">  <span className="text-cyan-300">help</span>              Full command reference</div>
-              <div className="text-gray-500">&nbsp;</div>
-              <div className="text-gray-500">Tab for completion · ↑↓ for history</div>
+              <div className="text-jewel-brain">Welcome to the AGENTESE Terminal</div>
+              <div className="text-steel-zinc">&nbsp;</div>
+              <div className="text-steel-zinc">Try these commands:</div>
+              <div className="text-glow-light">
+                {' '}
+                <span className="text-jewel-brain">discover</span> List all paths
+              </div>
+              <div className="text-glow-light">
+                {' '}
+                <span className="text-jewel-brain">self.soul.manifest</span> View K-gent state
+              </div>
+              <div className="text-glow-light">
+                {' '}
+                <span className="text-jewel-brain">world.codebase</span> Codebase health
+              </div>
+              <div className="text-glow-light">
+                {' '}
+                <span className="text-jewel-brain">help</span> Full command reference
+              </div>
+              <div className="text-steel-zinc">&nbsp;</div>
+              <div className="text-steel-zinc">Tab for completion · ↑↓ for history</div>
             </div>
           ) : (
-            lines.map((line) => (
-              <TerminalOutputLine key={line.id} line={line} />
-            ))
+            lines.map((line) => <TerminalOutputLine key={line.id} line={line} />)
           )}
         </div>
       )}
@@ -785,7 +763,7 @@ export function Terminal({
       {/* Input */}
       <div
         className={`relative px-4 py-2 shrink-0 ${
-          isExpanded ? 'border-t border-gray-700/50' : ''
+          isExpanded ? 'border-t border-steel-gunmetal/50' : ''
         }`}
       >
         <CompletionDropdown
@@ -794,7 +772,7 @@ export function Terminal({
           onSelect={handleSuggestionSelect}
         />
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400 font-mono text-xs">{PROMPT}</span>
+          <span className="text-jewel-brain font-mono text-xs">{PROMPT}</span>
           <input
             ref={inputRef}
             type="text"
@@ -802,7 +780,7 @@ export function Terminal({
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => !isExpanded && handleExpand()}
-            className="flex-1 bg-transparent text-white font-mono text-xs outline-none"
+            className="flex-1 bg-transparent text-glow-light font-mono text-xs outline-none"
             placeholder="Enter command..."
             autoComplete="off"
             autoCapitalize="off"
@@ -812,7 +790,7 @@ export function Terminal({
             <button
               onClick={handleExecute}
               disabled={isExecuting}
-              className="px-2 py-1 text-xs bg-cyan-600 hover:bg-cyan-500 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded transition-colors"
+              className="px-2 py-1 text-xs bg-jewel-brain hover:bg-jewel-brain-accent disabled:bg-steel-gunmetal disabled:text-steel-zinc text-glow-light rounded-bare transition-colors duration-quick"
             >
               Run
             </button>

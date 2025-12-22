@@ -372,8 +372,16 @@ class SnippetPane(Widget, can_focus=True):
             pass  # Not mounted yet
 
     def on_key(self, event: Any) -> None:
-        """Handle keyboard navigation (only when active)."""
-        if not self.is_active:
+        """Handle keyboard navigation (only when active or focused).
+
+        Teaching:
+            gotcha: Check both is_active AND has_focus. When user tabs or clicks
+                    into a pane, the first Enter may arrive before is_active is
+                    propagated from the reactive watcher. Using has_focus as
+                    fallback ensures the key is handled.
+                    (Evidence: User report of Enter twice needed after focus)
+        """
+        if not self.is_active and not self.has_focus:
             return  # Let app handle keys when not active
 
         key = event.key
