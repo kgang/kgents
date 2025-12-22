@@ -18,6 +18,11 @@ Teaching:
             Witness may not be available during testing or lightweight invocations.
             (Evidence: agentese-node-registration.md → "Enlightened Resolution")
 
+    gotcha: QuerySnippet loading requires AGENTESE invocation. The snippets_copy
+            aspect detects unloaded QuerySnippets and invokes their query path
+            via logos.invoke() before returning content.
+            (Evidence: spec/protocols/dawn-cockpit.md § QuerySnippet)
+
 See: spec/protocols/dawn-cockpit.md
 AGENTESE: time.dawn
 """
@@ -433,6 +438,10 @@ class DawnNode(BaseLogosNode):
 
         Law 2 (copy_records): Every copy action records in Witness.
 
+        For QuerySnippets, this aspect invokes the AGENTESE path stored in
+        snippet.query to load content dynamically. The loaded content is
+        cached in the snippet library for future access.
+
         Args:
             snippet_id: ID of snippet to copy
 
@@ -448,8 +457,18 @@ class DawnNode(BaseLogosNode):
         # Get content (already loaded for static/custom, may need loading for query)
         snippet_dict = snippet.to_dict()
         content = snippet_dict.get("content")
+
+        # QuerySnippet loading via AGENTESE
+        if content is None and snippet_dict.get("type") == "query":
+            query_path = snippet_dict.get("query")
+            if query_path:
+                content = await self._load_query_snippet(query_path, observer)
+                # Cache the loaded content
+                if content:
+                    self.snippet_library.update_query_content(snippet_id, content)
+
+        # Final fallback if still no content
         if content is None:
-            # Query snippet not loaded
             content = f"[Query snippet: {snippet_dict.get('query', 'unknown')}]"
 
         # Record in Witness if available (Law 2: copy_records)
@@ -473,6 +492,71 @@ class DawnNode(BaseLogosNode):
             copied=True,
             witness_mark_id=witness_mark_id,
         )
+
+    async def _load_query_snippet(
+        self,
+        query_path: str,
+        observer: Observer | "Umwelt[Any, Any]",
+    ) -> str | None:
+        """
+        Load content for a QuerySnippet by invoking its AGENTESE path.
+
+        This method bridges Dawn's lazy-loaded snippets with the AGENTESE
+        protocol. Query paths like "self.memory.recent" or "self.witness.thoughts"
+        are resolved through the gateway/logos infrastructure.
+
+        Args:
+            query_path: AGENTESE path (e.g., "self.memory.recent")
+            observer: Observer context for the invocation
+
+        Returns:
+            Content string, or None if loading failed
+
+        Teaching:
+            gotcha: Query paths may reference non-existent nodes during startup
+                    or testing. Always catch exceptions gracefully.
+                    (Evidence: agentese-node-registration.md)
+        """
+        try:
+            from protocols.agentese.logos import Logos
+
+            logos = Logos()
+
+            # Parse path into node.aspect format
+            # e.g., "self.memory.recent" → invoke on "self.memory" with aspect "recent"
+            parts = query_path.split(".")
+            if len(parts) < 2:
+                logger.debug(f"Invalid query path format: {query_path}")
+                return None
+
+            # Try to invoke the full path as an aspect
+            result = await logos.invoke(query_path, observer)
+
+            # Extract content from result
+            if result is None:
+                return None
+
+            # Handle different result types
+            if isinstance(result, str):
+                return result
+            if hasattr(result, "content"):
+                return str(result.content)
+            if hasattr(result, "to_text"):
+                return str(result.to_text())
+            if hasattr(result, "to_dict"):
+                result_dict = result.to_dict()
+                # Try common content keys
+                for key in ("content", "summary", "text", "thoughts"):
+                    if key in result_dict and result_dict[key]:
+                        return str(result_dict[key])
+                # Fallback to formatted dict
+                return str(result_dict)
+
+            return str(result)
+
+        except Exception as e:
+            logger.debug(f"QuerySnippet load failed for {query_path}: {e}")
+            return None
 
     @aspect(
         category=AspectCategory.MUTATION,

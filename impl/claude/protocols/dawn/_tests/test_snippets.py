@@ -282,19 +282,14 @@ class TestSnippetLibrary:
         assert len(lib.list_query()) == 1
         assert len(lib.list_custom()) == 0
 
-    def test_load_defaults_adds_voice_anchors(self) -> None:
-        """Load defaults populates voice anchors."""
+    def test_load_defaults_no_static_snippets(self) -> None:
+        """Load defaults has no hardcoded static snippets."""
         lib = SnippetLibrary()
         lib.load_defaults()
 
         static = lib.list_static()
-        # Should have at least 3 voice anchors + 1 quote
-        assert len(static) >= 3
-
-        # Check for specific voice anchors
-        labels = [s.label for s in static]
-        assert "Depth > breadth" in labels
-        assert "Mirror Test" in labels
+        # No static snippets by default (user can add custom)
+        assert len(static) == 0
 
     def test_load_defaults_adds_query_snippets(self) -> None:
         """Load defaults populates query snippets."""
@@ -302,11 +297,11 @@ class TestSnippetLibrary:
         lib.load_defaults()
 
         query = lib.list_query()
-        assert len(query) >= 2  # At least NOW.md and Witness
+        assert len(query) >= 2  # Memory and Witness stubs
 
         labels = [q.label for q in query]
-        assert "NOW.md Focus" in labels
-        assert "Recent Witness" in labels
+        assert "Recent Memories" in labels
+        assert "Witness Thoughts" in labels
 
     def test_custom_sorted_newest_first(self) -> None:
         """Custom snippets sorted by creation time, newest first."""

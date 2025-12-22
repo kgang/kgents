@@ -4,8 +4,9 @@ Tests for Dawn Cockpit AGENTESE node.
 Verifies node registration, aspect invocation, and Witness integration.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from protocols.agentese.node import Observer
 from protocols.agentese.registry import get_registry
@@ -285,7 +286,7 @@ class TestSnippetAspects:
 
         assert isinstance(result, SnippetListResponse)
         assert result.total_count > 0
-        assert result.static_count > 0
+        assert result.query_count > 0  # Only query snippets by default
 
     @pytest.mark.asyncio
     async def test_snippets_copy_without_witness(self) -> None:
@@ -346,6 +347,28 @@ class TestSnippetAspects:
         result = await node.snippets_copy(observer, snippet_id="nonexistent")
 
         assert result is None
+
+    @pytest.mark.asyncio
+    async def test_snippets_copy_query_fallback(self) -> None:
+        """snippets_copy returns fallback for unloaded QuerySnippet when AGENTESE unavailable."""
+        sl = SnippetLibrary()
+        # Add a query snippet (content will be None until loaded)
+        snippet = sl.add_query(
+            kind="now",
+            label="Test Query",
+            query="self.nonexistent.path",  # Non-existent path for testing
+        )
+        assert snippet.content is None  # Verify not loaded
+
+        node = create_dawn_node(snippet_library=sl)
+        observer = Observer.test()
+
+        result = await node.snippets_copy(observer, snippet_id=snippet.id)
+
+        assert isinstance(result, SnippetCopyResponse)
+        assert result.copied is True
+        # Should contain fallback message since AGENTESE path doesn't exist
+        assert "self.nonexistent.path" in result.content
 
     @pytest.mark.asyncio
     async def test_snippets_add(self) -> None:

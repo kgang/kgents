@@ -435,47 +435,25 @@ class SnippetLibrary:
 
     def load_defaults(self) -> None:
         """
-        Load default snippets (voice anchors, common patterns).
+        Load default snippets (query stubs only).
 
         Called at startup to populate the button pad with
-        useful defaults from CLAUDE.md.
+        useful query snippets. No hardcoded static snippets -
+        users can add their own custom snippets.
         """
-        # Voice anchors from CLAUDE.md
-        self.add_static(
-            kind="voice_anchor",
-            label="Depth > breadth",
-            content="Depth over breadth",
-            source="CLAUDE.md",
-        )
-        self.add_static(
-            kind="voice_anchor",
-            label="Mirror Test",
-            content="Does K-gent feel like me on my best day?",
-            source="CLAUDE.md",
-        )
-        self.add_static(
-            kind="voice_anchor",
-            label="Tasteful > complete",
-            content="Tasteful > feature-complete; Joy-inducing > merely functional",
-            source="CLAUDE.md",
-        )
-        self.add_static(
-            kind="quote",
-            label="Proof IS decision",
-            content="The proof IS the decision. The mark IS the witness.",
-            source="CLAUDE.md",
-        )
-
-        # Common query snippets
+        # Query snippets (stubs for AGENTESE integration)
+        # Note: These paths match registered AGENTESE nodes:
+        # - self.memory.recent → Brain's recent crystals
+        # - self.witness.thoughts → Witness thought stream
         self.add_query(
             kind="now",
-            label="NOW.md Focus",
-            query="self.brain.now",
+            label="Recent Memories",
+            query="self.memory.recent",
         )
         self.add_query(
             kind="mark",
-            label="Recent Witness",
-            query="self.witness.recent",
+            label="Witness Thoughts",
+            query="self.witness.thoughts",
         )
 
     def __len__(self) -> int:
