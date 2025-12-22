@@ -3,7 +3,8 @@
 > *"The aesthetic is the structure perceiving itself. Beauty is not revealed—it breathes."*
 
 **Created**: 2025-12-18
-**Visual Energy**: Alive Workshop (organic, breathing, growing)
+**Updated**: 2025-12-22 — "Stark Biome" evolution
+**Visual Energy**: Stark Biome (cool steel × microbial life)
 **Teaching Density**: Dense Teacher (full categorical visibility)
 **3D Role**: Optional Layer (2D-first with 3D available)
 **Interaction Mode**: Immersive Inhabit (first-person presence)
@@ -13,16 +14,40 @@
 
 ## I. Visual References
 
-### Primary Aesthetic: "Alive Workshop"
+### Primary Aesthetic: "Stark Biome"
 
-The Crown Jewels Genesis draws from **Studio Ghibli machinery aesthetics**—where technology feels organic, warm, and alive. Think: Howl's Moving Castle (steam and gears that breathe), Castle in the Sky (floating stones that pulse), Spirited Away (baths that steam and shimmer).
+> *"Cool steel structures where microbial life finds cracks to bloom."*
+
+The Crown Jewels Genesis evolved from "Alive Workshop" to **Stark Biome**—a duality between industrial minimalism and organic persistence. Think: an abandoned server room where moss grows through cable runs. Blade Runner's rain-soaked concrete with bioluminescent fungi. The coldness makes the life more precious.
 
 | Reference | What We Take |
 |-----------|--------------|
-| [Studio Ghibli UI Principles](https://www.arielsoftwares.com/ghibli-inspired-ui-ux-design/) | Warm earth tones, gentle greens, motion with personality |
-| [Matsu Theme for shadcn/ui](https://matsu-theme.vercel.app/) | Watercolor paper textures, soft shadows, hand-drawn feel |
-| [Organic Matter Design Trend 2025](https://pros.squarespace.com/blog/organic-matter-design-trend) | Nature-inspired textures, fluid organic shapes |
-| [Botanical Data Visualization](https://creativemarket.com/blog/botanical-organic-design) | Growth patterns, vine structures, leaf venation |
+| [Simon Stålenhag's Electric State](https://www.simonstalenhag.se/) | Brutalist tech decay, nature reclaiming, melancholic beauty |
+| [Dieter Rams / Braun Design](https://www.vitsoe.com/us/about/dieter-rams) | Austere precision, functional honesty, deliberate restraint |
+| [Fermenting Landscapes](https://fermentinglandscapes.com/) | Microbial textures, soil horizons, living matter in sterile containers |
+| [Japanese Wabi-Sabi](https://www.japan-guide.com/e/e2091.html) | Imperfection as beauty, patina, the crack where light enters |
+
+### The Duality (NEW)
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         THE STARK BIOME DUALITY                          │
+├──────────────────────────────┬──────────────────────────────────────────┤
+│         COOL STEEL           │           MICROBIAL LIFE                 │
+├──────────────────────────────┼──────────────────────────────────────────┤
+│  Slate, gunmetal, cold zinc  │  Moss green, soil brown, spore amber    │
+│  Sharp edges, grid geometry  │  Organic spread, mycelium branching     │
+│  Monospace, technical        │  Handwritten, imperfect                 │
+│  Flat, matte surfaces        │  Texture, grain, subtle noise           │
+│  Silence, negative space     │  Whispered movement, breathing          │
+│  Industrial lighting         │  Bioluminescent accents                 │
+│  The container               │  The contained                          │
+│  The frame                   │  The life within the frame              │
+└──────────────────────────────┴──────────────────────────────────────────┘
+
+        The frame is humble. The content glows.
+        The austerity makes the warmth more precious.
+```
 
 ### Secondary Reference: "Punchdrunk Theater"
 
@@ -46,148 +71,226 @@ For Domain (the Integration Hub), we draw from **modern developer portals** with
 
 ---
 
-## II. Color Palette: "Living Earth"
+## II. Color Palette: "Stark Biome"
+
+> *Evolution: "Living Earth" → "Stark Biome" — same organic warmth, now emerging from industrial coldness*
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
 ║                         CROWN JEWELS GENESIS                              ║
-║                         Color Palette: Living Earth                       ║
+║                    Color Palette: Stark Biome (v2)                        ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                           ║
-║  PRIMARY (Warm Earth)                                                     ║
+║  STEEL FOUNDATION (Cool, Industrial)                                      ║
 ║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐            ║
-║  │ #2D1B14 │ │ #4A3728 │ │ #6B4E3D │ │ #8B6F5C │ │ #AB9080 │            ║
-║  │  Soil   │ │  Bark   │ │  Wood   │ │  Clay   │ │  Sand   │            ║
+║  │ #0A0A0C │ │ #141418 │ │ #1C1C22 │ │ #28282F │ │ #3A3A44 │            ║
+║  │ Obsidian│ │ Carbon  │ │ Slate   │ │ Gunmetal│ │ Zinc    │            ║
 ║  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘            ║
+║  Use: Backgrounds, panels, frames — the container is humble              ║
 ║                                                                           ║
-║  SECONDARY (Living Green)                                                 ║
+║  LIVING ACCENT (Organic, Emerging)                                        ║
 ║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐            ║
 ║  │ #1A2E1A │ │ #2E4A2E │ │ #4A6B4A │ │ #6B8B6B │ │ #8BAB8B │            ║
 ║  │  Moss   │ │  Fern   │ │  Sage   │ │  Mint   │ │  Sprout │            ║
 ║  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘            ║
+║  Use: Success states, growth indicators — life finding cracks            ║
 ║                                                                           ║
-║  ACCENT (Ghibli Glow)                                                     ║
+║  SOIL UNDERTONES (Grounding)                                              ║
 ║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐            ║
-║  │ #F5E6D3 │ │ #E8C4A0 │ │ #D4A574 │ │ #C08552 │ │ #8B5A2B │            ║
-║  │ Lantern │ │ Honey   │ │ Amber   │ │ Copper  │ │ Bronze  │            ║
+║  │ #1A1512 │ │ #2D221A │ │ #3D3028 │ │ #524436 │ │ #685844 │            ║
+║  │ Loam    │ │ Humus   │ │ Peat    │ │ Earth   │ │ Clay    │            ║
 ║  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘            ║
+║  Use: Warm surface variants, secondary backgrounds — organic warmth       ║
 ║                                                                           ║
-║  SEMANTIC (Status)                                                        ║
+║  BIOLUMINESCENT ACCENTS (Precious, Rare)                                  ║
 ║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐            ║
-║  │ #4A6B4A │ │ #D4A574 │ │ #C08552 │ │ #8B4513 │ │ #6B4E3D │            ║
-║  │ Healthy │ │ Growing │ │ Warning │ │ Urgent  │ │ Dormant │            ║
+║  │ #C4A77D │ │ #D4B88C │ │ #E5C99D │ │ #8BA98B │ │ #9CBDA0 │            ║
+║  │ Spore   │ │ Amber   │ │ Glow    │ │ Lichen  │ │ Bloom   │            ║
 ║  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘            ║
+║  Use: Highlights, active states, focus — moments where life glows        ║
 ║                                                                           ║
-║  JEWEL IDENTITIES                                                         ║
+║  SEMANTIC (Status — constrained)                                          ║
+║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐                         ║
+║  │ #4A6B4A │ │ #C4A77D │ │ #A65D4A │ │ #3A3A44 │                         ║
+║  │ Healthy │ │ Pending │ │ Alert   │ │ Dormant │                         ║
+║  └─────────┘ └─────────┘ └─────────┘ └─────────┘                         ║
+║  Note: Reduced from 5 to 4 — tasteful constraint                          ║
+║                                                                           ║
+║  JEWEL IDENTITIES (Muted, Earned)                                         ║
 ║  ┌───────────────────────────────────────────────────────────────────┐   ║
-║  │  Atelier:   #C08552 (Copper)   — Creative forge, warm workshop    │   ║
-║  │  Park:      #4A6B4A (Sage)     — Organic growth, living hosts     │   ║
-║  │  Domain:    #6B4E3D (Wood)     — Grounded, practical, reliable    │   ║
-║  │  Coalition: #D4A574 (Amber)    — Collaboration glow               │   ║
+║  │  Brain:     #4A6B6B (Teal Moss)   — Knowledge growing quietly     │   ║
+║  │  Witness:   #6B6B4A (Olive)       — Memory preserved in amber     │   ║
+║  │  Atelier:   #8B7355 (Umber)       — Creative warmth, earned glow  │   ║
+║  │  Liminal:   #5A5A6B (Pewter)      — Threshold between states      │   ║
 ║  └───────────────────────────────────────────────────────────────────┘   ║
 ║                                                                           ║
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
+### The 90/10 Rule
+
+```
+90% STEEL — The frame, the silence, the negative space
+10% LIFE  — The content that earns attention
+
+"Don't decorate. Let the rare color moments feel earned."
+```
+
 ---
 
-## III. Typography: "Organic Craft"
+## III. Typography: "Steel & Spore"
+
+> *Evolution: "Organic Craft" → "Steel & Spore" — precision structures with organic softness*
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                         TYPOGRAPHY SYSTEM                                 ║
+║                    TYPOGRAPHY SYSTEM: Steel & Spore                       ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                           ║
-║  HEADINGS: Nunito (friendly, hand-drawn feel)                            ║
+║  STEEL VOICE: Inter (precision, clarity, industrial)                     ║
 ║  ───────────────────────────────────────────────────────────────────     ║
 ║                                                                           ║
-║    H1: Crown Jewels Genesis                                              ║
-║        Nunito Bold 32px / 40px line-height                               ║
+║    H1: CROWN JEWELS GENESIS                                              ║
+║        Inter SemiBold 28px / 36px — UPPERCASE, letter-spacing: 0.05em   ║
+║        Color: Zinc (#3A3A44) — reserved, not shouting                   ║
 ║                                                                           ║
-║    H2: The Alive Workshop                                                ║
-║        Nunito SemiBold 24px / 32px line-height                           ║
+║    H2: The Stark Biome                                                   ║
+║        Inter Medium 20px / 28px — Title case, normal spacing            ║
+║        Color: Gunmetal (#28282F)                                         ║
 ║                                                                           ║
 ║    H3: Immersive Inhabit Mode                                            ║
-║        Nunito Medium 18px / 24px line-height                             ║
+║        Inter Medium 16px / 22px — Sentence case                         ║
+║        Color: Zinc (#3A3A44)                                             ║
 ║                                                                           ║
-║  BODY: Inter (clean, readable)                                           ║
+║  ORGANIC VOICE: Inter (same font, different weight = unity)              ║
 ║  ───────────────────────────────────────────────────────────────────     ║
 ║                                                                           ║
 ║    Body: The citizen's eigenvector determines their response.            ║
-║          Inter Regular 16px / 24px line-height                           ║
+║          Inter Regular 15px / 24px — generous line-height for breath    ║
+║          Color: #8A8A94 (muted, doesn't compete)                        ║
 ║                                                                           ║
 ║    Small: Consent debt: 0.65 | Forces: 2/3                               ║
-║           Inter Regular 14px / 20px line-height                          ║
+║           Inter Regular 13px / 18px                                      ║
+║           Color: #5A5A64 (whisper)                                       ║
 ║                                                                           ║
-║  CODE: JetBrains Mono (technical clarity)                                ║
+║  TECHNICAL: JetBrains Mono (honest, mechanical)                          ║
 ║  ───────────────────────────────────────────────────────────────────     ║
 ║                                                                           ║
 ║    Code: await logos.invoke("world.park.inhabit", umwelt)                ║
-║          JetBrains Mono 14px / 20px line-height                          ║
+║          JetBrains Mono 13px / 20px                                      ║
+║          Color: #6B8B6B (Mint) — life emerging from code                ║
+║                                                                           ║
+║  ACCENT MOMENTS (Rare, Earned)                                           ║
+║  ───────────────────────────────────────────────────────────────────     ║
+║                                                                           ║
+║    Glow text: Active states, focus labels                                ║
+║               Color: #C4A77D (Spore) or #8BA98B (Lichen)                ║
+║               Use sparingly — these are bioluminescent moments          ║
 ║                                                                           ║
 ╚══════════════════════════════════════════════════════════════════════════╝
+
+THE RULE: Same font family (Inter) for unity. Variation through:
+          - Weight (SemiBold → Regular → Light)
+          - Case (UPPERCASE for steel, Sentence for organic)
+          - Color (cool grays vs warm accents)
+          - Spacing (tight for precision, generous for breath)
 ```
 
 ---
 
-## IV. Animation Philosophy: "Everything Breathes"
+## IV. Animation Philosophy: "Stillness, Then Life"
+
+> *Evolution: "Everything Breathes" → "Stillness, Then Life" — restraint makes motion precious*
 
 ```
 ╔══════════════════════════════════════════════════════════════════════════╗
-║                      ANIMATION PRINCIPLES                                 ║
+║                 ANIMATION PRINCIPLES: Stillness, Then Life                ║
 ╠══════════════════════════════════════════════════════════════════════════╣
 ║                                                                           ║
-║  1. BREATHING (Idle State)                                               ║
+║  THE RULE: Most things are STILL. Movement is EARNED.                    ║
+║                                                                           ║
+║  ┌─────────────────────────────────────────────────────────────────────┐ ║
+║  │  STEEL (90%)              │  LIFE (10%)                             │ ║
+║  ├───────────────────────────┼─────────────────────────────────────────┤ ║
+║  │  Static by default        │  Breathes when alive                    │ ║
+║  │  Instant state changes    │  Organic transitions when meaningful    │ ║
+║  │  No decoration            │  Subtle glow on interaction             │ ║
+║  │  Grid-locked              │  Slight organic drift on hover          │ ║
+║  └───────────────────────────┴─────────────────────────────────────────┘ ║
+║                                                                           ║
+║  1. STILLNESS (Default State)                                            ║
 ║     ─────────────────────────────────────────────────────────────        ║
-║     All living elements have subtle scale/opacity pulse                  ║
-║     Period: 3-4 seconds | Amplitude: 2-3%                                ║
+║     UI is static. No idle animations. Silence.                           ║
+║     "If nothing is happening, nothing should move."                      ║
 ║                                                                           ║
 ║          ╭──────────────────────────────────────────────────╮            ║
 ║          │                                                  │            ║
-║          │    ○ ──► ● ──► ○ ──► ● ──► ○                    │            ║
-║          │    (inhale)   (hold)   (exhale)   (rest)         │            ║
+║          │    ▪ ─── ▪ ─── ▪ ─── ▪ ─── ▪                    │            ║
+║          │         (frozen, waiting, patient)               │            ║
 ║          │                                                  │            ║
 ║          ╰──────────────────────────────────────────────────╯            ║
 ║                                                                           ║
-║  2. GROWING (Transitions)                                                ║
+║  2. BREATHING (Living Elements Only)                                     ║
 ║     ─────────────────────────────────────────────────────────────        ║
-║     New elements grow from seed to full size                             ║
-║     Duration: 300-500ms | Easing: cubic-bezier(0.34, 1.56, 0.64, 1)     ║
+║     ONLY elements representing living/active things breathe              ║
+║     Period: 4-5 seconds | Amplitude: 1-2% (subtle!)                     ║
+║     Reserved for: Active agents, live connections, user presence        ║
 ║                                                                           ║
 ║          ╭──────────────────────────────────────────────────╮            ║
 ║          │                                                  │            ║
-║          │    . ──► · ──► • ──► ● ──► ◉                    │            ║
-║          │    (seed) (sprout) (grow) (bloom) (full)         │            ║
+║          │    ○ ─·─ ○ ─·─ ○                                │            ║
+║          │    (barely perceptible, like distant heartbeat)  │            ║
 ║          │                                                  │            ║
 ║          ╰──────────────────────────────────────────────────╯            ║
 ║                                                                           ║
-║  3. UNFURLING (Panels/Drawers)                                           ║
+║  3. EMERGENCE (Transitions)                                              ║
 ║     ─────────────────────────────────────────────────────────────        ║
-║     Panels unfurl like leaves, not slide mechanically                    ║
-║     Duration: 400ms | Easing: cubic-bezier(0.4, 0, 0.2, 1)              ║
+║     New elements fade in from nothing. No bounce, no overshoot.         ║
+║     Duration: 200-300ms | Easing: ease-out (no spring!)                 ║
+║     "Life emerging from darkness, not bouncing into frame."             ║
 ║                                                                           ║
 ║          ╭──────────────────────────────────────────────────╮            ║
 ║          │                                                  │            ║
-║          │    ╔══╗      ╔═══════╗      ╔═══════════════╗   │            ║
-║          │    ║  ║  ──► ║       ║  ──► ║               ║   │            ║
-║          │    ╚══╝      ║       ║      ║               ║   │            ║
-║          │              ╚═══════╝      ╚═══════════════╝   │            ║
+║          │    ░ ──► ▒ ──► ▓ ──► █                          │            ║
+║          │    (void)  (forming)  (present)                  │            ║
 ║          │                                                  │            ║
 ║          ╰──────────────────────────────────────────────────╯            ║
 ║                                                                           ║
-║  4. FLOWING (Data/Events)                                                ║
+║  4. MECHANICAL SLIDE (Panels/Drawers)                                    ║
 ║     ─────────────────────────────────────────────────────────────        ║
-║     Data flows like water through vines                                  ║
-║     Particle speed: 30-60px/s | Trail length: 20-40px                   ║
+║     Panels slide like precision machinery. No organic unfurl.           ║
+║     Duration: 250ms | Easing: ease-in-out (industrial, exact)           ║
 ║                                                                           ║
 ║          ╭──────────────────────────────────────────────────╮            ║
 ║          │                                                  │            ║
-║          │    ○═══●═══○═══●═══○═══●═══○═══●═══○            │            ║
-║          │         ~~~~~~~~~~~~▶                            │            ║
+║          │    ┌──┐      ┌────────┐      ┌──────────────┐   │            ║
+║          │    │  │  ──► │        │  ──► │              │   │            ║
+║          │    └──┘      └────────┘      └──────────────┘   │            ║
+║          │         (precise, no overshoot)                  │            ║
+║          │                                                  │            ║
+║          ╰──────────────────────────────────────────────────╯            ║
+║                                                                           ║
+║  5. DATA PULSE (Connections)                                             ║
+║     ─────────────────────────────────────────────────────────────        ║
+║     Data doesn't flow continuously. It PULSES when something happens.   ║
+║     Single pulse on event, then stillness. No constant animation.       ║
+║                                                                           ║
+║          ╭──────────────────────────────────────────────────╮            ║
+║          │                                                  │            ║
+║          │    ───────●───────── (pulse) ─────────────────  │            ║
+║          │           └─▶ then stillness                     │            ║
 ║          │                                                  │            ║
 ║          ╰──────────────────────────────────────────────────╯            ║
 ║                                                                           ║
 ╚══════════════════════════════════════════════════════════════════════════╝
+
+BANNED: Continuous looping animations on non-living elements
+BANNED: Bounce/spring easing (too playful for stark aesthetic)
+BANNED: Decorative motion (parallax, floating particles, etc.)
+
+ALLOWED: Single-shot transitions on user action
+ALLOWED: Breathing on explicitly "alive" elements
+ALLOWED: Pulse feedback on data events
 ```
 
 ---
@@ -607,6 +710,58 @@ For Domain (the Integration Hub), we draw from **modern developer portals** with
 
 ---
 
-*"The workshop breathes. The stage listens. The hub connects. All share the same earth."*
+## VIII. Evolution Summary
 
-*Compiled: 2025-12-18 | Aesthetic: Alive Workshop | Energy: Organic Growth*
+### The Journey: Alive Workshop → Stark Biome
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            CREATIVE EVOLUTION                                │
+├───────────────────────────────┬─────────────────────────────────────────────┤
+│     v1: ALIVE WORKSHOP        │         v2: STARK BIOME                     │
+│         (2025-12-18)          │           (2025-12-22)                      │
+├───────────────────────────────┼─────────────────────────────────────────────┤
+│                               │                                             │
+│  "Everything breathes"        │  "Stillness, then life"                    │
+│                               │                                             │
+│  Warm earth tones             │  Cool steel + organic accent               │
+│  Studio Ghibli warmth         │  Stålenhag industrial × biome              │
+│  Continuous organic motion    │  Static default, earned motion             │
+│  Rounded, soft edges          │  Sharp frames, bare edges                  │
+│  Decorative life              │  Functional life (only where alive)        │
+│                               │                                             │
+│  ████████████████████         │  ░░░░░░░░░░░░░░░░░░██                      │
+│  (warm everywhere)            │  (90% steel, 10% life)                     │
+│                               │                                             │
+└───────────────────────────────┴─────────────────────────────────────────────┘
+
+What we KEPT:
+  ✓ Organic life emerges (moss, soil, amber)
+  ✓ "Breathing" animation for living things
+  ✓ Teaching mode depth
+  ✓ Immersive theater interaction
+
+What we REFINED:
+  → Life is now precious, rare, earned
+  → Frames are humble; content glows
+  → Motion is restrained; stillness is default
+  → The coldness makes warmth more meaningful
+```
+
+### Design Principle
+
+> *"Daring, bold, creative, opinionated but not gaudy."*
+
+The Stark Biome achieves this by:
+- **Daring**: Choosing austerity when warm is expected
+- **Bold**: Trusting negative space and silence
+- **Creative**: Finding life in the cracks of industrial stillness
+- **Opinionated**: 90/10 rule leaves no room for wishy-washy decoration
+- **Not gaudy**: Every color moment is earned, not given
+
+---
+
+*"The frame is humble. The content glows. The austerity makes the warmth more precious."*
+
+*Compiled: 2025-12-18 | Updated: 2025-12-22*
+*Aesthetic: Stark Biome | Energy: Stillness × Emergence*

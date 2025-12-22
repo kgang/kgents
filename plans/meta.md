@@ -386,6 +386,19 @@ DensityField animation: 30fps always or only when focused?
 Servo embedding vs Electron: which path for desktop app?
 ```
 
+### Git Archaeology → Witness → ASHC (2025-12-22)
+```
+CommitTeaching → Mark: teaching.insight → response.content, commit.sha → proof.data, category → tags
+Deterministic mark IDs: arch-{sha[:8]}-{hash[:8]} for idempotent crystallization re-runs
+GENEALOGICAL evidence tier: git history is evidence of past decisions (spec/protocols/witness-supersession.md)
+Principle inference from category: gotcha→ethical, pattern→composable+generative, decision→tasteful
+_invoke_aspect routes to methods: abstract in BaseLogosNode, concrete implementations in subclass
+BasicRendering(summary=str): expects string, not dict; use custom rendering dataclasses with to_dict/to_text
+Umwelt[Any, Any] > Observer for node methods: Observer is for lightweight calls, Umwelt for full invocations
+concept.compiler.priors bridges archaeology→ASHC: extract priors → seed CausalLearner → 8 edges from 100 commits
+Archaeological confidence discount 50%: correlational not causal; use as initial priors, let runtime evidence accumulate
+```
+
 ---
 
-*Lines: ~390/200 | Last updated: 2025-12-22 | ZenPortal Audit*
+*Lines: ~400/200 | Last updated: 2025-12-22 | Git Archaeology Phase 6 Complete*

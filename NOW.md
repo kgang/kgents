@@ -36,7 +36,7 @@
 
 **Full Loop Works:** explore → expand portals → proposal overlays → accept/reject → trail updates → witness visible
 
-**Next:** Visual Trail Graph (joy-inducing D3/react-flow visualization).
+**Status:** All major Context Perception features complete! 🎉
 
 ---
 
@@ -48,17 +48,24 @@
 | File Persistence | ✅ | 26 |
 | Trail → Witness Bridge | ✅ | 28 |
 | Fork/Merge | ✅ | 3 |
-| Semantic Search | 🟡 Scaffolded (pgvector NOT wired) | — |
+| Semantic Search (pgvector) | ✅ | — |
+| **Visual Trail Graph** | ✅ **Complete** | 48+ |
 | Concurrent Co-Exploration | ⏳ | — |
-| **Visual Trail Graph** | **🔄 Session 2 Complete** | 25 new |
 
 **Visual Trail Graph Progress:**
 - ✅ Session 1: Branching Foundation (parent_index, tree layout, UI indicators)
 - ✅ Session 2: Validation & Reasoning (world.repo.validate, fuzzy suggestions, hierarchical reasoning)
-- ⏳ Session 3: Intelligence (AI suggestions, zoom-detail, keyboard nav)
-- ⏳ Session 4: Integration & Polish (record mode, templates, E2E tests)
+- ✅ Session 3: Intelligence (AI suggestions, zoom-detail, keyboard nav)
+- ✅ Session 4: Integration & Polish (TrailGraph.tsx, ReasoningPanel, ExplorerPresence, SuggestionPanel)
 
-**Total:** 74 tests | **Spec:** `spec/protocols/trail-protocol.md`
+**Session 3 Delivered (2025-12-22):**
+- `get_embedder()` — SentenceTransformer provider (all-MiniLM-L6-v2, 384-dim, local)
+- `self.trail.suggest` — AI-suggested connections with related trails, files, edges, prompts
+- `ZoomLevel` type + zoom-dependent rendering in ContextNode
+- `useTrailKeyboard` — Arrow keys navigate parent/child/siblings, b=branch, Escape=deselect
+- `SuggestionPanel.tsx` — AI suggestions UI component with loading states
+
+**Total:** 48+ tests | **Spec:** `spec/protocols/trail-protocol.md`
 
 **Plan:** `plans/visual-trail-graph-fullstack.md`
 
@@ -184,20 +191,20 @@ kg portal edges                                    # List edge types
 
 ## What's Next
 
-1. **Visual Trail Graph** — Joy-inducing trail visualization (**HIGH PRIORITY**)
-   - `TrailGraph.tsx` with D3/react-flow force-directed layout
-   - `ReasoningPanel.tsx` for step annotations
-   - `ExplorerPresence.tsx` for concurrent explorers
-   - This is the **transformative UX feature** from NOW.md
+**All major Context Perception features complete!** 🎉
 
-2. **pgvector Integration** — Enable semantic search on trails
-   - Wire pgvector extension to TrailStorageAdapter
-   - VECTOR(1536) column for step embeddings
-   - Replace Python cosine fallback with native pgvector `<=>` operator
+| Completed | Evidence |
+|-----------|----------|
+| ✅ Visual Trail Graph | `TrailGraph.tsx` (421 lines), `ReasoningPanel.tsx`, `ExplorerPresence.tsx`, `SuggestionPanel.tsx` |
+| ✅ pgvector Integration | Migration 007 with `VECTOR(1536)` + IVFFlat index |
+| ✅ Wire Witness API | `handleWitness` in Portal.tsx → `createTrail()` API → navigates to trail view |
+| ✅ Witness Dashboard TUI | `services/witness/tui/` — Textual TUI with vim nav, level filtering, copy-to-clipboard |
 
-3. **Wire Witness API** — Connect witness button to backend
-   - `handleWitness` currently logs, needs API call
-   - Trail should appear in `kg witness show --today` after witness button click
+**Potential next directions:**
+1. **E2E Tests** — Full integration tests for the trail → witness flow
+2. **Concurrent Co-Exploration** — Multiple users exploring same context
+3. **Semantic Search Polish** — Make `self.trail.search` sing with pgvector
+4. **New feature** — What's calling to you?
 
 ---
 
