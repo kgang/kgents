@@ -3,21 +3,77 @@
 > *"What's happening right now?"*
 
 **Last Updated**: 2025-12-22
-**Session**: Context Perception Phase 5B (Trail → Witness)
+**Session**: RADICAL TRANSFORMATION — The Membrane
 
 ---
 
 ## Current Focus
 
-**The Living Outline: Trails as Evidence**
+**THE MEMBRANE: Stop Documenting Agents. Become the Agent.**
 
-*"The trail IS evidence. The mark IS the witness."*
+*"The proof IS the decision."*
+
+**Decision**: `fuse-ccad81de` (2025-12-22)
 
 ---
 
 ## What's Happening Now
 
-### Context Perception Phase 5: The Living Outline — COMPLETE ✅
+### RADICAL TRANSFORMATION: The Membrane
+
+**67,330 lines burned. The canvas is blank.**
+
+The old frontend was a documentation shell — browse AGENTESE paths, see polynomial diagrams, explore trails. It was *about* agents.
+
+**The Membrane is different**: One surface that morphs based on context. Not navigation, not routes, not pages. A **co-thinking surface** where Kent and K-gent work together.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  THE MEMBRANE                                                           │
+│  ═══════════════════════════════════════════════════════════════════════│
+│  ┌─────────────────────────────┐  ┌─────────────────────────────────┐  │
+│  │      FOCUS PANE             │  │       WITNESS STREAM            │  │
+│  │  [Current working context]  │  │  • Decisions flow here          │  │
+│  └─────────────────────────────┘  └─────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │  DIALOGUE — Where Kent and K-gent think together                  │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Plan**: `plans/_membrane.md`
+**Spec**: `spec/surfaces/membrane.md`
+
+---
+
+### What Got Burned (2025-12-22)
+
+| Category | Lines Deleted | Components |
+|----------|---------------|------------|
+| shell/ | ~15K | Terminal, NavigationTree, CommandPalette |
+| witness/ | ~8K | MarkCard, MarkTimeline, garden/ |
+| trail/ | ~6K | TrailGraph, ReasoningPanel, SuggestionPanel |
+| brain/ | ~4K | Brain2D, CrystalTree, CaptureForm |
+| polynomial/ | ~3K | PolynomialDiagram, MiniPolynomial |
+| Others | ~31K | servo/, canvas/, portal/, docs/, categorical/ |
+| **Total** | **67,330** | ~65% of web codebase |
+
+**Preserved**: elastic/, joy/, genesis/, useDesignPolynomial, useAnimationCoordination
+
+---
+
+### Implementation Phases
+
+| Phase | What | Status |
+|-------|------|--------|
+| **1** | Membrane Foundation — Membrane.tsx, FocusPane, WitnessStream, DialoguePane | ⏳ |
+| **2** | Context Sensing — useWorkingContext, useFocusContent | |
+| **3** | Crystallization — decisions flow into witness stream | |
+| **4** | Polish — elastic modes, joy primitives, keyboard shortcuts | |
+
+---
+
+### Previous: Context Perception Phase 5 — COMPLETE ✅
 
 | Phase | What It Means | Status |
 |-------|---------------|--------|
