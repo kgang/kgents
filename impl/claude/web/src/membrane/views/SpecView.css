@@ -1,0 +1,312 @@
+/**
+ * SpecView styles — SpecGraph integration
+ *
+ * Displays spec with tier, confidence, edge portals, and tokens.
+ * "The spec is not description—it is generative."
+ */
+
+.spec-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.spec-view--loading,
+.spec-view--error,
+.spec-view--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spec-view__empty {
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+}
+
+.spec-view__empty-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* Header */
+.spec-view__header {
+  padding: 1rem 1.5rem;
+  background: var(--surface-1, #1a1a2e);
+  border-bottom: 1px solid var(--border-subtle, #222);
+}
+
+.spec-view__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.spec-view__title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #e5e7eb);
+}
+
+.spec-view__tier {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+  background: var(--surface-2, #252540);
+  color: var(--text-muted, #9ca3af);
+}
+
+.spec-view__tier[data-tier='bootstrap'] {
+  background: var(--jewel-witness, #10b981);
+  color: #000;
+}
+
+.spec-view__tier[data-tier='protocol'] {
+  background: var(--jewel-brain, #8b5cf6);
+  color: #fff;
+}
+
+.spec-view__tier[data-tier='agent'] {
+  background: var(--jewel-atelier, #f59e0b);
+  color: #000;
+}
+
+.spec-view__tier[data-tier='service'] {
+  background: var(--jewel-liminal, #ec4899);
+  color: #fff;
+}
+
+.spec-view__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spec-view__path {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+}
+
+/* Confidence bar */
+.spec-view__confidence {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.spec-view__confidence-bar {
+  letter-spacing: -0.1em;
+  color: var(--jewel-witness, #10b981);
+}
+
+.spec-view__confidence-value {
+  color: var(--text-secondary, #9ca3af);
+}
+
+/* Derives from */
+.spec-view__derives {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.spec-view__derives-label {
+  color: var(--text-muted, #6b7280);
+}
+
+.spec-view__derives-link {
+  background: none;
+  border: none;
+  padding: 0.125rem 0.375rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--jewel-brain, #8b5cf6);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+
+.spec-view__derives-link:hover {
+  background: var(--surface-2, #252540);
+}
+
+/* Token badges */
+.spec-view__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--surface-0, #0f0f1a);
+  border-bottom: 1px solid var(--border-subtle, #222);
+}
+
+.spec-view__token-badge {
+  padding: 0.125rem 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  background: var(--surface-2, #252540);
+  color: var(--text-secondary, #9ca3af);
+  border-radius: 2px;
+}
+
+.spec-view__token-badge[data-type='agentese_path'] {
+  border-left: 2px solid var(--jewel-witness, #10b981);
+}
+
+.spec-view__token-badge[data-type='code_block'] {
+  border-left: 2px solid var(--jewel-brain, #8b5cf6);
+}
+
+.spec-view__token-badge[data-type='impl_ref'] {
+  border-left: 2px solid var(--jewel-atelier, #f59e0b);
+}
+
+.spec-view__token-badge[data-type='test_ref'] {
+  border-left: 2px solid var(--jewel-liminal, #ec4899);
+}
+
+/* Edge portals */
+.spec-view__edges {
+  padding: 1rem 1.5rem;
+  background: var(--surface-0, #0f0f1a);
+  border-bottom: 1px solid var(--border-subtle, #222);
+}
+
+.spec-view__edges-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #6b7280);
+}
+
+.spec-view__edge-group {
+  margin-bottom: 0.5rem;
+}
+
+.spec-view__edge-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem;
+  background: var(--surface-1, #1a1a2e);
+  border: 1px solid var(--border-subtle, #333);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.spec-view__edge-toggle:hover {
+  background: var(--surface-2, #252540);
+}
+
+.spec-view__edge-icon {
+  font-size: 0.625rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.spec-view__edge-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--jewel-brain, #8b5cf6);
+}
+
+.spec-view__edge-count {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.spec-view__edge-list {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.spec-view__edge-item {
+  margin-bottom: 0.25rem;
+}
+
+.spec-view__edge-link {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  cursor: pointer;
+  border-radius: 2px;
+  text-align: left;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.spec-view__edge-link:hover {
+  background: var(--surface-2, #252540);
+  color: var(--text-primary, #e5e7eb);
+}
+
+.spec-view__edge-more {
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+  padding: 0.25rem 0.5rem;
+}
+
+/* Content */
+.spec-view__content {
+  flex: 1;
+  overflow: auto;
+  padding: 1.5rem;
+  background: var(--surface-0, #0f0f1a);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle, #333) transparent;
+}
+
+.spec-view__content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.spec-view__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.spec-view__content::-webkit-scrollbar-thumb {
+  background: var(--border-subtle, #333);
+  border-radius: 4px;
+}
+
+.spec-view__content-loading,
+.spec-view__content-empty {
+  text-align: center;
+  color: var(--text-muted, #6b7280);
+  padding: 2rem;
+}
+
+.spec-view__content-hint {
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.spec-view__markdown {
+  margin: 0;
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-primary, #e5e7eb);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
