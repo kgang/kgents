@@ -60,11 +60,11 @@
   align-items: center;
   gap: 1rem;
   padding: 0.5rem 0.75rem;
-  border-radius: 8px;
-  background: var(--surface-1, #1a1a2e);
-  border: 1px solid var(--border-subtle, #222);
+  border-radius: 2px; /* STARK: bare edge */
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
   font-size: 0.75rem;
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   opacity: 0.7;
   transition: opacity 0.2s ease;
   z-index: 100;
@@ -78,7 +78,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: var(--accent-primary, #6366f1);
+  color: var(--accent-primary); /* glow-spore — earned accent */
 }
 
 .membrane__mode-hints {
@@ -88,8 +88,8 @@
 
 .membrane__mode-hints kbd {
   padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-  background: var(--surface-2, #222244);
+  border-radius: 2px; /* STARK: bare edge */
+  background: var(--surface-2);
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
   margin-right: 0.25rem;
@@ -111,27 +111,36 @@
   border: none;
 }
 
-/* CSS variables for theming */
+/* =============================================================================
+ * STARK BIOME COLOR SYSTEM
+ * "The frame is humble. The content glows."
+ * 90% Steel (cool industrial) / 10% Life (organic accents)
+ * ============================================================================= */
 :root {
-  /* Surfaces */
-  --surface-0: #0f0f1a;
-  --surface-1: #1a1a2e;
-  --surface-2: #222244;
-  --surface-3: #333355;
+  /* STEEL FOUNDATION (90% — backgrounds, frames, containers) */
+  --surface-0: #0a0a0c; /* steel-obsidian — deepest background */
+  --surface-1: #141418; /* steel-carbon — card backgrounds */
+  --surface-2: #1c1c22; /* steel-slate — elevated surfaces */
+  --surface-3: #28282f; /* steel-gunmetal — borders, dividers */
 
-  /* Text */
-  --text-primary: #e5e7eb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
+  /* TEXT (cool grays, not warm) */
+  --text-primary: #e5e7eb; /* bright text */
+  --text-secondary: #8a8a94; /* muted body text */
+  --text-muted: #5a5a64; /* whisper — hints, timestamps */
 
-  /* Borders */
-  --border-subtle: #222;
+  /* BORDERS */
+  --border-subtle: #28282f; /* steel-gunmetal */
 
-  /* Accents */
-  --accent-primary: #6366f1;
-  --accent-primary-bright: #818cf8;
-  --accent-secondary: #8b5cf6;
-  --accent-gold: #fbbf24;
-  --accent-success: #10b981;
-  --accent-error: #ef4444;
+  /* BIOLUMINESCENT ACCENTS (10% — earned, precious moments) */
+  --accent-primary: #c4a77d; /* glow-spore — main accent */
+  --accent-primary-bright: #d4b88c; /* glow-amber — hover state */
+  --accent-secondary: #8ba98b; /* glow-lichen — secondary accent */
+  --accent-gold: #d4b88c; /* glow-amber — crystallize */
+  --accent-success: #4a6b4a; /* life-sage — healthy states */
+  --accent-error: #a65d4a; /* muted rust — alerts */
+
+  /* LIFE COLORS (organic emergence) */
+  --life-sage: #4a6b4a;
+  --life-mint: #6b8b6b;
+  --life-sprout: #8bab8b;
 }

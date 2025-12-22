@@ -1,13 +1,14 @@
 /**
- * FocusPane styles
+ * FocusPane styles — STARK BIOME
  *
  * Container for focus views. Fills available space.
+ * "The frame is humble. The content glows."
  */
 
 .focus-pane {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--surface-0, #0f0f1a);
+  background: var(--surface-0);
   overflow: hidden;
 }

@@ -160,6 +160,12 @@ def _import_node_modules() -> None:
         except ImportError as e:
             logger.warning(f"AGENTESE node import failed (dawn): {e}")
 
+        # === K-Block Crown Jewel (self.kblock.*) ===
+        try:
+            from services.k_block import node as kblock_node  # noqa: F401  # self.kblock.*
+        except ImportError as e:
+            logger.warning(f"AGENTESE node import failed (k_block): {e}")
+
         logger.debug("AGENTESE node modules imported for registration")
     except ImportError as e:
         logger.warning(f"Could not import some node modules: {e}")

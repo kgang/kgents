@@ -96,6 +96,8 @@ export function Membrane() {
                     onAppendDialogue={membrane.appendDialogue}
                     onFocusChange={membrane.setFocus}
                     onCrystallize={membrane.crystallize}
+                    kblockIsolation={membrane.kblockIsolation}
+                    kblockIsDirty={membrane.kblockIsDirty}
                   />
                 }
               />
@@ -114,6 +116,8 @@ export function Membrane() {
                 onAppendDialogue={membrane.appendDialogue}
                 onFocusChange={membrane.setFocus}
                 onCrystallize={membrane.crystallize}
+                kblockIsolation={membrane.kblockIsolation}
+                kblockIsDirty={membrane.kblockIsDirty}
               />
             </div>
           </div>

@@ -18,9 +18,10 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, NewType
+from typing import TYPE_CHECKING, Any, NewType, cast
 
 if TYPE_CHECKING:
+    from ..views.base import View
     from .cosmos import Cosmos
 
 # -----------------------------------------------------------------------------
@@ -28,15 +29,6 @@ if TYPE_CHECKING:
 # -----------------------------------------------------------------------------
 
 KBlockId = NewType("KBlockId", str)
-ViewType = NewType("ViewType", str)
-
-# Standard view types
-VIEW_PROSE: ViewType = ViewType("prose")
-VIEW_GRAPH: ViewType = ViewType("graph")
-VIEW_CODE: ViewType = ViewType("code")
-VIEW_DIFF: ViewType = ViewType("diff")
-VIEW_OUTLINE: ViewType = ViewType("outline")
-VIEW_TIMELINE: ViewType = ViewType("timeline")
 
 
 def generate_kblock_id() -> KBlockId:
@@ -230,7 +222,8 @@ class KBlock:
     checkpoints: list[Checkpoint] = field(default_factory=list)
 
     # Views (hyperdimensional rendering - populated lazily)
-    active_views: set[ViewType] = field(default_factory=set)
+    # Uses dict to store View instances keyed by ViewType enum
+    _views: dict[Any, Any] = field(default_factory=dict, repr=False)
 
     # Entanglement (if ENTANGLED state)
     entangled_with: KBlockId | None = None
@@ -363,6 +356,55 @@ class KBlock:
         return self.isolation in (IsolationState.STALE, IsolationState.CONFLICTING)
 
     # ---------------------------------------------------------------------
+    # Views (Hyperdimensional Rendering)
+    # ---------------------------------------------------------------------
+
+    @property
+    def views(self) -> dict[Any, Any]:
+        """Return active views dict."""
+        return self._views
+
+    def activate_view(self, view_type: Any) -> "View":
+        """
+        Activate a view and render current content.
+
+        Views are created lazily on first activation. The view
+        is rendered with current content and cached for reuse.
+
+        Args:
+            view_type: ViewType enum value (PROSE, GRAPH, CODE, etc.)
+
+        Returns:
+            The activated View instance
+        """
+        from ..views.base import View as ViewProtocol, create_view
+
+        if view_type not in self._views:
+            self._views[view_type] = create_view(view_type)
+        self._views[view_type].render(self.content)
+        return cast("ViewProtocol", self._views[view_type])
+
+    def refresh_views(self) -> None:
+        """
+        Re-render all active views with current content.
+
+        Called after content changes to keep views in sync.
+        For Prose-canonical model, other views derive from prose.
+        """
+        from ..views.base import ViewType as VT
+
+        for view_type, view in self._views.items():
+            if view_type == VT.DIFF:
+                # Diff view needs base_content too
+                view.render(self.content, self.base_content)
+            else:
+                view.render(self.content)
+
+    def active_view_types(self) -> set[Any]:
+        """Return set of currently active view types."""
+        return set(self._views.keys())
+
+    # ---------------------------------------------------------------------
     # Serialization
     # ---------------------------------------------------------------------
 
@@ -386,7 +428,7 @@ class KBlock:
                 }
                 for cp in self.checkpoints
             ],
-            "active_views": list(self.active_views),
+            "active_views": [vt.value for vt in self._views.keys()],
             "entangled_with": self.entangled_with,
         }
 
@@ -413,7 +455,8 @@ class KBlock:
             created_at=datetime.fromisoformat(data["created_at"]),
             modified_at=datetime.fromisoformat(data["modified_at"]),
             checkpoints=checkpoints,
-            active_views={ViewType(v) for v in data.get("active_views", [])},
+            # Note: active_views is stored as list of strings, but we don't
+            # restore View instances on deserialize - they're recreated on demand
             entangled_with=KBlockId(data["entangled_with"]) if data.get("entangled_with") else None,
         )
 

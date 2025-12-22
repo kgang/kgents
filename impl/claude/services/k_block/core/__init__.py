@@ -40,7 +40,6 @@ from .kblock import (
     IsolationState,
     KBlock,
     KBlockId,
-    ViewType,
     generate_kblock_id,
 )
 from .polynomial import (
@@ -61,7 +60,6 @@ __all__ = [
     "IsolationState",
     "KBlock",
     "KBlockId",
-    "ViewType",
     "generate_kblock_id",
     # Cosmos
     "AppendOnlyLog",

@@ -47,7 +47,6 @@ from .core import (
     SaveResult,
     SemanticIndex,
     VersionId,
-    ViewType,
     describe_state,
     generate_kblock_id,
     generate_version_id,
@@ -68,7 +67,6 @@ __all__ = [
     "IsolationState",
     "KBlock",
     "KBlockId",
-    "ViewType",
     "generate_kblock_id",
     # Cosmos
     "AppendOnlyLog",

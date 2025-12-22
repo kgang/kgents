@@ -6,10 +6,17 @@
  * 2. Focus (what you're looking at) — context-aware content
  * 3. Dialogue (conversation history) — co-thinking thread
  *
+ * OPTION C INTEGRATION:
+ * Every dialogue session IS a K-Block. Messages accumulate in isolation.
+ * Crystallize = harness.save() = thoughts escape to cosmos.
+ *
  * "The proof IS the decision."
+ * "The K-Block is where you edit a possible world."
  */
 
-import { useCallback, useReducer } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
+
+import { useKBlock, type IsolationState } from './useKBlock';
 
 // =============================================================================
 // Types
@@ -39,6 +46,10 @@ export interface MembraneState {
   focus: Focus;
   dialogueHistory: DialogueMessage[];
   witnessConnected: boolean;
+  // K-Block integration (Option C)
+  kblockIsolation: IsolationState;
+  kblockIsDirty: boolean;
+  sessionId: string;
 }
 
 // =============================================================================
@@ -50,17 +61,27 @@ type MembraneAction =
   | { type: 'SET_FOCUS'; focus: Focus }
   | { type: 'APPEND_DIALOGUE'; message: DialogueMessage }
   | { type: 'CLEAR_DIALOGUE' }
-  | { type: 'SET_WITNESS_CONNECTED'; connected: boolean };
+  | { type: 'SET_WITNESS_CONNECTED'; connected: boolean }
+  // K-Block actions
+  | { type: 'UPDATE_KBLOCK'; isolation: IsolationState; isDirty: boolean }
+  | { type: 'RESET_KBLOCK' };
 
 // =============================================================================
 // Reducer
 // =============================================================================
+
+// Generate unique session ID for this membrane instance
+const generateSessionId = () => `membrane-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const initialState: MembraneState = {
   mode: 'comfortable',
   focus: { type: 'welcome' },
   dialogueHistory: [],
   witnessConnected: false,
+  // K-Block state (Option C)
+  kblockIsolation: 'PRISTINE',
+  kblockIsDirty: false,
+  sessionId: generateSessionId(),
 };
 
 function membraneReducer(state: MembraneState, action: MembraneAction): MembraneState {
@@ -83,6 +104,23 @@ function membraneReducer(state: MembraneState, action: MembraneAction): Membrane
     case 'SET_WITNESS_CONNECTED':
       return { ...state, witnessConnected: action.connected };
 
+    // K-Block actions
+    case 'UPDATE_KBLOCK':
+      return {
+        ...state,
+        kblockIsolation: action.isolation,
+        kblockIsDirty: action.isDirty,
+      };
+
+    case 'RESET_KBLOCK':
+      return {
+        ...state,
+        dialogueHistory: [],
+        kblockIsolation: 'PRISTINE',
+        kblockIsDirty: false,
+        sessionId: generateSessionId(),
+      };
+
     default:
       return state;
   }
@@ -92,22 +130,34 @@ function membraneReducer(state: MembraneState, action: MembraneAction): Membrane
 // Hook
 // =============================================================================
 
+export interface CrystallizeResult {
+  success: boolean;
+  blockId?: string;
+  messageCount?: number;
+  error?: string;
+}
+
 export interface UseMembrane {
   // State
   mode: MembraneMode;
   focus: Focus;
   dialogueHistory: DialogueMessage[];
   witnessConnected: boolean;
+  // K-Block state (Option C)
+  kblockIsolation: IsolationState;
+  kblockIsDirty: boolean;
+  sessionId: string;
 
   // Actions
   setMode: (mode: MembraneMode) => void;
   setFocus: (type: FocusType, path?: string, content?: string) => void;
-  appendDialogue: (role: 'user' | 'assistant', content: string) => void;
+  appendDialogue: (role: 'user' | 'assistant', content: string) => Promise<void>;
   clearDialogue: () => void;
   setWitnessConnected: (connected: boolean) => void;
 
   // Compound actions
-  crystallize: (content: string) => Promise<void>;
+  crystallize: (reasoning?: string) => Promise<CrystallizeResult>;
+  discardThoughts: () => Promise<void>;
   focusOnFile: (path: string) => void;
   focusOnSpec: (path: string) => void;
   focusOnConcept: (concept: string) => void;
@@ -119,6 +169,25 @@ let messageIdCounter = 0;
 export function useMembrane(): UseMembrane {
   const [state, dispatch] = useReducer(membraneReducer, initialState);
 
+  // K-Block integration (Option C: Every dialogue session IS a K-Block)
+  const kblock = useKBlock(state.sessionId);
+
+  // Sync K-Block state to membrane state
+  const prevKBlockState = useRef(kblock.state);
+  useEffect(() => {
+    if (
+      prevKBlockState.current.isolation !== kblock.state.isolation ||
+      prevKBlockState.current.isDirty !== kblock.state.isDirty
+    ) {
+      dispatch({
+        type: 'UPDATE_KBLOCK',
+        isolation: kblock.state.isolation,
+        isDirty: kblock.state.isDirty,
+      });
+      prevKBlockState.current = kblock.state;
+    }
+  }, [kblock.state]);
+
   // Basic actions
   const setMode = useCallback((mode: MembraneMode) => {
     dispatch({ type: 'SET_MODE', mode });
@@ -128,15 +197,23 @@ export function useMembrane(): UseMembrane {
     dispatch({ type: 'SET_FOCUS', focus: { type, path, content } });
   }, []);
 
-  const appendDialogue = useCallback((role: 'user' | 'assistant', content: string) => {
-    const message: DialogueMessage = {
-      id: `msg-${++messageIdCounter}`,
-      role,
-      content,
-      timestamp: new Date(),
-    };
-    dispatch({ type: 'APPEND_DIALOGUE', message });
-  }, []);
+  // appendDialogue now writes to K-Block (isolated until crystallized)
+  const appendDialogue = useCallback(
+    async (role: 'user' | 'assistant', content: string) => {
+      // Add to local state immediately (optimistic)
+      const message: DialogueMessage = {
+        id: `msg-${++messageIdCounter}`,
+        role,
+        content,
+        timestamp: new Date(),
+      };
+      dispatch({ type: 'APPEND_DIALOGUE', message });
+
+      // Also write to K-Block (isolated until crystallized)
+      await kblock.appendThought(content, role);
+    },
+    [kblock]
+  );
 
   const clearDialogue = useCallback(() => {
     dispatch({ type: 'CLEAR_DIALOGUE' });
@@ -146,22 +223,44 @@ export function useMembrane(): UseMembrane {
     dispatch({ type: 'SET_WITNESS_CONNECTED', connected });
   }, []);
 
-  // Compound actions
-  const crystallize = useCallback(async (content: string) => {
-    try {
-      await fetch('/api/witness/marks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'crystallize',
-          reasoning: content,
-          author: 'membrane',
-        }),
-      });
-    } catch (error) {
-      console.error('Failed to crystallize:', error);
-    }
-  }, []);
+  // Crystallize = harness.save() for thoughts (Option C)
+  const crystallize = useCallback(
+    async (reasoning?: string): Promise<CrystallizeResult> => {
+      const result = await kblock.crystallize(reasoning);
+
+      if (result.success && !result.error) {
+        // Also create a witness mark for the crystallization
+        try {
+          await fetch('/api/witness/marks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'crystallize_dialogue',
+              reasoning: reasoning || `Crystallized ${result.messageCount || 0} messages`,
+              author: 'membrane',
+              tags: ['dialogue', 'crystallize'],
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to create witness mark:', error);
+        }
+      }
+
+      return {
+        success: result.success,
+        blockId: result.blockId,
+        messageCount: result.messageCount,
+        error: result.error,
+      };
+    },
+    [kblock]
+  );
+
+  // Discard thoughts = abandon K-Block without crystallizing
+  const discardThoughts = useCallback(async () => {
+    await kblock.discard();
+    dispatch({ type: 'RESET_KBLOCK' });
+  }, [kblock]);
 
   const focusOnFile = useCallback((path: string) => {
     dispatch({ type: 'SET_FOCUS', focus: { type: 'file', path, label: path.split('/').pop() } });
@@ -185,6 +284,10 @@ export function useMembrane(): UseMembrane {
     focus: state.focus,
     dialogueHistory: state.dialogueHistory,
     witnessConnected: state.witnessConnected,
+    // K-Block state (Option C)
+    kblockIsolation: state.kblockIsolation,
+    kblockIsDirty: state.kblockIsDirty,
+    sessionId: state.sessionId,
 
     // Actions
     setMode,
@@ -195,6 +298,7 @@ export function useMembrane(): UseMembrane {
 
     // Compound actions
     crystallize,
+    discardThoughts,
     focusOnFile,
     focusOnSpec,
     focusOnConcept,

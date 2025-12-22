@@ -9,7 +9,12 @@
 import { useCallback, useRef, useState } from 'react';
 
 import { DialogueMessage } from './DialogueMessage';
-import type { DialogueMessage as DialogueMessageData, FocusType } from './useMembrane';
+import type {
+  CrystallizeResult,
+  DialogueMessage as DialogueMessageData,
+  FocusType,
+} from './useMembrane';
+import type { IsolationState } from './useKBlock';
 
 import './DialoguePane.css';
 
@@ -19,9 +24,12 @@ import './DialoguePane.css';
 
 interface DialoguePaneProps {
   dialogueHistory: DialogueMessageData[];
-  onAppendDialogue: (role: 'user' | 'assistant', content: string) => void;
+  onAppendDialogue: (role: 'user' | 'assistant', content: string) => Promise<void>;
   onFocusChange: (type: FocusType, path?: string) => void;
-  onCrystallize: (content: string) => Promise<void>;
+  onCrystallize: (reasoning?: string) => Promise<CrystallizeResult>;
+  // K-Block state (Option C)
+  kblockIsolation?: IsolationState;
+  kblockIsDirty?: boolean;
 }
 
 // =============================================================================
@@ -33,9 +41,12 @@ export function DialoguePane({
   onAppendDialogue,
   onFocusChange,
   onCrystallize,
+  kblockIsolation = 'PRISTINE',
+  kblockIsDirty = false,
 }: DialoguePaneProps) {
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [isCrystallizing, setIsCrystallizing] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const historyRef = useRef<HTMLDivElement>(null);
 
@@ -90,12 +101,28 @@ export function DialoguePane({
     [handleSubmit]
   );
 
+  // Crystallize = harness.save() — thoughts escape to cosmos
   const handleCrystallize = useCallback(async () => {
-    const lastMessage = dialogueHistory[dialogueHistory.length - 1];
-    if (lastMessage) {
-      await onCrystallize(lastMessage.content);
+    if (!kblockIsDirty || isCrystallizing) return;
+
+    setIsCrystallizing(true);
+    try {
+      const lastMessage = dialogueHistory[dialogueHistory.length - 1];
+      const reasoning = lastMessage
+        ? `Crystallized dialogue ending with: "${lastMessage.content.slice(0, 50)}..."`
+        : 'Crystallized dialogue session';
+
+      const result = await onCrystallize(reasoning);
+
+      if (result.success) {
+        console.log(`Crystallized ${result.messageCount || 0} messages (block: ${result.blockId})`);
+      } else {
+        console.error('Crystallize failed:', result.error);
+      }
+    } finally {
+      setIsCrystallizing(false);
     }
-  }, [dialogueHistory, onCrystallize]);
+  }, [dialogueHistory, kblockIsDirty, isCrystallizing, onCrystallize]);
 
   return (
     <div className="dialogue-pane">
@@ -143,13 +170,29 @@ export function DialoguePane({
             Send
           </button>
 
+          {/* K-Block state indicator */}
+          {kblockIsDirty && (
+            <span
+              className={`dialogue-pane__kblock-state dialogue-pane__kblock-state--${kblockIsolation.toLowerCase()}`}
+              title={`K-Block: ${kblockIsolation} (isolated until crystallized)`}
+            >
+              {kblockIsolation === 'DIRTY' ? '◇' : '◆'}
+            </span>
+          )}
+
+          {/* Crystallize = harness.save() */}
           {dialogueHistory.length > 0 && (
             <button
-              className="dialogue-pane__crystallize"
+              className={`dialogue-pane__crystallize ${isCrystallizing ? 'dialogue-pane__crystallize--loading' : ''}`}
               onClick={handleCrystallize}
-              title="Crystallize the last message to witness"
+              disabled={!kblockIsDirty || isCrystallizing}
+              title={
+                kblockIsDirty
+                  ? 'Crystallize thoughts → escape to cosmos'
+                  : 'No changes to crystallize'
+              }
             >
-              Crystallize
+              {isCrystallizing ? 'Crystallizing...' : 'Crystallize ⬡'}
             </button>
           )}
         </div>

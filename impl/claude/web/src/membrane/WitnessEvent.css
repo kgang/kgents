@@ -1,41 +1,44 @@
 /**
- * WitnessEvent styles
+ * WitnessEvent styles — STARK BIOME
  *
- * Each event type has distinct visual treatment:
- * - mark: primary accent, bold action
- * - thought: subtle, ambient
- * - crystal: highlight, significant
- * - connected: minimal, confirmation
+ * Each event type has distinct visual treatment.
+ * "The frame is humble. The content glows."
+ *
+ * STARK: Muted borders, organic accents earned.
+ * - mark: glow-spore (amber) — decisions glow
+ * - thought: steel-zinc — ambient, unobtrusive
+ * - crystal: glow-amber — preserved in amber
+ * - connected: life-sage — organic life
  */
 
 .witness-event {
   padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: var(--surface-1, #1a1a2e);
-  border-left: 3px solid var(--border-subtle, #333);
+  border-radius: 2px; /* STARK: bare edge */
+  background: var(--surface-1);
+  border-left: 2px solid var(--surface-3); /* humble by default */
   margin-bottom: 0.5rem;
   transition: background 0.2s ease;
 }
 
 .witness-event:hover {
-  background: var(--surface-2, #222244);
+  background: var(--surface-2);
 }
 
-/* Type-specific borders */
+/* Type-specific borders — STARK: earned accents */
 .witness-event--mark {
-  border-left-color: var(--accent-primary, #6366f1);
+  border-left-color: var(--accent-primary); /* glow-spore */
 }
 
 .witness-event--thought {
-  border-left-color: var(--accent-subtle, #4b5563);
+  border-left-color: var(--surface-3); /* steel-gunmetal — ambient */
 }
 
 .witness-event--crystal {
-  border-left-color: var(--accent-gold, #fbbf24);
+  border-left-color: var(--accent-gold); /* preserved in amber */
 }
 
 .witness-event--connected {
-  border-left-color: var(--accent-success, #10b981);
+  border-left-color: var(--life-sage); /* organic life */
   opacity: 0.7;
 }
 
@@ -52,25 +55,30 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
-  color: var(--text-secondary, #9ca3af);
+  font-size: 0.65rem;
+  color: var(--text-muted); /* humble by default */
 }
 
 .witness-event--mark .witness-event__type {
-  color: var(--accent-primary, #6366f1);
+  color: var(--accent-primary); /* glow-spore — earned */
 }
 
 .witness-event--crystal .witness-event__type {
-  color: var(--accent-gold, #fbbf24);
+  color: var(--accent-gold);
+}
+
+.witness-event--connected .witness-event__type {
+  color: var(--life-sage);
 }
 
 .witness-event__time {
-  color: var(--text-muted, #6b7280);
-  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.65rem;
 }
 
 /* Content */
 .witness-event__content {
-  color: var(--text-primary, #e5e7eb);
+  color: var(--text-primary);
   font-size: 0.875rem;
   line-height: 1.5;
 }
@@ -81,43 +89,43 @@
 }
 
 .witness-event__reasoning {
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
   font-style: italic;
 }
 
 .witness-event__author {
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
 
 .witness-event__thought {
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
 }
 
 .witness-event__source {
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
 
 .witness-event__insight {
-  color: var(--accent-gold, #fbbf24);
+  color: var(--accent-gold); /* preserved in amber */
   font-weight: 500;
 }
 
 .witness-event__level {
-  color: var(--text-muted, #6b7280);
+  color: var(--text-muted);
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
 
 .witness-event__connected {
-  color: var(--accent-success, #10b981);
+  color: var(--life-sage); /* organic life */
   font-style: italic;
 }
 
-/* Principles */
+/* Principles — STARK: subtle pills */
 .witness-event__principles {
   display: flex;
   flex-wrap: wrap;
@@ -127,9 +135,10 @@
 
 .witness-event__principle {
   padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background: var(--surface-3, #333355);
-  color: var(--text-secondary, #9ca3af);
-  font-size: 0.65rem;
+  border-radius: 2px; /* STARK: bare edge, not pill */
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 0.6rem;
   text-transform: lowercase;
+  letter-spacing: 0.025em;
 }

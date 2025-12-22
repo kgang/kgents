@@ -1,7 +1,8 @@
 /**
- * WelcomeView styles
+ * WelcomeView styles — STARK BIOME
  *
  * Clean, centered, inviting.
+ * "The frame is humble. The content glows."
  */
 
 .welcome-view {
@@ -18,21 +19,22 @@
 }
 
 .welcome-view__title {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--text-primary, #e5e7eb);
+  font-size: 2rem; /* STARK: slightly smaller, more reserved */
+  font-weight: 600;
+  color: var(--text-primary);
   margin: 0 0 0.5rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
+  text-transform: uppercase; /* STARK: industrial typography */
 }
 
 .welcome-view__subtitle {
-  font-size: 1.125rem;
-  color: var(--text-secondary, #9ca3af);
+  font-size: 1rem;
+  color: var(--text-secondary);
   margin: 0 0 2rem;
 }
 
 .welcome-view__description {
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
   font-size: 0.95rem;
   line-height: 1.6;
   margin-bottom: 2rem;
@@ -42,11 +44,11 @@
   margin: 0;
 }
 
-/* Hints */
+/* Hints — STARK: humble frames with organic accents */
 .welcome-view__hints {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   margin-bottom: 2rem;
 }
 
@@ -55,28 +57,32 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
-  background: var(--surface-1, #1a1a2e);
+  border-radius: 2px; /* STARK: bare edge */
+  background: var(--surface-1);
+  border: 1px solid var(--surface-3);
   text-align: left;
 }
 
 .welcome-view__hint-key {
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  background: var(--accent-primary, #6366f1);
-  color: white;
-  font-size: 0.75rem;
+  border-radius: 2px; /* STARK: bare edge */
+  background: transparent;
+  border: 1px solid var(--life-sage);
+  color: var(--life-mint);
+  font-size: 0.7rem;
   font-weight: 600;
   min-width: 70px;
   text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .welcome-view__hint-action {
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
   font-size: 0.875rem;
 }
 
-/* Quote */
+/* Quote — STARK: precious amber glow */
 .welcome-view__quote {
   margin-top: 2rem;
 }
@@ -85,6 +91,6 @@
   margin: 0;
   padding: 0;
   font-style: italic;
-  color: var(--text-muted, #6b7280);
+  color: var(--accent-primary); /* glow-spore — precious quote */
   font-size: 0.875rem;
 }
