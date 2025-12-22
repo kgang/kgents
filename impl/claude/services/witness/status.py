@@ -40,10 +40,12 @@ Teaching:
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Protocol
 
-from .evidence import Evidence, EvidenceLevel
+from .evidence import Evidence, EvidenceLevel, EvidenceRelation
 
 if TYPE_CHECKING:
     pass
@@ -74,6 +76,175 @@ class ContextGraphProtocol(Protocol):
             List of connected node paths
         """
         ...
+
+
+# =============================================================================
+# EvidenceLadder: Aggregate Counts Per Level
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class EvidenceLadder:
+    """
+    The complete evidence stack from L-∞ to L3.
+
+    Aggregates counts of evidence at each level, enabling visualization
+    of the "soil depth" in the garden metaphor. More evidence = taller plant.
+
+    From the spec:
+        "Evidence accumulates; it is never removed."
+        (Monotonicity Law)
+
+    Laws:
+    - Monotonicity: Counts only increase over time
+    - Completeness: All levels are represented (even if 0)
+
+    Example:
+        >>> ladder = EvidenceLadder.from_evidence([e1, e2, e3])
+        >>> ladder.total_count
+        3
+        >>> ladder.height  # normalized 0-100
+        42
+    """
+
+    orphan: int = 0  # L-∞: Artifacts without lineage
+    prompt: int = 0  # L-2: PromptAncestor count
+    trace: int = 0  # L-1: TraceWitness count
+    mark: int = 0  # L0: Human marks
+    test: int = 0  # L1: Test artifacts
+    proof: int = 0  # L2: Formal proofs
+    bet: int = 0  # L3: Economic bets
+
+    @property
+    def total_count(self) -> int:
+        """Total evidence across all levels."""
+        return (
+            self.orphan + self.prompt + self.trace + self.mark + self.test + self.proof + self.bet
+        )
+
+    @property
+    def human_count(self) -> int:
+        """Evidence requiring human attention (marks only for now)."""
+        return self.mark
+
+    @property
+    def automated_count(self) -> int:
+        """Automated evidence (test + proof + bet)."""
+        return self.test + self.proof + self.bet
+
+    @property
+    def generative_count(self) -> int:
+        """Generative evidence (prompt + orphan)."""
+        return self.prompt + self.orphan
+
+    @property
+    def height(self) -> int:
+        """
+        Normalized height (0-100) for visualization.
+
+        Based on total evidence with diminishing returns:
+        - 0-5 evidence: 0-50 height (linear)
+        - 5-20 evidence: 50-80 height (slower)
+        - 20+ evidence: 80-100 height (capped)
+        """
+        total = self.total_count
+        if total <= 5:
+            return total * 10
+        elif total <= 20:
+            return 50 + (total - 5) * 2
+        else:
+            return min(100, 80 + (total - 20))
+
+    @property
+    def needs_attention(self) -> bool:
+        """True if there are orphans that need tending."""
+        return self.orphan > 0
+
+    @classmethod
+    def from_evidence(cls, evidence: list[Evidence]) -> "EvidenceLadder":
+        """Create ladder by counting evidence at each level."""
+        counts = {level: 0 for level in EvidenceLevel}
+        for e in evidence:
+            counts[e.level] += 1
+
+        return cls(
+            orphan=counts[EvidenceLevel.ORPHAN],
+            prompt=counts[EvidenceLevel.PROMPT],
+            trace=counts[EvidenceLevel.TRACE],
+            mark=counts[EvidenceLevel.MARK],
+            test=counts[EvidenceLevel.TEST],
+            proof=counts[EvidenceLevel.PROOF],
+            bet=counts[EvidenceLevel.BET],
+        )
+
+    def to_dict(self) -> dict[str, int]:
+        """Convert to dictionary for serialization."""
+        return {
+            "orphan": self.orphan,
+            "prompt": self.prompt,
+            "trace": self.trace,
+            "mark": self.mark,
+            "test": self.test,
+            "proof": self.proof,
+            "bet": self.bet,
+            "total": self.total_count,
+            "height": self.height,
+        }
+
+
+# =============================================================================
+# PlantHealth Enum: Garden Visualization
+# =============================================================================
+
+
+class PlantHealth(Enum):
+    """
+    Health state of a spec in the garden metaphor.
+
+    From the spec:
+        "Trust has a heartbeat. A green checkmark is dead;
+         a pulsing indicator is alive."
+
+    Health is derived from:
+    - Evidence freshness
+    - Contradiction count
+    - Prompt fitness
+    """
+
+    BLOOMING = "blooming"  # witnessed, high confidence - thriving
+    HEALTHY = "healthy"  # in_progress, stable - doing well
+    WILTING = "wilting"  # contested or decaying - needs attention
+    DEAD = "dead"  # superseded - historical only
+
+    @property
+    def emoji(self) -> str:
+        """Emoji for visualization."""
+        return {
+            PlantHealth.BLOOMING: "🌸",
+            PlantHealth.HEALTHY: "🌿",
+            PlantHealth.WILTING: "🥀",
+            PlantHealth.DEAD: "🍂",
+        }[self]
+
+    @property
+    def pulse_rate(self) -> float:
+        """Animation pulse rate (0 = flatline, 1.5 = thriving)."""
+        return {
+            PlantHealth.BLOOMING: 1.5,  # Strong pulse
+            PlantHealth.HEALTHY: 1.0,  # Steady pulse
+            PlantHealth.WILTING: 0.5,  # Slow pulse
+            PlantHealth.DEAD: 0.0,  # Flatline
+        }[self]
+
+    @property
+    def color(self) -> str:
+        """Color for visualization."""
+        return {
+            PlantHealth.BLOOMING: "#22C55E",  # Green
+            PlantHealth.HEALTHY: "#84A98C",  # Sage
+            PlantHealth.WILTING: "#F59E0B",  # Amber
+            PlantHealth.DEAD: "#6B7280",  # Gray
+        }[self]
 
 
 # =============================================================================
@@ -137,6 +308,114 @@ class SpecStatus(Enum):
     def is_healthy(self) -> bool:
         """True if this is a healthy state (witnessed or in progress)."""
         return self in (SpecStatus.WITNESSED, SpecStatus.IN_PROGRESS)
+
+
+# =============================================================================
+# SpecPlant: Garden Visualization Entity
+# =============================================================================
+
+
+@dataclass(frozen=True)
+class SpecPlant:
+    """
+    A spec rendered as a plant in the garden.
+
+    Combines status, confidence, and evidence into a visualization-ready
+    entity. Plants grow (height from evidence), have health (from status
+    and confidence), and need tending (orphans).
+
+    From the spec:
+        "Trust is not a badge—it's a living organism."
+
+    Laws:
+    - Monotonicity: Plant height only increases (evidence accumulates)
+    - Health Dynamics: health = f(evidence_freshness, contradictions, prompt_fitness)
+    """
+
+    path: str  # Spec path (e.g., "spec/protocols/witness.md")
+    status: SpecStatus
+    confidence: float  # 0.0-1.0
+    evidence_ladder: EvidenceLadder
+    health: PlantHealth = PlantHealth.HEALTHY
+    created_at: datetime = field(default_factory=datetime.now)
+
+    @property
+    def height(self) -> int:
+        """Plant height based on evidence accumulation."""
+        return self.evidence_ladder.height
+
+    @property
+    def needs_tending(self) -> bool:
+        """True if this plant needs human attention."""
+        return (
+            self.health in (PlantHealth.WILTING, PlantHealth.DEAD)
+            or self.evidence_ladder.needs_attention
+            or self.confidence < 0.3
+        )
+
+    @property
+    def pulse_rate(self) -> float:
+        """Animation pulse rate based on confidence and health."""
+        # Confidence-based pulse rate
+        if self.confidence < 0.3:
+            return 0.0  # Flatline
+        elif self.confidence < 0.6:
+            return 0.5  # Awakening
+        elif self.confidence < 0.9:
+            return 1.0  # Alive
+        else:
+            return 1.5  # Thriving
+
+    @classmethod
+    def from_spec(
+        cls,
+        path: str,
+        status: SpecStatus,
+        evidence: list[Evidence],
+        confidence: float | None = None,
+    ) -> "SpecPlant":
+        """Create a plant from spec path, status, and evidence."""
+        ladder = EvidenceLadder.from_evidence(evidence)
+
+        # Compute confidence from evidence if not provided
+        if confidence is None:
+            if not evidence:
+                confidence = 0.0
+            else:
+                confidence = sum(e.confidence for e in evidence) / len(evidence)
+
+        # Derive health from status and confidence
+        if status == SpecStatus.SUPERSEDED:
+            health = PlantHealth.DEAD
+        elif status == SpecStatus.CONTESTED:
+            health = PlantHealth.WILTING
+        elif status == SpecStatus.WITNESSED and confidence >= 0.8:
+            health = PlantHealth.BLOOMING
+        elif confidence < 0.3:
+            health = PlantHealth.WILTING
+        else:
+            health = PlantHealth.HEALTHY
+
+        return cls(
+            path=path,
+            status=status,
+            confidence=confidence,
+            evidence_ladder=ladder,
+            health=health,
+        )
+
+    def to_dict(self) -> dict[str, object]:
+        """Convert to dictionary for serialization."""
+        return {
+            "path": self.path,
+            "status": self.status.value,
+            "confidence": self.confidence,
+            "health": self.health.value,
+            "height": self.height,
+            "pulse_rate": self.pulse_rate,
+            "needs_tending": self.needs_tending,
+            "evidence_ladder": self.evidence_ladder.to_dict(),
+        }
 
 
 # =============================================================================
@@ -266,7 +545,10 @@ async def compute_status(
     has_trace_or_test = any(e.level in (EvidenceLevel.TRACE, EvidenceLevel.TEST) for e in evidence)
     has_mark = any(e.level == EvidenceLevel.MARK for e in evidence)
     has_prompt_lineage = any(e.level == EvidenceLevel.PROMPT for e in evidence)
-    has_refutation = any(e.metadata.get("relation") == "refutes" for e in evidence)
+    has_refutation = any(
+        e.relation == EvidenceRelation.REFUTES or e.metadata.get("relation") == "refutes"
+        for e in evidence
+    )
 
     # Check hypergraph for implementation edge
     # Convert spec path to AGENTESE-style path for node lookup
@@ -317,7 +599,10 @@ def compute_status_from_evidence_only(
     """
     has_trace_or_test = any(e.level in (EvidenceLevel.TRACE, EvidenceLevel.TEST) for e in evidence)
     has_mark = any(e.level == EvidenceLevel.MARK for e in evidence)
-    has_refutation = any(e.metadata.get("relation") == "refutes" for e in evidence)
+    has_refutation = any(
+        e.relation == EvidenceRelation.REFUTES or e.metadata.get("relation") == "refutes"
+        for e in evidence
+    )
 
     if has_refutation:
         return SpecStatus.CONTESTED, "Has refutation evidence"
@@ -365,8 +650,12 @@ def _spec_path_to_agentese(spec_path: str) -> str:
 __all__ = [
     # Protocol
     "ContextGraphProtocol",
-    # Enum
+    # Enums
     "SpecStatus",
+    "PlantHealth",
+    # Dataclasses
+    "EvidenceLadder",
+    "SpecPlant",
     # Helper class
     "WitnessedCriteria",
     # Functions

@@ -220,10 +220,15 @@ class PulseRate(Enum):
     | THRIVING | >0.9 | Strong pulse |
     """
 
-    FLATLINE = 0  # confidence < 0.3: no animation
-    AWAKENING = 0.5  # confidence 0.3-0.6: slow pulse
-    ALIVE = 1.0  # confidence 0.6-0.9: steady pulse
-    THRIVING = 1.5  # confidence > 0.9: strong pulse
+    FLATLINE = "flatline"  # confidence < 0.3: no animation
+    AWAKENING = "awakening"  # confidence 0.3-0.6: slow pulse
+    ALIVE = "alive"  # confidence 0.6-0.9: steady pulse
+    THRIVING = "thriving"  # confidence > 0.9: strong pulse
+
+    @property
+    def multiplier(self) -> float:
+        """Animation speed multiplier for this pulse rate."""
+        return {"flatline": 0.0, "awakening": 0.5, "alive": 1.0, "thriving": 1.5}[self.value]
 
     @classmethod
     def from_confidence(cls, confidence: float) -> PulseRate:
@@ -248,13 +253,14 @@ class ConfidencePulse:
 
     confidence: float  # Current confidence [0, 1]
     previous_confidence: float | None = None  # For delta calculation
-    pulse_rate: PulseRate = PulseRate.FLATLINE
+    pulse_rate: str = "flatline"  # PulseRate value (string for JSON serialization)
     delta_direction: Literal["increasing", "decreasing", "stable"] = "stable"
 
     def __post_init__(self) -> None:
         """Derive pulse_rate and delta from confidence."""
         # Use object.__setattr__ for frozen dataclass
-        object.__setattr__(self, "pulse_rate", PulseRate.from_confidence(self.confidence))
+        rate = PulseRate.from_confidence(self.confidence)
+        object.__setattr__(self, "pulse_rate", rate.value)
 
         if self.previous_confidence is not None:
             delta = self.confidence - self.previous_confidence
@@ -280,7 +286,7 @@ class ConfidencePulse:
         return {
             "confidence": self.confidence,
             "previous_confidence": self.previous_confidence,
-            "pulse_rate": self.pulse_rate.value,
+            "pulse_rate": self.pulse_rate,  # Already a string
             "delta_direction": self.delta_direction,
         }
 
@@ -317,7 +323,7 @@ class SpecPlant:
 
     # Derived visual properties
     height: int = 0  # Taller = more evidence
-    health: PlantHealth = PlantHealth.SEEDLING
+    health: str = "seedling"  # PlantHealth value (string for JSON serialization)
 
     # Metadata
     last_evidence_at: datetime | None = None
@@ -335,16 +341,16 @@ class SpecPlant:
 
         # Health from confidence
         if self.confidence >= 0.9:
-            health = PlantHealth.BLOOMING
+            health_val = PlantHealth.BLOOMING.value
         elif self.confidence >= 0.6:
-            health = PlantHealth.HEALTHY
+            health_val = PlantHealth.HEALTHY.value
         elif self.confidence >= 0.3:
-            health = PlantHealth.WILTING
+            health_val = PlantHealth.WILTING.value
         elif self.evidence_levels.total_evidence > 0:
-            health = PlantHealth.DEAD
+            health_val = PlantHealth.DEAD.value
         else:
-            health = PlantHealth.SEEDLING
-        object.__setattr__(self, "health", health)
+            health_val = PlantHealth.SEEDLING.value
+        object.__setattr__(self, "health", health_val)
 
     @classmethod
     def from_spec_file(
@@ -388,7 +394,7 @@ class SpecPlant:
             "evidence_levels": self.evidence_levels.to_dict(),
             "pulse": self.pulse.to_dict(),
             "height": self.height,
-            "health": self.health.value,
+            "health": self.health,  # Already a string
             "last_evidence_at": self.last_evidence_at.isoformat()
             if self.last_evidence_at
             else None,

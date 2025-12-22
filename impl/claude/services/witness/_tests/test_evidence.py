@@ -558,3 +558,395 @@ class TestUtilityFunctions:
         assert hash1 == hash2
         assert hash1 != hash3
         assert len(hash1) == 16  # Truncated SHA-256
+
+
+# =============================================================================
+# Phase 1 Enhancements: ORPHAN Level, EvidenceRelation, Lineage, Garden
+# =============================================================================
+
+
+class TestOrphanLevel:
+    """Tests for L-∞ ORPHAN level."""
+
+    def test_orphan_level_ordering(self) -> None:
+        """ORPHAN < PROMPT < TRACE (L-∞ < L-2 < L-1)."""
+        assert EvidenceLevel.ORPHAN < EvidenceLevel.PROMPT
+        assert EvidenceLevel.ORPHAN < EvidenceLevel.TRACE
+        assert EvidenceLevel.ORPHAN < EvidenceLevel.MARK
+
+    def test_orphan_level_value(self) -> None:
+        """ORPHAN has value -3."""
+        assert EvidenceLevel.ORPHAN.value == -3
+
+    def test_orphan_level_label(self) -> None:
+        """ORPHAN has special L-∞ label."""
+        assert EvidenceLevel.ORPHAN.level_label == "L-∞"
+
+    def test_orphan_display_name(self) -> None:
+        """ORPHAN has 'Orphan' display name."""
+        assert EvidenceLevel.ORPHAN.display_name == "Orphan"
+
+    def test_orphan_is_orphan_property(self) -> None:
+        """ORPHAN.is_orphan is True."""
+        assert EvidenceLevel.ORPHAN.is_orphan is True
+        assert EvidenceLevel.MARK.is_orphan is False
+
+    def test_orphan_has_color(self) -> None:
+        """ORPHAN has red color (needs attention)."""
+        assert EvidenceLevel.ORPHAN.color == "#991B1B"
+
+
+class TestEvidenceRelation:
+    """Tests for EvidenceRelation enum."""
+
+    def test_relation_values(self) -> None:
+        """Relations have expected values."""
+        from services.witness.evidence import EvidenceRelation
+
+        assert EvidenceRelation.SUPPORTS.value == "supports"
+        assert EvidenceRelation.REFUTES.value == "refutes"
+        assert EvidenceRelation.SUPERSEDES.value == "supersedes"
+        assert EvidenceRelation.EXTENDS.value == "extends"
+        assert EvidenceRelation.QUALIFIES.value == "qualifies"
+
+    def test_is_positive_relations(self) -> None:
+        """SUPPORTS and EXTENDS are positive relations."""
+        from services.witness.evidence import EvidenceRelation
+
+        assert EvidenceRelation.SUPPORTS.is_positive is True
+        assert EvidenceRelation.EXTENDS.is_positive is True
+        assert EvidenceRelation.REFUTES.is_positive is False
+
+    def test_is_negative_relations(self) -> None:
+        """REFUTES and QUALIFIES are negative relations."""
+        from services.witness.evidence import EvidenceRelation
+
+        assert EvidenceRelation.REFUTES.is_negative is True
+        assert EvidenceRelation.QUALIFIES.is_negative is True
+        assert EvidenceRelation.SUPPORTS.is_negative is False
+
+    def test_relation_symbols(self) -> None:
+        """Relations have symbols for display."""
+        from services.witness.evidence import EvidenceRelation
+
+        assert EvidenceRelation.SUPPORTS.symbol == "+"
+        assert EvidenceRelation.REFUTES.symbol == "−"
+
+
+class TestEvidenceLineage:
+    """Tests for Evidence ancestry/lineage fields."""
+
+    def test_evidence_has_parent_ids(self) -> None:
+        """Evidence can have parent_ids."""
+        evidence = Evidence(
+            level=EvidenceLevel.MARK,
+            parent_ids=("evd-parent1", "evd-parent2"),
+        )
+        assert evidence.parent_ids == ("evd-parent1", "evd-parent2")
+
+    def test_evidence_has_lineage_with_parents(self) -> None:
+        """has_lineage is True when parent_ids exist."""
+        evidence = Evidence(
+            level=EvidenceLevel.MARK,
+            parent_ids=("evd-parent1",),
+        )
+        assert evidence.has_lineage is True
+
+    def test_evidence_has_lineage_for_non_orphan(self) -> None:
+        """has_lineage is True for non-orphan levels even without parents."""
+        evidence = Evidence(level=EvidenceLevel.MARK)
+        assert evidence.has_lineage is True
+
+    def test_orphan_has_no_lineage(self) -> None:
+        """has_lineage is False for orphan without parents."""
+        evidence = Evidence(level=EvidenceLevel.ORPHAN)
+        assert evidence.has_lineage is False
+
+    def test_evidence_relation_field(self) -> None:
+        """Evidence can have a relation field."""
+        from services.witness.evidence import EvidenceRelation
+
+        evidence = Evidence(
+            level=EvidenceLevel.MARK,
+            relation=EvidenceRelation.SUPPORTS,
+            parent_ids=("evd-parent",),
+        )
+        assert evidence.relation == EvidenceRelation.SUPPORTS
+
+    def test_lineage_serialization(self) -> None:
+        """Lineage fields serialize correctly."""
+        from services.witness.evidence import EvidenceRelation
+
+        evidence = Evidence(
+            level=EvidenceLevel.MARK,
+            parent_ids=("evd-p1", "evd-p2"),
+            relation=EvidenceRelation.EXTENDS,
+        )
+        d = evidence.to_dict()
+        assert d["parent_ids"] == ["evd-p1", "evd-p2"]
+        assert d["relation"] == "extends"
+
+    def test_lineage_deserialization(self) -> None:
+        """Lineage fields deserialize correctly."""
+        d = {
+            "level": 0,
+            "parent_ids": ["evd-p1"],
+            "relation": "supports",
+            "created_at": "2025-01-01T00:00:00",
+        }
+        evidence = Evidence.from_dict(d)
+        assert evidence.parent_ids == ("evd-p1",)
+        from services.witness.evidence import EvidenceRelation
+
+        assert evidence.relation == EvidenceRelation.SUPPORTS
+
+
+class TestOrphanFactory:
+    """Tests for from_orphan() factory method."""
+
+    def test_from_orphan_creates_orphan_level(self) -> None:
+        """from_orphan creates L-∞ evidence."""
+        evidence = Evidence.from_orphan(
+            artifact_path="impl/claude/foo.py",
+            artifact_type="file",
+        )
+        assert evidence.level == EvidenceLevel.ORPHAN
+        assert evidence.source_type == "orphan"
+
+    def test_from_orphan_has_zero_confidence(self) -> None:
+        """from_orphan has zero confidence (needs tending)."""
+        evidence = Evidence.from_orphan("foo.py")
+        assert evidence.confidence == 0.0
+
+    def test_from_orphan_needs_tending(self) -> None:
+        """Orphan evidence needs_tending is True."""
+        evidence = Evidence.from_orphan("foo.py")
+        assert evidence.needs_tending is True
+
+    def test_from_orphan_stores_artifact_path(self) -> None:
+        """from_orphan stores artifact_path in metadata."""
+        evidence = Evidence.from_orphan("impl/claude/bar.py", artifact_type="function")
+        assert evidence.metadata["artifact_path"] == "impl/claude/bar.py"
+        assert evidence.metadata["artifact_type"] == "function"
+
+    def test_from_orphan_with_suggested_prompt(self) -> None:
+        """from_orphan can include suggested prompt."""
+        evidence = Evidence.from_orphan(
+            "foo.py",
+            suggested_prompt="Implement the foo module",
+        )
+        assert evidence.metadata["suggested_prompt"] == "Implement the foo module"
+
+
+class TestPromptFactory:
+    """Tests for from_prompt() factory method."""
+
+    def test_from_prompt_creates_prompt_level(self) -> None:
+        """from_prompt creates L-2 evidence."""
+        evidence = Evidence.from_prompt(
+            prompt_text="Implement a function that calculates fibonacci",
+            model="claude-3.5-sonnet",
+        )
+        assert evidence.level == EvidenceLevel.PROMPT
+        assert evidence.source_type == "prompt"
+
+    def test_from_prompt_has_confidence(self) -> None:
+        """from_prompt has reasonable confidence."""
+        evidence = Evidence.from_prompt("Test prompt")
+        assert evidence.confidence == 0.7
+
+    def test_from_prompt_stores_metadata(self) -> None:
+        """from_prompt stores metadata correctly."""
+        evidence = Evidence.from_prompt(
+            prompt_text="Test prompt",
+            prompt_id="prompt-123",
+            model="claude-3.5-sonnet",
+            session_id="session-abc",
+        )
+        assert evidence.metadata["prompt_id"] == "prompt-123"
+        assert evidence.metadata["model"] == "claude-3.5-sonnet"
+        assert evidence.metadata["session_id"] == "session-abc"
+
+    def test_from_prompt_truncates_preview(self) -> None:
+        """from_prompt truncates long prompts for preview."""
+        long_prompt = "x" * 1000
+        evidence = Evidence.from_prompt(long_prompt)
+        assert len(evidence.metadata["prompt_preview"]) == 200
+        assert evidence.metadata["prompt_length"] == 1000
+
+
+class TestEvidenceLadder:
+    """Tests for EvidenceLadder aggregate dataclass."""
+
+    def test_ladder_from_evidence(self) -> None:
+        """EvidenceLadder counts evidence at each level."""
+        from services.witness.status import EvidenceLadder
+
+        evidence = [
+            Evidence(level=EvidenceLevel.MARK),
+            Evidence(level=EvidenceLevel.MARK),
+            Evidence(level=EvidenceLevel.TEST),
+            Evidence(level=EvidenceLevel.TRACE),
+        ]
+        ladder = EvidenceLadder.from_evidence(evidence)
+        assert ladder.mark == 2
+        assert ladder.test == 1
+        assert ladder.trace == 1
+        assert ladder.orphan == 0
+
+    def test_ladder_total_count(self) -> None:
+        """total_count sums all levels."""
+        from services.witness.status import EvidenceLadder
+
+        ladder = EvidenceLadder(mark=2, test=3, proof=1)
+        assert ladder.total_count == 6
+
+    def test_ladder_height_linear(self) -> None:
+        """height is linear for 0-5 evidence."""
+        from services.witness.status import EvidenceLadder
+
+        assert EvidenceLadder(mark=0).height == 0
+        assert EvidenceLadder(mark=3).height == 30
+        assert EvidenceLadder(mark=5).height == 50
+
+    def test_ladder_height_diminishing(self) -> None:
+        """height has diminishing returns above 5."""
+        from services.witness.status import EvidenceLadder
+
+        assert EvidenceLadder(mark=10).height == 60  # 50 + (10-5)*2
+        assert EvidenceLadder(mark=20).height == 80  # 50 + 15*2
+
+    def test_ladder_height_capped(self) -> None:
+        """height is capped at 100."""
+        from services.witness.status import EvidenceLadder
+
+        assert EvidenceLadder(mark=100).height == 100
+
+    def test_ladder_needs_attention(self) -> None:
+        """needs_attention is True when orphans exist."""
+        from services.witness.status import EvidenceLadder
+
+        assert EvidenceLadder(orphan=1).needs_attention is True
+        assert EvidenceLadder(mark=5).needs_attention is False
+
+
+class TestPlantHealth:
+    """Tests for PlantHealth enum."""
+
+    def test_plant_health_values(self) -> None:
+        """PlantHealth has expected values."""
+        from services.witness.status import PlantHealth
+
+        assert PlantHealth.BLOOMING.value == "blooming"
+        assert PlantHealth.HEALTHY.value == "healthy"
+        assert PlantHealth.WILTING.value == "wilting"
+        assert PlantHealth.DEAD.value == "dead"
+
+    def test_plant_health_emojis(self) -> None:
+        """PlantHealth has emojis."""
+        from services.witness.status import PlantHealth
+
+        assert PlantHealth.BLOOMING.emoji == "🌸"
+        assert PlantHealth.HEALTHY.emoji == "🌿"
+        assert PlantHealth.WILTING.emoji == "🥀"
+        assert PlantHealth.DEAD.emoji == "🍂"
+
+    def test_plant_health_pulse_rates(self) -> None:
+        """PlantHealth has pulse rates."""
+        from services.witness.status import PlantHealth
+
+        assert PlantHealth.BLOOMING.pulse_rate == 1.5
+        assert PlantHealth.DEAD.pulse_rate == 0.0
+
+
+class TestSpecPlant:
+    """Tests for SpecPlant garden visualization."""
+
+    def test_spec_plant_from_spec(self) -> None:
+        """SpecPlant.from_spec creates plant correctly."""
+        from services.witness.status import SpecPlant
+
+        evidence = [
+            Evidence.from_witness_mark("mark-1", "Verified"),
+            Evidence.from_test("test.py", "test_foo", passed=True),
+        ]
+        plant = SpecPlant.from_spec(
+            path="spec/foo.md",
+            status=SpecStatus.IN_PROGRESS,
+            evidence=evidence,
+        )
+        assert plant.path == "spec/foo.md"
+        assert plant.status == SpecStatus.IN_PROGRESS
+        assert plant.evidence_ladder.mark == 1
+        assert plant.evidence_ladder.test == 1
+
+    def test_spec_plant_health_from_status(self) -> None:
+        """Plant health derives from status."""
+        from services.witness.status import PlantHealth, SpecPlant
+
+        # Superseded = DEAD
+        plant = SpecPlant.from_spec(
+            path="spec/old.md",
+            status=SpecStatus.SUPERSEDED,
+            evidence=[],
+        )
+        assert plant.health == PlantHealth.DEAD
+
+        # Contested = WILTING
+        plant = SpecPlant.from_spec(
+            path="spec/contested.md",
+            status=SpecStatus.CONTESTED,
+            evidence=[],
+        )
+        assert plant.health == PlantHealth.WILTING
+
+    def test_spec_plant_blooming_when_witnessed_high_confidence(self) -> None:
+        """Plant is BLOOMING when witnessed with high confidence."""
+        from services.witness.status import PlantHealth, SpecPlant
+
+        plant = SpecPlant.from_spec(
+            path="spec/good.md",
+            status=SpecStatus.WITNESSED,
+            evidence=[Evidence(confidence=1.0), Evidence(confidence=0.9)],
+        )
+        assert plant.health == PlantHealth.BLOOMING
+
+    def test_spec_plant_pulse_rate(self) -> None:
+        """Pulse rate reflects confidence."""
+        from services.witness.status import SpecPlant
+
+        # Low confidence = flatline
+        plant = SpecPlant.from_spec(
+            path="spec/weak.md",
+            status=SpecStatus.IN_PROGRESS,
+            evidence=[Evidence(confidence=0.1)],
+        )
+        assert plant.pulse_rate == 0.0  # Flatline
+
+        # High confidence = thriving
+        plant = SpecPlant.from_spec(
+            path="spec/strong.md",
+            status=SpecStatus.WITNESSED,
+            evidence=[Evidence(confidence=0.95)],
+        )
+        assert plant.pulse_rate == 1.5  # Thriving
+
+    def test_spec_plant_needs_tending(self) -> None:
+        """needs_tending is True for wilting/dead or orphans."""
+        from services.witness.status import SpecPlant
+
+        # Contested plant needs tending
+        plant = SpecPlant.from_spec(
+            path="spec/bad.md",
+            status=SpecStatus.CONTESTED,
+            evidence=[],
+        )
+        assert plant.needs_tending is True
+
+        # Plant with orphan evidence needs tending
+        plant = SpecPlant.from_spec(
+            path="spec/orphaned.md",
+            status=SpecStatus.IN_PROGRESS,
+            evidence=[Evidence.from_orphan("foo.py")],
+        )
+        assert plant.needs_tending is True
