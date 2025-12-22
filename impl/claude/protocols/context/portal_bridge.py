@@ -35,21 +35,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
+from .lens import FileLens, FocusSpec, create_lens_for_function, create_lens_for_range
 from .outline import (
     Outline,
     OutlineNode,
     OutlineOperations,
     PortalToken as OutlinePortalToken,
-    TextSnippet,
     SnippetType,
+    TextSnippet,
     create_outline,
 )
-from .lens import FileLens, FocusSpec, create_lens_for_function, create_lens_for_range
 from .parser import RecognizedToken, TokenType, extract_tokens
 
 if TYPE_CHECKING:
-    from protocols.file_operad.portal import PortalTree, PortalNode, PortalOpenSignal
     from protocols.file_operad.context_bridge import ContextEvent
+    from protocols.file_operad.portal import PortalNode, PortalOpenSignal, PortalTree
 
 
 # =============================================================================
@@ -251,9 +251,7 @@ class OutlinePortalBridge:
         await self._emit_expand_event(portal, portal_path)
 
         # Phase 3: Parse content for tokens
-        discovered_tokens, agentese_paths, evidence_links = self._parse_content_tokens(
-            content
-        )
+        discovered_tokens, agentese_paths, evidence_links = self._parse_content_tokens(content)
 
         return PortalExpansionResult(
             success=True,
@@ -353,6 +351,7 @@ class OutlinePortalBridge:
         if focus.startswith("class:"):
             class_name = focus[6:]
             from .lens import create_lens_for_class
+
             return create_lens_for_class(file_path, class_name)
         elif focus.startswith("lines:"):
             range_spec = focus[6:]
@@ -644,8 +643,7 @@ class UnifiedPortalBridge:
         if outline_token._content is not None:
             # Combine dict content into single string for file token
             combined = "\n---\n".join(
-                f"# {path}\n{content}"
-                for path, content in outline_token._content.items()
+                f"# {path}\n{content}" for path, content in outline_token._content.items()
             )
             token._content = combined
 

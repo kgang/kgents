@@ -20,7 +20,6 @@ from protocols.agentese.contexts.self_portal import (
 )
 from protocols.agentese.node import Observer
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -205,9 +204,7 @@ class TestTrailAspect:
         assert isinstance(result.metadata["step_count"], int)
 
     @pytest.mark.asyncio
-    async def test_trail_dfs_order(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_trail_dfs_order(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """Trail should be in DFS order (expanded nodes first)."""
         result = await portal_node.trail(observer, name="Test Trail")
 
@@ -240,9 +237,7 @@ class TestInvokeRouting:
     """Tests for _invoke_aspect routing."""
 
     @pytest.mark.asyncio
-    async def test_invoke_expand(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_invoke_expand(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """_invoke_aspect should route 'expand' correctly."""
         result = await portal_node._invoke_aspect(
             "expand",
@@ -252,9 +247,7 @@ class TestInvokeRouting:
         assert "success" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_invoke_collapse(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_invoke_collapse(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """_invoke_aspect should route 'collapse' correctly."""
         result = await portal_node._invoke_aspect(
             "collapse",
@@ -264,9 +257,7 @@ class TestInvokeRouting:
         assert "success" in result.metadata
 
     @pytest.mark.asyncio
-    async def test_invoke_unknown(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_invoke_unknown(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """_invoke_aspect should handle unknown aspects."""
         result = await portal_node._invoke_aspect(
             "unknown_aspect",
@@ -318,18 +309,14 @@ class TestEdgeCases:
     """Edge case tests."""
 
     @pytest.mark.asyncio
-    async def test_empty_portal_path(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_empty_portal_path(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """expand() with empty path should fail gracefully."""
         result = await portal_node.expand(observer, "")
 
         assert result.metadata["success"] is False
 
     @pytest.mark.asyncio
-    async def test_deeply_nested_path(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_deeply_nested_path(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """expand() with deeply nested path should fail gracefully."""
         result = await portal_node.expand(observer, "a/b/c/d/e/f/g")
 
@@ -444,18 +431,14 @@ class TestReplayAspect:
     """Tests for replay aspect (Phase 3)."""
 
     @pytest.mark.asyncio
-    async def test_replay_not_found(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_replay_not_found(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """replay with nonexistent ID should report error."""
         result = await portal_node.replay(observer, trail_id="nonexistent-xyz")
 
         assert "error" in result.metadata or "not_found" in str(result.metadata)
 
     @pytest.mark.asyncio
-    async def test_replay_via_invoke(
-        self, portal_node: PortalNavNode, observer: Observer
-    ) -> None:
+    async def test_replay_via_invoke(self, portal_node: PortalNavNode, observer: Observer) -> None:
         """_invoke_aspect should route 'replay' correctly."""
         result = await portal_node._invoke_aspect(
             "replay",

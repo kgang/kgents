@@ -39,7 +39,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum, auto
-from typing import Any, Callable, Awaitable
+from typing import Any, Awaitable, Callable
 from uuid import uuid4
 
 logger = logging.getLogger(__name__)
@@ -118,9 +118,7 @@ class KeystrokeTracker:
         async with self._lock:
             now = datetime.now()
             return [
-                loc
-                for loc, ts in self.typing_locations.items()
-                if now - ts < TYPING_GRACE_PERIOD
+                loc for loc, ts in self.typing_locations.items() if now - ts < TYPING_GRACE_PERIOD
             ]
 
     async def clear_stale(self) -> int:
@@ -184,10 +182,7 @@ class ProposedEdit:
     @property
     def should_auto_accept(self) -> bool:
         """Whether this proposal should auto-accept now."""
-        return (
-            self.status == ProposalStatus.PENDING
-            and datetime.now() >= self.auto_accept_at
-        )
+        return self.status == ProposalStatus.PENDING and datetime.now() >= self.auto_accept_at
 
     def accept(self) -> None:
         """Accept this proposal."""
@@ -323,9 +318,7 @@ class CollaborationProtocol:
             self._proposals[proposal.id] = proposal
             self._agent_last_proposal[agent_id] = datetime.now()
 
-            logger.info(
-                f"Proposal created: {proposal.id} by {agent_name} for {location}"
-            )
+            logger.info(f"Proposal created: {proposal.id} by {agent_name} for {location}")
             return proposal
 
     async def accept_proposal(self, proposal_id: str) -> ProposedEdit | None:
@@ -401,14 +394,10 @@ class CollaborationProtocol:
 
         return expired
 
-    async def get_pending_proposals(
-        self, location: str | None = None
-    ) -> list[ProposedEdit]:
+    async def get_pending_proposals(self, location: str | None = None) -> list[ProposedEdit]:
         """Get all pending proposals, optionally filtered by location."""
         async with self._lock:
-            proposals = [
-                p for p in self._proposals.values() if p.status == ProposalStatus.PENDING
-            ]
+            proposals = [p for p in self._proposals.values() if p.status == ProposalStatus.PENDING]
             if location:
                 proposals = [p for p in proposals if p.location == location]
             return proposals
@@ -417,9 +406,7 @@ class CollaborationProtocol:
         """Get a specific proposal by ID."""
         return self._proposals.get(proposal_id)
 
-    def on_accept(
-        self, callback: Callable[[ProposedEdit], Awaitable[None]]
-    ) -> Callable[[], None]:
+    def on_accept(self, callback: Callable[[ProposedEdit], Awaitable[None]]) -> Callable[[], None]:
         """
         Register callback for proposal acceptance.
 
@@ -428,9 +415,7 @@ class CollaborationProtocol:
         self._on_accept_callbacks.append(callback)
         return lambda: self._on_accept_callbacks.remove(callback)
 
-    def on_reject(
-        self, callback: Callable[[ProposedEdit], Awaitable[None]]
-    ) -> Callable[[], None]:
+    def on_reject(self, callback: Callable[[ProposedEdit], Awaitable[None]]) -> Callable[[], None]:
         """
         Register callback for proposal rejection.
 

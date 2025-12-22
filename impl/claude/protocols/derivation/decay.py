@@ -45,8 +45,8 @@ Teaching:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, replace, field
-from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any, Protocol, Sequence
 
 from .registry import DerivationRegistry, get_registry
@@ -254,8 +254,7 @@ def decay_derivation_evidence(
         return derivation  # Law 3
 
     decayed_draws = tuple(
-        decay_principle_draw(draw, days_elapsed, config)
-        for draw in derivation.principle_draws
+        decay_principle_draw(draw, days_elapsed, config) for draw in derivation.principle_draws
     )
 
     return replace(derivation, principle_draws=decayed_draws)
@@ -514,11 +513,9 @@ class RefreshSchedule:
 class RefreshStore(Protocol):
     """Protocol for storing refresh schedules."""
 
-    def get(self, agent_name: str) -> RefreshSchedule | None:
-        ...
+    def get(self, agent_name: str) -> RefreshSchedule | None: ...
 
-    def set(self, schedule: RefreshSchedule) -> None:
-        ...
+    def set(self, schedule: RefreshSchedule) -> None: ...
 
 
 class InMemoryRefreshStore:
@@ -648,7 +645,10 @@ async def apply_ashc_refresh(
             schedule = RefreshSchedule(
                 agent_name=agent_name,
                 last_refresh=now,
-                refresh_count=(refresh_store.get(agent_name) or RefreshSchedule(agent_name, now)).refresh_count + 1,
+                refresh_count=(
+                    refresh_store.get(agent_name) or RefreshSchedule(agent_name, now)
+                ).refresh_count
+                + 1,
                 last_result=result,
             )
             refresh_store.set(schedule)
@@ -736,14 +736,10 @@ async def run_decay_cycle(
     evidence_result = await apply_evidence_decay(days_elapsed, registry, config)
 
     # 2. Stigmergic decay
-    stigmergic_result = await apply_stigmergic_decay(
-        registry, activity_store, config, now
-    )
+    stigmergic_result = await apply_stigmergic_decay(registry, activity_store, config, now)
 
     # 3. ASHC refresh (optional)
-    refresh_result = await apply_ashc_refresh(
-        registry, refresh_store, config, ashc_runner
-    )
+    refresh_result = await apply_ashc_refresh(registry, refresh_store, config, ashc_runner)
 
     # Calculate total affected
     affected = set()

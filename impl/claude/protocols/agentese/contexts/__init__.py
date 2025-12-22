@@ -75,6 +75,17 @@ from .design import (
     create_design_resolver,
 )
 
+# Hyperedge Resolvers
+from .hyperedge_resolvers import (
+    ResolverRegistry,
+    agentese_path_to_file,
+    file_to_agentese_path,
+    get_resolver_registry,
+    register_resolver,
+    resolve_all_edges,
+    resolve_hyperedge,
+)
+
 # Note: Forest, Gardener, and Prompt contexts were deprecated 2025-12-21
 # See: spec/protocols/_archive/gardener-evergreen-heritage.md
 # Note: Chat, Citizen, Town, Park, Forge, Gestalt, Witness removed 2025-12-21
@@ -107,6 +118,34 @@ from .self_ import (
     create_soul_node,
 )
 
+# Collaboration Context (self.collaboration.* - Phase 5C)
+from .self_collaboration import (
+    COLLABORATION_AFFORDANCES,
+    CollaborationNode,
+)
+
+# Typed-Hypergraph Context (self.context.* - AD-009 Context Management)
+from .self_context import (
+    ALL_STANDARD_EDGES,
+    CONTEXT_AFFORDANCES,
+    EVIDENCE_EDGES,
+    REVERSE_EDGES,
+    SEMANTIC_EDGES,
+    SPEC_EDGES,
+    STRUCTURAL_EDGES,
+    TEMPORAL_EDGES,
+    TESTING_EDGES,
+    ContextGraph,
+    ContextNavNode,
+    ContextNode,
+    Trail,
+    TrailStep,
+    create_context_graph,
+    create_context_node,
+    get_context_nav_node,
+    get_reverse_edge,
+)
+
 # Self Différance navigation (spec/impl traversal)
 from .self_differance import (
     SELF_DIFFERANCE_AFFORDANCES,
@@ -114,6 +153,14 @@ from .self_differance import (
     create_self_differance_node,
     get_self_differance_node,
     set_self_differance_node,
+)
+
+# Exploration Harness Context (self.explore.* - Exploration with Safety)
+from .self_explore import (
+    EXPLORE_AFFORDANCES,
+    ExploreNode,
+    get_explore_node,
+    set_explore_node,
 )
 
 # Jewel-Flow integration (F-gent Flow + Crown Jewels)
@@ -135,6 +182,14 @@ from .self_judgment import (
     Critique,
     CritiqueWeights,
     RefinedArtifact,
+)
+
+# Portal Token Context (self.portal.* - Portal Token Navigation)
+from .self_portal import (
+    PORTAL_AFFORDANCES,
+    PortalNavNode,
+    get_portal_nav_node,
+    set_portal_nav_node,
 )
 
 # 3D Projection Context (concept.projection.three.*)
@@ -198,61 +253,6 @@ from .world import (
     WorldNode,
     create_world_node,
     create_world_resolver,
-)
-
-# Typed-Hypergraph Context (self.context.* - AD-009 Context Management)
-from .self_context import (
-    CONTEXT_AFFORDANCES,
-    ALL_STANDARD_EDGES,
-    EVIDENCE_EDGES,
-    REVERSE_EDGES,
-    SEMANTIC_EDGES,
-    SPEC_EDGES,
-    STRUCTURAL_EDGES,
-    TEMPORAL_EDGES,
-    TESTING_EDGES,
-    ContextGraph,
-    ContextNavNode,
-    ContextNode,
-    Trail,
-    TrailStep,
-    create_context_graph,
-    create_context_node,
-    get_context_nav_node,
-    get_reverse_edge,
-)
-
-# Hyperedge Resolvers
-from .hyperedge_resolvers import (
-    ResolverRegistry,
-    agentese_path_to_file,
-    file_to_agentese_path,
-    get_resolver_registry,
-    register_resolver,
-    resolve_all_edges,
-    resolve_hyperedge,
-)
-
-# Portal Token Context (self.portal.* - Portal Token Navigation)
-from .self_portal import (
-    PORTAL_AFFORDANCES,
-    PortalNavNode,
-    get_portal_nav_node,
-    set_portal_nav_node,
-)
-
-# Exploration Harness Context (self.explore.* - Exploration with Safety)
-from .self_explore import (
-    EXPLORE_AFFORDANCES,
-    ExploreNode,
-    get_explore_node,
-    set_explore_node,
-)
-
-# Collaboration Context (self.collaboration.* - Phase 5C)
-from .self_collaboration import (
-    COLLABORATION_AFFORDANCES,
-    CollaborationNode,
 )
 
 # Note: Emergence Node (world.emergence.*) removed 2025-12-21

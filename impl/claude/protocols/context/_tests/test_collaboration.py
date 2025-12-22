@@ -15,21 +15,21 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
+
 import pytest
 
 from protocols.context.collaboration import (
-    TYPING_GRACE_PERIOD,
     AUTO_ACCEPT_DELAY,
     PROPOSAL_COOLDOWN,
-    TurnState,
-    ProposalStatus,
-    KeystrokeTracker,
-    ProposedEdit,
+    TYPING_GRACE_PERIOD,
     CollaborationProtocol,
+    KeystrokeTracker,
+    ProposalStatus,
+    ProposedEdit,
+    TurnState,
     get_collaboration_protocol,
     reset_collaboration_protocol,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -63,17 +63,13 @@ class TestKeystrokeTracker:
     """Tests for keystroke tracking."""
 
     @pytest.mark.asyncio
-    async def test_no_keystrokes_means_not_typing(
-        self, tracker: KeystrokeTracker
-    ) -> None:
+    async def test_no_keystrokes_means_not_typing(self, tracker: KeystrokeTracker) -> None:
         """Without keystrokes, is_human_typing returns False."""
         assert await tracker.is_human_typing() is False
         assert await tracker.is_human_typing("/path/to/file") is False
 
     @pytest.mark.asyncio
-    async def test_recent_keystroke_means_typing(
-        self, tracker: KeystrokeTracker
-    ) -> None:
+    async def test_recent_keystroke_means_typing(self, tracker: KeystrokeTracker) -> None:
         """Recent keystroke means human is typing."""
         await tracker.record_keystroke("/path/to/file.py")
         assert await tracker.is_human_typing() is True
@@ -98,18 +94,14 @@ class TestKeystrokeTracker:
         assert "/file2.py" in locations
 
     @pytest.mark.asyncio
-    async def test_clear_stale_removes_old_entries(
-        self, tracker: KeystrokeTracker
-    ) -> None:
+    async def test_clear_stale_removes_old_entries(self, tracker: KeystrokeTracker) -> None:
         """clear_stale removes entries older than 2x grace period."""
         # Record keystroke
         await tracker.record_keystroke("/old_file.py")
 
         # Manually make it old
         async with tracker._lock:
-            tracker.typing_locations["/old_file.py"] = datetime.now() - timedelta(
-                seconds=10
-            )
+            tracker.typing_locations["/old_file.py"] = datetime.now() - timedelta(seconds=10)
 
         cleared = await tracker.clear_stale()
         assert cleared == 1
@@ -230,17 +222,13 @@ class TestCollaborationProtocol:
     """Tests for CollaborationProtocol."""
 
     @pytest.mark.asyncio
-    async def test_agent_can_edit_when_idle(
-        self, protocol: CollaborationProtocol
-    ) -> None:
+    async def test_agent_can_edit_when_idle(self, protocol: CollaborationProtocol) -> None:
         """Agent can edit when human is not typing."""
         can_edit = await protocol.agent_can_edit("k-gent", "/file.py")
         assert can_edit is True
 
     @pytest.mark.asyncio
-    async def test_agent_waits_for_human_typing(
-        self, protocol: CollaborationProtocol
-    ) -> None:
+    async def test_agent_waits_for_human_typing(self, protocol: CollaborationProtocol) -> None:
         """Agent cannot edit when human is typing."""
         await protocol.record_keystroke("/file.py")
         can_edit = await protocol.agent_can_edit("k-gent", "/file.py")
@@ -259,9 +247,7 @@ class TestCollaborationProtocol:
         assert TYPING_GRACE_PERIOD.total_seconds() == 2.0
 
     @pytest.mark.asyncio
-    async def test_propose_edit_creates_proposal(
-        self, protocol: CollaborationProtocol
-    ) -> None:
+    async def test_propose_edit_creates_proposal(self, protocol: CollaborationProtocol) -> None:
         """propose_edit should create and return a proposal."""
         proposal = await protocol.propose_edit(
             agent_id="k-gent",
@@ -336,9 +322,7 @@ class TestCollaborationProtocol:
         assert result.status == ProposalStatus.REJECTED
 
     @pytest.mark.asyncio
-    async def test_get_pending_proposals(
-        self, protocol: CollaborationProtocol
-    ) -> None:
+    async def test_get_pending_proposals(self, protocol: CollaborationProtocol) -> None:
         """get_pending_proposals returns only pending ones."""
         p1 = await protocol.propose_edit(
             agent_id="agent-1",

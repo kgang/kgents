@@ -30,8 +30,8 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from protocols.agentese.node import Observer
     from protocols.agentese.contexts.self_context import Trail, TrailStep
+    from protocols.agentese.node import Observer
 
 
 # === Enums ===
@@ -72,9 +72,7 @@ class Range:
 
     @property
     def is_empty(self) -> bool:
-        return (
-            self.start_line == self.end_line and self.start_col == self.end_col
-        )
+        return self.start_line == self.end_line and self.start_col == self.end_col
 
     def contains(self, line: int, col: int) -> bool:
         """Check if a position is within this range."""
@@ -507,12 +505,14 @@ class Outline:
         edge_type: str | None = None,
     ) -> None:
         """Record a navigation step in the trail."""
-        self.trail_steps.append({
-            "action": action,
-            "node_path": node_path,
-            "edge_type": edge_type,
-            "timestamp": datetime.now().isoformat(),
-        })
+        self.trail_steps.append(
+            {
+                "action": action,
+                "node_path": node_path,
+                "edge_type": edge_type,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
         self.steps_taken += 1
 
 
@@ -629,7 +629,7 @@ class OutlineOperations:
         if selection.start_line == selection.end_line:
             if selection.start_line < len(lines):
                 line = lines[selection.start_line]
-                selected = line[selection.start_col:selection.end_col]
+                selected = line[selection.start_col : selection.end_col]
             else:
                 selected = ""
         else:
@@ -637,9 +637,9 @@ class OutlineOperations:
             for i in range(selection.start_line, min(selection.end_line + 1, len(lines))):
                 line = lines[i]
                 if i == selection.start_line:
-                    selected_lines.append(line[selection.start_col:])
+                    selected_lines.append(line[selection.start_col :])
                 elif i == selection.end_line:
-                    selected_lines.append(line[:selection.end_col])
+                    selected_lines.append(line[: selection.end_col])
                 else:
                     selected_lines.append(line)
             selected = "\n".join(selected_lines)
@@ -754,6 +754,7 @@ class OutlineOperations:
                     (Evidence: test_outline.py::test_lens_semantic_loading)
         """
         from pathlib import Path
+
         from .lens import create_lens_for_range
 
         content: dict[str, str] = {}

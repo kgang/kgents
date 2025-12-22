@@ -37,7 +37,6 @@ from protocols.derivation.witness_bridge import (
     walk_updates_derivations,
 )
 
-
 # =============================================================================
 # Mock Types (avoid full witness import)
 # =============================================================================
@@ -310,9 +309,7 @@ class TestDenialWeakensDerivation:
             d.draw_strength for d in before.principle_draws if d.principle == "Composable"
         )
 
-        affected = await denial_weakens_derivation(
-            denial, registry, agent_name="TestAgent"
-        )
+        affected = await denial_weakens_derivation(denial, registry, agent_name="TestAgent")
 
         assert "TestAgent" in affected
 
@@ -356,9 +353,7 @@ class TestDenialWeakensDerivation:
         assert generative_after == generative_before
 
     @pytest.mark.asyncio
-    async def test_categorical_evidence_not_weakened(
-        self, registry: DerivationRegistry
-    ) -> None:
+    async def test_categorical_evidence_not_weakened(self, registry: DerivationRegistry) -> None:
         """Categorical evidence is never weakened by denials."""
         # Register agent with categorical evidence
         registry.register(
@@ -382,9 +377,7 @@ class TestDenialWeakensDerivation:
             severity=0.5,
         )
 
-        affected = await denial_weakens_derivation(
-            denial, registry, agent_name="CategoricalAgent"
-        )
+        affected = await denial_weakens_derivation(denial, registry, agent_name="CategoricalAgent")
 
         # Not affected because categorical
         assert "CategoricalAgent" not in affected
@@ -427,9 +420,7 @@ class TestDenialWeakensDerivation:
             challenge_evidence="test",
         )
 
-        affected = await denial_weakens_derivation(
-            denial, registry, agent_name="NonExistent"
-        )
+        affected = await denial_weakens_derivation(denial, registry, agent_name="NonExistent")
 
         assert len(affected) == 0
 
@@ -482,7 +473,9 @@ class TestWalkUpdatesDerivations:
         )
 
         results = await walk_updates_derivations(
-            walk, mark_store=mark_store, registry=registry  # type: ignore
+            walk,
+            mark_store=mark_store,
+            registry=registry,  # type: ignore
         )
 
         # Brain had 2 marks
@@ -494,9 +487,7 @@ class TestWalkUpdatesDerivations:
         assert results["Witness"]["marks"] == 1
 
     @pytest.mark.asyncio
-    async def test_walk_with_participants_fallback(
-        self, registry: DerivationRegistry
-    ) -> None:
+    async def test_walk_with_participants_fallback(self, registry: DerivationRegistry) -> None:
         """Walk without mark_store falls back to participants."""
         walk = MockWalk(
             id="walk-2",
@@ -570,7 +561,9 @@ class TestSyncWitnessToDerivations:
         ]
 
         results = await sync_witness_to_derivations(
-            marks, denials, registry  # type: ignore
+            marks,
+            denials,
+            registry,  # type: ignore
         )
 
         assert results["marks_processed"] == 2
@@ -646,9 +639,7 @@ class TestWitnessBridgeIntegration:
         after_denial = registry.get("Brain")
         assert after_denial is not None
         composable_strength = next(
-            d.draw_strength
-            for d in after_denial.principle_draws
-            if d.principle == "Composable"
+            d.draw_strength for d in after_denial.principle_draws if d.principle == "Composable"
         )
         assert composable_strength < 0.8  # Was weakened from initial
 

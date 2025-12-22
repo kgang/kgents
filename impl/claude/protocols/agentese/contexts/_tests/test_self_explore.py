@@ -21,17 +21,17 @@ Teaching:
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
 
-from protocols.agentese.node import Observer
+import pytest
+
 from protocols.agentese.contexts.self_explore import (
     EXPLORE_AFFORDANCES,
     ExploreNode,
     get_explore_node,
     set_explore_node,
 )
-
+from protocols.agentese.node import Observer
 
 # === Fixtures ===
 
@@ -99,7 +99,9 @@ class TestManifest:
     """Tests for manifest aspect."""
 
     @pytest.mark.asyncio
-    async def test_manifest_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_manifest_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """manifest() without active exploration returns hint."""
         result = await fresh_node.manifest(observer)
 
@@ -176,7 +178,9 @@ class TestNavigate:
     """Tests for navigate aspect."""
 
     @pytest.mark.asyncio
-    async def test_navigate_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_navigate_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """navigate() without exploration returns error."""
         result = await fresh_node.navigate(observer, "tests")
 
@@ -193,7 +197,9 @@ class TestNavigate:
         assert result.metadata.get("edge") == "tests"
 
     @pytest.mark.asyncio
-    async def test_navigate_updates_trail(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_navigate_updates_trail(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """navigate() adds to trail."""
         await fresh_node.start(observer, "world.test")
         await fresh_node.navigate(observer, "tests")
@@ -212,7 +218,9 @@ class TestBudget:
     """Tests for budget aspect."""
 
     @pytest.mark.asyncio
-    async def test_budget_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_budget_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """budget() without exploration returns error."""
         result = await fresh_node.budget(observer)
 
@@ -254,14 +262,18 @@ class TestEvidence:
     """Tests for evidence aspect."""
 
     @pytest.mark.asyncio
-    async def test_evidence_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_evidence_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """evidence() without exploration returns error."""
         result = await fresh_node.evidence(observer)
 
         assert result.metadata.get("error") == "no_exploration"
 
     @pytest.mark.asyncio
-    async def test_evidence_initially_empty(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_evidence_initially_empty(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """evidence() starts empty."""
         await fresh_node.start(observer, "world.test")
 
@@ -270,7 +282,9 @@ class TestEvidence:
         assert result.metadata.get("total") == 0
 
     @pytest.mark.asyncio
-    async def test_evidence_grows_with_navigation(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_evidence_grows_with_navigation(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """evidence() grows as we navigate."""
         await fresh_node.start(observer, "world.test")
         await fresh_node.navigate(observer, "tests")
@@ -289,7 +303,9 @@ class TestTrail:
     """Tests for trail aspect."""
 
     @pytest.mark.asyncio
-    async def test_trail_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_trail_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """trail() without exploration returns error."""
         result = await fresh_node.trail(observer)
 
@@ -327,14 +343,18 @@ class TestCommit:
     """Tests for commit aspect."""
 
     @pytest.mark.asyncio
-    async def test_commit_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_commit_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """commit() without exploration returns error."""
         result = await fresh_node.commit(observer, "test claim")
 
         assert result.metadata.get("error") == "no_exploration"
 
     @pytest.mark.asyncio
-    async def test_commit_insufficient_evidence(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_commit_insufficient_evidence(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """commit() fails without sufficient evidence."""
         await fresh_node.start(observer, "world.test")
 
@@ -344,7 +364,9 @@ class TestCommit:
         assert result.metadata.get("approved") is False
 
     @pytest.mark.asyncio
-    async def test_commit_tentative_succeeds(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_commit_tentative_succeeds(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """commit() at tentative level with any evidence."""
         await fresh_node.start(observer, "world.test")
         await fresh_node.navigate(observer, "tests")
@@ -363,7 +385,9 @@ class TestLoops:
     """Tests for loops aspect."""
 
     @pytest.mark.asyncio
-    async def test_loops_without_exploration(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_loops_without_exploration(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """loops() without exploration returns error."""
         result = await fresh_node.loops(observer)
 
@@ -398,7 +422,9 @@ class TestReset:
         assert not fresh_node._has_harness()
 
     @pytest.mark.asyncio
-    async def test_reset_returns_confirmation(self, fresh_node: ExploreNode, observer: Observer) -> None:
+    async def test_reset_returns_confirmation(
+        self, fresh_node: ExploreNode, observer: Observer
+    ) -> None:
         """reset() returns confirmation."""
         await fresh_node.start(observer, "world.test")
 

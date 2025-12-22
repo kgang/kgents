@@ -36,7 +36,6 @@ from .types import (
     Trail,
 )
 
-
 # =============================================================================
 # Commitment Requirements
 # =============================================================================
@@ -159,9 +158,7 @@ class ASHCCommitment:
 
         # Count evidence
         evidence_count = len(evidence)
-        strong_count = sum(
-            1 for e in evidence if e.strength == EvidenceStrength.STRONG
-        )
+        strong_count = sum(1 for e in evidence if e.strength == EvidenceStrength.STRONG)
         unaddressed_counter = [c for c in counterevidence if not c.addressed]
 
         # Check trail support
@@ -176,10 +173,7 @@ class ASHCCommitment:
                 strong_count=strong_count,
                 unaddressed_counter_count=len(unaddressed_counter),
                 trail_supports=trail_supports,
-                message=(
-                    f"Need {requirements.min_evidence} evidence items, "
-                    f"have {evidence_count}"
-                ),
+                message=(f"Need {requirements.min_evidence} evidence items, have {evidence_count}"),
             )
 
         # Check quality
@@ -191,10 +185,7 @@ class ASHCCommitment:
                 strong_count=strong_count,
                 unaddressed_counter_count=len(unaddressed_counter),
                 trail_supports=trail_supports,
-                message=(
-                    f"Need {requirements.min_strong} strong evidence, "
-                    f"have {strong_count}"
-                ),
+                message=(f"Need {requirements.min_strong} strong evidence, have {strong_count}"),
             )
 
         # Check counterevidence
@@ -206,9 +197,7 @@ class ASHCCommitment:
                 strong_count=strong_count,
                 unaddressed_counter_count=len(unaddressed_counter),
                 trail_supports=trail_supports,
-                message=(
-                    f"{len(unaddressed_counter)} unaddressed counterevidence items"
-                ),
+                message=(f"{len(unaddressed_counter)} unaddressed counterevidence items"),
             )
 
         # Check trail support
@@ -262,9 +251,7 @@ class ASHCCommitment:
                     result=CommitmentResult.TRAIL_DOES_NOT_SUPPORT,
                     level=level,
                     evidence_count=len(evidence),
-                    strong_count=sum(
-                        1 for e in evidence if e.strength == EvidenceStrength.STRONG
-                    ),
+                    strong_count=sum(1 for e in evidence if e.strength == EvidenceStrength.STRONG),
                     unaddressed_counter_count=len(
                         [c for c in (counterevidence or []) if not c.addressed]
                     ),
@@ -294,9 +281,7 @@ class ASHCCommitment:
         """
         counterevidence = counterevidence or []
         evidence_count = len(evidence)
-        strong_count = sum(
-            1 for e in evidence if e.strength == EvidenceStrength.STRONG
-        )
+        strong_count = sum(1 for e in evidence if e.strength == EvidenceStrength.STRONG)
         has_unaddressed = any(not c.addressed for c in counterevidence)
 
         # Check from highest to lowest

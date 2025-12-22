@@ -15,7 +15,6 @@ import pytest
 from ..evidence import PortalExpansionEvidence
 from ..types import EvidenceStrength
 
-
 # =============================================================================
 # PortalExpansionEvidence Tests
 # =============================================================================

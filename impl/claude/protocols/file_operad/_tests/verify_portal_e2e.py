@@ -38,8 +38,8 @@ async def verify_portal_fullstack():
     print()
 
     # Import here to avoid issues when script is run standalone
-    from protocols.agentese.contexts.self_portal import PortalNavNode, set_portal_nav_node
     from protocols.agentese.contexts.portal_response import PortalResponse
+    from protocols.agentese.contexts.self_portal import PortalNavNode, set_portal_nav_node
     from protocols.agentese.node import Observer
 
     # Create temp file with imports
@@ -83,17 +83,14 @@ class Example:
             return False
 
         print(f"   SUCCESS: Tree loaded with {len(result.tree['root']['children'])} children")
-        for child in result.tree['root']['children']:
+        for child in result.tree["root"]["children"]:
             print(f"      - {child['edge_type']}: {child.get('note', 'no note')}")
         print()
 
         # Step 2: Expand at depth 1 (imports)
         print("3. Expanding 'imports' (depth 1 - no witness mark expected)...")
         result = await node.expand(
-            observer,
-            portal_path="imports",
-            file_path=str(test_file),
-            response_format="json"
+            observer, portal_path="imports", file_path=str(test_file), response_format="json"
         )
 
         if not isinstance(result, PortalResponse):
@@ -103,7 +100,7 @@ class Example:
         if result.evidence_id:
             print(f"   WARNING: Depth 1 should not emit mark, but got: {result.evidence_id}")
         else:
-            print(f"   SUCCESS: No witness mark at depth 1 (correct)")
+            print("   SUCCESS: No witness mark at depth 1 (correct)")
         print()
 
         # Step 3: Expand at depth 2 (imports/dataclass)
@@ -123,7 +120,7 @@ class Example:
         if result.evidence_id:
             print(f"   SUCCESS: Witness mark emitted: {result.evidence_id}")
         else:
-            print(f"   NOTE: No evidence_id (witness service may not be running)")
+            print("   NOTE: No evidence_id (witness service may not be running)")
         print()
 
         # Step 4: Save trail
@@ -146,9 +143,10 @@ class Example:
 
             # Cleanup
             from protocols.trail.file_persistence import delete_trail
+
             if result.trail_id:
                 await delete_trail(result.trail_id)
-                print(f"            (cleaned up)")
+                print("            (cleaned up)")
         else:
             print(f"   FAIL: Trail save failed - {result.error}")
             return False
@@ -216,7 +214,9 @@ def main():
         print("All verifications PASSED!")
         print()
         print("Next steps:")
-        print("  1. Run backend tests: uv run pytest protocols/file_operad/_tests/test_fullstack_portal.py -v")
+        print(
+            "  1. Run backend tests: uv run pytest protocols/file_operad/_tests/test_fullstack_portal.py -v"
+        )
         print("  2. Run frontend tests: cd web && npm run test:e2e -- --grep 'Portal'")
         print("  3. Manual UI test: http://localhost:3000/_/portal")
         print()
@@ -229,4 +229,5 @@ def main():
 
 if __name__ == "__main__":
     import sys
+
     sys.exit(main())

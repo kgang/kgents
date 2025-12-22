@@ -8,22 +8,22 @@ Spec: spec/protocols/context-perception.md §7
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
 
-from ..parser import (
-    TokenType,
-    RecognizedToken,
-    extract_tokens,
-    parse_text,
-    encode_invisible_metadata,
-    decode_invisible_metadata,
-    is_portal_line,
-    is_agentese_path,
-    extract_portal_info,
-    METADATA_MARKER,
-)
+import pytest
 
+from ..parser import (
+    METADATA_MARKER,
+    RecognizedToken,
+    TokenType,
+    decode_invisible_metadata,
+    encode_invisible_metadata,
+    extract_portal_info,
+    extract_tokens,
+    is_agentese_path,
+    is_portal_line,
+    parse_text,
+)
 
 # === Token Extraction Tests ===
 

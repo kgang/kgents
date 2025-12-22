@@ -70,63 +70,45 @@ See spec/protocols/derivation-framework.md for full specification.
 See spec/bootstrap.md for the axiom base.
 """
 
-from .types import (
-    Derivation,
-    DerivationTier,
-    EvidenceType,
-    PrincipleDraw,
-)
-from .registry import DerivationRegistry, get_registry, reset_registry
-
 # Phase 2: ASHC Integration
 from .ashc_bridge import (
     extract_principle_evidence,
+    lemma_strengthens_derivation,
     merge_principle_draws,
-    update_derivation_from_ashc,
     sync_from_principle_registry,
     sync_to_principle_registry,
-    lemma_strengthens_derivation,
-)
-
-# Phase 3: Witness Integration
-from .witness_bridge import (
-    DifferentialDenial,
-    extract_agents_from_mark,
-    mark_updates_stigmergy,
-    denial_weakens_derivation,
-    walk_updates_derivations,
-    sync_witness_to_derivations,
+    update_derivation_from_ashc,
 )
 
 # Phase 4: Decay & Refresh
 from .decay import (
-    # Configuration
-    DecayConfig,
     DEFAULT_CONFIG,
     # Activity tracking
     ActivityRecord,
-    InMemoryActivityStore,
-    get_activity_store,
-    set_activity_store,
-    reset_activity_store,
-    record_activity,
-    # Evidence decay
-    decay_principle_draw,
-    decay_derivation_evidence,
-    apply_evidence_decay,
-    # Stigmergic decay
-    calculate_stigmergic_decay,
-    apply_stigmergic_decay,
-    # ASHC refresh
-    RefreshSchedule,
-    InMemoryRefreshStore,
-    get_refresh_store,
-    reset_refresh_store,
-    should_refresh_agent,
-    apply_ashc_refresh,
+    # Configuration
+    DecayConfig,
     # Full cycle
     DecayCycleResult,
+    InMemoryActivityStore,
+    InMemoryRefreshStore,
+    # ASHC refresh
+    RefreshSchedule,
+    apply_ashc_refresh,
+    apply_evidence_decay,
+    apply_stigmergic_decay,
+    # Stigmergic decay
+    calculate_stigmergic_decay,
+    decay_derivation_evidence,
+    # Evidence decay
+    decay_principle_draw,
+    get_activity_store,
+    get_refresh_store,
+    record_activity,
+    reset_activity_store,
+    reset_refresh_store,
     run_decay_cycle,
+    set_activity_store,
+    should_refresh_agent,
 )
 
 # Phase 6: Cross-Protocol Integration
@@ -134,42 +116,59 @@ from .exploration_bridge import (
     TrailEvidence,
     apply_trail_evidence,
     apply_trail_evidence_async,
-    trail_to_derivation_evidence,
-    merge_trail_evidence,
     batch_apply_trail_evidence,
-)
-from .portal_bridge import (
-    path_to_agent_name,
-    agent_name_to_paths,
-    PortalOpenSignal,
-    PortalDerivationSync,
-    portal_expansion_to_derivation,
-    derivation_to_portal_trust,
-    sync_portal_expansion,
-    get_trust_for_path,
-)
-from .hypergraph_bridge import (
-    DERIVATION_EDGE_TYPES,
-    ContextNode as DerivationContextNode,
-    SimpleObserver,
-    DerivationHyperedgeResolver,
-    get_derivation_resolver,
-    reset_derivation_resolver,
-    register_derivation_resolvers,
-    resolve_derivation_edge,
-    get_derivation_graph_for_agent,
+    merge_trail_evidence,
+    trail_to_derivation_evidence,
 )
 from .file_operad_bridge import (
-    OperationThresholds,
     DEFAULT_THRESHOLDS,
     ConfidenceGateResult,
     FileOperationRequest,
     FileOperationResult,
-    check_operation_confidence,
-    gate_file_operation,
-    gate_and_execute,
+    OperationThresholds,
     check_multiple_operations,
+    check_operation_confidence,
+    gate_and_execute,
+    gate_file_operation,
     get_agent_capabilities,
+)
+from .hypergraph_bridge import (
+    DERIVATION_EDGE_TYPES,
+    ContextNode as DerivationContextNode,
+    DerivationHyperedgeResolver,
+    SimpleObserver,
+    get_derivation_graph_for_agent,
+    get_derivation_resolver,
+    register_derivation_resolvers,
+    reset_derivation_resolver,
+    resolve_derivation_edge,
+)
+from .portal_bridge import (
+    PortalDerivationSync,
+    PortalOpenSignal,
+    agent_name_to_paths,
+    derivation_to_portal_trust,
+    get_trust_for_path,
+    path_to_agent_name,
+    portal_expansion_to_derivation,
+    sync_portal_expansion,
+)
+from .registry import DerivationRegistry, get_registry, reset_registry
+from .types import (
+    Derivation,
+    DerivationTier,
+    EvidenceType,
+    PrincipleDraw,
+)
+
+# Phase 3: Witness Integration
+from .witness_bridge import (
+    DifferentialDenial,
+    denial_weakens_derivation,
+    extract_agents_from_mark,
+    mark_updates_stigmergy,
+    sync_witness_to_derivations,
+    walk_updates_derivations,
 )
 
 __all__ = [

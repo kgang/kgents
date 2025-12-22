@@ -23,28 +23,29 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from models.base import Base
+
 # Import trail models (already registered via models/__init__.py)
 from models.trail import (  # noqa: F401
+    TrailAnnotationRow,
+    TrailCommitmentRow,
+    TrailEvidenceRow,
+    TrailForkRow,
     TrailRow,
     TrailStepRow,
-    TrailAnnotationRow,
-    TrailForkRow,
-    TrailEvidenceRow,
-    TrailCommitmentRow,
 )
 from protocols.exploration.types import (
+    Claim,
     Evidence,
     EvidenceStrength,
     Observer,
     Trail as ExplorationTrail,
     TrailStep as ExplorationTrailStep,
-    Claim,
 )
 from protocols.trail.storage import (
-    TrailStorageAdapter,
-    TrailSaveResult,
     TrailLoadResult,
+    TrailSaveResult,
     TrailStatus,
+    TrailStorageAdapter,
 )
 
 
@@ -162,9 +163,7 @@ class TestSaveTrail:
         """Save trail generates ID if not provided."""
         trail = ExplorationTrail(
             name="Auto ID Trail",
-            steps=(
-                ExplorationTrailStep(node="world.test", edge_taken=None),
-            ),
+            steps=(ExplorationTrailStep(node="world.test", edge_taken=None),),
         )
 
         result = await storage.save_trail(trail, sample_observer)
@@ -242,7 +241,6 @@ class TestLoadTrail:
         await storage.save_trail(sample_trail, sample_observer)
 
         # Add another trail (small delay to ensure different timestamps)
-        import asyncio
         await asyncio.sleep(0.01)
 
         trail2 = ExplorationTrail(

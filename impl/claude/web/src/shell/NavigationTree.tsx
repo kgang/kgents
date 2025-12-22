@@ -4,6 +4,11 @@
  * The Navigation Tree provides tree-based semantic navigation that mirrors
  * the five AGENTESE contexts. Paths are auto-discovered from the gateway.
  *
+ * STARK BIOME: Steel frame, organic accents for context icons
+ * - Surfaces: steel-carbon, steel-gunmetal
+ * - Text: steel-zinc (muted) → glow-light (emphasis)
+ * - Context icons keep their semantic colors (earned glow)
+ *
  * Features:
  * - Auto-populate from /agentese/discover
  * - Tree structure for five contexts (world, self, concept, void, time)
@@ -58,36 +63,36 @@ export interface NavigationTreeProps {
 // Constants
 // =============================================================================
 
-/** AGENTESE contexts with icons and colors */
+/** AGENTESE contexts with icons and colors (keep semantic colors for context identity) */
 const CONTEXT_INFO: Record<string, ContextInfo> = {
   world: {
     icon: Globe,
     label: 'World',
-    color: 'text-green-400',
+    color: 'text-life-sage', // Stark: muted organic
     description: 'External entities and environments',
   },
   self: {
     icon: User,
     label: 'Self',
-    color: 'text-cyan-400',
+    color: 'text-jewel-brain', // Stark: teal moss
     description: 'Internal memory and capability',
   },
   concept: {
     icon: BookOpen,
     label: 'Concept',
-    color: 'text-violet-400',
+    color: 'text-jewel-coalition', // Stark: muted violet
     description: 'Abstract definitions and logic',
   },
   void: {
     icon: Sparkles,
     label: 'Void',
-    color: 'text-pink-400',
+    color: 'text-jewel-park', // Stark: muted pink
     description: 'Entropy and serendipity',
   },
   time: {
     icon: Clock,
     label: 'Time',
-    color: 'text-amber-400',
+    color: 'text-glow-spore', // Stark: amber glow
     description: 'Traces and schedules',
   },
 };
@@ -484,20 +489,22 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
 
   const HeaderWithReset = (
     <div className="flex items-center gap-2">
-      <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wider">AGENTESE Paths</h2>
+      <h2 className="text-xs font-medium text-steel-zinc uppercase tracking-wider">
+        AGENTESE Paths
+      </h2>
       {loadingAspects && (
         <span
-          className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"
+          className="w-1.5 h-1.5 rounded-full bg-jewel-brain animate-pulse"
           title="Loading aspects..."
         />
       )}
       <button
         onClick={navActions.reset}
-        className="ml-auto p-1 hover:bg-gray-700 rounded transition-colors opacity-50 hover:opacity-100"
+        className="ml-auto p-1 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick opacity-50 hover:opacity-100"
         title="Reset tree"
         aria-label="Reset navigation tree"
       >
-        <RotateCcw className="w-3 h-3 text-gray-400" />
+        <RotateCcw className="w-3 h-3 text-steel-zinc" />
       </button>
     </div>
   );
@@ -516,7 +523,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: shouldAnimate ? 0.2 : 0 }}
-              className="fixed inset-0 z-40 bg-black/50"
+              className="fixed inset-0 z-40 bg-steel-obsidian/50"
               onClick={() => setNavigationTreeExpanded(false)}
             />
 
@@ -532,27 +539,27 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               }}
               className={`
                 fixed bottom-0 left-0 right-0 z-50
-                bg-gray-800 rounded-t-2xl shadow-xl
+                bg-steel-carbon rounded-t-lg shadow-xl
                 max-h-[80vh] overflow-auto
                 ${className}
               `}
             >
-              <div className="sticky top-0 flex justify-center pt-2 pb-1 bg-gray-800">
-                <div className="w-10 h-1 rounded-full bg-gray-600" />
+              <div className="sticky top-0 flex justify-center pt-2 pb-1 bg-steel-carbon">
+                <div className="w-10 h-1 rounded-full bg-steel-gunmetal" />
               </div>
 
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
-                className="absolute top-2 right-2 p-2 hover:bg-gray-700 rounded-full"
+                className="absolute top-2 right-2 p-2 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                 aria-label="Close navigation"
               >
-                <X className="w-5 h-5 text-gray-400" />
+                <X className="w-5 h-5 text-steel-zinc" />
               </button>
 
               <div className="p-4 space-y-4">
                 {HeaderWithReset}
                 {loading ? (
-                  <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
+                  <div className="py-4 text-center text-steel-zinc text-sm">Loading paths...</div>
                 ) : (
                   TreeContent
                 )}
@@ -579,10 +586,10 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
         {!navigationTreeExpanded && (
           <button
             onClick={() => setNavigationTreeExpanded(true)}
-            className="fixed left-0 top-1/2 -translate-y-1/2 z-30 p-2 bg-gray-800/80 backdrop-blur-sm rounded-r-lg border border-l-0 border-gray-700/50 hover:bg-gray-700 transition-colors"
+            className="fixed left-0 top-1/2 -translate-y-1/2 z-30 p-2 bg-steel-carbon/80 backdrop-blur-sm rounded-r-bare border border-l-0 border-steel-gunmetal/50 hover:bg-steel-gunmetal transition-colors duration-quick"
             aria-label="Open navigation sidebar"
           >
-            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <ChevronRight className="w-4 h-4 text-steel-zinc" />
           </button>
         )}
 
@@ -596,24 +603,24 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
               style={{ width: width || 240, top: getTopOffset(), bottom: getBottomOffset() }}
               className={`
                 fixed left-0 z-30
-                bg-gray-800/[0.825] backdrop-blur-md
-                border-r border-gray-700/50
+                bg-steel-carbon/[0.825] backdrop-blur-md
+                border-r border-steel-gunmetal/50
                 overflow-y-auto
                 ${className}
               `}
             >
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
-                className="absolute top-2 right-2 p-1 hover:bg-gray-700 rounded"
+                className="absolute top-2 right-2 p-1 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                 aria-label="Close navigation sidebar"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-steel-zinc" />
               </button>
 
               <div className="p-3 pt-8 space-y-4">
                 <div className="px-3">{HeaderWithReset}</div>
                 {loading ? (
-                  <div className="py-4 text-center text-gray-500 text-sm">Loading...</div>
+                  <div className="py-4 text-center text-steel-zinc text-sm">Loading...</div>
                 ) : (
                   TreeContent
                 )}
@@ -640,9 +647,9 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
         onClick={() => setNavigationTreeExpanded(!navigationTreeExpanded)}
         className={`
           fixed left-0 top-1/2 -translate-y-1/2 z-40
-          p-2 bg-gray-800/90 backdrop-blur-sm rounded-r-lg
-          border border-l-0 border-gray-700/50
-          hover:bg-gray-700 transition-all duration-200
+          p-2 bg-steel-carbon/90 backdrop-blur-sm rounded-r-bare
+          border border-l-0 border-steel-gunmetal/50
+          hover:bg-steel-gunmetal transition-all duration-200
           ${navigationTreeExpanded ? 'translate-x-[280px]' : 'translate-x-0'}
         `}
         aria-label={navigationTreeExpanded ? 'Close navigation sidebar' : 'Open navigation sidebar'}
@@ -652,7 +659,7 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
           transition={{ duration: shouldAnimate ? 0.2 : 0 }}
           className="block"
         >
-          <ChevronRight className="w-4 h-4 text-gray-400" />
+          <ChevronRight className="w-4 h-4 text-steel-zinc" />
         </motion.span>
       </button>
 
@@ -666,27 +673,27 @@ export function NavigationTree({ className = '' }: NavigationTreeProps) {
             style={{ width: width || 280, top: getTopOffset(), bottom: getBottomOffset() }}
             className={`
               fixed left-0 z-30
-              bg-gray-800/[0.825] backdrop-blur-md
-              border-r border-gray-700/50
+              bg-steel-carbon/[0.825] backdrop-blur-md
+              border-r border-steel-gunmetal/50
               overflow-y-auto
               shadow-xl
               ${className}
             `}
           >
-            <div className="sticky top-0 bg-gray-800/[0.825] backdrop-blur-md border-b border-gray-700/50 px-3 py-2 flex items-center justify-between">
+            <div className="sticky top-0 bg-steel-carbon/[0.825] backdrop-blur-md border-b border-steel-gunmetal/50 px-3 py-2 flex items-center justify-between">
               {HeaderWithReset}
               <button
                 onClick={() => setNavigationTreeExpanded(false)}
-                className="p-1 hover:bg-gray-700 rounded transition-colors"
+                className="p-1 hover:bg-steel-gunmetal rounded-bare transition-colors duration-quick"
                 aria-label="Close navigation sidebar"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-steel-zinc" />
               </button>
             </div>
 
             <div className="p-3 space-y-4">
               {loading ? (
-                <div className="py-4 text-center text-gray-500 text-sm">Loading paths...</div>
+                <div className="py-4 text-center text-steel-zinc text-sm">Loading paths...</div>
               ) : (
                 TreeContent
               )}

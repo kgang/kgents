@@ -42,12 +42,12 @@ SUPPORTED_EXTENSIONS = {".py", ".ts", ".tsx", ".js", ".jsx", ".md"}
 
 # Edge types we can discover from source files
 SOURCE_EDGE_TYPES = {
-    "imports",      # What this file imports
-    "tests",        # Test files for this module
-    "implements",   # Specs this implements
-    "contains",     # Submodules/children
-    "calls",        # Functions called by this module
-    "related",      # Sibling modules
+    "imports",  # What this file imports
+    "tests",  # Test files for this module
+    "implements",  # Specs this implements
+    "contains",  # Submodules/children
+    "calls",  # Functions called by this module
+    "related",  # Sibling modules
 }
 
 
@@ -126,8 +126,8 @@ class SourcePortalLink(PortalLink):
 
         # Use hyperedge resolver path utilities
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            agentese_path_to_file,
             _get_project_root,
+            agentese_path_to_file,
         )
 
         return agentese_path_to_file(self.path, _get_project_root())
@@ -171,6 +171,7 @@ class SourcePortalDiscovery:
             from protocols.agentese.contexts.hyperedge_resolvers import (
                 _get_project_root,
             )
+
             self.project_root = _get_project_root()
 
     async def discover_portals(
@@ -211,9 +212,9 @@ class SourcePortalDiscovery:
 
         # Convert file path to ContextNode
         from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
             file_to_agentese_path,
             resolve_hyperedge,
-            _get_project_root,
         )
         from protocols.agentese.contexts.self_context import ContextNode
 
@@ -234,9 +235,7 @@ class SourcePortalDiscovery:
         # Resolve each edge type
         links: list[SourcePortalLink] = []
         for edge_type in types_to_check:
-            destinations = await resolve_hyperedge(
-                node, edge_type, project_root
-            )
+            destinations = await resolve_hyperedge(node, edge_type, project_root)
             for dest in destinations:
                 link = SourcePortalLink.from_hyperedge(
                     edge_type=edge_type,
@@ -272,6 +271,7 @@ class SourcePortalDiscovery:
                         from protocols.agentese.contexts.self_context import (
                             ContextNode,
                         )
+
                         dest = ContextNode(
                             path=f"world.{alias.name}",
                             holon=alias.name.split(".")[-1],
@@ -288,6 +288,7 @@ class SourcePortalDiscovery:
                         from protocols.agentese.contexts.self_context import (
                             ContextNode,
                         )
+
                         dest = ContextNode(
                             path=f"world.{stmt.module}",
                             holon=stmt.module.split(".")[-1],
@@ -439,10 +440,12 @@ class SourcePortalToken(PortalToken):
     Extends PortalToken with source-file-aware loading.
     """
 
-    link: SourcePortalLink = field(default_factory=lambda: SourcePortalLink(
-        edge_type="unknown",
-        path="unknown",
-    ))
+    link: SourcePortalLink = field(
+        default_factory=lambda: SourcePortalLink(
+            edge_type="unknown",
+            path="unknown",
+        )
+    )
 
     def load(self) -> bool:
         """

@@ -49,33 +49,11 @@ Spec References:
 """
 
 # Types
-from .types import (
-    # Enums
-    LoopStatus,
-    CommitmentLevel,
-    CommitmentResult,
-    EvidenceStrength,
-    # Observer
-    Observer,
-    # Trail
-    Trail,
-    TrailStep,
-    # Context
-    ContextNode,
-    ContextGraph,
-    # Evidence
-    Claim,
-    Evidence,
-    Counterevidence,
-    # Results
-    NavigationResult,
-)
-
 # Budget
 from .budget import (
-    NavigationBudget,
     BudgetExhausted,
     ExhaustionReason,
+    NavigationBudget,
     # Presets
     quick_budget,
     standard_budget,
@@ -83,32 +61,19 @@ from .budget import (
     unlimited_budget,
 )
 
-# Loops
-from .loops import (
-    LoopDetector,
-    LoopResponse,
-    LoopEvent,
-    EmbeddingFunction,
-    cosine_similarity,
-    # Factories
-    create_loop_detector,
-    strict_loop_detector,
-    relaxed_loop_detector,
+# Commitment
+from .commitment import (
+    ASHCCommitment,
+    CommitmentCheckResult,
+    CommitmentRequirements,
 )
 
 # Evidence
 from .evidence import (
-    TrailAsEvidence,
     EvidenceCollector,
     EvidenceScope,
     EvidenceSummary,
-)
-
-# Commitment
-from .commitment import (
-    ASHCCommitment,
-    CommitmentRequirements,
-    CommitmentCheckResult,
+    TrailAsEvidence,
 )
 
 # Harness
@@ -121,6 +86,39 @@ from .harness import (
     thorough_harness,
 )
 
+# Loops
+from .loops import (
+    EmbeddingFunction,
+    LoopDetector,
+    LoopEvent,
+    LoopResponse,
+    cosine_similarity,
+    # Factories
+    create_loop_detector,
+    relaxed_loop_detector,
+    strict_loop_detector,
+)
+from .types import (
+    # Evidence
+    Claim,
+    CommitmentLevel,
+    CommitmentResult,
+    ContextGraph,
+    # Context
+    ContextNode,
+    Counterevidence,
+    Evidence,
+    EvidenceStrength,
+    # Enums
+    LoopStatus,
+    # Results
+    NavigationResult,
+    # Observer
+    Observer,
+    # Trail
+    Trail,
+    TrailStep,
+)
 
 __all__ = [
     # === Types ===

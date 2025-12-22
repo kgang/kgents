@@ -10,25 +10,25 @@ Spec: spec/protocols/context-perception.md §9
 from __future__ import annotations
 
 import json
+
 import pytest
 
 from protocols.context.outline import (
     Outline,
     OutlineNode,
-    TextSnippet,
     PortalToken,
     SnippetType,
+    TextSnippet,
     create_outline,
 )
 from protocols.context.renderer import (
-    Surface,
-    RenderConfig,
-    OutlineRenderer,
-    render_outline,
-    render_for_llm,
     SURFACE_CONFIG,
+    OutlineRenderer,
+    RenderConfig,
+    Surface,
+    render_for_llm,
+    render_outline,
 )
-
 
 # === Test Fixtures ===
 
@@ -238,9 +238,7 @@ class TestLLMRendering:
         outline = create_outline(root_text="Root")
         current = outline.root
         for i in range(10):
-            child = OutlineNode(
-                snippet=TextSnippet(visible_text=f"Level {i}")
-            )
+            child = OutlineNode(snippet=TextSnippet(visible_text=f"Level {i}"))
             current.add_child(child)
             current = child
 

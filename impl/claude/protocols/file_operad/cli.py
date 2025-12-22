@@ -23,6 +23,17 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from .ashc_bridge import (
+    LawProofCompiler,
+    LawVerifier,
+    VerificationResult,
+)
+from .law_parser import (
+    LawDefinition,
+    LawStatus,
+    list_laws_in_operad,
+    parse_law_file,
+)
 from .portal import (
     OPERADS_ROOT,
     PortalOpenSignal,
@@ -33,32 +44,21 @@ from .portal import (
     parse_wires_to,
     show_portals,
 )
+from .sandbox import (
+    InvalidTransitionError,
+    SandboxConfig,
+    SandboxId,
+    SandboxPhase,
+    SandboxPolynomial,
+    SandboxRuntime,
+    get_sandbox_store,
+    reset_sandbox_store,
+)
 from .trace import (
     enable_persistence,
     get_file_trace_store,
     record_expansion,
     sync_file_trace_store,
-)
-from .sandbox import (
-    SandboxId,
-    SandboxPhase,
-    SandboxRuntime,
-    SandboxConfig,
-    SandboxPolynomial,
-    get_sandbox_store,
-    reset_sandbox_store,
-    InvalidTransitionError,
-)
-from .law_parser import (
-    LawDefinition,
-    LawStatus,
-    list_laws_in_operad,
-    parse_law_file,
-)
-from .ashc_bridge import (
-    LawProofCompiler,
-    LawVerifier,
-    VerificationResult,
 )
 
 if TYPE_CHECKING:
@@ -102,8 +102,7 @@ def _print_portal_link(link: Any, index: int = 0) -> None:
         path_style = "" if exists else "[dim]"
         console.print(
             f"  {status} {edge_style}[{link.edge_type}][/] "
-            f"{path_style}{link.path}[/]"
-            + (f" [dim]({link.note})[/dim]" if link.note else "")
+            f"{path_style}{link.path}[/]" + (f" [dim]({link.note})[/dim]" if link.note else "")
         )
     else:
         status_char = "\u2713" if exists else "\u2717"
@@ -305,7 +304,9 @@ def cmd_list(args: list[str]) -> int:
             if operad_dir.is_dir() and not operad_dir.name.startswith("_"):
                 op_count = len(list(operad_dir.glob("*.op")))
                 if console:
-                    console.print(f"  [bold]{operad_dir.name}[/bold] [dim]({op_count} operations)[/dim]")
+                    console.print(
+                        f"  [bold]{operad_dir.name}[/bold] [dim]({op_count} operations)[/dim]"
+                    )
                 else:
                     print(f"  {operad_dir.name} ({op_count} operations)")
 
@@ -318,7 +319,7 @@ def cmd_list(args: list[str]) -> int:
 
     if not operad_dir.exists():
         print(f"Error: Operad not found: {operad_name}")
-        print(f"\nAvailable operads:")
+        print("\nAvailable operads:")
         cmd_list([])
         return 1
 
@@ -444,7 +445,9 @@ def cmd_tree(args: list[str]) -> int:
                 token = tree.tokens.get(child.path)
                 if token and token.link.exists():
                     signal = PortalOpenSignal(
-                        paths_opened=[str(token.link.file_path)] if token.link.file_path else [child.path],
+                        paths_opened=[str(token.link.file_path)]
+                        if token.link.file_path
+                        else [child.path],
                         edge_type=child.edge_type,
                         parent_path=parent_path,
                         depth=child.depth,
@@ -558,7 +561,9 @@ def cmd_trail(args: list[str]) -> int:
 
     if not traces:
         if console:
-            console.print("[dim]No traces recorded yet. Use 'kg op tree' or 'kg op expand' to explore.[/dim]")
+            console.print(
+                "[dim]No traces recorded yet. Use 'kg op tree' or 'kg op expand' to explore.[/dim]"
+            )
             if use_persistence and store.persistence_path:
                 console.print(f"[dim]Persistence file: {store.persistence_path}[/dim]")
         else:
@@ -669,7 +674,7 @@ def cmd_sandbox(args: list[str]) -> int:
     store = get_sandbox_store()
     sandbox = store.create(str(path), content, config)
 
-    _print_header(f"\U0001f4e6 Sandbox Created")
+    _print_header("\U0001f4e6 Sandbox Created")
 
     if console:
         console.print(f"  [bold]ID:[/bold] {sandbox.id}")
@@ -680,7 +685,7 @@ def cmd_sandbox(args: list[str]) -> int:
         console.print(f"  [bold]Expires:[/bold] {mins} minutes remaining")
         console.print()
         console.print("[dim]Commands:[/dim]")
-        console.print(f"  kg op sandboxes          List active sandboxes")
+        console.print("  kg op sandboxes          List active sandboxes")
         console.print(f"  kg op promote {sandbox.id}  Promote to production")
         console.print(f"  kg op discard {sandbox.id}  Discard sandbox")
         console.print(f"  kg op extend {sandbox.id}   Extend timeout")
@@ -693,7 +698,7 @@ def cmd_sandbox(args: list[str]) -> int:
         print(f"  Expires: {mins} minutes remaining")
         print()
         print("Commands:")
-        print(f"  kg op sandboxes          List active sandboxes")
+        print("  kg op sandboxes          List active sandboxes")
         print(f"  kg op promote {sandbox.id}  Promote to production")
         print(f"  kg op discard {sandbox.id}  Discard sandbox")
         print(f"  kg op extend {sandbox.id}   Extend timeout")
@@ -1023,7 +1028,9 @@ def cmd_laws(args: list[str]) -> int:
                                 pass
 
                         total = len(law_files)
-                        status_str = f"✅ {verified}" if verified == total else f"✅ {verified}/{total}"
+                        status_str = (
+                            f"✅ {verified}" if verified == total else f"✅ {verified}/{total}"
+                        )
                         if failed > 0:
                             status_str += f" ❌ {failed}"
 
@@ -1050,7 +1057,7 @@ def cmd_laws(args: list[str]) -> int:
     operad_dir = OPERADS_ROOT / operad_name
     if not operad_dir.exists():
         print(f"Error: Operad not found: {operad_name}")
-        print(f"\nAvailable operads:")
+        print("\nAvailable operads:")
         cmd_laws([])
         return 1
 
@@ -1081,7 +1088,7 @@ def cmd_laws(args: list[str]) -> int:
             if console:
                 console.print(f"\n  {status_emoji} [bold]{law.name}[/bold]")
                 if law.description:
-                    console.print(f"     [dim]\"{law.description}\"[/dim]")
+                    console.print(f'     [dim]"{law.description}"[/dim]')
                 console.print(f"     [cyan]Category:[/cyan] {law.category}")
                 console.print(f"     [cyan]Equation:[/cyan] {law.equation}")
                 if ops_str:
@@ -1094,7 +1101,7 @@ def cmd_laws(args: list[str]) -> int:
             else:
                 print(f"\n  {status_emoji} {law.name}")
                 if law.description:
-                    print(f"     \"{law.description}\"")
+                    print(f'     "{law.description}"')
                 print(f"     Category: {law.category}")
                 print(f"     Equation: {law.equation}")
                 if ops_str:
@@ -1275,7 +1282,9 @@ def cmd_verify(args: list[str]) -> int:
             f"/ {total} total"
         )
     else:
-        print(f"Results: {passed} passed, {failed} failed, {errored} errors, {skipped} skipped / {total} total")
+        print(
+            f"Results: {passed} passed, {failed} failed, {errored} errors, {skipped} skipped / {total} total"
+        )
 
     print()
     return 0 if (failed == 0 and errored == 0) else 1
@@ -1366,7 +1375,9 @@ def cmd_prove(args: list[str]) -> int:
 
     if not obligations:
         if console:
-            console.print("[green]\u2713[/green] All laws are verified. No proof obligations needed.")
+            console.print(
+                "[green]\u2713[/green] All laws are verified. No proof obligations needed."
+            )
         else:
             print("\u2713 All laws are verified. No proof obligations needed.")
         return 0
@@ -1394,12 +1405,8 @@ def cmd_prove(args: list[str]) -> int:
 
     # Summary
     if console:
-        console.print(
-            f"[bold]Generated:[/bold] {len(obligations)} proof obligation(s)"
-        )
-        console.print(
-            "[dim]These can be fed to the ASHC proof search system.[/dim]"
-        )
+        console.print(f"[bold]Generated:[/bold] {len(obligations)} proof obligation(s)")
+        console.print("[dim]These can be fed to the ASHC proof search system.[/dim]")
     else:
         print(f"Generated: {len(obligations)} proof obligation(s)")
         print("These can be fed to the ASHC proof search system.")
@@ -1476,7 +1483,9 @@ def cmd_evidence(args: list[str]) -> int:
 
         if not traces:
             if console:
-                console.print("[dim]No traces found. Use 'kg op tree' or 'kg op expand' to explore.[/dim]")
+                console.print(
+                    "[dim]No traces found. Use 'kg op tree' or 'kg op expand' to explore.[/dim]"
+                )
             else:
                 print("No traces found. Use 'kg op tree' or 'kg op expand' to explore.")
             return 0
@@ -1497,7 +1506,7 @@ def cmd_evidence(args: list[str]) -> int:
 
     print()
     if console:
-        console.print(f"[dim]Evidence can be fed to ASHC proof search.[/dim]")
+        console.print("[dim]Evidence can be fed to ASHC proof search.[/dim]")
     else:
         print("Evidence can be fed to ASHC proof search.")
 
@@ -1522,7 +1531,8 @@ def cmd_run(args: list[str]) -> int:
     "CHAOTIC reality agents MUST run sandboxed before being trusted."
     """
     import asyncio
-    from .wasm_executor import execute_sandbox, IsolationLevel
+
+    from .wasm_executor import IsolationLevel, execute_sandbox
 
     console = _get_console()
 
@@ -1576,6 +1586,7 @@ def cmd_run(args: list[str]) -> int:
         # Override runtime if specified
         if runtime_override:
             from dataclasses import replace
+
             new_config = SandboxConfig(
                 timeout_seconds=sandbox.config.timeout_seconds,
                 runtime=runtime_override,
@@ -1595,6 +1606,7 @@ def cmd_run(args: list[str]) -> int:
 
         # Update sandbox with result
         from .sandbox import SandboxEvent, transition_sandbox
+
         updated = transition_sandbox(sandbox, SandboxEvent.EXECUTE, result=result)
         store.update(updated)
 
@@ -1663,7 +1675,7 @@ def cmd_analyze(args: list[str]) -> int:
 
     if not args:
         print("Usage: kg op analyze <sandbox_id>")
-        print("       kg op analyze --code \"import os\"")
+        print('       kg op analyze --code "import os"')
         print("       kg op analyze --file path/to/file.py")
         return 1
 

@@ -11,20 +11,19 @@ Spec: plans/portal-fullstack-integration.md §6 (Phase 4)
 
 import pytest
 
-from protocols.portal_protocol import (
-    PortalTokenProtocol,
-    ExpandableTokenProtocol,
-    satisfies_protocol,
-    get_canonical_dict,
-)
 from protocols.context.outline import PortalToken as OutlinePortalToken
+from protocols.context.portal_bridge import UnifiedPortalBridge
 from protocols.file_operad.portal import (
     PortalLink,
     PortalState,
     PortalToken as FilePortalToken,
 )
-from protocols.context.portal_bridge import UnifiedPortalBridge
-
+from protocols.portal_protocol import (
+    ExpandableTokenProtocol,
+    PortalTokenProtocol,
+    get_canonical_dict,
+    satisfies_protocol,
+)
 
 # =============================================================================
 # Protocol Satisfaction Tests

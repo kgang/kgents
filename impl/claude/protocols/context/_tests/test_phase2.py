@@ -12,12 +12,12 @@ Spec: spec/protocols/context-perception.md
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from typing import Any
 
-from protocols.agentese.node import Observer
+import pytest
 
+from protocols.agentese.node import Observer
 
 # =============================================================================
 # Fixtures
@@ -87,9 +87,7 @@ class TestContextNavNodePhase2:
         assert result.metadata.get("route") == "/context/outline"
 
     @pytest.mark.asyncio
-    async def test_lens_aspect_with_valid_file(
-        self, observer: Observer, test_file: Path
-    ) -> None:
+    async def test_lens_aspect_with_valid_file(self, observer: Observer, test_file: Path) -> None:
         """file_lens aspect creates semantic lens for valid file."""
         from protocols.agentese.contexts.self_context import ContextNavNode
 
@@ -301,9 +299,7 @@ class TestEndToEndWorkflow:
     """End-to-end workflow tests."""
 
     @pytest.mark.asyncio
-    async def test_full_lens_workflow(
-        self, observer: Observer, test_file: Path
-    ) -> None:
+    async def test_full_lens_workflow(self, observer: Observer, test_file: Path) -> None:
         """Test full workflow: CLI → AGENTESE → Context Perception → Result."""
         from protocols.agentese.contexts.self_context import ContextNavNode
 
@@ -358,9 +354,9 @@ class TestContextPerceptionLaws:
     async def test_law_11_3_copy_preserves_source(self) -> None:
         """Law 11.3: paste(copy(snippet)).source ≡ snippet.path"""
         from protocols.context.outline import (
-            TextSnippet,
-            Range,
             OutlineOperations,
+            Range,
+            TextSnippet,
             create_outline,
         )
 

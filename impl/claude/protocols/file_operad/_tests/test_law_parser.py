@@ -20,7 +20,6 @@ from ..law_parser import (
     parse_law_markdown,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -174,12 +173,20 @@ class TestLawDefinition:
     def test_is_verified_property(self):
         """is_verified property works correctly."""
         verified = LawDefinition(
-            name="v", equation="", operations=(), category="",
-            status=LawStatus.VERIFIED, verification_code=""
+            name="v",
+            equation="",
+            operations=(),
+            category="",
+            status=LawStatus.VERIFIED,
+            verification_code="",
         )
         unverified = LawDefinition(
-            name="u", equation="", operations=(), category="",
-            status=LawStatus.UNVERIFIED, verification_code=""
+            name="u",
+            equation="",
+            operations=(),
+            category="",
+            status=LawStatus.UNVERIFIED,
+            verification_code="",
         )
 
         assert verified.is_verified is True
@@ -188,16 +195,28 @@ class TestLawDefinition:
     def test_status_emoji_property(self):
         """status_emoji returns correct emoji."""
         verified = LawDefinition(
-            name="v", equation="", operations=(), category="",
-            status=LawStatus.VERIFIED, verification_code=""
+            name="v",
+            equation="",
+            operations=(),
+            category="",
+            status=LawStatus.VERIFIED,
+            verification_code="",
         )
         unverified = LawDefinition(
-            name="u", equation="", operations=(), category="",
-            status=LawStatus.UNVERIFIED, verification_code=""
+            name="u",
+            equation="",
+            operations=(),
+            category="",
+            status=LawStatus.UNVERIFIED,
+            verification_code="",
         )
         failed = LawDefinition(
-            name="f", equation="", operations=(), category="",
-            status=LawStatus.FAILED, verification_code=""
+            name="f",
+            equation="",
+            operations=(),
+            category="",
+            status=LawStatus.FAILED,
+            verification_code="",
         )
 
         assert verified.status_emoji == "✅"
@@ -414,8 +433,12 @@ class TestListLawsInOperad:
         laws_dir.mkdir(parents=True)
 
         # Create with non-alphabetical names
-        (laws_dir / "z_law.law").write_text(sample_law_content.replace("create_read_identity", "z_law"))
-        (laws_dir / "a_law.law").write_text(sample_law_content.replace("create_read_identity", "a_law"))
+        (laws_dir / "z_law.law").write_text(
+            sample_law_content.replace("create_read_identity", "z_law")
+        )
+        (laws_dir / "a_law.law").write_text(
+            sample_law_content.replace("create_read_identity", "a_law")
+        )
 
         laws = list_laws_in_operad(operad_dir)
 

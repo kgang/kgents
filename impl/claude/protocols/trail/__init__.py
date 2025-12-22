@@ -46,29 +46,29 @@ Spec Reference: spec/protocols/trail-protocol.md
 """
 
 from models.trail import (
+    TrailAnnotationRow,
+    TrailCommitmentRow,
+    TrailEvidenceRow,
+    TrailForkRow,
     # SQLAlchemy models (Row suffix to avoid collision with exploration types)
     TrailRow,
     TrailStepRow,
-    TrailAnnotationRow,
-    TrailForkRow,
-    TrailEvidenceRow,
-    TrailCommitmentRow,
 )
-from .storage import TrailStorageAdapter
 
 # Phase 3: File-based persistence
 from .file_persistence import (
     TRAIL_DIR,
-    TrailSaveResult,
-    TrailLoadResult,
     TrailListEntry,
-    save_trail,
-    load_trail,
-    list_trails,
+    TrailLoadResult,
+    TrailSaveResult,
     delete_trail,
-    sanitize_trail_name,
     generate_trail_id,
+    list_trails,
+    load_trail,
+    sanitize_trail_name,
+    save_trail,
 )
+from .storage import TrailStorageAdapter
 
 __all__ = [
     # SQLAlchemy models (re-exported from models.trail)

@@ -11,6 +11,10 @@
  *
  * @see spec/protocols/os-shell.md
  *
+ * STARK BIOME: 90% steel silence, 10% organic glow
+ * - Steel foundation: obsidian → carbon → slate → gunmetal → zinc
+ * - Earned highlights: glow-spore, glow-light
+ *
  * @example
  * ```tsx
  * // In App.tsx
@@ -79,7 +83,7 @@ function CrownContext() {
 
   if (!activeJewel) {
     return (
-      <div className="flex items-center gap-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 text-sm text-steel-zinc">
         <span>Crown Jewels</span>
       </div>
     );
@@ -124,7 +128,7 @@ function QuickNav() {
   }
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto px-2 py-1 bg-gray-800/50 border-b border-gray-700/50">
+    <nav className="flex items-center gap-1 overflow-x-auto px-2 py-1 bg-steel-carbon/50 border-b border-steel-gunmetal/50">
       {jewels.map((jewel) => {
         const Icon = JEWEL_ICONS[jewel.name];
         const colors = JEWEL_COLORS[jewel.name];
@@ -135,17 +139,20 @@ function QuickNav() {
             key={jewel.name}
             to={jewel.route}
             className={`
-              flex items-center gap-1.5 px-2 py-1 rounded text-xs
-              transition-colors
-              ${isActive ? 'bg-gray-700/70' : 'hover:bg-gray-700/50'}
+              flex items-center gap-1.5 px-2 py-1 rounded-bare text-xs
+              transition-colors duration-quick
+              ${isActive ? 'bg-steel-gunmetal/70' : 'hover:bg-steel-gunmetal/50'}
             `}
           >
             <Icon
               className="w-4 h-4"
-              style={{ color: isActive ? colors.primary : 'rgb(156, 163, 175)' }}
+              style={{ color: isActive ? colors.primary : 'var(--color-steel-zinc)' }}
             />
             {density === 'comfortable' && (
-              <span style={{ color: isActive ? colors.primary : 'rgb(156, 163, 175)' }}>
+              <span
+                className={isActive ? '' : 'text-steel-zinc'}
+                style={isActive ? { color: colors.primary } : undefined}
+              >
                 {jewel.name.charAt(0).toUpperCase() + jewel.name.slice(1)}
               </span>
             )}
@@ -267,7 +274,7 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
   const MOBILE_HEADER_HEIGHT = 44;
 
   return (
-    <div className="h-screen bg-gray-900 flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-steel-obsidian flex flex-col relative overflow-hidden">
       {/* Observer Drawer - Always present at top */}
       <ObserverErrorBoundary>
         <ObserverDrawer />
@@ -276,7 +283,7 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
       {/* Header with logo (compact/comfortable) */}
       {density !== 'spacious' && (
         <header
-          className="bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/50 px-4 py-2 flex items-center justify-between fixed left-0 right-0 z-20"
+          className="bg-steel-carbon/80 backdrop-blur-sm border-b border-steel-gunmetal/50 px-4 py-2 flex items-center justify-between fixed left-0 right-0 z-20"
           style={{ top: `${observerHeight}px` }}
         >
           <div className="flex items-center gap-3">
@@ -285,14 +292,14 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
               <button
                 type="button"
                 onClick={() => setNavigationTreeExpanded(true)}
-                className="p-2 hover:bg-gray-700/50 rounded transition-colors"
+                className="p-2 hover:bg-steel-gunmetal/50 rounded-bare transition-colors duration-quick"
                 aria-label="Open navigation"
               >
-                <Menu className="w-6 h-6 text-gray-300" />
+                <Menu className="w-6 h-6 text-steel-zinc" />
               </button>
             )}
             <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <span className="font-semibold text-lg text-white">kgents</span>
+              <span className="font-semibold text-lg text-glow-light">kgents</span>
             </Link>
           </div>
           <CrownContext />
@@ -314,9 +321,11 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
           className="flex-1 min-h-0 flex flex-col overflow-y-auto"
           style={{
             marginTop: density !== 'compact' ? `${observerHeight}px` : undefined,
-            marginLeft: density !== 'compact' && navigationTreeExpanded ? `${navigationWidth}px` : 0,
+            marginLeft:
+              density !== 'compact' && navigationTreeExpanded ? `${navigationWidth}px` : 0,
             marginBottom: density !== 'compact' ? `${terminalHeight}px` : undefined,
-            paddingTop: density === 'compact' ? `${observerHeight + MOBILE_HEADER_HEIGHT}px` : undefined,
+            paddingTop:
+              density === 'compact' ? `${observerHeight + MOBILE_HEADER_HEIGHT}px` : undefined,
             paddingBottom: density === 'compact' ? '5rem' : undefined,
             transition: isAnimating ? 'none' : 'margin 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
@@ -334,7 +343,7 @@ function ShellLayoutInner({ showFooter = false }: ShellLayoutProps) {
 
       {/* Optional Footer */}
       {showFooter && (
-        <footer className="border-t border-gray-700/50 bg-gray-800/30 py-3 px-4 text-center text-xs text-gray-500">
+        <footer className="border-t border-steel-gunmetal/50 bg-steel-carbon/30 py-3 px-4 text-center text-xs text-steel-zinc">
           kgents - Tasteful, curated, ethical, joy-inducing agents
         </footer>
       )}

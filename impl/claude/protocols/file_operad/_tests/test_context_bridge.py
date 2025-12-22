@@ -17,7 +17,6 @@ from protocols.file_operad.context_bridge import (
 )
 from protocols.file_operad.portal import PortalOpenSignal
 
-
 # =============================================================================
 # ContextEvent Tests
 # =============================================================================
@@ -359,11 +358,13 @@ class TestContextAccumulator:
         accumulator = ContextAccumulator()
 
         # Open some files
-        accumulator.apply(ContextEvent.files_opened(
-            paths=["/a.py", "/b.py", "/c.py"],
-            reason="Open",
-            depth=1,
-        ))
+        accumulator.apply(
+            ContextEvent.files_opened(
+                paths=["/a.py", "/b.py", "/c.py"],
+                reason="Open",
+                depth=1,
+            )
+        )
         assert accumulator.open_count == 3
 
         # Close all
@@ -386,11 +387,13 @@ class TestContextAccumulator:
     def test_summary(self) -> None:
         """summary() returns human-readable state."""
         accumulator = ContextAccumulator()
-        accumulator.apply(ContextEvent.files_opened(
-            paths=["/path/to/file.py"],
-            reason="Test",
-            depth=1,
-        ))
+        accumulator.apply(
+            ContextEvent.files_opened(
+                paths=["/path/to/file.py"],
+                reason="Test",
+                depth=1,
+            )
+        )
 
         summary = accumulator.summary()
 
@@ -402,16 +405,20 @@ class TestContextAccumulator:
         """Multiple open events accumulate paths."""
         accumulator = ContextAccumulator()
 
-        accumulator.apply(ContextEvent.files_opened(
-            paths=["/a.py"],
-            reason="First",
-            depth=1,
-        ))
-        accumulator.apply(ContextEvent.files_opened(
-            paths=["/b.py", "/c.py"],
-            reason="Second",
-            depth=2,
-        ))
+        accumulator.apply(
+            ContextEvent.files_opened(
+                paths=["/a.py"],
+                reason="First",
+                depth=1,
+            )
+        )
+        accumulator.apply(
+            ContextEvent.files_opened(
+                paths=["/b.py", "/c.py"],
+                reason="Second",
+                depth=2,
+            )
+        )
 
         assert accumulator.open_count == 3
         assert accumulator.is_open("/a.py")

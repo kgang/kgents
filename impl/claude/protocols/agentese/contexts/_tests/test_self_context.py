@@ -28,26 +28,26 @@ Teaching:
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
 from typing import Any
 
-from protocols.agentese.node import Observer
+import pytest
+
 from protocols.agentese.contexts.self_context import (
-    ContextNode,
-    ContextGraph,
-    Trail,
-    TrailStep,
     REVERSE_EDGES,
-    get_reverse_edge,
-    create_context_node,
-    create_context_graph,
-    get_context_nav_node,
+    SPEC_EDGES,
     STRUCTURAL_EDGES,
     TESTING_EDGES,
-    SPEC_EDGES,
+    ContextGraph,
+    ContextNode,
+    Trail,
+    TrailStep,
+    create_context_graph,
+    create_context_node,
+    get_context_nav_node,
+    get_reverse_edge,
 )
-
+from protocols.agentese.node import Observer
 
 # === Basic Data Structure Tests ===
 
@@ -277,7 +277,7 @@ class TestTrail:
 
         outline = trail.as_outline()
 
-        assert "📍 Trail: \"Empty Investigation\"" in outline
+        assert '📍 Trail: "Empty Investigation"' in outline
         assert "Steps: 0" in outline
 
     def test_as_outline_with_steps(self) -> None:
@@ -295,7 +295,7 @@ class TestTrail:
 
         outline = trail.as_outline()
 
-        assert "📍 Trail: \"Auth Bug\"" in outline
+        assert '📍 Trail: "Auth Bug"' in outline
         assert "Steps: 3" in outline
         assert "Started at world.auth" in outline
         assert "──[tests]──→ world.auth.tests" in outline
@@ -320,7 +320,7 @@ class TestTrail:
         outline = trail.as_outline()
 
         # Step annotation
-        assert "💭 \"Found the bug here\"" in outline
+        assert '💭 "Found the bug here"' in outline
         # Trail-level annotation
         assert "📝 This is the root cause" in outline
 
@@ -528,8 +528,9 @@ class TestLaw10_2_BidirectionalConsistency:
                 assert reverse is not None, f"Edge {edge} has no reverse"
                 # Verify the reverse of reverse is original
                 reverse_of_reverse = get_reverse_edge(reverse)
-                assert reverse_of_reverse == edge, \
+                assert reverse_of_reverse == edge, (
                     f"reverse(reverse({edge})) = {reverse_of_reverse} != {edge}"
+                )
 
     def test_bidirectional_pairs(self) -> None:
         """Key edge pairs are properly bidirectional."""

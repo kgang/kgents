@@ -37,7 +37,6 @@ from ..types import (
     PrincipleDraw,
 )
 
-
 # =============================================================================
 # Test Fixtures: Minimal ASHC Types for Testing
 # =============================================================================
@@ -496,9 +495,7 @@ class TestUpdateDerivationFromASHC:
             await update_derivation_from_ashc(registry, "UnknownAgent", output)
 
     @pytest.mark.asyncio
-    async def test_adaptive_evidence_uses_posterior(
-        self, registry: DerivationRegistry
-    ) -> None:
+    async def test_adaptive_evidence_uses_posterior(self, registry: DerivationRegistry) -> None:
         """AdaptiveEvidence uses posterior mean for confidence."""
         runs = tuple(MockAdaptiveRunResult(success=True) for _ in range(5))
         adaptive = MockAdaptiveEvidence(
@@ -587,7 +584,8 @@ class TestSyncFromPrincipleRegistry:
 
         registry = MockPrincipleRegistry()
         registry.principles["BadPrinciple"] = MockPrincipleCredibility(
-            "BadPrinciple", credibility=0.0  # Discredited
+            "BadPrinciple",
+            credibility=0.0,  # Discredited
         )
 
         updated = sync_from_principle_registry(derivation, registry)
@@ -686,9 +684,7 @@ class TestSyncToPrincipleRegistry:
         )
 
         registry = MockPrincipleRegistry()
-        registry.principles["Composable"] = MockPrincipleCredibility(
-            "Composable", credibility=0.9
-        )
+        registry.principles["Composable"] = MockPrincipleCredibility("Composable", credibility=0.9)
 
         sync_to_principle_registry(derivation, registry, success=True)
 
@@ -741,13 +737,15 @@ class TestLemmaStrengthensDerivation:
         """Categorical evidence replaces empirical for same principle."""
         # First add empirical evidence
         existing = registry.get("TestAgent")
-        updated = existing.with_principle_draws((
-            PrincipleDraw(
-                principle="Composable",
-                draw_strength=0.7,
-                evidence_type=EvidenceType.EMPIRICAL,
-            ),
-        ))
+        updated = existing.with_principle_draws(
+            (
+                PrincipleDraw(
+                    principle="Composable",
+                    draw_strength=0.7,
+                    evidence_type=EvidenceType.EMPIRICAL,
+                ),
+            )
+        )
         registry._derivations["TestAgent"] = updated
 
         # Now add categorical

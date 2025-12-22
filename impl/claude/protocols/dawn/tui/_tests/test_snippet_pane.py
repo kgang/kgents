@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from protocols.dawn.snippets import SnippetLibrary
-from protocols.dawn.tui.snippet_pane import SnippetPane, SNIPPET_ICONS, SNIPPET_COLORS
+from protocols.dawn.tui.snippet_pane import SNIPPET_COLORS, SNIPPET_ICONS, SnippetPane
 
 
 class TestSnippetPaneConstruction:

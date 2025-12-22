@@ -51,25 +51,91 @@ MAX_OUTPUT_BYTES = 1024 * 1024  # 1MB max output
 MAX_MEMORY_MB = 256  # Memory limit for subprocess
 
 # Safe builtins for restricted execution
-SAFE_BUILTINS = frozenset({
-    "abs", "all", "any", "ascii", "bin", "bool", "bytearray", "bytes",
-    "callable", "chr", "classmethod", "complex", "dict", "dir", "divmod",
-    "enumerate", "filter", "float", "format", "frozenset", "getattr",
-    "hasattr", "hash", "hex", "id", "int", "isinstance", "issubclass",
-    "iter", "len", "list", "map", "max", "min", "next", "object", "oct",
-    "ord", "pow", "print", "property", "range", "repr", "reversed",
-    "round", "set", "slice", "sorted", "staticmethod", "str", "sum",
-    "super", "tuple", "type", "vars", "zip",
-})
+SAFE_BUILTINS = frozenset(
+    {
+        "abs",
+        "all",
+        "any",
+        "ascii",
+        "bin",
+        "bool",
+        "bytearray",
+        "bytes",
+        "callable",
+        "chr",
+        "classmethod",
+        "complex",
+        "dict",
+        "dir",
+        "divmod",
+        "enumerate",
+        "filter",
+        "float",
+        "format",
+        "frozenset",
+        "getattr",
+        "hasattr",
+        "hash",
+        "hex",
+        "id",
+        "int",
+        "isinstance",
+        "issubclass",
+        "iter",
+        "len",
+        "list",
+        "map",
+        "max",
+        "min",
+        "next",
+        "object",
+        "oct",
+        "ord",
+        "pow",
+        "print",
+        "property",
+        "range",
+        "repr",
+        "reversed",
+        "round",
+        "set",
+        "slice",
+        "sorted",
+        "staticmethod",
+        "str",
+        "sum",
+        "super",
+        "tuple",
+        "type",
+        "vars",
+        "zip",
+    }
+)
 
 # Blocked imports for security
-BLOCKED_IMPORTS = frozenset({
-    "os", "sys", "subprocess", "socket", "http", "urllib",
-    "pickle", "shelve", "shutil", "pathlib", "tempfile",
-    "multiprocessing", "threading", "asyncio",
-    "ctypes", "cffi", "cython",
-    "importlib", "__builtins__",
-})
+BLOCKED_IMPORTS = frozenset(
+    {
+        "os",
+        "sys",
+        "subprocess",
+        "socket",
+        "http",
+        "urllib",
+        "pickle",
+        "shelve",
+        "shutil",
+        "pathlib",
+        "tempfile",
+        "multiprocessing",
+        "threading",
+        "asyncio",
+        "ctypes",
+        "cffi",
+        "cython",
+        "importlib",
+        "__builtins__",
+    }
+)
 
 
 # =============================================================================
@@ -80,16 +146,16 @@ BLOCKED_IMPORTS = frozenset({
 class ExecutionMode(Enum):
     """Execution mode for sandbox."""
 
-    LOCAL = auto()    # Subprocess with restrictions
-    REMOTE = auto()   # Remote sandbox service
+    LOCAL = auto()  # Subprocess with restrictions
+    REMOTE = auto()  # Remote sandbox service
 
 
 class IsolationLevel(Enum):
     """Level of isolation for execution."""
 
-    MINIMAL = auto()   # Basic namespace restriction
+    MINIMAL = auto()  # Basic namespace restriction
     STANDARD = auto()  # Namespace + resource limits
-    STRICT = auto()    # Full isolation (container/WASM)
+    STRICT = auto()  # Full isolation (container/WASM)
 
 
 # =============================================================================
@@ -148,11 +214,24 @@ class ExecutorConfig:
     max_output_bytes: int = MAX_OUTPUT_BYTES
     max_memory_mb: int = MAX_MEMORY_MB
     allowed_imports: frozenset[str] = field(
-        default_factory=lambda: frozenset({
-            "re", "json", "dataclasses", "typing", "datetime",
-            "math", "functools", "itertools", "collections",
-            "abc", "enum", "copy", "pprint", "textwrap",
-        })
+        default_factory=lambda: frozenset(
+            {
+                "re",
+                "json",
+                "dataclasses",
+                "typing",
+                "datetime",
+                "math",
+                "functools",
+                "itertools",
+                "collections",
+                "abc",
+                "enum",
+                "copy",
+                "pprint",
+                "textwrap",
+            }
+        )
     )
     blocked_imports: frozenset[str] = BLOCKED_IMPORTS
 
@@ -301,7 +380,7 @@ class LocalWASMExecutor:
 
             return ExecutionResult(
                 success=result["success"],
-                output=result["stdout"][:self.config.max_output_bytes],
+                output=result["stdout"][: self.config.max_output_bytes],
                 error=result["stderr"] if result["stderr"] else None,
                 execution_time_ms=elapsed,
                 isolation_level=self.isolation_level,
@@ -606,7 +685,7 @@ class ExecutorBridge:
         Returns:
             SandboxResult with execution output
         """
-        from .sandbox import SandboxRuntime, SandboxResult, SandboxEvent, transition_sandbox
+        from .sandbox import SandboxEvent, SandboxResult, SandboxRuntime, transition_sandbox
 
         runtime = sandbox.config.runtime
         timeout = sandbox.config.timeout_seconds
@@ -654,14 +733,15 @@ class ExecutorBridge:
 
         WARNING: This has minimal isolation. Only use for trusted code.
         """
-        from .sandbox import SandboxResult
         import asyncio
+
+        from .sandbox import SandboxResult
 
         start_time = time.perf_counter()
 
         # Capture stdout
-        import io
         import contextlib
+        import io
 
         stdout_capture = io.StringIO()
         stderr_capture = io.StringIO()

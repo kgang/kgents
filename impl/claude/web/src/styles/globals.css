@@ -9,6 +9,30 @@
      * "The frame is humble. The content glows."
      * 90% Steel (cool industrial) / 10% Life (organic accents)
      * ================================================================= */
+
+    /* Steel Foundation (backgrounds, frames — the 90%) */
+    --color-steel-obsidian: #0a0a0c;
+    --color-steel-carbon: #141418;
+    --color-steel-slate: #1c1c22;
+    --color-steel-gunmetal: #28282f;
+    --color-steel-zinc: #3a3a44;
+
+    /* Soil Undertones (warm secondary) */
+    --color-soil-loam: #1a1512;
+    --color-soil-humus: #2d221a;
+
+    /* Living Accent (the 10%) */
+    --color-life-moss: #1a2e1a;
+    --color-life-sage: #4a6b4a;
+    --color-life-mint: #6b8b6b;
+
+    /* Bioluminescent (earned glow) */
+    --color-glow-spore: #c4a77d;
+    --color-glow-amber: #d4b88c;
+    --color-glow-light: #e5c99d;
+    --color-glow-lichen: #8ba98b;
+
+    /* Legacy mappings */
     --background: 10 10 12; /* steel-obsidian */
     --foreground: 138 138 148; /* muted body text */
     --foreground-strong: 180 180 190; /* emphasized text */

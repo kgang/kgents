@@ -32,8 +32,9 @@ from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from .registry import DerivationRegistry
     from protocols.exploration.types import Observer
+
+    from .registry import DerivationRegistry
 
 
 # =============================================================================
@@ -41,11 +42,13 @@ if TYPE_CHECKING:
 # =============================================================================
 
 
-DERIVATION_EDGE_TYPES = frozenset({
-    "derives_from",
-    "shares_principle",
-    "confidence_flows_to",
-})
+DERIVATION_EDGE_TYPES = frozenset(
+    {
+        "derives_from",
+        "shares_principle",
+        "confidence_flows_to",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -190,10 +193,7 @@ class DerivationHyperedgeResolver:
         if source in self._derives_from_cache:
             return self._derives_from_cache[source]
 
-        nodes = [
-            ContextNode.for_agent(name)
-            for name in derivation.derives_from
-        ]
+        nodes = [ContextNode.for_agent(name) for name in derivation.derives_from]
         self._derives_from_cache[source] = nodes
         return nodes
 
@@ -403,7 +403,6 @@ def get_derivation_graph_for_agent(
 
 # Import Derivation type for type hints
 from .types import Derivation
-
 
 __all__ = [
     # Edge types

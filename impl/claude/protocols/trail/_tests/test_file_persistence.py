@@ -33,7 +33,6 @@ from protocols.trail.file_persistence import (
     save_trail,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -96,10 +95,7 @@ def mock_exploration_trail() -> Any:
             return {
                 "id": self.id,
                 "name": self.name,
-                "steps": [
-                    {"node_path": s.node, "edge_type": s.edge_taken}
-                    for s in self.steps
-                ],
+                "steps": [{"node_path": s.node, "edge_type": s.edge_taken} for s in self.steps],
                 "annotations": self.annotations,
             }
 
@@ -297,9 +293,7 @@ class TestListTrails:
         entries = list_trails()
         assert entries == []
 
-    def test_list_with_trails(
-        self, tmp_trail_dir: Path, sample_trail_dict: dict[str, Any]
-    ) -> None:
+    def test_list_with_trails(self, tmp_trail_dir: Path, sample_trail_dict: dict[str, Any]) -> None:
         """Should list saved trails."""
         # Save a few trails
         for i in range(3):
@@ -335,7 +329,9 @@ class TestListTrails:
     ) -> None:
         """Should be sorted by saved_at descending (newest first)."""
         # Save with different timestamps
-        for i, time in enumerate(["2025-12-20T10:00:00", "2025-12-22T10:00:00", "2025-12-21T10:00:00"]):
+        for i, time in enumerate(
+            ["2025-12-20T10:00:00", "2025-12-22T10:00:00", "2025-12-21T10:00:00"]
+        ):
             trail = sample_trail_dict.copy()
             trail["id"] = f"trail-{i}"
             trail["saved_at"] = time

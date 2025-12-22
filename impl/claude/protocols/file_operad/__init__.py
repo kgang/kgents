@@ -16,44 +16,6 @@ The core insight: "Navigation is expansion. Expansion is navigation."
 
 from __future__ import annotations
 
-from .portal import (
-    PortalLink,
-    PortalOpenSignal,
-    PortalRenderer,
-    PortalState,
-    PortalToken,
-    PortalTree,
-)
-from .trace import (
-    FileTraceStore,
-    FileWiringTrace,
-    enable_persistence,
-    get_file_trace_store,
-    record_expansion,
-    record_file_operation,
-    reset_file_trace_store,
-    sync_file_trace_store,
-)
-from .sandbox import (
-    SandboxConfig,
-    SandboxId,
-    SandboxPhase,
-    SandboxPolynomial,
-    SandboxResult,
-    SandboxRuntime,
-    SandboxStore,
-    get_sandbox_store,
-    reset_sandbox_store,
-    InvalidTransitionError,
-)
-from .law_parser import (
-    LawDefinition,
-    LawStatus,
-    parse_law_file,
-    parse_law_markdown,
-    list_laws_in_operad,
-    extract_verification_code,
-)
 from .ashc_bridge import (
     EvidenceSource,
     EvidenceType,
@@ -66,6 +28,34 @@ from .ashc_bridge import (
     SandboxToEvidenceAdapter,
     VerificationResult,
 )
+from .law_parser import (
+    LawDefinition,
+    LawStatus,
+    extract_verification_code,
+    list_laws_in_operad,
+    parse_law_file,
+    parse_law_markdown,
+)
+from .portal import (
+    PortalLink,
+    PortalOpenSignal,
+    PortalRenderer,
+    PortalState,
+    PortalToken,
+    PortalTree,
+)
+from .sandbox import (
+    InvalidTransitionError,
+    SandboxConfig,
+    SandboxId,
+    SandboxPhase,
+    SandboxPolynomial,
+    SandboxResult,
+    SandboxRuntime,
+    SandboxStore,
+    get_sandbox_store,
+    reset_sandbox_store,
+)
 from .source_portals import (
     SOURCE_EDGE_TYPES,
     SUPPORTED_EXTENSIONS,
@@ -75,6 +65,16 @@ from .source_portals import (
     build_source_portal_tree,
     discover_portals,
     render_portals_cli,
+)
+from .trace import (
+    FileTraceStore,
+    FileWiringTrace,
+    enable_persistence,
+    get_file_trace_store,
+    record_expansion,
+    record_file_operation,
+    reset_file_trace_store,
+    sync_file_trace_store,
 )
 from .wasm_executor import (
     CodeAnalyzer,

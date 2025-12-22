@@ -14,18 +14,17 @@ See: spec/protocols/derivation-framework.md §6.2
 import pytest
 
 from ..portal_bridge import (
-    path_to_agent_name,
-    agent_name_to_paths,
-    PortalOpenSignal,
     PortalDerivationSync,
-    portal_expansion_to_derivation,
+    PortalOpenSignal,
+    agent_name_to_paths,
     derivation_to_portal_trust,
-    sync_portal_expansion,
     get_trust_for_path,
+    path_to_agent_name,
+    portal_expansion_to_derivation,
+    sync_portal_expansion,
 )
-from ..types import Derivation, DerivationTier
 from ..registry import DerivationRegistry
-
+from ..types import Derivation, DerivationTier
 
 # =============================================================================
 # Fixtures
@@ -218,7 +217,9 @@ class TestDerivationToPortalTrust:
         trust = PortalDerivationSync.derivation_to_portal_trust("Unknown", registry)
         assert trust == 0.3
 
-    def test_trust_bounded_by_confidence(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_trust_bounded_by_confidence(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Trust is bounded by agent confidence."""
         trust = PortalDerivationSync.derivation_to_portal_trust("Brain", registry)
 
@@ -263,7 +264,9 @@ class TestDerivationToPortalTrust:
 class TestConvenienceFunctions:
     """Tests for convenience wrapper functions."""
 
-    def test_portal_expansion_to_derivation_wrapper(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_portal_expansion_to_derivation_wrapper(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Wrapper function works correctly."""
         signal = PortalOpenSignal.from_expansion(
             portal_path="parent",
@@ -273,7 +276,9 @@ class TestConvenienceFunctions:
 
         assert "Brain" in updated
 
-    def test_derivation_to_portal_trust_wrapper(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_derivation_to_portal_trust_wrapper(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Wrapper function works correctly."""
         trust = derivation_to_portal_trust("Brain", registry)
         assert 0 < trust <= 1.0
@@ -309,7 +314,9 @@ class TestConvenienceFunctions:
 class TestBidirectionalSync:
     """Integration tests for bidirectional sync."""
 
-    def test_usage_increases_stigmergic_confidence(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_usage_increases_stigmergic_confidence(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Many usages increase stigmergic confidence over time."""
         initial_trust = derivation_to_portal_trust("Brain", registry)
 
@@ -328,7 +335,9 @@ class TestBidirectionalSync:
         derivation = registry.get("Brain")
         assert derivation.stigmergic_confidence > 0
 
-    def test_trust_reflects_derivation_updates(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_trust_reflects_derivation_updates(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Trust updates when derivation confidence changes."""
         initial_trust = derivation_to_portal_trust("Brain", registry)
 

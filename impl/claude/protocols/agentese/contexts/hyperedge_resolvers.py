@@ -26,7 +26,7 @@ import ast
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Awaitable
+from typing import TYPE_CHECKING, Any, Awaitable, Callable
 
 if TYPE_CHECKING:
     from .self_context import ContextNode
@@ -257,9 +257,7 @@ def file_to_agentese_path(file_path: Path, root: Path) -> str:
 
 
 @register_resolver("contains", reverse_edge="contained_in")
-async def resolve_contains(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_contains(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find children/submodules of a node.
 
@@ -309,9 +307,7 @@ async def resolve_contains(
 
 
 @register_resolver("parent", reverse_edge="children")
-async def resolve_parent(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_parent(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """Find parent module of a node."""
     from .self_context import ContextNode
 
@@ -332,9 +328,7 @@ async def resolve_parent(
 
 
 @register_resolver("imports", reverse_edge="imported_by")
-async def resolve_imports(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_imports(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find imports/dependencies of a Python file.
 
@@ -379,9 +373,7 @@ async def resolve_imports(
 
 
 @register_resolver("calls", reverse_edge="called_by")
-async def resolve_calls(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_calls(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find functions called by this module.
 
@@ -428,9 +420,7 @@ async def resolve_calls(
 
 
 @register_resolver("tests", reverse_edge="tested_by")
-async def resolve_tests(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_tests(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find test files for a module.
 
@@ -470,9 +460,7 @@ async def resolve_tests(
 
 
 @register_resolver("covers", reverse_edge="covered_by")
-async def resolve_covers(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_covers(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find code paths covered by this test.
 
@@ -512,9 +500,7 @@ async def resolve_covers(
 
 
 @register_resolver("implements", reverse_edge="implemented_by")
-async def resolve_implements(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_implements(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find specifications implemented by this module.
 
@@ -554,7 +540,7 @@ async def resolve_implements(
     try:
         content = file_path.read_text()
         # Look for "Spec: ..." patterns
-        spec_refs = re.findall(r'Spec:\s*([^\n]+)', content)
+        spec_refs = re.findall(r"Spec:\s*([^\n]+)", content)
         for ref in spec_refs:
             ref = ref.strip()
             if ref:
@@ -571,9 +557,7 @@ async def resolve_implements(
 
 
 @register_resolver("derives_from", reverse_edge="derived_by")
-async def resolve_derives_from(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_derives_from(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find parent specifications this derives from.
 
@@ -597,7 +581,7 @@ async def resolve_derives_from(
             try:
                 content = spec_path.read_text()
                 # Look for "Derives From:" pattern
-                derives = re.findall(r'Derives From:\s*`([^`]+)`', content)
+                derives = re.findall(r"Derives From:\s*`([^`]+)`", content)
                 results: list[ContextNode] = []
                 for ref in derives:
                     results.append(
@@ -618,9 +602,7 @@ async def resolve_derives_from(
 
 
 @register_resolver("contained_in", reverse_edge="contains")
-async def resolve_contained_in(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_contained_in(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find parent container of a node (reverse of contains).
 
@@ -634,9 +616,7 @@ async def resolve_contained_in(
 
 
 @register_resolver("imported_by")
-async def resolve_imported_by(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_imported_by(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find modules that import this node (reverse of imports).
 
@@ -654,9 +634,7 @@ async def resolve_imported_by(
 
 
 @register_resolver("called_by")
-async def resolve_called_by(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_called_by(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find functions that call this node (reverse of calls).
 
@@ -667,9 +645,7 @@ async def resolve_called_by(
 
 
 @register_resolver("tested_by")
-async def resolve_tested_by(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_tested_by(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find the module tested by this test file (reverse of tests).
 
@@ -685,9 +661,7 @@ async def resolve_tested_by(
 
 
 @register_resolver("implemented_by")
-async def resolve_implemented_by(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_implemented_by(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find implementation modules for a spec (reverse of implements).
 
@@ -733,9 +707,7 @@ async def resolve_implemented_by(
 
 
 @register_resolver("derived_by")
-async def resolve_derived_by(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_derived_by(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find specs that derive from this spec (reverse of derives_from).
 
@@ -749,9 +721,7 @@ async def resolve_derived_by(
 
 
 @register_resolver("related")
-async def resolve_related(
-    node: "ContextNode", root: Path
-) -> list["ContextNode"]:
+async def resolve_related(node: "ContextNode", root: Path) -> list["ContextNode"]:
     """
     Find loosely related nodes.
 

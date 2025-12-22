@@ -14,17 +14,16 @@ from pathlib import Path
 import pytest
 
 from ..lens import (
-    FocusType,
-    FocusSpec,
     FileLens,
-    create_lens_for_function,
+    FocusSpec,
+    FocusType,
     create_lens_for_class,
+    create_lens_for_function,
     create_lens_for_method,
-    create_lens_for_range,
     create_lens_for_pattern,
+    create_lens_for_range,
     generate_sane_name,
 )
-
 
 # === FocusSpec Tests ===
 
@@ -319,10 +318,7 @@ class TestLensIntegration:
         assert "Validate a JWT token" in lens.visible_content
 
         # 3. Modify
-        modified = lens.visible_content.replace(
-            "len(parts) == 3",
-            "len(parts) >= 3"
-        )
+        modified = lens.visible_content.replace("len(parts) == 3", "len(parts) >= 3")
 
         # 4. Write back
         whole = sample_python_file.read_text()

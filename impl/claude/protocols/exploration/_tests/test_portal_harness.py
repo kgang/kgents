@@ -11,8 +11,11 @@ Spec: spec/protocols/portal-token.md section 10 (Integration Points)
 """
 
 import asyncio
-import pytest
 from pathlib import Path
+
+import pytest
+
+from protocols.file_operad.portal import PortalLink, PortalNode, PortalToken, PortalTree
 
 from ..budget import NavigationBudget, quick_budget
 from ..harness import ExplorationHarness, create_harness
@@ -24,8 +27,6 @@ from ..types import (
     Observer,
     PortalExpansionResult,
 )
-from protocols.file_operad.portal import PortalLink, PortalNode, PortalToken, PortalTree
-
 
 # =============================================================================
 # Loop Detector Portal Tests
@@ -242,27 +243,21 @@ class TestPortalExpansionResult:
 
     def test_budget_exhausted_result(self) -> None:
         """budget_exhausted_result() should create failed result."""
-        result = PortalExpansionResult.budget_exhausted_result(
-            "tests", "max_steps"
-        )
+        result = PortalExpansionResult.budget_exhausted_result("tests", "max_steps")
         assert not result.success
         assert result.budget_exhausted
         assert "Budget exhausted" in result.error_message
 
     def test_loop_detected_result(self) -> None:
         """loop_detected_result() should create failed result."""
-        result = PortalExpansionResult.loop_detected_result(
-            "tests", LoopStatus.EXACT_LOOP
-        )
+        result = PortalExpansionResult.loop_detected_result("tests", LoopStatus.EXACT_LOOP)
         assert not result.success
         assert result.loop_detected == LoopStatus.EXACT_LOOP
         assert "Loop detected" in result.error_message
 
     def test_expansion_failed_result(self) -> None:
         """expansion_failed_result() should create failed result."""
-        result = PortalExpansionResult.expansion_failed_result(
-            "tests", "File not found"
-        )
+        result = PortalExpansionResult.expansion_failed_result("tests", "File not found")
         assert not result.success
         assert result.error_message == "File not found"
 

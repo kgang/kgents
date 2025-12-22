@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from protocols.dawn.tui.garden_view import GardenView, MAX_EVENTS
+from protocols.dawn.tui.garden_view import MAX_EVENTS, GardenView
 
 
 class TestGardenViewConstruction:

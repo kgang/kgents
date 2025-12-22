@@ -22,27 +22,27 @@ Teaching:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
 from protocols.derivation.decay import (
-    DecayConfig,
     ActivityRecord,
+    DecayConfig,
     InMemoryActivityStore,
     InMemoryRefreshStore,
     RefreshSchedule,
-    decay_principle_draw,
-    decay_derivation_evidence,
-    apply_evidence_decay,
-    calculate_stigmergic_decay,
-    apply_stigmergic_decay,
-    record_activity,
-    should_refresh_agent,
     apply_ashc_refresh,
-    run_decay_cycle,
+    apply_evidence_decay,
+    apply_stigmergic_decay,
+    calculate_stigmergic_decay,
+    decay_derivation_evidence,
+    decay_principle_draw,
+    record_activity,
     reset_activity_store,
     reset_refresh_store,
+    run_decay_cycle,
+    should_refresh_agent,
 )
 from protocols.derivation.registry import DerivationRegistry
 from protocols.derivation.types import (
@@ -51,7 +51,6 @@ from protocols.derivation.types import (
     EvidenceType,
     PrincipleDraw,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -253,9 +252,7 @@ class TestDecayDerivationEvidence:
 
         # Both draws should have decayed
         for draw in decayed.principle_draws:
-            original = next(
-                d for d in brain.principle_draws if d.principle == draw.principle
-            )
+            original = next(d for d in brain.principle_draws if d.principle == draw.principle)
             assert draw.draw_strength < original.draw_strength
 
     def test_bootstrap_never_decayed(
@@ -299,9 +296,7 @@ class TestApplyEvidenceDecay:
         self, registry: DerivationRegistry, config: DecayConfig
     ) -> None:
         """Decays evidence for all non-bootstrap agents."""
-        result = await apply_evidence_decay(
-            days_elapsed=10, registry=registry, config=config
-        )
+        result = await apply_evidence_decay(days_elapsed=10, registry=registry, config=config)
 
         # Brain should be in decayed list
         assert "Brain" in result["decayed_agents"]
@@ -310,13 +305,9 @@ class TestApplyEvidenceDecay:
         assert "Compose" in result["bootstrap_skipped"]
 
     @pytest.mark.asyncio
-    async def test_returns_summary(
-        self, registry: DerivationRegistry, config: DecayConfig
-    ) -> None:
+    async def test_returns_summary(self, registry: DerivationRegistry, config: DecayConfig) -> None:
         """Returns summary with all categories."""
-        result = await apply_evidence_decay(
-            days_elapsed=1, registry=registry, config=config
-        )
+        result = await apply_evidence_decay(days_elapsed=1, registry=registry, config=config)
 
         assert "days_elapsed" in result
         assert "decayed_agents" in result
@@ -647,9 +638,7 @@ class TestRunDecayCycle:
         # Set up some activity
         now = datetime.now(timezone.utc)
         old = now - timedelta(days=60)
-        activity_store.set(
-            ActivityRecord("Brain", old, 50)
-        )
+        activity_store.set(ActivityRecord("Brain", old, 50))
 
         result = await run_decay_cycle(
             days_elapsed=1.0,
@@ -660,10 +649,7 @@ class TestRunDecayCycle:
         )
 
         # All three phases should have run
-        assert (
-            "days_elapsed" in result.evidence_decay
-            or "decayed_agents" in result.evidence_decay
-        )
+        assert "days_elapsed" in result.evidence_decay or "decayed_agents" in result.evidence_decay
         assert "decayed_agents" in result.stigmergic_decay
         assert "skipped_agents" in result.ashc_refresh
 
@@ -740,9 +726,7 @@ class TestDecayIntegration:
         # Record activity 60 days ago
         now = datetime.now(timezone.utc)
         old = now - timedelta(days=60)
-        activity_store.set(
-            ActivityRecord("TestAgent", old, 100)
-        )
+        activity_store.set(ActivityRecord("TestAgent", old, 100))
 
         # Run decay cycle
         result = await run_decay_cycle(
@@ -758,9 +742,7 @@ class TestDecayIntegration:
 
         # Evidence should have decayed significantly
         original_draw = 0.9
-        decayed_draw = next(
-            d.draw_strength for d in decayed_agent.principle_draws
-        )
+        decayed_draw = next(d.draw_strength for d in decayed_agent.principle_draws)
         assert decayed_draw < original_draw
 
         # Stigmergic should have decayed (60 days inactive)

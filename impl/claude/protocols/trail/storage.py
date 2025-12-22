@@ -35,13 +35,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from agents.d import Datum, DgentProtocol
-
 from models.trail import (
-    TrailRow,
     TrailAnnotationRow,
     TrailCommitmentRow,
     TrailEvidenceRow,
     TrailForkRow,
+    TrailRow,
     TrailStepRow,
     generate_step_id,
     generate_trail_id,
@@ -190,11 +189,7 @@ class TrailStorageAdapter:
         """
         # Use provided ID, or generate one if not provided
         # Note: exploration Trail has default uuid, check if it's really user-provided
-        trail_id = (
-            trail.id
-            if trail.id and trail.id.startswith("trail-")
-            else generate_trail_id()
-        )
+        trail_id = trail.id if trail.id and trail.id.startswith("trail-") else generate_trail_id()
         now = datetime.now(UTC)
 
         # Compute content hash for integrity
@@ -216,7 +211,9 @@ class TrailStorageAdapter:
 
                 # Add new steps (append-only)
                 existing_step_count = await self._get_step_count(session, trail_id)
-                for i, step in enumerate(trail.steps[existing_step_count:], start=existing_step_count):
+                for i, step in enumerate(
+                    trail.steps[existing_step_count:], start=existing_step_count
+                ):
                     await self._save_step(session, trail_id, i, step, observer)
 
                 await session.commit()
@@ -541,7 +538,9 @@ class TrailStorageAdapter:
 
             # Get step count via direct query (avoid lazy loading)
             step_count_result = await session.execute(
-                select(func.count()).select_from(TrailStepRow).where(TrailStepRow.trail_id == trail_id)
+                select(func.count())
+                .select_from(TrailStepRow)
+                .where(TrailStepRow.trail_id == trail_id)
             )
             current_step_count = step_count_result.scalar() or 0
 
@@ -697,7 +696,6 @@ class TrailStorageAdapter:
 
         return search_results
 
-
     async def update_step_embedding(
         self,
         step_id: str,
@@ -758,9 +756,7 @@ class TrailStorageAdapter:
         async with self.session_factory() as session:
             # Find steps without embeddings
             result = await session.execute(
-                select(TrailStepRow)
-                .where(TrailStepRow.embedding.is_(None))
-                .limit(limit)
+                select(TrailStepRow).where(TrailStepRow.embedding.is_(None)).limit(limit)
             )
             steps = result.scalars().all()
 
@@ -850,7 +846,9 @@ class TrailStorageAdapter:
             evidence_row = TrailEvidenceRow(
                 trail_id=trail_id,
                 claim=evidence.claim,
-                strength=evidence.strength.value if hasattr(evidence.strength, "value") else str(evidence.strength),
+                strength=evidence.strength.value
+                if hasattr(evidence.strength, "value")
+                else str(evidence.strength),
                 content={"source": evidence.source, "content": evidence.content},
                 source_step_index=source_step_index,
             )
@@ -919,7 +917,9 @@ class TrailStorageAdapter:
 
             # Count forked trails
             forked_count = await session.execute(
-                select(func.count()).select_from(TrailRow).where(TrailRow.forked_from_id.isnot(None))
+                select(func.count())
+                .select_from(TrailRow)
+                .where(TrailRow.forked_from_id.isnot(None))
             )
             forked_trails = forked_count.scalar() or 0
 
@@ -1004,7 +1004,6 @@ class TrailStorageAdapter:
         )
 
         return await self.dgent.put(datum)
-
 
 
 __all__ = [

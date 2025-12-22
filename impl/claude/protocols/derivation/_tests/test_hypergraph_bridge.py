@@ -16,17 +16,16 @@ import pytest
 from ..hypergraph_bridge import (
     DERIVATION_EDGE_TYPES,
     ContextNode,
-    SimpleObserver,
     DerivationHyperedgeResolver,
-    get_derivation_resolver,
-    reset_derivation_resolver,
-    register_derivation_resolvers,
-    resolve_derivation_edge,
+    SimpleObserver,
     get_derivation_graph_for_agent,
+    get_derivation_resolver,
+    register_derivation_resolvers,
+    reset_derivation_resolver,
+    resolve_derivation_edge,
 )
-from ..types import Derivation, DerivationTier, PrincipleDraw, EvidenceType
 from ..registry import DerivationRegistry
-
+from ..types import Derivation, DerivationTier, EvidenceType, PrincipleDraw
 
 # =============================================================================
 # Fixtures

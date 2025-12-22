@@ -30,7 +30,6 @@ from protocols.file_operad.source_portals import (
     render_portals_cli,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -56,7 +55,8 @@ def temp_project() -> Path:
         (impl_claude / "services" / "brain" / "_tests").mkdir()
 
         # Create brain/core.py with imports
-        (impl_claude / "services" / "brain" / "core.py").write_text(dedent('''
+        (impl_claude / "services" / "brain" / "core.py").write_text(
+            dedent('''
             """Brain service core.
 
             Spec: spec/protocols/brain.md
@@ -73,10 +73,12 @@ def temp_project() -> Path:
             def analyze_context(path: Path) -> Optional[str]:
                 """Analyze context from path."""
                 return None
-        ''').strip())
+        ''').strip()
+        )
 
         # Create test file
-        (impl_claude / "services" / "brain" / "_tests" / "test_core.py").write_text(dedent('''
+        (impl_claude / "services" / "brain" / "_tests" / "test_core.py").write_text(
+            dedent('''
             """Tests for brain core."""
 
             import pytest
@@ -88,10 +90,12 @@ def temp_project() -> Path:
 
             def test_analyze_context():
                 pass
-        ''').strip())
+        ''').strip()
+        )
 
         # Create persistence module
-        (impl_claude / "services" / "brain" / "persistence.py").write_text(dedent('''
+        (impl_claude / "services" / "brain" / "persistence.py").write_text(
+            dedent('''
             """Brain persistence layer."""
 
             from pathlib import Path
@@ -102,16 +106,19 @@ def temp_project() -> Path:
 
             def load_memory(path: Path) -> dict:
                 return {}
-        ''').strip())
+        ''').strip()
+        )
 
         # Create spec file
         spec_dir = root / "spec" / "protocols"
         spec_dir.mkdir(parents=True)
-        (spec_dir / "brain.md").write_text(dedent('''
+        (spec_dir / "brain.md").write_text(
+            dedent("""
             # Brain Protocol
 
             The brain service manages memory persistence.
-        ''').strip())
+        """).strip()
+        )
 
         yield root
 
@@ -120,7 +127,8 @@ def temp_project() -> Path:
 def temp_python_file(tmp_path: Path) -> Path:
     """Create a temporary Python file with imports."""
     file_path = tmp_path / "test_module.py"
-    file_path.write_text(dedent('''
+    file_path.write_text(
+        dedent('''
         """Test module."""
 
         import os
@@ -130,7 +138,8 @@ def temp_python_file(tmp_path: Path) -> Path:
 
         def main():
             pass
-    ''').strip())
+    ''').strip()
+    )
     return file_path
 
 
@@ -232,8 +241,11 @@ class TestSourcePortalLinkExists:
 
     def test_exists_with_context_node(self, temp_project: Path) -> None:
         """exists() works when context_node can resolve to file."""
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
         from protocols.agentese.contexts.self_context import ContextNode
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
 
         original = _get_project_root()
         try:
@@ -265,7 +277,10 @@ class TestSourcePortalDiscovery:
     @pytest.mark.asyncio
     async def test_discovery_async(self, temp_project: Path) -> None:
         """discover_portals is async."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -283,7 +298,10 @@ class TestSourcePortalDiscovery:
     @pytest.mark.asyncio
     async def test_discover_imports(self, temp_project: Path) -> None:
         """discover_portals finds imports."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -309,7 +327,10 @@ class TestSourcePortalDiscovery:
     @pytest.mark.asyncio
     async def test_discover_tests(self, temp_project: Path) -> None:
         """discover_portals finds test files."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -348,9 +369,7 @@ class TestSourcePortalDiscovery:
         assert links == []
 
     @pytest.mark.asyncio
-    async def test_discover_python_imports_directly(
-        self, temp_python_file: Path
-    ) -> None:
+    async def test_discover_python_imports_directly(self, temp_python_file: Path) -> None:
         """discover_python_imports parses imports with AST."""
         discovery = SourcePortalDiscovery()
         links = await discovery.discover_python_imports(temp_python_file)
@@ -365,9 +384,7 @@ class TestSourcePortalDiscovery:
         assert "world.pathlib" in paths
 
     @pytest.mark.asyncio
-    async def test_discover_python_imports_handles_syntax_error(
-        self, tmp_path: Path
-    ) -> None:
+    async def test_discover_python_imports_handles_syntax_error(self, tmp_path: Path) -> None:
         """discover_python_imports handles syntax errors gracefully."""
         bad_file = tmp_path / "bad.py"
         bad_file.write_text("def broken(\n  # incomplete")
@@ -379,8 +396,11 @@ class TestSourcePortalDiscovery:
     @pytest.mark.asyncio
     async def test_observer_filtering(self, temp_project: Path) -> None:
         """discover_portals respects observer visibility."""
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
         from protocols.agentese.node import Observer
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
 
         original = _get_project_root()
         try:
@@ -413,8 +433,11 @@ class TestSourcePortalToken:
 
     def test_load_with_valid_file(self, temp_project: Path) -> None:
         """load() works for files that exist."""
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
         from protocols.agentese.contexts.self_context import ContextNode
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
         from protocols.file_operad.portal import PortalState
 
         original = _get_project_root()
@@ -467,7 +490,10 @@ class TestBuildSourcePortalTree:
     @pytest.mark.asyncio
     async def test_builds_tree_from_python_file(self, temp_project: Path) -> None:
         """build_source_portal_tree creates tree from Python file."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -486,7 +512,10 @@ class TestBuildSourcePortalTree:
     @pytest.mark.asyncio
     async def test_tree_respects_max_depth(self, temp_project: Path) -> None:
         """build_source_portal_tree respects max_depth."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -502,7 +531,10 @@ class TestBuildSourcePortalTree:
     @pytest.mark.asyncio
     async def test_tree_expand_all(self, temp_project: Path) -> None:
         """build_source_portal_tree can expand all nodes."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -527,7 +559,10 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio
     async def test_discover_portals_convenience(self, temp_project: Path) -> None:
         """discover_portals() convenience function works."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -569,7 +604,7 @@ class TestConvenienceFunctions:
         assert "[imports]" in result
         assert "[tests]" in result
         assert "2 files" in result  # 2 imports
-        assert "1 file" in result   # 1 test
+        assert "1 file" in result  # 1 test
 
     def test_render_portals_cli_truncates_long_lists(self) -> None:
         """render_portals_cli truncates lists > 5 items."""
@@ -620,11 +655,12 @@ class TestIntegration:
     """Integration tests for full workflow."""
 
     @pytest.mark.asyncio
-    async def test_full_discovery_to_tree_workflow(
-        self, temp_project: Path
-    ) -> None:
+    async def test_full_discovery_to_tree_workflow(self, temp_project: Path) -> None:
         """Full workflow: discover -> build tree -> render."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:
@@ -653,7 +689,10 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_spec_file_discovery(self, temp_project: Path) -> None:
         """Discover implements edges to spec files."""
-        from protocols.agentese.contexts.hyperedge_resolvers import _set_project_root, _get_project_root
+        from protocols.agentese.contexts.hyperedge_resolvers import (
+            _get_project_root,
+            _set_project_root,
+        )
 
         original = _get_project_root()
         try:

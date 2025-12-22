@@ -21,7 +21,6 @@ from protocols.file_operad.portal import (
     parse_wires_to,
 )
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -391,8 +390,12 @@ class TestPortalTreeRender:
 
         # Deep tree: root -> child -> grandchild -> great_grandchild
         great = PortalNode(path="great.op", edge_type="deep", depth=3)
-        grand = PortalNode(path="grand.op", edge_type="related", expanded=True, children=[great], depth=2)
-        child = PortalNode(path="child.op", edge_type="tests", expanded=True, children=[grand], depth=1)
+        grand = PortalNode(
+            path="grand.op", edge_type="related", expanded=True, children=[great], depth=2
+        )
+        child = PortalNode(
+            path="child.op", edge_type="tests", expanded=True, children=[grand], depth=1
+        )
         root = PortalNode(path="root.op", expanded=True, children=[child], depth=0)
         tree = PortalTree(root=root)
 

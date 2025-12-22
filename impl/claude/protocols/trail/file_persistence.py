@@ -44,8 +44,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from protocols.exploration.types import Trail as ExplorationTrail
     from protocols.agentese.contexts.self_context import Trail as ContextTrail
+    from protocols.exploration.types import Trail as ExplorationTrail
 
 logger = logging.getLogger(__name__)
 
@@ -203,6 +203,7 @@ async def save_trail(
     elif hasattr(trail, "__dataclass_fields__"):
         # Handle dataclasses (e.g., protocols.exploration.types.Trail)
         from dataclasses import asdict
+
         trail_data = asdict(trail)
         # Convert datetime objects to ISO format
         for key, value in trail_data.items():
@@ -211,8 +212,10 @@ async def save_trail(
             elif isinstance(value, tuple):
                 # Convert tuples (like steps) to lists for JSON serialization
                 trail_data[key] = [
-                    {k: (v.isoformat() if hasattr(v, "isoformat") else v)
-                     for k, v in (item if isinstance(item, dict) else asdict(item)).items()}
+                    {
+                        k: (v.isoformat() if hasattr(v, "isoformat") else v)
+                        for k, v in (item if isinstance(item, dict) else asdict(item)).items()
+                    }
                     for item in value
                 ]
     else:
@@ -242,8 +245,8 @@ async def save_trail(
     mark_id: str | None = None
     if emit_mark:
         try:
-            from services.witness.portal_marks import mark_trail_save
             from protocols.agentese.contexts.self_context import Trail as ContextTrailType
+            from services.witness.portal_marks import mark_trail_save
 
             # Need a ContextTrail object for mark_trail_save
             if isinstance(trail, ContextTrailType):

@@ -9,7 +9,7 @@ from __future__ import annotations
 import pytest
 
 from protocols.dawn.focus import Bucket, FocusManager
-from protocols.dawn.tui.focus_pane import FocusPane, BUCKET_EMOJI
+from protocols.dawn.tui.focus_pane import BUCKET_EMOJI, FocusPane
 
 
 class TestFocusPaneConstruction:

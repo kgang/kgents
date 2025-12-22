@@ -18,6 +18,7 @@ Verifies:
 from __future__ import annotations
 
 from pathlib import Path
+
 import pytest
 
 from protocols.agentese.contexts.portal_response import PortalResponse
@@ -26,7 +27,6 @@ from protocols.agentese.contexts.self_portal import (
     set_portal_nav_node,
 )
 from protocols.agentese.node import Observer
-
 
 # =============================================================================
 # Fixtures

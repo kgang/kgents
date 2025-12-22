@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from typing import Callable
 
     from protocols.exploration.types import Trail
+
     from .context_bridge import ContextEvent
 
 
@@ -511,6 +512,7 @@ class PortalTree:
         # This enables recursive portal expansion for source file trees
         if node.path.endswith(".py"):
             from pathlib import Path
+
             node_path = Path(node.path)
             original_path = node.path  # Keep for error messages
 
@@ -1050,13 +1052,11 @@ class PortalRenderer:
                     for nested_link in token.nested_links:
                         nested_token = PortalToken(nested_link, depth=token.depth + 1)
                         nested_items.append(
-                            f'<li>{self.render_html(nested_token, lazy_load=True)}</li>'
+                            f"<li>{self.render_html(nested_token, lazy_load=True)}</li>"
                         )
                     if nested_items:
                         nested_html = (
-                            '<ul class="portal-nested-links">'
-                            + "".join(nested_items)
-                            + "</ul>"
+                            '<ul class="portal-nested-links">' + "".join(nested_items) + "</ul>"
                         )
 
                 content_div = f'<div class="portal-content">{content_html}{nested_html}</div>'
@@ -1111,9 +1111,7 @@ class PortalRenderer:
 
             # If expanded, render children
             if node.expanded and node.children:
-                children_html = "\n".join(
-                    render_node(child, depth + 1) for child in node.children
-                )
+                children_html = "\n".join(render_node(child, depth + 1) for child in node.children)
                 # Insert children into the content div
                 # This is a simplified approach - real impl would be more sophisticated
                 return node_html.replace(

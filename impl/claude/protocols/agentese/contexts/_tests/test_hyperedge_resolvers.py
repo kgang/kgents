@@ -15,22 +15,22 @@ Teaching:
 
 from __future__ import annotations
 
-import pytest
-from pathlib import Path
-import tempfile
 import os
+import tempfile
+from pathlib import Path
 
-from protocols.agentese.contexts.self_context import ContextNode
+import pytest
+
 from protocols.agentese.contexts.hyperedge_resolvers import (
     ResolverRegistry,
-    get_resolver_registry,
-    register_resolver,
     agentese_path_to_file,
     file_to_agentese_path,
-    resolve_hyperedge,
+    get_resolver_registry,
+    register_resolver,
     resolve_all_edges,
+    resolve_hyperedge,
 )
-
+from protocols.agentese.contexts.self_context import ContextNode
 
 # === Module-Level Fixtures ===
 
@@ -154,9 +154,7 @@ class TestRegisterDecorator:
         """@register_resolver decorator registers the function."""
 
         @register_resolver("custom_test_edge")
-        async def custom_resolver(
-            node: ContextNode, root: Path
-        ) -> list[ContextNode]:
+        async def custom_resolver(node: ContextNode, root: Path) -> list[ContextNode]:
             return []
 
         registry = get_resolver_registry()
@@ -336,8 +334,9 @@ class TestProjectRootDiscovery:
         root = _get_project_root()
         assert root.exists(), f"Project root {root} does not exist"
         # Should be kgents directory
-        assert (root / "spec").exists() or (root / "impl").exists(), \
+        assert (root / "spec").exists() or (root / "impl").exists(), (
             f"Project root {root} doesn't look like kgents root"
+        )
 
     def test_project_root_caching(self) -> None:
         """_get_project_root() caches the result."""
@@ -421,11 +420,11 @@ class TestContextNodeFollow:
     @pytest.mark.asyncio
     async def test_follow_with_temp_project(self, temp_project: Path) -> None:
         """follow() finds actual test files in temp project."""
-        from protocols.agentese.node import Observer
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
+        from protocols.agentese.node import Observer
 
         original_root = _get_project_root()
 
@@ -443,8 +442,7 @@ class TestContextNodeFollow:
 
             # Should find test_core.py in _tests directory
             assert len(results) >= 1, "Should find at least one test file"
-            assert any("test" in r.holon for r in results), \
-                "Test file holon should contain 'test'"
+            assert any("test" in r.holon for r in results), "Test file holon should contain 'test'"
 
         finally:
             # Restore original root
@@ -490,8 +488,8 @@ class TestBidirectionalConsistencyLaw:
     async def test_contains_contained_in_bidirectional(self, temp_project: Path) -> None:
         """contains ↔ contained_in are bidirectional."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -525,8 +523,8 @@ class TestBidirectionalConsistencyLaw:
     async def test_tested_by_resolver(self, temp_project: Path) -> None:
         """tested_by resolver finds implementation from test."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -566,8 +564,8 @@ class TestBidirectionalConsistencyLaw:
     async def test_implemented_by_resolver(self, temp_project: Path) -> None:
         """implemented_by finds implementations of specs."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -630,13 +628,11 @@ class TestResolverRobustness:
     """
 
     @pytest.mark.asyncio
-    async def test_imports_resolver_handles_syntax_error(
-        self, temp_project: Path
-    ) -> None:
+    async def test_imports_resolver_handles_syntax_error(self, temp_project: Path) -> None:
         """Imports resolver gracefully handles Python syntax errors."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -644,14 +640,7 @@ class TestResolverRobustness:
             _set_project_root(temp_project)
 
             # Create a file with syntax error
-            bad_file = (
-                temp_project
-                / "impl"
-                / "claude"
-                / "services"
-                / "brain"
-                / "broken.py"
-            )
+            bad_file = temp_project / "impl" / "claude" / "services" / "brain" / "broken.py"
             bad_file.write_text("def broken(\n  # incomplete")
 
             node = ContextNode(path="world.brain.broken", holon="broken")
@@ -662,13 +651,11 @@ class TestResolverRobustness:
             _set_project_root(original_root)
 
     @pytest.mark.asyncio
-    async def test_calls_resolver_handles_complex_ast(
-        self, temp_project: Path
-    ) -> None:
+    async def test_calls_resolver_handles_complex_ast(self, temp_project: Path) -> None:
         """Calls resolver handles complex AST patterns."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -676,22 +663,15 @@ class TestResolverRobustness:
             _set_project_root(temp_project)
 
             # Create file with various call patterns
-            complex_file = (
-                temp_project
-                / "impl"
-                / "claude"
-                / "services"
-                / "brain"
-                / "complex.py"
-            )
-            complex_file.write_text('''
+            complex_file = temp_project / "impl" / "claude" / "services" / "brain" / "complex.py"
+            complex_file.write_text("""
 def foo():
     x.method()
     module.function()
     nested.deep.call()
     lambda_call = lambda: func()
     [f() for f in []]
-''')
+""")
 
             node = ContextNode(path="world.brain.complex", holon="complex")
             result = await resolve_hyperedge(node, "calls", temp_project)
@@ -704,13 +684,11 @@ def foo():
             _set_project_root(original_root)
 
     @pytest.mark.asyncio
-    async def test_tests_resolver_multiple_patterns(
-        self, temp_project: Path
-    ) -> None:
+    async def test_tests_resolver_multiple_patterns(self, temp_project: Path) -> None:
         """Tests resolver finds tests in multiple locations."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -718,9 +696,7 @@ def foo():
             _set_project_root(temp_project)
 
             # Create additional test location
-            tests_dir = (
-                temp_project / "impl" / "claude" / "services" / "brain" / "tests"
-            )
+            tests_dir = temp_project / "impl" / "claude" / "services" / "brain" / "tests"
             tests_dir.mkdir(exist_ok=True)
             (tests_dir / "test_core.py").write_text("def test_alt(): pass")
 
@@ -734,13 +710,11 @@ def foo():
             _set_project_root(original_root)
 
     @pytest.mark.asyncio
-    async def test_implements_resolver_finds_spec_references(
-        self, temp_project: Path
-    ) -> None:
+    async def test_implements_resolver_finds_spec_references(self, temp_project: Path) -> None:
         """Implements resolver finds spec references in docstrings."""
         from protocols.agentese.contexts.hyperedge_resolvers import (
-            _set_project_root,
             _get_project_root,
+            _set_project_root,
         )
 
         original_root = _get_project_root()
@@ -749,12 +723,7 @@ def foo():
 
             # Create a file with spec reference
             (
-                temp_project
-                / "impl"
-                / "claude"
-                / "services"
-                / "brain"
-                / "spec_impl.py"
+                temp_project / "impl" / "claude" / "services" / "brain" / "spec_impl.py"
             ).write_text('''
 """
 Implementation module.

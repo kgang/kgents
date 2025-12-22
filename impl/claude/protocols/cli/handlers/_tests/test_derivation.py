@@ -17,11 +17,10 @@ Teaching:
 from __future__ import annotations
 
 import json
-from io import StringIO
 import sys
+from io import StringIO
 
 import pytest
-
 
 # =============================================================================
 # Fixtures
@@ -32,6 +31,7 @@ import pytest
 def reset_registry():
     """Reset derivation registry before each test."""
     from protocols.derivation import reset_registry as _reset
+
     _reset()
     yield
     _reset()
@@ -41,10 +41,10 @@ def reset_registry():
 def registry_with_derived():
     """Registry with some derived agents."""
     from protocols.derivation import (
-        get_registry,
         DerivationTier,
-        PrincipleDraw,
         EvidenceType,
+        PrincipleDraw,
+        get_registry,
     )
 
     registry = get_registry()

@@ -36,8 +36,9 @@ from typing import TYPE_CHECKING
 from .types import Derivation, EvidenceType, PrincipleDraw
 
 if TYPE_CHECKING:
+    from protocols.exploration.types import Claim, CommitmentLevel, Trail
+
     from .registry import DerivationRegistry
-    from protocols.exploration.types import Trail, Claim, CommitmentLevel
 
 
 # =============================================================================

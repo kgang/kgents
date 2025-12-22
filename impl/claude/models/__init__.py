@@ -43,12 +43,12 @@ from .town import Citizen, CitizenRelationship, Conversation, ConversationTurn
 
 # Trail Protocol
 from .trail import (
+    TrailAnnotationRow,
+    TrailCommitmentRow,
+    TrailEvidenceRow,
+    TrailForkRow,
     TrailRow,
     TrailStepRow,
-    TrailAnnotationRow,
-    TrailForkRow,
-    TrailEvidenceRow,
-    TrailCommitmentRow,
 )
 
 __all__ = [

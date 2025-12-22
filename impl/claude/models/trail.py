@@ -27,6 +27,8 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
+# pgvector is required for Trail embedding columns
+from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -39,9 +41,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
-
-# pgvector is required for Trail embedding columns
-from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 
 VECTOR_1536 = Vector(1536)
 
@@ -79,9 +78,7 @@ class TrailRow(TimestampMixin, Base):
 
     __tablename__ = "trails"
 
-    id: Mapped[str] = mapped_column(
-        String(64), primary_key=True, default=generate_trail_id
-    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=generate_trail_id)
     name: Mapped[str] = mapped_column(String(256), nullable=False, default="")
 
     # Ownership and creation
@@ -166,9 +163,7 @@ class TrailStepRow(TimestampMixin, Base):
 
     __tablename__ = "trail_steps"
 
-    id: Mapped[str] = mapped_column(
-        String(64), primary_key=True, default=generate_step_id
-    )
+    id: Mapped[str] = mapped_column(String(64), primary_key=True, default=generate_step_id)
     trail_id: Mapped[str] = mapped_column(
         String(64),
         ForeignKey("trails.id", ondelete="CASCADE"),
@@ -182,9 +177,7 @@ class TrailStepRow(TimestampMixin, Base):
 
     # Who took this step
     explorer_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    explorer_archetype: Mapped[str] = mapped_column(
-        String(64), default="developer", nullable=False
-    )
+    explorer_archetype: Mapped[str] = mapped_column(String(64), default="developer", nullable=False)
 
     # Navigation data
     source_path: Mapped[str] = mapped_column(Text, nullable=False)

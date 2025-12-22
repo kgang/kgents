@@ -32,7 +32,6 @@ from ..law_parser import LawDefinition, LawStatus
 from ..sandbox import SandboxConfig, SandboxPhase, SandboxPolynomial, SandboxResult
 from ..trace import FileWiringTrace
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -313,7 +312,7 @@ class TestSandboxToEvidenceAdapter:
 
     def test_convert_promoted_sandbox(self, sample_sandbox):
         """Convert promoted sandbox."""
-        from ..sandbox import transition_sandbox, SandboxEvent
+        from ..sandbox import SandboxEvent, transition_sandbox
 
         promoted = transition_sandbox(sample_sandbox, SandboxEvent.PROMOTE, destination="/dest")
 
@@ -326,7 +325,7 @@ class TestSandboxToEvidenceAdapter:
 
     def test_convert_discarded_sandbox(self, sample_sandbox):
         """Convert discarded sandbox."""
-        from ..sandbox import transition_sandbox, SandboxEvent
+        from ..sandbox import SandboxEvent, transition_sandbox
 
         discarded = transition_sandbox(sample_sandbox, SandboxEvent.DISCARD)
 

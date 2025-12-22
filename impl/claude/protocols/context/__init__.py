@@ -29,16 +29,25 @@ Teaching:
             (Evidence: test_outline.py::test_expand_records_trail)
 """
 
+from .lens import (
+    # Lens types
+    FileLens,
+    FocusSpec,
+    create_lens_for_class,
+    # Factory
+    create_lens_for_function,
+    create_lens_for_range,
+)
 from .outline import (
-    # Core data structures
-    TextSnippet,
-    OutlineNode,
-    Outline,
     Clipboard,
-    Range,
     Location,
+    Outline,
+    OutlineNode,
     # Operations
     OutlineOperations,
+    Range,
+    # Core data structures
+    TextSnippet,
     # Factory functions
     create_outline,
     create_snippet,
@@ -47,41 +56,32 @@ from .parser import (
     # Token types
     RecognizedToken,
     TokenType,
-    # Parsing
-    parse_text,
-    extract_tokens,
+    decode_invisible_metadata,
     # Metadata
     encode_invisible_metadata,
-    decode_invisible_metadata,
-)
-from .lens import (
-    # Lens types
-    FileLens,
-    FocusSpec,
-    # Factory
-    create_lens_for_function,
-    create_lens_for_class,
-    create_lens_for_range,
+    extract_tokens,
+    # Parsing
+    parse_text,
 )
 from .portal_bridge import (
     # Bridge types
     BridgeState,
-    PortalExpansionResult,
     OutlinePortalBridge,
+    PortalExpansionResult,
     # Factory
     create_bridge,
     create_bridge_from_file,
 )
 from .renderer import (
-    # Surface types
-    Surface,
-    RenderConfig,
+    SURFACE_CONFIG,
     # Renderer
     OutlineRenderer,
+    RenderConfig,
+    # Surface types
+    Surface,
+    render_for_llm,
     # Factory
     render_outline,
-    render_for_llm,
-    SURFACE_CONFIG,
 )
 
 __all__ = [

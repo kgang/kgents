@@ -53,7 +53,7 @@ from .budget import (
 )
 from .commitment import ASHCCommitment, CommitmentCheckResult
 from .evidence import EvidenceCollector, EvidenceScope, EvidenceSummary, TrailAsEvidence
-from .loops import LoopDetector, LoopResponse, LoopEvent
+from .loops import LoopDetector, LoopEvent, LoopResponse
 from .types import (
     Claim,
     CommitmentLevel,
@@ -68,7 +68,6 @@ from .types import (
     PortalExpansionResult,
     Trail,
 )
-
 
 # =============================================================================
 # Exploration State
@@ -152,9 +151,7 @@ class ExplorationHarness:
         # 1. Check budget
         if not self.budget.can_navigate():
             reason = self.budget.exhaustion_reason()
-            return NavigationResult.budget_exhausted_result(
-                reason.value if reason else "unknown"
-            )
+            return NavigationResult.budget_exhausted_result(reason.value if reason else "unknown")
 
         # 2. Navigate
         new_graph = await self.graph.navigate(edge)

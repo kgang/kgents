@@ -12,18 +12,18 @@ Verifies the AGENTESE node correctly exposes:
 - self.collaboration.status - Get turn state
 """
 
-import pytest
 from datetime import datetime, timedelta
 
+import pytest
+
 from protocols.agentese.contexts.self_collaboration import (
-    CollaborationNode,
     COLLABORATION_AFFORDANCES,
+    CollaborationNode,
 )
 from protocols.context.collaboration import (
     get_collaboration_protocol,
     reset_collaboration_protocol,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -41,8 +41,10 @@ def collaboration_node():
 @pytest.fixture
 def mock_observer():
     """Create a minimal mock observer."""
+
     class MockObserver:
         pass
+
     return MockObserver()
 
 
@@ -77,8 +79,8 @@ class TestRegistration:
 
     def test_node_registered(self):
         """Should be registered in the AGENTESE registry."""
-        from protocols.agentese.registry import get_registry
         from protocols.agentese.contexts import self_collaboration  # trigger import  # noqa: F401
+        from protocols.agentese.registry import get_registry
 
         registry = get_registry()
         assert "self.collaboration" in registry._nodes

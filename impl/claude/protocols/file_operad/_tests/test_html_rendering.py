@@ -15,13 +15,12 @@ import pytest
 
 from ..portal import (
     PortalLink,
+    PortalNode,
     PortalRenderer,
     PortalState,
     PortalToken,
-    PortalNode,
     PortalTree,
 )
-
 
 # =============================================================================
 # HTML Rendering Tests

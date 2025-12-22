@@ -9,20 +9,20 @@ Tests for:
 "The trail IS evidence. The mark IS the witness."
 """
 
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from protocols.agentese.contexts.self_context import (
-    ContextNavNode,
     ContextGraph,
+    ContextNavNode,
     ContextNode,
+    Observer,
     Trail,
     TrailStep,
-    Observer,
     set_context_nav_node,
 )
-
 
 # =============================================================================
 # Test Fixtures
@@ -107,9 +107,7 @@ def trail_under_threshold(observer: Observer) -> Trail:
 class TestCurrentTrailProperty:
     """Tests for ContextNavNode._current_trail property."""
 
-    async def test_current_trail_returns_none_without_graph(
-        self, nav_node: ContextNavNode
-    ):
+    async def test_current_trail_returns_none_without_graph(self, nav_node: ContextNavNode):
         """Returns None when no graph is initialized."""
         assert nav_node._current_trail is None
 
@@ -151,9 +149,7 @@ class TestCurrentTrailProperty:
 class TestAutoWitnessThreshold:
     """Tests for auto-witness on threshold."""
 
-    async def test_no_witness_under_threshold(
-        self, nav_node: ContextNavNode, observer: Observer
-    ):
+    async def test_no_witness_under_threshold(self, nav_node: ContextNavNode, observer: Observer):
         """Does not auto-witness when under threshold."""
         graph = nav_node._ensure_graph(observer)
         graph.trail = [
@@ -161,18 +157,14 @@ class TestAutoWitnessThreshold:
             TrailStep(node_path="world.b", edge_type="related"),
         ]
 
-        with patch(
-            "services.witness.trail_bridge.emit_trail_as_mark"
-        ) as mock_emit:
+        with patch("services.witness.trail_bridge.emit_trail_as_mark") as mock_emit:
             mock_emit.return_value = AsyncMock()
 
             await nav_node._maybe_auto_witness(graph)
 
             mock_emit.assert_not_called()
 
-    async def test_auto_witness_at_5_steps(
-        self, nav_node: ContextNavNode, observer: Observer
-    ):
+    async def test_auto_witness_at_5_steps(self, nav_node: ContextNavNode, observer: Observer):
         """Auto-witnesses when trail reaches 5 steps."""
         graph = nav_node._ensure_graph(observer)
         graph.trail = [
@@ -180,9 +172,7 @@ class TestAutoWitnessThreshold:
             for i in range(5)
         ]
 
-        with patch(
-            "services.witness.trail_bridge.emit_trail_as_mark"
-        ) as mock_emit:
+        with patch("services.witness.trail_bridge.emit_trail_as_mark") as mock_emit:
             mock_emit.return_value = AsyncMock()
 
             await nav_node._maybe_auto_witness(graph)
@@ -199,18 +189,14 @@ class TestAutoWitnessThreshold:
             TrailStep(node_path="world.b", edge_type="related", annotations="Note 2"),
         ]
 
-        with patch(
-            "services.witness.trail_bridge.emit_trail_as_mark"
-        ) as mock_emit:
+        with patch("services.witness.trail_bridge.emit_trail_as_mark") as mock_emit:
             mock_emit.return_value = AsyncMock()
 
             await nav_node._maybe_auto_witness(graph)
 
             mock_emit.assert_called_once()
 
-    async def test_auto_witness_only_once(
-        self, nav_node: ContextNavNode, observer: Observer
-    ):
+    async def test_auto_witness_only_once(self, nav_node: ContextNavNode, observer: Observer):
         """Only auto-witnesses once per threshold crossing."""
         graph = nav_node._ensure_graph(observer)
         graph.trail = [
@@ -218,9 +204,7 @@ class TestAutoWitnessThreshold:
             for i in range(5)
         ]
 
-        with patch(
-            "services.witness.trail_bridge.emit_trail_as_mark"
-        ) as mock_emit:
+        with patch("services.witness.trail_bridge.emit_trail_as_mark") as mock_emit:
             mock_emit.return_value = AsyncMock()
 
             # First call should emit
@@ -231,9 +215,7 @@ class TestAutoWitnessThreshold:
             await nav_node._maybe_auto_witness(graph)
             assert mock_emit.call_count == 1
 
-    async def test_auto_witness_fails_silently(
-        self, nav_node: ContextNavNode, observer: Observer
-    ):
+    async def test_auto_witness_fails_silently(self, nav_node: ContextNavNode, observer: Observer):
         """Auto-witness failure doesn't break navigation."""
         graph = nav_node._ensure_graph(observer)
         graph.trail = [
@@ -241,9 +223,7 @@ class TestAutoWitnessThreshold:
             for i in range(5)
         ]
 
-        with patch(
-            "services.witness.trail_bridge.emit_trail_as_mark"
-        ) as mock_emit:
+        with patch("services.witness.trail_bridge.emit_trail_as_mark") as mock_emit:
             mock_emit.side_effect = Exception("Witness failed!")
 
             # Should not raise

@@ -11,20 +11,20 @@ Verifies:
 See: spec/protocols/derivation-framework.md §6.1
 """
 
-import pytest
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+
+import pytest
 
 from ..exploration_bridge import (
     TrailEvidence,
     apply_trail_evidence,
-    trail_to_derivation_evidence,
-    merge_trail_evidence,
     batch_apply_trail_evidence,
+    merge_trail_evidence,
+    trail_to_derivation_evidence,
 )
-from ..types import Derivation, DerivationTier, EvidenceType, PrincipleDraw
 from ..registry import DerivationRegistry
-
+from ..types import Derivation, DerivationTier, EvidenceType, PrincipleDraw
 
 # =============================================================================
 # Fixtures
@@ -97,10 +97,7 @@ class TestTrailEvidenceCreation:
 
     def test_long_diverse_trail_signals_composable(self):
         """Long trail with diverse edges signals Composable."""
-        steps = tuple(
-            MockTrailStep(node=f"node{i}", edge_taken=f"edge{i % 3}")
-            for i in range(8)
-        )
+        steps = tuple(MockTrailStep(node=f"node{i}", edge_taken=f"edge{i % 3}") for i in range(8))
         trail = MockTrail(steps=steps)
         claim = MockClaim()
 
@@ -113,10 +110,7 @@ class TestTrailEvidenceCreation:
 
     def test_loop_free_trail_signals_generative(self):
         """Trail without revisits signals Generative."""
-        steps = tuple(
-            MockTrailStep(node=f"unique_node_{i}", edge_taken="edge")
-            for i in range(5)
-        )
+        steps = tuple(MockTrailStep(node=f"unique_node_{i}", edge_taken="edge") for i in range(5))
         trail = MockTrail(steps=steps)
         claim = MockClaim()
 
@@ -200,7 +194,9 @@ class TestApplyTrailEvidence:
 
         assert result is None
 
-    def test_apply_creates_new_principle_draw(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_apply_creates_new_principle_draw(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Applying evidence creates new principle draws."""
         evidence = TrailEvidence(
             trail_id="t1",
@@ -249,7 +245,9 @@ class TestApplyTrailEvidence:
         assert result is not None
         assert result.principle_draws == original_draws  # Unchanged
 
-    def test_law_6_1_additivity_strengthens(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_law_6_1_additivity_strengthens(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Law 6.1: Trails can only strengthen, not weaken."""
         # First application
         evidence1 = TrailEvidence(
@@ -272,7 +270,9 @@ class TestApplyTrailEvidence:
         principles = {d.principle: d for d in result.principle_draws}
         assert principles["Composable"].draw_strength == 0.8  # Strengthened
 
-    def test_law_6_1_additivity_no_weaken(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_law_6_1_additivity_no_weaken(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Law 6.1: Lower strength doesn't weaken existing draw."""
         # First application with high strength
         evidence1 = TrailEvidence(
@@ -295,7 +295,9 @@ class TestApplyTrailEvidence:
         principles = {d.principle: d for d in result.principle_draws}
         assert principles["Composable"].draw_strength == 0.8  # Not weakened
 
-    def test_evidence_sources_accumulate(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_evidence_sources_accumulate(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Multiple trails add to evidence sources."""
         evidence1 = TrailEvidence(
             trail_id="t1",
@@ -397,10 +399,14 @@ class TestBatchApplyTrailEvidence:
         assert results["Agent1"] is not None
         assert results["Agent2"] is not None
 
-        agent1_principles = {d.principle: d.draw_strength for d in results["Agent1"].principle_draws}
+        agent1_principles = {
+            d.principle: d.draw_strength for d in results["Agent1"].principle_draws
+        }
         assert agent1_principles.get("Composable") == 0.7
 
-    def test_batch_handles_unknown_agent(self, registry: DerivationRegistry, test_agent: Derivation):
+    def test_batch_handles_unknown_agent(
+        self, registry: DerivationRegistry, test_agent: Derivation
+    ):
         """Batch apply returns None for unknown agents."""
         evidences = [
             TrailEvidence(

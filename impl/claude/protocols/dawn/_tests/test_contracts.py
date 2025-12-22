@@ -4,8 +4,9 @@ Tests for Dawn Cockpit contracts.
 Verifies the request/response types and helper functions.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 
 from ..contracts import (
     DawnManifestResponse,

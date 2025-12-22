@@ -12,21 +12,20 @@ Teaching:
 import pytest
 
 from protocols.agentese.contexts.concept_derivation import (
+    ConfidenceTimeline,
+    DerivationDAGVisualization,
     DerivationNode,
     DerivationPortalToken,
-    DerivationDAGVisualization,
-    ConfidenceTimeline,
     PrincipleBreakdown,
     get_derivation_node,
 )
 from protocols.derivation import (
+    DerivationTier,
+    EvidenceType,
+    PrincipleDraw,
     get_registry,
     reset_registry,
-    DerivationTier,
-    PrincipleDraw,
-    EvidenceType,
 )
-
 
 # === Fixtures ===
 
@@ -74,8 +73,10 @@ def registry_with_derived(fresh_registry):
 @pytest.fixture
 def mock_observer():
     """Mock observer for testing."""
+
     class MockObserver:
         archetype = "developer"
+
     return MockObserver()
 
 
@@ -173,7 +174,9 @@ class TestDerivationNodeQuery:
     """Tests for concept.derivation.query."""
 
     @pytest.mark.asyncio
-    async def test_query_without_name_lists_agents(self, derivation_node, mock_observer, fresh_registry):
+    async def test_query_without_name_lists_agents(
+        self, derivation_node, mock_observer, fresh_registry
+    ):
         """Query without agent_name lists available agents."""
         result = await derivation_node.query(mock_observer)
 
@@ -204,7 +207,9 @@ class TestDerivationNodeDAG:
     """Tests for concept.derivation.dag."""
 
     @pytest.mark.asyncio
-    async def test_dag_returns_nodes_and_edges(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_dag_returns_nodes_and_edges(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """DAG returns nodes and edges for visualization."""
         result = await derivation_node.dag(mock_observer)
 
@@ -224,7 +229,9 @@ class TestDerivationNodeConfidence:
     """Tests for concept.derivation.confidence."""
 
     @pytest.mark.asyncio
-    async def test_confidence_breakdown(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_confidence_breakdown(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Confidence shows component breakdown."""
         result = await derivation_node.confidence(mock_observer, agent_name="Flux")
 
@@ -238,7 +245,9 @@ class TestDerivationNodePrinciples:
     """Tests for concept.derivation.principles."""
 
     @pytest.mark.asyncio
-    async def test_principles_returns_all_seven(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_principles_returns_all_seven(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Principles returns all 7 principles."""
         result = await derivation_node.principles(mock_observer, agent_name="Flux")
 
@@ -248,7 +257,9 @@ class TestDerivationNodePrinciples:
         assert "Ethical" in labels
 
     @pytest.mark.asyncio
-    async def test_principles_data_for_radar(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_principles_data_for_radar(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Principles returns data compatible with radar charts."""
         result = await derivation_node.principles(mock_observer, agent_name="Flux")
 
@@ -261,7 +272,9 @@ class TestDerivationNodeNavigate:
     """Tests for concept.derivation.navigate."""
 
     @pytest.mark.asyncio
-    async def test_navigate_without_name_shows_bootstrap(self, derivation_node, mock_observer, fresh_registry):
+    async def test_navigate_without_name_shows_bootstrap(
+        self, derivation_node, mock_observer, fresh_registry
+    ):
         """Navigate without name shows bootstrap entry points."""
         result = await derivation_node.navigate(mock_observer)
 
@@ -270,7 +283,9 @@ class TestDerivationNodeNavigate:
         assert all(t["tier"] == "bootstrap" for t in tokens)
 
     @pytest.mark.asyncio
-    async def test_navigate_derives_from(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_navigate_derives_from(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Navigate with derives_from shows ancestors."""
         result = await derivation_node.navigate(
             mock_observer,
@@ -309,7 +324,9 @@ class TestDerivationNodeTimeline:
     """Tests for concept.derivation.timeline."""
 
     @pytest.mark.asyncio
-    async def test_timeline_returns_snapshot(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_timeline_returns_snapshot(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Timeline returns current snapshot."""
         result = await derivation_node.timeline(mock_observer, agent_name="Flux")
 
@@ -323,7 +340,9 @@ class TestDerivationNodePropagate:
     """Tests for concept.derivation.propagate."""
 
     @pytest.mark.asyncio
-    async def test_propagate_from_source(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_propagate_from_source(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Propagate from source updates dependents."""
         # First register something that derives from Flux
         registry = get_registry()
@@ -369,7 +388,9 @@ class TestDerivationNodeIntegration:
         assert len(principles.metadata["labels"]) == 7
 
     @pytest.mark.asyncio
-    async def test_metadata_compatible_with_components(self, derivation_node, mock_observer, registry_with_derived):
+    async def test_metadata_compatible_with_components(
+        self, derivation_node, mock_observer, registry_with_derived
+    ):
         """Metadata is compatible with web components."""
         # DAG for PolynomialDiagram-like component
         dag = await derivation_node.dag(mock_observer)

@@ -8,25 +8,25 @@ Spec: spec/protocols/context-perception.md §4
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime
 
+import pytest
+
 from ..outline import (
-    Range,
-    Location,
-    TextSnippet,
     AnnotationSnippet,
     AnnotationType,
-    PortalToken,
-    OutlineNode,
     Clipboard,
+    Location,
     Outline,
+    OutlineNode,
     OutlineOperations,
+    PortalToken,
+    Range,
     SnippetType,
-    create_snippet,
+    TextSnippet,
     create_outline,
+    create_snippet,
 )
-
 
 # === Range Tests ===
 

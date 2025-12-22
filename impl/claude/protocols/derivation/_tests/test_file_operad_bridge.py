@@ -14,20 +14,19 @@ See: spec/protocols/derivation-framework.md §6.4
 import pytest
 
 from ..file_operad_bridge import (
-    OperationThresholds,
     DEFAULT_THRESHOLDS,
     ConfidenceGateResult,
     FileOperationRequest,
     FileOperationResult,
-    check_operation_confidence,
-    gate_file_operation,
-    gate_and_execute,
+    OperationThresholds,
     check_multiple_operations,
+    check_operation_confidence,
+    gate_and_execute,
+    gate_file_operation,
     get_agent_capabilities,
 )
-from ..types import Derivation, DerivationTier
 from ..registry import DerivationRegistry
-
+from ..types import Derivation, DerivationTier
 
 # =============================================================================
 # Fixtures
@@ -221,7 +220,9 @@ class TestConfidenceGateResultCheck:
 
             assert result.allowed is True
 
-    def test_low_trust_denied_promote(self, registry: DerivationRegistry, low_trust_agent: Derivation):
+    def test_low_trust_denied_promote(
+        self, registry: DerivationRegistry, low_trust_agent: Derivation
+    ):
         """Low trust APP agent denied promote (requires 0.85, APP ceiling is 0.75)."""
         result = ConfidenceGateResult.check(
             operation="promote",
@@ -232,7 +233,9 @@ class TestConfidenceGateResultCheck:
         # APP tier ceiling is 0.75, promote requires 0.85
         assert result.allowed is False
 
-    def test_low_trust_allowed_read(self, registry: DerivationRegistry, low_trust_agent: Derivation):
+    def test_low_trust_allowed_read(
+        self, registry: DerivationRegistry, low_trust_agent: Derivation
+    ):
         """Low trust agent allowed read."""
         result = ConfidenceGateResult.check(
             operation="read",
@@ -251,7 +254,9 @@ class TestConfidenceGateResultCheck:
 class TestLaw6_4MonotonicTrust:
     """Tests for Law 6.4: Monotonic Trust."""
 
-    def test_if_can_delete_can_read(self, registry: DerivationRegistry, high_trust_agent: Derivation):
+    def test_if_can_delete_can_read(
+        self, registry: DerivationRegistry, high_trust_agent: Derivation
+    ):
         """If agent can delete, it can also read."""
         delete_result = ConfidenceGateResult.check("delete", "HighTrust", registry)
         read_result = ConfidenceGateResult.check("read", "HighTrust", registry)
@@ -259,7 +264,9 @@ class TestLaw6_4MonotonicTrust:
         if delete_result.allowed:
             assert read_result.allowed
 
-    def test_if_can_execute_can_write(self, registry: DerivationRegistry, high_trust_agent: Derivation):
+    def test_if_can_execute_can_write(
+        self, registry: DerivationRegistry, high_trust_agent: Derivation
+    ):
         """If agent can execute, it can also write."""
         execute_result = ConfidenceGateResult.check("execute", "HighTrust", registry)
         write_result = ConfidenceGateResult.check("write", "HighTrust", registry)
@@ -267,7 +274,9 @@ class TestLaw6_4MonotonicTrust:
         if execute_result.allowed:
             assert write_result.allowed
 
-    def test_monotonic_all_operations(self, registry: DerivationRegistry, high_trust_agent: Derivation):
+    def test_monotonic_all_operations(
+        self, registry: DerivationRegistry, high_trust_agent: Derivation
+    ):
         """Full monotonicity: higher ops imply lower ops."""
         # Order from highest to lowest threshold
         ops_by_threshold = ["promote", "execute", "delete", "sandbox", "write", "annotate", "read"]
@@ -312,9 +321,7 @@ class TestFileOperationRequestResult:
 
     def test_file_operation_result_denied(self):
         """Denied result creation."""
-        gate_result = ConfidenceGateResult.denied_result(
-            "write", "Agent", 0.3, 0.5
-        )
+        gate_result = ConfidenceGateResult.denied_result("write", "Agent", 0.3, 0.5)
         result = FileOperationResult.denied(gate_result)
 
         assert result.success is False
@@ -322,9 +329,7 @@ class TestFileOperationRequestResult:
 
     def test_file_operation_result_succeeded(self):
         """Success result creation."""
-        gate_result = ConfidenceGateResult.allowed_result(
-            "write", "Agent", 0.8, 0.5
-        )
+        gate_result = ConfidenceGateResult.allowed_result("write", "Agent", 0.8, 0.5)
         result = FileOperationResult.succeeded(gate_result, "output")
 
         assert result.success is True
@@ -339,7 +344,9 @@ class TestFileOperationRequestResult:
 class TestCheckOperationConfidence:
     """Tests for check_operation_confidence()."""
 
-    def test_check_operation_confidence(self, registry: DerivationRegistry, medium_trust_agent: Derivation):
+    def test_check_operation_confidence(
+        self, registry: DerivationRegistry, medium_trust_agent: Derivation
+    ):
         """Main entry point works correctly."""
         result = check_operation_confidence(
             operation="write",
@@ -388,7 +395,9 @@ class TestGateAndExecute:
     """Tests for gate_and_execute()."""
 
     @pytest.mark.asyncio
-    async def test_denied_operation_not_executed(self, registry: DerivationRegistry, low_trust_agent: Derivation):
+    async def test_denied_operation_not_executed(
+        self, registry: DerivationRegistry, low_trust_agent: Derivation
+    ):
         """Denied operation doesn't call executor."""
         # APP tier ceiling is 0.75, promote requires 0.85
         request = FileOperationRequest(
@@ -409,7 +418,9 @@ class TestGateAndExecute:
         assert len(executed) == 0  # Executor not called
 
     @pytest.mark.asyncio
-    async def test_allowed_operation_executed(self, registry: DerivationRegistry, high_trust_agent: Derivation):
+    async def test_allowed_operation_executed(
+        self, registry: DerivationRegistry, high_trust_agent: Derivation
+    ):
         """Allowed operation calls executor."""
         request = FileOperationRequest(
             operation="read",
@@ -426,7 +437,9 @@ class TestGateAndExecute:
         assert result.output == "read /test"
 
     @pytest.mark.asyncio
-    async def test_executor_exception_caught(self, registry: DerivationRegistry, high_trust_agent: Derivation):
+    async def test_executor_exception_caught(
+        self, registry: DerivationRegistry, high_trust_agent: Derivation
+    ):
         """Executor exceptions are caught."""
         request = FileOperationRequest(
             operation="read",
@@ -451,7 +464,9 @@ class TestGateAndExecute:
 class TestBulkOperations:
     """Tests for bulk operation functions."""
 
-    def test_check_multiple_operations(self, registry: DerivationRegistry, medium_trust_agent: Derivation):
+    def test_check_multiple_operations(
+        self, registry: DerivationRegistry, medium_trust_agent: Derivation
+    ):
         """check_multiple_operations returns correct results."""
         operations = [
             ("read", "MediumTrust"),
@@ -465,7 +480,9 @@ class TestBulkOperations:
         assert results[0].allowed is True  # read by MediumTrust
         assert results[2].allowed is False  # read by unknown
 
-    def test_check_multiple_caches_derivations(self, registry: DerivationRegistry, medium_trust_agent: Derivation):
+    def test_check_multiple_caches_derivations(
+        self, registry: DerivationRegistry, medium_trust_agent: Derivation
+    ):
         """Bulk check caches derivation lookups."""
         operations = [
             ("read", "MediumTrust"),
@@ -497,7 +514,9 @@ class TestGetAgentCapabilities:
 
         assert all(v is True for v in caps.values())
 
-    def test_capabilities_reflect_confidence(self, registry: DerivationRegistry, low_trust_agent: Derivation):
+    def test_capabilities_reflect_confidence(
+        self, registry: DerivationRegistry, low_trust_agent: Derivation
+    ):
         """Capabilities reflect actual confidence (APP tier ceiling = 0.75)."""
         caps = get_agent_capabilities("LowTrust", registry)
 

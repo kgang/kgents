@@ -4,6 +4,11 @@
  * Uses layout context to determine available space and collapses
  * gracefully based on priority and minContent settings.
  *
+ * STARK BIOME: Steel frame, content earns glow
+ * - Border: steel-gunmetal (default) → glow-spore (selected)
+ * - Text: steel-zinc (muted) → glow-light (emphasis)
+ * - Background: steel-carbon with transparency
+ *
  * @see plans/web-refactor/elastic-primitives.md
  */
 
@@ -125,15 +130,16 @@ export function ElasticCard({
     return null;
   }
 
-  // Build class list
+  // Build class list — Stark Biome: steel frame, earned glow
   const cardClasses = [
     'elastic-card',
-    'rounded-lg',
+    'rounded-bare', // Stark: bare edge system
     'border',
     'transition-all',
-    isSelected ? 'border-town-highlight ring-2 ring-town-highlight/30' : 'border-town-accent/30',
+    'duration-quick',
+    isSelected ? 'border-glow-spore ring-2 ring-glow-spore/30' : 'border-steel-gunmetal/30',
     onClick ? 'cursor-pointer' : '',
-    isHovered !== undefined ? '' : 'hover:border-town-accent/60',
+    isHovered !== undefined ? '' : 'hover:border-steel-gunmetal/60',
     draggable ? 'cursor-grab active:cursor-grabbing' : '',
     shrinkBehavior === 'stack' && context.isConstrained ? 'flex-col' : '',
     className,
@@ -142,9 +148,12 @@ export function ElasticCard({
     .join(' ');
 
   // Build inline styles with priority as CSS var (for potential styling hooks)
+  // Stark Biome: steel-carbon base, glow-spore accent when selected
   const cardStyle: CSSProperties = {
     '--card-priority': priority,
-    backgroundColor: isSelected ? 'rgba(233, 69, 96, 0.1)' : 'rgba(26, 26, 46, 0.8)',
+    backgroundColor: isSelected
+      ? 'rgba(196, 167, 125, 0.1)' // glow-spore at 10%
+      : 'rgba(20, 20, 24, 0.8)', // steel-carbon at 80%
     ...style,
   } as CSSProperties;
 
@@ -154,7 +163,7 @@ export function ElasticCard({
       case 'icon':
         return (
           <div className="flex items-center justify-center p-2">
-            {icon || <span className="text-lg text-town-muted">?</span>}
+            {icon || <span className="text-lg text-steel-zinc">?</span>}
           </div>
         );
 
@@ -163,7 +172,7 @@ export function ElasticCard({
           <div className="flex items-center gap-2 p-3">
             {icon && <span className="flex-shrink-0">{icon}</span>}
             {title && (
-              <span className="font-medium text-white truncate" title={String(title)}>
+              <span className="font-medium text-glow-light truncate" title={String(title)}>
                 {title}
               </span>
             )}
@@ -175,11 +184,9 @@ export function ElasticCard({
           <div className="p-3">
             <div className="flex items-center gap-2 mb-1">
               {icon && <span className="flex-shrink-0">{icon}</span>}
-              {title && <span className="font-medium text-white">{title}</span>}
+              {title && <span className="font-medium text-glow-light">{title}</span>}
             </div>
-            {summary && (
-              <div className="text-sm text-town-muted line-clamp-2">{summary}</div>
-            )}
+            {summary && <div className="text-sm text-steel-zinc line-clamp-2">{summary}</div>}
           </div>
         );
 
@@ -189,9 +196,9 @@ export function ElasticCard({
           <div className="p-4">
             <div className="flex items-center gap-2 mb-2">
               {icon && <span className="flex-shrink-0">{icon}</span>}
-              {title && <span className="font-medium text-white">{title}</span>}
+              {title && <span className="font-medium text-glow-light">{title}</span>}
             </div>
-            {summary && <div className="text-sm text-town-muted mb-3">{summary}</div>}
+            {summary && <div className="text-sm text-steel-zinc mb-3">{summary}</div>}
             {children}
           </div>
         );

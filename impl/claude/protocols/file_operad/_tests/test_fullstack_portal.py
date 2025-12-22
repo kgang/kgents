@@ -83,6 +83,7 @@ async def client() -> AsyncIterator["AsyncClient"]:
                 await conn.run_sync(Base.metadata.create_all)
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"setup_providers/init_db failed: {e}")
 
     app = create_app()
@@ -161,11 +162,11 @@ class TestPortalFullstackUnit:
 
         This is the core integration test for Phase 5.
         """
+        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.contexts.self_portal import (
             PortalNavNode,
             set_portal_nav_node,
         )
-        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.node import Observer
 
         # Fresh node for test isolation
@@ -250,16 +251,17 @@ class TestPortalFullstackUnit:
         # Cleanup: delete the saved trail
         if result.success and result.trail_id:
             from protocols.trail.file_persistence import delete_trail
+
             await delete_trail(result.trail_id)
 
     @pytest.mark.asyncio
     async def test_depth_2_emits_witness_mark(self, temp_python_file: Path) -> None:
         """Depth 2+ expansions should emit witness marks."""
+        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.contexts.self_portal import (
             PortalNavNode,
             set_portal_nav_node,
         )
-        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.node import Observer
 
         set_portal_nav_node(None)
@@ -270,7 +272,9 @@ class TestPortalFullstackUnit:
         await node.manifest(observer, file_path=str(temp_python_file), response_format="json")
 
         # Expand imports first (depth 1)
-        await node.expand(observer, portal_path="imports", file_path=str(temp_python_file), response_format="json")
+        await node.expand(
+            observer, portal_path="imports", file_path=str(temp_python_file), response_format="json"
+        )
 
         # Expand imports/dataclass (depth 2) - should trigger mark
         result = await node.expand(
@@ -288,11 +292,11 @@ class TestPortalFullstackUnit:
     @pytest.mark.asyncio
     async def test_evidence_edge_type_always_marks(self, temp_python_file: Path) -> None:
         """edge_type='evidence' should always emit mark, even at depth 1."""
+        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.contexts.self_portal import (
             PortalNavNode,
             set_portal_nav_node,
         )
-        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.node import Observer
 
         set_portal_nav_node(None)
@@ -318,11 +322,11 @@ class TestPortalFullstackUnit:
     @pytest.mark.asyncio
     async def test_trail_save_roundtrip(self, temp_python_file: Path) -> None:
         """Save and load trail should preserve state."""
+        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.contexts.self_portal import (
             PortalNavNode,
             set_portal_nav_node,
         )
-        from protocols.agentese.contexts.portal_response import PortalResponse
         from protocols.agentese.node import Observer
 
         set_portal_nav_node(None)
@@ -331,7 +335,9 @@ class TestPortalFullstackUnit:
 
         # Build up exploration state
         await node.manifest(observer, file_path=str(temp_python_file), response_format="json")
-        await node.expand(observer, portal_path="imports", file_path=str(temp_python_file), response_format="json")
+        await node.expand(
+            observer, portal_path="imports", file_path=str(temp_python_file), response_format="json"
+        )
 
         # Save trail
         save_result = await node.save_trail(
@@ -359,6 +365,7 @@ class TestPortalFullstackUnit:
 
         # Cleanup
         from protocols.trail.file_persistence import delete_trail
+
         await delete_trail(trail_id)
 
 
@@ -397,7 +404,9 @@ class TestPortalFullstackHTTP:
             if "persistence" in error_text or "missing" in error_text:
                 pytest.skip("Service not bootstrapped - route exists")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
 
         data = response.json()
         # Gateway wraps in {path, aspect, result: ...}
@@ -430,7 +439,9 @@ class TestPortalFullstackHTTP:
             if "persistence" in error_text or "missing" in error_text:
                 pytest.skip("Service not bootstrapped - route exists")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
 
     @pytest.mark.anyio
     async def test_fullstack_http_flow(self, client: "AsyncClient", temp_python_file: Path) -> None:
@@ -519,6 +530,7 @@ class TestPortalFullstackHTTP:
             if trail_id:
                 # Cleanup
                 from protocols.trail.file_persistence import delete_trail
+
                 await delete_trail(trail_id)
 
 
@@ -532,7 +544,9 @@ class TestPortalPerformance:
     """Performance baseline tests for portal operations."""
 
     @pytest.mark.anyio
-    async def test_manifest_performance(self, client: "AsyncClient", temp_python_file: Path) -> None:
+    async def test_manifest_performance(
+        self, client: "AsyncClient", temp_python_file: Path
+    ) -> None:
         """Manifest should return within 1s."""
         import time
 
@@ -564,6 +578,7 @@ if __name__ == "__main__":
 
         # Create temp file
         import tempfile
+
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
             (tmp_path / "pyproject.toml").write_text("[project]\nname = 'test'\n")
@@ -591,15 +606,20 @@ class Example:
             print(f"   Success: {result.success}, Tree root: {result.tree['root']['path']}")
 
             print("2. Expand imports (depth 1)...")
-            result = await node.expand(observer, portal_path="imports", file_path=str(test_file), response_format="json")
+            result = await node.expand(
+                observer, portal_path="imports", file_path=str(test_file), response_format="json"
+            )
             print(f"   Success: {result.success}, Evidence ID: {result.evidence_id}")
 
             print("3. Save trail...")
-            result = await node.save_trail(observer, name="Manual Test", file_path=str(test_file), response_format="json")
+            result = await node.save_trail(
+                observer, name="Manual Test", file_path=str(test_file), response_format="json"
+            )
             print(f"   Success: {result.success}, Trail ID: {result.trail_id}")
 
             if result.success and result.trail_id:
                 from protocols.trail.file_persistence import delete_trail
+
                 await delete_trail(result.trail_id)
                 print("   (cleaned up)")
 

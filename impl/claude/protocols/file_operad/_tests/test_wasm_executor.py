@@ -12,29 +12,29 @@ Verifies:
 
 from __future__ import annotations
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 from ..sandbox import (
     SandboxConfig,
+    SandboxId,
     SandboxPolynomial,
     SandboxRuntime,
-    SandboxId,
 )
 from ..wasm_executor import (
+    BLOCKED_IMPORTS,
+    SAFE_BUILTINS,
     CodeAnalyzer,
-    ExecutorConfig,
     ExecutionResult,
+    ExecutorBridge,
+    ExecutorConfig,
     IsolationLevel,
     LocalWASMExecutor,
-    ExecutorBridge,
+    execute_sandbox,
     get_executor_bridge,
     reset_executor_bridge,
-    execute_sandbox,
-    SAFE_BUILTINS,
-    BLOCKED_IMPORTS,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -302,7 +302,9 @@ while True:
         result = await local_executor.execute(code, timeout=0.5)
 
         assert result.success is False
-        assert "timed out" in (result.error or "").lower() or "timeout" in (result.error or "").lower()
+        assert (
+            "timed out" in (result.error or "").lower() or "timeout" in (result.error or "").lower()
+        )
 
     @pytest.mark.asyncio
     async def test_executor_isolation_level(self, local_executor):
@@ -426,7 +428,7 @@ class TestExecutorBridge:
         # Native can use open() (though we don't recommend it)
         sandbox = SandboxPolynomial.create(
             source_path="test.op",
-            content='print(len(dir()))',  # Should work in native
+            content="print(len(dir()))",  # Should work in native
             config=SandboxConfig(runtime=SandboxRuntime.NATIVE),
         )
 

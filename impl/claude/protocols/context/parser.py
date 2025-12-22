@@ -35,7 +35,6 @@ from datetime import datetime
 from enum import Enum, auto
 from typing import Any
 
-
 # === Token Types ===
 
 
@@ -78,8 +77,7 @@ TOKEN_PATTERNS: list[tuple[str, TokenType]] = [
 
 # Compile patterns for efficiency
 COMPILED_PATTERNS: list[tuple[re.Pattern[str], TokenType]] = [
-    (re.compile(pattern), token_type)
-    for pattern, token_type in TOKEN_PATTERNS
+    (re.compile(pattern), token_type) for pattern, token_type in TOKEN_PATTERNS
 ]
 
 
@@ -205,7 +203,9 @@ class ParsedText:
     tokens: list[RecognizedToken]
 
     # Code block tracking
-    code_blocks: list[tuple[int, int, str]] = field(default_factory=list)  # (start_line, end_line, lang)
+    code_blocks: list[tuple[int, int, str]] = field(
+        default_factory=list
+    )  # (start_line, end_line, lang)
 
     # Invisible metadata if present
     metadata: dict[str, Any] | None = None

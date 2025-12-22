@@ -21,7 +21,6 @@ from protocols.agentese.contexts.world_repo import (
 )
 from protocols.agentese.node import Observer
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================

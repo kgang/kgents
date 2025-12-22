@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+
 import pytest
 
 from protocols.file_operad.file_analyzer import (
@@ -21,7 +22,6 @@ from protocols.file_operad.file_analyzer import (
     create_file_portal_tree,
 )
 from protocols.file_operad.portal import PortalState
-
 
 # =============================================================================
 # Fixtures
@@ -56,9 +56,7 @@ class BrainService:
     # Create test files
     (tmp_path / "services" / "brain" / "_tests").mkdir()
     (tmp_path / "services" / "brain" / "_tests" / "__init__.py").write_text("")
-    (tmp_path / "services" / "brain" / "_tests" / "test_core.py").write_text(
-        "# Tests for core"
-    )
+    (tmp_path / "services" / "brain" / "_tests" / "test_core.py").write_text("# Tests for core")
 
     # Create witness module (for relative import)
     (tmp_path / "services" / "witness").mkdir()

@@ -11,11 +11,10 @@ Verifies:
 from __future__ import annotations
 
 import json
-from io import StringIO
 import sys
+from io import StringIO
 
 import pytest
-
 
 # =============================================================================
 # Fixtures
@@ -26,6 +25,7 @@ import pytest
 def reset_harness():
     """Reset harness before each test."""
     from protocols.cli.handlers.explore import reset_harness
+
     reset_harness()
     yield
     reset_harness()

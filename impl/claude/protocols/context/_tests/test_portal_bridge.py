@@ -11,26 +11,26 @@ Teaching:
 
 from __future__ import annotations
 
-import pytest
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 from protocols.context.outline import (
     Outline,
     OutlineNode,
     PortalToken,
-    TextSnippet,
     SnippetType,
+    TextSnippet,
     create_outline,
 )
 from protocols.context.portal_bridge import (
+    BridgeState,
     OutlinePortalBridge,
     PortalExpansionResult,
-    BridgeState,
     create_bridge,
     create_bridge_from_file,
 )
-
 
 # =============================================================================
 # Fixtures
@@ -85,6 +85,7 @@ class TestOutlinePortalBridge:
 
     def test_set_portal_tree(self, bridge: OutlinePortalBridge) -> None:
         """Can set portal tree."""
+
         # Create a mock portal tree
         class MockPortalTree:
             pass
@@ -113,9 +114,7 @@ class TestExpand:
         assert result.edge_type == "tests"
 
     @pytest.mark.asyncio
-    async def test_expand_updates_portal_state(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    async def test_expand_updates_portal_state(self, bridge: OutlinePortalBridge) -> None:
         """Expand updates portal.expanded state."""
         # Portal starts collapsed
         node = bridge.outline.find_node("root.0")
@@ -129,9 +128,7 @@ class TestExpand:
         assert node.portal.expanded
 
     @pytest.mark.asyncio
-    async def test_expand_records_trail_step(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    async def test_expand_records_trail_step(self, bridge: OutlinePortalBridge) -> None:
         """Expand records a trail step."""
         initial_steps = bridge.outline.steps_taken
 
@@ -174,9 +171,7 @@ class TestCollapse:
         assert not result
 
     @pytest.mark.asyncio
-    async def test_collapse_already_collapsed(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    async def test_collapse_already_collapsed(self, bridge: OutlinePortalBridge) -> None:
         """Collapse on already collapsed portal returns True (idempotent)."""
         result = await bridge.collapse("root.0")
         assert result  # Success (already collapsed)
@@ -246,9 +241,7 @@ class TestCreateLens:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_lens_function_focus(
-        self, bridge: OutlinePortalBridge, tmp_path: Path
-    ) -> None:
+    async def test_lens_function_focus(self, bridge: OutlinePortalBridge, tmp_path: Path) -> None:
         """Creating lens with function focus."""
         # Create test file
         test_file = tmp_path / "test.py"
@@ -259,9 +252,7 @@ class TestCreateLens:
         # May return None if AST parsing fails
 
     @pytest.mark.asyncio
-    async def test_lens_class_focus(
-        self, bridge: OutlinePortalBridge, tmp_path: Path
-    ) -> None:
+    async def test_lens_class_focus(self, bridge: OutlinePortalBridge, tmp_path: Path) -> None:
         """Creating lens with class focus."""
         test_file = tmp_path / "test.py"
         test_file.write_text("class Foo:\n    pass\n")
@@ -270,9 +261,7 @@ class TestCreateLens:
         # May return None if class not found
 
     @pytest.mark.asyncio
-    async def test_lens_lines_focus(
-        self, bridge: OutlinePortalBridge, tmp_path: Path
-    ) -> None:
+    async def test_lens_lines_focus(self, bridge: OutlinePortalBridge, tmp_path: Path) -> None:
         """Creating lens with lines focus."""
         test_file = tmp_path / "test.py"
         test_file.write_text("line1\nline2\nline3\nline4\n")
@@ -320,9 +309,7 @@ class TestEventSubscription:
 class TestGetState:
     """Tests for get_state."""
 
-    def test_get_state_returns_bridge_state(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_get_state_returns_bridge_state(self, bridge: OutlinePortalBridge) -> None:
         """get_state returns BridgeState."""
         state = bridge.get_state()
         assert isinstance(state, BridgeState)
@@ -394,6 +381,7 @@ class TestSyncInvariant:
     @pytest.mark.asyncio
     async def test_expand_syncs_both(self, bridge: OutlinePortalBridge) -> None:
         """Expanding via bridge updates both Outline and PortalTree."""
+
         # Create a mock portal tree that tracks calls
         class MockPortalTree:
             expanded_paths: list[list[str]] = []
@@ -455,9 +443,7 @@ class TestTokenParsing:
         assert paths == []
         assert links == []
 
-    def test_parse_content_tokens_plain_text(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_parse_content_tokens_plain_text(self, bridge: OutlinePortalBridge) -> None:
         """Parsing plain text returns no tokens."""
         content = {"file.txt": "Hello world\nNo tokens here"}
         tokens, paths, links = bridge._parse_content_tokens(content)
@@ -465,13 +451,10 @@ class TestTokenParsing:
         assert paths == []
         assert links == []
 
-    def test_parse_content_discovers_agentese_paths(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_parse_content_discovers_agentese_paths(self, bridge: OutlinePortalBridge) -> None:
         """Parser discovers AGENTESE paths in content."""
         content = {
-            "doc.md": "See `world.auth.validate` for details.\n"
-            "Also check `self.context.trail`."
+            "doc.md": "See `world.auth.validate` for details.\nAlso check `self.context.trail`."
         }
         tokens, paths, links = bridge._parse_content_tokens(content)
 
@@ -479,26 +462,18 @@ class TestTokenParsing:
         assert "world.auth.validate" in paths
         assert "self.context.trail" in paths
 
-    def test_parse_content_discovers_evidence_links(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_parse_content_discovers_evidence_links(self, bridge: OutlinePortalBridge) -> None:
         """Parser discovers evidence links in content."""
-        content = {
-            "investigation.md": "📎 Found bug in auth\n📎 Confirmed fix (strong)"
-        }
+        content = {"investigation.md": "📎 Found bug in auth\n📎 Confirmed fix (strong)"}
         tokens, paths, links = bridge._parse_content_tokens(content)
 
         assert len(links) == 2
         assert "Found bug in auth" in links
         assert "Confirmed fix" in links
 
-    def test_parse_content_discovers_portals(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_parse_content_discovers_portals(self, bridge: OutlinePortalBridge) -> None:
         """Parser discovers nested portal tokens in content."""
-        content = {
-            "outline.md": "▶ [tests] test_auth.py\n▼ [imports] dependencies"
-        }
+        content = {"outline.md": "▶ [tests] test_auth.py\n▼ [imports] dependencies"}
         tokens, paths, links = bridge._parse_content_tokens(content)
 
         # Should find portal tokens
@@ -507,14 +482,11 @@ class TestTokenParsing:
         portal_tokens = [
             t
             for t in tokens
-            if t.token_type
-            in (TokenType.PORTAL_COLLAPSED, TokenType.PORTAL_EXPANDED)
+            if t.token_type in (TokenType.PORTAL_COLLAPSED, TokenType.PORTAL_EXPANDED)
         ]
         assert len(portal_tokens) == 2
 
-    def test_expansion_result_includes_tokens(
-        self, bridge: OutlinePortalBridge
-    ) -> None:
+    def test_expansion_result_includes_tokens(self, bridge: OutlinePortalBridge) -> None:
         """PortalExpansionResult includes discovered tokens after expansion."""
         # Note: This tests the integration, but content is mocked
         # so we check the structure is correct

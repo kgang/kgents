@@ -24,7 +24,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models import Base, Crystal, ExtinctionEvent, ExtinctionTeaching, TeachingCrystal
 from models.base import get_engine
 
-
 # =============================================================================
 # Fixtures
 # =============================================================================
@@ -95,9 +94,7 @@ class TestPrepareExtinction:
     """Tests for prepare_extinction() behavior."""
 
     @pytest.mark.asyncio
-    async def test_extinction_creates_event(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_extinction_creates_event(self, brain_persistence, db_session: AsyncSession):
         """prepare_extinction() creates an ExtinctionEvent."""
         result = await brain_persistence.prepare_extinction(
             reason="Test cleanup",
@@ -175,9 +172,7 @@ class TestPrepareExtinction:
         assert brain_teaching[0].is_alive is True
 
     @pytest.mark.asyncio
-    async def test_path_to_module_conversion(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_path_to_module_conversion(self, brain_persistence, db_session: AsyncSession):
         """prepare_extinction() converts filesystem paths to module prefixes."""
         # Teaching uses dots, paths use slashes
         await brain_persistence.crystallize_teaching(
@@ -196,9 +191,7 @@ class TestPrepareExtinction:
         assert result.affected_count == 1
 
     @pytest.mark.asyncio
-    async def test_successor_map_applied(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_successor_map_applied(self, brain_persistence, db_session: AsyncSession):
         """prepare_extinction() applies successor_map to affected teaching."""
         await brain_persistence.crystallize_teaching(
             insight="Chat gotcha",
@@ -227,9 +220,7 @@ class TestPrepareExtinction:
         assert teaching.successor_module == "services.brain.conversation"
 
     @pytest.mark.asyncio
-    async def test_extinction_links_created(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_extinction_links_created(self, brain_persistence, db_session: AsyncSession):
         """prepare_extinction() creates ExtinctionTeaching links."""
         await brain_persistence.crystallize_teaching(
             insight="Link test gotcha",
@@ -245,9 +236,7 @@ class TestPrepareExtinction:
         )
 
         # Verify link was created
-        stmt = select(ExtinctionTeaching).where(
-            ExtinctionTeaching.extinction_id == result.event_id
-        )
+        stmt = select(ExtinctionTeaching).where(ExtinctionTeaching.extinction_id == result.event_id)
         res = await db_session.execute(stmt)
         links = res.scalars().all()
 
@@ -350,9 +339,7 @@ class TestGetExtinctWisdom:
         assert "validate" in ghosts[0].teaching.insight.lower()
 
     @pytest.mark.asyncio
-    async def test_ghost_wisdom_module_filtering(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_ghost_wisdom_module_filtering(self, brain_persistence, db_session: AsyncSession):
         """get_extinct_wisdom() filters by module prefix."""
         await brain_persistence.crystallize_teaching(
             insight="Town A gotcha",
@@ -389,9 +376,7 @@ class TestGetExtinctionEvents:
     """Tests for get_extinction_events() behavior."""
 
     @pytest.mark.asyncio
-    async def test_list_extinction_events(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_list_extinction_events(self, brain_persistence, db_session: AsyncSession):
         """get_extinction_events() lists all extinction events."""
         # Create multiple events
         await brain_persistence.prepare_extinction(
@@ -410,9 +395,7 @@ class TestGetExtinctionEvents:
         assert len(events) == 2
 
     @pytest.mark.asyncio
-    async def test_get_specific_event(
-        self, brain_persistence, db_session: AsyncSession
-    ):
+    async def test_get_specific_event(self, brain_persistence, db_session: AsyncSession):
         """get_extinction_event() retrieves a specific event."""
         result = await brain_persistence.prepare_extinction(
             reason="Specific event",

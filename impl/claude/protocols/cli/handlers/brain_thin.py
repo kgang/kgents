@@ -214,7 +214,7 @@ def _handle_extinct(args: list[str], ctx: "InvocationContext | None" = None) -> 
                     print(f"Commit: {event.commit}")
                     if event.decision_doc:
                         print(f"Decision Doc: {event.decision_doc}")
-                    print(f"\nDeleted Paths:")
+                    print("\nDeleted Paths:")
                     for p in event.deleted_paths:
                         successor = event.successor_map.get(p.rstrip("/"), "(removed)")
                         print(f"  - {p} -> {successor}")
@@ -247,9 +247,11 @@ def _handle_extinct(args: list[str], ctx: "InvocationContext | None" = None) -> 
                     print("Ancestral Wisdom (From Deleted Code)")
                     print("=" * 50)
                     for g in ghosts[:20]:
-                        icon = {"critical": "\U0001f6a8", "warning": "\u26a0\ufe0f", "info": "\u2139\ufe0f"}.get(
-                            g.teaching.severity, "\u2022"
-                        )
+                        icon = {
+                            "critical": "\U0001f6a8",
+                            "warning": "\u26a0\ufe0f",
+                            "info": "\u2139\ufe0f",
+                        }.get(g.teaching.severity, "\u2022")
                         print(f"\n{icon} {g.teaching.source_module}::{g.teaching.source_symbol}")
                         print(f"   {g.teaching.insight}")
                         if g.successor:
