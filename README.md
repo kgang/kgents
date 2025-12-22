@@ -8,6 +8,101 @@ This is not another orchestration framework. kgents is a **specification** for a
 
 ---
 
+## Feel It
+
+```python
+from agents.poly import from_function, sequential
+
+double = from_function("double", lambda x: x * 2)
+add_one = from_function("add_one", lambda x: x + 1)
+
+pipe = sequential(double, add_one)
+_, outputs = pipe.run(initial=("ready", "ready"), inputs=[5, 10])
+
+# 5 → 11, 10 → 21
+# (f >> g) >> h == f >> (g >> h) — Verified, not aspirational
+```
+
+---
+
+## Try It: Interactive Demos
+
+Experience kgents through multiple projections—the same concepts, different manifestations.
+
+### Python Examples (2 minutes)
+
+Five standalone scripts, each <50 lines:
+
+```bash
+cd impl/claude
+
+# Agent composition and associativity laws
+python ../../docs/examples/composition.py
+
+# Operad law verification at runtime
+python ../../docs/examples/operad_laws.py
+
+# Trust levels and witness verification
+python ../../docs/examples/trust_levels.py
+
+# All examples at once
+for f in ../../docs/examples/*.py; do python "$f"; done
+```
+
+### Marimo Notebooks (Interactive)
+
+Six interactive notebooks for hands-on exploration:
+
+```bash
+cd impl/claude
+
+# The flagship demo: Alethic Architecture
+# Same agent → 6 different projections (Local, CLI, Docker, K8s, WASM, marimo)
+marimo edit demos/agent_explorer.py
+
+# Forge Crown Jewel: artifact synthesis and composition
+marimo edit demos/foundry_showcase.py
+
+# Memory agents: holographic associative memory
+marimo edit demos/stateful_memory_demo.py
+
+# Interactive text rendering and projection
+marimo edit demos/interactive_text_demo.py
+
+# Reactive substrate visualization
+marimo edit demos/red_and_blue.py
+
+# WASM sandbox: zero-trust browser execution
+marimo edit demos/wasm_sandbox_demo.py
+```
+
+### HTML Sandboxes (Browser, No Build)
+
+Open directly in your browser—no server, no build step:
+
+```bash
+cd impl/claude/demos
+
+# Memory agent visualization
+open memory_agent_sandbox.html    # macOS
+# or: xdg-open memory_agent_sandbox.html  # Linux
+
+# Text transformation playground
+open text_transformer_sandbox.html
+```
+
+### WASM Demo (Zero-Trust Execution)
+
+Run agents completely sandboxed in your browser via Pyodide:
+
+```bash
+cd impl/claude
+uv run python demos/wasm_sandbox_demo.py
+# Opens in browser. No server required after loading.
+```
+
+---
+
 ## For Developers: Quick Start
 
 ### Requirements
@@ -46,7 +141,7 @@ npm run dev                          # http://localhost:3000
 
 ### 3. LLM Setup (Morpheus Gateway)
 
-Morpheus is the LLM gateway. Without it, composition and tests work but LLM-powered features (K-gent soul, Town dialogue) won't.
+Morpheus is the LLM gateway. Without it, composition and tests work but LLM-powered features (K-gent soul, semantic search) won't.
 
 **Option A: Claude CLI (Recommended)**
 ```bash
@@ -90,10 +185,13 @@ npm run lint
 spec/              # THE LAW — conceptual specification
 impl/claude/       # Reference implementation
   agents/          # Categorical primitives: PolyAgent, Operad, Sheaf, Flux
-  services/        # Crown Jewels: Brain, Gardener, Town, Park, Atelier, Morpheus
+  services/        # Crown Jewels: Brain, Living Docs, Witness, Foundry
   protocols/       # AGENTESE runtime, CLI, API gateway
+  demos/           # Interactive demos (marimo, HTML, WASM)
   web/             # React + Three.js frontend
-docs/skills/       # THE 13 SKILLS — read before building
+docs/              # Developer documentation
+  skills/          # THE 17 SKILLS — read before building
+  examples/        # Standalone Python examples
 ```
 
 ### What Works Without LLM
@@ -106,30 +204,7 @@ docs/skills/       # THE 13 SKILLS — read before building
 | Web UI navigation | ✅ | ✅ |
 | Brain (memory storage) | ✅ | ✅ |
 | K-gent soul dialogue | ❌ | ✅ |
-| Town citizen dialogue | ❌ | ✅ |
 | Semantic search | ❌ | ✅ |
-
----
-
-## Feel It
-
-```python
-from agents import agent
-
-@agent
-async def parse(s: str) -> int:
-    return int(s)
-
-@agent
-async def double(x: int) -> int:
-    return x * 2
-
-pipe = parse >> double  # Category theory made practical
-result = await pipe.invoke("21")  # 42
-
-# Laws are verified, not aspirational
-# (f >> g) >> h == f >> (g >> h) ← BootstrapWitness.verify_composition_laws()
-```
 
 ---
 
@@ -153,7 +228,7 @@ result = await pipe.invoke("21")  # 42
 | **Operad** | Composition grammar—defines *what combinations are valid* | [spec/principles.md](spec/principles.md) §AD-003 |
 | **Sheaf** | Gluing local views into global coherence. How emergence works. | [categorical-foundations.md](docs/categorical-foundations.md) |
 | **AGENTESE** | Verb-first protocol. Five contexts: `world.*`, `self.*`, `concept.*`, `void.*`, `time.*` | [agentese-path.md](docs/skills/agentese-path.md) |
-| **Crown Jewel** | Production service (Brain, Town, Park...) built on categorical primitives | [crown-jewel-patterns.md](docs/skills/crown-jewel-patterns.md) |
+| **Crown Jewel** | Production service (Brain, Witness, Foundry...) built on categorical primitives | [crown-jewel-patterns.md](docs/skills/crown-jewel-patterns.md) |
 | **K-gent** | The governance functor—personality space navigation, not chatbot | [spec/agents/k-gent.md](spec/agents/k-gent.md) |
 | **Functor** | Structure-preserving map. `F.lift(a >> b) = F.lift(a) >> F.lift(b)` | [architecture-overview.md](docs/architecture-overview.md) |
 | **Accursed Share** | The void context. Entropy budget. *"Everything is slop or comes from slop."* | [spec/principles.md](spec/principles.md) §Meta-Principle |
@@ -174,20 +249,22 @@ Full treatment: [spec/principles.md](spec/principles.md)
 
 ---
 
-## The Garden
+## Web Galleries
 
+The frontend includes interactive galleries showcasing projection patterns. Start the frontend (see [Quick Start](#2-start-backend--frontend)), then visit:
+
+| Gallery | URL | What It Shows |
+|---------|-----|---------------|
+| **Projection Gallery** | [localhost:3000/_/gallery](http://localhost:3000/_/gallery) | Polynomial playground, operad wiring, category filtering |
+| **Layout Gallery** | [localhost:3000/_/gallery/layout](http://localhost:3000/_/gallery/layout) | 8 pilots demonstrating density isomorphism—same content, different structures (compact ↔ spacious) |
+| **Interactive Text** | [localhost:3000/_/gallery/interactive-text](http://localhost:3000/_/gallery/interactive-text) | 6 pilots: AGENTESE portals, task toggles, code regions, badge tokens |
+
+```bash
+# Quick start: Backend + Frontend
+cd impl/claude && uv run uvicorn protocols.api.app:create_app --factory --reload --port 8000 &
+cd impl/claude/web && npm run dev
+# Then visit http://localhost:3000/_/gallery
 ```
-Ship-ready     Brain ████████████████████ 100%    Memory cathedral
-               Gardener ██████████████████ 100%   Cultivation practice
-               Gestalt █████████████████▒ 90%     Living code garden
-               Forge ████████████████████ 100%    Creative workshop
-
-Growing        Witness ███████████████▒▒▒ 75%     Trust verification
-               Town ██████████████▒▒▒▒▒▒ 70%      Agent simulation
-               Park ████████████▒▒▒▒▒▒▒▒ 60%      Westworld hosts
-```
-
-11,170+ tests. Strict mypy. Category laws verified at runtime via `BootstrapWitness`.
 
 ---
 
@@ -195,7 +272,7 @@ Growing        Witness ███████████████▒▒▒ 75
 
 Read [CLAUDE.md](CLAUDE.md) first. It contains:
 - **Anti-Sausage Protocol**: Kent's voice gets diluted through LLM processing. Quote directly; don't paraphrase.
-- **Skills-First**: The 13 skills in `docs/skills/` cover every task. Read them before building.
+- **Skills-First**: The 17 skills in `docs/skills/` cover every task. Read them before building.
 - **DI Enlightened Resolution**: Required deps fail fast with actionable errors. Optional deps (`= None`) degrade gracefully.
 - **Voice Anchors**: *"Daring, bold, creative, opinionated but not gaudy"*, *"Tasteful > feature-complete"*
 
@@ -207,8 +284,9 @@ The Mirror Test: *"Does this feel like Kent on his best day?"*
 
 | What | Where | When |
 |------|-------|------|
+| Interactive demos | [impl/claude/demos/](impl/claude/demos/) | First 10 minutes |
 | Zero to agent | [docs/quickstart.md](docs/quickstart.md) | First 5 minutes |
-| The 13 skills | [docs/skills/](docs/skills/) | Before building anything |
+| The 17 skills | [docs/skills/](docs/skills/) | Before building anything |
 | The seven principles | [spec/principles.md](spec/principles.md) | Understanding why |
 | Architecture | [docs/architecture-overview.md](docs/architecture-overview.md) | Understanding how |
 | Systems inventory | [docs/systems-reference.md](docs/systems-reference.md) | Before building new |
