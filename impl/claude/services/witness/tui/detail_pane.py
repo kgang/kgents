@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 from rich.text import Text
 from textual.reactive import reactive
-from textual.widget import Widget
+from textual.widgets import Static
 
 from .crystal_list import LEVEL_COLORS, LEVEL_NAMES, format_age
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from ..crystal import Crystal
 
 
-class CrystalDetailPane(Widget):
+class CrystalDetailPane(Static):
     """
     Right pane showing expanded crystal details.
 
@@ -43,9 +43,17 @@ class CrystalDetailPane(Widget):
     def set_crystal(self, crystal: Any | None) -> None:
         """Set the crystal to display."""
         self.crystal = crystal
-        self.refresh()
+        self._update_display()
 
-    def render(self) -> Text:
+    def _update_display(self) -> None:
+        """Update the displayed content."""
+        try:
+            self.update(self._render_details())
+        except Exception:
+            # Widget not mounted yet, will update on mount
+            pass
+
+    def _render_details(self) -> Text:
         """Render the crystal details."""
         if self.crystal is None:
             return Text("Select a crystal to view details.", style="dim")
@@ -181,8 +189,8 @@ class CrystalDetailPane(Widget):
         return lines
 
     def watch_crystal(self, crystal: Any | None) -> None:
-        """Refresh when crystal changes."""
-        self.refresh()
+        """Update display when crystal changes."""
+        self._update_display()
 
 
 __all__ = [

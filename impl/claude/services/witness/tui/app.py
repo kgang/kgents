@@ -245,13 +245,17 @@ class WitnessDashApp(App[None]):
         self.query_one("#crystal-list").focus()
         self.query_one("#crystal-list").add_class("active")
 
-        # Load crystals
-        self.run_worker(self._load_crystals())
-
         # Update hint bar
         self.query_one("#hint-bar", HintBar).set_hints(
             "j/k: navigate  Enter: copy  0-3: filter level  a: all  r: refresh  q: quit"
         )
+
+        # Load crystals after refresh to ensure widgets are ready
+        self.call_after_refresh(self._schedule_crystal_load)
+
+    def _schedule_crystal_load(self) -> None:
+        """Schedule crystal loading after UI is ready."""
+        self.run_worker(self._load_crystals())
 
     async def _load_crystals(self) -> None:
         """Load crystals from the store (async worker)."""
@@ -270,13 +274,24 @@ class WitnessDashApp(App[None]):
             self._crystals = crystals
             self.crystal_count = len(crystals)
 
+            logger.info(f"Loaded {len(crystals)} crystals")
+
             # Update the list pane
             list_pane = self.query_one("#crystal-list", CrystalListPane)
             list_pane.set_crystals(crystals)
 
+            logger.info(f"Set {len(list_pane._crystals)} crystals on pane")
+
+            # Force refresh of the list pane
+            list_pane.refresh()
+
+            # Show notification so user knows loading happened
+            self.notify(f"Loaded {len(crystals)} crystals", severity="information")
+
             # Select first crystal if available
             if crystals:
                 self._on_crystal_selected(crystals[0])
+                logger.info(f"Selected first crystal: {crystals[0].insight[:30]}...")
 
         except Exception as e:
             logger.exception("Failed to load crystals: %s", e)
@@ -307,7 +322,7 @@ class WitnessDashApp(App[None]):
         crystal = list_pane.selected_crystal
         if crystal:
             try:
-                import pyperclip
+                import pyperclip  # type: ignore[import-untyped]
 
                 pyperclip.copy(crystal.insight)
                 self.notify("📋 Copied insight to clipboard", severity="information")

@@ -13,6 +13,7 @@ See: docs/skills/zenportal-patterns.md
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -24,6 +25,8 @@ from textual.widgets import Static
 
 if TYPE_CHECKING:
     from ..crystal import Crystal, CrystalLevel
+
+logger = logging.getLogger(__name__)
 
 
 # Level colors (consistent across TUI)
@@ -68,7 +71,7 @@ def format_age(dt: datetime) -> str:
         return f"{age.days // 7}w"
 
 
-class CrystalListPane(Widget, can_focus=True):
+class CrystalListPane(Static, can_focus=True):
     """
     Navigable list of crystals with vim-style navigation.
 
@@ -103,38 +106,25 @@ class CrystalListPane(Widget, can_focus=True):
         """Set the crystals to display."""
         self._crystals = crystals
         self.selected_index = 0 if crystals else 0
-        self.refresh()
+        self._update_display()
 
-    @property
-    def selected_crystal(self) -> Any | None:
-        """Get the currently selected crystal."""
-        if 0 <= self.selected_index < len(self._crystals):
-            return self._crystals[self.selected_index]
-        return None
+    def _update_display(self) -> None:
+        """Update the displayed content."""
+        try:
+            self.update(self._render_crystals())
+        except Exception:
+            # Widget not mounted yet, will update on mount
+            pass
 
-    def select_next(self) -> None:
-        """Select the next crystal."""
-        if self._crystals:
-            self.selected_index = min(len(self._crystals) - 1, self.selected_index + 1)
-            if self.selected_crystal:
-                self.post_message(self.CrystalSelected(self.selected_crystal))
-
-    def select_previous(self) -> None:
-        """Select the previous crystal."""
-        if self._crystals:
-            self.selected_index = max(0, self.selected_index - 1)
-            if self.selected_crystal:
-                self.post_message(self.CrystalSelected(self.selected_crystal))
-
-    def render(self) -> Text:
-        """Render the crystal list."""
+    def _render_crystals(self) -> Text:
+        """Render the crystal list as Text."""
         if not self._crystals:
             return Text(
                 "No crystals found.\n\nUse 'kg witness crystallize' to create one.", style="dim"
             )
 
         lines: list[Text] = []
-        available_width = self.size.width - 4  # Account for padding
+        available_width = max(40, self.size.width - 4) if self.size.width > 0 else 60
 
         for i, crystal in enumerate(self._crystals[:20]):  # Limit display
             is_selected = i == self.selected_index
@@ -195,9 +185,32 @@ class CrystalListPane(Widget, can_focus=True):
 
         return result
 
+    @property
+    def selected_crystal(self) -> Any | None:
+        """Get the currently selected crystal."""
+        if 0 <= self.selected_index < len(self._crystals):
+            return self._crystals[self.selected_index]
+        return None
+
+    def select_next(self) -> None:
+        """Select the next crystal."""
+        if self._crystals:
+            self.selected_index = min(len(self._crystals) - 1, self.selected_index + 1)
+            self._update_display()
+            if self.selected_crystal:
+                self.post_message(self.CrystalSelected(self.selected_crystal))
+
+    def select_previous(self) -> None:
+        """Select the previous crystal."""
+        if self._crystals:
+            self.selected_index = max(0, self.selected_index - 1)
+            self._update_display()
+            if self.selected_crystal:
+                self.post_message(self.CrystalSelected(self.selected_crystal))
+
     def watch_selected_index(self, index: int) -> None:
-        """Refresh when selection changes."""
-        self.refresh()
+        """Update display when selection changes."""
+        self._update_display()
 
 
 __all__ = [
