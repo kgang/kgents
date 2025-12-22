@@ -49,8 +49,9 @@ from textual.reactive import reactive
 from textual.widgets import Header, Static
 
 from ..focus import Bucket, FocusManager
-from ..snippets import SnippetLibrary
+from ..snippets import Snippet, SnippetLibrary
 from .add_focus_modal import AddFocusModal
+from .edit_snippet_modal import EditSnippetModal
 from .focus_pane import FocusPane
 from .garden_view import GardenView
 from .snippet_pane import SnippetPane
@@ -77,24 +78,18 @@ class DawnCockpit(App[None]):
     TITLE = "DAWN COCKPIT"
     SUB_TITLE = "The gardener tends the garden."
 
-    # Enforce quarter-screen dimensions
+    # Use dock layout - Header docks top, GardenView docks bottom
     CSS = """
-    Screen {
-        layout: grid;
-        grid-size: 1 3;
-        grid-rows: 1fr auto auto;
-    }
-
     #main-container {
         layout: horizontal;
-        height: 100%;
+        width: 100%;
+        height: 1fr;
     }
 
     #focus-pane {
         width: 50%;
         border: solid gray;
         padding: 0 1;
-        margin: 0 0 0 1;
     }
 
     #focus-pane.active {
@@ -105,7 +100,6 @@ class DawnCockpit(App[None]):
         width: 50%;
         border: solid gray;
         padding: 0 1;
-        margin: 0 1 0 0;
     }
 
     #snippet-pane.active {
@@ -113,10 +107,10 @@ class DawnCockpit(App[None]):
     }
 
     #garden-view {
-        height: 4;
+        dock: bottom;
+        height: 5;
         border: solid magenta;
         padding: 0 1;
-        margin: 0 1;
     }
 
     .pane-title {
@@ -197,6 +191,7 @@ class DawnCockpit(App[None]):
         self._snippet_library = snippet_library or SnippetLibrary()
         if snippet_library is None:
             self._snippet_library.load_defaults()
+            self._snippet_library.load_custom()  # Load persisted custom snippets
         self._dawn_start_time = datetime.now()
 
     @property
@@ -256,16 +251,6 @@ class DawnCockpit(App[None]):
         else:
             self.query_one("#snippet-pane").focus()
 
-    def action_activate_item(self) -> None:
-        """Activate the selected item in the active pane."""
-        if self.active_pane == "focus":
-            focus_pane = self.query_one("#focus-pane", FocusPane)
-            if focus_pane.selected_item:
-                focus_pane.post_message(focus_pane.ItemActivated(focus_pane.selected_item))
-        else:
-            snippet_pane = self.query_one("#snippet-pane", SnippetPane)
-            snippet_pane._copy_selected()
-
     def action_add_focus(self) -> None:
         """Add a new focus item (opens modal)."""
         self.push_screen(AddFocusModal(), self._handle_add_focus)
@@ -286,11 +271,13 @@ class DawnCockpit(App[None]):
     def action_done_focus(self) -> None:
         """Mark current focus item as done."""
         focus_pane = self.query_one("#focus-pane", FocusPane)
-        if focus_pane.selected_item:
-            self._focus_manager.remove(focus_pane.selected_item.id)
+        item = focus_pane.selected_item
+        if item:
+            label = item.label  # Save before removal
+            self._focus_manager.remove(item.id)
             focus_pane.refresh_items()
             garden = self.query_one("#garden-view", GardenView)
-            garden.add_event(f"Archived: {focus_pane.selected_item.label}")
+            garden.add_event(f"✅ Archived: {label}")
 
     def action_hygiene(self) -> None:
         """Run hygiene check on focus items."""
@@ -320,9 +307,31 @@ class DawnCockpit(App[None]):
         label = message.snippet.to_dict().get("label", "snippet")
         garden.add_event(f"📋 Copied: {label}")
 
-    def on_key(self, event: Any) -> None:
-        """Debug: Log all keys reaching the app."""
-        logger.warning(f"DawnCockpit.on_key: key={event.key!r}")
+    def on_snippet_pane_snippet_edit_requested(
+        self, message: SnippetPane.SnippetEditRequested
+    ) -> None:
+        """Handle snippet edit request — open edit modal."""
+        self.push_screen(
+            EditSnippetModal(message.snippet),
+            lambda result: self._handle_edit_snippet(message.snippet, result),
+        )
+
+    def _handle_edit_snippet(self, snippet: Snippet, result: tuple[str, str] | None) -> None:
+        """Handle result from EditSnippetModal."""
+        if result is None:
+            return  # User cancelled
+
+        label, content = result
+        snippet_dict = snippet.to_dict()
+        updated = self._snippet_library.update_custom(
+            snippet_dict["id"],
+            label=label,
+            content=content,
+        )
+        if updated:
+            self.query_one("#snippet-pane", SnippetPane).refresh_items()
+            garden = self.query_one("#garden-view", GardenView)
+            garden.add_event(f"✏️ Edited: {label}")
 
     async def on_mount(self) -> None:
         """Handle app mount."""

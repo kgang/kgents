@@ -1,26 +1,27 @@
 """
-Dawn Cockpit Add Focus Modal: Modal for adding new focus items.
+Dawn Cockpit Edit Snippet Modal: Modal for editing custom snippets.
 
-A simple modal that captures:
-- Target (file path or AGENTESE path)
-- Label (optional, inferred from target if not provided)
-- Bucket (today/week/someday)
+A modal that allows editing:
+- Label
+- Content
 
 Layout:
     ┌─────────────────────────────────────────┐
-    │  ADD FOCUS ITEM                         │
+    │  EDIT SNIPPET                           │
     │  ═══════════════                        │
     │                                         │
-    │  Target: [________________________]     │
-    │  Label:  [________________________]     │
-    │  Bucket: [▼ today________________]     │
+    │  Label:   [________________________]    │
+    │  Content: [________________________]    │
+    │           [________________________]    │
+    │           [________________________]    │
     │                                         │
-    │        [Cancel]    [Add]               │
+    │        [Cancel]    [Save]               │
     └─────────────────────────────────────────┘
 
 Key Bindings:
     Escape   Cancel and close modal
-    Enter    Submit (when on Add button)
+    Enter    Submit (from any field)
+    Tab      Cycle through fields
 
 See: spec/protocols/dawn-cockpit.md
 """
@@ -32,24 +33,24 @@ from typing import Any
 from textual.containers import Horizontal, Vertical
 from textual.events import Key
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Select, Static
+from textual.widgets import Button, Input, Static, TextArea
 
-from ..focus import Bucket
+from ..snippets import Snippet
 
 
-class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
+class EditSnippetModal(ModalScreen[tuple[str, str] | None]):
     """
-    Modal for adding a new focus item.
+    Modal for editing an existing custom snippet.
 
     Returns:
-        tuple[target, label, bucket_value] on Add
+        tuple[label, content] on Save
         None on Cancel/Escape
 
     Teaching:
-        gotcha: ModalScreen requires a result type parameter. The dismiss()
-                method takes the result value, which is returned to the
-                callback in push_screen().
-                (Evidence: Textual docs on ModalScreen)
+        gotcha: Only custom snippets can be edited. Static and Query
+                snippets are configured at startup and should not be
+                modified through the UI.
+                (Evidence: spec/protocols/dawn-cockpit.md)
     """
 
     BINDINGS = [
@@ -59,14 +60,14 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
     ]
 
     CSS = """
-    AddFocusModal {
+    EditSnippetModal {
         align: center middle;
     }
 
     #modal-container {
-        width: 50;
+        width: 60;
         height: auto;
-        max-height: 24;
+        max-height: 20;
         border: thick $primary;
         background: $surface;
         padding: 1 2;
@@ -92,7 +93,8 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
         margin-bottom: 1;
     }
 
-    Select {
+    #content-input {
+        height: 5;
         margin-bottom: 1;
     }
 
@@ -106,28 +108,34 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
     }
     """
 
+    def __init__(self, snippet: Snippet, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self._snippet = snippet
+        self._snippet_dict = snippet.to_dict()
+
     def compose(self) -> Any:
         """Compose the modal content."""
         with Vertical(id="modal-container"):
-            yield Static("ADD FOCUS ITEM", id="modal-title")
-            yield Static("═" * 30, classes="modal-separator")
-            yield Static("Target (file path or AGENTESE):", classes="modal-label")
-            yield Input(placeholder="e.g., plans/my-plan.md", id="target-input")
-            yield Static("Label (optional):", classes="modal-label")
-            yield Input(placeholder="e.g., Portal Phase 4", id="label-input")
-            yield Static("Bucket:", classes="modal-label")
-            yield Select(
-                [(b.value.capitalize(), b.value) for b in Bucket],
-                value=Bucket.TODAY.value,
-                id="bucket-select",
+            yield Static("EDIT SNIPPET", id="modal-title")
+            yield Static("═" * 40, classes="modal-separator")
+            yield Static("Label:", classes="modal-label")
+            yield Input(
+                value=self._snippet_dict.get("label", ""),
+                placeholder="Snippet label",
+                id="label-input",
+            )
+            yield Static("Content:", classes="modal-label")
+            yield TextArea(
+                self._snippet_dict.get("content", ""),
+                id="content-input",
             )
             with Horizontal(id="button-row"):
                 yield Button("Cancel", id="cancel-btn", variant="default")
-                yield Button("Add", id="add-btn", variant="primary")
+                yield Button("Save", id="save-btn", variant="primary")
 
     def on_mount(self) -> None:
-        """Focus the first input on mount."""
-        self.query_one("#target-input", Input).focus()
+        """Focus the label input on mount."""
+        self.query_one("#label-input", Input).focus()
 
     def action_cancel(self) -> None:
         """Cancel and close modal."""
@@ -135,22 +143,22 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
 
     def _submit(self) -> None:
         """Submit the form if valid."""
-        target = self.query_one("#target-input", Input).value.strip()
         label = self.query_one("#label-input", Input).value.strip()
-        bucket = self.query_one("#bucket-select", Select).value
+        content = self.query_one("#content-input", TextArea).text.strip()
 
-        # Validate target is provided
-        if not target:
-            # Focus the input and provide feedback
-            target_input = self.query_one("#target-input", Input)
-            target_input.focus()
+        # Validate - both required
+        if not label:
+            self.query_one("#label-input", Input).focus()
+            return
+        if not content:
+            self.query_one("#content-input", TextArea).focus()
             return
 
-        self.dismiss((target, label, str(bucket)))
+        self.dismiss((label, content))
 
     def _get_focusable(self) -> list[Any]:
         """Get list of focusable widgets in the modal."""
-        return list(self.query("Input, Select, Button"))
+        return list(self.query("Input, TextArea, Button"))
 
     def action_focus_next_in_modal(self) -> None:
         """Cycle focus to next widget in modal."""
@@ -185,19 +193,21 @@ class AddFocusModal(ModalScreen[tuple[str, str, str] | None]):
             focusable[-1].focus()
 
     def on_key(self, event: Key) -> None:
-        """Handle Enter key to submit."""
+        """Handle Enter key - submit from Input only (TextArea needs newlines)."""
         if event.key == "enter":
-            event.stop()
-            self._submit()
+            focused = self.focused
+            if isinstance(focused, Input):
+                event.stop()
+                self._submit()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
-        if event.button.id == "add-btn":
+        if event.button.id == "save-btn":
             self._submit()
         else:
             self.dismiss(None)
 
 
 __all__ = [
-    "AddFocusModal",
+    "EditSnippetModal",
 ]

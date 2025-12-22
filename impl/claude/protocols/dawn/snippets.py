@@ -23,10 +23,16 @@ See: spec/protocols/dawn-cockpit.md
 from __future__ import annotations
 
 import hashlib
+import json
+import logging
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
 
 
 def _deterministic_id(content: str) -> str:
@@ -164,29 +170,50 @@ class CustomSnippet:
 Snippet = StaticSnippet | QuerySnippet | CustomSnippet
 
 
+def _get_snippets_path() -> Path:
+    """Get the path for snippet persistence file."""
+    xdg_data = os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+    snippets_dir = Path(xdg_data) / "kgents" / "dawn"
+    snippets_dir.mkdir(parents=True, exist_ok=True)
+    return snippets_dir / "custom_snippets.json"
+
+
 class SnippetLibrary:
     """
     Manages snippet collection across the three patterns.
 
     Provides separate storage for static, query, and custom snippets.
     Static and query snippets are configured at startup; custom snippets
-    are added by the user during the session.
+    are added by the user and persisted to disk.
 
     Usage:
         lib = SnippetLibrary()
         lib.load_defaults()  # Load voice anchors
+        lib.load_custom()    # Load persisted custom snippets
 
         # Add custom snippet during session
         snippet = lib.add_custom("My Note", "Remember this")
+        lib.save_custom()    # Persist to disk
 
         # Copy operation would use lib.get(snippet.id)
+
+    Teaching:
+        gotcha: Custom snippets are now persisted to XDG_DATA_HOME/kgents/dawn/custom_snippets.json.
+                Call save_custom() after mutations to persist changes.
+                (Evidence: spec/protocols/dawn-cockpit.md § CustomSnippet)
     """
 
-    def __init__(self) -> None:
-        """Initialize empty snippet library."""
+    def __init__(self, auto_persist: bool = True) -> None:
+        """
+        Initialize empty snippet library.
+
+        Args:
+            auto_persist: If True, automatically save after add/update/remove operations.
+        """
         self._static: dict[str, StaticSnippet] = {}
         self._query: dict[str, QuerySnippet] = {}
         self._custom: dict[str, CustomSnippet] = {}
+        self._auto_persist = auto_persist
 
     # === List operations ===
 
@@ -298,7 +325,7 @@ class SnippetLibrary:
         label: str,
         content: str,
     ) -> CustomSnippet:
-        """Add a custom snippet (ephemeral per session)."""
+        """Add a custom snippet and optionally persist."""
         snippet = CustomSnippet(
             id=str(uuid.uuid4())[:8],
             label=label,
@@ -306,23 +333,97 @@ class SnippetLibrary:
             created_at=datetime.now(),
         )
         self._custom[snippet.id] = snippet
+        if self._auto_persist:
+            self.save_custom()
         return snippet
 
     def remove_custom(self, snippet_id: str) -> bool:
         """
-        Remove a custom snippet.
+        Remove a custom snippet and optionally persist.
 
         Returns True if removed, False if not found.
         Only custom snippets can be removed.
         """
         if snippet_id in self._custom:
             del self._custom[snippet_id]
+            if self._auto_persist:
+                self.save_custom()
             return True
         return False
 
+    def update_custom(
+        self,
+        snippet_id: str,
+        label: str | None = None,
+        content: str | None = None,
+    ) -> CustomSnippet | None:
+        """
+        Update a custom snippet's label and/or content, optionally persist.
+
+        Returns the updated snippet, or None if not found.
+        Only custom snippets can be updated.
+
+        Since CustomSnippet is frozen, we create a new instance
+        with the updated values.
+        """
+        snippet = self._custom.get(snippet_id)
+        if snippet is None:
+            return None
+
+        # Create updated snippet (preserving created_at and id)
+        updated = CustomSnippet(
+            id=snippet.id,
+            label=label if label is not None else snippet.label,
+            content=content if content is not None else snippet.content,
+            created_at=snippet.created_at,
+        )
+        self._custom[snippet_id] = updated
+        if self._auto_persist:
+            self.save_custom()
+        return updated
+
     def clear_custom(self) -> None:
-        """Clear all custom snippets (session end)."""
+        """Clear all custom snippets and optionally persist."""
         self._custom.clear()
+        if self._auto_persist:
+            self.save_custom()
+
+    # === Persistence ===
+
+    def save_custom(self) -> None:
+        """Save custom snippets to disk."""
+        path = _get_snippets_path()
+        data = [snippet.to_dict() for snippet in self._custom.values()]
+        try:
+            with open(path, "w") as f:
+                json.dump(data, f, indent=2)
+            logger.debug(f"Saved {len(data)} custom snippets to {path}")
+        except Exception as e:
+            logger.error(f"Failed to save snippets: {e}")
+
+    def load_custom(self) -> None:
+        """Load custom snippets from disk."""
+        path = _get_snippets_path()
+        if not path.exists():
+            logger.debug(f"No custom snippets file at {path}")
+            return
+
+        try:
+            with open(path) as f:
+                data = json.load(f)
+
+            for item in data:
+                snippet = CustomSnippet(
+                    id=item["id"],
+                    label=item["label"],
+                    content=item["content"],
+                    created_at=datetime.fromisoformat(item["created_at"]),
+                )
+                self._custom[snippet.id] = snippet
+
+            logger.debug(f"Loaded {len(data)} custom snippets from {path}")
+        except Exception as e:
+            logger.error(f"Failed to load snippets: {e}")
 
     # === Bulk operations ===
 

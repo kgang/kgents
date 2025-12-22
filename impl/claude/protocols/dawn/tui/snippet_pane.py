@@ -44,6 +44,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from rich.text import Text
+from textual.containers import VerticalScroll
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
@@ -69,6 +70,65 @@ SNIPPET_COLORS = {
     "query": "cyan",
     "custom": "green",
 }
+
+
+class SnippetItemWidget(Static):
+    """
+    A single snippet item widget for scroll-into-view support.
+
+    Each snippet renders as its own widget so we can scroll to it.
+    """
+
+    is_selected: reactive[bool] = reactive(False)
+
+    def __init__(
+        self,
+        snippet: Snippet,
+        index: int,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.snippet = snippet
+        self.index = index
+
+    def render(self) -> Text:
+        """Render the snippet item."""
+        snippet_dict = self.snippet.to_dict()
+        snippet_type = snippet_dict.get("type", "static")
+        icon = SNIPPET_ICONS.get(snippet_type, "▶")
+        color = SNIPPET_COLORS.get(snippet_type, "white")
+
+        label = snippet_dict["label"]
+        content = snippet_dict.get("content")
+        is_loaded = snippet_dict.get("is_loaded", True)
+
+        # Build preview
+        if content:
+            preview = content[:30] + "..." if len(content) > 30 else content
+        elif not is_loaded:
+            preview = "[not loaded]"
+        else:
+            preview = ""
+
+        # Build text
+        text = Text()
+
+        # Selection indicator and main line
+        if self.is_selected:
+            text.append("▶ ", style="bold")
+            text.append(f"{icon} {label}", style=f"bold {color}")
+        else:
+            text.append(f"  {icon} {label}", style=color)
+
+        # Preview on next line
+        if preview:
+            text.append(f'\n      "{preview}"', style="dim")
+
+        return text
+
+    def watch_is_selected(self, selected: bool) -> None:
+        """Update display when selection changes."""
+        self.refresh()
 
 
 class SnippetPane(Widget, can_focus=True):
@@ -102,6 +162,13 @@ class SnippetPane(Widget, can_focus=True):
             self.snippet = snippet
             super().__init__()
 
+    class SnippetEditRequested(Message):
+        """Emitted when user requests to edit a snippet."""
+
+        def __init__(self, snippet: Snippet) -> None:
+            self.snippet = snippet
+            super().__init__()
+
     is_active: reactive[bool] = reactive(False)
     _reactive_selected_index: reactive[int] = reactive(0)
 
@@ -113,6 +180,7 @@ class SnippetPane(Widget, can_focus=True):
         super().__init__(**kwargs)
         self.snippet_library = snippet_library
         self._snippets: list[Snippet] = []
+        self._item_widgets: list[SnippetItemWidget] = []
         self._copy_callback: Any | None = None
         self._selected_index: int = 0  # Non-reactive for testing
 
@@ -142,13 +210,26 @@ class SnippetPane(Widget, can_focus=True):
         """Set callback for clipboard operations (for testing)."""
         self._copy_callback = callback
 
+    CSS = """
+    #snippets-scroll {
+        height: 1fr;
+        scrollbar-size: 1 1;
+    }
+
+    .snippet-item {
+        height: auto;
+        padding: 0;
+        margin-bottom: 1;
+    }
+    """
+
     def compose(self) -> Any:
         """Compose the pane content."""
         yield Static("📋 SNIPPETS", id="snippet-title", classes="pane-title")
         yield Static("═" * 25, classes="separator")
-        yield Static(id="snippets-container")
+        yield VerticalScroll(id="snippets-scroll")
         yield Static("─" * 25, classes="separator")
-        yield Static("[dim]↑↓ select  ⏎ copy  [x] delete[/dim]", id="help")
+        yield Static("[dim]↑↓ select  ⏎ copy  [e] edit  [x] del[/dim]", id="help")
 
     def on_mount(self) -> None:
         """Populate snippets on mount."""
@@ -169,53 +250,58 @@ class SnippetPane(Widget, can_focus=True):
             self._selected_index = max(0, len(self._snippets) - 1)
 
     def _render_snippets(self) -> None:
-        """Render snippets to the container."""
-        container = self.query_one("#snippets-container", Static)
+        """Render snippets to the scrollable container."""
+        try:
+            container = self.query_one("#snippets-scroll", VerticalScroll)
+        except Exception:
+            return  # Not mounted
+
+        # Remove old widgets
+        container.remove_children()
+        self._item_widgets = []
 
         if not self._snippets:
-            container.update("[dim]No snippets. Load defaults with snippet_library.load_defaults()[/dim]")
+            container.mount(Static("[dim]No snippets. Load defaults.[/dim]"))
             return
 
-        lines = []
+        # Create individual widgets for each snippet
         for i, snippet in enumerate(self._snippets):
-            snippet_dict = snippet.to_dict()
-            snippet_type = snippet_dict.get("type", "static")
-            icon = SNIPPET_ICONS.get(snippet_type, "▶")
-            color = SNIPPET_COLORS.get(snippet_type, "white")
+            widget = SnippetItemWidget(
+                snippet,
+                i,
+                id=f"snippet-{i}",
+                classes="snippet-item",
+            )
+            widget.is_selected = i == self.selected_index
+            self._item_widgets.append(widget)
+            container.mount(widget)
 
-            # Selection indicator
-            selected = i == self.selected_index
-            prefix = "▶ " if selected else "  "
+        # Scroll to selected
+        self._scroll_to_selected()
 
-            # Label display
-            label = snippet_dict["label"]
+    def _scroll_to_selected(self) -> None:
+        """Scroll to keep the selected item visible."""
+        if not self._item_widgets or self.selected_index >= len(self._item_widgets):
+            return
 
-            # Content preview (truncated)
-            content = snippet_dict.get("content")
-            is_loaded = snippet_dict.get("is_loaded", True)
+        try:
+            selected_widget = self._item_widgets[self.selected_index]
+            selected_widget.scroll_visible()
+        except Exception:
+            pass  # Widget not ready
 
-            if content:
-                preview = content[:30] + "..." if len(content) > 30 else content
-            elif not is_loaded:
-                preview = "[not loaded]"
-            else:
-                preview = ""
-
-            # Build line
-            if selected:
-                lines.append(f"[bold {color}]{prefix}{icon} {label}[/bold {color}]")
-            else:
-                lines.append(f"[{color}]  {icon} {label}[/{color}]")
-
-            if preview:
-                lines.append(f"[dim]      \"{preview}\"[/dim]")
-            lines.append("")
-
-        container.update("\n".join(lines))
+    def _update_selection_display(self) -> None:
+        """Update which widget shows as selected (without full re-render)."""
+        for i, widget in enumerate(self._item_widgets):
+            widget.is_selected = i == self.selected_index
+        self._scroll_to_selected()
 
     def watch__reactive_selected_index(self, index: int) -> None:
         """Update display when selection changes."""
-        self._render_snippets()
+        if self._item_widgets:
+            self._update_selection_display()
+        else:
+            self._render_snippets()
         self.post_message(self.SnippetSelected(self.selected_snippet))
 
     def watch_is_active(self, active: bool) -> None:
@@ -231,9 +317,6 @@ class SnippetPane(Widget, can_focus=True):
 
     def on_key(self, event: Any) -> None:
         """Handle keyboard navigation (only when active)."""
-        # DEBUG: Log every key received
-        logger.warning(f"SnippetPane.on_key: key={event.key!r}, is_active={self.is_active}, snippets={len(self._snippets)}")
-
         if not self.is_active:
             return  # Let app handle keys when not active
 
@@ -252,6 +335,9 @@ class SnippetPane(Widget, can_focus=True):
         elif key == "x" and self._snippets:
             self._delete_selected()
             event.stop()
+        elif key == "e" and self._snippets:
+            self._edit_selected()
+            event.stop()
         elif key in "123456789" and self._snippets:
             index = int(key) - 1
             if index < len(self._snippets):
@@ -261,14 +347,11 @@ class SnippetPane(Widget, can_focus=True):
 
     def _copy_selected(self) -> None:
         """Copy the selected snippet to clipboard."""
-        logger.warning(f"_copy_selected called, selected_snippet={self.selected_snippet}")
         snippet = self.selected_snippet
         if not snippet:
-            logger.warning("_copy_selected: No snippet selected, returning")
             return
 
         snippet_dict = snippet.to_dict()
-        logger.warning(f"_copy_selected: snippet_dict={snippet_dict}")
         content = snippet_dict.get("content")
 
         if not content:
@@ -282,18 +365,31 @@ class SnippetPane(Widget, can_focus=True):
             if self._copy_callback:
                 self._copy_callback(content)
             else:
+                # Try pyperclip first, fall back to pbcopy on macOS
+                copied = False
                 try:
-                    import pyperclip
+                    import pyperclip  # type: ignore[import-untyped]
+
                     pyperclip.copy(content)
+                    copied = True
                 except ImportError:
-                    # pyperclip not available - emit message anyway
-                    logger.debug("pyperclip not available, skipping clipboard copy")
-                except Exception as e:
-                    logger.debug("Clipboard copy failed: %s", e)
+                    pass  # pyperclip not available
+                except Exception:
+                    pass  # pyperclip failed
+
+                if not copied:
+                    # macOS fallback
+                    try:
+                        import subprocess
+
+                        process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+                        process.communicate(content.encode("utf-8"))
+                    except Exception as e:
+                        logger.debug(f"Clipboard copy failed: {e}")
 
             self.post_message(self.SnippetCopied(snippet, content))
         except Exception as e:
-            logger.error("Failed to copy snippet: %s", e)
+            logger.error(f"Failed to copy snippet: {e}")
 
     def _delete_selected(self) -> None:
         """Delete the selected custom snippet."""
@@ -309,7 +405,21 @@ class SnippetPane(Widget, can_focus=True):
         self.snippet_library.remove_custom(snippet_dict["id"])
         self.refresh_items()
 
+    def _edit_selected(self) -> None:
+        """Request edit for the selected snippet."""
+        snippet = self.selected_snippet
+        if not snippet:
+            return
+
+        snippet_dict = snippet.to_dict()
+        if snippet_dict.get("type") != "custom":
+            # Can only edit custom snippets
+            return
+
+        self.post_message(self.SnippetEditRequested(snippet))
+
 
 __all__ = [
     "SnippetPane",
+    "SnippetItemWidget",
 ]
