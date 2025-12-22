@@ -22,6 +22,7 @@ See: spec/protocols/repo-archaeology.md, plans/git-archaeology-backfill.md
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -98,13 +99,16 @@ def _handle_manifest(args: list[str]) -> int:
         patterns_by_status = get_patterns_by_status()
 
         if "--json" in args:
-            print(json.dumps({
-                "total_commits": commit_count,
-                "features": {
-                    status: len(patterns)
-                    for status, patterns in patterns_by_status.items()
-                },
-            }))
+            print(
+                json.dumps(
+                    {
+                        "total_commits": commit_count,
+                        "features": {
+                            status: len(patterns) for status, patterns in patterns_by_status.items()
+                        },
+                    }
+                )
+            )
         else:
             print("Git Archaeology Status")
             print("=" * 40)
@@ -130,7 +134,12 @@ def _handle_manifest(args: list[str]) -> int:
 def _handle_mine(args: list[str]) -> int:
     """Parse git history and show summary statistics."""
     try:
-        from services.archaeology import get_authors, get_commit_count, get_file_activity, parse_git_log
+        from services.archaeology import (
+            get_authors,
+            get_commit_count,
+            get_file_activity,
+            parse_git_log,
+        )
 
         max_commits = _parse_int_arg(args, "max-commits", 500)
 
@@ -142,16 +151,19 @@ def _handle_mine(args: list[str]) -> int:
         hot_files = get_file_activity(limit=10)
 
         if "--json" in args:
-            print(json.dumps({
-                "parsed_commits": len(commits),
-                "total_commits": commit_count,
-                "authors": authors,
-                "hot_files": [
-                    {"path": f.path, "commits": f.commit_count}
-                    for f in hot_files
-                ],
-                "commit_types": _count_commit_types(commits),
-            }))
+            print(
+                json.dumps(
+                    {
+                        "parsed_commits": len(commits),
+                        "total_commits": commit_count,
+                        "authors": authors,
+                        "hot_files": [
+                            {"path": f.path, "commits": f.commit_count} for f in hot_files
+                        ],
+                        "commit_types": _count_commit_types(commits),
+                    }
+                )
+            )
         else:
             print()
             print(f"Parsed: {len(commits)} / {commit_count} commits")
@@ -203,13 +215,15 @@ def _handle_report(args: list[str]) -> int:
         report = generate_report(trajectories)
 
         if "--json" in args:
-            print(json.dumps({
-                "features": len(trajectories),
-                "commits_analyzed": len(commits),
-                "trajectories": [
-                    t.to_report_row() for t in trajectories.values()
-                ],
-            }))
+            print(
+                json.dumps(
+                    {
+                        "features": len(trajectories),
+                        "commits_analyzed": len(commits),
+                        "trajectories": [t.to_report_row() for t in trajectories.values()],
+                    }
+                )
+            )
         else:
             print(report)
 
@@ -239,20 +253,24 @@ def _handle_teaching(args: list[str]) -> int:
             teachings = [t for t in teachings if t.category == category_filter]
 
         if "--json" in args:
-            print(json.dumps({
-                "total": len(teachings),
-                "by_category": _count_by_category(teachings),
-                "teachings": [
+            print(
+                json.dumps(
                     {
-                        "insight": t.teaching.insight,
-                        "severity": t.teaching.severity,
-                        "category": t.category,
-                        "features": list(t.features),
-                        "commit": t.commit.sha[:8],
+                        "total": len(teachings),
+                        "by_category": _count_by_category(teachings),
+                        "teachings": [
+                            {
+                                "insight": t.teaching.insight,
+                                "severity": t.teaching.severity,
+                                "category": t.category,
+                                "features": list(t.features),
+                                "commit": t.commit.sha[:8],
+                            }
+                            for t in teachings[:50]  # Limit JSON output
+                        ],
                     }
-                    for t in teachings[:50]  # Limit JSON output
-                ],
-            }))
+                )
+            )
         else:
             report = generate_teaching_report(teachings)
             print(report)
@@ -264,10 +282,15 @@ def _handle_teaching(args: list[str]) -> int:
 
 
 def _handle_crystallize(args: list[str]) -> int:
-    """Crystallize commit teachings to Brain persistence."""
+    """Crystallize commit teachings to Witness marks."""
+    import asyncio
+
     try:
         from services.archaeology import (
+            CrystallizationResult,
+            crystallize_teachings_to_witness,
             extract_teachings_from_commits,
+            generate_crystallization_report,
             parse_git_log,
         )
 
@@ -286,27 +309,65 @@ def _handle_crystallize(args: list[str]) -> int:
             for cat, count in sorted(by_category.items(), key=lambda x: -x[1]):
                 print(f"  {cat}: {count}")
             print()
-            print("Run without --dry-run to persist to Brain.")
+            print("Run without --dry-run to persist to Witness.")
 
             if "--json" in args:
-                print(json.dumps({
-                    "mode": "dry_run",
-                    "would_crystallize": len(teachings),
-                    "by_category": by_category,
-                }))
+                print(
+                    json.dumps(
+                        {
+                            "mode": "dry_run",
+                            "would_crystallize": len(teachings),
+                            "by_category": by_category,
+                        }
+                    )
+                )
             return 0
 
-        # Actual crystallization
-        # TODO: Wire to Brain persistence when ready
-        print("Crystallizing teachings to Brain...")
-        print()
-        print("NOTE: Full Brain integration pending.")
-        print(f"Found {len(teachings)} teachings from {len(commits)} commits.")
-        print()
-        print("To persist, use: kg docs crystallize (for docstring teachings)")
-        print("or wait for archaeology → Brain integration.")
+        # Actual crystallization to Witness
+        async def do_crystallize() -> CrystallizationResult:
+            # Get WitnessPersistence from providers
+            from services.providers import get_witness_persistence
 
-        return 0
+            persistence = await get_witness_persistence()
+            return await crystallize_teachings_to_witness(teachings, persistence, dry_run=False)
+
+        print(f"Crystallizing {len(teachings)} teachings to Witness...")
+        print()
+
+        try:
+            result = asyncio.run(do_crystallize())
+        except Exception as e:
+            # Fallback: report without persistence
+            print(f"Warning: Could not connect to Witness persistence: {e}")
+            print()
+            print("Teachings extracted (not persisted):")
+            by_category = _count_by_category(teachings)
+            for cat, count in sorted(by_category.items(), key=lambda x: -x[1]):
+                print(f"  {cat}: {count}")
+            print()
+            print("To persist, ensure database is running:")
+            print("  cd impl/claude && docker compose up -d")
+            return 1
+
+        report = generate_crystallization_report(result)
+        print(report)
+
+        if "--json" in args:
+            print()
+            print(
+                json.dumps(
+                    {
+                        "mode": "crystallize",
+                        "total_teachings": result.total_teachings,
+                        "marks_created": result.marks_created,
+                        "marks_skipped": result.marks_skipped,
+                        "errors": result.errors,
+                        "mark_ids": result.mark_ids[:20],  # Limit output
+                    }
+                )
+            )
+
+        return 0 if not result.errors else 1
     except Exception as e:
         print(f"Error crystallizing: {e}")
         return 1
@@ -366,11 +427,15 @@ def _handle_priors(args: list[str]) -> int:
             return 0
 
         if "--json" in args:
-            print(json.dumps({
-                "spec_patterns": len(spec_patterns),
-                "causal_priors": len(causal_priors),
-                "patterns": [p.pattern_type for p in spec_patterns],
-            }))
+            print(
+                json.dumps(
+                    {
+                        "spec_patterns": len(spec_patterns),
+                        "causal_priors": len(causal_priors),
+                        "patterns": [p.pattern_type for p in spec_patterns],
+                    }
+                )
+            )
         else:
             print(report)
 
@@ -380,20 +445,21 @@ def _handle_priors(args: list[str]) -> int:
         return 1
 
 
-def _count_commit_types(commits: list) -> dict[str, int]:
+def _count_commit_types(commits: Sequence[object]) -> dict[str, int]:
     """Count commits by type."""
     counts: dict[str, int] = {}
     for c in commits:
-        ctype = c.commit_type
+        ctype = getattr(c, "commit_type", "unknown")
         counts[ctype] = counts.get(ctype, 0) + 1
     return counts
 
 
-def _count_by_category(teachings: list) -> dict[str, int]:
+def _count_by_category(teachings: Sequence[object]) -> dict[str, int]:
     """Count teachings by category."""
     counts: dict[str, int] = {}
     for t in teachings:
-        counts[t.category] = counts.get(t.category, 0) + 1
+        category = getattr(t, "category", "unknown")
+        counts[category] = counts.get(category, 0) + 1
     return counts
 
 

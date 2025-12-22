@@ -38,12 +38,6 @@ from .patterns import (
     get_patterns_by_category,
     get_patterns_by_status,
 )
-from .teaching_extractor import (
-    CommitTeaching,
-    CommitTeachingExtractor,
-    extract_teachings_from_commits,
-    generate_teaching_report,
-)
 from .priors import (
     CausalPrior,
     EvolutionPhase,
@@ -53,6 +47,21 @@ from .priors import (
     extract_evolution_traces,
     extract_spec_patterns,
     generate_prior_report,
+)
+from .teaching_extractor import (
+    CommitTeaching,
+    CommitTeachingExtractor,
+    extract_teachings_from_commits,
+    generate_teaching_report,
+)
+from .witness_bridge import (
+    ARCHAEOLOGY_LINEAGE_TAG,
+    ARCHAEOLOGY_ORIGIN,
+    CrystallizationResult,
+    crystallize_teachings_to_witness,
+    generate_crystallization_report,
+    generate_deterministic_mark_id,
+    teaching_to_mark,
 )
 
 # ASHC Adapter - import conditionally to handle missing ASHC dependencies gracefully
@@ -69,6 +78,7 @@ try:
         spec_pattern_to_edge,
         spec_pattern_to_nudge,
     )
+
     _ASHC_AVAILABLE = True
 except ImportError:
     _ASHC_AVAILABLE = False
@@ -112,19 +122,29 @@ __all__ = [
     "CommitTeachingExtractor",
     "extract_teachings_from_commits",
     "generate_teaching_report",
+    # Witness Bridge (CommitTeaching → Mark)
+    "ARCHAEOLOGY_ORIGIN",
+    "ARCHAEOLOGY_LINEAGE_TAG",
+    "CrystallizationResult",
+    "teaching_to_mark",
+    "generate_deterministic_mark_id",
+    "crystallize_teachings_to_witness",
+    "generate_crystallization_report",
 ]
 
 # Conditionally add ASHC adapter exports
 if _ASHC_AVAILABLE:
-    __all__.extend([
-        "ARCHAEOLOGICAL_CONFIDENCE_DISCOUNT",
-        "PriorConversionResult",
-        "prior_to_nudge",
-        "prior_to_edge",
-        "spec_pattern_to_nudge",
-        "spec_pattern_to_edge",
-        "seed_graph_with_priors",
-        "seed_learner_with_archaeology",
-        "create_seeded_learner",
-        "generate_priors_report",
-    ])
+    __all__.extend(
+        [
+            "ARCHAEOLOGICAL_CONFIDENCE_DISCOUNT",
+            "PriorConversionResult",
+            "prior_to_nudge",
+            "prior_to_edge",
+            "spec_pattern_to_nudge",
+            "spec_pattern_to_edge",
+            "seed_graph_with_priors",
+            "seed_learner_with_archaeology",
+            "create_seeded_learner",
+            "generate_priors_report",
+        ]
+    )
