@@ -149,7 +149,7 @@ class TriadHealthNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return VITALS_AFFORDANCES["triad"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Get complete triad health."""
         collector = get_semantic_collector()
         if collector is None:
@@ -227,7 +227,7 @@ class SynapseMetricsNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return VITALS_AFFORDANCES["synapse"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Get Synapse metrics."""
         metrics = get_synapse_metrics()
         if metrics is None:
@@ -301,7 +301,7 @@ class ResonanceVitalsNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return VITALS_AFFORDANCES["resonance"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Get resonance signal with coherency."""
         collector = get_semantic_collector()
         if collector is None:
@@ -392,7 +392,7 @@ class CircuitBreakerNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return VITALS_AFFORDANCES["circuit"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Get circuit breaker status."""
         breaker = get_circuit_breaker()
         if breaker is None:
@@ -514,7 +514,7 @@ class GenericVitalsNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("manifest",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         return BasicRendering(
             summary=f"Vitals: {self.holon}",
             content=f"Generic vitals node for {self.holon}",

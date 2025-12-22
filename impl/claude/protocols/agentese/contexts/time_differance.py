@@ -150,7 +150,7 @@ class DifferanceMark(BaseLogosNode):
         effects=[],
         help="View trace state summary",
     )
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current trace state."""
         mark_count = await self._get_mark_count()
         has_store = self._store is not None
@@ -748,7 +748,7 @@ class BranchNode(BaseLogosNode):
         effects=[],
         help="View active branches",
     )
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current branches."""
         return BasicRendering(
             summary="Speculative Branches",

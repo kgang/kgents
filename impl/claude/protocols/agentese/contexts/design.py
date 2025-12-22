@@ -81,7 +81,7 @@ class LayoutDesignNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return DESIGN_AFFORDANCES["layout"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest layout operad summary."""
         from agents.design import LAYOUT_OPERAD
 
@@ -193,7 +193,7 @@ class ContentDesignNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return DESIGN_AFFORDANCES["content"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest content operad summary."""
         from agents.design import CONTENT_OPERAD
 
@@ -313,7 +313,7 @@ class MotionDesignNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return DESIGN_AFFORDANCES["motion"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest motion operad summary."""
         from agents.design import MOTION_OPERAD
 
@@ -425,7 +425,7 @@ class DesignOperadNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return DESIGN_AFFORDANCES["operad"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest unified design operad summary."""
         from agents.design import DESIGN_OPERAD
 
@@ -550,7 +550,7 @@ class DesignContextNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return DESIGN_AFFORDANCES["default"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest design language overview."""
         return BasicRendering(
             summary="Design Language System",

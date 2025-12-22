@@ -47,7 +47,7 @@ class SimpleNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("test",)
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(summary="Simple node")
 
     async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -68,7 +68,7 @@ class DependentNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("capture", "search")
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(summary="Dependent node")
 
     async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:

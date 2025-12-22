@@ -172,7 +172,7 @@ class InteractiveTextNode(BaseLogosNode):
         # Guest: read-only parsing
         return ("parse",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Return service status and capabilities.
 

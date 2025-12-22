@@ -113,7 +113,7 @@ class DataNode(BaseLogosNode):
         """Data affordances available to all archetypes."""
         return DATA_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current data storage state."""
         if self._dgent is None:
             return BasicRendering(
@@ -529,7 +529,7 @@ class UpgraderNode(BaseLogosNode):
         """Upgrader affordances available to all archetypes."""
         return UPGRADER_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current upgrader state."""
         if self._upgrader is None:
             return BasicRendering(
@@ -738,7 +738,7 @@ class TableNode(BaseLogosNode):
         """Table affordances available to all archetypes."""
         return TABLE_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View available tables and their status."""
         if not self._adapters and self._session_factory is None:
             return BasicRendering(
@@ -1045,7 +1045,7 @@ class TableModelNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("get", "put", "delete", "list", "count", "causal_chain")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View model table info."""
         if self._adapter is None:
             return BasicRendering(

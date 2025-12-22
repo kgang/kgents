@@ -129,9 +129,9 @@ def _handle_town(args: list[str], ctx: "InvocationContext | None" = None) -> int
 
 def _handle_codebase(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     """Handle world codebase -> delegating to Gestalt handler."""
-    from protocols.gestalt.handler import cmd_codebase
+    from protocols.gestalt.handler import cmd_codebase  # type: ignore[import-untyped]
 
-    return cmd_codebase(args, ctx)
+    return cmd_codebase(args, ctx)  # type: ignore[no-any-return]
 
 
 def _handle_viz(args: list[str], ctx: "InvocationContext | None" = None) -> int:

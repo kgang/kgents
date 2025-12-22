@@ -202,7 +202,7 @@ class ThreeNodeNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return THREE_AFFORDANCES["node"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest the 3D node primitive information."""
         return BasicRendering(
             summary="TopologyNode3D Configuration",
@@ -266,7 +266,7 @@ class ThreeEdgeNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return THREE_AFFORDANCES["edge"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest the 3D edge primitive information."""
         return BasicRendering(
             summary="TopologyEdge3D Configuration",
@@ -329,7 +329,7 @@ class ThreeThemeNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return THREE_AFFORDANCES["theme"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest the available themes."""
         theme_lines = []
         for name, theme in THEME_REGISTRY.items():
@@ -401,7 +401,7 @@ class ThreeQualityNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return THREE_AFFORDANCES["quality"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest quality adaptation information."""
         quality_lines = []
         for quality, config in QUALITY_CONFIGS.items():

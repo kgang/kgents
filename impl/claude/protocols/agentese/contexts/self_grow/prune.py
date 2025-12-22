@@ -91,7 +91,7 @@ class PruneNode(BaseLogosNode):
             return ("sweep", "compost", "learn", "remove")
         return ("compost",)  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View pruning status."""
         ready = []
         if self._nursery is not None:

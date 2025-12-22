@@ -39,7 +39,7 @@ See: spec/protocols/typed-hypergraph.md, spec/protocols/context-perception.md
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from protocols.cli.reflector import InvocationContext
@@ -143,19 +143,21 @@ def _parse_subcommand(args: list[str]) -> str:
     return "manifest"
 
 
-def _get_node():
+def _get_node() -> Any:
     """Get the ContextNavNode singleton."""
     from protocols.agentese.contexts.self_context import get_context_nav_node
+
     return get_context_nav_node()
 
 
-def _get_observer():
+def _get_observer() -> Any:
     """Get default observer for CLI."""
     from protocols.agentese.node import Observer
+
     return Observer(archetype="developer", capabilities=frozenset({"debug", "test"}))
 
 
-def _run_async(coro):
+def _run_async(coro: Any) -> Any:
     """Run async coroutine synchronously."""
     try:
         loop = asyncio.get_event_loop()

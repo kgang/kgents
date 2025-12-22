@@ -206,7 +206,7 @@ class DerivationNode(BaseLogosNode):
         """All archetypes see derivation paths."""
         return DERIVATION_AFFORDANCES
 
-    def _get_registry(self):
+    def _get_registry(self) -> Any:
         """Import registry lazily to avoid circular imports."""
         from protocols.derivation import get_registry
 
@@ -217,7 +217,7 @@ class DerivationNode(BaseLogosNode):
         effects=[],
         help="View derivation DAG structure and overall confidence",
     )
-    async def manifest(self, observer: Observer | "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: Observer | "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         What is the derivation framework? Project to observer's view.
 
@@ -286,12 +286,12 @@ class DerivationNode(BaseLogosNode):
 
 | Tier | Count | Ceiling |
 |------|-------|---------|
-| Bootstrap | {tier_counts.get('bootstrap', 0)} | 1.00 |
-| Functor | {tier_counts.get('functor', 0)} | 0.98 |
-| Polynomial | {tier_counts.get('polynomial', 0)} | 0.95 |
-| Operad | {tier_counts.get('operad', 0)} | 0.92 |
-| Jewel | {tier_counts.get('jewel', 0)} | 0.85 |
-| App | {tier_counts.get('app', 0)} | 0.75 |
+| Bootstrap | {tier_counts.get("bootstrap", 0)} | 1.00 |
+| Functor | {tier_counts.get("functor", 0)} | 0.98 |
+| Polynomial | {tier_counts.get("polynomial", 0)} | 0.95 |
+| Operad | {tier_counts.get("operad", 0)} | 0.92 |
+| Jewel | {tier_counts.get("jewel", 0)} | 0.85 |
+| App | {tier_counts.get("app", 0)} | 0.75 |
 
 ---
 
@@ -375,8 +375,8 @@ class DerivationNode(BaseLogosNode):
 
 ### Identity
 - **Tier**: {derivation.tier.value} (ceiling: {derivation.tier.ceiling:.0%})
-- **Derives From**: {', '.join(derivation.derives_from) or '(bootstrap axiom)'}
-- **Is Bootstrap**: {'Yes' if derivation.is_bootstrap else 'No'}
+- **Derives From**: {", ".join(derivation.derives_from) or "(bootstrap axiom)"}
+- **Is Bootstrap**: {"Yes" if derivation.is_bootstrap else "No"}
 
 ### Confidence Breakdown
 
@@ -432,7 +432,7 @@ Components:
             },
         )
 
-    def _format_derivation_chain(self, registry, agent_name: str, depth: int = 0) -> str:
+    def _format_derivation_chain(self, registry: Any, agent_name: str, depth: int = 0) -> str:
         """Format derivation chain as ASCII tree."""
         if depth > 5:
             return "  " * depth + "└─ ..."
@@ -442,7 +442,9 @@ Components:
             return "  " * depth + f"└─ {agent_name} (not found)"
 
         prefix = "  " * depth
-        lines = [f"{prefix}{'└─ ' if depth > 0 else ''}{agent_name} ({derivation.tier.value}, {derivation.total_confidence:.0%})"]
+        lines = [
+            f"{prefix}{'└─ ' if depth > 0 else ''}{agent_name} ({derivation.tier.value}, {derivation.total_confidence:.0%})"
+        ]
 
         for parent in derivation.derives_from:
             lines.append(self._format_derivation_chain(registry, parent, depth + 1))
@@ -511,25 +513,27 @@ Components:
                     )
 
         # Organize by tier layers
-        for node in viz.nodes:
-            tier_key = node.tier
+        for viz_node in viz.nodes:
+            tier_key = viz_node.tier
             if tier_key not in viz.tier_layers:
                 viz.tier_layers[tier_key] = []
-            viz.tier_layers[tier_key].append(node.id)
+            viz.tier_layers[tier_key].append(viz_node.id)
 
         # Format for CLI output
         tier_summaries = []
         for t in ["bootstrap", "functor", "polynomial", "operad", "jewel", "app"]:
             if t in viz.tier_layers:
                 nodes_in_tier = viz.tier_layers[t]
-                tier_summaries.append(f"- **{t}**: {', '.join(nodes_in_tier[:5])}" +
-                                     (f" (+{len(nodes_in_tier)-5})" if len(nodes_in_tier) > 5 else ""))
+                tier_summaries.append(
+                    f"- **{t}**: {', '.join(nodes_in_tier[:5])}"
+                    + (f" (+{len(nodes_in_tier) - 5})" if len(nodes_in_tier) > 5 else "")
+                )
 
         content = f"""## Derivation DAG
 
 **Nodes**: {len(viz.nodes)}
 **Edges**: {len(viz.edges)}
-**Focus**: {focus or '(none)'}
+**Focus**: {focus or "(none)"}
 
 ### By Tier
 
@@ -630,11 +634,11 @@ total_confidence = base + boost + stigmergy
 ### Visualization
 
 ```
-Inherited:  [{'█' * int(base * 20):.<20}] {base:.1%}
-Empirical:  [{'█' * int(boost * 20):.<20}] {boost:.1%} (from {derivation.empirical_confidence:.1%})
-Stigmergic: [{'█' * int(stigmergy * 20):.<20}] {stigmergy:.1%} (from {derivation.stigmergic_confidence:.1%})
+Inherited:  [{"█" * int(base * 20):.<20}] {base:.1%}
+Empirical:  [{"█" * int(boost * 20):.<20}] {boost:.1%} (from {derivation.empirical_confidence:.1%})
+Stigmergic: [{"█" * int(stigmergy * 20):.<20}] {stigmergy:.1%} (from {derivation.stigmergic_confidence:.1%})
 ─────────────────────────────────────
-Total:      [{'█' * int(capped * 20):.<20}] {capped:.1%}
+Total:      [{"█" * int(capped * 20):.<20}] {capped:.1%}
 ```
 """
 
@@ -833,8 +837,13 @@ This data is compatible with GraphWidget line charts.
 
         # Build breakdown with all 7 principles
         all_principles = [
-            "Tasteful", "Curated", "Ethical", "Joy-Inducing",
-            "Composable", "Heterarchical", "Generative"
+            "Tasteful",
+            "Curated",
+            "Ethical",
+            "Joy-Inducing",
+            "Composable",
+            "Heterarchical",
+            "Generative",
         ]
 
         breakdown = PrincipleBreakdown(
@@ -873,7 +882,9 @@ This data is compatible with GraphWidget line charts.
         radar_lines = []
         for ps in breakdown.principles:
             bar = "█" * int(ps.draw_strength * 10) + "░" * (10 - int(ps.draw_strength * 10))
-            radar_lines.append(f"| {ps.principle:<14} | [{bar}] {ps.draw_strength:.0%} | {ps.evidence_type:<12} |")
+            radar_lines.append(
+                f"| {ps.principle:<14} | [{bar}] {ps.draw_strength:.0%} | {ps.evidence_type:<12} |"
+            )
 
         content = f"""## Principle Breakdown: {agent_name}
 

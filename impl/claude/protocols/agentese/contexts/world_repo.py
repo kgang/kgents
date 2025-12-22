@@ -47,11 +47,24 @@ REPO_AFFORDANCES: tuple[str, ...] = (
 )
 
 # Extensions that can be created via the UI
-CREATABLE_EXTENSIONS = frozenset({
-    ".py", ".md", ".ts", ".tsx", ".js", ".jsx",
-    ".json", ".yaml", ".yml", ".toml",
-    ".txt", ".html", ".css", ".scss",
-})
+CREATABLE_EXTENSIONS = frozenset(
+    {
+        ".py",
+        ".md",
+        ".ts",
+        ".tsx",
+        ".js",
+        ".jsx",
+        ".json",
+        ".yaml",
+        ".yml",
+        ".toml",
+        ".txt",
+        ".html",
+        ".css",
+        ".scss",
+    }
+)
 
 # Maximum files to scan for suggestions (performance guard)
 MAX_FILES_SCAN = 10000
@@ -101,7 +114,7 @@ class RepoNode(BaseLogosNode):
         """Repo affordances available to all archetypes."""
         return REPO_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View repo node status and capabilities."""
         repo_root = self._get_repo_root()
 
@@ -256,9 +269,9 @@ class RepoNode(BaseLogosNode):
             )
             # Map back to full paths
             for match in filename_matches:
-                for file_path in all_files:
-                    if Path(file_path).name == match and file_path not in suggestions:
-                        suggestions.append(file_path)
+                for candidate in all_files:
+                    if Path(candidate).name == match and candidate not in suggestions:
+                        suggestions.append(candidate)
                         if len(suggestions) >= MAX_SUGGESTIONS:
                             break
                 if len(suggestions) >= MAX_SUGGESTIONS:
@@ -268,12 +281,12 @@ class RepoNode(BaseLogosNode):
 
     async def _invoke_aspect(
         self,
-        aspect_name: str,
+        aspect: str,
         observer: "Umwelt[Any, Any]",
         **kwargs: Any,
-    ) -> Renderable:
+    ) -> Any:
         """Route aspect invocations."""
-        match aspect_name:
+        match aspect:
             case "manifest":
                 return await self.manifest(observer)
             case "validate":
@@ -282,9 +295,9 @@ class RepoNode(BaseLogosNode):
                 return await self.validate(observer, path=path, response_format=response_format)
             case _:
                 return BasicRendering(
-                    summary=f"Unknown aspect: {aspect_name}",
+                    summary=f"Unknown aspect: {aspect}",
                     content=f"Available aspects: {', '.join(REPO_AFFORDANCES)}",
-                    metadata={"error": "unknown_aspect", "aspect": aspect_name},
+                    metadata={"error": "unknown_aspect", "aspect": aspect},
                 )
 
 

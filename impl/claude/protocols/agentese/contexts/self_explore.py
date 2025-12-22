@@ -146,6 +146,7 @@ class ExploreNode(BaseLogosNode):
     async def manifest(
         self,
         observer: "Umwelt[Any, Any] | Observer",
+        **kwargs: Any,
     ) -> Renderable:
         """Manifest current exploration state."""
         BOLD = "\033[1m"
@@ -153,11 +154,7 @@ class ExploreNode(BaseLogosNode):
         CYAN = "\033[36m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -196,12 +193,16 @@ class ExploreNode(BaseLogosNode):
         ev_str = f"{state.evidence_count} items"
         if state.strong_evidence_count > 0:
             weak = state.evidence_count - state.strong_evidence_count
-            ev_str = f"{state.evidence_count} items ({state.strong_evidence_count} strong, {weak} weak)"
+            ev_str = (
+                f"{state.evidence_count} items ({state.strong_evidence_count} strong, {weak} weak)"
+            )
         lines.append(f"{BOLD}Evidence:{RESET}    {ev_str}")
 
         # Budget
         remaining = state.budget_remaining
-        budget_pct = 100 - int(remaining.get("used_pct", 0) * 100) if "used_pct" in remaining else 100
+        budget_pct = (
+            100 - int(remaining.get("used_pct", 0) * 100) if "used_pct" in remaining else 100
+        )
         lines.append(f"{BOLD}Budget:{RESET}      ~{budget_pct}% remaining")
 
         # Loops
@@ -243,11 +244,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         # Reset and create new harness
         self._reset_harness()
@@ -258,9 +255,9 @@ class ExploreNode(BaseLogosNode):
         lines.append(f"{BOLD}Preset:{RESET}  {preset}")
         lines.append("")
         lines.append(f"{DIM}Commands:{RESET}")
-        lines.append(f"  navigate <edge>   Follow a hyperedge")
-        lines.append(f"  budget            Show budget status")
-        lines.append(f"  evidence          Show evidence collected")
+        lines.append("  navigate <edge>   Follow a hyperedge")
+        lines.append("  budget            Show budget status")
+        lines.append("  evidence          Show evidence collected")
 
         return BasicRendering(
             summary=f"Started at {path}",
@@ -290,11 +287,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -331,7 +324,7 @@ class ExploreNode(BaseLogosNode):
             )
         else:
             return BasicRendering(
-                summary=f"Navigation failed",
+                summary="Navigation failed",
                 content=f"{RED}Navigation failed: {result.error_message}{RESET}",
                 metadata={
                     "success": False,
@@ -356,11 +349,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -374,8 +363,9 @@ class ExploreNode(BaseLogosNode):
 
         # Need a PortalTree - check if we have one
         try:
-            from protocols.file_operad.portal import PortalNode, PortalTree
             from pathlib import Path
+
+            from protocols.file_operad.portal import PortalNode, PortalTree
 
             # Create a minimal tree if needed
             root = PortalNode(path=str(Path.cwd()), depth=0)
@@ -390,8 +380,7 @@ class ExploreNode(BaseLogosNode):
                 files_str = ", ".join(result.files_opened) if result.files_opened else "(none)"
                 return BasicRendering(
                     summary=f"Expanded [{portal_path}]",
-                    content=f"{GREEN}Expanded{RESET} [{portal_path}]\n\n"
-                    f"Files opened: {files_str}",
+                    content=f"{GREEN}Expanded{RESET} [{portal_path}]\n\nFiles opened: {files_str}",
                     metadata={
                         "success": True,
                         "portal_path": portal_path,
@@ -400,13 +389,15 @@ class ExploreNode(BaseLogosNode):
                 )
             else:
                 return BasicRendering(
-                    summary=f"Expansion failed",
+                    summary="Expansion failed",
                     content=f"{YELLOW}Failed:{RESET} {result.error_message}",
                     metadata={
                         "success": False,
                         "portal_path": portal_path,
                         "error": result.error_message,
-                        "loop_detected": result.loop_detected.name if result.loop_detected else None,
+                        "loop_detected": result.loop_detected.name
+                        if result.loop_detected
+                        else None,
                     },
                 )
         except ImportError:
@@ -433,11 +424,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -461,24 +448,32 @@ class ExploreNode(BaseLogosNode):
         # Steps
         steps_pct = budget.steps_taken / budget.max_steps if budget.max_steps > 0 else 0
         bar = progress_bar(budget.steps_taken, budget.max_steps)
-        lines.append(f"  Steps:   {budget.steps_taken:3d} / {budget.max_steps:3d}  {bar} {int(steps_pct*100):3d}%")
+        lines.append(
+            f"  Steps:   {budget.steps_taken:3d} / {budget.max_steps:3d}  {bar} {int(steps_pct * 100):3d}%"
+        )
 
         # Nodes
         nodes_count = len(budget.nodes_visited)
         nodes_pct = nodes_count / budget.max_nodes if budget.max_nodes > 0 else 0
         bar = progress_bar(nodes_count, budget.max_nodes)
-        lines.append(f"  Nodes:   {nodes_count:3d} / {budget.max_nodes:3d}  {bar} {int(nodes_pct*100):3d}%")
+        lines.append(
+            f"  Nodes:   {nodes_count:3d} / {budget.max_nodes:3d}  {bar} {int(nodes_pct * 100):3d}%"
+        )
 
         # Depth
         depth_pct = budget.current_depth / budget.max_depth if budget.max_depth > 0 else 0
         bar = progress_bar(budget.current_depth, budget.max_depth)
-        lines.append(f"  Depth:   {budget.current_depth:3d} / {budget.max_depth:3d}  {bar} {int(depth_pct*100):3d}%")
+        lines.append(
+            f"  Depth:   {budget.current_depth:3d} / {budget.max_depth:3d}  {bar} {int(depth_pct * 100):3d}%"
+        )
 
         # Time
         elapsed = budget._elapsed_ms()
         time_pct = elapsed / budget.time_budget_ms if budget.time_budget_ms > 0 else 0
         bar = progress_bar(elapsed, budget.time_budget_ms)
-        lines.append(f"  Time:    {int(elapsed):5d} / {budget.time_budget_ms:5d} ms {bar} {int(time_pct*100):3d}%")
+        lines.append(
+            f"  Time:    {int(elapsed):5d} / {budget.time_budget_ms:5d} ms {bar} {int(time_pct * 100):3d}%"
+        )
 
         lines.append("")
 
@@ -523,11 +518,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -546,6 +537,7 @@ class ExploreNode(BaseLogosNode):
         else:
             # Group by strength
             from protocols.exploration.types import EvidenceStrength
+
             evidence_list = harness.evidence_collector._evidence
 
             strong = [e for e in evidence_list if e.strength == EvidenceStrength.STRONG]
@@ -571,9 +563,15 @@ class ExploreNode(BaseLogosNode):
 
             # Commitment potential
             lines.append(f"\n{BOLD}Commitment Potential:{RESET}")
-            lines.append(f"  TENTATIVE:  {'YES' if summary.total_count >= 1 else 'NO'} (1+ evidence)")
-            lines.append(f"  MODERATE:   {'YES' if summary.total_count >= 3 and summary.strong_count >= 1 else 'NO'} (3+ evidence, 1+ strong)")
-            lines.append(f"  STRONG:     {'YES' if summary.total_count >= 5 and summary.strong_count >= 2 else 'NO'} (5+ evidence, 2+ strong)")
+            lines.append(
+                f"  TENTATIVE:  {'YES' if summary.total_count >= 1 else 'NO'} (1+ evidence)"
+            )
+            lines.append(
+                f"  MODERATE:   {'YES' if summary.total_count >= 3 and summary.strong_count >= 1 else 'NO'} (3+ evidence, 1+ strong)"
+            )
+            lines.append(
+                f"  STRONG:     {'YES' if summary.total_count >= 5 and summary.strong_count >= 2 else 'NO'} (5+ evidence, 2+ strong)"
+            )
 
         return BasicRendering(
             summary=f"Evidence: {summary.total_count} items",
@@ -601,11 +599,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -634,10 +628,7 @@ class ExploreNode(BaseLogosNode):
             content="\n".join(lines),
             metadata={
                 "id": trail.id,
-                "steps": [
-                    {"node": s.node, "edge_taken": s.edge_taken}
-                    for s in trail.steps
-                ],
+                "steps": [{"node": s.node, "edge_taken": s.edge_taken} for s in trail.steps],
             },
         )
 
@@ -659,11 +650,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -690,9 +677,11 @@ class ExploreNode(BaseLogosNode):
 
         if result.approved:
             lines = [f"{GREEN}Claim Committed{RESET}\n"]
-            lines.append(f"{BOLD}Claim:{RESET}    \"{claim}\"")
+            lines.append(f'{BOLD}Claim:{RESET}    "{claim}"')
             lines.append(f"{BOLD}Level:{RESET}    {commitment_level.value.upper()}")
-            lines.append(f"{BOLD}Evidence:{RESET} {result.evidence_count} items ({result.strong_count} strong)")
+            lines.append(
+                f"{BOLD}Evidence:{RESET} {result.evidence_count} items ({result.strong_count} strong)"
+            )
             lines.append("")
             lines.append(f"{GREEN}The claim is now recorded with commitment level.{RESET}")
 
@@ -710,7 +699,9 @@ class ExploreNode(BaseLogosNode):
         else:
             lines = [f"{RED}Commitment Failed: {result.message}{RESET}\n"]
             lines.append(f"{BOLD}Requested level:{RESET} {commitment_level.value}")
-            lines.append(f"{BOLD}Evidence:{RESET}        {result.evidence_count} items ({result.strong_count} strong)")
+            lines.append(
+                f"{BOLD}Evidence:{RESET}        {result.evidence_count} items ({result.strong_count} strong)"
+            )
             lines.append("")
             lines.append(f"{DIM}Gather more evidence or try a lower commitment level.{RESET}")
 
@@ -742,11 +733,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         if not self._has_harness():
             return BasicRendering(
@@ -794,11 +781,7 @@ class ExploreNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         self._reset_harness()
 

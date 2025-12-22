@@ -187,6 +187,7 @@ class SnippetPane(Widget, can_focus=True):
         self._snippets: list[Snippet] = []
         self._item_widgets: list[SnippetItemWidget] = []
         self._copy_callback: Any | None = None
+        self._render_batch: int = 0  # Counter for unique widget IDs
         self._selected_index: int = 0  # Non-reactive for testing
 
     @property
@@ -311,11 +312,15 @@ class SnippetPane(Widget, can_focus=True):
             self._item_widgets = []
             return
 
+        # Increment batch counter for unique IDs (prevents DuplicateIds error)
+        self._render_batch += 1
+        batch = self._render_batch
+
         for i, snippet in enumerate(self._snippets):
             widget = SnippetItemWidget(
                 snippet,
                 i,
-                id=f"snippet-{i}",
+                id=f"snippet-{batch}-{i}",  # Unique per render batch
                 classes="snippet-item",
             )
             widget.is_selected = i == self.selected_index

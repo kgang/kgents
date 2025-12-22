@@ -1,92 +1,135 @@
 /** @type {import('tailwindcss').Config} */
 
 /**
- * kgents Tailwind Configuration
+ * kgents Tailwind Configuration — STARK BIOME EDITION
+ *
+ * "The frame is humble. The content glows."
+ * 90% Steel (cool industrial) / 10% Life (organic accents)
  *
  * Design tokens derived from the visual system.
  * @see docs/creative/visual-system.md
+ * @see creative/crown-jewels-genesis-moodboard.md
+ * @see plans/stark-biome-refactor.md
  */
 
-// Crown Jewel Colors (semantic: meaning → hue)
+// =============================================================================
+// STARK BIOME COLOR SYSTEM
+// =============================================================================
+
+// Steel Foundation (backgrounds, frames, containers — the 90%)
+const steelColors = {
+  'steel-obsidian': '#0A0A0C', // Deepest background
+  'steel-carbon': '#141418', // Card backgrounds
+  'steel-slate': '#1C1C22', // Elevated surfaces
+  'steel-gunmetal': '#28282F', // Borders, dividers
+  'steel-zinc': '#3A3A44', // Muted text, inactive states
+};
+
+// Soil Undertones (warm secondary surfaces)
+const soilColors = {
+  'soil-loam': '#1A1512',
+  'soil-humus': '#2D221A',
+  'soil-peat': '#3D3028',
+  'soil-earth': '#524436',
+  'soil-clay': '#685844',
+};
+
+// Living Accent (success, growth, life emerging — part of the 10%)
+const lifeColors = {
+  'life-moss': '#1A2E1A',
+  'life-fern': '#2E4A2E',
+  'life-sage': '#4A6B4A',
+  'life-mint': '#6B8B6B',
+  'life-sprout': '#8BAB8B',
+};
+
+// Bioluminescent (highlights, focus, precious moments — the earned glow)
+const glowColors = {
+  'glow-spore': '#C4A77D',
+  'glow-amber': '#D4B88C',
+  'glow-light': '#E5C99D',
+  'glow-lichen': '#8BA98B',
+  'glow-bloom': '#9CBDA0',
+};
+
+// Jewel Identities (MUTED for Stark Biome — earned, not given)
 const jewelColors = {
-  // Brain: Knowledge (Cyan)
-  'jewel-brain': '#06B6D4',
-  'jewel-brain-accent': '#0891B2',
-  'jewel-brain-bg': '#0E7490',
-
-  // Gestalt: Growth (Green)
-  'jewel-gestalt': '#22C55E',
-  'jewel-gestalt-accent': '#16A34A',
-  'jewel-gestalt-bg': '#15803D',
-
-  // Gardener: Cultivation (Lime)
-  'jewel-gardener': '#84CC16',
-  'jewel-gardener-accent': '#65A30D',
-  'jewel-gardener-bg': '#4D7C0F',
-
-  // Atelier: Creation (Amber)
-  'jewel-atelier': '#F59E0B',
-  'jewel-atelier-accent': '#D97706',
-  'jewel-atelier-bg': '#B45309',
-
-  // Coalition: Collaboration (Violet)
-  'jewel-coalition': '#8B5CF6',
-  'jewel-coalition-accent': '#7C3AED',
-  'jewel-coalition-bg': '#6D28D9',
-
-  // Park: Drama (Pink)
-  'jewel-park': '#EC4899',
-  'jewel-park-accent': '#DB2777',
-  'jewel-park-bg': '#BE185D',
-
-  // Domain: Urgency (Red)
-  'jewel-domain': '#EF4444',
-  'jewel-domain-accent': '#DC2626',
-  'jewel-domain-bg': '#B91C1C',
+  'jewel-brain': '#4A6B6B', // Teal Moss — knowledge growing quietly
+  'jewel-witness': '#6B6B4A', // Olive — memory preserved in amber
+  'jewel-atelier': '#8B7355', // Umber — creative warmth, earned glow
+  'jewel-liminal': '#5A5A6B', // Pewter — threshold between states
+  // Legacy mappings (backwards compat)
+  'jewel-brain-accent': '#5A7B7B',
+  'jewel-brain-bg': '#3A5B5B',
+  'jewel-gestalt': '#4A6B4A',
+  'jewel-gestalt-accent': '#5A7B5A',
+  'jewel-gestalt-bg': '#3A5B3A',
+  'jewel-gardener': '#6B8B6B',
+  'jewel-gardener-accent': '#7B9B7B',
+  'jewel-gardener-bg': '#5A7B5A',
+  'jewel-atelier-accent': '#9B8365',
+  'jewel-atelier-bg': '#7B6345',
+  'jewel-coalition': '#6B5A7B',
+  'jewel-coalition-accent': '#7B6A8B',
+  'jewel-coalition-bg': '#5B4A6B',
+  'jewel-park': '#7B5A6B',
+  'jewel-park-accent': '#8B6A7B',
+  'jewel-park-bg': '#6B4A5B',
+  'jewel-domain': '#8B5A4A',
+  'jewel-domain-accent': '#9B6A5A',
+  'jewel-domain-bg': '#7B4A3A',
 };
 
-// State Colors (system feedback)
+// State Colors (Stark Biome: constrained to 4, muted)
 const stateColors = {
-  'state-success': '#22C55E',
-  'state-warning': '#F59E0B',
-  'state-error': '#EF4444',
-  'state-info': '#06B6D4',
-  'state-pending': '#64748B',
+  'state-healthy': '#4A6B4A', // life-sage
+  'state-pending': '#C4A77D', // glow-spore
+  'state-alert': '#A65D4A', // Muted rust
+  'state-dormant': '#3A3A44', // steel-zinc
+  // Legacy mappings
+  'state-success': '#4A6B4A',
+  'state-warning': '#C4A77D',
+  'state-error': '#A65D4A',
+  'state-info': '#4A6B6B',
 };
 
-// Surface Colors (dark mode first)
+// Surface Colors (Stark Biome steel foundation)
 const surfaceColors = {
-  'surface-canvas': '#0F172A', // gray-900
-  'surface-card': '#1E293B', // gray-800
-  'surface-elevated': '#334155', // gray-700
+  'surface-canvas': '#0A0A0C', // steel-obsidian
+  'surface-card': '#141418', // steel-carbon
+  'surface-elevated': '#1C1C22', // steel-slate
 };
 
-// Agent Town Colors (legacy, kept for compatibility)
+// Agent Town Colors (legacy → redirect to steel)
 const townColors = {
-  'town-bg': '#1a1a2e',
-  'town-surface': '#16213e',
-  'town-accent': '#0f3460',
-  'town-highlight': '#e94560',
+  'town-bg': '#0A0A0C', // → steel-obsidian
+  'town-surface': '#141418', // → steel-carbon
+  'town-accent': '#1C1C22', // → steel-slate
+  'town-highlight': '#C4A77D', // → glow-spore (earned highlight)
 };
 
-// Archetype Colors
+// Archetype Colors (muted for Stark Biome)
 const archetypeColors = {
-  'archetype-builder': '#3B82F6',
-  'archetype-trader': '#F59E0B',
-  'archetype-healer': '#22C55E',
-  'archetype-scholar': '#8B5CF6',
-  'archetype-watcher': '#6B7280',
+  'archetype-builder': '#5A6B8B', // Muted blue-gray
+  'archetype-trader': '#8B7355', // Umber
+  'archetype-healer': '#4A6B4A', // life-sage
+  'archetype-scholar': '#6B5A7B', // Muted violet
+  'archetype-watcher': '#4A4A54', // Steel gray
 };
 
-// Phase Colors (time of day)
+// Phase Colors (muted for Stark Biome)
 const phaseColors = {
-  'phase-morning': '#FBBF24',
-  'phase-afternoon': '#FB923C',
-  'phase-evening': '#A855F7',
-  'phase-night': '#1E3A5F',
+  'phase-morning': '#8B7355', // Warm umber
+  'phase-afternoon': '#7B6345', // Darker umber
+  'phase-evening': '#5A5A6B', // Pewter
+  'phase-night': '#1C1C22', // steel-slate
 };
 
-// Animation keyframes
+// =============================================================================
+// STARK BIOME ANIMATION SYSTEM
+// "Stillness, then life" — Motion is earned, not decorative
+// =============================================================================
+
 const keyframes = {
   fadeIn: {
     '0%': { opacity: '0' },
@@ -108,37 +151,57 @@ const keyframes = {
     '0%': { opacity: '0', transform: 'scale(0.95)' },
     '100%': { opacity: '1', transform: 'scale(1)' },
   },
+  // STARK: Emergence (fade-in, no bounce overshoot)
+  emerge: {
+    '0%': { opacity: '0', transform: 'scale(0.98)' },
+    '100%': { opacity: '1', transform: 'scale(1)' },
+  },
+  // STARK: Pop simplified (no bounce, mechanical precision)
   pop: {
-    '0%': { transform: 'scale(0.8)', opacity: '0' },
-    '50%': { transform: 'scale(1.1)' },
-    '100%': { transform: 'scale(1)', opacity: '1' },
+    '0%': { opacity: '0', transform: 'scale(0.95)' },
+    '100%': { opacity: '1', transform: 'scale(1)' },
   },
   shake: {
     '0%, 100%': { transform: 'translateX(0)' },
     '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
     '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
   },
+  // STARK: Breathe subtle (2% amplitude, 5s period — barely perceptible)
   breathe: {
     '0%, 100%': { opacity: '1' },
-    '50%': { opacity: '0.7' },
+    '50%': { opacity: '0.98' },
+  },
+  // STARK: Breathe for living elements only (slightly more visible)
+  breatheAlive: {
+    '0%, 100%': { opacity: '1' },
+    '50%': { opacity: '0.92' },
   },
   pulse: {
     '0%, 100%': { opacity: '1' },
-    '50%': { opacity: '0.5' },
+    '50%': { opacity: '0.7' },
+  },
+  // STARK: Data pulse (single pulse on event)
+  dataPulse: {
+    '0%': { opacity: '0.5', transform: 'scale(0.95)' },
+    '50%': { opacity: '1', transform: 'scale(1.02)' },
+    '100%': { opacity: '0.5', transform: 'scale(0.95)' },
   },
 };
 
-// Animation utilities
+// Animation utilities (Stark Biome: mechanical precision, no spring bounce)
 const animations = {
-  'fade-in': 'fadeIn 300ms cubic-bezier(0, 0, 0.2, 1)',
-  'fade-out': 'fadeOut 200ms cubic-bezier(0.4, 0, 1, 1)',
-  'slide-up': 'slideUp 300ms cubic-bezier(0, 0, 0.2, 1)',
-  'slide-down': 'slideDown 300ms cubic-bezier(0, 0, 0.2, 1)',
-  'scale-in': 'scaleIn 300ms cubic-bezier(0, 0, 0.2, 1)',
-  pop: 'pop 300ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-  shake: 'shake 500ms cubic-bezier(0.4, 0, 0.2, 1)',
-  breathe: 'breathe 3s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-  'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+  'fade-in': 'fadeIn 250ms ease-out',
+  'fade-out': 'fadeOut 200ms ease-in',
+  'slide-up': 'slideUp 250ms ease-out',
+  'slide-down': 'slideDown 250ms ease-out',
+  'scale-in': 'scaleIn 250ms ease-out',
+  emerge: 'emerge 250ms ease-out',
+  pop: 'pop 200ms ease-out',
+  shake: 'shake 500ms ease-in-out',
+  breathe: 'breathe 5s ease-in-out infinite',
+  'breathe-alive': 'breatheAlive 4s ease-in-out infinite',
+  'pulse-slow': 'pulse 3s ease-in-out infinite',
+  'data-pulse': 'dataPulse 600ms ease-out',
 };
 
 export default {
@@ -147,6 +210,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        // STARK BIOME: Primary palettes
+        ...steelColors,
+        ...soilColors,
+        ...lifeColors,
+        ...glowColors,
+        // Legacy/semantic (redirect to Stark equivalents)
         ...jewelColors,
         ...stateColors,
         ...surfaceColors,
@@ -159,31 +228,27 @@ export default {
         mono: ['JetBrains Mono', 'monospace'],
       },
       // Spacing: "Tight Frame" semantic tokens
-      // Use these for intentionally tighter spacing.
-      // Default Tailwind scale preserved for compatibility.
       spacing: {
-        'tight-xs': '3px', // Micro gaps
-        'tight-sm': '6px', // Tight groupings
-        'tight-md': '10px', // Standard tight
-        'tight-lg': '16px', // Comfortable tight
-        'tight-xl': '24px', // Spacious tight
+        'tight-xs': '3px',
+        'tight-sm': '6px',
+        'tight-md': '10px',
+        'tight-lg': '16px',
+        'tight-xl': '24px',
       },
       animation: animations,
       keyframes: keyframes,
       // Border radius scale: "Bare Edge" philosophy
-      // The container is humble; the content glows.
-      // Sharp frames make warm elements pop.
       borderRadius: {
-        none: '0px', // Panels, canvas — invisible frame
-        bare: '2px', // Cards, containers — just enough to not cut
-        subtle: '3px', // Interactive surfaces — softened for touch
-        DEFAULT: '2px', // Default to bare (was 4px)
-        sm: '2px', // Alias for bare
-        md: '3px', // Alias for subtle (was 8px)
-        lg: '4px', // Slightly softer (was 12px) — use sparingly
-        xl: '6px', // Soft accent (was 16px) — rare
-        pill: '9999px', // Badges, tags — finite, precious
-        full: '9999px', // Alias for pill
+        none: '0px',
+        bare: '2px',
+        subtle: '3px',
+        DEFAULT: '2px',
+        sm: '2px',
+        md: '3px',
+        lg: '4px',
+        xl: '6px',
+        pill: '9999px',
+        full: '9999px',
       },
       // Transition timing
       transitionDuration: {
@@ -192,12 +257,12 @@ export default {
         standard: '300ms',
         elaborate: '500ms',
       },
-      // Transition timing functions
+      // Transition timing functions (Stark Biome: no bounce/spring)
       transitionTimingFunction: {
         standard: 'cubic-bezier(0.4, 0, 0.2, 1)',
         enter: 'cubic-bezier(0, 0, 0.2, 1)',
         exit: 'cubic-bezier(0.4, 0, 1, 1)',
-        bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        // NOTE: bounce removed for Stark Biome
       },
     },
   },

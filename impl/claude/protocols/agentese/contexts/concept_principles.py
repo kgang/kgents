@@ -124,6 +124,7 @@ class PrinciplesNode(BaseLogosNode):
         observer: "Umwelt[Any, Any] | Observer",
         stance: str | None = None,
         task: str | None = None,
+        **kwargs: Any,
     ) -> Renderable:
         """
         Collapse principles to observer's stance.

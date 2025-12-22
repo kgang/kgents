@@ -351,7 +351,7 @@ class TestBaseLogosNode:
                     return ("delete", "modify")
                 return ()
 
-            async def manifest(self, observer: Any) -> Renderable:
+            async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
                 return BasicRendering(summary="Concrete node")
 
             async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -430,7 +430,7 @@ class TestPolynomialAspect:
             def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
                 return ("custom_aspect",)
 
-            async def manifest(self, observer: Any) -> Renderable:
+            async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
                 return BasicRendering(summary="Test")
 
             async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -462,7 +462,7 @@ class TestPolynomialAspect:
             def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
                 return ()
 
-            async def manifest(self, observer: Any) -> Renderable:
+            async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
                 return BasicRendering(summary="Test")
 
             async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -486,7 +486,7 @@ class TestPolynomialAspect:
             def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
                 return ()
 
-            async def manifest(self, observer: Any) -> Renderable:
+            async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
                 return BasicRendering(summary="Test")
 
             async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:

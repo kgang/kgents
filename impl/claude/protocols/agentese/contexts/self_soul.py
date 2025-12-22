@@ -380,7 +380,7 @@ class SoulNode(BaseLogosNode):
         # Guest (default): read-only soul state
         return ("manifest", "starters")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View soul state."""
         if self._soul is None:
             return BasicRendering(

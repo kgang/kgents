@@ -50,6 +50,16 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def is_pgvector_available() -> bool:
+    """Check if pgvector package is installed."""
+    try:
+        import pgvector  # type: ignore[import-untyped]  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
+
 # pgvector is required for PostgresVectorBackend
 from pgvector.sqlalchemy import Vector  # type: ignore[import-untyped]
 
@@ -440,7 +450,9 @@ class PostgresVectorBackend(BaseVgent):
             if threshold is not None:
                 # Convert similarity threshold to distance threshold
                 distance_threshold = 1.0 - threshold
-                base_query += f" AND {self._embedding_column} {operator} :query < :distance_threshold"
+                base_query += (
+                    f" AND {self._embedding_column} {operator} :query < :distance_threshold"
+                )
                 params["distance_threshold"] = distance_threshold
 
             # Order by distance (ascending) and limit
@@ -539,9 +551,7 @@ class PostgresVectorBackend(BaseVgent):
             Exception: If user lacks CREATE EXTENSION privilege
         """
         async with self._session_factory() as session:
-            await session.execute(
-                text("CREATE EXTENSION IF NOT EXISTS vector")
-            )
+            await session.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
             await session.commit()
 
     async def reindex(self) -> None:
@@ -552,9 +562,7 @@ class PostgresVectorBackend(BaseVgent):
         """
         index_name = f"idx_{self._table_name}_{self._embedding_column}_vector"
         async with self._session_factory() as session:
-            await session.execute(
-                text(f"REINDEX INDEX IF EXISTS {index_name}")
-            )
+            await session.execute(text(f"REINDEX INDEX IF EXISTS {index_name}"))
             await session.commit()
 
     # =========================================================================

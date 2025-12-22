@@ -331,7 +331,9 @@ def cmd_mark(args: list[str]) -> int:
         kg witness mark "Follow-up" --parent mark-abc123  # Create with parent
     """
     if not args:
-        print('Usage: kg witness mark "action" [-w reason] [-p principles] [--parent mark-id] [--json]')
+        print(
+            'Usage: kg witness mark "action" [-w reason] [-p principles] [--parent mark-id] [--json]'
+        )
         return 1
 
     # Parse arguments
@@ -458,25 +460,20 @@ def cmd_show(args: list[str]) -> int:
         # Apply --today filter
         if today_only:
             today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            marks = [
-                m for m in marks
-                if _parse_timestamp(m.get("timestamp", "")) >= today_start
-            ]
+            marks = [m for m in marks if _parse_timestamp(m.get("timestamp", "")) >= today_start]
 
         # Apply --grep filter
         if grep_pattern:
             marks = [
-                m for m in marks
+                m
+                for m in marks
                 if grep_pattern in m.get("action", "").lower()
                 or grep_pattern in (m.get("reasoning") or "").lower()
             ]
 
         # Apply --tag filter
         if tag_filter:
-            marks = [
-                m for m in marks
-                if tag_filter in [p.lower() for p in m.get("principles", [])]
-            ]
+            marks = [m for m in marks if tag_filter in [p.lower() for p in m.get("principles", [])]]
 
         # Re-apply limit after filtering
         marks = marks[:limit]
@@ -524,16 +521,17 @@ async def _crystallize_async(
     tree_root_id: str | None = None,
 ) -> dict[str, Any]:
     """Crystallize recent marks into a crystal."""
+    from services.providers import get_witness_persistence
     from services.witness.crystal import CrystalLevel
     from services.witness.crystal_store import get_crystal_store
     from services.witness.crystallizer import Crystallizer
     from services.witness.mark import Mark
     from services.witness.persistence import WitnessPersistence
-    from services.providers import get_witness_persistence
 
     # Get K-gent Soul for LLM
     try:
         from agents.k.soul import KgentSoul
+
         soul = KgentSoul()
     except Exception:
         soul = None
@@ -549,7 +547,7 @@ async def _crystallize_async(
             return {"error": f"Mark tree not found: {tree_root_id}"}
 
         # Convert to Mark objects
-        from services.witness.mark import Mark, MarkId, Response, Stimulus, NPhase
+        from services.witness.mark import Mark, MarkId, NPhase, Response, Stimulus
 
         marks = []
         for m in marks_data:
@@ -596,7 +594,7 @@ async def _crystallize_async(
             return {"error": "No marks to crystallize"}
 
         # Convert to Mark objects
-        from services.witness.mark import Mark, MarkId, Response, Stimulus, NPhase
+        from services.witness.mark import Mark, MarkId, NPhase, Response, Stimulus
 
         marks = []
         for m in marks_data:
@@ -696,7 +694,9 @@ async def _get_crystal_async(crystal_id: str) -> dict[str, Any] | None:
         "time_range": [
             crystal.time_range[0].isoformat(),
             crystal.time_range[1].isoformat(),
-        ] if crystal.time_range else None,
+        ]
+        if crystal.time_range
+        else None,
         "crystallized_at": crystal.crystallized_at.isoformat(),
         "session_id": crystal.session_id,
     }
@@ -727,11 +727,13 @@ async def _expand_crystal_async(crystal_id: str) -> dict[str, Any]:
         for source_id in crystal.source_crystals:
             source_crystal = store.get(source_id)
             if source_crystal:
-                sources.append({
-                    "id": str(source_crystal.id),
-                    "level": source_crystal.level.name,
-                    "insight": source_crystal.insight,
-                })
+                sources.append(
+                    {
+                        "id": str(source_crystal.id),
+                        "level": source_crystal.level.name,
+                        "insight": source_crystal.insight,
+                    }
+                )
             else:
                 sources.append({"id": str(source_id), "error": "not found"})
 
@@ -809,12 +811,12 @@ def cmd_crystallize(args: list[str]) -> int:
                 console.print(f"[bold]Sources:[/bold] {result['source_count']} marks")
                 console.print(f"[bold]Confidence:[/bold] {result['confidence']:.0%}")
                 console.print()
-                console.print(f"[bold]Insight:[/bold]")
+                console.print("[bold]Insight:[/bold]")
                 console.print(f"  {result['insight']}")
-                if result['significance']:
-                    console.print(f"\n[bold]Significance:[/bold]")
+                if result["significance"]:
+                    console.print("\n[bold]Significance:[/bold]")
                     console.print(f"  {result['significance']}")
-                if result['principles']:
+                if result["principles"]:
                     console.print(f"\n[bold]Principles:[/bold] {', '.join(result['principles'])}")
                 console.print()
             else:
@@ -882,7 +884,9 @@ def cmd_crystals(args: list[str]) -> int:
 
         if not crystals:
             if console:
-                console.print("[dim]No crystals found. Use 'kg witness crystallize' to create one.[/dim]")
+                console.print(
+                    "[dim]No crystals found. Use 'kg witness crystallize' to create one.[/dim]"
+                )
             else:
                 print("No crystals found. Use 'kg witness crystallize' to create one.")
             return 0
@@ -911,7 +915,9 @@ def cmd_crystals(args: list[str]) -> int:
                     f"[dim]({c['source_count']} src)[/dim]  "
                     f"{insight_short}"
                 )
-                console.print(f"         [dim]id: {c['id'][:12]}... conf: {c['confidence']:.0%}[/dim]")
+                console.print(
+                    f"         [dim]id: {c['id'][:12]}... conf: {c['confidence']:.0%}[/dim]"
+                )
             else:
                 print(f"  {ts_str}  {c['level']} ({c['source_count']} src)  {insight_short}")
                 print(f"         id: {c['id'][:12]}...")
@@ -962,7 +968,7 @@ def cmd_crystal(args: list[str]) -> int:
 
         # Pretty print
         if console:
-            console.print(f"\n[bold]Crystal Details[/bold]")
+            console.print("\n[bold]Crystal Details[/bold]")
             console.print("[dim]" + "─" * 60 + "[/dim]")
             console.print(f"[bold]ID:[/bold] {crystal['id']}")
             console.print(f"[bold]Level:[/bold] {crystal['level']}")
@@ -970,17 +976,19 @@ def cmd_crystal(args: list[str]) -> int:
             console.print(f"[bold]Confidence:[/bold] {crystal['confidence']:.0%}")
             console.print(f"[bold]Tokens:[/bold] ~{crystal['token_estimate']}")
             console.print(f"[bold]Crystallized:[/bold] {crystal['crystallized_at']}")
-            if crystal['time_range']:
-                console.print(f"[bold]Time Range:[/bold] {crystal['time_range'][0]} to {crystal['time_range'][1]}")
+            if crystal["time_range"]:
+                console.print(
+                    f"[bold]Time Range:[/bold] {crystal['time_range'][0]} to {crystal['time_range'][1]}"
+                )
             console.print()
-            console.print(f"[bold]Insight:[/bold]")
+            console.print("[bold]Insight:[/bold]")
             console.print(f"  {crystal['insight']}")
-            if crystal['significance']:
-                console.print(f"\n[bold]Significance:[/bold]")
+            if crystal["significance"]:
+                console.print("\n[bold]Significance:[/bold]")
                 console.print(f"  {crystal['significance']}")
-            if crystal['principles']:
+            if crystal["principles"]:
                 console.print(f"\n[bold]Principles:[/bold] {', '.join(crystal['principles'])}")
-            if crystal['topics']:
+            if crystal["topics"]:
                 console.print(f"[bold]Topics:[/bold] {', '.join(crystal['topics'])}")
             console.print()
             console.print(f"[dim]Mood: {crystal['mood']}[/dim]")
@@ -1034,23 +1042,23 @@ def cmd_expand(args: list[str]) -> int:
 
         # Pretty print
         if console:
-            console.print(f"\n[bold]Crystal Sources[/bold]")
+            console.print("\n[bold]Crystal Sources[/bold]")
             console.print("[dim]" + "─" * 50 + "[/dim]")
             console.print(f"[bold]Crystal:[/bold] {result['crystal_id'][:12]}...")
             console.print(f"[bold]Level:[/bold] {result['level']}")
             console.print(f"[bold]Source Type:[/bold] {result['source_type']}")
             console.print()
 
-            if result['source_type'] == 'marks':
+            if result["source_type"] == "marks":
                 console.print(f"[bold]Marks ({len(result['sources'])}):[/bold]")
-                for mark_id in result['sources'][:10]:
+                for mark_id in result["sources"][:10]:
                     console.print(f"  - {mark_id}")
-                if len(result['sources']) > 10:
+                if len(result["sources"]) > 10:
                     console.print(f"  ... and {len(result['sources']) - 10} more")
             else:
                 console.print(f"[bold]Source Crystals ({len(result['sources'])}):[/bold]")
-                for src in result['sources']:
-                    if 'error' in src:
+                for src in result["sources"]:
+                    if "error" in src:
                         console.print(f"  - [red]{src['id'][:12]}... (not found)[/red]")
                     else:
                         console.print(f"  - [cyan]{src['id'][:12]}...[/cyan] [{src['level']}]")
@@ -1059,7 +1067,7 @@ def cmd_expand(args: list[str]) -> int:
         else:
             print(f"\nCrystal Sources: {result['crystal_id'][:12]}...")
             print(f"Type: {result['source_type']}")
-            for src in result['sources'][:10]:
+            for src in result["sources"][:10]:
                 print(f"  - {src if isinstance(src, str) else src.get('id', src)}")
             print()
 
@@ -1128,40 +1136,48 @@ def cmd_context(args: list[str]) -> int:
 
         if not result.items:
             if console:
-                console.print("[dim]No crystals found. Use 'kg witness crystallize' to create some.[/dim]")
+                console.print(
+                    "[dim]No crystals found. Use 'kg witness crystallize' to create some.[/dim]"
+                )
             else:
                 print("No crystals found. Use 'kg witness crystallize' to create some.")
             return 0
 
         # Pretty print
         if console:
-            console.print(f"\n[bold]Context Query[/bold]")
+            console.print("\n[bold]Context Query[/bold]")
             console.print("[dim]" + "─" * 60 + "[/dim]")
-            console.print(f"  Budget: {budget} tokens | Used: {result.total_tokens} | Remaining: {result.budget_remaining}")
+            console.print(
+                f"  Budget: {budget} tokens | Used: {result.total_tokens} | Remaining: {result.budget_remaining}"
+            )
             if query:
-                console.print(f"  Query: \"{query}\"")
+                console.print(f'  Query: "{query}"')
             console.print(f"  Recency weight: {recency_weight:.1f}")
             console.print()
         else:
-            print(f"\nContext Query")
+            print("\nContext Query")
             print("─" * 60)
-            print(f"  Budget: {budget} tokens | Used: {result.total_tokens} | Remaining: {result.budget_remaining}")
+            print(
+                f"  Budget: {budget} tokens | Used: {result.total_tokens} | Remaining: {result.budget_remaining}"
+            )
             if query:
-                print(f"  Query: \"{query}\"")
+                print(f'  Query: "{query}"')
             print()
 
         for item in result.items:
             crystal = item.crystal
             try:
                 dt = crystal.crystallized_at
-                if hasattr(dt, 'strftime'):
+                if hasattr(dt, "strftime"):
                     ts_str = dt.strftime("%Y-%m-%d %H:%M")
                 else:
                     ts_str = str(dt)
             except (ValueError, AttributeError):
                 ts_str = "???"
 
-            insight_short = crystal.insight[:55] + "..." if len(crystal.insight) > 55 else crystal.insight
+            insight_short = (
+                crystal.insight[:55] + "..." if len(crystal.insight) > 55 else crystal.insight
+            )
 
             if console:
                 score_str = f"[dim](score: {item.score:.2f})[/dim]"
@@ -1173,16 +1189,22 @@ def cmd_context(args: list[str]) -> int:
                 )
                 console.print(f"         {insight_short}")
             else:
-                print(f"  {crystal.level.name} {ts_str}  ~{item.tokens} tok  (score: {item.score:.2f})")
+                print(
+                    f"  {crystal.level.name} {ts_str}  ~{item.tokens} tok  (score: {item.score:.2f})"
+                )
                 print(f"         {insight_short}")
 
         if console:
             console.print()
-            console.print(f"[dim]Cumulative: {result.total_tokens}/{budget} tokens ({len(result.items)} crystals)[/dim]")
+            console.print(
+                f"[dim]Cumulative: {result.total_tokens}/{budget} tokens ({len(result.items)} crystals)[/dim]"
+            )
             console.print()
         else:
             print()
-            print(f"Cumulative: {result.total_tokens}/{budget} tokens ({len(result.items)} crystals)")
+            print(
+                f"Cumulative: {result.total_tokens}/{budget} tokens ({len(result.items)} crystals)"
+            )
             print()
 
         return 0
@@ -1271,9 +1293,10 @@ def cmd_propose_now(args: list[str]) -> int:
     apply = "--apply" in args
     console = _get_console()
 
-    async def run_propose() -> dict:
-        from services.witness.integration import propose_now_update, apply_now_proposal
+    async def run_propose() -> dict[str, Any]:
         from pathlib import Path
+
+        from services.witness.integration import apply_now_proposal, propose_now_update
 
         proposals = await propose_now_update()
 
@@ -1309,10 +1332,11 @@ def cmd_propose_now(args: list[str]) -> int:
             return 0
 
         # Pretty print proposals
-        from services.witness.integration import propose_now_update, NowMdProposal
         import asyncio as aio
 
-        async def get_proposals_formatted():
+        from services.witness.integration import NowMdProposal, propose_now_update
+
+        async def get_proposals_formatted() -> list[str]:
             proposals = await propose_now_update()
             return [p.format_diff() for p in proposals]
 
@@ -1391,7 +1415,9 @@ def cmd_promote(args: list[str]) -> int:
             print("─" * 60)
 
         for i, c in enumerate(candidates[:10], 1):
-            insight_short = c.crystal.insight[:50] + "..." if len(c.crystal.insight) > 50 else c.crystal.insight
+            insight_short = (
+                c.crystal.insight[:50] + "..." if len(c.crystal.insight) > 50 else c.crystal.insight
+            )
             if console:
                 console.print(f"  {i}. [cyan]{c.crystal.id[:12]}...[/cyan] (score: {c.score:.2f})")
                 console.print(f"     {insight_short}")
@@ -1404,8 +1430,9 @@ def cmd_promote(args: list[str]) -> int:
 
     if auto_mode:
         # Auto-promote top candidates
-        async def run_auto_promote():
+        async def run_auto_promote() -> list[dict[str, Any]]:
             from services.witness.integration import auto_promote_crystals
+
             return await auto_promote_crystals(limit=3)
 
         try:
@@ -1442,9 +1469,10 @@ def cmd_promote(args: list[str]) -> int:
         return 1
 
     # Promote specific crystal
-    async def run_promote():
-        from services.witness.integration import promote_to_brain
+    async def run_promote() -> dict[str, Any]:
         from services.witness.crystal import CrystalId
+        from services.witness.integration import promote_to_brain
+
         return await promote_to_brain(CrystalId(crystal_id))
 
     try:
@@ -1455,14 +1483,16 @@ def cmd_promote(args: list[str]) -> int:
         else:
             if result.get("success"):
                 if console:
-                    console.print(f"[green]✓ Crystal promoted to Brain[/green]")
+                    console.print("[green]✓ Crystal promoted to Brain[/green]")
                     console.print(f"  {result.get('message', '')}")
                 else:
-                    print(f"✓ Crystal promoted to Brain")
+                    print("✓ Crystal promoted to Brain")
                     print(f"  {result.get('message', '')}")
             else:
                 if console:
-                    console.print(f"[red]✗ Promotion failed: {result.get('error', 'unknown')}[/red]")
+                    console.print(
+                        f"[red]✗ Promotion failed: {result.get('error', 'unknown')}[/red]"
+                    )
                 else:
                     print(f"✗ Promotion failed: {result.get('error', 'unknown')}")
 
@@ -1565,10 +1595,14 @@ def cmd_tree(args: list[str]) -> int:
             def print_node(node: dict[str, Any], prefix: str = "", is_last: bool = True) -> None:
                 """Recursively print tree node."""
                 connector = "└── " if is_last else "├── "
-                action_short = node["action"][:45] + "..." if len(node["action"]) > 45 else node["action"]
+                action_short = (
+                    node["action"][:45] + "..." if len(node["action"]) > 45 else node["action"]
+                )
 
                 if console:
-                    console.print(f"{prefix}{connector}[cyan]{node['id'][:12]}[/cyan] {action_short}")
+                    console.print(
+                        f"{prefix}{connector}[cyan]{node['id'][:12]}[/cyan] {action_short}"
+                    )
                 else:
                     print(f"{prefix}{connector}{node['id'][:12]} {action_short}")
 
@@ -1643,11 +1677,14 @@ def cmd_dashboard(args: list[str]) -> int:
     if not use_classic:
         try:
             from services.witness.tui import run_witness_tui
+
             return run_witness_tui(initial_level=level_filter)
         except ImportError as e:
             console = _get_console()
             if console:
-                console.print(f"[yellow]Textual TUI not available ({e}), falling back to classic.[/yellow]")
+                console.print(
+                    f"[yellow]Textual TUI not available ({e}), falling back to classic.[/yellow]"
+                )
             else:
                 print(f"Textual TUI not available ({e}), falling back to classic.")
             # Fall through to classic mode
@@ -1662,11 +1699,11 @@ def cmd_dashboard(args: list[str]) -> int:
 
     try:
         from rich.layout import Layout
-        from rich.panel import Panel
-        from rich.table import Table
         from rich.live import Live
-        from rich.text import Text
+        from rich.panel import Panel
         from rich.style import Style
+        from rich.table import Table
+        from rich.text import Text
     except ImportError:
         print("Dashboard requires Rich library. Install with: pip install rich")
         return 1
@@ -1675,10 +1712,10 @@ def cmd_dashboard(args: list[str]) -> int:
 
     # Level colors
     LEVEL_COLORS = {
-        0: "blue",       # SESSION
-        1: "green",      # DAY
-        2: "yellow",     # WEEK
-        3: "magenta",    # EPOCH
+        0: "blue",  # SESSION
+        1: "green",  # DAY
+        2: "yellow",  # WEEK
+        3: "magenta",  # EPOCH
     }
     LEVEL_NAMES = {0: "SESSION", 1: "DAY", 2: "WEEK", 3: "EPOCH"}
 
@@ -1700,11 +1737,13 @@ def cmd_dashboard(args: list[str]) -> int:
         title.append("j/k", style="bold cyan")
         title.append(" navigate", style="dim")
         from rich.box import SIMPLE
+
         return Panel(title, box=SIMPLE, padding=(0, 1))
 
     def make_hierarchy_panel(crystals: list[dict[str, Any]], level_filter: int | None) -> Panel:
         """Create hierarchy visualization panel."""
         from rich.box import SIMPLE
+
         table = Table(show_header=True, header_style="bold", box=SIMPLE, padding=(0, 1))
         table.add_column("Level", width=8)
         table.add_column("Time", width=12)
@@ -1835,17 +1874,19 @@ def cmd_dashboard(args: list[str]) -> int:
         layout["stats"].update(make_stats_panel(crystals))
         layout["recent"].update(make_recent_panel(crystals))
         layout["footer"].update(
-            Text("Press q to quit | r to refresh | h/l to filter level", style="dim", justify="center")
+            Text(
+                "Press q to quit | r to refresh | h/l to filter level",
+                style="dim",
+                justify="center",
+            )
         )
 
         return layout
 
     def fetch_crystals(level: int | None) -> list[dict[str, Any]]:
         """Fetch crystals synchronously."""
-        import asyncio
-        return asyncio.run(_bootstrap_and_run(
-            lambda: _get_crystals_async(limit=50, level=level)
-        ))
+
+        return asyncio.run(_bootstrap_and_run(lambda: _get_crystals_async(limit=50, level=level)))
 
     # Initial fetch
     try:
@@ -1864,7 +1905,9 @@ def cmd_dashboard(args: list[str]) -> int:
 
     if not is_interactive:
         # Non-interactive mode: just display and exit
-        console.print("\n[dim]Non-interactive mode: displayed once. Use --refresh for auto-refresh.[/dim]")
+        console.print(
+            "\n[dim]Non-interactive mode: displayed once. Use --refresh for auto-refresh.[/dim]"
+        )
         return 0
 
     console.print("\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level[/dim]")
@@ -1872,6 +1915,7 @@ def cmd_dashboard(args: list[str]) -> int:
     # Use Rich's Prompt for more robust input handling
     try:
         from rich.prompt import Prompt
+
         use_rich_prompt = True
     except ImportError:
         use_rich_prompt = False
@@ -1902,21 +1946,27 @@ def cmd_dashboard(args: list[str]) -> int:
                 console.clear()
                 layout = make_layout(crystals, level_filter)
                 console.print(layout)
-                console.print("\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level[/dim]")
+                console.print(
+                    "\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level[/dim]"
+                )
             elif user_input in ("0", "1", "2", "3"):
                 level_filter = int(user_input)
                 crystals = fetch_crystals(level_filter)
                 console.clear()
                 layout = make_layout(crystals, level_filter)
                 console.print(layout)
-                console.print("\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level[/dim]")
+                console.print(
+                    "\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level[/dim]"
+                )
             elif user_input == "a":
                 level_filter = None
                 crystals = fetch_crystals(level_filter)
                 console.clear()
                 layout = make_layout(crystals, level_filter)
                 console.print(layout)
-                console.print("\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level, 'a' for all[/dim]")
+                console.print(
+                    "\n[dim]Press Enter to refresh, 'q' to quit, '0-3' to filter level, 'a' for all[/dim]"
+                )
 
     except KeyboardInterrupt:
         pass
@@ -1924,6 +1974,7 @@ def cmd_dashboard(args: list[str]) -> int:
         # Catch any unexpected exceptions with diagnostic info
         print(f"\nDashboard error ({type(e).__name__}): {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
@@ -1964,7 +2015,7 @@ def cmd_graph(args: list[str]) -> int:
         else:
             i += 1
 
-    async def get_graph():
+    async def get_graph() -> dict[str, Any]:
         from services.witness.crystal import CrystalLevel
         from services.witness.crystal_trail import CrystalTrailAdapter, format_graph_response
 

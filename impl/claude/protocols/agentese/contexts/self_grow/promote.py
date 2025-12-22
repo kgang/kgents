@@ -113,7 +113,7 @@ class PromoteNode(BaseLogosNode):
             return ("stage", "status")
         return ("status",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View promotion status."""
         return BasicRendering(
             summary=f"Promotions: {len(self._staged)} staged",

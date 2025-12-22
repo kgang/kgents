@@ -44,7 +44,7 @@ class BudgetNode(BaseLogosNode):
             return ("status", "history", "regenerate")
         return ("status", "history")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View budget status."""
         self._budget.regenerate()  # Apply pending regeneration
 

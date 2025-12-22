@@ -150,7 +150,7 @@ class SystemNode(BaseLogosNode):
         effects=[],
         help="View system architecture and health",
     )
-    async def manifest(self, observer: Observer | "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: Observer | "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         What is kgents? Project to observer's view.
 
@@ -928,6 +928,7 @@ class SpecCommandNode(BaseLogosNode):
     async def manifest(
         self,
         observer: Observer | "Umwelt[Any, Any]",
+        **kwargs: Any,
     ) -> Renderable:
         """
         View available spec commands.

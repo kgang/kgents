@@ -129,7 +129,7 @@ class ConceptNode(BaseLogosNode):
         archetype_extra = CONCEPT_ARCHETYPE_AFFORDANCES.get(archetype, ())
         return base_extra + archetype_extra
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Perceive the concept.
 

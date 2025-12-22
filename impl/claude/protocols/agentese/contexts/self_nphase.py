@@ -96,7 +96,7 @@ class NPhaseNode(BaseLogosNode):
         """N-Phase affordances available to all archetypes."""
         return NPHASE_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View N-Phase session status."""
         try:
             from protocols.nphase.session import list_sessions

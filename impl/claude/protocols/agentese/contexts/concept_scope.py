@@ -104,7 +104,7 @@ class ScopeNode(BaseLogosNode):
     # Core Protocol Methods
     # ==========================================================================
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Show active scopes.
 

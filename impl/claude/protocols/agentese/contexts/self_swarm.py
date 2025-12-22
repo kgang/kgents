@@ -238,7 +238,7 @@ class SwarmNode(BaseLogosNode):
         """Swarm affordances available to all archetypes."""
         return SWARM_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View swarm status and active agents."""
         agents = self._spawner.list_agents()
         agent_data = [cursor.to_dict() for cursor in agents]

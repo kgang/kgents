@@ -281,7 +281,7 @@ class LayoutNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return PROJECTION_AFFORDANCES["layout"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest the current layout context."""
         return BasicRendering(
             summary=f"Layout context: {self._capacity.density.value}",
@@ -352,7 +352,7 @@ class PanelNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return PROJECTION_AFFORDANCES["panel"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest panel projection based on observer's capacity."""
         # Extract capacity from observer if available
         capacity = self._get_capacity_from_observer(observer)
@@ -419,7 +419,7 @@ class ActionsNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return PROJECTION_AFFORDANCES["actions"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest actions projection based on observer's capacity."""
         capacity = self._get_capacity_from_observer(observer)
         behavior = ACTIONS_BEHAVIORS[capacity.density]
@@ -483,7 +483,7 @@ class SplitNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return PROJECTION_AFFORDANCES["split"]
 
-    async def manifest(self, observer: Umwelt[Any, Any]) -> Renderable:
+    async def manifest(self, observer: Umwelt[Any, Any], **kwargs: Any) -> Renderable:
         """Manifest split projection based on observer's capacity."""
         capacity = self._get_capacity_from_observer(observer)
         behavior = SPLIT_BEHAVIORS[capacity.density]

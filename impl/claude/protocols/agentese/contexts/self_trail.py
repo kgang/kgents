@@ -679,7 +679,7 @@ class TrailNode(BaseLogosNode):
     )
     async def manifest(
         self,
-        observer: "Umwelt[Any, Any]",
+        observer: "Observer | Umwelt[Any, Any]",
         **kwargs: Any,
     ) -> Renderable:
         """
@@ -706,7 +706,7 @@ class TrailNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = Observer.from_umwelt(observer)
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         # Always include the demo trail at the top of the list
         demo = get_demo_trail()

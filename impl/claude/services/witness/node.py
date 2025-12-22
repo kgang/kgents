@@ -299,7 +299,7 @@ class WitnessNode(BaseLogosNode):
         # Guest (default): minimal observation
         return ("manifest",)
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest witness status to observer.
 

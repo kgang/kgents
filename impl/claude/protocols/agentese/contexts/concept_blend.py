@@ -333,7 +333,7 @@ class BlendNode(BaseLogosNode):
         """All archetypes have access to blend operations."""
         return BLEND_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View blending capability."""
         return BasicRendering(
             summary="Conceptual Blending (Fauconnier)",

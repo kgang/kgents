@@ -92,7 +92,7 @@ class WorldNode(BaseLogosNode):
         archetype_extra = WORLD_ARCHETYPE_AFFORDANCES.get(archetype, ())
         return base_extra + archetype_extra
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Collapse to observer-appropriate representation.
 
@@ -381,7 +381,7 @@ class PurgatoryNode(BaseLogosNode):
         # Other archetypes get read-only access
         return ("list", "inspect")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View purgatory status."""
         pending = await self._get_pending_list(observer)
         return BasicRendering(

@@ -195,7 +195,7 @@ class RecognizeNode(BaseLogosNode):
             return ("scan", "history")
         return ("history",)  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View recognized gaps."""
         return BasicRendering(
             summary=f"Recognized Gaps: {len(self._recognized_gaps)}",

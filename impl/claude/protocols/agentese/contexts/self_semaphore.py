@@ -71,7 +71,7 @@ class SemaphoreNode(BaseLogosNode):
         """Semaphore affordances available to all archetypes."""
         return SEMAPHORE_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View pending semaphores for this agent."""
         pending = await self._get_pending(observer)
         return BasicRendering(

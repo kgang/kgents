@@ -66,7 +66,7 @@ class RollbackNode(BaseLogosNode):
             return ("revert", "tokens", "expire")
         return ("tokens",)  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View rollback status."""
         active = [t for t in self._rollback_tokens.values() if not t.is_expired]
         expired = [t for t in self._rollback_tokens.values() if t.is_expired]

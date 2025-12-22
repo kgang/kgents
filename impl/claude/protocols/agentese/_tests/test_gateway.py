@@ -50,7 +50,7 @@ class TestNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("greet", "echo")
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(
             summary=f"Test node: {self._path}",
             metadata={"observer_archetype": getattr(observer, "archetype", "unknown")},

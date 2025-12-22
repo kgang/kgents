@@ -334,7 +334,7 @@ class ValidateNode(BaseLogosNode):
             return ("check", "gates", "history")
         return ("gates", "history")  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View validation status."""
         passed_count = sum(1 for r in self._results.values() if r.passed)
         failed_count = len(self._results) - passed_count

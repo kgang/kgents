@@ -55,7 +55,7 @@ from .add_snippet_modal import AddSnippetModal
 from .coffee_overlay import CoffeeOverlay, CoffeeResult
 from .edit_snippet_modal import EditSnippetModal
 from .focus_pane import FocusPane
-from .garden_view import GardenView
+from .garden_view import GardenEvent, GardenView
 from .help_modal import HelpModal
 from .snippet_pane import SnippetPane
 
@@ -272,8 +272,7 @@ class DawnCockpit(App[None]):
         bucket = Bucket(bucket_value)
         item = self._focus_manager.add(target, label=label or None, bucket=bucket)
         self.query_one("#focus-pane", FocusPane).refresh_items()
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event(f"✅ Added: {item.label}")
+        self.post_message(GardenEvent(f"✅ Added: {item.label}"))
 
     def action_done_focus(self) -> None:
         """Mark current focus item as done - only when focus pane is active."""
@@ -286,8 +285,7 @@ class DawnCockpit(App[None]):
             self._last_archived_focus = item
             self._focus_manager.remove(item.id)
             focus_pane.refresh_items()
-            garden = self.query_one("#garden-view", GardenView)
-            garden.add_event(f"✅ Done: {item.label} [u] undo")
+            self.post_message(GardenEvent(f"✅ Done: {item.label} [u] undo"))
 
     def action_undo(self) -> None:
         """Undo last archive action."""
@@ -302,19 +300,17 @@ class DawnCockpit(App[None]):
             bucket=item.bucket,
         )
         self.query_one("#focus-pane", FocusPane).refresh_items()
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event(f"↩️ Restored: {restored.label}")
+        self.post_message(GardenEvent(f"↩️ Restored: {restored.label}"))
 
     def action_hygiene(self) -> None:
         """Run hygiene check on focus items - only when focus pane is active."""
         if self.active_pane != "focus":
             return  # Ignore when snippet pane is active
         stale = self._focus_manager.get_stale()
-        garden = self.query_one("#garden-view", GardenView)
         if stale:
-            garden.add_event(f"Hygiene: {len(stale)} stale items found")
+            self.post_message(GardenEvent(f"Hygiene: {len(stale)} stale items found"))
         else:
-            garden.add_event("Hygiene: All items fresh!")
+            self.post_message(GardenEvent("Hygiene: All items fresh!"))
 
     def action_help(self) -> None:
         """Show comprehensive help panel."""
@@ -344,38 +340,67 @@ class DawnCockpit(App[None]):
         """Handle result from CoffeeOverlay."""
         if result is None:
             return
-        garden = self.query_one("#garden-view", GardenView)
 
         if result.completed:
             # Full ritual complete
             minutes = int(result.time_spent_seconds / 60)
             seconds = int(result.time_spent_seconds % 60)
-            garden.add_event(f"☕ Coffee complete! ({minutes}:{seconds:02d})")
+            self.post_message(GardenEvent(f"☕ Coffee complete! ({minutes}:{seconds:02d})"))
             # Refresh panes to show any updates
             self.query_one("#focus-pane", FocusPane).refresh_items()
             self.query_one("#snippet-pane", SnippetPane).refresh_items()
         else:
             # Partial ritual
-            garden.add_event(f"☕ Coffee paused at {result.movement_reached.title}")
+            self.post_message(GardenEvent(f"☕ Coffee paused at {result.movement_reached.title}"))
 
     def action_search(self) -> None:
         """Open search prompt."""
         # TODO: Implement search
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event("Search: Coming soon...")
+        self.post_message(GardenEvent("Search: Coming soon..."))
 
     def action_refresh(self) -> None:
         """Refresh all panes."""
         self.query_one("#focus-pane", FocusPane).refresh_items()
         self.query_one("#snippet-pane", SnippetPane).refresh_items()
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event("Refreshed")
+        self.post_message(GardenEvent("Refreshed"))
+
+    def on_focus_pane_item_activated(self, message: FocusPane.ItemActivated) -> None:
+        """Handle focus item activation (Enter) — copy target path to clipboard."""
+        item = message.item
+        target = item.target
+
+        # Copy to clipboard
+        try:
+            # Try pyperclip first, fall back to pbcopy on macOS
+            copied = False
+            try:
+                import pyperclip  # type: ignore[import-untyped]
+
+                pyperclip.copy(target)
+                copied = True
+            except ImportError:
+                pass
+            except Exception:
+                pass
+
+            if not copied:
+                # macOS fallback
+                try:
+                    import subprocess
+
+                    process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+                    process.communicate(target.encode("utf-8"))
+                except Exception:
+                    pass
+
+            self.post_message(GardenEvent(f"📋 {target}"))
+        except Exception as e:
+            logger.error(f"Failed to copy focus target: {e}")
 
     def on_snippet_pane_snippet_copied(self, message: SnippetPane.SnippetCopied) -> None:
         """Handle snippet copied event — show confirmation in Garden."""
-        garden = self.query_one("#garden-view", GardenView)
-        label = message.snippet.to_dict().get("label", "snippet")
-        garden.add_event(f"📋 {label}")
+        label = message.snippet.to_dict().get("label", "snippet") if message.snippet else "snippet"
+        self.post_message(GardenEvent(f"📋 {label}"))
 
     def on_snippet_pane_snippet_add_requested(
         self, message: SnippetPane.SnippetAddRequested
@@ -391,8 +416,7 @@ class DawnCockpit(App[None]):
         label, content = result
         self._snippet_library.add_custom(label, content)
         self.query_one("#snippet-pane", SnippetPane).refresh_items()
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event(f"★ Added: {label}")
+        self.post_message(GardenEvent(f"★ Added: {label}"))
 
     def on_snippet_pane_snippet_edit_requested(
         self, message: SnippetPane.SnippetEditRequested
@@ -417,8 +441,7 @@ class DawnCockpit(App[None]):
         )
         if updated:
             self.query_one("#snippet-pane", SnippetPane).refresh_items()
-            garden = self.query_one("#garden-view", GardenView)
-            garden.add_event(f"✏️ Edited: {label}")
+            self.post_message(GardenEvent(f"✏️ Edited: {label}"))
 
     async def on_mount(self) -> None:
         """Handle app mount."""
@@ -427,8 +450,26 @@ class DawnCockpit(App[None]):
         self.query_one("#focus-pane").focus()
 
         # Add startup message to garden
-        garden = self.query_one("#garden-view", GardenView)
-        garden.add_event("Dawn awakened. Tab to switch panes, Enter to copy.")
+        self.post_message(GardenEvent("Dawn awakened. Tab to switch panes, Enter to copy."))
+
+    def on_garden_event(self, message: GardenEvent) -> None:
+        """
+        Handle GardenEvent messages and forward to GardenView.
+
+        This is the message bus pattern: any widget can post a GardenEvent
+        and it will be delivered to the garden status bar.
+
+        Teaching:
+            gotcha: Using message bus decouples components from the Garden widget.
+                    Any component can post events without needing to know about
+                    the Garden's location in the DOM tree.
+                    (Evidence: Textual message passing pattern)
+        """
+        try:
+            garden = self.query_one("#garden-view", GardenView)
+            garden.add_event(message.text)
+        except Exception:
+            pass  # Garden not mounted yet
 
 
 def run_dawn_tui(

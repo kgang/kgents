@@ -224,7 +224,7 @@ class AgentNode(BaseLogosNode):
             case _:
                 return base + ("invoke",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest agent information based on observer's archetype.
         """
@@ -368,7 +368,7 @@ class AgentListNode(BaseLogosNode):
             case _:
                 return base + ("list",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Manifest the list of all agents."""
         agents = []
         for letter, info in sorted(self._registry.items()):

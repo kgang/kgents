@@ -128,7 +128,7 @@ class MemoryNode(BaseLogosNode):
         help="Display brain status and health metrics",
         examples=["kg brain", "kg brain status"],
     )
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current memory state."""
         # Try Brain Crown Jewel first (preferred path)
         try:
@@ -771,7 +771,7 @@ class MemoryGhostNode(BaseLogosNode):
         """Ghost affordances available to all archetypes."""
         return MEMORY_GHOST_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Show current ghost state."""
         ghost_count = 0
         composting_count = 0
@@ -926,7 +926,7 @@ class MemoryCartographyNode(BaseLogosNode):
         """Cartography affordances available to all archetypes."""
         return MEMORY_CARTOGRAPHY_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """Show current memory topology."""
         # Get memory count from parent
         memory_count = 0

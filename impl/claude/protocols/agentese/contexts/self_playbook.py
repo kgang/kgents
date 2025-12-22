@@ -117,7 +117,7 @@ class PlaybookNode(BaseLogosNode):
     # Core Protocol Methods
     # ==========================================================================
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Show active and recent playbooks.
 

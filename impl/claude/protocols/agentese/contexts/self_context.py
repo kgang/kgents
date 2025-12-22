@@ -88,9 +88,7 @@ class ContextNode:
     _content_loaded: bool = field(default=False, repr=False)
 
     # Cached edges (populated on first edges() call)
-    _edges_cache: dict[str, list["ContextNode"]] | None = field(
-        default=None, repr=False
-    )
+    _edges_cache: dict[str, list["ContextNode"]] | None = field(default=None, repr=False)
 
     def __hash__(self) -> int:
         """Hash by path for set membership."""
@@ -125,9 +123,7 @@ class ContextNode:
         object.__setattr__(self, "_edges_cache", edges)
         return edges
 
-    def _compute_edges_for_observer(
-        self, observer: Observer
-    ) -> dict[str, list["ContextNode"]]:
+    def _compute_edges_for_observer(self, observer: Observer) -> dict[str, list["ContextNode"]]:
         """
         Compute hyperedges for a specific observer.
 
@@ -215,9 +211,7 @@ class ContextNode:
 
         return f"[{self.holon}]"
 
-    async def follow(
-        self, edge_type: str, observer: Observer
-    ) -> list["ContextNode"]:
+    async def follow(self, edge_type: str, observer: Observer) -> list["ContextNode"]:
         """
         Traverse a hyperedge using resolvers.
 
@@ -238,7 +232,7 @@ class ContextNode:
             return []  # Observer can't see this edge
 
         # Import here to avoid circular dependency
-        from .hyperedge_resolvers import resolve_hyperedge, _get_project_root
+        from .hyperedge_resolvers import _get_project_root, resolve_hyperedge
 
         # Invoke the resolver
         root = _get_project_root()
@@ -334,7 +328,7 @@ class Trail:
                2. Expanded [tests] → found 3 test files
                3. 💭 "Bug is here—< instead of <="
         """
-        lines = [f"📍 Trail: \"{self.name}\""]
+        lines = [f'📍 Trail: "{self.name}"']
         lines.append(f"   Created by: {self.created_by.archetype}")
         lines.append(f"   Created at: {self.created_at.strftime('%Y-%m-%d %H:%M')}")
         lines.append(f"   Steps: {len(self.steps)}")
@@ -353,7 +347,7 @@ class Trail:
 
             # Inline annotation from step
             if step.annotations:
-                lines.append(f"      💭 \"{step.annotations}\"")
+                lines.append(f'      💭 "{step.annotations}"')
 
             # Trail-level annotation for this step
             if i in self.annotations:
@@ -415,9 +409,7 @@ class Trail:
             "weak" | "moderate" | "strong" | "definitive"
         """
         step_count = len(self.steps)
-        annotation_count = len(self.annotations) + sum(
-            1 for s in self.steps if s.annotations
-        )
+        annotation_count = len(self.annotations) + sum(1 for s in self.steps if s.annotations)
         unique_paths = len({s.node_path for s in self.steps})
         unique_edges = len({s.edge_type for s in self.steps if s.edge_type})
 
@@ -484,9 +476,7 @@ class Trail:
         ]
 
         # Parse annotations
-        annotations = {
-            int(k): v for k, v in data.get("annotations", {}).items()
-        }
+        annotations = {int(k): v for k, v in data.get("annotations", {}).items()}
 
         return cls(
             id=data.get("id", str(uuid.uuid4())),
@@ -534,16 +524,16 @@ class ContextGraph:
         """
         # Collect all destinations from all focused nodes
         new_focus: set[ContextNode] = set()
-        for node in self.focus:
-            destinations = await node.follow(edge_type, self.observer)
+        for focus_node in self.focus:
+            destinations = await focus_node.follow(edge_type, self.observer)
             new_focus.update(destinations)
 
         # Record the navigation in trail
         new_trail = self.trail.copy()
-        for node in self.focus:
+        for focus_node in self.focus:
             new_trail.append(
                 TrailStep(
-                    node_path=node.path,
+                    node_path=focus_node.path,
                     edge_type=edge_type,
                 )
             )
@@ -571,14 +561,14 @@ class ContextGraph:
         """
         result: dict[str, int] = {}
 
-        for node in self.focus:
+        for focus_node in self.focus:
             # Get visible edge types for this observer
-            visible_edges = node.edges(self.observer)
+            visible_edges = focus_node.edges(self.observer)
 
             if resolve:
                 # Actually resolve each edge to get real counts
                 for edge_type in visible_edges:
-                    destinations = await node.follow(edge_type, self.observer)
+                    destinations = await focus_node.follow(edge_type, self.observer)
                     result[edge_type] = result.get(edge_type, 0) + len(destinations)
             else:
                 # Just mark edge types as available (fast path)
@@ -680,12 +670,7 @@ SEMANTIC_EDGES = frozenset(
 
 # All standard edges
 ALL_STANDARD_EDGES = (
-    STRUCTURAL_EDGES
-    | TESTING_EDGES
-    | SPEC_EDGES
-    | EVIDENCE_EDGES
-    | TEMPORAL_EDGES
-    | SEMANTIC_EDGES
+    STRUCTURAL_EDGES | TESTING_EDGES | SPEC_EDGES | EVIDENCE_EDGES | TEMPORAL_EDGES | SEMANTIC_EDGES
 )
 
 # Reverse edge mapping (bidirectional consistency)
@@ -865,6 +850,7 @@ class ContextNavNode(BaseLogosNode):
 
                 # Log for debugging (not visible to user)
                 import logging
+
                 logging.getLogger(__name__).debug(
                     f"Auto-witnessed trail: {step_count} steps, {annotation_count} annotations"
                 )
@@ -877,13 +863,9 @@ class ContextNavNode(BaseLogosNode):
         effects=[],
         help="View current position in the typed-hypergraph",
     )
-    async def manifest(self, observer: "Umwelt[Any, Any] | Observer") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any] | Observer", **kwargs: Any) -> Renderable:
         """Collapse to observer-appropriate representation."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         # Get affordances (available hyperedges)
@@ -901,9 +883,7 @@ class ContextNavNode(BaseLogosNode):
             },
         )
 
-    def _format_manifest(
-        self, graph: ContextGraph, affordances: dict[str, int]
-    ) -> str:
+    def _format_manifest(self, graph: ContextGraph, affordances: dict[str, int]) -> str:
         """Format the manifest content with ANSI colors for CLI."""
         # ANSI color codes
         BOLD = "\033[1m"
@@ -936,7 +916,9 @@ class ContextNavNode(BaseLogosNode):
             if active_edges:
                 lines.append(f"{BOLD}Navigate via:{RESET}")
                 for edge_type, count in sorted(active_edges.items(), key=lambda x: -x[1]):
-                    lines.append(f"  {GREEN}▶{RESET} {edge_type} {DIM}→ {count} node{'s' if count != 1 else ''}{RESET}")
+                    lines.append(
+                        f"  {GREEN}▶{RESET} {edge_type} {DIM}→ {count} node{'s' if count != 1 else ''}{RESET}"
+                    )
                 lines.append("")
 
             if empty_edges:
@@ -950,12 +932,16 @@ class ContextNavNode(BaseLogosNode):
 
         # Trail - navigation history
         if graph.trail:
-            lines.append(f"{BOLD}Trail:{RESET} {DIM}({len(graph.trail)} step{'s' if len(graph.trail) != 1 else ''}){RESET}")
+            lines.append(
+                f"{BOLD}Trail:{RESET} {DIM}({len(graph.trail)} step{'s' if len(graph.trail) != 1 else ''}){RESET}"
+            )
             # Show last 5 steps
             start = max(0, len(graph.trail) - 5)
             for i, step in enumerate(graph.trail[start:], start=start):
                 if step.edge_type:
-                    lines.append(f"  {DIM}{i}.{RESET} {step.node_path} {YELLOW}─[{step.edge_type}]→{RESET}")
+                    lines.append(
+                        f"  {DIM}{i}.{RESET} {step.node_path} {YELLOW}─[{step.edge_type}]→{RESET}"
+                    )
                 else:
                     lines.append(f"  {DIM}{i}.{RESET} {step.node_path} {MAGENTA}(start){RESET}")
             if start > 0:
@@ -972,9 +958,7 @@ class ContextNavNode(BaseLogosNode):
         effects=[Effect.WRITES("graph_state")],
         help="Follow a hyperedge from current focus",
     )
-    async def navigate(
-        self, observer: "Umwelt[Any, Any] | Observer", edge_type: str
-    ) -> Renderable:
+    async def navigate(self, observer: "Umwelt[Any, Any] | Observer", edge_type: str) -> Renderable:
         """Follow a hyperedge from all focused nodes."""
         BOLD = "\033[1m"
         CYAN = "\033[36m"
@@ -982,11 +966,7 @@ class ContextNavNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         if not graph.focus:
@@ -1028,15 +1008,9 @@ class ContextNavNode(BaseLogosNode):
         effects=[Effect.WRITES("graph_state")],
         help="Jump to a specific node in the hypergraph",
     )
-    async def focus(
-        self, observer: "Umwelt[Any, Any] | Observer", path: str
-    ) -> Renderable:
+    async def focus(self, observer: "Umwelt[Any, Any] | Observer", path: str) -> Renderable:
         """Jump to a specific node."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         # Create node from path
         holon = path.split(".")[-1]
@@ -1063,15 +1037,9 @@ class ContextNavNode(BaseLogosNode):
         effects=[Effect.WRITES("graph_state")],
         help="Go back one step in the trail",
     )
-    async def backtrack(
-        self, observer: "Umwelt[Any, Any] | Observer"
-    ) -> Renderable:
+    async def backtrack(self, observer: "Umwelt[Any, Any] | Observer") -> Renderable:
         """Go back along the trail."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         if not graph.trail:
@@ -1099,15 +1067,9 @@ class ContextNavNode(BaseLogosNode):
         effects=[],
         help="Get the current navigation trail",
     )
-    async def trail(
-        self, observer: "Umwelt[Any, Any] | Observer"
-    ) -> Renderable:
+    async def trail(self, observer: "Umwelt[Any, Any] | Observer") -> Renderable:
         """Get current trail."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         trail_obj = graph.to_trail()
@@ -1146,11 +1108,7 @@ class ContextNavNode(BaseLogosNode):
         max_depth: int = 3,
     ) -> Renderable:
         """Extract reachable subgraph from current focus."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         # BFS to find reachable nodes
@@ -1183,17 +1141,15 @@ class ContextNavNode(BaseLogosNode):
             },
         )
 
-    def _format_subgraph(
-        self, nodes: set[str], edges: list[tuple[str, str, str]]
-    ) -> str:
+    def _format_subgraph(self, nodes: set[str], edges: list[tuple[str, str, str]]) -> str:
         """Format subgraph for display."""
         lines = ["# Reachable Subgraph\n"]
         lines.append(f"Nodes: {len(nodes)}")
         lines.append(f"Edges: {len(edges)}\n")
 
         lines.append("## Nodes")
-        for node in sorted(nodes):
-            lines.append(f"  - {node}")
+        for node_path in sorted(nodes):
+            lines.append(f"  - {node_path}")
 
         if edges:
             lines.append("\n## Edges")
@@ -1219,6 +1175,7 @@ class ContextNavNode(BaseLogosNode):
                     OutlinePortalBridge,
                     create_bridge,
                 )
+
                 self._portal_bridge = create_bridge(
                     observer_id=observer.archetype,
                 )
@@ -1232,9 +1189,7 @@ class ContextNavNode(BaseLogosNode):
         effects=[],
         help="Render current context as editable outline",
     )
-    async def outline(
-        self, observer: "Umwelt[Any, Any] | Observer"
-    ) -> Renderable:
+    async def outline(self, observer: "Umwelt[Any, Any] | Observer") -> Renderable:
         """
         Render current context as an editable outline.
 
@@ -1248,11 +1203,7 @@ class ContextNavNode(BaseLogosNode):
         CYAN = "\033[36m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         bridge = self._ensure_portal_bridge(obs)
 
         if bridge is None:
@@ -1273,10 +1224,7 @@ class ContextNavNode(BaseLogosNode):
                 lines.append(f"{indent}{node.snippet.visible_text}")
             elif node.portal:
                 icon = "▼" if node.portal.expanded else "▶"
-                lines.append(
-                    f"{indent}{icon} [{node.portal.edge_type}] → "
-                    f"{node.portal.summary}"
-                )
+                lines.append(f"{indent}{icon} [{node.portal.edge_type}] → {node.portal.summary}")
             for child in node.children:
                 render_node(child, depth + 1)
 
@@ -1333,11 +1281,7 @@ class ContextNavNode(BaseLogosNode):
         GREEN = "\033[32m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         bridge = self._ensure_portal_bridge(obs)
 
         if bridge is None:
@@ -1407,11 +1351,7 @@ class ContextNavNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         bridge = self._ensure_portal_bridge(obs)
 
         if bridge is None:
@@ -1465,11 +1405,7 @@ class ContextNavNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         bridge = self._ensure_portal_bridge(obs)
 
         if bridge is None:
@@ -1546,11 +1482,7 @@ class ContextNavNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         graph = self._ensure_graph(obs)
 
         # Get current trail

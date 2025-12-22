@@ -9,6 +9,8 @@ Tests the _get_alternatives method on BaseLogosNode, ensuring that:
 5. categories are mapped correctly
 """
 
+from typing import Any
+
 import pytest
 
 from bootstrap.umwelt import Umwelt
@@ -31,7 +33,7 @@ class TestNode(BaseLogosNode):
             return ("build", "test", "refactor")
         return ()
 
-    async def manifest(self, observer: "Umwelt[object, object]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[object, object]", **kwargs: Any) -> Renderable:
         """Test manifest implementation."""
         from protocols.agentese.node import BasicRendering
 

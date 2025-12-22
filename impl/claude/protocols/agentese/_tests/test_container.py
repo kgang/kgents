@@ -55,7 +55,7 @@ class NodeWithDeps(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ()
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(summary="Node with deps")
 
     async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -75,7 +75,7 @@ class NodeWithDefaults(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ()
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(summary="Node with defaults")
 
     async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:
@@ -92,7 +92,7 @@ class NodeNoDeps(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ()
 
-    async def manifest(self, observer: Any) -> Renderable:
+    async def manifest(self, observer: Any, **kwargs: Any) -> Renderable:
         return BasicRendering(summary="Node without deps")
 
     async def _invoke_aspect(self, aspect: str, observer: Any, **kwargs: Any) -> Any:

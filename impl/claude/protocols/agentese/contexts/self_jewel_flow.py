@@ -131,7 +131,7 @@ class JewelFlowNode(BaseLogosNode):
             return BRAIN_FLOW_AFFORDANCES
         return ()
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View jewel-flow state."""
         return BasicRendering(
             summary=f"{self._jewel_name.title()} Flow",
@@ -160,7 +160,7 @@ class BrainFlowNode(JewelFlowNode):
     _chat_flow: Any = None
     _query_history: list[dict[str, Any]] = field(default_factory=list)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View Brain chat flow state."""
         return BasicRendering(
             summary="Brain Chat Flow",

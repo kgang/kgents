@@ -134,7 +134,7 @@ class {class_name}(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return AFFORDANCES.get(archetype, AFFORDANCES.get("default", ()))
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         return BasicRendering(
             summary="{handle}",
             content="{proposal.why_exists}",
@@ -198,7 +198,7 @@ class GerminateNode(BaseLogosNode):
             return ("seed", "status")
         return ("status",)  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View germination status."""
         if self._nursery is None:
             return BasicRendering(

@@ -4,10 +4,16 @@
 
 @layer base {
   :root {
-    --background: 26 26 46;
-    --foreground: 255 255 255;
-    --muted: 100 100 120;
-    --accent: 233 69 96;
+    /* =================================================================
+     * STARK BIOME COLOR SYSTEM
+     * "The frame is humble. The content glows."
+     * 90% Steel (cool industrial) / 10% Life (organic accents)
+     * ================================================================= */
+    --background: 10 10 12; /* steel-obsidian */
+    --foreground: 138 138 148; /* muted body text */
+    --foreground-strong: 180 180 190; /* emphasized text */
+    --muted: 58 58 68; /* steel-zinc */
+    --accent: 196 167 125; /* glow-spore */
 
     /* =================================================================
      * "Bare Edge" Corner System
@@ -66,7 +72,7 @@
   }
 
   body {
-    @apply bg-gray-900 text-white;
+    @apply bg-steel-obsidian text-steel-zinc;
   }
 }
 

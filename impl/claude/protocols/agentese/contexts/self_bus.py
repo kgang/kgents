@@ -90,7 +90,7 @@ class BusNode(BaseLogosNode):
         """Bus affordances available to all archetypes."""
         return BUS_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current bus state."""
         if self._bus is None:
             return BasicRendering(

@@ -250,7 +250,7 @@ class MorpheusNode(BaseLogosNode):
             # Guest: basic completion only
             return base
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest Morpheus status to observer.
 

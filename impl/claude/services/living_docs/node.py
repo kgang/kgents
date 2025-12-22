@@ -103,6 +103,7 @@ class LivingDocsNode(BaseLogosNode):
     async def manifest(
         self,
         observer: "Umwelt[Any, Any] | Observer",
+        **kwargs: Any,
     ) -> Renderable:
         """Collapse to observer-appropriate representation."""
         return BasicRendering(
@@ -464,6 +465,7 @@ class SelfDocsNode(BaseLogosNode):
     async def manifest(
         self,
         observer: "Umwelt[Any, Any] | Observer",
+        **kwargs: Any,
     ) -> Renderable:
         """Collapse to observer-appropriate representation."""
         return BasicRendering(

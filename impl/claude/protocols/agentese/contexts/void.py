@@ -221,7 +221,7 @@ class EntropyNode(BaseLogosNode):
         """Everyone can interact with entropy."""
         return ("sip", "pour", "sample", "status")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View entropy pool status."""
         return BasicRendering(
             summary="Entropy Pool (Accursed Share)",
@@ -324,7 +324,7 @@ class SerendipityNode(BaseLogosNode):
         """Everyone can seek serendipity."""
         return ("sip", "inspire", "tangent")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View serendipity potential."""
         return BasicRendering(
             summary="Serendipity Portal",
@@ -451,7 +451,7 @@ class GratitudeNode(BaseLogosNode):
         """Everyone can express gratitude."""
         return ("tithe", "thank", "acknowledge")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View gratitude interface."""
         return BasicRendering(
             summary="Gratitude Portal",
@@ -538,7 +538,7 @@ class CapitalNode(BaseLogosNode):
         """All agents can interact with capital."""
         return ("balance", "history", "tithe", "bypass")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         AGENTESE: void.capital.manifest
 
@@ -682,7 +682,7 @@ class PataphysicsNode(BaseLogosNode):
         """Everyone can invoke pataphysics."""
         return ("solve", "melt", "verify", "imagine")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View pataphysics interface."""
         return BasicRendering(
             summary="Pataphysics Portal (Imaginary Solutions)",
@@ -1059,7 +1059,7 @@ class JoyNode(BaseLogosNode):
         """Everyone deserves joy."""
         return ("oblique", "surprise", "challenge", "flinch", "play")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View joy interface."""
         strategy = self._oblique_strategies[
             int(self._pool.sample() * len(self._oblique_strategies))
@@ -1275,7 +1275,7 @@ class ExtinctNode(BaseLogosNode):
         """Everyone can access ancestral wisdom."""
         return ("list", "show", "wisdom")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View extinction portal."""
         try:
             events = await self._get_events()
@@ -1285,7 +1285,7 @@ class ExtinctNode(BaseLogosNode):
                 content=(
                     f"Extinction events: {len(events)}\n"
                     f"Ghost teaching crystals: {ghost_count}\n"
-                    f"\"Teaching moments don't die; they become ancestors.\""
+                    f'"Teaching moments don\'t die; they become ancestors."'
                 ),
                 metadata={
                     "event_count": len(events),
@@ -1431,7 +1431,9 @@ class ExtinctNode(BaseLogosNode):
                         "source_module": g.teaching.source_module,
                         "source_symbol": g.teaching.source_symbol,
                         "successor": g.successor,
-                        "extinction_reason": g.extinction_event.reason if g.extinction_event else None,
+                        "extinction_reason": g.extinction_event.reason
+                        if g.extinction_event
+                        else None,
                     }
                     for g in ghosts
                 ],
@@ -1475,7 +1477,7 @@ class HypnagogiaNode(BaseLogosNode):
         """Everyone can interact with hypnagogia."""
         return ("status", "wake", "report", "patterns")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View hypnagogia status."""
         from agents.k.hypnagogia import get_hypnagogia
 
@@ -1574,7 +1576,7 @@ class MetabolicNode(BaseLogosNode):
         """Everyone can interact with metabolism."""
         return ("pressure", "fever", "oblique", "dream", "tithe", "status")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View metabolic status."""
         status = self._engine.status()
         pressure_pct = int(status["pressure"] / status["critical_threshold"] * 100)
@@ -1740,7 +1742,7 @@ class GenericVoidNode(BaseLogosNode):
         """Void is open to all."""
         return ("sip", "tithe")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         return BasicRendering(
             summary=f"Void: {self.holon}",
             content=f"An unexplored region of the void: {self.holon}",

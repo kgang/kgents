@@ -249,7 +249,7 @@ class CoffeeNode(BaseLogosNode):
         effects=[],
         help="View current ritual state and last capture",
     )
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current ritual state."""
         assert self.coffee_service is not None
 

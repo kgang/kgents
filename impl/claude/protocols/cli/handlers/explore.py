@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -145,6 +146,7 @@ def _get_console() -> Any:
     """Get Rich console for pretty output."""
     try:
         from rich.console import Console
+
         return Console()
     except ImportError:
         return None
@@ -164,7 +166,7 @@ def _print_header(text: str) -> None:
 def _progress_bar(current: int | float, total: int | float, width: int = 10) -> str:
     """Create a simple ASCII progress bar."""
     if total == 0:
-        pct = 0
+        pct = 0.0
     else:
         pct = current / total
     filled = int(pct * width)
@@ -172,7 +174,7 @@ def _progress_bar(current: int | float, total: int | float, width: int = 10) -> 
     return "[" + "█" * filled + "░" * empty + "]"
 
 
-def _run_async(coro):
+def _run_async(coro: Any) -> Any:
     """Run async coroutine synchronously."""
     try:
         loop = asyncio.get_event_loop()
@@ -193,7 +195,11 @@ def _handle_status(args: list[str], json_output: bool = False) -> int:
 
     if not has_active_harness():
         if json_output:
-            print(json.dumps({"status": "no_exploration", "hint": "Use 'kg explore start <path>'"}, indent=2))
+            print(
+                json.dumps(
+                    {"status": "no_exploration", "hint": "Use 'kg explore start <path>'"}, indent=2
+                )
+            )
         else:
             _print_header("🔍 Exploration State")
             msg = "No active exploration. Start one with: kg explore start <path>"
@@ -237,7 +243,9 @@ def _handle_status(args: list[str], json_output: bool = False) -> int:
     evidence_str = f"{state.evidence_count} items"
     if state.strong_evidence_count > 0:
         weak = state.evidence_count - state.strong_evidence_count
-        evidence_str = f"{state.evidence_count} items ({state.strong_evidence_count} strong, {weak} weak)"
+        evidence_str = (
+            f"{state.evidence_count} items ({state.strong_evidence_count} strong, {weak} weak)"
+        )
 
     # Budget summary
     remaining = state.budget_remaining
@@ -250,7 +258,7 @@ def _handle_status(args: list[str], json_output: bool = False) -> int:
         console.print(f"  [bold]Budget:[/bold]      ~{budget_pct}% remaining")
         console.print(f"  [bold]Loops:[/bold]       {state.loop_warnings} warnings")
         if harness.is_halted:
-            console.print(f"  [bold red]HALTED[/bold red]")
+            console.print("  [bold red]HALTED[/bold red]")
     else:
         print(f"  Focus:       {focus_str}")
         print(f"  Trail:       {trail_str}")
@@ -379,7 +387,9 @@ def _handle_budget(args: list[str], json_output: bool = False) -> int:
             "depth": {"current": budget.current_depth, "max": budget.max_depth},
             "time_ms": {"elapsed": budget._elapsed_ms(), "max": budget.time_budget_ms},
             "can_navigate": budget.can_navigate(),
-            "exhaustion_reason": budget.exhaustion_reason().value if budget.exhaustion_reason() else None,
+            "exhaustion_reason": budget.exhaustion_reason().value
+            if budget.exhaustion_reason()
+            else None,
         }
         print(json.dumps(output, indent=2))
         return 0
@@ -405,16 +415,26 @@ def _handle_budget(args: list[str], json_output: bool = False) -> int:
     time_bar = _progress_bar(elapsed, budget.time_budget_ms)
 
     if console:
-        console.print(f"  Steps:       {budget.steps_taken:3d} / {budget.max_steps:3d}      {bar} {int(steps_pct*100):3d}%")
-        console.print(f"  Nodes:       {nodes_visited:3d} / {budget.max_nodes:3d}      {nodes_bar} {int(nodes_pct*100):3d}%")
-        console.print(f"  Depth:       {budget.current_depth:3d} / {budget.max_depth:3d}      {depth_bar} {int(depth_pct*100):3d}%")
-        console.print(f"  Time (ms):   {int(elapsed):5d} / {budget.time_budget_ms:5d}  {time_bar} {int(time_pct*100):3d}%")
+        console.print(
+            f"  Steps:       {budget.steps_taken:3d} / {budget.max_steps:3d}      {bar} {int(steps_pct * 100):3d}%"
+        )
+        console.print(
+            f"  Nodes:       {nodes_visited:3d} / {budget.max_nodes:3d}      {nodes_bar} {int(nodes_pct * 100):3d}%"
+        )
+        console.print(
+            f"  Depth:       {budget.current_depth:3d} / {budget.max_depth:3d}      {depth_bar} {int(depth_pct * 100):3d}%"
+        )
+        console.print(
+            f"  Time (ms):   {int(elapsed):5d} / {budget.time_budget_ms:5d}  {time_bar} {int(time_pct * 100):3d}%"
+        )
         console.print()
 
         # Exhaustion warning
         if not budget.can_navigate():
             reason = budget.exhaustion_reason()
-            console.print(f"  [red bold]⚠ BUDGET EXHAUSTED: {reason.value if reason else 'unknown'}[/red bold]")
+            console.print(
+                f"  [red bold]⚠ BUDGET EXHAUSTED: {reason.value if reason else 'unknown'}[/red bold]"
+            )
         else:
             # Risk assessment
             max_pct = max(steps_pct, nodes_pct, depth_pct, time_pct)
@@ -425,10 +445,18 @@ def _handle_budget(args: list[str], json_output: bool = False) -> int:
             else:
                 console.print("  [green]Exhaustion Risk: LOW[/green]")
     else:
-        print(f"  Steps:       {budget.steps_taken:3d} / {budget.max_steps:3d}      {bar} {int(steps_pct*100):3d}%")
-        print(f"  Nodes:       {nodes_visited:3d} / {budget.max_nodes:3d}      {nodes_bar} {int(nodes_pct*100):3d}%")
-        print(f"  Depth:       {budget.current_depth:3d} / {budget.max_depth:3d}      {depth_bar} {int(depth_pct*100):3d}%")
-        print(f"  Time (ms):   {int(elapsed):5d} / {budget.time_budget_ms:5d}  {time_bar} {int(time_pct*100):3d}%")
+        print(
+            f"  Steps:       {budget.steps_taken:3d} / {budget.max_steps:3d}      {bar} {int(steps_pct * 100):3d}%"
+        )
+        print(
+            f"  Nodes:       {nodes_visited:3d} / {budget.max_nodes:3d}      {nodes_bar} {int(nodes_pct * 100):3d}%"
+        )
+        print(
+            f"  Depth:       {budget.current_depth:3d} / {budget.max_depth:3d}      {depth_bar} {int(depth_pct * 100):3d}%"
+        )
+        print(
+            f"  Time (ms):   {int(elapsed):5d} / {budget.time_budget_ms:5d}  {time_bar} {int(time_pct * 100):3d}%"
+        )
 
     print()
     return 0
@@ -508,8 +536,12 @@ def _handle_evidence(args: list[str], json_output: bool = False) -> int:
         # Commitment potential
         console.print("\n  [bold]Commitment Potential:[/bold]")
         console.print(f"    TENTATIVE:  {'✓' if summary.total_count >= 1 else '✗'} (1+ evidence)")
-        console.print(f"    MODERATE:   {'✓' if summary.total_count >= 3 and summary.strong_count >= 1 else '✗'} (3+ evidence, 1+ strong)")
-        console.print(f"    STRONG:     {'✓' if summary.total_count >= 5 and summary.strong_count >= 2 else '✗'} (5+ evidence, 2+ strong)")
+        console.print(
+            f"    MODERATE:   {'✓' if summary.total_count >= 3 and summary.strong_count >= 1 else '✗'} (3+ evidence, 1+ strong)"
+        )
+        console.print(
+            f"    STRONG:     {'✓' if summary.total_count >= 5 and summary.strong_count >= 2 else '✗'} (5+ evidence, 2+ strong)"
+        )
     else:
         print(f"\n  STRONG ({len(strong)}): {len(strong)} items")
         print(f"  MODERATE ({len(moderate)}): {len(moderate)} items")
@@ -591,8 +623,8 @@ def _handle_commit(args: list[str], level: str = "moderate") -> int:
 
     claim_text = " ".join(claim_parts)
     if not claim_text:
-        print("Usage: kg explore commit \"<claim>\" [--level tentative|moderate|strong]")
-        print("Example: kg explore commit \"brain.core implements PolyAgent pattern\"")
+        print('Usage: kg explore commit "<claim>" [--level tentative|moderate|strong]')
+        print('Example: kg explore commit "brain.core implements PolyAgent pattern"')
         return 1
 
     # Remove quotes if present
@@ -617,13 +649,15 @@ def _handle_commit(args: list[str], level: str = "moderate") -> int:
         _print_header("✓ Claim Committed")
 
         if console:
-            console.print(f"  [bold]Claim:[/bold]    \"{claim_text}\"")
+            console.print(f'  [bold]Claim:[/bold]    "{claim_text}"')
             console.print(f"  [bold]Level:[/bold]    {commitment_level.value.upper()}")
-            console.print(f"  [bold]Evidence:[/bold] {result.evidence_count} items ({result.strong_count} strong)")
+            console.print(
+                f"  [bold]Evidence:[/bold] {result.evidence_count} items ({result.strong_count} strong)"
+            )
             console.print()
             console.print("[green]The claim is now recorded with commitment level.[/green]")
         else:
-            print(f"  Claim:    \"{claim_text}\"")
+            print(f'  Claim:    "{claim_text}"')
             print(f"  Level:    {commitment_level.value.upper()}")
             print(f"  Evidence: {result.evidence_count} items ({result.strong_count} strong)")
     else:
@@ -631,7 +665,9 @@ def _handle_commit(args: list[str], level: str = "moderate") -> int:
             console.print(f"[red]✗ Commitment Failed: {result.message}[/red]")
             console.print()
             console.print(f"  [bold]Requested level:[/bold] {commitment_level.value}")
-            console.print(f"  [bold]Evidence:[/bold]        {result.evidence_count} items ({result.strong_count} strong)")
+            console.print(
+                f"  [bold]Evidence:[/bold]        {result.evidence_count} items ({result.strong_count} strong)"
+            )
             console.print()
             console.print("[dim]Gather more evidence or try a lower commitment level.[/dim]")
         else:
@@ -734,7 +770,7 @@ def cmd_explore(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     for i, arg in enumerate(args):
         if arg == "--preset" and i + 1 < len(args):
             preset = args[i + 1]
-            args = args[:i] + args[i + 2:]
+            args = args[:i] + args[i + 2 :]
             break
         elif arg.startswith("--preset="):
             preset = arg.split("=", 1)[1]
@@ -745,7 +781,7 @@ def cmd_explore(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     for i, arg in enumerate(args):
         if arg == "--level" and i + 1 < len(args):
             level = args[i + 1]
-            args = args[:i] + args[i + 2:]
+            args = args[:i] + args[i + 2 :]
             break
         elif arg.startswith("--level="):
             level = arg.split("=", 1)[1]
@@ -756,11 +792,20 @@ def cmd_explore(args: list[str], ctx: "InvocationContext | None" = None) -> int:
     subcommand = "status"
     if args:
         first_arg = args[0].lower()
-        if first_arg in ("start", "navigate", "budget", "evidence", "trail", "commit", "loops", "reset"):
+        if first_arg in (
+            "start",
+            "navigate",
+            "budget",
+            "evidence",
+            "trail",
+            "commit",
+            "loops",
+            "reset",
+        ):
             subcommand = first_arg
 
     # Route to handler
-    handlers = {
+    handlers: dict[str, Callable[[], int]] = {
         "status": lambda: _handle_status(args, json_output),
         "start": lambda: _handle_start(args, preset),
         "navigate": lambda: _handle_navigate(args),

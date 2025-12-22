@@ -119,13 +119,12 @@ class PortalNavNode(BaseLogosNode):
         # - Tree doesn't exist, OR
         # - We have a specific target_path AND it differs from current file
         current_file = getattr(self, "_current_file", None)
-        need_new_tree = (
-            self._tree is None
-            or (target_path is not None and target_path != current_file)
+        need_new_tree = self._tree is None or (
+            target_path is not None and target_path != current_file
         )
 
         if need_new_tree:
-            from protocols.file_operad.portal import PortalNode, PortalTree, PortalState
+            from protocols.file_operad.portal import PortalNode, PortalState, PortalTree
 
             # Default to cwd if no path provided
             if target_path is None:
@@ -180,6 +179,7 @@ class PortalNavNode(BaseLogosNode):
         if self._portal_bridge is None:
             try:
                 from protocols.context.portal_bridge import create_bridge
+
                 self._portal_bridge = create_bridge(observer_id="portal")
             except ImportError:
                 # Context Perception not available
@@ -231,6 +231,7 @@ class PortalNavNode(BaseLogosNode):
         max_depth: int = 5,
         expand_all: bool = False,
         response_format: str = "cli",
+        **kwargs: Any,
     ) -> Renderable:
         """
         Manifest the current portal tree state.
@@ -246,11 +247,7 @@ class PortalNavNode(BaseLogosNode):
             For CLI: Colored text rendering
             For JSON: Structured PortalTree data in metadata
         """
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path=root_path, file_path=file_path)
         # Only update max_depth if explicitly provided
         if max_depth != 5:  # 5 is the default
@@ -292,9 +289,7 @@ class PortalNavNode(BaseLogosNode):
 
         # Tree info
         lines.append(f"{BOLD}Root:{RESET} {CYAN}{tree.root.path}{RESET}")
-        lines.append(
-            f"{BOLD}Expanded:{RESET} {self._count_expanded(tree.root)} nodes"
-        )
+        lines.append(f"{BOLD}Expanded:{RESET} {self._count_expanded(tree.root)} nodes")
         lines.append(f"{BOLD}Max Depth:{RESET} {tree.max_depth}\n")
 
         # Tree structure
@@ -352,11 +347,7 @@ class PortalNavNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path=root_path, file_path=file_path)
 
         # Parse portal path into list
@@ -364,6 +355,7 @@ class PortalNavNode(BaseLogosNode):
         path_segments: list[str] = []
         if portal_path.startswith("["):
             import json
+
             try:
                 path_segments = json.loads(portal_path)
             except json.JSONDecodeError:
@@ -434,7 +426,9 @@ class PortalNavNode(BaseLogosNode):
             if error_code == "depth_limit_reached":
                 # Depth limit is a FEATURE, not a failure - show it distinctly
                 lines.append(f"{YELLOW}⚠ Depth Limit Reached{RESET}\n")
-                lines.append(f"You've explored {result.depth} levels deep (max: {result.max_depth}).")
+                lines.append(
+                    f"You've explored {result.depth} levels deep (max: {result.max_depth})."
+                )
             else:
                 lines.append(f"{YELLOW}Could not expand [{portal_path}]{RESET}\n")
 
@@ -492,11 +486,7 @@ class PortalNavNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path=root_path, file_path=file_path)
 
         # Parse portal path into list
@@ -504,6 +494,7 @@ class PortalNavNode(BaseLogosNode):
         path_segments: list[str] = []
         if portal_path.startswith("["):
             import json
+
             try:
                 path_segments = json.loads(portal_path)
             except json.JSONDecodeError:
@@ -566,11 +557,7 @@ class PortalNavNode(BaseLogosNode):
         root_path: str | None = None,
     ) -> Renderable:
         """Render the full portal tree."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path)
 
         rendered = tree.render(max_depth=max_depth)
@@ -597,11 +584,7 @@ class PortalNavNode(BaseLogosNode):
         root_path: str | None = None,
     ) -> Renderable:
         """Convert the portal tree to a Trail artifact."""
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path)
 
         # Convert to trail
@@ -654,11 +637,7 @@ class PortalNavNode(BaseLogosNode):
         DIM = "\033[2m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path)
 
         # Collect expandable portals
@@ -686,12 +665,8 @@ class PortalNavNode(BaseLogosNode):
             summary=f"Affordances: {len(expandable)} expandable, {len(collapsible)} collapsible",
             content="\n".join(lines),
             metadata={
-                "expandable": [
-                    {"path": p, "edge_type": e, "depth": d} for p, e, d in expandable
-                ],
-                "collapsible": [
-                    {"path": p, "edge_type": e} for p, e in collapsible
-                ],
+                "expandable": [{"path": p, "edge_type": e, "depth": d} for p, e, d in expandable],
+                "collapsible": [{"path": p, "edge_type": e} for p, e in collapsible],
             },
         )
 
@@ -709,15 +684,11 @@ class PortalNavNode(BaseLogosNode):
 
             # Recurse into expanded children
             if child.expanded:
-                result.extend(
-                    self._collect_expandable(child, max_depth, child_path)
-                )
+                result.extend(self._collect_expandable(child, max_depth, child_path))
 
         return result
 
-    def _collect_collapsible(
-        self, node: Any, current_path: str = ""
-    ) -> list[tuple[str, str]]:
+    def _collect_collapsible(self, node: Any, current_path: str = "") -> list[tuple[str, str]]:
         """Collect portals that can be collapsed."""
         result: list[tuple[str, str]] = []
 
@@ -773,11 +744,7 @@ class PortalNavNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
         tree = self._ensure_tree(root_path=root_path, file_path=file_path)
 
         # Convert tree to trail
@@ -982,7 +949,7 @@ class PortalNavNode(BaseLogosNode):
             return BasicRendering(
                 summary="No saved trails",
                 content=f"{DIM}No saved trails found.{RESET}\n\n"
-                f"Save a trail: kg op save_trail \"My Investigation\"",
+                f'Save a trail: kg op save_trail "My Investigation"',
                 metadata={"count": 0},
             )
 
@@ -1045,15 +1012,11 @@ class PortalNavNode(BaseLogosNode):
         YELLOW = "\033[33m"
         RESET = "\033[0m"
 
-        obs = (
-            observer
-            if isinstance(observer, Observer)
-            else Observer.from_umwelt(observer)
-        )
+        obs = observer if isinstance(observer, Observer) else Observer.from_umwelt(observer)
 
         try:
+            from protocols.file_operad.portal import PortalNode, PortalState, PortalTree
             from protocols.trail.file_persistence import load_trail as load_trail_from_file
-            from protocols.file_operad.portal import PortalNode, PortalTree, PortalState
 
             result = await load_trail_from_file(trail_id)
 
@@ -1188,9 +1151,7 @@ class PortalNavNode(BaseLogosNode):
             # Phase 3: Trail Persistence & Replay
             case "save_trail":
                 name = kwargs.get("name", "Portal Exploration")
-                return await self.save_trail(
-                    observer, name, root_path, file_path, response_format
-                )
+                return await self.save_trail(observer, name, root_path, file_path, response_format)
             case "load_trail":
                 trail_id = kwargs.get("trail_id", "")
                 return await self.load_trail(observer, trail_id, response_format)

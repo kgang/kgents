@@ -296,7 +296,7 @@ class FoundryNode(BaseLogosNode):
         # Guest users can forge and inspect
         return ("forge", "inspect")
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Show foundry status to observer.
 

@@ -126,7 +126,7 @@ class ReplNode(BaseLogosNode):
         """REPL affordances available to all archetypes."""
         return REPL_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View REPL status and memory overview."""
         state = self._repl_state
 

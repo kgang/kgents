@@ -95,7 +95,7 @@ class VectorNode(BaseLogosNode):
         """Vector affordances available to all archetypes."""
         return VECTOR_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current vector state."""
         if self._vgent is not None:
             try:

@@ -196,7 +196,7 @@ class PresenceNode(BaseLogosNode):
         # Guest: manifest only
         return ("manifest",)
 
-    async def manifest(self, observer: "Observer") -> Renderable:
+    async def manifest(self, observer: "Observer", **kwargs: Any) -> Renderable:
         """View active agent cursors and presence channel status."""
         try:
             cursors = self.channel.active_cursors

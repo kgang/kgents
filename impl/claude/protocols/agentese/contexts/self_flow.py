@@ -126,7 +126,7 @@ class FlowNode(BaseLogosNode):
         """Flow affordances available to all archetypes."""
         return FLOW_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current flow state."""
         active_flows = []
         if self._chat_flow is not None:
@@ -617,7 +617,7 @@ class ChatFlowNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return CHAT_FLOW_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View chat flow state."""
         if self._parent_flow is None or self._parent_flow._chat_flow is None:
             return BasicRendering(
@@ -726,7 +726,7 @@ class ResearchFlowNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return RESEARCH_FLOW_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View research flow state."""
         if self._parent_flow is None or self._parent_flow._research_flow is None:
             return BasicRendering(
@@ -850,7 +850,7 @@ class CollaborationFlowNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return COLLABORATION_FLOW_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View collaboration flow state."""
         if self._parent_flow is None or self._parent_flow._collaboration_flow is None:
             return BasicRendering(

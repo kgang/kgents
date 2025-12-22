@@ -123,7 +123,7 @@ class KgentSessionNode(BaseLogosNode):
         """Session affordances available to all archetypes."""
         return KGENT_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View K-gent session status."""
         return BasicRendering(
             summary="K-gent Sessions",

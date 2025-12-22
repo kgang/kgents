@@ -85,7 +85,7 @@ class NurseryNode(BaseLogosNode):
         """All can view nursery; only gardener/architect can germinate."""
         return ("list", "status", "stats")
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View nursery status."""
         # Update metrics
         metrics.gauge("growth.nursery.count").set(self.count)

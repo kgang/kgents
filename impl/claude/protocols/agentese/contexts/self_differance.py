@@ -81,7 +81,7 @@ class SelfDifferanceNode(BaseLogosNode):
         effects=[],
         help="View spec/impl navigation state",
     )
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View current navigation state."""
         return BasicRendering(
             summary="Différance Navigation",

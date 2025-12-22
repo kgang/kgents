@@ -105,7 +105,7 @@ class Mark(BaseLogosNode):
         """Trace affordances."""
         return TIME_AFFORDANCES["trace"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View trace summary."""
         mark_count = len(self._traces)
         has_static = self._static_graph is not None
@@ -580,7 +580,7 @@ class PastNode(BaseLogosNode):
         """Past projection affordances."""
         return TIME_AFFORDANCES["past"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View past projection interface."""
         return BasicRendering(
             summary="Temporal Projection (Past)",
@@ -724,7 +724,7 @@ class FutureNode(BaseLogosNode):
         """Future forecasting affordances."""
         return TIME_AFFORDANCES["future"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View future forecasting interface."""
         return BasicRendering(
             summary="Temporal Projection (Future)",
@@ -846,7 +846,7 @@ class ScheduleNode(BaseLogosNode):
         """Scheduling affordances."""
         return TIME_AFFORDANCES["schedule"]
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View scheduled actions."""
         pending = [a for a in self._actions.values() if a.status == "pending"]
         return BasicRendering(
@@ -1089,7 +1089,7 @@ class GenericTimeNode(BaseLogosNode):
     def _get_affordances_for_archetype(self, archetype: str) -> tuple[str, ...]:
         return ("witness",)
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         return BasicRendering(
             summary=f"Time: {self.holon}",
             content=f"Generic temporal node for {self.holon}",

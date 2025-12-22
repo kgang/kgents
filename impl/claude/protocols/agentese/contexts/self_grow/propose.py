@@ -206,7 +206,7 @@ class ProposeNode(BaseLogosNode):
             return ("draft", "edit", "withdraw", "list")
         return ("list",)  # Read-only for others
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View pending proposals."""
         return BasicRendering(
             summary=f"Pending Proposals: {len(self._proposals)}",

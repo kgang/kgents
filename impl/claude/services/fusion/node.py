@@ -254,7 +254,7 @@ class FusionNode(BaseLogosNode):
         # Guest (default): manifest only
         return ("manifest",)
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest fusion system status to observer.
 

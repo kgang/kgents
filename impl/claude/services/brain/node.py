@@ -301,7 +301,7 @@ class BrainNode(BaseLogosNode):
         # Guest (default): read-only observation
         return ("search", "surface", "get")
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest brain status to observer.
 

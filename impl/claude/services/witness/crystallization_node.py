@@ -244,7 +244,7 @@ class TimeWitnessNode(BaseLogosNode):
         # Guest: minimal
         return ("manifest",)
 
-    async def manifest(self, observer: "Observer | Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Observer | Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """
         Manifest crystallization status to observer.
 

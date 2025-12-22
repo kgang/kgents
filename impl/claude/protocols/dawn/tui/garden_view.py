@@ -27,14 +27,57 @@ from __future__ import annotations
 import logging
 from collections import deque
 from datetime import datetime
+from enum import Enum
 from typing import Any
 
-from rich.text import Text
+from textual.message import Message
 from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Static
 
 logger = logging.getLogger(__name__)
+
+
+class GardenEventType(Enum):
+    """Categories of garden events for optional filtering."""
+
+    INFO = "info"  # General information
+    SUCCESS = "success"  # Completed actions
+    WARNING = "warning"  # Attention needed
+    SYSTEM = "system"  # System status
+
+
+class GardenEvent(Message):
+    """
+    Message bus event for the Garden status bar.
+
+    Post this message from any widget to add an event to the Garden.
+    Events bubble up to the app and are handled by DawnCockpit.on_garden_event.
+
+    Usage:
+        self.post_message(GardenEvent("Something happened"))
+        self.post_message(GardenEvent("Error!", event_type=GardenEventType.WARNING))
+
+    Teaching:
+        gotcha: Use bubble=True so events from nested widgets reach DawnCockpit.
+                DawnCockpit.on_garden_event handler forwards to GardenView.add_event().
+                (Evidence: Textual message passing pattern)
+
+        gotcha: bubble must be a class attribute, not a class argument!
+                `class Foo(Message, bubble=True)` does NOT work.
+                `class Foo(Message): bubble = True` is correct.
+    """
+
+    bubble = True  # Must be class attribute, not class argument
+
+    def __init__(
+        self,
+        text: str,
+        event_type: GardenEventType = GardenEventType.INFO,
+    ) -> None:
+        self.text = text
+        self.event_type = event_type
+        super().__init__()
 
 
 # Maximum events to display
@@ -129,5 +172,7 @@ class GardenView(Widget):
 
 
 __all__ = [
+    "GardenEvent",
+    "GardenEventType",
     "GardenView",
 ]

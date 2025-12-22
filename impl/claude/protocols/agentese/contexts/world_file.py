@@ -151,7 +151,7 @@ class FileNode(BaseLogosNode):
         """File affordances available to all archetypes."""
         return FILE_AFFORDANCES
 
-    async def manifest(self, observer: "Umwelt[Any, Any]") -> Renderable:
+    async def manifest(self, observer: "Umwelt[Any, Any]", **kwargs: Any) -> Renderable:
         """View file node status and capabilities."""
         guard = self._get_guard()
         stats = guard.get_statistics()
