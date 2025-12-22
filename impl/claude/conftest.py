@@ -625,3 +625,102 @@ def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:
                 item.add_marker(getattr(pytest.mark, marker_name))
                 break
         # Tests not matching any domain remain unmarked (will run with all)
+
+
+# =============================================================================
+# Database Isolation for Multi-Agent Test Execution
+# =============================================================================
+#
+# When multiple Claude agents run tests simultaneously, they can conflict
+# on shared database files. The solution follows kgents principles:
+#
+# - Heterarchical: Resources flow where needed, not allocated top-down
+# - Graceful Degradation: Tests work in any environment
+# - Composable: Each test session is independent
+#
+# See models/base.py _get_test_isolation_suffix() for the isolation logic.
+# =============================================================================
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _reset_database_engine_at_session_start():
+    """
+    Reset the database engine singleton at session start.
+
+    This ensures each pytest session (including parallel xdist workers and
+    multiple Claude agents) gets a fresh, isolated database engine pointing
+    to its own isolated database file.
+
+    The isolation happens via:
+    1. models/base.py._get_test_isolation_suffix() generates unique DB names
+    2. This fixture resets the engine singleton so it picks up the new URL
+    3. Each worker/agent gets: membrane_test_gw0_12345.db (xdist) or
+       membrane_test_12345.db (single pytest)
+    """
+    # Reset engine singleton to force re-creation with test-isolated URL
+    import models.base as base_module
+
+    # Clear existing engine (if any from previous run or parent process)
+    if base_module._engine is not None:
+        import asyncio
+
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # Can't await in running loop - schedule for later
+                pass
+            else:
+                loop.run_until_complete(base_module._engine.dispose())
+        except RuntimeError:
+            # No event loop - that's fine, engine will be GC'd
+            pass
+        finally:
+            base_module._engine = None
+            base_module._session_factory = None
+
+    yield
+
+    # Cleanup: try to clean up isolated test databases after session
+    # (best effort - don't fail tests if cleanup fails)
+    try:
+        import os
+        from pathlib import Path
+
+        # Get the test isolation suffix
+        suffix = base_module._get_test_isolation_suffix()
+        if suffix:  # Only cleanup if we're in a test
+            xdg_data = os.environ.get("XDG_DATA_HOME")
+            if xdg_data:
+                data_dir = Path(xdg_data) / "kgents"
+            else:
+                data_dir = Path.home() / ".local" / "share" / "kgents"
+
+            db_path = data_dir / f"membrane{suffix}.db"
+            if db_path.exists():
+                # Close engine first
+                if base_module._engine is not None:
+                    import asyncio
+
+                    try:
+                        loop = asyncio.get_event_loop()
+                        if not loop.is_running():
+                            loop.run_until_complete(base_module._engine.dispose())
+                    except RuntimeError:
+                        pass
+                    base_module._engine = None
+                    base_module._session_factory = None
+
+                # Remove the isolated test database
+                try:
+                    db_path.unlink()
+                    # Also remove WAL and SHM files if they exist
+                    wal_path = db_path.with_suffix(".db-wal")
+                    shm_path = db_path.with_suffix(".db-shm")
+                    if wal_path.exists():
+                        wal_path.unlink()
+                    if shm_path.exists():
+                        shm_path.unlink()
+                except OSError:
+                    pass  # Best effort
+    except Exception:
+        pass  # Never fail tests due to cleanup

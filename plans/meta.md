@@ -399,6 +399,15 @@ concept.compiler.priors bridges archaeology→ASHC: extract priors → seed Caus
 Archaeological confidence discount 50%: correlational not causal; use as initial priors, let runtime evidence accumulate
 ```
 
+### Multi-Agent Test Isolation (2025-12-22)
+```
+PID-based database isolation: membrane_test_{pid}.db prevents SQLite lockups across agents
+PYTEST_XDIST_WORKER + PYTEST_CURRENT_TEST: detect test environment, apply isolation
+Session-scoped fixture resets engine singleton: each pytest session gets isolated DB
+Principles alignment: Heterarchical (resources flow), Graceful Degradation (tests work anywhere), Composable (independent sessions)
+StorageProvider mirrors isolation: vectors, blobs, telemetry all get isolated in tests
+```
+
 ---
 
-*Lines: ~400/200 | Last updated: 2025-12-22 | Git Archaeology Phase 6 Complete*
+*Lines: ~410/200 | Last updated: 2025-12-22 | Multi-Agent Test Isolation*

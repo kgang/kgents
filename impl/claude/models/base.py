@@ -91,6 +91,37 @@ _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
+def _get_test_isolation_suffix() -> str:
+    """
+    Generate a suffix for test database isolation.
+
+    Enables multiple Claude agents to run tests simultaneously without
+    SQLite locking conflicts or Postgres connection pool exhaustion.
+
+    Isolation hierarchy (Heterarchical principle - resources flow where needed):
+    1. PYTEST_XDIST_WORKER - pytest-xdist worker ID (e.g., "gw0", "gw1")
+    2. PYTEST_CURRENT_TEST - running under pytest at all
+    3. (empty) - not a test, use shared database
+
+    This follows the Graceful Degradation principle:
+    - Production: shared database
+    - Single pytest: isolated temp database
+    - pytest-xdist: per-worker isolated databases
+    - Multi-agent: each agent's pytest gets unique isolation
+    """
+    # pytest-xdist sets this for each worker
+    if worker := os.environ.get("PYTEST_XDIST_WORKER"):
+        # Include PID for multi-agent isolation (different Claude agents
+        # running tests simultaneously each have different PIDs)
+        return f"_test_{worker}_{os.getpid()}"
+
+    # pytest sets this when running tests
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return f"_test_{os.getpid()}"
+
+    return ""
+
+
 def get_database_url() -> str:
     """
     Resolve database URL from environment or XDG defaults.
@@ -103,11 +134,15 @@ def get_database_url() -> str:
     3. XDG_DATA_HOME/kgents/membrane.db
     4. ~/.local/share/kgents/membrane.db
 
+    For tests: Automatically isolates databases to prevent conflicts when
+    multiple agents run tests simultaneously. See _get_test_isolation_suffix().
+
     Postgres URL format: postgresql+asyncpg://user:pass@host:port/db
     SQLite URL format: sqlite+aiosqlite:///path/to/db.db
     """
-    # Check for canonical URL first
+    # Check for canonical URL first (production use)
     if url := os.environ.get("KGENTS_DATABASE_URL"):
+        # Don't isolate explicit URLs - user knows what they're doing
         return url
 
     # Check legacy Postgres URL and convert to async format
@@ -127,7 +162,11 @@ def get_database_url() -> str:
     # Ensure directory exists
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    db_path = data_dir / "membrane.db"
+    # Apply test isolation suffix (empty string for production)
+    suffix = _get_test_isolation_suffix()
+    db_name = f"membrane{suffix}.db"
+
+    db_path = data_dir / db_name
     return f"sqlite+aiosqlite:///{db_path}"
 
 

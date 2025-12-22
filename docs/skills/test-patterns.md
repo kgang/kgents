@@ -661,6 +661,36 @@ def test_with_global_singleton() -> None:
     ...
 ```
 
+### 5c. Multi-Agent Test Execution (SQLite Locking)
+
+**Symptom**: Database lockups when multiple Claude agents run tests simultaneously
+
+**Context**: When multiple agents (or humans) run `pytest` at the same time, they can conflict on shared SQLite database files (`membrane.db`, `telemetry.db`). The solution follows kgents principles:
+
+- **Heterarchical**: Resources flow where needed, not allocated top-down
+- **Graceful Degradation**: Tests work in any environment
+- **Composable**: Each test session is independent
+
+**Built-In Solution**: kgents automatically isolates test databases using PID-based suffixes:
+
+```
+Production:   ~/.local/share/kgents/membrane.db
+Single test:  ~/.local/share/kgents/membrane_test_12345.db
+xdist gw0:    ~/.local/share/kgents/membrane_test_gw0_12345.db
+xdist gw1:    ~/.local/share/kgents/membrane_test_gw1_12345.db
+Agent 2:      ~/.local/share/kgents/membrane_test_67890.db  # Different PID
+```
+
+**How it works**:
+- `models/base.py._get_test_isolation_suffix()` generates unique suffixes
+- `conftest.py._reset_database_engine_at_session_start()` resets engine singletons
+- `StorageProvider` uses the same isolation logic for all storage backends
+
+**If you still see lockups**:
+1. Ensure you're using SQLite fallback (unset `KGENTS_DATABASE_URL`)
+2. For Postgres, increase `pool_size` in `get_engine()` or use separate test databases
+3. For file-based tests, use `tmp_path` fixture (pytest creates unique temp dirs)
+
 ### 6. Flaky async tests
 
 **Symptom**: Test intermittently fails

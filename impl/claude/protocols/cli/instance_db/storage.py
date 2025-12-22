@@ -153,31 +153,61 @@ class InfrastructureConfig:
 
     @classmethod
     def default(cls, paths: XDGPaths) -> "InfrastructureConfig":
-        """Create default local-first configuration."""
+        """Create default local-first configuration.
+
+        For tests: Automatically isolates databases to prevent conflicts when
+        multiple agents run tests simultaneously. Uses the same isolation
+        logic as models/base.py.
+        """
+        # Get test isolation suffix (empty for production, unique for tests)
+        suffix = _get_test_isolation_suffix()
+
         return cls(
             profile="local-canonical",
             relational=ProviderConfig(
                 type="sqlite",
-                connection=str(paths.data / "membrane.db"),
+                connection=str(paths.data / f"membrane{suffix}.db"),
                 wal_mode=True,
             ),
             vector=ProviderConfig(
                 type="numpy",
-                path=str(paths.data / "vectors.json"),
+                path=str(paths.data / f"vectors{suffix}.json"),
                 dimensions=384,
                 fallback="numpy-cosine",
                 threshold=1000,
             ),
             blob=ProviderConfig(
                 type="filesystem",
-                path=str(paths.data / "blobs"),
+                path=str(paths.data / f"blobs{suffix}"),
             ),
             telemetry=ProviderConfig(
                 type="sqlite",
-                connection=str(paths.data / "telemetry.db"),
+                connection=str(paths.data / f"telemetry{suffix}.db"),
                 retention=RetentionConfig(hot_days=30, warm_days=365),
             ),
         )
+
+
+def _get_test_isolation_suffix() -> str:
+    """
+    Generate a suffix for test storage isolation.
+
+    Mirrors models/base.py._get_test_isolation_suffix() for consistency.
+
+    This follows kgents principles:
+    - Heterarchical: Resources flow where needed, not allocated top-down
+    - Graceful Degradation: Tests work in any environment
+    - Composable: Each test session is independent
+    """
+    # pytest-xdist sets this for each worker
+    if worker := os.environ.get("PYTEST_XDIST_WORKER"):
+        return f"_test_{worker}_{os.getpid()}"
+
+    # pytest sets this when running tests
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        return f"_test_{os.getpid()}"
+
+    return ""
 
 
 class EnvVarNotSetError(ValueError):

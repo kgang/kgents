@@ -149,7 +149,10 @@ class TestInfrastructureConfig:
         assert config.profile == "local-canonical"
         assert config.relational.type == "sqlite"
         assert config.relational.connection is not None
-        assert "membrane.db" in config.relational.connection
+        # Connection includes "membrane" but may have test isolation suffix
+        # e.g., "membrane.db" (production) or "membrane_test_12345.db" (tests)
+        assert "membrane" in config.relational.connection
+        assert config.relational.connection.endswith(".db")
         assert config.vector.type == "numpy"
 
 
