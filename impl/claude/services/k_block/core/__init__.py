@@ -22,6 +22,13 @@ from .cosmos import (
     reset_cosmos,
     set_cosmos,
 )
+from .errors import (
+    GluingError,
+    PropagationError,
+    SheafConditionError,
+    SheafError,
+    TokenConflict,
+)
 from .harness import (
     ConflictError,
     EntanglementError,
@@ -51,6 +58,8 @@ from .polynomial import (
     describe_state,
     get_valid_actions,
 )
+from .sheaf import KBlockSheaf
+from .verification import SheafVerification
 
 __all__ = [
     # KBlock
@@ -90,4 +99,12 @@ __all__ = [
     "KBlockState",
     "describe_state",
     "get_valid_actions",
+    # Sheaf
+    "GluingError",
+    "KBlockSheaf",
+    "PropagationError",
+    "SheafConditionError",
+    "SheafError",
+    "SheafVerification",
+    "TokenConflict",
 ]

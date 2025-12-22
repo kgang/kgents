@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING, Any, NewType, cast
 if TYPE_CHECKING:
     from ..views.base import View
     from .cosmos import Cosmos
+    from .sheaf import KBlockSheaf
+    from .verification import SheafVerification
 
 # -----------------------------------------------------------------------------
 # Type Aliases
@@ -403,6 +405,36 @@ class KBlock:
     def active_view_types(self) -> set[Any]:
         """Return set of currently active view types."""
         return set(self._views.keys())
+
+    # ---------------------------------------------------------------------
+    # Sheaf Operations
+    # ---------------------------------------------------------------------
+
+    @property
+    def sheaf(self) -> "KBlockSheaf":
+        """
+        Get sheaf for this K-Block.
+
+        The sheaf provides operations for verifying view coherence
+        and propagating changes across views.
+
+        Returns:
+            KBlockSheaf instance bound to this K-Block
+        """
+        from .sheaf import KBlockSheaf
+
+        return KBlockSheaf(self)
+
+    def verify_coherence(self) -> "SheafVerification":
+        """
+        Verify all active views are coherent.
+
+        Convenience method that delegates to sheaf.verify_sheaf_condition().
+
+        Returns:
+            SheafVerification with detailed results
+        """
+        return self.sheaf.verify_sheaf_condition()
 
     # ---------------------------------------------------------------------
     # Serialization
