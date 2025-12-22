@@ -65,11 +65,11 @@ def bus() -> SynergyEventBus:
 def sample_event() -> SynergyEvent:
     """Create a sample event for testing."""
     return SynergyEvent(
-        source_jewel=Jewel.GESTALT,
+        source_jewel=Jewel.WITNESS,
         target_jewel=Jewel.BRAIN,
-        event_type=SynergyEventType.ANALYSIS_COMPLETE,
+        event_type=SynergyEventType.WITNESS_THOUGHT_CAPTURED,
         source_id="test-123",
-        payload={"module_count": 50},
+        payload={"content": "Test thought"},
     )
 
 
@@ -84,7 +84,7 @@ class TestSynergyEventBus:
     ) -> None:
         """Registered handlers receive emitted events."""
         handler = MockHandler()
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler)
 
         await bus.emit_and_wait(sample_event)
 
@@ -101,8 +101,8 @@ class TestSynergyEventBus:
         handler1 = MockHandler("Handler1")
         handler2 = MockHandler("Handler2")
 
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler1)
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler2)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler1)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler2)
 
         await bus.emit_and_wait(sample_event)
 
@@ -117,7 +117,7 @@ class TestSynergyEventBus:
     ) -> None:
         """Unsubscribed handlers don't receive events."""
         handler = MockHandler()
-        unsubscribe = bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler)
+        unsubscribe = bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler)
 
         # Unsubscribe before emitting
         unsubscribe()
@@ -137,9 +137,9 @@ class TestSynergyEventBus:
 
         # Emit a different event type
         event = SynergyEvent(
-            source_jewel=Jewel.GESTALT,
+            source_jewel=Jewel.WITNESS,
             target_jewel=Jewel.BRAIN,
-            event_type=SynergyEventType.ANALYSIS_COMPLETE,
+            event_type=SynergyEventType.WITNESS_THOUGHT_CAPTURED,
             source_id="test-123",
         )
 
@@ -157,8 +157,8 @@ class TestSynergyEventBus:
         failing_handler = MockHandler("FailingHandler", should_fail=True)
         working_handler = MockHandler("WorkingHandler")
 
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, failing_handler)
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, working_handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, failing_handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, working_handler)
 
         results = await bus.emit_and_wait(sample_event)
 
@@ -178,7 +178,7 @@ class TestSynergyEventBus:
     ) -> None:
         """Result subscribers are notified of handler results."""
         handler = MockHandler()
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler)
 
         received_results: list[tuple[SynergyEvent, SynergyResult]] = []
 
@@ -202,7 +202,7 @@ class TestSynergyEventBus:
     ) -> None:
         """Unsubscribed result listeners don't receive notifications."""
         handler = MockHandler()
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler)
 
         received_results: list[Any] = []
 
@@ -232,7 +232,7 @@ class TestSynergyEventBus:
     ) -> None:
         """Clear removes all handlers and subscribers."""
         handler = MockHandler()
-        bus.register(SynergyEventType.ANALYSIS_COMPLETE, handler)
+        bus.register(SynergyEventType.WITNESS_THOUGHT_CAPTURED, handler)
         bus.subscribe_results(lambda e, r: None)
 
         bus.clear()
@@ -272,7 +272,7 @@ class TestSingleton:
         """Default handlers are registered on first access."""
         bus = get_synergy_bus()
 
-        # GestaltToBrainHandler should be registered
-        handlers = bus._handlers.get(SynergyEventType.ANALYSIS_COMPLETE, [])
+        # WitnessToBrainHandler should be registered for thought capture
+        handlers = bus._handlers.get(SynergyEventType.WITNESS_THOUGHT_CAPTURED, [])
         assert len(handlers) > 0
-        assert any("GestaltToBrain" in h.name for h in handlers)
+        assert any("WitnessToBrain" in h.name for h in handlers)
