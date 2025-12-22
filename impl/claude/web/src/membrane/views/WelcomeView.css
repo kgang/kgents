@@ -1,0 +1,90 @@
+/**
+ * WelcomeView styles
+ *
+ * Clean, centered, inviting.
+ */
+
+.welcome-view {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+}
+
+.welcome-view__content {
+  max-width: 480px;
+  text-align: center;
+}
+
+.welcome-view__title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #e5e7eb);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.welcome-view__subtitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary, #9ca3af);
+  margin: 0 0 2rem;
+}
+
+.welcome-view__description {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.welcome-view__description p {
+  margin: 0;
+}
+
+/* Hints */
+.welcome-view__hints {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.welcome-view__hint {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--surface-1, #1a1a2e);
+  text-align: left;
+}
+
+.welcome-view__hint-key {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: var(--accent-primary, #6366f1);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 70px;
+  text-align: center;
+}
+
+.welcome-view__hint-action {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.875rem;
+}
+
+/* Quote */
+.welcome-view__quote {
+  margin-top: 2rem;
+}
+
+.welcome-view__quote blockquote {
+  margin: 0;
+  padding: 0;
+  font-style: italic;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.875rem;
+}

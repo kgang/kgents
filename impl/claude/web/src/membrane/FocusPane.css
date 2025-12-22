@@ -1,0 +1,13 @@
+/**
+ * FocusPane styles
+ *
+ * Container for focus views. Fills available space.
+ */
+
+.focus-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--surface-0, #0f0f1a);
+  overflow: hidden;
+}

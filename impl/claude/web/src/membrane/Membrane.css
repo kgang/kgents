@@ -1,0 +1,137 @@
+/**
+ * Membrane styles
+ *
+ * The single morphing co-thinking surface.
+ * Three modes: compact, comfortable, spacious.
+ */
+
+.membrane {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-0, #0f0f1a);
+  color: var(--text-primary, #e5e7eb);
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  overflow: hidden;
+}
+
+.membrane__container {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Main split */
+.membrane__main-split {
+  height: 100%;
+}
+
+.membrane__focus-dialogue {
+  height: 100%;
+}
+
+/* Compact mode */
+.membrane__compact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.membrane__compact > :first-child {
+  flex: 1;
+  min-height: 0;
+}
+
+.membrane__compact-dialogue {
+  height: 200px;
+  border-top: 1px solid var(--border-subtle, #222);
+}
+
+/* Mode indicator */
+.membrane__mode-indicator {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--surface-1, #1a1a2e);
+  border: 1px solid var(--border-subtle, #222);
+  font-size: 0.75rem;
+  color: var(--text-muted, #6b7280);
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+
+.membrane__mode-indicator:hover {
+  opacity: 1;
+}
+
+.membrane__mode-label {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--accent-primary, #6366f1);
+}
+
+.membrane__mode-hints {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.membrane__mode-hints kbd {
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background: var(--surface-2, #222244);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  margin-right: 0.25rem;
+}
+
+/* Mode-specific adjustments */
+.membrane--compact .membrane__mode-indicator {
+  bottom: 0.5rem;
+  left: 0.5rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.membrane--compact .membrane__mode-hints {
+  display: none;
+}
+
+.membrane--spacious .membrane__mode-indicator {
+  background: transparent;
+  border: none;
+}
+
+/* CSS variables for theming */
+:root {
+  /* Surfaces */
+  --surface-0: #0f0f1a;
+  --surface-1: #1a1a2e;
+  --surface-2: #222244;
+  --surface-3: #333355;
+
+  /* Text */
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  /* Borders */
+  --border-subtle: #222;
+
+  /* Accents */
+  --accent-primary: #6366f1;
+  --accent-primary-bright: #818cf8;
+  --accent-secondary: #8b5cf6;
+  --accent-gold: #fbbf24;
+  --accent-success: #10b981;
+  --accent-error: #ef4444;
+}

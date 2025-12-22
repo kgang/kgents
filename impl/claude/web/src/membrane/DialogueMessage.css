@@ -1,0 +1,102 @@
+/**
+ * DialogueMessage styles
+ *
+ * User messages align right, assistant messages align left.
+ * Focus links are clickable and highlighted.
+ */
+
+.dialogue-message {
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  max-width: 85%;
+}
+
+/* User messages */
+.dialogue-message--user {
+  background: var(--accent-primary, #6366f1);
+  color: white;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.dialogue-message--user .dialogue-message__role {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dialogue-message--user .dialogue-message__time {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dialogue-message--user .dialogue-message__focus-link {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.dialogue-message--user .dialogue-message__focus-link:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Assistant messages */
+.dialogue-message--assistant {
+  background: var(--surface-1, #1a1a2e);
+  color: var(--text-primary, #e5e7eb);
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+.dialogue-message--assistant .dialogue-message__role {
+  color: var(--accent-secondary, #8b5cf6);
+}
+
+.dialogue-message--assistant .dialogue-message__time {
+  color: var(--text-muted, #6b7280);
+}
+
+/* Header */
+.dialogue-message__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.375rem;
+  font-size: 0.75rem;
+}
+
+.dialogue-message__role {
+  font-weight: 600;
+  letter-spacing: 0.025em;
+}
+
+.dialogue-message__time {
+  font-size: 0.65rem;
+}
+
+/* Content */
+.dialogue-message__content {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Focus links */
+.dialogue-message__focus-link {
+  display: inline;
+  padding: 0.125rem 0.375rem;
+  border: none;
+  border-radius: 4px;
+  background: var(--surface-2, #222244);
+  color: var(--accent-primary, #6366f1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+  text-decoration: none;
+}
+
+.dialogue-message__focus-link:hover {
+  background: var(--surface-3, #333355);
+  color: var(--accent-primary-bright, #818cf8);
+}

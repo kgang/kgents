@@ -1,0 +1,135 @@
+/**
+ * WitnessEvent styles
+ *
+ * Each event type has distinct visual treatment:
+ * - mark: primary accent, bold action
+ * - thought: subtle, ambient
+ * - crystal: highlight, significant
+ * - connected: minimal, confirmation
+ */
+
+.witness-event {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: var(--surface-1, #1a1a2e);
+  border-left: 3px solid var(--border-subtle, #333);
+  margin-bottom: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.witness-event:hover {
+  background: var(--surface-2, #222244);
+}
+
+/* Type-specific borders */
+.witness-event--mark {
+  border-left-color: var(--accent-primary, #6366f1);
+}
+
+.witness-event--thought {
+  border-left-color: var(--accent-subtle, #4b5563);
+}
+
+.witness-event--crystal {
+  border-left-color: var(--accent-gold, #fbbf24);
+}
+
+.witness-event--connected {
+  border-left-color: var(--accent-success, #10b981);
+  opacity: 0.7;
+}
+
+/* Header */
+.witness-event__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.witness-event__type {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.witness-event--mark .witness-event__type {
+  color: var(--accent-primary, #6366f1);
+}
+
+.witness-event--crystal .witness-event__type {
+  color: var(--accent-gold, #fbbf24);
+}
+
+.witness-event__time {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.7rem;
+}
+
+/* Content */
+.witness-event__content {
+  color: var(--text-primary, #e5e7eb);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.witness-event__action {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.witness-event__reasoning {
+  color: var(--text-secondary, #9ca3af);
+  font-style: italic;
+}
+
+.witness-event__author {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.witness-event__thought {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.witness-event__source {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.witness-event__insight {
+  color: var(--accent-gold, #fbbf24);
+  font-weight: 500;
+}
+
+.witness-event__level {
+  color: var(--text-muted, #6b7280);
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.witness-event__connected {
+  color: var(--accent-success, #10b981);
+  font-style: italic;
+}
+
+/* Principles */
+.witness-event__principles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.witness-event__principle {
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  background: var(--surface-3, #333355);
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.65rem;
+  text-transform: lowercase;
+}

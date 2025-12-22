@@ -1,25 +1,27 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ErrorBoundary } from './components/error/ErrorBoundary';
 import { SynergyToaster } from './components/synergy';
 import { PageTransition, PersonalityLoading } from './components/joy';
+// Note: Membrane uses useWindowLayout internally for density detection
+import { Membrane } from './membrane';
 
 /**
- * kgents Web - Surgical Refactor 2025-12-22
+ * kgents Web - THE MEMBRANE
  *
- * Transformed from AGENTESE explorer to:
- * 1. Timeline/Stream File Explorer (coming)
- * 2. Swarm/Stigmergy Agent Lab (coming)
+ * "Stop documenting agents. Become the agent."
  *
- * For now, simple gallery routes while we build new features.
+ * The Membrane is the entire app. No navigation, no routes (except dev escape hatch).
+ * One surface that morphs: Focus + Witness + Dialogue.
+ *
+ * Decision: fuse-ccad81de (2025-12-22)
  */
 
-// Gallery pages (kept for dev/testing)
+// Gallery pages (kept for dev/testing - escape hatch)
 const GalleryPage = lazy(() => import('./pages/GalleryPage'));
 const LayoutGallery = lazy(() => import('./pages/LayoutGallery'));
 const InteractiveTextGallery = lazy(() => import('./pages/InteractiveTextGallery'));
-const NotFound = lazy(() => import('./pages/NotFound'));
 
 function LoadingFallback() {
   return (
@@ -32,32 +34,28 @@ function LoadingFallback() {
 function App() {
   const location = useLocation();
 
+  // Dev escape hatch: /_/gallery routes bypass the Membrane
+  const isDevRoute = location.pathname.startsWith('/_/');
+
   return (
     <ErrorBoundary resetKeys={[location.pathname]}>
-      <Suspense fallback={<LoadingFallback />}>
-        <AnimatePresence mode="wait" initial={false}>
-          <PageTransition key={location.pathname} variant="fade">
-            <Routes location={location}>
-              {/* Redirect root to gallery for now */}
-              <Route path="/" element={<Navigate to="/_/gallery" replace />} />
-
-              {/* Developer Galleries */}
-              <Route path="/_/gallery" element={<GalleryPage />} />
-              <Route path="/_/gallery/layout" element={<LayoutGallery />} />
-              <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
-
-              {/* Future: Timeline Explorer */}
-              {/* <Route path="/timeline/:id?" element={<TimelineExplorer />} /> */}
-
-              {/* Future: Swarm Lab */}
-              {/* <Route path="/lab/:outlineId?" element={<SwarmLab />} /> */}
-
-              {/* 404 */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </PageTransition>
-        </AnimatePresence>
-      </Suspense>
+      {isDevRoute ? (
+        // Dev gallery routes
+        <Suspense fallback={<LoadingFallback />}>
+          <AnimatePresence mode="wait" initial={false}>
+            <PageTransition key={location.pathname} variant="fade">
+              <Routes location={location}>
+                <Route path="/_/gallery" element={<GalleryPage />} />
+                <Route path="/_/gallery/layout" element={<LayoutGallery />} />
+                <Route path="/_/gallery/interactive-text" element={<InteractiveTextGallery />} />
+              </Routes>
+            </PageTransition>
+          </AnimatePresence>
+        </Suspense>
+      ) : (
+        // THE MEMBRANE — The entire app
+        <Membrane />
+      )}
 
       {/* Cross-jewel synergy notifications */}
       <SynergyToaster />
