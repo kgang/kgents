@@ -20,12 +20,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 import { useTrail, useTrailList, useTrailMetrics } from '../hooks/useTrail';
+import { useTrailKeyboard } from '../hooks/useTrailKeyboard';
 import {
   TrailGraph,
   ReasoningPanel,
   ExplorerPresence,
   BudgetRing,
   TrailBuilderPanel,
+  SuggestionPanel,
 } from '../components/trail';
 import { getEvidenceColor, type TrailSummary } from '../api/trail';
 
@@ -58,9 +60,7 @@ export default function TrailPage() {
   const metrics = useTrailMetrics(trail);
 
   // Track active trail ID
-  const [activeTrailId, setActiveTrailId] = useState<string | null>(
-    urlTrailId || null
-  );
+  const [activeTrailId, setActiveTrailId] = useState<string | null>(urlTrailId || null);
 
   // Sync URL with active trail
   useEffect(() => {
@@ -105,6 +105,15 @@ export default function TrailPage() {
     setForkName('');
   };
 
+  // Keyboard navigation (Session 3)
+  useTrailKeyboard({
+    nodes,
+    selectedStep,
+    onSelectStep: selectStep,
+    onBranch: () => handleFork(),
+    enabled: !showForkDialog, // Disable when dialog open
+  });
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
@@ -113,11 +122,7 @@ export default function TrailPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold">Trail Graph</h1>
-              {trail && (
-                <span className="text-gray-400">
-                  {trail.name || 'Untitled Trail'}
-                </span>
-              )}
+              {trail && <span className="text-gray-400">{trail.name || 'Untitled Trail'}</span>}
             </div>
 
             {/* Actions */}
@@ -137,7 +142,9 @@ export default function TrailPage() {
                     if (btn) {
                       const original = btn.innerText;
                       btn.innerText = 'Copied!';
-                      setTimeout(() => { btn.innerText = original; }, 1500);
+                      setTimeout(() => {
+                        btn.innerText = original;
+                      }, 1500);
                     }
                   }}
                   className="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded transition-colors"
@@ -161,13 +168,10 @@ export default function TrailPage() {
                 {evidence.evidence_strength}
               </span>
               <span className="text-gray-500">
-                {evidence.step_count} steps |{' '}
-                {evidence.unique_paths} paths |{' '}
+                {evidence.step_count} steps | {evidence.unique_paths} paths |{' '}
                 {evidence.unique_edges} edges
               </span>
-              {metrics.duration && (
-                <span className="text-gray-500">{metrics.duration}</span>
-              )}
+              {metrics.duration && <span className="text-gray-500">{metrics.duration}</span>}
             </div>
           )}
         </div>
@@ -192,9 +196,7 @@ export default function TrailPage() {
             {/* Trail list */}
             <div className="space-y-1">
               {trails.length === 0 && !listLoading && (
-                <div className="text-sm text-gray-600 italic py-4">
-                  No saved trails
-                </div>
+                <div className="text-sm text-gray-600 italic py-4">No saved trails</div>
               )}
 
               {trails.map((t) => (
@@ -247,23 +249,36 @@ export default function TrailPage() {
           <aside className="space-y-4">
             {/* Reasoning trace */}
             <ReasoningPanel
-              steps={trail?.steps.map((s, i) => ({
-                index: i,
-                source_path: s.source_path,
-                edge: s.edge,
-                destination_paths: s.destination_paths,
-                reasoning: s.reasoning,
-                loop_status: s.loop_status,
-                created_at: s.created_at,
-              })) || []}
+              steps={
+                trail?.steps.map((s, i) => ({
+                  index: i,
+                  source_path: s.source_path,
+                  edge: s.edge,
+                  destination_paths: s.destination_paths,
+                  reasoning: s.reasoning,
+                  loop_status: s.loop_status,
+                  created_at: s.created_at,
+                })) || []
+              }
               selectedStep={selectedStep}
               onSelectStep={selectStep}
             />
 
-            {/* Explorer presence */}
-            <ExplorerPresence
-              creator={trail ? 'developer' : undefined}
+            {/* AI Suggestions (Session 3) */}
+            <SuggestionPanel
+              trailId={activeTrailId}
+              stepIndex={selectedStep}
+              onSelectFile={(path, edgeType) => {
+                console.log('[Trail] Suggested file selected:', path, edgeType);
+                // TODO: Add step to trail builder
+              }}
+              onSelectTrail={(trailId) => {
+                handleSelectTrail(trailId);
+              }}
             />
+
+            {/* Explorer presence */}
+            <ExplorerPresence creator={trail ? 'developer' : undefined} />
 
             {/* Budget ring */}
             <BudgetRing
@@ -335,27 +350,22 @@ function TrailListItem({ trail, isActive, onClick }: TrailListItemProps) {
       onClick={onClick}
       className={`
         w-full text-left px-3 py-2 rounded-lg transition-colors
-        ${isActive
-          ? 'bg-blue-900/30 border border-blue-700/50'
-          : 'hover:bg-gray-800 border border-transparent'}
+        ${
+          isActive
+            ? 'bg-blue-900/30 border border-blue-700/50'
+            : 'hover:bg-gray-800 border border-transparent'
+        }
       `}
     >
-      <div className="text-sm font-medium text-gray-200 truncate">
-        {trail.name || 'Untitled'}
-      </div>
+      <div className="text-sm font-medium text-gray-200 truncate">{trail.name || 'Untitled'}</div>
       <div className="flex items-center gap-2 mt-1 text-xs text-gray-500">
         <span>{trail.step_count} steps</span>
-        {trail.forked_from_id && (
-          <span className="text-purple-400">forked</span>
-        )}
+        {trail.forked_from_id && <span className="text-purple-400">forked</span>}
       </div>
       {trail.topics.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1.5">
           {trail.topics.slice(0, 3).map((topic) => (
-            <span
-              key={topic}
-              className="px-1.5 py-0.5 bg-gray-800 rounded text-xs text-gray-400"
-            >
+            <span key={topic} className="px-1.5 py-0.5 bg-gray-800 rounded text-xs text-gray-400">
               {topic}
             </span>
           ))}

@@ -9,6 +9,7 @@
  *   self.trail.graph - Get trail as react-flow graph data
  *   self.trail.fork - Fork a trail
  *   self.trail.status - Storage health status
+ *   self.trail.suggest - AI-suggested connections (Session 3)
  *
  * @see spec/protocols/trail-protocol.md Section 8
  */
@@ -272,6 +273,80 @@ export interface CreateTrailStep {
   reasoning?: string;
 }
 
+// =============================================================================
+// Suggestion Types (Visual Trail Graph Session 3)
+// =============================================================================
+
+/**
+ * Related trail found via semantic search.
+ */
+export interface RelatedTrail {
+  /** Trail ID */
+  trail_id: string;
+  /** Human-readable name */
+  name: string;
+  /** Semantic similarity score (0-1) */
+  score: number;
+  /** Number of steps in the trail */
+  step_count: number;
+}
+
+/**
+ * Suggested file to explore next.
+ */
+export interface SuggestedFile {
+  /** Path to the suggested file */
+  path: string;
+  /** Reason for the suggestion */
+  reason: string;
+  /** Confidence (0-1) */
+  confidence: number;
+}
+
+/**
+ * Inferred edge type for navigation.
+ */
+export interface InferredEdge {
+  /** Edge type (implements, tests, uses, etc.) */
+  edge_type: string;
+  /** Target path this edge points to */
+  target_path: string;
+  /** Confidence (0-1) */
+  confidence: number;
+}
+
+/**
+ * AI-generated suggestions for a trail step.
+ * Visual Trail Graph Session 3: Intelligence
+ */
+export interface TrailSuggestion {
+  /** Semantically similar trails */
+  related_trails: RelatedTrail[];
+  /** Files to explore next */
+  suggested_files: SuggestedFile[];
+  /** Inferred edge types */
+  inferred_edges: InferredEdge[];
+  /** Questions to consider */
+  reasoning_prompts: string[];
+}
+
+/**
+ * Response from self.trail.suggest
+ */
+interface TrailSuggestResponse {
+  summary: string;
+  content: string;
+  metadata: {
+    trail_id?: string;
+    step_index?: number;
+    related_trails?: RelatedTrail[];
+    suggested_files?: SuggestedFile[];
+    inferred_edges?: InferredEdge[];
+    reasoning_prompts?: string[];
+    error?: string;
+  };
+}
+
 /**
  * Path validation result from world.repo.validate
  * Visual Trail Graph Session 2: Path Validation
@@ -382,9 +457,7 @@ export async function getTrailWithEvidence(
  *
  * @param trailId - Trail ID to convert to graph
  */
-export async function getTrailGraph(
-  trailId: string
-): Promise<{
+export async function getTrailGraph(trailId: string): Promise<{
   nodes: TrailGraphNode[];
   edges: TrailGraphEdge[];
   trail: Trail;
@@ -526,6 +599,49 @@ export async function createTrail(
   };
 }
 
+/**
+ * Get AI-suggested connections for a trail step.
+ * Visual Trail Graph Session 3: Intelligence
+ *
+ * Returns semantic matches, suggested files, inferred edges, and reasoning prompts.
+ *
+ * @param trailId - Trail ID to get suggestions for
+ * @param stepIndex - Step index (-1 = last step)
+ * @returns Suggestions or null on error
+ */
+export async function getSuggestions(
+  trailId: string,
+  stepIndex: number = -1
+): Promise<TrailSuggestion | null> {
+  try {
+    const response = await apiClient.post<AgenteseResponse<TrailSuggestResponse>>(
+      '/agentese/self/trail/suggest',
+      {
+        trail_id: trailId,
+        step_index: stepIndex,
+        response_format: 'json',
+      }
+    );
+    const result = unwrapAgentese(response);
+
+    // Handle errors gracefully
+    if (result.metadata.error) {
+      console.warn('[Trail] Suggestions error:', result.metadata.error);
+      return null;
+    }
+
+    return {
+      related_trails: result.metadata.related_trails || [],
+      suggested_files: result.metadata.suggested_files || [],
+      inferred_edges: result.metadata.inferred_edges || [],
+      reasoning_prompts: result.metadata.reasoning_prompts || [],
+    };
+  } catch (err) {
+    console.error('[Trail] Suggestions failed:', err);
+    return null;
+  }
+}
+
 // =============================================================================
 // Utility Functions
 // =============================================================================
@@ -533,10 +649,7 @@ export async function createTrail(
 /**
  * Compute evidence strength from trail metrics.
  */
-export function computeEvidenceStrength(
-  stepCount: number,
-  uniquePaths: number
-): EvidenceStrength {
+export function computeEvidenceStrength(stepCount: number, uniquePaths: number): EvidenceStrength {
   if (stepCount >= 10 && uniquePaths >= 8) return 'definitive';
   if (stepCount >= 5 && uniquePaths >= 4) return 'strong';
   if (stepCount >= 3 && uniquePaths >= 2) return 'moderate';
@@ -581,4 +694,5 @@ export type {
   TrailForkResponse,
   TrailStatusResponse,
   TrailCreateResponse,
+  TrailSuggestResponse,
 };

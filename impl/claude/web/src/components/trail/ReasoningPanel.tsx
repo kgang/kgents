@@ -1,21 +1,26 @@
 /**
  * ReasoningPanel - Step-by-step reasoning trace display.
  *
+ * Living Earth Aesthetic (Crown Jewels Genesis):
+ * "The aesthetic is the structure perceiving itself. Beauty is not revealed—it breathes."
+ *
  * Shows the trail steps with their edge types and reasoning annotations.
  * Syncs selection with TrailGraph.
  *
  * Features:
- * - Scrollable step list
- * - Edge type badges
- * - LLM reasoning in quote style
- * - Selection highlighting
+ * - Scrollable step list with warm earth tones
+ * - Living Earth edge type badges
+ * - LLM reasoning in organic quote style
+ * - Selection highlighting with lantern glow
  *
  * @see spec/protocols/trail-protocol.md Section 8
+ * @see creative/crown-jewels-genesis-moodboard.md
  */
 
 import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { TrailStep } from '../../api/trail';
+import { LIVING_EARTH, BACKGROUNDS, GROWING, getEdgeColor, glowShadow } from './living-earth';
 
 // =============================================================================
 // Types
@@ -66,29 +71,60 @@ export function ReasoningPanel({
   // Empty state
   if (steps.length === 0) {
     return (
-      <div
-        className={`bg-gray-800 rounded-lg border border-gray-700 p-4 ${className}`}
+      <motion.div
+        initial={{ opacity: 0, scale: GROWING.initialScale }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: GROWING.duration, ease: GROWING.ease }}
+        className={`rounded-lg p-4 ${className}`}
+        style={{
+          backgroundColor: BACKGROUNDS.surface,
+          borderWidth: 1,
+          borderColor: LIVING_EARTH.wood,
+        }}
       >
-        <h3 className="text-sm font-medium text-gray-300 mb-3">{title}</h3>
-        <div className="text-sm text-gray-500 italic">No steps in trail</div>
-      </div>
+        <h3 className="text-sm font-medium mb-3" style={{ color: LIVING_EARTH.sand }}>
+          {title}
+        </h3>
+        <div className="text-sm italic" style={{ color: LIVING_EARTH.clay }}>
+          No steps in trail
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
-      className={`bg-gray-800 rounded-lg border border-gray-700 overflow-hidden ${className}`}
+    <motion.div
+      initial={{ opacity: 0, scale: GROWING.initialScale }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: GROWING.duration, ease: GROWING.ease }}
+      className={`rounded-lg overflow-hidden ${className}`}
+      style={{
+        backgroundColor: BACKGROUNDS.surface,
+        borderWidth: 1,
+        borderColor: LIVING_EARTH.wood,
+      }}
     >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-300">{title}</h3>
-        <span className="text-xs text-gray-500">{steps.length} steps</span>
+      <div
+        className="px-4 py-3 flex items-center justify-between"
+        style={{
+          borderBottomWidth: 1,
+          borderBottomColor: LIVING_EARTH.wood,
+        }}
+      >
+        <h3 className="text-sm font-medium" style={{ color: LIVING_EARTH.sand }}>
+          {title}
+        </h3>
+        <span className="text-xs" style={{ color: LIVING_EARTH.clay }}>
+          {steps.length} steps
+        </span>
       </div>
 
       {/* Steps list */}
       <div
         ref={scrollRef}
-        className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600"
+        className="max-h-[400px] overflow-y-auto scrollbar-thin"
+        style={{ scrollbarColor: `${LIVING_EARTH.wood} ${BACKGROUNDS.surface}` }}
       >
         {steps.map((step, index) => {
           const isSelected = selectedStep === index;
@@ -102,20 +138,28 @@ export function ReasoningPanel({
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
               onClick={() => onSelectStep(isSelected ? null : index)}
-              className={`
-                px-4 py-3 cursor-pointer transition-colors
-                ${isSelected ? 'bg-blue-900/30 border-l-2 border-blue-500' : 'hover:bg-gray-700/50'}
-                ${!isLast ? 'border-b border-gray-700/50' : ''}
-              `}
+              className="px-4 py-3 cursor-pointer transition-colors"
+              style={{
+                backgroundColor: isSelected ? `${LIVING_EARTH.copper}20` : 'transparent',
+                borderLeftWidth: isSelected ? 2 : 0,
+                borderLeftColor: LIVING_EARTH.lantern,
+                borderBottomWidth: !isLast ? 1 : 0,
+                borderBottomColor: `${LIVING_EARTH.wood}50`,
+              }}
+              whileHover={{
+                backgroundColor: isSelected ? `${LIVING_EARTH.copper}25` : BACKGROUNDS.hover,
+              }}
             >
               {/* Step header */}
               <div className="flex items-start gap-2">
                 {/* Step number */}
                 <span
-                  className={`
-                    flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs
-                    ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400'}
-                  `}
+                  className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                  style={{
+                    backgroundColor: isSelected ? LIVING_EARTH.copper : LIVING_EARTH.wood,
+                    color: LIVING_EARTH.lantern,
+                    boxShadow: isSelected ? glowShadow(LIVING_EARTH.lantern, 'subtle') : undefined,
+                  }}
                 >
                   {index + 1}
                 </span>
@@ -123,13 +167,17 @@ export function ReasoningPanel({
                 {/* Step content */}
                 <div className="flex-1 min-w-0">
                   {/* Source path */}
-                  <div className="font-medium text-gray-200 truncate">
+                  <div
+                    className="font-medium truncate"
+                    style={{ color: isSelected ? LIVING_EARTH.lantern : LIVING_EARTH.sand }}
+                  >
                     {getHolonName(step.source_path)}
                   </div>
 
                   {/* Full path */}
                   <div
-                    className="text-xs text-gray-500 truncate mt-0.5"
+                    className="text-xs truncate mt-0.5"
+                    style={{ color: LIVING_EARTH.clay }}
                     title={step.source_path}
                   >
                     {step.source_path}
@@ -139,7 +187,7 @@ export function ReasoningPanel({
                   {step.edge && (
                     <div className="flex items-center gap-1.5 mt-2">
                       <EdgeBadge edgeType={step.edge} />
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs" style={{ color: LIVING_EARTH.clay }}>
                         {step.destination_paths?.[0]
                           ? `to ${getHolonName(step.destination_paths[0])}`
                           : ''}
@@ -149,8 +197,17 @@ export function ReasoningPanel({
 
                   {/* Reasoning annotation */}
                   {step.reasoning && (
-                    <div className="mt-2 pl-3 border-l-2 border-gray-600">
-                      <p className="text-xs text-gray-400 italic leading-relaxed">
+                    <div
+                      className="mt-2 pl-3"
+                      style={{
+                        borderLeftWidth: 2,
+                        borderLeftColor: LIVING_EARTH.wood,
+                      }}
+                    >
+                      <p
+                        className="text-xs italic leading-relaxed"
+                        style={{ color: LIVING_EARTH.sand }}
+                      >
                         "{step.reasoning}"
                       </p>
                     </div>
@@ -158,7 +215,10 @@ export function ReasoningPanel({
 
                   {/* Loop warning */}
                   {step.loop_status !== 'OK' && (
-                    <div className="mt-2 flex items-center gap-1 text-xs text-amber-400">
+                    <div
+                      className="mt-2 flex items-center gap-1 text-xs"
+                      style={{ color: LIVING_EARTH.warning }}
+                    >
                       <span>Loop detected:</span>
                       <span className="font-medium">{step.loop_status}</span>
                     </div>
@@ -168,7 +228,7 @@ export function ReasoningPanel({
 
               {/* Timestamp */}
               {step.created_at && (
-                <div className="text-xs text-gray-600 mt-2 pl-8">
+                <div className="text-xs mt-2 pl-8" style={{ color: LIVING_EARTH.wood }}>
                   {formatTime(step.created_at)}
                 </div>
               )}
@@ -176,7 +236,7 @@ export function ReasoningPanel({
           );
         })}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -194,11 +254,16 @@ function EdgeBadge({ edgeType }: EdgeBadgeProps) {
   return (
     <span
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
-      style={{ backgroundColor: `${color}20`, color }}
+      style={{
+        backgroundColor: `${color}25`,
+        color,
+        borderWidth: 1,
+        borderColor: `${color}40`,
+      }}
     >
-      <span className="opacity-70">[</span>
+      <span style={{ opacity: 0.7 }}>[</span>
       {edgeType}
-      <span className="opacity-70">]</span>
+      <span style={{ opacity: 0.7 }}>]</span>
     </span>
   );
 }
@@ -215,21 +280,6 @@ function getHolonName(path: string): string {
     return path.split('/').pop() || path;
   }
   return path;
-}
-
-function getEdgeColor(edgeType: string): string {
-  const colors: Record<string, string> = {
-    imports: '#3b82f6',
-    contains: '#f59e0b',
-    tests: '#22c55e',
-    implements: '#8b5cf6',
-    calls: '#ec4899',
-    semantic: '#06b6d4',
-    similar_to: '#06b6d4',
-    type_of: '#8b5cf6',
-    pattern: '#f97316',
-  };
-  return colors[edgeType] || '#6b7280';
 }
 
 function formatTime(isoString: string): string {
