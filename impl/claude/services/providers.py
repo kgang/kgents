@@ -54,6 +54,7 @@ if TYPE_CHECKING:
 
     from agents.d import DgentProtocol, TableAdapter
     from agents.k.soul import KgentSoul
+    from agents.l.embedders import SentenceTransformerEmbedder
     from models.brain import Crystal
     from protocols.agentese.logos import Logos
     from services.ashc.persistence import PostgresLemmaDatabase
@@ -419,6 +420,34 @@ async def get_fusion_service() -> "FusionService":
 
 
 # =============================================================================
+# Trail Intelligence (Visual Trail Graph Session 3)
+# =============================================================================
+
+
+async def get_embedder() -> "SentenceTransformerEmbedder | None":
+    """
+    Get SentenceTransformer embedder for semantic similarity.
+
+    Uses all-MiniLM-L6-v2 (384-dim, local, no API key).
+    Lazy-loads to avoid startup delay.
+
+    Used by TrailNode.suggest for finding semantically similar trails.
+
+    Returns None if sentence-transformers is not installed.
+    """
+    try:
+        from agents.l.embedders import SentenceTransformerEmbedder
+
+        return SentenceTransformerEmbedder(model_name="all-MiniLM-L6-v2")
+    except ImportError:
+        logger.warning("sentence-transformers not installed, trail suggestions disabled")
+        return None
+    except Exception as e:
+        logger.warning(f"Embedder initialization failed: {e}")
+        return None
+
+
+# =============================================================================
 # Setup Function
 # =============================================================================
 
@@ -487,6 +516,9 @@ async def setup_providers() -> None:
 
     # Fusion Crown Jewel (Symmetric Supersession)
     container.register("fusion_service", get_fusion_service, singleton=True)
+
+    # Trail Intelligence (Visual Trail Graph Session 3)
+    container.register("embedder", get_embedder, singleton=True)
 
     logger.info(
         "Core services registered (Brain + Witness + Conductor + Tooling + Verification + Foundry + Interactive Text + ASHC + Fusion)"
@@ -634,4 +666,6 @@ __all__ = [
     "get_lemma_database",
     # Fusion Crown Jewel
     "get_fusion_service",
+    # Trail Intelligence
+    "get_embedder",
 ]

@@ -230,6 +230,14 @@ def create_app(
     if brain_ws_router is not None:
         app.include_router(brain_ws_router)
 
+    # Witness REST API (frontend dashboard)
+    from .witness import create_witness_router
+
+    witness_router = create_witness_router()
+    if witness_router is not None:
+        app.include_router(witness_router)
+        logger.info("Witness API mounted at /api/witness")
+
     # Gestalt endpoints REMOVED (AD-009 Router Consolidation)
     # The /v1/world/codebase/* endpoints are superseded by:
     # - GET/POST /agentese/world/codebase/{aspect}
@@ -507,6 +515,12 @@ def create_app(
                     "disconnect": "POST /agentese/world/gestalt/live/disconnect",
                 },
                 # === Non-AGENTESE Endpoints ===
+                "witness": {
+                    "list": "GET /api/witness/marks",
+                    "create": "POST /api/witness/marks",
+                    "retract": "PATCH /api/witness/marks/{id}/retract",
+                    "stream": "GET /api/witness/stream (SSE)",
+                },
                 "webhooks": {
                     "stripe": "/webhooks/stripe",
                     "stripe_health": "/webhooks/stripe/health",
