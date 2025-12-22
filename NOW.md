@@ -62,14 +62,24 @@ The old frontend was a documentation shell — browse AGENTESE paths, see polyno
 
 ---
 
-### Implementation Phases
+### Implementation Phases — COMPLETE ✅
 
 | Phase | What | Status |
 |-------|------|--------|
-| **1** | Membrane Foundation — Membrane.tsx, FocusPane, WitnessStream, DialoguePane | ⏳ |
-| **2** | Context Sensing — useWorkingContext, useFocusContent | |
-| **3** | Crystallization — decisions flow into witness stream | |
-| **4** | Polish — elastic modes, joy primitives, keyboard shortcuts | |
+| **1** | Membrane Foundation — Membrane.tsx, FocusPane, WitnessStream, DialoguePane | ✅ |
+| **2** | SpecGraph Integration — tier badges, confidence bars, edge portals | ✅ |
+| **3** | Crystallization — crystallize() action flows to witness | ✅ |
+| **4** | Polish — elastic modes, keyboard shortcuts (⌘1/2/3, Escape) | ✅ |
+
+**25 files created in `impl/claude/web/src/membrane/`**
+
+**Key Components:**
+- `Membrane.tsx` — Root component with three-mode layout
+- `useMembrane.ts` — State machine (mode, focus, dialogue, witness)
+- `FocusPane.tsx` — Context-aware content (file/spec/concept views)
+- `SpecView.tsx` — SpecGraph integration with edge portals
+- `WitnessStream.tsx` — Real-time SSE event stream
+- `DialoguePane.tsx` — Co-thinking interface with crystallize action
 
 ---
 
