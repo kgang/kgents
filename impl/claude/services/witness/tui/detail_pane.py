@@ -144,8 +144,8 @@ class CrystalDetailPane(Widget):
 
         # Join all lines
         result = Text()
-        for line in lines:
-            result.append(line)
+        for text_line in lines:
+            result.append(text_line)
             result.append("\n")
 
         return result

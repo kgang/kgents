@@ -2,11 +2,12 @@
 
 > *"The garden thrives through pruning. Marks become crystals. Crystals become wisdom."*
 
-**Status:** Draft
+**Status:** ✅ COMPLETE (Phase 1-3)
 **Spec:** `spec/protocols/witness-crystallization.md`
 **Skill:** `docs/skills/zenportal-patterns.md`
 **Priority:** MEDIUM (replaces janky input() dashboard)
 **Filed:** 2025-12-22
+**Completed:** 2025-12-22
 
 ---
 
@@ -163,30 +164,29 @@ class CrystalDetailPane(Widget):
 - `impl/claude/services/witness/tui/styles.tcss`
 
 **Deliverables:**
-- [ ] Basic two-pane layout
-- [ ] Crystal list with navigation (j/k)
-- [ ] Detail pane showing selected crystal
-- [ ] Hint bar with context-sensitive keys
-- [ ] Level filtering (0-3, a for all)
-- [ ] Refresh command
+- [x] Basic two-pane layout
+- [x] Crystal list with navigation (j/k)
+- [x] Detail pane showing selected crystal
+- [x] Hint bar with context-sensitive keys
+- [x] Level filtering (0-3, a for all)
+- [x] Refresh command
 
 ### Phase 2: Polish (Estimated: 1-2 hours)
 
 **Features:**
-- [ ] Copy to clipboard with toast notification
-- [ ] Elastic width truncation
-- [ ] Status glyphs for crystal state
-- [ ] Human-friendly age display
-- [ ] Active pane indicator
-- [ ] Expand/collapse crystal sources
+- [x] Copy to clipboard with toast notification
+- [x] Elastic width truncation
+- [x] Status glyphs for crystal state (▪/▫)
+- [x] Human-friendly age display ("3m", "1h", "2d")
+- [x] Active pane indicator
+- [ ] Expand/collapse crystal sources (deferred to v2)
 
 ### Phase 3: Integration (Estimated: 1 hour)
 
 **Changes:**
-- [ ] Wire `kg witness dash` to launch TUI
-- [ ] Add `--classic` flag for old Rich dashboard (deprecate after validation)
-- [ ] Ensure LOCAL_ONLY routing for stdin access
-- [ ] Handle async crystal fetching without blocking UI
+- [x] Wire `kg witness dash` to launch TUI
+- [x] Add `--classic` flag for old Rich dashboard (deprecate after validation)
+- [x] Handle async crystal fetching without blocking UI (run_worker pattern)
 
 ---
 

@@ -46,7 +46,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.message import Message
 from textual.reactive import reactive
-from textual.widgets import Footer, Header, Static
+from textual.widgets import Header, Static
 
 from ..focus import Bucket, FocusManager
 from ..snippets import SnippetLibrary
@@ -222,7 +222,8 @@ class DawnCockpit(App[None]):
                 id="snippet-pane",
             )
         yield GardenView(id="garden-view")
-        yield Footer()
+        # Footer removed - was intercepting Enter key
+        # yield Footer()
 
     def watch_active_pane(self, pane: str) -> None:
         """Update focus styling when active pane changes."""
@@ -318,6 +319,10 @@ class DawnCockpit(App[None]):
         garden = self.query_one("#garden-view", GardenView)
         label = message.snippet.to_dict().get("label", "snippet")
         garden.add_event(f"📋 Copied: {label}")
+
+    def on_key(self, event: Any) -> None:
+        """Debug: Log all keys reaching the app."""
+        logger.warning(f"DawnCockpit.on_key: key={event.key!r}")
 
     async def on_mount(self) -> None:
         """Handle app mount."""

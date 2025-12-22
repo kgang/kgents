@@ -231,6 +231,9 @@ class SnippetPane(Widget, can_focus=True):
 
     def on_key(self, event: Any) -> None:
         """Handle keyboard navigation (only when active)."""
+        # DEBUG: Log every key received
+        logger.warning(f"SnippetPane.on_key: key={event.key!r}, is_active={self.is_active}, snippets={len(self._snippets)}")
+
         if not self.is_active:
             return  # Let app handle keys when not active
 

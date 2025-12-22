@@ -18,3 +18,12 @@ export {
   type MarkTimelineProps,
 } from './MarkTimeline';
 export { QuickMarkForm, type QuickMarkFormProps } from './QuickMarkForm';
+export {
+  MarkFilters,
+  FilterChip,
+  FilterSection,
+  createDefaultFilters,
+  type MarkFilterState,
+  type MarkFiltersProps,
+  type AuthorFilter,
+} from './MarkFilters';

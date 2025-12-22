@@ -25,6 +25,7 @@ const CanvasPage = lazy(() => import('./pages/Canvas'));
 const AgenteseDocs = lazy(() => import('./pages/AgenteseDocs'));
 const PortalPage = lazy(() => import('./pages/Portal'));
 const TrailPage = lazy(() => import('./pages/Trail'));
+const WitnessPage = lazy(() => import('./pages/Witness'));
 
 function LoadingFallback() {
   return (
@@ -59,6 +60,7 @@ function App() {
                 <Route path="/_/docs/agentese" element={<AgenteseDocs />} />
                 <Route path="/_/portal" element={<PortalPage />} />
                 <Route path="/_/trail/:id?" element={<TrailPage />} />
+                <Route path="/_/witness" element={<WitnessPage />} />
 
                 {/*
                  * Universal AGENTESE Projection (catch-all)

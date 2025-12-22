@@ -9,6 +9,8 @@ See: docs/skills/zenportal-patterns.md
 
 from __future__ import annotations
 
+from typing import Any
+
 from rich.text import Text
 from textual.widget import Widget
 
@@ -26,7 +28,7 @@ class HintBar(Widget):
 
     DEFAULT_HINTS = "j/k: navigate  Enter: copy  0-3: filter level  a: all  r: refresh  q: quit"
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         """Initialize the hint bar."""
         super().__init__(**kwargs)
         self._hints = self.DEFAULT_HINTS

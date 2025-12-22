@@ -269,6 +269,14 @@ class WitnessMark(TimestampMixin, Base):
     # Session context (for grouping marks)
     session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
+    # Parent mark for causal lineage (--parent flag)
+    parent_mark_id: Mapped[str | None] = mapped_column(
+        String(64),
+        ForeignKey("witness_marks.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     # D-gent link for semantic search
     datum_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
 
