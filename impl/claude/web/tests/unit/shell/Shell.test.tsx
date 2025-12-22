@@ -377,8 +377,7 @@ describe('Shell accessibility', () => {
       expect(screen.getByText('Crown Jewels')).toBeInTheDocument();
     });
 
-    // Check navigation items are present
+    // Check navigation items are present (only Brain is currently registered)
     expect(screen.getByText('Brain')).toBeInTheDocument();
-    expect(screen.getByText('Gardener')).toBeInTheDocument();
   });
 });

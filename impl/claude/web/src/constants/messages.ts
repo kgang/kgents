@@ -35,6 +35,13 @@ export const LOADING_MESSAGES: Record<JewelName, readonly string[]> = {
     'Visualizing structure...',
     'Computing relationships...',
   ],
+  gardener: [
+    'Preparing the garden...',
+    'Gathering context...',
+    'Sensing the forest...',
+    'Tending to the growth...',
+    'Nurturing ideas...',
+  ],
   forge: [
     'Heating the forge...',
     'Preparing the workshop...',

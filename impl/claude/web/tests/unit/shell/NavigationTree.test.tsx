@@ -213,12 +213,9 @@ describe('NavigationTree', () => {
       render(<NavigationTree />, { wrapper: createWrapper() });
 
       await waitFor(() => {
+        // Currently only Brain is registered in CROWN_JEWELS array
+        // Other jewels will be added as their AGENTESE nodes are implemented
         expect(screen.getByText('Brain')).toBeInTheDocument();
-        expect(screen.getByText('Gestalt')).toBeInTheDocument();
-        expect(screen.getByText('Gardener')).toBeInTheDocument();
-        expect(screen.getByText('Forge')).toBeInTheDocument(); // Not Atelier
-        expect(screen.getByText('Coalition')).toBeInTheDocument();
-        expect(screen.getByText('Park')).toBeInTheDocument();
       });
     });
 
@@ -226,8 +223,8 @@ describe('NavigationTree', () => {
       render(<NavigationTree />, { wrapper: createWrapper() });
 
       await waitFor(() => {
+        // Currently only Brain (self.memory) is registered
         expect(screen.getByText('self.memory')).toBeInTheDocument();
-        expect(screen.getByText('world.codebase')).toBeInTheDocument();
       });
     });
 

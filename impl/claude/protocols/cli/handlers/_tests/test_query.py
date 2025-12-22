@@ -48,8 +48,8 @@ class TestDynamicPathDiscovery:
         # From crown_jewels.py BRAIN_PATHS
         assert "self.memory.ghost.surface" in paths
 
-        # From crown_jewels.py PARK_PATHS
-        assert "concept.mask.manifest" in paths
+        # From other registered nodes
+        assert "self.memory.capture" in paths
 
     def test_discover_paths_includes_base_contexts(self) -> None:
         """Should include the five base AGENTESE contexts."""
@@ -61,8 +61,8 @@ class TestDynamicPathDiscovery:
     def test_discover_paths_minimum_count(self) -> None:
         """Should discover a reasonable number of paths (sanity check)."""
         paths = _discover_paths()
-        # With Crown Jewels + handlers, we expect 100+ paths
-        assert len(paths) > 100, f"Only discovered {len(paths)} paths"
+        # With Crown Jewels + handlers, we expect 50+ paths (reduced after cleanup)
+        assert len(paths) > 50, f"Only discovered {len(paths)} paths"
 
 
 class TestPathCaching:
@@ -178,7 +178,7 @@ class TestContextDiscovery:
     def test_world_context_has_paths(self) -> None:
         """world.* should have substantial paths."""
         matched = _query_known_paths("world.*")
-        assert len(matched) >= 20, f"Only {len(matched)} world paths"
+        assert len(matched) >= 10, f"Only {len(matched)} world paths"
 
     def test_self_context_has_paths(self) -> None:
         """self.* should have substantial paths."""

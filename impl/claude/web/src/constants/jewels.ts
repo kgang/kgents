@@ -19,12 +19,14 @@ import {
   Users,
   Theater,
   Building,
+  Sprout,
   type LucideIcon,
 } from 'lucide-react';
 
 export type JewelName =
   | 'brain'
   | 'gestalt'
+  | 'gardener'
   | 'forge'
   | 'coalition'
   | 'park'
@@ -53,6 +55,7 @@ export interface JewelColor {
 export const JEWEL_COLORS: Record<JewelName, JewelColor> = {
   brain: { primary: '#06B6D4', accent: '#0891B2', bg: '#0E7490' }, // Cyan family
   gestalt: { primary: '#22C55E', accent: '#16A34A', bg: '#15803D' }, // Green family
+  gardener: { primary: '#84CC16', accent: '#65A30D', bg: '#4D7C0F' }, // Lime family - Growth, nurturing
   forge: { primary: '#F59E0B', accent: '#D97706', bg: '#B45309' }, // Amber family
   coalition: { primary: '#8B5CF6', accent: '#7C3AED', bg: '#6D28D9' }, // Violet family
   park: { primary: '#EC4899', accent: '#DB2777', bg: '#BE185D' }, // Pink family
@@ -73,6 +76,7 @@ export const JEWEL_COLORS: Record<JewelName, JewelColor> = {
 export const JEWEL_ICONS: Record<JewelName, LucideIcon> = {
   brain: Brain, // Cyan family - Knowledge, memory
   gestalt: Network, // Green family - Growth, health
+  gardener: Sprout, // Lime family - Growth, nurturing
   forge: Palette, // Amber family - Creation, creativity
   coalition: Users, // Violet family - Collaboration, synthesis
   park: Theater, // Pink family - Drama, narrative
@@ -96,6 +100,7 @@ export function getJewelIcon(name: string): LucideIcon {
 export const JEWEL_EMOJI: Record<JewelName, string> = {
   brain: '\u{1F9E0}', // brain
   gestalt: '\u{1F3D7}\u{FE0F}', // building
+  gardener: '\u{1F331}', // seedling
   forge: '\u{1F3A8}', // artist palette
   coalition: '\u{1F91D}', // handshake
   park: '\u{1F3AD}', // performing arts
@@ -135,6 +140,10 @@ export const JEWEL_TAILWIND_COLORS = {
   'jewel-gestalt': JEWEL_COLORS.gestalt.primary,
   'jewel-gestalt-accent': JEWEL_COLORS.gestalt.accent,
   'jewel-gestalt-bg': JEWEL_COLORS.gestalt.bg,
+
+  'jewel-gardener': JEWEL_COLORS.gardener.primary,
+  'jewel-gardener-accent': JEWEL_COLORS.gardener.accent,
+  'jewel-gardener-bg': JEWEL_COLORS.gardener.bg,
 
   'jewel-forge': JEWEL_COLORS.forge.primary,
   'jewel-forge-accent': JEWEL_COLORS.forge.accent,

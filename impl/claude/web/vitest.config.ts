@@ -59,7 +59,9 @@ export default defineConfig({
       forks: {
         maxForks: 2, // Max 2 parallel workers (~8GB max)
         minForks: 1,
-        isolate: false, // Reuse worker processes between test files
+        // MUST be true: vi.mock() bleeds between test files when false
+        // This was causing 262 test failures from mock contamination
+        isolate: true,
       },
     },
 
